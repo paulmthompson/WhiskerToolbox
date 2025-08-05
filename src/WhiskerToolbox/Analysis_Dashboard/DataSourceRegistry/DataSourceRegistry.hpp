@@ -11,13 +11,9 @@
 #include <memory>
 #include <map>
 
-class QTableView;
 class TableManager;
-
-// Forward declare our custom TableView
-namespace WhiskerToolbox {
 class TableView;
-}
+
 
 /**
  * @brief Abstract interface for data sources that can provide data to plots
@@ -126,30 +122,6 @@ private:
     DataManager* data_manager_;
     int data_manager_observer_id_;
     bool last_known_availability_ = false;
-};
-
-/**
- * @brief TableView-based data source implementation
- */
-class TableViewSource : public AbstractDataSource {
-    Q_OBJECT
-
-public:
-    explicit TableViewSource(QTableView* table_view, const QString& name, QObject* parent = nullptr);
-    ~TableViewSource() override = default;
-
-    QString getName() const override { return name_; }
-    QString getType() const override { return "TableView"; }
-    bool isAvailable() const override;
-    int getDataPointCount() const override;
-    QStringList getAvailableColumns() const override;
-    QVariant getColumnData(const QString& column_name) const override;
-    QVariant getValue(int row, const QString& column_name) const override;
-    QAbstractItemModel* getModel() const override;
-
-private:
-    QTableView* table_view_;
-    QString name_;
 };
 
 /**

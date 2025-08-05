@@ -3,7 +3,6 @@
 #include "Analysis_Dashboard/Tables/TableManager.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
 
-#include <QTableView>
 #include <QAbstractItemModel>
 #include <QHeaderView>
 #include <QDebug>
@@ -120,113 +119,6 @@ QVariant DataManagerSource::getValue(int row, const QString& column_name) const
     // For now, return a placeholder since accessing individual values
     // from DataManager variants requires type-specific handling
     return QVariant::fromValue(QString("Value at row %1, column %2").arg(row).arg(column_name));
-}
-
-// ==================== TableViewSource Implementation ====================
-
-TableViewSource::TableViewSource(QTableView* table_view, const QString& name, QObject* parent)
-    : AbstractDataSource(parent)
-    , table_view_(table_view)
-    , name_(name)
-{
-    if (table_view_ && table_view_->model()) {
-        // Connect to model signals for change notifications
-        connect(table_view_->model(), &QAbstractItemModel::dataChanged,
-                this, &AbstractDataSource::dataChanged);
-        connect(table_view_->model(), &QAbstractItemModel::modelReset,
-                this, &AbstractDataSource::dataChanged);
-        connect(table_view_->model(), &QAbstractItemModel::rowsInserted,
-                this, &AbstractDataSource::dataChanged);
-        connect(table_view_->model(), &QAbstractItemModel::rowsRemoved,
-                this, &AbstractDataSource::dataChanged);
-        
-        qDebug() << "TableViewSource: Created for table" << name_;
-    } else {
-        qWarning() << "TableViewSource: Created with invalid table view";
-    }
-}
-
-bool TableViewSource::isAvailable() const
-{
-    return table_view_ && table_view_->model() && 
-           table_view_->model()->rowCount() > 0 && 
-           table_view_->model()->columnCount() > 0;
-}
-
-int TableViewSource::getDataPointCount() const
-{
-    if (!isAvailable()) {
-        return -1;
-    }
-    
-    return table_view_->model()->rowCount();
-}
-
-QStringList TableViewSource::getAvailableColumns() const
-{
-    if (!isAvailable()) {
-        return QStringList();
-    }
-    
-    QStringList columns;
-    QAbstractItemModel* model = table_view_->model();
-    
-    for (int col = 0; col < model->columnCount(); ++col) {
-        QString header = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
-        if (header.isEmpty()) {
-            header = QString("Column_%1").arg(col);
-        }
-        columns.append(header);
-    }
-    
-    return columns;
-}
-
-QVariant TableViewSource::getColumnData(const QString& column_name) const
-{
-    if (!isAvailable()) {
-        return QVariant();
-    }
-    
-    QAbstractItemModel* model = table_view_->model();
-    QStringList columns = getAvailableColumns();
-    
-    int col_index = columns.indexOf(column_name);
-    if (col_index < 0) {
-        qWarning() << "TableViewSource::getColumnData: Column not found:" << column_name;
-        return QVariant();
-    }
-    
-    // Extract all values for this column
-    QVector<QVariant> column_data;
-    for (int row = 0; row < model->rowCount(); ++row) {
-        QModelIndex index = model->index(row, col_index);
-        column_data.append(model->data(index, Qt::DisplayRole));
-    }
-    
-    return QVariant::fromValue(column_data);
-}
-
-QVariant TableViewSource::getValue(int row, const QString& column_name) const
-{
-    if (!isAvailable() || row < 0) {
-        return QVariant();
-    }
-    
-    QStringList columns = getAvailableColumns();
-    int col_index = columns.indexOf(column_name);
-    
-    if (col_index < 0 || row >= table_view_->model()->rowCount()) {
-        return QVariant();
-    }
-    
-    QModelIndex index = table_view_->model()->index(row, col_index);
-    return table_view_->model()->data(index, Qt::DisplayRole);
-}
-
-QAbstractItemModel* TableViewSource::getModel() const
-{
-    return table_view_ ? table_view_->model() : nullptr;
 }
 
 // ==================== DataSourceRegistry Implementation ====================
