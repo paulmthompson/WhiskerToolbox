@@ -57,8 +57,6 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.cpp
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.ui
-    Widgets/ScatterPlotWidget/ScatterPlotVisualization.hpp
-    Widgets/ScatterPlotWidget/ScatterPlotVisualization.cpp
 
     Widgets/EventPlotWidget/EventPlotWidget.hpp
     Widgets/EventPlotWidget/EventPlotWidget.cpp
@@ -97,6 +95,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Visualizers/Points/PointDataVisualization.cpp
     Visualizers/Points/GenericPointVisualization.hpp
     Visualizers/Points/VectorPointVisualization.hpp
+    Visualizers/Points/ScatterPlotVisualization.hpp
+    Visualizers/Points/ScatterPlotVisualization.cpp
 
     # Properties
     Properties/PropertiesPanel.hpp

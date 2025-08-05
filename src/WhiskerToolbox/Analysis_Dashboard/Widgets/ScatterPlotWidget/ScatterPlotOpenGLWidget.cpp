@@ -1,7 +1,8 @@
 #include "ScatterPlotOpenGLWidget.hpp"
-#include "ScatterPlotVisualization.hpp"
 
-#include "../../Groups/GroupManager.hpp"
+
+#include "Groups/GroupManager.hpp"
+#include "Visualizers/Points/ScatterPlotVisualization.hpp"
 
 #include <QDebug>
 #include <QMatrix4x4>

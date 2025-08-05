@@ -1,6 +1,6 @@
 #include "ScatterPlotVisualization.hpp"
 
-#include "../../Groups/GroupManager.hpp"
+#include "Groups/GroupManager.hpp"
 
 #include <QDebug>
 
