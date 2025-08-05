@@ -78,7 +78,10 @@ private:
     int _edge_search_radius {20}; // Default search radius in pixels
     cv::Mat _current_edges; // Cached edge detection results
     cv::Mat _current_frame; // Cached current frame
-    
+
+    // Flag to prevent infinite loops during percentage updates
+    bool _is_updating_percentages {false};
+
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, TimeFrameIndex current_time);
     void _applyPolynomialFit(Line2D& line, int order);

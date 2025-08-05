@@ -87,15 +87,8 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     connect(ui->segment_end_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &MediaLine_Widget::_setSegmentEndPercentage);
     
-    // Synchronize segment slider and spinbox controls
-    connect(ui->segment_start_slider, &QSlider::valueChanged,
-            ui->segment_start_spinbox, &QSpinBox::setValue);
-    connect(ui->segment_start_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-            ui->segment_start_slider, &QSlider::setValue);
-    connect(ui->segment_end_slider, &QSlider::valueChanged,
-            ui->segment_end_spinbox, &QSpinBox::setValue);
-    connect(ui->segment_end_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-            ui->segment_end_slider, &QSlider::setValue);
+    // Note: Removed direct slider-spinbox synchronization to prevent infinite loops
+    // The synchronization is now handled within the percentage setter functions
     
     connect(ui->line_select_slider, &QSlider::valueChanged, this, &MediaLine_Widget::_lineSelectionChanged);
 
@@ -768,23 +761,27 @@ void MediaLine_Widget::_toggleShowSegment(bool checked) {
 }
 
 void MediaLine_Widget::_setSegmentStartPercentage(int percentage) {
+    if (_is_updating_percentages) return;
+    _is_updating_percentages = true;
+
     if (!_active_key.empty()) {
         auto line_opts = _scene->getLineConfig(_active_key);
         if (line_opts.has_value()) {
-            // Ensure start percentage doesn't exceed end percentage
-            if (percentage > line_opts.value()->segment_end_percentage) {
-                // Don't allow start to exceed end
+            // Ensure start percentage doesn't exceed end percentage - 1%
+            int max_start_percentage = line_opts.value()->segment_end_percentage - 1;
+            if (percentage > max_start_percentage) {
+                // Don't allow start to exceed end - 1%
                 QObject* sender_obj = sender();
                 if (sender_obj == ui->segment_start_slider) {
                     ui->segment_start_slider->blockSignals(true);
-                    ui->segment_start_slider->setValue(line_opts.value()->segment_end_percentage);
+                    ui->segment_start_slider->setValue(max_start_percentage);
                     ui->segment_start_slider->blockSignals(false);
                 } else if (sender_obj == ui->segment_start_spinbox) {
                     ui->segment_start_spinbox->blockSignals(true);
-                    ui->segment_start_spinbox->setValue(line_opts.value()->segment_end_percentage);
+                    ui->segment_start_spinbox->setValue(max_start_percentage);
                     ui->segment_start_spinbox->blockSignals(false);
                 }
-                percentage = line_opts.value()->segment_end_percentage;
+                percentage = max_start_percentage;
             }
             
             line_opts.value()->segment_start_percentage = percentage;
@@ -792,7 +789,7 @@ void MediaLine_Widget::_setSegmentStartPercentage(int percentage) {
         _scene->UpdateCanvas();
     }
     
-    // Synchronize slider and spinbox if the signal came from one of them
+    // Synchronize the other control if this one was changed
     QObject* sender_obj = sender();
     if (sender_obj == ui->segment_start_slider) {
         ui->segment_start_spinbox->blockSignals(true);
@@ -805,26 +802,31 @@ void MediaLine_Widget::_setSegmentStartPercentage(int percentage) {
     }
     
     std::cout << "Segment start percentage set to: " << percentage << std::endl;
+    _is_updating_percentages = false;
 }
 
 void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
+    if (_is_updating_percentages) return;
+    _is_updating_percentages = true;
+
     if (!_active_key.empty()) {
         auto line_opts = _scene->getLineConfig(_active_key);
         if (line_opts.has_value()) {
-            // Ensure end percentage doesn't go below start percentage
-            if (percentage < line_opts.value()->segment_start_percentage) {
-                // Don't allow end to go below start
+            // Ensure end percentage doesn't go below start percentage + 1%
+            int min_end_percentage = line_opts.value()->segment_start_percentage + 1;
+            if (percentage < min_end_percentage) {
+                // Don't allow end to go below start + 1%
                 QObject* sender_obj = sender();
                 if (sender_obj == ui->segment_end_slider) {
                     ui->segment_end_slider->blockSignals(true);
-                    ui->segment_end_slider->setValue(line_opts.value()->segment_start_percentage);
+                    ui->segment_end_slider->setValue(min_end_percentage);
                     ui->segment_end_slider->blockSignals(false);
                 } else if (sender_obj == ui->segment_end_spinbox) {
                     ui->segment_end_spinbox->blockSignals(true);
-                    ui->segment_end_spinbox->setValue(line_opts.value()->segment_start_percentage);
+                    ui->segment_end_spinbox->setValue(min_end_percentage);
                     ui->segment_end_spinbox->blockSignals(false);
                 }
-                percentage = line_opts.value()->segment_start_percentage;
+                percentage = min_end_percentage;
             }
             
             line_opts.value()->segment_end_percentage = percentage;
@@ -832,7 +834,7 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
         _scene->UpdateCanvas();
     }
     
-    // Synchronize slider and spinbox if the signal came from one of them
+    // Synchronize the other control if this one was changed
     QObject* sender_obj = sender();
     if (sender_obj == ui->segment_end_slider) {
         ui->segment_end_spinbox->blockSignals(true);
@@ -845,6 +847,7 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
     }
     
     std::cout << "Segment end percentage set to: " << percentage << std::endl;
+    _is_updating_percentages = false;
 }
 
 void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
