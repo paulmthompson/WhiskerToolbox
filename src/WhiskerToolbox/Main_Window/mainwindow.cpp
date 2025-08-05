@@ -620,7 +620,22 @@ void MainWindow::openDataTransforms() {
                 this);
 
         dt_widget->setObjectName(key);
-        registerDockWidget(key, dt_widget.get(), ads::RightDockWidgetArea);
+
+        // Set explicit minimum size constraints
+        dt_widget->setMinimumSize(250, 400);
+        dt_widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+
+        // Create dock widget with appropriate settings
+        auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+
+        // Use ForceNoScrollArea to prevent adding another scroll area
+        dock_widget->setWidget(dt_widget.get(), ads::CDockWidget::ForceNoScrollArea);
+
+        // Ensure the dock widget sizes based on content
+        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
+
+        _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
+
         _widgets[key] = std::move(dt_widget);
     }
 
