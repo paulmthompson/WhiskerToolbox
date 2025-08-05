@@ -2,14 +2,13 @@
 #define PLOTFACTORY_HPP
 
 #include <QString>
+
 #include <memory>
 
 class AbstractPlotWidget;
 class AbstractPlotPropertiesWidget;
 class PlotContainer;
-class DataManager;
-class GroupManager;
-class TableManager;
+
 
 /**
  * @brief Factory for creating plot widgets and their associated properties widgets

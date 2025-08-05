@@ -3,11 +3,11 @@
 
 #include <QObject>
 #include <QString>
+
 #include <memory>
 
 class AbstractPlotWidget;
 class AbstractPlotPropertiesWidget;
-class DataManager;
 class DataSourceRegistry;
 class GroupManager;
 
