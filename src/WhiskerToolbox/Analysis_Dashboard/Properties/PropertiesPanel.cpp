@@ -77,7 +77,6 @@ void PropertiesPanel::showPlotProperties(QString const & plot_id, AbstractPlotWi
         qDebug() << "PropertiesPanel: Setting DataManager and plot widget";
 
         // Configure the properties widget for this specific plot
-        properties_widget->setDataManager(_data_manager);
         properties_widget->setPlotWidget(plot_widget);
         properties_widget->updateFromPlot();
 
@@ -151,25 +150,16 @@ void PropertiesPanel::registerBuiltInPropertiesWidgets() {
 
     // Spatial Overlay Plot
     SpatialOverlayPlotPropertiesWidget * spatial_properties = new SpatialOverlayPlotPropertiesWidget(this);
-    if (_data_manager) {
-        spatial_properties->setDataManager(_data_manager);
-    }
     registerPlotPropertiesWidget("Spatial Overlay Plot", spatial_properties);
     qDebug() << "PropertiesPanel: Registered properties widget for 'Spatial Overlay Plot'";
 
     // Event Plot
     EventPlotPropertiesWidget * event_properties = new EventPlotPropertiesWidget(this);
-    if (_data_manager) {
-        event_properties->setDataManager(_data_manager);
-    }
     registerPlotPropertiesWidget("Event Plot", event_properties);
     qDebug() << "PropertiesPanel: Registered properties widget for 'Event Plot'";
 
     // Scatter Plot
     ScatterPlotPropertiesWidget * scatter_properties = new ScatterPlotPropertiesWidget(this);
-    if (_data_manager) {
-        scatter_properties->setDataManager(_data_manager);
-    }
     registerPlotPropertiesWidget("Scatter Plot", scatter_properties);
     qDebug() << "PropertiesPanel: Registered properties widget for 'Scatter Plot'";
 }

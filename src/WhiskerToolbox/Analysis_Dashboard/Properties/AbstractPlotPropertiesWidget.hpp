@@ -4,7 +4,6 @@
 #include <QWidget>
 
 class AbstractPlotWidget;
-class DataManager;
 class DataSourceRegistry;
 
 /**
@@ -19,12 +18,6 @@ class AbstractPlotPropertiesWidget : public QWidget {
 public:
     explicit AbstractPlotPropertiesWidget(QWidget * parent = nullptr);
     ~AbstractPlotPropertiesWidget() override = default;
-
-    /**
-     * @brief Set the data manager that this properties widget uses
-     * @param data_manager Pointer to the data manager
-     */
-    virtual void setDataManager(std::shared_ptr<DataManager> data_manager) = 0;
 
     /**
      * @brief Set the data source registry for unified data access

@@ -31,11 +31,6 @@ ScatterPlotPropertiesWidget::~ScatterPlotPropertiesWidget() {
     delete ui;
 }
 
-void ScatterPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
-    _data_manager = data_manager;
-    updateAvailableDataSources();
-}
-
 void ScatterPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
     _data_source_registry = data_source_registry;
     
@@ -45,19 +40,6 @@ void ScatterPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * dat
                 this, &ScatterPlotPropertiesWidget::updateAvailableDataSources);
         connect(_data_source_registry, &DataSourceRegistry::dataSourceUnregistered,
                 this, &ScatterPlotPropertiesWidget::updateAvailableDataSources);
-        
-        // Extract the DataManager from the registry for backwards compatibility
-        AbstractDataSource* primary_source = _data_source_registry->getDataSource("primary_data_manager");
-        if (primary_source && primary_source->getType() == "DataManager") {
-            DataManagerSource* dm_source = static_cast<DataManagerSource*>(primary_source);
-            DataManager* data_manager = dm_source->getDataManager();
-            
-            if (data_manager) {
-                std::shared_ptr<DataManager> shared_dm(data_manager, [](DataManager*){});
-                setDataManager(shared_dm);
-                qDebug() << "ScatterPlotPropertiesWidget: Set DataManager from DataSourceRegistry";
-            }
-        }
     }
     
     updateAvailableDataSources();
@@ -121,12 +103,15 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
     ui->x_axis_combo->addItem("Select a data source...", "");
     ui->y_axis_combo->addItem("Select a data source...", "");
 
+    auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
+    auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
+
     // Add items from DataManager (analog time series)
-    if (_data_manager) {
-        std::vector<std::string> all_keys = _data_manager->getAllKeys();
+    if (data_manager) {
+        std::vector<std::string> all_keys = data_manager->getAllKeys();
         
         for (std::string const & key: all_keys) {
-            DM_DataType data_type = _data_manager->getType(key);
+            DM_DataType data_type = data_manager->getType(key);
             
             // Only add analog time series for scatter plots
             if (data_type == DM_DataType::Analog) {
@@ -372,13 +357,11 @@ std::vector<float> ScatterPlotPropertiesWidget::loadDataFromKey(QString const & 
         // Handle analog time series
         QString analog_key = data_key.mid(7); // Remove "analog:" prefix
         
-        if (!_data_manager) {
-            qDebug() << "No data manager available for analog data";
-            return result;
-        }
-        
         try {
-            auto analog_data = _data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
+             auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
+             auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
+
+            auto analog_data = data_manager ? data_manager->getData<AnalogTimeSeries>(analog_key.toStdString()) : nullptr;
             if (analog_data) {
                 auto data_vector = analog_data->getAnalogTimeSeries();
                 result.reserve(data_vector.size());
@@ -475,10 +458,13 @@ void ScatterPlotPropertiesWidget::updateXAxisInfoLabel() {
     if (selected_key.startsWith("analog:")) {
         QString analog_key = selected_key.mid(7);
         info_text = QString("X-axis: Analog Time Series\nKey: %1").arg(analog_key);
-        
-        if (_data_manager) {
+
+        auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
+        auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
+
+        if (data_manager) {
             try {
-                auto analog_data = _data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
+                auto analog_data = data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
                 if (analog_data) {
                     info_text += QString("\nSamples: %1").arg(analog_data->getNumSamples());
                 }
@@ -516,10 +502,13 @@ void ScatterPlotPropertiesWidget::updateYAxisInfoLabel() {
     if (selected_key.startsWith("analog:")) {
         QString analog_key = selected_key.mid(7);
         info_text = QString("Y-axis: Analog Time Series\nKey: %1").arg(analog_key);
-        
-        if (_data_manager) {
+
+        auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
+        auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
+
+        if (data_manager) {
             try {
-                auto analog_data = _data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
+                auto analog_data = data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
                 if (analog_data) {
                     info_text += QString("\nSamples: %1").arg(analog_data->getNumSamples());
                 }

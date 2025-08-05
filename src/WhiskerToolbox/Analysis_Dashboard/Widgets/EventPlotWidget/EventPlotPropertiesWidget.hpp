@@ -30,7 +30,6 @@ public:
     explicit EventPlotPropertiesWidget(QWidget * parent = nullptr);
     ~EventPlotPropertiesWidget() override;
 
-    void setDataManager(std::shared_ptr<DataManager> data_manager) override;
     void setDataSourceRegistry(DataSourceRegistry * data_source_registry) override;
     void setPlotWidget(AbstractPlotWidget * plot_widget) override;
     void updateFromPlot() override;
