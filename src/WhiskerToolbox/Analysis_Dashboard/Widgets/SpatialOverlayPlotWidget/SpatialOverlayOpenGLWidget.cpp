@@ -4,7 +4,7 @@
 #include "Groups/GroupManager.hpp"
 #include "Visualizers/Points/PointDataVisualization.hpp"
 #include "Visualizers/Lines/LineDataVisualization.hpp"
-#include "Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.hpp"
+#include "Visualizers/Masks/MaskDataVisualization.hpp"
 #include "Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
 #include "Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
 #include "Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp"
