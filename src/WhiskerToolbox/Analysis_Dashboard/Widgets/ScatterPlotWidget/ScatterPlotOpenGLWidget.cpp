@@ -34,9 +34,6 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setSamples(4); // Enable multisampling for anti-aliasing
     setFormat(format);
-
-    // Generate sample data for testing
-    generateSampleData();
 }
 
 ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() {
@@ -306,16 +303,4 @@ void ScatterPlotOpenGLWidget::handleMouseHover(QPoint const & pos) {
     _tooltip_timer->start(TOOLTIP_DELAY_MS);
 }
 
-void ScatterPlotOpenGLWidget::generateSampleData() {
-    // Generate some random sample data for testing
-    std::vector<float> x_data, y_data;
-    
-    QRandomGenerator * rng = QRandomGenerator::global();
-    for (int i = 0; i < 100; ++i) {
-        x_data.push_back((rng->bounded(2000) - 1000) / 1000.0f); // -1.0 to 1.0
-        y_data.push_back((rng->bounded(2000) - 1000) / 1000.0f); // -1.0 to 1.0
-    }
-    
-    setScatterData(x_data, y_data);
-    setAxisLabels("Sample X", "Sample Y");
-}
+

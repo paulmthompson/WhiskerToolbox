@@ -174,11 +174,6 @@ private:
      * @param pos Mouse position
      */
     void handleMouseHover(QPoint const & pos);
-
-    /**
-     * @brief Generate sample data for testing
-     */
-    void generateSampleData();
 };
 
 #endif// SCATTERPLOTOPENGLWIDGET_HPP
