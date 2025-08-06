@@ -56,21 +56,6 @@ public:
     virtual QStringList getAvailableColumns() const = 0;
 
     /**
-     * @brief Get data for a specific column
-     * @param column_name Name of the column to retrieve
-     * @return QVariant containing the column data (usually QVector<double> or similar)
-     */
-    virtual QVariant getColumnData(QString const & column_name) const = 0;
-
-    /**
-     * @brief Get a value at a specific row and column
-     * @param row The row index
-     * @param column_name The column name
-     * @return The value at the specified location
-     */
-    virtual QVariant getValue(int row, QString const & column_name) const = 0;
-
-    /**
      * @brief Get the underlying model if available (for table views)
      * @return Pointer to QAbstractItemModel, or nullptr if not applicable
      */
@@ -103,8 +88,6 @@ public:
     QString getType() const override { return "DataManager"; }
     bool isAvailable() const override;
     QStringList getAvailableColumns() const override;
-    QVariant getColumnData(QString const & column_name) const override;
-    QVariant getValue(int row, QString const & column_name) const override;
 
     /**
      * @brief Get the underlying DataManager pointer for backwards compatibility
@@ -136,9 +119,14 @@ public:
     QString getType() const override { return "TableManager"; }
     bool isAvailable() const override;
     QStringList getAvailableColumns() const override;
-    QVariant getColumnData(QString const & column_name) const override;
-    QVariant getValue(int row, QString const & column_name) const override;
-    QAbstractItemModel * getModel() const override { return nullptr; }// Not applicable
+
+    /**
+     * @brief Get type-safe column data from a specific table
+     * @param table_id The ID of the table
+     * @param column_name The name of the column
+     * @return ColumnDataVariant containing the typed column data
+     */
+    ColumnDataVariant getTableColumnDataVariant(QString const & table_id, QString const & column_name) const;
 
     /**
      * @brief Get type information for a column in a specific table
@@ -157,14 +145,6 @@ public:
     std::type_index getColumnTypeIndex(QString const & table_id, QString const & column_name) const;
 
     /**
-     * @brief Check if a column contains data that could be used for plotting
-     * @param table_id The ID of the table
-     * @param column_name The name of the column
-     * @return True if the column contains numeric vector data suitable for plotting
-     */
-    bool isColumnNumericVector(QString const & table_id, QString const & column_name) const;
-
-    /**
      * @brief Get the underlying TableManager pointer
      * @return Pointer to the wrapped TableManager, or nullptr if invalid
      */
@@ -177,21 +157,13 @@ public:
     QStringList getAvailableTableIds() const;
 
     /**
-     * @brief Get column data from a specific table
-     * @param table_id The ID of the table
-     * @param column_name The name of the column
-     * @return Column data as QVariant
-     */
-    QVariant getTableColumnData(QString const & table_id, QString const & column_name) const;
-
-    /**
      * @brief Get typed column data from a specific table
      * @tparam T The expected data type
      * @param table_id The ID of the table
      * @param column_name The name of the column
      * @return Vector of typed data
      */
-    template<typename T>
+    template<SupportedColumnType T>
     std::vector<T> getTypedTableColumnData(QString const & table_id, QString const & column_name) const;
 
 private:

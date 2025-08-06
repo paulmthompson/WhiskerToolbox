@@ -1,5 +1,4 @@
 #include "DataSourceRegistry.hpp"
-#include "QVariantColumnDataVisitor.hpp"
 #include "Analysis_Dashboard/Tables/TableManager.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
@@ -71,36 +70,6 @@ QStringList DataManagerSource::getAvailableColumns() const {
         columns.append(QString::fromStdString(key));
     }
     return columns;
-}
-
-QVariant DataManagerSource::getColumnData(QString const & column_name) const {
-    if (!isAvailable()) {
-        return QVariant();
-    }
-
-    // Convert QString to std::string and get data variant
-    std::string key = column_name.toStdString();
-    auto data_variant = data_manager_->getDataVariant(key);
-
-    if (!data_variant.has_value()) {
-        qWarning() << "DataManagerSource::getColumnData: Data key not found:" << column_name;
-        return QVariant();
-    }
-
-    // Convert the DataManager variant to QVariant
-    // This is a simplified conversion - in a real implementation,
-    // we'd need to handle the specific data types properly
-    return QVariant::fromValue(QString("DataManager data for key: %1").arg(column_name));
-}
-
-QVariant DataManagerSource::getValue(int row, QString const & column_name) const {
-    if (!isAvailable() || row < 0) {
-        return QVariant();
-    }
-
-    // For now, return a placeholder since accessing individual values
-    // from DataManager variants requires type-specific handling
-    return QVariant::fromValue(QString("Value at row %1, column %2").arg(row).arg(column_name));
 }
 
 // ==================== DataSourceRegistry Implementation ====================
@@ -300,25 +269,6 @@ QStringList TableManagerSource::getAvailableColumns() const {
     return all_columns;
 }
 
-QVariant TableManagerSource::getColumnData(QString const & column_name) const {
-    // Parse qualified name: table_id.column_name
-    QStringList parts = column_name.split('.');
-    if (parts.size() != 2) {
-        qWarning() << "TableManagerSource: Invalid column name format, expected 'table_id.column_name':" << column_name;
-        return QVariant();
-    }
-
-    return getTableColumnData(parts[0], parts[1]);
-}
-
-QVariant TableManagerSource::getValue(int row, QString const & column_name) const {
-    // This would need to be implemented based on how you want to map
-    // row indices across multiple tables
-    Q_UNUSED(row)
-    Q_UNUSED(column_name)
-    return QVariant();
-}
-
 QStringList TableManagerSource::getAvailableTableIds() const {
     if (!table_manager_) {
         return QStringList();
@@ -337,15 +287,15 @@ QStringList TableManagerSource::getAvailableTableIds() const {
     return available_tables;
 }
 
-QVariant TableManagerSource::getTableColumnData(QString const & table_id, QString const & column_name) const {
+ColumnDataVariant TableManagerSource::getTableColumnDataVariant(QString const & table_id, QString const & column_name) const {
     if (!table_manager_) {
-        return QVariant();
+        return ColumnDataVariant{};
     }
 
     auto table_view = table_manager_->getBuiltTable(table_id);
     if (!table_view) {
         qWarning() << "TableManagerSource: Table not found:" << table_id;
-        return QVariant();
+        return ColumnDataVariant{};
     }
 
     std::string std_column_name = column_name.toStdString();
@@ -353,17 +303,16 @@ QVariant TableManagerSource::getTableColumnData(QString const & table_id, QStrin
     // Check if column exists
     if (!table_view->hasColumn(std_column_name)) {
         qWarning() << "TableManagerSource: Column not found:" << column_name << "in table:" << table_id;
-        return QVariant();
+        return ColumnDataVariant{};
     }
 
     try {
-        // Use our new type-safe variant approach instead of try/catch
-        QVariantColumnDataVisitor visitor;
-        return table_view->visitColumnData(std_column_name, visitor);
+        // Use TableView's type-safe getColumnDataVariant method
+        return table_view->getColumnDataVariant(std_column_name);
     } catch (const std::exception& e) {
         qWarning() << "TableManagerSource: Error accessing column data for" << column_name 
                    << "in table" << table_id << ":" << e.what();
-        return QVariant();
+        return ColumnDataVariant{};
     }
 }
 
@@ -424,18 +373,6 @@ ColumnTypeInfo TableManagerSource::getColumnTypeInfo(QString const & table_id, Q
             qDebug() << "Identified as std::vector<bool>";
             return ColumnTypeInfo::fromType<std::vector<bool>>();
         }
-        else if (type_index == typeid(std::vector<std::vector<float>>)) {
-            qDebug() << "Identified as std::vector<std::vector<float>>";
-            return ColumnTypeInfo::fromType<std::vector<std::vector<float>>>();
-        }
-        else if (type_index == typeid(std::vector<std::vector<double>>)) {
-            qDebug() << "Identified as std::vector<std::vector<double>>";
-            return ColumnTypeInfo::fromType<std::vector<std::vector<double>>>();
-        }
-        else if (type_index == typeid(std::vector<std::vector<int>>)) {
-            qDebug() << "Identified as std::vector<std::vector<int>>";
-            return ColumnTypeInfo::fromType<std::vector<std::vector<int>>>();
-        }
         else {
             // Unknown type
             qDebug() << "TableManagerSource::getColumnTypeInfo: Unknown type" << type_index.name() 
@@ -473,17 +410,7 @@ std::type_index TableManagerSource::getColumnTypeIndex(QString const & table_id,
     }
 }
 
-bool TableManagerSource::isColumnNumericVector(QString const & table_id, QString const & column_name) const {
-    auto type_info = getColumnTypeInfo(table_id, column_name);
-    
-    // Check if it's a vector type with numeric elements
-    return type_info.isVectorType && 
-           (type_info.hasElementType<float>() || 
-            type_info.hasElementType<double>() || 
-            type_info.hasElementType<int>());
-}
-
-template<typename T>
+template<SupportedColumnType T>
 std::vector<T> TableManagerSource::getTypedTableColumnData(QString const & table_id, QString const & column_name) const {
     if (!table_manager_) {
         return std::vector<T>();

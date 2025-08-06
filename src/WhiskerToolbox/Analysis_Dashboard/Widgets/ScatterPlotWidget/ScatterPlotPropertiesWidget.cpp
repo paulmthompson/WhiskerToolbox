@@ -454,38 +454,51 @@ std::vector<float> ScatterPlotPropertiesWidget::loadDataFromKey(QString const & 
             
             if (table_manager_source) {
                 TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-                auto table_manager = tm_source->getTableManager();
                 
-                if (table_manager) {
-                    auto table_view = table_manager->getBuiltTable(table_id);
-                    if (table_view) {
-                        try {
-                            auto column_data = table_view->getColumnValues<float>(column_name.toStdString());
-                            result = column_data;
-                            
-                            qDebug() << "Loaded" << result.size() << "values from table column:" 
-                                     << table_id << "." << column_name;
-                                     
-                        } catch (std::exception const & e) {
-                            qDebug() << "Error loading table column data:" << e.what();
-                            
-                            // Try loading as double and converting
-                            try {
-                                auto column_data_double = table_view->getColumnValues<double>(column_name.toStdString());
-                                result.reserve(column_data_double.size());
-                                
-                                for (auto value : column_data_double) {
-                                    result.push_back(static_cast<float>(value));
-                                }
-                                
-                                qDebug() << "Loaded" << result.size() << "values from table column (as double):" 
-                                         << table_id << "." << column_name;
-                                         
-                            } catch (std::exception const & e2) {
-                                qDebug() << "Error loading table column data as double:" << e2.what();
+                try {
+                    // Use the new type-safe interface
+                    auto column_variant = tm_source->getTableColumnDataVariant(table_id, column_name);
+                    
+                    // Create a visitor to extract numeric data as float vector
+                    auto float_vector_visitor = [&result](const auto& data) {
+                        using DataType = std::decay_t<decltype(data)>;
+                        
+                        if constexpr (std::is_same_v<DataType, std::vector<float>>) {
+                            result = data;
+                        }
+                        else if constexpr (std::is_same_v<DataType, std::vector<double>>) {
+                            result.reserve(data.size());
+                            for (const auto& value : data) {
+                                result.push_back(static_cast<float>(value));
                             }
                         }
-                    }
+                        else if constexpr (std::is_same_v<DataType, std::vector<int>>) {
+                            result.reserve(data.size());
+                            for (const auto& value : data) {
+                                result.push_back(static_cast<float>(value));
+                            }
+                        }
+                        else if constexpr (std::is_same_v<DataType, float>) {
+                            result.push_back(data);
+                        }
+                        else if constexpr (std::is_same_v<DataType, double>) {
+                            result.push_back(static_cast<float>(data));
+                        }
+                        else if constexpr (std::is_same_v<DataType, int>) {
+                            result.push_back(static_cast<float>(data));
+                        }
+                        else {
+                            qWarning() << "Unsupported column data type for scatter plot";
+                        }
+                    };
+                    
+                    std::visit(float_vector_visitor, column_variant);
+                    
+                    qDebug() << "Loaded" << result.size() << "values from table column:" 
+                             << table_id << "." << column_name;
+                             
+                } catch (std::exception const & e) {
+                    qDebug() << "Error loading table column data:" << e.what();
                 }
             }
         }

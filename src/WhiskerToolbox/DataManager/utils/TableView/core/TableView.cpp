@@ -73,28 +73,27 @@ std::type_index TableView::getColumnTypeIndex(std::string const & name) const {
 ColumnDataVariant TableView::getColumnDataVariant(std::string const & name) {
     auto type_index = getColumnTypeIndex(name);
     
-    // Use template dispatch based on the actual stored types in TableView
-    // TableView stores std::vector<T> where T is the element type per row
-    if (type_index == typeid(std::vector<float>)) {
-        return getColumnValues<float>(name);  // Returns std::vector<float>
+    // Dispatch from element type_index to vector type using template metaprogramming
+    std::optional<ColumnDataVariant> result;
+    
+    for_each_type<SupportedColumnElementTypes>([&](auto, auto type_instance) {
+        using ElementType = std::decay_t<decltype(type_instance)>;
+        
+        if (!result.has_value() && type_index == std::type_index(typeid(ElementType))) {
+            // Found matching element type, get the vector data
+            auto vectorData = getColumnValues<ElementType>(name);
+            result = vectorData;  // This will construct the variant with the correct vector type
+        }
+    });
+
+    if (!result.has_value()) {
+        throw std::runtime_error("Unsupported column type: " + std::string(type_index.name()) + 
+                                " for column: " + name);
     }
-    else if (type_index == typeid(std::vector<double>)) {
-        return getColumnValues<double>(name);  // Returns std::vector<double>
-    }
-    else if (type_index == typeid(std::vector<int>)) {
-        return getColumnValues<int>(name);  // Returns std::vector<int>
-    }
-    else if (type_index == typeid(std::vector<bool>)) {
-        return getColumnValues<bool>(name);  // Returns std::vector<bool>
-    }
-    else if (type_index == typeid(std::vector<std::vector<float>>)) {
-        return getColumnValues<std::vector<float>>(name);  // Returns std::vector<std::vector<float>>
-    }
-    else {
-        throw std::runtime_error("Column '" + name + "' has unsupported type for variant access: " + 
-                               getColumnType(name).name());
-    }
+    
+    return result.value();
 }
+
 
 void TableView::materializeAll() {
     std::set<std::string> materializing;

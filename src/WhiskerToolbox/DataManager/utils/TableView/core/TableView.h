@@ -61,7 +61,7 @@ public:
      * @return Reference to the column's data vector.
      * @throws std::runtime_error if the column is not found or type mismatch.
      */
-    template<typename T>
+    template<SupportedColumnType T>
     [[nodiscard]] auto getColumnValues(std::string const & name) -> std::vector<T> const &;
 
     /**
@@ -146,7 +146,7 @@ public:
 private:
     friend class TableViewBuilder;
     // Grant friend access to the templated Column class
-    template<typename T>
+    template<SupportedColumnType T>
     friend class Column;
 
     /**
@@ -208,7 +208,7 @@ private:
 };
 
 // Template method implementation for getColumnValues
-template<typename T>
+template<SupportedColumnType T>
 auto TableView::getColumnValues(std::string const & name) -> std::vector<T> const & {
     // 1. Find the IColumn pointer by name
     auto it = m_colNameToIndex.find(name);

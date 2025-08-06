@@ -1,27 +1,103 @@
 #ifndef COLUMNTYPEINFO_HPP
 #define COLUMNTYPEINFO_HPP
 
+#include "TimeFrame.hpp"
+
+#include <string>
+#include <tuple>
+#include <type_traits>
 #include <typeindex>
 #include <variant>
 #include <vector>
-#include <string>
+
+
+// ==========================================
+// Supported tableview column data types
+// ==========================================
+
+// Element types that can be stored in columns (what each row contains)
+using SupportedColumnElementTypes = std::tuple<
+    float,
+    double,
+    int,
+    int64_t,
+    bool,
+    std::vector<float>,
+    std::vector<double>,
+    std::vector<int>,
+    std::vector<TimeFrameIndex>
+>;
+
+// Data types that getColumnDataVariant() can return (always vectors)
+using SupportedColumnDataTypes = std::tuple<
+    std::vector<float>,
+    std::vector<double>,
+    std::vector<int>,
+    std::vector<int64_t>,
+    std::vector<bool>,
+    std::vector<TimeFrameIndex>,
+    std::vector<std::vector<float>>,
+    std::vector<std::vector<double>>,
+    std::vector<std::vector<int>>,
+    std::vector<std::vector<TimeFrameIndex>>
+>;
+
+// Backward compatibility alias
+using SupportedColumnTypes = SupportedColumnElementTypes;
+
+// ===================================================================
+// == Metaprogramming Utilities 
+// ===================================================================
+
+// Helper to convert a tuple of types into a variant of those types
+
+template <typename T>
+struct tuple_to_variant;
+
+template <typename... Types>
+struct tuple_to_variant<std::tuple<Types...>> {
+    using type = std::variant<Types...>;
+};
+
+
+template <typename T>
+using tuple_to_variant_t = typename tuple_to_variant<T>::type;
+
+
+// Helper to check if a type T is present in a tuple
+
+template <typename T, typename Tuple>
+struct is_in_tuple;
+
+template <typename T, typename... Us>
+struct is_in_tuple<T, std::tuple<Us...>> : std::disjunction<std::is_same<T, Us>...> {};
+
+template <typename T, typename Tuple>
+inline constexpr bool is_in_tuple_v = is_in_tuple<T, Tuple>::value;
+
+// Helper to apply a function (like a lambda) to each type in a tuple
+template<typename F, typename... Ts>
+constexpr void for_each_type_impl(F&& func, std::tuple<Ts...>) {
+    // Use fold expression to call function for each type
+    (func(std::integral_constant<int, 0>{}, Ts{}), ...);
+}
+
+template<typename Tuple, typename F>
+constexpr void for_each_type(F&& func) {
+    for_each_type_impl(std::forward<F>(func), Tuple{});
+}
+
+template <typename T>
+concept SupportedColumnType = is_in_tuple_v<T, SupportedColumnTypes>;
 
 /**
  * @brief Variant type containing all possible column data types that TableView can return
  * 
- * This variant is based on the explicit template instantiations in TableManagerSource
- * and represents the complete set of types that the system supports.
+ * This variant represents the complete set of types that getColumnDataVariant() can return.
+ * These are always vectors since getColumnValues<T>() returns std::vector<T>.
  */
-using ColumnDataVariant = std::variant<
-    std::vector<float>,
-    std::vector<double>, 
-    std::vector<int>,
-    std::vector<bool>,
-    std::vector<std::vector<float>>,
-    std::vector<std::vector<double>>,
-    std::vector<std::vector<int>>
-    // Add more types as needed based on your explicit instantiations
->;
+using ColumnDataVariant = tuple_to_variant_t<SupportedColumnDataTypes>;
+using ColumnElementVariant = tuple_to_variant_t<SupportedColumnElementTypes>;
 
 /**
  * @brief Runtime type information for table columns
@@ -87,6 +163,39 @@ private:
 };
 
 // Template specializations for createTypeInfo
+
+// Scalar types (Column<T> where each row contains one T value)
+template<>
+inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<float>() {
+    return ColumnTypeInfo(typeid(float), typeid(float), 
+                         false, false, "float", "float");
+}
+
+template<>
+inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<double>() {
+    return ColumnTypeInfo(typeid(double), typeid(double), 
+                         false, false, "double", "double");
+}
+
+template<>
+inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<int>() {
+    return ColumnTypeInfo(typeid(int), typeid(int), 
+                         false, false, "int", "int");
+}
+
+template<>
+inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<int64_t>() {
+    return ColumnTypeInfo(typeid(int64_t), typeid(int64_t), 
+                         false, false, "int64_t", "int64_t");
+}
+
+template<>
+inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<bool>() {
+    return ColumnTypeInfo(typeid(bool), typeid(bool), 
+                         false, false, "bool", "bool");
+}
+
+// Vector types (Column<std::vector<T>> where each row contains a vector of T values)
 template<>
 inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<std::vector<float>>() {
     return ColumnTypeInfo(typeid(std::vector<float>), typeid(float), 
@@ -106,27 +215,15 @@ inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<std::vector<int>>() {
 }
 
 template<>
+inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<std::vector<TimeFrameIndex>>() {
+    return ColumnTypeInfo(typeid(std::vector<TimeFrameIndex>), typeid(TimeFrameIndex), 
+                         true, false, "std::vector<TimeFrameIndex>", "TimeFrameIndex");
+}
+
+template<>
 inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<std::vector<bool>>() {
     return ColumnTypeInfo(typeid(std::vector<bool>), typeid(bool), 
                          true, false, "std::vector<bool>", "bool");
-}
-
-template<>
-inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<std::vector<std::vector<float>>>() {
-    return ColumnTypeInfo(typeid(std::vector<std::vector<float>>), typeid(float), 
-                         true, true, "std::vector<std::vector<float>>", "float");
-}
-
-template<>
-inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<std::vector<std::vector<double>>>() {
-    return ColumnTypeInfo(typeid(std::vector<std::vector<double>>), typeid(double), 
-                         true, true, "std::vector<std::vector<double>>", "double");
-}
-
-template<>
-inline ColumnTypeInfo ColumnTypeInfo::createTypeInfo<std::vector<std::vector<int>>>() {
-    return ColumnTypeInfo(typeid(std::vector<std::vector<int>>), typeid(int), 
-                         true, true, "std::vector<std::vector<int>>", "int");
 }
 
 /**
@@ -140,13 +237,18 @@ class ColumnDataVisitor {
 public:
     virtual ~ColumnDataVisitor() = default;
     
+    // Scalar types
+    virtual ReturnType visit(const float& data) = 0;
+    virtual ReturnType visit(const double& data) = 0;
+    virtual ReturnType visit(const int& data) = 0;
+    virtual ReturnType visit(const int64_t& data) = 0;
+    virtual ReturnType visit(const bool& data) = 0;
+    
+    // Vector types
     virtual ReturnType visit(const std::vector<float>& data) = 0;
     virtual ReturnType visit(const std::vector<double>& data) = 0;
     virtual ReturnType visit(const std::vector<int>& data) = 0;
-    virtual ReturnType visit(const std::vector<bool>& data) = 0;
-    virtual ReturnType visit(const std::vector<std::vector<float>>& data) = 0;
-    virtual ReturnType visit(const std::vector<std::vector<double>>& data) = 0;
-    virtual ReturnType visit(const std::vector<std::vector<int>>& data) = 0;
+    virtual ReturnType visit(const std::vector<TimeFrameIndex>& data) = 0;
 };
 
 /**
