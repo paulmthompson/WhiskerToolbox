@@ -191,6 +191,12 @@ private:
      * @brief Refresh the column computer combo box based on current selections
      */
     void refreshColumnComputerCombo();
+    
+    /**
+     * @brief Update the UserRole indices for all column list items
+     * Call this after adding, removing, or moving columns to keep indices in sync
+     */
+    void updateColumnIndices();
 
     /**
      * @brief Load table information into the UI

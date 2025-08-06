@@ -256,9 +256,10 @@ void TableDesignerWidget::onAddColumn() {
     // Create column info and add to table manager
     ColumnInfo column_info(column_name);
     if (_table_manager->addTableColumn(_current_table_id, column_info)) {
-        // Add to UI list
+        // Add to UI list with correct index
+        int new_index = ui->column_list->count(); // Get index BEFORE adding
         auto * item = new QListWidgetItem(column_name, ui->column_list);
-        item->setData(Qt::UserRole, ui->column_list->count() - 1);// Store column index
+        item->setData(Qt::UserRole, new_index); // Store correct column index
 
         // Don't automatically select the new column to avoid triggering loadColumnConfiguration
         // The user can manually select it if they want to configure it
@@ -266,7 +267,7 @@ void TableDesignerWidget::onAddColumn() {
         ui->column_name_edit->selectAll();
         ui->column_name_edit->setFocus();
 
-        qDebug() << "Added column:" << column_name;
+        qDebug() << "Added column:" << column_name << "at index:" << new_index;
     } else {
         QMessageBox::warning(this, "Error", "Failed to add column to table");
     }
@@ -283,6 +284,9 @@ void TableDesignerWidget::onRemoveColumn() {
 
     if (_table_manager->removeTableColumn(_current_table_id, column_index)) {
         delete current_item;
+        
+        // Update UserRole indices for all remaining items after the removed one
+        updateColumnIndices();
 
         // Clear column configuration if no items left
         if (ui->column_list->count() == 0) {
@@ -314,6 +318,9 @@ void TableDesignerWidget::onMoveColumnUp() {
         auto * item = ui->column_list->takeItem(current_row);
         ui->column_list->insertItem(current_row - 1, item);
         ui->column_list->setCurrentRow(current_row - 1);
+        
+        // Update UserRole indices for all items
+        updateColumnIndices();
     }
 }
 
@@ -327,6 +334,9 @@ void TableDesignerWidget::onMoveColumnDown() {
         auto * item = ui->column_list->takeItem(current_row);
         ui->column_list->insertItem(current_row + 1, item);
         ui->column_list->setCurrentRow(current_row + 1);
+        
+        // Update UserRole indices for all items
+        updateColumnIndices();
     }
 }
 
@@ -1413,6 +1423,17 @@ bool TableDesignerWidget::addTypedColumnToBuilder(TableViewBuilder & builder,
                  << ":" << e.what();
         return false;
     }
+}
+
+void TableDesignerWidget::updateColumnIndices() {
+    // Update UserRole data for all items to match their current position
+    for (int i = 0; i < ui->column_list->count(); ++i) {
+        auto* item = ui->column_list->item(i);
+        if (item) {
+            item->setData(Qt::UserRole, i);
+        }
+    }
+    qDebug() << "Updated column indices for" << ui->column_list->count() << "items";
 }
 
 // Explicit template instantiations to ensure they're compiled
