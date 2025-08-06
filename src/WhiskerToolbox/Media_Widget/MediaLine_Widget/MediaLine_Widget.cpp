@@ -4,6 +4,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
+#include "DataManager/Media/Video_Data.hpp"
 #include "Media_Window/Media_Window.hpp"
 #include "DataManager/transforms/Lines/line_angle.hpp"
 #include "DataManager/utils/opencv_utility.hpp"
@@ -12,6 +13,7 @@
 #include "SelectionWidgets/LineAddSelectionWidget.hpp"
 #include "SelectionWidgets/LineEraseSelectionWidget.hpp"
 #include "SelectionWidgets/LineSelectSelectionWidget.hpp"
+#include "SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp"
 
 #include <QLabel>
 #include <QRadioButton>
@@ -37,6 +39,7 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     _selection_modes["Add Points"] = Selection_Mode::Add;
     _selection_modes["Erase Points"] = Selection_Mode::Erase;
     _selection_modes["Select Line"] = Selection_Mode::Select;
+    _selection_modes["Draw Across All Frames"] = Selection_Mode::DrawAllFrames;
 
     ui->selection_mode_combo->addItems(QStringList(_selection_modes.keys()));
     
@@ -129,6 +132,20 @@ void MediaLine_Widget::_setupSelectionModePages() {
                 _line_selection_threshold = threshold;
                 std::cout << "Line selection threshold set to: " << threshold << std::endl;
             });
+    
+    _drawAllFramesSelectionWidget = new line_widget::LineDrawAllFramesSelectionWidget();
+    ui->mode_stacked_widget->addWidget(_drawAllFramesSelectionWidget);
+    
+    connect(_drawAllFramesSelectionWidget, &line_widget::LineDrawAllFramesSelectionWidget::lineDrawingStarted,
+            this, [this]() {
+                std::cout << "Line drawing started for all frames mode" << std::endl;
+            });
+    connect(_drawAllFramesSelectionWidget, &line_widget::LineDrawAllFramesSelectionWidget::lineDrawingCompleted,
+            this, [this]() {
+                std::cout << "Line drawing completed for all frames mode" << std::endl;
+            });
+    connect(_drawAllFramesSelectionWidget, &line_widget::LineDrawAllFramesSelectionWidget::applyToAllFrames,
+            this, &MediaLine_Widget::_applyLineToAllFrames);
     
     ui->mode_stacked_widget->setCurrentIndex(0);
 }
@@ -301,6 +318,11 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                 _clearLineSelection();
                 std::cout << "No line found within threshold" << std::endl;
             }
+            break;
+        }
+        case Selection_Mode::DrawAllFrames: {
+            std::cout << "Selection mode is DrawAllFrames" << std::endl;
+            _addPointToDrawAllFrames(x_media, y_media);
             break;
         }
     }
@@ -1049,4 +1071,81 @@ void MediaLine_Widget::_copyLineToTarget(const std::string& target_key) {
     target_line_data->addAtTime(current_time, selected_line);
     
     std::cout << "Copied line from " << _active_key << " to " << target_key << std::endl;
+}
+
+void MediaLine_Widget::_addPointToDrawAllFrames(float x_media, float y_media) {
+    if (_drawAllFramesSelectionWidget && _drawAllFramesSelectionWidget->isDrawingActive()) {
+        _drawAllFramesSelectionWidget->addPoint(Point2D<float>{x_media, y_media});
+        std::cout << "Added point (" << x_media << ", " << y_media << ") to all frames line" << std::endl;
+    }
+}
+
+void MediaLine_Widget::_applyLineToAllFrames() {
+    if (!_drawAllFramesSelectionWidget || _active_key.empty()) {
+        std::cout << "Cannot apply line to all frames: widget not available or no active key" << std::endl;
+        return;
+    }
+    
+    auto line_points = _drawAllFramesSelectionWidget->getCurrentLinePoints();
+    if (line_points.empty()) {
+        std::cout << "No line points to apply to all frames" << std::endl;
+        return;
+    }
+    
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        std::cout << "No line data available for active key" << std::endl;
+        return;
+    }
+    
+    // Get all frame times
+    auto frame_times = _getAllFrameTimes();
+    if (frame_times.empty()) {
+        std::cout << "No frame times available" << std::endl;
+        return;
+    }
+    
+    // Create the line from points
+    Line2D line_to_apply(line_points);
+    
+    // Apply the line to all frames
+    int frames_processed = 0;
+    for (const auto& frame_time : frame_times) {
+        line_data->addAtTime(frame_time, line_to_apply, false); // Don't notify for each frame
+        frames_processed++;
+    }
+    
+    // Notify observers once at the end
+    line_data->notifyObservers();
+    
+    // Clear the line points after applying
+    _drawAllFramesSelectionWidget->clearLinePoints();
+    
+    std::cout << "Applied line to " << frames_processed << " frames" << std::endl;
+    _scene->UpdateCanvas();
+}
+
+std::vector<TimeFrameIndex> MediaLine_Widget::_getAllFrameTimes() {
+    std::vector<TimeFrameIndex> frame_times;
+    
+    // Get media data to determine total frame count
+    auto media_data = _data_manager->getData<MediaData>("media");
+    if (!media_data) {
+        std::cout << "No media data available" << std::endl;
+        return frame_times;
+    }
+    
+    int total_frames = media_data->getTotalFrameCount();
+    if (total_frames <= 0) {
+        std::cout << "Invalid frame count: " << total_frames << std::endl;
+        return frame_times;
+    }
+    
+    // Create TimeFrameIndex for each frame
+    frame_times.reserve(total_frames);
+    for (int i = 0; i < total_frames; ++i) {
+        frame_times.emplace_back(i);
+    }
+    
+    return frame_times;
 }
