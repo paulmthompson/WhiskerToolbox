@@ -1,6 +1,12 @@
 #ifndef LINE_ALIGNMENT_HPP
 #define LINE_ALIGNMENT_HPP
 
+// Debug mode - set to 1 to enable debug output with FWHM profile extents
+// When enabled, the transformation returns LineData with multiple lines per timestamp:
+// - Each vertex becomes a separate Line2D with 3 points: [left_extent, max_point, right_extent]
+// - This allows visualization of the FWHM profile analysis for debugging
+#define LINE_ALIGNMENT_DEBUG_MODE 1
+
 #include "transforms/data_transforms.hpp"
 
 #include "CoreGeometry/points.hpp"
@@ -33,8 +39,13 @@ enum class FWHMApproach {
  */
 Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t vertex_index);
 
+// Helper function to get pixel value at a given position (exposed for testing)
+uint8_t get_pixel_value(Point2D<float> const & point, 
+                        std::vector<uint8_t> const & image_data, 
+                        ImageSize const & image_size);
+
 /**
- * @brief Calculate FWHM displacement for a single vertex
+ * @brief Calculate FWHM center point for a single vertex
  * 
  * @param vertex The vertex position
  * @param perpendicular_dir The perpendicular direction
@@ -42,15 +53,36 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
  * @param image_data The image data as uint8_t vector
  * @param image_size The image dimensions
  * @param approach The FWHM calculation approach
- * @return The displacement along the perpendicular direction
+ * @return The center point of the bright feature along the perpendicular direction
  */
-float calculate_fwhm_displacement(Point2D<float> const & vertex,
-                                 Point2D<float> const & perpendicular_dir,
-                                 int width,
-                                 int perpendicular_range,
-                                 std::vector<uint8_t> const & image_data,
-                                 ImageSize const & image_size,
-                                 FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
+                                     Point2D<float> const & perpendicular_dir,
+                                     int width,
+                                     int perpendicular_range,
+                                     std::vector<uint8_t> const & image_data,
+                                     ImageSize const & image_size,
+                                     FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+
+#if LINE_ALIGNMENT_DEBUG_MODE
+/**
+ * @brief Calculate FWHM profile extents for a single vertex (debug mode)
+ * 
+ * @param vertex The vertex position
+ * @param perpendicular_dir The perpendicular direction
+ * @param width The width of the analysis strip
+ * @param image_data The image data as uint8_t vector
+ * @param image_size The image dimensions
+ * @param approach The FWHM calculation approach
+ * @return A line with 3 points: [left_extent, max_point, right_extent]
+ */
+Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
+                                      Point2D<float> const & perpendicular_dir,
+                                      int width,
+                                      int perpendicular_range,
+                                      std::vector<uint8_t> const & image_data,
+                                      ImageSize const & image_size,
+                                      FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+#endif
 
 /**
  * @brief Align a line to bright linear objects in media data
