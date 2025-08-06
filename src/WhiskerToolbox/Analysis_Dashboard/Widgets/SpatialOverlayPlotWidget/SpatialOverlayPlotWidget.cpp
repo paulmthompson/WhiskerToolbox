@@ -179,11 +179,15 @@ void SpatialOverlayPlotWidget::loadLineData() {
 void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     _opengl_widget = new SpatialOverlayOpenGLWidget();
     
-    // Configure higher quality surface format
-    //QSurfaceFormat format = _opengl_widget->format();
-    //format.setSamples(8);  // Increase multisampling
-    //format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    //_opengl_widget->setFormat(format);
+    // Configure OpenGL widget for better Linux compatibility
+    _opengl_widget->setAttribute(Qt::WA_AlwaysStackOnTop, false);
+    _opengl_widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
+    _opengl_widget->setAttribute(Qt::WA_NoSystemBackground, true);
+    
+    // Ensure the widget is properly initialized
+    _opengl_widget->setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+    
+    qDebug() << "SpatialOverlayPlotWidget: Created OpenGL widget with format:" << _opengl_widget->format().majorVersion() << "." << _opengl_widget->format().minorVersion();
     
     _proxy_widget = new QGraphicsProxyWidget(this);
     _proxy_widget->setWidget(_opengl_widget);
@@ -192,17 +196,14 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     _proxy_widget->setFlag(QGraphicsItem::ItemIsMovable, false);
     _proxy_widget->setFlag(QGraphicsItem::ItemIsSelectable, false);
     
-    // Enable cache mode that preserves OpenGL content better
-    //_proxy_widget->setCacheMode(QGraphicsItem::NoCache);
-    
-    // Configure for better OpenGL rendering
-    //_opengl_widget->setAttribute(Qt::WA_AlwaysStackOnTop, false);
-    //_opengl_widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
+    // Set cache mode for better OpenGL rendering
+    _proxy_widget->setCacheMode(QGraphicsItem::NoCache);
 
     // Set initial size and position
     QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
     _opengl_widget->resize(content_rect.size().toSize());
     _proxy_widget->setGeometry(content_rect);
+
 
     // Connect signals
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::frameJumpRequested,

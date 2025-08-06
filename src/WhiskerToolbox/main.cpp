@@ -12,12 +12,14 @@
 
 int main(int argc, char *argv[])
 {
-
-    //QSurfaceFormat format;
-    //format.setOption(QSurfaceFormat::DebugContext);
-    //format.setProfile(QSurfaceFormat::CoreProfile);
-    //format.setVersion(4, 1);
-    //QSurfaceFormat::setDefaultFormat(format);
+    // Set global OpenGL format for the application
+    QSurfaceFormat format;
+    format.setOption(QSurfaceFormat::DebugContext);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setVersion(4, 3); // Use 4.3 for SpatialOverlayOpenGLWidget compatibility
+    format.setSamples(4);
+    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    QSurfaceFormat::setDefaultFormat(format);
 
     QApplication a(argc, argv);
 
