@@ -1,4 +1,4 @@
-#include "Analysis_Dashboard/Tables/ColumnTypeInfo.hpp"
+#include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
 #include <QVariant>
 #include <QVariantList>
 #include <QStringList>
@@ -52,6 +52,30 @@ public:
         for (const auto& vector : data) {
             QVariantList inner_list;
             for (float value : vector) {
+                inner_list.append(value);
+            }
+            result.append(QVariant::fromValue(inner_list));
+        }
+        return QVariant::fromValue(result);
+    }
+    
+    QVariant operator()(const std::vector<std::vector<double>>& data) {
+        QVariantList result;
+        for (const auto& vector : data) {
+            QVariantList inner_list;
+            for (double value : vector) {
+                inner_list.append(value);
+            }
+            result.append(QVariant::fromValue(inner_list));
+        }
+        return QVariant::fromValue(result);
+    }
+    
+    QVariant operator()(const std::vector<std::vector<int>>& data) {
+        QVariantList result;
+        for (const auto& vector : data) {
+            QVariantList inner_list;
+            for (int value : vector) {
                 inner_list.append(value);
             }
             result.append(QVariant::fromValue(inner_list));

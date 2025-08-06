@@ -385,27 +385,61 @@ ColumnTypeInfo TableManagerSource::getColumnTypeInfo(QString const & table_id, Q
     try {
         auto type_index = table_view->getColumnTypeIndex(std_column_name);
         
+        qDebug() << "TableManagerSource::getColumnTypeInfo: Column" << column_name 
+                 << "has type_index:" << type_index.name();
+        
         // Create ColumnTypeInfo based on the runtime type
-        if (type_index == typeid(std::vector<float>)) {
+        // Handle scalar column types (Column<T> where each row contains one T value)
+        if (type_index == typeid(double)) {
+            qDebug() << "Identified as double (scalar column)";
+            // For scalar columns, create ColumnTypeInfo that indicates this is a single-value-per-row column
+            return ColumnTypeInfo(typeid(double), typeid(double), false, false, "double", "double");
+        }
+        else if (type_index == typeid(float)) {
+            qDebug() << "Identified as float (scalar column)";
+            return ColumnTypeInfo(typeid(float), typeid(float), false, false, "float", "float");
+        }
+        else if (type_index == typeid(int)) {
+            qDebug() << "Identified as int (scalar column)";
+            return ColumnTypeInfo(typeid(int), typeid(int), false, false, "int", "int");
+        }
+        else if (type_index == typeid(bool)) {
+            qDebug() << "Identified as bool (scalar column)";
+            return ColumnTypeInfo(typeid(bool), typeid(bool), false, false, "bool", "bool");
+        }
+        // Handle vector column types (Column<std::vector<T>> where each row contains a vector of T values)
+        else if (type_index == typeid(std::vector<float>)) {
+            qDebug() << "Identified as std::vector<float>";
             return ColumnTypeInfo::fromType<std::vector<float>>();
         }
         else if (type_index == typeid(std::vector<double>)) {
+            qDebug() << "Identified as std::vector<double>";
             return ColumnTypeInfo::fromType<std::vector<double>>();
         }
         else if (type_index == typeid(std::vector<int>)) {
+            qDebug() << "Identified as std::vector<int>";
             return ColumnTypeInfo::fromType<std::vector<int>>();
         }
         else if (type_index == typeid(std::vector<bool>)) {
+            qDebug() << "Identified as std::vector<bool>";
             return ColumnTypeInfo::fromType<std::vector<bool>>();
         }
-        else if (type_index == typeid(std::vector<std::string>)) {
-            return ColumnTypeInfo::fromType<std::vector<std::string>>();
-        }
         else if (type_index == typeid(std::vector<std::vector<float>>)) {
+            qDebug() << "Identified as std::vector<std::vector<float>>";
             return ColumnTypeInfo::fromType<std::vector<std::vector<float>>>();
+        }
+        else if (type_index == typeid(std::vector<std::vector<double>>)) {
+            qDebug() << "Identified as std::vector<std::vector<double>>";
+            return ColumnTypeInfo::fromType<std::vector<std::vector<double>>>();
+        }
+        else if (type_index == typeid(std::vector<std::vector<int>>)) {
+            qDebug() << "Identified as std::vector<std::vector<int>>";
+            return ColumnTypeInfo::fromType<std::vector<std::vector<int>>>();
         }
         else {
             // Unknown type
+            qDebug() << "TableManagerSource::getColumnTypeInfo: Unknown type" << type_index.name() 
+                     << "for column" << column_name;
             return ColumnTypeInfo{};
         }
     } catch (const std::exception& e) {

@@ -1,7 +1,7 @@
 #ifndef DATASOURCEREGISTRY_HPP
 #define DATASOURCEREGISTRY_HPP
 
-#include "Analysis_Dashboard/Tables/ColumnTypeInfo.hpp"
+#include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include <QAbstractItemModel>

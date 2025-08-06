@@ -1,7 +1,7 @@
 #ifndef TABLE_INFO_HPP
 #define TABLE_INFO_HPP
 
-#include "ColumnTypeInfo.hpp"
+#include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
 
 #include <QString>
 #include <QStringList>

@@ -17,6 +17,7 @@
 #include <QDebug>
 #include <QDoubleSpinBox>
 #include <QPushButton>
+#include <numeric>
 
 ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
@@ -147,23 +148,43 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
             
             if (table_manager) {
                 auto table_ids = table_manager->getTableIds();
+                qDebug() << "Found" << table_ids.size() << "tables in table manager";
                 
                 for (auto const & table_id : table_ids) {
+                    qDebug() << "Processing table:" << table_id;
+                    
                     auto table_view = table_manager->getBuiltTable(table_id);
                     if (table_view) {
+                        qDebug() << "Table" << table_id << "is built and available";
                         auto column_names = table_view->getColumnNames();
+                        qDebug() << "Table" << table_id << "has" << column_names.size() << "columns:" << QString::fromStdString(std::accumulate(column_names.begin(), column_names.end(), std::string{}, [](const std::string& a, const std::string& b) { return a.empty() ? b : a + ", " + b; }));
                         
                         for (auto const & column_name : column_names) {
                             // Use our new type-safe interface to filter by numeric types
                             ColumnTypeInfo type_info = tm_source->getColumnTypeInfo(table_id, QString::fromStdString(column_name));
                             
+                            qDebug() << "Column:" << QString::fromStdString(column_name)
+                                     << "Type:" << QString::fromStdString(type_info.typeName)
+                                     << "ElementType:" << QString::fromStdString(type_info.elementTypeName)
+                                     << "isVectorType:" << type_info.isVectorType
+                                     << "hasElementType<double>():" << type_info.hasElementType<double>()
+                                     << "hasElementType<float>():" << type_info.hasElementType<float>()
+                                     << "hasElementType<int>():" << type_info.hasElementType<int>();
+                            
                             // Only add columns that contain numeric data suitable for scatter plots
+                            // We want std::vector<double> etc., but NOT std::vector<std::vector<double>>
                             bool is_plottable_numeric = false;
-                            if (type_info.isVectorType) {
+                            if (!type_info.isVectorType) {
                                 // Check if it's a vector of numeric types (single values per row)
                                 is_plottable_numeric = type_info.hasElementType<float>() || 
                                                      type_info.hasElementType<double>() || 
                                                      type_info.hasElementType<int>();
+                            }
+                            
+                            // Special handling for void types - they might not be built yet
+                            if (type_info.typeName == "void") {
+                                qDebug() << "Column" << QString::fromStdString(column_name) 
+                                        << "has void type - table may not be built yet";
                             }
                             
                             if (is_plottable_numeric) {
@@ -183,12 +204,22 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
                                         << "Type:" << QString::fromStdString(type_info.typeName);
                             } else {
                                 qDebug() << "Skipped non-numeric column:" << QString::fromStdString(column_name)
-                                        << "Type:" << QString::fromStdString(type_info.typeName);
+                                        << "Type:" << QString::fromStdString(type_info.typeName)
+                                        << "Reason: isVectorType=" << type_info.isVectorType
+                                        << "isNumeric=" << (type_info.hasElementType<float>() || 
+                                                           type_info.hasElementType<double>() || 
+                                                           type_info.hasElementType<int>());
                             }
                         }
+                    } else {
+                        qDebug() << "Table" << table_id << "is not built yet";
                     }
                 }
+            } else {
+                qDebug() << "TableManagerSource has no table manager";
             }
+        } else {
+            qDebug() << "No TableManagerSource found in data source registry";
         }
     }
 

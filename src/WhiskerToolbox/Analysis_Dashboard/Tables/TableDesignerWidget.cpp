@@ -247,19 +247,36 @@ void TableDesignerWidget::onIntervalSettingChanged() {
 }
 
 void TableDesignerWidget::onAddColumn() {
+    qDebug() << "=== onAddColumn() called ===";
+    qDebug() << "Current table ID:" << _current_table_id;
+    qDebug() << "Current column count:" << ui->column_list->count();
+    
     if (_current_table_id.isEmpty()) {
+        qDebug() << "No current table ID, returning";
         return;
     }
 
+    // Set flag to prevent recursive updates
+    _updating_column_configuration = true;
+
     QString column_name = QString("Column_%1").arg(ui->column_list->count() + 1);
+    qDebug() << "Generated column name:" << column_name;
 
     // Create column info and add to table manager
     ColumnInfo column_info(column_name);
+    qDebug() << "Calling _table_manager->addTableColumn()";
     if (_table_manager->addTableColumn(_current_table_id, column_info)) {
+        qDebug() << "Successfully added column to table manager";
+        
         // Add to UI list with correct index
         int new_index = ui->column_list->count(); // Get index BEFORE adding
+        qDebug() << "UI column list count BEFORE adding item:" << ui->column_list->count();
+        qDebug() << "Calculated new_index:" << new_index;
+        
         auto * item = new QListWidgetItem(column_name, ui->column_list);
         item->setData(Qt::UserRole, new_index); // Store correct column index
+
+        qDebug() << "UI column list count AFTER adding item:" << ui->column_list->count();
 
         // Don't automatically select the new column to avoid triggering loadColumnConfiguration
         // The user can manually select it if they want to configure it
@@ -268,9 +285,15 @@ void TableDesignerWidget::onAddColumn() {
         ui->column_name_edit->setFocus();
 
         qDebug() << "Added column:" << column_name << "at index:" << new_index;
+        qDebug() << "UI column list count is now:" << ui->column_list->count();
     } else {
+        qDebug() << "Failed to add column to table manager";
         QMessageBox::warning(this, "Error", "Failed to add column to table");
     }
+    
+    // Reset flag
+    _updating_column_configuration = false;
+    qDebug() << "=== onAddColumn() finished ===";
 }
 
 void TableDesignerWidget::onRemoveColumn() {
@@ -1122,13 +1145,24 @@ void TableDesignerWidget::loadColumnConfiguration(int column_index) {
 }
 
 void TableDesignerWidget::saveCurrentColumnConfiguration() {
+    qDebug() << "saveCurrentColumnConfiguration called, _updating_column_configuration =" << _updating_column_configuration;
+    
     int current_row = ui->column_list->currentRow();
     if (current_row < 0 || _current_table_id.isEmpty() || !_table_manager) {
+        qDebug() << "saveCurrentColumnConfiguration: Invalid state, returning. current_row=" << current_row << "table_id=" << _current_table_id;
+        return;
+    }
+
+    // Don't save during column updates to prevent recursive modifications
+    if (_updating_column_configuration) {
+        qDebug() << "saveCurrentColumnConfiguration: Skipping due to _updating_column_configuration flag";
         return;
     }
 
     // Set flag to prevent reload during update
     _updating_column_configuration = true;
+
+    qDebug() << "saveCurrentColumnConfiguration: Saving column" << current_row << "with name" << ui->column_name_edit->text();
 
     // Create column info from UI
     ColumnInfo column_info;
