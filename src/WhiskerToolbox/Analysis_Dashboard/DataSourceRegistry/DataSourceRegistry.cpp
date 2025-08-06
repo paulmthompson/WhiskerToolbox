@@ -10,7 +10,7 @@
 
 // ==================== DataManagerSource Implementation ====================
 
-DataManagerSource::DataManagerSource(DataManager * data_manager, QObject * parent)
+DataManagerSource::DataManagerSource(std::shared_ptr<DataManager> data_manager, QObject * parent)
     : AbstractDataSource(parent),
       data_manager_(data_manager),
       data_manager_observer_id_(-1) {

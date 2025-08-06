@@ -81,7 +81,7 @@ class DataManagerSource : public AbstractDataSource {
     Q_OBJECT
 
 public:
-    explicit DataManagerSource(DataManager * data_manager, QObject * parent = nullptr);
+    explicit DataManagerSource(std::shared_ptr<DataManager> data_manager, QObject * parent = nullptr);
     ~DataManagerSource() override = default;
 
     QString getName() const override;
@@ -93,11 +93,11 @@ public:
      * @brief Get the underlying DataManager pointer for backwards compatibility
      * @return Pointer to the wrapped DataManager, or nullptr if invalid
      */
-    DataManager * getDataManager() const { return data_manager_; }
+    std::shared_ptr<DataManager> getDataManager() const { return data_manager_; }
 
 
 private:
-    DataManager * data_manager_;
+    std::shared_ptr<DataManager> data_manager_;
     int data_manager_observer_id_;
     bool last_known_availability_ = false;
 };
@@ -245,7 +245,7 @@ public:
         }
 
         DataManagerSource * dm_source = static_cast<DataManagerSource *>(primary_source);
-        DataManager * data_manager = dm_source->getDataManager();
+        auto data_manager = dm_source->getDataManager();
 
         if (!data_manager) {
             return nullptr;
