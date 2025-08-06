@@ -337,4 +337,95 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
     return segment;
 }
 
+Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t vertex_index) {
+    if (line.size() < 2 || vertex_index >= line.size()) {
+        return Point2D<float>{0.0f, 0.0f};
+    }
+
+    if (vertex_index == 0) {
+        // First vertex - use the segment from vertex 0 to vertex 1
+        Point2D<float> segment = {
+            line[1].x - line[0].x,
+            line[1].y - line[0].y
+        };
+        
+        // Calculate perpendicular: rotate 90 degrees counterclockwise
+        Point2D<float> perp = {-segment.y, segment.x};
+        
+        // Normalize
+        float length = std::sqrt(perp.x * perp.x + perp.y * perp.y);
+        if (length > 0.0f) {
+            perp.x /= length;
+            perp.y /= length;
+        }
+        
+        return perp;
+    } else if (vertex_index == line.size() - 1) {
+        // Last vertex - use the segment from vertex n-2 to vertex n-1
+        Point2D<float> segment = {
+            line[vertex_index].x - line[vertex_index - 1].x,
+            line[vertex_index].y - line[vertex_index - 1].y
+        };
+        
+        // Calculate perpendicular: rotate 90 degrees counterclockwise
+        Point2D<float> perp = {-segment.y, segment.x};
+        
+        // Normalize
+        float length = std::sqrt(perp.x * perp.x + perp.y * perp.y);
+        if (length > 0.0f) {
+            perp.x /= length;
+            perp.y /= length;
+        }
+        
+        return perp;
+    } else {
+        // Internal vertex - average perpendiculars from both adjacent segments
+        
+        // Segment from previous vertex to current vertex
+        Point2D<float> segment1 = {
+            line[vertex_index].x - line[vertex_index - 1].x,
+            line[vertex_index].y - line[vertex_index - 1].y
+        };
+        
+        // Segment from current vertex to next vertex
+        Point2D<float> segment2 = {
+            line[vertex_index + 1].x - line[vertex_index].x,
+            line[vertex_index + 1].y - line[vertex_index].y
+        };
+        
+        // Calculate perpendiculars
+        Point2D<float> perp1 = {-segment1.y, segment1.x};
+        Point2D<float> perp2 = {-segment2.y, segment2.x};
+        
+        // Normalize both perpendiculars
+        float length1 = std::sqrt(perp1.x * perp1.x + perp1.y * perp1.y);
+        float length2 = std::sqrt(perp2.x * perp2.x + perp2.y * perp2.y);
+        
+        if (length1 > 0.0f) {
+            perp1.x /= length1;
+            perp1.y /= length1;
+        }
+        
+        if (length2 > 0.0f) {
+            perp2.x /= length2;
+            perp2.y /= length2;
+        }
+        
+        // Average the perpendiculars
+        Point2D<float> avg_perp = {
+            (perp1.x + perp2.x) / 2.0f,
+            (perp1.y + perp2.y) / 2.0f
+        };
+        
+        // Normalize the average
+        float avg_length = std::sqrt(avg_perp.x * avg_perp.x + avg_perp.y * avg_perp.y);
+        if (avg_length > 0.0f) {
+            avg_perp.x /= avg_length;
+            avg_perp.y /= avg_length;
+        }
+        
+        return avg_perp;
+    }
+}
+
 

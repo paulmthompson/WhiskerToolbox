@@ -2,7 +2,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
-
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <cmath>
 
 /**
  * @brief Test file for lines utility functions
@@ -204,5 +205,118 @@ TEST_CASE("Line segment extraction edge cases", "[lines][segment][edge-cases]") 
         auto line = Line2D({{5.0f, 5.0f}, {5.0f, 5.0f}, {5.0f, 5.0f}});
         auto segment = get_segment_between_percentages(line, 0.25f, 0.75f);
         REQUIRE(segment.empty());
+    }
+}
+
+TEST_CASE("calculate_perpendicular_direction - Core functionality", "[calculate_perpendicular_direction]") {
+    SECTION("Horizontal line - perpendicular should be vertical") {
+        Line2D horizontal_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}});
+        
+        // First vertex (0) - should point up (0, 1)
+        Point2D<float> perp_dir_first = calculate_perpendicular_direction(horizontal_line, 0);
+        REQUIRE_THAT(perp_dir_first.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(perp_dir_first.y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+        
+        // Last vertex (1) - should point up (0, 1)
+        Point2D<float> perp_dir_last = calculate_perpendicular_direction(horizontal_line, 1);
+        REQUIRE_THAT(perp_dir_last.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(perp_dir_last.y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    }
+
+    SECTION("Vertical line - perpendicular should be horizontal") {
+        Line2D vertical_line = Line2D({{0.0f, 0.0f}, {0.0f, 10.0f}});
+        
+        // First vertex (0) - should point left (-1, 0)
+        Point2D<float> perp_dir_first = calculate_perpendicular_direction(vertical_line, 0);
+        REQUIRE_THAT(perp_dir_first.x, Catch::Matchers::WithinAbs(-1.0f, 0.001f));
+        REQUIRE_THAT(perp_dir_first.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        
+        // Last vertex (1) - should point left (-1, 0)
+        Point2D<float> perp_dir_last = calculate_perpendicular_direction(vertical_line, 1);
+        REQUIRE_THAT(perp_dir_last.x, Catch::Matchers::WithinAbs(-1.0f, 0.001f));
+        REQUIRE_THAT(perp_dir_last.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+    }
+
+    SECTION("Diagonal line - perpendicular should be perpendicular") {
+        Line2D diagonal_line = Line2D({{0.0f, 0.0f}, {10.0f, 10.0f}});
+        
+        // First vertex (0) - should be perpendicular to diagonal
+        Point2D<float> perp_dir_first = calculate_perpendicular_direction(diagonal_line, 0);
+        float expected_x = -1.0f / std::sqrt(2.0f); // -0.707
+        float expected_y = 1.0f / std::sqrt(2.0f);  // 0.707
+        REQUIRE_THAT(perp_dir_first.x, Catch::Matchers::WithinAbs(expected_x, 0.001f));
+        REQUIRE_THAT(perp_dir_first.y, Catch::Matchers::WithinAbs(expected_y, 0.001f));
+        
+        // Last vertex (1) - should be perpendicular to diagonal
+        Point2D<float> perp_dir_last = calculate_perpendicular_direction(diagonal_line, 1);
+        REQUIRE_THAT(perp_dir_last.x, Catch::Matchers::WithinAbs(expected_x, 0.001f));
+        REQUIRE_THAT(perp_dir_last.y, Catch::Matchers::WithinAbs(expected_y, 0.001f));
+    }
+
+    SECTION("Multi-segment line - internal vertices average perpendiculars") {
+        // L-shaped line: horizontal then vertical
+        Line2D multi_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}, {10.0f, 10.0f}});
+        
+        // Middle vertex (1) - should average perpendiculars from both segments
+        Point2D<float> perp_dir_middle = calculate_perpendicular_direction(multi_line, 1);
+        
+        // Should be normalized
+        float length = std::sqrt(perp_dir_middle.x * perp_dir_middle.x + perp_dir_middle.y * perp_dir_middle.y);
+        REQUIRE_THAT(length, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+        
+        // Should not be exactly vertical or horizontal (averaged)
+        REQUIRE(std::abs(perp_dir_middle.x) > 0.001f);
+        REQUIRE(std::abs(perp_dir_middle.y) > 0.001f);
+    }
+}
+
+TEST_CASE("calculate_perpendicular_direction - Edge cases and error handling", "[calculate_perpendicular_direction][edge]") {
+    SECTION("Line with fewer than 2 points") {
+        Line2D short_line = Line2D({{5.0f, 5.0f}});
+        Point2D<float> perp_dir = calculate_perpendicular_direction(short_line, 0);
+        REQUIRE_THAT(perp_dir.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(perp_dir.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+    }
+
+    SECTION("Empty line") {
+        Line2D empty_line;
+        Point2D<float> perp_dir = calculate_perpendicular_direction(empty_line, 0);
+        REQUIRE_THAT(perp_dir.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(perp_dir.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+    }
+
+    SECTION("Invalid vertex index") {
+        Line2D test_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}});
+        Point2D<float> perp_dir = calculate_perpendicular_direction(test_line, 5); // Invalid index
+        REQUIRE_THAT(perp_dir.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(perp_dir.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+    }
+
+    SECTION("Zero-length segments") {
+        // Line with zero-length segments
+        Line2D zero_line = Line2D({{5.0f, 5.0f}, {5.0f, 5.0f}});
+        Point2D<float> perp_dir = calculate_perpendicular_direction(zero_line, 1);
+        REQUIRE_THAT(perp_dir.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(perp_dir.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+    }
+
+    SECTION("Complex multi-segment line") {
+        // Line with multiple segments
+        Line2D test_line = Line2D({{0.0f, 0.0f}, {5.0f, 0.0f}, {5.0f, 5.0f}, {10.0f, 5.0f}});
+        
+        // First vertex
+        Point2D<float> perp_dir_first = calculate_perpendicular_direction(test_line, 0);
+        REQUIRE_THAT(perp_dir_first.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(perp_dir_first.y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+        
+        // Middle vertex (should average perpendiculars)
+        Point2D<float> perp_dir_middle = calculate_perpendicular_direction(test_line, 1);
+        float length = std::sqrt(perp_dir_middle.x * perp_dir_middle.x + perp_dir_middle.y * perp_dir_middle.y);
+        REQUIRE_THAT(length, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+        
+        // Last vertex
+        Point2D<float> perp_dir_last = calculate_perpendicular_direction(test_line, 3);
+        REQUIRE_THAT(perp_dir_last.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(perp_dir_last.y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
     }
 }

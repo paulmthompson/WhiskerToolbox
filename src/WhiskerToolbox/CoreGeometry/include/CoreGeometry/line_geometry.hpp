@@ -88,4 +88,21 @@ Point2D<float> get_position_at_percentage(Line2D const & line, float percentage)
  */
 Line2D get_segment_between_percentages(Line2D const & line, float start_percentage, float end_percentage);
 
+/**
+ * @brief Calculate the perpendicular direction at a specific vertex of a line
+ *
+ * For internal vertices (1 to n-1), calculates the average of perpendicular directions
+ * from adjacent segments. For edge vertices (0 and n-1), calculates the perpendicular
+ * of the single adjacent segment.
+ *
+ * @param line The line to calculate perpendicular direction for
+ * @param vertex_index The index of the vertex (0 to line.size()-1)
+ * @return Point2D<float> representing the normalized perpendicular direction vector
+ *
+ * @note Returns (0,0) if line has fewer than 2 points or vertex_index is invalid
+ * @note For edge vertices, uses the single adjacent segment
+ * @note For internal vertices, averages perpendiculars from both adjacent segments
+ */
+Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t vertex_index);
+
 #endif// LINE_GEOMETRY_HPP
