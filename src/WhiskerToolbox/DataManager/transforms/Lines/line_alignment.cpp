@@ -10,54 +10,7 @@
 #include <map>
 #include <vector>
 
-// Calculate perpendicular direction at a line vertex
-Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t vertex_index) {
-    if (line.size() < 2) {
-        // For lines with fewer than 2 points, we can't calculate a meaningful perpendicular
-        return Point2D<float>{0.0f, 0.0f};
-    }
 
-    if (vertex_index == 0) {
-        // First vertex: use the direction from vertex 0 to vertex 1
-        Point2D<float> dir{line[1].x - line[0].x, line[1].y - line[0].y};
-        float length = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-        if (length > 0) {
-            return Point2D<float>{-dir.y / length, dir.x / length}; // Perpendicular
-        }
-    } else if (vertex_index == line.size() - 1) {
-        // Last vertex: use the direction from vertex n-2 to vertex n-1
-        Point2D<float> dir{line[line.size() - 1].x - line[line.size() - 2].x, 
-                           line[line.size() - 1].y - line[line.size() - 2].y};
-        float length = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-        if (length > 0) {
-            return Point2D<float>{-dir.y / length, dir.x / length}; // Perpendicular
-        }
-    } else {
-        // Middle vertices: average the perpendicular directions from adjacent segments
-        Point2D<float> dir1{line[vertex_index].x - line[vertex_index - 1].x, 
-                            line[vertex_index].y - line[vertex_index - 1].y};
-        Point2D<float> dir2{line[vertex_index + 1].x - line[vertex_index].x, 
-                            line[vertex_index + 1].y - line[vertex_index].y};
-        
-        float length1 = std::sqrt(dir1.x * dir1.x + dir1.y * dir1.y);
-        float length2 = std::sqrt(dir2.x * dir2.x + dir2.y * dir2.y);
-        
-        if (length1 > 0 && length2 > 0) {
-            Point2D<float> perp1{-dir1.y / length1, dir1.x / length1};
-            Point2D<float> perp2{-dir2.y / length2, dir2.x / length2};
-            
-            // Average the perpendicular directions
-            Point2D<float> avg_perp{(perp1.x + perp2.x) / 2.0f, (perp1.y + perp2.y) / 2.0f};
-            float avg_length = std::sqrt(avg_perp.x * avg_perp.x + avg_perp.y * avg_perp.y);
-            
-            if (avg_length > 0) {
-                return Point2D<float>{avg_perp.x / avg_length, avg_perp.y / avg_length};
-            }
-        }
-    }
-    
-    return Point2D<float>{0.0f, 0.0f};
-}
 
 // Helper function to get pixel value at a given position
 uint8_t get_pixel_value(Point2D<float> const & point, 
@@ -213,8 +166,7 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
     return vertex; // Return original vertex if no valid weights
 }
 
-#if LINE_ALIGNMENT_DEBUG_MODE
-// Calculate FWHM profile extents for a single vertex (debug mode)
+// Calculate FWHM profile extents for a single vertex
 Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
                                       Point2D<float> const & perpendicular_dir,
                                       int width,
@@ -390,12 +342,11 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
     debug_line.push_back(vertex);
     return debug_line;
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
 std::string LineAlignmentOperation::getName() const {
-    return "Line Alignment to Bright Objects";
+    return "Line Alignment to Bright Features";
 }
 
 std::type_index LineAlignmentOperation::getTargetInputTypeIndex() const {
@@ -450,6 +401,7 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
             typed_params->perpendicular_range,
             typed_params->use_processed_data,
             typed_params->approach,
+            typed_params->output_mode,
             progressCallback
     );
 
@@ -467,8 +419,9 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
                                              int width,
                                              int perpendicular_range,
                                              bool use_processed_data,
-                                             FWHMApproach approach) {
-    return line_alignment(line_data, media_data, width, perpendicular_range, use_processed_data, approach, [](int) {});
+                                             FWHMApproach approach,
+                                             LineAlignmentOutputMode output_mode) {
+    return line_alignment(line_data, media_data, width, perpendicular_range, use_processed_data, approach, output_mode, [](int) {});
 }
 
 std::shared_ptr<LineData> line_alignment(LineData const * line_data,
@@ -477,6 +430,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          int perpendicular_range,
                                          bool use_processed_data,
                                          FWHMApproach approach,
+                                         LineAlignmentOutputMode output_mode,
                                          ProgressCallback progressCallback) {
     if (!line_data || !media_data) {
         std::cerr << "LineAlignment: Null LineData or MediaData provided." << std::endl;
@@ -530,7 +484,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                 continue;
             }
 
-#if LINE_ALIGNMENT_DEBUG_MODE
+                if (output_mode == LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS) {
             // Debug mode: create a debug line for each vertex
             for (size_t i = 0; i < line.size(); ++i) {
                 Point2D<float> vertex = line[i];
@@ -553,7 +507,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                     vertex, perp_dir, width, perpendicular_range, image_data, image_size, approach);
                 aligned_lines.push_back(debug_line);
             }
-#else
+                } else {
             // Normal mode: create a single aligned line
             Line2D aligned_line;
             
@@ -582,7 +536,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
             }
             
             aligned_lines.push_back(aligned_line);
-#endif
+                }
         }
 
         // Add the aligned lines to the new LineData

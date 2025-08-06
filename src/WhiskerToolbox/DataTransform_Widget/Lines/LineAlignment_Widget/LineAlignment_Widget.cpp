@@ -14,11 +14,17 @@ LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
     // Setup the media data feature table widget
     ui->media_feature_table_widget->setColumns({"Feature", "Type"});
     
-    // Setup the approach combo box
+    // Setup approach combo box
     ui->approachComboBox->addItem("Peak Width Half Max", static_cast<int>(FWHMApproach::PEAK_WIDTH_HALF_MAX));
     ui->approachComboBox->addItem("Gaussian Fit", static_cast<int>(FWHMApproach::GAUSSIAN_FIT));
     ui->approachComboBox->addItem("Threshold Based", static_cast<int>(FWHMApproach::THRESHOLD_BASED));
-    
+    ui->approachComboBox->setCurrentIndex(0);
+
+    // Setup output mode combo box
+    ui->outputModeComboBox->addItem("Aligned Vertices", static_cast<int>(LineAlignmentOutputMode::ALIGNED_VERTICES));
+    ui->outputModeComboBox->addItem("FWHM Profile Extents", static_cast<int>(LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS));
+    ui->outputModeComboBox->setCurrentIndex(0);
+
     // Set default values
     ui->widthSpinBox->setValue(20);
     ui->perpendicularRangeSpinBox->setValue(50);
@@ -36,6 +42,8 @@ LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
             this, &LineAlignment_Widget::_useProcessedDataToggled);
     connect(ui->approachComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LineAlignment_Widget::_approachChanged);
+    connect(ui->outputModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &LineAlignment_Widget::_outputModeChanged);
 }
 
 LineAlignment_Widget::~LineAlignment_Widget() {
@@ -62,6 +70,9 @@ std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() c
     params->perpendicular_range = ui->perpendicularRangeSpinBox->value();
     params->use_processed_data = ui->useProcessedDataCheckBox->isChecked();
     params->approach = static_cast<FWHMApproach>(ui->approachComboBox->currentData().toInt());
+    
+    // Get the output mode
+    params->output_mode = static_cast<LineAlignmentOutputMode>(ui->outputModeComboBox->currentData().toInt());
     
     return params;
 }
@@ -100,18 +111,17 @@ void LineAlignment_Widget::_useProcessedDataToggled(bool checked) {
 }
 
 void LineAlignment_Widget::_approachChanged(int index) {
-    // Update the approach description based on selection
-    QString description;
-    switch (static_cast<FWHMApproach>(ui->approachComboBox->currentData().toInt())) {
-        case FWHMApproach::PEAK_WIDTH_HALF_MAX:
-            description = "Find the width of the peak at half maximum intensity";
-            break;
-        case FWHMApproach::GAUSSIAN_FIT:
-            description = "Fit a Gaussian curve to the intensity profile";
-            break;
-        case FWHMApproach::THRESHOLD_BASED:
-            description = "Use threshold-based peak detection";
-            break;
+    // Update the approach parameter
+    if (index >= 0) {
+        FWHMApproach approach = static_cast<FWHMApproach>(ui->approachComboBox->itemData(index).toInt());
+        // You can add any additional logic here if needed
     }
-    ui->approachDescriptionLabel->setText(description);
+}
+
+void LineAlignment_Widget::_outputModeChanged(int index) {
+    // Update the output mode parameter
+    if (index >= 0) {
+        LineAlignmentOutputMode output_mode = static_cast<LineAlignmentOutputMode>(ui->outputModeComboBox->itemData(index).toInt());
+        // You can add any additional logic here if needed
+    }
 } 

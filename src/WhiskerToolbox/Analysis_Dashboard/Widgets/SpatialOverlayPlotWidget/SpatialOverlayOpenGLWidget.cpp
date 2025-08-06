@@ -36,18 +36,20 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _tooltips_enabled(true),
       _pending_update(false),
       _hover_processing_active(false),
-      _selection_mode(SelectionMode::PointSelection),
-      _selection_handler(std::make_unique<PointSelectionHandler>(calculateWorldTolerance(10.0f))) {
+      _selection_mode(SelectionMode::PointSelection) {
 
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
 
-    // Request OpenGL 4.3 Core Profile
+    // Request OpenGL 4.3 Core Profile (required for line shaders with compute shaders)
     QSurfaceFormat format;
     format.setVersion(4, 3);
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setSamples(4);// Enable multisampling for smooth points
     setFormat(format);
+
+    // Initialize selection handler after widget setup
+    _selection_handler = std::make_unique<PointSelectionHandler>(10.0f); // Use fixed tolerance initially
 
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
@@ -506,7 +508,7 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
             _selection_handler = std::make_unique<LineSelectionHandler>();
             setCursor(Qt::CrossCursor);
         } else if (_selection_mode == SelectionMode::PointSelection) {
-            _selection_handler = std::make_unique<PointSelectionHandler>(calculateWorldTolerance(10.0f));
+            _selection_handler = std::make_unique<PointSelectionHandler>(10.0f); // Use fixed tolerance
             setCursor(Qt::ArrowCursor);
         } else if (_selection_mode == SelectionMode::None) {
             _selection_handler = std::make_unique<NoneSelectionHandler>();
@@ -737,7 +739,7 @@ void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
         qDebug() << "SpatialOverlayOpenGLWidget: Double-click detected at" << event->pos();
 
         QVector2D world_pos = screenToWorld(event->pos().x(), event->pos().y());
-        float tolerance = calculateWorldTolerance(10.0f);
+        float tolerance = 10.0f; // Use fixed tolerance
 
         for (auto const & [key, viz]: _point_data_visualizations) {
             auto frame_index = viz->handleDoubleClick(world_pos, tolerance);
@@ -1087,7 +1089,7 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
     qDebug() << "SpatialOverlayOpenGLWidget: Processing debounced hover at" << _pending_hover_pos;
 
     QVector2D world_pos = screenToWorld(_pending_hover_pos.x(), _pending_hover_pos.y());
-    float tolerance = calculateWorldTolerance(10.0f);
+    float tolerance = 10.0f; // Use fixed tolerance
     bool needs_tooltip_update = false;
 
     // Delegate hover handling to each point data visualization

@@ -30,6 +30,7 @@ private slots:
     void _perpendicularRangeValueChanged(int value);
     void _useProcessedDataToggled(bool checked);
     void _approachChanged(int index);
+    void _outputModeChanged(int index);
 };
 
 #endif// LINEALIGNMENT_WIDGET_HPP 

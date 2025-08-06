@@ -1,17 +1,14 @@
 #ifndef LINE_ALIGNMENT_HPP
 #define LINE_ALIGNMENT_HPP
 
-// Debug mode - set to 1 to enable debug output with FWHM profile extents
-// When enabled, the transformation returns LineData with multiple lines per timestamp:
-// - Each vertex becomes a separate Line2D with 3 points: [left_extent, max_point, right_extent]
-// - This allows visualization of the FWHM profile analysis for debugging
-#define LINE_ALIGNMENT_DEBUG_MODE 1
+
 
 #include "transforms/data_transforms.hpp"
 
 #include "CoreGeometry/points.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/ImageSize.hpp"
+#include "CoreGeometry/line_geometry.hpp"
 
 #include <memory>       // std::shared_ptr
 #include <string>       // std::string
@@ -31,13 +28,13 @@ enum class FWHMApproach {
 };
 
 /**
- * @brief Calculate perpendicular direction at a line vertex
- * 
- * @param line The line containing the vertex
- * @param vertex_index The index of the vertex
- * @return The perpendicular direction as a normalized vector
+ * @brief Enum for output mode
  */
-Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t vertex_index);
+enum class LineAlignmentOutputMode {
+    ALIGNED_VERTICES,       // Return aligned line vertices (normal mode)
+    FWHM_PROFILE_EXTENTS    // Return FWHM profile extents for debugging/analysis
+};
+
 
 // Helper function to get pixel value at a given position (exposed for testing)
 uint8_t get_pixel_value(Point2D<float> const & point, 
@@ -63,9 +60,8 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
                                      ImageSize const & image_size,
                                      FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
 
-#if LINE_ALIGNMENT_DEBUG_MODE
 /**
- * @brief Calculate FWHM profile extents for a single vertex (debug mode)
+ * @brief Calculate FWHM profile extents for a single vertex
  * 
  * @param vertex The vertex position
  * @param perpendicular_dir The perpendicular direction
@@ -82,7 +78,6 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
                                       std::vector<uint8_t> const & image_data,
                                       ImageSize const & image_size,
                                       FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
-#endif
 
 /**
  * @brief Align a line to bright linear objects in media data
@@ -90,16 +85,19 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
  * @param line_data The input line data
  * @param media_data The media data containing the images
  * @param width The width of the analysis strip perpendicular to the line
+ * @param perpendicular_range The range of perpendicular analysis
  * @param use_processed_data Whether to use processed or raw media data
  * @param approach The FWHM calculation approach
- * @return A new LineData with aligned vertices
+ * @param output_mode The output mode (aligned vertices or FWHM profile extents)
+ * @return A new LineData with aligned vertices or FWHM profile extents
  */
 std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          MediaData * media_data,
                                          int width = 20,
                                          int perpendicular_range = 50,
                                          bool use_processed_data = true,
-                                         FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+                                         FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX,
+                                         LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES);
 
 /**
  * @brief Align a line to bright linear objects in media data with progress callback
@@ -118,6 +116,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          int perpendicular_range,
                                          bool use_processed_data,
                                          FWHMApproach approach,
+                                         LineAlignmentOutputMode output_mode,
                                          ProgressCallback progressCallback);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -128,6 +127,7 @@ struct LineAlignmentParameters : public TransformParametersBase {
     int perpendicular_range = 50;            // Range of perpendicular analysis (pixels)
     bool use_processed_data = true;         // Whether to use processed or raw data
     FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX; // FWHM calculation approach
+    LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES; // Output mode
 };
 
 class LineAlignmentOperation final : public TransformOperation {
