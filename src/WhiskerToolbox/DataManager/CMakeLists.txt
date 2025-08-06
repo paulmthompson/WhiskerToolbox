@@ -104,6 +104,7 @@ set(DATAMANAGER_SOURCES
         utils/TableView/columns/IColumn.h
         utils/TableView/columns/Column.h
         utils/TableView/columns/Column.cpp
+        utils/TableView/columns/ColumnTypeInfo.hpp
 
         utils/TableView/interfaces/IAnalogSource.h
         utils/TableView/interfaces/IEventSource.h

@@ -28,8 +28,25 @@ SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget *
       _start_frame(0),
       _end_frame(999999),
       _total_frame_count(0),
-      _line_width(2.0) {
+      _line_width(2.0),
+      _updating_selection_status(false) {
     ui->setupUi(this);
+
+    // Prevent infinite layout loops by setting fixed sizes on dynamic labels
+    if (ui->active_dataset_label) {
+        ui->active_dataset_label->setMinimumHeight(20);
+        ui->active_dataset_label->setMaximumHeight(40);
+    }
+    if (ui->selection_count_label) {
+        ui->selection_count_label->setMinimumHeight(20);
+        ui->selection_count_label->setMaximumHeight(40);
+    }
+    // CRITICAL FIX: Prevent infinite layout loop from word-wrapped instructions label
+    if (ui->selection_instructions_label) {
+        ui->selection_instructions_label->setMinimumHeight(120);
+        ui->selection_instructions_label->setMaximumHeight(150);
+        ui->selection_instructions_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    }
 
     setupFeatureTable();
     setupConnections();
@@ -41,7 +58,13 @@ SpatialOverlayPlotPropertiesWidget::~SpatialOverlayPlotPropertiesWidget() {
 
 void SpatialOverlayPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
     _data_source_registry = data_source_registry;
-    
+    auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
+    auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
+    if (data_manager) {
+        ui->feature_table_widget->setDataManager(data_manager);
+        updateAvailableDataSources();
+    }
+
 }
 
 void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
@@ -76,8 +99,11 @@ void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot
                 });
 
         // Update available data sources if data manager is available. Might be null during initial setup.
-        if (_data_manager) {
+        if (_data_source_registry) {
+            qDebug() << "SpatialOverlayPlotPropertiesWidget: Data source registry available, updating data sources";
             updateAvailableDataSources();
+        } else {
+            qDebug() << "SpatialOverlayPlotPropertiesWidget: No data source registry available";
         }
 
         // Update UI from plot
@@ -286,12 +312,19 @@ void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {
     QStringList mask_data_keys;
     QStringList line_data_keys;
 
+    auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
+    auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
+    if (!data_manager) {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: No data manager available, cannot update plot widget";
+        return;
+    }
+
     for (auto const & key: selected_keys) {
-        if (_data_manager->getType(key.toStdString()) == DM_DataType::Points) {
+        if (data_manager->getType(key.toStdString()) == DM_DataType::Points) {
             point_data_keys.append(key);
-        } else if (_data_manager->getType(key.toStdString()) == DM_DataType::Mask) {
+        } else if (data_manager->getType(key.toStdString()) == DM_DataType::Mask) {
             mask_data_keys.append(key);
-        } else if (_data_manager->getType(key.toStdString()) == DM_DataType::Line) {
+        } else if (data_manager->getType(key.toStdString()) == DM_DataType::Line) {
             line_data_keys.append(key);
         }
     }
@@ -429,8 +462,16 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
 void SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() called";
 
+    // Guard against infinite recursion
+    if (_updating_selection_status) {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() - Already updating, skipping to prevent infinite loop";
+        return;
+    }
+    _updating_selection_status = true;
+
     if (!ui->active_dataset_label || !ui->selection_count_label) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() - Missing UI labels";
+        _updating_selection_status = false;
         return;
     }
 
@@ -475,6 +516,8 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Updated selection status - Dataset:" << activeDataset
              << "Selected:" << pointCount << "points," << maskCount << "masks," << lineCount << "lines";
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Set label text to:" << selectionText;
+    
+    _updating_selection_status = false;
 }
 
 void SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked() {
@@ -505,11 +548,17 @@ void SpatialOverlayPlotPropertiesWidget::onEndFrameChanged(int value) {
 void SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() called";
 
+    auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
+    auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
+    if (!data_manager) {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() - No data manager available";
+        return;
+    }
     // Get total frame count from data manager
     _total_frame_count = 0;
-    if (_data_manager) {
+    if (data_manager) {
         try {
-            auto timeFrame = _data_manager->getTime("time");
+            auto timeFrame = data_manager->getTime("time");
             if (timeFrame) {
                 _total_frame_count = static_cast<int>(timeFrame->getTotalFrameCount());
                 qDebug() << "Total frame count from data manager:" << _total_frame_count;

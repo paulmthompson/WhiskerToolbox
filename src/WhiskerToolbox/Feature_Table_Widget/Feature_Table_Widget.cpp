@@ -13,11 +13,6 @@
 #include <iostream>
 
 
-
-
-
-
-
 Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Feature_Table_Widget) {
@@ -206,6 +201,7 @@ void Feature_Table_Widget::populateTable() {
         ui->available_features_table->sortItems(featureColumnIndex, Qt::AscendingOrder);
     }
 
+
     // Adjust table height to show all rows
     int rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
     int headerHeight = ui->available_features_table->horizontalHeader()->height();
@@ -265,6 +261,12 @@ void Feature_Table_Widget::_highlightFeature(int row, int column) {
 void Feature_Table_Widget::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
 
+    // Prevent infinite resize loops
+    if (_is_resizing) {
+        return;
+    }
+    _is_resizing = true;
+
     // Make the table widget take up the full width of the widget minus margins
     ui->available_features_table->setFixedWidth(this->width());
 
@@ -274,4 +276,6 @@ void Feature_Table_Widget::resizeEvent(QResizeEvent* event) {
     int totalHeight = (rowHeight * ui->available_features_table->rowCount()) + headerHeight;
     ui->available_features_table->setMinimumHeight(totalHeight);
     ui->available_features_table->setMaximumHeight(totalHeight);
+
+    _is_resizing = false;
 }

@@ -9,7 +9,7 @@
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
-#include <QOpenGLFunctions_4_1_Core>
+#include <QOpenGLFunctions_4_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
@@ -37,7 +37,7 @@ class GroupManager;
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
  */
-class SpatialOverlayOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
+class SpatialOverlayOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core {
     Q_OBJECT
 
 public:

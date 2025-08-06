@@ -19,6 +19,7 @@ add_executable(AnalysisDashboardTests
     test_analysis_dashboard.cpp
     test_table_designer_widget.cpp
     PointDataVisualization.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard/Analysis_Dashboard.test.cpp
     ../fixtures/test_signal_probe_simple.cpp
     ../fixtures/signal_probe.cpp
     ../fixtures/simple_test_emitter.hpp

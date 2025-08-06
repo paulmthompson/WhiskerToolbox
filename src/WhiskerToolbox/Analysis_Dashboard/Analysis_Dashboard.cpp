@@ -66,7 +66,7 @@ void Analysis_Dashboard::initializeDashboard() {
 
     // Initialize the data source registry with the primary data manager
     if (_data_manager) {
-        auto data_manager_source = std::make_unique<DataManagerSource>(_data_manager.get(), this);
+        auto data_manager_source = std::make_unique<DataManagerSource>(_data_manager, this);
         _data_source_registry->registerDataSource("primary_data_manager", std::move(data_manager_source));
         qDebug() << "Analysis_Dashboard: Registered primary DataManager as data source";
     }

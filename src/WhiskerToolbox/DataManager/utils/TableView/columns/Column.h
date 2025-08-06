@@ -1,6 +1,7 @@
 #ifndef COLUMN_H
 #define COLUMN_H
 
+#include "ColumnTypeInfo.hpp"
 #include "IColumn.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/IColumnComputer.h"
@@ -21,7 +22,7 @@ class TableView;
  * type safety for the actual data storage and computation. It supports any
  * type T that can be stored in a std::vector<T>.
  */
-template<typename T>
+template<SupportedColumnType T>
 class Column : public IColumn {
 public:
     /**

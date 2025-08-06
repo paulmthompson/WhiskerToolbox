@@ -180,10 +180,10 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     _opengl_widget = new SpatialOverlayOpenGLWidget();
     
     // Configure higher quality surface format
-    QSurfaceFormat format = _opengl_widget->format();
-    format.setSamples(8);  // Increase multisampling
-    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    _opengl_widget->setFormat(format);
+    //QSurfaceFormat format = _opengl_widget->format();
+    //format.setSamples(8);  // Increase multisampling
+    //format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    //_opengl_widget->setFormat(format);
     
     _proxy_widget = new QGraphicsProxyWidget(this);
     _proxy_widget->setWidget(_opengl_widget);
@@ -193,11 +193,11 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     _proxy_widget->setFlag(QGraphicsItem::ItemIsSelectable, false);
     
     // Enable cache mode that preserves OpenGL content better
-    _proxy_widget->setCacheMode(QGraphicsItem::NoCache);
+    //_proxy_widget->setCacheMode(QGraphicsItem::NoCache);
     
     // Configure for better OpenGL rendering
-    _opengl_widget->setAttribute(Qt::WA_AlwaysStackOnTop, false);
-    _opengl_widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
+    //_opengl_widget->setAttribute(Qt::WA_AlwaysStackOnTop, false);
+    //_opengl_widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
 
     // Set initial size and position
     QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);

@@ -223,6 +223,7 @@ void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::sh
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
     size_t total = 0;
     for (auto const & [key, viz]: _mask_data_visualizations) {
+        if (!viz) continue;
         total += viz->selected_masks.size();
     }
     return total;
@@ -253,6 +254,7 @@ void SpatialOverlayOpenGLWidget::setLineWidth(float line_width) {
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
     size_t total = 0;
     for (auto const & [key, viz]: _point_data_visualizations) {
+        if (!viz) continue;
         total += viz->m_selected_points.size();
     }
     return total;
@@ -261,6 +263,7 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
     size_t total = 0;
     for (auto const & [key, viz]: _line_data_visualizations) {
+        if (!viz) continue;
         total += viz->m_selected_lines.size();
     }
     return total;

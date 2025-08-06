@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-// Forward declarations
+
 class ScatterPlotVisualization;
 class GroupManager;
 
@@ -132,6 +132,13 @@ private:
     GroupManager * _group_manager;
     float _point_size;
 
+    // Data storage for deferred initialization
+    std::vector<float> _x_data;
+    std::vector<float> _y_data;
+
+    // OpenGL state
+    bool _opengl_resources_initialized;
+
     // View transformation
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _projection_matrix;
@@ -167,11 +174,6 @@ private:
      * @param pos Mouse position
      */
     void handleMouseHover(QPoint const & pos);
-
-    /**
-     * @brief Generate sample data for testing
-     */
-    void generateSampleData();
 };
 
 #endif// SCATTERPLOTOPENGLWIDGET_HPP

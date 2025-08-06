@@ -129,7 +129,6 @@ private slots:
 private:
     Ui::SpatialOverlayPlotPropertiesWidget * ui;
     SpatialOverlayPlotWidget * _spatial_plot_widget;
-    std::shared_ptr<DataManager> _data_manager;
     QStringList _selected_features;// Track selected features from the feature table
 
     // Time range filtering
@@ -139,6 +138,9 @@ private:
 
     // Line visualization settings
     double _line_width;
+
+    // Guard against infinite recursion in updateSelectionStatus()
+    bool _updating_selection_status;
 
     /**
      * @brief Setup connections between UI elements and handlers

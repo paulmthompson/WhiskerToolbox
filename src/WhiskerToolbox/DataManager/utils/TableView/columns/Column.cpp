@@ -1,7 +1,7 @@
 #include "Column.h"
 #include "utils/TableView/core/TableView.h"
 
-template<typename T>
+template<SupportedColumnType T>
 auto Column<T>::getValues(TableView * table) -> std::vector<T> const & {
     if (!isMaterialized()) {
         materialize(table);
@@ -9,7 +9,7 @@ auto Column<T>::getValues(TableView * table) -> std::vector<T> const & {
     return std::get<std::vector<T>>(m_cache);
 }
 
-template<typename T>
+template<SupportedColumnType T>
 void Column<T>::materialize(TableView * table) {
     if (isMaterialized()) {
         return;

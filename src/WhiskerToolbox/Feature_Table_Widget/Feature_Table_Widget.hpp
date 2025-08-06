@@ -52,6 +52,7 @@ private:
     QString _highlighted_feature;
     QStringList _columns;
     std::vector<DM_DataType> _type_filters;
+    bool _is_resizing = false;  // Guard to prevent infinite resize loops
 
     void _addFeatureName(std::string const & key, int row, int col);
     void _addFeatureType(std::string const & key, int row, int col);

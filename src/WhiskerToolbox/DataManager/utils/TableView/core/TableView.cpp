@@ -57,6 +57,44 @@ bool TableView::hasColumn(std::string const & name) const {
     return m_colNameToIndex.find(name) != m_colNameToIndex.end();
 }
 
+std::type_info const & TableView::getColumnType(std::string const & name) const {
+    auto it = m_colNameToIndex.find(name);
+    if (it == m_colNameToIndex.end()) {
+        throw std::runtime_error("Column '" + name + "' not found in table");
+    }
+    
+    return m_columns[it->second]->getType();
+}
+
+std::type_index TableView::getColumnTypeIndex(std::string const & name) const {
+    return std::type_index(getColumnType(name));
+}
+
+ColumnDataVariant TableView::getColumnDataVariant(std::string const & name) {
+    auto type_index = getColumnTypeIndex(name);
+    
+    // Dispatch from element type_index to vector type using template metaprogramming
+    std::optional<ColumnDataVariant> result;
+    
+    for_each_type<SupportedColumnElementTypes>([&](auto, auto type_instance) {
+        using ElementType = std::decay_t<decltype(type_instance)>;
+        
+        if (!result.has_value() && type_index == std::type_index(typeid(ElementType))) {
+            // Found matching element type, get the vector data
+            auto vectorData = getColumnValues<ElementType>(name);
+            result = vectorData;  // This will construct the variant with the correct vector type
+        }
+    });
+
+    if (!result.has_value()) {
+        throw std::runtime_error("Unsupported column type: " + std::string(type_index.name()) + 
+                                " for column: " + name);
+    }
+    
+    return result.value();
+}
+
+
 void TableView::materializeAll() {
     std::set<std::string> materializing;
 

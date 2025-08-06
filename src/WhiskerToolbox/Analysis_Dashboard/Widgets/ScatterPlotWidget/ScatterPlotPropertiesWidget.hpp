@@ -4,6 +4,7 @@
 #include "Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.hpp"
 
 #include <QStringList>
+#include <QMap>
 
 class DataSourceRegistry;
 class ScatterPlotWidget;
@@ -134,6 +135,32 @@ private:
      * @brief Update the Y-axis info label
      */
     void updateYAxisInfoLabel();
+
+    /**
+     * @brief Get available numeric column keys that can be used for scatter plotting
+     * @return QStringList of column keys in format "table:table_id:column_name" 
+     */
+    QStringList getAvailableNumericColumns() const;
+
+    /**
+     * @brief Get detailed information about available numeric columns
+     * @return Map of column keys to their type information
+     */
+    QMap<QString, QString> getAvailableNumericColumnsWithTypes() const;
+
+    /**
+     * @brief Static utility function to get numeric columns from any DataSourceRegistry
+     * @param data_source_registry Pointer to the data source registry
+     * @return QStringList of numeric column keys suitable for plotting
+     */
+    static QStringList getNumericColumnsFromRegistry(DataSourceRegistry * data_source_registry);
+    
+    /**
+     * @brief Demonstrate the new type-safe column filtering capabilities
+     * Shows how the enhanced type system eliminates try/catch blocks and enables
+     * precise type-based data discovery for plotting widgets.
+     */
+    void demonstrateTypeFiltering();
 };
 
 #endif// SCATTERPLOTPROPERTIESWIDGET_HPP
