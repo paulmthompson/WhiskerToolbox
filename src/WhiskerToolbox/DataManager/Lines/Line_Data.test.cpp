@@ -279,7 +279,7 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : line_data.GetLinesInRange(interval, timeframe, timeframe)) {
+            for (const auto& pair : line_data.GetLinesInRange(interval, timeframe.get(), timeframe.get())) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
                     REQUIRE(pair.lines.size() == 2);
@@ -315,7 +315,7 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             size_t count = 0;
-            for (const auto& pair : timeframe_test_data.GetLinesInRange(video_interval, video_timeframe, data_timeframe)) {
+            for (const auto& pair : timeframe_test_data.GetLinesInRange(video_interval, video_timeframe.get(), data_timeframe.get())) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 2);
                     REQUIRE(pair.lines.size() == 1);

@@ -34,6 +34,9 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::getAnalogSource(std::string
 
 void DataManagerExtension::clearCache() {
     m_dataSourceCache.clear();
+    m_eventSourceCache.clear();
+    m_intervalSourceCache.clear();
+    m_lineSourceCache.clear();
 }
 
 std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(std::string const & name) {
@@ -83,6 +86,23 @@ std::shared_ptr<IIntervalSource> DataManagerExtension::createDigitalIntervalData
         return std::make_shared<DigitalIntervalDataAdapter>(digitalIntervalSeries, timeFrame, name);
     } catch (std::exception const & e) {
         std::cerr << "Error creating DigitalIntervalDataAdapter for '" << name << "': " << e.what() << std::endl;
+        return nullptr;
+    }
+}
+
+std::shared_ptr<ILineSource> DataManagerExtension::createLineDataAdapter(std::string const & name) {
+    try {
+        auto lineData = m_dataManager.getData<LineData>(name);
+        if (!lineData) {
+            return nullptr;
+        }
+
+        auto timeFrame_key = m_dataManager.getTimeFrame(name);
+        auto timeFrame = m_dataManager.getTime(timeFrame_key);
+
+        return std::make_shared<LineDataAdapter>(lineData, timeFrame, name);
+    } catch (std::exception const & e) {
+        std::cerr << "Error creating LineDataAdapter for '" << name << "': " << e.what() << std::endl;
         return nullptr;
     }
 }
@@ -158,4 +178,21 @@ std::shared_ptr<IIntervalSource> DataManagerExtension::getIntervalSource(std::st
         std::cerr << "Interval source '" << name << "' not found." << std::endl;
     }
     return intervalSource;
+}
+
+std::shared_ptr<ILineSource> DataManagerExtension::getLineSource(std::string const & name) {
+    // Check cache first
+    auto it = m_lineSourceCache.find(name);
+    if (it != m_lineSourceCache.end()) {
+        return it->second;
+    }
+
+    // Create a new line source adapter
+    auto lineSource = createLineDataAdapter(name);
+    if (lineSource) {
+        m_lineSourceCache[name] = lineSource;
+    } else {
+        std::cerr << "Line source '" << name << "' not found." << std::endl;
+    }
+    return lineSource;
 }
