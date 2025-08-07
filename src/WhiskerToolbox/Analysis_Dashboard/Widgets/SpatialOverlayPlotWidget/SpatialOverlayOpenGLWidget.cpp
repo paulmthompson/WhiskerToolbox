@@ -36,18 +36,21 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _tooltips_enabled(true),
       _pending_update(false),
       _hover_processing_active(false),
-      _selection_mode(SelectionMode::PointSelection),
-      _selection_handler(std::make_unique<PointSelectionHandler>(calculateWorldTolerance(10.0f))) {
+      _selection_mode(SelectionMode::PointSelection) {
 
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
 
-    // Request OpenGL 4.3 Core Profile
-    QSurfaceFormat format;
-    format.setVersion(4, 3);
-    format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSamples(4);// Enable multisampling for smooth points
-    setFormat(format);
+    // Set OpenGL 4.3 Core Profile format (required for line shaders with compute shaders)
+    // The actual context creation will happen when the widget is shown
+    tryCreateContextWithVersion(4, 3);
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Requested surface format - Version:" << format().majorVersion() << "." << format().minorVersion();
+    qDebug() << "SpatialOverlayOpenGLWidget: Requested surface format - Profile:" << (format().profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
+    qDebug() << "SpatialOverlayOpenGLWidget: Requested surface format - Samples:" << format().samples();
+
+    // Initialize selection handler after widget setup
+    _selection_handler = std::make_unique<PointSelectionHandler>(10.0f); // Use fixed tolerance initially
 
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
@@ -78,6 +81,23 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
 
     // Initialize data bounds
     _data_min_x = _data_max_x = _data_min_y = _data_max_y = 0.0f;
+}
+
+bool SpatialOverlayOpenGLWidget::tryCreateContextWithVersion(int major, int minor) {
+    QSurfaceFormat format;
+    format.setVersion(major, minor);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setSamples(4);
+    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    format.setSwapInterval(1);
+    
+    setFormat(format);
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Set OpenGL" << major << "." << minor << "Core Profile format";
+    
+    // Note: Context is not created until widget is shown or initializeGL is called
+    // We can't check validity here, just set the format
+    return true;
 }
 
 SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
@@ -506,7 +526,7 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
             _selection_handler = std::make_unique<LineSelectionHandler>();
             setCursor(Qt::CrossCursor);
         } else if (_selection_mode == SelectionMode::PointSelection) {
-            _selection_handler = std::make_unique<PointSelectionHandler>(calculateWorldTolerance(10.0f));
+            _selection_handler = std::make_unique<PointSelectionHandler>(10.0f); // Use fixed tolerance
             setCursor(Qt::ArrowCursor);
         } else if (_selection_mode == SelectionMode::None) {
             _selection_handler = std::make_unique<NoneSelectionHandler>();
@@ -525,8 +545,42 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
 }
 
 void SpatialOverlayOpenGLWidget::initializeGL() {
+    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL called";
+    
+    // Check if OpenGL functions can be initialized
     if (!initializeOpenGLFunctions()) {
+        qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Failed to initialize OpenGL functions";
         return;
+    }
+
+    // Check if context is valid
+    if (!context() || !context()->isValid()) {
+        qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Invalid OpenGL context";
+        return;
+    }
+
+    // Check format validity
+    auto fmt = format();
+
+
+    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - OpenGL version:" << fmt.majorVersion() << "." << fmt.minorVersion();
+    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Profile:" << (fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
+    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Samples:" << fmt.samples();
+
+    // Check what OpenGL version was actually created
+    if (context() && context()->isValid()) {
+        qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Context created successfully";
+        qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Requested format:" << fmt.majorVersion() << "." << fmt.minorVersion();
+        qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Actual OpenGL version:" << context()->format().majorVersion() << "." << context()->format().minorVersion();
+        
+        // Check if we got the version we requested
+        if (fmt.majorVersion() != context()->format().majorVersion() || fmt.minorVersion() != context()->format().minorVersion()) {
+            qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - OpenGL version mismatch!";
+            qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Requested:" << fmt.majorVersion() << "." << fmt.minorVersion();
+            qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Got:" << context()->format().majorVersion() << "." << context()->format().minorVersion();
+        }
+    } else {
+        qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Context creation failed!";
     }
 
     // Set clear color
@@ -535,8 +589,6 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
     // Enable blending for transparency with premultiplied alpha
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    auto fmt = format();
 
     // Enable multisampling if available
     if (fmt.samples() > 1) {
@@ -549,13 +601,22 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
     // Check OpenGL capabilities
     GLint max_point_size;
     glGetIntegerv(GL_POINT_SIZE_RANGE, &max_point_size);
+    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Max point size:" << max_point_size;
 
     // Initialize OpenGL resources
     initializeOpenGLResources();
     updateViewMatrices();
+    
+    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL completed successfully";
 }
 
 void SpatialOverlayOpenGLWidget::paintGL() {
+    // Check if OpenGL context is valid
+    if (!context() || !context()->isValid()) {
+        qWarning() << "SpatialOverlayOpenGLWidget::paintGL - Invalid OpenGL context";
+        return;
+    }
+
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (!_data_bounds_valid || !_opengl_resources_initialized) {
@@ -737,7 +798,7 @@ void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
         qDebug() << "SpatialOverlayOpenGLWidget: Double-click detected at" << event->pos();
 
         QVector2D world_pos = screenToWorld(event->pos().x(), event->pos().y());
-        float tolerance = calculateWorldTolerance(10.0f);
+        float tolerance = 10.0f; // Use fixed tolerance
 
         for (auto const & [key, viz]: _point_data_visualizations) {
             auto frame_index = viz->handleDoubleClick(world_pos, tolerance);
@@ -1087,7 +1148,7 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
     qDebug() << "SpatialOverlayOpenGLWidget: Processing debounced hover at" << _pending_hover_pos;
 
     QVector2D world_pos = screenToWorld(_pending_hover_pos.x(), _pending_hover_pos.y());
-    float tolerance = calculateWorldTolerance(10.0f);
+    float tolerance = 10.0f; // Use fixed tolerance
     bool needs_tooltip_update = false;
 
     // Delegate hover handling to each point data visualization
@@ -1348,4 +1409,48 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
     clearSelection();
 
     qDebug() << "SpatialOverlayOpenGLWidget: Ungrouped" << selected_point_ids.size() << "points";
+}
+
+bool SpatialOverlayOpenGLWidget::isOpenGLContextValid() const {
+    return context() && context()->isValid() && _opengl_resources_initialized;
+}
+
+QString SpatialOverlayOpenGLWidget::getOpenGLErrorInfo() const {
+    QString error_info;
+    
+    if (!context()) {
+        error_info += "No OpenGL context available\n";
+    } else if (!context()->isValid()) {
+        error_info += "OpenGL context is invalid\n";
+    }
+    
+    if (!_opengl_resources_initialized) {
+        error_info += "OpenGL resources not initialized\n";
+    }
+    
+    auto fmt = format();
+
+    error_info += QString("Surface format: OpenGL %1.%2 %3 Profile\n")
+                     .arg(fmt.majorVersion())
+                     .arg(fmt.minorVersion())
+                     .arg(fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
+ 
+    
+    return error_info;
+}
+
+bool SpatialOverlayOpenGLWidget::forceContextCreation() {
+    qDebug() << "SpatialOverlayOpenGLWidget::forceContextCreation called";
+    
+    // Try to make the context current
+    if (!context()) {
+        qWarning() << "SpatialOverlayOpenGLWidget::forceContextCreation - No context available";
+        return false;
+    }
+    
+    qDebug() << "SpatialOverlayOpenGLWidget::forceContextCreation - Context made current successfully";
+    qDebug() << "SpatialOverlayOpenGLWidget::forceContextCreation - Context format:" << context()->format().majorVersion() << "." << context()->format().minorVersion();
+    
+    doneCurrent();
+    return true;
 }

@@ -152,7 +152,7 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         return widget;
     };
 
-    _parameterWidgetFactories["Line Alignment to Bright Objects"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+    _parameterWidgetFactories["Line Alignment to Bright Features"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new LineAlignment_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;

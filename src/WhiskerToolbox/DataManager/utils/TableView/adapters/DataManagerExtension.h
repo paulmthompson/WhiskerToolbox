@@ -6,9 +6,11 @@
 #include "utils/TableView/adapters/PointComponentAdapter.h"
 #include "utils/TableView/adapters/DigitalEventDataAdapter.h"
 #include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
+#include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/IEventSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
+#include "utils/TableView/interfaces/ILineSource.h"
 
 #include <map>
 #include <memory>
@@ -74,6 +76,17 @@ public:
      */
     auto getIntervalSource(std::string const & name) -> std::shared_ptr<IIntervalSource>;
 
+    /**
+     * @brief Gets a line source by name.
+     * 
+     * This method provides access to ILineSource implementations for
+     * line data such as LineData.
+     * 
+     * @param name The name of the line source.
+     * @return Shared pointer to ILineSource, or nullptr if not found.
+     */
+    auto getLineSource(std::string const & name) -> std::shared_ptr<ILineSource>;
+
 private:
     /**
      * @brief Creates an AnalogDataAdapter for the given name.
@@ -97,6 +110,13 @@ private:
     auto createDigitalIntervalDataAdapter(std::string const & name) -> std::shared_ptr<IIntervalSource>;
 
     /**
+     * @brief Creates a LineDataAdapter for the given name.
+     * @param name The name of the LineData.
+     * @return Shared pointer to the adapter, or nullptr if not found.
+     */
+    auto createLineDataAdapter(std::string const & name) -> std::shared_ptr<ILineSource>;
+
+    /**
      * @brief Creates a PointComponentAdapter for the given name and component.
      * @param pointDataName The name of the PointData.
      * @param component The component type (X or Y).
@@ -118,6 +138,7 @@ private:
     mutable std::map<std::string, std::shared_ptr<IAnalogSource>> m_dataSourceCache;
     mutable std::map<std::string, std::shared_ptr<IEventSource>> m_eventSourceCache;
     mutable std::map<std::string, std::shared_ptr<IIntervalSource>> m_intervalSourceCache;
+    mutable std::map<std::string, std::shared_ptr<ILineSource>> m_lineSourceCache;
 
     // Regex for parsing virtual source names
     static std::regex const s_virtualSourceRegex;

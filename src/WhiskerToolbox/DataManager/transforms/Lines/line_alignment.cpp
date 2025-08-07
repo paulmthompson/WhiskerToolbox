@@ -10,54 +10,7 @@
 #include <map>
 #include <vector>
 
-// Calculate perpendicular direction at a line vertex
-Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t vertex_index) {
-    if (line.size() < 3) {
-        // For lines with fewer than 3 points, we can't calculate a meaningful perpendicular
-        return Point2D<float>{0.0f, 0.0f};
-    }
 
-    if (vertex_index == 0) {
-        // First vertex: use the direction from vertex 0 to vertex 1
-        Point2D<float> dir{line[1].x - line[0].x, line[1].y - line[0].y};
-        float length = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-        if (length > 0) {
-            return Point2D<float>{-dir.y / length, dir.x / length}; // Perpendicular
-        }
-    } else if (vertex_index == line.size() - 1) {
-        // Last vertex: use the direction from vertex n-2 to vertex n-1
-        Point2D<float> dir{line[line.size() - 1].x - line[line.size() - 2].x, 
-                           line[line.size() - 1].y - line[line.size() - 2].y};
-        float length = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-        if (length > 0) {
-            return Point2D<float>{-dir.y / length, dir.x / length}; // Perpendicular
-        }
-    } else {
-        // Middle vertices: average the perpendicular directions from adjacent segments
-        Point2D<float> dir1{line[vertex_index].x - line[vertex_index - 1].x, 
-                            line[vertex_index].y - line[vertex_index - 1].y};
-        Point2D<float> dir2{line[vertex_index + 1].x - line[vertex_index].x, 
-                            line[vertex_index + 1].y - line[vertex_index].y};
-        
-        float length1 = std::sqrt(dir1.x * dir1.x + dir1.y * dir1.y);
-        float length2 = std::sqrt(dir2.x * dir2.x + dir2.y * dir2.y);
-        
-        if (length1 > 0 && length2 > 0) {
-            Point2D<float> perp1{-dir1.y / length1, dir1.x / length1};
-            Point2D<float> perp2{-dir2.y / length2, dir2.x / length2};
-            
-            // Average the perpendicular directions
-            Point2D<float> avg_perp{(perp1.x + perp2.x) / 2.0f, (perp1.y + perp2.y) / 2.0f};
-            float avg_length = std::sqrt(avg_perp.x * avg_perp.x + avg_perp.y * avg_perp.y);
-            
-            if (avg_length > 0) {
-                return Point2D<float>{avg_perp.x / avg_length, avg_perp.y / avg_length};
-            }
-        }
-    }
-    
-    return Point2D<float>{0.0f, 0.0f};
-}
 
 // Helper function to get pixel value at a given position
 uint8_t get_pixel_value(Point2D<float> const & point, 
@@ -72,6 +25,7 @@ uint8_t get_pixel_value(Point2D<float> const & point,
     }
     
     size_t index = static_cast<size_t>(y * image_size.width + x);
+    //size_t index = static_cast<size_t>(x * image_size.height + y);
     if (index < image_data.size()) {
         return image_data[index];
     }
@@ -79,19 +33,19 @@ uint8_t get_pixel_value(Point2D<float> const & point,
     return 0;
 }
 
-// Calculate FWHM displacement for a single vertex
-float calculate_fwhm_displacement(Point2D<float> const & vertex,
-                                 Point2D<float> const & perpendicular_dir,
-                                 int width,
-                                 int perpendicular_range,
-                                 std::vector<uint8_t> const & image_data,
-                                 ImageSize const & image_size,
-                                 FWHMApproach approach) {
+// Calculate FWHM center point for a single vertex
+Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
+                                     Point2D<float> const & perpendicular_dir,
+                                     int width,
+                                     int perpendicular_range,
+                                     std::vector<uint8_t> const & image_data,
+                                     ImageSize const & image_size,
+                                     FWHMApproach approach) {
     if (width <= 0) {
-        return 0.0f;
+        return vertex; // Return original vertex if no width
     }
     
-    std::vector<float> displacements;
+    std::vector<Point2D<float>> center_points;
     std::vector<float> intensities;
     
     // Sample multiple points along the width of the analysis strip
@@ -131,58 +85,268 @@ float calculate_fwhm_displacement(Point2D<float> const & vertex,
             continue; // Skip if no signal
         }
         
-        // Find the half-maximum threshold
-        uint8_t half_max = max_intensity / 2;
-        
-        // Find the left and right boundaries at half maximum
-        int left_bound = -perpendicular_range/2;
-        int right_bound = perpendicular_range/2;
-        
+        // Find all positions with the maximum intensity
+        std::vector<int> max_indices;
         for (int i = 0; i < static_cast<int>(profile.size()); ++i) {
-            if (profile[i] >= half_max) {
-                left_bound = i - perpendicular_range/2;
+            if (profile[i] == max_intensity) {
+                max_indices.push_back(i);
+            }
+        }
+        
+        // Calculate the average position of all maximum points
+        float avg_max_index = 0.0f;
+        for (int index : max_indices) {
+            avg_max_index += static_cast<float>(index);
+        }
+        avg_max_index /= static_cast<float>(max_indices.size());
+        
+        int max_offset = static_cast<int>(std::round(avg_max_index)) - perpendicular_range/2;
+
+        // Find minimum in profile 
+        auto min_it = std::min_element(profile.begin(), profile.end());
+        if (min_it == profile.end()) {
+            continue;
+        }
+        
+        uint8_t min_intensity = *min_it;
+        
+        // Find the half-maximum threshold
+        uint8_t half_max = (static_cast<int>(max_intensity) + static_cast<int>(min_intensity)) / 2;
+        
+        // Find the left and right boundaries at half maximum, starting from the average max position
+        int left_bound = max_offset;
+        int right_bound = max_offset;
+        
+        // Work leftward from the average max position to find the first half-maximum
+        int avg_max_index_int = static_cast<int>(std::round(avg_max_index));
+        for (int i = avg_max_index_int; i >= 0; --i) {
+            if (profile[i] < half_max) {
+                left_bound = i + 1 - perpendicular_range/2; // +1 to include the last point >= half_max
                 break;
             }
         }
         
-        for (int i = static_cast<int>(profile.size()) - 1; i >= 0; --i) {
-            if (profile[i] >= half_max) {
-                right_bound = i - perpendicular_range/2;
+        // Work rightward from the average max position to find the first half-maximum
+        for (int i = avg_max_index_int; i < static_cast<int>(profile.size()); ++i) {
+            if (profile[i] < half_max) {
+                right_bound = i - 1 - perpendicular_range/2; // -1 to include the last point >= half_max
                 break;
             }
         }
         
-        // Calculate the center of the FWHM region
+        // Calculate the center point of the FWHM region
         float center_offset = (left_bound + right_bound) / 2.0f;
-        displacements.push_back(center_offset);
+        Point2D<float> center_point = {
+            sample_start.x + perpendicular_dir.x * center_offset,
+            sample_start.y + perpendicular_dir.y * center_offset
+        };
+        center_points.push_back(center_point);
         intensities.push_back(static_cast<float>(max_intensity));
     }
     
-    // Calculate weighted average displacement based on intensity
-    if (displacements.empty()) {
-        return 0.0f;
+    // Calculate weighted average center point based on intensity
+    if (center_points.empty()) {
+        return vertex; // Return original vertex if no center points found
     }
     
     float total_weight = 0.0f;
-    float weighted_sum = 0.0f;
+    Point2D<float> weighted_sum{0.0f, 0.0f};
     
-    for (size_t i = 0; i < displacements.size(); ++i) {
+    for (size_t i = 0; i < center_points.size(); ++i) {
         float weight = intensities[i];
-        weighted_sum += displacements[i] * weight;
+        weighted_sum.x += center_points[i].x * weight;
+        weighted_sum.y += center_points[i].y * weight;
         total_weight += weight;
     }
     
     if (total_weight > 0) {
-        return weighted_sum / total_weight;
+        return Point2D<float>{weighted_sum.x / total_weight, weighted_sum.y / total_weight};
     }
     
-    return 0.0f;
+    return vertex; // Return original vertex if no valid weights
+}
+
+// Calculate FWHM profile extents for a single vertex
+Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
+                                      Point2D<float> const & perpendicular_dir,
+                                      int width,
+                                      int perpendicular_range,
+                                      std::vector<uint8_t> const & image_data,
+                                      ImageSize const & image_size,
+                                      FWHMApproach approach) {
+    if (width <= 0) {
+        // Return a line with just the original vertex repeated
+        Line2D debug_line;
+        debug_line.push_back(vertex);
+        debug_line.push_back(vertex);
+        debug_line.push_back(vertex);
+        return debug_line;
+    }
+    
+    std::vector<Point2D<float>> left_extents;
+    std::vector<Point2D<float>> right_extents;
+    std::vector<Point2D<float>> max_points;
+    std::vector<float> intensities;
+    
+    // Sample multiple points along the width of the analysis strip
+    for (int w = -width/2; w <= width/2; ++w) {
+        // Calculate the sampling point along the width direction
+        Point2D<float> width_dir{-perpendicular_dir.y, perpendicular_dir.x}; // Perpendicular to perp dir
+        
+        Point2D<float> sample_start = {
+            vertex.x + width_dir.x * w,
+            vertex.y + width_dir.y * w
+        };
+        
+        // Sample intensity profile along the perpendicular direction
+        std::vector<uint8_t> profile;
+        std::vector<float> distances;
+        
+        // Sample up to perpendicular_range pixels in each direction along the perpendicular
+        for (int d = -perpendicular_range/2; d <= perpendicular_range/2; ++d) {
+            Point2D<float> sample_point = {
+                sample_start.x + perpendicular_dir.x * d,
+                sample_start.y + perpendicular_dir.y * d
+            };
+            
+            uint8_t intensity = get_pixel_value(sample_point, image_data, image_size);
+            profile.push_back(intensity);
+            distances.push_back(static_cast<float>(d));
+        }
+        
+        // Find the maximum intensity in the profile
+        auto max_it = std::max_element(profile.begin(), profile.end());
+        if (max_it == profile.end()) {
+            continue;
+        }
+        
+        uint8_t max_intensity = *max_it;
+        if (max_intensity == 0) {
+            continue; // Skip if no signal
+        }
+        
+        // Find all positions with the maximum intensity
+        std::vector<int> max_indices;
+        for (int i = 0; i < static_cast<int>(profile.size()); ++i) {
+            if (profile[i] == max_intensity) {
+                max_indices.push_back(i);
+            }
+        }
+        
+        // Calculate the average position of all maximum points
+        float avg_max_index = 0.0f;
+        for (int index : max_indices) {
+            avg_max_index += static_cast<float>(index);
+        }
+        avg_max_index /= static_cast<float>(max_indices.size());
+        
+        int max_offset = static_cast<int>(std::round(avg_max_index)) - perpendicular_range/2;
+        
+        // Calculate the maximum point location
+        Point2D<float> max_point = {
+            sample_start.x + perpendicular_dir.x * max_offset,
+            sample_start.y + perpendicular_dir.y * max_offset
+        };
+        
+        // Find minimum in profile 
+        auto min_it = std::min_element(profile.begin(), profile.end());
+        if (min_it == profile.end()) {
+            continue;
+        }
+        
+        uint8_t min_intensity = *min_it;
+        
+        // Find the half-maximum threshold
+        uint8_t half_max = (static_cast<int>(max_intensity) + static_cast<int>(min_intensity)) / 2;
+        
+        // Find the left and right boundaries at half maximum, starting from the average max position
+        int left_bound = max_offset;
+        int right_bound = max_offset;
+        
+        // Work leftward from the average max position to find the first half-maximum
+        int avg_max_index_int = static_cast<int>(std::round(avg_max_index));
+        for (int i = avg_max_index_int; i >= 0; --i) {
+            if (profile[i] < half_max) {
+                left_bound = i + 1 - perpendicular_range/2; // +1 to include the last point >= half_max
+                break;
+            }
+        }
+        
+        // Work rightward from the average max position to find the first half-maximum
+        for (int i = avg_max_index_int; i < static_cast<int>(profile.size()); ++i) {
+            if (profile[i] < half_max) {
+                right_bound = i - 1 - perpendicular_range/2; // -1 to include the last point >= half_max
+                break;
+            }
+        }
+        
+        // Calculate the left and right extent points
+        Point2D<float> left_extent = {
+            sample_start.x + perpendicular_dir.x * left_bound,
+            sample_start.y + perpendicular_dir.y * left_bound
+        };
+        
+        Point2D<float> right_extent = {
+            sample_start.x + perpendicular_dir.x * right_bound,
+            sample_start.y + perpendicular_dir.y * right_bound
+        };
+        
+        left_extents.push_back(left_extent);
+        right_extents.push_back(right_extent);
+        max_points.push_back(max_point);
+        intensities.push_back(static_cast<float>(max_intensity));
+    }
+    
+    // Calculate weighted average extents based on intensity
+    if (left_extents.empty()) {
+        // Return a line with just the original vertex repeated
+        Line2D debug_line;
+        debug_line.push_back(vertex);
+        debug_line.push_back(vertex);
+        debug_line.push_back(vertex);
+        return debug_line;
+    }
+    
+    float total_weight = 0.0f;
+    Point2D<float> weighted_left_sum{0.0f, 0.0f};
+    Point2D<float> weighted_right_sum{0.0f, 0.0f};
+    Point2D<float> weighted_max_sum{0.0f, 0.0f};
+    
+    for (size_t i = 0; i < left_extents.size(); ++i) {
+        float weight = intensities[i];
+        weighted_left_sum.x += left_extents[i].x * weight;
+        weighted_left_sum.y += left_extents[i].y * weight;
+        weighted_right_sum.x += right_extents[i].x * weight;
+        weighted_right_sum.y += right_extents[i].y * weight;
+        weighted_max_sum.x += max_points[i].x * weight;
+        weighted_max_sum.y += max_points[i].y * weight;
+        total_weight += weight;
+    }
+    
+    if (total_weight > 0) {
+        Point2D<float> avg_left = {weighted_left_sum.x / total_weight, weighted_left_sum.y / total_weight};
+        Point2D<float> avg_right = {weighted_right_sum.x / total_weight, weighted_right_sum.y / total_weight};
+        Point2D<float> avg_max = {weighted_max_sum.x / total_weight, weighted_max_sum.y / total_weight};
+        
+        Line2D debug_line;
+        debug_line.push_back(avg_left);
+        debug_line.push_back(avg_max);
+        debug_line.push_back(avg_right);
+        return debug_line;
+    }
+    
+    // Return a line with just the original vertex repeated
+    Line2D debug_line;
+    debug_line.push_back(vertex);
+    debug_line.push_back(vertex);
+    debug_line.push_back(vertex);
+    return debug_line;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 std::string LineAlignmentOperation::getName() const {
-    return "Line Alignment to Bright Objects";
+    return "Line Alignment to Bright Features";
 }
 
 std::type_index LineAlignmentOperation::getTargetInputTypeIndex() const {
@@ -237,6 +401,7 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
             typed_params->perpendicular_range,
             typed_params->use_processed_data,
             typed_params->approach,
+            typed_params->output_mode,
             progressCallback
     );
 
@@ -254,8 +419,9 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
                                              int width,
                                              int perpendicular_range,
                                              bool use_processed_data,
-                                             FWHMApproach approach) {
-    return line_alignment(line_data, media_data, width, perpendicular_range, use_processed_data, approach, [](int) {});
+                                             FWHMApproach approach,
+                                             LineAlignmentOutputMode output_mode) {
+    return line_alignment(line_data, media_data, width, perpendicular_range, use_processed_data, approach, output_mode, [](int) {});
 }
 
 std::shared_ptr<LineData> line_alignment(LineData const * line_data,
@@ -264,6 +430,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          int perpendicular_range,
                                          bool use_processed_data,
                                          FWHMApproach approach,
+                                         LineAlignmentOutputMode output_mode,
                                          ProgressCallback progressCallback) {
     if (!line_data || !media_data) {
         std::cerr << "LineAlignment: Null LineData or MediaData provided." << std::endl;
@@ -317,6 +484,31 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                 continue;
             }
 
+                if (output_mode == LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS) {
+            // Debug mode: create a debug line for each vertex
+            for (size_t i = 0; i < line.size(); ++i) {
+                Point2D<float> vertex = line[i];
+                
+                // Calculate perpendicular direction
+                Point2D<float> perp_dir = calculate_perpendicular_direction(line, i);
+                
+                if (perp_dir.x == 0.0f && perp_dir.y == 0.0f) {
+                    // If we can't calculate a perpendicular direction, create a debug line with just the vertex repeated
+                    Line2D debug_line;
+                    debug_line.push_back(vertex);
+                    debug_line.push_back(vertex);
+                    debug_line.push_back(vertex);
+                    aligned_lines.push_back(debug_line);
+                    continue;
+                }
+                
+                // Debug mode: calculate FWHM profile extents
+                Line2D debug_line = calculate_fwhm_profile_extents(
+                    vertex, perp_dir, width, perpendicular_range, image_data, image_size, approach);
+                aligned_lines.push_back(debug_line);
+            }
+                } else {
+            // Normal mode: create a single aligned line
             Line2D aligned_line;
             
             // Process each vertex in the line
@@ -332,15 +524,9 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                     continue;
                 }
                 
-                // Calculate FWHM displacement
-                float displacement = calculate_fwhm_displacement(
+                // Normal mode: calculate FWHM center point
+                Point2D<float> aligned_vertex = calculate_fwhm_center(
                     vertex, perp_dir, width, perpendicular_range, image_data, image_size, approach);
-                
-                // Apply the displacement
-                Point2D<float> aligned_vertex = {
-                    vertex.x + perp_dir.x * displacement,
-                    vertex.y + perp_dir.y * displacement
-                };
                 
                 // Ensure the aligned vertex stays within image bounds
                 aligned_vertex.x = std::max(0.0f, std::min(static_cast<float>(image_size.width - 1), aligned_vertex.x));
@@ -350,6 +536,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
             }
             
             aligned_lines.push_back(aligned_line);
+                }
         }
 
         // Add the aligned lines to the new LineData

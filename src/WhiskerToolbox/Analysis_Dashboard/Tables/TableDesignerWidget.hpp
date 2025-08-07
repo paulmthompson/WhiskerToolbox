@@ -100,15 +100,7 @@ private slots:
      */
     void onRemoveColumn();
 
-    /**
-     * @brief Handle moving a column up in the list
-     */
-    void onMoveColumnUp();
 
-    /**
-     * @brief Handle moving a column down in the list
-     */
-    void onMoveColumnDown();
 
     /**
      * @brief Handle changes to the column data source selection

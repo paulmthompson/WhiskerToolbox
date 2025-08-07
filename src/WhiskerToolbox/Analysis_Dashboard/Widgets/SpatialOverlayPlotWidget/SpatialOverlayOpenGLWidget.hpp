@@ -423,6 +423,33 @@ private:
      * @brief Remove selected points from their groups
      */
     void ungroupSelectedPoints();
+
+    /**
+     * @brief Check if OpenGL context is properly initialized
+     * @return true if OpenGL context is valid and ready for rendering
+     */
+    bool isOpenGLContextValid() const;
+
+    /**
+     * @brief Get OpenGL context error information
+     * @return QString containing error information if context creation failed
+     */
+    QString getOpenGLErrorInfo() const;
+
+    /**
+     * @brief Force OpenGL context creation (for debugging)
+     * @return true if context creation was successful
+     */
+    bool forceContextCreation();
+
+private:
+    /**
+     * @brief Try to create OpenGL context with specified version
+     * @param major Major version number
+     * @param minor Minor version number
+     * @return true if context creation was successful
+     */
+    bool tryCreateContextWithVersion(int major, int minor);
 };
 
 #endif// SPATIALOVERLAYOPENGLWIDGET_HPP
