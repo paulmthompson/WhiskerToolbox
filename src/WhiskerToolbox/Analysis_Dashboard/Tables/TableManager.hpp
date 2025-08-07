@@ -141,21 +141,7 @@ public:
      */
     bool removeTableColumn(QString const & table_id, int column_index);
 
-    /**
-     * @brief Move a column up in the list (decrease index)
-     * @param table_id The table ID
-     * @param column_index The index of the column to move up
-     * @return True if successful, false if table doesn't exist or invalid move
-     */
-    bool moveTableColumnUp(QString const & table_id, int column_index);
 
-    /**
-     * @brief Move a column down in the list (increase index)
-     * @param table_id The table ID
-     * @param column_index The index of the column to move down
-     * @return True if successful, false if table doesn't exist or invalid move
-     */
-    bool moveTableColumnDown(QString const & table_id, int column_index);
 
     /**
      * @brief Get column information for a specific column

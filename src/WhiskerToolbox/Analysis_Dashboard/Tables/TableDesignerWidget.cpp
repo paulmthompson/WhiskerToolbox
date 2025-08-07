@@ -98,10 +98,7 @@ void TableDesignerWidget::connectSignals() {
             this, &TableDesignerWidget::onAddColumn);
     connect(ui->remove_column_btn, &QPushButton::clicked,
             this, &TableDesignerWidget::onRemoveColumn);
-    connect(ui->move_up_btn, &QPushButton::clicked,
-            this, &TableDesignerWidget::onMoveColumnUp);
-    connect(ui->move_down_btn, &QPushButton::clicked,
-            this, &TableDesignerWidget::onMoveColumnDown);
+
 
     connect(ui->column_data_source_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &TableDesignerWidget::onColumnDataSourceChanged);
@@ -331,37 +328,7 @@ void TableDesignerWidget::onRemoveColumn() {
     }
 }
 
-void TableDesignerWidget::onMoveColumnUp() {
-    int current_row = ui->column_list->currentRow();
-    if (current_row <= 0 || _current_table_id.isEmpty()) {
-        return;
-    }
 
-    if (_table_manager->moveTableColumnUp(_current_table_id, current_row)) {
-        auto * item = ui->column_list->takeItem(current_row);
-        ui->column_list->insertItem(current_row - 1, item);
-        ui->column_list->setCurrentRow(current_row - 1);
-        
-        // Update UserRole indices for all items
-        updateColumnIndices();
-    }
-}
-
-void TableDesignerWidget::onMoveColumnDown() {
-    int current_row = ui->column_list->currentRow();
-    if (current_row < 0 || current_row >= ui->column_list->count() - 1 || _current_table_id.isEmpty()) {
-        return;
-    }
-
-    if (_table_manager->moveTableColumnDown(_current_table_id, current_row)) {
-        auto * item = ui->column_list->takeItem(current_row);
-        ui->column_list->insertItem(current_row + 1, item);
-        ui->column_list->setCurrentRow(current_row + 1);
-        
-        // Update UserRole indices for all items
-        updateColumnIndices();
-    }
-}
 
 void TableDesignerWidget::onColumnDataSourceChanged() {
     qDebug() << "onColumnDataSourceChanged called";

@@ -209,53 +209,7 @@ bool TableManager::removeTableColumn(QString const & table_id, int column_index)
     return true;
 }
 
-bool TableManager::moveTableColumnUp(QString const & table_id, int column_index) {
-    if (!hasTable(table_id)) {
-        return false;
-    }
 
-    auto & table = _table_info[table_id];
-    if (column_index <= 0 || column_index >= table.columns.size()) {
-        return false;
-    }
-
-    table.columns.swapItemsAt(column_index - 1, column_index);
-
-    // Update the columnNames list for backward compatibility
-    table.columnNames.clear();
-    for (auto const & column: table.columns) {
-        table.columnNames.append(column.name);
-    }
-
-    qDebug() << "Moved column" << column_index << "up in table" << table_id;
-    emit tableInfoUpdated(table_id);
-
-    return true;
-}
-
-bool TableManager::moveTableColumnDown(QString const & table_id, int column_index) {
-    if (!hasTable(table_id)) {
-        return false;
-    }
-
-    auto & table = _table_info[table_id];
-    if (column_index < 0 || column_index >= table.columns.size() - 1) {
-        return false;
-    }
-
-    table.columns.swapItemsAt(column_index, column_index + 1);
-
-    // Update the columnNames list for backward compatibility
-    table.columnNames.clear();
-    for (auto const & column: table.columns) {
-        table.columnNames.append(column.name);
-    }
-
-    qDebug() << "Moved column" << column_index << "down in table" << table_id;
-    emit tableInfoUpdated(table_id);
-
-    return true;
-}
 
 ColumnInfo TableManager::getTableColumn(QString const & table_id, int column_index) const {
     if (!hasTable(table_id)) {
