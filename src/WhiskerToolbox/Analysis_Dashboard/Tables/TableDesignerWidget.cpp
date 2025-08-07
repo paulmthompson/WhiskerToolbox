@@ -649,8 +649,8 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
     // Convert row source to RowSelectorType
     RowSelectorType row_selector_type = RowSelectorType::Interval;// Default
     if (row_source.startsWith("TimeFrame: ")) {
-        row_selector_type = RowSelectorType::Interval;// TimeFrames define intervals
-        qDebug() << "Row selector type: Interval (TimeFrame)";
+        row_selector_type = RowSelectorType::Timestamp;// TimeFrames define timestamps
+        qDebug() << "Row selector type: Timestamp (TimeFrame)";
     } else if (row_source.startsWith("Events: ")) {
         row_selector_type = RowSelectorType::Timestamp;// Events define timestamps
         qDebug() << "Row selector type: Timestamp (Events)";
@@ -1186,11 +1186,12 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
                 return nullptr;
             }
 
-            // Create intervals for the entire timeframe
-            std::vector<TimeFrameInterval> intervals;
-            intervals.emplace_back(TimeFrameIndex(0), TimeFrameIndex(timeframe->getTotalFrameCount() - 1));
-
-            return std::make_unique<IntervalSelector>(std::move(intervals), timeframe);
+            // Use timestamps to select all rows
+            std::vector<TimeFrameIndex> timestamps;
+            for (int64_t i = 0; i < timeframe->getTotalFrameCount(); ++i) {
+                timestamps.push_back(TimeFrameIndex(i));
+            }
+            return std::make_unique<TimestampSelector>(std::move(timestamps), timeframe);
 
         } else if (source_type == "Events") {
             // Create TimestampSelector using DigitalEventSeries

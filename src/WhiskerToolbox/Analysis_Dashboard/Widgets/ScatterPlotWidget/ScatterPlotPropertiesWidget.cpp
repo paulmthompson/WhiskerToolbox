@@ -96,6 +96,11 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
         return;
     }
 
+    if (!_data_source_registry) {
+        std::cout << "ScatterPlotPropertiesWidget::updateAvailableDataSources - Data source registry is null" << std::endl;
+        return;
+    }
+
     qDebug() << "ScatterPlotPropertiesWidget::updateAvailableDataSources: Starting update";
 
     // Clear existing items
@@ -109,39 +114,42 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
     auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
 
     // Add items from DataManager (analog time series)
-    if (data_manager) {
-        std::vector<std::string> all_keys = data_manager->getAllKeys();
+    if (!data_manager) {
+        std::cout << "ScatterPlotPropertiesWidget::updateAvailableDataSources - Data manager is null" << std::endl;
+        return;
+    }
+
+    std::vector<std::string> all_keys = data_manager->getAllKeys();
         
-        for (std::string const & key: all_keys) {
-            DM_DataType data_type = data_manager->getType(key);
+    for (std::string const & key: all_keys) {
+        DM_DataType data_type = data_manager->getType(key);
             
-            // Only add analog time series for scatter plots
-            if (data_type == DM_DataType::Analog) {
-                QString display_text = QString("Analog: %1").arg(QString::fromStdString(key));
-                QString data_key = QString("analog:%1").arg(QString::fromStdString(key));
+        // Only add analog time series for scatter plots
+        if (data_type == DM_DataType::Analog) {
+            QString display_text = QString("Analog: %1").arg(QString::fromStdString(key));
+            QString data_key = QString("analog:%1").arg(QString::fromStdString(key));
                 
-                ui->x_axis_combo->addItem(display_text, data_key);
-                ui->y_axis_combo->addItem(display_text, data_key);
+            ui->x_axis_combo->addItem(display_text, data_key);
+            ui->y_axis_combo->addItem(display_text, data_key);
                 
-                qDebug() << "Added analog time series:" << display_text;
-            }
+            qDebug() << "Added analog time series:" << display_text;
         }
     }
 
     // Add items from TableManager (table columns)
-    if (_data_source_registry) {
-        // Find TableManagerSource
-        AbstractDataSource* table_manager_source = nullptr;
-        auto source_ids = _data_source_registry->getAvailableSourceIds();
+    // Find TableManagerSource
+    AbstractDataSource* table_manager_source = nullptr;
+    auto source_ids = _data_source_registry->getAvailableSourceIds();
 
-        for (auto const & source_id : source_ids) {
-            auto* source = _data_source_registry->getDataSource(source_id);
-            if (source && source->getType() == "TableManager") {
-                table_manager_source = source;
-                break;
-            }
+    for (auto const & source_id : source_ids) {
+        auto* source = _data_source_registry->getDataSource(source_id);
+        if (source && source->getType() == "TableManager") {
+            table_manager_source = source;
+            break;
         }
-        
+    }
+
+    
         if (table_manager_source) {
             TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
             auto table_manager = tm_source->getTableManager();
@@ -221,7 +229,6 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
         } else {
             qDebug() << "No TableManagerSource found in data source registry";
         }
-    }
 
     qDebug() << "ScatterPlotPropertiesWidget::updateAvailableDataSources: Completed update";
 
@@ -404,6 +411,11 @@ void ScatterPlotPropertiesWidget::updatePlotWidget() {
 
 std::vector<float> ScatterPlotPropertiesWidget::loadDataFromKey(QString const & data_key) {
     std::vector<float> result;
+
+    if (!_data_source_registry) {
+        std::cout << "ScatterPlotPropertiesWidget::loadDataFromKey - Data source registry is null" << std::endl;
+        return result;
+    }
     
     if (data_key.startsWith("analog:")) {
         // Handle analog time series
@@ -512,6 +524,11 @@ void ScatterPlotPropertiesWidget::updateXAxisInfoLabel() {
         return;
     }
 
+    if (!_data_source_registry) {
+        std::cout << "ScatterPlotPropertiesWidget::updateXAxisInfoLabel - Data source registry is null" << std::endl;
+        return;
+    }
+
     QString selected_key = getSelectedXAxisDataSource();
     if (selected_key.isEmpty()) {
         ui->x_axis_info_label->setText("Select a data source for the X-axis");
@@ -553,6 +570,11 @@ void ScatterPlotPropertiesWidget::updateXAxisInfoLabel() {
 
 void ScatterPlotPropertiesWidget::updateYAxisInfoLabel() {
     if (!ui->y_axis_info_label) {
+        return;
+    }
+
+    if (!_data_source_registry) {
+        std::cout << "ScatterPlotPropertiesWidget::updateYAxisInfoLabel - Data source registry is null" << std::endl;
         return;
     }
 
@@ -599,6 +621,7 @@ QStringList ScatterPlotPropertiesWidget::getAvailableNumericColumns() const {
     QStringList numeric_columns;
     
     if (!_data_source_registry) {
+        std::cout << "ScatterPlotPropertiesWidget::getAvailableNumericColumns - Data source registry is null" << std::endl;
         return numeric_columns;
     }
     
@@ -654,6 +677,7 @@ QMap<QString, QString> ScatterPlotPropertiesWidget::getAvailableNumericColumnsWi
     QMap<QString, QString> columns_with_types;
     
     if (!_data_source_registry) {
+        std::cout << "ScatterPlotPropertiesWidget::getAvailableNumericColumnsWithTypes - Data source registry is null" << std::endl;
         return columns_with_types;
     }
     
@@ -714,6 +738,7 @@ QStringList ScatterPlotPropertiesWidget::getNumericColumnsFromRegistry(DataSourc
     QStringList numeric_columns;
     
     if (!data_source_registry) {
+        std::cout << "ScatterPlotPropertiesWidget::getNumericColumnsFromRegistry - Data source registry is null" << std::endl;
         return numeric_columns;
     }
     

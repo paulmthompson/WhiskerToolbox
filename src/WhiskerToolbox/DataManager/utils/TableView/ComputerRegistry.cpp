@@ -3,6 +3,7 @@
 #include "computers/IntervalReductionComputer.h"
 #include "computers/EventInIntervalComputer.h"
 #include "computers/IntervalPropertyComputer.h"
+#include "computers/TimestampValueComputer.h"
 #include "adapters/PointComponentAdapter.h"
 #include "Points/Point_Data.hpp"
 
@@ -509,10 +510,26 @@ void ComputerRegistry::registerBuiltInComputers() {
         registerComputer(std::move(info), std::move(factory));
     }
     
-    // Note: No computers are currently registered for RowSelectorType::Timestamp
-    // This means when using Events as row sources (which create TimestampSelector),
-    // no computers will be available. This would require implementing computers
-    // that can work with timestamp-based row selectors.
+    // TimestampValueComputer - Extract values at specific timestamps
+    {
+        ComputerInfo info("Timestamp Value",
+                         "Extract analog signal values at specific timestamps",
+                         typeid(double),
+                         "double",
+                         RowSelectorType::Timestamp,
+                         typeid(std::shared_ptr<IAnalogSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
+                auto computer = std::make_unique<TimestampValueComputer>(*analogSrc);
+                return std::make_unique<ComputerWrapper<double>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
     
     std::cout << "Finished registering built-in computers." << std::endl;
 }
