@@ -141,9 +141,9 @@ void ScatterPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
     AbstractPlotWidget::resizeEvent(event);
     
     if (_proxy_widget) {
-        // Update the proxy widget to fill the plot area (minus title space)
+        // Update the proxy widget to fill the plot area (minus title space and resize handles)
         QRectF rect = boundingRect();
-        QRectF content_rect = rect.adjusted(1, 25, -1, -1); // Leave space for title and border
+        QRectF content_rect = rect.adjusted(8, 30, -8, -8); // Account for resize handles (4px margins) and title space
         _proxy_widget->setGeometry(content_rect);
         _proxy_widget->widget()->resize(content_rect.size().toSize());
     }
@@ -169,8 +169,9 @@ void ScatterPlotWidget::setupOpenGLWidget() {
     _proxy_widget->setWidget(_opengl_widget);
     
     // Position the proxy widget within this graphics item
+    // Leave space for title, border, and resize handles
     QRectF rect = boundingRect();
-    QRectF content_rect = rect.adjusted(1, 25, -1, -1); // Leave space for title and border
+    QRectF content_rect = rect.adjusted(8, 30, -8, -8); // Account for resize handles (4px margins) and title space
     _proxy_widget->setGeometry(content_rect);
     
     // Connect signals after widget is created
