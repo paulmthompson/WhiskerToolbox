@@ -17,7 +17,9 @@
 #include <QDebug>
 #include <QDoubleSpinBox>
 #include <QPushButton>
+
 #include <numeric>
+#include <vector>
 
 ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
@@ -66,6 +68,16 @@ void ScatterPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget
 
 void ScatterPlotPropertiesWidget::setScatterPlotWidget(ScatterPlotWidget * scatter_widget) {
     _scatter_plot_widget = scatter_widget;
+    
+    // Connect to OpenGL widget signals for coordinate range updates
+    if (_scatter_plot_widget && _scatter_plot_widget->getOpenGLWidget()) {
+        auto opengl_widget = _scatter_plot_widget->getOpenGLWidget();
+        connect(opengl_widget, &ScatterPlotOpenGLWidget::zoomLevelChanged,
+                this, &ScatterPlotPropertiesWidget::onZoomLevelChanged);
+        connect(opengl_widget, &ScatterPlotOpenGLWidget::panOffsetChanged,
+                this, &ScatterPlotPropertiesWidget::onPanOffsetChanged);
+    }
+    
     updateFromPlot();
 }
 
@@ -79,6 +91,9 @@ void ScatterPlotPropertiesWidget::updateFromPlot() {
     ui->point_color_button->setStyleSheet("background-color: #3268a8; border: 1px solid #ccc;");
     ui->show_grid_checkbox->setChecked(true);
     ui->show_legend_checkbox->setChecked(true);
+    
+    // Update coordinate range display
+    updateCoordinateRange();
 }
 
 void ScatterPlotPropertiesWidget::applyToPlot() {
@@ -373,12 +388,18 @@ void ScatterPlotPropertiesWidget::updatePlotWidget() {
         return;
     }
     
+    // Store data for coordinate range calculations
+    _x_data = x_data;
+    _y_data = y_data;
+    
     // Make sure both data vectors have the same size
     size_t min_size = std::min(x_data.size(), y_data.size());
     if (x_data.size() != y_data.size()) {
         qDebug() << "Data size mismatch, trimming to minimum size:" << min_size;
         x_data.resize(min_size);
         y_data.resize(min_size);
+        _x_data.resize(min_size);
+        _y_data.resize(min_size);
     }
     
     // Update the scatter plot widget if available
@@ -789,3 +810,87 @@ QStringList ScatterPlotPropertiesWidget::getNumericColumnsFromRegistry(DataSourc
     
     return numeric_columns;
 }
+
+void ScatterPlotPropertiesWidget::updateCoordinateRange() {
+    if (!_scatter_plot_widget || !_scatter_plot_widget->getOpenGLWidget()) {
+        ui->x_range_value->setText("No data");
+        ui->y_range_value->setText("No data");
+        return;
+    }
+
+    auto opengl_widget = _scatter_plot_widget->getOpenGLWidget();
+    float zoom_level = opengl_widget->getZoomLevel();
+    QVector2D pan_offset = opengl_widget->getPanOffset();
+
+    // Get the stored data for calculating bounds
+    if (_x_data.empty() || _y_data.empty()) {
+        ui->x_range_value->setText("No data");
+        ui->y_range_value->setText("No data");
+        return;
+    }
+
+    // Calculate data bounds
+    float min_x = _x_data[0];
+    float max_x = _x_data[0];
+    float min_y = _y_data[0];
+    float max_y = _y_data[0];
+
+    for (size_t i = 1; i < _x_data.size(); ++i) {
+        min_x = std::min(min_x, _x_data[i]);
+        max_x = std::max(max_x, _x_data[i]);
+        min_y = std::min(min_y, _y_data[i]);
+        max_y = std::max(max_y, _y_data[i]);
+    }
+
+    // Calculate the visible range based on zoom and pan
+    // The OpenGL widget uses normalized coordinates (-1 to 1) for the viewport
+    // We need to convert this to world coordinates based on the data range
+    
+    // Calculate the visible window in normalized coordinates
+    float view_width = 2.0f / zoom_level;  // Width of visible area in normalized coords
+    float view_height = 2.0f / zoom_level; // Height of visible area in normalized coords
+    
+    // Calculate the center of the visible area in normalized coordinates
+    float center_x = -pan_offset.x() / zoom_level;
+    float center_y = -pan_offset.y() / zoom_level;
+    
+    // Calculate the visible bounds in normalized coordinates
+    float left_norm = center_x - view_width / 2.0f;
+    float right_norm = center_x + view_width / 2.0f;
+    float bottom_norm = center_y - view_height / 2.0f;
+    float top_norm = center_y + view_height / 2.0f;
+    
+    // Convert normalized coordinates to world coordinates
+    // We need to map from the normalized range to the actual data range
+    float data_width = max_x - min_x;
+    float data_height = max_y - min_y;
+    
+    // Map normalized coordinates to world coordinates
+    float left_world = min_x + (left_norm + 1.0f) * data_width / 2.0f;
+    float right_world = min_x + (right_norm + 1.0f) * data_width / 2.0f;
+    float bottom_world = min_y + (bottom_norm + 1.0f) * data_height / 2.0f;
+    float top_world = min_y + (top_norm + 1.0f) * data_height / 2.0f;
+    
+    // Format the range strings
+    QString x_range_text = QString("[%1, %2]")
+                          .arg(left_world, 0, 'f', 3)
+                          .arg(right_world, 0, 'f', 3);
+    QString y_range_text = QString("[%1, %2]")
+                          .arg(bottom_world, 0, 'f', 3)
+                          .arg(top_world, 0, 'f', 3);
+
+    ui->x_range_value->setText(x_range_text);
+    ui->y_range_value->setText(y_range_text);
+}
+
+void ScatterPlotPropertiesWidget::onZoomLevelChanged(float zoom_level) {
+    Q_UNUSED(zoom_level)
+    updateCoordinateRange();
+}
+
+void ScatterPlotPropertiesWidget::onPanOffsetChanged(float offset_x, float offset_y) {
+    Q_UNUSED(offset_x)
+    Q_UNUSED(offset_y)
+    updateCoordinateRange();
+}
+

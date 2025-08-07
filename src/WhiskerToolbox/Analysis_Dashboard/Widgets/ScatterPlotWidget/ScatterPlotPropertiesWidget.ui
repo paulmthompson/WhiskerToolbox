@@ -246,6 +246,89 @@ border-radius: 3px;
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="coordinate_range_group">
+     <property name="title">
+      <string>Coordinate Range</string>
+     </property>
+     <layout class="QVBoxLayout" name="coordinate_range_layout">
+      <item>
+       <layout class="QHBoxLayout" name="x_range_layout">
+        <item>
+         <widget class="QLabel" name="x_range_label">
+          <property name="text">
+           <string>X Range:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="x_range_value">
+          <property name="text">
+           <string>No data</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLabel { 
+color: #555; 
+font-size: 11px; 
+padding: 4px; 
+background-color: #f8f8f8; 
+border: 1px solid #ddd; 
+border-radius: 3px; 
+}</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="y_range_layout">
+        <item>
+         <widget class="QLabel" name="y_range_label">
+          <property name="text">
+           <string>Y Range:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="y_range_value">
+          <property name="text">
+           <string>No data</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLabel { 
+color: #555; 
+font-size: 11px; 
+padding: 4px; 
+background-color: #f8f8f8; 
+border: 1px solid #ddd; 
+border-radius: 3px; 
+}</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="coordinate_info_label">
+        <property name="text">
+         <string>Coordinate ranges update when you zoom or pan the plot</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel { 
+color: #666; 
+font-size: 10px; 
+font-style: italic; 
+padding: 4px; 
+}</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

@@ -79,11 +79,33 @@ private slots:
      */
     void onShowLegendToggled(bool enabled);
 
+    /**
+     * @brief Update coordinate range display from current view
+     */
+    void updateCoordinateRange();
+
+    /**
+     * @brief Handle zoom level changes from OpenGL widget
+     * @param zoom_level The new zoom level
+     */
+    void onZoomLevelChanged(float zoom_level);
+
+    /**
+     * @brief Handle pan offset changes from OpenGL widget
+     * @param offset_x The new X pan offset
+     * @param offset_y The new Y pan offset
+     */
+    void onPanOffsetChanged(float offset_x, float offset_y);
+
 private:
     Ui::ScatterPlotPropertiesWidget * ui;
     ScatterPlotWidget * _scatter_plot_widget;
     DataSourceRegistry * _data_source_registry;
     bool _applying_properties;  // Flag to prevent signal emission during applyToPlot()
+    
+    // Data storage for coordinate range calculations
+    std::vector<float> _x_data;
+    std::vector<float> _y_data;
 
     /**
      * @brief Setup connections between UI elements and handlers
@@ -155,12 +177,6 @@ private:
      */
     static QStringList getNumericColumnsFromRegistry(DataSourceRegistry * data_source_registry);
     
-    /**
-     * @brief Demonstrate the new type-safe column filtering capabilities
-     * Shows how the enhanced type system eliminates try/catch blocks and enables
-     * precise type-based data discovery for plotting widgets.
-     */
-    void demonstrateTypeFiltering();
 };
 
 #endif// SCATTERPLOTPROPERTIESWIDGET_HPP
