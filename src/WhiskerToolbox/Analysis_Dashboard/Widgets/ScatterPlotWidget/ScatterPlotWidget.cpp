@@ -14,6 +14,10 @@ ScatterPlotWidget::ScatterPlotWidget(QGraphicsItem * parent)
     qDebug() << "ScatterPlotWidget::ScatterPlotWidget constructor called";
 
     setPlotTitle("Scatter Plot");
+    
+    // Disable item caching to ensure live updates from embedded OpenGL widget
+    setCacheMode(QGraphicsItem::NoCache);
+
     setupOpenGLWidget();
 
     qDebug() << "ScatterPlotWidget::ScatterPlotWidget constructor done";
@@ -150,8 +154,24 @@ void ScatterPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
 }
 
 void ScatterPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
-    // Let the base class handle the event first
-    AbstractPlotWidget::mousePressEvent(event);
+    // Check if the click is in the title area (top 25 pixels)
+    QRectF title_area = boundingRect().adjusted(0, 0, 0, -boundingRect().height() + 25);
+
+    if (title_area.contains(event->pos())) {
+        // Click in title area - handle selection and allow movement
+        emit plotSelected(getPlotId());
+        // Make sure the item is movable for dragging
+        setFlag(QGraphicsItem::ItemIsMovable, true);
+        AbstractPlotWidget::mousePressEvent(event);
+    } else {
+        // Click in content area - let the OpenGL widget handle it
+        // But still emit selection signal
+        emit plotSelected(getPlotId());
+        // Disable movement when clicking in content area
+        setFlag(QGraphicsItem::ItemIsMovable, false);
+        // Don't call parent implementation to avoid interfering with OpenGL panning
+        event->accept();
+    }
 }
 
 void ScatterPlotWidget::updateVisualization() {
@@ -167,6 +187,19 @@ void ScatterPlotWidget::setupOpenGLWidget() {
     // Create a proxy widget to embed the OpenGL widget in the graphics scene
     _proxy_widget = new QGraphicsProxyWidget(this);
     _proxy_widget->setWidget(_opengl_widget);
+
+    // Configure OpenGL widget for better compatibility inside QGraphicsScene
+    _opengl_widget->setAttribute(Qt::WA_AlwaysStackOnTop, false);
+    _opengl_widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
+    _opengl_widget->setAttribute(Qt::WA_NoSystemBackground, true);
+    _opengl_widget->setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+
+    // Configure the proxy widget to not interfere with parent interactions
+    _proxy_widget->setFlag(QGraphicsItem::ItemIsMovable, false);
+    _proxy_widget->setFlag(QGraphicsItem::ItemIsSelectable, false);
+
+    // Disable proxy caching so that it repaints each update from the child widget
+    _proxy_widget->setCacheMode(QGraphicsItem::NoCache);
     
     // Position the proxy widget within this graphics item
     // Leave space for title, border, and resize handles
@@ -194,6 +227,16 @@ void ScatterPlotWidget::connectOpenGLSignals() {
             this, &ScatterPlotWidget::renderingPropertiesChanged);
     connect(_opengl_widget, &ScatterPlotOpenGLWidget::panOffsetChanged,
             this, &ScatterPlotWidget::renderingPropertiesChanged);
+
+    // Force proxy and item repaints on interactive changes to ensure on-screen updates
+    auto requestRepaint = [this]() {
+        if (_proxy_widget) {
+            _proxy_widget->update();
+        }
+        this->update();
+    };
+    connect(_opengl_widget, &ScatterPlotOpenGLWidget::zoomLevelChanged, this, requestRepaint);
+    connect(_opengl_widget, &ScatterPlotOpenGLWidget::panOffsetChanged, this, requestRepaint);
     
     qDebug() << "ScatterPlotWidget: OpenGL signals connected";
 }

@@ -144,7 +144,6 @@ private:
     bool _opengl_resources_initialized;
 
     // View transformation
-    QMatrix4x4 _view_matrix;
     QMatrix4x4 _projection_matrix;
     float _zoom_level;
     float _pan_offset_x;
@@ -155,16 +154,26 @@ private:
     QPoint _last_mouse_pos;
     QPoint _current_mouse_pos;
     bool _tooltips_enabled;
+    bool _is_panning;  // Track panning state
 
     // Tooltip system
     QTimer * _tooltip_timer;
     QPoint _tooltip_mouse_pos;
     static constexpr int TOOLTIP_DELAY_MS = 500;
 
+    // FPS limiter timer (30 FPS = ~33ms interval)
+    QTimer * _fps_limiter_timer;
+    bool _pending_update;         // fps limiting
+
     /**
-     * @brief Update the view matrix based on current zoom and pan
+     * @brief Update the projection matrix based on current data bounds and zoom/pan
      */
-    void updateViewMatrix();
+    void updateProjectionMatrix();
+
+    /**
+     * @brief Throttled update method to limit FPS
+     */
+    void requestThrottledUpdate();
 
     /**
      * @brief Convert screen coordinates to world coordinates
@@ -192,11 +201,6 @@ private:
      * @brief Calculate data bounds from the stored data
      */
     void calculateDataBounds();
-
-    /**
-     * @brief Update the projection matrix based on current data bounds and zoom/pan
-     */
-    void updateProjectionMatrix();
 };
 
 #endif// SCATTERPLOTOPENGLWIDGET_HPP
