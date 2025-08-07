@@ -39,18 +39,39 @@ size_t PointComponentAdapter::size() const {
 std::vector<float> PointComponentAdapter::getDataInRange(TimeFrameIndex start,
                                                          TimeFrameIndex end,
                                                          TimeFrame const * target_timeFrame) {
+    // Special case: if start == end, we're looking for points at exactly one time frame
+    if (start == end) {
+        auto points = m_pointData->getAtTime(start, target_timeFrame, m_timeFrame.get());
+        std::vector<float> componentValues;
+        componentValues.reserve(points.size());
+        
+        for (auto const & point: points) {
+            float componentValue = (m_component == Component::X) ? point.x : point.y;
+            componentValues.push_back(componentValue);
+        }
+        return componentValues;
+    }
+    
+    // For ranges with different start and end, use the range view
     auto point_range = m_pointData->GetPointsInRange(TimeFrameInterval(start, end),
                                                      target_timeFrame,
                                                      m_timeFrame.get());
-    if (point_range.empty()) {
-        return {};
-    }
-    std::vector<float> componentValues;
+    
+    auto componentValues = std::vector<float>();
 
     for (auto const & time_point_pair: point_range) {
-        float componentValue = (m_component == Component::X) ? time_point_pair.points[0].x : time_point_pair.points[0].y;
-        componentValues.push_back(componentValue);
+        // Check if there are points at this time
+        if (time_point_pair.points.empty()) {
+            continue;
+        }
+        
+        // Add all points at this time frame
+        for (auto const & point: time_point_pair.points) {
+            float componentValue = (m_component == Component::X) ? point.x : point.y;
+            componentValues.push_back(componentValue);
+        }
     }
+    
     return componentValues;
 }
 
