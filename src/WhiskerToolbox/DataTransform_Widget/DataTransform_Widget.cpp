@@ -30,6 +30,7 @@
 #include "DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
 #include "AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp"
+#include "Media/WhiskerTracing_Widget/WhiskerTracing_Widget.hpp"
 
 #include <QApplication>
 #include <QGroupBox>
@@ -192,6 +193,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Filter"] = [](QWidget * parent)  -> TransformParameter_Widget * {
         return new AnalogFilter_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Whisker Tracing"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new WhiskerTracing_Widget(parent);
     };
 }
 

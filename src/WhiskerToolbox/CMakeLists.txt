@@ -173,6 +173,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.cpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.ui
+        DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.hpp
+        DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.cpp
+        DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui

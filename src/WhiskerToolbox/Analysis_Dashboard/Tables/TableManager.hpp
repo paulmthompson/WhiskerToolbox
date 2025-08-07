@@ -3,6 +3,7 @@
 
 #include "TableInfo.hpp"
 
+#include <nlohmann/json.hpp>
 #include <QMap>
 #include <QObject>
 #include <QString>
@@ -210,6 +211,24 @@ public:
      * @return Map of type_index to human-readable type names
      */
     QStringList getAvailableOutputTypes() const;
+
+    /**
+     * @brief Execute a table pipeline from JSON configuration
+     * @param json_config JSON configuration for multiple tables
+     * @param progress_callback Optional progress callback
+     * @return True if all tables were built successfully
+     */
+    bool executeTablePipeline(nlohmann::json const& json_config, 
+                              std::function<void(int, std::string const&, int, int)> progress_callback = nullptr);
+
+    /**
+     * @brief Execute a table pipeline from JSON file
+     * @param json_file_path Path to JSON configuration file
+     * @param progress_callback Optional progress callback  
+     * @return True if all tables were built successfully
+     */
+    bool executeTablePipelineFromFile(std::string const& json_file_path,
+                                      std::function<void(int, std::string const&, int, int)> progress_callback = nullptr);
 
 signals:
     /**

@@ -195,6 +195,8 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/mask_to_line.hpp
         transforms/Masks/mask_skeletonize.cpp
         transforms/Masks/mask_skeletonize.hpp
+        transforms/Media/whisker_tracing.cpp
+        transforms/Media/whisker_tracing.hpp
 )
 
 
@@ -238,6 +240,7 @@ target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 #target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
 target_link_libraries(DataManager PRIVATE CapnProto::capnp)
+target_link_libraries(DataManager PRIVATE Whisker-Analysis)
 #target_link_libraries(DataManager PRIVATE RocksDB::rocksdb RocksDB::rocksdb-shared)
 
 target_link_libraries(DataManager PUBLIC iir::iir)

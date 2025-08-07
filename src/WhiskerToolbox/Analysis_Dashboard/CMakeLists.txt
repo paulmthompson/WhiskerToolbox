@@ -59,6 +59,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Tables/TableDesignerWidget.hpp
     Tables/TableDesignerWidget.cpp
     Tables/TableDesignerWidget.ui
+    Tables/TablePipeline.hpp 
+    Tables/TablePipeline.cpp
 
     # Widgets
     Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
@@ -137,6 +139,7 @@ target_link_libraries(Analysis_Dashboard PRIVATE DataManager)
 target_link_libraries(Analysis_Dashboard PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(Analysis_Dashboard PRIVATE ShaderManager)
 target_link_libraries(Analysis_Dashboard PRIVATE Feature_Table_Widget)
+target_link_libraries(Analysis_Dashboard PUBLIC nlohmann_json::nlohmann_json)
 
 # Include directories
 target_include_directories(Analysis_Dashboard PUBLIC

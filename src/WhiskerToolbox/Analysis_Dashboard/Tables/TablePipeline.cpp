@@ -1,0 +1,446 @@
+#include "TablePipeline.hpp"
+#include "../../DataManager/utils/TableView/core/TableViewBuilder.h"
+#include "../../DataManager/utils/TableView/adapters/DataManagerExtension.h"
+#include "../../DataManager/utils/TableView/interfaces/IRowSelector.h"
+#include "../../DataManager/utils/TableView/ComputerRegistryTypes.hpp"
+
+#include <fstream>
+#include <iostream>
+#include <chrono>
+
+TablePipeline::TablePipeline(TableManager* table_manager, DataManager* data_manager)
+    : table_manager_(table_manager)
+    , data_manager_(data_manager)
+    , data_manager_extension_(table_manager->getDataManagerExtension())
+    , computer_registry_(&table_manager->getComputerRegistry()) {
+    
+    if (!table_manager_) {
+        throw std::invalid_argument("TableManager cannot be null");
+    }
+    if (!data_manager_) {
+        throw std::invalid_argument("DataManager cannot be null");
+    }
+}
+
+bool TablePipeline::loadFromJson(nlohmann::json const& json_config) {
+    try {
+        clear();
+        
+        // Load metadata if present
+        if (json_config.contains("metadata")) {
+            metadata_ = json_config["metadata"];
+        }
+        
+        // Load tables array
+        if (!json_config.contains("tables")) {
+            std::cerr << "TablePipeline: JSON must contain 'tables' array" << std::endl;
+            return false;
+        }
+        
+        if (!json_config["tables"].is_array()) {
+            std::cerr << "TablePipeline: 'tables' must be an array" << std::endl;
+            return false;
+        }
+        
+        for (auto const& table_json : json_config["tables"]) {
+            auto config = parseTableConfiguration(table_json);
+            
+            // Validate configuration
+            std::string validation_error = validateTableConfiguration(config);
+            if (!validation_error.empty()) {
+                std::cerr << "TablePipeline: Invalid table configuration for '"
+                          << config.table_id << "': " << validation_error << std::endl;
+                return false;
+            }
+            
+            tables_.push_back(std::move(config));
+        }
+        
+        std::cout << "TablePipeline: Loaded " << tables_.size() << " table configurations" << std::endl;
+        return true;
+        
+    } catch (std::exception const& e) {
+        std::cerr << "TablePipeline: Error loading JSON: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool TablePipeline::loadFromJsonFile(std::string const& json_file_path) {
+    std::ifstream file(json_file_path);
+    if (!file.is_open()) {
+        std::cerr << "TablePipeline: Cannot open file: " << json_file_path << std::endl;
+        return false;
+    }
+    
+    nlohmann::json json_config;
+    try {
+        file >> json_config;
+    } catch (std::exception const& e) {
+        std::cerr << "TablePipeline: Error parsing JSON file: " << e.what() << std::endl;
+        return false;
+    }
+    
+    return loadFromJson(json_config);
+}
+
+TablePipelineResult TablePipeline::execute(TablePipelineProgressCallback progress_callback) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    
+    TablePipelineResult result;
+    result.total_tables = static_cast<int>(tables_.size());
+    
+    if (tables_.empty()) {
+        result.success = true;
+        return result;
+    }
+    
+    try {
+        for (size_t i = 0; i < tables_.size(); ++i) {
+            auto const& config = tables_[i];
+            
+            // Report progress
+            if (progress_callback) {
+                int overall_progress = static_cast<int>((i * 100) / tables_.size());
+                progress_callback(static_cast<int>(i), config.name, 0, overall_progress);
+            }
+            
+            // Build the table
+            auto table_result = buildTable(config, [&](int columns_done, int total_columns) {
+                if (progress_callback) {
+                    int table_progress = total_columns > 0 ? (columns_done * 100) / total_columns : 100;
+                    int overall_progress = static_cast<int>((i * 100) / tables_.size());
+                    progress_callback(static_cast<int>(i), config.name, table_progress, overall_progress);
+                }
+            });
+            
+            result.table_results.push_back(table_result);
+            
+            if (table_result.success) {
+                result.tables_completed++;
+            } else {
+                result.success = false;
+                result.error_message = "Failed to build table '" + config.table_id + "': " + table_result.error_message;
+                break;
+            }
+        }
+        
+        if (result.tables_completed == result.total_tables) {
+            result.success = true;
+        }
+        
+    } catch (std::exception const& e) {
+        result.success = false;
+        result.error_message = "Exception during pipeline execution: " + std::string(e.what());
+    }
+    
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    result.total_execution_time_ms = static_cast<double>(duration.count()) / 1000.0;
+    
+    return result;
+}
+
+TableBuildResult TablePipeline::buildTable(TableConfiguration const& config, 
+                                          std::function<void(int, int)> progress_callback) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    
+    TableBuildResult result;
+    result.table_id = config.table_id;
+    result.total_columns = static_cast<int>(config.columns.size());
+    
+    try {
+        // Create or update table info in TableManager
+        QString q_table_id = QString::fromStdString(config.table_id);
+        QString q_name = QString::fromStdString(config.name);
+        QString q_description = QString::fromStdString(config.description);
+        
+        if (table_manager_->hasTable(q_table_id)) {
+            table_manager_->updateTableInfo(q_table_id, q_name, q_description);
+        } else {
+            table_manager_->createTable(q_table_id, q_name, q_description);
+        }
+        
+        // Create TableViewBuilder
+        TableViewBuilder builder(data_manager_extension_);
+        
+        // Create and set row selector
+        auto row_selector = createRowSelector(config.row_selector);
+        if (!row_selector) {
+            result.error_message = "Failed to create row selector";
+            return result;
+        }
+        
+        RowSelectorType selector_type = parseRowSelectorType(config.row_selector["type"]);
+        builder.setRowSelector(std::move(row_selector));
+        
+        // Add columns
+        for (size_t i = 0; i < config.columns.size(); ++i) {
+            auto const& column_json = config.columns[i];
+            
+            // Report progress
+            if (progress_callback) {
+                progress_callback(static_cast<int>(i), result.total_columns);
+            }
+            
+            // Create column computer
+            auto computer = createColumnComputer(column_json, selector_type);
+            if (!computer) {
+                result.error_message = "Failed to create computer for column: " + 
+                                     column_json.value("name", "unnamed");
+                return result;
+            }
+            
+            // Add column to builder - this requires template specialization
+            std::string column_name = column_json["name"];
+            
+            // Get computer info to determine output type
+            std::string computer_name = column_json["computer"];
+            auto computer_info = computer_registry_->findComputerInfo(computer_name);
+            if (!computer_info) {
+                result.error_message = "Computer not found: " + computer_name;
+                return result;
+            }
+            
+            // Add column based on output type
+            if (!addColumnToBuilder(builder, column_json, std::move(computer))) {
+                result.error_message = "Failed to add column to builder: " + column_name;
+                return result;
+            }
+            
+            result.columns_built++;
+        }
+        
+        // Final progress report
+        if (progress_callback) {
+            progress_callback(result.total_columns, result.total_columns);
+        }
+        
+        // Build the table
+        TableView table_view = builder.build();
+        
+        // Store the built table in TableManager
+        if (!table_manager_->storeBuiltTable(q_table_id, std::move(table_view))) {
+            result.error_message = "Failed to store built table in TableManager";
+            return result;
+        }
+        
+        result.success = true;
+        
+    } catch (std::exception const& e) {
+        result.error_message = "Exception during table build: " + std::string(e.what());
+    }
+    
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    result.build_time_ms = static_cast<double>(duration.count()) / 1000.0;
+    
+    return result;
+}
+
+void TablePipeline::clear() {
+    tables_.clear();
+    metadata_ = nlohmann::json{};
+}
+
+TableConfiguration TablePipeline::parseTableConfiguration(nlohmann::json const& table_json) {
+    TableConfiguration config;
+    
+    config.table_id = table_json.value("table_id", "");
+    config.name = table_json.value("name", "");
+    config.description = table_json.value("description", "");
+    
+    if (table_json.contains("row_selector")) {
+        config.row_selector = table_json["row_selector"];
+    }
+    
+    if (table_json.contains("columns") && table_json["columns"].is_array()) {
+        for (auto const& column_json : table_json["columns"]) {
+            config.columns.push_back(column_json);
+        }
+    }
+    
+    if (table_json.contains("tags") && table_json["tags"].is_array()) {
+        for (auto const& tag : table_json["tags"]) {
+            if (tag.is_string()) {
+                config.tags.push_back(tag);
+            }
+        }
+    }
+    
+    return config;
+}
+
+std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json const& row_selector_json) {
+    if (!row_selector_json.contains("type")) {
+        std::cerr << "TablePipeline: Row selector must have 'type' field" << std::endl;
+        return nullptr;
+    }
+    
+    std::string type = row_selector_json["type"];
+    
+    if (type == "interval") {
+        // TODO: Implement interval row selector creation
+        // This needs to handle:
+        // 1. Direct DigitalIntervalSeries reference
+        // 2. User-defined intervals around events
+        // 3. Capture range and anchor point settings
+        std::cerr << "TablePipeline: Interval row selector not yet implemented" << std::endl;
+        return nullptr;
+        
+    } else if (type == "timestamp") {
+        // TODO: Implement timestamp row selector creation
+        std::cerr << "TablePipeline: Timestamp row selector not yet implemented" << std::endl;
+        return nullptr;
+        
+    } else if (type == "index") {
+        // TODO: Implement index row selector creation
+        std::cerr << "TablePipeline: Index row selector not yet implemented" << std::endl;
+        return nullptr;
+        
+    } else {
+        std::cerr << "TablePipeline: Unknown row selector type: " << type << std::endl;
+        return nullptr;
+    }
+}
+
+std::unique_ptr<IComputerBase> TablePipeline::createColumnComputer(nlohmann::json const& column_json,
+                                                                   RowSelectorType row_selector_type) {
+    if (!column_json.contains("computer")) {
+        std::cerr << "TablePipeline: Column must have 'computer' field" << std::endl;
+        return nullptr;
+    }
+    
+    std::string computer_name = column_json["computer"];
+    
+    // Resolve data source
+    DataSourceVariant data_source;
+    if (column_json.contains("data_source")) {
+        data_source = resolveDataSource(column_json["data_source"]);
+        
+    }
+    
+    // Get parameters
+    std::map<std::string, std::string> parameters;
+    if (column_json.contains("parameters") && column_json["parameters"].is_object()) {
+        for (auto const& [key, value] : column_json["parameters"].items()) {
+            if (value.is_string()) {
+                parameters[key] = value;
+            } else {
+                parameters[key] = value.dump();
+            }
+        }
+    }
+    
+    // Create computer using registry
+    return computer_registry_->createComputer(computer_name, data_source, parameters);
+}
+
+DataSourceVariant TablePipeline::resolveDataSource(nlohmann::json const& data_source_json) {
+    if (data_source_json.is_string()) {
+        // Simple key reference - resolve directly through DataManagerExtension
+        std::string key = data_source_json;
+        
+        // Try different interface types
+        if (auto analog_source = data_manager_extension_->getAnalogSource(key)) {
+            return analog_source;
+        }
+        if (auto event_source = data_manager_extension_->getEventSource(key)) {
+            return event_source;
+        }
+        if (auto interval_source = data_manager_extension_->getIntervalSource(key)) {
+            return interval_source;
+        }
+        
+        std::cerr << "TablePipeline: Could not resolve data source: " << key << std::endl;
+        return {};
+        
+    } else if (data_source_json.is_object()) {
+        // Complex data source with adapter
+        std::string key = data_source_json.value("key", "");
+        std::string adapter = data_source_json.value("adapter", "");
+        
+        if (key.empty() || adapter.empty()) {
+            std::cerr << "TablePipeline: Data source object must have 'key' and 'adapter' fields" << std::endl;
+            return {};
+        }
+        
+        // TODO: Implement adapter-based data source resolution
+        // This would use the ComputerRegistry's adapter system
+        std::cerr << "TablePipeline: Adapter-based data sources not yet implemented" << std::endl;
+        return {};
+        
+    } else {
+        std::cerr << "TablePipeline: Invalid data source specification" << std::endl;
+        return {};
+    }
+}
+
+RowSelectorType TablePipeline::parseRowSelectorType(std::string const& type_string) {
+    if (type_string == "interval") {
+        return RowSelectorType::Interval;
+    } else if (type_string == "timestamp") {
+        return RowSelectorType::Timestamp;
+    } else if (type_string == "index") {
+        return RowSelectorType::Index;
+    } else {
+        std::cerr << "TablePipeline: Unknown row selector type: " << type_string << std::endl;
+        return RowSelectorType::Interval; // Default fallback
+    }
+}
+
+std::string TablePipeline::validateTableConfiguration(TableConfiguration const& config) {
+    if (config.table_id.empty()) {
+        return "table_id cannot be empty";
+    }
+    
+    if (config.name.empty()) {
+        return "name cannot be empty";
+    }
+    
+    if (config.columns.empty()) {
+        return "table must have at least one column";
+    }
+    
+    // Validate row selector
+    if (!config.row_selector.contains("type")) {
+        return "row_selector must have 'type' field";
+    }
+    
+    // Validate columns
+    for (size_t i = 0; i < config.columns.size(); ++i) {
+        auto const& column = config.columns[i];
+        
+        if (!column.contains("name")) {
+            return "column " + std::to_string(i) + " missing 'name' field";
+        }
+        
+        if (!column.contains("computer")) {
+            return "column " + std::to_string(i) + " missing 'computer' field";
+        }
+        
+        if (!column.contains("data_source")) {
+            return "column " + std::to_string(i) + " missing 'data_source' field";
+        }
+    }
+    
+    return ""; // Valid
+}
+
+// Helper function to add column to builder based on type
+bool TablePipeline::addColumnToBuilder(TableViewBuilder& builder, 
+                                      nlohmann::json const& column_json,
+                                      std::unique_ptr<IComputerBase> computer) {
+    // This is a simplified version - in practice, you'd need to handle
+    // the type casting based on the computer's output type
+    std::string column_name = column_json["name"];
+    
+    // For now, assume double output - this would need to be made generic
+    // based on the computer's actual output type from the registry
+    auto typed_computer = dynamic_cast<IColumnComputer<double>*>(computer.release());
+    if (typed_computer) {
+        builder.addColumn(column_name, std::unique_ptr<IColumnComputer<double>>(typed_computer));
+        return true;
+    }
+    
+    return false;
+}
