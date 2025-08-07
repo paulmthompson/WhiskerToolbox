@@ -78,6 +78,12 @@ Feature_Table_Widget::~Feature_Table_Widget() {
 }
 
 void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+
+    if (!data_manager) {
+        std::cout << "Feature_Table_Widget::setDataManager - Data manager is null" << std::endl;
+        return;
+    }
+
     _data_manager = std::move(data_manager);
     // I want to add a callback to the data manager to be called when the data manager is updated
 
@@ -94,6 +100,11 @@ void Feature_Table_Widget::_addFeatureName(std::string const & key, int row, int
 
 void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int col) {
 
+    if (!_data_manager) {
+        std::cout << "Feature_Table_Widget::_addFeatureType - Data manager is null" << std::endl;
+        return;
+    }
+
     std::string const type = convert_data_type_to_string(_data_manager->getType(key));
     auto* item = new QTableWidgetItem(QString::fromStdString(type));
     item->setTextAlignment(Qt::AlignCenter);
@@ -101,6 +112,11 @@ void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int
 }
 
 void Feature_Table_Widget::_addFeatureClock(std::string const & key, int row, int col) {
+
+    if (!_data_manager) {
+        std::cout << "Feature_Table_Widget::_addFeatureClock - Data manager is null" << std::endl;
+        return;
+    }
 
     std::string const clock = _data_manager->getTimeFrame(key);
     auto* item = new QTableWidgetItem(QString::fromStdString(clock));
@@ -155,6 +171,12 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
 }
 
 void Feature_Table_Widget::populateTable() {
+
+    if (!_data_manager) {
+        std::cout << "Feature_Table_Widget::populateTable - Data manager is null" << std::endl;
+        return;
+    }
+
     ui->available_features_table->setRowCount(0);
     ui->available_features_table->setColumnCount(static_cast<int>(_columns.size()));
     ui->available_features_table->setHorizontalHeaderLabels(_columns);
