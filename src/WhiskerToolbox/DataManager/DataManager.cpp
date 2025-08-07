@@ -28,6 +28,9 @@
 #include "TimeFrame/TimeFrameV2.hpp"
 
 #include "nlohmann/json.hpp"
+
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
 #include "utils/string_manip.hpp"
 
 #include <filesystem>
@@ -337,6 +340,11 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
     // Iterate through JSON array
     for (auto const & item: j) {
 
+        // Skip transformation objects - they will be processed separately
+        if (item.contains("transformations")) {
+            continue;
+        }
+
         if (!checkRequiredFields(item, {"data_type", "name", "filepath"})) {
             continue;// Exit if any required field is missing
         }
@@ -568,6 +576,42 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             std::string const clock = item["clock"];
             std::cout << "Setting time for " << name << " to " << clock << std::endl;
             dm->setTimeFrame(name, clock);
+        }
+    }
+
+    // Process all transformation objects found in the JSON array
+    for (auto const & item: j) {
+        if (item.contains("transformations")) {
+            std::cout << "Found transformations section, executing pipeline..." << std::endl;
+            
+            try {
+                // Create registry and pipeline with proper constructors
+                auto registry = std::make_unique<TransformRegistry>();
+                TransformPipeline pipeline(dm, registry.get());
+                
+                // Load the pipeline configuration from JSON
+                if (!pipeline.loadFromJson(item["transformations"])) {
+                    std::cerr << "Failed to load pipeline configuration from JSON" << std::endl;
+                    continue;
+                }
+                
+                // Execute the pipeline with a progress callback
+                auto result = pipeline.execute([](int step_index, const std::string& step_name, int step_progress, int overall_progress) {
+                    std::cout << "Step " << step_index << " ('" << step_name << "'): " 
+                              << step_progress << "% (Overall: " << overall_progress << "%)" << std::endl;
+                });
+                
+                if (result.success) {
+                    std::cout << "Pipeline executed successfully!" << std::endl;
+                    std::cout << "Steps completed: " << result.steps_completed << "/" << result.total_steps << std::endl;
+                    std::cout << "Total execution time: " << result.total_execution_time_ms << " ms" << std::endl;
+                } else {
+                    std::cerr << "Pipeline execution failed: " << result.error_message << std::endl;
+                }
+                
+            } catch (const std::exception& e) {
+                std::cerr << "Exception during pipeline execution: " << e.what() << std::endl;
+            }
         }
     }
 

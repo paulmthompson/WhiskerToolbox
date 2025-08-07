@@ -31,6 +31,10 @@ std::type_index MaskAreaOperation::getTargetInputTypeIndex() const {
     return typeid(std::shared_ptr<MaskData>);
 }
 
+std::unique_ptr<TransformParametersBase> MaskAreaOperation::getDefaultParameters() const {
+    return std::make_unique<MaskAreaParameters>();
+}
+
 bool MaskAreaOperation::canApply(DataTypeVariant const & dataVariant) const {
     // 1. Check if the variant holds the correct alternative type (shared_ptr<MaskData>)
     if (!std::holds_alternative<std::shared_ptr<MaskData>>(dataVariant)) {

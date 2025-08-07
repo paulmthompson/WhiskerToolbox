@@ -20,6 +20,10 @@ std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data);
 
 ///////////////////////////////////////////////////////////////////////////////
 
+struct MaskAreaParameters : public TransformParametersBase {
+    // No parameters needed for mask area calculation
+    // This struct exists to maintain consistency with the parameter system
+};
 
 class MaskAreaOperation final : public TransformOperation {
 public:
@@ -31,6 +35,12 @@ public:
 
 
     [[nodiscard]] std::type_index getTargetInputTypeIndex() const override;
+
+    /**
+     * @brief Gets the default parameters for the mask area operation.
+     * @return A unique_ptr to the default parameters.
+     */
+    [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
 
     /**
      * @brief Checks if this operation can be applied to the given data variant.

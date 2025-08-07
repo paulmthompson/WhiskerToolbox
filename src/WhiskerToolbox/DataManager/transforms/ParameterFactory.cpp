@@ -3,6 +3,7 @@
 #include "Lines/line_resample.hpp"
 #include "Lines/line_angle.hpp"
 #include "Masks/mask_median_filter.hpp"
+#include "Masks/mask_area.hpp"
 
 #include <iostream>
 
@@ -78,6 +79,9 @@ void ParameterFactory::initializeDefaultSetters() {
     //     "Mask Median Filter", "kernel_size", &MaskMedianFilterParameters::kernel_size);
     // registerBasicParameter<MaskMedianFilterParameters, int>(
     //     "Mask Median Filter", "iterations", &MaskMedianFilterParameters::iterations);
+    
+    // MaskArea operation has no configurable parameters
+    // It will work automatically when referenced in JSON with operation: "Calculate Area"
     
     std::cout << "Parameter factory initialized with default setters" << std::endl;
 }
