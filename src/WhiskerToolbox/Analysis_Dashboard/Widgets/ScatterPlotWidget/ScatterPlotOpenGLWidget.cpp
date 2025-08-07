@@ -21,7 +21,12 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
       _pan_offset_y(0.0f),
       _dragging(false),
       _tooltips_enabled(true),
-      _opengl_resources_initialized(false) {
+      _opengl_resources_initialized(false),
+      _data_min_x(0.0f),
+      _data_max_x(1.0f),
+      _data_min_y(0.0f),
+      _data_max_y(1.0f),
+      _data_bounds_valid(false) {
     
     // Setup tooltip timer
     _tooltip_timer = new QTimer(this);
@@ -61,6 +66,12 @@ void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
     _x_data = x_data;
     _y_data = y_data;
 
+    // Calculate data bounds
+    calculateDataBounds();
+
+    qDebug() << "ScatterPlotOpenGLWidget::setScatterData: Data bounds:" 
+             << _data_min_x << "," << _data_min_y << "to" << _data_max_x << "," << _data_max_y;
+
     qDebug() << "Creating ScatterPlotVisualization with" << x_data.size() << "points";
     
     // Create new visualization with the data (using deferred initialization)
@@ -83,6 +94,9 @@ void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
         }
         doneCurrent();
     }
+
+    // Update projection matrix based on data bounds
+    updateProjectionMatrix();
 
     update();
     
@@ -115,7 +129,7 @@ void ScatterPlotOpenGLWidget::setPointSize(float point_size) {
 
 void ScatterPlotOpenGLWidget::setZoomLevel(float zoom_level) {
     _zoom_level = std::max(0.1f, std::min(10.0f, zoom_level));
-    updateViewMatrix();
+    updateProjectionMatrix();
     emit zoomLevelChanged(_zoom_level);
     update();
 }
@@ -123,7 +137,7 @@ void ScatterPlotOpenGLWidget::setZoomLevel(float zoom_level) {
 void ScatterPlotOpenGLWidget::setPanOffset(float offset_x, float offset_y) {
     _pan_offset_x = offset_x;
     _pan_offset_y = offset_y;
-    updateViewMatrix();
+    updateProjectionMatrix();
     emit panOffsetChanged(_pan_offset_x, _pan_offset_y);
     update();
 }
@@ -182,8 +196,8 @@ void ScatterPlotOpenGLWidget::paintGL() {
         return;
     }
 
-    // Set up matrices
-    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix;
+    // Set up matrices - use projection matrix directly since zoom/pan are handled in projection
+    QMatrix4x4 mvp_matrix = _projection_matrix;
     
     qDebug() << "ScatterPlotOpenGLWidget::paintGL: Rendering with point size" << _point_size;
     
@@ -194,15 +208,26 @@ void ScatterPlotOpenGLWidget::paintGL() {
 void ScatterPlotOpenGLWidget::resizeGL(int width, int height) {
     glViewport(0, 0, width, height);
     
-    // Update projection matrix for 2D rendering
+    // Update projection matrix based on data bounds
+    updateProjectionMatrix();
+}
+
+void ScatterPlotOpenGLWidget::updateProjectionMatrix() {
     _projection_matrix.setToIdentity();
     
-    // Set up orthographic projection that maintains aspect ratio
-    float aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
-    if (aspect_ratio > 1.0f) {
-        _projection_matrix.ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f, -1.0f, 1.0f);
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
+    
+    if (left == right || bottom == top) {
+        // Fall back to default projection if data bounds are invalid
+        float aspect_ratio = static_cast<float>(width()) / height();
+        if (aspect_ratio > 1.0f) {
+            _projection_matrix.ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f, -1.0f, 1.0f);
+        } else {
+            _projection_matrix.ortho(-1.0f, 1.0f, -1.0f / aspect_ratio, 1.0f / aspect_ratio, -1.0f, 1.0f);
+        }
     } else {
-        _projection_matrix.ortho(-1.0f, 1.0f, -1.0f / aspect_ratio, 1.0f / aspect_ratio, -1.0f, 1.0f);
+        _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
     }
 }
 
@@ -301,6 +326,70 @@ void ScatterPlotOpenGLWidget::handleMouseHover(QPoint const & pos) {
 
     _tooltip_mouse_pos = pos;
     _tooltip_timer->start(TOOLTIP_DELAY_MS);
+}
+
+void ScatterPlotOpenGLWidget::calculateDataBounds() {
+    if (_x_data.empty() || _y_data.empty()) {
+        _data_bounds_valid = false;
+        return;
+    }
+
+    _data_min_x = _data_max_x = _x_data[0];
+    _data_min_y = _data_max_y = _y_data[0];
+
+    for (size_t i = 1; i < _x_data.size(); ++i) {
+        _data_min_x = std::min(_data_min_x, _x_data[i]);
+        _data_max_x = std::max(_data_max_x, _x_data[i]);
+        _data_min_y = std::min(_data_min_y, _y_data[i]);
+        _data_max_y = std::max(_data_max_y, _y_data[i]);
+    }
+
+    // Add some padding
+    float padding_x = (_data_max_x - _data_min_x) * 0.1f;
+    float padding_y = (_data_max_y - _data_min_y) * 0.1f;
+
+    _data_min_x -= padding_x;
+    _data_max_x += padding_x;
+    _data_min_y -= padding_y;
+    _data_max_y += padding_y;
+
+    _data_bounds_valid = true;
+}
+
+void ScatterPlotOpenGLWidget::calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const {
+    if (!_data_bounds_valid || width() <= 0 || height() <= 0) {
+        left = right = bottom = top = 0.0f;
+        return;
+    }
+
+    // Calculate orthographic projection bounds (similar to SpatialOverlayOpenGLWidget)
+    float data_width = _data_max_x - _data_min_x;
+    float data_height = _data_max_y - _data_min_y;
+    float center_x = (_data_min_x + _data_max_x) * 0.5f;
+    float center_y = (_data_min_y + _data_max_y) * 0.5f;
+
+    // Add padding and apply zoom
+    float padding = 1.1f; // 10% padding
+    float zoom_factor = 1.0f / _zoom_level;
+    float half_width = (data_width * padding * zoom_factor) / 2.0f;
+    float half_height = (data_height * padding * zoom_factor) / 2.0f;
+
+    // Apply aspect ratio correction
+    float aspect_ratio = static_cast<float>(width()) / height();
+    if (aspect_ratio > 1.0f) {
+        half_width *= aspect_ratio;
+    } else {
+        half_height /= aspect_ratio;
+    }
+
+    // Apply pan offset
+    float pan_x = _pan_offset_x * data_width * zoom_factor;
+    float pan_y = _pan_offset_y * data_height * zoom_factor;
+
+    left = center_x - half_width + pan_x;
+    right = center_x + half_width + pan_x;
+    bottom = center_y - half_height + pan_y;
+    top = center_y + half_height + pan_y;
 }
 
 

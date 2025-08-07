@@ -53,8 +53,12 @@ void ScatterPlotVisualization::populateData() {
         return;
     }
 
+    qDebug() << "ScatterPlotVisualization::populateData: Starting with" << m_x_data.size() << "points";
+
     // Calculate bounds for QuadTree initialization
     BoundingBox bounds = getDataBounds();
+    qDebug() << "ScatterPlotVisualization::populateData: Data bounds:" 
+             << bounds.min_x << "," << bounds.min_y << "to" << bounds.max_x << "," << bounds.max_y;
 
     // Update the spatial index with proper bounds
     this->m_spatial_index = std::make_unique<QuadTree<size_t>>(bounds);
@@ -67,10 +71,11 @@ void ScatterPlotVisualization::populateData() {
         // Use vector index as row indicator
         size_t row_indicator = i;
 
-        // Store coordinates in QuadTree
+        // Store original coordinates in QuadTree for spatial queries
         this->m_spatial_index->insert(x, y, row_indicator);
 
-        // Store coordinates and group_id in vertex data for OpenGL rendering
+        // Store original world coordinates in vertex data for OpenGL rendering
+        // The projection matrix will handle the coordinate transformation
         this->m_vertex_data.push_back(x);
         this->m_vertex_data.push_back(y);
         this->m_vertex_data.push_back(0.0f);// group_id = 0 (ungrouped) initially
@@ -81,12 +86,18 @@ void ScatterPlotVisualization::populateData() {
     this->m_hidden_point_count = 0;
     this->m_visible_vertex_count = this->m_vertex_data.size();
 
+    qDebug() << "ScatterPlotVisualization::populateData: Created" << this->m_total_point_count 
+             << "points with" << this->m_vertex_data.size() << "vertex components";
+
     // Update the OpenGL vertex buffer with the populated data
     if (this->m_vertex_buffer.isCreated()) {
         this->m_vertex_buffer.bind();
         this->m_vertex_buffer.allocate(this->m_vertex_data.data(), 
                                        static_cast<int>(this->m_vertex_data.size() * sizeof(float)));
         this->m_vertex_buffer.release();
+        qDebug() << "ScatterPlotVisualization::populateData: Updated OpenGL vertex buffer";
+    } else {
+        qDebug() << "ScatterPlotVisualization::populateData: Vertex buffer not created yet";
     }
 
     qDebug() << "ScatterPlotVisualization: Populated data with" << this->m_total_point_count << "points";

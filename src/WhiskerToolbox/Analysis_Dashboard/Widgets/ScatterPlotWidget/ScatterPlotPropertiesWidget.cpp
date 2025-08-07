@@ -843,33 +843,33 @@ void ScatterPlotPropertiesWidget::updateCoordinateRange() {
     }
 
     // Calculate the visible range based on zoom and pan
-    // The OpenGL widget uses normalized coordinates (-1 to 1) for the viewport
-    // We need to convert this to world coordinates based on the data range
+    // The OpenGL widget uses a projection matrix that maps world coordinates to screen
+    // We need to calculate what portion of the data is currently visible
     
-    // Calculate the visible window in normalized coordinates
-    float view_width = 2.0f / zoom_level;  // Width of visible area in normalized coords
-    float view_height = 2.0f / zoom_level; // Height of visible area in normalized coords
-    
-    // Calculate the center of the visible area in normalized coordinates
-    float center_x = -pan_offset.x() / zoom_level;
-    float center_y = -pan_offset.y() / zoom_level;
-    
-    // Calculate the visible bounds in normalized coordinates
-    float left_norm = center_x - view_width / 2.0f;
-    float right_norm = center_x + view_width / 2.0f;
-    float bottom_norm = center_y - view_height / 2.0f;
-    float top_norm = center_y + view_height / 2.0f;
-    
-    // Convert normalized coordinates to world coordinates
-    // We need to map from the normalized range to the actual data range
+    // Calculate data dimensions
     float data_width = max_x - min_x;
     float data_height = max_y - min_y;
     
-    // Map normalized coordinates to world coordinates
-    float left_world = min_x + (left_norm + 1.0f) * data_width / 2.0f;
-    float right_world = min_x + (right_norm + 1.0f) * data_width / 2.0f;
-    float bottom_world = min_y + (bottom_norm + 1.0f) * data_height / 2.0f;
-    float top_world = min_y + (top_norm + 1.0f) * data_height / 2.0f;
+    // Calculate the visible window based on zoom level
+    // The projection matrix creates an orthographic view with padding
+    float padding = 1.1f; // 10% padding (same as SpatialOverlayOpenGLWidget)
+    float zoom_factor = 1.0f / zoom_level;
+    float half_width = (data_width * padding * zoom_factor) / 2.0f;
+    float half_height = (data_height * padding * zoom_factor) / 2.0f;
+    
+    // Calculate center of data
+    float center_x = (min_x + max_x) / 2.0f;
+    float center_y = (min_y + max_y) / 2.0f;
+    
+    // Apply pan offset (convert from normalized to world coordinates)
+    float pan_x = pan_offset.x() * data_width * zoom_factor;
+    float pan_y = pan_offset.y() * data_height * zoom_factor;
+    
+    // Calculate visible bounds
+    float left_world = center_x - half_width + pan_x;
+    float right_world = center_x + half_width + pan_x;
+    float bottom_world = center_y - half_height + pan_y;
+    float top_world = center_y + half_height + pan_y;
     
     // Format the range strings
     QString x_range_text = QString("[%1, %2]")

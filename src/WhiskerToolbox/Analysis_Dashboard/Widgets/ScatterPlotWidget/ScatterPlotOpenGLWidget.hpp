@@ -136,6 +136,10 @@ private:
     std::vector<float> _x_data;
     std::vector<float> _y_data;
 
+    // Data bounds for projection calculation
+    float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
+    bool _data_bounds_valid;
+
     // OpenGL state
     bool _opengl_resources_initialized;
 
@@ -174,6 +178,25 @@ private:
      * @param pos Mouse position
      */
     void handleMouseHover(QPoint const & pos);
+
+    /**
+     * @brief Calculate the current orthographic projection bounds based on data
+     * @param left Output: left bound
+     * @param right Output: right bound  
+     * @param bottom Output: bottom bound
+     * @param top Output: top bound
+     */
+    void calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const;
+
+    /**
+     * @brief Calculate data bounds from the stored data
+     */
+    void calculateDataBounds();
+
+    /**
+     * @brief Update the projection matrix based on current data bounds and zoom/pan
+     */
+    void updateProjectionMatrix();
 };
 
 #endif// SCATTERPLOTOPENGLWIDGET_HPP

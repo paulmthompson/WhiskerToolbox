@@ -330,7 +330,10 @@ GenericPointVisualization<CoordType, RowIndicatorType>::~GenericPointVisualizati
 
 template<typename CoordType, typename RowIndicatorType>
 void GenericPointVisualization<CoordType, RowIndicatorType>::initializeOpenGLResources() {
+    qDebug() << "GenericPointVisualization::initializeOpenGLResources: Starting initialization for" << m_key;
+    
     if (!initializeOpenGLFunctions()) {
+        qDebug() << "GenericPointVisualization::initializeOpenGLResources: Failed to initialize OpenGL functions";
         return;
     }
 
@@ -344,6 +347,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::initializeOpenGLRes
         return;
     }
 
+    qDebug() << "GenericPointVisualization::initializeOpenGLResources: Shader program loaded successfully";
+
     m_vertex_array_object.create();
     m_vertex_array_object.bind();
 
@@ -351,6 +356,9 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::initializeOpenGLRes
     m_vertex_buffer.bind();
     m_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     m_vertex_buffer.allocate(m_vertex_data.data(), static_cast<int>(m_vertex_data.size() * sizeof(float)));
+
+    qDebug() << "GenericPointVisualization::initializeOpenGLResources: Vertex buffer created with" 
+             << m_vertex_data.size() << "components";
 
     // Position attribute (x, y)
     glEnableVertexAttribArray(0);
@@ -362,6 +370,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::initializeOpenGLRes
 
     m_vertex_buffer.release();
     m_vertex_array_object.release();
+
+    qDebug() << "GenericPointVisualization::initializeOpenGLResources: Vertex array object setup complete";
 
     m_selection_vertex_array_object.create();
     m_selection_vertex_array_object.bind();
@@ -527,7 +537,13 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::render(QMatrix4x4 c
 
 template<typename CoordType, typename RowIndicatorType>
 void GenericPointVisualization<CoordType, RowIndicatorType>::_renderPoints(QOpenGLShaderProgram * shader_program, float point_size) {
-    if (!m_visible || m_vertex_data.empty()) return;
+    if (!m_visible || m_vertex_data.empty()) {
+        qDebug() << "GenericPointVisualization::_renderPoints: Skipping render - visible:" << m_visible 
+                 << "vertex_data_empty:" << m_vertex_data.empty() << "total_points:" << m_total_point_count;
+        return;
+    }
+
+    qDebug() << "GenericPointVisualization::_renderPoints: Rendering" << m_total_point_count << "points";
 
     m_vertex_array_object.bind();
     m_vertex_buffer.bind();
