@@ -144,6 +144,10 @@ set(DATAMANAGER_SOURCES
         transforms/data_transforms.hpp
         transforms/TransformRegistry.hpp
         transforms/TransformRegistry.cpp
+        transforms/TransformPipeline.hpp
+        transforms/TransformPipeline.cpp
+        transforms/ParameterFactory.hpp
+        transforms/ParameterFactory.cpp
         transforms/AnalogTimeSeries/analog_event_threshold.cpp
         transforms/AnalogTimeSeries/analog_event_threshold.hpp
         transforms/AnalogTimeSeries/analog_filter.cpp 
