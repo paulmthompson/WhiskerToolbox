@@ -4,6 +4,8 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/transforms/TransformRegistry.hpp"
+#include "DataManager/transforms/TransformPipeline.hpp"
+#include "DataManager/transforms/ParameterFactory.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
@@ -28,8 +30,18 @@
 #include "DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
 #include "AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp"
+#include "Media/WhiskerTracing_Widget/WhiskerTracing_Widget.hpp"
 
 #include <QApplication>
+#include <QGroupBox>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QFileDialog>
+#include <QJsonDocument>
+#include <QJsonParseError>
+#include <QMessageBox>
+#include <QFont>
+#include <QSplitter>
 
 
 DataTransform_Widget::DataTransform_Widget(
@@ -37,24 +49,37 @@ DataTransform_Widget::DataTransform_Widget(
         QWidget * parent)
     : QScrollArea(parent),
       ui(new Ui::DataTransform_Widget),
-      _data_manager{std::move(data_manager)} {
+      _data_manager{std::move(data_manager)},
+      _jsonPipelineGroup(nullptr),
+      _loadJsonButton(nullptr),
+      _jsonTextEdit(nullptr),
+      _jsonStatusLabel(nullptr),
+      _executeJsonButton(nullptr),
+      _pipelineProgressBar(nullptr) {
     ui->setupUi(this);
 
-    // Set explicit size policy and minimum size
+    // Set explicit size policy and minimum size - increased for JSON section
     setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-    setMinimumSize(250, 400);
+    setMinimumSize(250, 600);
 
-    // Configure scroll area properties - disable scroll bars completely
+    // Configure scroll area properties - enable scrolling for JSON section
     setWidgetResizable(true);
-    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     _registry = std::make_unique<TransformRegistry>();
+    
+    // Initialize pipeline with registry and data manager
+    _pipeline = std::make_unique<TransformPipeline>(_data_manager.get(), _registry.get());
+    
+    // Initialize parameter factory
+    ParameterFactory::getInstance().initializeDefaultSetters();
 
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
     ui->feature_table_widget->setDataManager(_data_manager);
 
     _initializeParameterWidgetFactories();
+    _setupJsonPipelineUI();
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataTransform_Widget::_handleFeatureSelected);
     connect(ui->do_transform_button, &QPushButton::clicked, this, &DataTransform_Widget::_doTransform);
@@ -168,6 +193,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Filter"] = [](QWidget * parent)  -> TransformParameter_Widget * {
         return new AnalogFilter_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Whisker Tracing"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new WhiskerTracing_Widget(parent);
     };
 }
 
@@ -427,14 +456,288 @@ void DataTransform_Widget::resizeEvent(QResizeEvent* event) {
         _currentParameterWidget->updateGeometry();
     }
 
+    // Update JSON text editor width if it exists
+    if (_jsonTextEdit) {
+        _jsonTextEdit->setMaximumWidth(width() - 40); // Account for margins
+    }
+
     // Ensure the stackedWidget is properly sized
     ui->stackedWidget->updateGeometry();
 }
 
 QSize DataTransform_Widget::sizeHint() const {
-    return QSize(350, 600);
+    return QSize(350, 800);
 }
 
 QSize DataTransform_Widget::minimumSizeHint() const {
-    return QSize(250, 400);
+    return QSize(250, 600);
+}
+
+void DataTransform_Widget::_setupJsonPipelineUI() {
+    // Create the JSON pipeline group box
+    _jsonPipelineGroup = new QGroupBox("JSON Pipeline", this);
+    _jsonPipelineGroup->setCheckable(true);
+    _jsonPipelineGroup->setChecked(false); // Start collapsed
+    _jsonPipelineGroup->setMinimumHeight(50); // Smaller when collapsed
+    
+    auto jsonLayout = new QVBoxLayout(_jsonPipelineGroup);
+    
+    // JSON file loading section
+    auto jsonButtonLayout = new QHBoxLayout();
+    _loadJsonButton = new QPushButton("Load JSON Pipeline...", this);
+    _jsonStatusLabel = new QLabel("No JSON pipeline loaded", this);
+    _jsonStatusLabel->setStyleSheet("color: gray;");
+    
+    jsonButtonLayout->addWidget(_loadJsonButton);
+    jsonButtonLayout->addWidget(_jsonStatusLabel, 1);
+    jsonLayout->addLayout(jsonButtonLayout);
+    
+    // JSON text editor
+    _jsonTextEdit = new QTextEdit(this);
+    _jsonTextEdit->setPlaceholderText(
+        "JSON pipeline configuration will appear here...\n\n"
+        "Example:\n"
+        "{\n"
+        "  \"metadata\": {\n"
+        "    \"name\": \"My Pipeline\",\n"
+        "    \"version\": \"1.0\"\n"
+        "  },\n"
+        "  \"steps\": [\n"
+        "    {\n"
+        "      \"step_id\": \"step1\",\n"
+        "      \"transform_name\": \"Line Alignment\",\n"
+        "      \"input_key\": \"whisker_trace\",\n"
+        "      \"output_key\": \"aligned_whisker\",\n"
+        "      \"phase\": 0,\n"
+        "      \"parameters\": {\n"
+        "        \"width\": 25\n"
+        "      }\n"
+        "    }\n"
+        "  ]\n"
+        "}"
+    );
+    
+    // Set monospace font for JSON
+    QFont monoFont("Consolas, Monaco, monospace");
+    monoFont.setPointSize(9);
+    _jsonTextEdit->setFont(monoFont);
+    _jsonTextEdit->setMinimumHeight(200);
+    
+    jsonLayout->addWidget(_jsonTextEdit);
+    
+    // Pipeline execution section
+    auto executeLayout = new QHBoxLayout();
+    _executeJsonButton = new QPushButton("Execute Pipeline", this);
+    _executeJsonButton->setEnabled(false);
+    
+    _pipelineProgressBar = new QProgressBar(this);
+    _pipelineProgressBar->setVisible(false);
+    _pipelineProgressBar->setTextVisible(true);
+    
+    executeLayout->addWidget(_executeJsonButton);
+    executeLayout->addWidget(_pipelineProgressBar, 1);
+    jsonLayout->addLayout(executeLayout);
+    
+    // Add the JSON pipeline group to the main layout
+    // Get the scroll area's widget and its layout
+    auto* scrollWidget = widget();
+    if (scrollWidget) {
+        auto* mainLayout = qobject_cast<QVBoxLayout*>(scrollWidget->layout());
+        if (mainLayout) {
+            // Insert the JSON pipeline group before the last spacer
+            int spacerIndex = mainLayout->count() - 1;
+            mainLayout->insertWidget(spacerIndex, _jsonPipelineGroup);
+        }
+    }
+    
+    // Connect signals
+    connect(_loadJsonButton, &QPushButton::clicked, this, &DataTransform_Widget::_loadJsonPipeline);
+    connect(_jsonTextEdit, &QTextEdit::textChanged, this, &DataTransform_Widget::_onJsonTextChanged);
+    connect(_executeJsonButton, &QPushButton::clicked, this, &DataTransform_Widget::_executeJsonPipeline);
+    
+    // Connect group box toggle to adjust size
+    connect(_jsonPipelineGroup, &QGroupBox::toggled, this, [this](bool checked) {
+        if (checked) {
+            _jsonPipelineGroup->setMinimumHeight(350);
+        } else {
+            _jsonPipelineGroup->setMinimumHeight(50);
+        }
+        updateGeometry();
+    });
+}
+
+void DataTransform_Widget::_loadJsonPipeline() {
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        "Load JSON Pipeline",
+        "",
+        "JSON Files (*.json);;All Files (*)"
+    );
+    
+    if (!fileName.isEmpty()) {
+        _updateJsonDisplay(fileName);
+    }
+}
+
+void DataTransform_Widget::_updateJsonDisplay(const QString& jsonFilePath) {
+    QFile file(jsonFilePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Error", "Could not open file: " + jsonFilePath);
+        return;
+    }
+    
+    QTextStream in(&file);
+    QString jsonContent = in.readAll();
+    file.close();
+    
+    // Update the text editor
+    _jsonTextEdit->setPlainText(jsonContent);
+    
+    // Update status and file path
+    _currentJsonFile = jsonFilePath;
+    QFileInfo fileInfo(jsonFilePath);
+    _jsonStatusLabel->setText("Loaded: " + fileInfo.fileName());
+    _jsonStatusLabel->setStyleSheet("color: green;");
+    
+    // Validate and update UI
+    _validateJsonSyntax();
+}
+
+void DataTransform_Widget::_onJsonTextChanged() {
+    _validateJsonSyntax();
+}
+
+void DataTransform_Widget::_validateJsonSyntax() {
+    QString jsonText = _getCurrentJsonContent();
+    if (jsonText.isEmpty()) {
+        _jsonStatusLabel->setText("No JSON content");
+        _jsonStatusLabel->setStyleSheet("color: gray;");
+        _executeJsonButton->setEnabled(false);
+        return;
+    }
+    
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(jsonText.toUtf8(), &error);
+    
+    if (error.error != QJsonParseError::NoError) {
+        _jsonStatusLabel->setText("JSON Error: " + error.errorString());
+        _jsonStatusLabel->setStyleSheet("color: red;");
+        _executeJsonButton->setEnabled(false);
+    } else {
+        // Try to load the pipeline to validate it
+        nlohmann::json config;
+        try {
+            config = nlohmann::json::parse(jsonText.toStdString());
+            
+            if (_pipeline->loadFromJson(config)) {
+                auto validation_errors = _pipeline->validate();
+                if (validation_errors.empty()) {
+                    _jsonStatusLabel->setText("Valid pipeline (" + QString::number(_pipeline->getSteps().size()) + " steps)");
+                    _jsonStatusLabel->setStyleSheet("color: green;");
+                    _executeJsonButton->setEnabled(true);
+                } else {
+                    QString errorText = "Validation errors: ";
+                    for (size_t i = 0; i < validation_errors.size() && i < 2; ++i) {
+                        if (i > 0) errorText += "; ";
+                        errorText += QString::fromStdString(validation_errors[i]);
+                    }
+                    if (validation_errors.size() > 2) {
+                        errorText += "...";
+                    }
+                    _jsonStatusLabel->setText(errorText);
+                    _jsonStatusLabel->setStyleSheet("color: red;");
+                    _executeJsonButton->setEnabled(false);
+                }
+            } else {
+                _jsonStatusLabel->setText("Invalid pipeline configuration");
+                _jsonStatusLabel->setStyleSheet("color: red;");
+                _executeJsonButton->setEnabled(false);
+            }
+        } catch (std::exception const& e) {
+            _jsonStatusLabel->setText("Pipeline error: " + QString::fromStdString(e.what()));
+            _jsonStatusLabel->setStyleSheet("color: red;");
+            _executeJsonButton->setEnabled(false);
+        }
+    }
+}
+
+void DataTransform_Widget::_executeJsonPipeline() {
+    if (!_pipeline) {
+        QMessageBox::warning(this, "Error", "No pipeline available");
+        return;
+    }
+    
+    // Load the current JSON content
+    QString jsonText = _getCurrentJsonContent();
+    nlohmann::json config;
+    try {
+        config = nlohmann::json::parse(jsonText.toStdString());
+    } catch (std::exception const& e) {
+        QMessageBox::warning(this, "JSON Error", "Failed to parse JSON: " + QString::fromStdString(e.what()));
+        return;
+    }
+    
+    if (!_pipeline->loadFromJson(config)) {
+        QMessageBox::warning(this, "Pipeline Error", "Failed to load pipeline configuration");
+        return;
+    }
+    
+    // Setup progress tracking
+    _pipelineProgressBar->setVisible(true);
+    _pipelineProgressBar->setValue(0);
+    _executeJsonButton->setEnabled(false);
+    
+    // Execute the pipeline with progress callback
+    auto progressCallback = [this](int step_index, std::string const& step_name, int step_progress, int overall_progress) {
+        _pipelineProgressBar->setValue(overall_progress);
+        if (step_index >= 0) {
+            _pipelineProgressBar->setFormat(QString("Step %1 (%2): %3%").arg(step_index).arg(QString::fromStdString(step_name)).arg(step_progress));
+        } else {
+            _pipelineProgressBar->setFormat(QString("%1: %2%").arg(QString::fromStdString(step_name)).arg(overall_progress));
+        }
+        QApplication::processEvents();
+    };
+    
+    auto result = _pipeline->execute(progressCallback);
+    
+    // Handle results
+    if (result.success) {
+        _pipelineProgressBar->setValue(100);
+        _pipelineProgressBar->setFormat("Pipeline completed successfully!");
+        
+        QMessageBox::information(this, "Success", 
+            QString("Pipeline completed successfully!\n"
+                   "Steps completed: %1/%2\n"
+                   "Execution time: %3 ms")
+                   .arg(result.steps_completed)
+                   .arg(result.total_steps)
+                   .arg(result.total_execution_time_ms, 0, 'f', 1));
+                   
+        // Refresh the feature table to show new data
+        ui->feature_table_widget->populateTable();
+    } else {
+        _pipelineProgressBar->setFormat("Pipeline failed");
+        _pipelineProgressBar->setStyleSheet("QProgressBar::chunk { background-color: red; }");
+        
+        QString errorDetails;
+        for (size_t i = 0; i < result.step_results.size(); ++i) {
+            auto const& step_result = result.step_results[i];
+            if (!step_result.success) {
+                errorDetails += QString("Step %1: %2\n").arg(i).arg(QString::fromStdString(step_result.error_message));
+            }
+        }
+        
+        QMessageBox::warning(this, "Pipeline Failed", 
+            QString("Pipeline execution failed:\n%1\n\nSteps completed: %2/%3")
+                   .arg(QString::fromStdString(result.error_message))
+                   .arg(result.steps_completed)
+                   .arg(result.total_steps) + 
+                   (errorDetails.isEmpty() ? "" : "\n\nStep details:\n" + errorDetails));
+    }
+    
+    _executeJsonButton->setEnabled(true);
+}
+
+QString DataTransform_Widget::_getCurrentJsonContent() const {
+    return _jsonTextEdit ? _jsonTextEdit->toPlainText() : QString();
 }

@@ -22,6 +22,7 @@
 #include "transforms/Masks/mask_principal_axis.hpp"
 #include "transforms/Masks/mask_skeletonize.hpp"
 #include "transforms/Masks/mask_to_line.hpp"
+#include "transforms/Media/whisker_tracing.hpp"
 
 #include <iostream>// For init messages
 #include <map>
@@ -58,6 +59,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LineClipOperation>());
     _registerOperation(std::make_unique<GroupOperation>());
     _registerOperation(std::make_unique<AnalogFilterOperation>());
+    _registerOperation(std::make_unique<WhiskerTracingOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;

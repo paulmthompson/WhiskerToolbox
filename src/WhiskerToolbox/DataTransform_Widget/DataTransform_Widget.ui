@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>500</height>
+    <height>650</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,14 +19,14 @@
   <property name="minimumSize">
    <size>
     <width>250</width>
-    <height>400</height>
+    <height>600</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <property name="verticalScrollBarPolicy">
-   <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+   <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
   </property>
   <property name="horizontalScrollBarPolicy">
    <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
@@ -40,7 +40,7 @@
      <x>0</x>
      <y>0</y>
      <width>398</width>
-     <height>498</height>
+     <height>648</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0,1,0">

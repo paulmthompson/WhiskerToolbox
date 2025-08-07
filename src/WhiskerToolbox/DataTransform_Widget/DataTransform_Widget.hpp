@@ -7,6 +7,11 @@
 #include <QString>
 #include <QScrollArea>
 #include <QResizeEvent>
+#include <QGroupBox>
+#include <QPushButton>
+#include <QTextEdit>
+#include <QLabel>
+#include <QProgressBar>
 
 #include <map>
 #include <memory>
@@ -20,6 +25,7 @@ class DataManager;
 class TransformOperation;
 class TransformParameter_Widget;
 class TransformRegistry;
+class TransformPipeline;
 
 
 class DataTransform_Widget : public QScrollArea {
@@ -48,8 +54,25 @@ private:
     DataTypeVariant _currentSelectedDataVariant;
     int _current_progress = 0;
 
+    // JSON Pipeline members
+    QGroupBox* _jsonPipelineGroup;
+    QPushButton* _loadJsonButton;
+    QTextEdit* _jsonTextEdit;
+    QLabel* _jsonStatusLabel;
+    QPushButton* _executeJsonButton;
+    QProgressBar* _pipelineProgressBar;
+    
+    QString _currentJsonFile;
+    std::unique_ptr<TransformPipeline> _pipeline;
+
     void _initializeParameterWidgetFactories();
     void _displayParameterWidget(std::string const & op_name);
+    
+    // JSON Pipeline helper methods
+    void _setupJsonPipelineUI();
+    void _updateExecuteButtonState();
+    QString _getCurrentJsonContent() const;
+    void _updateJsonDisplay(const QString& jsonFilePath);
     
     /**
      * @brief Generates an output name based on the input feature and transform operation
@@ -67,6 +90,12 @@ private slots:
     void _doTransform();
     void _onOperationSelected(int index);
     void _updateProgress(int progress);
+    
+    // JSON Pipeline slots
+    void _loadJsonPipeline();
+    void _onJsonTextChanged();
+    void _executeJsonPipeline();
+    void _validateJsonSyntax();
 };
 
 
