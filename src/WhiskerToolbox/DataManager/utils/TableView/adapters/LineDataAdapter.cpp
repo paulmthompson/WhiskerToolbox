@@ -65,3 +65,16 @@ auto LineDataAdapter::getLinesInRange(TimeFrameIndex start,
 
     return result;
 } 
+
+auto LineDataAdapter::getEntityCountAt(TimeFrameIndex t) const -> size_t {
+    auto const& lines_ref = m_lineData->getAtTime(t, m_timeFrame.get(), m_timeFrame.get());
+    return lines_ref.size();
+}
+
+auto LineDataAdapter::getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* {
+    auto const& lines_ref = m_lineData->getAtTime(t, m_timeFrame.get(), m_timeFrame.get());
+    if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= lines_ref.size()) {
+        return nullptr;
+    }
+    return &lines_ref[static_cast<size_t>(entityIndex)];
+}

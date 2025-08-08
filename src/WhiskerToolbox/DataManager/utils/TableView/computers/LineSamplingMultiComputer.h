@@ -29,16 +29,27 @@ public:
           m_segments(segments < 1 ? 1 : segments) {}
 
     [[nodiscard]] auto computeBatch(ExecutionPlan const & plan) const -> std::vector<std::vector<double>> override {
-        // Determine rows: timestamps or intervals; we support timestamps for sampling
+        // Determine rows: entity-expanded rows take precedence
         std::vector<TimeFrameIndex> indices;
-        if (plan.hasIndices()) {
+        std::vector<std::optional<int>> entityIdx;
+        if (!plan.getRows().empty()) {
+            auto const& rows = plan.getRows();
+            indices.reserve(rows.size());
+            entityIdx.reserve(rows.size());
+            for (auto const& r : rows) {
+                indices.push_back(r.timeIndex);
+                entityIdx.push_back(r.entityIndex);
+            }
+        } else if (plan.hasIndices()) {
             indices = plan.getIndices();
+            entityIdx.resize(indices.size());
         } else {
-            // For intervals, sample at start index; extend later if needed
             auto const & intervals = plan.getIntervals();
             indices.reserve(intervals.size());
+            entityIdx.reserve(intervals.size());
             for (auto const & interval : intervals) {
                 indices.push_back(interval.start);
+                entityIdx.emplace_back(std::nullopt);
             }
         }
 
@@ -64,19 +75,26 @@ public:
 
         for (size_t r = 0; r < rowCount; ++r) {
             TimeFrameIndex const tfIndex = indices[r];
-            // Fetch lines at the given time in the target timeframe, converted to the source timeframe
-            auto lines = m_lineSource->getLinesInRange(tfIndex, tfIndex, targetTF);
-            if (lines.empty()) {
-                // Fill zeros if no line
-                for (int p = 0; p < positions; ++p) {
-                    results[2 * p][r] = 0.0;
-                    results[2 * p + 1][r] = 0.0;
+            // Prefer direct entity access if entity index is present
+            Line2D const* linePtr = nullptr;
+            if (entityIdx[r].has_value()) {
+                linePtr = m_lineSource->getLineAt(tfIndex, *entityIdx[r]);
+            }
+            Line2D lineFallback;
+            if (!linePtr) {
+                auto lines = m_lineSource->getLinesInRange(tfIndex, tfIndex, targetTF);
+                if (lines.empty()) {
+                    for (int p = 0; p < positions; ++p) {
+                        results[2 * p][r] = 0.0;
+                        results[2 * p + 1][r] = 0.0;
+                    }
+                    continue;
                 }
-                continue;
+                lineFallback = lines.front();
+                linePtr = &lineFallback;
             }
 
-            // Use the first line at this time
-            Line2D const & line = lines.front();
+            Line2D const & line = *linePtr;
             for (int p = 0; p < positions; ++p) {
                 auto optPoint = point_at_fractional_position(line, fractions[static_cast<size_t>(p)], true);
                 if (optPoint.has_value()) {

@@ -3,9 +3,12 @@
 
 #include "DigitalTimeSeries/interval_data.hpp"
 #include "TimeFrame.hpp"
+#include "utils/TableView/core/DataSourceNameInterner.hpp"
+#include "utils/TableView/core/RowDescriptor.h"
 
 #include <utility>
 #include <vector>
+#include <map>
 
 /**
  * @brief Holds a cached, reusable access pattern for a specific data source.
@@ -79,10 +82,50 @@ public:
         return m_timeFrame;
     }
 
+    // Entity-expanded API
+    void setRows(std::vector<RowId> rows) {
+        m_rows = std::move(rows);
+    }
+
+    std::vector<RowId> const& getRows() const {
+        return m_rows;
+    }
+
+    bool hasEntities() const {
+        if (m_rows.empty()) return false;
+        for (auto const& r : m_rows) {
+            if (r.entityIndex.has_value()) return true;
+        }
+        return false;
+    }
+
+    void setSourceId(DataSourceId id) { m_sourceId = id; }
+    DataSourceId getSourceId() const { return m_sourceId; }
+
+    // Group spans per timestamp for fast broadcast
+    void setTimeToRowSpan(std::map<TimeFrameIndex, std::pair<size_t,size_t>> map) {
+        m_timeToRowSpan = std::move(map);
+    }
+
+    std::map<TimeFrameIndex, std::pair<size_t,size_t>> const& getTimeToRowSpan() const {
+        return m_timeToRowSpan;
+    }
+
+    template<typename F>
+    void forEachTimestampGroup(F&& f) const {
+        for (auto const& [t, span] : m_timeToRowSpan) {
+            f(t, span.first, span.second);
+        }
+    }
+
 private:
     std::vector<TimeFrameIndex> m_indices;
     std::vector<TimeFrameInterval> m_intervals;
     std::shared_ptr<TimeFrame> m_timeFrame;
+    // Extended entity-aware plan
+    DataSourceId m_sourceId{0};
+    std::vector<RowId> m_rows;
+    std::map<TimeFrameIndex, std::pair<size_t,size_t>> m_timeToRowSpan;
 };
 
 #endif// EXECUTION_PLAN_H

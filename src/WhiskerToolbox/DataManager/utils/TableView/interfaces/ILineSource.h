@@ -3,6 +3,7 @@
 
 #include "TimeFrame.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "utils/TableView/interfaces/IEntityProvider.h"
 
 #include <memory>
 #include <string>
@@ -15,7 +16,7 @@
  * such as whisker traces, trajectories, or other spatial paths. Each line
  * is defined by a sequence of 2D points.
  */
-class ILineSource {
+class ILineSource : public IEntityProvider {
 public:
     virtual ~ILineSource() = default;
     
@@ -66,6 +67,10 @@ public:
     virtual std::vector<Line2D> getLinesInRange(TimeFrameIndex start,
                                                  TimeFrameIndex end,
                                                  TimeFrame const * target_timeFrame) = 0;
+
+    // IEntityProvider
+    [[nodiscard]] auto getEntityCountAt(TimeFrameIndex t) const -> size_t override = 0;
+    [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* override = 0;
 
 protected:
     // Protected constructor to prevent direct instantiation

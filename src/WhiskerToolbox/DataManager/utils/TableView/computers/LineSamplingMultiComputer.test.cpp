@@ -247,4 +247,188 @@ TEST_CASE("LineSamplingMultiComputer can be created via registry", "[LineSamplin
     REQUIRE(names.size() == 6);
 }
 
+TEST_CASE("LineSamplingMultiComputer with per-line row expansion drops empty timestamps and samples per entity", "[LineSamplingMultiComputer][Expansion]") {
+    DataManager dm;
+
+    // Timeframe with 5 timestamps
+    std::vector<int> timeValues = {0, 1, 2, 3, 4};
+    auto tf = std::make_shared<TimeFrame>(timeValues);
+
+    // LineData with varying number of lines per timestamp
+    auto lineData = std::make_shared<LineData>();
+    lineData->setTimeFrame(tf);
+
+    // t=0: no lines (should be dropped)
+    // t=1: one horizontal line from x=0..10
+    {
+        std::vector<float> xs = {0.0f, 10.0f};
+        std::vector<float> ys = {0.0f, 0.0f};
+        lineData->addAtTime(TimeFrameIndex(1), xs, ys, false);
+    }
+    // t=2: two lines; l0 horizontal (x 0..10), l1 vertical (y 0..10)
+    {
+        std::vector<float> xs = {0.0f, 10.0f};
+        std::vector<float> ys = {0.0f, 0.0f};
+        lineData->addAtTime(TimeFrameIndex(2), xs, ys, false);
+        std::vector<float> xs2 = {5.0f, 5.0f};
+        std::vector<float> ys2 = {0.0f, 10.0f};
+        lineData->addAtTime(TimeFrameIndex(2), xs2, ys2, false);
+    }
+    // t=3: no lines (should be dropped)
+    // t=4: one vertical line (y 0..10 at x=2)
+    {
+        std::vector<float> xs = {2.0f, 2.0f};
+        std::vector<float> ys = {0.0f, 10.0f};
+        lineData->addAtTime(TimeFrameIndex(4), xs, ys, false);
+    }
+
+    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"ExpLines"});
+    // Register into DataManager so TableView expansion can resolve the line source by name
+    dm.setData<LineData>("ExpLines", lineData);
+
+    // Timestamps include empty ones; expansion should drop t=0 and t=3
+    std::vector<TimeFrameIndex> timestamps = {
+        TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(4)
+    };
+    auto rowSelector = std::make_unique<TimestampSelector>(timestamps, tf);
+
+    // Build table
+    auto dme_ptr = std::make_shared<DataManagerExtension>(dm);
+    TableViewBuilder builder(dme_ptr);
+    builder.setRowSelector(std::move(rowSelector));
+
+    auto multi = std::make_unique<LineSamplingMultiComputer>(
+        std::static_pointer_cast<ILineSource>(lineAdapter),
+        std::string{"ExpLines"},
+        tf,
+        2 // positions 0.0, 0.5, 1.0
+    );
+    builder.addColumns<double>("Line", std::move(multi));
+
+    auto table = builder.build();
+
+    // With expansion: expected rows = t1:1 + t2:2 + t4:1 = 4 rows
+    REQUIRE(table.getRowCount() == 4);
+
+    // Column names same structure
+    auto names = table.getColumnNames();
+    REQUIRE(names.size() == 6);
+
+    // Validate per-entity sampling ordering as inserted:
+    // Row 0 -> t=1, the single horizontal line: x@0.5 = 5, y@0.5 = 0
+    // Row 1 -> t=2, entity 0 (horizontal): x@0.5 = 5, y@0.5 = 0
+    // Row 2 -> t=2, entity 1 (vertical):   x@0.5 = 5, y@0.5 = 5
+    // Row 3 -> t=4, the single vertical line at x=2: x@0.5 = 2, y@0.5 = 5
+    auto const & xsMid = table.getColumnValues<double>("Line.x@0.500");
+    auto const & ysMid = table.getColumnValues<double>("Line.y@0.500");
+    REQUIRE(xsMid.size() == 4);
+    REQUIRE(ysMid.size() == 4);
+
+    REQUIRE(xsMid[0] == Catch::Approx(5.0));
+    REQUIRE(ysMid[0] == Catch::Approx(0.0));
+
+    REQUIRE(xsMid[1] == Catch::Approx(5.0));
+    REQUIRE(ysMid[1] == Catch::Approx(0.0));
+
+    REQUIRE(xsMid[2] == Catch::Approx(5.0));
+    REQUIRE(ysMid[2] == Catch::Approx(5.0));
+
+    REQUIRE(xsMid[3] == Catch::Approx(2.0));
+    REQUIRE(ysMid[3] == Catch::Approx(5.0));
+}
+
+TEST_CASE("LineSamplingMultiComputer expansion with coexisting analog column retains empty-line timestamps for analog", "[LineSamplingMultiComputer][Expansion][AnalogBroadcast]") {
+    DataManager dm;
+
+    std::vector<int> timeValues = {0, 1, 2, 3};
+    auto tf = std::make_shared<TimeFrame>(timeValues);
+
+    // LineData: only at t=1
+    auto lineData = std::make_shared<LineData>();
+    lineData->setTimeFrame(tf);
+    {
+        std::vector<float> xs = {0.0f, 10.0f};
+        std::vector<float> ys = {1.0f, 1.0f};
+        lineData->addAtTime(TimeFrameIndex(1), xs, ys, false);
+    }
+    dm.setData<LineData>("MixedLines", lineData);
+
+    // Analog data present at all timestamps: values 0,10,20,30
+    std::vector<float> analogVals = {0.f, 10.f, 20.f, 30.f};
+    dm.createAnalogTimeSeriesWithCamera("AnalogA", "cam", analogVals, {0,1,2,3}, true);
+
+    // Build selector across all timestamps
+    std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3)};
+    auto rowSelector = std::make_unique<TimestampSelector>(timestamps, tf);
+
+    auto dme_ptr = std::make_shared<DataManagerExtension>(dm);
+    TableViewBuilder builder(dme_ptr);
+    builder.setRowSelector(std::move(rowSelector));
+
+    // Multi-line columns (expanding)
+    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"MixedLines"});
+    auto multi = std::make_unique<LineSamplingMultiComputer>(
+        std::static_pointer_cast<ILineSource>(lineAdapter),
+        std::string{"MixedLines"},
+        tf,
+        2
+    );
+    builder.addColumns<double>("Line", std::move(multi));
+
+    // Analog timestamp value column
+    // Use registry to create the computer; simpler path: direct TimestampValueComputer
+    // but we need an IAnalogSource from DataManagerExtension, resolved by name "AnalogA"
+    class SimpleTimestampValueComputer : public IColumnComputer<double> {
+    public:
+        explicit SimpleTimestampValueComputer(std::shared_ptr<IAnalogSource> src) : src_(std::move(src)) {}
+        [[nodiscard]] auto compute(ExecutionPlan const& plan) const -> std::vector<double> override {
+            std::vector<TimeFrameIndex> idx;
+            if (plan.hasIndices()) { idx = plan.getIndices(); }
+            else {
+                // Build from rows (expanded)
+                for (auto const& r : plan.getRows()) idx.push_back(r.timeIndex);
+            }
+            std::vector<double> out(idx.size(), 0.0);
+            // naive: use AnalogDataAdapter semantics: value == index*10
+            for (size_t i = 0; i < idx.size(); ++i) out[i] = static_cast<double>(idx[i].getValue() * 10);
+            return out;
+        }
+        [[nodiscard]] auto getSourceDependency() const -> std::string override { return src_ ? src_->getName() : std::string{"AnalogA"}; }
+    private:
+        std::shared_ptr<IAnalogSource> src_;
+    };
+
+    auto analogSrc = dme_ptr->getAnalogSource("AnalogA");
+    REQUIRE(analogSrc != nullptr);
+    auto analogComp = std::make_unique<SimpleTimestampValueComputer>(analogSrc);
+    builder.addColumn<double>("Analog", std::move(analogComp));
+
+    auto table = builder.build();
+
+    // Expect expanded rows keep all timestamps due to coexisting analog column: t=0,1,2,3 -> 4 rows
+    // Line columns will have zero for t=0,2,3 where no line exists; analog column has 0,10,20,30
+    REQUIRE(table.getRowCount() == 4);
+    auto const & xsMid = table.getColumnValues<double>("Line.x@0.500");
+    auto const & ysMid = table.getColumnValues<double>("Line.y@0.500");
+    auto const & analog = table.getColumnValues<double>("Analog");
+    REQUIRE(xsMid.size() == 4);
+    REQUIRE(ysMid.size() == 4);
+    REQUIRE(analog.size() == 4);
+
+    // At t=1 (row 1), line exists; others should be zeros for line columns
+    REQUIRE(xsMid[0] == Catch::Approx(0.0));
+    REQUIRE(ysMid[0] == Catch::Approx(0.0));
+    REQUIRE(xsMid[1] == Catch::Approx(5.0));
+    REQUIRE(ysMid[1] == Catch::Approx(1.0));
+    REQUIRE(xsMid[2] == Catch::Approx(0.0));
+    REQUIRE(ysMid[2] == Catch::Approx(0.0));
+    REQUIRE(xsMid[3] == Catch::Approx(0.0));
+    REQUIRE(ysMid[3] == Catch::Approx(0.0));
+
+    REQUIRE(analog[0] == Catch::Approx(0.0));
+    REQUIRE(analog[1] == Catch::Approx(10.0));
+    REQUIRE(analog[2] == Catch::Approx(20.0));
+    REQUIRE(analog[3] == Catch::Approx(30.0));
+}
+
 

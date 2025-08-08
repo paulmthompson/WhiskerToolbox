@@ -3,8 +3,10 @@
 
 #include "TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
+#include "utils/TableView/core/DataSourceNameInterner.hpp"
 
 #include <cstddef>
+#include <optional>
 #include <variant>
 
 
@@ -20,5 +22,21 @@ using RowDescriptor = std::variant<
     TimeFrameIndex,         // For TimestampSelector
     TimeFrameInterval       // For IntervalSelector
 >;
+
+/**
+ * @brief Lightweight row identity for expanded rows (e.g., per-line in a timestamp).
+ */
+struct RowId {
+    TimeFrameIndex timeIndex{0};
+    std::optional<int> entityIndex{}; // Per-timestamp local index (e.g., line index)
+};
+
+/**
+ * @brief Extended row descriptor carrying compact source identity and optional entity index.
+ */
+struct ExtendedRowDescriptor {
+    DataSourceId sourceId{};
+    RowId row{};
+};
 
 #endif // ROW_DESCRIPTOR_H
