@@ -97,6 +97,24 @@ std::unique_ptr<IComputerBase> ComputerRegistry::createComputer(
     return nullptr;
 }
 
+std::unique_ptr<IComputerBase> ComputerRegistry::createMultiComputer(
+    std::string const& computerName,
+    DataSourceVariant const& dataSource,
+    std::map<std::string, std::string> const& parameters
+) const {
+    auto it = multi_computer_factories_.find(computerName);
+    if (it != multi_computer_factories_.end()) {
+        try {
+            return it->second(dataSource, parameters);
+        } catch (std::exception const& e) {
+            std::cerr << "Error creating multi-computer '" << computerName << "': " << e.what() << std::endl;
+            return nullptr;
+        }
+    }
+    std::cerr << "Multi-computer '" << computerName << "' not found in registry." << std::endl;
+    return nullptr;
+}
+
 DataSourceVariant ComputerRegistry::createAdapter(
     std::string const& adapterName,
     std::shared_ptr<void> const& sourceData,
@@ -243,6 +261,26 @@ void ComputerRegistry::registerAdapter(AdapterInfo info, AdapterFactory factory)
     
     name_to_adapter_[name] = infoPtr;
     adapter_factories_[name] = std::move(factory);
+}
+
+void ComputerRegistry::registerMultiComputer(ComputerInfo info, MultiComputerFactory factory) {
+    std::string const name = info.name;
+    if (name_to_computer_.count(name) || multi_computer_factories_.count(name)) {
+        std::cerr << "Warning: Computer '" << name << "' already registered." << std::endl;
+        return;
+    }
+
+    info.isMultiOutput = true;
+
+    std::cout << "Registering multi-output computer: " << name
+              << " (Row selector: " << static_cast<int>(info.requiredRowSelector)
+              << ", Source type: " << info.requiredSourceType.name() << ")" << std::endl;
+
+    all_computers_.push_back(std::move(info));
+    ComputerInfo const* infoPtr = &all_computers_.back();
+
+    name_to_computer_[name] = infoPtr;
+    multi_computer_factories_[name] = std::move(factory);
 }
 
 void ComputerRegistry::computeComputerMappings() {

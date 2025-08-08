@@ -8,6 +8,7 @@
 class IAnalogSource;
 class IEventSource;
 class IIntervalSource;
+class ILineSource;
 
 /**
  * @brief Enumeration of supported row selector types for matching computers.
@@ -27,7 +28,8 @@ enum class RowSelectorType : std::uint8_t {
 using DataSourceVariant = std::variant<
     std::shared_ptr<IAnalogSource>,
     std::shared_ptr<IEventSource>,
-    std::shared_ptr<IIntervalSource>
+    std::shared_ptr<IIntervalSource>,
+    std::shared_ptr<ILineSource>
 >;
 
 #endif // COMPUTERREGISTRYTYPES_HPP
