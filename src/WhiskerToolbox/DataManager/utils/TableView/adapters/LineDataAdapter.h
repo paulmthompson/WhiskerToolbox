@@ -69,6 +69,10 @@ public:
                                          TimeFrameIndex end,
                                          TimeFrame const * target_timeFrame) override;
 
+    // IEntityProvider implementation
+    [[nodiscard]] auto getEntityCountAt(TimeFrameIndex t) const -> size_t override;
+    [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* override;
+
 private:
     std::shared_ptr<LineData> m_lineData;
     std::shared_ptr<TimeFrame> m_timeFrame;

@@ -35,6 +35,32 @@ TableView & TableView::operator=(TableView && other) noexcept {
 }
 
 size_t TableView::getRowCount() const {
+    // Prefer expanded row count if any execution plan has entity-expanded rows cached
+    for (auto const & entry : m_planCache) {
+        if (!entry.second.getRows().empty()) {
+            return entry.second.getRows().size();
+        }
+    }
+    // If nothing cached yet, proactively attempt expansion using a line-source dependent column
+    // Find a column whose source is an ILineSource
+    for (auto const & column : m_columns) {
+        try {
+            auto const & dep = column->getSourceDependency();
+            // Query line source without mutating the cache in a surprising way
+            auto lineSource = m_dataManager->getLineSource(dep);
+            if (lineSource) {
+                // Trigger plan generation for this source to populate expansion rows
+                auto & self = const_cast<TableView &>(*this);
+                ExecutionPlan const & plan = self.getExecutionPlanFor(dep);
+                if (!plan.getRows().empty()) {
+                    return plan.getRows().size();
+                }
+                break; // only expand based on the first line source column
+            }
+        } catch (...) {
+            // Ignore and continue
+        }
+    }
     return m_rowSelector->getRowCount();
 }
 
@@ -289,30 +315,70 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
     // Try as line source
     auto lineSource = m_dataManager->getLineSource(sourceName);
     if (lineSource) {
-        // Generate plan based on row selector type for line data
+        // Default-on entity expansion for TimestampSelector
+        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
+            auto const & timestamps = timestampSelector->getTimestamps();
+            auto timeFrame = timestampSelector->getTimeFrame();
+
+            ExecutionPlan plan(std::vector<TimeFrameIndex>{}, timeFrame);
+            // Build expanded rows: one row per line at that timestamp; drop timestamps with zero lines
+            std::vector<RowId> rows;
+            rows.reserve(timestamps.size());
+            std::map<TimeFrameIndex, std::pair<size_t,size_t>> spans;
+
+            // Determine if table contains any non-line columns; if so, we include singleton rows
+            bool anyNonLineColumn = false;
+            for (auto const & col : m_columns) {
+                try {
+                    auto const & dep = col->getSourceDependency();
+                    if (!m_dataManager->getLineSource(dep)) {
+                        anyNonLineColumn = true;
+                        break;
+                    }
+                } catch (...) {
+                    // Ignore
+                }
+            }
+
+            size_t cursor = 0;
+            for (auto const & t : timestamps) {
+                auto const count = lineSource->getEntityCountAt(t);
+                if (count == 0) {
+                    if (anyNonLineColumn) {
+                        spans.emplace(t, std::make_pair(cursor, static_cast<size_t>(1)));
+                        rows.push_back(RowId{t, std::nullopt});
+                        ++cursor;
+                    }
+                } else {
+                    spans.emplace(t, std::make_pair(cursor, static_cast<size_t>(count)));
+                    for (size_t i = 0; i < count; ++i) {
+                        rows.push_back(RowId{t, static_cast<int>(i)});
+                        ++cursor;
+                    }
+                }
+            }
+
+            plan.setRows(std::move(rows));
+            plan.setTimeToRowSpan(std::move(spans));
+            plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
+            return plan;
+        }
+
+        // IntervalSelector: keep legacy behavior (no expansion) for now
         if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
             auto const & intervals = intervalSelector->getIntervals();
             auto timeFrame = intervalSelector->getTimeFrame();
             return ExecutionPlan(intervals, timeFrame);
         }
 
-        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
-            auto const & indices = timestampSelector->getTimestamps();
-            auto timeFrame = timestampSelector->getTimeFrame();
-            return ExecutionPlan(indices, timeFrame);
-        }
-
         if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
             auto const & indices = indexSelector->getIndices();
             std::vector<TimeFrameIndex> timeFrameIndices;
             timeFrameIndices.reserve(indices.size());
-
             for (size_t index: indices) {
                 timeFrameIndices.emplace_back(static_cast<int64_t>(index));
             }
-
             std::cout << "WARNING: IndexSelector is not supported for line data" << std::endl;
-
             return ExecutionPlan(std::move(timeFrameIndices), nullptr);
         }
     }
