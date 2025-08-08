@@ -8,7 +8,7 @@
 #include <QObject>
 #include <QTimer>
 
-TEST_CASE_METHOD(QtWidgetTestFixture, "SignalProbe - Simple test", "[signal_probe][simple]") {
+TEST_CASE_METHOD(QtWidgetTestFixture, "Fixture Test - SignalProbe - Simple test", "[signal_probe][simple]") {
     // Create test emitter
     SimpleTestEmitter emitter;
     
@@ -32,7 +32,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "SignalProbe - Simple test", "[signal_prob
     REQUIRE(stringProbe.getLastArg() == "Hello, World!");
 }
 
-TEST_CASE_METHOD(QtWidgetTestFixture, "SignalProbe - Multiple emissions simple", "[signal_probe][multiple_simple]") {
+TEST_CASE_METHOD(QtWidgetTestFixture, "Fixture Test - SignalProbe - Multiple emissions simple", "[signal_probe][multiple_simple]") {
     // Create test emitter
     SimpleTestEmitter emitter;
     
@@ -62,7 +62,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "SignalProbe - Multiple emissions simple",
     REQUIRE(allArgs[2] == "Third");
 }
 
-TEST_CASE_METHOD(QtWidgetTestFixture, "SignalProbe - Reset functionality simple", "[signal_probe][reset_simple]") {
+TEST_CASE_METHOD(QtWidgetTestFixture, "Fixture Test - SignalProbe - Reset functionality simple", "[signal_probe][reset_simple]") {
     // Create test emitter
     SimpleTestEmitter emitter;
     

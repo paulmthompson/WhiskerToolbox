@@ -120,7 +120,7 @@ private:
     }
 };
 
-TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - ScatterPlotWidget Creation", "[Analysis_Dashboard][ScatterPlot]") {
+TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - Analysis_Dashboard - ScatterPlotWidget Creation", "[Analysis_Dashboard][ScatterPlot]") {
     // Get the dashboard
     auto& dashboard = getDashboard();
     
@@ -155,7 +155,7 @@ TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - ScatterPlot
     }
 }
 
-TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - EventPlotWidget Creation", "[Analysis_Dashboard][EventPlot]") {
+TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - Analysis_Dashboard - EventPlotWidget Creation", "[Analysis_Dashboard][EventPlot]") {
     // Get the dashboard
     auto& dashboard = getDashboard();
     
@@ -188,7 +188,7 @@ TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - EventPlotWi
     }
 }
 
-TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - SpatialOverlayPlotWidget Creation", "[Analysis_Dashboard][SpatialOverlay]") {
+TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - Analysis_Dashboard - SpatialOverlayPlotWidget Creation", "[Analysis_Dashboard][SpatialOverlay]") {
     // Get the dashboard  
     auto& dashboard = getDashboard();
     
@@ -237,7 +237,7 @@ TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - SpatialOver
     }
 }
 
-TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - Basic Infrastructure", "[Analysis_Dashboard][Infrastructure]") {
+TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - Analysis_Dashboard - Basic Infrastructure", "[Analysis_Dashboard][Infrastructure]") {
     // Get the dashboard
     auto& dashboard = getDashboard();
     

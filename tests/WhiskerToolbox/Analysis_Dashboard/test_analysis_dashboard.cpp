@@ -194,7 +194,7 @@ protected:
 };
 
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Basic Creation", "[AnalysisDashboard]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Basic Creation", "[AnalysisDashboard]") {
     // Create a data manager
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
@@ -219,7 +219,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Basic Creation", "[Analysi
     delete time_scrollbar;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Data Manager Integration", "[AnalysisDashboard]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Data Manager Integration", "[AnalysisDashboard]") {
     // Create a data manager with some test data
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
@@ -247,7 +247,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Data Manager Integration",
     delete time_scrollbar;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Widget Lifecycle", "[AnalysisDashboard]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Widget Lifecycle", "[AnalysisDashboard]") {
     // Create a data manager
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
@@ -291,7 +291,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Widget Lifecycle", "[Analy
     delete time_scrollbar;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Component Access", "[AnalysisDashboard]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Component Access", "[AnalysisDashboard]") {
     // Create a data manager
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
@@ -316,7 +316,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Component Access", "[Analy
     delete time_scrollbar;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Event Processing", "[AnalysisDashboard]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Event Processing", "[AnalysisDashboard]") {
     // Create a data manager
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
@@ -357,7 +357,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Event Processing", "[Analy
     delete time_scrollbar;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Memory Management", "[AnalysisDashboard]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Memory Management", "[AnalysisDashboard]") {
     // Test that the dashboard can be created and destroyed without memory leaks
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
@@ -381,7 +381,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Memory Management", "[Anal
     delete time_scrollbar;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Null Data Manager", "[AnalysisDashboard]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Null Data Manager", "[AnalysisDashboard]") {
     // Test behavior with null data manager
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
@@ -398,7 +398,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Null Data Manager", "[Anal
     delete time_scrollbar;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Multiple Instances", "[AnalysisDashboard]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Multiple Instances", "[AnalysisDashboard]") {
     // Test creating multiple dashboard instances
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
@@ -427,7 +427,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Multiple Instances", "[Ana
     delete time_scrollbar2;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - ShaderManager Integration", "[AnalysisDashboard]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - ShaderManager Integration", "[AnalysisDashboard]") {
     // Test that ShaderManager is properly initialized
     auto& shader_manager = ShaderManager::instance();
     REQUIRE(&shader_manager != nullptr);
@@ -472,7 +472,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - ShaderManager Integration"
     delete time_scrollbar;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Feature_Table_Widget - Basic Creation", "[FeatureTableWidget]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Feature_Table_Widget Basic Creation", "[FeatureTableWidget]") {
     // Test that Feature_Table_Widget can be created
     auto feature_table_widget = new Feature_Table_Widget();
     REQUIRE(feature_table_widget != nullptr);
@@ -489,7 +489,7 @@ TEST_CASE_METHOD(QtTestFixture, "Feature_Table_Widget - Basic Creation", "[Featu
     delete feature_table_widget;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Feature_Table_Widget - Data Manager Integration", "[FeatureTableWidget]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - Feature_Table_Widget Data Manager Integration", "[FeatureTableWidget]") {
     // Create a data manager
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
@@ -518,7 +518,7 @@ TEST_CASE_METHOD(QtTestFixture, "Feature_Table_Widget - Data Manager Integration
     delete feature_table_widget;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "OpenGL Context - Version Check", "[OpenGL]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - OpenGL Context Version Check", "[OpenGL]") {
     // Test that we have a valid OpenGL 4.1+ context
     REQUIRE(context != nullptr);
     REQUIRE(context->isValid());
@@ -552,7 +552,7 @@ TEST_CASE_METHOD(QtTestFixture, "OpenGL Context - Version Check", "[OpenGL]") {
     }
 }
 
-TEST_CASE_METHOD(QtTestFixture, "ShaderManager - Resource Loading", "[ShaderManager]") {
+TEST_CASE_METHOD(QtTestFixture, "Analysis_Dashboard - Integration - ShaderManager Resource Loading", "[ShaderManager]") {
     // Test that ShaderManager can load shaders from Qt resources
     auto& shader_manager = ShaderManager::instance();
     REQUIRE(&shader_manager != nullptr);

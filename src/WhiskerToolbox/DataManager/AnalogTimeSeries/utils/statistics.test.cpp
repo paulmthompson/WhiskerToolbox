@@ -12,7 +12,7 @@
 #include <vector>
 
 
-TEST_CASE("AnalogTimeSeries - Statistics", "[analog][timeseries][statistics]") {
+TEST_CASE("DataManager - AnalogTimeSeries - Statistics", "[analog][timeseries][statistics]") {
 
     SECTION("Statistical calculations") {
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
@@ -32,7 +32,7 @@ TEST_CASE("AnalogTimeSeries - Statistics", "[analog][timeseries][statistics]") {
 
 }
 
-TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][approximate]") {
+TEST_CASE("DataManager - AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][approximate]") {
     SECTION("Approximate standard deviation with percentage sampling") {
         // Create a large dataset with known statistical properties
         std::vector<float> data;
