@@ -20,6 +20,7 @@
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/IO/JSON/Point_Data_JSON.hpp"
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
+#include "utils/TableView/TableRegistry.hpp"
 
 #include "loaders/binary_loaders.hpp"
 #include "transforms/Masks/mask_area.hpp"
@@ -47,7 +48,12 @@ DataManager::DataManager() {
 
     setTimeFrame("media", "time");
     _output_path = std::filesystem::current_path();
+
+    // Initialize TableRegistry
+    _table_registry = std::make_unique<TableRegistry>(*this);
 }
+
+DataManager::~DataManager() = default;
 
 void DataManager::reset() {
     std::cout << "DataManager: Resetting to initial state..." << std::endl;
@@ -229,6 +235,39 @@ void DataManager::_notifyObservers() {
     for (auto & observer: _observers) {
         observer();
     }
+}
+
+// ===== Table Registry accessors =====
+TableRegistry * DataManager::getTableRegistry() {
+    return _table_registry.get();
+}
+
+TableRegistry const * DataManager::getTableRegistry() const {
+    return _table_registry.get();
+}
+
+// ===== Table observer channel =====
+int DataManager::addTableObserver(TableObserver callback) {
+    if (!callback) return -1;
+    int id = _next_table_observer_id++;
+    _table_observers[id] = std::move(callback);
+    return id;
+}
+
+bool DataManager::removeTableObserver(int callback_id) {
+    return _table_observers.erase(callback_id) > 0;
+}
+
+void DataManager::notifyTableObservers(TableEvent const & ev) {
+    for (auto const & [id, cb] : _table_observers) {
+        (void)id;
+        cb(ev);
+    }
+}
+
+// Provide C-style bridge for TableRegistry to call
+void DataManager__NotifyTableObservers(DataManager & dm, TableEvent const & ev) {
+    dm.notifyTableObservers(ev);
 }
 
 std::vector<std::string> DataManager::getAllKeys() {

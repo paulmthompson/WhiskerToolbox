@@ -1,5 +1,5 @@
 #include "DataSourceRegistry.hpp"
-#include "Analysis_Dashboard/Tables/TableManager.hpp"
+#include "DataManager/utils/TableView/TableRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
 
@@ -223,30 +223,27 @@ void DataSourceRegistry::disconnectFromDataSource(AbstractDataSource * data_sour
 
 // ==================== TableManagerSource Implementation ====================
 
-TableManagerSource::TableManagerSource(TableManager * table_manager, QString const & name, QObject * parent)
+TableManagerSource::TableManagerSource(std::shared_ptr<DataManager> data_manager, QString const & name, QObject * parent)
     : AbstractDataSource(parent),
-      table_manager_(table_manager),
+      data_manager_(std::move(data_manager)),
       name_(name) {
-    if (table_manager_) {
-        // Connect to table manager signals to update availability
-        connect(table_manager_, &TableManager::tableCreated, this, [this](QString const &) {
-            emit availabilityChanged(isAvailable());
-        });
-        connect(table_manager_, &TableManager::tableRemoved, this, [this](QString const &) {
-            emit availabilityChanged(isAvailable());
-        });
-        connect(table_manager_, &TableManager::tableDataChanged, this, [this](QString const &) {
-            emit dataChanged();
+    if (data_manager_) {
+        table_observer_id_ = data_manager_->addTableObserver([this](TableEvent const & ev) {
+            if (ev.type == TableEventType::Created || ev.type == TableEventType::Removed) {
+                emit availabilityChanged(isAvailable());
+            } else if (ev.type == TableEventType::DataChanged) {
+                emit dataChanged();
+            }
         });
     }
 }
 
 bool TableManagerSource::isAvailable() const {
-    return table_manager_ != nullptr && !getAvailableTableIds().isEmpty();
+    return static_cast<bool>(data_manager_) && !getAvailableTableIds().isEmpty();
 }
 
 QStringList TableManagerSource::getAvailableColumns() const {
-    if (!table_manager_) {
+    if (!data_manager_) {
         return QStringList();
     }
 
@@ -254,7 +251,7 @@ QStringList TableManagerSource::getAvailableColumns() const {
     auto table_ids = getAvailableTableIds();
 
     for (auto const & table_id: table_ids) {
-        auto table_view = table_manager_->getBuiltTable(table_id);
+        auto table_view = data_manager_->getTableRegistry()->getBuiltTable(table_id);
         if (table_view) {
             auto column_names = table_view->getColumnNames();
             for (auto const & name: column_names) {
@@ -270,15 +267,16 @@ QStringList TableManagerSource::getAvailableColumns() const {
 }
 
 QStringList TableManagerSource::getAvailableTableIds() const {
-    if (!table_manager_) {
+    if (!data_manager_) {
         return QStringList();
     }
 
     QStringList available_tables;
-    auto all_table_ids = table_manager_->getTableIds();
+    auto * registry = data_manager_->getTableRegistry();
+    auto all_table_ids = registry->getTableIds();
 
     for (auto const & table_id: all_table_ids) {
-        auto table_view = table_manager_->getBuiltTable(table_id);
+        auto table_view = registry->getBuiltTable(table_id);
         if (table_view) {
             available_tables.append(table_id);
         }
@@ -288,11 +286,11 @@ QStringList TableManagerSource::getAvailableTableIds() const {
 }
 
 ColumnDataVariant TableManagerSource::getTableColumnDataVariant(QString const & table_id, QString const & column_name) const {
-    if (!table_manager_) {
+    if (!data_manager_) {
         return ColumnDataVariant{};
     }
 
-    auto table_view = table_manager_->getBuiltTable(table_id);
+    auto table_view = data_manager_->getTableRegistry()->getBuiltTable(table_id);
     if (!table_view) {
         qWarning() << "TableManagerSource: Table not found:" << table_id;
         return ColumnDataVariant{};
@@ -317,11 +315,11 @@ ColumnDataVariant TableManagerSource::getTableColumnDataVariant(QString const & 
 }
 
 ColumnTypeInfo TableManagerSource::getColumnTypeInfo(QString const & table_id, QString const & column_name) const {
-    if (!table_manager_) {
+    if (!data_manager_) {
         return ColumnTypeInfo{};
     }
 
-    auto table_view = table_manager_->getBuiltTable(table_id);
+    auto table_view = data_manager_->getTableRegistry()->getBuiltTable(table_id);
     if (!table_view) {
         return ColumnTypeInfo{};
     }
@@ -387,11 +385,12 @@ ColumnTypeInfo TableManagerSource::getColumnTypeInfo(QString const & table_id, Q
 }
 
 std::type_index TableManagerSource::getColumnTypeIndex(QString const & table_id, QString const & column_name) const {
-    if (!table_manager_) {
+    if (!data_manager_) {
         return typeid(void);
     }
 
-    auto table_view = table_manager_->getBuiltTable(table_id);
+    auto * registry = data_manager_->getTableRegistry();
+    auto table_view = registry->getBuiltTable(table_id);
     if (!table_view) {
         return typeid(void);
     }
@@ -412,11 +411,12 @@ std::type_index TableManagerSource::getColumnTypeIndex(QString const & table_id,
 
 template<SupportedColumnType T>
 std::vector<T> TableManagerSource::getTypedTableColumnData(QString const & table_id, QString const & column_name) const {
-    if (!table_manager_) {
+    if (!data_manager_) {
         return std::vector<T>();
     }
 
-    auto table_view = table_manager_->getBuiltTable(table_id);
+    auto * registry = data_manager_->getTableRegistry();
+    auto table_view = registry->getBuiltTable(table_id);
     if (!table_view) {
         return std::vector<T>();
     }

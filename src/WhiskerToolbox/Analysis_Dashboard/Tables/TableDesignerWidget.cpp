@@ -9,12 +9,13 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
+#include "DataManager/utils/TableView/TableEvents.hpp"
 #include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
 #include "DataManager/utils/TableView/computers/IntervalReductionComputer.h"
 #include "DataManager/utils/TableView/core/TableViewBuilder.h"
 #include "DataManager/utils/TableView/interfaces/IColumnComputer.h"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
-#include "TableManager.hpp"
+#include "DataManager/utils/TableView/TableRegistry.hpp"
 
 #include <QDebug>
 #include <QInputDialog>
@@ -31,11 +32,10 @@
 #include <vector>
 #include <tuple>
 
-TableDesignerWidget::TableDesignerWidget(TableManager * table_manager, std::shared_ptr<DataManager> data_manager, QWidget * parent)
+TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::TableDesignerWidget),
-      _table_manager(table_manager),
-      _data_manager(data_manager) {
+      _data_manager(std::move(data_manager)) {
 
     ui->setupUi(this);
     
@@ -120,14 +120,25 @@ void TableDesignerWidget::connectSignals() {
     connect(ui->build_table_btn, &QPushButton::clicked,
             this, &TableDesignerWidget::onBuildTable);
 
-    // TableManager signals
-    if (_table_manager) {
-        connect(_table_manager, &TableManager::tableCreated,
-                this, &TableDesignerWidget::onTableManagerTableCreated);
-        connect(_table_manager, &TableManager::tableRemoved,
-                this, &TableDesignerWidget::onTableManagerTableRemoved);
-        connect(_table_manager, &TableManager::tableInfoUpdated,
-                this, &TableDesignerWidget::onTableManagerTableInfoUpdated);
+    // Subscribe to DataManager table observer
+    if (_data_manager) {
+        auto token = _data_manager->addTableObserver([this](TableEvent const & ev) {
+            switch (ev.type) {
+                case TableEventType::Created:
+                    this->onTableManagerTableCreated(QString::fromStdString(ev.tableId));
+                    break;
+                case TableEventType::Removed:
+                    this->onTableManagerTableRemoved(QString::fromStdString(ev.tableId));
+                    break;
+                case TableEventType::InfoUpdated:
+                    this->onTableManagerTableInfoUpdated(QString::fromStdString(ev.tableId));
+                    break;
+                case TableEventType::DataChanged:
+                    // No direct UI change needed here for designer list
+                    break;
+            }
+        });
+        (void)token; // Optionally store and remove on dtor
     }
 }
 
@@ -165,9 +176,11 @@ void TableDesignerWidget::onCreateNewTable() {
         return;
     }
 
-    QString table_id = _table_manager->generateUniqueTableId("Table");
+    auto * registry = _data_manager->getTableRegistry();
+    if (!registry) { return; }
+    QString table_id = registry->generateUniqueTableId("Table");
 
-    if (_table_manager->createTable(table_id, name)) {
+    if (registry->createTable(table_id, name)) {
         // The combo will be refreshed by the signal handler
         // Set the new table as selected
         for (int i = 0; i < ui->table_combo->count(); ++i) {
@@ -191,7 +204,8 @@ void TableDesignerWidget::onDeleteTable() {
                                        QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
-        if (_table_manager->removeTable(_current_table_id)) {
+        auto * registry = _data_manager->getTableRegistry();
+        if (registry && registry->removeTable(_current_table_id)) {
             // The combo will be refreshed by the signal handler
             clearUI();
         } else {
@@ -209,8 +223,8 @@ void TableDesignerWidget::onRowDataSourceChanged() {
 
     // Save the row source selection to the current table
     // Only save if we have a current table and we're not loading table info
-    if (!_current_table_id.isEmpty() && _table_manager) {
-        _table_manager->updateTableRowSource(_current_table_id, selected);
+    if (!_current_table_id.isEmpty() && _data_manager) {
+        if (auto* reg = _data_manager->getTableRegistry()) { reg->updateTableRowSource(_current_table_id, selected); }
     }
 
     // Update the info label
@@ -262,8 +276,8 @@ void TableDesignerWidget::onAddColumn() {
 
     // Create column info and add to table manager
     ColumnInfo column_info(column_name);
-    qDebug() << "Calling _table_manager->addTableColumn()";
-    if (_table_manager->addTableColumn(_current_table_id, column_info)) {
+    qDebug() << "Calling TableRegistry.addTableColumn()";
+    if (auto* reg = _data_manager->getTableRegistry(); reg && reg->addTableColumn(_current_table_id, column_info)) {
         qDebug() << "Successfully added column to table manager";
         
         // Add to UI list with correct index
@@ -304,7 +318,7 @@ void TableDesignerWidget::onRemoveColumn() {
     int column_index = ui->column_list->currentRow();
     QString column_name = current_item->text();
 
-    if (_table_manager->removeTableColumn(_current_table_id, column_index)) {
+    if (auto* reg = _data_manager->getTableRegistry(); reg && reg->removeTableColumn(_current_table_id, column_index)) {
         delete current_item;
         
         // Update UserRole indices for all remaining items after the removed one
@@ -354,8 +368,10 @@ void TableDesignerWidget::onColumnComputerChanged() {
     
     // Get and display type information for the selected computer
     QString computer_name = ui->column_computer_combo->currentData().toString();
-    if (!computer_name.isEmpty() && _table_manager) {
-        auto [type_name, is_vector, element_type] = _table_manager->getComputerTypeInfo(computer_name);
+    if (!computer_name.isEmpty() && _data_manager) {
+        auto* reg = _data_manager->getTableRegistry();
+        if (!reg) { return; }
+        auto [type_name, is_vector, element_type] = reg->getComputerTypeInfo(computer_name);
         
         QString type_info = QString("Returns: %1").arg(type_name);
         if (is_vector && element_type != "unknown") {
@@ -418,7 +434,9 @@ void TableDesignerWidget::onBuildTable() {
 
     try {
         // Get the table info with column configurations
-        auto table_info = _table_manager->getTableInfo(_current_table_id);
+        auto* reg = _data_manager->getTableRegistry();
+        if (!reg) { updateBuildStatus("Registry unavailable", true); return; }
+        auto table_info = reg->getTableInfo(_current_table_id);
         if (table_info.columns.isEmpty()) {
             updateBuildStatus("No column configurations found", true);
             return;
@@ -432,7 +450,8 @@ void TableDesignerWidget::onBuildTable() {
         }
 
         // Get the data manager extension
-        auto data_manager_extension = _table_manager->getDataManagerExtension();
+        auto* reg2 = _data_manager->getTableRegistry();
+        auto data_manager_extension = reg2 ? reg2->getDataManagerExtension() : nullptr;
         if (!data_manager_extension) {
             updateBuildStatus("DataManager extension not available", true);
             return;
@@ -460,7 +479,7 @@ void TableDesignerWidget::onBuildTable() {
         auto table_view = builder.build();
 
         // Store the built table in the TableManager
-        if (_table_manager->storeBuiltTable(_current_table_id, std::move(table_view))) {
+        if (auto* reg3 = _data_manager->getTableRegistry(); reg3 && reg3->storeBuiltTable(_current_table_id, std::move(table_view))) {
             updateBuildStatus("Table built successfully!");
             qDebug() << "Successfully built table:" << _current_table_id;
         } else {
@@ -486,7 +505,7 @@ void TableDesignerWidget::onSaveTableInfo() {
         return;
     }
 
-    if (_table_manager->updateTableInfo(_current_table_id, name, description)) {
+    if (auto* reg = _data_manager->getTableRegistry(); reg && reg->updateTableInfo(_current_table_id, name, description)) {
         updateBuildStatus("Table information saved");
         // Refresh the combo to show updated name
         refreshTableCombo();
@@ -526,7 +545,8 @@ void TableDesignerWidget::onTableManagerTableInfoUpdated(QString const & table_i
 void TableDesignerWidget::refreshTableCombo() {
     ui->table_combo->clear();
 
-    auto table_infos = _table_manager->getAllTableInfo();
+    auto* reg = _data_manager->getTableRegistry();
+    auto table_infos = reg ? reg->getAllTableInfo() : std::vector<TableInfo>{};
     for (auto const & info: table_infos) {
         ui->table_combo->addItem(info.name, info.id);
     }
@@ -539,7 +559,7 @@ void TableDesignerWidget::refreshTableCombo() {
 void TableDesignerWidget::refreshRowDataSourceCombo() {
     ui->row_data_source_combo->clear();
 
-    if (!_table_manager) {
+    if (!_data_manager) {
         qDebug() << "refreshRowDataSourceCombo: No table manager";
         return;
     }
@@ -560,11 +580,12 @@ void TableDesignerWidget::refreshRowDataSourceCombo() {
 void TableDesignerWidget::refreshColumnDataSourceCombo() {
     ui->column_data_source_combo->clear();
 
-    if (!_table_manager) {
+    if (!_data_manager) {
         return;
     }
 
-    auto data_manager_extension = _table_manager->getDataManagerExtension();
+    auto* reg = _data_manager->getTableRegistry();
+    auto data_manager_extension = reg ? reg->getDataManagerExtension() : nullptr;
     if (!data_manager_extension) {
         return;
     }
@@ -634,7 +655,7 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
     _refreshing_computer_combo = true;
     ui->column_computer_combo->clear();
 
-    if (!_table_manager) {
+    if (!_data_manager) {
         qDebug() << "No table manager available";
         _refreshing_computer_combo = false;
         return;
@@ -672,7 +693,8 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
     DataSourceVariant data_source_variant;
     bool valid_source = false;
 
-    auto data_manager_extension = _table_manager->getDataManagerExtension();
+    auto* reg = _data_manager->getTableRegistry();
+    auto data_manager_extension = reg ? reg->getDataManagerExtension() : nullptr;
     if (!data_manager_extension) {
         ui->column_computer_combo->addItem("(DataManager not available)", "");
         _refreshing_computer_combo = false;
@@ -764,7 +786,7 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
     }
 
     // Query ComputerRegistry for available computers
-    auto const & registry = _table_manager->getComputerRegistry();
+    auto const & registry = _data_manager->getTableRegistry()->getComputerRegistry();
     auto available_computers = registry.getAvailableComputers(row_selector_type, data_source_variant);
 
     // Populate the combo box with available computers, including type information
@@ -805,12 +827,13 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
 }
 
 void TableDesignerWidget::loadTableInfo(QString const & table_id) {
-    if (table_id.isEmpty() || !_table_manager) {
+    if (table_id.isEmpty() || !_data_manager) {
         clearUI();
         return;
     }
 
-    auto info = _table_manager->getTableInfo(table_id);
+    auto* reg = _data_manager->getTableRegistry();
+    auto info = reg ? reg->getTableInfo(table_id) : TableInfo{};
     if (info.id.isEmpty()) {
         clearUI();
         return;
@@ -912,12 +935,13 @@ void TableDesignerWidget::updateBuildStatus(QString const & message, bool is_err
 QStringList TableDesignerWidget::getAvailableDataSources() const {
     QStringList sources;
 
-    if (!_table_manager) {
+    if (!_data_manager) {
         qDebug() << "getAvailableDataSources: No table manager";
         return sources;
     }
 
-    auto data_manager_extension = _table_manager->getDataManagerExtension();
+    auto* reg = _data_manager->getTableRegistry();
+    auto data_manager_extension = reg ? reg->getDataManagerExtension() : nullptr;
     if (!data_manager_extension) {
         qDebug() << "getAvailableDataSources: No data manager extension";
         return sources;
@@ -966,12 +990,13 @@ QStringList TableDesignerWidget::getAvailableDataSources() const {
 QStringList TableDesignerWidget::getAvailableTableColumns() const {
     QStringList columns;
 
-    if (!_table_manager) {
+    if (!_data_manager) {
         return columns;
     }
 
     // Get all existing tables and their columns
-    auto table_infos = _table_manager->getAllTableInfo();
+    auto* reg2 = _data_manager->getTableRegistry();
+    auto table_infos = reg2 ? reg2->getAllTableInfo() : std::vector<TableInfo>{};
     for (auto const & info: table_infos) {
         if (info.id != _current_table_id) {// Don't include current table's columns
             for (QString const & column_name: info.columnNames) {
@@ -1007,12 +1032,13 @@ void TableDesignerWidget::updateRowInfoLabel(QString const & selected_source) {
     // Get additional information about the selected source
     QString info_text = QString("Selected: %1 (%2)").arg(source_name, source_type);
 
-    if (!_table_manager) {
+    if (!_data_manager) {
         ui->row_info_label->setText(info_text);
         return;
     }
 
-    auto data_manager_extension = _table_manager->getDataManagerExtension();
+    auto* reg3 = _data_manager->getTableRegistry();
+    auto data_manager_extension = reg3 ? reg3->getDataManagerExtension() : nullptr;
     if (!data_manager_extension) {
         ui->row_info_label->setText(info_text);
         return;
@@ -1055,12 +1081,13 @@ void TableDesignerWidget::updateRowInfoLabel(QString const & selected_source) {
 void TableDesignerWidget::loadColumnConfiguration(int column_index) {
     qDebug() << "loadColumnConfiguration called for column" << column_index;
     
-    if (_current_table_id.isEmpty() || !_table_manager) {
+    if (_current_table_id.isEmpty() || !_data_manager) {
         clearColumnConfiguration();
         return;
     }
 
-    auto column_info = _table_manager->getTableColumn(_current_table_id, column_index);
+    auto* reg = _data_manager->getTableRegistry();
+    auto column_info = reg ? reg->getTableColumn(_current_table_id, column_index) : ColumnInfo{};
     if (column_info.name.isEmpty()) {
         clearColumnConfiguration();
         return;
@@ -1135,7 +1162,7 @@ void TableDesignerWidget::saveCurrentColumnConfiguration() {
     qDebug() << "saveCurrentColumnConfiguration called, _updating_column_configuration =" << _updating_column_configuration;
     
     int current_row = ui->column_list->currentRow();
-    if (current_row < 0 || _current_table_id.isEmpty() || !_table_manager) {
+    if (current_row < 0 || _current_table_id.isEmpty() || !_data_manager) {
         qDebug() << "saveCurrentColumnConfiguration: Invalid state, returning. current_row=" << current_row << "table_id=" << _current_table_id;
         return;
     }
@@ -1160,7 +1187,7 @@ void TableDesignerWidget::saveCurrentColumnConfiguration() {
     column_info.parameters = getCurrentParameterValues();
 
     // Save to table manager
-    if (_table_manager->updateTableColumn(_current_table_id, current_row, column_info)) {
+    if (auto* reg = _data_manager->getTableRegistry(); reg && reg->updateTableColumn(_current_table_id, current_row, column_info)) {
         qDebug() << "Saved column configuration for:" << column_info.name;
     }
 
@@ -1305,7 +1332,8 @@ bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder & builder, ColumnI
 
     try {
         // Get the data manager extension
-        auto data_manager_extension = _table_manager->getDataManagerExtension();
+        auto* reg = _data_manager->getTableRegistry();
+        auto data_manager_extension = reg ? reg->getDataManagerExtension() : nullptr;
         if (!data_manager_extension) {
             qDebug() << "DataManagerExtension not available";
             return false;
@@ -1367,7 +1395,7 @@ bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder & builder, ColumnI
         }
 
         // Create the computer from the registry
-        auto const & registry = _table_manager->getComputerRegistry();
+        auto const & registry = _data_manager->getTableRegistry()->getComputerRegistry();
         
         // Get type information for the computer
         auto computer_info_ptr = registry.findComputerInfo(column_info.computerName.toStdString());
@@ -1579,12 +1607,13 @@ bool TableDesignerWidget::isIntervalItselfSelected() const {
 void TableDesignerWidget::setupParameterUI(QString const & computerName) {
     clearParameterUI();
     
-    if (!_table_manager || computerName.isEmpty()) {
+    if (!_data_manager || computerName.isEmpty()) {
         return;
     }
     
     // Get computer info from table manager
-    auto computer_info = _table_manager->getComputerInfo(computerName);
+    auto* reg = _data_manager->getTableRegistry();
+    auto computer_info = reg ? reg->getComputerInfo(computerName) : nullptr;
     if (!computer_info) {
         return;
     }

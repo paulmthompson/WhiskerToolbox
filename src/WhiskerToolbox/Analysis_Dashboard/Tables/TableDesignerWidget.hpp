@@ -1,7 +1,7 @@
 #ifndef TABLEDESIGNERWIDGET_HPP
 #define TABLEDESIGNERWIDGET_HPP
 
-#include "TableInfo.hpp"
+#include "DataManager/utils/TableView/TableInfo.hpp"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
 
 #include <QStringList>
@@ -14,7 +14,6 @@
 #include <memory>
 #include <map>
 
-class TableManager;
 class DataManager;
 class ComputerRegistry;
 class IRowSelector;
@@ -38,7 +37,7 @@ class TableDesignerWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit TableDesignerWidget(TableManager * table_manager, std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
+    explicit TableDesignerWidget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
     ~TableDesignerWidget() override;
 
     /**
@@ -146,7 +145,6 @@ private slots:
 
 private:
     Ui::TableDesignerWidget * ui;
-    TableManager * _table_manager;
     std::shared_ptr<DataManager> _data_manager;
 
     QString _current_table_id;

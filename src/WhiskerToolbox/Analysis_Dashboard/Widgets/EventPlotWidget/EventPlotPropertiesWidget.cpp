@@ -3,7 +3,7 @@
 #include "EventPlotWidget.hpp"
 
 #include "DataSourceRegistry/DataSourceRegistry.hpp"
-#include "Tables/TableManager.hpp"
+#include "DataManager/utils/TableView/TableRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/DataManagerTypes.hpp"
@@ -573,13 +573,14 @@ void EventPlotPropertiesWidget::updateAvailableColumns() {
     }
 
     TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-    auto table_manager = tm_source->getTableManager();
+    auto dm_for_tables = tm_source->getDataManager();
     
-    if (!table_manager) {
+    if (!dm_for_tables) {
         return;
     }
 
-    auto table_view = table_manager->getBuiltTable(selected_table_id);
+    auto * registry = dm_for_tables->getTableRegistry();
+    auto table_view = registry->getBuiltTable(selected_table_id);
     if (!table_view) {
         ui->column_combo->addItem("Table not built", "");
         return;

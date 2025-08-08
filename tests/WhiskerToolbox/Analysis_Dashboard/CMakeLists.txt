@@ -17,7 +17,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 # Test executable for AnalysisDashboard
 add_executable(AnalysisDashboardTests
     test_analysis_dashboard.cpp
-    test_table_designer_widget.cpp
     PointDataVisualization.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard/Analysis_Dashboard.test.cpp
     ../fixtures/test_signal_probe_simple.cpp

@@ -1,11 +1,11 @@
 #ifndef TABLE_PIPELINE_HPP
 #define TABLE_PIPELINE_HPP
 
-#include "TableInfo.hpp"
-#include "TableManager.hpp"
-#include "../DataManager/DataManager.hpp"
-#include "../DataManager/utils/TableView/core/TableView.h"
-#include "../DataManager/utils/TableView/ComputerRegistry.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/utils/TableView/core/TableView.h"
+#include "DataManager/utils/TableView/ComputerRegistry.hpp"
+#include "DataManager/utils/TableView/TableInfo.hpp"
+#include "DataManager/utils/TableView/TableRegistry.hpp"
 
 #include <nlohmann/json.hpp>
 #include <functional>
@@ -79,7 +79,7 @@ public:
      * @param table_manager Pointer to the table manager
      * @param data_manager Pointer to the data manager
      */
-    TablePipeline(TableManager* table_manager, DataManager* data_manager);
+    TablePipeline(TableRegistry* table_registry, DataManager* data_manager);
 
     /**
      * @brief Load pipeline configuration from JSON
@@ -130,7 +130,7 @@ public:
     void clear();
 
 private:
-    TableManager* table_manager_;
+    TableRegistry* table_registry_;
     DataManager* data_manager_;
     std::shared_ptr<DataManagerExtension> data_manager_extension_;
     ComputerRegistry* computer_registry_;

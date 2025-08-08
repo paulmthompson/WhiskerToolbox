@@ -7,7 +7,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
-#include "Analysis_Dashboard/Tables/TableManager.hpp"
+#include "DataManager/utils/TableView/TableRegistry.hpp"
 #include "ScatterPlotOpenGLWidget.hpp"
 #include "ui_ScatterPlotPropertiesWidget.h"
 
@@ -151,7 +151,7 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
         }
     }
 
-    // Add items from TableManager (table columns)
+    // Add items from TableRegistry (table columns)
     // Find TableManagerSource
     AbstractDataSource* table_manager_source = nullptr;
     auto source_ids = _data_source_registry->getAvailableSourceIds();
@@ -167,16 +167,16 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
     
         if (table_manager_source) {
             TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-            auto table_manager = tm_source->getTableManager();
-            
-            if (table_manager) {
-                auto table_ids = table_manager->getTableIds();
+            auto dm_for_tables = tm_source->getDataManager();
+            if (dm_for_tables) {
+                auto * registry = dm_for_tables->getTableRegistry();
+                auto table_ids = registry->getTableIds();
                 qDebug() << "Found" << table_ids.size() << "tables in table manager";
                 
                 for (auto const & table_id : table_ids) {
                     qDebug() << "Processing table:" << table_id;
                     
-                    auto table_view = table_manager->getBuiltTable(table_id);
+                    auto table_view = registry->getBuiltTable(table_id);
                     if (table_view) {
                         qDebug() << "Table" << table_id << "is built and available";
                         auto column_names = table_view->getColumnNames();
@@ -239,7 +239,7 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
                     }
                 }
             } else {
-                qDebug() << "TableManagerSource has no table manager";
+                qDebug() << "TableManagerSource has no DataManager";
             }
         } else {
             qDebug() << "No TableManagerSource found in data source registry";
@@ -660,13 +660,14 @@ QStringList ScatterPlotPropertiesWidget::getAvailableNumericColumns() const {
     
     if (table_manager_source) {
         TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-        auto table_manager = tm_source->getTableManager();
+        auto dm_for_tables = tm_source->getDataManager();
         
-        if (table_manager) {
-            auto table_ids = table_manager->getTableIds();
+        if (dm_for_tables) {
+            auto * registry = dm_for_tables->getTableRegistry();
+            auto table_ids = registry->getTableIds();
             
             for (auto const & table_id : table_ids) {
-                auto table_view = table_manager->getBuiltTable(table_id);
+                auto table_view = registry->getBuiltTable(table_id);
                 if (table_view) {
                     auto column_names = table_view->getColumnNames();
                     
@@ -716,13 +717,14 @@ QMap<QString, QString> ScatterPlotPropertiesWidget::getAvailableNumericColumnsWi
     
     if (table_manager_source) {
         TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-        auto table_manager = tm_source->getTableManager();
+        auto dm_for_tables = tm_source->getDataManager();
         
-        if (table_manager) {
-            auto table_ids = table_manager->getTableIds();
+        if (dm_for_tables) {
+            auto * registry = dm_for_tables->getTableRegistry();
+            auto table_ids = registry->getTableIds();
             
             for (auto const & table_id : table_ids) {
-                auto table_view = table_manager->getBuiltTable(table_id);
+                auto table_view = registry->getBuiltTable(table_id);
                 if (table_view) {
                     auto column_names = table_view->getColumnNames();
                     
@@ -777,13 +779,14 @@ QStringList ScatterPlotPropertiesWidget::getNumericColumnsFromRegistry(DataSourc
     
     if (table_manager_source) {
         TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-        auto table_manager = tm_source->getTableManager();
-        
-        if (table_manager) {
-            auto table_ids = table_manager->getTableIds();
+        auto dm_for_tables = tm_source->getDataManager();
+
+        if (dm_for_tables) {
+            auto * registry = dm_for_tables->getTableRegistry();
+            auto table_ids = registry->getTableIds();
             
             for (auto const & table_id : table_ids) {
-                auto table_view = table_manager->getBuiltTable(table_id);
+                auto table_view = registry->getBuiltTable(table_id);
                 if (table_view) {
                     auto column_names = table_view->getColumnNames();
                     

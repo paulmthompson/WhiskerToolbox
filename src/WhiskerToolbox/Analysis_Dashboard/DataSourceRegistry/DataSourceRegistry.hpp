@@ -12,7 +12,6 @@
 #include <map>
 #include <memory>
 
-class TableManager;
 class TableView;
 
 
@@ -112,7 +111,7 @@ class TableManagerSource : public AbstractDataSource {
     Q_OBJECT
 
 public:
-    explicit TableManagerSource(TableManager * table_manager, QString const & name, QObject * parent = nullptr);
+    explicit TableManagerSource(std::shared_ptr<DataManager> data_manager, QString const & name, QObject * parent = nullptr);
     ~TableManagerSource() override = default;
 
     QString getName() const override { return name_; }
@@ -148,7 +147,7 @@ public:
      * @brief Get the underlying TableManager pointer
      * @return Pointer to the wrapped TableManager, or nullptr if invalid
      */
-    TableManager * getTableManager() const { return table_manager_; }
+    std::shared_ptr<DataManager> getDataManager() const { return data_manager_; }
 
     /**
      * @brief Get list of available table IDs
@@ -167,8 +166,9 @@ public:
     std::vector<T> getTypedTableColumnData(QString const & table_id, QString const & column_name) const;
 
 private:
-    TableManager * table_manager_;
+    std::shared_ptr<DataManager> data_manager_;
     QString name_;
+    int table_observer_id_ = -1;
 };
 
 /**

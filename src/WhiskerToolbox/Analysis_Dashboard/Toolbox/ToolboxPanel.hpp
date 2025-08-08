@@ -12,7 +12,6 @@ class QListWidget;
 class QListWidgetItem;
 class GroupManager;
 class GroupManagementWidget;
-class TableManager;
 class TableDesignerWidget;
 class DataManager;
 
@@ -30,11 +29,7 @@ public:
     explicit ToolboxPanel(GroupManager * group_manager, std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
     ~ToolboxPanel() override;
 
-    /**
-     * @brief Get the table manager instance
-     * @return Pointer to the table manager
-     */
-    TableManager * getTableManager() const { return _table_manager.get(); }
+    
 
 signals:
     /**
@@ -58,7 +53,6 @@ private slots:
 private:
     Ui::ToolboxPanel * ui;
     GroupManagementWidget * _group_widget;
-    std::unique_ptr<TableManager> _table_manager;
     TableDesignerWidget * _table_designer_widget;
 
     /**

@@ -1,24 +1,20 @@
 #include "TablePipeline.hpp"
-#include "../../DataManager/utils/TableView/core/TableViewBuilder.h"
-#include "../../DataManager/utils/TableView/adapters/DataManagerExtension.h"
-#include "../../DataManager/utils/TableView/interfaces/IRowSelector.h"
-#include "../../DataManager/utils/TableView/ComputerRegistryTypes.hpp"
+#include "DataManager/utils/TableView/core/TableViewBuilder.h"
+#include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
+#include "DataManager/utils/TableView/interfaces/IRowSelector.h"
+#include "DataManager/utils/TableView/ComputerRegistryTypes.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <chrono>
 
-TablePipeline::TablePipeline(TableManager* table_manager, DataManager* data_manager)
-    : table_manager_(table_manager)
-    , data_manager_(data_manager)
-    , data_manager_extension_(table_manager->getDataManagerExtension())
-    , computer_registry_(&table_manager->getComputerRegistry()) {
+TablePipeline::TablePipeline(TableRegistry* table_registry, DataManager* data_manager)
+    : table_registry_(table_registry)
+    , data_manager_extension_(table_registry->getDataManagerExtension())
+    , computer_registry_(&table_registry->getComputerRegistry()) {
     
-    if (!table_manager_) {
-        throw std::invalid_argument("TableManager cannot be null");
-    }
-    if (!data_manager_) {
-        throw std::invalid_argument("DataManager cannot be null");
+    if (!table_registry) {
+        throw std::invalid_argument("TableRegistry cannot be null");
     }
 }
 
@@ -154,10 +150,10 @@ TableBuildResult TablePipeline::buildTable(TableConfiguration const& config,
         QString q_name = QString::fromStdString(config.name);
         QString q_description = QString::fromStdString(config.description);
         
-        if (table_manager_->hasTable(q_table_id)) {
-            table_manager_->updateTableInfo(q_table_id, q_name, q_description);
+        if (table_registry_->hasTable(q_table_id)) {
+            table_registry_->updateTableInfo(q_table_id, q_name, q_description);
         } else {
-            table_manager_->createTable(q_table_id, q_name, q_description);
+            table_registry_->createTable(q_table_id, q_name, q_description);
         }
         
         // Create TableViewBuilder
@@ -219,7 +215,7 @@ TableBuildResult TablePipeline::buildTable(TableConfiguration const& config,
         TableView table_view = builder.build();
         
         // Store the built table in TableManager
-        if (!table_manager_->storeBuiltTable(q_table_id, std::move(table_view))) {
+        if (!table_registry_->storeBuiltTable(q_table_id, std::move(table_view))) {
             result.error_message = "Failed to store built table in TableManager";
             return result;
         }

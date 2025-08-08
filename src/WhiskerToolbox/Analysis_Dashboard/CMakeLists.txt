@@ -54,8 +54,7 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Toolbox/ToolboxPanel.ui
 
     # Tables
-    Tables/TableManager.hpp
-    Tables/TableManager.cpp
+    
     Tables/TableDesignerWidget.hpp
     Tables/TableDesignerWidget.cpp
     Tables/TableDesignerWidget.ui

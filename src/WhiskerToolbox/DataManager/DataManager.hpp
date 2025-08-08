@@ -16,10 +16,32 @@
 #include <variant>      // std::variant
 #include <vector>       // std::vector
 
+class TableRegistry;
+struct TableEvent;
+
 class DataManager {
 
 public:
     DataManager();
+    ~DataManager();
+    // ======= Table Registry access =======
+    /**
+     * @brief Get the centralized TableRegistry owned by this DataManager
+     */
+    TableRegistry * getTableRegistry();
+    TableRegistry const * getTableRegistry() const;
+
+    // ======= Table observer channel (separate from data observers) =======
+    using TableObserver = std::function<void(TableEvent const &)>;
+    /**
+     * @brief Subscribe to table events
+     * @return Subscription id (>=1) or -1 on failure
+     */
+    [[nodiscard]] int addTableObserver(TableObserver callback);
+    /**
+     * @brief Unsubscribe from table events
+     */
+    bool removeTableObserver(int callback_id);
 
     /**
     * @brief Register a new temporal coordinate system with a unique key
@@ -482,6 +504,8 @@ public:
     template<typename CoordinateType>
     bool analogUsesCoordinateType(std::string const & data_key);
 
+    void notifyTableObservers(TableEvent const & ev);
+
 private:
     std::unordered_map<std::string, std::shared_ptr<TimeFrame>> _times;
 
@@ -504,6 +528,12 @@ private:
 
     // Helper function for template method (implemented in .cpp)
     bool analogUsesCoordinateTypeImpl(std::string const & data_key, std::string const & type_name);
+
+    // ======= Table Registry and observer internals =======
+    std::unique_ptr<TableRegistry> _table_registry;
+    std::unordered_map<int, TableObserver> _table_observers;
+    int _next_table_observer_id{1};
+
 };
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);

@@ -2,7 +2,6 @@
 #include "../Groups/GroupManagementWidget.hpp"
 #include "../Groups/GroupManager.hpp"
 #include "../Tables/TableDesignerWidget.hpp"
-#include "../Tables/TableManager.hpp"
 #include "DataManager/DataManager.hpp"
 #include "ui_ToolboxPanel.h"
 
@@ -17,15 +16,14 @@ ToolboxPanel::ToolboxPanel(GroupManager * group_manager, std::shared_ptr<DataMan
     : QWidget(parent),
       ui(new Ui::ToolboxPanel),
       _group_widget(nullptr),
-      _table_manager(std::make_unique<TableManager>(data_manager, this)),
       _table_designer_widget(nullptr) {
     ui->setupUi(this);
 
     // Create and add the group management widget at the top
     _group_widget = new GroupManagementWidget(group_manager, this);
 
-    // Create the table designer widget
-    _table_designer_widget = new TableDesignerWidget(_table_manager.get(), data_manager, this);
+    // Create the table designer widget (now takes only DataManager)
+    _table_designer_widget = new TableDesignerWidget(data_manager, this);
 
     // Insert widgets into the layout
     auto * layout = ui->verticalLayout;
