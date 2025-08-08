@@ -85,6 +85,42 @@ public:
 };
 
 /**
+ * @brief Parameter descriptor for integer numeric parameters.
+ */
+class IntParameterDescriptor : public IParameterDescriptor {
+    std::string name_;
+    std::string description_;
+    int defaultValue_;
+    int minValue_;
+    int maxValue_;
+    bool required_;
+
+public:
+    IntParameterDescriptor(std::string name, std::string description,
+                           int defaultValue = 0, int minValue = 0, int maxValue = 1000000,
+                           bool required = true)
+        : name_(std::move(name)), description_(std::move(description)),
+          defaultValue_(defaultValue), minValue_(minValue), maxValue_(maxValue), required_(required) {}
+
+    std::string getName() const override { return name_; }
+    std::string getDescription() const override { return description_; }
+    bool isRequired() const override { return required_; }
+    std::string getUIHint() const override { return "number"; }
+
+    std::map<std::string, std::string> getUIProperties() const override {
+        return {
+            {"default", std::to_string(defaultValue_)},
+            {"min", std::to_string(minValue_)},
+            {"max", std::to_string(maxValue_)}
+        };
+    }
+
+    std::unique_ptr<IParameterDescriptor> clone() const override {
+        return std::make_unique<IntParameterDescriptor>(name_, description_, defaultValue_, minValue_, maxValue_, required_);
+    }
+};
+
+/**
  * @brief Non-templated base class for type-erased computer storage.
  * 
  * This allows us to store different templated IColumnComputer instances

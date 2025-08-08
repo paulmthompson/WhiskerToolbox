@@ -139,6 +139,7 @@ set(DATAMANAGER_SOURCES
         utils/TableView/computers/EventInIntervalComputer.cpp
         utils/TableView/computers/TimestampValueComputer.h
         utils/TableView/computers/TimestampValueComputer.cpp
+        utils/TableView/computers/LineSamplingMultiComputer.h
         utils/TableView/computers/AnalogSliceGathererComputer.h
         utils/TableView/computers/StandardizeComputer.h
 

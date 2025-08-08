@@ -5,6 +5,9 @@
 #include "computers/IntervalPropertyComputer.h"
 #include "computers/TimestampValueComputer.h"
 #include "adapters/PointComponentAdapter.h"
+#include "adapters/LineDataAdapter.h"
+#include "interfaces/ILineSource.h"
+#include "computers/LineSamplingMultiComputer.h"
 #include "Points/Point_Data.hpp"
 
 #include <iostream>
@@ -567,6 +570,55 @@ void ComputerRegistry::registerBuiltInComputers() {
         };
         
         registerComputer(std::move(info), std::move(factory));
+    }
+
+    // LineSamplingMultiComputer - sample x/y at equally spaced segments along line
+    {
+        std::vector<std::unique_ptr<IParameterDescriptor>> paramDescriptors;
+        paramDescriptors.push_back(std::make_unique<IntParameterDescriptor>(
+            "segments", "Number of equal segments to divide the line into (generates segments+1 sample points)", 2, 1, 1000, true));
+
+        ComputerInfo info("Line Sample XY",
+                          "Sample line x and y at equally spaced positions",
+                          typeid(double),
+                          "double",
+                          RowSelectorType::Timestamp,
+                          typeid(std::shared_ptr<ILineSource>),
+                          std::move(paramDescriptors));
+        info.isMultiOutput = true;
+        info.makeOutputSuffixes = [](std::map<std::string, std::string> const& parameters) {
+            int segments = 2;
+            auto it = parameters.find("segments");
+            if (it != parameters.end()) {
+                segments = std::max(1, std::stoi(it->second));
+            }
+            std::vector<std::string> suffixes;
+            suffixes.reserve(static_cast<size_t>((segments + 1) * 2));
+            for (int i = 0; i <= segments; ++i) {
+                double frac = static_cast<double>(i) / static_cast<double>(segments);
+                char buf[32];
+                std::snprintf(buf, sizeof(buf), "@%.3f", frac);
+                suffixes.emplace_back(std::string{".x"} + buf);
+                suffixes.emplace_back(std::string{".y"} + buf);
+            }
+            return suffixes;
+        };
+
+        MultiComputerFactory factory = [](DataSourceVariant const& source,
+                                          std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto lineSrc = std::get_if<std::shared_ptr<ILineSource>>(&source)) {
+                int segments = 2;
+                auto it = parameters.find("segments");
+                if (it != parameters.end()) {
+                    segments = std::max(1, std::stoi(it->second));
+                }
+                auto comp = std::make_unique<LineSamplingMultiComputer>(*lineSrc, (*lineSrc)->getName(), (*lineSrc)->getTimeFrame(), segments);
+                return std::make_unique<MultiComputerWrapper<double>>(std::move(comp));
+            }
+            return nullptr;
+        };
+
+        registerMultiComputer(std::move(info), std::move(factory));
     }
     
     std::cout << "Finished registering built-in computers." << std::endl;
