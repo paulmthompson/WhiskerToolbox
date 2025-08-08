@@ -550,9 +550,10 @@ public:
         if (!wrapper) {
             return nullptr;
         }
-        
-        base_computer.release(); // Transfer ownership
-        return wrapper->releaseComputer(); // Use releaseComputer() to get unique_ptr
+        // Extract the underlying computer and then delete the wrapper by resetting base_computer
+        auto typed = wrapper->releaseComputer();
+        base_computer.reset();
+        return typed;
     }
 
     template<typename T>
@@ -576,8 +577,9 @@ public:
             return nullptr;
         }
 
-        base_computer.release();
-        return wrapper->releaseComputer();
+        auto typed = wrapper->releaseComputer();
+        base_computer.reset();
+        return typed;
     }
 
 private:
