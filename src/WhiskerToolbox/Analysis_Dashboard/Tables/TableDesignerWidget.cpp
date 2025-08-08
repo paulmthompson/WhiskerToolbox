@@ -6,6 +6,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
 #include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
@@ -275,8 +276,9 @@ void TableDesignerWidget::onAddColumn() {
 
         qDebug() << "UI column list count AFTER adding item:" << ui->column_list->count();
 
-        // Don't automatically select the new column to avoid triggering loadColumnConfiguration
-        // The user can manually select it if they want to configure it
+        // Select the newly added column so subsequent UI edits map to this row
+        // This ensures data source/computer selections are saved correctly
+        ui->column_list->setCurrentRow(new_index);
         ui->column_name_edit->setText(column_name);
         ui->column_name_edit->selectAll();
         ui->column_name_edit->setFocus();
@@ -597,6 +599,13 @@ void TableDesignerWidget::refreshColumnDataSourceCombo() {
                                               QString("points_y:%1").arg(QString::fromStdString(key)));
     }
 
+    // Add LineData sources
+    auto line_keys = _data_manager->getKeys<LineData>();
+    for (auto const & key: line_keys) {
+        ui->column_data_source_combo->addItem(QString("Lines: %1").arg(QString::fromStdString(key)),
+                                              QString("lines:%1").arg(QString::fromStdString(key)));
+    }
+
     // Add existing table columns as potential data sources
     auto table_columns = getAvailableTableColumns();
     for (QString const & column: table_columns) {
@@ -733,6 +742,17 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
         ui->column_computer_combo->addItem("(Table columns not yet supported)", "");
         _refreshing_computer_combo = false;
         return;
+    } else if (column_source.startsWith("lines:")) {
+        QString source_name = column_source.mid(6);// Remove "lines:" prefix
+        qDebug() << "Creating line source for:" << source_name;
+        auto line_source = data_manager_extension->getLineSource(source_name.toStdString());
+        if (line_source) {
+            data_source_variant = line_source;
+            valid_source = true;
+            qDebug() << "Successfully created line source";
+        } else {
+            qDebug() << "Failed to create line source";
+        }
     } else {
         qDebug() << "Unknown column source format:" << column_source;
     }
@@ -1349,10 +1369,10 @@ bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder & builder, ColumnI
             return false;
         }
         
-        auto computer_base = registry.createComputer(column_info.computerName.toStdString(), data_source_variant);
+        auto computer_base = registry.createComputer(column_info.computerName.toStdString(), data_source_variant, column_info.parameters);
         if (!computer_base) {
             qDebug() << "Failed to create computer" << column_info.computerName << "for column:" << column_info.name;
-            return false;
+            // Continue; the computer may be multi-output and use a different factory
         }
 
         // Use the actual return type from the computer info instead of hardcoding double
@@ -1362,22 +1382,57 @@ bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder & builder, ColumnI
         // Handle different return types using runtime type dispatch
         bool success = false;
         
-        if (return_type == typeid(double)) {
-            success = addTypedColumnToBuilder<double>(builder, column_info, data_source_variant, registry);
-        } else if (return_type == typeid(int)) {
-            success = addTypedColumnToBuilder<int>(builder, column_info, data_source_variant, registry);
-        } else if (return_type == typeid(bool)) {
-            success = addTypedColumnToBuilder<bool>(builder, column_info, data_source_variant, registry);
-        } else if (return_type == typeid(std::vector<double>)) {
-            success = addTypedColumnToBuilder<std::vector<double>>(builder, column_info, data_source_variant, registry);
-        } else if (return_type == typeid(std::vector<int>)) {
-            success = addTypedColumnToBuilder<std::vector<int>>(builder, column_info, data_source_variant, registry);
-        } else if (return_type == typeid(std::vector<float>)) {
-            success = addTypedColumnToBuilder<std::vector<float>>(builder, column_info, data_source_variant, registry);
+        if (computer_info_ptr->isMultiOutput) {
+            // Multi-output: expand into multiple columns using builder.addColumns
+            if (return_type == typeid(double)) {
+                auto multi = registry.createTypedMultiComputer<double>(
+                    column_info.computerName.toStdString(), data_source_variant, column_info.parameters);
+                if (!multi) {
+                    qDebug() << "Failed to create typed MULTI computer for" << column_info.computerName;
+                    return false;
+                }
+                builder.addColumns<double>(column_info.name.toStdString(), std::move(multi));
+                success = true;
+            } else if (return_type == typeid(int)) {
+                auto multi = registry.createTypedMultiComputer<int>(
+                    column_info.computerName.toStdString(), data_source_variant, column_info.parameters);
+                if (!multi) {
+                    qDebug() << "Failed to create typed MULTI computer<int> for" << column_info.computerName;
+                    return false;
+                }
+                builder.addColumns<int>(column_info.name.toStdString(), std::move(multi));
+                success = true;
+            } else if (return_type == typeid(bool)) {
+                auto multi = registry.createTypedMultiComputer<bool>(
+                    column_info.computerName.toStdString(), data_source_variant, column_info.parameters);
+                if (!multi) {
+                    qDebug() << "Failed to create typed MULTI computer<bool> for" << column_info.computerName;
+                    return false;
+                }
+                builder.addColumns<bool>(column_info.name.toStdString(), std::move(multi));
+                success = true;
+            } else {
+                qDebug() << "Unsupported multi-output element type for" << column_info.computerName;
+                return false;
+            }
         } else {
-            qDebug() << "Unsupported return type for computer" << column_info.computerName 
-                     << "- type:" << computer_info_ptr->outputTypeName.c_str();
-            return false;
+            if (return_type == typeid(double)) {
+                success = addTypedColumnToBuilder<double>(builder, column_info, data_source_variant, registry);
+            } else if (return_type == typeid(int)) {
+                success = addTypedColumnToBuilder<int>(builder, column_info, data_source_variant, registry);
+            } else if (return_type == typeid(bool)) {
+                success = addTypedColumnToBuilder<bool>(builder, column_info, data_source_variant, registry);
+            } else if (return_type == typeid(std::vector<double>)) {
+                success = addTypedColumnToBuilder<std::vector<double>>(builder, column_info, data_source_variant, registry);
+            } else if (return_type == typeid(std::vector<int>)) {
+                success = addTypedColumnToBuilder<std::vector<int>>(builder, column_info, data_source_variant, registry);
+            } else if (return_type == typeid(std::vector<float>)) {
+                success = addTypedColumnToBuilder<std::vector<float>>(builder, column_info, data_source_variant, registry);
+            } else {
+                qDebug() << "Unsupported return type for computer" << column_info.computerName 
+                         << "- type:" << computer_info_ptr->outputTypeName.c_str();
+                return false;
+            }
         }
         
         if (!success) {
