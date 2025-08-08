@@ -284,7 +284,9 @@ struct ComputerInfo {
           isVectorType(other.isVectorType), elementType(other.elementType), 
           elementTypeName(other.elementTypeName),
           requiredRowSelector(other.requiredRowSelector), 
-          requiredSourceType(other.requiredSourceType) {
+          requiredSourceType(other.requiredSourceType),
+          isMultiOutput(other.isMultiOutput),
+          makeOutputSuffixes(other.makeOutputSuffixes) {
         // Deep copy parameter descriptors
         parameterDescriptors.reserve(other.parameterDescriptors.size());
         for (const auto& param : other.parameterDescriptors) {

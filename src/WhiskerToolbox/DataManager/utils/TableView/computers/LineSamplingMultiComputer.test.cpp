@@ -3,6 +3,7 @@
 
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/core/TableView.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/adapters/LineDataAdapter.h"
@@ -13,6 +14,7 @@
 
 #include <memory>
 #include <vector>
+#include <iostream>
 
 TEST_CASE("LineSamplingMultiComputer basic integration", "[LineSamplingMultiComputer]") {
     // Build a simple DataManager and inject LineData
@@ -110,6 +112,139 @@ TEST_CASE("LineSamplingMultiComputer basic integration", "[LineSamplingMultiComp
             REQUIRE(ys1[i] == Catch::Approx(0.0));
         }
     }
+}
+
+TEST_CASE("LineSamplingMultiComputer handles missing lines as zeros", "[LineSamplingMultiComputer]") {
+    DataManager dm;
+
+    std::vector<int> timeValues = {0, 1, 2};
+    auto tf = std::make_shared<TimeFrame>(timeValues);
+
+    auto lineData = std::make_shared<LineData>();
+    lineData->setTimeFrame(tf);
+
+    // Add a line at t=0 and t=2 only; t=1 has no lines
+    std::vector<float> xs = {0.0f, 10.0f};
+    std::vector<float> ys = {0.0f, 0.0f};
+    lineData->addAtTime(TimeFrameIndex(0), xs, ys, false);
+    lineData->addAtTime(TimeFrameIndex(2), xs, ys, false);
+
+    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"TestLinesMissing"});
+
+    std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2)};
+    auto rowSelector = std::make_unique<TimestampSelector>(timestamps, tf);
+
+    auto dme_ptr = std::make_shared<DataManagerExtension>(dm);
+    TableViewBuilder builder(dme_ptr);
+    builder.setRowSelector(std::move(rowSelector));
+
+    // Build multi-computer directly
+    auto multi = std::make_unique<LineSamplingMultiComputer>(
+        std::static_pointer_cast<ILineSource>(lineAdapter),
+        std::string{"TestLinesMissing"},
+        tf,
+        2
+    );
+    builder.addColumns<double>("Line", std::move(multi));
+
+    auto table = builder.build();
+
+    // At t=1 (middle row), expect zeros
+    auto const & xs0 = table.getColumnValues<double>("Line.x@0.000");
+    auto const & ys0 = table.getColumnValues<double>("Line.y@0.000");
+    auto const & xsMid = table.getColumnValues<double>("Line.x@0.500");
+    auto const & ysMid = table.getColumnValues<double>("Line.y@0.500");
+    auto const & xs1 = table.getColumnValues<double>("Line.x@1.000");
+    auto const & ys1 = table.getColumnValues<double>("Line.y@1.000");
+
+    REQUIRE(xs0.size() == 3);
+    REQUIRE(ys0.size() == 3);
+    REQUIRE(xsMid.size() == 3);
+    REQUIRE(ysMid.size() == 3);
+    REQUIRE(xs1.size() == 3);
+    REQUIRE(ys1.size() == 3);
+
+    REQUIRE(xs0[1] == Catch::Approx(0.0));
+    REQUIRE(ys0[1] == Catch::Approx(0.0));
+    REQUIRE(xsMid[1] == Catch::Approx(0.0));
+    REQUIRE(ysMid[1] == Catch::Approx(0.0));
+    REQUIRE(xs1[1] == Catch::Approx(0.0));
+    REQUIRE(ys1[1] == Catch::Approx(0.0));
+}
+
+TEST_CASE("LineSamplingMultiComputer can be created via registry", "[LineSamplingMultiComputer][Registry]") {
+    DataManager dm;
+
+    std::vector<int> timeValues = {0, 1};
+    auto tf = std::make_shared<TimeFrame>(timeValues);
+
+    auto lineData = std::make_shared<LineData>();
+    lineData->setTimeFrame(tf);
+    std::vector<float> xs = {0.0f, 10.0f};
+    std::vector<float> ys = {0.0f, 0.0f};
+    lineData->addAtTime(TimeFrameIndex(0), xs, ys, false);
+    lineData->addAtTime(TimeFrameIndex(1), xs, ys, false);
+
+    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"RegLines"});
+
+    // Create DataSourceVariant via registry adapter to ensure consistent type usage
+    ComputerRegistry registry;
+    auto adapted = registry.createAdapter(
+        "Line Data",
+        std::static_pointer_cast<void>(lineData),
+        tf,
+        std::string{"RegLines"},
+        {}
+    );
+    // Diagnostics
+    {
+        auto adapter_names = registry.getAllAdapterNames();
+        std::cout << "Registered adapters (" << adapter_names.size() << ")" << std::endl;
+        for (auto const& n : adapter_names) {
+            std::cout << "  Adapter: " << n << std::endl;
+        }
+        std::cout << "Adapted variant index: " << adapted.index() << std::endl;
+    }
+    // Fallback to direct adapter if registry adapter not found (should not happen after registration)
+    DataSourceVariant variant = adapted.index() != std::variant_npos ? adapted
+                               : DataSourceVariant{std::static_pointer_cast<ILineSource>(lineAdapter)};
+
+    // More diagnostics: list available computers
+    {
+        auto comps = registry.getAvailableComputers(RowSelectorType::Timestamp, variant);
+        std::cout << "Available computers for Timestamp + variant(" << variant.index() << ") = " << comps.size() << std::endl;
+        for (auto const& ci : comps) {
+            std::cout << "  Computer: " << ci.name
+                      << ", isMultiOutput=" << (ci.isMultiOutput ? "true" : "false")
+                      << ", requiredSourceType=" << ci.requiredSourceType.name() << std::endl;
+        }
+        auto info = registry.findComputerInfo("Line Sample XY");
+        if (info) {
+            std::cout << "Found computer info for 'Line Sample XY' with requiredSourceType=" << info->requiredSourceType.name()
+                      << ", rowSelector=" << static_cast<int>(info->requiredRowSelector)
+                      << ", isMultiOutput=" << (info->isMultiOutput ? "true" : "false") << std::endl;
+        } else {
+            std::cout << "Did not find computer info for 'Line Sample XY'" << std::endl;
+        }
+    }
+
+    // Create via registry
+    std::map<std::string, std::string> params{{"segments", "2"}};
+    auto multi = registry.createTypedMultiComputer<double>("Line Sample XY", variant, params);
+    REQUIRE(multi != nullptr);
+
+    // Build with builder
+    auto dme_ptr = std::make_shared<DataManagerExtension>(dm);
+    std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(0), TimeFrameIndex(1)};
+    auto rowSelector = std::make_unique<TimestampSelector>(timestamps, tf);
+
+    TableViewBuilder builder(dme_ptr);
+    builder.setRowSelector(std::move(rowSelector));
+    builder.addColumns<double>("Line", std::move(multi));
+    auto table = builder.build();
+
+    auto names = table.getColumnNames();
+    REQUIRE(names.size() == 6);
 }
 
 

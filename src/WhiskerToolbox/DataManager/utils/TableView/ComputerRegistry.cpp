@@ -679,5 +679,26 @@ void ComputerRegistry::registerBuiltInAdapters() {
         registerAdapter(std::move(info), std::move(factory));
     }
     
+    // LineDataAdapter - LineData -> ILineSource
+    {
+        AdapterInfo info("Line Data",
+                         "Expose LineData as ILineSource",
+                         typeid(LineData),
+                         typeid(std::shared_ptr<ILineSource>));
+
+        AdapterFactory factory = [](std::shared_ptr<void> const& sourceData,
+                                    std::shared_ptr<TimeFrame> const& timeFrame,
+                                    std::string const& name,
+                                    std::map<std::string, std::string> const& /*parameters*/) -> DataSourceVariant {
+            if (auto ld = std::static_pointer_cast<LineData>(sourceData)) {
+                auto adapter = std::make_shared<LineDataAdapter>(ld, timeFrame, name);
+                return DataSourceVariant{std::static_pointer_cast<ILineSource>(adapter)};
+            }
+            return DataSourceVariant{};
+        };
+
+        registerAdapter(std::move(info), std::move(factory));
+    }
+
     std::cout << "Finished registering built-in adapters." << std::endl;
 }

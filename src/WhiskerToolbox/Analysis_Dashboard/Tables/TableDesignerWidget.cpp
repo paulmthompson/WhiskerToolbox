@@ -1352,6 +1352,13 @@ bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder & builder, ColumnI
                 data_source_variant = analog_source;
                 valid_source = true;
             }
+        } else if (column_source.startsWith("lines:")) {
+            QString source_name = column_source.mid(6);// Remove "lines:" prefix
+            auto line_source = data_manager_extension->getLineSource(source_name.toStdString());
+            if (line_source) {
+                data_source_variant = line_source;
+                valid_source = true;
+            }
         }
 
         if (!valid_source) {
