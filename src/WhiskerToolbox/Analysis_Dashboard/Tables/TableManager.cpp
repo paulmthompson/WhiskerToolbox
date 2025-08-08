@@ -231,6 +231,16 @@ bool TableManager::storeBuiltTable(QString const & table_id, TableView table_vie
 
     _table_views[table_id] = std::make_shared<TableView>(std::move(table_view));
 
+    // Update column names in table info to reflect the actual built columns
+    if (auto view = _table_views[table_id]) {
+        auto column_names = view->getColumnNames();
+        QStringList qt_column_names;
+        for (auto const & name: column_names) {
+            qt_column_names.append(QString::fromStdString(name));
+        }
+        _table_info[table_id].columnNames = qt_column_names;
+    }
+
     qDebug() << "Stored built table for:" << table_id;
     emit tableDataChanged(table_id);
 

@@ -6,6 +6,8 @@
 #include "utils/TableView/columns/Column.h"
 #include "utils/TableView/columns/IColumn.h"
 #include "utils/TableView/interfaces/IColumnComputer.h"
+#include "utils/TableView/interfaces/IMultiColumnComputer.h"
+#include "utils/TableView/interfaces/MultiComputerOutputView.hpp"
 #include "utils/TableView/interfaces/IRowSelector.h"
 
 #include <memory>
@@ -52,6 +54,16 @@ public:
     auto addColumn(std::string const & name, std::unique_ptr<IColumnComputer<T>> computer) -> TableViewBuilder &;
 
     /**
+     * @brief Adds multiple columns backed by a single multi-output computer.
+     * @tparam T Element type of the outputs.
+     * @param baseName Base name for the columns; per-output suffixes are provided by the computer.
+     * @param computer Unique pointer to the multi-output computer.
+     * @return Reference to this builder for method chaining.
+     */
+    template<typename T>
+    auto addColumns(std::string const & baseName, std::unique_ptr<IMultiColumnComputer<T>> computer) -> TableViewBuilder &;
+
+    /**
      * @brief Builds the final TableView object.
      * 
      * This method validates the configuration and constructs the TableView.
@@ -79,6 +91,31 @@ auto TableViewBuilder::addColumn(std::string const & name, std::unique_ptr<IColu
     // Create the templated column
     auto column = std::shared_ptr<IColumn>(new Column<T>(name, std::move(computer)));
     m_columns.push_back(std::move(column));
+
+    return *this;
+}
+
+template<typename T>
+auto TableViewBuilder::addColumns(std::string const & baseName, std::unique_ptr<IMultiColumnComputer<T>> computer) -> TableViewBuilder & {
+    if (!computer) {
+        throw std::invalid_argument("Multi-column computer cannot be null");
+    }
+
+    auto suffixes = computer->getOutputNames();
+    if (suffixes.empty()) {
+        throw std::invalid_argument("Multi-column computer returned no outputs");
+    }
+
+    // wrap in shared_ptr so each per-output view can reference the same instance
+    auto sharedComputer = std::shared_ptr<IMultiColumnComputer<T>>(std::move(computer));
+    auto sharedCache = std::make_shared<typename MultiComputerOutputView<T>::SharedBatchCache>();
+
+    for (size_t i = 0; i < suffixes.size(); ++i) {
+        std::string colName = baseName + suffixes[i];
+        auto view = std::make_unique<MultiComputerOutputView<T>>(sharedComputer, sharedCache, i);
+        auto column = std::shared_ptr<IColumn>(new Column<T>(colName, std::move(view)));
+        m_columns.push_back(std::move(column));
+    }
 
     return *this;
 }

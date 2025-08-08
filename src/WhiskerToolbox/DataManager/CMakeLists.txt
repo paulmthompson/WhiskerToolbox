@@ -113,6 +113,8 @@ set(DATAMANAGER_SOURCES
         utils/TableView/interfaces/IRowSelector.h
         utils/TableView/interfaces/IRowSelector.cpp
         utils/TableView/interfaces/IColumnComputer.h
+        utils/TableView/interfaces/IMultiColumnComputer.h
+        utils/TableView/interfaces/MultiComputerOutputView.hpp
 
         utils/TableView/adapters/AnalogDataAdapter.h
         utils/TableView/adapters/AnalogDataAdapter.cpp
@@ -137,6 +139,7 @@ set(DATAMANAGER_SOURCES
         utils/TableView/computers/EventInIntervalComputer.cpp
         utils/TableView/computers/TimestampValueComputer.h
         utils/TableView/computers/TimestampValueComputer.cpp
+        utils/TableView/computers/LineSamplingMultiComputer.h
         utils/TableView/computers/AnalogSliceGathererComputer.h
         utils/TableView/computers/StandardizeComputer.h
 

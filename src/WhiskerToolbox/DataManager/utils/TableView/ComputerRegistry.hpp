@@ -7,6 +7,7 @@
 #include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
+#include "utils/TableView/interfaces/IMultiColumnComputer.h"
 
 #include <deque>
 #include <functional>
@@ -84,6 +85,42 @@ public:
 };
 
 /**
+ * @brief Parameter descriptor for integer numeric parameters.
+ */
+class IntParameterDescriptor : public IParameterDescriptor {
+    std::string name_;
+    std::string description_;
+    int defaultValue_;
+    int minValue_;
+    int maxValue_;
+    bool required_;
+
+public:
+    IntParameterDescriptor(std::string name, std::string description,
+                           int defaultValue = 0, int minValue = 0, int maxValue = 1000000,
+                           bool required = true)
+        : name_(std::move(name)), description_(std::move(description)),
+          defaultValue_(defaultValue), minValue_(minValue), maxValue_(maxValue), required_(required) {}
+
+    std::string getName() const override { return name_; }
+    std::string getDescription() const override { return description_; }
+    bool isRequired() const override { return required_; }
+    std::string getUIHint() const override { return "number"; }
+
+    std::map<std::string, std::string> getUIProperties() const override {
+        return {
+            {"default", std::to_string(defaultValue_)},
+            {"min", std::to_string(minValue_)},
+            {"max", std::to_string(maxValue_)}
+        };
+    }
+
+    std::unique_ptr<IParameterDescriptor> clone() const override {
+        return std::make_unique<IntParameterDescriptor>(name_, description_, defaultValue_, minValue_, maxValue_, required_);
+    }
+};
+
+/**
  * @brief Non-templated base class for type-erased computer storage.
  * 
  * This allows us to store different templated IColumnComputer instances
@@ -134,6 +171,29 @@ private:
     std::unique_ptr<IColumnComputer<T>> computer_;
 };
 
+/**
+ * @brief Template wrapper to type-erase IMultiColumnComputer<T> in the registry.
+ */
+template<typename T>
+class MultiComputerWrapper : public IComputerBase {
+public:
+    explicit MultiComputerWrapper(std::unique_ptr<IMultiColumnComputer<T>> computer)
+        : computer_(std::move(computer)) {}
+
+    IMultiColumnComputer<T>* get() const { return computer_.get(); }
+
+    std::shared_ptr<IMultiColumnComputer<T>> getComputer() const {
+        return std::shared_ptr<IMultiColumnComputer<T>>(computer_.get(), [](IMultiColumnComputer<T>*){});
+    }
+
+    std::unique_ptr<IMultiColumnComputer<T>> releaseComputer() {
+        return std::move(computer_);
+    }
+
+private:
+    std::unique_ptr<IMultiColumnComputer<T>> computer_;
+};
+
 
 
 /**
@@ -166,6 +226,9 @@ struct ComputerInfo {
     RowSelectorType requiredRowSelector;                ///< Required row selector type
     std::type_index requiredSourceType;                 ///< Required data source interface type
     std::vector<std::unique_ptr<IParameterDescriptor>> parameterDescriptors; ///< Parameter descriptors for UI generation
+    bool isMultiOutput = false;                         ///< True if computer produces multiple outputs of same type
+    // Optional factory to derive output suffixes from parameters for discovery/UI
+    std::function<std::vector<std::string>(std::map<std::string, std::string> const&)> makeOutputSuffixes;
     
     // Default constructor
     ComputerInfo() 
@@ -221,7 +284,9 @@ struct ComputerInfo {
           isVectorType(other.isVectorType), elementType(other.elementType), 
           elementTypeName(other.elementTypeName),
           requiredRowSelector(other.requiredRowSelector), 
-          requiredSourceType(other.requiredSourceType) {
+          requiredSourceType(other.requiredSourceType),
+          isMultiOutput(other.isMultiOutput),
+          makeOutputSuffixes(other.makeOutputSuffixes) {
         // Deep copy parameter descriptors
         parameterDescriptors.reserve(other.parameterDescriptors.size());
         for (const auto& param : other.parameterDescriptors) {
@@ -241,6 +306,8 @@ struct ComputerInfo {
             elementTypeName = other.elementTypeName;
             requiredRowSelector = other.requiredRowSelector;
             requiredSourceType = other.requiredSourceType;
+            isMultiOutput = other.isMultiOutput;
+            makeOutputSuffixes = other.makeOutputSuffixes;
             
             // Deep copy parameter descriptors
             parameterDescriptors.clear();
@@ -273,6 +340,11 @@ using ComputerFactory = std::function<std::unique_ptr<IComputerBase>(
     DataSourceVariant const& source,
     std::map<std::string, std::string> const& parameters
 )>;
+
+    using MultiComputerFactory = std::function<std::unique_ptr<IComputerBase>(
+        DataSourceVariant const& source,
+        std::map<std::string, std::string> const& parameters
+    )>;
 
 /**
  * @brief Information about an available adapter.
@@ -349,6 +421,12 @@ public:
      * @return Type-erased unique_ptr to the computer instance, or nullptr if creation failed.
      */
     std::unique_ptr<IComputerBase> createComputer(
+        std::string const& computerName,
+        DataSourceVariant const& dataSource,
+        std::map<std::string, std::string> const& parameters = {}
+    ) const;
+
+    std::unique_ptr<IComputerBase> createMultiComputer(
         std::string const& computerName,
         DataSourceVariant const& dataSource,
         std::map<std::string, std::string> const& parameters = {}
@@ -472,15 +550,43 @@ public:
         if (!wrapper) {
             return nullptr;
         }
-        
-        base_computer.release(); // Transfer ownership
-        return wrapper->releaseComputer(); // Use releaseComputer() to get unique_ptr
+        // Extract the underlying computer and then delete the wrapper by resetting base_computer
+        auto typed = wrapper->releaseComputer();
+        base_computer.reset();
+        return typed;
+    }
+
+    template<typename T>
+    std::unique_ptr<IMultiColumnComputer<T>> createTypedMultiComputer(
+        std::string const& computerName,
+        DataSourceVariant const& dataSource,
+        std::map<std::string, std::string> const& parameters = {}
+    ) const {
+        auto info = findComputerInfo(computerName);
+        if (!info || info->outputType != typeid(T) || !info->isMultiOutput) {
+            return nullptr;
+        }
+
+        auto base_computer = createMultiComputer(computerName, dataSource, parameters);
+        if (!base_computer) {
+            return nullptr;
+        }
+
+        auto wrapper = dynamic_cast<MultiComputerWrapper<T>*>(base_computer.get());
+        if (!wrapper) {
+            return nullptr;
+        }
+
+        auto typed = wrapper->releaseComputer();
+        base_computer.reset();
+        return typed;
     }
 
 private:
     // Computer registration storage
     std::deque<ComputerInfo> all_computers_;
     std::map<std::string, ComputerFactory> computer_factories_;
+    std::map<std::string, MultiComputerFactory> multi_computer_factories_;
     
     // Maps (RowSelectorType, SourceTypeIndex) -> vector<ComputerInfo*>
     std::map<std::pair<RowSelectorType, std::type_index>, std::vector<ComputerInfo const*>> selector_source_to_computers_;
@@ -504,6 +610,8 @@ private:
      * @param factory Factory function for creating instances.
      */
     void registerComputer(ComputerInfo info, ComputerFactory factory);
+
+    void registerMultiComputer(ComputerInfo info, MultiComputerFactory factory);
 
     /**
      * @brief Registers an adapter with the registry.

@@ -5,6 +5,9 @@
 #include "computers/IntervalPropertyComputer.h"
 #include "computers/TimestampValueComputer.h"
 #include "adapters/PointComponentAdapter.h"
+#include "adapters/LineDataAdapter.h"
+#include "interfaces/ILineSource.h"
+#include "computers/LineSamplingMultiComputer.h"
 #include "Points/Point_Data.hpp"
 
 #include <iostream>
@@ -94,6 +97,24 @@ std::unique_ptr<IComputerBase> ComputerRegistry::createComputer(
     }
     
     std::cerr << "Computer '" << computerName << "' not found in registry." << std::endl;
+    return nullptr;
+}
+
+std::unique_ptr<IComputerBase> ComputerRegistry::createMultiComputer(
+    std::string const& computerName,
+    DataSourceVariant const& dataSource,
+    std::map<std::string, std::string> const& parameters
+) const {
+    auto it = multi_computer_factories_.find(computerName);
+    if (it != multi_computer_factories_.end()) {
+        try {
+            return it->second(dataSource, parameters);
+        } catch (std::exception const& e) {
+            std::cerr << "Error creating multi-computer '" << computerName << "': " << e.what() << std::endl;
+            return nullptr;
+        }
+    }
+    std::cerr << "Multi-computer '" << computerName << "' not found in registry." << std::endl;
     return nullptr;
 }
 
@@ -243,6 +264,26 @@ void ComputerRegistry::registerAdapter(AdapterInfo info, AdapterFactory factory)
     
     name_to_adapter_[name] = infoPtr;
     adapter_factories_[name] = std::move(factory);
+}
+
+void ComputerRegistry::registerMultiComputer(ComputerInfo info, MultiComputerFactory factory) {
+    std::string const name = info.name;
+    if (name_to_computer_.count(name) || multi_computer_factories_.count(name)) {
+        std::cerr << "Warning: Computer '" << name << "' already registered." << std::endl;
+        return;
+    }
+
+    info.isMultiOutput = true;
+
+    std::cout << "Registering multi-output computer: " << name
+              << " (Row selector: " << static_cast<int>(info.requiredRowSelector)
+              << ", Source type: " << info.requiredSourceType.name() << ")" << std::endl;
+
+    all_computers_.push_back(std::move(info));
+    ComputerInfo const* infoPtr = &all_computers_.back();
+
+    name_to_computer_[name] = infoPtr;
+    multi_computer_factories_[name] = std::move(factory);
 }
 
 void ComputerRegistry::computeComputerMappings() {
@@ -530,6 +571,55 @@ void ComputerRegistry::registerBuiltInComputers() {
         
         registerComputer(std::move(info), std::move(factory));
     }
+
+    // LineSamplingMultiComputer - sample x/y at equally spaced segments along line
+    {
+        std::vector<std::unique_ptr<IParameterDescriptor>> paramDescriptors;
+        paramDescriptors.push_back(std::make_unique<IntParameterDescriptor>(
+            "segments", "Number of equal segments to divide the line into (generates segments+1 sample points)", 2, 1, 1000, true));
+
+        ComputerInfo info("Line Sample XY",
+                          "Sample line x and y at equally spaced positions",
+                          typeid(double),
+                          "double",
+                          RowSelectorType::Timestamp,
+                          typeid(std::shared_ptr<ILineSource>),
+                          std::move(paramDescriptors));
+        info.isMultiOutput = true;
+        info.makeOutputSuffixes = [](std::map<std::string, std::string> const& parameters) {
+            int segments = 2;
+            auto it = parameters.find("segments");
+            if (it != parameters.end()) {
+                segments = std::max(1, std::stoi(it->second));
+            }
+            std::vector<std::string> suffixes;
+            suffixes.reserve(static_cast<size_t>((segments + 1) * 2));
+            for (int i = 0; i <= segments; ++i) {
+                double frac = static_cast<double>(i) / static_cast<double>(segments);
+                char buf[32];
+                std::snprintf(buf, sizeof(buf), "@%.3f", frac);
+                suffixes.emplace_back(std::string{".x"} + buf);
+                suffixes.emplace_back(std::string{".y"} + buf);
+            }
+            return suffixes;
+        };
+
+        MultiComputerFactory factory = [](DataSourceVariant const& source,
+                                          std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto lineSrc = std::get_if<std::shared_ptr<ILineSource>>(&source)) {
+                int segments = 2;
+                auto it = parameters.find("segments");
+                if (it != parameters.end()) {
+                    segments = std::max(1, std::stoi(it->second));
+                }
+                auto comp = std::make_unique<LineSamplingMultiComputer>(*lineSrc, (*lineSrc)->getName(), (*lineSrc)->getTimeFrame(), segments);
+                return std::make_unique<MultiComputerWrapper<double>>(std::move(comp));
+            }
+            return nullptr;
+        };
+
+        registerMultiComputer(std::move(info), std::move(factory));
+    }
     
     std::cout << "Finished registering built-in computers." << std::endl;
 }
@@ -589,5 +679,26 @@ void ComputerRegistry::registerBuiltInAdapters() {
         registerAdapter(std::move(info), std::move(factory));
     }
     
+    // LineDataAdapter - LineData -> ILineSource
+    {
+        AdapterInfo info("Line Data",
+                         "Expose LineData as ILineSource",
+                         typeid(LineData),
+                         typeid(std::shared_ptr<ILineSource>));
+
+        AdapterFactory factory = [](std::shared_ptr<void> const& sourceData,
+                                    std::shared_ptr<TimeFrame> const& timeFrame,
+                                    std::string const& name,
+                                    std::map<std::string, std::string> const& /*parameters*/) -> DataSourceVariant {
+            if (auto ld = std::static_pointer_cast<LineData>(sourceData)) {
+                auto adapter = std::make_shared<LineDataAdapter>(ld, timeFrame, name);
+                return DataSourceVariant{std::static_pointer_cast<ILineSource>(adapter)};
+            }
+            return DataSourceVariant{};
+        };
+
+        registerAdapter(std::move(info), std::move(factory));
+    }
+
     std::cout << "Finished registering built-in adapters." << std::endl;
 }

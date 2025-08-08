@@ -13,15 +13,15 @@ LineDataAdapter::LineDataAdapter(std::shared_ptr<LineData> lineData,
     }
 }
 
-std::string const & LineDataAdapter::getName() const {
+auto LineDataAdapter::getName() const -> std::string const & {
     return m_name;
 }
 
-std::shared_ptr<TimeFrame> LineDataAdapter::getTimeFrame() const {
+auto LineDataAdapter::getTimeFrame() const -> std::shared_ptr<TimeFrame> {
     return m_timeFrame;
 }
 
-size_t LineDataAdapter::size() const {
+auto LineDataAdapter::size() const -> size_t {
     // Count total number of lines across all time frames
     size_t totalLines = 0;
     for (auto const & [time, lines]: m_lineData->GetAllLinesAsRange()) {
@@ -30,7 +30,7 @@ size_t LineDataAdapter::size() const {
     return totalLines;
 }
 
-std::vector<Line2D> LineDataAdapter::getLines() {
+auto LineDataAdapter::getLines() -> std::vector<Line2D> {
     std::vector<Line2D> allLines;
     
     // Collect all lines from all time frames
@@ -41,16 +41,23 @@ std::vector<Line2D> LineDataAdapter::getLines() {
     return allLines;
 }
 
-std::vector<Line2D> LineDataAdapter::getLinesInRange(TimeFrameIndex start,
-                                                      TimeFrameIndex end,
-                                                      TimeFrame const * target_timeFrame) {
-    // Use the LineData's built-in method to get lines in the time range
-    // This method handles the time frame conversion internally
+auto LineDataAdapter::getLinesInRange(TimeFrameIndex start,
+                                      TimeFrameIndex end,
+                                      TimeFrame const * target_timeFrame) -> std::vector<Line2D> {
+    // Fast path: when start == end, avoid constructing a ranges pipeline.
+    // Directly fetch the lines at the single time index using timeframe conversion.
+    if (start == end) {
+        auto const & lines_ref = m_lineData->getAtTime(start, target_timeFrame, m_timeFrame.get());
+        return {lines_ref.begin(), lines_ref.end()};
+    }
+
+    // Use the LineData's built-in method to get lines in the time range.
+    // This method handles the time frame conversion internally via a lazy view.
     auto lines_view = m_lineData->GetLinesInRange(TimeFrameInterval(start, end),
                                                   target_timeFrame,
                                                   m_timeFrame.get());
 
-    // Convert the view to a vector
+    // Materialize the view into a vector
     std::vector<Line2D> result;
     for (auto const & timeLinesPair: lines_view) {
         result.insert(result.end(), timeLinesPair.lines.begin(), timeLinesPair.lines.end());
