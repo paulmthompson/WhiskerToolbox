@@ -2,12 +2,11 @@
 #include "ScatterPlotPropertiesWidget.hpp"
 #include "ScatterPlotWidget.hpp"
 
-#include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
-#include "DataSourceRegistry/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
-#include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/utils/TableView/TableRegistry.hpp"
+#include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
+#include "DataManager/utils/TableView/core/TableView.h"
 #include "ScatterPlotOpenGLWidget.hpp"
 #include "ui_ScatterPlotPropertiesWidget.h"
 
@@ -18,6 +17,7 @@
 #include <QDoubleSpinBox>
 #include <QPushButton>
 
+#include <memory>
 #include <numeric>
 #include <vector>
 
@@ -25,7 +25,6 @@ ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
       ui(new Ui::ScatterPlotPropertiesWidget),
       _scatter_plot_widget(nullptr),
-      _data_source_registry(nullptr),
       _applying_properties(false) {
     ui->setupUi(this);
     setupConnections();
@@ -35,17 +34,8 @@ ScatterPlotPropertiesWidget::~ScatterPlotPropertiesWidget() {
     delete ui;
 }
 
-void ScatterPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
-    _data_source_registry = data_source_registry;
-    
-    if (_data_source_registry) {
-        // Connect to data source registry signals for dynamic updates
-        connect(_data_source_registry, &DataSourceRegistry::dataSourceRegistered,
-                this, &ScatterPlotPropertiesWidget::updateAvailableDataSources);
-        connect(_data_source_registry, &DataSourceRegistry::dataSourceUnregistered,
-                this, &ScatterPlotPropertiesWidget::updateAvailableDataSources);
-    }
-    
+void ScatterPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    _data_manager = std::move(data_manager);
     updateAvailableDataSources();
 }
 
@@ -68,7 +58,7 @@ void ScatterPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget
 
 void ScatterPlotPropertiesWidget::setScatterPlotWidget(ScatterPlotWidget * scatter_widget) {
     _scatter_plot_widget = scatter_widget;
-    
+
     // Connect to OpenGL widget signals for coordinate range updates
     if (_scatter_plot_widget && _scatter_plot_widget->getOpenGLWidget()) {
         auto opengl_widget = _scatter_plot_widget->getOpenGLWidget();
@@ -77,7 +67,7 @@ void ScatterPlotPropertiesWidget::setScatterPlotWidget(ScatterPlotWidget * scatt
         connect(opengl_widget, &ScatterPlotOpenGLWidget::panOffsetChanged,
                 this, &ScatterPlotPropertiesWidget::onPanOffsetChanged);
     }
-    
+
     updateFromPlot();
 }
 
@@ -91,7 +81,7 @@ void ScatterPlotPropertiesWidget::updateFromPlot() {
     ui->point_color_button->setStyleSheet("background-color: #3268a8; border: 1px solid #ccc;");
     ui->show_grid_checkbox->setChecked(true);
     ui->show_legend_checkbox->setChecked(true);
-    
+
     // Update coordinate range display
     updateCoordinateRange();
 }
@@ -111,8 +101,8 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
         return;
     }
 
-    if (!_data_source_registry) {
-        std::cout << "ScatterPlotPropertiesWidget::updateAvailableDataSources - Data source registry is null" << std::endl;
+    if (!_data_manager) {
+        std::cout << "ScatterPlotPropertiesWidget::updateAvailableDataSources - DataManager is null" << std::endl;
         return;
     }
 
@@ -125,125 +115,112 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
     ui->x_axis_combo->addItem("Select a data source...", "");
     ui->y_axis_combo->addItem("Select a data source...", "");
 
-    auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
-    auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
-
     // Add items from DataManager (analog time series)
-    if (!data_manager) {
-        std::cout << "ScatterPlotPropertiesWidget::updateAvailableDataSources - Data manager is null" << std::endl;
-        return;
-    }
+    std::vector<std::string> all_keys = _data_manager->getAllKeys();
 
-    std::vector<std::string> all_keys = data_manager->getAllKeys();
-        
     for (std::string const & key: all_keys) {
-        DM_DataType data_type = data_manager->getType(key);
-            
+        DM_DataType data_type = _data_manager->getType(key);
+
         // Only add analog time series for scatter plots
         if (data_type == DM_DataType::Analog) {
             QString display_text = QString("Analog: %1").arg(QString::fromStdString(key));
             QString data_key = QString("analog:%1").arg(QString::fromStdString(key));
-                
+
             ui->x_axis_combo->addItem(display_text, data_key);
             ui->y_axis_combo->addItem(display_text, data_key);
-                
+
             qDebug() << "Added analog time series:" << display_text;
         }
     }
 
     // Add items from TableRegistry (table columns)
-    // Find TableManagerSource
-    AbstractDataSource* table_manager_source = nullptr;
-    auto source_ids = _data_source_registry->getAvailableSourceIds();
+    if (auto * registry = _data_manager->getTableRegistry()) {
+        auto table_ids = registry->getTableIds();
+        qDebug() << "Found" << table_ids.size() << "tables in table manager";
 
-    for (auto const & source_id : source_ids) {
-        auto* source = _data_source_registry->getDataSource(source_id);
-        if (source && source->getType() == "TableManager") {
-            table_manager_source = source;
-            break;
-        }
-    }
+        for (auto const & table_id: table_ids) {
+            qDebug() << "Processing table:" << table_id;
 
-    
-        if (table_manager_source) {
-            TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-            auto dm_for_tables = tm_source->getDataManager();
-            if (dm_for_tables) {
-                auto * registry = dm_for_tables->getTableRegistry();
-                auto table_ids = registry->getTableIds();
-                qDebug() << "Found" << table_ids.size() << "tables in table manager";
-                
-                for (auto const & table_id : table_ids) {
-                    qDebug() << "Processing table:" << table_id;
-                    
-                    auto table_view = registry->getBuiltTable(table_id);
-                    if (table_view) {
-                        qDebug() << "Table" << table_id << "is built and available";
-                        auto column_names = table_view->getColumnNames();
-                        qDebug() << "Table" << table_id << "has" << column_names.size() << "columns:" << QString::fromStdString(std::accumulate(column_names.begin(), column_names.end(), std::string{}, [](const std::string& a, const std::string& b) { return a.empty() ? b : a + ", " + b; }));
-                        
-                        for (auto const & column_name : column_names) {
-                            // Use our new type-safe interface to filter by numeric types
-                            ColumnTypeInfo type_info = tm_source->getColumnTypeInfo(table_id, QString::fromStdString(column_name));
-                            
-                            qDebug() << "Column:" << QString::fromStdString(column_name)
-                                     << "Type:" << QString::fromStdString(type_info.typeName)
-                                     << "ElementType:" << QString::fromStdString(type_info.elementTypeName)
-                                     << "isVectorType:" << type_info.isVectorType
-                                     << "hasElementType<double>():" << type_info.hasElementType<double>()
-                                     << "hasElementType<float>():" << type_info.hasElementType<float>()
-                                     << "hasElementType<int>():" << type_info.hasElementType<int>();
-                            
-                            // Only add columns that contain numeric data suitable for scatter plots
-                            // We want std::vector<double> etc., but NOT std::vector<std::vector<double>>
-                            bool is_plottable_numeric = false;
-                            if (!type_info.isVectorType) {
-                                // Check if it's a vector of numeric types (single values per row)
-                                is_plottable_numeric = type_info.hasElementType<float>() || 
-                                                     type_info.hasElementType<double>() || 
-                                                     type_info.hasElementType<int>();
-                            }
-                            
-                            // Special handling for void types - they might not be built yet
-                            if (type_info.typeName == "void") {
-                                qDebug() << "Column" << QString::fromStdString(column_name) 
-                                        << "has void type - table may not be built yet";
-                            }
-                            
-                            if (is_plottable_numeric) {
-                                QString type_display = QString::fromStdString(type_info.elementTypeName);
-                                QString display_text = QString("Table: %1.%2 (%3)")
+            auto table_view = registry->getBuiltTable(table_id);
+            if (table_view) {
+                qDebug() << "Table" << table_id << "is built and available";
+                auto column_names = table_view->getColumnNames();
+                qDebug() << "Table" << table_id << "has" << column_names.size() << "columns:" << QString::fromStdString(std::accumulate(column_names.begin(), column_names.end(), std::string{}, [](std::string const & a, std::string const & b) { return a.empty() ? b : a + ", " + b; }));
+
+                for (auto const & column_name: column_names) {
+                    // Use our new type-safe interface to filter by numeric types
+                    // Inspect type via TableView runtime type
+                    ColumnTypeInfo type_info;
+                    try {
+                        auto type_index = table_view->getColumnTypeIndex(column_name);
+                        if (type_index == typeid(std::vector<float>)) type_info = ColumnTypeInfo::fromType<std::vector<float>>();
+                        else if (type_index == typeid(std::vector<double>))
+                            type_info = ColumnTypeInfo::fromType<std::vector<double>>();
+                        else if (type_index == typeid(std::vector<int>))
+                            type_info = ColumnTypeInfo::fromType<std::vector<int>>();
+                        else if (type_index == typeid(float))
+                            type_info = ColumnTypeInfo(typeid(float), typeid(float), false, false, "float", "float");
+                        else if (type_index == typeid(double))
+                            type_info = ColumnTypeInfo(typeid(double), typeid(double), false, false, "double", "double");
+                        else if (type_index == typeid(int))
+                            type_info = ColumnTypeInfo(typeid(int), typeid(int), false, false, "int", "int");
+                        else
+                            type_info = ColumnTypeInfo{};
+                    } catch (...) { type_info = ColumnTypeInfo{}; }
+
+                    qDebug() << "Column:" << QString::fromStdString(column_name)
+                             << "Type:" << QString::fromStdString(type_info.typeName)
+                             << "ElementType:" << QString::fromStdString(type_info.elementTypeName)
+                             << "isVectorType:" << type_info.isVectorType
+                             << "hasElementType<double>():" << type_info.hasElementType<double>()
+                             << "hasElementType<float>():" << type_info.hasElementType<float>()
+                             << "hasElementType<int>():" << type_info.hasElementType<int>();
+
+                    // Only add columns that contain numeric data suitable for scatter plots
+                    // We want std::vector<double> etc., but NOT std::vector<std::vector<double>>
+                    bool is_plottable_numeric = false;
+                    if (!type_info.isVectorType) {
+                        // Check if it's a vector of numeric types (single values per row)
+                        is_plottable_numeric = type_info.hasElementType<float>() ||
+                                               type_info.hasElementType<double>() ||
+                                               type_info.hasElementType<int>();
+                    }
+
+                    // Special handling for void types - they might not be built yet
+                    if (type_info.typeName == "void") {
+                        qDebug() << "Column" << QString::fromStdString(column_name)
+                                 << "has void type - table may not be built yet";
+                    }
+
+                    if (is_plottable_numeric) {
+                        QString type_display = QString::fromStdString(type_info.elementTypeName);
+                        QString display_text = QString("Table: %1.%2 (%3)")
                                                        .arg(table_id)
                                                        .arg(QString::fromStdString(column_name))
                                                        .arg(type_display);
-                                QString data_key = QString("table:%1:%2")
+                        QString data_key = QString("table:%1:%2")
                                                    .arg(table_id)
                                                    .arg(QString::fromStdString(column_name));
-                                
-                                ui->x_axis_combo->addItem(display_text, data_key);
-                                ui->y_axis_combo->addItem(display_text, data_key);
-                                
-                                qDebug() << "Added numeric table column:" << display_text 
-                                        << "Type:" << QString::fromStdString(type_info.typeName);
-                            } else {
-                                qDebug() << "Skipped non-numeric column:" << QString::fromStdString(column_name)
-                                        << "Type:" << QString::fromStdString(type_info.typeName)
-                                        << "Reason: isVectorType=" << type_info.isVectorType
-                                        << "isNumeric=" << (type_info.hasElementType<float>() || 
-                                                           type_info.hasElementType<double>() || 
-                                                           type_info.hasElementType<int>());
-                            }
-                        }
+
+                        ui->x_axis_combo->addItem(display_text, data_key);
+                        ui->y_axis_combo->addItem(display_text, data_key);
+
+                        qDebug() << "Added numeric table column:" << display_text
+                                 << "Type:" << QString::fromStdString(type_info.typeName);
                     } else {
-                        qDebug() << "Table" << table_id << "is not built yet";
+                        qDebug() << "Skipped non-numeric column:" << QString::fromStdString(column_name)
+                                 << "Type:" << QString::fromStdString(type_info.typeName)
+                                 << "Reason: isVectorType=" << type_info.isVectorType
+                                 << "isNumeric=" << (type_info.hasElementType<float>() || type_info.hasElementType<double>() || type_info.hasElementType<int>());
                     }
                 }
             } else {
-                qDebug() << "TableManagerSource has no DataManager";
+                qDebug() << "Table" << table_id << "is not built yet";
             }
-        } else {
-            qDebug() << "No TableManagerSource found in data source registry";
         }
+    } else {
+        qDebug() << "TableManagerSource has no DataManager";
+    }
 
     qDebug() << "ScatterPlotPropertiesWidget::updateAvailableDataSources: Completed update";
 
@@ -251,6 +228,7 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
     updateXAxisInfoLabel();
     updateYAxisInfoLabel();
 }
+
 
 void ScatterPlotPropertiesWidget::onXAxisDataSourceChanged() {
     updateXAxisInfoLabel();
@@ -266,7 +244,7 @@ void ScatterPlotPropertiesWidget::onPointSizeChanged(double value) {
     if (_scatter_plot_widget) {
         _scatter_plot_widget->setPointSize(static_cast<float>(value));
     }
-    
+
     if (!_applying_properties) {
         updatePlotWidget();
     }
@@ -364,13 +342,13 @@ void ScatterPlotPropertiesWidget::setSelectedYAxisDataSource(QString const & dat
 
 void ScatterPlotPropertiesWidget::updatePlotWidget() {
     qDebug() << "ScatterPlotPropertiesWidget::updatePlotWidget: Starting update";
-    
+
     QString x_data_key = getSelectedXAxisDataSource();
     QString y_data_key = getSelectedYAxisDataSource();
-    
+
     qDebug() << "Selected X data key:" << x_data_key;
     qDebug() << "Selected Y data key:" << y_data_key;
-    
+
     if (x_data_key.isEmpty() || y_data_key.isEmpty()) {
         qDebug() << "One or both data keys are empty, skipping plot update";
         return;
@@ -379,19 +357,19 @@ void ScatterPlotPropertiesWidget::updatePlotWidget() {
     // Load X and Y data
     std::vector<float> x_data = loadDataFromKey(x_data_key);
     std::vector<float> y_data = loadDataFromKey(y_data_key);
-    
+
     qDebug() << "Loaded X data size:" << x_data.size();
     qDebug() << "Loaded Y data size:" << y_data.size();
-    
+
     if (x_data.empty() || y_data.empty()) {
         qDebug() << "One or both data vectors are empty";
         return;
     }
-    
+
     // Store data for coordinate range calculations
     _x_data = x_data;
     _y_data = y_data;
-    
+
     // Make sure both data vectors have the same size
     size_t min_size = std::min(x_data.size(), y_data.size());
     if (x_data.size() != y_data.size()) {
@@ -401,29 +379,25 @@ void ScatterPlotPropertiesWidget::updatePlotWidget() {
         _x_data.resize(min_size);
         _y_data.resize(min_size);
     }
-    
+
     // Update the scatter plot widget if available
     if (_scatter_plot_widget) {
         _scatter_plot_widget->setScatterData(x_data, y_data);
-        
+
         // Set axis labels based on data keys
-        QString x_label = x_data_key.startsWith("analog:") ? 
-                         x_data_key.mid(7) : 
-                         (x_data_key.startsWith("table:") ? x_data_key.split(":").last() : x_data_key);
-        QString y_label = y_data_key.startsWith("analog:") ? 
-                         y_data_key.mid(7) : 
-                         (y_data_key.startsWith("table:") ? y_data_key.split(":").last() : y_data_key);
-                         
+        QString x_label = x_data_key.startsWith("analog:") ? x_data_key.mid(7) : (x_data_key.startsWith("table:") ? x_data_key.split(":").last() : x_data_key);
+        QString y_label = y_data_key.startsWith("analog:") ? y_data_key.mid(7) : (y_data_key.startsWith("table:") ? y_data_key.split(":").last() : y_data_key);
+
         _scatter_plot_widget->setAxisLabels(x_label, y_label);
-        
+
         // Apply other settings
         _scatter_plot_widget->setPointSize(static_cast<float>(ui->point_size_spinbox->value()));
-        
+
         qDebug() << "Updated scatter plot widget with" << min_size << "points";
     } else {
         qDebug() << "No scatter plot widget available, cannot update plot";
     }
-    
+
     // Only emit properties changed signal when not applying properties
     if (!_applying_properties) {
         emit propertiesChanged();
@@ -433,110 +407,85 @@ void ScatterPlotPropertiesWidget::updatePlotWidget() {
 std::vector<float> ScatterPlotPropertiesWidget::loadDataFromKey(QString const & data_key) {
     std::vector<float> result;
 
-    if (!_data_source_registry) {
-        std::cout << "ScatterPlotPropertiesWidget::loadDataFromKey - Data source registry is null" << std::endl;
+    if (!_data_manager) {
+        std::cout << "ScatterPlotPropertiesWidget::loadDataFromKey - DataManager is null" << std::endl;
         return result;
     }
-    
+
     if (data_key.startsWith("analog:")) {
         // Handle analog time series
-        QString analog_key = data_key.mid(7); // Remove "analog:" prefix
-        
-        try {
-             auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
-             auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
+        QString analog_key = data_key.mid(7);// Remove "analog:" prefix
 
-            auto analog_data = data_manager ? data_manager->getData<AnalogTimeSeries>(analog_key.toStdString()) : nullptr;
+        try {
+            auto analog_data = _data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
             if (analog_data) {
                 auto data_vector = analog_data->getAnalogTimeSeries();
                 result.reserve(data_vector.size());
-                
-                for (auto value : data_vector) {
+
+                for (auto value: data_vector) {
                     result.push_back(static_cast<float>(value));
                 }
-                
+
                 qDebug() << "Loaded" << result.size() << "values from analog time series:" << analog_key;
             }
         } catch (std::exception const & e) {
             qDebug() << "Error loading analog data:" << e.what();
         }
-        
+
     } else if (data_key.startsWith("table:")) {
         // Handle table column data
         QStringList parts = data_key.split(":");
         if (parts.size() >= 3) {
             QString table_id = parts[1];
             QString column_name = parts[2];
-            
-            if (!_data_source_registry) {
-                qDebug() << "No data source registry available for table data";
-                return result;
-            }
-            
-            // Find TableManagerSource
-            AbstractDataSource* table_manager_source = nullptr;
-            auto source_ids = _data_source_registry->getAvailableSourceIds();
 
-            for (auto const & source_id : source_ids) {
-                auto* source = _data_source_registry->getDataSource(source_id);
-                if (source && source->getType() == "TableManager") {
-                    table_manager_source = source;
-                    break;
-                }
-            }
-            
-            if (table_manager_source) {
-                TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-                
+            if (auto * registry = _data_manager->getTableRegistry()) {
                 try {
-                    // Use the new type-safe interface
-                    auto column_variant = tm_source->getTableColumnDataVariant(table_id, column_name);
-                    
-                    // Create a visitor to extract numeric data as float vector
-                    auto float_vector_visitor = [&result](const auto& data) {
-                        using DataType = std::decay_t<decltype(data)>;
-                        
-                        if constexpr (std::is_same_v<DataType, std::vector<float>>) {
-                            result = data;
-                        }
-                        else if constexpr (std::is_same_v<DataType, std::vector<double>>) {
-                            result.reserve(data.size());
-                            for (const auto& value : data) {
-                                result.push_back(static_cast<float>(value));
+                    // Use TableView's variant accessor directly
+                    auto view = registry->getBuiltTable(table_id);
+                    if (view) {
+                        auto column_variant = view->getColumnDataVariant(column_name.toStdString());
+
+                        // Create a visitor to extract numeric data as float vector
+                        auto float_vector_visitor = [&result](auto const & data) {
+                            using DataType = std::decay_t<decltype(data)>;
+
+                            if constexpr (std::is_same_v<DataType, std::vector<float>>) {
+                                result = data;
+                            } else if constexpr (std::is_same_v<DataType, std::vector<double>>) {
+                                result.reserve(data.size());
+                                for (auto const & value: data) {
+                                    result.push_back(static_cast<float>(value));
+                                }
+                            } else if constexpr (std::is_same_v<DataType, std::vector<int>>) {
+                                result.reserve(data.size());
+                                for (auto const & value: data) {
+                                    result.push_back(static_cast<float>(value));
+                                }
+                            } else if constexpr (std::is_same_v<DataType, float>) {
+                                result.push_back(data);
+                            } else if constexpr (std::is_same_v<DataType, double>) {
+                                result.push_back(static_cast<float>(data));
+                            } else if constexpr (std::is_same_v<DataType, int>) {
+                                result.push_back(static_cast<float>(data));
+                            } else {
+                                qWarning() << "Unsupported column data type for scatter plot";
                             }
-                        }
-                        else if constexpr (std::is_same_v<DataType, std::vector<int>>) {
-                            result.reserve(data.size());
-                            for (const auto& value : data) {
-                                result.push_back(static_cast<float>(value));
-                            }
-                        }
-                        else if constexpr (std::is_same_v<DataType, float>) {
-                            result.push_back(data);
-                        }
-                        else if constexpr (std::is_same_v<DataType, double>) {
-                            result.push_back(static_cast<float>(data));
-                        }
-                        else if constexpr (std::is_same_v<DataType, int>) {
-                            result.push_back(static_cast<float>(data));
-                        }
-                        else {
-                            qWarning() << "Unsupported column data type for scatter plot";
-                        }
-                    };
-                    
-                    std::visit(float_vector_visitor, column_variant);
-                    
-                    qDebug() << "Loaded" << result.size() << "values from table column:" 
+                        };
+
+                        std::visit(float_vector_visitor, column_variant);
+                    }
+
+                    qDebug() << "Loaded" << result.size() << "values from table column:"
                              << table_id << "." << column_name;
-                             
+
                 } catch (std::exception const & e) {
                     qDebug() << "Error loading table column data:" << e.what();
                 }
             }
         }
     }
-    
+
     return result;
 }
 
@@ -545,8 +494,8 @@ void ScatterPlotPropertiesWidget::updateXAxisInfoLabel() {
         return;
     }
 
-    if (!_data_source_registry) {
-        std::cout << "ScatterPlotPropertiesWidget::updateXAxisInfoLabel - Data source registry is null" << std::endl;
+    if (!_data_manager) {
+        std::cout << "ScatterPlotPropertiesWidget::updateXAxisInfoLabel - DataManager is null" << std::endl;
         return;
     }
 
@@ -557,17 +506,14 @@ void ScatterPlotPropertiesWidget::updateXAxisInfoLabel() {
     }
 
     QString info_text;
-    
+
     if (selected_key.startsWith("analog:")) {
         QString analog_key = selected_key.mid(7);
         info_text = QString("X-axis: Analog Time Series\nKey: %1").arg(analog_key);
 
-        auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
-        auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
-
-        if (data_manager) {
+        if (_data_manager) {
             try {
-                auto analog_data = data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
+                auto analog_data = _data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
                 if (analog_data) {
                     info_text += QString("\nSamples: %1").arg(analog_data->getNumSamples());
                 }
@@ -594,8 +540,8 @@ void ScatterPlotPropertiesWidget::updateYAxisInfoLabel() {
         return;
     }
 
-    if (!_data_source_registry) {
-        std::cout << "ScatterPlotPropertiesWidget::updateYAxisInfoLabel - Data source registry is null" << std::endl;
+    if (!_data_manager) {
+        std::cout << "ScatterPlotPropertiesWidget::updateYAxisInfoLabel - DataManager is null" << std::endl;
         return;
     }
 
@@ -606,17 +552,14 @@ void ScatterPlotPropertiesWidget::updateYAxisInfoLabel() {
     }
 
     QString info_text;
-    
+
     if (selected_key.startsWith("analog:")) {
         QString analog_key = selected_key.mid(7);
         info_text = QString("Y-axis: Analog Time Series\nKey: %1").arg(analog_key);
 
-        auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
-        auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
-
-        if (data_manager) {
+        if (_data_manager) {
             try {
-                auto analog_data = data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
+                auto analog_data = _data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
                 if (analog_data) {
                     info_text += QString("\nSamples: %1").arg(analog_data->getNumSamples());
                 }
@@ -640,179 +583,131 @@ void ScatterPlotPropertiesWidget::updateYAxisInfoLabel() {
 
 QStringList ScatterPlotPropertiesWidget::getAvailableNumericColumns() const {
     QStringList numeric_columns;
-    
-    if (!_data_source_registry) {
-        std::cout << "ScatterPlotPropertiesWidget::getAvailableNumericColumns - Data source registry is null" << std::endl;
+
+    if (!_data_manager) {
+        std::cout << "ScatterPlotPropertiesWidget::getAvailableNumericColumns - DataManager is null" << std::endl;
         return numeric_columns;
     }
-    
-    // Find TableManagerSource
-    AbstractDataSource* table_manager_source = nullptr;
-    auto source_ids = _data_source_registry->getAvailableSourceIds();
 
-    for (auto const & source_id : source_ids) {
-        auto* source = _data_source_registry->getDataSource(source_id);
-        if (source && source->getType() == "TableManager") {
-            table_manager_source = source;
-            break;
+    auto * registry = _data_manager->getTableRegistry();
+    if (!registry) return numeric_columns;
+
+    auto table_ids = registry->getTableIds();
+
+    auto isNumericIndex = [](std::type_index const & idx) -> bool {
+        return idx == typeid(float) || idx == typeid(double) || idx == typeid(int) ||
+               idx == typeid(std::vector<float>) || idx == typeid(std::vector<double>) || idx == typeid(std::vector<int>);
+    };
+
+    auto isNumericFromInfo = [](ColumnTypeInfo const & info) -> bool {
+        if (info.isVectorType) {
+            return info.hasElementType<float>() || info.hasElementType<double>() || info.hasElementType<int>();
         }
-    }
-    
-    if (table_manager_source) {
-        TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-        auto dm_for_tables = tm_source->getDataManager();
-        
-        if (dm_for_tables) {
-            auto * registry = dm_for_tables->getTableRegistry();
-            auto table_ids = registry->getTableIds();
-            
-            for (auto const & table_id : table_ids) {
-                auto table_view = registry->getBuiltTable(table_id);
-                if (table_view) {
-                    auto column_names = table_view->getColumnNames();
-                    
-                    for (auto const & column_name : column_names) {
-                        // Use our type-safe interface to check if column is numeric
-                        ColumnTypeInfo type_info = tm_source->getColumnTypeInfo(table_id, QString::fromStdString(column_name));
-                        
-                        // Check if it's a numeric vector type suitable for plotting
-                        if (type_info.isVectorType && 
-                            (type_info.hasElementType<float>() || 
-                             type_info.hasElementType<double>() || 
-                             type_info.hasElementType<int>())) {
-                            
-                            QString data_key = QString("table:%1:%2")
-                                               .arg(table_id)
-                                               .arg(QString::fromStdString(column_name));
-                            numeric_columns.append(data_key);
-                        }
+        return info.typeName == std::string("float") || info.typeName == std::string("double") || info.typeName == std::string("int");
+    };
+
+    for (auto const & table_id: table_ids) {
+        auto table_view = registry->getBuiltTable(table_id);
+        if (table_view) {
+            auto column_names = table_view->getColumnNames();
+            for (auto const & column_name: column_names) {
+                try {
+                    auto idx = table_view->getColumnTypeIndex(column_name);
+                    if (isNumericIndex(idx)) {
+                        QString data_key = QString("table:%1:%2").arg(table_id).arg(QString::fromStdString(column_name));
+                        numeric_columns.append(data_key);
                     }
+                } catch (...) {
+                    // ignore columns we cannot type
                 }
+            }
+            continue;
+        }
+
+        // Not built: fall back to definition
+        auto info = registry->getTableInfo(table_id);
+        for (auto const & col : info.columns) {
+            if (isNumericFromInfo(col.typeInfo)) {
+                QString data_key = QString("table:%1:%2").arg(table_id).arg(col.name);
+                numeric_columns.append(data_key);
             }
         }
     }
-    
+
     return numeric_columns;
 }
 
 QMap<QString, QString> ScatterPlotPropertiesWidget::getAvailableNumericColumnsWithTypes() const {
     QMap<QString, QString> columns_with_types;
-    
-    if (!_data_source_registry) {
-        std::cout << "ScatterPlotPropertiesWidget::getAvailableNumericColumnsWithTypes - Data source registry is null" << std::endl;
+
+    if (!_data_manager) {
+        std::cout << "ScatterPlotPropertiesWidget::getAvailableNumericColumnsWithTypes - DataManager is null" << std::endl;
         return columns_with_types;
     }
-    
-    // Find TableManagerSource
-    AbstractDataSource* table_manager_source = nullptr;
-    auto source_ids = _data_source_registry->getAvailableSourceIds();
 
-    for (auto const & source_id : source_ids) {
-        auto* source = _data_source_registry->getDataSource(source_id);
-        if (source && source->getType() == "TableManager") {
-            table_manager_source = source;
-            break;
+    auto * registry = _data_manager->getTableRegistry();
+    if (!registry) return columns_with_types;
+
+    auto table_ids = registry->getTableIds();
+
+    auto describeIndex = [](std::type_index const & idx) -> QString {
+        if (idx == typeid(float)) return "float";
+        if (idx == typeid(double)) return "double";
+        if (idx == typeid(int)) return "int";
+        if (idx == typeid(std::vector<float>)) return "std::vector<float>";
+        if (idx == typeid(std::vector<double>)) return "std::vector<double>";
+        if (idx == typeid(std::vector<int>)) return "std::vector<int>";
+        return "unknown";
+    };
+
+    auto isNumericIndex = [&](std::type_index const & idx) -> bool {
+        return describeIndex(idx) != "unknown";
+    };
+
+    auto isNumericFromInfo = [](ColumnTypeInfo const & info) -> bool {
+        if (info.isVectorType) {
+            return info.hasElementType<float>() || info.hasElementType<double>() || info.hasElementType<int>();
         }
-    }
-    
-    if (table_manager_source) {
-        TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-        auto dm_for_tables = tm_source->getDataManager();
-        
-        if (dm_for_tables) {
-            auto * registry = dm_for_tables->getTableRegistry();
-            auto table_ids = registry->getTableIds();
-            
-            for (auto const & table_id : table_ids) {
-                auto table_view = registry->getBuiltTable(table_id);
-                if (table_view) {
-                    auto column_names = table_view->getColumnNames();
-                    
-                    for (auto const & column_name : column_names) {
-                        // Use our type-safe interface to get detailed type information
-                        ColumnTypeInfo type_info = tm_source->getColumnTypeInfo(table_id, QString::fromStdString(column_name));
-                        
-                        // Check if it's a numeric vector type suitable for plotting
-                        if (type_info.isVectorType && 
-                            (type_info.hasElementType<float>() || 
-                             type_info.hasElementType<double>() || 
-                             type_info.hasElementType<int>())) {
-                            
-                            QString data_key = QString("table:%1:%2")
-                                               .arg(table_id)
-                                               .arg(QString::fromStdString(column_name));
-                            
-                            QString type_description = QString("%1 (element type: %2)")
-                                                      .arg(QString::fromStdString(type_info.typeName))
-                                                      .arg(QString::fromStdString(type_info.elementTypeName));
-                            
-                            columns_with_types[data_key] = type_description;
-                        }
+        return info.typeName == std::string("float") || info.typeName == std::string("double") || info.typeName == std::string("int");
+    };
+
+    for (auto const & table_id: table_ids) {
+        auto table_view = registry->getBuiltTable(table_id);
+        if (table_view) {
+            auto column_names = table_view->getColumnNames();
+            for (auto const & column_name: column_names) {
+                try {
+                    auto idx = table_view->getColumnTypeIndex(column_name);
+                    if (isNumericIndex(idx)) {
+                        QString key = QString("table:%1:%2").arg(table_id).arg(QString::fromStdString(column_name));
+                        columns_with_types[key] = describeIndex(idx);
                     }
+                } catch (...) {
                 }
+            }
+            continue;
+        }
+
+        // Not built: use definition
+        auto info = registry->getTableInfo(table_id);
+        for (auto const & col : info.columns) {
+            if (isNumericFromInfo(col.typeInfo)) {
+                QString key = QString("table:%1:%2").arg(table_id).arg(col.name);
+                QString desc;
+                if (col.typeInfo.isVectorType) {
+                    desc = QString("std::vector<%1>").arg(QString::fromStdString(col.typeInfo.elementTypeName));
+                } else {
+                    desc = QString::fromStdString(col.typeInfo.typeName);
+                }
+                columns_with_types[key] = desc;
             }
         }
     }
-    
     return columns_with_types;
 }
 
-QStringList ScatterPlotPropertiesWidget::getNumericColumnsFromRegistry(DataSourceRegistry * data_source_registry) {
-    QStringList numeric_columns;
-    
-    if (!data_source_registry) {
-        std::cout << "ScatterPlotPropertiesWidget::getNumericColumnsFromRegistry - Data source registry is null" << std::endl;
-        return numeric_columns;
-    }
-    
-    // Find TableManagerSource
-    AbstractDataSource* table_manager_source = nullptr;
-    auto source_ids = data_source_registry->getAvailableSourceIds();
 
-    for (auto const & source_id : source_ids) {
-        auto* source = data_source_registry->getDataSource(source_id);
-        if (source && source->getType() == "TableManager") {
-            table_manager_source = source;
-            break;
-        }
-    }
-    
-    if (table_manager_source) {
-        TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-        auto dm_for_tables = tm_source->getDataManager();
-
-        if (dm_for_tables) {
-            auto * registry = dm_for_tables->getTableRegistry();
-            auto table_ids = registry->getTableIds();
-            
-            for (auto const & table_id : table_ids) {
-                auto table_view = registry->getBuiltTable(table_id);
-                if (table_view) {
-                    auto column_names = table_view->getColumnNames();
-                    
-                    for (auto const & column_name : column_names) {
-                        // Use type-safe interface to filter numeric columns
-                        ColumnTypeInfo type_info = tm_source->getColumnTypeInfo(table_id, QString::fromStdString(column_name));
-                        
-                        // Only include numeric vector types
-                        if (type_info.isVectorType && 
-                            (type_info.hasElementType<float>() || 
-                             type_info.hasElementType<double>() || 
-                             type_info.hasElementType<int>())) {
-                            
-                            QString data_key = QString("table:%1:%2")
-                                               .arg(table_id)
-                                               .arg(QString::fromStdString(column_name));
-                            numeric_columns.append(data_key);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    return numeric_columns;
-}
+// Removed legacy getNumericColumnsFromRegistry
 
 void ScatterPlotPropertiesWidget::updateCoordinateRange() {
     if (!_scatter_plot_widget || !_scatter_plot_widget->getOpenGLWidget()) {
@@ -848,39 +743,39 @@ void ScatterPlotPropertiesWidget::updateCoordinateRange() {
     // Calculate the visible range based on zoom and pan
     // The OpenGL widget uses a projection matrix that maps world coordinates to screen
     // We need to calculate what portion of the data is currently visible
-    
+
     // Calculate data dimensions
     float data_width = max_x - min_x;
     float data_height = max_y - min_y;
-    
+
     // Calculate the visible window based on zoom level
     // The projection matrix creates an orthographic view with padding
-    float padding = 1.1f; // 10% padding (same as SpatialOverlayOpenGLWidget)
+    float padding = 1.1f;// 10% padding (same as SpatialOverlayOpenGLWidget)
     float zoom_factor = 1.0f / zoom_level;
     float half_width = (data_width * padding * zoom_factor) / 2.0f;
     float half_height = (data_height * padding * zoom_factor) / 2.0f;
-    
+
     // Calculate center of data
     float center_x = (min_x + max_x) / 2.0f;
     float center_y = (min_y + max_y) / 2.0f;
-    
+
     // Apply pan offset (convert from normalized to world coordinates)
     float pan_x = pan_offset.x() * data_width * zoom_factor;
     float pan_y = pan_offset.y() * data_height * zoom_factor;
-    
+
     // Calculate visible bounds
     float left_world = center_x - half_width + pan_x;
     float right_world = center_x + half_width + pan_x;
     float bottom_world = center_y - half_height + pan_y;
     float top_world = center_y + half_height + pan_y;
-    
+
     // Format the range strings
     QString x_range_text = QString("[%1, %2]")
-                          .arg(left_world, 0, 'f', 3)
-                          .arg(right_world, 0, 'f', 3);
+                                   .arg(left_world, 0, 'f', 3)
+                                   .arg(right_world, 0, 'f', 3);
     QString y_range_text = QString("[%1, %2]")
-                          .arg(bottom_world, 0, 'f', 3)
-                          .arg(top_world, 0, 'f', 3);
+                                   .arg(bottom_world, 0, 'f', 3)
+                                   .arg(top_world, 0, 'f', 3);
 
     ui->x_range_value->setText(x_range_text);
     ui->y_range_value->setText(y_range_text);
@@ -896,4 +791,3 @@ void ScatterPlotPropertiesWidget::onPanOffsetChanged(float offset_x, float offse
     Q_UNUSED(offset_y)
     updateCoordinateRange();
 }
-

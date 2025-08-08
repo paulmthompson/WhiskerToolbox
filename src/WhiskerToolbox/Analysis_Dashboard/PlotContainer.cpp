@@ -1,5 +1,5 @@
 #include "PlotContainer.hpp"
-#include "DataSourceRegistry/DataSourceRegistry.hpp"
+#include "DataManager/DataManager.hpp"
 #include "Plots/AbstractPlotWidget.hpp"
 #include "Properties/AbstractPlotPropertiesWidget.hpp"
 
@@ -36,27 +36,21 @@ QString PlotContainer::getPlotType() const
     return plot_widget_ ? plot_widget_->getPlotType() : QString();
 }
 
-void PlotContainer::configureManagers(DataSourceRegistry * data_source_registry,
+void PlotContainer::configureManagers(std::shared_ptr<DataManager> data_manager,
                                      GroupManager* group_manager)
 {
-    qDebug() << "PlotContainer::configureManagers: Configuring with DataSourceRegistry for plot:" << getPlotId();
-    qDebug() << "  - DataSourceRegistry:" << (data_source_registry != nullptr);
+    qDebug() << "PlotContainer::configureManagers: Configuring with DataManager for plot:" << getPlotId();
+    qDebug() << "  - DataManager:" << (data_manager != nullptr);
     qDebug() << "  - GroupManager:" << (group_manager != nullptr);
     
     if (plot_widget_) {
-        plot_widget_->setDataSourceRegistry(data_source_registry);
+        plot_widget_->setDataManager(std::move(data_manager));
         plot_widget_->setGroupManager(group_manager);
-        qDebug() << "PlotContainer::configureManagers: Configured plot widget with DataSourceRegistry";
+        qDebug() << "PlotContainer::configureManagers: Configured plot widget with DataManager";
     } else {
         qDebug() << "PlotContainer::configureManagers: ERROR - null plot_widget_";
     }
-    
-    if (properties_widget_) {
-        properties_widget_->setDataSourceRegistry(data_source_registry);
-        qDebug() << "PlotContainer::configureManagers: Configured properties widget with DataSourceRegistry";
-    } else {
-        qDebug() << "PlotContainer::configureManagers: ERROR - null properties_widget_";
-    }
+    // Properties widgets retrieve DataManager through setDataManager in analysis dashboard
 }
 
 void PlotContainer::updatePropertiesFromPlot()

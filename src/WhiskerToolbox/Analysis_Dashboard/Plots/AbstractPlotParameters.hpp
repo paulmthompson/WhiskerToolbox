@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-class DataSourceRegistry;
+class DataManager;
 class GroupManager;
 
 /**
@@ -50,7 +50,7 @@ struct AbstractPlotParameters {
      */
     std::string getPlotTitle() const;
 
-    DataSourceRegistry * data_source_registry = nullptr;
+    std::shared_ptr<DataManager> data_manager = nullptr;
     GroupManager * group_manager = nullptr;
     std::string plot_title;
     std::string plot_id;

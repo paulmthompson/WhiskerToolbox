@@ -308,10 +308,6 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Component Access", "[Analy
     auto group_manager = dashboard.getGroupManager();
     REQUIRE(group_manager != nullptr);
     
-    // Test that we can access the data source registry
-    auto data_source_registry = dashboard.getDataSourceRegistry();
-    REQUIRE(data_source_registry != nullptr);
-    
     // Clean up
     delete time_scrollbar;
 }

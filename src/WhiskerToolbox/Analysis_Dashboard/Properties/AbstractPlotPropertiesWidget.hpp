@@ -4,7 +4,7 @@
 #include <QWidget>
 
 class AbstractPlotWidget;
-class DataSourceRegistry;
+class DataManager;
 
 /**
  * @brief Abstract base class for plot-specific properties widgets
@@ -20,10 +20,10 @@ public:
     ~AbstractPlotPropertiesWidget() override = default;
 
     /**
-     * @brief Set the data source registry for unified data access
-     * @param data_source_registry Pointer to the data source registry
+     * @brief Set the DataManager for direct data access
+     * @param data_manager Pointer to the DataManager
      */
-    virtual void setDataSourceRegistry(DataSourceRegistry * data_source_registry) = 0;
+    virtual void setDataManager(std::shared_ptr<DataManager> data_manager) = 0;
 
     /**
      * @brief Set the plot widget that this properties widget configures
@@ -49,7 +49,7 @@ signals:
 
 protected:
     AbstractPlotWidget * _plot_widget;
-    DataSourceRegistry * _data_source_registry;
+    std::shared_ptr<DataManager> _data_manager;
 };
 
 #endif// ABSTRACTPLOTPROPERTIESWIDGET_HPP

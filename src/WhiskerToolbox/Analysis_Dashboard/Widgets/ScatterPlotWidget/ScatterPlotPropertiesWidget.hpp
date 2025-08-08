@@ -6,7 +6,6 @@
 #include <QStringList>
 #include <QMap>
 
-class DataSourceRegistry;
 class ScatterPlotWidget;
 
 namespace Ui {
@@ -28,7 +27,7 @@ public:
     explicit ScatterPlotPropertiesWidget(QWidget * parent = nullptr);
     ~ScatterPlotPropertiesWidget() override;
 
-    void setDataSourceRegistry(DataSourceRegistry * data_source_registry) override;
+    void setDataManager(std::shared_ptr<DataManager> data_manager) override;
     void setPlotWidget(AbstractPlotWidget * plot_widget) override;
     void updateFromPlot() override;
     void applyToPlot() override;
@@ -100,7 +99,6 @@ private slots:
 private:
     Ui::ScatterPlotPropertiesWidget * ui;
     ScatterPlotWidget * _scatter_plot_widget;
-    DataSourceRegistry * _data_source_registry;
     bool _applying_properties;  // Flag to prevent signal emission during applyToPlot()
     
     // Data storage for coordinate range calculations
@@ -170,12 +168,7 @@ private:
      */
     QMap<QString, QString> getAvailableNumericColumnsWithTypes() const;
 
-    /**
-     * @brief Static utility function to get numeric columns from any DataSourceRegistry
-     * @param data_source_registry Pointer to the data source registry
-     * @return QStringList of numeric column keys suitable for plotting
-     */
-    static QStringList getNumericColumnsFromRegistry(DataSourceRegistry * data_source_registry);
+    // Removed DataSourceRegistry static helper
     
 };
 

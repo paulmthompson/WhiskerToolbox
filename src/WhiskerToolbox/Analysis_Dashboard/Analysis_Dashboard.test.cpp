@@ -141,18 +141,6 @@ TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - ScatterPlot
         REQUIRE(scatter_properties != nullptr);
     }
     
-    SECTION("Dashboard can handle scatter plot type selection") {
-        // This test verifies that the dashboard's plot creation infrastructure works
-        // We can't easily test the full UI interaction without more complex setup,
-        // but we can verify the core creation logic works
-        
-        auto plot_container = PlotFactory::createPlotContainer("scatter_plot");
-        REQUIRE(plot_container != nullptr);
-        
-        // Verify that the DataManager and other components are accessible
-        REQUIRE(dashboard.getDataSourceRegistry() != nullptr);
-        REQUIRE(dashboard.getGroupManager() != nullptr);
-    }
 }
 
 TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - EventPlotWidget Creation", "[Analysis_Dashboard][EventPlot]") {
@@ -243,7 +231,6 @@ TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - Basic Infra
     
     SECTION("Dashboard has required components") {
         // Verify that all required components are present
-        REQUIRE(dashboard.getDataSourceRegistry() != nullptr);
         REQUIRE(dashboard.getGroupManager() != nullptr);
         
         // Verify that the data manager is accessible and populated

@@ -9,7 +9,7 @@
 
 #include <memory>
 
-class DataSourceRegistry;
+class DataManager;
 class GroupManager;
 class QGraphicsSceneMouseEvent;
 
@@ -46,10 +46,9 @@ public:
     virtual void setPlotTitle(QString const & title);
 
     /**
-     * @brief Set the data source registry for unified data access
-     * @param data_source_registry Pointer to the data source registry
+     * @brief Set the DataManager for direct data access
      */
-    virtual void setDataSourceRegistry(DataSourceRegistry* data_source_registry);
+    virtual void setDataManager(std::shared_ptr<DataManager> data_manager);
 
     /**
      * @brief Set the group manager for data grouping

@@ -1,7 +1,6 @@
 #include "EventPlotWidget.hpp"
 #include "EventPlotOpenGLWidget.hpp"
 
-#include "DataSourceRegistry/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
 #include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"

@@ -77,6 +77,7 @@ void PropertiesPanel::showPlotProperties(QString const & plot_id, AbstractPlotWi
         qDebug() << "PropertiesPanel: Setting DataManager and plot widget";
 
         // Configure the properties widget for this specific plot
+        properties_widget->setDataManager(_data_manager);
         properties_widget->setPlotWidget(plot_widget);
         properties_widget->updateFromPlot();
 
@@ -112,6 +113,8 @@ void PropertiesPanel::showContainerProperties(QString const & plot_id, AbstractP
         _stacked_widget->addWidget(properties_widget);
     }
     
+    // Ensure properties widget has DataManager
+    properties_widget->setDataManager(_data_manager);
     // Update the properties widget from its associated plot
     properties_widget->updateFromPlot();
     

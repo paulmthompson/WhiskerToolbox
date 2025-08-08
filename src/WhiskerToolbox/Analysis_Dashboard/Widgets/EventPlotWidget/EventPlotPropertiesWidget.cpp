@@ -2,7 +2,7 @@
 #include "EventPlotOpenGLWidget.hpp"
 #include "EventPlotWidget.hpp"
 
-#include "DataSourceRegistry/DataSourceRegistry.hpp"
+
 #include "DataManager/utils/TableView/TableRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
@@ -16,12 +16,12 @@
 #include <QPushButton>
 #include <QRadioButton>
 
+#include <memory>
 
 EventPlotPropertiesWidget::EventPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
       ui(new Ui::EventPlotPropertiesWidget),
       _event_plot_widget(nullptr),
-      _data_source_registry(nullptr),
       _applying_properties(false) {
     ui->setupUi(this);
     setupConnections();
@@ -32,36 +32,10 @@ EventPlotPropertiesWidget::~EventPlotPropertiesWidget() {
     delete ui;
 }
 
-void EventPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
-    // Disconnect from previous registry if any
-    if (_data_source_registry) {
-        disconnect(_data_source_registry, nullptr, this, nullptr);
-    }
-    
-    _data_source_registry = data_source_registry;
-    
-    // Connect to registry signals to update when new data sources are added
-    if (_data_source_registry) {
-        connect(_data_source_registry, &DataSourceRegistry::dataSourceRegistered,
-                this, [this](const QString& source_id) {
-                    Q_UNUSED(source_id)
-                    // Update both tables and data sources when new sources are registered
-                    updateAvailableTables();
-                    updateAvailableDataSources();
-                });
-        
-        connect(_data_source_registry, &DataSourceRegistry::dataSourceUnregistered,
-                this, [this](const QString& source_id) {
-                    Q_UNUSED(source_id)
-                    // Update both tables and data sources when sources are unregistered
-                    updateAvailableTables();
-                    updateAvailableDataSources();
-                });
-    }
-    
-    // Update available tables whenever the registry changes
+void EventPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    _data_manager = std::move(data_manager);
     updateAvailableTables();
-    
+    updateAvailableDataSources();
 }
 
 void EventPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
@@ -500,36 +474,17 @@ void EventPlotPropertiesWidget::setSelectedColumnName(const QString& column_name
 }
 
 void EventPlotPropertiesWidget::updateAvailableTables() {
-    if (!ui->table_combo || !_data_source_registry) {
+    if (!ui->table_combo || !_data_manager) {
         return;
     }
 
     ui->table_combo->clear();
     ui->table_combo->addItem("Select a table...", "");
 
-    // Look for TableManager source in the registry
-    AbstractDataSource* table_manager_source = nullptr;
-    auto source_ids = _data_source_registry->getRegisteredSourceIds();
-    
-    for (const auto& source_id : source_ids) {
-        auto* source = _data_source_registry->getDataSource(source_id);
-        if (source && source->getType() == "TableManager") {
-            table_manager_source = source;
-            break;
-        }
-    }
+    auto * registry = _data_manager->getTableRegistry();
+    auto table_ids = registry ? registry->getTableIds() : std::vector<QString>{};
 
-    if (!table_manager_source) {
-        ui->table_combo->addItem("No TableManager found", "");
-        ui->table_info_label->setText("TableManager not available in data registry.");
-        return;
-    }
-
-    // Cast to TableManagerSource and get available tables
-    TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-    auto table_ids = tm_source->getAvailableTableIds();
-
-    if (table_ids.isEmpty()) {
+    if (table_ids.empty()) {
         ui->table_combo->addItem("No tables available", "");
         ui->table_info_label->setText("Create tables using the Table Designer widget.");
     } else {
@@ -544,7 +499,7 @@ void EventPlotPropertiesWidget::updateAvailableTables() {
 }
 
 void EventPlotPropertiesWidget::updateAvailableColumns() {
-    if (!ui->column_combo || !_data_source_registry) {
+    if (!ui->column_combo || !_data_manager) {
         return;
     }
 
@@ -556,30 +511,7 @@ void EventPlotPropertiesWidget::updateAvailableColumns() {
         return;
     }
 
-    // Get TableManager source
-    AbstractDataSource* table_manager_source = nullptr;
-    auto source_ids = _data_source_registry->getRegisteredSourceIds();
-    
-    for (const auto& source_id : source_ids) {
-        auto* source = _data_source_registry->getDataSource(source_id);
-        if (source && source->getType() == "TableManager") {
-            table_manager_source = source;
-            break;
-        }
-    }
-
-    if (!table_manager_source) {
-        return;
-    }
-
-    TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-    auto dm_for_tables = tm_source->getDataManager();
-    
-    if (!dm_for_tables) {
-        return;
-    }
-
-    auto * registry = dm_for_tables->getTableRegistry();
+    auto * registry = _data_manager->getTableRegistry();
     auto table_view = registry->getBuiltTable(selected_table_id);
     if (!table_view) {
         ui->column_combo->addItem("Table not built", "");
@@ -596,38 +528,24 @@ void EventPlotPropertiesWidget::updateAvailableColumns() {
 void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QString& column_name) {
     qDebug() << "EventPlotPropertiesWidget::loadTableData called with table_id:" << table_id << "column_name:" << column_name;
     
-    if (!_data_source_registry || !_event_plot_widget) {
+    if (!_data_manager || !_event_plot_widget) {
         qWarning() << "EventPlotPropertiesWidget: Missing data_source_registry or event_plot_widget";
         return;
     }
 
-    // Get TableManager source
-    AbstractDataSource* table_manager_source = nullptr;
-    auto source_ids = _data_source_registry->getRegisteredSourceIds();
-    
-    qDebug() << "EventPlotPropertiesWidget: Found" << source_ids.size() << "registered data sources";
-    
-    for (const auto& source_id : source_ids) {
-        auto* source = _data_source_registry->getDataSource(source_id);
-        qDebug() << "EventPlotPropertiesWidget: Checking source" << source_id << "type:" << (source ? source->getType() : "null");
-        if (source && source->getType() == "TableManager") {
-            table_manager_source = source;
-            qDebug() << "EventPlotPropertiesWidget: Found TableManager source:" << source_id;
-            break;
-        }
-    }
-
-    if (!table_manager_source) {
-        qWarning() << "EventPlotPropertiesWidget: No TableManager source found";
-        return;
-    }
-
-    TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
-    
     // Get the typed data - try std::vector<float> first (common for event data)
     try {
         qDebug() << "EventPlotPropertiesWidget: Attempting to load table data...";
-        auto event_data = tm_source->getTypedTableColumnData<std::vector<float>>(table_id, column_name);
+        auto * registry = _data_manager->getTableRegistry();
+        auto view = registry ? registry->getBuiltTable(table_id) : nullptr;
+        std::vector<std::vector<float>> event_data;
+        if (view) {
+            auto variant = view->getColumnDataVariant(column_name.toStdString());
+            // Try to extract vector<vector<float>> or compatible
+            if (auto p = std::get_if<std::vector<std::vector<float>>>(&variant)) {
+                event_data = *p;
+            }
+        }
         
         qDebug() << "EventPlotPropertiesWidget: Retrieved" << event_data.size() << "event vectors";
         

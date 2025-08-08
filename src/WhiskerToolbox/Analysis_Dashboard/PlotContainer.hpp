@@ -8,7 +8,7 @@
 
 class AbstractPlotWidget;
 class AbstractPlotPropertiesWidget;
-class DataSourceRegistry;
+class DataManager;
 class GroupManager;
 
 /**
@@ -54,16 +54,10 @@ public:
     QString getPlotType() const;
 
     /**
-     * @brief Configure the plot and properties widgets with data source registry
-     * 
-     * This method allows plots to access data through the unified registry interface.
-     * 
-     * @param data_source_registry Pointer to data source registry
-     * @param group_manager Pointer to group manager
-     * @param table_manager Pointer to table manager
+     * @brief Configure the plot and properties widgets with DataManager and GroupManager
      */
-    void configureManagers(DataSourceRegistry * data_source_registry,
-                          GroupManager* group_manager);
+    void configureManagers(std::shared_ptr<DataManager> data_manager,
+                           GroupManager* group_manager);
 
     /**
      * @brief Update properties widget from current plot state

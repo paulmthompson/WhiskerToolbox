@@ -8,7 +8,6 @@
 #include <set>
 
 class DataManager;
-class DataSourceRegistry;
 class EventPlotWidget;
 
 namespace Ui {
@@ -30,7 +29,7 @@ public:
     explicit EventPlotPropertiesWidget(QWidget * parent = nullptr);
     ~EventPlotPropertiesWidget() override;
 
-    void setDataSourceRegistry(DataSourceRegistry * data_source_registry) override;
+    void setDataManager(std::shared_ptr<DataManager> data_manager) override;
     void setPlotWidget(AbstractPlotWidget * plot_widget) override;
     void updateFromPlot() override;
     void applyToPlot() override;
@@ -146,8 +145,6 @@ private slots:
 private:
     Ui::EventPlotPropertiesWidget * ui;
     EventPlotWidget * _event_plot_widget;
-    std::shared_ptr<DataManager> _data_manager;
-    DataSourceRegistry * _data_source_registry;
     std::set<QString> _selected_y_axis_features;
     bool _applying_properties;  // Flag to prevent signal emission during applyToPlot()
 

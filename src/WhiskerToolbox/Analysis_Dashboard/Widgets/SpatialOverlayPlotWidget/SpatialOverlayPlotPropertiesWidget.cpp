@@ -4,7 +4,6 @@
 #include "SpatialOverlayOpenGLWidget.hpp"
 #include "SpatialOverlayPlotWidget.hpp"
 
-#include "DataSourceRegistry/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
@@ -20,6 +19,8 @@
 #include <QSplitter>
 #include <QTimer>
 #include <QVBoxLayout>
+
+#include <memory>
 
 SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
@@ -56,15 +57,12 @@ SpatialOverlayPlotPropertiesWidget::~SpatialOverlayPlotPropertiesWidget() {
     delete ui;
 }
 
-void SpatialOverlayPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
-    _data_source_registry = data_source_registry;
-    auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
-    auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
-    if (data_manager) {
-        ui->feature_table_widget->setDataManager(data_manager);
+void SpatialOverlayPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    _data_manager = std::move(data_manager);
+    if (_data_manager) {
+        ui->feature_table_widget->setDataManager(_data_manager);
         updateAvailableDataSources();
     }
-
 }
 
 void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
@@ -99,11 +97,11 @@ void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot
                 });
 
         // Update available data sources if data manager is available. Might be null during initial setup.
-        if (_data_source_registry) {
-            qDebug() << "SpatialOverlayPlotPropertiesWidget: Data source registry available, updating data sources";
+        if (_data_manager) {
+            qDebug() << "SpatialOverlayPlotPropertiesWidget: DataManager available, updating data sources";
             updateAvailableDataSources();
         } else {
-            qDebug() << "SpatialOverlayPlotPropertiesWidget: No data source registry available";
+            qDebug() << "SpatialOverlayPlotPropertiesWidget: No DataManager available";
         }
 
         // Update UI from plot
@@ -312,19 +310,17 @@ void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {
     QStringList mask_data_keys;
     QStringList line_data_keys;
 
-    auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
-    auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
-    if (!data_manager) {
+    if (!_data_manager) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: No data manager available, cannot update plot widget";
         return;
     }
 
     for (auto const & key: selected_keys) {
-        if (data_manager->getType(key.toStdString()) == DM_DataType::Points) {
+        if (_data_manager->getType(key.toStdString()) == DM_DataType::Points) {
             point_data_keys.append(key);
-        } else if (data_manager->getType(key.toStdString()) == DM_DataType::Mask) {
+        } else if (_data_manager->getType(key.toStdString()) == DM_DataType::Mask) {
             mask_data_keys.append(key);
-        } else if (data_manager->getType(key.toStdString()) == DM_DataType::Line) {
+        } else if (_data_manager->getType(key.toStdString()) == DM_DataType::Line) {
             line_data_keys.append(key);
         }
     }
@@ -548,17 +544,15 @@ void SpatialOverlayPlotPropertiesWidget::onEndFrameChanged(int value) {
 void SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() called";
 
-    auto data_manager_source = _data_source_registry->getDataSource("primary_data_manager");
-    auto data_manager = data_manager_source ? dynamic_cast<DataManagerSource*>(data_manager_source)->getDataManager() : nullptr;
-    if (!data_manager) {
+    if (!_data_manager) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() - No data manager available";
         return;
     }
     // Get total frame count from data manager
     _total_frame_count = 0;
-    if (data_manager) {
+    {
         try {
-            auto timeFrame = data_manager->getTime("time");
+            auto timeFrame = _data_manager->getTime("time");
             if (timeFrame) {
                 _total_frame_count = static_cast<int>(timeFrame->getTotalFrameCount());
                 qDebug() << "Total frame count from data manager:" << _total_frame_count;
