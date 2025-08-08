@@ -24,6 +24,7 @@
 // Forward declarations
 class EventPointVisualization;
 class GroupManager;
+class EventPlotViewAdapter; // adapter (friend)
 
 /**
  * @brief OpenGL widget for rendering event data with high performance
@@ -190,6 +191,8 @@ private slots:
 
 
 private:
+    // Grant adapter access to private state for high-performance interaction
+    friend class EventPlotViewAdapter;
     // Point visualization using GenericPointVisualization
     std::unique_ptr<EventPointVisualization> _event_visualization;
     GroupManager * _group_manager;
@@ -256,10 +259,7 @@ private:
     // Composition-based interaction controller
     std::unique_ptr<PlotInteractionController> _interaction;
 
-    // Box-zoom state
-    bool _box_zoom_active = false;
-    QRubberBand * _rubber_band = nullptr;
-    QPoint _rubber_origin;
+    // Box-zoom state (legacy rubber band removed; controller manages rubber band)
 
     /**
      * @brief Initialize OpenGL shaders

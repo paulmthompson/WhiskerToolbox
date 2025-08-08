@@ -11,6 +11,7 @@
 #include <algorithm>
 #include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
 #include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
+#include "EventPlotViewAdapter.hpp"
 
 EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
@@ -68,48 +69,13 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     _hover_processing_active = false;
 
     // Setup composition-based interaction controller
-    struct Adapter final : ViewAdapter {
-        explicit Adapter(EventPlotOpenGLWidget * widget) : w(widget) {}
-        EventPlotOpenGLWidget * w;
-        void getProjectionBounds(float & l,float & r,float & b,float & t) const override { w->calculateProjectionBounds(l,r,b,t); }
-        void getPerAxisZoom(float & zx,float & zy) const override { zx = w->_zoom_level_x; zy = w->_y_zoom_level; }
-        void setPerAxisZoom(float zx,float zy) override { w->_zoom_level_x = zx; w->_y_zoom_level = zy; }
-        void getPan(float & px,float & py) const override { px = w->_pan_offset_x; py = w->_pan_offset_y; }
-        void setPan(float px,float py) override { w->setPanOffset(px, py); }
-        float getPadding() const override { return w->_padding_factor; }
-        int viewportWidth() const override { return w->_widget_width; }
-        int viewportHeight() const override { return w->_widget_height; }
-        void requestUpdate() override { w->updateMatrices(); w->update(); }
-        void applyBoxZoomToWorldRect(float min_x,float max_x,float min_y,float max_y) override {
-            // Fit X range using per-axis zoom X; Y uses _y_zoom_level
-            float x_range_width = static_cast<float>(w->_negative_range + w->_positive_range);
-            float y_range_height = 2.0f;
-            float ar = static_cast<float>(w->_widget_width) / std::max(1, w->_widget_height);
-            float pad = w->_padding_factor;
-            float zfx, zfy;
-            if (ar > 1.0f) {
-                zfx = (max_x - min_x) / (ar * x_range_width * pad);
-                zfy = (max_y - min_y) / (y_range_height * pad);
-            } else {
-                zfx = (max_x - min_x) / (x_range_width * pad);
-                zfy = ((max_y - min_y) * ar) / (y_range_height * pad);
-            }
-            w->_zoom_level_x = std::clamp(1.0f / zfx, 0.1f, 10.0f);
-            w->_y_zoom_level = std::clamp(1.0f / zfy, 0.1f, 10.0f);
-            float cx = 0.5f * (min_x + max_x);
-            float cy = 0.5f * (min_y + max_y);
-            w->_pan_offset_x = cx / (x_range_width * (1.0f / w->_zoom_level_x));
-            w->_pan_offset_y = cy / (y_range_height * (1.0f / w->_y_zoom_level));
-        }
-    };
-    _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<Adapter>(Adapter{this}));
+    _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<EventPlotViewAdapter>(this));
     connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &EventPlotOpenGLWidget::viewBoundsChanged);
     connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &EventPlotOpenGLWidget::mouseWorldMoved);
 
     // Standardized interaction additions
     _zoom_level_x = 1.0f; // default no X zoom
     _padding_factor = 1.1f;
-    _rubber_band = nullptr;
 }
 
 
@@ -373,50 +339,6 @@ void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 void EventPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     _mouse_pressed = false;
     if (_interaction && _interaction->handleMouseRelease(event)) return;
-    if (_box_zoom_active && _rubber_band) {
-        _rubber_band->hide();
-        QRect rect = _rubber_band->geometry();
-        _box_zoom_active = false;
-        if (rect.width() > 3 && rect.height() > 3) {
-            float x1, y1, x2, y2;
-            screenToWorld(rect.left(), rect.top(), x1, y1);
-            screenToWorld(rect.right(), rect.bottom(), x2, y2);
-            float min_x = std::min(x1, x2);
-            float max_x = std::max(x1, x2);
-            float min_y = std::min(y2, y1);
-            float max_y = std::max(y2, y1);
-
-            // Compute per-axis zooms from target rect (respecting aspect correction similar to calculateProjectionBounds)
-            float x_range_width = static_cast<float>(_negative_range + _positive_range);
-            float y_range_height = 2.0f;
-            float aspect_ratio = static_cast<float>(_widget_width) / std::max(1, _widget_height);
-            float padding = _padding_factor;
-            float zoom_factor_x = max_x - min_x;
-            float zoom_factor_y = max_y - min_y;
-            if (aspect_ratio > 1.0f) {
-                zoom_factor_x = zoom_factor_x / (aspect_ratio * x_range_width * padding);
-                zoom_factor_y = zoom_factor_y / (y_range_height * padding);
-            } else {
-                zoom_factor_x = zoom_factor_x / (x_range_width * padding);
-                zoom_factor_y = (zoom_factor_y * aspect_ratio) / (y_range_height * padding);
-            }
-            _zoom_level_x = std::clamp(1.0f / zoom_factor_x, 0.1f, 10.0f);
-            _y_zoom_level = std::clamp(1.0f / zoom_factor_y, 0.1f, 10.0f);
-
-            // Center pan to rectangle center
-            float target_center_x = 0.5f * (min_x + max_x);
-            float target_center_y = 0.5f * (min_y + max_y);
-            _pan_offset_x = target_center_x / (x_range_width * (1.0f / _zoom_level_x));
-            _pan_offset_y = target_center_y / (y_range_height * (1.0f / _y_zoom_level));
-
-            updateMatrices();
-            update();
-        }
-    }
-    // Emit mouse world coordinates for UI feedback when not handled by controller
-    float world_x, world_y;
-    screenToWorld(event->pos().x(), event->pos().y(), world_x, world_y);
-    emit mouseWorldMoved(world_x, world_y);
 }
 
 void EventPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {

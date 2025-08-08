@@ -14,6 +14,7 @@
 
 class ScatterPlotVisualization;
 class GroupManager;
+class ScatterPlotViewAdapter; // adapter (friend)
 
 /**
  * @brief OpenGL widget for rendering scatter plot data with high performance
@@ -140,6 +141,8 @@ private slots:
     void handleTooltipTimer();
 
 private:
+  // Grant adapter access to private state for interaction
+  friend class ScatterPlotViewAdapter;
     // Point visualization
     std::unique_ptr<ScatterPlotVisualization> _scatter_visualization;
     GroupManager * _group_manager;

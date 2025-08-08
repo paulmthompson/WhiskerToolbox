@@ -14,6 +14,7 @@
 #include <algorithm>
 #include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
 #include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
+#include "ScatterPlotViewAdapter.hpp"
 
 ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     :
@@ -73,47 +74,7 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     _padding_factor = 1.1f;
     _rubber_band = nullptr;
 
-    struct Adapter final : ViewAdapter {
-        explicit Adapter(ScatterPlotOpenGLWidget * widget) : w(widget) {}
-        ScatterPlotOpenGLWidget * w;
-        void getProjectionBounds(float & l,float & r,float & b,float & t) const override { w->calculateProjectionBounds(l,r,b,t); }
-        void getPerAxisZoom(float & zx,float & zy) const override { zx = w->_zoom_level_x; zy = w->_zoom_level_y; }
-        void setPerAxisZoom(float zx,float zy) override { w->_zoom_level_x = zx; w->_zoom_level_y = zy; }
-        void getPan(float & px,float & py) const override { px = w->_pan_offset_x; py = w->_pan_offset_y; }
-        void setPan(float px,float py) override { w->setPanOffset(px, py); }
-        float getPadding() const override { return w->_padding_factor; }
-        int viewportWidth() const override { return w->width(); }
-        int viewportHeight() const override { return w->height(); }
-        void requestUpdate() override { w->updateProjectionMatrix(); w->requestThrottledUpdate(); }
-        void applyBoxZoomToWorldRect(float min_x,float max_x,float min_y,float max_y) override {
-            float data_width = w->_data_max_x - w->_data_min_x;
-            float data_height = w->_data_max_y - w->_data_min_y;
-            float center_x = (w->_data_min_x + w->_data_max_x) * 0.5f;
-            float center_y = (w->_data_min_y + w->_data_max_y) * 0.5f;
-            float target_width = std::max(1e-6f, max_x - min_x);
-            float target_height = std::max(1e-6f, max_y - min_y);
-            float aspect_ratio = static_cast<float>(w->width()) / std::max(1, w->height());
-            float padding = w->_padding_factor;
-            float zfx, zfy;
-            if (aspect_ratio > 1.0f) {
-                zfx = target_width / (aspect_ratio * data_width * padding);
-                zfy = target_height / (data_height * padding);
-            } else {
-                zfx = target_width / (data_width * padding);
-                zfy = (target_height * aspect_ratio) / (data_height * padding);
-            }
-            w->_zoom_level_x = std::clamp(1.0f / zfx, 0.1f, 10.0f);
-            w->_zoom_level_y = std::clamp(1.0f / zfy, 0.1f, 10.0f);
-            w->_zoom_level = std::clamp((w->_zoom_level_x + w->_zoom_level_y) * 0.5f, 0.1f, 10.0f);
-            float target_cx = 0.5f * (min_x + max_x);
-            float target_cy = 0.5f * (min_y + max_y);
-            float pan_norm_x = (target_cx - center_x) / (data_width * (1.0f / w->_zoom_level_x));
-            float pan_norm_y = (target_cy - center_y) / (data_height * (1.0f / w->_zoom_level_y));
-            w->_pan_offset_x = pan_norm_x;
-            w->_pan_offset_y = pan_norm_y;
-        }
-    };
-    _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<Adapter>(this));
+    _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<ScatterPlotViewAdapter>(this));
     connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &ScatterPlotOpenGLWidget::viewBoundsChanged);
     connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &ScatterPlotOpenGLWidget::mouseWorldMoved);
 }

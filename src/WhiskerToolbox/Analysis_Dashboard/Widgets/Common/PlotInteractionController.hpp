@@ -71,13 +71,30 @@ public:
 
         if (_is_panning && (event->buttons() & Qt::LeftButton)) {
             QPoint delta = event->pos() - _last_mouse;
-            float wppx = (r - l) / std::max(1, _adapter->viewportWidth());
-            float wppy = (t - b) / std::max(1, _adapter->viewportHeight());
-            float dx = delta.x() * wppx;
-            float dy = -delta.y() * wppy;
+            int vw = std::max(1, _adapter->viewportWidth());
+            int vh = std::max(1, _adapter->viewportHeight());
+
+            // World units per pixel in current view
+            float world_per_pixel_x = (r - l) / vw;
+            float world_per_pixel_y = (t - b) / vh;
+            float dx_world = delta.x() * world_per_pixel_x;
+            float dy_world = -delta.y() * world_per_pixel_y;
+
+            // Convert world delta to normalized pan units expected by widgets
+            float padding = _adapter->getPadding();
+            float aspect = static_cast<float>(vw) / vh;
+            // denom_x = data_width * zoom_x; denom_y = data_height * zoom_y
+            float denom_x = (aspect > 1.0f) ? ((r - l) / (padding * aspect)) : ((r - l) / padding);
+            float denom_y = (aspect > 1.0f) ? ((t - b) / padding) : (((t - b) * aspect) / padding);
+            if (denom_x == 0.0f) denom_x = 1.0f;
+            if (denom_y == 0.0f) denom_y = 1.0f;
+
+            float dx_norm = dx_world / denom_x;
+            float dy_norm = dy_world / denom_y;
+
             float px, py;
             _adapter->getPan(px, py);
-            _adapter->setPan(px + dx, py + dy);
+            _adapter->setPan(px + dx_norm, py + dy_norm);
             _adapter->requestUpdate();
             _last_mouse = event->pos();
             event->accept();

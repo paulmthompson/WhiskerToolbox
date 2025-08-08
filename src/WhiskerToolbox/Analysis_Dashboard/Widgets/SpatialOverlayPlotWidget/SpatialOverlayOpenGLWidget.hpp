@@ -35,6 +35,7 @@ class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;
 class GroupManager;
+class SpatialOverlayViewAdapter; // adapter (friend)
 
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
@@ -304,6 +305,9 @@ private slots:
     void requestThrottledUpdate();
 
 private:
+    // Grant adapter access to private state for high-performance interaction
+    friend class SpatialOverlayViewAdapter;
+
     std::unordered_map<QString, std::unique_ptr<PointDataVisualization>> _point_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
@@ -323,7 +327,7 @@ private:
     QMatrix4x4 _model_matrix;
     float _padding_factor; // view padding factor (default 1.1)
 
-    // Interaction state
+    // Interaction state (legacy pan removed; controller manages state)
     bool _is_panning;
     QPoint _last_mouse_pos;
     QPoint _current_mouse_pos;
@@ -341,10 +345,7 @@ private:
 
     QVector2D _current_mouse_world_pos;///< Current mouse position in world coordinates
 
-    // Box-zoom interaction
-    bool _box_zoom_active = false;
-    QRubberBand * _rubber_band = nullptr;
-    QPoint _rubber_origin;
+    // Box-zoom interaction (legacy rubber band removed; controller manages rubber band)
 
     // Composition-based interaction controller
     std::unique_ptr<PlotInteractionController> _interaction;
