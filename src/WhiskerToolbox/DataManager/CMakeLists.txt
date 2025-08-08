@@ -112,6 +112,9 @@ set(DATAMANAGER_SOURCES
         utils/TableView/columns/Column.cpp
         utils/TableView/columns/ColumnTypeInfo.hpp
 
+        utils/TableView/pipeline/TablePipeline.hpp
+        utils/TableView/pipeline/TablePipeline.cpp
+
         utils/TableView/interfaces/IAnalogSource.h
         utils/TableView/interfaces/IEventSource.h
         utils/TableView/interfaces/IIntervalSource.h

@@ -1,11 +1,11 @@
 #ifndef TABLE_PIPELINE_HPP
 #define TABLE_PIPELINE_HPP
 
-#include "DataManager/DataManager.hpp"
-#include "DataManager/utils/TableView/core/TableView.h"
-#include "DataManager/utils/TableView/ComputerRegistry.hpp"
-#include "DataManager/utils/TableView/TableInfo.hpp"
-#include "DataManager/utils/TableView/TableRegistry.hpp"
+#include "DataManager.hpp"
+#include "utils/TableView/core/TableView.h"
+#include "utils/TableView/ComputerRegistry.hpp"
+#include "utils/TableView/TableInfo.hpp"
+#include "utils/TableView/TableRegistry.hpp"
 
 #include <nlohmann/json.hpp>
 #include <functional>

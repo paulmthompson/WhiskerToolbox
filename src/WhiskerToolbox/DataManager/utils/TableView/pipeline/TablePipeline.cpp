@@ -1,8 +1,8 @@
 #include "TablePipeline.hpp"
-#include "DataManager/utils/TableView/core/TableViewBuilder.h"
-#include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
-#include "DataManager/utils/TableView/interfaces/IRowSelector.h"
-#include "DataManager/utils/TableView/ComputerRegistryTypes.hpp"
+#include "utils/TableView/core/TableViewBuilder.h"
+#include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/ComputerRegistryTypes.hpp"
 
 #include <fstream>
 #include <iostream>
