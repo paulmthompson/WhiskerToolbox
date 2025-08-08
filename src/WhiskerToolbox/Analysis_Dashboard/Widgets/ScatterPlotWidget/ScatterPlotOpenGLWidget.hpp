@@ -5,6 +5,7 @@
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLWidget>
 #include <QTimer>
+#include <QRubberBand>
 
 #include <memory>
 #include <vector>
@@ -109,6 +110,16 @@ signals:
      */
     void panOffsetChanged(float offset_x, float offset_y);
 
+    /**
+     * @brief Emitted when the current world view bounds change (after zoom/pan/resize/box-zoom)
+     */
+    void viewBoundsChanged(float left, float right, float bottom, float top);
+
+    /**
+     * @brief Emitted when the mouse moves, reporting world coordinates under the cursor
+     */
+    void mouseWorldMoved(float world_x, float world_y);
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -146,8 +157,11 @@ private:
     // View transformation
     QMatrix4x4 _projection_matrix;
     float _zoom_level;
+    float _zoom_level_x;
+    float _zoom_level_y;
     float _pan_offset_x;
     float _pan_offset_y;
+    float _padding_factor;
 
     // Mouse interaction
     bool _dragging;
@@ -164,6 +178,11 @@ private:
     // FPS limiter timer (30 FPS = ~33ms interval)
     QTimer * _fps_limiter_timer;
     bool _pending_update;         // fps limiting
+
+    // Box-zoom state
+    bool _box_zoom_active = false;
+    QRubberBand * _rubber_band = nullptr;
+    QPoint _rubber_origin;
 
     /**
      * @brief Update the projection matrix based on current data bounds and zoom/pan
@@ -200,7 +219,7 @@ private:
     /**
      * @brief Calculate data bounds from the stored data
      */
-    void calculateDataBounds();
+  void calculateDataBounds();
 };
 
 #endif// SCATTERPLOTOPENGLWIDGET_HPP

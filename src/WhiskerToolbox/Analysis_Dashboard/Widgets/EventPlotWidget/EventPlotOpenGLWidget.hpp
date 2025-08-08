@@ -13,6 +13,7 @@
 #include <QOpenGLWidget>
 #include <QString>
 #include <QTimer>
+#include <QRubberBand>
 
 #include <memory>
 #include <optional>
@@ -154,6 +155,16 @@ signals:
      */
     void tooltipsEnabledChanged(bool enabled);
 
+    /**
+     * @brief Emitted when the current world view bounds change (after zoom/pan/resize/box-zoom)
+     */
+    void viewBoundsChanged(float left, float right, float bottom, float top);
+
+    /**
+     * @brief Emitted when the mouse moves, reporting world coordinates under the cursor
+     */
+    void mouseWorldMoved(float world_x, float world_y);
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -195,8 +206,10 @@ private:
     QMatrix4x4 _projection_matrix;
     float _zoom_level;  // Overall zoom level (kept for compatibility)
     float _y_zoom_level;// Y-axis zoom level (for trial spacing)
+    float _zoom_level_x;// For standardized API; maps to X zoom (default 1)
     float _pan_offset_x;
     float _pan_offset_y;
+    float _padding_factor = 1.1f;
 
     // Interaction state
     bool _mouse_pressed;
@@ -238,6 +251,11 @@ private:
     QPoint _pending_hover_pos;
 
     PlotTheme _plot_theme = PlotTheme::Dark;
+
+    // Box-zoom state
+    bool _box_zoom_active = false;
+    QRubberBand * _rubber_band = nullptr;
+    QPoint _rubber_origin;
 
     /**
      * @brief Initialize OpenGL shaders

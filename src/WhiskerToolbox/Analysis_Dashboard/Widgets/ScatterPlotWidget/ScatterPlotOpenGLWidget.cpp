@@ -11,6 +11,7 @@
 #include <QRandomGenerator>
 #include <QToolTip>
 #include <QWheelEvent>
+#include <algorithm>
 
 ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
@@ -62,6 +63,12 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
     setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+
+    // Initialize standardized interaction state
+    _zoom_level_x = 1.0f;
+    _zoom_level_y = 1.0f;
+    _padding_factor = 1.1f;
+    _rubber_band = nullptr;
 }
 
 ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() {
@@ -153,6 +160,8 @@ void ScatterPlotOpenGLWidget::setPointSize(float point_size) {
 void ScatterPlotOpenGLWidget::setZoomLevel(float zoom_level) {
     qDebug() << "ScatterPlotOpenGLWidget::setZoomLevel called with" << zoom_level;
     _zoom_level = std::max(0.1f, std::min(10.0f, zoom_level));
+    _zoom_level_x = _zoom_level;
+    _zoom_level_y = _zoom_level;
     qDebug() << "ScatterPlotOpenGLWidget::setZoomLevel: final zoom_level =" << _zoom_level;
     updateProjectionMatrix();
     emit zoomLevelChanged(_zoom_level);
@@ -260,6 +269,9 @@ void ScatterPlotOpenGLWidget::updateProjectionMatrix() {
         _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
         qDebug() << "ScatterPlotOpenGLWidget::updateProjectionMatrix: Using calculated projection";
     }
+
+    // Notify listeners of current world bounds
+    emit viewBoundsChanged(left, right, bottom, top);
 }
 
 void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
@@ -270,6 +282,15 @@ void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         _dragging = true;
         _last_mouse_pos = event->pos();
         qDebug() << "ScatterPlotOpenGLWidget::mousePressEvent: Started panning";
+        if (event->modifiers().testFlag(Qt::AltModifier)) {
+            if (!_rubber_band) {
+                _rubber_band = new QRubberBand(QRubberBand::Rectangle, this);
+            }
+            _box_zoom_active = true;
+            _rubber_origin = event->pos();
+            _rubber_band->setGeometry(QRect(_rubber_origin, QSize()));
+            _rubber_band->show();
+        }
         
         // Check for point click
         if (_scatter_visualization) {
@@ -281,19 +302,30 @@ void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
 void ScatterPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     _current_mouse_pos = event->pos();
+    // Emit current mouse world coordinates
+    {
+        QVector2D world_pos = screenToWorld(event->pos());
+        emit mouseWorldMoved(world_pos.x(), world_pos.y());
+    }
     
-    if (_is_panning && (event->buttons() & Qt::LeftButton)) {
+    if (_box_zoom_active && _rubber_band) {
+        QRect rect = QRect(_rubber_origin, event->pos()).normalized();
+        _rubber_band->setGeometry(rect);
+        event->accept();
+        return;
+    } else if (_is_panning && (event->buttons() & Qt::LeftButton)) {
         qDebug() << "ScatterPlotOpenGLWidget::mouseMoveEvent: Panning from" << _last_mouse_pos << "to" << event->pos();
         
         // Handle panning
         QPoint delta = event->pos() - _last_mouse_pos;
         
         // Convert screen delta to world delta (similar to SpatialOverlayOpenGLWidget)
-        float world_scale = 2.0f / (_zoom_level * std::min(width(), height()));
-        float dx = delta.x() * world_scale;
-        float dy = -delta.y() * world_scale; // Flip Y axis
+        float left, right, bottom, top;
+        calculateProjectionBounds(left, right, bottom, top);
+        float dx = delta.x() * ((right - left) / std::max(1, width()));
+        float dy = -delta.y() * ((top - bottom) / std::max(1, height()));
         
-        qDebug() << "ScatterPlotOpenGLWidget::mouseMoveEvent: delta =" << delta << "world_scale =" << world_scale << "dx =" << dx << "dy =" << dy;
+        qDebug() << "ScatterPlotOpenGLWidget::mouseMoveEvent: delta =" << delta << "dx =" << dx << "dy =" << dy;
         
         setPanOffset(_pan_offset_x + dx, _pan_offset_y + dy);
         _last_mouse_pos = event->pos();
@@ -311,6 +343,51 @@ void ScatterPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
         _dragging = false;
+        if (_box_zoom_active && _rubber_band) {
+            _rubber_band->hide();
+            QRect rect = _rubber_band->geometry();
+            _box_zoom_active = false;
+            if (rect.width() > 3 && rect.height() > 3) {
+                QVector2D world_tl = screenToWorld(rect.topLeft());
+                QVector2D world_br = screenToWorld(rect.bottomRight());
+                float min_x = std::min(world_tl.x(), world_br.x());
+                float max_x = std::max(world_tl.x(), world_br.x());
+                float min_y = std::min(world_br.y(), world_tl.y());
+                float max_y = std::max(world_br.y(), world_tl.y());
+
+                float data_width = _data_max_x - _data_min_x;
+                float data_height = _data_max_y - _data_min_y;
+                float target_width = std::max(1e-6f, max_x - min_x);
+                float target_height = std::max(1e-6f, max_y - min_y);
+                float aspect_ratio = static_cast<float>(width()) / std::max(1, height());
+                float padding = _padding_factor;
+                float zoom_factor_x;
+                float zoom_factor_y;
+                if (aspect_ratio > 1.0f) {
+                    zoom_factor_x = target_width / (aspect_ratio * data_width * padding);
+                    zoom_factor_y = target_height / (data_height * padding);
+                } else {
+                    zoom_factor_x = target_width / (data_width * padding);
+                    zoom_factor_y = (target_height * aspect_ratio) / (data_height * padding);
+                }
+                _zoom_level_x = std::clamp(1.0f / zoom_factor_x, 0.1f, 10.0f);
+                _zoom_level_y = std::clamp(1.0f / zoom_factor_y, 0.1f, 10.0f);
+                _zoom_level = std::clamp((_zoom_level_x + _zoom_level_y) * 0.5f, 0.1f, 10.0f);
+
+                // Center view to rectangle center via pan offsets
+                float center_x = (_data_min_x + _data_max_x) * 0.5f;
+                float center_y = (_data_min_y + _data_max_y) * 0.5f;
+                float target_center_x = (min_x + max_x) * 0.5f;
+                float target_center_y = (min_y + max_y) * 0.5f;
+                float pan_norm_x = (target_center_x - center_x) / (data_width * (1.0f / _zoom_level_x));
+                float pan_norm_y = (target_center_y - center_y) / (data_height * (1.0f / _zoom_level_y));
+                _pan_offset_x = pan_norm_x;
+                _pan_offset_y = pan_norm_y;
+
+                updateProjectionMatrix();
+                requestThrottledUpdate();
+            }
+        }
     }
 }
 
@@ -319,8 +396,20 @@ void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
     
     // Handle zooming
     float zoom_factor = 1.0f + (event->angleDelta().y() / 1200.0f);
+    Qt::KeyboardModifiers mods = event->modifiers();
+    if (mods.testFlag(Qt::ControlModifier) && !mods.testFlag(Qt::ShiftModifier)) {
+        _zoom_level_x = std::clamp(_zoom_level_x * zoom_factor, 0.1f, 10.0f);
+    } else if (mods.testFlag(Qt::ShiftModifier) && !mods.testFlag(Qt::ControlModifier)) {
+        _zoom_level_y = std::clamp(_zoom_level_y * zoom_factor, 0.1f, 10.0f);
+    } else {
+        _zoom_level_x = std::clamp(_zoom_level_x * zoom_factor, 0.1f, 10.0f);
+        _zoom_level_y = std::clamp(_zoom_level_y * zoom_factor, 0.1f, 10.0f);
+    }
+    _zoom_level = std::clamp((_zoom_level_x + _zoom_level_y) * 0.5f, 0.1f, 10.0f);
     qDebug() << "ScatterPlotOpenGLWidget::wheelEvent: zoom_factor =" << zoom_factor;
-    setZoomLevel(_zoom_level * zoom_factor);
+    updateProjectionMatrix();
+    emit zoomLevelChanged(_zoom_level);
+    requestThrottledUpdate();
     
     event->accept();
 }
@@ -417,11 +506,12 @@ void ScatterPlotOpenGLWidget::calculateProjectionBounds(float & left, float & ri
     float center_x = (_data_min_x + _data_max_x) * 0.5f;
     float center_y = (_data_min_y + _data_max_y) * 0.5f;
 
-    // Add padding and apply zoom
-    float padding = 1.1f; // 10% padding
-    float zoom_factor = 1.0f / _zoom_level;
-    float half_width = (data_width * padding * zoom_factor) / 2.0f;
-    float half_height = (data_height * padding * zoom_factor) / 2.0f;
+    // Add padding and apply per-axis zoom
+    float padding = _padding_factor; // 10% padding
+    float zoom_factor_x = 1.0f / _zoom_level_x;
+    float zoom_factor_y = 1.0f / _zoom_level_y;
+    float half_width = (data_width * padding * zoom_factor_x) / 2.0f;
+    float half_height = (data_height * padding * zoom_factor_y) / 2.0f;
 
     // Apply aspect ratio correction
     float aspect_ratio = static_cast<float>(width()) / height();
@@ -432,8 +522,8 @@ void ScatterPlotOpenGLWidget::calculateProjectionBounds(float & left, float & ri
     }
 
     // Apply pan offset
-    float pan_x = _pan_offset_x * data_width * zoom_factor;
-    float pan_y = _pan_offset_y * data_height * zoom_factor;
+    float pan_x = _pan_offset_x * data_width * zoom_factor_x;
+    float pan_y = _pan_offset_y * data_height * zoom_factor_y;
 
     left = center_x - half_width + pan_x;
     right = center_x + half_width + pan_x;
@@ -443,7 +533,7 @@ void ScatterPlotOpenGLWidget::calculateProjectionBounds(float & left, float & ri
     qDebug() << "ScatterPlotOpenGLWidget::calculateProjectionBounds: calculated bounds:";
     qDebug() << "  data_width:" << data_width << "data_height:" << data_height;
     qDebug() << "  center_x:" << center_x << "center_y:" << center_y;
-    qDebug() << "  zoom_factor:" << zoom_factor << "half_width:" << half_width << "half_height:" << half_height;
+    qDebug() << "  zoom_factor_x:" << zoom_factor_x << "zoom_factor_y:" << zoom_factor_y << "half_width:" << half_width << "half_height:" << half_height;
     qDebug() << "  pan_x:" << pan_x << "pan_y:" << pan_y;
     qDebug() << "  final: left=" << left << "right=" << right << "bottom=" << bottom << "top=" << top;
 }

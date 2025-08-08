@@ -15,6 +15,7 @@
 #include <QOpenGLWidget>
 #include <QString>
 #include <QTimer>
+#include <QRubberBand>
 
 #include <memory>
 #include <set>
@@ -249,6 +250,22 @@ signals:
      */
     void highlightStateChanged();
 
+    /**
+     * @brief Emitted when the current world view bounds change (after zoom/pan/resize/box-zoom)
+     * @param left Left world bound
+     * @param right Right world bound
+     * @param bottom Bottom world bound
+     * @param top Top world bound
+     */
+    void viewBoundsChanged(float left, float right, float bottom, float top);
+
+    /**
+     * @brief Emitted when the mouse moves, reporting world coordinates under the cursor
+     * @param world_x X coordinate in world space
+     * @param world_y Y coordinate in world space
+     */
+    void mouseWorldMoved(float world_x, float world_y);
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -294,12 +311,15 @@ private:
 
     // View parameters
     float _zoom_level;
+    float _zoom_level_x; // per-axis zoom (X)
+    float _zoom_level_y; // per-axis zoom (Y)
     float _pan_offset_x, _pan_offset_y;
     float _point_size;
     float _line_width;
     QMatrix4x4 _projection_matrix;
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _model_matrix;
+    float _padding_factor; // view padding factor (default 1.1)
 
     // Interaction state
     bool _is_panning;
@@ -318,6 +338,11 @@ private:
     SelectionVariant _selection_handler;
 
     QVector2D _current_mouse_world_pos;///< Current mouse position in world coordinates
+
+    // Box-zoom interaction
+    bool _box_zoom_active = false;
+    QRubberBand * _rubber_band = nullptr;
+    QPoint _rubber_origin;
 
 
     // Data bounds

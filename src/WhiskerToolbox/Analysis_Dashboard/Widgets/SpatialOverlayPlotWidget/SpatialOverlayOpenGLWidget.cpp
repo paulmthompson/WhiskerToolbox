@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <unordered_set>
+#include <algorithm>
 
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
@@ -81,6 +82,14 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
 
     // Initialize data bounds
     _data_min_x = _data_max_x = _data_min_y = _data_max_y = 0.0f;
+
+    // Initialize per-axis zoom and padding
+    _zoom_level_x = 1.0f;
+    _zoom_level_y = 1.0f;
+    _padding_factor = 1.1f;
+
+    // Initialize rubber band for box zoom
+    _rubber_band = nullptr;
 }
 
 bool SpatialOverlayOpenGLWidget::tryCreateContextWithVersion(int major, int minor) {
@@ -436,6 +445,8 @@ void SpatialOverlayOpenGLWidget::setZoomLevel(float zoom_level) {
     float new_zoom_level = std::max(0.1f, std::min(10.0f, zoom_level));
     if (new_zoom_level != _zoom_level) {
         _zoom_level = new_zoom_level;
+        _zoom_level_x = new_zoom_level;
+        _zoom_level_y = new_zoom_level;
         emit zoomLevelChanged(_zoom_level);
         updateViewMatrices();
         requestThrottledUpdate();
@@ -668,6 +679,16 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
             _is_panning = true;
             _last_mouse_pos = event->pos();
         }
+        // Alt+Left starts box-zoom rubber band
+        if (event->modifiers().testFlag(Qt::AltModifier)) {
+            if (!_rubber_band) {
+                _rubber_band = new QRubberBand(QRubberBand::Rectangle, this);
+            }
+            _box_zoom_active = true;
+            _rubber_origin = event->pos();
+            _rubber_band->setGeometry(QRect(_rubber_origin, QSize()));
+            _rubber_band->show();
+        }
         event->accept();
     } else if (event->button() == Qt::RightButton) {
         // Accept right click so we get the corresponding mouseReleaseEvent
@@ -704,6 +725,7 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     _current_mouse_pos = event->pos();
 
     updateMouseWorldPosition(event->pos().x(), event->pos().y());
+    emit mouseWorldMoved(_current_mouse_world_pos.x(), _current_mouse_world_pos.y());
 
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
     std::visit([event, world_pos](auto & handler) {
@@ -714,10 +736,13 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (_is_panning && (event->buttons() & Qt::LeftButton)) {
         QPoint delta = event->pos() - _last_mouse_pos;
 
-        // Convert pixel delta to world coordinates
-        float world_scale = 2.0f / (_zoom_level * std::min(width(), height()));
-        float dx = delta.x() * world_scale;
-        float dy = -delta.y() * world_scale;// Flip Y axis
+        // Convert pixel delta to world coordinates using current bounds
+        float left, right, bottom, top;
+        calculateProjectionBounds(left, right, bottom, top);
+        float world_per_pixel_x = (right - left) / std::max(1, width());
+        float world_per_pixel_y = (top - bottom) / std::max(1, height());
+        float dx = delta.x() * world_per_pixel_x;
+        float dy = -delta.y() * world_per_pixel_y; // Flip Y axis
 
         setPanOffset(_pan_offset_x + dx, _pan_offset_y + dy);
         _last_mouse_pos = event->pos();
@@ -765,6 +790,58 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
+
+        // Complete box zoom if active
+        if (_box_zoom_active && _rubber_band) {
+            _rubber_band->hide();
+            QRect rect = _rubber_band->geometry();
+            _box_zoom_active = false;
+
+            if (rect.width() > 3 && rect.height() > 3) {
+                QVector2D world_tl = screenToWorld(rect.left(), rect.top());
+                QVector2D world_br = screenToWorld(rect.right(), rect.bottom());
+                float min_x = std::min(world_tl.x(), world_br.x());
+                float max_x = std::max(world_tl.x(), world_br.x());
+                float min_y = std::min(world_br.y(), world_tl.y());
+                float max_y = std::max(world_br.y(), world_tl.y());
+
+                float data_width = _data_max_x - _data_min_x;
+                float data_height = _data_max_y - _data_min_y;
+                float center_x = (_data_min_x + _data_max_x) * 0.5f;
+                float center_y = (_data_min_y + _data_max_y) * 0.5f;
+                float target_width = std::max(1e-6f, max_x - min_x);
+                float target_height = std::max(1e-6f, max_y - min_y);
+                float aspect_ratio = static_cast<float>(width()) / std::max(1, height());
+
+                float padding = _padding_factor;
+                float zoom_factor_x;
+                float zoom_factor_y;
+                if (aspect_ratio > 1.0f) {
+                    zoom_factor_x = target_width / (aspect_ratio * data_width * padding);
+                    zoom_factor_y = target_height / (data_height * padding);
+                } else {
+                    zoom_factor_x = target_width / (data_width * padding);
+                    zoom_factor_y = (target_height * aspect_ratio) / (data_height * padding);
+                }
+                _zoom_level_x = std::clamp(1.0f / zoom_factor_x, 0.1f, 10.0f);
+                _zoom_level_y = std::clamp(1.0f / zoom_factor_y, 0.1f, 10.0f);
+                _zoom_level = std::clamp((_zoom_level_x + _zoom_level_y) * 0.5f, 0.1f, 10.0f);
+
+                float target_center_x = (min_x + max_x) * 0.5f;
+                float target_center_y = (min_y + max_y) * 0.5f;
+                float pan_x_world = target_center_x - center_x;
+                float pan_y_world = target_center_y - center_y;
+                float pan_norm_x = pan_x_world / (data_width * zoom_factor_x);
+                float pan_norm_y = pan_y_world / (data_height * zoom_factor_y);
+                _pan_offset_x = pan_norm_x;
+                _pan_offset_y = pan_norm_y;
+
+                updateViewMatrices();
+                requestThrottledUpdate();
+            }
+            event->accept();
+            return;
+        }
 
         // Re-enable hover processing after interaction ends
         // This ensures hover works again even if the click was in an incompatible selection mode
@@ -820,7 +897,19 @@ void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 
 void SpatialOverlayOpenGLWidget::wheelEvent(QWheelEvent * event) {
     float zoom_factor = 1.0f + (event->angleDelta().y() / 1200.0f);
-    setZoomLevel(_zoom_level * zoom_factor);
+    Qt::KeyboardModifiers mods = event->modifiers();
+    if (mods.testFlag(Qt::ControlModifier) && !mods.testFlag(Qt::ShiftModifier)) {
+        _zoom_level_x = std::clamp(_zoom_level_x * zoom_factor, 0.1f, 10.0f);
+    } else if (mods.testFlag(Qt::ShiftModifier) && !mods.testFlag(Qt::ControlModifier)) {
+        _zoom_level_y = std::clamp(_zoom_level_y * zoom_factor, 0.1f, 10.0f);
+    } else {
+        _zoom_level_x = std::clamp(_zoom_level_x * zoom_factor, 0.1f, 10.0f);
+        _zoom_level_y = std::clamp(_zoom_level_y * zoom_factor, 0.1f, 10.0f);
+    }
+    _zoom_level = std::clamp((_zoom_level_x + _zoom_level_y) * 0.5f, 0.1f, 10.0f);
+    updateViewMatrices();
+    emit zoomLevelChanged(_zoom_level);
+    requestThrottledUpdate();
 
     event->accept();
 }
@@ -1022,6 +1111,9 @@ void SpatialOverlayOpenGLWidget::updateViewMatrices() {
 
     // Update model matrix (identity for now)
     _model_matrix.setToIdentity();
+
+    // Emit current bounds for external UI
+    emit viewBoundsChanged(left, right, bottom, top);
 }
 
 void SpatialOverlayOpenGLWidget::renderPoints() {
@@ -1113,10 +1205,11 @@ void SpatialOverlayOpenGLWidget::calculateProjectionBounds(float & left, float &
     float center_y = (_data_min_y + _data_max_y) * 0.5f;
 
     // Add padding and apply zoom
-    float padding = 1.1f;// 10% padding
-    float zoom_factor = 1.0f / _zoom_level;
-    float half_width = (data_width * padding * zoom_factor) / 2.0f;
-    float half_height = (data_height * padding * zoom_factor) / 2.0f;
+    float padding = _padding_factor;// 10% padding
+    float zoom_factor_x = 1.0f / _zoom_level_x;
+    float zoom_factor_y = 1.0f / _zoom_level_y;
+    float half_width = (data_width * padding * zoom_factor_x) / 2.0f;
+    float half_height = (data_height * padding * zoom_factor_y) / 2.0f;
 
     // Apply aspect ratio correction
     float aspect_ratio = static_cast<float>(width()) / height();
@@ -1127,8 +1220,8 @@ void SpatialOverlayOpenGLWidget::calculateProjectionBounds(float & left, float &
     }
 
     // Apply pan offset
-    float pan_x = _pan_offset_x * data_width * zoom_factor;
-    float pan_y = _pan_offset_y * data_height * zoom_factor;
+    float pan_x = _pan_offset_x * data_width * zoom_factor_x;
+    float pan_y = _pan_offset_y * data_height * zoom_factor_y;
 
     left = center_x - half_width + pan_x;
     right = center_x + half_width + pan_x;
