@@ -9,6 +9,8 @@
 #include <QVector3D>
 #include <QWheelEvent>
 #include <algorithm>
+#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 
 EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
@@ -64,6 +66,45 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
 
     // Initialize hover processing state
     _hover_processing_active = false;
+
+    // Setup composition-based interaction controller
+    struct Adapter final : ViewAdapter {
+        explicit Adapter(EventPlotOpenGLWidget * widget) : w(widget) {}
+        EventPlotOpenGLWidget * w;
+        void getProjectionBounds(float & l,float & r,float & b,float & t) const override { w->calculateProjectionBounds(l,r,b,t); }
+        void getPerAxisZoom(float & zx,float & zy) const override { zx = w->_zoom_level_x; zy = w->_y_zoom_level; }
+        void setPerAxisZoom(float zx,float zy) override { w->_zoom_level_x = zx; w->_y_zoom_level = zy; }
+        void getPan(float & px,float & py) const override { px = w->_pan_offset_x; py = w->_pan_offset_y; }
+        void setPan(float px,float py) override { w->setPanOffset(px, py); }
+        float getPadding() const override { return w->_padding_factor; }
+        int viewportWidth() const override { return w->_widget_width; }
+        int viewportHeight() const override { return w->_widget_height; }
+        void requestUpdate() override { w->updateMatrices(); w->update(); }
+        void applyBoxZoomToWorldRect(float min_x,float max_x,float min_y,float max_y) override {
+            // Fit X range using per-axis zoom X; Y uses _y_zoom_level
+            float x_range_width = static_cast<float>(w->_negative_range + w->_positive_range);
+            float y_range_height = 2.0f;
+            float ar = static_cast<float>(w->_widget_width) / std::max(1, w->_widget_height);
+            float pad = w->_padding_factor;
+            float zfx, zfy;
+            if (ar > 1.0f) {
+                zfx = (max_x - min_x) / (ar * x_range_width * pad);
+                zfy = (max_y - min_y) / (y_range_height * pad);
+            } else {
+                zfx = (max_x - min_x) / (x_range_width * pad);
+                zfy = ((max_y - min_y) * ar) / (y_range_height * pad);
+            }
+            w->_zoom_level_x = std::clamp(1.0f / zfx, 0.1f, 10.0f);
+            w->_y_zoom_level = std::clamp(1.0f / zfy, 0.1f, 10.0f);
+            float cx = 0.5f * (min_x + max_x);
+            float cy = 0.5f * (min_y + max_y);
+            w->_pan_offset_x = cx / (x_range_width * (1.0f / w->_zoom_level_x));
+            w->_pan_offset_y = cy / (y_range_height * (1.0f / w->_y_zoom_level));
+        }
+    };
+    _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<Adapter>(Adapter{this}));
+    connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &EventPlotOpenGLWidget::viewBoundsChanged);
+    connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &EventPlotOpenGLWidget::mouseWorldMoved);
 
     // Standardized interaction additions
     _zoom_level_x = 1.0f; // default no X zoom
@@ -292,26 +333,14 @@ void EventPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         screenToWorld(event->pos().x(), event->pos().y(), world_x, world_y);
         // TODO: Find event at world position and emit frameJumpRequested
         // This will be implemented in subsequent steps
+        return;
     }
-    // Alt+Left starts box-zoom rectangle selection
-    if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::AltModifier)) {
-        if (!_rubber_band) {
-            _rubber_band = new QRubberBand(QRubberBand::Rectangle, this);
-        }
-        _box_zoom_active = true;
-        _rubber_origin = event->pos();
-        _rubber_band->setGeometry(QRect(_rubber_origin, QSize()));
-        _rubber_band->show();
-    }
+    if (_interaction && _interaction->handleMousePress(event)) return;
 }
 
 void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
-    if (_box_zoom_active && _rubber_band) {
-        QRect rect = QRect(_rubber_origin, event->pos()).normalized();
-        _rubber_band->setGeometry(rect);
-        event->accept();
-        return;
-    } else if (_mouse_pressed) {
+    if (_interaction && _interaction->handleMouseMove(event)) return;
+    if (_mouse_pressed) {
         QPoint current_pos = event->pos();
         int delta_x = current_pos.x() - _last_mouse_pos.x();
         int delta_y = current_pos.y() - _last_mouse_pos.y();
@@ -342,8 +371,8 @@ void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 }
 
 void EventPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
-    Q_UNUSED(event)
     _mouse_pressed = false;
+    if (_interaction && _interaction->handleMouseRelease(event)) return;
     if (_box_zoom_active && _rubber_band) {
         _rubber_band->hide();
         QRect rect = _rubber_band->geometry();
@@ -384,6 +413,10 @@ void EventPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
             update();
         }
     }
+    // Emit mouse world coordinates for UI feedback when not handled by controller
+    float world_x, world_y;
+    screenToWorld(event->pos().x(), event->pos().y(), world_x, world_y);
+    emit mouseWorldMoved(world_x, world_y);
 }
 
 void EventPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {

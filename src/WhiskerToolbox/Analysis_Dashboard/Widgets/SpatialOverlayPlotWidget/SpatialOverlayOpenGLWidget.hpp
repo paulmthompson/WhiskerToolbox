@@ -16,6 +16,7 @@
 #include <QString>
 #include <QTimer>
 #include <QRubberBand>
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 
 #include <memory>
 #include <set>
@@ -280,6 +281,7 @@ protected:
     void leaveEvent(QEvent * event) override;
     void keyPressEvent(QKeyEvent * event) override;
 
+
 private slots:
     /**
      * @brief Handle tooltip timer timeout
@@ -343,6 +345,9 @@ private:
     bool _box_zoom_active = false;
     QRubberBand * _rubber_band = nullptr;
     QPoint _rubber_origin;
+
+    // Composition-based interaction controller
+    std::unique_ptr<PlotInteractionController> _interaction;
 
 
     // Data bounds

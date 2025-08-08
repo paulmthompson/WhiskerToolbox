@@ -13,6 +13,7 @@
 #include <QOpenGLWidget>
 #include <QString>
 #include <QTimer>
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 #include <QRubberBand>
 
 #include <memory>
@@ -251,6 +252,9 @@ private:
     QPoint _pending_hover_pos;
 
     PlotTheme _plot_theme = PlotTheme::Dark;
+
+    // Composition-based interaction controller
+    std::unique_ptr<PlotInteractionController> _interaction;
 
     // Box-zoom state
     bool _box_zoom_active = false;

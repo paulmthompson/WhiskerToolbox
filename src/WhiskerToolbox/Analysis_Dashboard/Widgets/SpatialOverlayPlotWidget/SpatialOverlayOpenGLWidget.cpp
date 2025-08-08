@@ -11,6 +11,8 @@
 #include "Selection/PolygonSelectionHandler.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 
 #include <QApplication>
 #include <QDebug>
@@ -25,7 +27,7 @@
 
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
-    : QOpenGLWidget(parent),
+    :
       _opengl_resources_initialized(false),
       _zoom_level(1.0f),
       _pan_offset_x(0.0f),
@@ -39,6 +41,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _hover_processing_active(false),
       _selection_mode(SelectionMode::PointSelection) {
 
+    if (parent) setParent(parent);
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
 
@@ -82,6 +85,56 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
 
     // Initialize data bounds
     _data_min_x = _data_max_x = _data_min_y = _data_max_y = 0.0f;
+
+    // Initialize per-axis zoom defaults and padding
+    _zoom_level_x = 1.0f;
+    _zoom_level_y = 1.0f;
+    _padding_factor = 1.1f;
+
+    // Setup composition interaction controller
+    struct Adapter final : ViewAdapter {
+        explicit Adapter(SpatialOverlayOpenGLWidget * widget) : w(widget) {}
+        SpatialOverlayOpenGLWidget * w;
+        void getProjectionBounds(float & l,float & r,float & b,float & t) const override { w->calculateProjectionBounds(l,r,b,t); }
+        void getPerAxisZoom(float & zx,float & zy) const override { zx = w->_zoom_level_x; zy = w->_zoom_level_y; }
+        void setPerAxisZoom(float zx,float zy) override { w->_zoom_level_x = zx; w->_zoom_level_y = zy; }
+        void getPan(float & px,float & py) const override { px = w->_pan_offset_x; py = w->_pan_offset_y; }
+        void setPan(float px,float py) override { w->setPanOffset(px, py); }
+        float getPadding() const override { return w->_padding_factor; }
+        int viewportWidth() const override { return w->width(); }
+        int viewportHeight() const override { return w->height(); }
+        void requestUpdate() override { w->updateViewMatrices(); w->requestThrottledUpdate(); }
+        void applyBoxZoomToWorldRect(float min_x,float max_x,float min_y,float max_y) override {
+            float data_width = w->_data_max_x - w->_data_min_x;
+            float data_height = w->_data_max_y - w->_data_min_y;
+            float center_x = (w->_data_min_x + w->_data_max_x) * 0.5f;
+            float center_y = (w->_data_min_y + w->_data_max_y) * 0.5f;
+            float target_width = std::max(1e-6f, max_x - min_x);
+            float target_height = std::max(1e-6f, max_y - min_y);
+            float aspect_ratio = static_cast<float>(w->width()) / std::max(1, w->height());
+            float padding = w->_padding_factor;
+            float zfx, zfy;
+            if (aspect_ratio > 1.0f) {
+                zfx = target_width / (aspect_ratio * data_width * padding);
+                zfy = target_height / (data_height * padding);
+            } else {
+                zfx = target_width / (data_width * padding);
+                zfy = (target_height * aspect_ratio) / (data_height * padding);
+            }
+            w->_zoom_level_x = std::clamp(1.0f / zfx, 0.1f, 10.0f);
+            w->_zoom_level_y = std::clamp(1.0f / zfy, 0.1f, 10.0f);
+            w->_zoom_level = std::clamp((w->_zoom_level_x + w->_zoom_level_y) * 0.5f, 0.1f, 10.0f);
+            float target_cx = 0.5f * (min_x + max_x);
+            float target_cy = 0.5f * (min_y + max_y);
+            float pan_norm_x = (target_cx - center_x) / (data_width * (1.0f / w->_zoom_level_x));
+            float pan_norm_y = (target_cy - center_y) / (data_height * (1.0f / w->_zoom_level_y));
+            w->_pan_offset_x = pan_norm_x;
+            w->_pan_offset_y = pan_norm_y;
+        }
+    };
+    _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<Adapter>(Adapter{this}));
+    connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &SpatialOverlayOpenGLWidget::viewBoundsChanged);
+    connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &SpatialOverlayOpenGLWidget::mouseWorldMoved);
 
     // Initialize per-axis zoom and padding
     _zoom_level_x = 1.0f;
@@ -675,19 +728,8 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
     if (event->button() == Qt::LeftButton) {
         // Regular left click - start panning (if not in polygon or line selection mode)
-        if (_selection_mode != SelectionMode::PolygonSelection && _selection_mode != SelectionMode::LineIntersection) {
-            _is_panning = true;
-            _last_mouse_pos = event->pos();
-        }
-        // Alt+Left starts box-zoom rubber band
-        if (event->modifiers().testFlag(Qt::AltModifier)) {
-            if (!_rubber_band) {
-                _rubber_band = new QRubberBand(QRubberBand::Rectangle, this);
-            }
-            _box_zoom_active = true;
-            _rubber_origin = event->pos();
-            _rubber_band->setGeometry(QRect(_rubber_origin, QSize()));
-            _rubber_band->show();
+    if (_selection_mode != SelectionMode::PolygonSelection && _selection_mode != SelectionMode::LineIntersection) {
+            if (_interaction && _interaction->handleMousePress(event)) return;
         }
         event->accept();
     } else if (event->button() == Qt::RightButton) {
@@ -723,9 +765,7 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
 void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     _current_mouse_pos = event->pos();
-
-    updateMouseWorldPosition(event->pos().x(), event->pos().y());
-    emit mouseWorldMoved(_current_mouse_world_pos.x(), _current_mouse_world_pos.y());
+    if (_interaction && _interaction->handleMouseMove(event)) return;
 
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
     std::visit([event, world_pos](auto & handler) {
@@ -733,21 +773,7 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     },
                _selection_handler);
 
-    if (_is_panning && (event->buttons() & Qt::LeftButton)) {
-        QPoint delta = event->pos() - _last_mouse_pos;
-
-        // Convert pixel delta to world coordinates using current bounds
-        float left, right, bottom, top;
-        calculateProjectionBounds(left, right, bottom, top);
-        float world_per_pixel_x = (right - left) / std::max(1, width());
-        float world_per_pixel_y = (top - bottom) / std::max(1, height());
-        float dx = delta.x() * world_per_pixel_x;
-        float dy = -delta.y() * world_per_pixel_y; // Flip Y axis
-
-        setPanOffset(_pan_offset_x + dx, _pan_offset_y + dy);
-        _last_mouse_pos = event->pos();
-        event->accept();
-    } else {
+    if (!(_interaction && _interaction->handleMouseMove(event))) {
         // Stop panning if button was released
         _is_panning = false;
 
@@ -789,59 +815,7 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
                _selection_handler);
 
     if (event->button() == Qt::LeftButton) {
-        _is_panning = false;
-
-        // Complete box zoom if active
-        if (_box_zoom_active && _rubber_band) {
-            _rubber_band->hide();
-            QRect rect = _rubber_band->geometry();
-            _box_zoom_active = false;
-
-            if (rect.width() > 3 && rect.height() > 3) {
-                QVector2D world_tl = screenToWorld(rect.left(), rect.top());
-                QVector2D world_br = screenToWorld(rect.right(), rect.bottom());
-                float min_x = std::min(world_tl.x(), world_br.x());
-                float max_x = std::max(world_tl.x(), world_br.x());
-                float min_y = std::min(world_br.y(), world_tl.y());
-                float max_y = std::max(world_br.y(), world_tl.y());
-
-                float data_width = _data_max_x - _data_min_x;
-                float data_height = _data_max_y - _data_min_y;
-                float center_x = (_data_min_x + _data_max_x) * 0.5f;
-                float center_y = (_data_min_y + _data_max_y) * 0.5f;
-                float target_width = std::max(1e-6f, max_x - min_x);
-                float target_height = std::max(1e-6f, max_y - min_y);
-                float aspect_ratio = static_cast<float>(width()) / std::max(1, height());
-
-                float padding = _padding_factor;
-                float zoom_factor_x;
-                float zoom_factor_y;
-                if (aspect_ratio > 1.0f) {
-                    zoom_factor_x = target_width / (aspect_ratio * data_width * padding);
-                    zoom_factor_y = target_height / (data_height * padding);
-                } else {
-                    zoom_factor_x = target_width / (data_width * padding);
-                    zoom_factor_y = (target_height * aspect_ratio) / (data_height * padding);
-                }
-                _zoom_level_x = std::clamp(1.0f / zoom_factor_x, 0.1f, 10.0f);
-                _zoom_level_y = std::clamp(1.0f / zoom_factor_y, 0.1f, 10.0f);
-                _zoom_level = std::clamp((_zoom_level_x + _zoom_level_y) * 0.5f, 0.1f, 10.0f);
-
-                float target_center_x = (min_x + max_x) * 0.5f;
-                float target_center_y = (min_y + max_y) * 0.5f;
-                float pan_x_world = target_center_x - center_x;
-                float pan_y_world = target_center_y - center_y;
-                float pan_norm_x = pan_x_world / (data_width * zoom_factor_x);
-                float pan_norm_y = pan_y_world / (data_height * zoom_factor_y);
-                _pan_offset_x = pan_norm_x;
-                _pan_offset_y = pan_norm_y;
-
-                updateViewMatrices();
-                requestThrottledUpdate();
-            }
-            event->accept();
-            return;
-        }
+        if (_interaction && _interaction->handleMouseRelease(event)) return;
 
         // Re-enable hover processing after interaction ends
         // This ensures hover works again even if the click was in an incompatible selection mode
@@ -896,22 +870,8 @@ void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 }
 
 void SpatialOverlayOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    float zoom_factor = 1.0f + (event->angleDelta().y() / 1200.0f);
-    Qt::KeyboardModifiers mods = event->modifiers();
-    if (mods.testFlag(Qt::ControlModifier) && !mods.testFlag(Qt::ShiftModifier)) {
-        _zoom_level_x = std::clamp(_zoom_level_x * zoom_factor, 0.1f, 10.0f);
-    } else if (mods.testFlag(Qt::ShiftModifier) && !mods.testFlag(Qt::ControlModifier)) {
-        _zoom_level_y = std::clamp(_zoom_level_y * zoom_factor, 0.1f, 10.0f);
-    } else {
-        _zoom_level_x = std::clamp(_zoom_level_x * zoom_factor, 0.1f, 10.0f);
-        _zoom_level_y = std::clamp(_zoom_level_y * zoom_factor, 0.1f, 10.0f);
-    }
-    _zoom_level = std::clamp((_zoom_level_x + _zoom_level_y) * 0.5f, 0.1f, 10.0f);
-    updateViewMatrices();
-    emit zoomLevelChanged(_zoom_level);
-    requestThrottledUpdate();
-
-    event->accept();
+    if (_interaction && _interaction->handleWheel(event)) return;
+    QOpenGLWidget::wheelEvent(event);
 }
 
 void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {

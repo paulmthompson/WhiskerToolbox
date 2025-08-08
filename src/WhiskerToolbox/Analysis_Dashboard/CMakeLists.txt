@@ -15,6 +15,12 @@ set(ANALYSIS_DASHBOARD_SOURCES
     PlotContainer.cpp
     PlotFactory.hpp 
     PlotFactory.cpp
+
+    # Common 
+    Widgets/Common/PlotInteractionController.hpp
+    Widgets/Common/ViewAdapter.hpp
+    Widgets/Common/InteractiveOpenGLWidgetBase.hpp
+
     DataSourceRegistry/DataSourceRegistry.hpp
     DataSourceRegistry/DataSourceRegistry.cpp
 

@@ -6,6 +6,7 @@
 #include <QOpenGLWidget>
 #include <QTimer>
 #include <QRubberBand>
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 
 #include <memory>
 #include <vector>
@@ -131,6 +132,7 @@ protected:
     void wheelEvent(QWheelEvent * event) override;
     void leaveEvent(QEvent * event) override;
 
+
 private slots:
     /**
      * @brief Handle tooltip timer timeout
@@ -178,6 +180,9 @@ private:
     // FPS limiter timer (30 FPS = ~33ms interval)
     QTimer * _fps_limiter_timer;
     bool _pending_update;         // fps limiting
+
+  // Interaction controller (composition)
+  std::unique_ptr<PlotInteractionController> _interaction;
 
     // Box-zoom state
     bool _box_zoom_active = false;
