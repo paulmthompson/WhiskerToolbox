@@ -286,7 +286,67 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
         }
     }
 
-    throw std::runtime_error("Data source '" + sourceName + "' not found as analog, interval, or event source");
+    // Try as line source
+    auto lineSource = m_dataManager->getLineSource(sourceName);
+    if (lineSource) {
+        // Generate plan based on row selector type for line data
+        if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
+            auto const & intervals = intervalSelector->getIntervals();
+            auto timeFrame = intervalSelector->getTimeFrame();
+            return ExecutionPlan(intervals, timeFrame);
+        }
+
+        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
+            auto const & indices = timestampSelector->getTimestamps();
+            auto timeFrame = timestampSelector->getTimeFrame();
+            return ExecutionPlan(indices, timeFrame);
+        }
+
+        if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
+            auto const & indices = indexSelector->getIndices();
+            std::vector<TimeFrameIndex> timeFrameIndices;
+            timeFrameIndices.reserve(indices.size());
+
+            for (size_t index: indices) {
+                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+            }
+
+            std::cout << "WARNING: IndexSelector is not supported for line data" << std::endl;
+
+            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+        }
+    }
+
+    // Generic fallback: generate plan solely based on row selector when the source is unknown
+    if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
+        auto const & intervals = intervalSelector->getIntervals();
+        auto timeFrame = intervalSelector->getTimeFrame();
+        std::cout << "WARNING: Data source '" << sourceName
+                  << "' not found. Generating plan from IntervalSelector only." << std::endl;
+        return ExecutionPlan(intervals, timeFrame);
+    }
+
+    if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
+        auto const & indices = timestampSelector->getTimestamps();
+        auto timeFrame = timestampSelector->getTimeFrame();
+        std::cout << "WARNING: Data source '" << sourceName
+                  << "' not found. Generating plan from TimestampSelector only." << std::endl;
+        return ExecutionPlan(indices, timeFrame);
+    }
+
+    if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
+        auto const & indices = indexSelector->getIndices();
+        std::vector<TimeFrameIndex> timeFrameIndices;
+        timeFrameIndices.reserve(indices.size());
+        for (size_t index: indices) {
+            timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+        }
+        std::cout << "WARNING: Data source '" << sourceName
+                  << "' not found. Generating plan from IndexSelector only." << std::endl;
+        return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+    }
+
+    throw std::runtime_error("Data source '" + sourceName + "' not found as analog, interval, event, or line source");
 }
 
 RowDescriptor TableView::getRowDescriptor(size_t row_index) const {
