@@ -50,7 +50,7 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     refreshRowDataSourceCombo();
     clearUI();
 
-    qDebug() << "TableDesignerWidget initialized";
+    qDebug() << "TableDesignerWidget initialized (legacy path - to be removed)";
 }
 
 TableDesignerWidget::~TableDesignerWidget() {
@@ -1773,3 +1773,4 @@ void TableDesignerWidget::setParameterValues(std::map<std::string, std::string> 
         }
     }
 }
+

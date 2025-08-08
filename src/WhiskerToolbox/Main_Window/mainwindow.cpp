@@ -10,6 +10,7 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
+#include "TableDesignerWidget/TableDesignerWidget.hpp"
 #include "BatchProcessing_Widget/BatchProcessing_Widget.hpp"
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
@@ -128,6 +129,7 @@ void MainWindow::_createActions() {
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
     connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
     connect(ui->actionAnalysis_Dashboard, &QAction::triggered, this, &MainWindow::openAnalysisDashboard);
+    connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
 }
 
@@ -678,6 +680,19 @@ void MainWindow::openAnalysisDashboard() {
 
     auto ptr = dynamic_cast<Analysis_Dashboard *>(_widgets[key].get());
     ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openTableDesignerWidget() {
+    std::string const key = "TableDesigner_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto td_widget = std::make_unique<TableDesignerWidget>(_data_manager, this);
+        td_widget->setObjectName(QString::fromStdString(key));
+        registerDockWidget(key, td_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(td_widget);
+    }
 
     showDockWidget(key);
 }

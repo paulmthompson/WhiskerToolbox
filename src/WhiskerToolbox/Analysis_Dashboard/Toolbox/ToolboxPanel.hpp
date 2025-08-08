@@ -12,7 +12,6 @@ class QListWidget;
 class QListWidgetItem;
 class GroupManager;
 class GroupManagementWidget;
-class TableDesignerWidget;
 class DataManager;
 
 /**
@@ -53,7 +52,8 @@ private slots:
 private:
     Ui::ToolboxPanel * ui;
     GroupManagementWidget * _group_widget;
-    TableDesignerWidget * _table_designer_widget;
+    // TableDesignerWidget removed from dashboard toolbox
+    void* _table_designer_widget; // legacy placeholder, not used
 
     /**
      * @brief Initialize the toolbox with available plot types

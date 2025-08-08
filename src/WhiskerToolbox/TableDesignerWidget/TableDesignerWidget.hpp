@@ -99,8 +99,6 @@ private slots:
      */
     void onRemoveColumn();
 
-
-
     /**
      * @brief Handle changes to the column data source selection
      */
@@ -331,3 +329,5 @@ private:
 };
 
 #endif// TABLEDESIGNERWIDGET_HPP
+
+

@@ -1,7 +1,6 @@
 #include "ToolboxPanel.hpp"
 #include "../Groups/GroupManagementWidget.hpp"
 #include "../Groups/GroupManager.hpp"
-#include "../Tables/TableDesignerWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "ui_ToolboxPanel.h"
 
@@ -22,15 +21,9 @@ ToolboxPanel::ToolboxPanel(GroupManager * group_manager, std::shared_ptr<DataMan
     // Create and add the group management widget at the top
     _group_widget = new GroupManagementWidget(group_manager, this);
 
-    // Create the table designer widget (now takes only DataManager)
-    _table_designer_widget = new TableDesignerWidget(data_manager, this);
-
     // Insert widgets into the layout
     auto * layout = ui->verticalLayout;
     layout->insertWidget(0, _group_widget);// Insert at index 0 (top)
-
-    // Add the table designer widget after the plot list
-    layout->addWidget(_table_designer_widget);
 
     // Initialize with available plot types
     initializeToolbox();

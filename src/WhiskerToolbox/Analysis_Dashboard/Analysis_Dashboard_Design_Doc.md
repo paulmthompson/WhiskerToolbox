@@ -40,7 +40,7 @@ The table view creation interface.
 
 A list of available plot types that can be added to the graphics scene.
 
-Ownership: It creates and owns the GroupManagerWidget and the TableDesignerWidget.
+Ownership: It creates and owns the GroupManagerWidget. The TableDesignerWidget is now a top-level module in `WhiskerToolbox` and is launched from the Main Window.
 
 Functionality: It contains UI components for listing plot types. When a button is clicked to add a plot, it sends a signal to the Analysis Dashboard to call the CreatePlotWidget factory method.
 

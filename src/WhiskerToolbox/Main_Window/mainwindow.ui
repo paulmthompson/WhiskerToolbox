@@ -91,6 +91,7 @@
     <property name="title">
      <string>Modules</string>
     </property>
+     <addaction name="actionTable_Designer"/>
     <addaction name="actionData_Manager"/>
     <addaction name="actionBatch_Processing"/>
     <addaction name="actionWhisker_Tracking"/>
@@ -246,6 +247,11 @@
   <action name="actionAnalysis_Dashboard">
    <property name="text">
     <string>Analysis Dashboard</string>
+   </property>
+  </action>
+  <action name="actionTable_Designer">
+   <property name="text">
+    <string>Table Designer</string>
    </property>
   </action>
   <action name="actionTest_Widget">

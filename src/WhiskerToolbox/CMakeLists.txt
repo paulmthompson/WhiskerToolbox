@@ -48,6 +48,10 @@ set(PROJECT_SOURCES
         Main_Window/mainwindow.hpp
         Main_Window/mainwindow.ui
 
+        TableDesignerWidget/TableDesignerWidget.hpp
+        TableDesignerWidget/TableDesignerWidget.cpp
+        TableDesignerWidget/TableDesignerWidget.ui
+
         DataManager_Widget/DataManager_Widget.hpp
         DataManager_Widget/DataManager_Widget.cpp
         DataManager_Widget/DataManager_Widget.ui
@@ -512,6 +516,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 
   #      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/TableDesignerWidget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"

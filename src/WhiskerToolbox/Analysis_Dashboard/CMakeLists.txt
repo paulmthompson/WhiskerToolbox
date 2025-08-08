@@ -51,11 +51,7 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Toolbox/ToolboxPanel.cpp
     Toolbox/ToolboxPanel.ui
 
-    # Tables
-    
-    Tables/TableDesignerWidget.hpp
-    Tables/TableDesignerWidget.cpp
-    Tables/TableDesignerWidget.ui
+    # Tables (designer moved to top-level module)
     Tables/TablePipeline.hpp 
     Tables/TablePipeline.cpp
 

@@ -91,5 +91,6 @@ private slots:
     void openTerminalWidget();
     void openAnalysisDashboard();
     void openTestWidget();
+    void openTableDesignerWidget();
 };
 #endif// MAINWINDOW_HPP
