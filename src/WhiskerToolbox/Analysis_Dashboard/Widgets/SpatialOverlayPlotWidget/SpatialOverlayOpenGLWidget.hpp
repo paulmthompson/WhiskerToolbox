@@ -15,6 +15,8 @@
 #include <QOpenGLWidget>
 #include <QString>
 #include <QTimer>
+#include <QRubberBand>
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 
 #include <memory>
 #include <set>
@@ -33,6 +35,7 @@ class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;
 class GroupManager;
+class SpatialOverlayViewAdapter; // adapter (friend)
 
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
@@ -249,6 +252,22 @@ signals:
      */
     void highlightStateChanged();
 
+    /**
+     * @brief Emitted when the current world view bounds change (after zoom/pan/resize/box-zoom)
+     * @param left Left world bound
+     * @param right Right world bound
+     * @param bottom Bottom world bound
+     * @param top Top world bound
+     */
+    void viewBoundsChanged(float left, float right, float bottom, float top);
+
+    /**
+     * @brief Emitted when the mouse moves, reporting world coordinates under the cursor
+     * @param world_x X coordinate in world space
+     * @param world_y Y coordinate in world space
+     */
+    void mouseWorldMoved(float world_x, float world_y);
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -262,6 +281,7 @@ protected:
     void wheelEvent(QWheelEvent * event) override;
     void leaveEvent(QEvent * event) override;
     void keyPressEvent(QKeyEvent * event) override;
+
 
 private slots:
     /**
@@ -285,6 +305,9 @@ private slots:
     void requestThrottledUpdate();
 
 private:
+    // Grant adapter access to private state for high-performance interaction
+    friend class SpatialOverlayViewAdapter;
+
     std::unordered_map<QString, std::unique_ptr<PointDataVisualization>> _point_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
@@ -294,14 +317,17 @@ private:
 
     // View parameters
     float _zoom_level;
+    float _zoom_level_x; // per-axis zoom (X)
+    float _zoom_level_y; // per-axis zoom (Y)
     float _pan_offset_x, _pan_offset_y;
     float _point_size;
     float _line_width;
     QMatrix4x4 _projection_matrix;
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _model_matrix;
+    float _padding_factor; // view padding factor (default 1.1)
 
-    // Interaction state
+    // Interaction state (legacy pan removed; controller manages state)
     bool _is_panning;
     QPoint _last_mouse_pos;
     QPoint _current_mouse_pos;
@@ -318,6 +344,11 @@ private:
     SelectionVariant _selection_handler;
 
     QVector2D _current_mouse_world_pos;///< Current mouse position in world coordinates
+
+    // Box-zoom interaction (legacy rubber band removed; controller manages rubber band)
+
+    // Composition-based interaction controller
+    std::unique_ptr<PlotInteractionController> _interaction;
 
 
     // Data bounds

@@ -5,6 +5,8 @@
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLWidget>
 #include <QTimer>
+#include <QRubberBand>
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 
 #include <memory>
 #include <vector>
@@ -12,6 +14,7 @@
 
 class ScatterPlotVisualization;
 class GroupManager;
+class ScatterPlotViewAdapter; // adapter (friend)
 
 /**
  * @brief OpenGL widget for rendering scatter plot data with high performance
@@ -109,6 +112,16 @@ signals:
      */
     void panOffsetChanged(float offset_x, float offset_y);
 
+    /**
+     * @brief Emitted when the current world view bounds change (after zoom/pan/resize/box-zoom)
+     */
+    void viewBoundsChanged(float left, float right, float bottom, float top);
+
+    /**
+     * @brief Emitted when the mouse moves, reporting world coordinates under the cursor
+     */
+    void mouseWorldMoved(float world_x, float world_y);
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -120,6 +133,7 @@ protected:
     void wheelEvent(QWheelEvent * event) override;
     void leaveEvent(QEvent * event) override;
 
+
 private slots:
     /**
      * @brief Handle tooltip timer timeout
@@ -127,6 +141,8 @@ private slots:
     void handleTooltipTimer();
 
 private:
+  // Grant adapter access to private state for interaction
+  friend class ScatterPlotViewAdapter;
     // Point visualization
     std::unique_ptr<ScatterPlotVisualization> _scatter_visualization;
     GroupManager * _group_manager;
@@ -146,8 +162,11 @@ private:
     // View transformation
     QMatrix4x4 _projection_matrix;
     float _zoom_level;
+    float _zoom_level_x;
+    float _zoom_level_y;
     float _pan_offset_x;
     float _pan_offset_y;
+    float _padding_factor;
 
     // Mouse interaction
     bool _dragging;
@@ -164,6 +183,14 @@ private:
     // FPS limiter timer (30 FPS = ~33ms interval)
     QTimer * _fps_limiter_timer;
     bool _pending_update;         // fps limiting
+
+  // Interaction controller (composition)
+  std::unique_ptr<PlotInteractionController> _interaction;
+
+    // Box-zoom state
+    bool _box_zoom_active = false;
+    QRubberBand * _rubber_band = nullptr;
+    QPoint _rubber_origin;
 
     /**
      * @brief Update the projection matrix based on current data bounds and zoom/pan
@@ -200,7 +227,7 @@ private:
     /**
      * @brief Calculate data bounds from the stored data
      */
-    void calculateDataBounds();
+  void calculateDataBounds();
 };
 
 #endif// SCATTERPLOTOPENGLWIDGET_HPP

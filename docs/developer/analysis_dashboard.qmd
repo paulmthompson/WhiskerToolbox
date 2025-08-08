@@ -1,0 +1,151 @@
+---
+title: "Analysis Dashboard: Embedding OpenGL Widgets in QGraphicsScene"
+format: html
+---
+
+# Overview
+
+This note documents the pattern for embedding a `QOpenGLWidget` inside a `QGraphicsScene` via `QGraphicsProxyWidget`, as used by the Analysis Dashboard plots. The goal is to achieve smooth, interactive pan/zoom and reliable repainting while the plot lives as a `QGraphicsItem` within a scene.
+
+The core pieces:
+
+- A plot `QGraphicsWidget` subclass that owns a `QGraphicsProxyWidget` hosting the OpenGL widget
+- An OpenGL widget configured for proxy embedding and interactive input
+- Intentional event routing so dragging and wheel actions reach the OpenGL widget (not the parent graphics item)
+
+# Architecture
+
+- Plot item: `QGraphicsWidget` (e.g., `SpatialOverlayPlotWidget`, `ScatterPlotWidget`)
+  - Draws the plot frame and title in its `paint()`
+  - Embeds an OpenGL child via `QGraphicsProxyWidget`
+  - Routes mouse events: title area → item movement; content area → OpenGL interactivity
+
+- OpenGL child: `QOpenGLWidget` (e.g., `SpatialOverlayOpenGLWidget`, `ScatterPlotOpenGLWidget`)
+  - Holds visualization state and OpenGL resources
+  - Implements interactive behavior: mouse press/move/release, wheel zoom, tooltips
+  - Emits signals to trigger lightweight parent/proxy repaints
+
+# Embedding pattern (plot item)
+
+Configure the OpenGL widget and proxy to avoid stale frames and input conflicts when embedded in a `QGraphicsScene`:
+
+```cpp
+// In PlotWidget::setupOpenGLWidget()
+_opengl_widget = new ScatterPlotOpenGLWidget();
+
+_proxy_widget = new QGraphicsProxyWidget(this);
+_proxy_widget->setWidget(_opengl_widget);
+
+// OpenGL widget attributes for proxy embedding
+_opengl_widget->setAttribute(Qt::WA_AlwaysStackOnTop, false);
+_opengl_widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
+_opengl_widget->setAttribute(Qt::WA_NoSystemBackground, true);
+_opengl_widget->setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+
+// Prevent the proxy from intercepting movement/selection
+_proxy_widget->setFlag(QGraphicsItem::ItemIsMovable, false);
+_proxy_widget->setFlag(QGraphicsItem::ItemIsSelectable, false);
+
+// Make sure we repaint from the child every update
+_proxy_widget->setCacheMode(QGraphicsItem::NoCache);
+
+// Lay out inside the plot frame (leave room for title/border)
+QRectF rect = boundingRect();
+QRectF content_rect = rect.adjusted(8, 30, -8, -8);
+_proxy_widget->setGeometry(content_rect);
+_proxy_widget->widget()->resize(content_rect.size().toSize());
+```
+
+Event routing in the plot item ensures that content-area interaction reaches the OpenGL widget:
+
+```cpp
+// In PlotWidget::mousePressEvent(QGraphicsSceneMouseEvent* event)
+QRectF title_area = boundingRect().adjusted(0, 0, 0, -boundingRect().height() + 25);
+
+if (title_area.contains(event->pos())) {
+    // Title: allow moving/selecting the plot item
+    emit plotSelected(getPlotId());
+    setFlag(QGraphicsItem::ItemIsMovable, true);
+    AbstractPlotWidget::mousePressEvent(event);
+} else {
+    // Content: disable item movement so drag goes to the OpenGL child
+    emit plotSelected(getPlotId());
+    setFlag(QGraphicsItem::ItemIsMovable, false);
+    event->accept();
+}
+```
+
+# OpenGL widget configuration
+
+Configure the `QOpenGLWidget` so it reliably receives hover/wheel events and repaints well under a proxy:
+
+```cpp
+// In OpenGLWidget constructor
+setMouseTracking(true);
+setFocusPolicy(Qt::StrongFocus);
+
+// Prefer a core profile and multisampling
+QSurfaceFormat fmt;
+fmt.setVersion(4, 1);
+fmt.setProfile(QSurfaceFormat::CoreProfile);
+fmt.setSamples(4);
+setFormat(fmt);
+
+// Attributes for embedding in a QGraphicsProxyWidget
+setAttribute(Qt::WA_AlwaysStackOnTop, false);
+setAttribute(Qt::WA_OpaquePaintEvent, true);
+setAttribute(Qt::WA_NoSystemBackground, true);
+setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+```
+
+Typical interactive handlers (pan/zoom):
+
+```cpp
+void OpenGLWidget::mousePressEvent(QMouseEvent* e) {
+    if (e->button() == Qt::LeftButton) {
+        _is_panning = true;
+        _last_mouse_pos = e->pos();
+        e->accept();
+    } else {
+        e->ignore();
+    }
+}
+
+void OpenGLWidget::mouseMoveEvent(QMouseEvent* e) {
+    if (_is_panning && (e->buttons() & Qt::LeftButton)) {
+        QPoint delta = e->pos() - _last_mouse_pos;
+        float world_scale = 2.0f / (_zoom_level * std::min(width(), height()));
+        setPanOffset(_pan_offset_x + delta.x() * world_scale,
+                     _pan_offset_y - delta.y() * world_scale);
+        _last_mouse_pos = e->pos();
+        e->accept();
+    } else {
+        e->accept();
+    }
+}
+
+void OpenGLWidget::wheelEvent(QWheelEvent* e) {
+    float zoom_factor = 1.0f + (e->angleDelta().y() / 1200.0f);
+    setZoomLevel(_zoom_level * zoom_factor);
+    e->accept();
+}
+```
+
+# Repaint strategy
+
+- The OpenGL widget calls `update()` (optionally throttled) on interaction; the proxy and parent item listen to signals like `zoomLevelChanged` / `panOffsetChanged` to call `update()` on themselves too.
+- Disable caching (`QGraphicsItem::NoCache`) on the proxy so frames are not reused while the GL child is animating.
+
+# Troubleshooting
+
+- Symptom: plot only updates after resize or clicking away
+  - Ensure the GL child has `Qt::WA_OpaquePaintEvent`, `Qt::WA_NoSystemBackground`, and `NoPartialUpdate`
+  - Ensure the proxy uses `NoCache`
+  - Verify event routing: in content area, disable `ItemIsMovable` and accept the event so drag/wheel reach the GL widget
+  - Enable `setMouseTracking(true)` and `setFocusPolicy(Qt::StrongFocus)` on the GL widget
+
+# References
+
+- Plot items: `src/WhiskerToolbox/Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.cpp`, `src/WhiskerToolbox/Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp`
+- OpenGL widgets: `src/WhiskerToolbox/Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp`, `src/WhiskerToolbox/Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget.cpp`
+

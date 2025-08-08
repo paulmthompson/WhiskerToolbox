@@ -16,6 +16,12 @@ set(ANALYSIS_DASHBOARD_SOURCES
     PlotFactory.hpp 
     PlotFactory.cpp
 
+    # Common 
+    Widgets/Common/PlotInteractionController.hpp
+    Widgets/Common/ViewAdapter.hpp
+    Widgets/Common/InteractiveOpenGLWidgetBase.hpp
+
+
     # Plots
     Plots/AbstractPlotWidget.hpp
     Plots/AbstractPlotWidget.cpp
@@ -59,6 +65,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.cpp
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.ui
+    Widgets/ScatterPlotWidget/ScatterPlotViewAdapter.hpp
+    Widgets/ScatterPlotWidget/ScatterPlotViewAdapter.cpp
 
     Widgets/EventPlotWidget/EventPlotWidget.hpp
     Widgets/EventPlotWidget/EventPlotWidget.cpp
@@ -69,6 +77,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/EventPlotWidget/EventPlotOpenGLWidget.cpp
     Widgets/EventPlotWidget/EventPointVisualization.hpp
     Widgets/EventPlotWidget/EventPointVisualization.cpp
+    Widgets/EventPlotWidget/EventPlotViewAdapter.hpp
+    Widgets/EventPlotWidget/EventPlotViewAdapter.cpp
 
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
@@ -77,6 +87,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.ui
+    Widgets/SpatialOverlayPlotWidget/SpatialOverlayViewAdapter.hpp
+    Widgets/SpatialOverlayPlotWidget/SpatialOverlayViewAdapter.cpp
 
     Visualizers/RenderingContext.hpp
     Visualizers/Lines/LineDataVisualization.hpp

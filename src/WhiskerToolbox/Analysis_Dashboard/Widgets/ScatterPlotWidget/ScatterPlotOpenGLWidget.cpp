@@ -11,9 +11,13 @@
 #include <QRandomGenerator>
 #include <QToolTip>
 #include <QWheelEvent>
+#include <algorithm>
+#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
+#include "ScatterPlotViewAdapter.hpp"
 
 ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
-    : QOpenGLWidget(parent),
+    :
       _group_manager(nullptr),
       _point_size(3.0f),
       _zoom_level(1.0f),
@@ -58,10 +62,21 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     setFormat(format);
 
     // Configure paint behavior for embedding inside QGraphicsProxyWidget
+    if (parent) setParent(parent);
     setAttribute(Qt::WA_AlwaysStackOnTop, false);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
     setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+
+    // Initialize standardized interaction state
+    _zoom_level_x = 1.0f;
+    _zoom_level_y = 1.0f;
+    _padding_factor = 1.1f;
+    _rubber_band = nullptr;
+
+    _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<ScatterPlotViewAdapter>(this));
+    connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &ScatterPlotOpenGLWidget::viewBoundsChanged);
+    connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &ScatterPlotOpenGLWidget::mouseWorldMoved);
 }
 
 ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() {
@@ -153,6 +168,8 @@ void ScatterPlotOpenGLWidget::setPointSize(float point_size) {
 void ScatterPlotOpenGLWidget::setZoomLevel(float zoom_level) {
     qDebug() << "ScatterPlotOpenGLWidget::setZoomLevel called with" << zoom_level;
     _zoom_level = std::max(0.1f, std::min(10.0f, zoom_level));
+    _zoom_level_x = _zoom_level;
+    _zoom_level_y = _zoom_level;
     qDebug() << "ScatterPlotOpenGLWidget::setZoomLevel: final zoom_level =" << _zoom_level;
     updateProjectionMatrix();
     emit zoomLevelChanged(_zoom_level);
@@ -260,12 +277,17 @@ void ScatterPlotOpenGLWidget::updateProjectionMatrix() {
         _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
         qDebug() << "ScatterPlotOpenGLWidget::updateProjectionMatrix: Using calculated projection";
     }
+
+    // Notify listeners of current world bounds
+    emit viewBoundsChanged(left, right, bottom, top);
 }
 
 void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     qDebug() << "ScatterPlotOpenGLWidget::mousePressEvent called at" << event->pos();
     
-    if (event->button() == Qt::LeftButton) {
+    if (_interaction && _interaction->handleMousePress(event)) {
+        return;
+    } else if (event->button() == Qt::LeftButton) {
         _is_panning = true;
         _dragging = true;
         _last_mouse_pos = event->pos();
@@ -281,19 +303,27 @@ void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
 void ScatterPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     _current_mouse_pos = event->pos();
+    // Emit current mouse world coordinates
+    {
+        QVector2D world_pos = screenToWorld(event->pos());
+        emit mouseWorldMoved(world_pos.x(), world_pos.y());
+    }
     
-    if (_is_panning && (event->buttons() & Qt::LeftButton)) {
+    if (_interaction && _interaction->handleMouseMove(event)) {
+        return;
+    } else if (_is_panning && (event->buttons() & Qt::LeftButton)) {
         qDebug() << "ScatterPlotOpenGLWidget::mouseMoveEvent: Panning from" << _last_mouse_pos << "to" << event->pos();
         
         // Handle panning
         QPoint delta = event->pos() - _last_mouse_pos;
         
         // Convert screen delta to world delta (similar to SpatialOverlayOpenGLWidget)
-        float world_scale = 2.0f / (_zoom_level * std::min(width(), height()));
-        float dx = delta.x() * world_scale;
-        float dy = -delta.y() * world_scale; // Flip Y axis
+        float left, right, bottom, top;
+        calculateProjectionBounds(left, right, bottom, top);
+        float dx = delta.x() * ((right - left) / std::max(1, width()));
+        float dy = -delta.y() * ((top - bottom) / std::max(1, height()));
         
-        qDebug() << "ScatterPlotOpenGLWidget::mouseMoveEvent: delta =" << delta << "world_scale =" << world_scale << "dx =" << dx << "dy =" << dy;
+        qDebug() << "ScatterPlotOpenGLWidget::mouseMoveEvent: delta =" << delta << "dx =" << dx << "dy =" << dy;
         
         setPanOffset(_pan_offset_x + dx, _pan_offset_y + dy);
         _last_mouse_pos = event->pos();
@@ -308,21 +338,17 @@ void ScatterPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 }
 
 void ScatterPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
-    if (event->button() == Qt::LeftButton) {
+    if (_interaction && _interaction->handleMouseRelease(event)) {
+        return;
+    } else if (event->button() == Qt::LeftButton) {
         _is_panning = false;
         _dragging = false;
     }
 }
 
 void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    qDebug() << "ScatterPlotOpenGLWidget::wheelEvent called with delta:" << event->angleDelta();
-    
-    // Handle zooming
-    float zoom_factor = 1.0f + (event->angleDelta().y() / 1200.0f);
-    qDebug() << "ScatterPlotOpenGLWidget::wheelEvent: zoom_factor =" << zoom_factor;
-    setZoomLevel(_zoom_level * zoom_factor);
-    
-    event->accept();
+    if (_interaction && _interaction->handleWheel(event)) return;
+    QOpenGLWidget::wheelEvent(event);
 }
 
 void ScatterPlotOpenGLWidget::leaveEvent(QEvent * event) {
@@ -331,6 +357,7 @@ void ScatterPlotOpenGLWidget::leaveEvent(QEvent * event) {
     // Hide tooltip when mouse leaves widget
     _tooltip_timer->stop();
     QToolTip::hideText();
+    if (_interaction) _interaction->handleLeave();
 }
 
 void ScatterPlotOpenGLWidget::handleTooltipTimer() {
@@ -417,11 +444,12 @@ void ScatterPlotOpenGLWidget::calculateProjectionBounds(float & left, float & ri
     float center_x = (_data_min_x + _data_max_x) * 0.5f;
     float center_y = (_data_min_y + _data_max_y) * 0.5f;
 
-    // Add padding and apply zoom
-    float padding = 1.1f; // 10% padding
-    float zoom_factor = 1.0f / _zoom_level;
-    float half_width = (data_width * padding * zoom_factor) / 2.0f;
-    float half_height = (data_height * padding * zoom_factor) / 2.0f;
+    // Add padding and apply per-axis zoom
+    float padding = _padding_factor; // 10% padding
+    float zoom_factor_x = 1.0f / _zoom_level_x;
+    float zoom_factor_y = 1.0f / _zoom_level_y;
+    float half_width = (data_width * padding * zoom_factor_x) / 2.0f;
+    float half_height = (data_height * padding * zoom_factor_y) / 2.0f;
 
     // Apply aspect ratio correction
     float aspect_ratio = static_cast<float>(width()) / height();
@@ -432,8 +460,8 @@ void ScatterPlotOpenGLWidget::calculateProjectionBounds(float & left, float & ri
     }
 
     // Apply pan offset
-    float pan_x = _pan_offset_x * data_width * zoom_factor;
-    float pan_y = _pan_offset_y * data_height * zoom_factor;
+    float pan_x = _pan_offset_x * data_width * zoom_factor_x;
+    float pan_y = _pan_offset_y * data_height * zoom_factor_y;
 
     left = center_x - half_width + pan_x;
     right = center_x + half_width + pan_x;
@@ -443,7 +471,7 @@ void ScatterPlotOpenGLWidget::calculateProjectionBounds(float & left, float & ri
     qDebug() << "ScatterPlotOpenGLWidget::calculateProjectionBounds: calculated bounds:";
     qDebug() << "  data_width:" << data_width << "data_height:" << data_height;
     qDebug() << "  center_x:" << center_x << "center_y:" << center_y;
-    qDebug() << "  zoom_factor:" << zoom_factor << "half_width:" << half_width << "half_height:" << half_height;
+    qDebug() << "  zoom_factor_x:" << zoom_factor_x << "zoom_factor_y:" << zoom_factor_y << "half_width:" << half_width << "half_height:" << half_height;
     qDebug() << "  pan_x:" << pan_x << "pan_y:" << pan_y;
     qDebug() << "  final: left=" << left << "right=" << right << "bottom=" << bottom << "top=" << top;
 }

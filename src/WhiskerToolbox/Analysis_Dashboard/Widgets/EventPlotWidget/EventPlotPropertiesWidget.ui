@@ -330,7 +330,12 @@ border-radius: 3px;
       <item>
        <widget class="QLabel" name="pan_hint_label">
         <property name="text">
-         <string>Use click and drag to pan the view horizontally</string>
+         <string>View Controls:
+- Mouse Wheel: Zoom (both axes)
+- Ctrl + Wheel: Zoom X only
+- Shift + Wheel: Zoom Y only
+- Left-Drag: Pan
+- Alt + Left-Drag: Box-zoom to rectangle</string>
         </property>
         <property name="styleSheet">
          <string notr="true">QLabel { 

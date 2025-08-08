@@ -8,6 +8,10 @@
 #include <QToolTip>
 #include <QVector3D>
 #include <QWheelEvent>
+#include <algorithm>
+#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
+#include "EventPlotViewAdapter.hpp"
 
 EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
@@ -63,6 +67,15 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
 
     // Initialize hover processing state
     _hover_processing_active = false;
+
+    // Setup composition-based interaction controller
+    _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<EventPlotViewAdapter>(this));
+    connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &EventPlotOpenGLWidget::viewBoundsChanged);
+    connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &EventPlotOpenGLWidget::mouseWorldMoved);
+
+    // Standardized interaction additions
+    _zoom_level_x = 1.0f; // default no X zoom
+    _padding_factor = 1.1f;
 }
 
 
@@ -286,10 +299,13 @@ void EventPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         screenToWorld(event->pos().x(), event->pos().y(), world_x, world_y);
         // TODO: Find event at world position and emit frameJumpRequested
         // This will be implemented in subsequent steps
+        return;
     }
+    if (_interaction && _interaction->handleMousePress(event)) return;
 }
 
 void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
+    if (_interaction && _interaction->handleMouseMove(event)) return;
     if (_mouse_pressed) {
         QPoint current_pos = event->pos();
         int delta_x = current_pos.x() - _last_mouse_pos.x();
@@ -314,15 +330,35 @@ void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
             _hover_debounce_timer->start();
         }
     }
+    // Emit mouse world coordinates
+    float world_x, world_y;
+    screenToWorld(event->pos().x(), event->pos().y(), world_x, world_y);
+    emit mouseWorldMoved(world_x, world_y);
 }
 
 void EventPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
-    Q_UNUSED(event)
     _mouse_pressed = false;
+    if (_interaction && _interaction->handleMouseRelease(event)) return;
 }
 
 void EventPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    handleZooming(event->angleDelta().y());
+    // Zoom behavior with modifiers: Ctrl=X-only, Shift=Y-only, None=both
+    float zoom_sensitivity = 0.001f;
+    float zoom_factor = 1.0f + event->angleDelta().y() * zoom_sensitivity;
+    zoom_factor = std::clamp(zoom_factor, 0.1f, 10.0f);
+    Qt::KeyboardModifiers mods = event->modifiers();
+    if (mods.testFlag(Qt::ControlModifier) && !mods.testFlag(Qt::ShiftModifier)) {
+        _zoom_level_x = std::clamp(_zoom_level_x * zoom_factor, 0.1f, 10.0f);
+    } else if (mods.testFlag(Qt::ShiftModifier) && !mods.testFlag(Qt::ControlModifier)) {
+        float new_y_zoom = std::clamp(_y_zoom_level * zoom_factor, 0.1f, 10.0f);
+        _y_zoom_level = new_y_zoom;
+    } else {
+        _zoom_level_x = std::clamp(_zoom_level_x * zoom_factor, 0.1f, 10.0f);
+        float new_y_zoom = std::clamp(_y_zoom_level * zoom_factor, 0.1f, 10.0f);
+        _y_zoom_level = new_y_zoom;
+    }
+    updateMatrices();
+    update();
 }
 
 void EventPlotOpenGLWidget::leaveEvent(QEvent * event) {
@@ -485,6 +521,7 @@ void EventPlotOpenGLWidget::updateMatrices() {
              << "left:" << left << "right:" << right
              << "bottom:" << bottom << "top:" << top
              << "y_zoom:" << _y_zoom_level;
+    emit viewBoundsChanged(left, right, bottom, top);
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
@@ -690,9 +727,9 @@ void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & righ
     float y_range_height = 2.0f;
     float center_y = 0.0f;
 
-    // Apply zoom: X uses no zoom (controlled by spinboxes), Y uses Y zoom
-    float x_zoom_factor = 1.0f;                // No X zoom
-    float y_zoom_factor = 1.0f / _y_zoom_level;// Y zoom only
+    // Apply zoom: allow standardized X zoom via _zoom_level_x and Y zoom via _y_zoom_level
+    float x_zoom_factor = 1.0f / _zoom_level_x;
+    float y_zoom_factor = 1.0f / _y_zoom_level;
 
     float half_width = (x_range_width * x_zoom_factor) / 2.0f;
     float half_height = (y_range_height * y_zoom_factor) / 2.0f;

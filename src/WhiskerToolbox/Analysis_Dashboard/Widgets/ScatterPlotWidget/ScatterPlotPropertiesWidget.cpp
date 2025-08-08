@@ -28,6 +28,7 @@ ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(QWidget * parent)
       _applying_properties(false) {
     ui->setupUi(this);
     setupConnections();
+    setViewControlsHelp();
 }
 
 ScatterPlotPropertiesWidget::~ScatterPlotPropertiesWidget() {
@@ -791,3 +792,16 @@ void ScatterPlotPropertiesWidget::onPanOffsetChanged(float offset_x, float offse
     Q_UNUSED(offset_y)
     updateCoordinateRange();
 }
+
+void ScatterPlotPropertiesWidget::setViewControlsHelp() {
+    if (!ui->view_help_label) return;
+    const QString text =
+        "View Controls:\n"
+        "- Mouse Wheel: Zoom (both axes)\n"
+        "- Ctrl + Wheel: Zoom X only\n"
+        "- Shift + Wheel: Zoom Y only\n"
+        "- Left-Drag: Pan\n"
+        "- Alt + Left-Drag: Box-zoom to rectangle";
+    ui->view_help_label->setText(text);
+}
+

@@ -191,6 +191,31 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="view_help_label">
+        <property name="text">
+         <string>View Controls:
+- Mouse Wheel: Zoom (both axes)
+- Ctrl + Wheel: Zoom X only
+- Shift + Wheel: Zoom Y only
+- Left-Drag: Pan
+- Alt + Left-Drag: Box-zoom to rectangle</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel {
+ color: #555;
+ font-size: 11px;
+ padding: 8px;
+ background-color: #f0f0f0;
+ border: 1px solid #ccc;
+ border-radius: 4px;
+ }</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="tooltips_checkbox">
         <property name="text">
          <string>Show Tooltips</string>

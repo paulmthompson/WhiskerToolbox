@@ -96,6 +96,11 @@ private slots:
      */
     void onPanOffsetChanged(float offset_x, float offset_y);
 
+    /**
+     * @brief Set the view controls help text.
+     */
+    void setViewControlsHelp();
+
 private:
     Ui::ScatterPlotPropertiesWidget * ui;
     ScatterPlotWidget * _scatter_plot_widget;

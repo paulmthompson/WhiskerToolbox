@@ -13,6 +13,8 @@
 #include <QOpenGLWidget>
 #include <QString>
 #include <QTimer>
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
+#include <QRubberBand>
 
 #include <memory>
 #include <optional>
@@ -22,6 +24,7 @@
 // Forward declarations
 class EventPointVisualization;
 class GroupManager;
+class EventPlotViewAdapter; // adapter (friend)
 
 /**
  * @brief OpenGL widget for rendering event data with high performance
@@ -154,6 +157,16 @@ signals:
      */
     void tooltipsEnabledChanged(bool enabled);
 
+    /**
+     * @brief Emitted when the current world view bounds change (after zoom/pan/resize/box-zoom)
+     */
+    void viewBoundsChanged(float left, float right, float bottom, float top);
+
+    /**
+     * @brief Emitted when the mouse moves, reporting world coordinates under the cursor
+     */
+    void mouseWorldMoved(float world_x, float world_y);
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -178,6 +191,8 @@ private slots:
 
 
 private:
+    // Grant adapter access to private state for high-performance interaction
+    friend class EventPlotViewAdapter;
     // Point visualization using GenericPointVisualization
     std::unique_ptr<EventPointVisualization> _event_visualization;
     GroupManager * _group_manager;
@@ -195,8 +210,10 @@ private:
     QMatrix4x4 _projection_matrix;
     float _zoom_level;  // Overall zoom level (kept for compatibility)
     float _y_zoom_level;// Y-axis zoom level (for trial spacing)
+    float _zoom_level_x;// For standardized API; maps to X zoom (default 1)
     float _pan_offset_x;
     float _pan_offset_y;
+    float _padding_factor = 1.1f;
 
     // Interaction state
     bool _mouse_pressed;
@@ -238,6 +255,11 @@ private:
     QPoint _pending_hover_pos;
 
     PlotTheme _plot_theme = PlotTheme::Dark;
+
+    // Composition-based interaction controller
+    std::unique_ptr<PlotInteractionController> _interaction;
+
+    // Box-zoom state (legacy rubber band removed; controller manages rubber band)
 
     /**
      * @brief Initialize OpenGL shaders
