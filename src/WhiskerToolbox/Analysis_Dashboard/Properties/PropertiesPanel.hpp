@@ -5,7 +5,6 @@
 #include <QWidget>
 
 class QStackedWidget;
-class QScrollArea;
 class AbstractPlotWidget;
 class GlobalPropertiesWidget;
 class AbstractPlotPropertiesWidget;
@@ -73,7 +72,7 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     GlobalPropertiesWidget * _global_properties;
     QStackedWidget * _stacked_widget;
-    QScrollArea * _scroll_area;
+    // Removed internal scroll area to allow full-width properties display
 
     // Map of plot type to properties widget
     QMap<QString, AbstractPlotPropertiesWidget *> _plot_properties_widgets;

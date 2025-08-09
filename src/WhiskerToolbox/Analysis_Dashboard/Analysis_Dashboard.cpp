@@ -25,6 +25,7 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 #include <QTimer>
+#include <QSizePolicy>
 
 Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager,
                                        TimeScrollBar * time_scrollbar,
@@ -91,9 +92,21 @@ void Analysis_Dashboard::setupLayout() {
     toolbox_layout->setContentsMargins(0, 0, 0, 0);
     toolbox_layout->addWidget(_toolbox_panel);
 
+    // Ensure toolbox panel can expand horizontally
+    _toolbox_panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
     QVBoxLayout * properties_layout = new QVBoxLayout(properties_container);
     properties_layout->setContentsMargins(0, 0, 0, 0);
     properties_layout->addWidget(_properties_panel);
+
+    // Ensure properties panel can expand horizontally
+    _properties_panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    // Set equal stretch so both side panels share available width
+    if (auto * main_layout = qobject_cast<QHBoxLayout *>(ui->centralwidget->layout())) {
+        main_layout->setStretch(0, 1);
+        main_layout->setStretch(1, 1);
+    }
 }
 
 void Analysis_Dashboard::connectSignals() {

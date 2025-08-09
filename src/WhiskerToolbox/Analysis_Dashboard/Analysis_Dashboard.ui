@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
+    <width>416</width>
     <height>800</height>
    </rect>
   </property>
@@ -28,33 +28,21 @@
      <number>5</number>
     </property>
      <item>
-      <widget class="QWidget" name="toolbox_container">
+      <widget class="QWidget" name="toolbox_container" native="true">
        <property name="minimumSize">
         <size>
          <width>200</width>
          <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>300</width>
-         <height>16777215</height>
         </size>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QWidget" name="properties_container">
+      <widget class="QWidget" name="properties_container" native="true">
        <property name="minimumSize">
         <size>
          <width>200</width>
          <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>300</width>
-         <height>16777215</height>
         </size>
        </property>
       </widget>
@@ -66,7 +54,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1200</width>
+     <width>416</width>
      <height>22</height>
     </rect>
    </property>
