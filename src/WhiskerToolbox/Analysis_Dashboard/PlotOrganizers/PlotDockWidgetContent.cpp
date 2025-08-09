@@ -37,14 +37,15 @@ void PlotDockWidgetContent::_initView(AbstractPlotWidget* plot_item)
     // Configure the view similar to GraphicsScenePlotOrganizer
     _view->setDragMode(QGraphicsView::RubberBandDrag);
     _view->setRenderHint(QPainter::Antialiasing);
-    _view->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+    // Full viewport updates tend to play nicer with embedded QOpenGLWidget proxies
+    _view->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     _view->setFrameShape(QFrame::NoFrame);
     _view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     _view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    // Use OpenGL viewport
-    auto* gl_viewport = new QOpenGLWidget();
-    _view->setViewport(gl_viewport);
+    // Important: Do NOT set an OpenGL viewport on the QGraphicsView because
+    // we embed QOpenGLWidget via QGraphicsProxyWidget inside the scene.
+    // Using a GL viewport here can prevent child QOpenGLWidgets from painting.
 
     // Scene bounds can be flexible; set a generous rect
     _scene->setSceneRect(0, 0, 1600, 1200);

@@ -39,6 +39,9 @@ void DockingPlotOrganizer::addPlot(std::unique_ptr<PlotContainer> plot_container
         return;
     }
 
+    // Hide internal frame/title when docked so content fills the dock
+    plot_item->setFrameAndTitleVisible(false);
+
     // Create per-plot content widget (scene + view + GL viewport)
     auto* content = new PlotDockWidgetContent(plot_id, plot_item);
 

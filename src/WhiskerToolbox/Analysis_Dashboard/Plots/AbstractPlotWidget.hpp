@@ -46,6 +46,17 @@ public:
     virtual void setPlotTitle(QString const & title);
 
     /**
+     * @brief Control visibility of the plot's frame and title bar
+     * @param visible True to show frame and title; false for edge-to-edge content
+     */
+    void setFrameAndTitleVisible(bool visible);
+
+    /**
+     * @brief Check whether frame and title are visible
+     */
+    bool isFrameAndTitleVisible() const { return _show_frame_and_title; }
+
+    /**
      * @brief Set the DataManager for direct data access
      */
     virtual void setDataManager(std::shared_ptr<DataManager> data_manager);
@@ -144,6 +155,7 @@ protected:
 
 protected:
     AbstractPlotParameters _parameters;
+    bool _show_frame_and_title{true};
 };
 
 #endif// ABSTRACTPLOTWIDGET_HPP

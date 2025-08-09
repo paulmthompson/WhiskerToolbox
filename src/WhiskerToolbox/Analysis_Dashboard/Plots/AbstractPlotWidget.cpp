@@ -34,6 +34,23 @@ void AbstractPlotWidget::setPlotTitle(QString const & title) {
     }
 }
 
+void AbstractPlotWidget::setFrameAndTitleVisible(bool visible) {
+    if (_show_frame_and_title != visible) {
+        _show_frame_and_title = visible;
+        if (_show_frame_and_title) {
+            // Restore window-style frame and margins when visible
+            setWindowFlags(Qt::Window);
+            setWindowFrameMargins(4, 4, 4, 4);
+        } else {
+            // Remove window-style frame/title when embedding inside docks
+            setWindowFlags(Qt::Widget);
+            setWindowFrameMargins(0, 0, 0, 0);
+        }
+        updateGeometry();
+        update();
+    }
+}
+
 void AbstractPlotWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     qDebug() << "AbstractPlotWidget: setDataManager called for plot" << QString::fromStdString(_parameters.getPlotId()) << "with dm:" << (data_manager != nullptr);
     _parameters.data_manager = std::move(data_manager);
