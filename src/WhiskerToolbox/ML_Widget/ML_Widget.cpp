@@ -2,11 +2,13 @@
 #include "ui_ML_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/utils/TableView/TableRegistry.hpp"
+#include "DataManager/utils/TableView/core/TableView.h"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
-#include "mlpack_conversion.hpp"
 #include "DataManager/Tensors/Tensor_Data.hpp"
+#include "mlpack_conversion.hpp"
 #define slots Q_SLOTS
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -29,6 +31,8 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 
+#include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -42,6 +46,19 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
       _ml_model_registry(std::make_unique<MLModelRegistry>()),
       ui(new Ui::ML_Widget) {
     ui->setupUi(this);
+    // Populate table-based ML selectors
+    _populateAvailableTablesAndColumns();
+    connect(ui->table_select_combo, &QComboBox::currentTextChanged, this, [this](QString const & name) {
+        // map display name to id by scanning registry
+        auto * reg = _data_manager->getTableRegistry();
+        if (!reg) return;
+        for (auto const & info: reg->getAllTableInfo()) {
+            if (info.name == name) {
+                _onSelectedTableChanged(info.id);
+                break;
+            }
+        }
+    });
 
     // Initialize Transformation Registry
     _transformation_registry[WhiskerTransformations::TransformationType::Identity] = std::make_unique<IdentityTransform>();
@@ -118,7 +135,194 @@ void ML_Widget::openWidget() {
     ui->outcome_table_widget->populateTable();
     _populateTrainingIntervalComboBox();// Ensure this is up-to-date too
 
+    _populateAvailableTablesAndColumns();
     this->show();
+}
+void ML_Widget::_populateAvailableTablesAndColumns() {
+    if (!_data_manager) return;
+    auto * reg = _data_manager->getTableRegistry();
+    if (!reg) return;
+    ui->table_select_combo->blockSignals(true);
+    ui->table_select_combo->clear();
+    for (auto const & info: reg->getAllTableInfo()) {
+        ui->table_select_combo->addItem(info.name);
+    }
+    ui->table_select_combo->blockSignals(false);
+
+    // If a table already selected, refresh its columns
+    if (!_selected_table_id.isEmpty()) {
+        _onSelectedTableChanged(_selected_table_id);
+    } else if (ui->table_select_combo->count() > 0) {
+        // Trigger for first item
+        auto first = ui->table_select_combo->itemText(0);
+        for (auto const & info: reg->getAllTableInfo()) {
+            if (info.name == first) {
+                _onSelectedTableChanged(info.id);
+                break;
+            }
+        }
+    }
+}
+
+void ML_Widget::_onSelectedTableChanged(QString const & table_id) {
+    _selected_table_id = table_id;
+    ui->feature_columns_list->clear();
+    ui->mask_columns_list->clear();
+    ui->label_column_combo->clear();
+    ui->prediction_target_combo->clear();
+    auto * reg = _data_manager->getTableRegistry();
+    if (!reg) return;
+    auto info = reg->getTableInfo(table_id);
+    // Populate eligible columns: numeric for features; boolean/int for masks/labels; any for prediction target series
+    for (int i = 0; i < info.columns.size(); ++i) {
+        auto const & c = info.columns[i];
+        QString display = c.name;
+        // Features: numeric types (double/float/int)
+        if (c.outputType == typeid(double) || c.outputType == typeid(float) || c.outputType == typeid(int) || c.outputType == typeid(int64_t)) {
+            auto * item = new QListWidgetItem(display, ui->feature_columns_list);
+            item->setCheckState(Qt::Unchecked);
+        }
+        // Masks: bool or int
+        if (c.outputType == typeid(bool) || c.outputType == typeid(int)) {
+            auto * mitem = new QListWidgetItem(display, ui->mask_columns_list);
+            mitem->setCheckState(Qt::Unchecked);
+        }
+        // Labels: bool or int
+        if (c.outputType == typeid(bool) || c.outputType == typeid(int)) {
+            ui->label_column_combo->addItem(display);
+        }
+        // Populate prediction targets with DigitalIntervalSeries keys (as requested)
+    }
+    // Fill DigitalIntervalSeries keys
+    for (auto const & key: _data_manager->getKeys<DigitalIntervalSeries>()) {
+        ui->prediction_target_combo->addItem(QString::fromStdString(key));
+    }
+}
+
+arma::Mat<double> ML_Widget::_buildFeatureMatrixFromTable(std::shared_ptr<TableView> const & table,
+                                                          std::vector<std::string> const & feature_columns,
+                                                          std::vector<size_t> & kept_row_indices) const {
+    if (!table) return arma::Mat<double>();
+    // Gather numeric columns as vectors<double>
+    auto & tv = *table;
+    std::vector<std::vector<double>> cols;
+    cols.reserve(feature_columns.size());
+    auto & nonConst = const_cast<TableView &>(tv);
+    size_t const nrows = tv.getRowCount();
+    for (auto const & name: feature_columns) {
+        auto ti = tv.getColumnTypeIndex(name);
+        if (ti == typeid(double)) {
+            cols.push_back(nonConst.getColumnValues<double>(name));
+        } else if (ti == typeid(float)) {
+            auto const & v = nonConst.getColumnValues<float>(name);
+            std::vector<double> d;
+            d.reserve(v.size());
+            for (float x: v) d.push_back(static_cast<double>(x));
+            cols.emplace_back(std::move(d));
+        } else if (ti == typeid(int)) {
+            auto const & v = nonConst.getColumnValues<int>(name);
+            std::vector<double> d;
+            d.reserve(v.size());
+            for (int x: v) d.push_back(static_cast<double>(x));
+            cols.emplace_back(std::move(d));
+        } else if (ti == typeid(int64_t)) {
+            auto const & v = nonConst.getColumnValues<int64_t>(name);
+            std::vector<double> d;
+            d.reserve(v.size());
+            for (int64_t x: v) d.push_back(static_cast<double>(x));
+            cols.emplace_back(std::move(d));
+        }
+    }
+    // Drop rows with NaN/Inf if requested
+    kept_row_indices.clear();
+    kept_row_indices.reserve(nrows);
+    bool drop = ui->drop_nan_checkbox && ui->drop_nan_checkbox->isChecked();
+    for (size_t r = 0; r < nrows; ++r) {
+        bool ok = true;
+        if (drop) {
+            for (auto const & c: cols) {
+                if (r >= c.size()) {
+                    ok = false;
+                    break;
+                }
+                double v = c[r];
+                if (!std::isfinite(v)) {
+                    ok = false;
+                    break;
+                }
+            }
+        }
+        if (ok) kept_row_indices.push_back(r);
+    }
+    arma::Mat<double> X(kept_row_indices.size(), cols.size());
+    for (size_t j = 0; j < cols.size(); ++j) {
+        for (size_t i = 0; i < kept_row_indices.size(); ++i) {
+            X(i, j) = cols[j][kept_row_indices[i]];
+        }
+    }
+    // Convert to features x samples (rows=features, cols=samples)
+    return X.t();
+}
+
+std::optional<arma::Row<size_t>> ML_Widget::_buildLabelsFromTable(std::shared_ptr<TableView> const & table,
+                                                                  std::string const & label_column,
+                                                                  std::vector<size_t> const & kept_row_indices) const {
+    if (!table || label_column.empty()) return std::nullopt;
+    auto & tv = *table;
+    auto & nonConst = const_cast<TableView &>(tv);
+    arma::Row<size_t> y(kept_row_indices.size());
+    auto ti = tv.getColumnTypeIndex(label_column);
+    if (ti == typeid(bool)) {
+        auto const & v = nonConst.getColumnValues<bool>(label_column);
+        if (v.size() < tv.getRowCount()) return std::nullopt;
+        for (size_t i = 0; i < kept_row_indices.size(); ++i) y(i) = v[kept_row_indices[i]] ? 1u : 0u;
+        return y;
+    } else if (ti == typeid(int)) {
+        auto const & v = nonConst.getColumnValues<int>(label_column);
+        if (v.size() < tv.getRowCount()) return std::nullopt;
+        bool asBinary = ui->label_binary_mode_checkbox && ui->label_binary_mode_checkbox->isChecked();
+        for (size_t i = 0; i < kept_row_indices.size(); ++i) {
+            int val = v[kept_row_indices[i]];
+            if (asBinary) y(i) = (val != 0) ? 1u : 0u;
+            else
+                y(i) = static_cast<size_t>(std::max(0, val));
+        }
+        return y;
+    }
+    return std::nullopt;
+}
+
+std::vector<size_t> ML_Widget::_applyMasksFromTable(std::shared_ptr<TableView> const & table,
+                                                    std::vector<std::string> const & mask_columns,
+                                                    std::vector<size_t> const & candidate_rows) const {
+    if (!table || mask_columns.empty()) return candidate_rows;
+    auto & tv = *table;
+    auto & nonConst = const_cast<TableView &>(tv);
+    std::vector<size_t> kept;
+    kept.reserve(candidate_rows.size());
+    for (size_t r: candidate_rows) {
+        bool keep = true;
+        for (auto const & name: mask_columns) {
+            auto ti = tv.getColumnTypeIndex(name);
+            if (ti == typeid(bool)) {
+                auto const & v = nonConst.getColumnValues<bool>(name);
+                if (r >= v.size() || !v[r]) {
+                    keep = false;
+                    break;
+                }
+            } else if (ti == typeid(int)) {
+                auto const & v = nonConst.getColumnValues<int>(name);
+                if (r >= v.size() || v[r] == 0) {
+                    keep = false;
+                    break;
+                }
+            } else {
+                // unsupported mask type -> ignore
+            }
+        }
+        if (keep) kept.push_back(r);
+    }
+    return kept;
 }
 
 void ML_Widget::closeEvent(QCloseEvent * event) {
@@ -225,26 +429,75 @@ void ML_Widget::_fitModel() {
     // Clear previous metrics at start of new fit
     _model_metrics_widget->clearMetrics();
 
-    std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> active_proc_features =
-            _feature_processing_widget->getActiveProcessedFeatures();
-
-    if (active_proc_features.empty() || _training_interval_key.isEmpty() || _selected_outcomes.empty()) {
-        std::cerr << "Please select features (and configure transformations), a training data interval, and outcomes" << std::endl;
-        return;
+    // New table-based path if a table is selected
+    auto * reg = _data_manager->getTableRegistry();
+    std::shared_ptr<TableView> table;
+    if (reg && !_selected_table_id.isEmpty()) {
+        table = reg->getBuiltTable(_selected_table_id);
     }
-
-    // Prepare training data
-    std::vector<std::size_t> training_timestamps;
     arma::Mat<double> feature_array;
-    arma::Mat<double> outcome_array;
+    arma::Row<size_t> labels;
+    std::vector<size_t> kept_rows;
+    // Declare legacy inputs outside branches so they can be reused for prediction
+    std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> active_proc_features;
+    std::vector<std::size_t> training_timestamps;
+    if (table) {
+        // collect selected columns
+        _selected_feature_columns.clear();
+        for (int i = 0; i < ui->feature_columns_list->count(); ++i) {
+            auto * item = ui->feature_columns_list->item(i);
+            if (item->checkState() == Qt::Checked) {
+                _selected_feature_columns.emplace_back(item->text().toStdString());
+            }
+        }
+        _selected_mask_columns.clear();
+        for (int i = 0; i < ui->mask_columns_list->count(); ++i) {
+            auto * item = ui->mask_columns_list->item(i);
+            if (item->checkState() == Qt::Checked) {
+                _selected_mask_columns.emplace_back(item->text().toStdString());
+            }
+        }
+        _selected_label_column = ui->label_column_combo->currentText().toStdString();
 
-    auto labels_opt = _prepareTrainingData(active_proc_features, training_timestamps, feature_array, outcome_array);
-    if (!labels_opt.has_value()) {
-        std::cerr << "Failed to prepare training data. Aborting fit." << std::endl;
-        return;
+        if (_selected_feature_columns.empty() || _selected_label_column.empty()) {
+            std::cerr << "Select at least one feature column and a label column from the table." << std::endl;
+            return;
+        }
+        // Build features
+        feature_array = _buildFeatureMatrixFromTable(table, _selected_feature_columns, kept_rows);
+        // Apply masks (post-drop) -> further filter kept_rows
+        kept_rows = _applyMasksFromTable(table, _selected_mask_columns, kept_rows);
+        // If masks removed rows, subselect the feature matrix columns accordingly
+        if (!kept_rows.empty() && kept_rows.size() != static_cast<size_t>(feature_array.n_cols)) {
+            arma::Mat<double> filtered(feature_array.n_rows, kept_rows.size());
+            for (size_t i = 0; i < kept_rows.size(); ++i) filtered.col(i) = feature_array.col(kept_rows[i]);
+            feature_array = std::move(filtered);
+        }
+        // Build labels aligned to kept_rows
+        auto labels_opt = _buildLabelsFromTable(table, _selected_label_column, kept_rows);
+        if (!labels_opt) {
+            std::cerr << "Failed to build labels from table." << std::endl;
+            return;
+        }
+        labels = *labels_opt;
+    } else {
+        // Legacy path using FeatureProcessingWidget
+        active_proc_features = _feature_processing_widget->getActiveProcessedFeatures();
+
+        if (active_proc_features.empty() || _training_interval_key.isEmpty() || _selected_outcomes.empty()) {
+            std::cerr << "Please select features (and configure transformations), a training data interval, and outcomes" << std::endl;
+            return;
+        }
+
+        // training_timestamps declared above
+        arma::Mat<double> outcome_array;
+        auto labels_opt = _prepareTrainingData(active_proc_features, training_timestamps, feature_array, outcome_array);
+        if (!labels_opt.has_value()) {
+            std::cerr << "Failed to prepare training data. Aborting fit." << std::endl;
+            return;
+        }
+        labels = labels_opt.value();
     }
-
-    arma::Row<size_t> labels = labels_opt.value();
 
     // Train the model
     arma::Mat<double> balanced_feature_array;
@@ -255,7 +508,7 @@ void ML_Widget::_fitModel() {
         return;
     }
 
-    // Predict on new data
+    // Predict on new data (table mode ignores these arguments)
     if (!_predictNewData(active_proc_features, training_timestamps)) {
         std::cerr << "Prediction on new data failed." << std::endl;
     }
@@ -290,7 +543,8 @@ std::optional<arma::Row<size_t>> ML_Widget::_prepareTrainingData(
     std::string feature_matrix_error;
     feature_array = _createFeatureMatrix(active_proc_features, training_timestamps, feature_matrix_error);
     if (!feature_matrix_error.empty()) {
-        std::cerr << "Error(s) creating feature matrix:\n" << feature_matrix_error << std::endl;
+        std::cerr << "Error(s) creating feature matrix:\n"
+                  << feature_matrix_error << std::endl;
     }
     if (feature_array.n_cols == 0) {
         std::cerr << "Feature array for training is empty or could not be created." << std::endl;
@@ -416,55 +670,79 @@ bool ML_Widget::_trainModel(arma::Mat<double> const & feature_array,
 bool ML_Widget::_predictNewData(std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & active_proc_features,
                                 std::vector<std::size_t> const & training_timestamps) {
 
-    // Determine prediction timestamps
-    int current_time_end_frame;
-    if (ui->predict_all_check->isChecked()) {
-        current_time_end_frame = _data_manager->getTime()->getTotalFrameCount();
+    // New table-based prediction if table is selected
+    auto * reg = _data_manager->getTableRegistry();
+    std::shared_ptr<TableView> table;
+    if (reg && !_selected_table_id.isEmpty()) table = reg->getBuiltTable(_selected_table_id);
+    arma::Mat<double> prediction_feature_array;
+    std::vector<std::size_t> prediction_timestamps; // legacy path only
+    std::vector<size_t> kept_rows;
+    if (table) {
+        // reuse previously selected feature/mask columns
+        if (_selected_feature_columns.empty()) {
+            std::cout << "No selected table feature columns; skipping prediction." << std::endl;
+            return true;
+        }
+        prediction_feature_array = _buildFeatureMatrixFromTable(table, _selected_feature_columns, kept_rows);
+        kept_rows = _applyMasksFromTable(table, _selected_mask_columns, kept_rows);
+        if (!kept_rows.empty() && kept_rows.size() != static_cast<size_t>(prediction_feature_array.n_cols)) {
+            arma::Mat<double> filtered(prediction_feature_array.n_rows, kept_rows.size());
+            for (size_t i = 0; i < kept_rows.size(); ++i) filtered.col(i) = prediction_feature_array.col(kept_rows[i]);
+            prediction_feature_array = std::move(filtered);
+        }
+        prediction_feature_array.replace(arma::datum::nan, 0.0);
     } else {
-        std::cout << "Prediction not set to predict all frames." << std::endl;
-        return true;
-    }
-    if (_data_manager->getTime()->getTotalFrameCount() == 0) current_time_end_frame = 0;
+        // legacy path
+        // Determine prediction timestamps
+        int current_time_end_frame;
+        if (ui->predict_all_check->isChecked()) {
+            current_time_end_frame = _data_manager->getTime()->getTotalFrameCount();
+        } else {
+            std::cout << "Prediction not set to predict all frames." << std::endl;
+            return true;
+        }
+        if (_data_manager->getTime()->getTotalFrameCount() == 0) current_time_end_frame = 0;
 
-    std::vector<std::size_t> prediction_timestamps;
-    if (current_time_end_frame > 0) {
-        std::unordered_set<std::size_t> train_ts_set(training_timestamps.begin(), training_timestamps.end());
-        for (std::size_t i = 0; i < static_cast<std::size_t>(current_time_end_frame); ++i) {
-            if (train_ts_set.find(i) == train_ts_set.end()) {
-                prediction_timestamps.push_back(i);
+        if (current_time_end_frame > 0) {
+            std::unordered_set<std::size_t> train_ts_set(training_timestamps.begin(), training_timestamps.end());
+            for (std::size_t i = 0; i < static_cast<std::size_t>(current_time_end_frame); ++i) {
+                if (train_ts_set.find(i) == train_ts_set.end()) {
+                    prediction_timestamps.push_back(i);
+                }
             }
         }
-    }
 
-    if (prediction_timestamps.empty()) {
-        std::cout << "No frames identified for prediction." << std::endl;
-        return true; // Not an error condition
-    }
+        if (prediction_timestamps.empty()) {
+            std::cout << "No frames identified for prediction." << std::endl;
+            return true;// Not an error condition
+        }
 
-    std::cout << "Number of prediction timestamps: " << prediction_timestamps.size()
-              << " (Range: " << prediction_timestamps.front() << " to " << prediction_timestamps.back() << ")" << std::endl;
+        std::cout << "Number of prediction timestamps: " << prediction_timestamps.size()
+                  << " (Range: " << prediction_timestamps.front() << " to " << prediction_timestamps.back() << ")" << std::endl;
 
-    // Create feature matrix for prediction
-    std::string pred_feature_matrix_error;
-    arma::Mat<double> prediction_feature_array = _createFeatureMatrix(
-            active_proc_features, prediction_timestamps, pred_feature_matrix_error);
+        // Create feature matrix for prediction
+        std::string pred_feature_matrix_error;
+        prediction_feature_array = _createFeatureMatrix(
+                active_proc_features, prediction_timestamps, pred_feature_matrix_error);
 
-    if (!pred_feature_matrix_error.empty()) {
-        std::cerr << "Error(s) creating prediction feature matrix:\n" << pred_feature_matrix_error << std::endl;
-    }
+        if (!pred_feature_matrix_error.empty()) {
+            std::cerr << "Error(s) creating prediction feature matrix:\n"
+                      << pred_feature_matrix_error << std::endl;
+        }
 
-    std::cout << "The prediction mask nan values: " << prediction_feature_array.has_nan() << std::endl;
-    prediction_feature_array.replace(arma::datum::nan, 0.0); // Prediction fails if there is a NaN value
-    std::cout << "After nan replacement: " << prediction_feature_array.has_nan() << std::endl;
+        std::cout << "The prediction mask nan values: " << prediction_feature_array.has_nan() << std::endl;
+        prediction_feature_array.replace(arma::datum::nan, 0.0);// Prediction fails if there is a NaN value
+        std::cout << "After nan replacement: " << prediction_feature_array.has_nan() << std::endl;
 
-    // Apply z-score normalization if enabled
-    if (_feature_processing_widget->isZScoreNormalizationEnabled()) {
-        prediction_feature_array = _zScoreNormalizeFeatures(prediction_feature_array, active_proc_features);
-    }
+        // Apply z-score normalization if enabled
+        if (_feature_processing_widget->isZScoreNormalizationEnabled()) {
+            prediction_feature_array = _zScoreNormalizeFeatures(prediction_feature_array, active_proc_features);
+        }
 
-    if (prediction_feature_array.n_cols == 0) {
-        std::cout << "No features to predict for the selected prediction timestamps (prediction_feature_array is empty)." << std::endl;
-        return true; // Not an error condition
+        if (prediction_feature_array.n_cols == 0) {
+            std::cout << "No features to predict (prediction_feature_array is empty)." << std::endl;
+            return true;
+        }
     }
 
     // Make predictions
@@ -485,13 +763,34 @@ bool ML_Widget::_predictNewData(std::vector<FeatureProcessingWidget::ProcessedFe
         std::cout << "Prediction vector on new data is empty." << std::endl;
     }
 
-    for (auto const & key: _selected_outcomes) {
-        auto outcome_series = _data_manager->getData<DigitalIntervalSeries>(key);
-        if (outcome_series) {
-            outcome_series->setEventsAtTimes(prediction_timestamps, prediction_vec);
-            std::cout << "Predictions applied to outcome series: " << key << std::endl;
+    // Apply predictions to a selected series or outcome
+    // If table path used, we map predicted rows to timeframe indices via row descriptors
+    if (table) {
+        std::vector<std::size_t> tf_indices;
+        tf_indices.reserve(kept_rows.size());
+        for (size_t colIdx = 0; colIdx < kept_rows.size(); ++colIdx) {
+            auto desc = table->getRowDescriptor(kept_rows[colIdx]);
+            if (auto t = std::get_if<TimeFrameIndex>(&desc)) {
+                tf_indices.push_back(static_cast<std::size_t>(t->getValue()));
+            }
+        }
+        auto target = ui->prediction_target_combo->currentText().toStdString();
+        auto outcome_series = _data_manager->getData<DigitalIntervalSeries>(target);
+        if (outcome_series && tf_indices.size() == prediction_vec.size()) {
+            outcome_series->setEventsAtTimes(tf_indices, prediction_vec);
+            std::cout << "Predictions applied to outcome series: " << target << std::endl;
         } else {
-            std::cerr << "Could not get outcome series '" << key << "' to apply predictions." << std::endl;
+            std::cerr << "Could not apply predictions (target not found or size mismatch)." << std::endl;
+        }
+    } else {
+        for (auto const & key: _selected_outcomes) {
+            auto outcome_series = _data_manager->getData<DigitalIntervalSeries>(key);
+            if (outcome_series) {
+                outcome_series->setEventsAtTimes(prediction_timestamps, prediction_vec);
+                std::cout << "Predictions applied to outcome series: " << key << std::endl;
+            } else {
+                std::cerr << "Could not get outcome series '" << key << "' to apply predictions." << std::endl;
+            }
         }
     }
 
@@ -701,9 +1000,9 @@ arma::Mat<double> ML_Widget::_removeNaNColumns(arma::Mat<double> const & matrix,
     if (matrix.empty() || timestamps.empty()) {
         return matrix;
     }
-    
+
     std::vector<arma::uword> valid_columns;
-    
+
     // Check each column for NaN values
     for (arma::uword col = 0; col < matrix.n_cols; ++col) {
         bool has_nan = false;
@@ -717,58 +1016,58 @@ arma::Mat<double> ML_Widget::_removeNaNColumns(arma::Mat<double> const & matrix,
             valid_columns.push_back(col);
         }
     }
-    
+
     size_t original_cols = matrix.n_cols;
     size_t removed_cols = original_cols - valid_columns.size();
-    
+
     if (removed_cols > 0) {
-        std::cout << "Removed " << removed_cols << " timestamp columns containing NaN values out of " 
-                  << original_cols << " total columns (" 
+        std::cout << "Removed " << removed_cols << " timestamp columns containing NaN values out of "
+                  << original_cols << " total columns ("
                   << (100.0 * removed_cols / original_cols) << "% removed)" << std::endl;
     }
-    
+
     if (valid_columns.empty()) {
         std::cout << "Warning: All columns contained NaN values. Returning empty matrix." << std::endl;
         timestamps.clear();
         return arma::Mat<double>();
     }
-    
+
     // Create new matrix with only valid columns
     arma::Mat<double> cleaned_matrix(matrix.n_rows, valid_columns.size());
     std::vector<std::size_t> cleaned_timestamps;
-    
+
     for (size_t i = 0; i < valid_columns.size(); ++i) {
         cleaned_matrix.col(i) = matrix.col(valid_columns[i]);
         cleaned_timestamps.push_back(timestamps[valid_columns[i]]);
     }
-    
+
     timestamps = cleaned_timestamps;
     return cleaned_matrix;
 }
 
-arma::Mat<double> ML_Widget::_zScoreNormalizeFeatures(arma::Mat<double> const & matrix, 
-        std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features) const {
+arma::Mat<double> ML_Widget::_zScoreNormalizeFeatures(arma::Mat<double> const & matrix,
+                                                      std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features) const {
     if (matrix.empty()) {
         return matrix;
     }
-    
+
     arma::Mat<double> normalized_matrix = matrix;
     arma::uword current_row = 0;
-    
-    for (auto const & p_feature : processed_features) {
+
+    for (auto const & p_feature: processed_features) {
         std::string base_key = p_feature.base_feature_key;
         DM_DataType data_type = _data_manager->getType(base_key);
-        
+
         // Skip normalization for DigitalInterval features (binary)
         bool skip_normalization = (data_type == DM_DataType::DigitalInterval);
-        
+
         // Determine how many rows this feature contributes
-        arma::uword feature_rows = 1; // Default for most features
-        
+        arma::uword feature_rows = 1;// Default for most features
+
         if (data_type == DM_DataType::Points) {
             auto point_data = _data_manager->getData<PointData>(base_key);
             if (point_data) {
-                feature_rows = point_data->getMaxPoints() * 2; // x,y coordinates
+                feature_rows = point_data->getMaxPoints() * 2;// x,y coordinates
             }
         } else if (data_type == DM_DataType::Tensor) {
             auto tensor_data = _data_manager->getData<TensorData>(base_key);
@@ -777,38 +1076,38 @@ arma::Mat<double> ML_Widget::_zScoreNormalizeFeatures(arma::Mat<double> const & 
                 feature_rows = std::accumulate(feature_shape.begin(), feature_shape.end(), 1, std::multiplies<>());
             }
         }
-        
+
         // Apply lag/lead multiplier if applicable
         if (p_feature.transformation.type == WhiskerTransformations::TransformationType::LagLead) {
-            if (auto* ll_params = std::get_if<WhiskerTransformations::LagLeadParams>(&p_feature.transformation.params)) {
+            if (auto * ll_params = std::get_if<WhiskerTransformations::LagLeadParams>(&p_feature.transformation.params)) {
                 int num_shifts = ll_params->max_lead_steps - ll_params->min_lag_steps + 1;
                 feature_rows *= num_shifts;
             }
         }
-        
+
         if (!skip_normalization) {
             // Normalize each row (feature) separately
             for (arma::uword row = current_row; row < current_row + feature_rows; ++row) {
                 if (row < normalized_matrix.n_rows) {
                     arma::rowvec feature_row = normalized_matrix.row(row);
-                    
+
                     // Check if this row has any finite values
                     arma::uvec finite_indices = arma::find_finite(feature_row);
-                    if (finite_indices.n_elem > 1) { // Need at least 2 values for std calculation
+                    if (finite_indices.n_elem > 1) {// Need at least 2 values for std calculation
                         double mean_val = arma::mean(feature_row(finite_indices));
                         double std_val = arma::stddev(feature_row(finite_indices));
-                        
-                        if (std_val > 1e-10) { // Avoid division by zero
+
+                        if (std_val > 1e-10) {// Avoid division by zero
                             normalized_matrix.row(row) = (feature_row - mean_val) / std_val;
                         }
                     }
                 }
             }
         }
-        
+
         current_row += feature_rows;
     }
-    
+
     return normalized_matrix;
 }
 
