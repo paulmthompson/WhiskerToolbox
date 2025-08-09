@@ -5,6 +5,8 @@
 
 #include <memory>
 
+namespace ads { class CDockManager; }
+
 class AbstractPlotOrganizer;
 class DataManager;
 class GroupCoordinator;
@@ -31,8 +33,16 @@ class Analysis_Dashboard : public QMainWindow {
     Q_OBJECT
 
 public:
+    /**
+     * @brief Construct the Analysis Dashboard
+     * @param data_manager Shared data manager
+     * @param time_scrollbar Global time scrollbar
+     * @param dock_manager Global dock manager (plots will be added as docks)
+     * @param parent Parent widget
+     */
     explicit Analysis_Dashboard(std::shared_ptr<DataManager> data_manager,
                                 TimeScrollBar * time_scrollbar,
+                                ads::CDockManager * dock_manager,
                                 QWidget * parent = nullptr);
     ~Analysis_Dashboard() override;
 
@@ -97,6 +107,7 @@ private:
     std::unique_ptr<GroupManager> _group_manager;
     std::unique_ptr<GroupCoordinator> _group_coordinator;
     TimeScrollBar * _time_scrollbar;
+    ads::CDockManager * _dock_manager;
 
     // Main panels
     ToolboxPanel * _toolbox_panel;

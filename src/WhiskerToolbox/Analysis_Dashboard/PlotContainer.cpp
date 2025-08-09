@@ -25,6 +25,8 @@ PlotContainer::PlotContainer(std::unique_ptr<AbstractPlotWidget> plot_widget,
     connectInternalSignals();
 }
 
+PlotContainer::~PlotContainer() = default;
+
 
 QString PlotContainer::getPlotId() const
 {

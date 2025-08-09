@@ -31,6 +31,12 @@ set(ANALYSIS_DASHBOARD_SOURCES
     PlotOrganizers/AbstractPlotOrganizer.hpp
     PlotOrganizers/GraphicsScenePlotOrganizer.hpp
     PlotOrganizers/GraphicsScenePlotOrganizer.cpp
+    PlotOrganizers/DockingPlotOrganizer.hpp
+    PlotOrganizers/DockingPlotOrganizer.cpp
+    PlotOrganizers/PlotDockWidget.hpp
+    PlotOrganizers/PlotDockWidget.cpp
+    PlotOrganizers/PlotDockWidgetContent.hpp
+    PlotOrganizers/PlotDockWidgetContent.cpp
 
     # Groups
     Groups/GroupManager.hpp
@@ -134,6 +140,7 @@ target_link_libraries(Analysis_Dashboard PRIVATE
     Qt6::OpenGLWidgets 
     Qt6::OpenGL
 )
+target_link_libraries(Analysis_Dashboard PRIVATE qt6advanceddocking)
 
 target_link_libraries(Analysis_Dashboard PRIVATE TimeScrollBar)
 target_link_libraries(Analysis_Dashboard PRIVATE DataManager)

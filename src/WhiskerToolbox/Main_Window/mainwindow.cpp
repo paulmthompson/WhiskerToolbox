@@ -296,6 +296,10 @@ void MainWindow::showDockWidget(std::string const & key) {
     _m_DockManager->findDockWidget(QString::fromStdString(key))->toggleView();
 }
 
+ads::CDockWidget * MainWindow::findDockWidget(std::string const & key) const {
+    return _m_DockManager->findDockWidget(QString::fromStdString(key));
+}
+
 void MainWindow::openTongueTracking() {
     std::string const key = "tongue_widget";
 
@@ -671,6 +675,7 @@ void MainWindow::openAnalysisDashboard() {
         auto analysis_dashboard_widget = std::make_unique<Analysis_Dashboard>(
                 _data_manager,
                 ui->time_scrollbar,
+                _m_DockManager,
                 this);
 
         analysis_dashboard_widget->setObjectName(key);

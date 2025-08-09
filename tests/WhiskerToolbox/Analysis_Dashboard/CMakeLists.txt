@@ -38,6 +38,7 @@ set_target_properties(AnalysisDashboardTests PROPERTIES
 target_link_libraries(AnalysisDashboardTests 
     PRIVATE 
     Analysis_Dashboard
+    qt6advanceddocking
     DataManager
     TimeScrollBar
     ShaderManager

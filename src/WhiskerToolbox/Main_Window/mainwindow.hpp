@@ -41,6 +41,19 @@ public:
     void registerDockWidget(std::string const & key, QWidget * widget, ads::DockWidgetArea area);
     void showDockWidget(std::string const & key);
 
+    /**
+     * @brief Access the global dock manager used by the application
+     * @return Pointer to the ads::CDockManager managing docks
+     */
+    ads::CDockManager * dockManager() const { return _m_DockManager; }
+
+    /**
+     * @brief Find the ADS dock widget by key
+     * @param key Dock key used at registration
+     * @return Pointer to the dock widget or nullptr if not found
+     */
+    ads::CDockWidget * findDockWidget(std::string const & key) const;
+
     void processLoadedData(std::vector<DataInfo> const & data_info);
 
 

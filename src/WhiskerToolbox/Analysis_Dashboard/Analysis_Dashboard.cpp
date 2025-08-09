@@ -6,6 +6,7 @@
 #include "DataManager/DataManager.hpp"
 #include "PlotOrganizers/AbstractPlotOrganizer.hpp"
 #include "PlotOrganizers/GraphicsScenePlotOrganizer.hpp"
+#include "PlotOrganizers/DockingPlotOrganizer.hpp"
 #include "Groups/GroupCoordinator.hpp"
 #include "PlotContainer.hpp"
 #include "PlotFactory.hpp"
@@ -15,6 +16,7 @@
 #include "Properties/PropertiesPanel.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "Toolbox/ToolboxPanel.hpp"
+#include "Main_Window/mainwindow.hpp"
 
 #include <QDebug>
 #include <QGraphicsView>
@@ -26,6 +28,7 @@
 
 Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager,
                                        TimeScrollBar * time_scrollbar,
+                                       ads::CDockManager * dock_manager,
                                        QWidget * parent)
     : QMainWindow(parent),
       ui(new Ui::Analysis_Dashboard),
@@ -33,6 +36,7 @@ Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager
       _group_manager(std::make_unique<GroupManager>(this)),
       _group_coordinator(nullptr),
       _time_scrollbar(time_scrollbar),
+      _dock_manager(dock_manager),
       _toolbox_panel(nullptr),
       _properties_panel(nullptr),
       _plot_organizer(nullptr),
@@ -56,8 +60,8 @@ void Analysis_Dashboard::initializeDashboard() {
     _toolbox_panel = new ToolboxPanel(_group_manager.get(), _data_manager, this);
     _properties_panel = new PropertiesPanel(this);
     
-    // Create the plot organizer (using GraphicsScene implementation for now)
-    _plot_organizer = std::make_unique<GraphicsScenePlotOrganizer>(this);
+    // Create the plot organizer using the forwarded dock manager
+    _plot_organizer = std::make_unique<DockingPlotOrganizer>(_dock_manager, this);
 
     // Create the group coordinator for cross-plot highlighting
     _group_coordinator = std::make_unique<GroupCoordinator>(_group_manager.get(), this);

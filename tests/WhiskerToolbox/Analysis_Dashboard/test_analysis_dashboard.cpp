@@ -8,6 +8,7 @@
 #include "ShaderManager/ShaderManager.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 
+#include "DockManager.h"
 #include <QApplication>
 #include <QTimer>
 #include <QTest>
@@ -203,8 +204,10 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Basic Creation", "[Analysi
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
+    // Create the global dock manager for tests
+    ads::CDockManager dock_manager;
     // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar);
+    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Test that the dashboard can be shown (this tests widget creation)
@@ -234,8 +237,10 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Data Manager Integration",
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
+    // Create the global dock manager for tests
+    ads::CDockManager dock_manager;
     // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar);
+    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Test that the data is accessible through the data manager directly
@@ -256,8 +261,9 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Widget Lifecycle", "[Analy
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
+    ads::CDockManager dock_manager;
     // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar);
+    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Test widget lifecycle
@@ -300,8 +306,9 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Component Access", "[Analy
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
+    ads::CDockManager dock_manager;
     // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar);
+    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Test that we can access the group manager
@@ -321,8 +328,9 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Event Processing", "[Analy
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
+    ads::CDockManager dock_manager;
     // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar);
+    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Show the dashboard
@@ -363,7 +371,8 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Memory Management", "[Anal
     
     // Create dashboard in a scope to test destruction
     {
-        Analysis_Dashboard dashboard(data_manager, time_scrollbar);
+        ads::CDockManager dock_manager;
+        Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
         REQUIRE(&dashboard != nullptr);
         
         dashboard.show();
@@ -383,7 +392,8 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Null Data Manager", "[Anal
     REQUIRE(time_scrollbar != nullptr);
     
     // Create dashboard with null data manager
-    Analysis_Dashboard dashboard(nullptr, time_scrollbar);
+    ads::CDockManager dock_manager;
+    Analysis_Dashboard dashboard(nullptr, time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Dashboard should still be created successfully
@@ -405,8 +415,9 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Multiple Instances", "[Ana
     REQUIRE(time_scrollbar2 != nullptr);
     
     // Create two dashboard instances
-    Analysis_Dashboard dashboard1(data_manager, time_scrollbar1);
-    Analysis_Dashboard dashboard2(data_manager, time_scrollbar2);
+    ads::CDockManager dock_manager;
+    Analysis_Dashboard dashboard1(data_manager, time_scrollbar1, &dock_manager);
+    Analysis_Dashboard dashboard2(data_manager, time_scrollbar2, &dock_manager);
     
     REQUIRE(&dashboard1 != nullptr);
     REQUIRE(&dashboard2 != nullptr);
@@ -450,7 +461,8 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - ShaderManager Integration"
     REQUIRE(time_scrollbar != nullptr);
     
     // Create the analysis dashboard (this should work with ShaderManager initialized)
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar);
+    ads::CDockManager dock_manager;
+    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Test that the dashboard can be shown (this tests widget creation with OpenGL)
