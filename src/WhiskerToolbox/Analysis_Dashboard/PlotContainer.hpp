@@ -27,7 +27,11 @@ public:
                           std::unique_ptr<AbstractPlotPropertiesWidget> properties_widget,
                           QObject* parent = nullptr);
     
-    ~PlotContainer() override = default;
+    /**
+     * @brief Destructor
+     * @post Ensures proper destruction of owned plot and properties widgets
+     */
+    ~PlotContainer() override;
 
     /**
      * @brief Get the plot widget

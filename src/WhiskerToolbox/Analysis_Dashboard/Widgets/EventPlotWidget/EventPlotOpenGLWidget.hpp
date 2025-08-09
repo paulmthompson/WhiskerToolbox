@@ -120,6 +120,12 @@ public:
      */
     void setPointSize(float point_size);
 
+    /**
+     * @brief Apply per-row color indices (palette indices) to all events in each trial
+     * @param row_color_indices Size must equal number of trials in current data
+     */
+    void setRowColorIndices(std::vector<uint32_t> const & row_color_indices);
+
     enum class PlotTheme {
         Dark,
         Light
@@ -234,6 +240,7 @@ private:
 
     // Event data
     std::vector<std::vector<float>> _event_data;
+    std::vector<uint32_t> _row_color_indices;
     
     // Legacy members (kept for compatibility but may be removed)
     std::vector<float> _vertex_data;
@@ -302,6 +309,7 @@ private:
      * @brief Update vertex data from event data
      */
     void updateVertexData();
+    void applyRowColorIndicesIfReady();
 
     /**
      * @brief Process hover detection with debouncing (improved version)

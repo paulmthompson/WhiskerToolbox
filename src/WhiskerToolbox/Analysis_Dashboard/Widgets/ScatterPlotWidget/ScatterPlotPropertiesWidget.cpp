@@ -9,6 +9,8 @@
 #include "DataManager/utils/TableView/core/TableView.h"
 #include "ScatterPlotOpenGLWidget.hpp"
 #include "ui_ScatterPlotPropertiesWidget.h"
+#include "Analysis_Dashboard/DataView/Transforms/FilterByRangeTransform.hpp"
+#include "Analysis_Dashboard/DataView/Transforms/ColorByFeatureTransform.hpp"
 
 #include <QCheckBox>
 #include <QColorDialog>
@@ -95,6 +97,11 @@ void ScatterPlotPropertiesWidget::applyToPlot() {
     _applying_properties = true;
     updatePlotWidget();
     _applying_properties = false;
+}
+
+void ScatterPlotPropertiesWidget::rebuildPipeline() {
+    _pipeline.clear();
+    // TODO: Add UI controls similar to EventPlot for filter/color and build transforms here
 }
 
 void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
@@ -379,6 +386,33 @@ void ScatterPlotPropertiesWidget::updatePlotWidget() {
         y_data.resize(min_size);
         _x_data.resize(min_size);
         _y_data.resize(min_size);
+    }
+
+    // Apply pipeline row-level mask and color (if configured)
+    if (_data_manager) {
+        auto * registry = _data_manager->getTableRegistry();
+        if (registry) {
+            DataViewContext ctx;
+            ctx.tableId = ""; // not table-backed by default; pipeline can still color via selected table
+            ctx.tableView = nullptr;
+            ctx.tableRegistry = registry;
+            ctx.rowCount = std::min(x_data.size(), y_data.size());
+            auto state = _pipeline.evaluate(ctx);
+            if (!state.rowMask.empty()) {
+                std::vector<float> xf, yf;
+                xf.reserve(ctx.rowCount);
+                yf.reserve(ctx.rowCount);
+                for (size_t i = 0; i < ctx.rowCount; ++i) {
+                    if (i < state.rowMask.size() ? state.rowMask[i] != 0 : true) {
+                        xf.push_back(x_data[i]);
+                        yf.push_back(y_data[i]);
+                    }
+                }
+                x_data.swap(xf);
+                y_data.swap(yf);
+            }
+            // TODO: propagate state.rowColorIndices to Scatter visualization when per-point API is exposed
+        }
     }
 
     // Update the scatter plot widget if available

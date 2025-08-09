@@ -17,6 +17,14 @@
 #include <QRadioButton>
 
 #include <memory>
+#include <optional>
+#include <algorithm>
+#include <numeric>
+#include <cmath>
+
+#include "Analysis_Dashboard/DataView/Transforms/SortByColumnTransform.hpp"
+#include "Analysis_Dashboard/DataView/Transforms/FilterByRangeTransform.hpp"
+#include "Analysis_Dashboard/DataView/Transforms/ColorByFeatureTransform.hpp"
 
 EventPlotPropertiesWidget::EventPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
@@ -36,6 +44,7 @@ void EventPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data
     _data_manager = std::move(data_manager);
     updateAvailableTables();
     updateAvailableDataSources();
+    updateAvailableSortColumns();
 }
 
 void EventPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
@@ -247,6 +256,62 @@ void EventPlotPropertiesWidget::setupConnections() {
         connect(ui->capture_range_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
                 this, &EventPlotPropertiesWidget::onCaptureRangeChanged);
     }
+
+    // Sorting controls
+    if (ui->sorting_enabled_checkbox) {
+        connect(ui->sorting_enabled_checkbox, &QCheckBox::toggled,
+                this, &EventPlotPropertiesWidget::onSortingToggled);
+    }
+    if (ui->sort_primary_combo) {
+        connect(ui->sort_primary_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::onSortingChanged);
+    }
+    if (ui->sort_secondary_combo) {
+        connect(ui->sort_secondary_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::onSortingChanged);
+    }
+    if (ui->sort_order_combo) {
+        connect(ui->sort_order_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::onSortingChanged);
+        ui->sort_order_combo->setCurrentIndex(0); // Ascending default
+    }
+
+    // Filter controls
+    if (ui->filter_enabled_checkbox) {
+        connect(ui->filter_enabled_checkbox, &QCheckBox::toggled, this, &EventPlotPropertiesWidget::onFilterToggled);
+    }
+    if (ui->filter_column_combo) {
+        connect(ui->filter_column_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &EventPlotPropertiesWidget::onFilterChanged);
+    }
+    if (ui->filter_comparator_combo) {
+        connect(ui->filter_comparator_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &EventPlotPropertiesWidget::onFilterChanged);
+    }
+    if (ui->filter_value_spin) {
+        connect(ui->filter_value_spin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &EventPlotPropertiesWidget::onFilterChanged);
+    }
+
+    // Color controls
+    if (ui->color_enabled_checkbox) {
+        connect(ui->color_enabled_checkbox, &QCheckBox::toggled, this, &EventPlotPropertiesWidget::onColorToggled);
+    }
+    if (ui->color_column_combo) {
+        connect(ui->color_column_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &EventPlotPropertiesWidget::onColorChanged);
+    }
+    if (ui->color_mode_combo) {
+        connect(ui->color_mode_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &EventPlotPropertiesWidget::onColorChanged);
+    }
+    if (ui->color_false_spin) {
+        connect(ui->color_false_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, &EventPlotPropertiesWidget::onColorChanged);
+    }
+    if (ui->color_true_spin) {
+        connect(ui->color_true_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, &EventPlotPropertiesWidget::onColorChanged);
+    }
+    if (ui->color_min_spin) {
+        connect(ui->color_min_spin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &EventPlotPropertiesWidget::onColorChanged);
+    }
+    if (ui->color_max_spin) {
+        connect(ui->color_max_spin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &EventPlotPropertiesWidget::onColorChanged);
+    }
 }
 
 void EventPlotPropertiesWidget::setupYAxisFeatureTable() {
@@ -434,6 +499,26 @@ void EventPlotPropertiesWidget::updateViewBoundsLabels() {
 
 void EventPlotPropertiesWidget::onTableSelectionChanged() {
     updateAvailableColumns();
+    updateAvailableSortColumns();
+    // Populate filter/color combos with same column list
+    if (ui->filter_column_combo) {
+        ui->filter_column_combo->clear();
+        ui->filter_column_combo->addItem("Select column...", "");
+        if (ui->sort_primary_combo) {
+            for (int i = 1; i < ui->sort_primary_combo->count(); ++i) {
+                ui->filter_column_combo->addItem(ui->sort_primary_combo->itemText(i), ui->sort_primary_combo->itemData(i));
+            }
+        }
+    }
+    if (ui->color_column_combo) {
+        ui->color_column_combo->clear();
+        ui->color_column_combo->addItem("Select column...", "");
+        if (ui->sort_primary_combo) {
+            for (int i = 1; i < ui->sort_primary_combo->count(); ++i) {
+                ui->color_column_combo->addItem(ui->sort_primary_combo->itemText(i), ui->sort_primary_combo->itemData(i));
+            }
+        }
+    }
     updatePlotWidget();
 }
 
@@ -481,8 +566,8 @@ void EventPlotPropertiesWidget::updateAvailableTables() {
     ui->table_combo->clear();
     ui->table_combo->addItem("Select a table...", "");
 
-    auto * registry = _data_manager->getTableRegistry();
-    auto table_ids = registry ? registry->getTableIds() : std::vector<QString>{};
+    auto * regTables = _data_manager->getTableRegistry();
+    auto table_ids = regTables ? regTables->getTableIds() : std::vector<QString>{};
 
     if (table_ids.empty()) {
         ui->table_combo->addItem("No tables available", "");
@@ -496,6 +581,7 @@ void EventPlotPropertiesWidget::updateAvailableTables() {
 
     // Update columns for the first valid table if any
     updateAvailableColumns();
+    updateAvailableSortColumns();
 }
 
 void EventPlotPropertiesWidget::updateAvailableColumns() {
@@ -511,8 +597,8 @@ void EventPlotPropertiesWidget::updateAvailableColumns() {
         return;
     }
 
-    auto * registry = _data_manager->getTableRegistry();
-    auto table_view = registry->getBuiltTable(selected_table_id);
+    auto * regA = _data_manager->getTableRegistry();
+    auto table_view = regA->getBuiltTable(selected_table_id);
     if (!table_view) {
         ui->column_combo->addItem("Table not built", "");
         return;
@@ -522,6 +608,167 @@ void EventPlotPropertiesWidget::updateAvailableColumns() {
     for (const auto& column_name : column_names) {
         QString qname = QString::fromStdString(column_name);
         ui->column_combo->addItem(qname, qname);
+    }
+}
+
+void EventPlotPropertiesWidget::updateAvailableSortColumns() {
+    if (!_data_manager) return;
+    if (!ui->sort_primary_combo || !ui->sort_secondary_combo) return;
+
+    ui->sort_primary_combo->clear();
+    ui->sort_secondary_combo->clear();
+
+    ui->sort_primary_combo->addItem("Select column...", "");
+    ui->sort_secondary_combo->addItem("None", "");
+
+    auto * regB = _data_manager->getTableRegistry();
+    if (!regB) return;
+
+    // Row count should match the selected table
+    QString base_table_id = getSelectedTableId();
+    if (base_table_id.isEmpty()) return;
+    auto base_view = regB->getBuiltTable(base_table_id);
+    if (!base_view) return;
+    size_t row_count = base_view->getRowCount();
+
+    auto table_ids = regB->getTableIds();
+    for (auto const & table_id : table_ids) {
+        auto view = regB->getBuiltTable(table_id);
+        if (!view) continue;
+        if (view->getRowCount() != row_count) continue; // must match rows
+
+        auto column_names = view->getColumnNames();
+        for (auto const & column_name : column_names) {
+            // Only scalar numeric elemental types: float, double, int, bool
+            try {
+                auto idx = view->getColumnTypeIndex(column_name);
+                bool is_scalar_numeric = (idx == typeid(float) || idx == typeid(double) || idx == typeid(int) || idx == typeid(bool));
+                if (!is_scalar_numeric) continue;
+            } catch (...) {
+                continue;
+            }
+            
+
+            QString label = QString("%1.%2").arg(table_id).arg(QString::fromStdString(column_name));
+            QString key = QString("table:%1:%2").arg(table_id).arg(QString::fromStdString(column_name));
+            ui->sort_primary_combo->addItem(label, key);
+            ui->sort_secondary_combo->addItem(label, key);
+        }
+    }
+}
+
+std::pair<QString, QString> EventPlotPropertiesWidget::parseSortKey(QString const & key) {
+    if (!key.startsWith("table:")) return {QString(), QString()};
+    auto parts = key.split(":");
+    if (parts.size() < 3) return {QString(), QString()};
+    QString table_id = parts.value(1);
+    // column name may include ':' in theory; join remainder
+    QString column_name = parts.mid(2).join(":");
+    return {table_id, column_name};
+}
+
+// removed local helpers in favor of shared pipeline
+
+void EventPlotPropertiesWidget::onSortingToggled(bool enabled) {
+    _sorting_enabled = enabled;
+    rebuildPipeline();
+    onSortingChanged();
+}
+
+void EventPlotPropertiesWidget::onSortingChanged() {
+    if (ui->sort_primary_combo) _sort_primary_key = ui->sort_primary_combo->currentData().toString();
+    if (ui->sort_secondary_combo) _sort_secondary_key = ui->sort_secondary_combo->currentData().toString();
+    if (ui->sort_order_combo) _sort_order_index = ui->sort_order_combo->currentIndex();
+    rebuildPipeline();
+    if (!_applying_properties) updatePlotWidget();
+}
+
+void EventPlotPropertiesWidget::onFilterToggled(bool enabled) {
+    Q_UNUSED(enabled)
+    rebuildPipeline();
+    if (!_applying_properties) updatePlotWidget();
+}
+
+void EventPlotPropertiesWidget::onFilterChanged() {
+    rebuildPipeline();
+    if (!_applying_properties) updatePlotWidget();
+}
+
+void EventPlotPropertiesWidget::onColorToggled(bool enabled) {
+    Q_UNUSED(enabled)
+    rebuildPipeline();
+    if (!_applying_properties) updatePlotWidget();
+}
+
+void EventPlotPropertiesWidget::onColorChanged() {
+    rebuildPipeline();
+    if (!_applying_properties) updatePlotWidget();
+}
+
+void EventPlotPropertiesWidget::rebuildPipeline() {
+    _pipeline.clear();
+    // Filter first
+    if (ui->filter_enabled_checkbox && ui->filter_enabled_checkbox->isChecked()) {
+        if (ui->filter_column_combo && !ui->filter_column_combo->currentData().toString().isEmpty()) {
+            auto filter = std::make_unique<FilterByRangeTransform>();
+            auto [ftid, fcol] = parseSortKey(ui->filter_column_combo->currentData().toString());
+            filter->tableId = ftid;
+            filter->columnName = fcol;
+            int cmpIdx = ui->filter_comparator_combo ? ui->filter_comparator_combo->currentIndex() : 2; // default '>'
+            switch (cmpIdx) {
+                case 0: filter->comparator = FilterByRangeTransform::Comparator::LT; break;
+                case 1: filter->comparator = FilterByRangeTransform::Comparator::LE; break;
+                case 2: filter->comparator = FilterByRangeTransform::Comparator::GT; break;
+                case 3: filter->comparator = FilterByRangeTransform::Comparator::GE; break;
+                case 4: filter->comparator = FilterByRangeTransform::Comparator::EQ; break;
+                case 5: filter->comparator = FilterByRangeTransform::Comparator::NE; break;
+                default: filter->comparator = FilterByRangeTransform::Comparator::GT; break;
+            }
+            filter->value = ui->filter_value_spin ? ui->filter_value_spin->value() : 0.0;
+            _pipeline.addTransform(std::move(filter));
+        }
+    }
+    if (_sorting_enabled) {
+        auto sort = std::make_unique<SortByColumnTransform>();
+        // Parse primary
+        if (!ui->sort_primary_combo || ui->sort_primary_combo->currentData().toString().isEmpty()) {
+            // no-op
+        } else {
+            auto [ptid, pcol] = parseSortKey(ui->sort_primary_combo->currentData().toString());
+            sort->tableIdPrimary = ptid;
+            sort->columnPrimary = pcol;
+        }
+        // Parse secondary
+        if (ui->sort_secondary_combo && !ui->sort_secondary_combo->currentData().toString().isEmpty()) {
+            auto [stid, scol] = parseSortKey(ui->sort_secondary_combo->currentData().toString());
+            sort->tableIdSecondary = stid;
+            sort->columnSecondary = scol;
+        }
+        sort->order = (_sort_order_index == 0) ? SortByColumnTransform::Order::Asc : SortByColumnTransform::Order::Desc;
+        _pipeline.addTransform(std::move(sort));
+    }
+    // Color last
+    if (ui->color_enabled_checkbox && ui->color_enabled_checkbox->isChecked()) {
+        if (ui->color_column_combo && !ui->color_column_combo->currentData().toString().isEmpty()) {
+            auto color = std::make_unique<ColorByFeatureTransform>();
+            auto [ctid, ccol] = parseSortKey(ui->color_column_combo->currentData().toString());
+            color->tableId = ctid;
+            color->columnName = ccol;
+            int modeIdx = ui->color_mode_combo ? ui->color_mode_combo->currentIndex() : 0;
+            color->mode = (modeIdx == 0) ? ColorByFeatureTransform::Mode::DiscreteBool : (modeIdx == 1 ? ColorByFeatureTransform::Mode::DiscreteInt : ColorByFeatureTransform::Mode::ContinuousFloat);
+            // discrete defaults
+            if (ui->color_false_spin && ui->color_true_spin) {
+                color->discreteMap.clear();
+                color->discreteMap[0] = static_cast<uint32_t>(ui->color_false_spin->value());
+                color->discreteMap[1] = static_cast<uint32_t>(ui->color_true_spin->value());
+            }
+            // continuous defaults
+            if (ui->color_min_spin && ui->color_max_spin) {
+                color->minValue = ui->color_min_spin->value();
+                color->maxValue = ui->color_max_spin->value();
+            }
+            _pipeline.addTransform(std::move(color));
+        }
     }
 }
 
@@ -536,11 +783,11 @@ void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QSt
     // Get the typed data - try std::vector<float> first (common for event data)
     try {
         qDebug() << "EventPlotPropertiesWidget: Attempting to load table data...";
-        auto * registry = _data_manager->getTableRegistry();
-        auto view = registry ? registry->getBuiltTable(table_id) : nullptr;
+        auto * reg0 = _data_manager->getTableRegistry();
+        auto view0 = reg0 ? reg0->getBuiltTable(table_id) : nullptr;
         std::vector<std::vector<float>> event_data;
-        if (view) {
-            auto variant = view->getColumnDataVariant(column_name.toStdString());
+        if (view0) {
+            auto variant = view0->getColumnDataVariant(column_name.toStdString());
             // Try to extract vector<vector<float>> or compatible
             if (auto p = std::get_if<std::vector<std::vector<float>>>(&variant)) {
                 event_data = *p;
@@ -550,6 +797,43 @@ void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QSt
         qDebug() << "EventPlotPropertiesWidget: Retrieved" << event_data.size() << "event vectors";
         
         if (!event_data.empty()) {
+            // Evaluate pipeline to get row order/mask, then apply to event_data
+            if (_data_manager) {
+                auto * reg2 = _data_manager->getTableRegistry();
+                auto view2 = reg2 ? reg2->getBuiltTable(table_id) : nullptr;
+                if (view2) {
+                    DataViewContext ctx;
+                    ctx.tableId = table_id;
+                    ctx.tableView = view2;
+                    ctx.tableRegistry = reg2;
+                    ctx.rowCount = event_data.size();
+
+                    auto state = _pipeline.evaluate(ctx);
+
+                    // Apply mask and order; track row color indices if present
+                    std::vector<std::vector<float>> filtered;
+                    filtered.reserve(event_data.size());
+                    std::vector<uint32_t> row_colors_reordered;
+                    if (state.rowColorIndices && !state.rowColorIndices->empty()) {
+                        row_colors_reordered.reserve(event_data.size());
+                    }
+                    for (size_t idx : state.rowOrder) {
+                        if (idx < event_data.size() && (idx < state.rowMask.size() ? state.rowMask[idx] != 0 : true)) {
+                            filtered.push_back(std::move(event_data[idx]));
+                            if (state.rowColorIndices && idx < state.rowColorIndices->size()) {
+                                row_colors_reordered.push_back((*state.rowColorIndices)[idx]);
+                            }
+                        }
+                    }
+                    event_data = std::move(filtered);
+                    // Propagate row colors to OpenGL widget after setEventData
+                    if (!row_colors_reordered.empty()) {
+                        if (_event_plot_widget && _event_plot_widget->getOpenGLWidget()) {
+                            _event_plot_widget->getOpenGLWidget()->setRowColorIndices(row_colors_reordered);
+                        }
+                    }
+                }
+            }
             // Pass the event data directly to the OpenGL widget
             if (_event_plot_widget->getOpenGLWidget()) {
                 _event_plot_widget->getOpenGLWidget()->setEventData(event_data);

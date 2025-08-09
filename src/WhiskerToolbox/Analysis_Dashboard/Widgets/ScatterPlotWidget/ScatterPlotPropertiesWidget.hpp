@@ -2,6 +2,7 @@
 #define SCATTERPLOTPROPERTIESWIDGET_HPP
 
 #include "Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.hpp"
+#include "Analysis_Dashboard/DataView/Transforms/TransformPipeline.hpp"
 
 #include <QStringList>
 #include <QMap>
@@ -109,6 +110,11 @@ private:
     // Data storage for coordinate range calculations
     std::vector<float> _x_data;
     std::vector<float> _y_data;
+
+    // Data view pipeline (filter/sort/color); sort may be unused for scatter
+    TransformPipeline _pipeline;
+
+    void rebuildPipeline();
 
     /**
      * @brief Setup connections between UI elements and handlers

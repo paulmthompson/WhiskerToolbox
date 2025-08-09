@@ -27,6 +27,7 @@
 #include <QTest>
 #include <QTimer>
 #include <QApplication>
+#include "DockManager.h"
 #include <memory>
 
 /**
@@ -50,8 +51,9 @@ protected:
         m_time_scrollbar = std::make_unique<TimeScrollBar>();
         m_time_scrollbar->setDataManager(m_data_manager);
         
-        // Create the Analysis_Dashboard
-        m_dashboard = std::make_unique<Analysis_Dashboard>(m_data_manager, m_time_scrollbar.get());
+        // Create a dock manager for tests and the Analysis_Dashboard
+        m_dock_manager = std::make_unique<ads::CDockManager>();
+        m_dashboard = std::make_unique<Analysis_Dashboard>(m_data_manager, m_time_scrollbar.get(), m_dock_manager.get());
         
         // Process any initial events
         if (m_app) {
@@ -96,6 +98,7 @@ private:
     std::unique_ptr<QApplication> m_app;
     std::unique_ptr<Analysis_Dashboard> m_dashboard;
     std::unique_ptr<TimeScrollBar> m_time_scrollbar;
+    std::unique_ptr<ads::CDockManager> m_dock_manager;
     std::shared_ptr<DataManager> m_data_manager;
     
     /**

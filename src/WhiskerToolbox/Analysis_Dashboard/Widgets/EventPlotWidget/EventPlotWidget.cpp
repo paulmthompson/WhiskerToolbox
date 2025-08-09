@@ -51,35 +51,39 @@ void EventPlotWidget::paint(QPainter * painter, QStyleOptionGraphicsItem const *
     Q_UNUSED(option)
     Q_UNUSED(widget)
 
-    // Draw frame around the plot
-    QRectF rect = boundingRect();
+    if (isFrameAndTitleVisible()) {
+        // Draw frame around the plot
+        QRectF rect = boundingRect();
 
-    QPen border_pen;
-    if (isSelected()) {
-        border_pen.setColor(QColor(0, 120, 200));
-        border_pen.setWidth(2);
-    } else {
-        border_pen.setColor(QColor(100, 100, 100));
-        border_pen.setWidth(1);
+        QPen border_pen;
+        if (isSelected()) {
+            border_pen.setColor(QColor(0, 120, 200));
+            border_pen.setWidth(2);
+        } else {
+            border_pen.setColor(QColor(100, 100, 100));
+            border_pen.setWidth(1);
+        }
+        painter->setPen(border_pen);
+        painter->drawRect(rect);
+
+        // Draw title
+        painter->setPen(QColor(0, 0, 0));
+        QFont title_font = painter->font();
+        title_font.setBold(true);
+        painter->setFont(title_font);
+
+        QRectF title_rect = rect.adjusted(5, 5, -5, -rect.height() + 20);
+        painter->drawText(title_rect, Qt::AlignCenter, getPlotTitle());
     }
-    painter->setPen(border_pen);
-    painter->drawRect(rect);
-
-    // Draw title
-    painter->setPen(QColor(0, 0, 0));
-    QFont title_font = painter->font();
-    title_font.setBold(true);
-    painter->setFont(title_font);
-
-    QRectF title_rect = rect.adjusted(5, 5, -5, -rect.height() + 20);
-    painter->drawText(title_rect, Qt::AlignCenter, getPlotTitle());
 }
 
 void EventPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
     AbstractPlotWidget::resizeEvent(event);
 
     if (_opengl_widget && _proxy_widget) {
-        QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
+        QRectF content_rect = isFrameAndTitleVisible()
+            ? boundingRect().adjusted(2, 25, -2, -2)
+            : boundingRect();
         _opengl_widget->resize(content_rect.size().toSize());
         _proxy_widget->setGeometry(content_rect);
 

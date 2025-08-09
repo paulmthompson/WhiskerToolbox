@@ -2,6 +2,7 @@
 #define EVENTPLOTPROPERTIESWIDGET_HPP
 
 #include "Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.hpp"
+#include "Analysis_Dashboard/DataView/Transforms/TransformPipeline.hpp"
 
 #include <QStringList>
 
@@ -147,6 +148,11 @@ private:
     EventPlotWidget * _event_plot_widget;
     std::set<QString> _selected_y_axis_features;
     bool _applying_properties;  // Flag to prevent signal emission during applyToPlot()
+     bool _sorting_enabled = false;
+     QString _sort_primary_key;   // format: "table:<table_id>:<column_name>"
+     QString _sort_secondary_key; // format: "table:<table_id>:<column_name>" or empty
+     int _sort_order_index = 0;   // 0 = Asc, 1 = Desc
+    TransformPipeline _pipeline; // per-plot pipeline
 
     /**
      * @brief Setup connections between UI elements and handlers
@@ -217,6 +223,33 @@ private:
     void loadTableData(const QString& table_id, const QString& column_name);
 
     void updateAvailableColumns();
+
+     /**
+      * @brief Populate sorting column combos with scalar numeric columns from built tables
+      *        that match the selected table's row count. Items are data-keyed as
+      *        "table:<table_id>:<column_name>" with user-friendly labels.
+      */
+     void updateAvailableSortColumns();
+
+     /**
+      * @brief Parse a sorting key of the form "table:<table_id>:<column_name>".
+      * @return pair<table_id, column_name> or empty strings if invalid.
+      */
+     static std::pair<QString, QString> parseSortKey(QString const & key);
+
+ private slots:
+     void onSortingToggled(bool enabled);
+     void onSortingChanged();
+    void onFilterToggled(bool enabled);
+    void onFilterChanged();
+    void onColorToggled(bool enabled);
+    void onColorChanged();
+
+ private:
+     /**
+      * @brief Rebuild the per-plot pipeline from current UI selections
+      */
+     void rebuildPipeline();
 };
 
 #endif// EVENTPLOTPROPERTIESWIDGET_HPP
