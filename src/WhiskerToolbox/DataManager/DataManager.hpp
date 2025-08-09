@@ -267,7 +267,7 @@ public:
         _notifyObservers();
     }
 
-    void setData(std::string const & key, DataTypeVariant data);
+    void setData(std::string const & key, DataTypeVariant data, TimeKey const & time_key);
 
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data, TimeKey const & time_key) {

@@ -429,7 +429,7 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
 
         // Using variant form
         DataTypeVariant variant = std::make_shared<PointData>();
-        dm.setData("variant_points", variant);
+        dm.setData("variant_points", variant, TimeKey("custom_time"));
         REQUIRE(notification_count == 3);
     }
 

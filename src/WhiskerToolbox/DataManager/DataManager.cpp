@@ -288,9 +288,9 @@ std::optional<DataTypeVariant> DataManager::getDataVariant(std::string const & k
     return std::nullopt;
 }
 
-void DataManager::setData(std::string const & key, DataTypeVariant data) {
+void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey const & time_key) {
     _data[key] = data;
-    setTimeKey(key, TimeKey("time"));
+    setTimeKey(key, time_key);
     _notifyObservers();
 }
 
