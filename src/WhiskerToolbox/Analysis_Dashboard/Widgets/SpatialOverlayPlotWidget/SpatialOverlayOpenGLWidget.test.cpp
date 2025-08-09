@@ -113,9 +113,6 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     SpatialOverlayOpenGLWidget widget;
     widget.resize(400, 300);
     widget.show();
-    widget.raise();
-    widget.activateWindow();
-    widget.setFocus(Qt::OtherFocusReason);
     processEvents();
 
     // Points in a known frame with non-zero Y span
@@ -154,4 +151,65 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 
     REQUIRE(frame_index == 5);
     REQUIRE(key == QString("test_points"));
+}
+
+TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGLWidget - polygon selection selects multiple points", "[SpatialOverlay][PolygonSelection]") {
+    SpatialOverlayOpenGLWidget widget;
+    widget.resize(400, 300);
+    widget.show();
+    processEvents();
+
+    // Two points to be enclosed by a polygon
+    auto point_data = std::make_shared<PointData>();
+    std::vector<Point2D<float>> frame_points = {Point2D<float>{100.0f, 100.0f}, Point2D<float>{200.0f, 150.0f}};
+    point_data->overwritePointsAtTime(TimeFrameIndex(0), frame_points);
+
+    std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
+    widget.setPointData(map);
+    processEvents();
+
+    REQUIRE(waitForValidProjection(widget));
+
+    // Enter polygon selection mode
+    widget.setSelectionMode(SelectionMode::PolygonSelection);
+    processEvents();
+
+    // Create a simple triangle that encloses both points
+    QPoint a = worldToScreen(widget, 50.0f, 50.0f);
+    QPoint b = worldToScreen(widget, 250.0f, 50.0f);
+    QPoint c = worldToScreen(widget, 150.0f, 300.0f);
+
+    widget.raise();
+    widget.activateWindow();
+    widget.setFocus(Qt::OtherFocusReason);
+    QTest::mouseMove(&widget, a);
+    QTest::qWait(5);
+
+    // Left clicks to add vertices
+    QMouseEvent p1(QEvent::MouseButtonPress, a, widget.mapToGlobal(a), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(&widget, &p1);
+    QMouseEvent r1(QEvent::MouseButtonRelease, a, widget.mapToGlobal(a), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(&widget, &r1);
+
+    QTest::mouseMove(&widget, b);
+    QTest::qWait(5);
+    QMouseEvent p2(QEvent::MouseButtonPress, b, widget.mapToGlobal(b), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(&widget, &p2);
+    QMouseEvent r2(QEvent::MouseButtonRelease, b, widget.mapToGlobal(b), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(&widget, &r2);
+
+    QTest::mouseMove(&widget, c);
+    QTest::qWait(5);
+    QMouseEvent p3(QEvent::MouseButtonPress, c, widget.mapToGlobal(c), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(&widget, &p3);
+    QMouseEvent r3(QEvent::MouseButtonRelease, c, widget.mapToGlobal(c), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(&widget, &r3);
+
+    // Press Enter to complete polygon and trigger selection
+    QKeyEvent enterEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    QCoreApplication::sendEvent(&widget, &enterEvent);
+    processEvents();
+
+    // Expect both points selected
+    REQUIRE(widget.getTotalSelectedPoints() >= 2);
 }

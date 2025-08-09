@@ -247,16 +247,16 @@ void PolygonSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D con
         } else {
             addPolygonVertex(world_pos.x(), world_pos.y());
         }
-    } else if (event->button() == Qt::RightButton) {
-        if (isPolygonSelecting()) {
-            completePolygonSelection();
-        }
     }
 }
 
 void PolygonSelectionHandler::keyPressEvent(QKeyEvent * event) {
     if (event->key() == Qt::Key_Escape) {
         cancelPolygonSelection();
+    } else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+        if (isPolygonSelecting()) {
+            completePolygonSelection();
+        }
     }
 }
 

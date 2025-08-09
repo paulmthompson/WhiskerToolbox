@@ -819,10 +819,15 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
         event->accept();
     } else if (event->button() == Qt::RightButton) {
-
-        qDebug() << "SpatialOverlayOpenGLWidget: Right-click detected at" << event->pos();
-        showContextMenu(event->pos());
-        event->accept();
+        // Only show context menu when not in polygon selection, to avoid interfering with completion
+        if (_selection_mode != SelectionMode::PolygonSelection) {
+            qDebug() << "SpatialOverlayOpenGLWidget: Right-click detected at" << event->pos();
+            showContextMenu(event->pos());
+            event->accept();
+        } else {
+            // In polygon mode, right-click is ignored to prevent menu; completion is done via Enter
+            event->ignore();
+        }
     } else {
         event->ignore();
     }
@@ -897,6 +902,17 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
             }
         },
                    _selection_handler);
+
+        requestThrottledUpdate();
+        event->accept();
+        return;
+    } else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+        // Forward Enter/Return to selection handler (used to complete polygon selection)
+        std::visit([event](auto & handler) {
+            if (handler) {
+                handler->keyPressEvent(event);
+            }
+        }, _selection_handler);
 
         requestThrottledUpdate();
         event->accept();
