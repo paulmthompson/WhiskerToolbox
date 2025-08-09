@@ -10,6 +10,18 @@
 #include "TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
 
+#include <QComboBox>
+#include <QDoubleSpinBox>
+#include <QSpinBox>
+#include <QPushButton>
+#include <QCheckBox>
+#include <QMenu>
+#include <QTimer>
+
+#include "Analysis_Dashboard/Groups/GroupManager.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp"
+
 // Qt test fixtures (application setup)
 #include "../fixtures/qt_test_fixtures.hpp"
 
@@ -212,4 +224,135 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 
     // Expect both points selected
     REQUIRE(widget.getTotalSelectedPoints() >= 2);
+}
+
+TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGLWidget - grouping via context menu assigns selected points", "[SpatialOverlay][Grouping]") {
+    SpatialOverlayOpenGLWidget widget;
+    widget.resize(400, 300);
+    widget.show();
+    processEvents();
+
+    // Two distinct points with unique row ids (different frames)
+    auto point_data = std::make_shared<PointData>();
+    std::vector<Point2D<float>> frame_points1 = {Point2D<float>{100.0f, 100.0f}}; // frame 1
+    std::vector<Point2D<float>> frame_points2 = {Point2D<float>{200.0f, 150.0f}}; // frame 2
+    point_data->overwritePointsAtTime(TimeFrameIndex(1), frame_points1);
+    point_data->overwritePointsAtTime(TimeFrameIndex(2), frame_points2);
+
+    std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
+    widget.setPointData(map);
+    REQUIRE(waitForValidProjection(widget));
+
+    // Select both points via Ctrl+clicks
+    widget.setSelectionMode(SelectionMode::PointSelection);
+    widget.setZoomLevel(5.0f);
+    processEvents();
+
+    auto clickCtrlAt = [&](float wx, float wy) {
+        QPoint s = worldToScreen(widget, wx, wy);
+        widget.raise(); widget.activateWindow(); widget.setFocus(Qt::OtherFocusReason);
+        QTest::mouseMove(&widget, s);
+        QMouseEvent p(QEvent::MouseButtonPress, s, widget.mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
+        QCoreApplication::sendEvent(&widget, &p);
+        processEvents();
+        QMouseEvent r(QEvent::MouseButtonRelease, s, widget.mapToGlobal(s), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
+        QCoreApplication::sendEvent(&widget, &r);
+        processEvents();
+    };
+
+    clickCtrlAt(100.0f, 100.0f);
+    clickCtrlAt(200.0f, 150.0f);
+    REQUIRE(widget.getTotalSelectedPoints() >= 2);
+
+    // Attach a GroupManager
+    GroupManager gm(nullptr);
+    widget.setGroupManager(&gm);
+
+    // Ensure context menu shows non-modally in tests
+    qputenv("WT_TESTING_NON_MODAL_MENUS", "1");
+
+    // Helper: poll for the non-modal menu and trigger "Create New Group"
+    auto triggerCreateNewGroup = [&]() -> bool {
+        const int maxWaitMs = 1000;
+        const int stepMs = 25;
+        int waited = 0;
+        while (waited <= maxWaitMs) {
+            for (QWidget * w : QApplication::topLevelWidgets()) {
+                if (auto * menu = qobject_cast<QMenu *>(w)) {
+                    for (QAction * action : menu->actions()) {
+                        if (action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
+                            QMenu * sub = action->menu();
+                            for (QAction * subAction : sub->actions()) {
+                                if (subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
+                                    subAction->trigger();
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            QTest::qWait(stepMs);
+            waited += stepMs;
+        }
+        return false;
+    };
+
+    // Open context menu with right-click (not in polygon mode)
+    QPoint pos = worldToScreen(widget, 150.0f, 120.0f);
+    QTest::mouseClick(&widget, Qt::RightButton, Qt::NoModifier, pos);
+    processEvents();
+
+    REQUIRE(triggerCreateNewGroup());
+    processEvents();
+
+    // Verify a group was created and points assigned
+    auto const & groups = gm.getGroups();
+    REQUIRE(groups.size() >= 1);
+    // Row ids are 1 and 2 from TimeFrameIndex(1) and (2)
+    REQUIRE(gm.getPointGroup(1) != -1);
+    REQUIRE(gm.getPointGroup(2) != -1);
+    // Selection clears after assignment
+    REQUIRE(widget.getTotalSelectedPoints() == 0);
+}
+
+TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayPlotPropertiesWidget - properties propagate to OpenGL widget", "[SpatialOverlay][Properties]") {
+    // Create plot widget (QGraphicsItem) and properties widget
+    SpatialOverlayPlotWidget plotItem;
+    SpatialOverlayPlotPropertiesWidget props;
+
+    // Attach plot to properties
+    props.setPlotWidget(&plotItem);
+
+    // Access child widgets by objectName
+    auto * pointSize = props.findChild<QDoubleSpinBox *>("point_size_spinbox");
+    auto * lineWidth = props.findChild<QDoubleSpinBox *>("line_width_spinbox");
+    auto * zoomSpin = props.findChild<QDoubleSpinBox *>("zoom_level_spinbox");
+    auto * tooltips = props.findChild<QCheckBox *>("tooltips_checkbox");
+    auto * modeCombo = props.findChild<QComboBox *>("selection_mode_combo");
+
+    REQUIRE(pointSize); REQUIRE(lineWidth); REQUIRE(zoomSpin); REQUIRE(tooltips); REQUIRE(modeCombo);
+
+    auto * gl = plotItem.getOpenGLWidget();
+    REQUIRE(gl != nullptr);
+
+    // Change point size
+    pointSize->setValue(12.5);
+    REQUIRE(gl->getPointSize() == Catch::Approx(12.5f));
+
+    // Change line width
+    lineWidth->setValue(3.5);
+    REQUIRE(gl->getLineWidth() == Catch::Approx(3.5f));
+
+    // Change zoom level
+    zoomSpin->setValue(2.0);
+    REQUIRE(gl->getZoomLevel() == Catch::Approx(2.0f));
+
+    // Toggle tooltips
+    tooltips->setChecked(false);
+    REQUIRE(gl->getTooltipsEnabled() == false);
+
+    // Change selection mode to Polygon
+    modeCombo->setCurrentIndex(2); // 0=None,1=Point,2=Polygon,3=Line
+    REQUIRE(plotItem.getSelectionMode() == SelectionMode::PolygonSelection);
 }

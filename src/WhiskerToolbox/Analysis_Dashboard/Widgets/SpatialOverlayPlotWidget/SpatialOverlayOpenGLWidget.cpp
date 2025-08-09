@@ -1314,7 +1314,8 @@ void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
 }
 
 void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
-    QMenu contextMenu(this);
+    // Build menu on heap so we can show it non-modally during tests
+    QMenu * contextMenu = new QMenu(this);
 
     // Check if we have any selected items
     size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
@@ -1322,7 +1323,7 @@ void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
     // Add group assignment options if we have selected points and a group manager
     if (total_selected > 0 && _group_manager) {
         // Add "Assign to Group" submenu
-        QMenu * assignGroupMenu = contextMenu.addMenu("Assign to Group");
+        QMenu * assignGroupMenu = contextMenu->addMenu("Assign to Group");
 
         // Add "New Group" option
         QAction * newGroupAction = assignGroupMenu->addAction("Create New Group");
@@ -1344,22 +1345,22 @@ void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
         }
 
         // Add "Remove from Group" option
-        QAction * ungroupAction = contextMenu.addAction("Remove from Group");
+        QAction * ungroupAction = contextMenu->addAction("Remove from Group");
         connect(ungroupAction, &QAction::triggered, this, [this]() {
             ungroupSelectedPoints();
         });
 
-        contextMenu.addSeparator();
+        contextMenu->addSeparator();
     }
 
     // Add "Hide Selected" option if there are selected items
     if (total_selected > 0) {
-        QAction * hideAction = contextMenu.addAction(QString("Hide Selected (%1 items)").arg(total_selected));
+        QAction * hideAction = contextMenu->addAction(QString("Hide Selected (%1 items)").arg(total_selected));
         connect(hideAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
     }
 
     // Add "Show All" submenu
-    QMenu * showAllMenu = contextMenu.addMenu("Show All");
+    QMenu * showAllMenu = contextMenu->addMenu("Show All");
 
     QAction * showCurrentAction = showAllMenu->addAction("Show All (Current Dataset)");
     connect(showCurrentAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset);
@@ -1368,7 +1369,13 @@ void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
     connect(showAllAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
 
     // Show the menu at the cursor position
-    contextMenu.exec(mapToGlobal(pos));
+    if (qEnvironmentVariableIsSet("WT_TESTING_NON_MODAL_MENUS")) {
+        // Non-blocking for tests
+        contextMenu->popup(mapToGlobal(pos));
+    } else {
+        contextMenu->exec(mapToGlobal(pos));
+        // 'exec' returns when the menu is closed; the menu will remain parented and cleaned up
+    }
 }
 
 //========== Group Assignment Methods ==========
