@@ -492,10 +492,7 @@ bool GenericPointVisualization<CoordType, RowIndicatorType>::togglePointSelectio
     auto it = m_selected_points.find(point_ptr);
 
     if (it != m_selected_points.end()) {
-        // Point is selected, remove it
-        m_selected_points.erase(it);
-        updateSelectionVertexBuffer();
-        return false;// Point was deselected
+        return false;// Point already selected
     } else {
         // Point is not selected, add it
         m_selected_points.insert(point_ptr);

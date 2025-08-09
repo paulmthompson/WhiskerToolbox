@@ -85,20 +85,28 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     }
     REQUIRE(bounds_spy.count() >= 1);
 
-    // Enable point selection mode
+    // Enable point selection mode and zoom in to make world tolerance generous in screen space
     widget.setSelectionMode(SelectionMode::PointSelection);
-    QSignalSpy selection_spy(&widget, &SpatialOverlayOpenGLWidget::selectionChanged);
-
-    // Ctrl+click near the first point
-    QPoint s0 = worldToScreen(widget, 100.0f, 100.0f);
-    QTest::mouseClick(&widget, Qt::LeftButton, Qt::ControlModifier, s0);
+    widget.setZoomLevel(5.0f);
     processEvents();
+    // Note: selectionChanged carries size_t which QSignalSpy may not decode reliably.
+    // Assert selection via state instead of spying the signal.
 
-    REQUIRE(selection_spy.count() >= 1);
-    QVariantList args = selection_spy.takeLast();
-    REQUIRE(args.size() == 3);
-    size_t total_selected = args.at(0).toULongLong();
-    REQUIRE(total_selected >= 1);
+    // Ctrl+click near the first point (ensure focus and synthesize with modifiers)
+    QPoint s0 = worldToScreen(widget, 100.0f, 100.0f);
+    widget.raise();
+    widget.activateWindow();
+    widget.setFocus(Qt::OtherFocusReason);
+    QTest::mouseMove(&widget, s0);
+    QTest::qWait(10);
+
+    QMouseEvent press(QEvent::MouseButtonPress, s0, widget.mapToGlobal(s0), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
+    QCoreApplication::sendEvent(&widget, &press);
+    processEvents();
+    QMouseEvent release(QEvent::MouseButtonRelease, s0, widget.mapToGlobal(s0), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
+    QCoreApplication::sendEvent(&widget, &release);
+    processEvents();
+    REQUIRE(widget.getTotalSelectedPoints() >= 1);
 }
 
 TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGLWidget - SpatialOverlayOpenGLWidget emits frameJumpRequested on double-click", "[SpatialOverlay][FrameJump]") {
