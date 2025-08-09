@@ -74,6 +74,10 @@ bool PlotDockWidgetContent::eventFilter(QObject* watched, QEvent* event)
         case QEvent::MouseButtonDblClick:
         case QEvent::FocusIn:
             emit activated(_plot_id);
+            // Push focus down into the plot item (and its embedded GL widget via proxy)
+            if (_plot_item) {
+                _plot_item->setFocus(Qt::OtherFocusReason);
+            }
             break;
         default:
             break;

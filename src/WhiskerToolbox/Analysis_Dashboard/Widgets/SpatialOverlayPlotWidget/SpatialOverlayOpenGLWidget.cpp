@@ -699,6 +699,10 @@ void SpatialOverlayOpenGLWidget::resizeGL(int w, int h) {
 }
 
 void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
+    // Ensure this widget gets keyboard focus so Enter/Escape reach selection handlers
+    if (!hasFocus()) {
+        setFocus(Qt::MouseFocusReason);
+    }
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
 
 
