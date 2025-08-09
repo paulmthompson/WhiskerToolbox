@@ -330,33 +330,33 @@ void DataManager_Widget::_createNewData(std::string key, std::string type, std::
         return;
     }
 
+    auto time_key = TimeKey("time");
+    if (!timeframe_key.empty()) {
+        time_key = TimeKey(timeframe_key);
+    }
+
     if (type == "Point") {
-        _data_manager->setData<PointData>(key);
+        _data_manager->setData<PointData>(key, time_key);
     } else if (type == "Mask") {
 
         auto const image_size = _data_manager->getData<MediaData>("media")->getImageSize();
 
-        _data_manager->setData<MaskData>(key);
+        _data_manager->setData<MaskData>(key, time_key);
         _data_manager->getData<MaskData>(key)->setImageSize(image_size);
 
     } else if (type == "Line") {
-        _data_manager->setData<LineData>(key);
+        _data_manager->setData<LineData>(key, time_key);
     } else if (type == "Analog Time Series") {
-        _data_manager->setData<AnalogTimeSeries>(key);
+        _data_manager->setData<AnalogTimeSeries>(key, time_key);
     } else if (type == "Interval") {
-        _data_manager->setData<DigitalIntervalSeries>(key);
+        _data_manager->setData<DigitalIntervalSeries>(key, time_key);
     } else if (type == "Event") {
-        _data_manager->setData<DigitalEventSeries>(key);
+        _data_manager->setData<DigitalEventSeries>(key, time_key);
     } else if (type == "Tensor") {
-        _data_manager->setData<TensorData>(key);
+        _data_manager->setData<TensorData>(key, time_key);
     } else {
         std::cout << "Unsupported data type" << std::endl;
         return;
-    }
-
-    // Set the selected timeframe for the newly created data
-    if (!timeframe_key.empty() && timeframe_key != "time") {
-        _data_manager->setTimeKey(key, TimeKey(timeframe_key));
     }
 }
 

@@ -254,9 +254,9 @@ public:
     }
 
     template<typename T>
-    void setData(std::string const & key) {
+    void setData(std::string const & key, TimeKey const & time_key) {
         _data[key] = std::make_shared<T>();
-        setTimeKey(key, TimeKey("time"));
+        setTimeKey(key, time_key);
         _notifyObservers();
     }
 

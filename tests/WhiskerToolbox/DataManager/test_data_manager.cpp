@@ -96,9 +96,10 @@ TEST_CASE("DataManager::getTime retrieves TimeFrame objects correctly", "[DataMa
 TEST_CASE("DataManager::setTimeFrame assigns TimeFrames to data objects", "[DataManager][TimeFrame]") {
     DataManager dm;
     // Add some test data
-    dm.setData<PointData>("test_points");
     auto custom_timeframe = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("custom_time"), custom_timeframe);
+    dm.setData<PointData>("test_points", TimeKey("custom_time"));
+
 
     SECTION("Associate data with a valid time frame") {
         bool result = dm.setTimeKey("test_points", TimeKey("custom_time"));
@@ -117,7 +118,7 @@ TEST_CASE("DataManager::setTimeFrame assigns TimeFrames to data objects", "[Data
 
 TEST_CASE("DataManager::setTimeKey handles error conditions", "[DataManager][TimeFrame][Error]") {
     DataManager dm;
-    dm.setData<PointData>("test_points");
+    dm.setData<PointData>("test_points", TimeKey("time"));
 
     SECTION("Invalid data key") {
         bool result = dm.setTimeKey("nonexistent_data", TimeKey("time"));
@@ -138,10 +139,11 @@ TEST_CASE("DataManager::getTimeKey retrieves TimeFrame associations correctly", 
     DataManager dm;
 
     // Setup - create some data and time frames
-    dm.setData<PointData>("test_points");
     auto custom_timeframe = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("custom_time"), custom_timeframe);
     dm.setTimeKey("test_points", TimeKey("custom_time"));
+    dm.setData<PointData>("test_points", TimeKey("custom_time"));
+
 
     SECTION("Get existing TimeFrame association") {
         TimeKey time_key = dm.getTimeKey("test_points");
@@ -150,7 +152,7 @@ TEST_CASE("DataManager::getTimeKey retrieves TimeFrame associations correctly", 
 
     SECTION("Default TimeFrame association") {
         // Add new data without explicit TimeFrame
-        dm.setData<PointData>("default_points");
+        dm.setData<PointData>("default_points", TimeKey("time"));
 
         // Should be associated with default "time"
         TimeKey time_key = dm.getTimeKey("default_points");
@@ -164,19 +166,6 @@ TEST_CASE("DataManager::getTimeKey handles error conditions", "[DataManager][Tim
     SECTION("Non-existent data key") {
         TimeKey time_key = dm.getTimeKey("nonexistent_data");
         REQUIRE(time_key == TimeKey(""));
-    }
-
-    SECTION("Data without TimeFrame association") {
-        // Create data but manipulate internal state to remove TimeFrame association
-        // This is a bit of a hack to test the second error condition, as setData automatically sets a TimeFrame
-        dm.setData<PointData>("unassociated_points");
-
-        // Directly manipulate the internal _time_frames map to remove the association
-        // In practice we would need to use friend classes or expose internals for testing
-        // For this example, we'll assume the normal API flow
-
-        // Since we can't easily test this case with the public API, we'll just note
-        // that this error path exists but is difficult to trigger in normal usage
     }
 }
 
@@ -242,7 +231,7 @@ TEST_CASE("DataManager::addCallbackToData registers callbacks with data objects"
     DataManager dm;
 
     // Setup - create some test data
-    dm.setData<PointData>("test_points");
+    dm.setData<PointData>("test_points", TimeKey("time"));
 
     SECTION("Successfully register callback to valid data") {
         bool callback_executed = false;
@@ -300,7 +289,7 @@ TEST_CASE("DataManager::removeCallbackFromData removes registered callbacks", "[
     DataManager dm;
 
     // Setup - create some test data
-    dm.setData<PointData>("test_points");
+    dm.setData<PointData>("test_points", TimeKey("time"));
 
     SECTION("Successfully remove registered callback") {
         // Setup - register a callback
@@ -357,7 +346,7 @@ TEST_CASE("DataManager::removeCallbackFromData handles error conditions", "[Data
 
     SECTION("Handles invalid callback ID gracefully") {
         // Setup - create test data
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
 
         // Try to remove a callback that doesn't exist
         bool result = dm.removeCallbackFromData("test_points", 9999);
@@ -382,12 +371,12 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         dm.addObserver(callback);
 
         // Add data which should trigger the callback
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
 
         REQUIRE(callback_count == 1);
 
         // Add another data object, should trigger again
-        dm.setData<PointData>("more_points");
+        dm.setData<PointData>("more_points", TimeKey("time"));
 
         REQUIRE(callback_count == 2);
     }
@@ -404,7 +393,7 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         dm.addObserver(callback2);
 
         // Trigger notification
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
 
         // Both callbacks should be called
         REQUIRE(callback1_count == 1);
@@ -418,7 +407,7 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         dm.addObserver(callback);
 
         // Different operations that should trigger notifications
-        dm.setData<PointData>("points");
+        dm.setData<PointData>("points", TimeKey("time"));
         REQUIRE(notification_count == 1);
 
         // Adding with custom TimeFrame
@@ -445,7 +434,7 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         dm.addObserver(callback);
 
         // Add data to trigger the callback
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
 
         // The observer should have captured the keys including our new one
         // (plus "media" which exists by default)
@@ -465,9 +454,9 @@ TEST_CASE("DataManager::getAllKeys returns all data keys", "[DataManager]") {
 
     SECTION("Adding data objects updates the key list") {
         // Add various data objects
-        dm.setData<PointData>("points1");
-        dm.setData<PointData>("points2");
-        dm.setData<LineData>("line1");
+        dm.setData<PointData>("points1", TimeKey("time"));
+        dm.setData<PointData>("points2", TimeKey("time"));
+        dm.setData<LineData>("line1", TimeKey("time"));
 
         // Get the keys
         auto keys = dm.getAllKeys();
@@ -488,7 +477,7 @@ TEST_CASE("DataManager::getAllKeys returns all data keys", "[DataManager]") {
 
     SECTION("Keys reflect changes to data collection") {
         // Add and then remove a data object
-        dm.setData<PointData>("temporary");
+        dm.setData<PointData>("temporary", TimeKey("time"));
 
         // First check that the key exists
         {
@@ -501,7 +490,7 @@ TEST_CASE("DataManager::getAllKeys returns all data keys", "[DataManager]") {
         // dm.removeData("temporary");
 
         // For now, we'll just test addition of data
-        dm.setData<LineData>("permanent");
+        dm.setData<LineData>("permanent", TimeKey("time"));
 
         // Check the updated keys
         auto keys = dm.getAllKeys();
@@ -519,10 +508,10 @@ TEST_CASE("DataManager::getKeys returns keys of the specified data type", "[Data
 
     SECTION("Returns only keys matching the requested type") {
         // Add various data objects
-        dm.setData<PointData>("points1");
-        dm.setData<PointData>("points2");
-        dm.setData<LineData>("line1");
-        dm.setData<MaskData>("mask1");
+        dm.setData<PointData>("points1", TimeKey("time"));
+        dm.setData<PointData>("points2", TimeKey("time"));
+        dm.setData<LineData>("line1", TimeKey("time"));
+        dm.setData<MaskData>("mask1", TimeKey("time"));
 
         // Get point keys
         auto point_keys = dm.getKeys<PointData>();
@@ -558,7 +547,7 @@ TEST_CASE("DataManager::getKeys returns keys of the specified data type", "[Data
         REQUIRE(dm.getKeys<PointData>().size() == 0);
 
         // Add a point data object
-        dm.setData<PointData>("dynamic_points");
+        dm.setData<PointData>("dynamic_points", TimeKey("time"));
 
         // Check that it appears in the keys
         auto point_keys = dm.getKeys<PointData>();
@@ -568,8 +557,8 @@ TEST_CASE("DataManager::getKeys returns keys of the specified data type", "[Data
 
     SECTION("Handles different template types") {
         // Add data of various types
-        dm.setData<PointData>("test_points");
-        dm.setData<LineData>("test_line");
+        dm.setData<PointData>("test_points", TimeKey("time"));
+        dm.setData<LineData>("test_line", TimeKey("time"));
 
         // Test with non-standard data types (that may be added later)
         // For now, we'll use the existing types
@@ -653,15 +642,15 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         // Test all data types that getType should recognize
         
         // Points
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
         REQUIRE(dm.getType("test_points") == DM_DataType::Points);
         
         // Lines
-        dm.setData<LineData>("test_lines");
+        dm.setData<LineData>("test_lines", TimeKey("time"));
         REQUIRE(dm.getType("test_lines") == DM_DataType::Line);
         
         // Masks
-        dm.setData<MaskData>("test_mask");
+        dm.setData<MaskData>("test_mask", TimeKey("time"));
         REQUIRE(dm.getType("test_mask") == DM_DataType::Mask);
         
     }
@@ -701,7 +690,7 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         REQUIRE(dm.getType("replaceable") == DM_DataType::Images);
         
         // Replace with completely different type
-        dm.setData<PointData>("replaceable");
+        dm.setData<PointData>("replaceable", TimeKey("time"));
         REQUIRE(dm.getType("replaceable") == DM_DataType::Points);
     }
 }
