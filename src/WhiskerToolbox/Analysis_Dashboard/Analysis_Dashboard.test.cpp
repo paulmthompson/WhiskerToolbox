@@ -107,19 +107,19 @@ private:
     void populateTestData() {
         // Add some basic point data
         auto point_data = std::make_shared<PointData>();
-        m_data_manager->setData<PointData>("test_points", point_data);
+        m_data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
         
         // Add some basic line data
         auto line_data = std::make_shared<LineData>();
-        m_data_manager->setData<LineData>("test_lines", line_data);
+        m_data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
         
         // Add some basic analog data
         auto analog_data = std::make_shared<AnalogTimeSeries>();
-        m_data_manager->setData<AnalogTimeSeries>("test_analog", analog_data);
+        m_data_manager->setData<AnalogTimeSeries>("test_analog", analog_data, TimeKey("time"));
         
         // Add some basic event data
         auto event_data = std::make_shared<DigitalEventSeries>();
-        m_data_manager->setData<DigitalEventSeries>("test_events", event_data);
+        m_data_manager->setData<DigitalEventSeries>("test_events", event_data, TimeKey("time"));
     }
 };
 

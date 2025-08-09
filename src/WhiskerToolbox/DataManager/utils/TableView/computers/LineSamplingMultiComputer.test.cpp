@@ -284,7 +284,7 @@ TEST_CASE("LineSamplingMultiComputer with per-line row expansion drops empty tim
 
     auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"ExpLines"});
     // Register into DataManager so TableView expansion can resolve the line source by name
-    dm.setData<LineData>("ExpLines", lineData);
+    dm.setData<LineData>("ExpLines", lineData, TimeKey("time"));
 
     // Timestamps include empty ones; expansion should drop t=0 and t=3
     std::vector<TimeFrameIndex> timestamps = {
@@ -351,13 +351,13 @@ TEST_CASE("LineSamplingMultiComputer expansion with coexisting analog column ret
         std::vector<float> ys = {1.0f, 1.0f};
         lineData->addAtTime(TimeFrameIndex(1), xs, ys, false);
     }
-    dm.setData<LineData>("MixedLines", lineData);
+    dm.setData<LineData>("MixedLines", lineData, TimeKey("time"));
 
     // Analog data present at all timestamps: values 0,10,20,30
     std::vector<float> analogVals = {0.f, 10.f, 20.f, 30.f};
     std::vector<TimeFrameIndex> analogTimes = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3)};
     auto analogData = std::make_shared<AnalogTimeSeries>(analogVals, analogTimes);
-    dm.setData<AnalogTimeSeries>("AnalogA", analogData);
+    dm.setData<AnalogTimeSeries>("AnalogA", analogData, TimeKey("time"));
 
     // Build selector across all timestamps
     std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3)};

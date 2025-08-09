@@ -78,7 +78,7 @@ void Digital_Event_Loader_Widget::_loadCSVEventData(std::vector<std::shared_ptr<
         // Multi-column case: we don't know the actual identifiers here, so we'll use indices
         for (size_t i = 0; i < event_series_list.size(); ++i) {
             std::string series_key = options.base_name + "_" + std::to_string(i);
-            _data_manager->setData<DigitalEventSeries>(series_key, event_series_list[i]);
+            _data_manager->setData<DigitalEventSeries>(series_key, event_series_list[i], TimeKey("time"));
             
             total_events += event_series_list[i]->size();
             series_count++;
@@ -88,7 +88,7 @@ void Digital_Event_Loader_Widget::_loadCSVEventData(std::vector<std::shared_ptr<
     } else {
         // Single column case: use base name directly
         if (!event_series_list.empty()) {
-            _data_manager->setData<DigitalEventSeries>(options.base_name, event_series_list[0]);
+            _data_manager->setData<DigitalEventSeries>(options.base_name, event_series_list[0], TimeKey("time"));
             
             total_events = event_series_list[0]->size();
             series_count = 1;

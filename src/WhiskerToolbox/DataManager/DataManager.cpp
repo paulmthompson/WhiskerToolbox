@@ -410,7 +410,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             case DM_DataType::Video: {
 
                 auto video_data = load_video_into_VideoData(file_path);
-                dm->setData<VideoData>("media", video_data);
+                dm->setData<VideoData>("media", video_data, TimeKey("time"));
 
                 data_info_list.push_back({name, "VideoData", ""});
                 break;
@@ -418,7 +418,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             case DM_DataType::Images: {
 
                 auto media = load_into_ImageData(file_path, item);
-                dm->setData<ImageData>("media", media);
+                dm->setData<ImageData>("media", media, TimeKey("time"));
 
                 data_info_list.push_back({name, "ImageData", ""});
                 break;
@@ -427,7 +427,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 auto point_data = load_into_PointData(file_path, item);
 
-                dm->setData<PointData>(name, point_data);
+                dm->setData<PointData>(name, point_data, TimeKey("time"));
 
                 std::string const color = item.value("color", "#0000FF");
                 data_info_list.push_back({name, "PointData", color});
@@ -438,7 +438,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 auto mask_data = load_into_MaskData(file_path, item);
 
                 std::string const color = item.value("color", "0000FF");
-                dm->setData<MaskData>(name, mask_data);
+                dm->setData<MaskData>(name, mask_data, TimeKey("time"));
 
                 data_info_list.push_back({name, "MaskData", color});
 
@@ -452,7 +452,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                             std::cout << "Calculating area for mask: " << name << std::endl;
                             auto area_data = area(dm->getData<MaskData>(name).get());
                             std::string const output_name = name + "_area";
-                            dm->setData<AnalogTimeSeries>(output_name, area_data);
+                            dm->setData<AnalogTimeSeries>(output_name, area_data, TimeKey("time"));
                         }
                     }
                 }
@@ -462,7 +462,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 auto line_data = load_into_LineData(file_path, item);
 
-                dm->setData<LineData>(name, line_data);
+                dm->setData<LineData>(name, line_data, TimeKey("time"));
 
                 std::string const color = item.value("color", "0000FF");
 
@@ -477,7 +477,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 for (int channel = 0; channel < analog_time_series.size(); channel++) {
                     std::string const channel_name = name + "_" + std::to_string(channel);
 
-                    dm->setData<AnalogTimeSeries>(channel_name, analog_time_series[channel]);
+                    dm->setData<AnalogTimeSeries>(channel_name, analog_time_series[channel], TimeKey("time"));
 
                     if (item.contains("clock")) {
                         TimeKey const clock = TimeKey(item["clock"]);
@@ -493,7 +493,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 for (int channel = 0; channel < digital_event_series.size(); channel++) {
                     std::string const channel_name = name + "_" + std::to_string(channel);
 
-                    dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel]);
+                    dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel], TimeKey("time"));
 
                     if (item.contains("clock")) {
                         TimeKey const clock = TimeKey(item["clock"]);
@@ -505,7 +505,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             case DM_DataType::DigitalInterval: {
 
                 auto digital_interval_series = load_into_DigitalIntervalSeries(file_path, item);
-                dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
+                dm->setData<DigitalIntervalSeries>(name, digital_interval_series, TimeKey("time"));
 
                 break;
             }
@@ -516,7 +516,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     TensorData tensor_data;
                     loadNpyToTensorData(file_path, tensor_data);
 
-                    dm->setData<TensorData>(name, std::make_shared<TensorData>(tensor_data));
+                    dm->setData<TensorData>(name, std::make_shared<TensorData>(tensor_data), TimeKey("time"));
 
                 } else {
                     std::cout << "Format " << item["format"] << " not found for " << name << std::endl;

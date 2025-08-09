@@ -579,7 +579,7 @@ auto filename = "data/Media/test_each_frame_number.mp4";
 
 auto media = std::make_shared<VideoData>();
 media->LoadMedia(filename);
-dm.setData<VideoData>("media", media);
+dm.setData<VideoData>("media", media, TimeKey("time"));
 
 auto dm_media = dm.getData<MediaData>("media");
 
@@ -599,7 +599,7 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
     SECTION("VideoData type detection") {
         // Create VideoData object without loading from file
         auto video_data = std::make_shared<VideoData>();
-        dm.setData<VideoData>("test_video", video_data);
+        dm.setData<VideoData>("test_video", video_data, TimeKey("time"));
 
         // getType should correctly identify it as Video
         REQUIRE(dm.getType("test_video") == DM_DataType::Video);
@@ -612,7 +612,7 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
     SECTION("ImageData type detection") {
         // Create ImageData object without loading from folder
         auto image_data = std::make_shared<ImageData>();
-        dm.setData<ImageData>("test_images", image_data);
+        dm.setData<ImageData>("test_images", image_data, TimeKey("time"));
 
         // getType should correctly identify it as Images
         REQUIRE(dm.getType("test_images") == DM_DataType::Images);
@@ -627,8 +627,8 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         auto video_data = std::make_shared<VideoData>();
         auto image_data = std::make_shared<ImageData>();
         
-        dm.setData<VideoData>("my_video", video_data);
-        dm.setData<ImageData>("my_images", image_data);
+        dm.setData<VideoData>("my_video", video_data, TimeKey("time"));
+        dm.setData<ImageData>("my_images", image_data, TimeKey("time"));
 
         // Each should be correctly identified
         REQUIRE(dm.getType("my_video") == DM_DataType::Video);
@@ -670,8 +670,8 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         auto image_data = std::make_shared<ImageData>();
         
         // Store them as their base class (MediaData) to test polymorphism
-        dm.setData<MediaData>("poly_video", video_data);
-        dm.setData<MediaData>("poly_images", image_data);
+        dm.setData<MediaData>("poly_video", video_data, TimeKey("time"));
+        dm.setData<MediaData>("poly_images", image_data, TimeKey("time"));
         
         // getType should still correctly identify the derived types via dynamic_cast
         REQUIRE(dm.getType("poly_video") == DM_DataType::Video);
@@ -681,12 +681,12 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
     SECTION("Replacing data updates type correctly") {
         // Start with one type
         auto video_data = std::make_shared<VideoData>();
-        dm.setData<VideoData>("replaceable", video_data);
+        dm.setData<VideoData>("replaceable", video_data, TimeKey("time"));
         REQUIRE(dm.getType("replaceable") == DM_DataType::Video);
         
         // Replace with different type
         auto image_data = std::make_shared<ImageData>();
-        dm.setData<ImageData>("replaceable", image_data);
+        dm.setData<ImageData>("replaceable", image_data, TimeKey("time"));
         REQUIRE(dm.getType("replaceable") == DM_DataType::Images);
         
         // Replace with completely different type

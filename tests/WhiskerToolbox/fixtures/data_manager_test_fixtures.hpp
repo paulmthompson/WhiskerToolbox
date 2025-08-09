@@ -115,7 +115,7 @@ private:
         point_data->setImageSize(ImageSize(800, 600));
         
         // Add to DataManager
-        m_data_manager->setData<PointData>("test_points", point_data);
+        m_data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
     }
     
     /**
@@ -160,7 +160,7 @@ private:
         line_data->setImageSize(ImageSize(800, 600));
         
         // Add to DataManager
-        m_data_manager->setData<LineData>("test_lines", line_data);
+        m_data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
     }
     
     /**
@@ -215,7 +215,7 @@ private:
         mask_data->setImageSize(ImageSize(800, 600));
         
         // Add to DataManager
-        m_data_manager->setData<MaskData>("test_masks", mask_data);
+        m_data_manager->setData<MaskData>("test_masks", mask_data, TimeKey("time"));
     }
     
     /**
@@ -238,7 +238,7 @@ private:
         auto analog_series = std::make_shared<AnalogTimeSeries>(analog_values, time_indices);
         
         // Add to DataManager
-        m_data_manager->setData<AnalogTimeSeries>("test_analog", analog_series);
+        m_data_manager->setData<AnalogTimeSeries>("test_analog", analog_series, TimeKey("time"));
         
         // Create a second analog series with different characteristics
         std::vector<float> analog_values_2 = {
@@ -252,7 +252,7 @@ private:
         }
         
         auto analog_series_2 = std::make_shared<AnalogTimeSeries>(analog_values_2, time_indices_2);
-        m_data_manager->setData<AnalogTimeSeries>("test_analog_2", analog_series_2);
+        m_data_manager->setData<AnalogTimeSeries>("test_analog_2", analog_series_2, TimeKey("time"));
     }
     
     /**
@@ -268,7 +268,7 @@ private:
         auto event_series = std::make_shared<DigitalEventSeries>(event_times);
         
         // Add to DataManager
-        m_data_manager->setData<DigitalEventSeries>("test_events", event_series);
+        m_data_manager->setData<DigitalEventSeries>("test_events", event_series, TimeKey("time"));
         
         // Create a second event series with different timing
         std::vector<float> event_times_2 = {
@@ -276,7 +276,7 @@ private:
         };
         
         auto event_series_2 = std::make_shared<DigitalEventSeries>(event_times_2);
-        m_data_manager->setData<DigitalEventSeries>("test_events_2", event_series_2);
+        m_data_manager->setData<DigitalEventSeries>("test_events_2", event_series_2, TimeKey("time"));
     }
     
     /**
@@ -296,7 +296,7 @@ private:
         auto interval_series = std::make_shared<DigitalIntervalSeries>(intervals);
         
         // Add to DataManager
-        m_data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_series);
+        m_data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_series, TimeKey("time"));
         
         // Create a second interval series with overlapping intervals
         std::vector<Interval> intervals_2 = {
@@ -308,7 +308,7 @@ private:
         };
         
         auto interval_series_2 = std::make_shared<DigitalIntervalSeries>(intervals_2);
-        m_data_manager->setData<DigitalIntervalSeries>("test_intervals_2", interval_series_2);
+        m_data_manager->setData<DigitalIntervalSeries>("test_intervals_2", interval_series_2, TimeKey("time"));
     }
 };
 
@@ -375,7 +375,7 @@ private:
         }
         
         point_data->setImageSize(ImageSize(800, 600));
-        m_data_manager->setData<PointData>("random_points", point_data);
+        m_data_manager->setData<PointData>("random_points", point_data, TimeKey("time"));
     }
     
     /**
@@ -399,7 +399,7 @@ private:
         }
         
         line_data->setImageSize(ImageSize(800, 600));
-        m_data_manager->setData<LineData>("random_lines", line_data);
+        m_data_manager->setData<LineData>("random_lines", line_data, TimeKey("time"));
     }
     
     /**
@@ -416,7 +416,7 @@ private:
         }
         
         auto analog_series = std::make_shared<AnalogTimeSeries>(analog_values, time_indices);
-        m_data_manager->setData<AnalogTimeSeries>("random_analog", analog_series);
+        m_data_manager->setData<AnalogTimeSeries>("random_analog", analog_series, TimeKey("time"));
     }
     
     /**
@@ -431,7 +431,7 @@ private:
         }
         
         auto event_series = std::make_shared<DigitalEventSeries>(event_times);
-        m_data_manager->setData<DigitalEventSeries>("random_events", event_series);
+        m_data_manager->setData<DigitalEventSeries>("random_events", event_series, TimeKey("time"));
     }
     
     /**
@@ -448,7 +448,7 @@ private:
         }
         
         auto interval_series = std::make_shared<DigitalIntervalSeries>(intervals);
-        m_data_manager->setData<DigitalIntervalSeries>("random_intervals", interval_series);
+        m_data_manager->setData<DigitalIntervalSeries>("random_intervals", interval_series, TimeKey("time"));
     }
 };
 

@@ -24,8 +24,7 @@ TEST_CASE("AnalogTimestampOffsetsMultiComputer basic integration", "[AnalogTimes
     for (int i = 0; i < 10; ++i) times[i] = i;
     auto tf = std::make_shared<TimeFrame>(times);
     auto analog = std::make_shared<AnalogTimeSeries>(analogVals, 10);
-    dm.setData<AnalogTimeSeries>("A", analog);
-    dm.setTimeKey("A", TimeKey("time"));
+    dm.setData<AnalogTimeSeries>("A", analog, TimeKey("time"));
 
     auto dme_ptr = std::make_shared<DataManagerExtension>(dm);
 
@@ -86,8 +85,7 @@ TEST_CASE("AnalogTimestampOffsets via registry", "[AnalogTimestampOffsetsMultiCo
     for (int i = 0; i < 6; ++i) times[i] = i;
     auto tf = std::make_shared<TimeFrame>(times);
     auto analog = std::make_shared<AnalogTimeSeries>(analogVals, 6);
-    dm.setData<AnalogTimeSeries>("B", analog);
-    dm.setTimeKey("B", TimeKey("time"));
+    dm.setData<AnalogTimeSeries>("B", analog, TimeKey("time"));
 
     ComputerRegistry registry;
     auto dme_ptr = std::make_shared<DataManagerExtension>(dm);

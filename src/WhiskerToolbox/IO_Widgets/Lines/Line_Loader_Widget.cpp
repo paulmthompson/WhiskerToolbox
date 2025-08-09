@@ -88,7 +88,7 @@ void Line_Loader_Widget::_loadSingleBinaryFile(QString const & filepath) {
     std::shared_ptr<LineData> line_data = load(opts);
 
     if (line_data) {
-        _data_manager->setData<LineData>(line_key, line_data);
+        _data_manager->setData<LineData>(line_key, line_data, TimeKey("time"));
         std::cout << "Successfully loaded binary line data: " << file_path_std << " into key: " << line_key << std::endl;
 
         ImageSize original_size = ui->scaling_widget->getOriginalImageSize();

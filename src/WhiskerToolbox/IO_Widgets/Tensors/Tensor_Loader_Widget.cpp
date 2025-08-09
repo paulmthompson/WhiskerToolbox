@@ -43,7 +43,7 @@ void Tensor_Loader_Widget::_loadNumpyArray() {
     TensorData tensor_data;
     loadNpyToTensorData(numpy_filename.toStdString(), tensor_data);
 
-    _data_manager->setData<TensorData>(tensor_key, std::make_shared<TensorData>(tensor_data));
+    _data_manager->setData<TensorData>(tensor_key, std::make_shared<TensorData>(tensor_data), TimeKey("time"));
 
     std::cout << "Loaded tensor with " << _data_manager->getData<TensorData>(tensor_key)->size() << " elements" << std::endl;
 }
