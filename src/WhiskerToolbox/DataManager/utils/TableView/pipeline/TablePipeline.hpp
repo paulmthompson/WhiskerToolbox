@@ -42,6 +42,14 @@ struct TableConfiguration {
     
     // Optional metadata
     std::vector<std::string> tags;              // Tags for organization
+    struct TransformSpec {
+        std::string type;                       // e.g., "PCA"
+        nlohmann::json parameters;              // transform-specific params
+        std::string output_table_id;            // optional explicit ID
+        std::string output_name;                // optional display name
+        std::string output_description;         // optional description
+    };
+    std::vector<TransformSpec> transforms;      // Optional transforms to apply to this table
 };
 
 /**
@@ -191,6 +199,8 @@ private:
     bool addColumnToBuilder(TableViewBuilder& builder, 
                                       nlohmann::json const& column_json,
                                       std::unique_ptr<IComputerBase> computer);
+
+    bool applyTransforms(TableConfiguration const& config);
 };
 
 #endif // TABLE_PIPELINE_HPP

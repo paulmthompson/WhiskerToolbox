@@ -16,6 +16,7 @@
 #include "DataManager/utils/TableView/interfaces/IColumnComputer.h"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 #include "DataManager/utils/TableView/TableRegistry.hpp"
+#include "DataManager/utils/TableView/transforms/PCATransform.hpp"
 
 #include <QDebug>
 #include <QInputDialog>
@@ -26,11 +27,14 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QGroupBox>
+#include <QFileDialog>
 
 #include <algorithm>
 #include <typeindex>
 #include <vector>
 #include <tuple>
+#include <fstream>
+#include <iomanip>
 
 TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
@@ -119,6 +123,14 @@ void TableDesignerWidget::connectSignals() {
     // Build signals
     connect(ui->build_table_btn, &QPushButton::clicked,
             this, &TableDesignerWidget::onBuildTable);
+    if (ui->apply_transform_btn) {
+        connect(ui->apply_transform_btn, &QPushButton::clicked,
+                this, &TableDesignerWidget::onApplyTransform);
+    }
+    if (ui->export_csv_btn) {
+        connect(ui->export_csv_btn, &QPushButton::clicked,
+                this, &TableDesignerWidget::onExportCsv);
+    }
 
     // Subscribe to DataManager table observer
     if (_data_manager) {
@@ -490,6 +502,139 @@ void TableDesignerWidget::onBuildTable() {
         updateBuildStatus(QString("Error building table: %1").arg(e.what()), true);
         qDebug() << "Exception during table building:" << e.what();
     }
+}
+
+void TableDesignerWidget::onApplyTransform() {
+    if (_current_table_id.isEmpty() || !_data_manager) {
+        updateBuildStatus("No base table selected", true);
+        return;
+    }
+
+    // Fetch the built base table
+    auto * reg = _data_manager->getTableRegistry();
+    if (!reg) { updateBuildStatus("Registry unavailable", true); return; }
+    auto base_view = reg->getBuiltTable(_current_table_id);
+    if (!base_view) {
+        updateBuildStatus("Build the base table first", true);
+        return;
+    }
+
+    // Currently only PCA option is exposed
+    QString transform = ui->transform_type_combo ? ui->transform_type_combo->currentText() : QString();
+    if (transform != "PCA") {
+        updateBuildStatus("Unsupported transform", true);
+        return;
+    }
+
+    // Configure PCA
+    PCAConfig cfg;
+    cfg.center = ui->transform_center_checkbox && ui->transform_center_checkbox->isChecked();
+    cfg.standardize = ui->transform_standardize_checkbox && ui->transform_standardize_checkbox->isChecked();
+    if (ui->transform_include_edit) {
+        for (auto const & s : parseCommaSeparatedList(ui->transform_include_edit->text())) cfg.include.push_back(s);
+    }
+    if (ui->transform_exclude_edit) {
+        for (auto const & s : parseCommaSeparatedList(ui->transform_exclude_edit->text())) cfg.exclude.push_back(s);
+    }
+
+    try {
+        PCATransform pca(cfg);
+        TableView derived = pca.apply(*base_view);
+
+        // Determine output id/name
+        QString out_name = ui->transform_output_name_edit ? ui->transform_output_name_edit->text().trimmed()
+                                                          : QString();
+        if (out_name.isEmpty()) out_name = QString("%1 (PCA)").arg(ui->table_name_edit->text().trimmed());
+
+        QString out_id = reg->generateUniqueTableId(_current_table_id + "_pca");
+        if (!reg->createTable(out_id, out_name)) {
+            reg->updateTableInfo(out_id, out_name, "");
+        }
+        if (reg->storeBuiltTable(out_id, std::move(derived))) {
+            updateBuildStatus(QString("Created transformed table: %1").arg(out_name));
+            refreshTableCombo();
+        } else {
+            updateBuildStatus("Failed to store transformed table", true);
+        }
+    } catch (std::exception const & e) {
+        updateBuildStatus(QString("Transform failed: %1").arg(e.what()), true);
+    }
+}
+
+std::vector<std::string> TableDesignerWidget::parseCommaSeparatedList(QString const & text) const {
+    std::vector<std::string> out;
+    for (QString s : text.split(",", Qt::SkipEmptyParts)) {
+        s = s.trimmed();
+        if (!s.isEmpty()) out.push_back(s.toStdString());
+    }
+    return out;
+}
+
+void TableDesignerWidget::onExportCsv() {
+    if (_current_table_id.isEmpty() || !_data_manager) {
+        updateBuildStatus("No table selected", true);
+        return;
+    }
+
+    auto * reg = _data_manager->getTableRegistry();
+    if (!reg) { updateBuildStatus("Registry unavailable", true); return; }
+    auto view = reg->getBuiltTable(_current_table_id);
+    if (!view) { updateBuildStatus("Build the table first", true); return; }
+
+    QString filename = promptSaveCsvFilename();
+    if (filename.isEmpty()) return;
+    if (!filename.endsWith(".csv", Qt::CaseInsensitive)) filename += ".csv";
+
+    // CSV options
+    QString delimiter = ui->export_delimiter_combo ? ui->export_delimiter_combo->currentText() : "Comma";
+    QString lineEnding = ui->export_line_ending_combo ? ui->export_line_ending_combo->currentText() : "LF (\\n)";
+    int precision = ui->export_precision_spinbox ? ui->export_precision_spinbox->value() : 3;
+    bool includeHeader = ui->export_header_checkbox && ui->export_header_checkbox->isChecked();
+
+    std::string delim = ",";
+    if (delimiter == "Space") delim = " ";
+    else if (delimiter == "Tab") delim = "\t";
+    std::string eol = "\n";
+    if (lineEnding.startsWith("CRLF")) eol = "\r\n";
+
+    try {
+        std::ofstream file(filename.toStdString());
+        if (!file.is_open()) {
+            updateBuildStatus("Could not open file for writing", true);
+            return;
+        }
+        file << std::fixed << std::setprecision(precision);
+
+        auto names = view->getColumnNames();
+        if (includeHeader) {
+            for (size_t i = 0; i < names.size(); ++i) {
+                if (i > 0) file << delim;
+                file << names[i];
+            }
+            file << eol;
+        }
+        size_t rows = view->getRowCount();
+        for (size_t r = 0; r < rows; ++r) {
+            for (size_t c = 0; c < names.size(); ++c) {
+                if (c > 0) file << delim;
+                try {
+                    auto const & vals = view->getColumnValues<double>(names[c]);
+                    if (r < vals.size()) file << vals[r]; else file << "NaN";
+                } catch (...) {
+                    file << "NaN";
+                }
+            }
+            file << eol;
+        }
+        file.close();
+        updateBuildStatus(QString("Exported CSV: %1").arg(filename));
+    } catch (std::exception const & e) {
+        updateBuildStatus(QString("Export failed: %1").arg(e.what()), true);
+    }
+}
+
+QString TableDesignerWidget::promptSaveCsvFilename() const {
+    return QFileDialog::getSaveFileName(const_cast<TableDesignerWidget*>(this), "Export Table to CSV", QString(), "CSV Files (*.csv)");
 }
 
 void TableDesignerWidget::onSaveTableInfo() {

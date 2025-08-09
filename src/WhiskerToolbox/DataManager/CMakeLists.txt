@@ -156,6 +156,9 @@ set(DATAMANAGER_SOURCES
         utils/TableView/ComputerRegistry.hpp
         utils/TableView/ComputerRegistryTypes.hpp
 
+        utils/TableView/transforms/ITableTransform.hpp
+        utils/TableView/transforms/PCATransform.hpp
+        utils/TableView/transforms/PCATransform.cpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
