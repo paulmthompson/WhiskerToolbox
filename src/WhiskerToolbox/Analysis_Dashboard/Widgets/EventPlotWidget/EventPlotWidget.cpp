@@ -134,12 +134,19 @@ void EventPlotWidget::setupOpenGLWidget() {
     
     // Block signals during setup to prevent premature signal emissions
     _opengl_widget->blockSignals(true);
+
+    // Configure OpenGL widget for better rendering when embedded in QGraphicsScene
+    _opengl_widget->setAttribute(Qt::WA_AlwaysStackOnTop, false);
+    _opengl_widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
+    _opengl_widget->setAttribute(Qt::WA_NoSystemBackground, true);
+    _opengl_widget->setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
     
     _proxy_widget = new QGraphicsProxyWidget(this);
     _proxy_widget->setWidget(_opengl_widget);
 
     _proxy_widget->setFlag(QGraphicsItem::ItemIsMovable, false);
     _proxy_widget->setFlag(QGraphicsItem::ItemIsSelectable, false);
+    _proxy_widget->setCacheMode(QGraphicsItem::NoCache);
 
     QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
     _opengl_widget->resize(content_rect.size().toSize());
