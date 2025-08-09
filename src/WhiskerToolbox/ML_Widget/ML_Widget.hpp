@@ -127,7 +127,7 @@ private:
     QString _training_interval_key;
     std::unordered_set<std::string> _selected_outcomes;
 
-    FeatureProcessingWidget * _feature_processing_widget;
+    FeatureProcessingWidget * _feature_processing_widget = nullptr; // removed from UI; kept for legacy path if needed
     ClassBalancingWidget * _class_balancing_widget;
     ModelMetricsWidget * _model_metrics_widget;
 

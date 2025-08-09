@@ -84,12 +84,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
         ui->fit_button->setEnabled(false);
     }
 
-    // Feature Processing Widget Setup
-    _feature_processing_widget = ui->feature_processing_widget;// Promoted from UI
-    _feature_processing_widget->setDataManager(_data_manager.get());
-    _feature_processing_widget->populateBaseFeatures();
-    connect(_feature_processing_widget, &FeatureProcessingWidget::configurationChanged,
-            this, &ML_Widget::_updateClassDistribution);
+  // Legacy Feature Processing Widget removed from UI. If needed, can be instantiated separately.
 
     // Training Interval ComboBox Setup (already done in previous steps)
     connect(ui->trainingIntervalComboBox, &QComboBox::currentTextChanged, this, &ML_Widget::_onTrainingIntervalChanged);
@@ -129,9 +124,7 @@ ML_Widget::~ML_Widget() {
 
 void ML_Widget::openWidget() {
     std::cout << "ML Widget Opened" << std::endl;
-    if (_feature_processing_widget) {
-        _feature_processing_widget->populateBaseFeatures();
-    }
+  // Legacy widget removed
     ui->outcome_table_widget->populateTable();
     _populateTrainingIntervalComboBox();// Ensure this is up-to-date too
 
@@ -690,7 +683,19 @@ bool ML_Widget::_predictNewData(std::vector<FeatureProcessingWidget::ProcessedFe
             for (size_t i = 0; i < kept_rows.size(); ++i) filtered.col(i) = prediction_feature_array.col(kept_rows[i]);
             prediction_feature_array = std::move(filtered);
         }
-        prediction_feature_array.replace(arma::datum::nan, 0.0);
+    if (ui->zscore_checkbox && ui->zscore_checkbox->isChecked()) {
+        // z-score across rows (features)
+        for (arma::uword r = 0; r < prediction_feature_array.n_rows; ++r) {
+            arma::rowvec v = prediction_feature_array.row(r);
+            arma::uvec finite_idx = arma::find_finite(v);
+            if (finite_idx.n_elem > 1) {
+                double mean = arma::mean(v(finite_idx));
+                double sd = arma::stddev(v(finite_idx));
+                if (sd > 1e-10) prediction_feature_array.row(r) = (v - mean) / sd;
+            }
+        }
+    }
+    prediction_feature_array.replace(arma::datum::nan, 0.0);
     } else {
         // legacy path
         // Determine prediction timestamps
@@ -734,9 +739,17 @@ bool ML_Widget::_predictNewData(std::vector<FeatureProcessingWidget::ProcessedFe
         prediction_feature_array.replace(arma::datum::nan, 0.0);// Prediction fails if there is a NaN value
         std::cout << "After nan replacement: " << prediction_feature_array.has_nan() << std::endl;
 
-        // Apply z-score normalization if enabled
-        if (_feature_processing_widget->isZScoreNormalizationEnabled()) {
-            prediction_feature_array = _zScoreNormalizeFeatures(prediction_feature_array, active_proc_features);
+        // Apply z-score normalization if enabled (legacy toggle removed; using new checkbox if present)
+        if (ui->zscore_checkbox && ui->zscore_checkbox->isChecked()) {
+            for (arma::uword r = 0; r < prediction_feature_array.n_rows; ++r) {
+                arma::rowvec v = prediction_feature_array.row(r);
+                arma::uvec finite_idx = arma::find_finite(v);
+                if (finite_idx.n_elem > 1) {
+                    double mean = arma::mean(v(finite_idx));
+                    double sd = arma::stddev(v(finite_idx));
+                    if (sd > 1e-10) prediction_feature_array.row(r) = (v - mean) / sd;
+                }
+            }
         }
 
         if (prediction_feature_array.n_cols == 0) {
@@ -798,8 +811,7 @@ bool ML_Widget::_predictNewData(std::vector<FeatureProcessingWidget::ProcessedFe
 }
 
 void ML_Widget::_updateClassDistribution() {
-    bool features_selected = (_feature_processing_widget &&
-                              !_feature_processing_widget->getActiveProcessedFeatures().empty());
+  bool features_selected = (!_selected_outcomes.empty());
 
     if (!features_selected || _training_interval_key.isEmpty() || _selected_outcomes.empty()) {
         _class_balancing_widget->clearClassDistribution();
