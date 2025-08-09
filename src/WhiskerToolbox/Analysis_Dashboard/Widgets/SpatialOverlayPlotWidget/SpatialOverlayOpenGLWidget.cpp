@@ -57,6 +57,13 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     // Initialize selection handler after widget setup
     _selection_handler = std::make_unique<PointSelectionHandler>(10.0f); // Use fixed tolerance initially
 
+    // Ensure selection notifications are wired for the default handler/mode
+    std::visit([this](auto & handler) {
+        if (handler) {
+            handler->setNotificationCallback([this]() { makeSelection(); });
+        }
+    }, _selection_handler);
+
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
     _tooltip_timer->setInterval(500);// 500ms delay for tooltip
@@ -499,15 +506,30 @@ void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
 void SpatialOverlayOpenGLWidget::makeSelection() {
     auto context = createRenderingContext();
 
+    std::cout << "makeSelection" << std::endl;
+
     if (_selection_handler.valueless_by_exception()) {
         return;
     }
 
-    // If there's no active selection region, it implies a clear command
-    bool should_clear = std::visit([](auto & handler) {
-        return handler->getActiveSelectionRegion() == nullptr;
-    },
-                                   _selection_handler);
+    // Determine if we should clear selection. For point selection, there is no region
+    // concept, so we should NOT clear. Only clear when selection mode is None or when
+    // region-based handlers have no active region.
+    bool should_clear = false;
+    if (_selection_mode == SelectionMode::None) {
+        should_clear = true;
+    } else {
+        should_clear = std::visit([](auto & handler) {
+            using HandlerType = std::decay_t<decltype(handler)>;
+            if constexpr (std::is_same_v<HandlerType, std::unique_ptr<PointSelectionHandler>>) {
+                return false; // point selection never uses a persistent region
+            } else if constexpr (std::is_same_v<HandlerType, std::unique_ptr<NoneSelectionHandler>>) {
+                return true;
+            } else {
+                return handler->getActiveSelectionRegion() == nullptr;
+            }
+        }, _selection_handler);
+    }
 
     if (should_clear) {
         clearSelection();
@@ -680,16 +702,19 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
 
 
-    std::visit([event, world_pos](auto & handler) {
+    std::visit([this, event, world_pos](auto & handler) {
         if (handler) {
             handler->mousePressEvent(event, world_pos);
+            if (_selection_mode == SelectionMode::PointSelection) {
+                // For click-based selection, apply immediately on press
+                makeSelection();
+            }
         }
-    },
-               _selection_handler);
+    }, _selection_handler);
 
     if (event->button() == Qt::LeftButton) {
         // Regular left click - start panning (if not in polygon or line selection mode)
-    if (_selection_mode != SelectionMode::PolygonSelection && _selection_mode != SelectionMode::LineIntersection) {
+        if (_selection_mode != SelectionMode::PolygonSelection && _selection_mode != SelectionMode::LineIntersection) {
             if (_interaction && _interaction->handleMousePress(event)) return;
         }
         event->accept();
