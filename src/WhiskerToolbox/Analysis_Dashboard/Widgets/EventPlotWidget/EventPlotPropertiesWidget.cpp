@@ -17,6 +17,12 @@
 #include <QRadioButton>
 
 #include <memory>
+#include <optional>
+#include <algorithm>
+#include <numeric>
+#include <cmath>
+
+#include "Analysis_Dashboard/DataView/Transforms/SortByColumnTransform.hpp"
 
 EventPlotPropertiesWidget::EventPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
@@ -36,6 +42,7 @@ void EventPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data
     _data_manager = std::move(data_manager);
     updateAvailableTables();
     updateAvailableDataSources();
+    updateAvailableSortColumns();
 }
 
 void EventPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
@@ -247,6 +254,25 @@ void EventPlotPropertiesWidget::setupConnections() {
         connect(ui->capture_range_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
                 this, &EventPlotPropertiesWidget::onCaptureRangeChanged);
     }
+
+    // Sorting controls
+    if (ui->sorting_enabled_checkbox) {
+        connect(ui->sorting_enabled_checkbox, &QCheckBox::toggled,
+                this, &EventPlotPropertiesWidget::onSortingToggled);
+    }
+    if (ui->sort_primary_combo) {
+        connect(ui->sort_primary_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::onSortingChanged);
+    }
+    if (ui->sort_secondary_combo) {
+        connect(ui->sort_secondary_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::onSortingChanged);
+    }
+    if (ui->sort_order_combo) {
+        connect(ui->sort_order_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::onSortingChanged);
+        ui->sort_order_combo->setCurrentIndex(0); // Ascending default
+    }
 }
 
 void EventPlotPropertiesWidget::setupYAxisFeatureTable() {
@@ -434,6 +460,7 @@ void EventPlotPropertiesWidget::updateViewBoundsLabels() {
 
 void EventPlotPropertiesWidget::onTableSelectionChanged() {
     updateAvailableColumns();
+    updateAvailableSortColumns();
     updatePlotWidget();
 }
 
@@ -496,6 +523,7 @@ void EventPlotPropertiesWidget::updateAvailableTables() {
 
     // Update columns for the first valid table if any
     updateAvailableColumns();
+    updateAvailableSortColumns();
 }
 
 void EventPlotPropertiesWidget::updateAvailableColumns() {
@@ -525,6 +553,101 @@ void EventPlotPropertiesWidget::updateAvailableColumns() {
     }
 }
 
+void EventPlotPropertiesWidget::updateAvailableSortColumns() {
+    if (!_data_manager) return;
+    if (!ui->sort_primary_combo || !ui->sort_secondary_combo) return;
+
+    ui->sort_primary_combo->clear();
+    ui->sort_secondary_combo->clear();
+
+    ui->sort_primary_combo->addItem("Select column...", "");
+    ui->sort_secondary_combo->addItem("None", "");
+
+    auto * registry = _data_manager->getTableRegistry();
+    if (!registry) return;
+
+    // Row count should match the selected table
+    QString base_table_id = getSelectedTableId();
+    if (base_table_id.isEmpty()) return;
+    auto base_view = registry->getBuiltTable(base_table_id);
+    if (!base_view) return;
+    size_t row_count = base_view->getRowCount();
+
+    auto table_ids = registry->getTableIds();
+    for (auto const & table_id : table_ids) {
+        auto view = registry->getBuiltTable(table_id);
+        if (!view) continue;
+        if (view->getRowCount() != row_count) continue; // must match rows
+
+        auto column_names = view->getColumnNames();
+        for (auto const & column_name : column_names) {
+            // Only scalar numeric elemental types: float, double, int, bool
+            try {
+                auto idx = view->getColumnTypeIndex(column_name);
+                bool is_scalar_numeric = (idx == typeid(float) || idx == typeid(double) || idx == typeid(int) || idx == typeid(bool));
+                if (!is_scalar_numeric) continue;
+            } catch (...) {
+                continue;
+            }
+            
+
+            QString label = QString("%1.%2").arg(table_id).arg(QString::fromStdString(column_name));
+            QString key = QString("table:%1:%2").arg(table_id).arg(QString::fromStdString(column_name));
+            ui->sort_primary_combo->addItem(label, key);
+            ui->sort_secondary_combo->addItem(label, key);
+        }
+    }
+}
+
+std::pair<QString, QString> EventPlotPropertiesWidget::parseSortKey(QString const & key) {
+    if (!key.startsWith("table:")) return {QString(), QString()};
+    auto parts = key.split(":");
+    if (parts.size() < 3) return {QString(), QString()};
+    QString table_id = parts.value(1);
+    // column name may include ':' in theory; join remainder
+    QString column_name = parts.mid(2).join(":");
+    return {table_id, column_name};
+}
+
+// removed local helpers in favor of shared pipeline
+
+void EventPlotPropertiesWidget::onSortingToggled(bool enabled) {
+    _sorting_enabled = enabled;
+    rebuildPipeline();
+    onSortingChanged();
+}
+
+void EventPlotPropertiesWidget::onSortingChanged() {
+    if (ui->sort_primary_combo) _sort_primary_key = ui->sort_primary_combo->currentData().toString();
+    if (ui->sort_secondary_combo) _sort_secondary_key = ui->sort_secondary_combo->currentData().toString();
+    if (ui->sort_order_combo) _sort_order_index = ui->sort_order_combo->currentIndex();
+    rebuildPipeline();
+    if (!_applying_properties) updatePlotWidget();
+}
+
+void EventPlotPropertiesWidget::rebuildPipeline() {
+    _pipeline.clear();
+    if (_sorting_enabled) {
+        auto sort = std::make_unique<SortByColumnTransform>();
+        // Parse primary
+        if (!ui->sort_primary_combo || ui->sort_primary_combo->currentData().toString().isEmpty()) {
+            // no-op
+        } else {
+            auto [ptid, pcol] = parseSortKey(ui->sort_primary_combo->currentData().toString());
+            sort->tableIdPrimary = ptid;
+            sort->columnPrimary = pcol;
+        }
+        // Parse secondary
+        if (ui->sort_secondary_combo && !ui->sort_secondary_combo->currentData().toString().isEmpty()) {
+            auto [stid, scol] = parseSortKey(ui->sort_secondary_combo->currentData().toString());
+            sort->tableIdSecondary = stid;
+            sort->columnSecondary = scol;
+        }
+        sort->order = (_sort_order_index == 0) ? SortByColumnTransform::Order::Asc : SortByColumnTransform::Order::Desc;
+        _pipeline.addTransform(std::move(sort));
+    }
+}
+
 void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QString& column_name) {
     qDebug() << "EventPlotPropertiesWidget::loadTableData called with table_id:" << table_id << "column_name:" << column_name;
     
@@ -550,6 +673,30 @@ void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QSt
         qDebug() << "EventPlotPropertiesWidget: Retrieved" << event_data.size() << "event vectors";
         
         if (!event_data.empty()) {
+            // Evaluate pipeline to get row order/mask, then apply to event_data
+            if (_data_manager) {
+                auto * registry = _data_manager->getTableRegistry();
+                auto view = registry ? registry->getBuiltTable(table_id) : nullptr;
+                if (view) {
+                    DataViewContext ctx;
+                    ctx.tableId = table_id;
+                    ctx.tableView = view;
+                    ctx.tableRegistry = registry;
+                    ctx.rowCount = event_data.size();
+
+                    auto state = _pipeline.evaluate(ctx);
+
+                    // Apply mask and order
+                    std::vector<std::vector<float>> filtered;
+                    filtered.reserve(event_data.size());
+                    for (size_t idx : state.rowOrder) {
+                        if (idx < event_data.size() && (idx < state.rowMask.size() ? state.rowMask[idx] != 0 : true)) {
+                            filtered.push_back(std::move(event_data[idx]));
+                        }
+                    }
+                    event_data = std::move(filtered);
+                }
+            }
             // Pass the event data directly to the OpenGL widget
             if (_event_plot_widget->getOpenGLWidget()) {
                 _event_plot_widget->getOpenGLWidget()->setEventData(event_data);

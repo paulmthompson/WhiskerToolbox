@@ -45,6 +45,112 @@
         </property>
        </widget>
       </item>
+    <item>
+     <widget class="QGroupBox" name="sorting_group">
+      <property name="title">
+       <string>Sorting</string>
+      </property>
+      <layout class="QVBoxLayout" name="sorting_layout">
+       <item>
+        <widget class="QCheckBox" name="sorting_enabled_checkbox">
+         <property name="text">
+          <string>Enable Sorting</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="primary_sort_layout">
+         <item>
+          <widget class="QLabel" name="primary_sort_label">
+           <property name="text">
+            <string>Primary:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="sort_primary_combo">
+           <property name="minimumWidth">
+            <number>180</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="secondary_sort_layout">
+         <item>
+          <widget class="QLabel" name="secondary_sort_label">
+           <property name="text">
+            <string>Secondary:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="sort_secondary_combo">
+           <property name="minimumWidth">
+            <number>180</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="sort_order_layout">
+         <item>
+          <widget class="QLabel" name="sort_order_label">
+           <property name="text">
+            <string>Order:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="sort_order_combo">
+           <item>
+            <property name="text">
+             <string>Ascending</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Descending</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_sort_order">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="sorting_info_label">
+         <property name="text">
+          <string>Select scalar numeric columns from built tables. Only tables matching the current table's row count are listed.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="styleSheet">
+          <string>color: #666;</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
       <item>
        <layout class="QHBoxLayout" name="table_combo_layout">
         <item>
