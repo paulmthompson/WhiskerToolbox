@@ -95,9 +95,9 @@ void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
 
     auto current_time = _data_manager->getCurrentTime();
 
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
-    auto point_timeframe_key = _data_manager->getTimeFrame(_active_key);
+    auto point_timeframe_key = _data_manager->getTimeKey(_active_key);
 
     if (!point_timeframe_key.empty()) {
         auto point_timeframe = _data_manager->getTime(point_timeframe_key);

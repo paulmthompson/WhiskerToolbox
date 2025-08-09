@@ -73,7 +73,7 @@ void Point_Loader_Widget::_loadSingleCSVFile(CSVPointLoaderOptions options) {
         std::cout << "Loaded " << keypoints.size() << " time points from " << options.filename << std::endl;
 
         auto point_data = std::make_shared<PointData>(keypoints);
-        _data_manager->setData<PointData>(keypoint_key, point_data);
+        _data_manager->setData<PointData>(keypoint_key, point_data, TimeKey("time"));
 
         ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
         point_data->setImageSize(original_size);

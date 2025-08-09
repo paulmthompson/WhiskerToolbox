@@ -74,7 +74,7 @@ void TimeScrollBar::Slider_Scroll(int newPos)
 
 void TimeScrollBar::_updateFrameLabels(int frame_num) {
 
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
     
     auto video_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(frame_num));
 

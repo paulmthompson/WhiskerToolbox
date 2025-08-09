@@ -186,7 +186,7 @@ void Feature_Tree_Widget::_populateTree() {
                 TreeFeature childFeature;
                 childFeature.key = member;
                 childFeature.type = convert_data_type_to_string(_data_manager->getType(member));
-                childFeature.timeFrame = _data_manager->getTimeFrame(member);
+                childFeature.timeFrame = _data_manager->getTimeKey(member).str();
                 childFeature.isGroup = false;
                 _features[member] = childFeature;
 
@@ -226,7 +226,7 @@ void Feature_Tree_Widget::_populateTree() {
             TreeFeature feature;
             feature.key = key;
             feature.type = convert_data_type_to_string(type);
-            feature.timeFrame = _data_manager->getTimeFrame(key);
+            feature.timeFrame = _data_manager->getTimeKey(key).str();
             feature.isGroup = false;
             _features[key] = feature;
 

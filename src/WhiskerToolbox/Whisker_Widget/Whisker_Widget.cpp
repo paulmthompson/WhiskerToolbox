@@ -60,7 +60,7 @@ Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
       ui(new Ui::Whisker_Widget) {
     ui->setupUi(this);
 
-    _data_manager->setData<LineData>("unlabeled_whiskers");
+    _data_manager->setData<LineData>("unlabeled_whiskers", TimeKey("time"));
 
     _janelia_config_widget = new Janelia_Config(_wt);
 
@@ -194,7 +194,7 @@ void Whisker_Widget::_dlTraceButton() {
 void Whisker_Widget::_dlAddMemoryButton() {
 
     if (!_data_manager->getData<MaskData>("SAM_output")) {
-        _data_manager->setData<MaskData>("SAM_output");
+        _data_manager->setData<MaskData>("SAM_output", TimeKey("time"));
         _data_manager->getData<MaskData>("SAM_output")->setImageSize({.width=256, .height=256});
     }
 
@@ -342,7 +342,7 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, i
 
     if (!_data_manager->getData<LineData>(whisker_name)) {
         std::cout << "Creating " << whisker_name << std::endl;
-        _data_manager->setData<LineData>(whisker_name);
+        _data_manager->setData<LineData>(whisker_name, TimeKey("time"));
     }
 }
 
@@ -643,7 +643,7 @@ void Whisker_Widget::_createNewWhiskerPad() {
 
     // Check if "whisker_pad" already exists
     if (!_data_manager->getData<PointData>(new_key)) {
-        _data_manager->setData<PointData>(new_key);
+        _data_manager->setData<PointData>(new_key, TimeKey("time"));
         std::cout << "Created new PointData: " << new_key << std::endl;
 
         // Create a new point at frame one with value 0,0

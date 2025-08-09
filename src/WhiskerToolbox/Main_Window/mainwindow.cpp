@@ -157,13 +157,13 @@ void MainWindow::Load_Video() {
 
         auto media = std::make_shared<VideoData>();
         media->LoadMedia(vid_name.toStdString());
-        _data_manager->setData<VideoData>("media", media);
+        _data_manager->setData<VideoData>("media", media, TimeKey("time"));
 
     } else if (extension == ".h5" || extension == ".mat") {
 
         auto media = std::make_shared<HDF5Data>();
         media->LoadMedia(vid_name.toStdString());
-        _data_manager->setData<HDF5Data>("media", media);
+        _data_manager->setData<HDF5Data>("media", media, TimeKey("time"));
 
     } else {
         std::cout << "Video file with extension " << vid_path.extension() << " not supported" << std::endl;
@@ -185,7 +185,7 @@ void MainWindow::Load_Images() {
 
     auto media = std::make_shared<ImageData>();
     media->LoadMedia(dir_name.toStdString());
-    _data_manager->setData<ImageData>("media", media);
+    _data_manager->setData<ImageData>("media", media, TimeKey("time"));
 
     _LoadData();
 }
@@ -255,8 +255,8 @@ void MainWindow::_updateFrameCount() {
 
             auto new_timeframe = std::make_shared<TimeFrame>(t);
 
-            _data_manager->removeTime("time");
-            _data_manager->setTime("time", new_timeframe);
+            _data_manager->removeTime(TimeKey("time"));
+            _data_manager->setTime(TimeKey("time"), new_timeframe);
         } else {    
             std::cout << "The time vector is not empty, so we will not create a new time vector" << std::endl;
         

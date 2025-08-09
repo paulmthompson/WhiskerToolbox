@@ -26,7 +26,6 @@
 #include "transforms/Masks/mask_area.hpp"
 
 #include "TimeFrame.hpp"
-#include "TimeFrame/TimeFrameV2.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -43,10 +42,10 @@
 using namespace nlohmann;
 
 DataManager::DataManager() {
-    _times["time"] = std::make_shared<TimeFrame>();
+    _times[TimeKey("time")] = std::make_shared<TimeFrame>();
     _data["media"] = std::make_shared<MediaData>();
 
-    setTimeFrame("media", "time");
+    setTimeKey("media", TimeKey("time"));
     _output_path = std::filesystem::current_path();
 
     // Initialize TableRegistry
@@ -66,19 +65,16 @@ void DataManager::reset() {
     _data["media"] = std::make_shared<MediaData>();
     
     // Clear all TimeFrame objects except the default "time" frame
-    auto defaultTime = _times.find("time");
+    auto defaultTime = _times.find(TimeKey("time"));
     _times.clear();
     
     // Recreate the default "time" TimeFrame
-    _times["time"] = std::make_shared<TimeFrame>();
+    _times[TimeKey("time")] = std::make_shared<TimeFrame>();
     
     // Clear all data-to-timeframe mappings and recreate the default media mapping
     _time_frames.clear();
-    setTimeFrame("media", "time");
-    
-    // Clear TimeFrameV2 objects and mappings
-    _times_v2.clear();
-    _time_frames_v2.clear();
+    setTimeKey("media", TimeKey("time"));
+
     
     // Reset current time
     _current_time = 0;
@@ -89,7 +85,7 @@ void DataManager::reset() {
     std::cout << "DataManager: Reset complete. Default 'time' frame and 'media' data restored." << std::endl;
 }
 
-bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite) {
+bool DataManager::setTime(TimeKey const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite) {
 
     if (!timeframe) {
         std::cerr << "Error: Cannot register a nullptr TimeFrame for key: " << key << std::endl;
@@ -105,36 +101,41 @@ bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> ti
 
     _times[key] = std::move(timeframe);
 
-    if (_data.find(key) != _data.end()) {
-        auto data = _data[key];
-        std::visit([this, timeframe](auto & x) {
-            x->setTimeFrame(timeframe);
-        },
-                   data);
+    // Move ptr to new time frame to all data that hold 
+    for (auto const & [data_key, data] : _data) {
+        if (_time_frames.find(data_key) != _time_frames.end()) {
+            auto time_key = _time_frames[data_key];
+            if (time_key == key) {
+                std::visit([this, timeframe](auto & x) {
+                    x->setTimeFrame(timeframe);
+                },
+                           data);
+            }
+        }
     }
 
     return true;
 }
 
 std::shared_ptr<TimeFrame> DataManager::getTime() {
-    return _times["time"];
+    return _times[TimeKey("time")];
 };
 
-std::shared_ptr<TimeFrame> DataManager::getTime(std::string const & key) {
+std::shared_ptr<TimeFrame> DataManager::getTime(TimeKey const & key) {
     if (_times.find(key) != _times.end()) {
         return _times[key];
     }
     return nullptr;
 };
 
-TimeIndexAndFrame DataManager::getCurrentIndexAndFrame(std::string const & key) {
+TimeIndexAndFrame DataManager::getCurrentIndexAndFrame(TimeKey const & key) {
     if (_times.find(key) != _times.end()) {
         return {TimeFrameIndex(_current_time), _times[key]};
     }
     return {TimeFrameIndex(_current_time), nullptr};
 }
 
-bool DataManager::removeTime(std::string const & key) {
+bool DataManager::removeTime(TimeKey const & key) {
     if (_times.find(key) == _times.end()) {
         std::cerr << "Error: could not find time key in DataManager: " << key << std::endl;
         return false;
@@ -145,7 +146,7 @@ bool DataManager::removeTime(std::string const & key) {
     return true;
 }
 
-bool DataManager::setTimeFrame(std::string const & data_key, std::string const & time_key) {
+bool DataManager::setTimeKey(std::string const & data_key, TimeKey const & time_key) {
     if (_data.find(data_key) == _data.end()) {
         std::cerr << "Error: Data key not found in DataManager: " << data_key << std::endl;
         return false;
@@ -168,11 +169,11 @@ bool DataManager::setTimeFrame(std::string const & data_key, std::string const &
     return true;
 }
 
-std::string DataManager::getTimeFrame(std::string const & data_key) {
+TimeKey DataManager::getTimeKey(std::string const & data_key) {
     // check if data_key exists
     if (_data.find(data_key) == _data.end()) {
         std::cerr << "Error: Data key not found in DataManager: " << data_key << std::endl;
-        return "";
+        return TimeKey("");
     }
 
     // check if data key has time frame
@@ -180,14 +181,14 @@ std::string DataManager::getTimeFrame(std::string const & data_key) {
         std::cerr << "Error: Data key "
                   << data_key
                   << " exists, but not assigned to a TimeFrame" << std::endl;
-        return "";
+        return TimeKey("");
     }
 
     return _time_frames[data_key];
 }
 
-std::vector<std::string> DataManager::getTimeFrameKeys() {
-    std::vector<std::string> keys;
+std::vector<TimeKey> DataManager::getTimeFrameKeys() {
+    std::vector<TimeKey> keys;
     keys.reserve(_times.size());
     for (auto const & [key, value]: _times) {
 
@@ -287,9 +288,9 @@ std::optional<DataTypeVariant> DataManager::getDataVariant(std::string const & k
     return std::nullopt;
 }
 
-void DataManager::setData(std::string const & key, DataTypeVariant data) {
+void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey const & time_key) {
     _data[key] = data;
-    setTimeFrame(key, "time");
+    setTimeKey(key, time_key);
     _notifyObservers();
 }
 
@@ -409,7 +410,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             case DM_DataType::Video: {
 
                 auto video_data = load_video_into_VideoData(file_path);
-                dm->setData<VideoData>("media", video_data);
+                dm->setData<VideoData>("media", video_data, TimeKey("time"));
 
                 data_info_list.push_back({name, "VideoData", ""});
                 break;
@@ -417,7 +418,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             case DM_DataType::Images: {
 
                 auto media = load_into_ImageData(file_path, item);
-                dm->setData<ImageData>("media", media);
+                dm->setData<ImageData>("media", media, TimeKey("time"));
 
                 data_info_list.push_back({name, "ImageData", ""});
                 break;
@@ -426,7 +427,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 auto point_data = load_into_PointData(file_path, item);
 
-                dm->setData<PointData>(name, point_data);
+                dm->setData<PointData>(name, point_data, TimeKey("time"));
 
                 std::string const color = item.value("color", "#0000FF");
                 data_info_list.push_back({name, "PointData", color});
@@ -437,7 +438,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 auto mask_data = load_into_MaskData(file_path, item);
 
                 std::string const color = item.value("color", "0000FF");
-                dm->setData<MaskData>(name, mask_data);
+                dm->setData<MaskData>(name, mask_data, TimeKey("time"));
 
                 data_info_list.push_back({name, "MaskData", color});
 
@@ -451,7 +452,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                             std::cout << "Calculating area for mask: " << name << std::endl;
                             auto area_data = area(dm->getData<MaskData>(name).get());
                             std::string const output_name = name + "_area";
-                            dm->setData<AnalogTimeSeries>(output_name, area_data);
+                            dm->setData<AnalogTimeSeries>(output_name, area_data, TimeKey("time"));
                         }
                     }
                 }
@@ -461,7 +462,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 auto line_data = load_into_LineData(file_path, item);
 
-                dm->setData<LineData>(name, line_data);
+                dm->setData<LineData>(name, line_data, TimeKey("time"));
 
                 std::string const color = item.value("color", "0000FF");
 
@@ -476,11 +477,11 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 for (int channel = 0; channel < analog_time_series.size(); channel++) {
                     std::string const channel_name = name + "_" + std::to_string(channel);
 
-                    dm->setData<AnalogTimeSeries>(channel_name, analog_time_series[channel]);
+                    dm->setData<AnalogTimeSeries>(channel_name, analog_time_series[channel], TimeKey("time"));
 
                     if (item.contains("clock")) {
-                        std::string const clock = item["clock"];
-                        dm->setTimeFrame(channel_name, clock);
+                        TimeKey const clock = TimeKey(item["clock"]);
+                        dm->setTimeKey(channel_name, clock);
                     }
                 }
                 break;
@@ -492,11 +493,11 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 for (int channel = 0; channel < digital_event_series.size(); channel++) {
                     std::string const channel_name = name + "_" + std::to_string(channel);
 
-                    dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel]);
+                    dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel], TimeKey("time"));
 
                     if (item.contains("clock")) {
-                        std::string const clock = item["clock"];
-                        dm->setTimeFrame(channel_name, clock);
+                        TimeKey const clock = TimeKey(item["clock"]);
+                        dm->setTimeKey(channel_name, clock);
                     }
                 }
                 break;
@@ -504,7 +505,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             case DM_DataType::DigitalInterval: {
 
                 auto digital_interval_series = load_into_DigitalIntervalSeries(file_path, item);
-                dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
+                dm->setData<DigitalIntervalSeries>(name, digital_interval_series, TimeKey("time"));
 
                 break;
             }
@@ -515,7 +516,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     TensorData tensor_data;
                     loadNpyToTensorData(file_path, tensor_data);
 
-                    dm->setData<TensorData>(name, std::make_shared<TensorData>(tensor_data));
+                    dm->setData<TensorData>(name, std::make_shared<TensorData>(tensor_data), TimeKey("time"));
 
                 } else {
                     std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
@@ -547,7 +548,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     std::cout << "Loaded " << events_int.size() << " events for " << name << std::endl;
 
                     auto timeframe = std::make_shared<TimeFrame>(events_int);
-                    dm->setTime(name, timeframe, true);
+                    dm->setTime(TimeKey(name), timeframe, true);
                 }
 
                 if (item["format"] == "uint16_length") {
@@ -564,7 +565,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     std::cout << "Total of " << t.size() << " timestamps for " << name << std::endl;
 
                     auto timeframe = std::make_shared<TimeFrame>(t);
-                    dm->setTime(name, timeframe, true);
+                    dm->setTime(TimeKey(name), timeframe, true);
                 }
 
                 if (item["format"] == "filename") {
@@ -597,7 +598,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     // Create TimeFrame from filenames
                     auto timeframe = createTimeFrameFromFilenames(options);
                     if (timeframe) {
-                        dm->setTime(name, timeframe, true);
+                        dm->setTime(TimeKey(name), timeframe, true);
                         std::cout << "Created TimeFrame '" << name << "' from filenames in "
                                   << folder_path << std::endl;
                     } else {
@@ -612,9 +613,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 continue;
         }
         if (item.contains("clock")) {
-            std::string const clock = item["clock"];
+            TimeKey const clock = TimeKey(item["clock"]);
             std::cout << "Setting time for " << name << " to " << clock << std::endl;
-            dm->setTimeFrame(name, clock);
+            dm->setTimeKey(name, clock);
         }
     }
 
@@ -691,72 +692,6 @@ DM_DataType DataManager::getType(std::string const & key) const {
     return DM_DataType::Unknown;
 }
 
-// ========== TimeFrameV2 Implementation ==========
-
-bool DataManager::setTimeV2(std::string const & key, AnyTimeFrame timeframe, bool overwrite) {
-    if (_times_v2.find(key) != _times_v2.end()) {
-        if (overwrite) {
-            _times_v2[key] = std::move(timeframe);
-            return true;
-        } else {
-            std::cerr << "Error: TimeFrameV2 key already exists in DataManager: " << key << std::endl;
-            return false;
-        }
-    }
-
-    _times_v2[key] = std::move(timeframe);
-    return true;
-}
-
-std::optional<AnyTimeFrame> DataManager::getTimeV2(std::string const & key) {
-    if (_times_v2.find(key) != _times_v2.end()) {
-        return _times_v2[key];
-    }
-    return std::nullopt;
-}
-
-bool DataManager::removeTimeV2(std::string const & key) {
-    if (_times_v2.find(key) == _times_v2.end()) {
-        std::cerr << "Error: could not find TimeFrameV2 key in DataManager: " << key << std::endl;
-        return false;
-    }
-
-    auto it = _times_v2.find(key);
-    _times_v2.erase(it);
-    return true;
-}
-
-std::vector<std::string> DataManager::getTimeFrameV2Keys() {
-    std::vector<std::string> keys;
-    keys.reserve(_times_v2.size());
-    for (auto const & [key, value]: _times_v2) {
-        keys.push_back(key);
-    }
-    return keys;
-}
-
-bool DataManager::createClockTimeFrame(std::string const & key, int64_t start_tick,
-                                       int64_t num_samples, double sampling_rate_hz,
-                                       bool overwrite) {
-    auto clock_frame = TimeFrameUtils::createDenseClockTimeFrame(start_tick, num_samples, sampling_rate_hz);
-    AnyTimeFrame any_frame = clock_frame;
-    return setTimeV2(key, std::move(any_frame), overwrite);
-}
-
-bool DataManager::createCameraTimeFrame(std::string const & key, std::vector<int64_t> frame_indices,
-                                        bool overwrite) {
-    auto camera_frame = TimeFrameUtils::createSparseCameraTimeFrame(std::move(frame_indices));
-    AnyTimeFrame any_frame = camera_frame;
-    return setTimeV2(key, std::move(any_frame), overwrite);
-}
-
-bool DataManager::createDenseCameraTimeFrame(std::string const & key, int64_t start_frame,
-                                             int64_t num_frames, bool overwrite) {
-    auto camera_frame = TimeFrameUtils::createDenseCameraTimeFrame(start_frame, num_frames);
-    AnyTimeFrame any_frame = camera_frame;
-    return setTimeV2(key, std::move(any_frame), overwrite);
-}
-
 std::string convert_data_type_to_string(DM_DataType type) {
     switch (type) {
         case DM_DataType::Video:
@@ -784,139 +719,3 @@ std::string convert_data_type_to_string(DM_DataType type) {
     }
 }
 
-// ========== Enhanced AnalogTimeSeries Support Implementation ==========
-
-bool DataManager::createAnalogTimeSeriesWithClock(std::string const & data_key,
-                                                  std::string const & timeframe_key,
-                                                  std::vector<float> analog_data,
-                                                  int64_t start_tick,
-                                                  double sampling_rate_hz,
-                                                  bool overwrite) {
-    // Create the clock timeframe
-    if (!createClockTimeFrame(timeframe_key, start_tick,
-                              static_cast<int64_t>(analog_data.size()),
-                              sampling_rate_hz, overwrite)) {
-        return false;
-    }
-
-    // Get the timeframe
-    auto timeframe_opt = getTimeV2(timeframe_key);
-    if (!timeframe_opt.has_value()) {
-        return false;
-    }
-
-    // Create time vector with the actual tick values
-    std::vector<TimeFrameIndex> time_vector;
-    time_vector.reserve(analog_data.size());
-    for (size_t i = 0; i < analog_data.size(); ++i) {
-        time_vector.push_back(TimeFrameIndex(start_tick + static_cast<int64_t>(i)));
-    }
-
-    // Create the analog series
-    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data), std::move(time_vector));
-    setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
-    return true;
-}
-
-bool DataManager::createAnalogTimeSeriesWithCamera(std::string const & data_key,
-                                                   std::string const & timeframe_key,
-                                                   std::vector<float> analog_data,
-                                                   std::vector<int64_t> frame_indices,
-                                                   bool overwrite) {
-    if (analog_data.size() != frame_indices.size()) {
-        std::cerr << "Error: analog data and frame indices must have same size" << std::endl;
-        return false;
-    }
-
-    // Save frame_indices before they're moved
-    std::vector<int64_t> frame_indices_copy = frame_indices;
-
-    // Create the camera timeframe
-    if (!createCameraTimeFrame(timeframe_key, std::move(frame_indices), overwrite)) {
-        return false;
-    }
-
-    // Get the timeframe
-    auto timeframe_opt = getTimeV2(timeframe_key);
-    if (!timeframe_opt.has_value()) {
-        return false;
-    }
-
-    // Create time vector with the actual frame indices
-    std::vector<TimeFrameIndex> time_vector;
-    time_vector.reserve(analog_data.size());
-    for (int64_t frame_idx: frame_indices_copy) {
-        time_vector.push_back(TimeFrameIndex(frame_idx));
-    }
-
-    // Create the analog series
-    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data), std::move(time_vector));
-    setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
-    return true;
-}
-
-bool DataManager::createAnalogTimeSeriesWithDenseCamera(std::string const & data_key,
-                                                        std::string const & timeframe_key,
-                                                        std::vector<float> analog_data,
-                                                        int64_t start_frame,
-                                                        bool overwrite) {
-    // Create the dense camera timeframe
-    if (!createDenseCameraTimeFrame(timeframe_key, start_frame,
-                                    static_cast<int64_t>(analog_data.size()), overwrite)) {
-        return false;
-    }
-
-    // Get the timeframe
-    auto timeframe_opt = getTimeV2(timeframe_key);
-    if (!timeframe_opt.has_value()) {
-        return false;
-    }
-
-    // Create time vector with the actual frame indices
-    std::vector<TimeFrameIndex> time_vector;
-    time_vector.reserve(analog_data.size());
-    for (size_t i = 0; i < analog_data.size(); ++i) {
-        time_vector.push_back(TimeFrameIndex(start_frame + static_cast<int64_t>(i)));
-    }
-
-    // Create the analog series
-    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data), std::move(time_vector));
-    setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
-    return true;
-}
-
-std::string DataManager::getAnalogCoordinateType(std::string const & data_key) {
-    // Check if the data exists and is an AnalogTimeSeries
-    if (_data.find(data_key) == _data.end()) {
-        return "not_found";
-    }
-
-    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(_data[data_key])) {
-        return "not_analog_timeseries";
-    }
-
-    auto series = std::get<std::shared_ptr<AnalogTimeSeries>>(_data[data_key]);
-    if (!series) {
-        return "null_series";
-    }
-
-    return series->getCoordinateType();
-}
-
-bool DataManager::analogUsesCoordinateTypeImpl(std::string const & data_key, std::string const & type_name) {
-    // Check if the data exists and is an AnalogTimeSeries
-    if (_data.find(data_key) == _data.end()) {
-        return false;
-    }
-
-    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(_data[data_key])) {
-        return false;
-    }
-
-    auto series = std::get<std::shared_ptr<AnalogTimeSeries>>(_data[data_key]);
-    if (!series) {
-        return false;
-    }
-
-    return series->getCoordinateType() == type_name;
-}

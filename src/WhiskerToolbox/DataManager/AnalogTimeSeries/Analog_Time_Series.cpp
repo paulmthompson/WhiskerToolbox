@@ -12,27 +12,24 @@
 
 AnalogTimeSeries::AnalogTimeSeries() :
  _data(),
- _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)),
- _timeframe_v2() {}
+ _time_storage(DenseTimeRange(TimeFrameIndex(0), 0))
+ {}
 
 AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map) :
  _data(),
- _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)),
- _timeframe_v2() {
+ _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {
     setData(std::move(analog_map));
 }
 
 AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) :
 _data(),
-_time_storage(DenseTimeRange(TimeFrameIndex(0), 0)),
-_timeframe_v2() {
+_time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {
     setData(std::move(analog_vector), std::move(time_vector));
 }
 
 AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples) :
 _data(),
-_time_storage(DenseTimeRange(TimeFrameIndex(0), num_samples)),
-_timeframe_v2() {
+_time_storage(DenseTimeRange(TimeFrameIndex(0), num_samples)) {
     if (analog_vector.size() != num_samples) {
         std::cerr << "Error: size of analog vector and number of samples are not the same!" << std::endl;
         return;

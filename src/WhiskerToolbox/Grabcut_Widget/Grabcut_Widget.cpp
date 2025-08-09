@@ -210,7 +210,7 @@ void Grabcut_Widget::_saveMask(){
     const char* mask_name = "grabcut_masks";
     if (!_data_manager->getData<MaskData>(mask_name)) {
         std::cout << "Creating " << mask_name << " in data manager " << std::endl;
-        _data_manager->setData<MaskData>(mask_name);
+        _data_manager->setData<MaskData>(mask_name, TimeKey("time"));
     }
 
     cv::Mat mask = _tool.getMask();

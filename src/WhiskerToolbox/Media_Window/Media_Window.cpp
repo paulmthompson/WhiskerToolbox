@@ -584,7 +584,7 @@ float Media_Window::getYAspect() const {
 void Media_Window::_plotLineData() {
     auto const current_time = _data_manager->getCurrentTime();
 
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     auto xAspect = getXAspect();
     auto yAspect = getYAspect();
@@ -595,7 +595,7 @@ void Media_Window::_plotLineData() {
 
         auto plot_color = plot_color_with_alpha(_line_config.get());
 
-        auto line_timeframe_key = _data_manager->getTimeFrame(line_key);
+        auto line_timeframe_key = _data_manager->getTimeKey(line_key);
         auto line_timeframe = _data_manager->getTime(line_timeframe_key);
 
         auto line_data = _data_manager->getData<LineData>(line_key);
@@ -733,7 +733,7 @@ void Media_Window::_plotLineData() {
 void Media_Window::_plotMaskData() {
     auto const current_time = _data_manager->getCurrentTime();
 
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     for (auto const & [mask_key, _mask_config]: _mask_configs) {
         if (!_mask_config.get()->is_visible) continue;
@@ -743,7 +743,7 @@ void Media_Window::_plotMaskData() {
         auto mask = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask->getImageSize();
 
-        auto mask_timeframe_key = _data_manager->getTimeFrame(mask_key);
+        auto mask_timeframe_key = _data_manager->getTimeKey(mask_key);
         auto mask_timeframe = _data_manager->getTime(mask_timeframe_key);
 
         // Check for preview data first
@@ -881,7 +881,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
     std::cout << "Media image size: " << media_image.width() << "x" << media_image.height() << std::endl;
     std::cout << "Canvas dimensions: " << _canvasWidth << "x" << _canvasHeight << std::endl;
 
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
     
     QImage final_image = media_image;
     
@@ -900,7 +900,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
         auto mask_data = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask_data->getImageSize();
 
-        auto mask_timeframe_key = _data_manager->getTimeFrame(mask_key);
+        auto mask_timeframe_key = _data_manager->getTimeKey(mask_key);
         auto mask_timeframe = _data_manager->getTime(mask_timeframe_key);
         
         std::cout << "Mask image size: " << image_size.width << "x" << image_size.height << std::endl;
@@ -947,7 +947,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
 void Media_Window::_plotPointData() {
 
     auto const current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     if (!video_timeframe) {
         std::cerr << "Error: Could not get video timeframe 'time' for point conversion" << std::endl;
@@ -961,7 +961,7 @@ void Media_Window::_plotPointData() {
 
         auto point = _data_manager->getData<PointData>(point_key);
 
-        auto point_timeframe_key = _data_manager->getTimeFrame(point_key);
+        auto point_timeframe_key = _data_manager->getTimeKey(point_key);
         if (point_timeframe_key.empty()) {
             std::cerr << "Error: No timeframe found for point data: " << point_key << std::endl;
             continue;
@@ -1083,7 +1083,7 @@ void Media_Window::_plotPointData() {
 
 void Media_Window::_plotDigitalIntervalSeries() {
     auto const current_time = _data_manager->getCurrentTime();
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     for (auto const & [key, _interval_config]: _interval_configs) {
         if (!_interval_config.get()->is_visible) continue;
@@ -1096,7 +1096,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
 
         // Get the timeframes for conversion
-        auto interval_timeframe_key = _data_manager->getTimeFrame(key);
+        auto interval_timeframe_key = _data_manager->getTimeKey(key);
         if (interval_timeframe_key.empty()) {
             std::cerr << "Error: No timeframe found for digital interval series: " << key << std::endl;
             continue;
@@ -1189,13 +1189,13 @@ void Media_Window::_plotDigitalIntervalBorders() {
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
 
         // Get the timeframes for conversion
-        auto interval_timeframe_key = _data_manager->getTimeFrame(key);
+        auto interval_timeframe_key = _data_manager->getTimeKey(key);
         if (interval_timeframe_key.empty()) {
             std::cerr << "Error: No timeframe found for digital interval series: " << key << std::endl;
             continue;
         }
 
-        auto video_timeframe = _data_manager->getTime("time");
+        auto video_timeframe = _data_manager->getTime(TimeKey("time"));
         auto interval_timeframe = _data_manager->getTime(interval_timeframe_key);
 
         if (!video_timeframe) {

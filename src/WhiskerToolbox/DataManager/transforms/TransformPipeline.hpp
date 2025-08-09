@@ -217,7 +217,8 @@ private:
      */
     void storeOutputData(std::string const& output_key, 
                         DataTypeVariant const& data, 
-                        std::string const& step_id);
+                        std::string const& step_id,
+                        TimeKey const& time_key);
     
     /**
      * @brief Group steps by execution phase

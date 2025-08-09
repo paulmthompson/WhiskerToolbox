@@ -358,7 +358,7 @@ void MediaMask_Widget::_applyDilationPermanently() {
 
     auto preview_masks = _scene->getPreviewMaskData(_active_key);
 
-    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame("time");
+    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
 
     // Clear existing masks at this time
     mask_data->clearAtTime(current_index_and_frame, false);
@@ -464,7 +464,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     auto brush_pixels = generate_ellipse_pixels(x_mask, y_mask, brush_radius_x, brush_radius_y);
 
 
-    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame("time");
+    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
     auto const & existing_masks = mask_data->getAtTime(current_index_and_frame);
 
     // Get or create the primary mask (index 0)
@@ -556,7 +556,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     float y_mask = y_mask_raw;
 
     // Get current time and existing masks
-    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame("time");
+    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
     auto const & existing_masks = mask_data->getAtTime(current_index_and_frame);
 
     // Check if there's a primary mask (index 0) to remove from

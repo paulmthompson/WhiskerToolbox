@@ -20,10 +20,10 @@ TEST_CASE("DataManager::setTime successfully registers TimeFrame objects", "[Dat
 
     SECTION("Register a new TimeFrame with a unique key") {
         auto timeframe = std::make_shared<TimeFrame>();
-        bool result = dm.setTime("test_time", timeframe);
+        bool result = dm.setTime(TimeKey("test_time"), timeframe);
 
         REQUIRE(result == true);
-        REQUIRE(dm.getTime("test_time") == timeframe);
+        REQUIRE(dm.getTime(TimeKey("test_time")) == timeframe);
         REQUIRE(dm.getTimeFrameKeys().size() == 2); // "time" exists by default + our new one
     }
 
@@ -31,13 +31,13 @@ TEST_CASE("DataManager::setTime successfully registers TimeFrame objects", "[Dat
         auto timeframe1 = std::make_shared<TimeFrame>();
         auto timeframe2 = std::make_shared<TimeFrame>();
 
-        bool result1 = dm.setTime("time1", timeframe1);
-        bool result2 = dm.setTime("time2", timeframe2);
+        bool result1 = dm.setTime(TimeKey("time1"), timeframe1);
+        bool result2 = dm.setTime(TimeKey("time2"), timeframe2);
 
         REQUIRE(result1 == true);
         REQUIRE(result2 == true);
-        REQUIRE(dm.getTime("time1") == timeframe1);
-        REQUIRE(dm.getTime("time2") == timeframe2);
+        REQUIRE(dm.getTime(TimeKey("time1")) == timeframe1);
+        REQUIRE(dm.getTime(TimeKey("time2")) == timeframe2);
         REQUIRE(dm.getTimeFrameKeys().size() == 3); // "time" exists by default + our 2 new ones
     }
 }
@@ -47,10 +47,10 @@ TEST_CASE("DataManager::setTime handles error conditions", "[DataManager][TimeFr
 
     SECTION("Reject nullptr TimeFrame") {
         std::shared_ptr<TimeFrame> null_timeframe = nullptr;
-        bool result = dm.setTime("null_time", null_timeframe);
+        bool result = dm.setTime(TimeKey("null_time"), null_timeframe);
 
         REQUIRE(result == false);
-        REQUIRE(dm.getTime("null_time") == nullptr);
+        REQUIRE(dm.getTime(TimeKey("null_time")) == nullptr);
         REQUIRE(dm.getTimeFrameKeys().size() == 1); // Only "time" exists by default
     }
 
@@ -58,12 +58,12 @@ TEST_CASE("DataManager::setTime handles error conditions", "[DataManager][TimeFr
         auto timeframe1 = std::make_shared<TimeFrame>();
         auto timeframe2 = std::make_shared<TimeFrame>();
 
-        bool result1 = dm.setTime("duplicate", timeframe1);
-        bool result2 = dm.setTime("duplicate", timeframe2);
+        bool result1 = dm.setTime(TimeKey("duplicate"), timeframe1);
+        bool result2 = dm.setTime(TimeKey("duplicate"), timeframe2);
 
         REQUIRE(result1 == true);
         REQUIRE(result2 == false);
-        REQUIRE(dm.getTime("duplicate") == timeframe1); // First one should remain
+        REQUIRE(dm.getTime(TimeKey("duplicate")) == timeframe1); // First one should remain
         REQUIRE(dm.getTimeFrameKeys().size() == 2); // Only "time" and "duplicate" exist
     }
 }
@@ -80,15 +80,15 @@ TEST_CASE("DataManager::getTime retrieves TimeFrame objects correctly", "[DataMa
     SECTION("Get TimeFrame by key") {
         // Register a new TimeFrame
         auto custom_timeframe = std::make_shared<TimeFrame>();
-        dm.setTime("custom_time", custom_timeframe);
+        dm.setTime(TimeKey("custom_time"), custom_timeframe);
 
         // Retrieve it by key
-        auto retrieved_timeframe = dm.getTime("custom_time");
+        auto retrieved_timeframe = dm.getTime(TimeKey("custom_time"));
         REQUIRE(retrieved_timeframe == custom_timeframe);
     }
 
     SECTION("Getting non-existent TimeFrame returns nullptr") {
-        auto non_existent = dm.getTime("non_existent_key");
+        auto non_existent = dm.getTime(TimeKey("non_existent_key"));
         REQUIRE(non_existent == nullptr);
     }
 }
@@ -96,87 +96,76 @@ TEST_CASE("DataManager::getTime retrieves TimeFrame objects correctly", "[DataMa
 TEST_CASE("DataManager::setTimeFrame assigns TimeFrames to data objects", "[DataManager][TimeFrame]") {
     DataManager dm;
     // Add some test data
-    dm.setData<PointData>("test_points");
     auto custom_timeframe = std::make_shared<TimeFrame>();
-    dm.setTime("custom_time", custom_timeframe);
+    dm.setTime(TimeKey("custom_time"), custom_timeframe);
+    dm.setData<PointData>("test_points", TimeKey("custom_time"));
+
 
     SECTION("Associate data with a valid time frame") {
-        bool result = dm.setTimeFrame("test_points", "custom_time");
+        bool result = dm.setTimeKey("test_points", TimeKey("custom_time"));
 
         REQUIRE(result == true);
-        REQUIRE(dm.getTimeFrame("test_points") == "custom_time");
+        REQUIRE(dm.getTimeKey("test_points") == TimeKey("custom_time"));
     }
 
     SECTION("Associate data with default time frame") {
-        bool result = dm.setTimeFrame("test_points", "time");
+        bool result = dm.setTimeKey("test_points", TimeKey("time"));
 
         REQUIRE(result == true);
-        REQUIRE(dm.getTimeFrame("test_points") == "time");
+        REQUIRE(dm.getTimeKey("test_points") == TimeKey("time"));
     }
 }
 
-TEST_CASE("DataManager::setTimeFrame handles error conditions", "[DataManager][TimeFrame][Error]") {
+TEST_CASE("DataManager::setTimeKey handles error conditions", "[DataManager][TimeFrame][Error]") {
     DataManager dm;
-    dm.setData<PointData>("test_points");
+    dm.setData<PointData>("test_points", TimeKey("time"));
 
     SECTION("Invalid data key") {
-        bool result = dm.setTimeFrame("nonexistent_data", "time");
+        bool result = dm.setTimeKey("nonexistent_data", TimeKey("time"));
 
         REQUIRE(result == false);
     }
 
     SECTION("Invalid time key") {
-        bool result = dm.setTimeFrame("test_points", "nonexistent_time");
+        bool result = dm.setTimeKey("test_points", TimeKey("nonexistent_time"));
 
         REQUIRE(result == false);
         // Should keep the default time frame association
-        REQUIRE(dm.getTimeFrame("test_points") == "time");
+        REQUIRE(dm.getTimeKey("test_points") == TimeKey("time"));
     }
 }
 
-TEST_CASE("DataManager::getTimeFrame retrieves TimeFrame associations correctly", "[DataManager][TimeFrame]") {
+TEST_CASE("DataManager::getTimeKey retrieves TimeFrame associations correctly", "[DataManager][TimeFrame]") {
     DataManager dm;
 
     // Setup - create some data and time frames
-    dm.setData<PointData>("test_points");
     auto custom_timeframe = std::make_shared<TimeFrame>();
-    dm.setTime("custom_time", custom_timeframe);
-    dm.setTimeFrame("test_points", "custom_time");
+    dm.setTime(TimeKey("custom_time"), custom_timeframe);
+    dm.setTimeKey("test_points", TimeKey("custom_time"));
+    dm.setData<PointData>("test_points", TimeKey("custom_time"));
+
 
     SECTION("Get existing TimeFrame association") {
-        std::string time_key = dm.getTimeFrame("test_points");
-        REQUIRE(time_key == "custom_time");
+        TimeKey time_key = dm.getTimeKey("test_points");
+        REQUIRE(time_key == TimeKey("custom_time"));
     }
 
     SECTION("Default TimeFrame association") {
         // Add new data without explicit TimeFrame
-        dm.setData<PointData>("default_points");
+        dm.setData<PointData>("default_points", TimeKey("time"));
 
         // Should be associated with default "time"
-        std::string time_key = dm.getTimeFrame("default_points");
-        REQUIRE(time_key == "time");
+        TimeKey time_key = dm.getTimeKey("default_points");
+        REQUIRE(time_key == TimeKey("time"));
     }
 }
 
-TEST_CASE("DataManager::getTimeFrame handles error conditions", "[DataManager][TimeFrame][Error]") {
+TEST_CASE("DataManager::getTimeKey handles error conditions", "[DataManager][TimeFrame][Error]") {
     DataManager dm;
 
     SECTION("Non-existent data key") {
-        std::string time_key = dm.getTimeFrame("nonexistent_data");
-        REQUIRE(time_key.empty());
-    }
-
-    SECTION("Data without TimeFrame association") {
-        // Create data but manipulate internal state to remove TimeFrame association
-        // This is a bit of a hack to test the second error condition, as setData automatically sets a TimeFrame
-        dm.setData<PointData>("unassociated_points");
-
-        // Directly manipulate the internal _time_frames map to remove the association
-        // In practice we would need to use friend classes or expose internals for testing
-        // For this example, we'll assume the normal API flow
-
-        // Since we can't easily test this case with the public API, we'll just note
-        // that this error path exists but is difficult to trigger in normal usage
+        TimeKey time_key = dm.getTimeKey("nonexistent_data");
+        REQUIRE(time_key == TimeKey(""));
     }
 }
 
@@ -186,7 +175,7 @@ TEST_CASE("DataManager::getTimeFrameKeys returns all TimeFrame keys", "[DataMana
     SECTION("Default state contains only 'time' key") {
         auto keys = dm.getTimeFrameKeys();
         REQUIRE(keys.size() == 1);
-        REQUIRE(keys[0] == "time");
+        REQUIRE(keys[0] == TimeKey("time"));
     }
 
     SECTION("Adding TimeFrames updates the key list") {
@@ -194,8 +183,8 @@ TEST_CASE("DataManager::getTimeFrameKeys returns all TimeFrame keys", "[DataMana
         auto timeframe1 = std::make_shared<TimeFrame>();
         auto timeframe2 = std::make_shared<TimeFrame>();
 
-        dm.setTime("custom_time1", timeframe1);
-        dm.setTime("custom_time2", timeframe2);
+        dm.setTime(TimeKey("custom_time1"), timeframe1);
+        dm.setTime(TimeKey("custom_time2"), timeframe2);
 
         // Get the keys
         auto keys = dm.getTimeFrameKeys();
@@ -204,36 +193,36 @@ TEST_CASE("DataManager::getTimeFrameKeys returns all TimeFrame keys", "[DataMana
         REQUIRE(keys.size() == 3);
 
         // Check that all expected keys are present (order not guaranteed)
-        auto has_key = [&keys](const std::string& key) {
+        auto has_key = [&keys](const TimeKey& key) {
             return std::find(keys.begin(), keys.end(), key) != keys.end();
         };
 
-        REQUIRE(has_key("time"));
-        REQUIRE(has_key("custom_time1"));
-        REQUIRE(has_key("custom_time2"));
+        REQUIRE(has_key(TimeKey("time")));
+        REQUIRE(has_key(TimeKey("custom_time1")));
+        REQUIRE(has_key(TimeKey("custom_time2")));
     }
 
     SECTION("Keys remain stable after modifications") {
         // Add a TimeFrame
         auto timeframe = std::make_shared<TimeFrame>();
-        dm.setTime("custom_time", timeframe);
+        dm.setTime(TimeKey("custom_time"), timeframe);
 
         // Verify it's added
         {
             auto keys = dm.getTimeFrameKeys();
             REQUIRE(keys.size() == 2);
-            REQUIRE(std::find(keys.begin(), keys.end(), "custom_time") != keys.end());
+            REQUIRE(std::find(keys.begin(), keys.end(), TimeKey("custom_time")) != keys.end());
         }
 
         // Try to add a duplicate (which should fail)
         auto duplicate = std::make_shared<TimeFrame>();
-        dm.setTime("custom_time", duplicate);
+        dm.setTime(TimeKey("custom_time"), duplicate);
 
         // Verify keys haven't changed
         {
             auto keys = dm.getTimeFrameKeys();
             REQUIRE(keys.size() == 2); // Still just 2 keys
-            REQUIRE(std::find(keys.begin(), keys.end(), "custom_time") != keys.end());
+            REQUIRE(std::find(keys.begin(), keys.end(), TimeKey("custom_time")) != keys.end());
         }
     }
 }
@@ -242,7 +231,7 @@ TEST_CASE("DataManager::addCallbackToData registers callbacks with data objects"
     DataManager dm;
 
     // Setup - create some test data
-    dm.setData<PointData>("test_points");
+    dm.setData<PointData>("test_points", TimeKey("time"));
 
     SECTION("Successfully register callback to valid data") {
         bool callback_executed = false;
@@ -300,7 +289,7 @@ TEST_CASE("DataManager::removeCallbackFromData removes registered callbacks", "[
     DataManager dm;
 
     // Setup - create some test data
-    dm.setData<PointData>("test_points");
+    dm.setData<PointData>("test_points", TimeKey("time"));
 
     SECTION("Successfully remove registered callback") {
         // Setup - register a callback
@@ -357,7 +346,7 @@ TEST_CASE("DataManager::removeCallbackFromData handles error conditions", "[Data
 
     SECTION("Handles invalid callback ID gracefully") {
         // Setup - create test data
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
 
         // Try to remove a callback that doesn't exist
         bool result = dm.removeCallbackFromData("test_points", 9999);
@@ -382,12 +371,12 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         dm.addObserver(callback);
 
         // Add data which should trigger the callback
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
 
         REQUIRE(callback_count == 1);
 
         // Add another data object, should trigger again
-        dm.setData<PointData>("more_points");
+        dm.setData<PointData>("more_points", TimeKey("time"));
 
         REQUIRE(callback_count == 2);
     }
@@ -404,7 +393,7 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         dm.addObserver(callback2);
 
         // Trigger notification
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
 
         // Both callbacks should be called
         REQUIRE(callback1_count == 1);
@@ -418,18 +407,18 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         dm.addObserver(callback);
 
         // Different operations that should trigger notifications
-        dm.setData<PointData>("points");
+        dm.setData<PointData>("points", TimeKey("time"));
         REQUIRE(notification_count == 1);
 
         // Adding with custom TimeFrame
         auto custom_time = std::make_shared<TimeFrame>();
-        dm.setTime("custom_time", custom_time);
-        dm.setData<PointData>("points2", std::make_shared<PointData>(), "custom_time");
+        dm.setTime(TimeKey("custom_time"), custom_time);
+        dm.setData<PointData>("points2", std::make_shared<PointData>(), TimeKey("custom_time"));
         REQUIRE(notification_count == 2);
 
         // Using variant form
         DataTypeVariant variant = std::make_shared<PointData>();
-        dm.setData("variant_points", variant);
+        dm.setData("variant_points", variant, TimeKey("custom_time"));
         REQUIRE(notification_count == 3);
     }
 
@@ -445,7 +434,7 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         dm.addObserver(callback);
 
         // Add data to trigger the callback
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
 
         // The observer should have captured the keys including our new one
         // (plus "media" which exists by default)
@@ -465,9 +454,9 @@ TEST_CASE("DataManager::getAllKeys returns all data keys", "[DataManager]") {
 
     SECTION("Adding data objects updates the key list") {
         // Add various data objects
-        dm.setData<PointData>("points1");
-        dm.setData<PointData>("points2");
-        dm.setData<LineData>("line1");
+        dm.setData<PointData>("points1", TimeKey("time"));
+        dm.setData<PointData>("points2", TimeKey("time"));
+        dm.setData<LineData>("line1", TimeKey("time"));
 
         // Get the keys
         auto keys = dm.getAllKeys();
@@ -488,7 +477,7 @@ TEST_CASE("DataManager::getAllKeys returns all data keys", "[DataManager]") {
 
     SECTION("Keys reflect changes to data collection") {
         // Add and then remove a data object
-        dm.setData<PointData>("temporary");
+        dm.setData<PointData>("temporary", TimeKey("time"));
 
         // First check that the key exists
         {
@@ -501,7 +490,7 @@ TEST_CASE("DataManager::getAllKeys returns all data keys", "[DataManager]") {
         // dm.removeData("temporary");
 
         // For now, we'll just test addition of data
-        dm.setData<LineData>("permanent");
+        dm.setData<LineData>("permanent", TimeKey("time"));
 
         // Check the updated keys
         auto keys = dm.getAllKeys();
@@ -519,10 +508,10 @@ TEST_CASE("DataManager::getKeys returns keys of the specified data type", "[Data
 
     SECTION("Returns only keys matching the requested type") {
         // Add various data objects
-        dm.setData<PointData>("points1");
-        dm.setData<PointData>("points2");
-        dm.setData<LineData>("line1");
-        dm.setData<MaskData>("mask1");
+        dm.setData<PointData>("points1", TimeKey("time"));
+        dm.setData<PointData>("points2", TimeKey("time"));
+        dm.setData<LineData>("line1", TimeKey("time"));
+        dm.setData<MaskData>("mask1", TimeKey("time"));
 
         // Get point keys
         auto point_keys = dm.getKeys<PointData>();
@@ -558,7 +547,7 @@ TEST_CASE("DataManager::getKeys returns keys of the specified data type", "[Data
         REQUIRE(dm.getKeys<PointData>().size() == 0);
 
         // Add a point data object
-        dm.setData<PointData>("dynamic_points");
+        dm.setData<PointData>("dynamic_points", TimeKey("time"));
 
         // Check that it appears in the keys
         auto point_keys = dm.getKeys<PointData>();
@@ -568,8 +557,8 @@ TEST_CASE("DataManager::getKeys returns keys of the specified data type", "[Data
 
     SECTION("Handles different template types") {
         // Add data of various types
-        dm.setData<PointData>("test_points");
-        dm.setData<LineData>("test_line");
+        dm.setData<PointData>("test_points", TimeKey("time"));
+        dm.setData<LineData>("test_line", TimeKey("time"));
 
         // Test with non-standard data types (that may be added later)
         // For now, we'll use the existing types
@@ -590,7 +579,7 @@ auto filename = "data/Media/test_each_frame_number.mp4";
 
 auto media = std::make_shared<VideoData>();
 media->LoadMedia(filename);
-dm.setData<VideoData>("media", media);
+dm.setData<VideoData>("media", media, TimeKey("time"));
 
 auto dm_media = dm.getData<MediaData>("media");
 
@@ -610,7 +599,7 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
     SECTION("VideoData type detection") {
         // Create VideoData object without loading from file
         auto video_data = std::make_shared<VideoData>();
-        dm.setData<VideoData>("test_video", video_data);
+        dm.setData<VideoData>("test_video", video_data, TimeKey("time"));
 
         // getType should correctly identify it as Video
         REQUIRE(dm.getType("test_video") == DM_DataType::Video);
@@ -623,7 +612,7 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
     SECTION("ImageData type detection") {
         // Create ImageData object without loading from folder
         auto image_data = std::make_shared<ImageData>();
-        dm.setData<ImageData>("test_images", image_data);
+        dm.setData<ImageData>("test_images", image_data, TimeKey("time"));
 
         // getType should correctly identify it as Images
         REQUIRE(dm.getType("test_images") == DM_DataType::Images);
@@ -638,8 +627,8 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         auto video_data = std::make_shared<VideoData>();
         auto image_data = std::make_shared<ImageData>();
         
-        dm.setData<VideoData>("my_video", video_data);
-        dm.setData<ImageData>("my_images", image_data);
+        dm.setData<VideoData>("my_video", video_data, TimeKey("time"));
+        dm.setData<ImageData>("my_images", image_data, TimeKey("time"));
 
         // Each should be correctly identified
         REQUIRE(dm.getType("my_video") == DM_DataType::Video);
@@ -653,15 +642,15 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         // Test all data types that getType should recognize
         
         // Points
-        dm.setData<PointData>("test_points");
+        dm.setData<PointData>("test_points", TimeKey("time"));
         REQUIRE(dm.getType("test_points") == DM_DataType::Points);
         
         // Lines
-        dm.setData<LineData>("test_lines");
+        dm.setData<LineData>("test_lines", TimeKey("time"));
         REQUIRE(dm.getType("test_lines") == DM_DataType::Line);
         
         // Masks
-        dm.setData<MaskData>("test_mask");
+        dm.setData<MaskData>("test_mask", TimeKey("time"));
         REQUIRE(dm.getType("test_mask") == DM_DataType::Mask);
         
     }
@@ -681,8 +670,8 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         auto image_data = std::make_shared<ImageData>();
         
         // Store them as their base class (MediaData) to test polymorphism
-        dm.setData<MediaData>("poly_video", video_data);
-        dm.setData<MediaData>("poly_images", image_data);
+        dm.setData<MediaData>("poly_video", video_data, TimeKey("time"));
+        dm.setData<MediaData>("poly_images", image_data, TimeKey("time"));
         
         // getType should still correctly identify the derived types via dynamic_cast
         REQUIRE(dm.getType("poly_video") == DM_DataType::Video);
@@ -692,16 +681,16 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
     SECTION("Replacing data updates type correctly") {
         // Start with one type
         auto video_data = std::make_shared<VideoData>();
-        dm.setData<VideoData>("replaceable", video_data);
+        dm.setData<VideoData>("replaceable", video_data, TimeKey("time"));
         REQUIRE(dm.getType("replaceable") == DM_DataType::Video);
         
         // Replace with different type
         auto image_data = std::make_shared<ImageData>();
-        dm.setData<ImageData>("replaceable", image_data);
+        dm.setData<ImageData>("replaceable", image_data, TimeKey("time"));
         REQUIRE(dm.getType("replaceable") == DM_DataType::Images);
         
         // Replace with completely different type
-        dm.setData<PointData>("replaceable");
+        dm.setData<PointData>("replaceable", TimeKey("time"));
         REQUIRE(dm.getType("replaceable") == DM_DataType::Points);
     }
 }

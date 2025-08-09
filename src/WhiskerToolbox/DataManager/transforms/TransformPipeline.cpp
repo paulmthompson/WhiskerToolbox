@@ -195,7 +195,8 @@ StepResult TransformPipeline::executeStep(PipelineStep const& step, ProgressCall
         }
         
         // Store output data
-        storeOutputData(step.output_key, output_data, step.step_id);
+        auto time_key = data_manager_->getTimeKey(step.input_key);
+        storeOutputData(step.output_key, output_data, step.step_id, time_key);
         result.result_data = output_data;
         result.success = true;
         
@@ -434,13 +435,14 @@ std::pair<bool, DataTypeVariant> TransformPipeline::getInputData(std::string con
 
 void TransformPipeline::storeOutputData(std::string const& output_key, 
                                        DataTypeVariant const& data, 
-                                       std::string const& step_id) {
+                                       std::string const& step_id,
+                                       TimeKey const& time_key) {
     if (output_key.empty()) {
         // Store as temporary data using step_id
         temporary_data_[step_id + "_output"] = data;
     } else {
         // Store in data manager
-        data_manager_->setData(output_key, data);
+        data_manager_->setData(output_key, data, time_key);
     }
 }
 

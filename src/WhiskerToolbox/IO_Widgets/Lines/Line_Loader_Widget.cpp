@@ -88,7 +88,7 @@ void Line_Loader_Widget::_loadSingleBinaryFile(QString const & filepath) {
     std::shared_ptr<LineData> line_data = load(opts);
 
     if (line_data) {
-        _data_manager->setData<LineData>(line_key, line_data);
+        _data_manager->setData<LineData>(line_key, line_data, TimeKey("time"));
         std::cout << "Successfully loaded binary line data: " << file_path_std << " into key: " << line_key << std::endl;
 
         ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
@@ -175,7 +175,7 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
             return;
         }
 
-        _data_manager->setData<LineData>(line_key);
+        _data_manager->setData<LineData>(line_key, TimeKey("time"));
         auto line_data_ptr = _data_manager->getData<LineData>(line_key);
 
         for (std::size_t i = 0; i < frames.size(); i++) {
@@ -259,7 +259,7 @@ void Line_Loader_Widget::_loadCSVData(std::map<TimeFrameIndex, std::vector<Line2
     }
     
     // Create a new LineData object in the data manager
-    _data_manager->setData<LineData>(line_key);
+    _data_manager->setData<LineData>(line_key, TimeKey("time"));
     auto line_data_ptr = _data_manager->getData<LineData>(line_key);
     
     // Add all the loaded data to the LineData object

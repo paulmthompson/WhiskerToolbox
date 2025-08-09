@@ -57,7 +57,7 @@ void Analog_Loader_Widget::_handleAnalogCSVLoadRequested(CSVAnalogLoaderOptions 
 
     try {
         auto analog_data_ptr = load(options);
-        _data_manager->setData<AnalogTimeSeries>(data_key, analog_data_ptr);
+        _data_manager->setData<AnalogTimeSeries>(data_key, analog_data_ptr, TimeKey("time"));
         
         std::cout << "Successfully loaded analog time series data with " 
                   << analog_data_ptr->getNumSamples() << " samples to key: " << data_key << std::endl;
@@ -97,7 +97,7 @@ void Analog_Loader_Widget::_handleBinaryAnalogLoadRequested(BinaryAnalogLoaderOp
                 channel_key = base_data_key + "_" + std::to_string(channel);
             }
             
-            _data_manager->setData<AnalogTimeSeries>(channel_key, analog_data_vector[channel]);
+            _data_manager->setData<AnalogTimeSeries>(channel_key, analog_data_vector[channel], TimeKey("time"));
             
             std::cout << "Successfully loaded analog time series channel " << channel 
                       << " with " << analog_data_vector[channel]->getNumSamples() 

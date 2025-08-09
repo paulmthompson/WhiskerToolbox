@@ -30,12 +30,12 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         auto camera_timeframe = std::make_shared<TimeFrame>(camera_times);
         
         // Register timeframes with DataManager
-        REQUIRE(dm.setTime("master", master_timeframe));
-        REQUIRE(dm.setTime("camera", camera_timeframe));
+        REQUIRE(dm.setTime(TimeKey("master"), master_timeframe));
+        REQUIRE(dm.setTime(TimeKey("camera"), camera_timeframe));
         
         // Verify timeframes are registered
-        auto retrieved_master = dm.getTime("master");
-        auto retrieved_camera = dm.getTime("camera");
+        auto retrieved_master = dm.getTime(TimeKey("master"));
+        auto retrieved_camera = dm.getTime(TimeKey("camera"));
         REQUIRE(retrieved_master != nullptr);
         REQUIRE(retrieved_camera != nullptr);
         REQUIRE(retrieved_master->getTotalFrameCount() == 30000);
@@ -60,7 +60,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         std::vector<int> master_times(30000);
         std::iota(master_times.begin(), master_times.end(), 1);
         auto master_timeframe = std::make_shared<TimeFrame>(master_times);
-        REQUIRE(dm.setTime("master", master_timeframe));
+        REQUIRE(dm.setTime(TimeKey("master"), master_timeframe));
         
         // Create analog data sampled at master rate
         std::vector<float> analog_values(30000);
@@ -78,13 +78,13 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         }
         
         auto analog_series = std::make_shared<AnalogTimeSeries>(analog_values, analog_indices);
-        dm.setData<AnalogTimeSeries>("neural_signal", analog_series, "master");
+        dm.setData<AnalogTimeSeries>("neural_signal", analog_series, TimeKey("master"));
         
         // Verify data is correctly associated
         auto retrieved_analog = dm.getData<AnalogTimeSeries>("neural_signal");
         REQUIRE(retrieved_analog != nullptr);
         REQUIRE(retrieved_analog->getAnalogTimeSeries().size() == 30000);
-        REQUIRE(dm.getTimeFrame("neural_signal") == "master");
+        REQUIRE(dm.getTimeKey("neural_signal") == TimeKey("master"));
         
         // Test specific values
         REQUIRE_THAT(retrieved_analog->getAnalogTimeSeries()[0], 
@@ -100,7 +100,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         std::vector<int> master_times(30000);
         std::iota(master_times.begin(), master_times.end(), 1);
         auto master_timeframe = std::make_shared<TimeFrame>(master_times);
-        REQUIRE(dm.setTime("master", master_timeframe));
+        REQUIRE(dm.setTime(TimeKey("master"), master_timeframe));
         
         // Create spike events at master resolution
         std::vector<float> spike_times = {
@@ -109,13 +109,13 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         };
         
         auto spike_series = std::make_shared<DigitalEventSeries>(spike_times);
-        dm.setData<DigitalEventSeries>("spike_events", spike_series, "master");
+        dm.setData<DigitalEventSeries>("spike_events", spike_series, TimeKey("master"));
         
         // Verify data
         auto retrieved_spikes = dm.getData<DigitalEventSeries>("spike_events");
         REQUIRE(retrieved_spikes != nullptr);
         REQUIRE(retrieved_spikes->size() == 11);
-        REQUIRE(dm.getTimeFrame("spike_events") == "master");
+        REQUIRE(dm.getTimeKey("spike_events") == TimeKey("master"));
         
         // Test event retrieval in range
         auto events_in_range = retrieved_spikes->getEventsAsVector(1000.0f, 20000.0f);
@@ -146,8 +146,8 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         }
         auto camera_timeframe = std::make_shared<TimeFrame>(camera_times);
         
-        REQUIRE(dm.setTime("master", master_timeframe));
-        REQUIRE(dm.setTime("camera", camera_timeframe));
+        REQUIRE(dm.setTime(TimeKey("master"), master_timeframe));
+        REQUIRE(dm.setTime(TimeKey("camera"), camera_timeframe));
         
         // Create behavior intervals at camera resolution (frame indices)
         std::vector<Interval> behavior_intervals = {
@@ -158,13 +158,13 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         };
         
         auto interval_series = std::make_shared<DigitalIntervalSeries>(behavior_intervals);
-        dm.setData<DigitalIntervalSeries>("behavior", interval_series, "camera");
+        dm.setData<DigitalIntervalSeries>("behavior", interval_series, TimeKey("camera"));
         
         // Verify data
         auto retrieved_intervals = dm.getData<DigitalIntervalSeries>("behavior");
         REQUIRE(retrieved_intervals != nullptr);
         REQUIRE(retrieved_intervals->size() == 4);
-        REQUIRE(dm.getTimeFrame("behavior") == "camera");
+        REQUIRE(dm.getTimeKey("behavior") == TimeKey("camera"));
         
     }
     
@@ -177,7 +177,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
             camera_times.push_back(1 + i * 300);
         }
         auto camera_timeframe = std::make_shared<TimeFrame>(camera_times);
-        REQUIRE(dm.setTime("camera", camera_timeframe));
+        REQUIRE(dm.setTime(TimeKey("camera"), camera_timeframe));
     }
     
     SECTION("Test time coordinate conversion edge cases") {
@@ -186,9 +186,9 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         // Create sparse camera timeframe (not every 300th sample)
         std::vector<int> sparse_camera_times = {1, 500, 1200, 2000, 3500, 5000};
         auto sparse_timeframe = std::make_shared<TimeFrame>(sparse_camera_times);
-        REQUIRE(dm.setTime("sparse_camera", sparse_timeframe));
+        REQUIRE(dm.setTime(TimeKey("sparse_camera"), sparse_timeframe));
         
-        auto retrieved_sparse = dm.getTime("sparse_camera");
+        auto retrieved_sparse = dm.getTime(TimeKey("sparse_camera"));
         
         // Test boundary conditions
         REQUIRE(retrieved_sparse->getIndexAtTime(0.0f) == TimeFrameIndex(0));     // Before first time
@@ -222,8 +222,8 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         }
         auto camera_timeframe = std::make_shared<TimeFrame>(camera_times);
         
-        REQUIRE(dm.setTime("master", master_timeframe));
-        REQUIRE(dm.setTime("camera", camera_timeframe));
+        REQUIRE(dm.setTime(TimeKey("master"), master_timeframe));
+        REQUIRE(dm.setTime(TimeKey("camera"), camera_timeframe));
         
         // Create synchronized data across timeframes
         
@@ -237,7 +237,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
             neural_indices.push_back(TimeFrameIndex(i));
         }
         auto neural_series = std::make_shared<AnalogTimeSeries>(neural_signal, neural_indices);
-        dm.setData<AnalogTimeSeries>("neural", neural_series, "master");
+        dm.setData<AnalogTimeSeries>("neural", neural_series, TimeKey("master"));
         
         // 2. Spike events at master rate
         std::vector<float> spike_times;
@@ -245,12 +245,12 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
             spike_times.push_back(static_cast<float>(i));
         }
         auto spike_series = std::make_shared<DigitalEventSeries>(spike_times);
-        dm.setData<DigitalEventSeries>("spikes", spike_series, "master");
+        dm.setData<DigitalEventSeries>("spikes", spike_series, TimeKey("master"));
         
         // 3. Behavior intervals at camera rate
         std::vector<Interval> behavior_intervals = {{10, 20}, {40, 60}, {80, 95}};
         auto behavior_series = std::make_shared<DigitalIntervalSeries>(behavior_intervals);
-        dm.setData<DigitalIntervalSeries>("behavior", behavior_series, "camera");
+        dm.setData<DigitalIntervalSeries>("behavior", behavior_series, TimeKey("camera"));
         
         // Test cross-timeframe queries
         

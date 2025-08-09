@@ -116,7 +116,7 @@ void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, s
 
     auto mask_data_ptr = load(opts);
 
-    _data_manager->setData<MaskData>(mask_key, mask_data_ptr);
+    _data_manager->setData<MaskData>(mask_key, mask_data_ptr, TimeKey("time"));
 
     ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
     mask_data_ptr->setImageSize(original_size);
@@ -135,7 +135,7 @@ void Mask_Loader_Widget::_handleImageMaskLoadRequested(ImageMaskLoaderOptions op
 
     auto mask_data_ptr = load(options);
 
-    _data_manager->setData<MaskData>(mask_key, mask_data_ptr);
+    _data_manager->setData<MaskData>(mask_key, mask_data_ptr, TimeKey("time"));
 
     ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
     mask_data_ptr->setImageSize(original_size);

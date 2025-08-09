@@ -231,7 +231,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Data Manager Integration",
     std::vector<float> test_data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
     std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)};
     auto series =std::make_shared<AnalogTimeSeries>(test_data, times);
-    data_manager->setData<AnalogTimeSeries>("test_analog", series);
+    data_manager->setData<AnalogTimeSeries>("test_analog", series, TimeKey("time"));
     
     // Create time scroll bar
     auto time_scrollbar = new TimeScrollBar();
@@ -506,7 +506,7 @@ TEST_CASE_METHOD(QtTestFixture, "Feature_Table_Widget - Data Manager Integration
     std::vector<float> test_data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
     std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)};
     auto series = std::make_shared<AnalogTimeSeries>(test_data, times);
-    data_manager->setData<AnalogTimeSeries>("test_analog", series);
+    data_manager->setData<AnalogTimeSeries>("test_analog", series, TimeKey("time"));
     
     // Create the feature table widget
     auto feature_table_widget = new Feature_Table_Widget();

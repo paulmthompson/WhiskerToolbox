@@ -109,11 +109,11 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Check for master clock
     auto time_keys = _data_manager->getTimeFrameKeys();
     // if timekeys doesn't have master, we should throw an error
-    if (std::find(time_keys.begin(), time_keys.end(), "master") == time_keys.end()) {
+    if (std::find(time_keys.begin(), time_keys.end(), TimeKey("master")) == time_keys.end()) {
         std::cout << "No master clock found in DataManager" << std::endl;
-        _time_frame = _data_manager->getTime("time");
+        _time_frame = _data_manager->getTime(TimeKey("time"));
     } else {
-        _time_frame = _data_manager->getTime("master");
+        _time_frame = _data_manager->getTime(TimeKey("master"));
     }
 
     std::cout << "Setting GL limit to " << _time_frame->getTotalFrameCount() << std::endl;
@@ -206,7 +206,7 @@ void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
 
 void DataViewer_Widget::_updatePlot(int time) {
     //std::cout << "Time is " << time;
-    time = _data_manager->getTime("time")->getTimeAtIndex(TimeFrameIndex(time));
+    time = _data_manager->getTime(TimeKey("time"))->getTimeAtIndex(TimeFrameIndex(time));
     //std::cout << ""
     ui->openGLWidget->updateCanvas(time);
 
@@ -259,7 +259,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         }
 
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         std::cout << "Time frame key: " << time_key << std::endl;
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
@@ -284,7 +284,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
@@ -305,7 +305,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
@@ -688,7 +688,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
@@ -704,7 +704,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
@@ -720,7 +720,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
