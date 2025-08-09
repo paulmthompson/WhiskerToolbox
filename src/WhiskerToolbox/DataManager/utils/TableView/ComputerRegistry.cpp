@@ -4,6 +4,8 @@
 #include "computers/EventInIntervalComputer.h"
 #include "computers/IntervalPropertyComputer.h"
 #include "computers/TimestampValueComputer.h"
+#include "computers/AnalogTimestampOffsetsMultiComputer.h"
+#include "computers/TimestampInIntervalComputer.h"
 #include "adapters/PointComponentAdapter.h"
 #include "adapters/LineDataAdapter.h"
 #include "interfaces/ILineSource.h"
@@ -569,6 +571,101 @@ void ComputerRegistry::registerBuiltInComputers() {
             return nullptr;
         };
         
+        registerComputer(std::move(info), std::move(factory));
+    }
+
+    // AnalogTimestampOffsetsMultiComputer - multi-output sampling at offsets
+    {
+        std::vector<std::unique_ptr<IParameterDescriptor>> paramDescriptors;
+        // Offsets provided as comma-separated integers, e.g., "-2,-1,0,1"
+        // Use a simple text parameter via IParameterDescriptor base replacement: reuse IntParameterDescriptor for a hint?
+        // We'll not enforce via UI here; consumers pass string list in parameters["offsets"].
+
+        ComputerInfo info("Analog Timestamp Offsets",
+                          "Sample analog values at specified integer offsets from each timestamp",
+                          typeid(double),
+                          "double",
+                          RowSelectorType::Timestamp,
+                          typeid(std::shared_ptr<IAnalogSource>),
+                          std::move(paramDescriptors));
+        info.isMultiOutput = true;
+        info.makeOutputSuffixes = [](std::map<std::string, std::string> const& parameters) {
+            std::vector<std::string> suffixes;
+            auto it = parameters.find("offsets");
+            if (it == parameters.end() || it->second.empty()) {
+                // default single output at t+0
+                suffixes.emplace_back(".t+0");
+                return suffixes;
+            }
+            std::string const & csv = it->second;
+            size_t pos = 0;
+            while (pos < csv.size()) {
+                size_t next = csv.find(',', pos);
+                std::string token = csv.substr(pos, next == std::string::npos ? std::string::npos : next - pos);
+                // trim spaces
+                size_t beg = token.find_first_not_of(" \t");
+                size_t end = token.find_last_not_of(" \t");
+                if (beg != std::string::npos) token = token.substr(beg, end - beg + 1);
+                int off = 0;
+                try { off = std::stoi(token); } catch (...) { off = 0; }
+                if (off == 0) suffixes.emplace_back(".t+0");
+                else if (off > 0) suffixes.emplace_back(".t+" + std::to_string(off));
+                else suffixes.emplace_back(".t" + std::to_string(off));
+                if (next == std::string::npos) break;
+                pos = next + 1;
+            }
+            if (suffixes.empty()) suffixes.emplace_back(".t+0");
+            return suffixes;
+        };
+
+        MultiComputerFactory factory = [](DataSourceVariant const& source,
+                                          std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
+                // parse offsets
+                std::vector<int> offsets;
+                auto it = parameters.find("offsets");
+                if (it != parameters.end()) {
+                    std::string const & csv = it->second;
+                    size_t pos = 0;
+                    while (pos < csv.size()) {
+                        size_t next = csv.find(',', pos);
+                        std::string token = csv.substr(pos, next == std::string::npos ? std::string::npos : next - pos);
+                        size_t beg = token.find_first_not_of(" \t");
+                        size_t end = token.find_last_not_of(" \t");
+                        if (beg != std::string::npos) token = token.substr(beg, end - beg + 1);
+                        try { offsets.push_back(std::stoi(token)); } catch (...) { offsets.push_back(0); }
+                        if (next == std::string::npos) break;
+                        pos = next + 1;
+                    }
+                }
+                if (offsets.empty()) offsets.push_back(0);
+                auto comp = std::make_unique<AnalogTimestampOffsetsMultiComputer>(*analogSrc, (*analogSrc)->getName(), offsets);
+                return std::make_unique<MultiComputerWrapper<double>>(std::move(comp));
+            }
+            return nullptr;
+        };
+
+        registerMultiComputer(std::move(info), std::move(factory));
+    }
+
+    // TimestampInIntervalComputer - bool for timestamps inside digital intervals
+    {
+        ComputerInfo info("Timestamp In Interval",
+                          "Returns true if timestamp lies within any digital interval",
+                          typeid(bool),
+                          "bool",
+                          RowSelectorType::Timestamp,
+                          typeid(std::shared_ptr<IIntervalSource>));
+
+        ComputerFactory factory = [](DataSourceVariant const& source,
+                                     std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                auto comp = std::make_unique<TimestampInIntervalComputer>(*intervalSrc, (*intervalSrc)->getName());
+                return std::make_unique<ComputerWrapper<bool>>(std::move(comp));
+            }
+            return nullptr;
+        };
+
         registerComputer(std::move(info), std::move(factory));
     }
 
