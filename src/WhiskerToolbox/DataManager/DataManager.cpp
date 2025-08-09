@@ -45,7 +45,7 @@ DataManager::DataManager() {
     _times[TimeKey("time")] = std::make_shared<TimeFrame>();
     _data["media"] = std::make_shared<MediaData>();
 
-    setTimeFrame("media", TimeKey("time"));
+    setTimeKey("media", TimeKey("time"));
     _output_path = std::filesystem::current_path();
 
     // Initialize TableRegistry
@@ -73,7 +73,7 @@ void DataManager::reset() {
     
     // Clear all data-to-timeframe mappings and recreate the default media mapping
     _time_frames.clear();
-    setTimeFrame("media", TimeKey("time"));
+    setTimeKey("media", TimeKey("time"));
 
     
     // Reset current time
@@ -146,7 +146,7 @@ bool DataManager::removeTime(TimeKey const & key) {
     return true;
 }
 
-bool DataManager::setTimeFrame(std::string const & data_key, TimeKey const & time_key) {
+bool DataManager::setTimeKey(std::string const & data_key, TimeKey const & time_key) {
     if (_data.find(data_key) == _data.end()) {
         std::cerr << "Error: Data key not found in DataManager: " << data_key << std::endl;
         return false;
@@ -169,7 +169,7 @@ bool DataManager::setTimeFrame(std::string const & data_key, TimeKey const & tim
     return true;
 }
 
-TimeKey DataManager::getTimeFrame(std::string const & data_key) {
+TimeKey DataManager::getTimeKey(std::string const & data_key) {
     // check if data_key exists
     if (_data.find(data_key) == _data.end()) {
         std::cerr << "Error: Data key not found in DataManager: " << data_key << std::endl;
@@ -290,7 +290,7 @@ std::optional<DataTypeVariant> DataManager::getDataVariant(std::string const & k
 
 void DataManager::setData(std::string const & key, DataTypeVariant data) {
     _data[key] = data;
-    setTimeFrame(key, TimeKey("time"));
+    setTimeKey(key, TimeKey("time"));
     _notifyObservers();
 }
 
@@ -481,7 +481,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                     if (item.contains("clock")) {
                         TimeKey const clock = TimeKey(item["clock"]);
-                        dm->setTimeFrame(channel_name, clock);
+                        dm->setTimeKey(channel_name, clock);
                     }
                 }
                 break;
@@ -497,7 +497,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                     if (item.contains("clock")) {
                         TimeKey const clock = TimeKey(item["clock"]);
-                        dm->setTimeFrame(channel_name, clock);
+                        dm->setTimeKey(channel_name, clock);
                     }
                 }
                 break;
@@ -615,7 +615,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
         if (item.contains("clock")) {
             TimeKey const clock = TimeKey(item["clock"]);
             std::cout << "Setting time for " << name << " to " << clock << std::endl;
-            dm->setTimeFrame(name, clock);
+            dm->setTimeKey(name, clock);
         }
     }
 

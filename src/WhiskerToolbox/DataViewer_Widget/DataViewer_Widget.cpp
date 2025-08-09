@@ -259,7 +259,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         }
 
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         std::cout << "Time frame key: " << time_key << std::endl;
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
@@ -284,7 +284,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
@@ -305,7 +305,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
@@ -688,7 +688,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
@@ -704,7 +704,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
@@ -720,7 +720,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
 
-        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_key = _data_manager->getTimeKey(key);
         auto time_frame = _data_manager->getTime(time_key);
         if (!time_frame) {
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;

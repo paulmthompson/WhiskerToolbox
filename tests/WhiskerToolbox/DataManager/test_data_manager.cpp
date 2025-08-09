@@ -101,50 +101,50 @@ TEST_CASE("DataManager::setTimeFrame assigns TimeFrames to data objects", "[Data
     dm.setTime(TimeKey("custom_time"), custom_timeframe);
 
     SECTION("Associate data with a valid time frame") {
-        bool result = dm.setTimeFrame("test_points", TimeKey("custom_time"));
+        bool result = dm.setTimeKey("test_points", TimeKey("custom_time"));
 
         REQUIRE(result == true);
-        REQUIRE(dm.getTimeFrame("test_points") == TimeKey("custom_time"));
+        REQUIRE(dm.getTimeKey("test_points") == TimeKey("custom_time"));
     }
 
     SECTION("Associate data with default time frame") {
-        bool result = dm.setTimeFrame("test_points", TimeKey("time"));
+        bool result = dm.setTimeKey("test_points", TimeKey("time"));
 
         REQUIRE(result == true);
-        REQUIRE(dm.getTimeFrame("test_points") == TimeKey("time"));
+        REQUIRE(dm.getTimeKey("test_points") == TimeKey("time"));
     }
 }
 
-TEST_CASE("DataManager::setTimeFrame handles error conditions", "[DataManager][TimeFrame][Error]") {
+TEST_CASE("DataManager::setTimeKey handles error conditions", "[DataManager][TimeFrame][Error]") {
     DataManager dm;
     dm.setData<PointData>("test_points");
 
     SECTION("Invalid data key") {
-        bool result = dm.setTimeFrame("nonexistent_data", TimeKey("time"));
+        bool result = dm.setTimeKey("nonexistent_data", TimeKey("time"));
 
         REQUIRE(result == false);
     }
 
     SECTION("Invalid time key") {
-        bool result = dm.setTimeFrame("test_points", TimeKey("nonexistent_time"));
+        bool result = dm.setTimeKey("test_points", TimeKey("nonexistent_time"));
 
         REQUIRE(result == false);
         // Should keep the default time frame association
-        REQUIRE(dm.getTimeFrame("test_points") == TimeKey("time"));
+        REQUIRE(dm.getTimeKey("test_points") == TimeKey("time"));
     }
 }
 
-TEST_CASE("DataManager::getTimeFrame retrieves TimeFrame associations correctly", "[DataManager][TimeFrame]") {
+TEST_CASE("DataManager::getTimeKey retrieves TimeFrame associations correctly", "[DataManager][TimeFrame]") {
     DataManager dm;
 
     // Setup - create some data and time frames
     dm.setData<PointData>("test_points");
     auto custom_timeframe = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("custom_time"), custom_timeframe);
-    dm.setTimeFrame("test_points", TimeKey("custom_time"));
+    dm.setTimeKey("test_points", TimeKey("custom_time"));
 
     SECTION("Get existing TimeFrame association") {
-        TimeKey time_key = dm.getTimeFrame("test_points");
+        TimeKey time_key = dm.getTimeKey("test_points");
         REQUIRE(time_key == TimeKey("custom_time"));
     }
 
@@ -153,16 +153,16 @@ TEST_CASE("DataManager::getTimeFrame retrieves TimeFrame associations correctly"
         dm.setData<PointData>("default_points");
 
         // Should be associated with default "time"
-        TimeKey time_key = dm.getTimeFrame("default_points");
+        TimeKey time_key = dm.getTimeKey("default_points");
         REQUIRE(time_key == TimeKey("time"));
     }
 }
 
-TEST_CASE("DataManager::getTimeFrame handles error conditions", "[DataManager][TimeFrame][Error]") {
+TEST_CASE("DataManager::getTimeKey handles error conditions", "[DataManager][TimeFrame][Error]") {
     DataManager dm;
 
     SECTION("Non-existent data key") {
-        TimeKey time_key = dm.getTimeFrame("nonexistent_data");
+        TimeKey time_key = dm.getTimeKey("nonexistent_data");
         REQUIRE(time_key == TimeKey(""));
     }
 

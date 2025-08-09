@@ -82,31 +82,31 @@ public:
     bool removeTime(TimeKey const & key);
 
     /**
-    * @brief Set the time frame for a specific data key
+    * @brief Set the time key for a specific data key
     *
     * Associates a data object with a specific temporal coordinate system.
     *
-    * @param data_key The data key to set the time frame for
+    * @param data_key The data key to set the time key for
     * @param time_key The time key to associate with the data
     * @return bool True if the time frame was successfully set, false otherwise
     *
     * @note If data_key or time_key doesn't exist, an error message will be printed
     *       to std::cerr and the function will return false
     */
-    bool setTimeFrame(std::string const & data_key, TimeKey const & time_key);
+    bool setTimeKey(std::string const & data_key, TimeKey const & time_key);
 
     /**
-    * @brief Get the time frame for a specific data key
+    * @brief Get the time key for a specific data key
     *
     * Retrieves the TimeFrame key associated with a particular data object.
     *
     * @param data_key The data key to get the time frame for
-    * @return The TimeFrame key as a string, or empty string if an error occurred
+    * @return The TimeKey, or empty string if an error occurred
     *
     * @note If data_key doesn't exist or doesn't have an associated TimeFrame,
     *       an error message will be printed to std::cerr and an empty string will be returned
     */
-    [[nodiscard]] TimeKey getTimeFrame(std::string const & data_key);
+    [[nodiscard]] TimeKey getTimeKey(std::string const & data_key);
 
     /**
     * @brief Get all registered TimeFrame keys
@@ -256,14 +256,14 @@ public:
     template<typename T>
     void setData(std::string const & key) {
         _data[key] = std::make_shared<T>();
-        setTimeFrame(key, TimeKey("time"));
+        setTimeKey(key, TimeKey("time"));
         _notifyObservers();
     }
 
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data) {
         _data[key] = data;
-        setTimeFrame(key, TimeKey("time"));
+        setTimeKey(key, TimeKey("time"));
         _notifyObservers();
     }
 
@@ -272,7 +272,7 @@ public:
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data, TimeKey const & time_key) {
         _data[key] = data;
-        setTimeFrame(key, time_key);
+        setTimeKey(key, time_key);
         _notifyObservers();
     }
 

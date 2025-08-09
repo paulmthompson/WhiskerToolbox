@@ -502,7 +502,7 @@ void Export_Video_Widget::_updateAudioSourcesTable() {
         auto series = _data_manager->getData<DigitalEventSeries>(key);
         if (!series) continue;
 
-        std::string time_frame_key = _data_manager->getTimeFrame(key).str();
+        std::string time_frame_key = _data_manager->getTimeKey(key).str();
         int event_count = static_cast<int>(series->size());
 
         // Create audio source

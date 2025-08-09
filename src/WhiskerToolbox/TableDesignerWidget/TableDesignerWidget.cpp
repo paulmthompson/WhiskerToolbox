@@ -1394,7 +1394,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
             }
 
             auto events = event_series->getEventSeries();
-            auto timeframe_key = _data_manager->getTimeFrame(source_name_str);
+            auto timeframe_key = _data_manager->getTimeKey(source_name_str);
             auto timeframe_obj = _data_manager->getTime(timeframe_key);
             if (!timeframe_obj) {
                 qDebug() << "TimeFrame not found for events:" << timeframe_key.str();
@@ -1418,7 +1418,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
             }
 
             auto intervals = interval_series->getDigitalIntervalSeries();
-            auto timeframe_key = _data_manager->getTimeFrame(source_name_str);
+            auto timeframe_key = _data_manager->getTimeKey(source_name_str);
             auto timeframe_obj = _data_manager->getTime(timeframe_key);
             if (!timeframe_obj) {
                 qDebug() << "TimeFrame not found for intervals:" << timeframe_key.str();

@@ -84,7 +84,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         auto retrieved_analog = dm.getData<AnalogTimeSeries>("neural_signal");
         REQUIRE(retrieved_analog != nullptr);
         REQUIRE(retrieved_analog->getAnalogTimeSeries().size() == 30000);
-        REQUIRE(dm.getTimeFrame("neural_signal") == TimeKey("master"));
+        REQUIRE(dm.getTimeKey("neural_signal") == TimeKey("master"));
         
         // Test specific values
         REQUIRE_THAT(retrieved_analog->getAnalogTimeSeries()[0], 
@@ -115,7 +115,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         auto retrieved_spikes = dm.getData<DigitalEventSeries>("spike_events");
         REQUIRE(retrieved_spikes != nullptr);
         REQUIRE(retrieved_spikes->size() == 11);
-        REQUIRE(dm.getTimeFrame("spike_events") == TimeKey("master"));
+        REQUIRE(dm.getTimeKey("spike_events") == TimeKey("master"));
         
         // Test event retrieval in range
         auto events_in_range = retrieved_spikes->getEventsAsVector(1000.0f, 20000.0f);
@@ -164,7 +164,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         auto retrieved_intervals = dm.getData<DigitalIntervalSeries>("behavior");
         REQUIRE(retrieved_intervals != nullptr);
         REQUIRE(retrieved_intervals->size() == 4);
-        REQUIRE(dm.getTimeFrame("behavior") == TimeKey("camera"));
+        REQUIRE(dm.getTimeKey("behavior") == TimeKey("camera"));
         
     }
     

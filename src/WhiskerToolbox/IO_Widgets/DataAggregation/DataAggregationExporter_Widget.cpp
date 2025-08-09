@@ -147,7 +147,7 @@ void DataAggregationExporter_Widget::_populateAvailableDataTable()
         ui->available_data_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type_str)));
         
         // Time Frame
-        std::string time_frame = _data_manager->getTimeFrame(key).str();
+        std::string time_frame = _data_manager->getTimeKey(key).str();
         ui->available_data_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(time_frame)));
     }
 }
@@ -493,7 +493,7 @@ std::unique_ptr<IRowSelector> DataAggregationExporter_Widget::_createRowSelector
     
     // Get the intervals and time frame
     const auto& intervals = interval_data->getDigitalIntervalSeries();
-    auto interval_time_frame_key = _data_manager->getTimeFrame(interval_source);
+    auto interval_time_frame_key = _data_manager->getTimeKey(interval_source);
     auto time_frame = _data_manager->getTime(interval_time_frame_key);
     if (!time_frame) {
         throw std::runtime_error("Could not retrieve time frame for key: " + interval_source);
@@ -523,7 +523,7 @@ void DataAggregationExporter_Widget::_addColumnsToBuilder(TableViewBuilder& buil
 std::unique_ptr<IColumnComputer<double>> DataAggregationExporter_Widget::_createComputer(const ExportColumn& column) const
 {
 
-    auto time_frame_key = _data_manager->getTimeFrame(column.data_key);
+    auto time_frame_key = _data_manager->getTimeKey(column.data_key);
     auto source_time_frame = _data_manager->getTime(time_frame_key);
 
     if (column.transformation_type == "mean" || 

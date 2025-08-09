@@ -207,7 +207,7 @@ void Analysis_Dashboard::_changeScrollbar(int64_t time_frame_index, std::string 
 
     auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
-    auto active_feature_timeframe_key = _data_manager->getTimeFrame(active_feature);
+    auto active_feature_timeframe_key = _data_manager->getTimeKey(active_feature);
 
     if (!active_feature_timeframe_key.empty()) {
         auto feature_timeframe = _data_manager->getTime(active_feature_timeframe_key);

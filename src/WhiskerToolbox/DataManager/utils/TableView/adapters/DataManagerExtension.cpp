@@ -46,7 +46,7 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(std
             return nullptr;
         }
 
-        auto timeFrame_key = m_dataManager.getTimeFrame(name);
+        auto timeFrame_key = m_dataManager.getTimeKey(name);
         auto timeFrame = m_dataManager.getTime(timeFrame_key);
 
         return std::make_shared<AnalogDataAdapter>(analogData, timeFrame, name);
@@ -63,7 +63,7 @@ std::shared_ptr<IEventSource> DataManagerExtension::createDigitalEventDataAdapte
             return nullptr;
         }
 
-        auto timeFrame_key = m_dataManager.getTimeFrame(name);
+        auto timeFrame_key = m_dataManager.getTimeKey(name);
         auto timeFrame = m_dataManager.getTime(timeFrame_key);
 
         return std::make_shared<DigitalEventDataAdapter>(digitalEventSeries, timeFrame, name);
@@ -80,7 +80,7 @@ std::shared_ptr<IIntervalSource> DataManagerExtension::createDigitalIntervalData
             return nullptr;
         }
 
-        auto timeFrame_key = m_dataManager.getTimeFrame(name);
+        auto timeFrame_key = m_dataManager.getTimeKey(name);
         auto timeFrame = m_dataManager.getTime(timeFrame_key);
 
         return std::make_shared<DigitalIntervalDataAdapter>(digitalIntervalSeries, timeFrame, name);
@@ -97,7 +97,7 @@ std::shared_ptr<ILineSource> DataManagerExtension::createLineDataAdapter(std::st
             return nullptr;
         }
 
-        auto timeFrame_key = m_dataManager.getTimeFrame(name);
+        auto timeFrame_key = m_dataManager.getTimeKey(name);
         auto timeFrame = m_dataManager.getTime(timeFrame_key);
 
         return std::make_shared<LineDataAdapter>(lineData, timeFrame, name);
@@ -117,7 +117,7 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createPointComponentAdapter
             return nullptr;
         }
 
-        auto timeFrame_key = m_dataManager.getTimeFrame(pointDataName);
+        auto timeFrame_key = m_dataManager.getTimeKey(pointDataName);
         auto timeFrame = m_dataManager.getTime(timeFrame_key);
 
         // Create the full name for the virtual source

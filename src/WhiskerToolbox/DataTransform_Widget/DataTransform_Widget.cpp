@@ -390,9 +390,9 @@ void DataTransform_Widget::_doTransform() {
     _data_manager->setData(new_data_key, result_any);
 
     // Make sure new data is in the same temporal coordinate system as the input
-    auto input_time_key = _data_manager->getTimeFrame(_highlighted_available_feature.toStdString());
+    auto input_time_key = _data_manager->getTimeKey(_highlighted_available_feature.toStdString());
     if (!input_time_key.empty()) {
-        auto success = _data_manager->setTimeFrame(new_data_key, input_time_key);
+        auto success = _data_manager->setTimeKey(new_data_key, input_time_key);
         std::cout << "Time key "<< input_time_key << " for input feature: " 
                   << _highlighted_available_feature.toStdString() << " was "
                   << "set for new data: " << (success ? "Success" : "Failed") << std::endl;
