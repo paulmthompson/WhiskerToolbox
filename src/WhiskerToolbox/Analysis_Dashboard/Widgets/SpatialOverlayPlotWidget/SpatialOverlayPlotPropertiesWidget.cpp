@@ -552,7 +552,7 @@ void SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() {
     _total_frame_count = 0;
     {
         try {
-            auto timeFrame = _data_manager->getTime("time");
+            auto timeFrame = _data_manager->getTime(TimeKey("time"));
             if (timeFrame) {
                 _total_frame_count = static_cast<int>(timeFrame->getTotalFrameCount());
                 qDebug() << "Total frame count from data manager:" << _total_frame_count;

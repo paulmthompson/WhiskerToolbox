@@ -13,13 +13,13 @@ TEST_CASE("TimestampInIntervalComputer basic integration", "[TimestampInInterval
     // Build a simple timeframe 0..9
     std::vector<int> times(10); for (int i=0;i<10;++i) times[i]=i;
     auto tf = std::make_shared<TimeFrame>(times);
-    dm.setTime("cam", tf, true);
+    dm.setTime(TimeKey("cam"), tf, true);
 
     // Create digital interval series: [2,4] and [7,8]
     auto dis = std::make_shared<DigitalIntervalSeries>();
     dis->addEvent(Interval{2,4});
     dis->addEvent(Interval{7,8});
-    dm.setData<DigitalIntervalSeries>("Intervals", dis, "cam");
+    dm.setData<DigitalIntervalSeries>("Intervals", dis, TimeKey("cam"));
 
     auto dme = std::make_shared<DataManagerExtension>(dm);
 
@@ -50,12 +50,12 @@ TEST_CASE("TimestampInIntervalComputer via registry", "[TimestampInIntervalCompu
     DataManager dm;
     std::vector<int> times(6); for (int i=0;i<6;++i) times[i]=i;
     auto tf = std::make_shared<TimeFrame>(times);
-    dm.setTime("cam", tf, true);
+    dm.setTime(TimeKey("cam"), tf, true);
 
     auto dis = std::make_shared<DigitalIntervalSeries>();
     dis->addEvent(Interval{0,2});
     dis->addEvent(Interval{4,5});
-    dm.setData<DigitalIntervalSeries>("DInt", dis, "cam");
+    dm.setData<DigitalIntervalSeries>("DInt", dis, TimeKey("cam"));
 
     auto dme = std::make_shared<DataManagerExtension>(dm);
     auto src = dme->getIntervalSource("DInt");

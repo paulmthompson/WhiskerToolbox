@@ -502,7 +502,7 @@ void Export_Video_Widget::_updateAudioSourcesTable() {
         auto series = _data_manager->getData<DigitalEventSeries>(key);
         if (!series) continue;
 
-        std::string time_frame_key = _data_manager->getTimeFrame(key);
+        std::string time_frame_key = _data_manager->getTimeFrame(key).str();
         int event_count = static_cast<int>(series->size());
 
         // Create audio source
@@ -600,7 +600,7 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
     double click_duration = ui->click_duration_spinbox->value();
 
     // Get master time frame for conversion (similar to OpenGLWidget approach)
-    auto master_time_frame = _data_manager->getTime("time");
+    auto master_time_frame = _data_manager->getTime(TimeKey("time"));
     if (!master_time_frame) {
         std::cerr << "Error: Could not get master time frame for audio conversion" << std::endl;
         return audio_track;
@@ -613,7 +613,7 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
         auto series = _data_manager->getData<DigitalEventSeries>(audio_source.key);
         if (!series) continue;
 
-        auto series_time_frame = _data_manager->getTime(audio_source.time_frame_key);
+        auto series_time_frame = _data_manager->getTime(TimeKey(audio_source.time_frame_key));
         if (!series_time_frame) continue;
 
         // Get events in the frame range, handling timeframe conversion similar to OpenGLWidget

@@ -20,10 +20,10 @@ TEST_CASE("DataManager::setTime successfully registers TimeFrame objects", "[Dat
 
     SECTION("Register a new TimeFrame with a unique key") {
         auto timeframe = std::make_shared<TimeFrame>();
-        bool result = dm.setTime("test_time", timeframe);
+        bool result = dm.setTime(TimeKey("test_time"), timeframe);
 
         REQUIRE(result == true);
-        REQUIRE(dm.getTime("test_time") == timeframe);
+        REQUIRE(dm.getTime(TimeKey("test_time")) == timeframe);
         REQUIRE(dm.getTimeFrameKeys().size() == 2); // "time" exists by default + our new one
     }
 
@@ -31,13 +31,13 @@ TEST_CASE("DataManager::setTime successfully registers TimeFrame objects", "[Dat
         auto timeframe1 = std::make_shared<TimeFrame>();
         auto timeframe2 = std::make_shared<TimeFrame>();
 
-        bool result1 = dm.setTime("time1", timeframe1);
-        bool result2 = dm.setTime("time2", timeframe2);
+        bool result1 = dm.setTime(TimeKey("time1"), timeframe1);
+        bool result2 = dm.setTime(TimeKey("time2"), timeframe2);
 
         REQUIRE(result1 == true);
         REQUIRE(result2 == true);
-        REQUIRE(dm.getTime("time1") == timeframe1);
-        REQUIRE(dm.getTime("time2") == timeframe2);
+        REQUIRE(dm.getTime(TimeKey("time1")) == timeframe1);
+        REQUIRE(dm.getTime(TimeKey("time2")) == timeframe2);
         REQUIRE(dm.getTimeFrameKeys().size() == 3); // "time" exists by default + our 2 new ones
     }
 }
@@ -47,10 +47,10 @@ TEST_CASE("DataManager::setTime handles error conditions", "[DataManager][TimeFr
 
     SECTION("Reject nullptr TimeFrame") {
         std::shared_ptr<TimeFrame> null_timeframe = nullptr;
-        bool result = dm.setTime("null_time", null_timeframe);
+        bool result = dm.setTime(TimeKey("null_time"), null_timeframe);
 
         REQUIRE(result == false);
-        REQUIRE(dm.getTime("null_time") == nullptr);
+        REQUIRE(dm.getTime(TimeKey("null_time")) == nullptr);
         REQUIRE(dm.getTimeFrameKeys().size() == 1); // Only "time" exists by default
     }
 
@@ -58,12 +58,12 @@ TEST_CASE("DataManager::setTime handles error conditions", "[DataManager][TimeFr
         auto timeframe1 = std::make_shared<TimeFrame>();
         auto timeframe2 = std::make_shared<TimeFrame>();
 
-        bool result1 = dm.setTime("duplicate", timeframe1);
-        bool result2 = dm.setTime("duplicate", timeframe2);
+        bool result1 = dm.setTime(TimeKey("duplicate"), timeframe1);
+        bool result2 = dm.setTime(TimeKey("duplicate"), timeframe2);
 
         REQUIRE(result1 == true);
         REQUIRE(result2 == false);
-        REQUIRE(dm.getTime("duplicate") == timeframe1); // First one should remain
+        REQUIRE(dm.getTime(TimeKey("duplicate")) == timeframe1); // First one should remain
         REQUIRE(dm.getTimeFrameKeys().size() == 2); // Only "time" and "duplicate" exist
     }
 }
@@ -80,15 +80,15 @@ TEST_CASE("DataManager::getTime retrieves TimeFrame objects correctly", "[DataMa
     SECTION("Get TimeFrame by key") {
         // Register a new TimeFrame
         auto custom_timeframe = std::make_shared<TimeFrame>();
-        dm.setTime("custom_time", custom_timeframe);
+        dm.setTime(TimeKey("custom_time"), custom_timeframe);
 
         // Retrieve it by key
-        auto retrieved_timeframe = dm.getTime("custom_time");
+        auto retrieved_timeframe = dm.getTime(TimeKey("custom_time"));
         REQUIRE(retrieved_timeframe == custom_timeframe);
     }
 
     SECTION("Getting non-existent TimeFrame returns nullptr") {
-        auto non_existent = dm.getTime("non_existent_key");
+        auto non_existent = dm.getTime(TimeKey("non_existent_key"));
         REQUIRE(non_existent == nullptr);
     }
 }
@@ -98,20 +98,20 @@ TEST_CASE("DataManager::setTimeFrame assigns TimeFrames to data objects", "[Data
     // Add some test data
     dm.setData<PointData>("test_points");
     auto custom_timeframe = std::make_shared<TimeFrame>();
-    dm.setTime("custom_time", custom_timeframe);
+    dm.setTime(TimeKey("custom_time"), custom_timeframe);
 
     SECTION("Associate data with a valid time frame") {
-        bool result = dm.setTimeFrame("test_points", "custom_time");
+        bool result = dm.setTimeFrame("test_points", TimeKey("custom_time"));
 
         REQUIRE(result == true);
-        REQUIRE(dm.getTimeFrame("test_points") == "custom_time");
+        REQUIRE(dm.getTimeFrame("test_points") == TimeKey("custom_time"));
     }
 
     SECTION("Associate data with default time frame") {
-        bool result = dm.setTimeFrame("test_points", "time");
+        bool result = dm.setTimeFrame("test_points", TimeKey("time"));
 
         REQUIRE(result == true);
-        REQUIRE(dm.getTimeFrame("test_points") == "time");
+        REQUIRE(dm.getTimeFrame("test_points") == TimeKey("time"));
     }
 }
 
@@ -120,17 +120,17 @@ TEST_CASE("DataManager::setTimeFrame handles error conditions", "[DataManager][T
     dm.setData<PointData>("test_points");
 
     SECTION("Invalid data key") {
-        bool result = dm.setTimeFrame("nonexistent_data", "time");
+        bool result = dm.setTimeFrame("nonexistent_data", TimeKey("time"));
 
         REQUIRE(result == false);
     }
 
     SECTION("Invalid time key") {
-        bool result = dm.setTimeFrame("test_points", "nonexistent_time");
+        bool result = dm.setTimeFrame("test_points", TimeKey("nonexistent_time"));
 
         REQUIRE(result == false);
         // Should keep the default time frame association
-        REQUIRE(dm.getTimeFrame("test_points") == "time");
+        REQUIRE(dm.getTimeFrame("test_points") == TimeKey("time"));
     }
 }
 
@@ -140,12 +140,12 @@ TEST_CASE("DataManager::getTimeFrame retrieves TimeFrame associations correctly"
     // Setup - create some data and time frames
     dm.setData<PointData>("test_points");
     auto custom_timeframe = std::make_shared<TimeFrame>();
-    dm.setTime("custom_time", custom_timeframe);
-    dm.setTimeFrame("test_points", "custom_time");
+    dm.setTime(TimeKey("custom_time"), custom_timeframe);
+    dm.setTimeFrame("test_points", TimeKey("custom_time"));
 
     SECTION("Get existing TimeFrame association") {
-        std::string time_key = dm.getTimeFrame("test_points");
-        REQUIRE(time_key == "custom_time");
+        TimeKey time_key = dm.getTimeFrame("test_points");
+        REQUIRE(time_key == TimeKey("custom_time"));
     }
 
     SECTION("Default TimeFrame association") {
@@ -153,8 +153,8 @@ TEST_CASE("DataManager::getTimeFrame retrieves TimeFrame associations correctly"
         dm.setData<PointData>("default_points");
 
         // Should be associated with default "time"
-        std::string time_key = dm.getTimeFrame("default_points");
-        REQUIRE(time_key == "time");
+        TimeKey time_key = dm.getTimeFrame("default_points");
+        REQUIRE(time_key == TimeKey("time"));
     }
 }
 
@@ -162,8 +162,8 @@ TEST_CASE("DataManager::getTimeFrame handles error conditions", "[DataManager][T
     DataManager dm;
 
     SECTION("Non-existent data key") {
-        std::string time_key = dm.getTimeFrame("nonexistent_data");
-        REQUIRE(time_key.empty());
+        TimeKey time_key = dm.getTimeFrame("nonexistent_data");
+        REQUIRE(time_key == TimeKey(""));
     }
 
     SECTION("Data without TimeFrame association") {
@@ -186,7 +186,7 @@ TEST_CASE("DataManager::getTimeFrameKeys returns all TimeFrame keys", "[DataMana
     SECTION("Default state contains only 'time' key") {
         auto keys = dm.getTimeFrameKeys();
         REQUIRE(keys.size() == 1);
-        REQUIRE(keys[0] == "time");
+        REQUIRE(keys[0] == TimeKey("time"));
     }
 
     SECTION("Adding TimeFrames updates the key list") {
@@ -194,8 +194,8 @@ TEST_CASE("DataManager::getTimeFrameKeys returns all TimeFrame keys", "[DataMana
         auto timeframe1 = std::make_shared<TimeFrame>();
         auto timeframe2 = std::make_shared<TimeFrame>();
 
-        dm.setTime("custom_time1", timeframe1);
-        dm.setTime("custom_time2", timeframe2);
+        dm.setTime(TimeKey("custom_time1"), timeframe1);
+        dm.setTime(TimeKey("custom_time2"), timeframe2);
 
         // Get the keys
         auto keys = dm.getTimeFrameKeys();
@@ -204,36 +204,36 @@ TEST_CASE("DataManager::getTimeFrameKeys returns all TimeFrame keys", "[DataMana
         REQUIRE(keys.size() == 3);
 
         // Check that all expected keys are present (order not guaranteed)
-        auto has_key = [&keys](const std::string& key) {
+        auto has_key = [&keys](const TimeKey& key) {
             return std::find(keys.begin(), keys.end(), key) != keys.end();
         };
 
-        REQUIRE(has_key("time"));
-        REQUIRE(has_key("custom_time1"));
-        REQUIRE(has_key("custom_time2"));
+        REQUIRE(has_key(TimeKey("time")));
+        REQUIRE(has_key(TimeKey("custom_time1")));
+        REQUIRE(has_key(TimeKey("custom_time2")));
     }
 
     SECTION("Keys remain stable after modifications") {
         // Add a TimeFrame
         auto timeframe = std::make_shared<TimeFrame>();
-        dm.setTime("custom_time", timeframe);
+        dm.setTime(TimeKey("custom_time"), timeframe);
 
         // Verify it's added
         {
             auto keys = dm.getTimeFrameKeys();
             REQUIRE(keys.size() == 2);
-            REQUIRE(std::find(keys.begin(), keys.end(), "custom_time") != keys.end());
+            REQUIRE(std::find(keys.begin(), keys.end(), TimeKey("custom_time")) != keys.end());
         }
 
         // Try to add a duplicate (which should fail)
         auto duplicate = std::make_shared<TimeFrame>();
-        dm.setTime("custom_time", duplicate);
+        dm.setTime(TimeKey("custom_time"), duplicate);
 
         // Verify keys haven't changed
         {
             auto keys = dm.getTimeFrameKeys();
             REQUIRE(keys.size() == 2); // Still just 2 keys
-            REQUIRE(std::find(keys.begin(), keys.end(), "custom_time") != keys.end());
+            REQUIRE(std::find(keys.begin(), keys.end(), TimeKey("custom_time")) != keys.end());
         }
     }
 }
@@ -423,8 +423,8 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
 
         // Adding with custom TimeFrame
         auto custom_time = std::make_shared<TimeFrame>();
-        dm.setTime("custom_time", custom_time);
-        dm.setData<PointData>("points2", std::make_shared<PointData>(), "custom_time");
+        dm.setTime(TimeKey("custom_time"), custom_time);
+        dm.setData<PointData>("points2", std::make_shared<PointData>(), TimeKey("custom_time"));
         REQUIRE(notification_count == 2);
 
         // Using variant form

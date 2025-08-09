@@ -356,7 +356,7 @@ void DataManager_Widget::_createNewData(std::string key, std::string type, std::
 
     // Set the selected timeframe for the newly created data
     if (!timeframe_key.empty() && timeframe_key != "time") {
-        _data_manager->setTimeFrame(key, timeframe_key);
+        _data_manager->setTimeFrame(key, TimeKey(timeframe_key));
     }
 }
 
@@ -364,7 +364,7 @@ void DataManager_Widget::_changeScrollbar(int frame_id) {
 
     auto active_feature = _highlighted_available_feature.toStdString();
 
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     auto active_feature_timeframe_key = _data_manager->getTimeFrame(active_feature);
 

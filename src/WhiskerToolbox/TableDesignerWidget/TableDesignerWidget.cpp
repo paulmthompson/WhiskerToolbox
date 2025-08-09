@@ -1102,7 +1102,7 @@ QStringList TableDesignerWidget::getAvailableDataSources() const {
     auto timeframe_keys = _data_manager->getTimeFrameKeys();
     qDebug() << "getAvailableDataSources: TimeFrame keys:" << timeframe_keys.size();
     for (auto const & key: timeframe_keys) {
-        QString source = QString("TimeFrame: %1").arg(QString::fromStdString(key));
+        QString source = QString("TimeFrame: %1").arg(QString::fromStdString(key.str()));
         sources << source;
         qDebug() << "  Added TimeFrame:" << source;
     }
@@ -1193,7 +1193,7 @@ void TableDesignerWidget::updateRowInfoLabel(QString const & selected_source) {
 
     // Add specific information based on source type
     if (source_type == "TimeFrame") {
-        auto timeframe = _data_manager->getTime(source_name_str);
+        auto timeframe = _data_manager->getTime(TimeKey(source_name_str));
         if (timeframe) {
             info_text += QString(" - %1 time points").arg(timeframe->getTotalFrameCount());
         }
@@ -1372,7 +1372,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
     try {
         if (source_type == "TimeFrame") {
             // Create IntervalSelector using TimeFrame
-            auto timeframe = _data_manager->getTime(source_name_str);
+            auto timeframe = _data_manager->getTime(TimeKey(source_name_str));
             if (!timeframe) {
                 qDebug() << "TimeFrame not found:" << source_name;
                 return nullptr;
@@ -1397,7 +1397,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
             auto timeframe_key = _data_manager->getTimeFrame(source_name_str);
             auto timeframe_obj = _data_manager->getTime(timeframe_key);
             if (!timeframe_obj) {
-                qDebug() << "TimeFrame not found for events:" << timeframe_key;
+                qDebug() << "TimeFrame not found for events:" << timeframe_key.str();
                 return nullptr;
             }
 
@@ -1421,7 +1421,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
             auto timeframe_key = _data_manager->getTimeFrame(source_name_str);
             auto timeframe_obj = _data_manager->getTime(timeframe_key);
             if (!timeframe_obj) {
-                qDebug() << "TimeFrame not found for intervals:" << timeframe_key;
+                qDebug() << "TimeFrame not found for intervals:" << timeframe_key.str();
                 return nullptr;
             }
 

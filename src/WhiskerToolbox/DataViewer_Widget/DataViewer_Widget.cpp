@@ -109,11 +109,11 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Check for master clock
     auto time_keys = _data_manager->getTimeFrameKeys();
     // if timekeys doesn't have master, we should throw an error
-    if (std::find(time_keys.begin(), time_keys.end(), "master") == time_keys.end()) {
+    if (std::find(time_keys.begin(), time_keys.end(), TimeKey("master")) == time_keys.end()) {
         std::cout << "No master clock found in DataManager" << std::endl;
-        _time_frame = _data_manager->getTime("time");
+        _time_frame = _data_manager->getTime(TimeKey("time"));
     } else {
-        _time_frame = _data_manager->getTime("master");
+        _time_frame = _data_manager->getTime(TimeKey("master"));
     }
 
     std::cout << "Setting GL limit to " << _time_frame->getTotalFrameCount() << std::endl;
@@ -206,7 +206,7 @@ void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
 
 void DataViewer_Widget::_updatePlot(int time) {
     //std::cout << "Time is " << time;
-    time = _data_manager->getTime("time")->getTimeAtIndex(TimeFrameIndex(time));
+    time = _data_manager->getTime(TimeKey("time"))->getTimeAtIndex(TimeFrameIndex(time));
     //std::cout << ""
     ui->openGLWidget->updateCanvas(time);
 

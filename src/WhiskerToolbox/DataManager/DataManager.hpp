@@ -56,7 +56,7 @@ public:
     * @note If the key already exists or timeframe is nullptr, a warning message will be printed
     *       to std::cerr and the function will return false
     */
-    bool setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite = false);
+    bool setTime(TimeKey const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite = false);
 
     /**
     * @brief Get the default time frame object
@@ -75,11 +75,11 @@ public:
     * @param key The key to retrieve the TimeFrame for
     * @return A shared pointer to the TimeFrame if the key exists, nullptr otherwise
      */
-    [[nodiscard]] std::shared_ptr<TimeFrame> getTime(std::string const & key);
+    [[nodiscard]] std::shared_ptr<TimeFrame> getTime(TimeKey const & key);
 
-    [[nodiscard]] TimeIndexAndFrame getCurrentIndexAndFrame(std::string const & key);
+    [[nodiscard]] TimeIndexAndFrame getCurrentIndexAndFrame(TimeKey const & key);
 
-    bool removeTime(std::string const & key);
+    bool removeTime(TimeKey const & key);
 
     /**
     * @brief Set the time frame for a specific data key
@@ -93,7 +93,7 @@ public:
     * @note If data_key or time_key doesn't exist, an error message will be printed
     *       to std::cerr and the function will return false
     */
-    bool setTimeFrame(std::string const & data_key, std::string const & time_key);
+    bool setTimeFrame(std::string const & data_key, TimeKey const & time_key);
 
     /**
     * @brief Get the time frame for a specific data key
@@ -106,7 +106,7 @@ public:
     * @note If data_key doesn't exist or doesn't have an associated TimeFrame,
     *       an error message will be printed to std::cerr and an empty string will be returned
     */
-    [[nodiscard]] std::string getTimeFrame(std::string const & data_key);
+    [[nodiscard]] TimeKey getTimeFrame(std::string const & data_key);
 
     /**
     * @brief Get all registered TimeFrame keys
@@ -116,7 +116,7 @@ public:
     * @return A vector of strings containing all TimeFrame keys
     * @note The default "time" key will always be included in the returned vector
     */
-    [[nodiscard]] std::vector<std::string> getTimeFrameKeys();
+    [[nodiscard]] std::vector<TimeKey> getTimeFrameKeys();
 
     /**
     * @brief Clear all data and reset DataManager to initial state
@@ -256,21 +256,21 @@ public:
     template<typename T>
     void setData(std::string const & key) {
         _data[key] = std::make_shared<T>();
-        setTimeFrame(key, "time");
+        setTimeFrame(key, TimeKey("time"));
         _notifyObservers();
     }
 
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data) {
         _data[key] = data;
-        setTimeFrame(key, "time");
+        setTimeFrame(key, TimeKey("time"));
         _notifyObservers();
     }
 
     void setData(std::string const & key, DataTypeVariant data);
 
     template<typename T>
-    void setData(std::string const & key, std::shared_ptr<T> data, std::string const & time_key) {
+    void setData(std::string const & key, std::shared_ptr<T> data, TimeKey const & time_key) {
         _data[key] = data;
         setTimeFrame(key, time_key);
         _notifyObservers();
@@ -288,14 +288,14 @@ public:
     void notifyTableObservers(TableEvent const & ev);
 
 private:
-    std::unordered_map<std::string, std::shared_ptr<TimeFrame>> _times;
+    std::unordered_map<TimeKey, std::shared_ptr<TimeFrame>> _times;
 
     std::vector<ObserverCallback> _observers;
 
     std::unordered_map<std::string, DataTypeVariant>
             _data;
 
-    std::unordered_map<std::string, std::string> _time_frames;
+    std::unordered_map<std::string, TimeKey> _time_frames;
 
     std::filesystem::path _output_path;
 

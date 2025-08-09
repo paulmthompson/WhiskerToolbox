@@ -584,7 +584,7 @@ float Media_Window::getYAspect() const {
 void Media_Window::_plotLineData() {
     auto const current_time = _data_manager->getCurrentTime();
 
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     auto xAspect = getXAspect();
     auto yAspect = getYAspect();
@@ -733,7 +733,7 @@ void Media_Window::_plotLineData() {
 void Media_Window::_plotMaskData() {
     auto const current_time = _data_manager->getCurrentTime();
 
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     for (auto const & [mask_key, _mask_config]: _mask_configs) {
         if (!_mask_config.get()->is_visible) continue;
@@ -881,7 +881,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
     std::cout << "Media image size: " << media_image.width() << "x" << media_image.height() << std::endl;
     std::cout << "Canvas dimensions: " << _canvasWidth << "x" << _canvasHeight << std::endl;
 
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
     
     QImage final_image = media_image;
     
@@ -947,7 +947,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
 void Media_Window::_plotPointData() {
 
     auto const current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     if (!video_timeframe) {
         std::cerr << "Error: Could not get video timeframe 'time' for point conversion" << std::endl;
@@ -1083,7 +1083,7 @@ void Media_Window::_plotPointData() {
 
 void Media_Window::_plotDigitalIntervalSeries() {
     auto const current_time = _data_manager->getCurrentTime();
-    auto video_timeframe = _data_manager->getTime("time");
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     for (auto const & [key, _interval_config]: _interval_configs) {
         if (!_interval_config.get()->is_visible) continue;
@@ -1195,7 +1195,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
             continue;
         }
 
-        auto video_timeframe = _data_manager->getTime("time");
+        auto video_timeframe = _data_manager->getTime(TimeKey("time"));
         auto interval_timeframe = _data_manager->getTime(interval_timeframe_key);
 
         if (!video_timeframe) {

@@ -33,7 +33,7 @@ void NewDataWidget::populateTimeframes() {
     auto timeframe_keys = _data_manager->getTimeFrameKeys();
 
     for (auto const & key: timeframe_keys) {
-        ui->timeframe_combo->addItem(QString::fromStdString(key));
+        ui->timeframe_combo->addItem(QString::fromStdString(key.str()));
     }
 
     // Set "time" as default if it exists

@@ -42,7 +42,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         // Create a TimeFrame for the point data
         std::vector<int> timeValues = {0, 1, 2, 3};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        dataManager.setTime("test_time", timeFrame);
+        dataManager.setTime(TimeKey("test_time"), timeFrame);
         
         // Create PointData and add points
         auto pointData = std::make_shared<PointData>();
@@ -56,7 +56,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         
         // Add the point data to the DataManager
         dataManager.setData<PointData>("TestPoints", pointData);
-        dataManager.setTimeFrame("TestPoints", "test_time");
+        dataManager.setTimeFrame("TestPoints", TimeKey("test_time"));
         
         // Create DataManagerExtension for TableView
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
@@ -141,7 +141,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         // Create a TimeFrame
         std::vector<int> timeValues = {0, 1, 2};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        dataManager.setTime("test_time", timeFrame);
+        dataManager.setTime(TimeKey("test_time"), timeFrame);
         
         // Create PointData and add points
         auto pointData = std::make_shared<PointData>();
@@ -155,7 +155,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         
         // Add the point data to the DataManager
         dataManager.setData<PointData>("TestPoints", pointData);
-        dataManager.setTimeFrame("TestPoints", "test_time");
+        dataManager.setTimeFrame("TestPoints", TimeKey("test_time"));
         
         // Create DataManagerExtension for TableView
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
@@ -240,7 +240,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         // Create TimeFrame
         std::vector<int> timeValues = {0, 1};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        dataManager.setTime("test_time", timeFrame);
+        dataManager.setTime(TimeKey("test_time"), timeFrame);
         
         // Create PointData
         auto pointData = std::make_shared<PointData>();
@@ -251,7 +251,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         }
         
         dataManager.setData<PointData>("TestPoints", pointData);
-        dataManager.setTimeFrame("TestPoints", "test_time");
+        dataManager.setTimeFrame("TestPoints", TimeKey("test_time"));
         
         // Create DataManagerExtension
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
@@ -321,7 +321,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         // Create TimeFrame
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        dataManager.setTime("test_time", timeFrame);
+        dataManager.setTime(TimeKey("test_time"), timeFrame);
         
         // Create PointData and add points
         auto pointData = std::make_shared<PointData>();
@@ -331,7 +331,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         }
         
         dataManager.setData<PointData>("TestPoints", pointData);
-        dataManager.setTimeFrame("TestPoints", "test_time");
+        dataManager.setTimeFrame("TestPoints", TimeKey("test_time"));
         
         // Create DataManagerExtension
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
@@ -426,7 +426,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         // Create TimeFrame
         std::vector<int> timeValues = {0, 1, 2};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        dataManager.setTime("test_time", timeFrame);
+        dataManager.setTime(TimeKey("test_time"), timeFrame);
         
         // Create PointData and add points
         auto pointData = std::make_shared<PointData>();
@@ -436,7 +436,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         }
         
         dataManager.setData<PointData>("TestPoints", pointData);
-        dataManager.setTimeFrame("TestPoints", "test_time");
+        dataManager.setTimeFrame("TestPoints", TimeKey("test_time"));
         
         // Create DataManagerExtension
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
@@ -492,12 +492,12 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         std::vector<Point2D<float>> points = {{1.0f, 2.0f}};
         std::vector<int> timeValues = {0};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        dataManager.setTime("test_time", timeFrame);
+        dataManager.setTime(TimeKey("test_time"), timeFrame);
         
         auto pointData = std::make_shared<PointData>();
         pointData->addAtTime(TimeFrameIndex(0), points[0]);
         dataManager.setData<PointData>("TestPoints", pointData);
-        dataManager.setTimeFrame("TestPoints", "test_time");
+        dataManager.setTimeFrame("TestPoints", TimeKey("test_time"));
         
         auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
         REQUIRE(xSource != nullptr);
@@ -522,11 +522,11 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         // Create a simple TimeFrame
         std::vector<int> timeValues = {0, 1, 2, 3};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        dataManager.setTime("test_time", timeFrame);
+        dataManager.setTime(TimeKey("test_time"), timeFrame);
 
         std::vector<int> timeValues2 = {1, 3};
         auto timeFrame2 = std::make_shared<TimeFrame>(timeValues2);
-        dataManager.setTime("test_time2", timeFrame2);
+        dataManager.setTime(TimeKey("test_time2"), timeFrame2);
 
         // Create PointData with multiple time frames
         auto pointData = std::make_shared<PointData>();
@@ -537,14 +537,14 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
 
         // Add the point data to the DataManager
         dataManager.setData<PointData>("TestPoints", pointData);
-        dataManager.setTimeFrame("TestPoints", "test_time");
+        dataManager.setTimeFrame("TestPoints", TimeKey("test_time"));
 
         // Add another PointData with a different time frame
         auto pointData2 = std::make_shared<PointData>();
         pointData2->addAtTime(TimeFrameIndex(0), Point2D<float>(9.0f, 10.0f));
         pointData2->addAtTime(TimeFrameIndex(1), Point2D<float>(11.0f, 12.0f));
         dataManager.setData<PointData>("TestPoints2", pointData2);
-        dataManager.setTimeFrame("TestPoints2", "test_time2");
+        dataManager.setTimeFrame("TestPoints2", TimeKey("test_time2"));
 
         // Create DataManagerExtension
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
@@ -610,11 +610,11 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         // Create two different timeframes
         std::vector<int> timeValues1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         auto timeFrame1 = std::make_shared<TimeFrame>(timeValues1);
-        dataManager.setTime("time1", timeFrame1);
+        dataManager.setTime(TimeKey("time1"), timeFrame1);
         
         std::vector<int> timeValues2 = {0, 2, 4, 6, 8};
         auto timeFrame2 = std::make_shared<TimeFrame>(timeValues2);
-        dataManager.setTime("time2", timeFrame2);
+        dataManager.setTime(TimeKey("time2"), timeFrame2);
         
         // Create first DigitalIntervalSeries (will act as row selector)
         auto intervalSeries1 = std::make_shared<DigitalIntervalSeries>();
@@ -623,7 +623,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         intervalSeries1->addEvent(TimeFrameIndex(9), TimeFrameIndex(10));  // Interval 9-10
         
         dataManager.setData<DigitalIntervalSeries>("RowIntervals", intervalSeries1);    
-        dataManager.setTimeFrame("RowIntervals", "time1");
+        dataManager.setTimeFrame("RowIntervals", TimeKey("time1"));
         
         // Create second DigitalIntervalSeries (will be used for overlap analysis)
         auto intervalSeries2 = std::make_shared<DigitalIntervalSeries>();
@@ -632,7 +632,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         intervalSeries2->addEvent(TimeFrameIndex(7), TimeFrameIndex(8));  // Interval 7-8
         
         dataManager.setData<DigitalIntervalSeries>("ColumnIntervals", intervalSeries2);
-        dataManager.setTimeFrame("ColumnIntervals", "time2");
+        dataManager.setTimeFrame("ColumnIntervals", TimeKey("time2"));
         
         // Create DataManagerExtension
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
@@ -746,7 +746,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
             fineTimeValues.push_back(i);
         }
         auto fineTimeFrame = std::make_shared<TimeFrame>(fineTimeValues);
-        dataManager.setTime("fine_time", fineTimeFrame);
+        dataManager.setTime(TimeKey("fine_time"), fineTimeFrame);
         
         // Create coarse-grained timeframe (0, 100, 200, ..., 30000)
         std::vector<int> coarseTimeValues;
@@ -754,7 +754,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
             coarseTimeValues.push_back(i * 100);
         }
         auto coarseTimeFrame = std::make_shared<TimeFrame>(coarseTimeValues);
-        dataManager.setTime("coarse_time", coarseTimeFrame);
+        dataManager.setTime(TimeKey("coarse_time"), coarseTimeFrame);
         
         // Create first DigitalIntervalSeries (row selector) using fine timeframe
         auto rowIntervalSeries = std::make_shared<DigitalIntervalSeries>();
@@ -763,7 +763,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         rowIntervalSeries->addEvent(TimeFrameIndex(15000), TimeFrameIndex(16000)); // Interval 15000-16000
         
         dataManager.setData<DigitalIntervalSeries>("RowIntervals", rowIntervalSeries);
-        dataManager.setTimeFrame("RowIntervals", "fine_time");
+        dataManager.setTimeFrame("RowIntervals", TimeKey("fine_time"));
         
         // Create second DigitalIntervalSeries (column data) using coarse timeframe
         auto columnIntervalSeries = std::make_shared<DigitalIntervalSeries>();
@@ -772,7 +772,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         columnIntervalSeries->addEvent(TimeFrameIndex(15), TimeFrameIndex(16));  // Interval 1500-1600
         
         dataManager.setData<DigitalIntervalSeries>("ColumnIntervals", columnIntervalSeries);
-        dataManager.setTimeFrame("ColumnIntervals", "coarse_time");
+        dataManager.setTimeFrame("ColumnIntervals", TimeKey("coarse_time"));
         
         // Create DataManagerExtension
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);

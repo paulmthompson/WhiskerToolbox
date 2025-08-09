@@ -147,7 +147,7 @@ void DataAggregationExporter_Widget::_populateAvailableDataTable()
         ui->available_data_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type_str)));
         
         // Time Frame
-        std::string time_frame = _data_manager->getTimeFrame(key);
+        std::string time_frame = _data_manager->getTimeFrame(key).str();
         ui->available_data_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(time_frame)));
     }
 }

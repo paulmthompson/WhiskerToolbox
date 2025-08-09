@@ -42,10 +42,10 @@
 using namespace nlohmann;
 
 DataManager::DataManager() {
-    _times["time"] = std::make_shared<TimeFrame>();
+    _times[TimeKey("time")] = std::make_shared<TimeFrame>();
     _data["media"] = std::make_shared<MediaData>();
 
-    setTimeFrame("media", "time");
+    setTimeFrame("media", TimeKey("time"));
     _output_path = std::filesystem::current_path();
 
     // Initialize TableRegistry
@@ -65,15 +65,15 @@ void DataManager::reset() {
     _data["media"] = std::make_shared<MediaData>();
     
     // Clear all TimeFrame objects except the default "time" frame
-    auto defaultTime = _times.find("time");
+    auto defaultTime = _times.find(TimeKey("time"));
     _times.clear();
     
     // Recreate the default "time" TimeFrame
-    _times["time"] = std::make_shared<TimeFrame>();
+    _times[TimeKey("time")] = std::make_shared<TimeFrame>();
     
     // Clear all data-to-timeframe mappings and recreate the default media mapping
     _time_frames.clear();
-    setTimeFrame("media", "time");
+    setTimeFrame("media", TimeKey("time"));
 
     
     // Reset current time
@@ -85,7 +85,7 @@ void DataManager::reset() {
     std::cout << "DataManager: Reset complete. Default 'time' frame and 'media' data restored." << std::endl;
 }
 
-bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite) {
+bool DataManager::setTime(TimeKey const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite) {
 
     if (!timeframe) {
         std::cerr << "Error: Cannot register a nullptr TimeFrame for key: " << key << std::endl;
@@ -101,36 +101,41 @@ bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> ti
 
     _times[key] = std::move(timeframe);
 
-    if (_data.find(key) != _data.end()) {
-        auto data = _data[key];
-        std::visit([this, timeframe](auto & x) {
-            x->setTimeFrame(timeframe);
-        },
-                   data);
+    // Move ptr to new time frame to all data that hold 
+    for (auto const & [data_key, data] : _data) {
+        if (_time_frames.find(data_key) != _time_frames.end()) {
+            auto time_key = _time_frames[data_key];
+            if (time_key == key) {
+                std::visit([this, timeframe](auto & x) {
+                    x->setTimeFrame(timeframe);
+                },
+                           data);
+            }
+        }
     }
 
     return true;
 }
 
 std::shared_ptr<TimeFrame> DataManager::getTime() {
-    return _times["time"];
+    return _times[TimeKey("time")];
 };
 
-std::shared_ptr<TimeFrame> DataManager::getTime(std::string const & key) {
+std::shared_ptr<TimeFrame> DataManager::getTime(TimeKey const & key) {
     if (_times.find(key) != _times.end()) {
         return _times[key];
     }
     return nullptr;
 };
 
-TimeIndexAndFrame DataManager::getCurrentIndexAndFrame(std::string const & key) {
+TimeIndexAndFrame DataManager::getCurrentIndexAndFrame(TimeKey const & key) {
     if (_times.find(key) != _times.end()) {
         return {TimeFrameIndex(_current_time), _times[key]};
     }
     return {TimeFrameIndex(_current_time), nullptr};
 }
 
-bool DataManager::removeTime(std::string const & key) {
+bool DataManager::removeTime(TimeKey const & key) {
     if (_times.find(key) == _times.end()) {
         std::cerr << "Error: could not find time key in DataManager: " << key << std::endl;
         return false;
@@ -141,7 +146,7 @@ bool DataManager::removeTime(std::string const & key) {
     return true;
 }
 
-bool DataManager::setTimeFrame(std::string const & data_key, std::string const & time_key) {
+bool DataManager::setTimeFrame(std::string const & data_key, TimeKey const & time_key) {
     if (_data.find(data_key) == _data.end()) {
         std::cerr << "Error: Data key not found in DataManager: " << data_key << std::endl;
         return false;
@@ -164,11 +169,11 @@ bool DataManager::setTimeFrame(std::string const & data_key, std::string const &
     return true;
 }
 
-std::string DataManager::getTimeFrame(std::string const & data_key) {
+TimeKey DataManager::getTimeFrame(std::string const & data_key) {
     // check if data_key exists
     if (_data.find(data_key) == _data.end()) {
         std::cerr << "Error: Data key not found in DataManager: " << data_key << std::endl;
-        return "";
+        return TimeKey("");
     }
 
     // check if data key has time frame
@@ -176,14 +181,14 @@ std::string DataManager::getTimeFrame(std::string const & data_key) {
         std::cerr << "Error: Data key "
                   << data_key
                   << " exists, but not assigned to a TimeFrame" << std::endl;
-        return "";
+        return TimeKey("");
     }
 
     return _time_frames[data_key];
 }
 
-std::vector<std::string> DataManager::getTimeFrameKeys() {
-    std::vector<std::string> keys;
+std::vector<TimeKey> DataManager::getTimeFrameKeys() {
+    std::vector<TimeKey> keys;
     keys.reserve(_times.size());
     for (auto const & [key, value]: _times) {
 
@@ -285,7 +290,7 @@ std::optional<DataTypeVariant> DataManager::getDataVariant(std::string const & k
 
 void DataManager::setData(std::string const & key, DataTypeVariant data) {
     _data[key] = data;
-    setTimeFrame(key, "time");
+    setTimeFrame(key, TimeKey("time"));
     _notifyObservers();
 }
 
@@ -475,7 +480,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     dm->setData<AnalogTimeSeries>(channel_name, analog_time_series[channel]);
 
                     if (item.contains("clock")) {
-                        std::string const clock = item["clock"];
+                        TimeKey const clock = TimeKey(item["clock"]);
                         dm->setTimeFrame(channel_name, clock);
                     }
                 }
@@ -491,7 +496,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel]);
 
                     if (item.contains("clock")) {
-                        std::string const clock = item["clock"];
+                        TimeKey const clock = TimeKey(item["clock"]);
                         dm->setTimeFrame(channel_name, clock);
                     }
                 }
@@ -543,7 +548,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     std::cout << "Loaded " << events_int.size() << " events for " << name << std::endl;
 
                     auto timeframe = std::make_shared<TimeFrame>(events_int);
-                    dm->setTime(name, timeframe, true);
+                    dm->setTime(TimeKey(name), timeframe, true);
                 }
 
                 if (item["format"] == "uint16_length") {
@@ -560,7 +565,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     std::cout << "Total of " << t.size() << " timestamps for " << name << std::endl;
 
                     auto timeframe = std::make_shared<TimeFrame>(t);
-                    dm->setTime(name, timeframe, true);
+                    dm->setTime(TimeKey(name), timeframe, true);
                 }
 
                 if (item["format"] == "filename") {
@@ -593,7 +598,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     // Create TimeFrame from filenames
                     auto timeframe = createTimeFrameFromFilenames(options);
                     if (timeframe) {
-                        dm->setTime(name, timeframe, true);
+                        dm->setTime(TimeKey(name), timeframe, true);
                         std::cout << "Created TimeFrame '" << name << "' from filenames in "
                                   << folder_path << std::endl;
                     } else {
@@ -608,7 +613,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 continue;
         }
         if (item.contains("clock")) {
-            std::string const clock = item["clock"];
+            TimeKey const clock = TimeKey(item["clock"]);
             std::cout << "Setting time for " << name << " to " << clock << std::endl;
             dm->setTimeFrame(name, clock);
         }

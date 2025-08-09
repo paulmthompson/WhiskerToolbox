@@ -118,7 +118,7 @@ void Feature_Table_Widget::_addFeatureClock(std::string const & key, int row, in
         return;
     }
 
-    std::string const clock = _data_manager->getTimeFrame(key);
+    std::string const clock = _data_manager->getTimeFrame(key).str();
     auto* item = new QTableWidgetItem(QString::fromStdString(clock));
     item->setTextAlignment(Qt::AlignCenter);
     ui->available_features_table->setItem(row, col, item);
