@@ -21,6 +21,11 @@
 #include "Analysis_Dashboard/Groups/GroupManager.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp"
+#include "Analysis_Dashboard/PlotOrganizers/GraphicsScenePlotOrganizer.hpp"
+#include "Analysis_Dashboard/PlotOrganizers/DockingPlotOrganizer.hpp"
+#include "Analysis_Dashboard/PlotFactory.hpp"
+#include "Analysis_Dashboard/PlotContainer.hpp"
+#include "DockManager.h"
 
 // Qt test fixtures (application setup)
 #include "../fixtures/qt_test_fixtures.hpp"
@@ -355,4 +360,142 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayPlotPr
     // Change selection mode to Polygon
     modeCombo->setCurrentIndex(2); // 0=None,1=Point,2=Polygon,3=Line
     REQUIRE(plotItem.getSelectionMode() == SelectionMode::PolygonSelection);
+}
+
+TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsScene) - spatial overlay selection works inside organizer", "[Organizer][GraphicsScene]") {
+    // Create organizer and show its view
+    GraphicsScenePlotOrganizer organizer;
+    QWidget * display = organizer.getDisplayWidget();
+    REQUIRE(display != nullptr);
+    display->resize(800, 600);
+    display->show();
+    processEvents();
+
+    // Create spatial overlay plot container
+    auto container = PlotFactory::createPlotContainer("spatial_overlay_plot");
+    REQUIRE(container != nullptr);
+
+    // Add the plot to the organizer
+    organizer.addPlot(std::move(container));
+    REQUIRE(organizer.getPlotCount() == 1);
+
+    // Access the plot to set data and get GL widget
+    auto ids = organizer.getAllPlotIds();
+    REQUIRE(ids.size() == 1);
+    PlotContainer * pc = organizer.getPlot(ids.front());
+    REQUIRE(pc != nullptr);
+    auto * plotItem = pc->getPlotWidget();
+    REQUIRE(plotItem != nullptr);
+    auto * overlay = dynamic_cast<SpatialOverlayPlotWidget *>(plotItem);
+    REQUIRE(overlay != nullptr);
+    auto * gl = overlay->getOpenGLWidget();
+    REQUIRE(gl != nullptr);
+
+    // Set test data
+    auto point_data = std::make_shared<PointData>();
+    point_data->overwritePointsAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}});
+    point_data->overwritePointsAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}});
+
+    std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
+    gl->setPointData(map);
+    REQUIRE(waitForValidProjection(*gl));
+
+    // Point selection via organizer’s view: dispatch events to the GL widget directly
+    gl->setSelectionMode(SelectionMode::PointSelection);
+    gl->setZoomLevel(5.0f);
+    processEvents();
+
+    auto clickCtrlAtGl = [&](float wx, float wy) {
+        QPoint s = worldToScreen(*gl, wx, wy);
+        gl->raise(); gl->activateWindow(); gl->setFocus(Qt::OtherFocusReason);
+        QTest::mouseMove(gl, s);
+        QMouseEvent p(QEvent::MouseButtonPress, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
+        QCoreApplication::sendEvent(gl, &p);
+        processEvents();
+        QMouseEvent r(QEvent::MouseButtonRelease, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
+        QCoreApplication::sendEvent(gl, &r);
+        processEvents();
+    };
+
+    clickCtrlAtGl(100.f, 100.f);
+    clickCtrlAtGl(200.f, 150.f);
+    REQUIRE(gl->getTotalSelectedPoints() >= 2);
+
+    // Polygon selection: clear, then select both with a rectangle
+    gl->clearSelection();
+    gl->setSelectionMode(SelectionMode::PolygonSelection);
+    processEvents();
+
+    QPoint a = worldToScreen(*gl, 50.f, 50.f);
+    QPoint b = worldToScreen(*gl, 250.f, 50.f);
+    QPoint c = worldToScreen(*gl, 250.f, 250.f);
+    QPoint d = worldToScreen(*gl, 50.f, 250.f);
+
+    auto leftClickAt = [&](QPoint p) {
+        QMouseEvent p1(QEvent::MouseButtonPress, p, gl->mapToGlobal(p), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(gl, &p1);
+        QMouseEvent r1(QEvent::MouseButtonRelease, p, gl->mapToGlobal(p), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(gl, &r1);
+    };
+
+    leftClickAt(a); leftClickAt(b); leftClickAt(c); leftClickAt(d);
+    QKeyEvent enterEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    QCoreApplication::sendEvent(gl, &enterEvent);
+    processEvents();
+
+    REQUIRE(gl->getTotalSelectedPoints() >= 2);
+}
+
+TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(Docking) - spatial overlay selection works inside organizer", "[Organizer][Docking]") {
+    // Docking organizer requires a dock manager
+    ads::CDockManager dockManager;
+    DockingPlotOrganizer organizer(&dockManager);
+
+    QWidget * display = organizer.getDisplayWidget();
+    REQUIRE(display != nullptr);
+    display->resize(800, 600);
+    display->show();
+    processEvents();
+
+    auto container = PlotFactory::createPlotContainer("spatial_overlay_plot");
+    REQUIRE(container != nullptr);
+
+    organizer.addPlot(std::move(container));
+    REQUIRE(organizer.getPlotCount() == 1);
+
+    auto ids = organizer.getAllPlotIds();
+    REQUIRE(ids.size() == 1);
+    PlotContainer * pc = organizer.getPlot(ids.front());
+    REQUIRE(pc != nullptr);
+    auto * overlay = dynamic_cast<SpatialOverlayPlotWidget *>(pc->getPlotWidget());
+    REQUIRE(overlay != nullptr);
+    auto * gl = overlay->getOpenGLWidget();
+    REQUIRE(gl != nullptr);
+
+    auto point_data = std::make_shared<PointData>();
+    point_data->overwritePointsAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}});
+    point_data->overwritePointsAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}});
+    std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
+    gl->setPointData(map);
+    REQUIRE(waitForValidProjection(*gl));
+
+    gl->setSelectionMode(SelectionMode::PointSelection);
+    gl->setZoomLevel(5.0f);
+    processEvents();
+
+    auto clickCtrlAtGl = [&](float wx, float wy) {
+        QPoint s = worldToScreen(*gl, wx, wy);
+        gl->raise(); gl->activateWindow(); gl->setFocus(Qt::OtherFocusReason);
+        QTest::mouseMove(gl, s);
+        QMouseEvent p(QEvent::MouseButtonPress, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
+        QCoreApplication::sendEvent(gl, &p);
+        processEvents();
+        QMouseEvent r(QEvent::MouseButtonRelease, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
+        QCoreApplication::sendEvent(gl, &r);
+        processEvents();
+    };
+
+    clickCtrlAtGl(100.f, 100.f);
+    clickCtrlAtGl(200.f, 150.f);
+    REQUIRE(gl->getTotalSelectedPoints() >= 2);
 }
