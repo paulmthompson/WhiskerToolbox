@@ -9,7 +9,7 @@
 
 #include <QDebug>
 #include <QLabel>
-#include <QScrollArea>
+#include <QSizePolicy>
 #include <QStackedWidget>
 #include <QVBoxLayout>
 
@@ -18,7 +18,6 @@ PropertiesPanel::PropertiesPanel(QWidget * parent)
       ui(new Ui::PropertiesPanel),
       _global_properties(nullptr),
       _stacked_widget(nullptr),
-      _scroll_area(nullptr),
       _current_plot_widget(nullptr) {
     ui->setupUi(this);
 
@@ -48,8 +47,11 @@ void PropertiesPanel::initializePropertiesPanel() {
     // Register plot-specific properties widgets
     registerBuiltInPropertiesWidgets();
 
-    // Set the stacked widget as the scroll area content
-    ui->scrollArea->setWidget(_stacked_widget);
+    // Add the stacked widget directly to the panel's layout (no internal scroll area)
+    if (auto * layout = ui->verticalLayout) {
+        _stacked_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        layout->addWidget(_stacked_widget);
+    }
 
     // Show global properties by default
     showGlobalProperties();

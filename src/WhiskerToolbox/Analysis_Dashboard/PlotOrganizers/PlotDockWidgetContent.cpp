@@ -34,21 +34,24 @@ PlotDockWidgetContent::PlotDockWidgetContent(QString const& plot_id,
 
 void PlotDockWidgetContent::_initView(AbstractPlotWidget* plot_item)
 {
-    // Configure the view similar to GraphicsScenePlotOrganizer
+    // Configure the view for best results with embedded QOpenGLWidget proxies
     _view->setDragMode(QGraphicsView::RubberBandDrag);
     _view->setRenderHint(QPainter::Antialiasing);
-    // Full viewport updates tend to play nicer with embedded QOpenGLWidget proxies
+    //_view->setRenderHint(QPainter::HighQualityAntialiasing);
     _view->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     _view->setFrameShape(QFrame::NoFrame);
     _view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     _view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    _view->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    _view->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing, true);
+    _view->setOptimizationFlag(QGraphicsView::DontSavePainterState, true);
 
     // Important: Do NOT set an OpenGL viewport on the QGraphicsView because
     // we embed QOpenGLWidget via QGraphicsProxyWidget inside the scene.
     // Using a GL viewport here can prevent child QOpenGLWidgets from painting.
 
-    // Scene bounds can be flexible; set a generous rect
-    _scene->setSceneRect(0, 0, 1600, 1200);
+    // Initialize scene to current size; will be updated on resize
+    _scene->setSceneRect(0, 0, width(), height());
 
     if (plot_item) {
         _plot_item = plot_item;
@@ -88,12 +91,19 @@ void PlotDockWidgetContent::_fitPlotToView()
 {
     if (!_plot_item) { return; }
 
-    // Compute the item bounding rect in scene coordinates
-    QRectF itemRect = _plot_item->boundingRect();
-    // Make sure the scene is at least the item size
-    _scene->setSceneRect(itemRect);
+    // Avoid scaling the view which would rasterize/blurr the embedded GL content
+    const QSize viewportSize = _view->viewport()->size();
 
-    // Fit the entire scene (plot) into the view with aspect ratio preserved
-    _view->fitInView(_scene->sceneRect(), Qt::KeepAspectRatio);
+    // Resize plot item to fill the view
+    _plot_item->resize(viewportSize.width(), viewportSize.height());
+
+    // Update scene rect to match the item/view size
+    _scene->setSceneRect(0, 0, viewportSize.width(), viewportSize.height());
+
+    // Ensure identity transform for 1:1 pixel mapping
+    _view->resetTransform();
+
+    // Keep item at origin
+    _plot_item->setPos(0, 0);
 }
 

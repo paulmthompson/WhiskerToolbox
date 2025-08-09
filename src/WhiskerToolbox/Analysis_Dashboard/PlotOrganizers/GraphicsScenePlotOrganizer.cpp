@@ -13,14 +13,15 @@ GraphicsScenePlotOrganizer::GraphicsScenePlotOrganizer(QObject* parent)
     , default_position_(50, 50)
     , next_position_(default_position_)
 {
-    // Configure the view
+    // Configure the view: avoid scaling which would rasterize GL proxies
     view_->setDragMode(QGraphicsView::RubberBandDrag);
     view_->setRenderHint(QPainter::Antialiasing);
-    view_->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+    //view_->setRenderHint(QPainter::HighQualityAntialiasing);
+    view_->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+    view_->setOptimizationFlag(QGraphicsView::DontAdjustForAntialiasing, true);
+    view_->setOptimizationFlag(QGraphicsView::DontSavePainterState, true);
     
-    // TEMPORARILY REMOVE OpenGL viewport to test stability
-    // QOpenGLWidget* opengl_viewport = new QOpenGLWidget();
-    // view_->setViewport(opengl_viewport);
+    // Do NOT set an OpenGL viewport because plots embed QOpenGLWidget via proxies
     
     // Set a fixed scene rect like the original implementation
     scene_->setSceneRect(0, 0, 1000, 800);
