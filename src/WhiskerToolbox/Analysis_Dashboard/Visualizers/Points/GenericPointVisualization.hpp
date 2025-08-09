@@ -149,6 +149,23 @@ public:
      */
     void render(QMatrix4x4 const & mvp_matrix, float point_size);
 
+    /**
+     * @brief Set per-point group indices (palette indices) used by the shader for coloring
+     * @pre ids.size() == m_total_point_count
+     */
+    void setPerPointGroupIds(std::vector<uint32_t> const & ids) {
+        if (ids.size() != m_total_point_count) return;
+        if (m_vertex_data.size() != m_total_point_count * 3) return;
+        for (size_t i = 0; i < m_total_point_count; ++i) {
+            m_vertex_data[i * 3 + 2] = static_cast<float>(ids[i]);
+        }
+        if (m_vertex_buffer.isCreated()) {
+            m_vertex_buffer.bind();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(m_vertex_data.size() * sizeof(float)), m_vertex_data.data());
+            m_vertex_buffer.release();
+        }
+    }
+
     //========== Selection Handlers ==========
 
     /**

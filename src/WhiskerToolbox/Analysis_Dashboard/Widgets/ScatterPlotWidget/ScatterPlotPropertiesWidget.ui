@@ -44,6 +44,81 @@
           </property>
          </widget>
         </item>
+    <item>
+     <widget class="QGroupBox" name="filter_group">
+      <property name="title">
+       <string>Filter By Range</string>
+      </property>
+      <layout class="QVBoxLayout" name="filter_layout">
+       <item>
+        <widget class="QCheckBox" name="filter_enabled_checkbox">
+         <property name="text"><string>Enable Filter</string></property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="filter_sel_layout">
+         <item><widget class="QLabel" name="filter_col_label"><property name="text"><string>Table.Column:</string></property></widget></item>
+         <item><widget class="QComboBox" name="filter_column_combo"><property name="minimumWidth"><number>200</number></property></widget></item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="filter_cond_layout">
+         <item><widget class="QComboBox" name="filter_comparator_combo">
+           <item><property name="text"><string>&lt;</string></property></item>
+           <item><property name="text"><string>&lt;=</string></property></item>
+           <item><property name="text"><string>&gt;</string></property></item>
+           <item><property name="text"><string>&gt;=</string></property></item>
+           <item><property name="text"><string>==</string></property></item>
+           <item><property name="text"><string>!=</string></property></item>
+         </widget></item>
+         <item><widget class="QDoubleSpinBox" name="filter_value_spin"><property name="minimum"><double>-1e12</double></property><property name="maximum"><double>1e12</double></property><property name="decimals"><number>6</number></property></widget></item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="color_group">
+      <property name="title">
+       <string>Color By Feature</string>
+      </property>
+      <layout class="QVBoxLayout" name="color_layout">
+       <item><widget class="QCheckBox" name="color_enabled_checkbox"><property name="text"><string>Enable Color Mapping</string></property></widget></item>
+       <item>
+        <layout class="QHBoxLayout" name="color_sel_layout">
+         <item><widget class="QLabel" name="color_col_label"><property name="text"><string>Table.Column:</string></property></widget></item>
+         <item><widget class="QComboBox" name="color_column_combo"><property name="minimumWidth"><number>200</number></property></widget></item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="color_mode_layout">
+         <item><widget class="QLabel" name="color_mode_label"><property name="text"><string>Mode:</string></property></widget></item>
+         <item><widget class="QComboBox" name="color_mode_combo">
+           <item><property name="text"><string>Bool</string></property></item>
+           <item><property name="text"><string>Int</string></property></item>
+           <item><property name="text"><string>Continuous</string></property></item>
+         </widget></item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="color_discrete_layout">
+         <item><widget class="QLabel" name="color_false_label"><property name="text"><string>False/0 idx:</string></property></widget></item>
+         <item><widget class="QSpinBox" name="color_false_spin"><property name="minimum"><number>0</number></property><property name="maximum"><number>31</number></property></widget></item>
+         <item><widget class="QLabel" name="color_true_label"><property name="text"><string>True/1 idx:</string></property></widget></item>
+         <item><widget class="QSpinBox" name="color_true_spin"><property name="minimum"><number>0</number></property><property name="maximum"><number>31</number></property></widget></item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="color_continuous_layout">
+         <item><widget class="QLabel" name="color_min_label"><property name="text"><string>Min:</string></property></widget></item>
+         <item><widget class="QDoubleSpinBox" name="color_min_spin"><property name="minimum"><double>-1e12</double></property><property name="maximum"><double>1e12</double></property></widget></item>
+         <item><widget class="QLabel" name="color_max_label"><property name="text"><string>Max:</string></property></widget></item>
+         <item><widget class="QDoubleSpinBox" name="color_max_spin"><property name="minimum"><double>-1e12</double></property><property name="maximum"><double>1e12</double></property></widget></item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
         <item>
          <widget class="QComboBox" name="x_axis_combo">
           <property name="minimumWidth">

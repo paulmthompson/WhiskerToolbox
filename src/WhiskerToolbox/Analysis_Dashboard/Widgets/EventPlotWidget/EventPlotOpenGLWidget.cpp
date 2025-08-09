@@ -160,6 +160,7 @@ void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const &
 
     // Update legacy vertex data for compatibility (may remove later)
     updateVertexData();
+    applyRowColorIndicesIfReady();
     updateMatrices();
     update();
 }
@@ -657,6 +658,34 @@ void EventPlotOpenGLWidget::renderEvents() {
     // Events are now rendered through the EventPointVisualization in paintGL()
     // This method is kept for compatibility but is essentially a no-op
     qDebug() << "EventPlotOpenGLWidget::renderEvents - using EventPointVisualization system";
+}
+
+void EventPlotOpenGLWidget::setRowColorIndices(std::vector<uint32_t> const & row_color_indices) {
+    _row_color_indices = row_color_indices;
+    applyRowColorIndicesIfReady();
+}
+
+void EventPlotOpenGLWidget::applyRowColorIndicesIfReady() {
+    if (!_event_visualization) return;
+    if (_row_color_indices.empty()) return;
+    // Construct per-point group ids: for each event mapping, use its trial index
+    // EventPointVisualization stores one vertex per event with group id at index 2 of each vertex triplet
+    // To avoid deep coupling, rebuild a per-point id array by scanning vertex data
+    size_t total_points = _event_visualization->m_total_point_count;
+    if (total_points == 0) return;
+    std::vector<uint32_t> per_point_ids(total_points, 0u);
+    // We need trial index per event. EventPointVisualization keeps mappings internally; not exposed.
+    // Approximate by recomputing from _event_data order: points are appended trial by trial.
+    size_t cursor = 0;
+    for (size_t trial = 0; trial < _event_data.size(); ++trial) {
+        uint32_t idx = (trial < _row_color_indices.size()) ? _row_color_indices[trial] : 0u;
+        size_t count = _event_data[trial].size();
+        for (size_t k = 0; k < count && cursor < per_point_ids.size(); ++k, ++cursor) {
+            per_point_ids[cursor] = idx;
+        }
+    }
+    _event_visualization->setPerPointGroupIds(per_point_ids);
+    update();
 }
 
 void EventPlotOpenGLWidget::renderHoveredEvent() {

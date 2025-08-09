@@ -240,6 +240,10 @@ private:
  private slots:
      void onSortingToggled(bool enabled);
      void onSortingChanged();
+    void onFilterToggled(bool enabled);
+    void onFilterChanged();
+    void onColorToggled(bool enabled);
+    void onColorChanged();
 
  private:
      /**
