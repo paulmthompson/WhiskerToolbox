@@ -39,8 +39,7 @@ Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager
       _dock_manager(dock_manager),
       _toolbox_panel(nullptr),
       _properties_panel(nullptr),
-      _plot_organizer(nullptr),
-      _main_splitter(nullptr) {
+      _plot_organizer(nullptr) {
 
     ui->setupUi(this);
 
@@ -74,9 +73,7 @@ void Analysis_Dashboard::initializeDashboard() {
     setupLayout();
     connectSignals();
 
-    // Set initial splitter sizes (toolbox: 250px, center: remaining, properties: 250px)
-    QList<int> sizes = {250, 700, 250};
-    ui->main_splitter->setSizes(sizes);
+    // No splitter in docking mode; toolbox and properties arranged side-by-side
 
     // Update plot display after layout is set up
     updatePlotDisplay();
@@ -87,17 +84,12 @@ void Analysis_Dashboard::initializeDashboard() {
 void Analysis_Dashboard::setupLayout() {
     // Get the container widgets from the UI
     QWidget * toolbox_container = ui->toolbox_container;
-    QWidget * graphics_container = ui->graphics_container;
     QWidget * properties_container = ui->properties_container;
 
     // Create layouts for each container
     QVBoxLayout * toolbox_layout = new QVBoxLayout(toolbox_container);
     toolbox_layout->setContentsMargins(0, 0, 0, 0);
     toolbox_layout->addWidget(_toolbox_panel);
-
-    QVBoxLayout * graphics_layout = new QVBoxLayout(graphics_container);
-    graphics_layout->setContentsMargins(0, 0, 0, 0);
-    graphics_layout->addWidget(_plot_organizer->getDisplayWidget());
 
     QVBoxLayout * properties_layout = new QVBoxLayout(properties_container);
     properties_layout->setContentsMargins(0, 0, 0, 0);

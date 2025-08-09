@@ -114,8 +114,7 @@ private:
     PropertiesPanel * _properties_panel;
     std::unique_ptr<AbstractPlotOrganizer> _plot_organizer;
 
-    // Layout
-    QSplitter * _main_splitter;
+    // Layout (graphics center removed in docking mode)
 
     /**
      * @brief Initialize the dashboard layout and components

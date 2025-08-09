@@ -14,7 +14,7 @@
    <string>Analysis Dashboard</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="main_layout">
+    <layout class="QHBoxLayout" name="main_layout">
     <property name="leftMargin">
      <number>5</number>
     </property>
@@ -27,14 +27,7 @@
     <property name="bottomMargin">
      <number>5</number>
     </property>
-    <item>
-     <widget class="QSplitter" name="main_splitter">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="childrenCollapsible">
-       <bool>false</bool>
-      </property>
+     <item>
       <widget class="QWidget" name="toolbox_container">
        <property name="minimumSize">
         <size>
@@ -49,14 +42,8 @@
         </size>
        </property>
       </widget>
-      <widget class="QWidget" name="graphics_container">
-       <property name="minimumSize">
-        <size>
-         <width>400</width>
-         <height>0</height>
-        </size>
-       </property>
-      </widget>
+     </item>
+     <item>
       <widget class="QWidget" name="properties_container">
        <property name="minimumSize">
         <size>
@@ -71,8 +58,7 @@
         </size>
        </property>
       </widget>
-     </widget>
-    </item>
+     </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
