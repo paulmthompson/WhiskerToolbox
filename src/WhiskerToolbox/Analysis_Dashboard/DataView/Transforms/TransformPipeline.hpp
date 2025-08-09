@@ -7,6 +7,8 @@
 #include <vector>
 #include <functional>
 
+namespace AnalysisDashboard {
+
 /**
  * @brief Ordered list of transforms with default evaluation
  */
@@ -37,6 +39,8 @@ public:
 private:
     std::vector<std::function<bool(DataViewContext const &, DataViewState &)>> _fns;
 };
+
+} // namespace AnalysisDashboard
 
 #endif // DATAVIEW_TRANSFORMPIPELINE_HPP
 

@@ -152,7 +152,7 @@ private:
      QString _sort_primary_key;   // format: "table:<table_id>:<column_name>"
      QString _sort_secondary_key; // format: "table:<table_id>:<column_name>" or empty
      int _sort_order_index = 0;   // 0 = Asc, 1 = Desc
-    TransformPipeline _pipeline; // per-plot pipeline
+    AnalysisDashboard::TransformPipeline _pipeline; // per-plot pipeline
 
     /**
      * @brief Setup connections between UI elements and handlers

@@ -112,7 +112,7 @@ private:
     std::vector<float> _y_data;
 
     // Data view pipeline (filter/sort/color); sort may be unused for scatter
-    TransformPipeline _pipeline;
+    AnalysisDashboard::TransformPipeline _pipeline;
 
     void rebuildPipeline();
 
