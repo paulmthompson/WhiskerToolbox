@@ -26,7 +26,6 @@
 #include "transforms/Masks/mask_area.hpp"
 
 #include "TimeFrame.hpp"
-#include "TimeFrame/TimeFrameV2.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -75,10 +74,7 @@ void DataManager::reset() {
     // Clear all data-to-timeframe mappings and recreate the default media mapping
     _time_frames.clear();
     setTimeFrame("media", "time");
-    
-    // Clear TimeFrameV2 objects and mappings
-    _times_v2.clear();
-    _time_frames_v2.clear();
+
     
     // Reset current time
     _current_time = 0;
@@ -691,72 +687,6 @@ DM_DataType DataManager::getType(std::string const & key) const {
     return DM_DataType::Unknown;
 }
 
-// ========== TimeFrameV2 Implementation ==========
-
-bool DataManager::setTimeV2(std::string const & key, AnyTimeFrame timeframe, bool overwrite) {
-    if (_times_v2.find(key) != _times_v2.end()) {
-        if (overwrite) {
-            _times_v2[key] = std::move(timeframe);
-            return true;
-        } else {
-            std::cerr << "Error: TimeFrameV2 key already exists in DataManager: " << key << std::endl;
-            return false;
-        }
-    }
-
-    _times_v2[key] = std::move(timeframe);
-    return true;
-}
-
-std::optional<AnyTimeFrame> DataManager::getTimeV2(std::string const & key) {
-    if (_times_v2.find(key) != _times_v2.end()) {
-        return _times_v2[key];
-    }
-    return std::nullopt;
-}
-
-bool DataManager::removeTimeV2(std::string const & key) {
-    if (_times_v2.find(key) == _times_v2.end()) {
-        std::cerr << "Error: could not find TimeFrameV2 key in DataManager: " << key << std::endl;
-        return false;
-    }
-
-    auto it = _times_v2.find(key);
-    _times_v2.erase(it);
-    return true;
-}
-
-std::vector<std::string> DataManager::getTimeFrameV2Keys() {
-    std::vector<std::string> keys;
-    keys.reserve(_times_v2.size());
-    for (auto const & [key, value]: _times_v2) {
-        keys.push_back(key);
-    }
-    return keys;
-}
-
-bool DataManager::createClockTimeFrame(std::string const & key, int64_t start_tick,
-                                       int64_t num_samples, double sampling_rate_hz,
-                                       bool overwrite) {
-    auto clock_frame = TimeFrameUtils::createDenseClockTimeFrame(start_tick, num_samples, sampling_rate_hz);
-    AnyTimeFrame any_frame = clock_frame;
-    return setTimeV2(key, std::move(any_frame), overwrite);
-}
-
-bool DataManager::createCameraTimeFrame(std::string const & key, std::vector<int64_t> frame_indices,
-                                        bool overwrite) {
-    auto camera_frame = TimeFrameUtils::createSparseCameraTimeFrame(std::move(frame_indices));
-    AnyTimeFrame any_frame = camera_frame;
-    return setTimeV2(key, std::move(any_frame), overwrite);
-}
-
-bool DataManager::createDenseCameraTimeFrame(std::string const & key, int64_t start_frame,
-                                             int64_t num_frames, bool overwrite) {
-    auto camera_frame = TimeFrameUtils::createDenseCameraTimeFrame(start_frame, num_frames);
-    AnyTimeFrame any_frame = camera_frame;
-    return setTimeV2(key, std::move(any_frame), overwrite);
-}
-
 std::string convert_data_type_to_string(DM_DataType type) {
     switch (type) {
         case DM_DataType::Video:
@@ -784,139 +714,3 @@ std::string convert_data_type_to_string(DM_DataType type) {
     }
 }
 
-// ========== Enhanced AnalogTimeSeries Support Implementation ==========
-
-bool DataManager::createAnalogTimeSeriesWithClock(std::string const & data_key,
-                                                  std::string const & timeframe_key,
-                                                  std::vector<float> analog_data,
-                                                  int64_t start_tick,
-                                                  double sampling_rate_hz,
-                                                  bool overwrite) {
-    // Create the clock timeframe
-    if (!createClockTimeFrame(timeframe_key, start_tick,
-                              static_cast<int64_t>(analog_data.size()),
-                              sampling_rate_hz, overwrite)) {
-        return false;
-    }
-
-    // Get the timeframe
-    auto timeframe_opt = getTimeV2(timeframe_key);
-    if (!timeframe_opt.has_value()) {
-        return false;
-    }
-
-    // Create time vector with the actual tick values
-    std::vector<TimeFrameIndex> time_vector;
-    time_vector.reserve(analog_data.size());
-    for (size_t i = 0; i < analog_data.size(); ++i) {
-        time_vector.push_back(TimeFrameIndex(start_tick + static_cast<int64_t>(i)));
-    }
-
-    // Create the analog series
-    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data), std::move(time_vector));
-    setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
-    return true;
-}
-
-bool DataManager::createAnalogTimeSeriesWithCamera(std::string const & data_key,
-                                                   std::string const & timeframe_key,
-                                                   std::vector<float> analog_data,
-                                                   std::vector<int64_t> frame_indices,
-                                                   bool overwrite) {
-    if (analog_data.size() != frame_indices.size()) {
-        std::cerr << "Error: analog data and frame indices must have same size" << std::endl;
-        return false;
-    }
-
-    // Save frame_indices before they're moved
-    std::vector<int64_t> frame_indices_copy = frame_indices;
-
-    // Create the camera timeframe
-    if (!createCameraTimeFrame(timeframe_key, std::move(frame_indices), overwrite)) {
-        return false;
-    }
-
-    // Get the timeframe
-    auto timeframe_opt = getTimeV2(timeframe_key);
-    if (!timeframe_opt.has_value()) {
-        return false;
-    }
-
-    // Create time vector with the actual frame indices
-    std::vector<TimeFrameIndex> time_vector;
-    time_vector.reserve(analog_data.size());
-    for (int64_t frame_idx: frame_indices_copy) {
-        time_vector.push_back(TimeFrameIndex(frame_idx));
-    }
-
-    // Create the analog series
-    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data), std::move(time_vector));
-    setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
-    return true;
-}
-
-bool DataManager::createAnalogTimeSeriesWithDenseCamera(std::string const & data_key,
-                                                        std::string const & timeframe_key,
-                                                        std::vector<float> analog_data,
-                                                        int64_t start_frame,
-                                                        bool overwrite) {
-    // Create the dense camera timeframe
-    if (!createDenseCameraTimeFrame(timeframe_key, start_frame,
-                                    static_cast<int64_t>(analog_data.size()), overwrite)) {
-        return false;
-    }
-
-    // Get the timeframe
-    auto timeframe_opt = getTimeV2(timeframe_key);
-    if (!timeframe_opt.has_value()) {
-        return false;
-    }
-
-    // Create time vector with the actual frame indices
-    std::vector<TimeFrameIndex> time_vector;
-    time_vector.reserve(analog_data.size());
-    for (size_t i = 0; i < analog_data.size(); ++i) {
-        time_vector.push_back(TimeFrameIndex(start_frame + static_cast<int64_t>(i)));
-    }
-
-    // Create the analog series
-    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data), std::move(time_vector));
-    setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
-    return true;
-}
-
-std::string DataManager::getAnalogCoordinateType(std::string const & data_key) {
-    // Check if the data exists and is an AnalogTimeSeries
-    if (_data.find(data_key) == _data.end()) {
-        return "not_found";
-    }
-
-    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(_data[data_key])) {
-        return "not_analog_timeseries";
-    }
-
-    auto series = std::get<std::shared_ptr<AnalogTimeSeries>>(_data[data_key]);
-    if (!series) {
-        return "null_series";
-    }
-
-    return series->getCoordinateType();
-}
-
-bool DataManager::analogUsesCoordinateTypeImpl(std::string const & data_key, std::string const & type_name) {
-    // Check if the data exists and is an AnalogTimeSeries
-    if (_data.find(data_key) == _data.end()) {
-        return false;
-    }
-
-    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(_data[data_key])) {
-        return false;
-    }
-
-    auto series = std::get<std::shared_ptr<AnalogTimeSeries>>(_data[data_key]);
-    if (!series) {
-        return false;
-    }
-
-    return series->getCoordinateType() == type_name;
-}

@@ -355,7 +355,9 @@ TEST_CASE("LineSamplingMultiComputer expansion with coexisting analog column ret
 
     // Analog data present at all timestamps: values 0,10,20,30
     std::vector<float> analogVals = {0.f, 10.f, 20.f, 30.f};
-    dm.createAnalogTimeSeriesWithCamera("AnalogA", "cam", analogVals, {0,1,2,3}, true);
+    std::vector<TimeFrameIndex> analogTimes = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3)};
+    auto analogData = std::make_shared<AnalogTimeSeries>(analogVals, analogTimes);
+    dm.setData<AnalogTimeSeries>("AnalogA", analogData);
 
     // Build selector across all timestamps
     std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3)};

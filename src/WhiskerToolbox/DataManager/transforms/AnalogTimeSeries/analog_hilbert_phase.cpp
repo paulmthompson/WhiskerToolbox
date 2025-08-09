@@ -307,11 +307,6 @@ std::shared_ptr<AnalogTimeSeries> hilbert_phase(
     // Create result
     auto result = std::make_shared<AnalogTimeSeries>(std::move(output_data), std::move(output_times));
 
-    // Copy TimeFrameV2 if present
-    if (analog_time_series->hasTimeFrameV2()) {
-        result->setTimeFrameV2(analog_time_series->getTimeFrameV2().value());
-    }
-
     if (progressCallback) {
         progressCallback(100);
     }

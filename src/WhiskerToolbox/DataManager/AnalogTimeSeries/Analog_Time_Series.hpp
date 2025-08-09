@@ -2,7 +2,6 @@
 #define ANALOG_TIME_SERIES_HPP
 
 #include "Observer/Observer_Data.hpp"
-#include "TimeFrame/TimeFrameV2.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame.hpp"
 
@@ -177,85 +176,6 @@ public:
                                                                       TimeFrame const * source_timeFrame,
                                                                       TimeFrame const * analog_timeFrame) const;
 
-
-    // ========== TimeFrameV2 Support ==========
-
-    /**
-    * @brief Set a TimeFrameV2 reference for this data series
-    *
-    * Associates this AnalogTimeSeries with a strongly-typed TimeFrameV2,
-    * enabling type-safe time coordinate operations.
-    *
-    * @param timeframe The TimeFrameV2 variant to associate with this data
-    */
-    void setTimeFrameV2(AnyTimeFrame timeframe) {
-        _timeframe_v2 = std::move(timeframe);
-    }
-
-    /**
-    * @brief Get the TimeFrameV2 reference for this data series
-    *
-    * @return Optional TimeFrameV2 variant if set, nullopt otherwise
-    */
-    [[nodiscard]] std::optional<AnyTimeFrame> getTimeFrameV2() const {
-        return _timeframe_v2;
-    }
-
-    /**
-    * @brief Check if this series has a TimeFrameV2 reference
-    *
-    * @return True if a TimeFrameV2 is associated with this series
-    */
-    [[nodiscard]] bool hasTimeFrameV2() const {
-        return _timeframe_v2.has_value();
-    }
-
-    /**
-    * @brief Get the coordinate type of the associated TimeFrameV2
-    *
-    * @return String identifier for the coordinate type, or "none" if no TimeFrameV2 is set
-    */
-    [[nodiscard]] std::string getCoordinateType() const {
-        if (!_timeframe_v2.has_value()) {
-            return "none";
-        }
-
-        return std::visit([](auto const & timeframe_ptr) -> std::string {
-            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
-            using CoordType = typename FrameType::coordinate_type;
-            
-            if constexpr (std::is_same_v<CoordType, ClockTicks>) {
-                return "ClockTicks";
-            } else if constexpr (std::is_same_v<CoordType, CameraFrameIndex>) {
-                return "CameraFrameIndex";
-            } else if constexpr (std::is_same_v<CoordType, Seconds>) {
-                return "Seconds";
-            } else if constexpr (std::is_same_v<CoordType, UncalibratedIndex>) {
-                return "UncalibratedIndex";
-            } else {
-                return "unknown";
-            }
-        }, _timeframe_v2.value());
-    }
-
-    /**
-    * @brief Check if the TimeFrameV2 uses a specific coordinate type
-    *
-    * @tparam CoordinateType The coordinate type to check for
-    * @return True if the TimeFrameV2 uses the specified coordinate type
-    */
-    template<typename CoordinateType>
-    [[nodiscard]] bool hasCoordinateType() const {
-        if (!_timeframe_v2.has_value()) {
-            return false;
-        }
-
-        return std::visit([](auto const & timeframe_ptr) -> bool {
-            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
-            using FrameCoordType = typename FrameType::coordinate_type;
-            return std::is_same_v<FrameCoordType, CoordinateType>;
-        }, _timeframe_v2.value());
-    }
 
         /**
      * @brief Find the DataArrayIndex that corresponds to a given TimeFrameIndex
@@ -553,9 +473,6 @@ private:
     std::vector<float> _data;
     TimeStorage _time_storage;
     std::shared_ptr<TimeFrame> _time_frame {nullptr};
-
-    // New TimeFrameV2 support
-    std::optional<AnyTimeFrame> _timeframe_v2;
 
     void setData(std::vector<float> analog_vector);
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
