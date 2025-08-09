@@ -16,14 +16,15 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
-#include <optional>
 
 
 class DataManager;
 class DigitalIntervalSeries;
+class TableView;
 class TimeScrollBar;
 
 namespace Ui {
@@ -57,14 +58,27 @@ private slots:
     void _populateTrainingIntervalComboBox();
 
 private:
+    // Table-based ML helpers
+    void _populateAvailableTablesAndColumns();
+    void _onSelectedTableChanged(QString const & table_id);
+    arma::Mat<double> _buildFeatureMatrixFromTable(std::shared_ptr<TableView> const & table,
+                                                   std::vector<std::string> const & feature_columns,
+                                                   std::vector<size_t> & kept_row_indices) const;
+    std::optional<arma::Row<size_t>> _buildLabelsFromTable(std::shared_ptr<TableView> const & table,
+                                                           std::string const & label_column,
+                                                           std::vector<size_t> const & kept_row_indices) const;
+    std::vector<size_t> _applyMasksFromTable(std::shared_ptr<TableView> const & table,
+                                             std::vector<std::string> const & mask_columns,
+                                             std::vector<size_t> const & candidate_rows) const;
+
     arma::Mat<double> _createFeatureMatrix(
             std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features,
             std::vector<std::size_t> const & timestamps,
             std::string & error_message) const;
-    
+
     arma::Mat<double> _removeNaNColumns(arma::Mat<double> const & matrix, std::vector<std::size_t> & timestamps) const;
-    arma::Mat<double> _zScoreNormalizeFeatures(arma::Mat<double> const & matrix, 
-            std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features) const;
+    arma::Mat<double> _zScoreNormalizeFeatures(arma::Mat<double> const & matrix,
+                                               std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features) const;
 
     /**
      * @brief Prepare training data including feature matrix and outcome arrays
@@ -113,11 +127,17 @@ private:
     QString _training_interval_key;
     std::unordered_set<std::string> _selected_outcomes;
 
-    FeatureProcessingWidget * _feature_processing_widget;
+    FeatureProcessingWidget * _feature_processing_widget = nullptr; // removed from UI; kept for legacy path if needed
     ClassBalancingWidget * _class_balancing_widget;
     ModelMetricsWidget * _model_metrics_widget;
 
     std::map<WhiskerTransformations::TransformationType, std::unique_ptr<ITransformation>> _transformation_registry;
+
+    // Table-based ML state
+    QString _selected_table_id;
+    std::vector<std::string> _selected_feature_columns;
+    std::vector<std::string> _selected_mask_columns;
+    std::string _selected_label_column;
 };
 
 arma::Mat<double> create_arrays(std::unordered_set<std::string> const & features,

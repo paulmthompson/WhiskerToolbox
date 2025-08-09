@@ -3,6 +3,7 @@
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
+#include "utils/TableView/transforms/PCATransform.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -220,6 +221,11 @@ TableBuildResult TablePipeline::buildTable(TableConfiguration const& config,
             return result;
         }
         
+        // Apply optional transforms for this base table
+        if (!applyTransforms(config)) {
+            std::cerr << "TablePipeline: One or more transforms failed for table '" << config.table_id << "'\n";
+        }
+
         result.success = true;
         
     } catch (std::exception const& e) {
@@ -262,8 +268,78 @@ TableConfiguration TablePipeline::parseTableConfiguration(nlohmann::json const& 
             }
         }
     }
+    if (table_json.contains("transforms") && table_json["transforms"].is_array()) {
+        for (auto const & tjson : table_json["transforms"]) {
+            TableConfiguration::TransformSpec spec;
+            spec.type = tjson.value("type", "");
+            if (tjson.contains("parameters") && tjson["parameters"].is_object()) {
+                spec.parameters = tjson["parameters"];
+            }
+            spec.output_table_id = tjson.value("output_table_id", "");
+            spec.output_name = tjson.value("output_name", "");
+            spec.output_description = tjson.value("output_description", "");
+            config.transforms.push_back(std::move(spec));
+        }
+    }
     
     return config;
+}
+
+bool TablePipeline::applyTransforms(TableConfiguration const& config) {
+    if (config.transforms.empty()) return true;
+
+    auto base_id = QString::fromStdString(config.table_id);
+    auto base_view_sp = table_registry_->getBuiltTable(base_id);
+    if (!base_view_sp) {
+        std::cerr << "TablePipeline: Cannot apply transforms, base table not found: " << config.table_id << "\n";
+        return false;
+    }
+
+    bool all_ok = true;
+    for (auto const & t : config.transforms) {
+        try {
+            if (t.type == "PCA") {
+                PCAConfig pc;
+                pc.center = t.parameters.value("center", true);
+                pc.standardize = t.parameters.value("standardize", false);
+                if (t.parameters.contains("include") && t.parameters["include"].is_array()) {
+                    for (auto const & s : t.parameters["include"]) if (s.is_string()) pc.include.push_back(s);
+                }
+                if (t.parameters.contains("exclude") && t.parameters["exclude"].is_array()) {
+                    for (auto const & s : t.parameters["exclude"]) if (s.is_string()) pc.exclude.push_back(s);
+                }
+
+                PCATransform pca(pc);
+                TableView derived = pca.apply(*base_view_sp);
+
+                // Prepare output id/name
+                QString out_id = t.output_table_id.empty()
+                                 ? table_registry_->generateUniqueTableId(QString::fromStdString(config.table_id + "_pca"))
+                                 : QString::fromStdString(t.output_table_id);
+                QString out_name = t.output_name.empty()
+                                   ? QString::fromStdString(config.name + " (PCA)")
+                                   : QString::fromStdString(t.output_name);
+                QString out_desc = QString::fromStdString(t.output_description);
+
+                if (!table_registry_->hasTable(out_id)) {
+                    table_registry_->createTable(out_id, out_name, out_desc);
+                } else {
+                    table_registry_->updateTableInfo(out_id, out_name, out_desc);
+                }
+                if (!table_registry_->storeBuiltTable(out_id, std::move(derived))) {
+                    std::cerr << "TablePipeline: Failed to store transformed table: " << out_id.toStdString() << "\n";
+                    all_ok = false;
+                }
+            } else {
+                std::cerr << "TablePipeline: Unknown transform type: " << t.type << "\n";
+                all_ok = false;
+            }
+        } catch (std::exception const & e) {
+            std::cerr << "TablePipeline: Transform '" << t.type << "' failed: " << e.what() << "\n";
+            all_ok = false;
+        }
+    }
+    return all_ok;
 }
 
 std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json const& row_selector_json) {

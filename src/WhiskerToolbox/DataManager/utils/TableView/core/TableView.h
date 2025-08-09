@@ -143,6 +143,20 @@ public:
      */
     [[nodiscard]] auto getRowDescriptor(size_t row_index) const -> RowDescriptor;
 
+    /**
+     * @brief Create a new row selector of the same concrete type, filtered to a subset of rows.
+     *
+     * @param keep_indices Indices of rows to keep (relative to this table's current rows), in ascending order.
+     * @return A new row selector that preserves the original selector's semantics while containing only the kept rows.
+     */
+    [[nodiscard]] auto cloneRowSelectorFiltered(std::vector<size_t> const & keep_indices) const -> std::unique_ptr<IRowSelector>;
+
+    /**
+     * @brief Access the data manager extension backing this table.
+     * @return Shared pointer to the `DataManagerExtension`.
+     */
+    [[nodiscard]] auto getDataManagerExtension() const -> std::shared_ptr<DataManagerExtension> { return m_dataManager; }
+
 private:
     friend class TableViewBuilder;
     // Grant friend access to the templated Column class

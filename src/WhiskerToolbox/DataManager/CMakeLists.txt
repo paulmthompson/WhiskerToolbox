@@ -149,13 +149,20 @@ set(DATAMANAGER_SOURCES
         utils/TableView/computers/TimestampValueComputer.h
         utils/TableView/computers/TimestampValueComputer.cpp
         utils/TableView/computers/LineSamplingMultiComputer.h
+        utils/TableView/computers/AnalogTimestampOffsetsMultiComputer.h
+        utils/TableView/computers/AnalogTimestampOffsetsMultiComputer.cpp
         utils/TableView/computers/AnalogSliceGathererComputer.h
+        utils/TableView/computers/TimestampInIntervalComputer.h
+        utils/TableView/computers/TimestampInIntervalComputer.cpp
         utils/TableView/computers/StandardizeComputer.h
 
         utils/TableView/ComputerRegistry.cpp 
         utils/TableView/ComputerRegistry.hpp
         utils/TableView/ComputerRegistryTypes.hpp
 
+        utils/TableView/transforms/ITableTransform.hpp
+        utils/TableView/transforms/PCATransform.hpp
+        utils/TableView/transforms/PCATransform.cpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp

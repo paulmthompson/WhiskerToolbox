@@ -421,3 +421,56 @@ RowDescriptor TableView::getRowDescriptor(size_t row_index) const {
     }
     return std::monostate{};
 }
+
+std::unique_ptr<IRowSelector> TableView::cloneRowSelectorFiltered(std::vector<size_t> const & keep_indices) const {
+    if (!m_rowSelector) {
+        return nullptr;
+    }
+
+    // IndexSelector
+    if (auto indexSelector = dynamic_cast<IndexSelector const *>(m_rowSelector.get())) {
+        std::vector<size_t> const & indices = indexSelector->getIndices();
+        std::vector<size_t> filtered;
+        filtered.reserve(keep_indices.size());
+        for (size_t k : keep_indices) {
+            if (k < indices.size()) {
+                filtered.push_back(indices[k]);
+            }
+        }
+        return std::make_unique<IndexSelector>(std::move(filtered));
+    }
+
+    // TimestampSelector
+    if (auto timestampSelector = dynamic_cast<TimestampSelector const *>(m_rowSelector.get())) {
+        auto const & timestamps = timestampSelector->getTimestamps();
+        auto timeFrame = timestampSelector->getTimeFrame();
+        std::vector<TimeFrameIndex> filtered;
+        filtered.reserve(keep_indices.size());
+        for (size_t k : keep_indices) {
+            if (k < timestamps.size()) {
+                filtered.push_back(timestamps[k]);
+            }
+        }
+        return std::make_unique<TimestampSelector>(std::move(filtered), timeFrame);
+    }
+
+    // IntervalSelector
+    if (auto intervalSelector = dynamic_cast<IntervalSelector const *>(m_rowSelector.get())) {
+        auto const & intervals = intervalSelector->getIntervals();
+        auto timeFrame = intervalSelector->getTimeFrame();
+        std::vector<TimeFrameInterval> filtered;
+        filtered.reserve(keep_indices.size());
+        for (size_t k : keep_indices) {
+            if (k < intervals.size()) {
+                filtered.push_back(intervals[k]);
+            }
+        }
+        return std::make_unique<IntervalSelector>(std::move(filtered), timeFrame);
+    }
+
+    // Fallback: preserve by indices if unknown type
+    std::vector<size_t> identity;
+    identity.reserve(keep_indices.size());
+    for (size_t k : keep_indices) identity.push_back(k);
+    return std::make_unique<IndexSelector>(std::move(identity));
+}

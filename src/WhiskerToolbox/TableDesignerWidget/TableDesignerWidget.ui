@@ -391,6 +391,97 @@
     </widget>
    </item>
    <item>
+     <widget class="QGroupBox" name="transform_group">
+      <property name="title">
+       <string>Transforms</string>
+      </property>
+      <layout class="QGridLayout" name="transform_layout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="transform_type_label">
+         <property name="text">
+          <string>Transform:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="transform_type_combo">
+         <item>
+          <property name="text">
+           <string>PCA</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="transform_center_checkbox">
+         <property name="text">
+          <string>Center</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QCheckBox" name="transform_standardize_checkbox">
+         <property name="text">
+          <string>Standardize (z-score)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="transform_include_label">
+         <property name="text">
+          <string>Include columns:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="transform_include_edit">
+         <property name="placeholderText">
+          <string>Comma-separated names (optional)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="transform_exclude_label">
+         <property name="text">
+          <string>Exclude columns:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="transform_exclude_edit">
+         <property name="placeholderText">
+          <string>Comma-separated names (optional)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="transform_output_name_label">
+         <property name="text">
+          <string>Output Name:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="transform_output_name_edit">
+         <property name="placeholderText">
+          <string>e.g., Base (PCA)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QPushButton" name="apply_transform_btn">
+         <property name="text">
+          <string>Apply Transform</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
     <widget class="QGroupBox" name="build_group">
      <property name="title">
       <string>Build Table</string>
@@ -413,6 +504,99 @@
         </property>
         <property name="styleSheet">
          <string>QLabel { color: gray; font-style: italic; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="export_group">
+     <property name="title">
+      <string>Export to CSV</string>
+     </property>
+     <layout class="QGridLayout" name="export_layout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="export_delimiter_label">
+        <property name="text">
+         <string>Delimiter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="export_delimiter_combo">
+        <item>
+         <property name="text">
+          <string>Comma</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Space</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Tab</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="export_line_ending_label">
+        <property name="text">
+         <string>Line Ending:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="export_line_ending_combo">
+        <item>
+         <property name="text">
+          <string>LF (\n)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>CRLF (\r\n)</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="export_precision_label">
+        <property name="text">
+         <string>Decimal Precision:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="export_precision_spinbox">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>10</number>
+        </property>
+        <property name="value">
+         <number>3</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+       <widget class="QCheckBox" name="export_header_checkbox">
+        <property name="text">
+         <string>Include Header Row</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QPushButton" name="export_csv_btn">
+        <property name="text">
+         <string>Export to CSV...</string>
         </property>
        </widget>
       </item>

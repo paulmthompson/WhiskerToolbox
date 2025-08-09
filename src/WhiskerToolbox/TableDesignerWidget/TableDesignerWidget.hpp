@@ -128,6 +128,8 @@ private slots:
      * @brief Handle building the table
      */
     void onBuildTable();
+    void onApplyTransform();
+    void onExportCsv();
 
     /**
      * @brief Handle saving the table metadata
@@ -326,6 +328,13 @@ private:
      * @param parameters Map of parameter name to string value
      */
     void setParameterValues(std::map<std::string, std::string> const & parameters);
+
+    // Helpers for transforms
+    std::vector<std::string> parseCommaSeparatedList(QString const & text) const;
+
+    // CSV helpers
+    QString promptSaveCsvFilename() const;
+    QString currentTableIdOrEmpty() const { return _current_table_id; }
 };
 
 #endif// TABLEDESIGNERWIDGET_HPP
