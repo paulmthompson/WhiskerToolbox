@@ -16,6 +16,8 @@ void SpatialOverlayViewAdapter::getPerAxisZoom(float & zoom_x, float & zoom_y) c
 void SpatialOverlayViewAdapter::setPerAxisZoom(float zoom_x, float zoom_y) {
     _w->_zoom_level_x = zoom_x;
     _w->_zoom_level_y = zoom_y;
+    _w->updateViewMatrices();
+    _w->requestThrottledUpdate();
 }
 
 void SpatialOverlayViewAdapter::getPan(float & pan_x, float & pan_y) const {
@@ -24,7 +26,11 @@ void SpatialOverlayViewAdapter::getPan(float & pan_x, float & pan_y) const {
 }
 
 void SpatialOverlayViewAdapter::setPan(float pan_x, float pan_y) {
-    _w->setPanOffset(pan_x, pan_y);
+    _w->_pan_offset_x = pan_x;
+    _w->_pan_offset_y = pan_y;
+    _w->emit panOffsetChanged(_w->_pan_offset_x, _w->_pan_offset_y);
+    _w->updateViewMatrices();
+    _w->requestThrottledUpdate();
 }
 
 float SpatialOverlayViewAdapter::getPadding() const {
@@ -70,5 +76,9 @@ void SpatialOverlayViewAdapter::applyBoxZoomToWorldRect(float min_x, float max_x
     float pan_norm_y = (target_cy - center_y) / (data_height * (1.0f / _w->_zoom_level_y));
     _w->_pan_offset_x = pan_norm_x;
     _w->_pan_offset_y = pan_norm_y;
+    
+    _w->emit panOffsetChanged(_w->_pan_offset_x, _w->_pan_offset_y);
+    _w->updateViewMatrices();
+    _w->requestThrottledUpdate();
 }
 

@@ -222,8 +222,8 @@ void SpatialOverlayPlotPropertiesWidget::onLineWidthChanged(double value) {
 
 void SpatialOverlayPlotPropertiesWidget::onResetViewClicked() {
     if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
-        // Reset pan to defaults (zoom is now handled by the view adapter)
-        _spatial_plot_widget->getOpenGLWidget()->setPanOffset(0.0f, 0.0f);
+        // Reset view to fit all data (zoom and pan to defaults)
+        _spatial_plot_widget->getOpenGLWidget()->resetView();
     }
 }
 

@@ -50,16 +50,9 @@ public:
 
 
     /**
-     * @brief Set pan offset
-     * @param offset_x X offset in normalized coordinates
-     * @param offset_y Y offset in normalized coordinates
+     * @brief Reset view to fit all data (zoom and pan to defaults)
      */
-    void setPanOffset(float offset_x, float offset_y);
-
-    /**
-     * @brief Get current pan offset
-     */
-    QVector2D getPanOffset() const { return QVector2D(_pan_offset_x, _pan_offset_y); }
+    void resetView();
 
     /**
      * @brief Set the current selection mode

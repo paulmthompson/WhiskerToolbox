@@ -465,14 +465,20 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
 
 
 
-void SpatialOverlayOpenGLWidget::setPanOffset(float offset_x, float offset_y) {
-    if (offset_x != _pan_offset_x || offset_y != _pan_offset_y) {
-        _pan_offset_x = offset_x;
-        _pan_offset_y = offset_y;
-        emit panOffsetChanged(_pan_offset_x, _pan_offset_y);
-        updateViewMatrices();
-        requestThrottledUpdate();
-    }
+void SpatialOverlayOpenGLWidget::resetView() {
+    // Reset zoom and pan to defaults
+    _zoom_level_x = 1.0f;
+    _zoom_level_y = 1.0f;
+    _zoom_level = 1.0f;
+    _pan_offset_x = 0.0f;
+    _pan_offset_y = 0.0f;
+    
+    // Emit pan offset changed signal
+    emit panOffsetChanged(_pan_offset_x, _pan_offset_y);
+    
+    // Update view matrices and trigger render
+    updateViewMatrices();
+    requestThrottledUpdate();
 }
 
 void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
