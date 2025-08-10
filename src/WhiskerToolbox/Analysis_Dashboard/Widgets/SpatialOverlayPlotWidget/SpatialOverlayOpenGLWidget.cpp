@@ -109,6 +109,8 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     _zoom_level_y = 1.0f;
     _padding_factor = 1.1f;
 
+    _initializeContextMenu();
+
     // Initialize rubber band for box zoom
     //_rubber_band = nullptr;
 }
@@ -822,7 +824,7 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
         // Only show context menu when not in polygon selection, to avoid interfering with completion
         if (_selection_mode != SelectionMode::PolygonSelection) {
             qDebug() << "SpatialOverlayOpenGLWidget: Right-click detected at" << event->pos();
-            showContextMenu(event->pos());
+            _showContextMenu(event->pos());
             event->accept();
         } else {
             // In polygon mode, right-click is ignored to prevent menu; completion is done via Enter
@@ -1313,7 +1315,17 @@ void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
     }
 }
 
-void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
+//========== Context Menu ==========
+
+void SpatialOverlayOpenGLWidget::_initializeContextMenu() {
+
+    _actionCreateNewGroup = new QAction("Create New Group", this);
+    connect(_actionCreateNewGroup, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup);
+    _actionUngroupSelected = new QAction("Ungroup Selected", this);
+    connect(_actionUngroupSelected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::ungroupSelectedPoints);
+}
+
+void SpatialOverlayOpenGLWidget::_showContextMenu(QPoint const & pos) {
 
     QMenu * contextMenu = new QMenu(nullptr);
     contextMenu->setAttribute(Qt::WA_DeleteOnClose);
@@ -1329,12 +1341,7 @@ void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
     if (total_selected > 0 && _group_manager) {
         // Add "Assign to Group" submenu
         QMenu * assignGroupMenu = contextMenu->addMenu("Assign to Group");
-
-        // Add "New Group" option
-        QAction * newGroupAction = assignGroupMenu->addAction("Create New Group");
-        connect(newGroupAction, &QAction::triggered, this, [this]() {
-            assignSelectedPointsToNewGroup();
-        });
+        assignGroupMenu->addAction(_actionCreateNewGroup);
 
         assignGroupMenu->addSeparator();
 
@@ -1350,10 +1357,8 @@ void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
         }
 
         // Add "Remove from Group" option
-        QAction * ungroupAction = contextMenu->addAction("Remove from Group");
-        connect(ungroupAction, &QAction::triggered, this, [this]() {
-            ungroupSelectedPoints();
-        });
+        contextMenu->addAction(_actionUngroupSelected);
+
 
         contextMenu->addSeparator();
     }
