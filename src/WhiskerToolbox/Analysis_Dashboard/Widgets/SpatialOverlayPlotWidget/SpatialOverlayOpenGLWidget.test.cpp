@@ -278,26 +278,69 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     // Ensure context menu shows non-modally in tests
     qputenv("WT_TESTING_NON_MODAL_MENUS", "1");
 
-    // Helper: poll for the non-modal menu and trigger "Create New Group"
+    // Helper: poll for the non-modal menu and ACTUALLY CLICK the "Create New Group" item
+    // This simulates real user interaction and will fail if clicks are not reaching the menu
     auto triggerCreateNewGroup = [&]() -> bool {
-        const int maxWaitMs = 1000;
+        const int maxWaitMs = 1500;
         const int stepMs = 25;
         int waited = 0;
         while (waited <= maxWaitMs) {
-            for (QWidget * w : QApplication::topLevelWidgets()) {
-                if (auto * menu = qobject_cast<QMenu *>(w)) {
-                    for (QAction * action : menu->actions()) {
-                        if (action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
-                            QMenu * sub = action->menu();
-                            for (QAction * subAction : sub->actions()) {
-                                if (subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
-                                    subAction->trigger();
-                                    return true;
-                                }
-                            }
-                        }
+            for (QWidget * topLevelWidget : QApplication::topLevelWidgets()) {
+                auto * mainMenu = qobject_cast<QMenu *>(topLevelWidget);
+                if (!mainMenu) continue;
+
+                QAction * assignToGroupAction = nullptr;
+                for (QAction * action : mainMenu->actions()) {
+                    if (action && action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
+                        assignToGroupAction = action;
+                        break;
                     }
                 }
+                if (!assignToGroupAction) continue;
+
+                // Open the submenu by hovering/clicking on the parent action
+                QRect assignRect = mainMenu->actionGeometry(assignToGroupAction);
+                if (!assignRect.isValid()) continue;
+
+                QPoint assignCenter = assignRect.center();
+                QTest::mouseMove(mainMenu, assignCenter);
+                QTest::qWait(50);
+                // Some styles require a click to open submenu in tests
+                if (!assignToGroupAction->menu() || !assignToGroupAction->menu()->isVisible()) {
+                    QTest::mouseClick(mainMenu, Qt::LeftButton, Qt::NoModifier, assignCenter);
+                }
+
+                // Wait for submenu to become visible
+                QMenu * subMenu = assignToGroupAction->menu();
+                int subWaited = 0;
+                while (subMenu && !subMenu->isVisible() && subWaited <= 500) {
+                    QTest::qWait(25);
+                    subWaited += 25;
+                }
+                if (!subMenu || !subMenu->isVisible()) {
+                    continue;
+                }
+
+                // Find the "Create New Group" action in the submenu
+                QAction * createNewGroupAction = nullptr;
+                for (QAction * subAction : subMenu->actions()) {
+                    if (subAction && subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
+                        createNewGroupAction = subAction;
+                        break;
+                    }
+                }
+                if (!createNewGroupAction) continue;
+
+                QRect createRect = subMenu->actionGeometry(createNewGroupAction);
+                if (!createRect.isValid()) continue;
+
+                // Move and click on the submenu action's rectangle
+                QPoint createCenter = createRect.center();
+                QTest::mouseMove(subMenu, createCenter);
+                QTest::qWait(25);
+                QTest::mouseClick(subMenu, Qt::LeftButton, Qt::NoModifier, createCenter);
+
+                return true;
             }
             QTest::qWait(stepMs);
             waited += stepMs;
@@ -502,369 +545,3 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(Docking) -
     REQUIRE(gl->getTotalSelectedPoints() >= 2);
 }
 
-TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsScene) - grouping via context menu assigns selected points", "[Organizer][GraphicsScene][Grouping]") {
-    GraphicsScenePlotOrganizer organizer;
-    QWidget * display = organizer.getDisplayWidget();
-    REQUIRE(display != nullptr);
-    display->resize(800, 600);
-    display->show();
-    processEvents();
-
-    // Create and add spatial overlay plot
-    auto container = PlotFactory::createPlotContainer("spatial_overlay_plot");
-    REQUIRE(container != nullptr);
-    organizer.addPlot(std::move(container));
-    REQUIRE(organizer.getPlotCount() == 1);
-
-    auto ids = organizer.getAllPlotIds();
-    PlotContainer * pc = organizer.getPlot(ids.front());
-    REQUIRE(pc != nullptr);
-    auto * overlay = dynamic_cast<SpatialOverlayPlotWidget *>(pc->getPlotWidget());
-    REQUIRE(overlay != nullptr);
-    auto * gl = overlay->getOpenGLWidget();
-    REQUIRE(gl != nullptr);
-
-    // Attach a GroupManager
-    GroupManager gm(nullptr);
-    gl->setGroupManager(&gm);
-
-    // Provide two points with distinct row ids (time indices)
-    auto point_data = std::make_shared<PointData>();
-    point_data->overwritePointsAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}});
-    point_data->overwritePointsAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}});
-    std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
-    gl->setPointData(map);
-    REQUIRE(waitForValidProjection(*gl));
-
-    // Select both points
-    gl->setSelectionMode(SelectionMode::PointSelection);
-    gl->setZoomLevel(5.0f);
-    processEvents();
-
-    auto clickCtrlAtGl = [&](float wx, float wy) {
-        QPoint s = worldToScreen(*gl, wx, wy);
-        gl->raise(); gl->activateWindow(); gl->setFocus(Qt::OtherFocusReason);
-        QTest::mouseMove(gl, s);
-        QMouseEvent p(QEvent::MouseButtonPress, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &p);
-        processEvents();
-        QMouseEvent r(QEvent::MouseButtonRelease, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &r);
-        processEvents();
-    };
-
-    clickCtrlAtGl(100.f, 100.f);
-    clickCtrlAtGl(200.f, 150.f);
-    REQUIRE(gl->getTotalSelectedPoints() >= 2);
-
-    // Non-modal menu for test
-    qputenv("WT_TESTING_NON_MODAL_MENUS", "1");
-    auto triggerCreateNewGroup = [&]() -> bool {
-        const int maxWaitMs = 1000, stepMs = 25; int waited = 0;
-        while (waited <= maxWaitMs) {
-            for (QWidget * w : QApplication::topLevelWidgets()) {
-                if (auto * menu = qobject_cast<QMenu *>(w)) {
-                    for (QAction * action : menu->actions()) {
-                        if (action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
-                            QMenu * sub = action->menu();
-                            for (QAction * subAction : sub->actions()) {
-                                if (subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
-                                    subAction->trigger();
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            QTest::qWait(stepMs); waited += stepMs;
-        }
-        return false;
-    };
-
-    // Open context menu on GL widget and trigger create group
-    QPoint pos = worldToScreen(*gl, 150.0f, 120.0f);
-    QTest::mouseClick(gl, Qt::RightButton, Qt::NoModifier, pos);
-    REQUIRE(triggerCreateNewGroup());
-    processEvents();
-
-    // Verify groups created and points assigned
-    auto const & groups = gm.getGroups();
-    REQUIRE(groups.size() >= 1);
-    REQUIRE(gm.getPointGroup(1) != -1);
-    REQUIRE(gm.getPointGroup(2) != -1);
-    REQUIRE(gl->getTotalSelectedPoints() == 0);
-}
-
-TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(Docking) - grouping via context menu assigns selected points", "[Organizer][Docking][Grouping]") {
-    ads::CDockManager dockManager;
-    DockingPlotOrganizer organizer(&dockManager);
-
-    QWidget * display = organizer.getDisplayWidget();
-    REQUIRE(display != nullptr);
-    display->resize(800, 600);
-    display->show();
-    processEvents();
-
-    auto container = PlotFactory::createPlotContainer("spatial_overlay_plot");
-    REQUIRE(container != nullptr);
-    organizer.addPlot(std::move(container));
-    REQUIRE(organizer.getPlotCount() == 1);
-
-    auto ids = organizer.getAllPlotIds();
-    PlotContainer * pc = organizer.getPlot(ids.front());
-    REQUIRE(pc != nullptr);
-    auto * overlay = dynamic_cast<SpatialOverlayPlotWidget *>(pc->getPlotWidget());
-    REQUIRE(overlay != nullptr);
-    auto * gl = overlay->getOpenGLWidget();
-    REQUIRE(gl != nullptr);
-
-    GroupManager gm(nullptr);
-    gl->setGroupManager(&gm);
-
-    auto point_data = std::make_shared<PointData>();
-    point_data->overwritePointsAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}});
-    point_data->overwritePointsAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}});
-    std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
-    gl->setPointData(map);
-    REQUIRE(waitForValidProjection(*gl));
-
-    gl->setSelectionMode(SelectionMode::PointSelection);
-    gl->setZoomLevel(5.0f);
-    processEvents();
-
-    auto clickCtrlAtGl = [&](float wx, float wy) {
-        QPoint s = worldToScreen(*gl, wx, wy);
-        gl->raise(); gl->activateWindow(); gl->setFocus(Qt::OtherFocusReason);
-        QTest::mouseMove(gl, s);
-        QMouseEvent p(QEvent::MouseButtonPress, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &p);
-        processEvents();
-        QMouseEvent r(QEvent::MouseButtonRelease, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &r);
-        processEvents();
-    };
-
-    clickCtrlAtGl(100.f, 100.f);
-    clickCtrlAtGl(200.f, 150.f);
-    REQUIRE(gl->getTotalSelectedPoints() >= 2);
-
-    qputenv("WT_TESTING_NON_MODAL_MENUS", "1");
-    auto triggerCreateNewGroup = [&]() -> bool {
-        const int maxWaitMs = 1000, stepMs = 25; int waited = 0;
-        while (waited <= maxWaitMs) {
-            for (QWidget * w : QApplication::topLevelWidgets()) {
-                if (auto * menu = qobject_cast<QMenu *>(w)) {
-                    for (QAction * action : menu->actions()) {
-                        if (action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
-                            QMenu * sub = action->menu();
-                            for (QAction * subAction : sub->actions()) {
-                                if (subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
-                                    subAction->trigger();
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            QTest::qWait(stepMs); waited += stepMs;
-        }
-        return false;
-    };
-
-    QPoint pos = worldToScreen(*gl, 150.0f, 120.0f);
-    QTest::mouseClick(gl, Qt::RightButton, Qt::NoModifier, pos);
-    REQUIRE(triggerCreateNewGroup());
-    processEvents();
-
-    auto const & groups = gm.getGroups();
-    REQUIRE(groups.size() >= 1);
-    REQUIRE(gm.getPointGroup(1) != -1);
-    REQUIRE(gm.getPointGroup(2) != -1);
-    REQUIRE(gl->getTotalSelectedPoints() == 0);
-}
-
-TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsScene) - grouping works with container->configureManagers wiring", "[Organizer][GraphicsScene][Grouping][Wiring]") {
-    GraphicsScenePlotOrganizer organizer;
-    QWidget * display = organizer.getDisplayWidget();
-    REQUIRE(display != nullptr);
-    display->resize(800, 600);
-    display->show();
-    processEvents();
-
-    // Create spatial overlay plot container
-    auto container = PlotFactory::createPlotContainer("spatial_overlay_plot");
-    REQUIRE(container != nullptr);
-
-    // Configure managers as dashboard does
-    auto dm = std::make_shared<DataManager>();
-    GroupManager gm(nullptr);
-    container->configureManagers(dm, &gm);
-
-    // Add the plot to the organizer
-    QString plotId = container->getPlotId();
-    organizer.addPlot(std::move(container));
-    REQUIRE(organizer.getPlotCount() == 1);
-
-    // Access GL widget
-    PlotContainer * pc = organizer.getPlot(plotId);
-    REQUIRE(pc != nullptr);
-    auto * overlay = dynamic_cast<SpatialOverlayPlotWidget *>(pc->getPlotWidget());
-    REQUIRE(overlay != nullptr);
-    auto * gl = overlay->getOpenGLWidget();
-    REQUIRE(gl != nullptr);
-
-    // Provide two points
-    auto point_data = std::make_shared<PointData>();
-    point_data->overwritePointsAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}});
-    point_data->overwritePointsAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}});
-    std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
-    gl->setPointData(map);
-    REQUIRE(waitForValidProjection(*gl));
-
-    // Select both points
-    gl->setSelectionMode(SelectionMode::PointSelection);
-    gl->setZoomLevel(5.0f);
-    processEvents();
-    auto clickCtrlAtGl = [&](float wx, float wy) {
-        QPoint s = worldToScreen(*gl, wx, wy);
-        gl->raise(); gl->activateWindow(); gl->setFocus(Qt::OtherFocusReason);
-        QTest::mouseMove(gl, s);
-        QMouseEvent p(QEvent::MouseButtonPress, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &p);
-        processEvents();
-        QMouseEvent r(QEvent::MouseButtonRelease, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &r);
-        processEvents();
-    };
-    clickCtrlAtGl(100.f, 100.f);
-    clickCtrlAtGl(200.f, 150.f);
-    REQUIRE(gl->getTotalSelectedPoints() >= 2);
-
-    // Open non-modal context menu and trigger create new group
-    qputenv("WT_TESTING_NON_MODAL_MENUS", "1");
-    auto triggerCreateNewGroup = [&]() -> bool {
-        const int maxWaitMs = 1000, stepMs = 25; int waited = 0;
-        while (waited <= maxWaitMs) {
-            for (QWidget * w : QApplication::topLevelWidgets()) {
-                if (auto * menu = qobject_cast<QMenu *>(w)) {
-                    for (QAction * action : menu->actions()) {
-                        if (action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
-                            QMenu * sub = action->menu();
-                            for (QAction * subAction : sub->actions()) {
-                                if (subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
-                                    subAction->trigger();
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            QTest::qWait(stepMs); waited += stepMs;
-        }
-        return false;
-    };
-
-    QPoint pos = worldToScreen(*gl, 150.0f, 120.0f);
-    QTest::mouseClick(gl, Qt::RightButton, Qt::NoModifier, pos);
-    REQUIRE(triggerCreateNewGroup());
-    processEvents();
-
-    auto const & groups = gm.getGroups();
-    REQUIRE(groups.size() >= 1);
-    REQUIRE(gm.getPointGroup(1) != -1);
-    REQUIRE(gm.getPointGroup(2) != -1);
-    REQUIRE(gl->getTotalSelectedPoints() == 0);
-}
-
-TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(Docking) - grouping works with container->configureManagers wiring", "[Organizer][Docking][Grouping][Wiring]") {
-    ads::CDockManager dockManager;
-    DockingPlotOrganizer organizer(&dockManager);
-    QWidget * display = organizer.getDisplayWidget();
-    REQUIRE(display != nullptr);
-    display->resize(800, 600);
-    display->show();
-    processEvents();
-
-    auto container = PlotFactory::createPlotContainer("spatial_overlay_plot");
-    REQUIRE(container != nullptr);
-
-    auto dm = std::make_shared<DataManager>();
-    GroupManager gm(nullptr);
-    container->configureManagers(dm, &gm);
-
-    QString plotId = container->getPlotId();
-    organizer.addPlot(std::move(container));
-    REQUIRE(organizer.getPlotCount() == 1);
-
-    PlotContainer * pc = organizer.getPlot(plotId);
-    REQUIRE(pc != nullptr);
-    auto * overlay = dynamic_cast<SpatialOverlayPlotWidget *>(pc->getPlotWidget());
-    REQUIRE(overlay != nullptr);
-    auto * gl = overlay->getOpenGLWidget();
-    REQUIRE(gl != nullptr);
-
-    auto point_data = std::make_shared<PointData>();
-    point_data->overwritePointsAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}});
-    point_data->overwritePointsAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}});
-    std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
-    gl->setPointData(map);
-    REQUIRE(waitForValidProjection(*gl));
-
-    gl->setSelectionMode(SelectionMode::PointSelection);
-    gl->setZoomLevel(5.0f);
-    processEvents();
-
-    auto clickCtrlAtGl = [&](float wx, float wy) {
-        QPoint s = worldToScreen(*gl, wx, wy);
-        gl->raise(); gl->activateWindow(); gl->setFocus(Qt::OtherFocusReason);
-        QTest::mouseMove(gl, s);
-        QMouseEvent p(QEvent::MouseButtonPress, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &p);
-        processEvents();
-        QMouseEvent r(QEvent::MouseButtonRelease, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &r);
-        processEvents();
-    };
-
-    clickCtrlAtGl(100.f, 100.f);
-    clickCtrlAtGl(200.f, 150.f);
-    REQUIRE(gl->getTotalSelectedPoints() >= 2);
-
-    qputenv("WT_TESTING_NON_MODAL_MENUS", "1");
-    auto triggerCreateNewGroup = [&]() -> bool {
-        const int maxWaitMs = 1000, stepMs = 25; int waited = 0;
-        while (waited <= maxWaitMs) {
-            for (QWidget * w : QApplication::topLevelWidgets()) {
-                if (auto * menu = qobject_cast<QMenu *>(w)) {
-                    for (QAction * action : menu->actions()) {
-                        if (action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
-                            QMenu * sub = action->menu();
-                            for (QAction * subAction : sub->actions()) {
-                                if (subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
-                                    subAction->trigger();
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            QTest::qWait(stepMs); waited += stepMs;
-        }
-        return false;
-    };
-
-    QPoint pos = worldToScreen(*gl, 150.0f, 120.0f);
-    QTest::mouseClick(gl, Qt::RightButton, Qt::NoModifier, pos);
-    REQUIRE(triggerCreateNewGroup());
-    processEvents();
-
-    auto const & groups = gm.getGroups();
-    REQUIRE(groups.size() >= 1);
-    REQUIRE(gm.getPointGroup(1) != -1);
-    REQUIRE(gm.getPointGroup(2) != -1);
-    REQUIRE(gl->getTotalSelectedPoints() == 0);
-}

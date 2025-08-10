@@ -355,6 +355,18 @@ private:
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
     bool _data_bounds_valid;
 
+    // Context menu
+    QMenu * _contextMenu {nullptr};
+    QMenu * _assignGroupMenu {nullptr};
+
+    QAction * _actionCreateNewGroup {nullptr};
+    QAction * _actionUngroupSelected {nullptr};
+    QAction * _actionShowAllCurrent {nullptr};
+    QAction * _actionShowAllDatasets {nullptr};
+    QAction * _actionHideSelected {nullptr};
+
+    QList<QAction*> _dynamicGroupActions;
+
     /**
      * @brief Initialize OpenGL shaders and resources
      */
@@ -433,11 +445,19 @@ private:
      */
     void updateMouseWorldPosition(int screen_x, int screen_y);
 
+    // ========== Context Menu ==========
+
+    void _initializeContextMenu();
+
     /**
      * @brief Show context menu at the given position
      * @param pos The position to show the menu at
      */
-    void showContextMenu(QPoint const & pos);
+    void _showContextMenu(QPoint const & pos);
+
+    void _updateContextMenuState();
+
+    void _updateDynamicGroupActions();
 
     /**
      * @brief Assign selected points to a new group

@@ -1,19 +1,19 @@
 #include "SpatialOverlayOpenGLWidget.hpp"
 #include "ShaderManager/ShaderManager.hpp"
 
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
+#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Points/Point_Data.hpp"
 #include "Groups/GroupManager.hpp"
-#include "Visualizers/Points/PointDataVisualization.hpp"
-#include "Visualizers/Lines/LineDataVisualization.hpp"
-#include "Visualizers/Masks/MaskDataVisualization.hpp"
 #include "Selection/LineSelectionHandler.hpp"
 #include "Selection/NoneSelectionHandler.hpp"
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
-#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
-#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 #include "SpatialOverlayViewAdapter.hpp"
+#include "Visualizers/Lines/LineDataVisualization.hpp"
+#include "Visualizers/Masks/MaskDataVisualization.hpp"
+#include "Visualizers/Points/PointDataVisualization.hpp"
 
 #include <QApplication>
 #include <QDebug>
@@ -24,12 +24,10 @@
 
 #include <algorithm>
 #include <unordered_set>
-#include <algorithm>
 
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
-    :
-      _opengl_resources_initialized(false),
+    : _opengl_resources_initialized(false),
       _zoom_level(1.0f),
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
@@ -49,20 +47,21 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     // Set OpenGL 4.3 Core Profile format (required for line shaders with compute shaders)
     // The actual context creation will happen when the widget is shown
     tryCreateContextWithVersion(4, 3);
-    
+
     qDebug() << "SpatialOverlayOpenGLWidget: Requested surface format - Version:" << format().majorVersion() << "." << format().minorVersion();
     qDebug() << "SpatialOverlayOpenGLWidget: Requested surface format - Profile:" << (format().profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
     qDebug() << "SpatialOverlayOpenGLWidget: Requested surface format - Samples:" << format().samples();
 
     // Initialize selection handler after widget setup
-    _selection_handler = std::make_unique<PointSelectionHandler>(10.0f); // Use fixed tolerance initially
+    _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// Use fixed tolerance initially
 
     // Ensure selection notifications are wired for the default handler/mode
     std::visit([this](auto & handler) {
         if (handler) {
             handler->setNotificationCallback([this]() { makeSelection(); });
         }
-    }, _selection_handler);
+    },
+               _selection_handler);
 
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
@@ -109,6 +108,8 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     _zoom_level_y = 1.0f;
     _padding_factor = 1.1f;
 
+    _initializeContextMenu();
+
     // Initialize rubber band for box zoom
     //_rubber_band = nullptr;
 }
@@ -120,11 +121,11 @@ bool SpatialOverlayOpenGLWidget::tryCreateContextWithVersion(int major, int mino
     format.setSamples(4);
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     format.setSwapInterval(1);
-    
+
     setFormat(format);
-    
+
     qDebug() << "SpatialOverlayOpenGLWidget: Set OpenGL" << major << "." << minor << "Core Profile format";
-    
+
     // Note: Context is not created until widget is shown or initializeGL is called
     // We can't check validity here, just set the format
     return true;
@@ -522,13 +523,14 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
         should_clear = std::visit([](auto & handler) {
             using HandlerType = std::decay_t<decltype(handler)>;
             if constexpr (std::is_same_v<HandlerType, std::unique_ptr<PointSelectionHandler>>) {
-                return false; // point selection never uses a persistent region
+                return false;// point selection never uses a persistent region
             } else if constexpr (std::is_same_v<HandlerType, std::unique_ptr<NoneSelectionHandler>>) {
                 return true;
             } else {
                 return handler->getActiveSelectionRegion() == nullptr;
             }
-        }, _selection_handler);
+        },
+                                  _selection_handler);
     }
 
     if (should_clear) {
@@ -573,7 +575,7 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
             _selection_handler = std::make_unique<LineSelectionHandler>();
             setCursor(Qt::CrossCursor);
         } else if (_selection_mode == SelectionMode::PointSelection) {
-            _selection_handler = std::make_unique<PointSelectionHandler>(10.0f); // Use fixed tolerance
+            _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// Use fixed tolerance
             setCursor(Qt::ArrowCursor);
         } else if (_selection_mode == SelectionMode::None) {
             _selection_handler = std::make_unique<NoneSelectionHandler>();
@@ -593,7 +595,7 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
 
 void SpatialOverlayOpenGLWidget::initializeGL() {
     qDebug() << "SpatialOverlayOpenGLWidget::initializeGL called";
-    
+
     // Check if OpenGL functions can be initialized
     if (!initializeOpenGLFunctions()) {
         qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Failed to initialize OpenGL functions";
@@ -619,7 +621,7 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
         qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Context created successfully";
         qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Requested format:" << fmt.majorVersion() << "." << fmt.minorVersion();
         qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Actual OpenGL version:" << context()->format().majorVersion() << "." << context()->format().minorVersion();
-        
+
         // Check if we got the version we requested
         if (fmt.majorVersion() != context()->format().majorVersion() || fmt.minorVersion() != context()->format().minorVersion()) {
             qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - OpenGL version mismatch!";
@@ -653,7 +655,7 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
     // Initialize OpenGL resources
     initializeOpenGLResources();
     updateViewMatrices();
-    
+
     qDebug() << "SpatialOverlayOpenGLWidget::initializeGL completed successfully";
 }
 
@@ -714,7 +716,8 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
                 makeSelection();
             }
         }
-    }, _selection_handler);
+    },
+               _selection_handler);
 
     if (event->button() == Qt::LeftButton) {
         // Regular left click - start panning (if not in polygon or line selection mode)
@@ -826,7 +829,7 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
         // Only show context menu when not in polygon selection, to avoid interfering with completion
         if (_selection_mode != SelectionMode::PolygonSelection) {
             qDebug() << "SpatialOverlayOpenGLWidget: Right-click detected at" << event->pos();
-            showContextMenu(event->pos());
+            _showContextMenu(event->pos());
             event->accept();
         } else {
             // In polygon mode, right-click is ignored to prevent menu; completion is done via Enter
@@ -844,7 +847,7 @@ void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
         qDebug() << "SpatialOverlayOpenGLWidget: Double-click detected at" << event->pos();
 
         QVector2D world_pos = screenToWorld(event->pos().x(), event->pos().y());
-        float tolerance = 10.0f; // Use fixed tolerance
+        float tolerance = 10.0f;// Use fixed tolerance
 
         for (auto const & [key, viz]: _point_data_visualizations) {
             auto frame_index = viz->handleDoubleClick(world_pos, tolerance);
@@ -916,7 +919,8 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
             if (handler) {
                 handler->keyPressEvent(event);
             }
-        }, _selection_handler);
+        },
+                   _selection_handler);
 
         requestThrottledUpdate();
         event->accept();
@@ -1207,7 +1211,7 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
     qDebug() << "SpatialOverlayOpenGLWidget: Processing debounced hover at" << _pending_hover_pos;
 
     QVector2D world_pos = screenToWorld(_pending_hover_pos.x(), _pending_hover_pos.y());
-    float tolerance = 10.0f; // Use fixed tolerance
+    float tolerance = 10.0f;// Use fixed tolerance
     bool needs_tooltip_update = false;
 
     // Delegate hover handling to each point data visualization
@@ -1317,68 +1321,111 @@ void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
     }
 }
 
-void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
-    // Build menu on heap so we can show it non-modally during tests
-    QMenu * contextMenu = new QMenu(this);
+//========== Context Menu ==========
 
-    // Check if we have any selected items
+void SpatialOverlayOpenGLWidget::_initializeContextMenu() {
+
+    _contextMenu = new QMenu(nullptr);
+    //_contextMenu->setAttribute(Qt::WA_DeleteOnClose);
+    // Global context is necessary because otherwise the left mouse
+    // click is captured by the complex widget infrastructure and the left click
+    // to select a menu item is never propagated to the menu.
+    //_contextMenu->setParent(this);
+
+    _actionCreateNewGroup = new QAction("Create New Group", this);
+    connect(_actionCreateNewGroup, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup);
+    _actionUngroupSelected = new QAction("Ungroup Selected", this);
+    connect(_actionUngroupSelected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::ungroupSelectedPoints);
+
+    _actionHideSelected = new QAction("Hide Selected", this);
+    connect(_actionHideSelected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
+
+    _actionShowAllCurrent = new QAction("Show All (Current Dataset)", this);
+    connect(_actionShowAllCurrent, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset);
+
+    _actionShowAllDatasets = new QAction("Show All (All Datasets)", this);
+    connect(_actionShowAllDatasets, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
+
+
+    _assignGroupMenu = _contextMenu->addMenu("Assign to Group");
+    
+    // Add the persistent "Create New Group" action
+    _assignGroupMenu->addAction(_actionCreateNewGroup);
+    _assignGroupMenu->addSeparator();
+
+    // Dynamic group actions will be inserted here by updateDynamicGroupActions()
+    
+    // Add ungroup action
+    _contextMenu->addAction(_actionUngroupSelected);
+    _contextMenu->addSeparator();
+    
+    // Add hide selected action
+    _contextMenu->addAction(_actionHideSelected);
+    
+    // Add show all submenu
+    QMenu* showAllMenu = _contextMenu->addMenu("Show All");
+    showAllMenu->addAction(_actionShowAllCurrent);
+    showAllMenu->addAction(_actionShowAllDatasets);
+}
+
+void SpatialOverlayOpenGLWidget::_updateContextMenuState() {
     size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
+    bool has_selection = total_selected > 0;
+    bool has_group_manager = _group_manager != nullptr;
+    
+    // Show/hide sections based on current state
+    _assignGroupMenu->menuAction()->setVisible(has_selection && has_group_manager);
+    _actionUngroupSelected->setVisible(has_selection && has_group_manager);
+    _actionHideSelected->setVisible(has_selection);
+    _actionHideSelected->setText(QString("Hide Selected (%1 items)").arg(total_selected));
+    
+    // Update dynamic group actions
+    _updateDynamicGroupActions();
+}
 
-    // Add group assignment options if we have selected points and a group manager
-    if (total_selected > 0 && _group_manager) {
-        // Add "Assign to Group" submenu
-        QMenu * assignGroupMenu = contextMenu->addMenu("Assign to Group");
+void SpatialOverlayOpenGLWidget::_showContextMenu(QPoint const & pos) {
 
-        // Add "New Group" option
-        QAction * newGroupAction = assignGroupMenu->addAction("Create New Group");
-        connect(newGroupAction, &QAction::triggered, this, [this]() {
-            assignSelectedPointsToNewGroup();
-        });
+    //QMenu * contextMenu = new QMenu(nullptr);
+    //contextMenu->setAttribute(Qt::WA_DeleteOnClose);
+    // Global context is necessary because otherwise the left mouse
+    // click is captured by the complex widget infrastructure and the left click
+    // to select a menu item is never propagated to the menu.
+    //contextMenu->setParent(this);
 
-        assignGroupMenu->addSeparator();
-
-        // Add existing groups
-        auto const & groups = _group_manager->getGroups();
-        for (auto it = groups.begin(); it != groups.end(); ++it) {
-            auto const & group = it.value();
-            QAction * groupAction = assignGroupMenu->addAction(group.name);
-            int group_id = group.id;
-            connect(groupAction, &QAction::triggered, this, [this, group_id]() {
-                assignSelectedPointsToGroup(group_id);
-            });
-        }
-
-        // Add "Remove from Group" option
-        QAction * ungroupAction = contextMenu->addAction("Remove from Group");
-        connect(ungroupAction, &QAction::triggered, this, [this]() {
-            ungroupSelectedPoints();
-        });
-
-        contextMenu->addSeparator();
-    }
-
-    // Add "Hide Selected" option if there are selected items
-    if (total_selected > 0) {
-        QAction * hideAction = contextMenu->addAction(QString("Hide Selected (%1 items)").arg(total_selected));
-        connect(hideAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
-    }
-
-    // Add "Show All" submenu
-    QMenu * showAllMenu = contextMenu->addMenu("Show All");
-
-    QAction * showCurrentAction = showAllMenu->addAction("Show All (Current Dataset)");
-    connect(showCurrentAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset);
-
-    QAction * showAllAction = showAllMenu->addAction("Show All (All Datasets)");
-    connect(showAllAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
+    _updateContextMenuState();
 
     // Show the menu at the cursor position
     if (qEnvironmentVariableIsSet("WT_TESTING_NON_MODAL_MENUS")) {
         // Non-blocking for tests
-        contextMenu->popup(mapToGlobal(pos));
+        _contextMenu->popup(mapToGlobal(pos));
     } else {
-        contextMenu->exec(mapToGlobal(pos));
+        _contextMenu->exec(mapToGlobal(pos));
         // 'exec' returns when the menu is closed; the menu will remain parented and cleaned up
+    }
+}
+
+void SpatialOverlayOpenGLWidget::_updateDynamicGroupActions() {
+
+    // Clear existing dynamic actions
+    for (QAction * action: _dynamicGroupActions) {
+        _assignGroupMenu->removeAction(action);
+        action->deleteLater();
+    }
+    _dynamicGroupActions.clear();
+
+    if (!_group_manager) {
+        return;
+    }
+
+    auto const & groups = _group_manager->getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        auto const & group = it.value();
+        QAction * groupAction = _assignGroupMenu->addAction(group.name);
+        int group_id = group.id;
+        connect(groupAction, &QAction::triggered, this, [this, group_id]() {
+            assignSelectedPointsToGroup(group_id);
+        });
+        _dynamicGroupActions.append(groupAction);
     }
 }
 
@@ -1483,40 +1530,40 @@ bool SpatialOverlayOpenGLWidget::isOpenGLContextValid() const {
 
 QString SpatialOverlayOpenGLWidget::getOpenGLErrorInfo() const {
     QString error_info;
-    
+
     if (!context()) {
         error_info += "No OpenGL context available\n";
     } else if (!context()->isValid()) {
         error_info += "OpenGL context is invalid\n";
     }
-    
+
     if (!_opengl_resources_initialized) {
         error_info += "OpenGL resources not initialized\n";
     }
-    
+
     auto fmt = format();
 
     error_info += QString("Surface format: OpenGL %1.%2 %3 Profile\n")
-                     .arg(fmt.majorVersion())
-                     .arg(fmt.minorVersion())
-                     .arg(fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
- 
-    
+                          .arg(fmt.majorVersion())
+                          .arg(fmt.minorVersion())
+                          .arg(fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
+
+
     return error_info;
 }
 
 bool SpatialOverlayOpenGLWidget::forceContextCreation() {
     qDebug() << "SpatialOverlayOpenGLWidget::forceContextCreation called";
-    
+
     // Try to make the context current
     if (!context()) {
         qWarning() << "SpatialOverlayOpenGLWidget::forceContextCreation - No context available";
         return false;
     }
-    
+
     qDebug() << "SpatialOverlayOpenGLWidget::forceContextCreation - Context made current successfully";
     qDebug() << "SpatialOverlayOpenGLWidget::forceContextCreation - Context format:" << context()->format().majorVersion() << "." << context()->format().minorVersion();
-    
+
     doneCurrent();
     return true;
 }
