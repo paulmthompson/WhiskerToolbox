@@ -1326,7 +1326,7 @@ void SpatialOverlayOpenGLWidget::_initializeContextMenu() {
     // Global context is necessary because otherwise the left mouse
     // click is captured by the complex widget infrastructure and the left click
     // to select a menu item is never propagated to the menu.
-    //contextMenu->setParent(this);
+    //_contextMenu->setParent(this);
 
     _actionCreateNewGroup = new QAction("Create New Group", this);
     connect(_actionCreateNewGroup, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup);

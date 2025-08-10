@@ -276,26 +276,69 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     // Ensure context menu shows non-modally in tests
     qputenv("WT_TESTING_NON_MODAL_MENUS", "1");
 
-    // Helper: poll for the non-modal menu and trigger "Create New Group"
+    // Helper: poll for the non-modal menu and ACTUALLY CLICK the "Create New Group" item
+    // This simulates real user interaction and will fail if clicks are not reaching the menu
     auto triggerCreateNewGroup = [&]() -> bool {
-        const int maxWaitMs = 1000;
+        const int maxWaitMs = 1500;
         const int stepMs = 25;
         int waited = 0;
         while (waited <= maxWaitMs) {
-            for (QWidget * w : QApplication::topLevelWidgets()) {
-                if (auto * menu = qobject_cast<QMenu *>(w)) {
-                    for (QAction * action : menu->actions()) {
-                        if (action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
-                            QMenu * sub = action->menu();
-                            for (QAction * subAction : sub->actions()) {
-                                if (subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
-                                    subAction->trigger();
-                                    return true;
-                                }
-                            }
-                        }
+            for (QWidget * topLevelWidget : QApplication::topLevelWidgets()) {
+                auto * mainMenu = qobject_cast<QMenu *>(topLevelWidget);
+                if (!mainMenu) continue;
+
+                QAction * assignToGroupAction = nullptr;
+                for (QAction * action : mainMenu->actions()) {
+                    if (action && action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
+                        assignToGroupAction = action;
+                        break;
                     }
                 }
+                if (!assignToGroupAction) continue;
+
+                // Open the submenu by hovering/clicking on the parent action
+                QRect assignRect = mainMenu->actionGeometry(assignToGroupAction);
+                if (!assignRect.isValid()) continue;
+
+                QPoint assignCenter = assignRect.center();
+                QTest::mouseMove(mainMenu, assignCenter);
+                QTest::qWait(50);
+                // Some styles require a click to open submenu in tests
+                if (!assignToGroupAction->menu() || !assignToGroupAction->menu()->isVisible()) {
+                    QTest::mouseClick(mainMenu, Qt::LeftButton, Qt::NoModifier, assignCenter);
+                }
+
+                // Wait for submenu to become visible
+                QMenu * subMenu = assignToGroupAction->menu();
+                int subWaited = 0;
+                while (subMenu && !subMenu->isVisible() && subWaited <= 500) {
+                    QTest::qWait(25);
+                    subWaited += 25;
+                }
+                if (!subMenu || !subMenu->isVisible()) {
+                    continue;
+                }
+
+                // Find the "Create New Group" action in the submenu
+                QAction * createNewGroupAction = nullptr;
+                for (QAction * subAction : subMenu->actions()) {
+                    if (subAction && subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
+                        createNewGroupAction = subAction;
+                        break;
+                    }
+                }
+                if (!createNewGroupAction) continue;
+
+                QRect createRect = subMenu->actionGeometry(createNewGroupAction);
+                if (!createRect.isValid()) continue;
+
+                // Move and click on the submenu action's rectangle
+                QPoint createCenter = createRect.center();
+                QTest::mouseMove(subMenu, createCenter);
+                QTest::qWait(25);
+                QTest::mouseClick(subMenu, Qt::LeftButton, Qt::NoModifier, createCenter);
+
+                return true;
             }
             QTest::qWait(stepMs);
             waited += stepMs;
@@ -499,3 +542,4 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(Docking) -
     clickCtrlAtGl(200.f, 150.f);
     REQUIRE(gl->getTotalSelectedPoints() >= 2);
 }
+
