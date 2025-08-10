@@ -1314,8 +1314,13 @@ void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
 }
 
 void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
-    // Build menu on heap so we can show it non-modally during tests
-    QMenu * contextMenu = new QMenu(this);
+
+    QMenu * contextMenu = new QMenu(nullptr);
+    contextMenu->setAttribute(Qt::WA_DeleteOnClose);
+    // Global context is necessary because otherwise the left mouse 
+    // click is captured by the complex widget infrastructure and the left click
+    // to select a menu item is never propagated to the menu.
+    //contextMenu->setParent(this);
 
     // Check if we have any selected items
     size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
