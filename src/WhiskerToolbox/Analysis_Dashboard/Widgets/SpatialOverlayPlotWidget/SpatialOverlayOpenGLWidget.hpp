@@ -359,6 +359,9 @@ private:
     //QMenu * _context_menu {nullptr};
     QAction * _actionCreateNewGroup {nullptr};
     QAction * _actionUngroupSelected {nullptr};
+    QAction * _actionShowAllCurrent {nullptr};
+    QAction * _actionShowAllDatasets {nullptr};
+    QAction * _actionHideSelected {nullptr};
 
     /**
      * @brief Initialize OpenGL shaders and resources

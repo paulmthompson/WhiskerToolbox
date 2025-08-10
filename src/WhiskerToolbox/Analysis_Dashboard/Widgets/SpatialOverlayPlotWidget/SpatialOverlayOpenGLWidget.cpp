@@ -1323,6 +1323,15 @@ void SpatialOverlayOpenGLWidget::_initializeContextMenu() {
     connect(_actionCreateNewGroup, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup);
     _actionUngroupSelected = new QAction("Ungroup Selected", this);
     connect(_actionUngroupSelected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::ungroupSelectedPoints);
+
+    _actionHideSelected = new QAction("Hide Selected", this);
+    connect(_actionHideSelected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
+
+    _actionShowAllCurrent = new QAction("Show All (Current Dataset)", this);
+    connect(_actionShowAllCurrent, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset);
+
+    _actionShowAllDatasets= new QAction("Show All (All Datasets)", this);
+    connect(_actionShowAllDatasets, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
 }
 
 void SpatialOverlayOpenGLWidget::_showContextMenu(QPoint const & pos) {
@@ -1365,18 +1374,15 @@ void SpatialOverlayOpenGLWidget::_showContextMenu(QPoint const & pos) {
 
     // Add "Hide Selected" option if there are selected items
     if (total_selected > 0) {
-        QAction * hideAction = contextMenu->addAction(QString("Hide Selected (%1 items)").arg(total_selected));
-        connect(hideAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
+        _actionHideSelected->setText(QString("Hide Selected (%1 items)").arg(total_selected));
+        contextMenu->addAction(_actionHideSelected);
     }
 
     // Add "Show All" submenu
     QMenu * showAllMenu = contextMenu->addMenu("Show All");
 
-    QAction * showCurrentAction = showAllMenu->addAction("Show All (Current Dataset)");
-    connect(showCurrentAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset);
-
-    QAction * showAllAction = showAllMenu->addAction("Show All (All Datasets)");
-    connect(showAllAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
+    showAllMenu->addAction(_actionShowAllCurrent);
+    showAllMenu->addAction(_actionShowAllDatasets);
 
     // Show the menu at the cursor position
     if (qEnvironmentVariableIsSet("WT_TESTING_NON_MODAL_MENUS")) {
