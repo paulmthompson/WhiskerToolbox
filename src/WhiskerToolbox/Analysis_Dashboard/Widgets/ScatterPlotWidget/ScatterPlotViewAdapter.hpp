@@ -1,15 +1,11 @@
 #ifndef SCATTERPLOTVIEWADAPTER_HPP
 #define SCATTERPLOTVIEWADAPTER_HPP
 
-// Prototype header
 
-// Project headers
 #include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
 
-// Forward declarations (project)
 class ScatterPlotOpenGLWidget;
 
-// Standard headers
 
 class ScatterPlotViewAdapter final : public ViewAdapter {
 public:

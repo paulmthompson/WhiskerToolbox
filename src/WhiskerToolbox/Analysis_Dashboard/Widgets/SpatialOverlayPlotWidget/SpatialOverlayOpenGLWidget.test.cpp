@@ -90,21 +90,16 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     // Ensure projection is valid first
     REQUIRE(waitForValidProjection(widget));
 
-    // Change zoom slightly to force updateViewMatrices -> emits viewBoundsChanged
-    widget.setZoomLevel(widget.getZoomLevel() + 0.01f);
+    // Force updateViewMatrices -> emits viewBoundsChanged by tweaking pan slightly
+    auto pan = widget.getPanOffset();
+    widget.setPanOffset(pan.x() + 0.01f, pan.y());
     processEvents();
 
-    if (bounds_spy.count() == 0) {
-        // Fallback: tweak pan slightly to force another emission
-        auto pan = widget.getPanOffset();
-        widget.setPanOffset(pan.x() + 0.01f, pan.y());
-        processEvents();
-    }
+
     REQUIRE(bounds_spy.count() >= 1);
 
-    // Enable point selection mode and zoom in to make world tolerance generous in screen space
+    // Enable point selection mode
     widget.setSelectionMode(SelectionMode::PointSelection);
-    widget.setZoomLevel(5.0f);
     processEvents();
     // Note: selectionChanged carries size_t which QSignalSpy may not decode reliably.
     // Assert selection via state instead of spying the signal.
@@ -250,7 +245,6 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 
     // Select both points via Ctrl+clicks
     widget.setSelectionMode(SelectionMode::PointSelection);
-    widget.setZoomLevel(5.0f);
     processEvents();
 
     auto clickCtrlAt = [&](float wx, float wy) {
@@ -375,11 +369,10 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayPlotPr
     // Access child widgets by objectName
     auto * pointSize = props.findChild<QDoubleSpinBox *>("point_size_spinbox");
     auto * lineWidth = props.findChild<QDoubleSpinBox *>("line_width_spinbox");
-    auto * zoomSpin = props.findChild<QDoubleSpinBox *>("zoom_level_spinbox");
     auto * tooltips = props.findChild<QCheckBox *>("tooltips_checkbox");
     auto * modeCombo = props.findChild<QComboBox *>("selection_mode_combo");
 
-    REQUIRE(pointSize); REQUIRE(lineWidth); REQUIRE(zoomSpin); REQUIRE(tooltips); REQUIRE(modeCombo);
+    REQUIRE(pointSize); REQUIRE(lineWidth); REQUIRE(tooltips); REQUIRE(modeCombo);
 
     auto * gl = plotItem.getOpenGLWidget();
     REQUIRE(gl != nullptr);
@@ -392,9 +385,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayPlotPr
     lineWidth->setValue(3.5);
     REQUIRE(gl->getLineWidth() == Catch::Approx(3.5f));
 
-    // Change zoom level
-    zoomSpin->setValue(2.0);
-    REQUIRE(gl->getZoomLevel() == Catch::Approx(2.0f));
+
 
     // Toggle tooltips
     tooltips->setChecked(false);
@@ -443,9 +434,8 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsSc
     gl->setPointData(map);
     REQUIRE(waitForValidProjection(*gl));
 
-    // Point selection via organizer’s view: dispatch events to the GL widget directly
+    // Point selection via organizer's view: dispatch events to the GL widget directly
     gl->setSelectionMode(SelectionMode::PointSelection);
-    gl->setZoomLevel(5.0f);
     processEvents();
 
     auto clickCtrlAtGl = [&](float wx, float wy) {
@@ -523,7 +513,6 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(Docking) -
     REQUIRE(waitForValidProjection(*gl));
 
     gl->setSelectionMode(SelectionMode::PointSelection);
-    gl->setZoomLevel(5.0f);
     processEvents();
 
     auto clickCtrlAtGl = [&](float wx, float wy) {

@@ -47,16 +47,7 @@ public:
     explicit SpatialOverlayOpenGLWidget(QWidget * parent = nullptr);
     ~SpatialOverlayOpenGLWidget() override;
 
-    /**
-     * @brief Set zoom level (1.0 = default, >1.0 = zoomed in, <1.0 = zoomed out)
-     * @param zoom_level The zoom level
-     */
-    void setZoomLevel(float zoom_level);
 
-    /**
-     * @brief Get current zoom level
-     */
-    float getZoomLevel() const { return _zoom_level; }
 
     /**
      * @brief Set pan offset
@@ -214,11 +205,7 @@ signals:
      */
     void lineWidthChanged(float line_width);
 
-    /**
-     * @brief Emitted when zoom level changes
-     * @param zoom_level The new zoom level
-     */
-    void zoomLevelChanged(float zoom_level);
+
 
     /**
      * @brief Emitted when pan offset changes

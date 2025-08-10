@@ -76,12 +76,6 @@ private slots:
     void onLineWidthChanged(double value);
 
     /**
-     * @brief Handle zoom level changes
-     * @param value New zoom level value
-     */
-    void onZoomLevelChanged(double value);
-
-    /**
      * @brief Reset view to fit all data
      */
     void onResetViewClicked();

@@ -137,49 +137,7 @@
         </item>
        </layout>
       </item>
-      <item>
-       <layout class="QHBoxLayout" name="zoom_layout">
-        <item>
-         <widget class="QLabel" name="zoom_label">
-          <property name="text">
-           <string>Zoom Level:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDoubleSpinBox" name="zoom_level_spinbox">
-          <property name="suffix">
-           <string>x</string>
-          </property>
-          <property name="minimum">
-           <double>0.100000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>10.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-          <property name="value">
-           <double>1.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
+
       <item>
        <widget class="QPushButton" name="reset_view_button">
         <property name="text">
