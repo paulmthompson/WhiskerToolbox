@@ -480,7 +480,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     dm->setData<AnalogTimeSeries>(channel_name, analog_time_series[channel], TimeKey("time"));
 
                     if (item.contains("clock")) {
-                        TimeKey const clock = TimeKey(item["clock"]);
+                        std::string const clock_str = item["clock"];
+                        auto const clock = TimeKey(clock_str);
                         dm->setTimeKey(channel_name, clock);
                     }
                 }
@@ -496,7 +497,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel], TimeKey("time"));
 
                     if (item.contains("clock")) {
-                        TimeKey const clock = TimeKey(item["clock"]);
+                        std::string const clock_str = item["clock"];
+                        auto const clock = TimeKey(clock_str);
                         dm->setTimeKey(channel_name, clock);
                     }
                 }
@@ -613,7 +615,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 continue;
         }
         if (item.contains("clock")) {
-            TimeKey const clock = TimeKey(item["clock"]);
+            std::string clock_str = item["clock"];
+            auto clock = TimeKey(clock_str);
             std::cout << "Setting time for " << name << " to " << clock << std::endl;
             dm->setTimeKey(name, clock);
         }
