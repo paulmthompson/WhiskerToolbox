@@ -13,7 +13,7 @@
 
 namespace torch::jit {class Module;}
 
-namespace deep_learning {
+namespace dl {
 
 struct memory_encoder_tensors;
 

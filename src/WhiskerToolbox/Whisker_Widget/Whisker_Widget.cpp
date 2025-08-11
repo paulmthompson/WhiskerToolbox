@@ -64,7 +64,7 @@ Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
 
     _janelia_config_widget = new Janelia_Config(_wt);
 
-    dl_model = std::make_unique<deep_learning::SCM>();
+    dl_model = std::make_unique<dl::SCM>();
 
     connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
     connect(ui->dl_trace_button, &QPushButton::clicked, this, &Whisker_Widget::_dlTraceButton);
