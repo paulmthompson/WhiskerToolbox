@@ -25,7 +25,7 @@ class WhiskerTracker;
 struct Line2D;
 }// namespace whisker
 
-namespace dl {
+namespace deep_learning {
 class SCM;
 }
 
@@ -87,7 +87,7 @@ private:
     /*
      * DL Model for whisker tracing
      */
-    std::unique_ptr<dl::SCM> dl_model{nullptr};
+    std::unique_ptr<deep_learning::SCM> dl_model{nullptr};
 
     Ui::Whisker_Widget * ui;
 

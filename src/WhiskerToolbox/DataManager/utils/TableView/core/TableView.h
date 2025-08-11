@@ -33,7 +33,7 @@ public:
 
     // Movable but not copyable
     TableView(TableView && other) noexcept;
-    TableView & operator=(TableView && other) noexcept;
+    TableView & operator=(TableView && other);
     TableView(const TableView & other) = delete;
     TableView & operator=(const TableView & other) = delete;
 
