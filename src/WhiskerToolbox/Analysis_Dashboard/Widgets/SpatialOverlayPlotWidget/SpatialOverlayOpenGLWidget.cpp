@@ -14,6 +14,7 @@
 #include "Visualizers/Lines/LineDataVisualization.hpp"
 #include "Visualizers/Masks/MaskDataVisualization.hpp"
 #include "Visualizers/Points/PointDataVisualization.hpp"
+#include "Widgets/Common/widget_utilities.hpp"
 
 #include <QApplication>
 #include <QDebug>
@@ -36,19 +37,14 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _tooltips_enabled(true),
       _pending_update(false),
       _hover_processing_active(false),
-      _selection_mode(SelectionMode::PointSelection) {
+      _selection_mode(SelectionMode::PointSelection),
+      _data_bounds(0.0f, 0.0f, 0.0f, 0.0f) {
 
     if (parent) setParent(parent);
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
 
-    // Set OpenGL 4.3 Core Profile format (required for line shaders with compute shaders)
-    // The actual context creation will happen when the widget is shown
-    tryCreateContextWithVersion(4, 3);
-
-    qDebug() << "SpatialOverlayOpenGLWidget: Requested surface format - Version:" << format().majorVersion() << "." << format().minorVersion();
-    qDebug() << "SpatialOverlayOpenGLWidget: Requested surface format - Profile:" << (format().profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
-    qDebug() << "SpatialOverlayOpenGLWidget: Requested surface format - Samples:" << format().samples();
+    try_create_opengl_context_with_version(this, 4, 3);
 
     // Initialize selection handler after widget setup
     _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// Use fixed tolerance initially
@@ -89,7 +85,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     });
 
     // Initialize data bounds
-    _data_min_x = _data_max_x = _data_min_y = _data_max_y = 0.0f;
+    _data_bounds = BoundingBox(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Initialize per-axis zoom defaults and padding
     _zoom_level_x = 1.0f;
@@ -101,32 +97,8 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &SpatialOverlayOpenGLWidget::viewBoundsChanged);
     connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &SpatialOverlayOpenGLWidget::mouseWorldMoved);
 
-    // Initialize per-axis zoom and padding
-    _zoom_level_x = 1.0f;
-    _zoom_level_y = 1.0f;
-    _padding_factor = 1.1f;
-
     _initializeContextMenu();
 
-    // Initialize rubber band for box zoom
-    //_rubber_band = nullptr;
-}
-
-bool SpatialOverlayOpenGLWidget::tryCreateContextWithVersion(int major, int minor) {
-    QSurfaceFormat format;
-    format.setVersion(major, minor);
-    format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSamples(4);
-    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    format.setSwapInterval(1);
-
-    setFormat(format);
-
-    qDebug() << "SpatialOverlayOpenGLWidget: Set OpenGL" << major << "." << minor << "Core Profile format";
-
-    // Note: Context is not created until widget is shown or initializeGL is called
-    // We can't check validity here, just set the format
-    return true;
 }
 
 SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
@@ -401,11 +373,8 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     float padding_x = (max_x - min_x) * 0.1f;
     float padding_y = (max_y - min_y) * 0.1f;
 
-    _data_min_x = min_x - padding_x;
-    _data_max_x = max_x + padding_x;
-    _data_min_y = min_y - padding_y;
-    _data_max_y = max_y + padding_y;
-
+    _data_bounds = BoundingBox(min_x - padding_x, min_y - padding_y, 
+                              max_x + padding_x, max_y + padding_y);
     _data_bounds_valid = true;
 }
 
@@ -1180,27 +1149,9 @@ void SpatialOverlayOpenGLWidget::computeCameraWorldView(float & center_x,
                                                         float & center_y,
                                                         float & world_width,
                                                         float & world_height) const {
-    // Base on data bounds and current per-axis zoom and pan offsets
-    float data_width = std::max(1e-6f, _data_max_x - _data_min_x);
-    float data_height = std::max(1e-6f, _data_max_y - _data_min_y);
-    float cx0 = (_data_min_x + _data_max_x) * 0.5f;
-    float cy0 = (_data_min_y + _data_max_y) * 0.5f;
-
-    // Padding applies when computing view extents
-    float padding = _padding_factor;
-
-    // Visible extents in world units (no aspect correction here; handled by P)
-    float half_w = 0.5f * (data_width * padding) / std::max(1e-6f, _zoom_level_x);
-    float half_h = 0.5f * (data_height * padding) / std::max(1e-6f, _zoom_level_y);
-
-    // Apply pan offsets in world units
-    float pan_x_world = _pan_offset_x * (data_width / std::max(1e-6f, _zoom_level_x));
-    float pan_y_world = _pan_offset_y * (data_height / std::max(1e-6f, _zoom_level_y));
-
-    center_x = cx0 + pan_x_world;
-    center_y = cy0 + pan_y_world;
-    world_width = 2.0f * half_w;
-    world_height = 2.0f * half_h;
+    compute_camera_world_view(_data_bounds, _zoom_level_x, _zoom_level_y, 
+                             _pan_offset_x, _pan_offset_y, _padding_factor, 
+                             center_x, center_y, world_width, world_height);
 }
 
 void SpatialOverlayOpenGLWidget::processHoverDebounce() {

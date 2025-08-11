@@ -4,6 +4,7 @@
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "Widgets/Common/PlotInteractionController.hpp"
+#include "CoreGeometry/boundingbox.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLFunctions_4_1_Core>
@@ -79,18 +80,6 @@ signals:
      */
     void pointClicked(size_t point_index);
 
-    /**
-     * @brief Emitted when zoom level changes
-     * @param zoom_level The new zoom level
-     */
-    void zoomLevelChanged(float zoom_level);
-
-    /**
-     * @brief Emitted when pan offset changes
-     * @param offset_x The new X pan offset
-     * @param offset_y The new Y pan offset
-     */
-    void panOffsetChanged(float offset_x, float offset_y);
 
     /**
      * @brief Emitted when the current world view bounds change (after zoom/pan/resize/box-zoom)
@@ -142,7 +131,7 @@ private:
     SelectionVariant _selection_handler;
 
     // Data bounds for projection calculation
-    float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
+    BoundingBox _data_bounds;
     bool _data_bounds_valid;
 
     // OpenGL state

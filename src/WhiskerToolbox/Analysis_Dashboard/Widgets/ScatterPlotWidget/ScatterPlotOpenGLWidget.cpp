@@ -9,6 +9,7 @@
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
 #include "Visualizers/Points/ScatterPlotVisualization.hpp"
+#include "Widgets/Common/widget_utilities.hpp"
 
 #include <QDebug>
 #include <QMatrix4x4>
@@ -28,16 +29,15 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
       _pan_offset_y(0.0f),
       _tooltips_enabled(true),
       _opengl_resources_initialized(false),
-      _data_min_x(0.0f),
-      _data_max_x(1.0f),
-      _data_min_y(0.0f),
-      _data_max_y(1.0f),
+      _data_bounds(0.0f, 0.0f, 1.0f, 1.0f),
       _data_bounds_valid(false),
       _selection_mode(SelectionMode::PointSelection) {
 
     // Ensure the widget receives continuous mouse move and wheel events
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
+
+    try_create_opengl_context_with_version(this, 4, 1);
 
     _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// Use fixed tolerance initially
 
@@ -57,13 +57,6 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
         }
     });
     _pending_update = false;
-
-    // Set OpenGL format
-    QSurfaceFormat format;
-    format.setVersion(4, 1);
-    format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSamples(4);// Enable multisampling for anti-aliasing
-    setFormat(format);
 
     // Configure paint behavior for embedding inside QGraphicsProxyWidget
     if (parent) setParent(parent);
@@ -111,7 +104,7 @@ void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
     calculateDataBounds();
 
     qDebug() << "ScatterPlotOpenGLWidget::setScatterData: Data bounds:"
-             << _data_min_x << "," << _data_min_y << "to" << _data_max_x << "," << _data_max_y;
+             << _data_bounds.min_x << "," << _data_bounds.min_y << "to" << _data_bounds.max_x << "," << _data_bounds.max_y;
 
     qDebug() << "Creating ScatterPlotVisualization with" << x_data.size() << "points";
 
@@ -392,25 +385,24 @@ void ScatterPlotOpenGLWidget::calculateDataBounds() {
         return;
     }
 
-    _data_min_x = _data_max_x = _x_data[0];
-    _data_min_y = _data_max_y = _y_data[0];
+    float min_x = _x_data[0];
+    float max_x = _x_data[0];
+    float min_y = _y_data[0];
+    float max_y = _y_data[0];
 
     for (size_t i = 1; i < _x_data.size(); ++i) {
-        _data_min_x = std::min(_data_min_x, _x_data[i]);
-        _data_max_x = std::max(_data_max_x, _x_data[i]);
-        _data_min_y = std::min(_data_min_y, _y_data[i]);
-        _data_max_y = std::max(_data_max_y, _y_data[i]);
+        min_x = std::min(min_x, _x_data[i]);
+        max_x = std::max(max_x, _x_data[i]);
+        min_y = std::min(min_y, _y_data[i]);
+        max_y = std::max(max_y, _y_data[i]);
     }
 
     // Add some padding
-    float padding_x = (_data_max_x - _data_min_x) * 0.1f;
-    float padding_y = (_data_max_y - _data_min_y) * 0.1f;
+    float padding_x = (max_x - min_x) * 0.1f;
+    float padding_y = (max_y - min_y) * 0.1f;
 
-    _data_min_x -= padding_x;
-    _data_max_x += padding_x;
-    _data_min_y -= padding_y;
-    _data_max_y += padding_y;
-
+    _data_bounds = BoundingBox(min_x - padding_x, min_y - padding_y, 
+                              max_x + padding_x, max_y + padding_y);
     _data_bounds_valid = true;
 }
 
@@ -431,19 +423,9 @@ void ScatterPlotOpenGLWidget::computeCameraWorldView(float & center_x,
                                                      float & center_y,
                                                      float & world_width,
                                                      float & world_height) const {
-    float data_width = std::max(1e-6f, _data_max_x - _data_min_x);
-    float data_height = std::max(1e-6f, _data_max_y - _data_min_y);
-    float cx0 = (_data_min_x + _data_max_x) * 0.5f;
-    float cy0 = (_data_min_y + _data_max_y) * 0.5f;
-    float padding = _padding_factor;
-    float half_w = 0.5f * (data_width * padding) / std::max(1e-6f, _zoom_level_x);
-    float half_h = 0.5f * (data_height * padding) / std::max(1e-6f, _zoom_level_y);
-    float pan_x_world = _pan_offset_x * (data_width / std::max(1e-6f, _zoom_level_x));
-    float pan_y_world = _pan_offset_y * (data_height / std::max(1e-6f, _zoom_level_y));
-    center_x = cx0 + pan_x_world;
-    center_y = cy0 + pan_y_world;
-    world_width = 2.0f * half_w;
-    world_height = 2.0f * half_h;
+    compute_camera_world_view(_data_bounds, _zoom_level_x, _zoom_level_y, 
+                             _pan_offset_x, _pan_offset_y, _padding_factor, 
+                             center_x, center_y, world_width, world_height);
 }
 
 void ScatterPlotOpenGLWidget::requestThrottledUpdate() {

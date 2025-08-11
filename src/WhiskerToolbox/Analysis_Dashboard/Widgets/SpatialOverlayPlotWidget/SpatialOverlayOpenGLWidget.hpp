@@ -5,6 +5,7 @@
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "ShaderManager/ShaderManager.hpp"
+#include "CoreGeometry/boundingbox.hpp"
 
 
 #include <QMatrix4x4>
@@ -316,7 +317,7 @@ private:
     std::unique_ptr<PlotInteractionController> _interaction;
 
     // Data bounds
-    float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
+    BoundingBox _data_bounds;
     bool _data_bounds_valid;
 
     // Context menu

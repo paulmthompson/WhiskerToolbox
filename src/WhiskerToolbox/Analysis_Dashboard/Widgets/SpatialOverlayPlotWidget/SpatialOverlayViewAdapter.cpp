@@ -1,5 +1,6 @@
 #include "SpatialOverlayViewAdapter.hpp"
 #include "SpatialOverlayOpenGLWidget.hpp"
+#include "CoreGeometry/boundingbox.hpp"
 
 SpatialOverlayViewAdapter::SpatialOverlayViewAdapter(SpatialOverlayOpenGLWidget * widget)
     : _w(widget) {}
@@ -48,10 +49,10 @@ void SpatialOverlayViewAdapter::requestUpdate() {
 }
 
 void SpatialOverlayViewAdapter::applyBoxZoomToWorldRect(float min_x, float max_x, float min_y, float max_y) {
-    float data_width = _w->_data_max_x - _w->_data_min_x;
-    float data_height = _w->_data_max_y - _w->_data_min_y;
-    float center_x = (_w->_data_min_x + _w->_data_max_x) * 0.5f;
-    float center_y = (_w->_data_min_y + _w->_data_max_y) * 0.5f;
+    float data_width = _w->_data_bounds.width();
+    float data_height = _w->_data_bounds.height();
+    float center_x = _w->_data_bounds.center_x();
+    float center_y = _w->_data_bounds.center_y();
     float target_width = std::max(1e-6f, max_x - min_x);
     float target_height = std::max(1e-6f, max_y - min_y);
     float aspect_ratio = static_cast<float>(_w->width()) / std::max(1, _w->height());
