@@ -1,12 +1,12 @@
 #ifndef SPATIALOVERLAYOPENGLWIDGET_HPP
 #define SPATIALOVERLAYOPENGLWIDGET_HPP
 
-#include "Visualizers/RenderingContext.hpp"
+#include "CoreGeometry/boundingbox.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "ShaderManager/ShaderManager.hpp"
-#include "CoreGeometry/boundingbox.hpp"
-
+#include "Visualizers/RenderingContext.hpp"
+#include "Widgets/Common/PlotInteractionController.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -16,7 +16,6 @@
 #include <QOpenGLWidget>
 #include <QString>
 #include <QTimer>
-#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 
 #include <memory>
 #include <set>
@@ -35,7 +34,7 @@ class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;
 class GroupManager;
-class SpatialOverlayViewAdapter; // adapter (friend)
+class SpatialOverlayViewAdapter;// adapter (friend)
 class QKeyEvent;
 
 /**
@@ -53,6 +52,8 @@ public:
      */
     void resetView();
 
+    //========== Selection ==========
+
     /**
      * @brief Set the current selection mode
      * @param mode The selection mode to activate
@@ -65,6 +66,33 @@ public:
     SelectionMode getSelectionMode() const { return _selection_mode; }
 
     /**
+     * @brief Programmatically clear all selected points
+     */
+    void clearSelection();
+
+    /**
+     * @brief Get total number of selected points across all PointData visualizations
+     * @return Total selected point count
+     */
+    size_t getTotalSelectedPoints() const;
+
+    /**
+     * @brief Get total number of selected masks across all MaskData visualizations
+     * @return Total selected mask count
+     */
+    size_t getTotalSelectedMasks() const;
+
+    /**
+     * @brief Get total number of selected lines across all LineData visualizations
+     * @return Total selected line count
+     */
+    size_t getTotalSelectedLines() const;
+    
+    void makeSelection();
+
+    //========== Tooltips ==========
+
+    /**
      * @brief Enable or disable tooltips
      * @param enabled Whether tooltips should be enabled
      */
@@ -74,10 +102,7 @@ public:
      * @brief Get current tooltip enabled state
      */
     bool getTooltipsEnabled() const { return _tooltips_enabled; }
-    /**
-     * @brief Programmatically clear all selected points
-     */
-    void clearSelection();
+
 
     //========== Visibility Management ==========
 
@@ -100,7 +125,7 @@ public:
      * @brief Public method to handle key press events from external sources
      * @param event The key event to handle
      */
-    void handleKeyPress(QKeyEvent* event);
+    void handleKeyPress(QKeyEvent * event);
 
     /**
      * @brief Convert screen coordinates to world coordinates
@@ -129,6 +154,8 @@ public:
      */
     float getPointSize() const { return _point_size; }
 
+    //========== Line Data ==========
+
     /**
      * @brief Set the line width for rendering
      * @param line_width Line width in pixels
@@ -140,11 +167,6 @@ public:
      */
     float getLineWidth() const { return _line_width; }
 
-    /**
-     * @brief Get total number of selected points across all PointData visualizations
-     * @return Total selected point count
-     */
-    size_t getTotalSelectedPoints() const;
 
     // ========== Mask Data ==========
 
@@ -155,12 +177,6 @@ public:
     void setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map);
 
 
-    /**
-     * @brief Get total number of selected masks across all MaskData visualizations
-     * @return Total selected mask count
-     */
-    size_t getTotalSelectedMasks() const;
-
     // ========== Line Data ==========
 
     /**
@@ -168,14 +184,6 @@ public:
      * @param line_data_map Map of data key to LineData objects
      */
     void setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map);
-
-    /**
-     * @brief Get total number of selected lines across all LineData visualizations
-     * @return Total selected line count
-     */
-    size_t getTotalSelectedLines() const;
-
-    void makeSelection();
 
     void applyTimeRangeFilter(int start_frame, int end_frame);
 
@@ -290,17 +298,17 @@ private:
     bool _opengl_resources_initialized;
 
     // View parameters
-    float _zoom_level_x; // per-axis zoom (X)
-    float _zoom_level_y; // per-axis zoom (Y)
+    float _zoom_level_x;// per-axis zoom (X)
+    float _zoom_level_y;// per-axis zoom (Y)
     float _pan_offset_x, _pan_offset_y;
-    float _center_x = 0.0f; // camera center (world units)
-    float _center_y = 0.0f; // camera center (world units)
+    float _center_x = 0.0f;// camera center (world units)
+    float _center_y = 0.0f;// camera center (world units)
     float _point_size;
     float _line_width;
     QMatrix4x4 _projection_matrix;
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _model_matrix;
-    float _padding_factor; // view padding factor (default 1.1)
+    float _padding_factor;// view padding factor (default 1.1)
 
     QPoint _last_mouse_pos;
     QPoint _current_mouse_pos;
@@ -326,16 +334,16 @@ private:
     bool _data_bounds_valid;
 
     // Context menu
-    QMenu * _contextMenu {nullptr};
-    QMenu * _assignGroupMenu {nullptr};
+    QMenu * _contextMenu{nullptr};
+    QMenu * _assignGroupMenu{nullptr};
 
-    QAction * _actionCreateNewGroup {nullptr};
-    QAction * _actionUngroupSelected {nullptr};
-    QAction * _actionShowAllCurrent {nullptr};
-    QAction * _actionShowAllDatasets {nullptr};
-    QAction * _actionHideSelected {nullptr};
+    QAction * _actionCreateNewGroup{nullptr};
+    QAction * _actionUngroupSelected{nullptr};
+    QAction * _actionShowAllCurrent{nullptr};
+    QAction * _actionShowAllDatasets{nullptr};
+    QAction * _actionHideSelected{nullptr};
 
-    QList<QAction*> _dynamicGroupActions;
+    QList<QAction *> _dynamicGroupActions;
 
     /**
      * @brief Initialize OpenGL shaders and resources
@@ -464,21 +472,21 @@ private:
     bool forceContextCreation();
 
 private:
-        /**
-         * @brief Compute camera center and visible world extents for current view
-         *
-         * Derives the world-space camera center and the visible world width/height
-         * from current data bounds, padding, per-axis zoom and normalized pan offsets.
-         * Aspect ratio corrections are applied in the same way as rendering, ensuring
-         * that the returned values exactly match the visible region.
-         *
-         * @pre _data_bounds_valid must be true and widget size positive
-         * @post On success, outputs are populated with center and extents in world units
-         */
-        void computeCameraWorldView(float & center_x,
-                                    float & center_y,
-                                    float & world_width,
-                                    float & world_height) const;
+    /**
+    * @brief Compute camera center and visible world extents for current view
+    *
+    * Derives the world-space camera center and the visible world width/height
+    * from current data bounds, padding, per-axis zoom and normalized pan offsets.
+    * Aspect ratio corrections are applied in the same way as rendering, ensuring
+    * that the returned values exactly match the visible region.
+    *
+    * @pre _data_bounds_valid must be true and widget size positive
+    * @post On success, outputs are populated with center and extents in world units
+    */
+    void computeCameraWorldView(float & center_x,
+                                float & center_y,
+                                float & world_width,
+                                float & world_height) const;
     /**
      * @brief Try to create OpenGL context with specified version
      * @param major Major version number
