@@ -47,28 +47,12 @@ public:
     explicit SpatialOverlayOpenGLWidget(QWidget * parent = nullptr);
     ~SpatialOverlayOpenGLWidget() override;
 
-    /**
-     * @brief Set zoom level (1.0 = default, >1.0 = zoomed in, <1.0 = zoomed out)
-     * @param zoom_level The zoom level
-     */
-    void setZoomLevel(float zoom_level);
+
 
     /**
-     * @brief Get current zoom level
+     * @brief Reset view to fit all data (zoom and pan to defaults)
      */
-    float getZoomLevel() const { return _zoom_level; }
-
-    /**
-     * @brief Set pan offset
-     * @param offset_x X offset in normalized coordinates
-     * @param offset_y Y offset in normalized coordinates
-     */
-    void setPanOffset(float offset_x, float offset_y);
-
-    /**
-     * @brief Get current pan offset
-     */
-    QVector2D getPanOffset() const { return QVector2D(_pan_offset_x, _pan_offset_y); }
+    void resetView();
 
     /**
      * @brief Set the current selection mode
@@ -190,9 +174,7 @@ public:
 
     void applyTimeRangeFilter(int start_frame, int end_frame);
 
-
     void setGroupManager(GroupManager * group_manager);
-
 
 signals:
     /**
@@ -213,19 +195,6 @@ signals:
      * @param line_width The new line width in pixels
      */
     void lineWidthChanged(float line_width);
-
-    /**
-     * @brief Emitted when zoom level changes
-     * @param zoom_level The new zoom level
-     */
-    void zoomLevelChanged(float zoom_level);
-
-    /**
-     * @brief Emitted when pan offset changes
-     * @param offset_x The new X pan offset
-     * @param offset_y The new Y pan offset
-     */
-    void panOffsetChanged(float offset_x, float offset_y);
 
     /**
      * @brief Emitted when tooltip enabled state changes

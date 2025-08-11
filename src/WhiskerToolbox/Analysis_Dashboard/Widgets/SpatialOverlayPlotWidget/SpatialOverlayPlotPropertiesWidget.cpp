@@ -120,13 +120,8 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - current keys from plot:" << current_keys;
         setSelectedDataSources(current_keys);
 
-        // Update zoom level and point size from current widget state
+        // Update point size from current widget state
         if (_spatial_plot_widget->getOpenGLWidget()) {
-
-            float current_zoom = _spatial_plot_widget->getOpenGLWidget()->getZoomLevel();
-            ui->zoom_level_spinbox->blockSignals(true);
-            ui->zoom_level_spinbox->setValue(static_cast<double>(current_zoom));
-            ui->zoom_level_spinbox->blockSignals(false);
 
             float current_point_size = _spatial_plot_widget->getOpenGLWidget()->getPointSize();
             ui->point_size_spinbox->blockSignals(true);
@@ -223,18 +218,12 @@ void SpatialOverlayPlotPropertiesWidget::onLineWidthChanged(double value) {
     }
 }
 
-void SpatialOverlayPlotPropertiesWidget::onZoomLevelChanged(double value) {
-    if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
-        _spatial_plot_widget->getOpenGLWidget()->setZoomLevel(static_cast<float>(value));
-    }
-}
+
 
 void SpatialOverlayPlotPropertiesWidget::onResetViewClicked() {
     if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
-        // Reset zoom and pan to defaults
-        _spatial_plot_widget->getOpenGLWidget()->setZoomLevel(1.0f);
-        _spatial_plot_widget->getOpenGLWidget()->setPanOffset(0.0f, 0.0f);
-        ui->zoom_level_spinbox->setValue(1.0);
+        // Reset view to fit all data (zoom and pan to defaults)
+        _spatial_plot_widget->getOpenGLWidget()->resetView();
     }
 }
 
@@ -255,8 +244,7 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
     connect(ui->line_width_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onLineWidthChanged);
 
-    connect(ui->zoom_level_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &SpatialOverlayPlotPropertiesWidget::onZoomLevelChanged);
+
 
     connect(ui->reset_view_button, &QPushButton::clicked,
             this, &SpatialOverlayPlotPropertiesWidget::onResetViewClicked);
