@@ -20,7 +20,6 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     :
       _group_manager(nullptr),
       _point_size(3.0f),
-      _zoom_level(1.0f),
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
       _dragging(false),
@@ -72,7 +71,6 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     _zoom_level_x = 1.0f;
     _zoom_level_y = 1.0f;
     _padding_factor = 1.1f;
-    _rubber_band = nullptr;
 
     _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<ScatterPlotViewAdapter>(this));
     connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &ScatterPlotOpenGLWidget::viewBoundsChanged);
@@ -165,16 +163,7 @@ void ScatterPlotOpenGLWidget::setPointSize(float point_size) {
     update();
 }
 
-void ScatterPlotOpenGLWidget::setZoomLevel(float zoom_level) {
-    qDebug() << "ScatterPlotOpenGLWidget::setZoomLevel called with" << zoom_level;
-    _zoom_level = std::max(0.1f, std::min(10.0f, zoom_level));
-    _zoom_level_x = _zoom_level;
-    _zoom_level_y = _zoom_level;
-    qDebug() << "ScatterPlotOpenGLWidget::setZoomLevel: final zoom_level =" << _zoom_level;
-    updateProjectionMatrix();
-    emit zoomLevelChanged(_zoom_level);
-    requestThrottledUpdate();
-}
+
 
 void ScatterPlotOpenGLWidget::setPanOffset(float offset_x, float offset_y) {
     qDebug() << "ScatterPlotOpenGLWidget::setPanOffset called with" << offset_x << offset_y;
@@ -237,8 +226,8 @@ void ScatterPlotOpenGLWidget::paintGL() {
         return;
     }
 
-    // Set up matrices - use projection matrix directly since zoom/pan are handled in projection
-    QMatrix4x4 mvp_matrix = _projection_matrix;
+    // Set up matrices consistently with SpatialOverlayOpenGLWidget
+    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
     
     qDebug() << "ScatterPlotOpenGLWidget::paintGL: Rendering with point size" << _point_size;
     qDebug() << "ScatterPlotOpenGLWidget::paintGL: Using projection matrix:" << _projection_matrix;
@@ -256,30 +245,37 @@ void ScatterPlotOpenGLWidget::resizeGL(int width, int height) {
 
 void ScatterPlotOpenGLWidget::updateProjectionMatrix() {
     qDebug() << "ScatterPlotOpenGLWidget::updateProjectionMatrix called";
-    _projection_matrix.setToIdentity();
-    
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
-    
-    qDebug() << "ScatterPlotOpenGLWidget::updateProjectionMatrix: projection bounds:" 
-             << "left=" << left << "right=" << right << "bottom=" << bottom << "top=" << top;
-    
-    if (left == right || bottom == top) {
-        // Fall back to default projection if data bounds are invalid
-        float aspect_ratio = static_cast<float>(width()) / height();
-        if (aspect_ratio > 1.0f) {
-            _projection_matrix.ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f, -1.0f, 1.0f);
-        } else {
-            _projection_matrix.ortho(-1.0f, 1.0f, -1.0f / aspect_ratio, 1.0f / aspect_ratio, -1.0f, 1.0f);
-        }
-        qDebug() << "ScatterPlotOpenGLWidget::updateProjectionMatrix: Using fallback projection";
-    } else {
-        _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
-        qDebug() << "ScatterPlotOpenGLWidget::updateProjectionMatrix: Using calculated projection";
+    _model_matrix.setToIdentity();
+
+    if (!_data_bounds_valid || width() <= 0 || height() <= 0) {
+        _projection_matrix.setToIdentity();
+        _view_matrix.setToIdentity();
+        return;
     }
 
-    // Notify listeners of current world bounds
-    emit viewBoundsChanged(left, right, bottom, top);
+    float cx, cy, w_world, h_world;
+    computeCameraWorldView(cx, cy, w_world, h_world);
+
+    // View: V = S * T(-center)
+    _view_matrix.setToIdentity();
+    float aspect = static_cast<float>(width()) / std::max(1, height());
+    float scale_x = (w_world > 0.0f) ? ((2.0f * aspect) / w_world) : 1.0f;
+    float scale_y = (h_world > 0.0f) ? (2.0f / h_world) : 1.0f;
+    _view_matrix.scale(scale_x, scale_y, 1.0f);
+    _view_matrix.translate(-cx, -cy, 0.0f);
+
+    // Projection: aspect-only orthographic
+    _projection_matrix.setToIdentity();
+    float left = -aspect;
+    float right = aspect;
+    float bottom = -1.0f;
+    float top = 1.0f;
+    _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
+
+    // Emit current visible bounds
+    float half_w = 0.5f * w_world;
+    float half_h = 0.5f * h_world;
+    emit viewBoundsChanged(cx - half_w, cx + half_w, cy - half_h, cy + half_h);
 }
 
 void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
@@ -370,20 +366,18 @@ void ScatterPlotOpenGLWidget::handleTooltipTimer() {
     
     // TODO: Implement proper point picking for tooltips
     // For now, show a basic tooltip
-    QToolTip::showText(mapToGlobal(_tooltip_mouse_pos), 
-                      QString("Scatter Plot\nZoom: %1x").arg(_zoom_level, 0, 'f', 2));
 }
 
 QVector2D ScatterPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
-    // Convert screen coordinates to normalized device coordinates
-    float x = (2.0f * screen_pos.x()) / width() - 1.0f;
-    float y = 1.0f - (2.0f * screen_pos.y()) / height();
-    
-    // Apply inverse transformation using only projection matrix
-    QMatrix4x4 inverse_matrix = _projection_matrix.inverted();
-    QVector4D world_pos = inverse_matrix * QVector4D(x, y, 0.0f, 1.0f);
-    
-    return QVector2D(world_pos.x(), world_pos.y());
+    // Convert screen to NDC
+    float x_ndc = (2.0f * screen_pos.x()) / std::max(1, width()) - 1.0f;
+    float y_ndc = 1.0f - (2.0f * screen_pos.y()) / std::max(1, height());
+
+    // Invert full MVP (model is identity)
+    QMatrix4x4 mvp = _projection_matrix * _view_matrix * _model_matrix;
+    QMatrix4x4 inv = mvp.inverted();
+    QVector4D world4 = inv * QVector4D(x_ndc, y_ndc, 0.0f, 1.0f);
+    return QVector2D(world4.x(), world4.y());
 }
 
 void ScatterPlotOpenGLWidget::handleMouseHover(QPoint const & pos) {
@@ -424,56 +418,35 @@ void ScatterPlotOpenGLWidget::calculateDataBounds() {
 }
 
 void ScatterPlotOpenGLWidget::calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const {
-    qDebug() << "ScatterPlotOpenGLWidget::calculateProjectionBounds called";
-    qDebug() << "  _data_bounds_valid:" << _data_bounds_valid;
-    qDebug() << "  width:" << width() << "height:" << height();
-    qDebug() << "  _data_min_x:" << _data_min_x << "_data_max_x:" << _data_max_x;
-    qDebug() << "  _data_min_y:" << _data_min_y << "_data_max_y:" << _data_max_y;
-    qDebug() << "  _zoom_level:" << _zoom_level;
-    qDebug() << "  _pan_offset_x:" << _pan_offset_x << "_pan_offset_y:" << _pan_offset_y;
-    
     if (!_data_bounds_valid || width() <= 0 || height() <= 0) {
         left = right = bottom = top = 0.0f;
-        qDebug() << "ScatterPlotOpenGLWidget::calculateProjectionBounds: Invalid bounds, returning zeros";
         return;
     }
+    float cx, cy, w_world, h_world;
+    computeCameraWorldView(cx, cy, w_world, h_world);
+    left = cx - 0.5f * w_world;
+    right = cx + 0.5f * w_world;
+    bottom = cy - 0.5f * h_world;
+    top = cy + 0.5f * h_world;
+}
 
-    // Calculate orthographic projection bounds (similar to SpatialOverlayOpenGLWidget)
-    float data_width = _data_max_x - _data_min_x;
-    float data_height = _data_max_y - _data_min_y;
-    float center_x = (_data_min_x + _data_max_x) * 0.5f;
-    float center_y = (_data_min_y + _data_max_y) * 0.5f;
-
-    // Add padding and apply per-axis zoom
-    float padding = _padding_factor; // 10% padding
-    float zoom_factor_x = 1.0f / _zoom_level_x;
-    float zoom_factor_y = 1.0f / _zoom_level_y;
-    float half_width = (data_width * padding * zoom_factor_x) / 2.0f;
-    float half_height = (data_height * padding * zoom_factor_y) / 2.0f;
-
-    // Apply aspect ratio correction
-    float aspect_ratio = static_cast<float>(width()) / height();
-    if (aspect_ratio > 1.0f) {
-        half_width *= aspect_ratio;
-    } else {
-        half_height /= aspect_ratio;
-    }
-
-    // Apply pan offset
-    float pan_x = _pan_offset_x * data_width * zoom_factor_x;
-    float pan_y = _pan_offset_y * data_height * zoom_factor_y;
-
-    left = center_x - half_width + pan_x;
-    right = center_x + half_width + pan_x;
-    bottom = center_y - half_height + pan_y;
-    top = center_y + half_height + pan_y;
-    
-    qDebug() << "ScatterPlotOpenGLWidget::calculateProjectionBounds: calculated bounds:";
-    qDebug() << "  data_width:" << data_width << "data_height:" << data_height;
-    qDebug() << "  center_x:" << center_x << "center_y:" << center_y;
-    qDebug() << "  zoom_factor_x:" << zoom_factor_x << "zoom_factor_y:" << zoom_factor_y << "half_width:" << half_width << "half_height:" << half_height;
-    qDebug() << "  pan_x:" << pan_x << "pan_y:" << pan_y;
-    qDebug() << "  final: left=" << left << "right=" << right << "bottom=" << bottom << "top=" << top;
+void ScatterPlotOpenGLWidget::computeCameraWorldView(float & center_x,
+                              float & center_y,
+                              float & world_width,
+                              float & world_height) const {
+    float data_width = std::max(1e-6f, _data_max_x - _data_min_x);
+    float data_height = std::max(1e-6f, _data_max_y - _data_min_y);
+    float cx0 = (_data_min_x + _data_max_x) * 0.5f;
+    float cy0 = (_data_min_y + _data_max_y) * 0.5f;
+    float padding = _padding_factor;
+    float half_w = 0.5f * (data_width * padding) / std::max(1e-6f, _zoom_level_x);
+    float half_h = 0.5f * (data_height * padding) / std::max(1e-6f, _zoom_level_y);
+    float pan_x_world = _pan_offset_x * (data_width / std::max(1e-6f, _zoom_level_x));
+    float pan_y_world = _pan_offset_y * (data_height / std::max(1e-6f, _zoom_level_y));
+    center_x = cx0 + pan_x_world;
+    center_y = cy0 + pan_y_world;
+    world_width = 2.0f * half_w;
+    world_height = 2.0f * half_h;
 }
 
 void ScatterPlotOpenGLWidget::requestThrottledUpdate() {

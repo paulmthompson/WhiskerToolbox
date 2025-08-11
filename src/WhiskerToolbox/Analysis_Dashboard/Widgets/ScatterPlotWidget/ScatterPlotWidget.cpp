@@ -72,19 +72,6 @@ float ScatterPlotWidget::getPointSize() const {
     return 3.0f; // Default value
 }
 
-void ScatterPlotWidget::setZoomLevel(float zoom_level) {
-    if (_opengl_widget) {
-        _opengl_widget->setZoomLevel(zoom_level);
-    }
-}
-
-float ScatterPlotWidget::getZoomLevel() const {
-    if (_opengl_widget) {
-        return _opengl_widget->getZoomLevel();
-    }
-    return 1.0f; // Default value
-}
-
 void ScatterPlotWidget::setPanOffset(float offset_x, float offset_y) {
     if (_opengl_widget) {
         _opengl_widget->setPanOffset(offset_x, offset_y);

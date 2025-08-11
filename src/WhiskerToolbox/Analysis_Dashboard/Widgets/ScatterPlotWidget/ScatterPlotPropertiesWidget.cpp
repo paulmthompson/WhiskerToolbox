@@ -741,10 +741,8 @@ QMap<QString, QString> ScatterPlotPropertiesWidget::getAvailableNumericColumnsWi
     return columns_with_types;
 }
 
-
-// Removed legacy getNumericColumnsFromRegistry
-
 void ScatterPlotPropertiesWidget::updateCoordinateRange() {
+    /*
     if (!_scatter_plot_widget || !_scatter_plot_widget->getOpenGLWidget()) {
         ui->x_range_value->setText("No data");
         ui->y_range_value->setText("No data");
@@ -814,6 +812,7 @@ void ScatterPlotPropertiesWidget::updateCoordinateRange() {
 
     ui->x_range_value->setText(x_range_text);
     ui->y_range_value->setText(y_range_text);
+    */
 }
 
 void ScatterPlotPropertiesWidget::onZoomLevelChanged(float zoom_level) {

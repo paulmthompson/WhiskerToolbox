@@ -5,7 +5,6 @@
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLWidget>
 #include <QTimer>
-#include <QRubberBand>
 #include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 
 #include <memory>
@@ -57,17 +56,6 @@ public:
      * @brief Get current point size
      */
     float getPointSize() const { return _point_size; }
-
-    /**
-     * @brief Set zoom level (1.0 = default, >1.0 = zoomed in, <1.0 = zoomed out)
-     * @param zoom_level The zoom level
-     */
-    void setZoomLevel(float zoom_level);
-
-    /**
-     * @brief Get current zoom level
-     */
-    float getZoomLevel() const { return _zoom_level; }
 
     /**
      * @brief Set pan offset
@@ -161,7 +149,8 @@ private:
 
     // View transformation
     QMatrix4x4 _projection_matrix;
-    float _zoom_level;
+    QMatrix4x4 _view_matrix;
+    QMatrix4x4 _model_matrix;
     float _zoom_level_x;
     float _zoom_level_y;
     float _pan_offset_x;
@@ -189,11 +178,10 @@ private:
 
     // Box-zoom state
     bool _box_zoom_active = false;
-    QRubberBand * _rubber_band = nullptr;
     QPoint _rubber_origin;
 
     /**
-     * @brief Update the projection matrix based on current data bounds and zoom/pan
+     * @brief Update view and projection matrices based on current camera state
      */
     void updateProjectionMatrix();
 
@@ -228,6 +216,15 @@ private:
      * @brief Calculate data bounds from the stored data
      */
   void calculateDataBounds();
+
+  /**
+   * @brief Compute camera center and visible world extents for current view
+   * @pre _data_bounds_valid must be true and widget size positive
+   */
+  void computeCameraWorldView(float & center_x,
+                              float & center_y,
+                              float & world_width,
+                              float & world_height) const;
 };
 
 #endif// SCATTERPLOTOPENGLWIDGET_HPP

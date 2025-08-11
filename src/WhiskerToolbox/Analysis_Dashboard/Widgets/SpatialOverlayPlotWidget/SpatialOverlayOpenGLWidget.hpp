@@ -15,7 +15,6 @@
 #include <QOpenGLWidget>
 #include <QString>
 #include <QTimer>
-#include <QRubberBand>
 #include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
 
 #include <memory>
@@ -313,11 +312,8 @@ private:
 
     QVector2D _current_mouse_world_pos;///< Current mouse position in world coordinates
 
-    // Box-zoom interaction (legacy rubber band removed; controller manages rubber band)
-
     // Composition-based interaction controller
     std::unique_ptr<PlotInteractionController> _interaction;
-
 
     // Data bounds
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;

@@ -16,6 +16,7 @@ void ScatterPlotViewAdapter::getPerAxisZoom(float & zoom_x, float & zoom_y) cons
 void ScatterPlotViewAdapter::setPerAxisZoom(float zoom_x, float zoom_y) {
     _w->_zoom_level_x = zoom_x;
     _w->_zoom_level_y = zoom_y;
+    requestUpdate();
 }
 
 void ScatterPlotViewAdapter::getPan(float & pan_x, float & pan_y) const {
@@ -25,6 +26,7 @@ void ScatterPlotViewAdapter::getPan(float & pan_x, float & pan_y) const {
 
 void ScatterPlotViewAdapter::setPan(float pan_x, float pan_y) {
     _w->setPanOffset(pan_x, pan_y);
+    requestUpdate();
 }
 
 float ScatterPlotViewAdapter::getPadding() const {
@@ -63,12 +65,13 @@ void ScatterPlotViewAdapter::applyBoxZoomToWorldRect(float min_x, float max_x, f
     }
     _w->_zoom_level_x = std::clamp(1.0f / zfx, 0.1f, 10.0f);
     _w->_zoom_level_y = std::clamp(1.0f / zfy, 0.1f, 10.0f);
-    _w->_zoom_level = std::clamp((_w->_zoom_level_x + _w->_zoom_level_y) * 0.5f, 0.1f, 10.0f);
+    //_w->_zoom_level = std::clamp((_w->_zoom_level_x + _w->_zoom_level_y) * 0.5f, 0.1f, 10.0f);
     float target_cx = 0.5f * (min_x + max_x);
     float target_cy = 0.5f * (min_y + max_y);
     float pan_norm_x = (target_cx - center_x) / (data_width * (1.0f / _w->_zoom_level_x));
     float pan_norm_y = (target_cy - center_y) / (data_height * (1.0f / _w->_zoom_level_y));
     _w->_pan_offset_x = pan_norm_x;
     _w->_pan_offset_y = pan_norm_y;
+    requestUpdate();
 }
 
