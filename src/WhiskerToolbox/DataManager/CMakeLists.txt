@@ -79,6 +79,7 @@ set(DATAMANAGER_SOURCES
         utils/hdf5_mask_load.hpp
         utils/json_helpers.hpp
         utils/map_timeseries.hpp
+        utils/metaprogramming_utils.hpp
         utils/opencv_utility.hpp
         utils/opencv_utility.cpp
         utils/polynomial/polynomial_fit.hpp
