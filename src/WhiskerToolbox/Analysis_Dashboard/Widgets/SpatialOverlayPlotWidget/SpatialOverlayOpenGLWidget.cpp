@@ -186,6 +186,26 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
     }
 }
 
+void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
+    float new_point_size = std::max(1.0f, std::min(50.0f, point_size));// Clamp between 1 and 50 pixels
+    if (new_point_size != _point_size) {
+        _point_size = new_point_size;
+        emit pointSizeChanged(_point_size);
+
+        // Use throttled update for better performance
+        requestThrottledUpdate();
+    }
+}
+
+size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
+    size_t total = 0;
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        if (!viz) continue;
+        total += viz->m_selected_points.size();
+    }
+    return total;
+}
+
 //========== Mask Data ==========
 
 void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map) {
@@ -247,14 +267,52 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
     return total;
 }
 
-void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
-    float new_point_size = std::max(1.0f, std::min(50.0f, point_size));// Clamp between 1 and 50 pixels
-    if (new_point_size != _point_size) {
-        _point_size = new_point_size;
-        emit pointSizeChanged(_point_size);
+//========== Line Data ==========
 
-        // Use throttled update for better performance
-        requestThrottledUpdate();
+void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map) {
+    // Clear existing visualizations
+    _line_data_visualizations.clear();
+
+    // Set different colors for different datasets
+    static std::vector<QVector4D> colors = {
+            QVector4D(0.0f, 0.0f, 1.0f, 1.0f),// Blue
+            QVector4D(0.0f, 1.0f, 0.0f, 1.0f),// Green
+            QVector4D(1.0f, 0.0f, 0.0f, 1.0f),// Red
+            QVector4D(1.0f, 1.0f, 0.0f, 1.0f),// Yellow
+            QVector4D(1.0f, 0.0f, 1.0f, 1.0f),// Magenta
+            QVector4D(0.0f, 1.0f, 1.0f, 1.0f),// Cyan
+    };
+
+    // Create visualization for each LineData
+    size_t color_index = 0;
+    for (auto const & [key, line_data]: line_data_map) {
+        if (!line_data) {
+            qDebug() << "SpatialOverlayOpenGLWidget: Null line data for key:" << key;
+            continue;
+        }
+
+        auto viz = std::make_unique<LineDataVisualization>(key, line_data);
+        viz->m_color = colors[color_index % colors.size()];
+        color_index++;
+
+        qDebug() << "SpatialOverlayOpenGLWidget: Created line visualization for" << key
+                 << "with" << viz->m_line_identifiers.size() << "lines";
+
+        _line_data_visualizations[key] = std::move(viz);
+    }
+
+    calculateDataBounds();
+    updateViewMatrices();
+
+    // Ensure OpenGL context is current before forcing repaint
+    if (context() && context()->isValid()) {
+        makeCurrent();
+        update();
+        repaint();
+        QApplication::processEvents();
+        doneCurrent();
+    } else {
+        update();
     }
 }
 
@@ -269,15 +327,6 @@ void SpatialOverlayOpenGLWidget::setLineWidth(float line_width) {
     }
 }
 
-size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
-    size_t total = 0;
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (!viz) continue;
-        total += viz->m_selected_points.size();
-    }
-    return total;
-}
-
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
     size_t total = 0;
     for (auto const & [key, viz]: _line_data_visualizations) {
@@ -286,6 +335,8 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
     }
     return total;
 }
+
+//========== Filters ==========
 
 void SpatialOverlayOpenGLWidget::applyTimeRangeFilter(int start_frame, int end_frame) {
 
@@ -374,56 +425,6 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
                                max_x + padding_x, max_y + padding_y);
     _data_bounds_valid = true;
 }
-
-//========== Line Data ==========
-
-void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map) {
-    // Clear existing visualizations
-    _line_data_visualizations.clear();
-
-    // Set different colors for different datasets
-    static std::vector<QVector4D> colors = {
-            QVector4D(0.0f, 0.0f, 1.0f, 1.0f),// Blue
-            QVector4D(0.0f, 1.0f, 0.0f, 1.0f),// Green
-            QVector4D(1.0f, 0.0f, 0.0f, 1.0f),// Red
-            QVector4D(1.0f, 1.0f, 0.0f, 1.0f),// Yellow
-            QVector4D(1.0f, 0.0f, 1.0f, 1.0f),// Magenta
-            QVector4D(0.0f, 1.0f, 1.0f, 1.0f),// Cyan
-    };
-
-    // Create visualization for each LineData
-    size_t color_index = 0;
-    for (auto const & [key, line_data]: line_data_map) {
-        if (!line_data) {
-            qDebug() << "SpatialOverlayOpenGLWidget: Null line data for key:" << key;
-            continue;
-        }
-
-        auto viz = std::make_unique<LineDataVisualization>(key, line_data);
-        viz->m_color = colors[color_index % colors.size()];
-        color_index++;
-
-        qDebug() << "SpatialOverlayOpenGLWidget: Created line visualization for" << key
-                 << "with" << viz->m_line_identifiers.size() << "lines";
-
-        _line_data_visualizations[key] = std::move(viz);
-    }
-
-    calculateDataBounds();
-    updateViewMatrices();
-
-    // Ensure OpenGL context is current before forcing repaint
-    if (context() && context()->isValid()) {
-        makeCurrent();
-        update();
-        repaint();
-        QApplication::processEvents();
-        doneCurrent();
-    } else {
-        update();
-    }
-}
-
 
 //========== View and MVP Matrices ==========
 
@@ -1046,7 +1047,7 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
     event->accept();
 }
 
-void SpatialOverlayOpenGLWidget::handleKeyPress(QKeyEvent* event) {
+void SpatialOverlayOpenGLWidget::handleKeyPress(QKeyEvent * event) {
     qDebug() << "SpatialOverlayOpenGLWidget::handleKeyPress - Public method called for key:" << event->key();
     // Simply call the protected keyPressEvent method
     keyPressEvent(event);
@@ -1376,13 +1377,6 @@ void SpatialOverlayOpenGLWidget::_updateContextMenuState() {
 
 void SpatialOverlayOpenGLWidget::_showContextMenu(QPoint const & pos) {
 
-    //QMenu * contextMenu = new QMenu(nullptr);
-    //contextMenu->setAttribute(Qt::WA_DeleteOnClose);
-    // Global context is necessary because otherwise the left mouse
-    // click is captured by the complex widget infrastructure and the left click
-    // to select a menu item is never propagated to the menu.
-    //contextMenu->setParent(this);
-
     _updateContextMenuState();
 
     // Show the menu at the cursor position
@@ -1514,4 +1508,3 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
 
     qDebug() << "SpatialOverlayOpenGLWidget: Ungrouped" << selected_point_ids.size() << "points";
 }
-

@@ -12,9 +12,9 @@
 #include "Widgets/Common/widget_utilities.hpp"
 
 #include <QDebug>
+#include <QKeyEvent>
 #include <QMatrix4x4>
 #include <QMouseEvent>
-#include <QKeyEvent>
 #include <QOpenGLShaderProgram>
 #include <QRandomGenerator>
 #include <QToolTip>
@@ -54,7 +54,11 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     // Setup tooltip timer
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
-    connect(_tooltip_timer, &QTimer::timeout, this, &ScatterPlotOpenGLWidget::handleTooltipTimer);
+    connect(_tooltip_timer, &QTimer::timeout, this, &ScatterPlotOpenGLWidget::_handleTooltipTimer);
+
+    _tooltip_refresh_timer = new QTimer(this);
+    _tooltip_refresh_timer->setInterval(100);// Refresh every 100ms to keep tooltip visible
+    connect(_tooltip_refresh_timer, &QTimer::timeout, this, &ScatterPlotOpenGLWidget::_handleTooltipRefresh);
 
     // FPS limiter timer (30 FPS = ~33ms interval)
     _fps_limiter_timer = new QTimer(this);
@@ -64,9 +68,12 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
         if (_pending_update) {
             _pending_update = false;
             update();
+            emit highlightStateChanged();
         }
     });
     _pending_update = false;
+
+    _data_bounds = BoundingBox(0.0f, 0.0f, 0.0f, 0.0f);
 
     _zoom_level_x = 1.0f;
     _zoom_level_y = 1.0f;
@@ -81,6 +88,32 @@ ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() {
     makeCurrent();
     _scatter_visualization.reset();
     doneCurrent();
+}
+
+void ScatterPlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
+    _group_manager = group_manager;
+
+    // Connect to group manager signals to handle updates
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::pointAssignmentsChanged,
+                this, [this](std::unordered_set<int> const & affected_groups) {
+                    Q_UNUSED(affected_groups)
+                    // Refresh visualization data for all point visualizations
+                    _scatter_visualization->refreshGroupRenderData();
+                    update();// Trigger a repaint
+                });
+
+        connect(_group_manager, &GroupManager::groupModified,
+                this, [this](int group_id) {
+                    Q_UNUSED(group_id)
+                    // Color changes don't require vertex data refresh, just re-render
+                    update();
+                });
+    }
+
+    if (_scatter_visualization) {
+        _scatter_visualization->setGroupManager(group_manager);
+    }
 }
 
 void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
@@ -145,14 +178,6 @@ void ScatterPlotOpenGLWidget::setAxisLabels(QString const & x_label, QString con
     }
 }
 
-void ScatterPlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
-    _group_manager = group_manager;
-
-    if (_scatter_visualization) {
-        _scatter_visualization->setGroupManager(group_manager);
-    }
-}
-
 void ScatterPlotOpenGLWidget::setPointSize(float point_size) {
     _point_size = point_size;
 
@@ -160,17 +185,10 @@ void ScatterPlotOpenGLWidget::setPointSize(float point_size) {
         //_scatter_visualization->setPointSize(point_size); // TODO
     }
 
-    update();
+    requestThrottledUpdate();
 }
 
-void ScatterPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
-    _tooltips_enabled = enabled;
-
-    if (!_tooltips_enabled) {
-        _tooltip_timer->stop();
-        QToolTip::hideText();
-    }
-}
+//========== OpenGL Initialization ==========
 
 void ScatterPlotOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
@@ -231,6 +249,21 @@ void ScatterPlotOpenGLWidget::resizeGL(int width, int height) {
     updateProjectionMatrix();
 }
 
+//========== View and MVP Matrices ==========
+
+
+QVector2D ScatterPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
+    // Convert screen to NDC
+    float x_ndc = (2.0f * screen_pos.x()) / std::max(1, width()) - 1.0f;
+    float y_ndc = 1.0f - (2.0f * screen_pos.y()) / std::max(1, height());
+
+    // Invert full MVP (model is identity)
+    QMatrix4x4 mvp = _projection_matrix * _view_matrix * _model_matrix;
+    QMatrix4x4 inv = mvp.inverted();
+    QVector4D world4 = inv * QVector4D(x_ndc, y_ndc, 0.0f, 1.0f);
+    return QVector2D(world4.x(), world4.y());
+}
+
 void ScatterPlotOpenGLWidget::updateProjectionMatrix() {
     qDebug() << "ScatterPlotOpenGLWidget::updateProjectionMatrix called";
     _model_matrix.setToIdentity();
@@ -265,6 +298,8 @@ void ScatterPlotOpenGLWidget::updateProjectionMatrix() {
     float half_h = 0.5f * h_world;
     emit viewBoundsChanged(cx - half_w, cx + half_w, cy - half_h, cy + half_h);
 }
+
+//========== Mouse Events ==========
 
 void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     qDebug() << "ScatterPlotOpenGLWidget::mousePressEvent called at" << event->pos();
@@ -354,7 +389,18 @@ void ScatterPlotOpenGLWidget::keyPressEvent(QKeyEvent * event) {
     event->accept();
 }
 
-void ScatterPlotOpenGLWidget::handleTooltipTimer() {
+//========== Tooltips ==========
+
+void ScatterPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
+    _tooltips_enabled = enabled;
+
+    if (!_tooltips_enabled) {
+        _tooltip_timer->stop();
+        QToolTip::hideText();
+    }
+}
+
+void ScatterPlotOpenGLWidget::_handleTooltipTimer() {
     if (!_tooltips_enabled || !_scatter_visualization) {
         return;
     }
@@ -366,26 +412,15 @@ void ScatterPlotOpenGLWidget::handleTooltipTimer() {
     // For now, show a basic tooltip
 }
 
-QVector2D ScatterPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
-    // Convert screen to NDC
-    float x_ndc = (2.0f * screen_pos.x()) / std::max(1, width()) - 1.0f;
-    float y_ndc = 1.0f - (2.0f * screen_pos.y()) / std::max(1, height());
-
-    // Invert full MVP (model is identity)
-    QMatrix4x4 mvp = _projection_matrix * _view_matrix * _model_matrix;
-    QMatrix4x4 inv = mvp.inverted();
-    QVector4D world4 = inv * QVector4D(x_ndc, y_ndc, 0.0f, 1.0f);
-    return QVector2D(world4.x(), world4.y());
-}
-
-void ScatterPlotOpenGLWidget::handleMouseHover(QPoint const & pos) {
-    if (!_tooltips_enabled) {
+void ScatterPlotOpenGLWidget::_handleTooltipRefresh() {
+    if (!_tooltips_enabled || !_scatter_visualization) {
+        _tooltip_refresh_timer->stop();
         return;
     }
 
-    _tooltip_mouse_pos = pos;
-    _tooltip_timer->start(TOOLTIP_DELAY_MS);
+    _handleTooltipTimer();
 }
+
 
 void ScatterPlotOpenGLWidget::calculateDataBounds() {
     if (_x_data.empty() || _y_data.empty()) {
@@ -409,8 +444,8 @@ void ScatterPlotOpenGLWidget::calculateDataBounds() {
     float padding_x = (max_x - min_x) * 0.1f;
     float padding_y = (max_y - min_y) * 0.1f;
 
-    _data_bounds = BoundingBox(min_x - padding_x, min_y - padding_y, 
-                              max_x + padding_x, max_y + padding_y);
+    _data_bounds = BoundingBox(min_x - padding_x, min_y - padding_y,
+                               max_x + padding_x, max_y + padding_y);
     _data_bounds_valid = true;
 }
 
@@ -431,9 +466,9 @@ void ScatterPlotOpenGLWidget::computeCameraWorldView(float & center_x,
                                                      float & center_y,
                                                      float & world_width,
                                                      float & world_height) const {
-    compute_camera_world_view(_data_bounds, _zoom_level_x, _zoom_level_y, 
-                             _pan_offset_x, _pan_offset_y, _padding_factor, 
-                             center_x, center_y, world_width, world_height);
+    compute_camera_world_view(_data_bounds, _zoom_level_x, _zoom_level_y,
+                              _pan_offset_x, _pan_offset_y, _padding_factor,
+                              center_x, center_y, world_width, world_height);
 }
 
 void ScatterPlotOpenGLWidget::requestThrottledUpdate() {
@@ -442,7 +477,7 @@ void ScatterPlotOpenGLWidget::requestThrottledUpdate() {
     if (!_fps_limiter_timer->isActive()) {
         // If timer is not running, update immediately and start timer
         qDebug() << "ScatterPlotOpenGLWidget::requestThrottledUpdate: Updating immediately";
-        emit highlightStateChanged(); // Same as SpatialOverlayOpenGLWidget::requestThrottledUpdate
+        emit highlightStateChanged();// Same as SpatialOverlayOpenGLWidget::requestThrottledUpdate
         update();
         _fps_limiter_timer->start();
     } else {

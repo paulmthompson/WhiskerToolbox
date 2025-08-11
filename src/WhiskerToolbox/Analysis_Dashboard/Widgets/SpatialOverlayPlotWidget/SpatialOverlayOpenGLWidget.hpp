@@ -25,11 +25,11 @@
 #include <vector>
 
 class PointData;
-class PointDataVisualization;
+struct PointDataVisualization;
 class MaskData;
-class MaskDataVisualization;
+struct MaskDataVisualization;
 class LineData;
-class LineDataVisualization;
+struct LineDataVisualization;
 class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;

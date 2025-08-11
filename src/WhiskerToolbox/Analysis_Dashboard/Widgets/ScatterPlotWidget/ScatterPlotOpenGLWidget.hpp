@@ -114,7 +114,12 @@ private slots:
     /**
      * @brief Handle tooltip timer timeout
      */
-    void handleTooltipTimer();
+    void _handleTooltipTimer();
+
+    /**
+     * @brief Handle tooltip refresh timer timeout
+     */
+    void _handleTooltipRefresh();
 
 private:
   // Grant adapter access to private state for interaction
@@ -156,8 +161,8 @@ private:
 
     // Tooltip system
     QTimer * _tooltip_timer;
+    QTimer * _tooltip_refresh_timer;
     QPoint _tooltip_mouse_pos;
-    static constexpr int TOOLTIP_DELAY_MS = 500;
 
     // FPS limiter timer (30 FPS = ~33ms interval)
     QTimer * _fps_limiter_timer;
@@ -182,12 +187,6 @@ private:
      * @return World position
      */
     QVector2D screenToWorld(QPoint const & screen_pos) const;
-
-    /**
-     * @brief Handle mouse hover for tooltips
-     * @param pos Mouse position
-     */
-    void handleMouseHover(QPoint const & pos);
 
     /**
      * @brief Calculate the current orthographic projection bounds based on data
