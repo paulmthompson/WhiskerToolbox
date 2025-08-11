@@ -28,12 +28,10 @@
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     : _opengl_resources_initialized(false),
-      _zoom_level(1.0f),
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
       _point_size(8.0f),
       _line_width(2.0f),
-      _is_panning(false),
       _data_bounds_valid(false),
       _tooltips_enabled(true),
       _pending_update(false),
@@ -469,7 +467,6 @@ void SpatialOverlayOpenGLWidget::resetView() {
     // Reset zoom and pan to defaults
     _zoom_level_x = 1.0f;
     _zoom_level_y = 1.0f;
-    _zoom_level = 1.0f;
     _pan_offset_x = 0.0f;
     _pan_offset_y = 0.0f;
     
@@ -760,8 +757,6 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
                _selection_handler);
 
     if (!(_interaction && _interaction->handleMouseMove(event))) {
-        // Stop panning if button was released
-        _is_panning = false;
 
         if (_last_mouse_pos == _current_mouse_pos) {
             return;
@@ -1056,27 +1051,40 @@ float SpatialOverlayOpenGLWidget::calculateWorldTolerance(float screen_tolerance
 
 
 void SpatialOverlayOpenGLWidget::updateViewMatrices() {
-    // Update projection matrix for current aspect ratio
-    _projection_matrix.setToIdentity();
+    // Build clear M, V, P matrices
+    _model_matrix.setToIdentity();
 
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
-
-    if (left == right || bottom == top) {
-        qDebug() << "SpatialOverlayOpenGLWidget: updateViewMatrices - invalid projection bounds";
+    if (!_data_bounds_valid || width() <= 0 || height() <= 0) {
+        _projection_matrix.setToIdentity();
+        _view_matrix.setToIdentity();
         return;
     }
 
+    // Compute camera center and world-space visible extents
+    float cx, cy, w_world, h_world;
+    computeCameraWorldView(cx, cy, w_world, h_world);
+
+    // View matrix encodes pan/zoom: V = S * T(-center)
+    _view_matrix.setToIdentity();
+    float aspect = static_cast<float>(width()) / std::max(1, height());
+    float scale_x = (w_world > 0.0f) ? ((2.0f * aspect) / w_world) : 1.0f;
+    float scale_y = (h_world > 0.0f) ? (2.0f / h_world) : 1.0f;
+    // Order matters: m = S * T so that final mapping is correct with our orthographic P
+    _view_matrix.scale(scale_x, scale_y, 1.0f);
+    _view_matrix.translate(-cx, -cy, 0.0f);
+
+    // Projection handles aspect only. Choose unit vertical span = 2, horizontal = 2*aspect
+    _projection_matrix.setToIdentity();
+    float left = -aspect;
+    float right = aspect;
+    float bottom = -1.0f;
+    float top = 1.0f;
     _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
 
-    // Update view matrix (identity for now, transformations handled in projection)
-    _view_matrix.setToIdentity();
-
-    // Update model matrix (identity for now)
-    _model_matrix.setToIdentity();
-
-    // Emit current bounds for external UI
-    emit viewBoundsChanged(left, right, bottom, top);
+    // Emit the current visible world bounds for external UI, computed consistently
+    float half_w = w_world * 0.5f;
+    float half_h = h_world * 0.5f;
+    emit viewBoundsChanged(cx - half_w, cx + half_w, cy - half_h, cy + half_h);
 }
 
 void SpatialOverlayOpenGLWidget::renderPoints() {
@@ -1161,35 +1169,39 @@ void SpatialOverlayOpenGLWidget::calculateProjectionBounds(float & left, float &
         return;
     }
 
-    // Calculate orthographic projection bounds (same logic as updateViewMatrices)
-    float data_width = _data_max_x - _data_min_x;
-    float data_height = _data_max_y - _data_min_y;
-    float center_x = (_data_min_x + _data_max_x) * 0.5f;
-    float center_y = (_data_min_y + _data_max_y) * 0.5f;
+    float cx, cy, w_world, h_world;
+    computeCameraWorldView(cx, cy, w_world, h_world);
+    left = cx - 0.5f * w_world;
+    right = cx + 0.5f * w_world;
+    bottom = cy - 0.5f * h_world;
+    top = cy + 0.5f * h_world;
+}
 
-    // Add padding and apply zoom
-    float padding = _padding_factor;// 10% padding
-    float zoom_factor_x = 1.0f / _zoom_level_x;
-    float zoom_factor_y = 1.0f / _zoom_level_y;
-    float half_width = (data_width * padding * zoom_factor_x) / 2.0f;
-    float half_height = (data_height * padding * zoom_factor_y) / 2.0f;
+void SpatialOverlayOpenGLWidget::computeCameraWorldView(float & center_x,
+                                                        float & center_y,
+                                                        float & world_width,
+                                                        float & world_height) const {
+    // Base on data bounds and current per-axis zoom and pan offsets
+    float data_width = std::max(1e-6f, _data_max_x - _data_min_x);
+    float data_height = std::max(1e-6f, _data_max_y - _data_min_y);
+    float cx0 = (_data_min_x + _data_max_x) * 0.5f;
+    float cy0 = (_data_min_y + _data_max_y) * 0.5f;
 
-    // Apply aspect ratio correction
-    float aspect_ratio = static_cast<float>(width()) / height();
-    if (aspect_ratio > 1.0f) {
-        half_width *= aspect_ratio;
-    } else {
-        half_height /= aspect_ratio;
-    }
+    // Padding applies when computing view extents
+    float padding = _padding_factor;
 
-    // Apply pan offset
-    float pan_x = _pan_offset_x * data_width * zoom_factor_x;
-    float pan_y = _pan_offset_y * data_height * zoom_factor_y;
+    // Visible extents in world units (no aspect correction here; handled by P)
+    float half_w = 0.5f * (data_width * padding) / std::max(1e-6f, _zoom_level_x);
+    float half_h = 0.5f * (data_height * padding) / std::max(1e-6f, _zoom_level_y);
 
-    left = center_x - half_width + pan_x;
-    right = center_x + half_width + pan_x;
-    bottom = center_y - half_height + pan_y;
-    top = center_y + half_height + pan_y;
+    // Apply pan offsets in world units
+    float pan_x_world = _pan_offset_x * (data_width / std::max(1e-6f, _zoom_level_x));
+    float pan_y_world = _pan_offset_y * (data_height / std::max(1e-6f, _zoom_level_y));
+
+    center_x = cx0 + pan_x_world;
+    center_y = cy0 + pan_y_world;
+    world_width = 2.0f * half_w;
+    world_height = 2.0f * half_h;
 }
 
 void SpatialOverlayOpenGLWidget::processHoverDebounce() {

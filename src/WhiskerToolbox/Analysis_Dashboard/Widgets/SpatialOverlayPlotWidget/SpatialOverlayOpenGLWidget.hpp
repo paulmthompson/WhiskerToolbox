@@ -285,10 +285,11 @@ private:
     bool _opengl_resources_initialized;
 
     // View parameters
-    float _zoom_level;
     float _zoom_level_x; // per-axis zoom (X)
     float _zoom_level_y; // per-axis zoom (Y)
     float _pan_offset_x, _pan_offset_y;
+    float _center_x = 0.0f; // camera center (world units)
+    float _center_y = 0.0f; // camera center (world units)
     float _point_size;
     float _line_width;
     QMatrix4x4 _projection_matrix;
@@ -296,8 +297,6 @@ private:
     QMatrix4x4 _model_matrix;
     float _padding_factor; // view padding factor (default 1.1)
 
-    // Interaction state (legacy pan removed; controller manages state)
-    bool _is_panning;
     QPoint _last_mouse_pos;
     QPoint _current_mouse_pos;
     QTimer * _tooltip_timer;
@@ -463,6 +462,21 @@ private:
     bool forceContextCreation();
 
 private:
+        /**
+         * @brief Compute camera center and visible world extents for current view
+         *
+         * Derives the world-space camera center and the visible world width/height
+         * from current data bounds, padding, per-axis zoom and normalized pan offsets.
+         * Aspect ratio corrections are applied in the same way as rendering, ensuring
+         * that the returned values exactly match the visible region.
+         *
+         * @pre _data_bounds_valid must be true and widget size positive
+         * @post On success, outputs are populated with center and extents in world units
+         */
+        void computeCameraWorldView(float & center_x,
+                                    float & center_y,
+                                    float & world_width,
+                                    float & world_height) const;
     /**
      * @brief Try to create OpenGL context with specified version
      * @param major Major version number
