@@ -36,6 +36,7 @@ class LineSelectionHandler;
 class NoneSelectionHandler;
 class GroupManager;
 class SpatialOverlayViewAdapter; // adapter (friend)
+class QKeyEvent;
 
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
@@ -46,8 +47,6 @@ class SpatialOverlayOpenGLWidget : public QOpenGLWidget, protected QOpenGLFuncti
 public:
     explicit SpatialOverlayOpenGLWidget(QWidget * parent = nullptr);
     ~SpatialOverlayOpenGLWidget() override;
-
-
 
     /**
      * @brief Reset view to fit all data (zoom and pan to defaults)
@@ -96,6 +95,12 @@ public:
      * @brief Show all hidden items across all datasets
      */
     void showAllItemsAllDatasets();
+
+    /**
+     * @brief Public method to handle key press events from external sources
+     * @param event The key event to handle
+     */
+    void handleKeyPress(QKeyEvent* event);
 
     /**
      * @brief Convert screen coordinates to world coordinates

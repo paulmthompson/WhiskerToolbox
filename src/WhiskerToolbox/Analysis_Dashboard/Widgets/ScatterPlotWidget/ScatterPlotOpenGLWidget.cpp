@@ -14,6 +14,7 @@
 #include <QDebug>
 #include <QMatrix4x4>
 #include <QMouseEvent>
+#include <QKeyEvent>
 #include <QOpenGLShaderProgram>
 #include <QRandomGenerator>
 #include <QToolTip>
@@ -24,7 +25,7 @@
 
 ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     : _group_manager(nullptr),
-      _point_size(3.0f),
+      _point_size(8.0f),
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
       _tooltips_enabled(true),
@@ -33,13 +34,22 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
       _data_bounds_valid(false),
       _selection_mode(SelectionMode::PointSelection) {
 
-    // Ensure the widget receives continuous mouse move and wheel events
+    if (parent) setParent(parent);
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
 
     try_create_opengl_context_with_version(this, 4, 1);
 
     _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// Use fixed tolerance initially
+
+    /*
+    std::visit([this](auto & handler) {
+        if (handler) {
+            handler->setNotificationCallback([this]() { makeSelection(); });
+        }
+    },
+               _selection_handler);
+               */
 
     // Setup tooltip timer
     _tooltip_timer = new QTimer(this);
@@ -58,14 +68,6 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     });
     _pending_update = false;
 
-    // Configure paint behavior for embedding inside QGraphicsProxyWidget
-    if (parent) setParent(parent);
-    setAttribute(Qt::WA_AlwaysStackOnTop, false);
-    setAttribute(Qt::WA_OpaquePaintEvent, true);
-    setAttribute(Qt::WA_NoSystemBackground, true);
-    setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
-
-    // Initialize standardized interaction state
     _zoom_level_x = 1.0f;
     _zoom_level_y = 1.0f;
     _padding_factor = 1.1f;
@@ -344,6 +346,12 @@ void ScatterPlotOpenGLWidget::leaveEvent(QEvent * event) {
     _tooltip_timer->stop();
     QToolTip::hideText();
     if (_interaction) _interaction->handleLeave();
+}
+
+void ScatterPlotOpenGLWidget::keyPressEvent(QKeyEvent * event) {
+    qDebug() << "ScatterPlotOpenGLWidget::keyPressEvent - Key:" << event->key() << "Text:" << event->text();
+
+    event->accept();
 }
 
 void ScatterPlotOpenGLWidget::handleTooltipTimer() {

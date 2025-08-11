@@ -2,6 +2,8 @@
 
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
+#include <QKeyEvent>
+
 
 AbstractPlotWidget::AbstractPlotWidget(QGraphicsItem * parent)
     : QGraphicsWidget(parent) {
@@ -73,6 +75,12 @@ void AbstractPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
 
     // Call parent implementation for standard behavior (dragging, etc.)
     QGraphicsWidget::mousePressEvent(event);
+}
+
+void AbstractPlotWidget::handleKeyPress(QKeyEvent* event) {
+    qDebug() << "AbstractPlotWidget::handleKeyPress - Public method called for key:" << event->key();
+    // Simply call the protected keyPressEvent method
+    keyPressEvent(event);
 }
 
 AbstractPlotParameters & AbstractPlotWidget::getParameters() {

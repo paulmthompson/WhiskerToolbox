@@ -421,6 +421,10 @@ bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
                 return true; // Event handled
             }
         }
+        
+        // For all other keys, let them pass through to the focused widget
+        qDebug() << "MainWindow::eventFilter - Passing key through to focused widget";
+        return false;
     }
     
     // For all other events, let them be handled normally

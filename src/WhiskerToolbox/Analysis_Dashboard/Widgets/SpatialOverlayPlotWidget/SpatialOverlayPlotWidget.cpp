@@ -100,6 +100,24 @@ void SpatialOverlayPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event)
     }
 }
 
+void SpatialOverlayPlotWidget::keyPressEvent(QKeyEvent * event) {
+    qDebug() << "SpatialOverlayPlotWidget::keyPressEvent - Key:" << event->key() << "Text:" << event->text();
+    
+    // Forward key events to the OpenGL widget
+    if (_opengl_widget) {
+        qDebug() << "SpatialOverlayPlotWidget::keyPressEvent - Forwarding to OpenGL widget";
+        _opengl_widget->handleKeyPress(event);
+        qDebug() << "SpatialOverlayPlotWidget::keyPressEvent - Public handleKeyPress call completed";
+        return; // Event was handled by OpenGL widget
+    } else {
+        qDebug() << "SpatialOverlayPlotWidget::keyPressEvent - No OpenGL widget available";
+    }
+    
+    // If not handled by OpenGL widget, let parent handle it
+    qDebug() << "SpatialOverlayPlotWidget::keyPressEvent - Calling parent implementation";
+    AbstractPlotWidget::keyPressEvent(event);
+}
+
 void SpatialOverlayPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
     AbstractPlotWidget::resizeEvent(event);
 

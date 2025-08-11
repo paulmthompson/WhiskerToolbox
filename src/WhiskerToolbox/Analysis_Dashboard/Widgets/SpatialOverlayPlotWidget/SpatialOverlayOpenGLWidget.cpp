@@ -46,10 +46,8 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
 
     try_create_opengl_context_with_version(this, 4, 3);
 
-    // Initialize selection handler after widget setup
     _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// Use fixed tolerance initially
 
-    // Ensure selection notifications are wired for the default handler/mode
     std::visit([this](auto & handler) {
         if (handler) {
             handler->setNotificationCallback([this]() { makeSelection(); });
@@ -98,7 +96,6 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &SpatialOverlayOpenGLWidget::mouseWorldMoved);
 
     _initializeContextMenu();
-
 }
 
 SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
@@ -373,8 +370,8 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     float padding_x = (max_x - min_x) * 0.1f;
     float padding_y = (max_y - min_y) * 0.1f;
 
-    _data_bounds = BoundingBox(min_x - padding_x, min_y - padding_y, 
-                              max_x + padding_x, max_y + padding_y);
+    _data_bounds = BoundingBox(min_x - padding_x, min_y - padding_y,
+                               max_x + padding_x, max_y + padding_y);
     _data_bounds_valid = true;
 }
 
@@ -431,14 +428,13 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
 //========== View and Interaction ==========
 
 
-
 void SpatialOverlayOpenGLWidget::resetView() {
     // Reset zoom and pan to defaults
     _zoom_level_x = 1.0f;
     _zoom_level_y = 1.0f;
     _pan_offset_x = 0.0f;
     _pan_offset_y = 0.0f;
-    
+
     // Update view matrices and trigger render
     updateViewMatrices();
     requestThrottledUpdate();
@@ -669,19 +665,15 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     std::visit([this, event, world_pos](auto & handler) {
         if (handler) {
             handler->mousePressEvent(event, world_pos);
-            if (_selection_mode == SelectionMode::PointSelection) {
-                // For click-based selection, apply immediately on press
-                makeSelection();
-            }
         }
     },
                _selection_handler);
 
+    if (_interaction) {
+        _interaction->handleMousePress(event);
+    }
+
     if (event->button() == Qt::LeftButton) {
-        // Regular left click - start panning (if not in polygon or line selection mode)
-        if (_selection_mode != SelectionMode::PolygonSelection && _selection_mode != SelectionMode::LineIntersection) {
-            if (_interaction && _interaction->handleMousePress(event)) return;
-        }
         event->accept();
     } else if (event->button() == Qt::RightButton) {
         // Accept right click so we get the corresponding mouseReleaseEvent
@@ -858,39 +850,32 @@ void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
 }
 
 void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
-    if (event->key() == Qt::Key_Escape) {
-        std::visit([event](auto & handler) {
-            if (handler) {
-                handler->keyPressEvent(event);
-            }
-        },
-                   _selection_handler);
+    qDebug() << "SpatialOverlayOpenGLWidget::keyPressEvent - Key:" << event->key() << "Text:" << event->text();
 
-        requestThrottledUpdate();
-        event->accept();
-        return;
-    } else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
-        // Forward Enter/Return to selection handler (used to complete polygon selection)
-        std::visit([event](auto & handler) {
-            if (handler) {
-                handler->keyPressEvent(event);
-            }
-        },
-                   _selection_handler);
+    std::visit([event](auto & handler) {
+        if (handler) {
+            handler->keyPressEvent(event);
+        }
+    },
+               _selection_handler);
 
-        requestThrottledUpdate();
-        event->accept();
-        return;
-    } else if (event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace) {
+    if (event->key() == Qt::Key_Escape || event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace) {
         if (getTotalSelectedPoints() > 0) {
             clearSelection();
-            event->accept();
-            return;
         }
     }
 
-    // Let parent handle other keys
-    QOpenGLWidget::keyPressEvent(event);
+    //if (_interaction) {
+    //    _interaction->handleKeyPress(event);
+    //}
+
+    event->accept();
+}
+
+void SpatialOverlayOpenGLWidget::handleKeyPress(QKeyEvent* event) {
+    qDebug() << "SpatialOverlayOpenGLWidget::handleKeyPress - Public method called for key:" << event->key();
+    // Simply call the protected keyPressEvent method
+    keyPressEvent(event);
 }
 
 void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
@@ -1149,9 +1134,9 @@ void SpatialOverlayOpenGLWidget::computeCameraWorldView(float & center_x,
                                                         float & center_y,
                                                         float & world_width,
                                                         float & world_height) const {
-    compute_camera_world_view(_data_bounds, _zoom_level_x, _zoom_level_y, 
-                             _pan_offset_x, _pan_offset_y, _padding_factor, 
-                             center_x, center_y, world_width, world_height);
+    compute_camera_world_view(_data_bounds, _zoom_level_x, _zoom_level_y,
+                              _pan_offset_x, _pan_offset_y, _padding_factor,
+                              center_x, center_y, world_width, world_height);
 }
 
 void SpatialOverlayOpenGLWidget::processHoverDebounce() {
@@ -1303,22 +1288,22 @@ void SpatialOverlayOpenGLWidget::_initializeContextMenu() {
 
 
     _assignGroupMenu = _contextMenu->addMenu("Assign to Group");
-    
+
     // Add the persistent "Create New Group" action
     _assignGroupMenu->addAction(_actionCreateNewGroup);
     _assignGroupMenu->addSeparator();
 
     // Dynamic group actions will be inserted here by updateDynamicGroupActions()
-    
+
     // Add ungroup action
     _contextMenu->addAction(_actionUngroupSelected);
     _contextMenu->addSeparator();
-    
+
     // Add hide selected action
     _contextMenu->addAction(_actionHideSelected);
-    
+
     // Add show all submenu
-    QMenu* showAllMenu = _contextMenu->addMenu("Show All");
+    QMenu * showAllMenu = _contextMenu->addMenu("Show All");
     showAllMenu->addAction(_actionShowAllCurrent);
     showAllMenu->addAction(_actionShowAllDatasets);
 }
@@ -1327,13 +1312,13 @@ void SpatialOverlayOpenGLWidget::_updateContextMenuState() {
     size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
     bool has_selection = total_selected > 0;
     bool has_group_manager = _group_manager != nullptr;
-    
+
     // Show/hide sections based on current state
     _assignGroupMenu->menuAction()->setVisible(has_selection && has_group_manager);
     _actionUngroupSelected->setVisible(has_selection && has_group_manager);
     _actionHideSelected->setVisible(has_selection);
     _actionHideSelected->setText(QString("Hide Selected (%1 items)").arg(total_selected));
-    
+
     // Update dynamic group actions
     _updateDynamicGroupActions();
 }

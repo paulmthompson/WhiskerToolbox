@@ -19,6 +19,7 @@
 class ScatterPlotVisualization;
 class GroupManager;
 class ScatterPlotViewAdapter; // adapter (friend)
+class QKeyEvent;
 
 /**
  * @brief OpenGL widget for rendering scatter plot data with high performance
@@ -106,6 +107,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
     void leaveEvent(QEvent * event) override;
+    void keyPressEvent(QKeyEvent * event) override;
 
 
 private slots:
