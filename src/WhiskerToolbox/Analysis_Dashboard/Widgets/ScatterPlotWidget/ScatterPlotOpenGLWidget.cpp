@@ -1,7 +1,13 @@
 #include "ScatterPlotOpenGLWidget.hpp"
 
-
+#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
+#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
 #include "Groups/GroupManager.hpp"
+#include "ScatterPlotViewAdapter.hpp"
+#include "Selection/LineSelectionHandler.hpp"
+#include "Selection/NoneSelectionHandler.hpp"
+#include "Selection/PointSelectionHandler.hpp"
+#include "Selection/PolygonSelectionHandler.hpp"
 #include "Visualizers/Points/ScatterPlotVisualization.hpp"
 
 #include <QDebug>
@@ -11,18 +17,15 @@
 #include <QRandomGenerator>
 #include <QToolTip>
 #include <QWheelEvent>
+
 #include <algorithm>
-#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
-#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
-#include "ScatterPlotViewAdapter.hpp"
+
 
 ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
-    :
-      _group_manager(nullptr),
+    : _group_manager(nullptr),
       _point_size(3.0f),
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
-      _dragging(false),
       _tooltips_enabled(true),
       _opengl_resources_initialized(false),
       _data_min_x(0.0f),
@@ -30,11 +33,13 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
       _data_min_y(0.0f),
       _data_max_y(1.0f),
       _data_bounds_valid(false),
-      _is_panning(false) {
-    
+      _selection_mode(SelectionMode::PointSelection) {
+
     // Ensure the widget receives continuous mouse move and wheel events
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
+
+    _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// Use fixed tolerance initially
 
     // Setup tooltip timer
     _tooltip_timer = new QTimer(this);
@@ -57,7 +62,7 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     QSurfaceFormat format;
     format.setVersion(4, 1);
     format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSamples(4); // Enable multisampling for anti-aliasing
+    format.setSamples(4);// Enable multisampling for anti-aliasing
     setFormat(format);
 
     // Configure paint behavior for embedding inside QGraphicsProxyWidget
@@ -83,11 +88,11 @@ ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() {
     doneCurrent();
 }
 
-void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data, 
-                                            std::vector<float> const & y_data) {
-    qDebug() << "ScatterPlotOpenGLWidget::setScatterData called with" 
+void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
+                                             std::vector<float> const & y_data) {
+    qDebug() << "ScatterPlotOpenGLWidget::setScatterData called with"
              << x_data.size() << "x points and" << y_data.size() << "y points";
-             
+
     if (x_data.size() != y_data.size()) {
         qDebug() << "ScatterPlotOpenGLWidget::setScatterData: X and Y data vectors must have the same size";
         return;
@@ -105,18 +110,18 @@ void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
     // Calculate data bounds
     calculateDataBounds();
 
-    qDebug() << "ScatterPlotOpenGLWidget::setScatterData: Data bounds:" 
+    qDebug() << "ScatterPlotOpenGLWidget::setScatterData: Data bounds:"
              << _data_min_x << "," << _data_min_y << "to" << _data_max_x << "," << _data_max_y;
 
     qDebug() << "Creating ScatterPlotVisualization with" << x_data.size() << "points";
-    
+
     // Create new visualization with the data (using deferred initialization)
     _scatter_visualization = std::make_unique<ScatterPlotVisualization>(
-        "scatter_data",
-        x_data,
-        y_data,
-        _group_manager,
-        true  // defer_opengl_init = true
+            "scatter_data",
+            x_data,
+            y_data,
+            _group_manager,
+            true// defer_opengl_init = true
     );
 
     // If OpenGL is already initialized, initialize the visualization resources
@@ -135,7 +140,7 @@ void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
     updateProjectionMatrix();
 
     update();
-    
+
     qDebug() << "ScatterPlotOpenGLWidget::setScatterData completed, widget updated";
 }
 
@@ -147,7 +152,7 @@ void ScatterPlotOpenGLWidget::setAxisLabels(QString const & x_label, QString con
 
 void ScatterPlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
     _group_manager = group_manager;
-    
+
     if (_scatter_visualization) {
         _scatter_visualization->setGroupManager(group_manager);
     }
@@ -155,29 +160,17 @@ void ScatterPlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
 
 void ScatterPlotOpenGLWidget::setPointSize(float point_size) {
     _point_size = point_size;
-    
+
     if (_scatter_visualization) {
         //_scatter_visualization->setPointSize(point_size); // TODO
     }
-    
+
     update();
-}
-
-
-
-void ScatterPlotOpenGLWidget::setPanOffset(float offset_x, float offset_y) {
-    qDebug() << "ScatterPlotOpenGLWidget::setPanOffset called with" << offset_x << offset_y;
-    _pan_offset_x = offset_x;
-    _pan_offset_y = offset_y;
-    qDebug() << "ScatterPlotOpenGLWidget::setPanOffset: final pan_offset =" << _pan_offset_x << _pan_offset_y;
-    updateProjectionMatrix();
-    emit panOffsetChanged(_pan_offset_x, _pan_offset_y);
-    requestThrottledUpdate();
 }
 
 void ScatterPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
     _tooltips_enabled = enabled;
-    
+
     if (!_tooltips_enabled) {
         _tooltip_timer->stop();
         QToolTip::hideText();
@@ -186,11 +179,11 @@ void ScatterPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
 
 void ScatterPlotOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
-    
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_PROGRAM_POINT_SIZE);
-    
+
     // Set clear color
     glClearColor(0.95f, 0.95f, 0.95f, 1.0f);
 
@@ -228,17 +221,17 @@ void ScatterPlotOpenGLWidget::paintGL() {
 
     // Set up matrices consistently with SpatialOverlayOpenGLWidget
     QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-    
+
     qDebug() << "ScatterPlotOpenGLWidget::paintGL: Rendering with point size" << _point_size;
     qDebug() << "ScatterPlotOpenGLWidget::paintGL: Using projection matrix:" << _projection_matrix;
-    
+
     // Render the scatter plot visualization
     _scatter_visualization->render(mvp_matrix, _point_size);
 }
 
 void ScatterPlotOpenGLWidget::resizeGL(int width, int height) {
     glViewport(0, 0, width, height);
-    
+
     // Update projection matrix based on data bounds
     updateProjectionMatrix();
 }
@@ -280,56 +273,61 @@ void ScatterPlotOpenGLWidget::updateProjectionMatrix() {
 
 void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     qDebug() << "ScatterPlotOpenGLWidget::mousePressEvent called at" << event->pos();
-    
+
     if (_interaction && _interaction->handleMousePress(event)) {
         return;
     } else if (event->button() == Qt::LeftButton) {
-        _is_panning = true;
-        _dragging = true;
         _last_mouse_pos = event->pos();
         qDebug() << "ScatterPlotOpenGLWidget::mousePressEvent: Started panning";
-        
+
         // Check for point click
         if (_scatter_visualization) {
             QVector2D world_pos = screenToWorld(event->pos());
             // TODO: Implement point picking/selection
         }
     }
+    requestThrottledUpdate();
 }
 
 void ScatterPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     _current_mouse_pos = event->pos();
-    // Emit current mouse world coordinates
-    {
-        QVector2D world_pos = screenToWorld(event->pos());
-        emit mouseWorldMoved(world_pos.x(), world_pos.y());
-    }
-    
-    if (_interaction && _interaction->handleMouseMove(event)) {
-        return;
-    } else if (_is_panning && (event->buttons() & Qt::LeftButton)) {
-        qDebug() << "ScatterPlotOpenGLWidget::mouseMoveEvent: Panning from" << _last_mouse_pos << "to" << event->pos();
-        
-        // Handle panning
-        QPoint delta = event->pos() - _last_mouse_pos;
-        
-        // Convert screen delta to world delta (similar to SpatialOverlayOpenGLWidget)
-        float left, right, bottom, top;
-        calculateProjectionBounds(left, right, bottom, top);
-        float dx = delta.x() * ((right - left) / std::max(1, width()));
-        float dy = -delta.y() * ((top - bottom) / std::max(1, height()));
-        
-        qDebug() << "ScatterPlotOpenGLWidget::mouseMoveEvent: delta =" << delta << "dx =" << dx << "dy =" << dy;
-        
-        setPanOffset(_pan_offset_x + dx, _pan_offset_y + dy);
-        _last_mouse_pos = event->pos();
+    if (_interaction && _interaction->handleMouseMove(event)) return;
+
+    auto world_pos = screenToWorld(event->pos());
+    emit mouseWorldMoved(world_pos.x(), world_pos.y());
+    std::visit([event, world_pos](auto & handler) {
+        handler->mouseMoveEvent(event, world_pos);
+    },
+               _selection_handler);
+
+    if (!(_interaction && _interaction->handleMouseMove(event))) {
+        if (_last_mouse_pos == _current_mouse_pos) {
+            return;
+        } else {
+            qDebug() << "ScatterPlotOpenGLWidget: Mouse moved from"
+                     << _last_mouse_pos << "to" << _current_mouse_pos;
+        }
+
+        if (_tooltips_enabled) {
+            // Store the current mouse position for debounced processing
+            /*
+            _pending_hover_pos = _current_mouse_pos;
+
+            // If hover processing is currently active, skip this event
+            if (_hover_processing_active) {
+                qDebug() << "ScatterPlotOpenGLWidget: Skipping hover processing - already active";
+                return;
+            }
+
+            // Start or restart the debounce timer
+            _hover_debounce_timer->stop();
+            _hover_debounce_timer->start();
+
+            qDebug() << "ScatterPlotOpenGLWidget: Starting hover debounce timer for position" << _pending_hover_pos;
+        */
+        }
+        _last_mouse_pos = _current_mouse_pos;
         event->accept();
-    } else {
-        // Stop panning if button was released
-        _is_panning = false;
-        
-        // Handle hover for tooltips
-        handleMouseHover(event->pos());
     }
 }
 
@@ -337,9 +335,8 @@ void ScatterPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (_interaction && _interaction->handleMouseRelease(event)) {
         return;
     } else if (event->button() == Qt::LeftButton) {
-        _is_panning = false;
-        _dragging = false;
     }
+    requestThrottledUpdate();
 }
 
 void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
@@ -349,7 +346,7 @@ void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
 
 void ScatterPlotOpenGLWidget::leaveEvent(QEvent * event) {
     Q_UNUSED(event)
-    
+
     // Hide tooltip when mouse leaves widget
     _tooltip_timer->stop();
     QToolTip::hideText();
@@ -363,7 +360,7 @@ void ScatterPlotOpenGLWidget::handleTooltipTimer() {
 
     // Convert mouse position to world coordinates and check for point under cursor
     QVector2D world_pos = screenToWorld(_tooltip_mouse_pos);
-    
+
     // TODO: Implement proper point picking for tooltips
     // For now, show a basic tooltip
 }
@@ -431,9 +428,9 @@ void ScatterPlotOpenGLWidget::calculateProjectionBounds(float & left, float & ri
 }
 
 void ScatterPlotOpenGLWidget::computeCameraWorldView(float & center_x,
-                              float & center_y,
-                              float & world_width,
-                              float & world_height) const {
+                                                     float & center_y,
+                                                     float & world_width,
+                                                     float & world_height) const {
     float data_width = std::max(1e-6f, _data_max_x - _data_min_x);
     float data_height = std::max(1e-6f, _data_max_y - _data_min_y);
     float cx0 = (_data_min_x + _data_max_x) * 0.5f;
@@ -451,10 +448,11 @@ void ScatterPlotOpenGLWidget::computeCameraWorldView(float & center_x,
 
 void ScatterPlotOpenGLWidget::requestThrottledUpdate() {
     qDebug() << "ScatterPlotOpenGLWidget::requestThrottledUpdate called, timer active:" << _fps_limiter_timer->isActive();
-    
+
     if (!_fps_limiter_timer->isActive()) {
         // If timer is not running, update immediately and start timer
         qDebug() << "ScatterPlotOpenGLWidget::requestThrottledUpdate: Updating immediately";
+        emit highlightStateChanged(); // Same as SpatialOverlayOpenGLWidget::requestThrottledUpdate
         update();
         _fps_limiter_timer->start();
     } else {
@@ -463,5 +461,3 @@ void ScatterPlotOpenGLWidget::requestThrottledUpdate() {
         _pending_update = true;
     }
 }
-
-

@@ -1,11 +1,15 @@
 #ifndef SCATTERPLOTOPENGLWIDGET_HPP
 #define SCATTERPLOTOPENGLWIDGET_HPP
 
+#include "Selection/SelectionHandlers.hpp"
+#include "Selection/SelectionModes.hpp"
+#include "Widgets/Common/PlotInteractionController.hpp"
+
 #include <QMatrix4x4>
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLWidget>
 #include <QTimer>
-#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
+
 
 #include <memory>
 #include <vector>
@@ -58,18 +62,6 @@ public:
     float getPointSize() const { return _point_size; }
 
     /**
-     * @brief Set pan offset
-     * @param offset_x X offset in normalized coordinates
-     * @param offset_y Y offset in normalized coordinates
-     */
-    void setPanOffset(float offset_x, float offset_y);
-
-    /**
-     * @brief Get current pan offset
-     */
-    QVector2D getPanOffset() const { return QVector2D(_pan_offset_x, _pan_offset_y); }
-
-    /**
      * @brief Enable or disable tooltips
      * @param enabled Whether tooltips should be enabled
      */
@@ -110,6 +102,11 @@ signals:
      */
     void mouseWorldMoved(float world_x, float world_y);
 
+    /**
+     * @brief Emitted when the highlight state changes, requiring scene graph update
+     */
+    void highlightStateChanged();
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -140,6 +137,10 @@ private:
     std::vector<float> _x_data;
     std::vector<float> _y_data;
 
+    SelectionMode _selection_mode;// Current selection mode
+
+    SelectionVariant _selection_handler;
+
     // Data bounds for projection calculation
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
     bool _data_bounds_valid;
@@ -158,11 +159,9 @@ private:
     float _padding_factor;
 
     // Mouse interaction
-    bool _dragging;
     QPoint _last_mouse_pos;
     QPoint _current_mouse_pos;
     bool _tooltips_enabled;
-    bool _is_panning;  // Track panning state
 
     // Tooltip system
     QTimer * _tooltip_timer;
@@ -175,10 +174,6 @@ private:
 
   // Interaction controller (composition)
   std::unique_ptr<PlotInteractionController> _interaction;
-
-    // Box-zoom state
-    bool _box_zoom_active = false;
-    QPoint _rubber_origin;
 
     /**
      * @brief Update view and projection matrices based on current camera state

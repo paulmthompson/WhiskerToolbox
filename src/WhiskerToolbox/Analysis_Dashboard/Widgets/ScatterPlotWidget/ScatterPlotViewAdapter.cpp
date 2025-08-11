@@ -25,7 +25,8 @@ void ScatterPlotViewAdapter::getPan(float & pan_x, float & pan_y) const {
 }
 
 void ScatterPlotViewAdapter::setPan(float pan_x, float pan_y) {
-    _w->setPanOffset(pan_x, pan_y);
+    _w->_pan_offset_x = pan_x;
+    _w->_pan_offset_y = pan_y;
     requestUpdate();
 }
 

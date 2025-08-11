@@ -697,7 +697,6 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     }
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
 
-
     std::visit([this, event, world_pos](auto & handler) {
         if (handler) {
             handler->mousePressEvent(event, world_pos);

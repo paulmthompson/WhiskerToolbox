@@ -182,7 +182,6 @@ void SpatialOverlayPlotWidget::loadLineData() {
 void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     _opengl_widget = new SpatialOverlayOpenGLWidget();
     
-    // Configure OpenGL widget for better Linux compatibility
     _opengl_widget->setAttribute(Qt::WA_AlwaysStackOnTop, false);
     _opengl_widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
     _opengl_widget->setAttribute(Qt::WA_NoSystemBackground, true);
@@ -206,7 +205,6 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
     _opengl_widget->resize(content_rect.size().toSize());
     _proxy_widget->setGeometry(content_rect);
-
 
     // Connect signals
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::frameJumpRequested,
