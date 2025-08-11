@@ -220,15 +220,6 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
                 emit renderingPropertiesChanged();
             });
 
-
-
-    connect(_opengl_widget, &SpatialOverlayOpenGLWidget::panOffsetChanged,
-            this, [this](float, float) {
-                update();// Trigger graphics item update
-                emit renderUpdateRequested(getPlotId());
-                emit renderingPropertiesChanged();
-            });
-
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::tooltipsEnabledChanged,
             this, [this](bool) {
                 emit renderingPropertiesChanged();

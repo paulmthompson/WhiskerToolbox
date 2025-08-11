@@ -473,9 +473,6 @@ void SpatialOverlayOpenGLWidget::resetView() {
     _pan_offset_x = 0.0f;
     _pan_offset_y = 0.0f;
     
-    // Emit pan offset changed signal
-    emit panOffsetChanged(_pan_offset_x, _pan_offset_y);
-    
     // Update view matrices and trigger render
     updateViewMatrices();
     requestThrottledUpdate();

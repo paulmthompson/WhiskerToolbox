@@ -174,9 +174,7 @@ public:
 
     void applyTimeRangeFilter(int start_frame, int end_frame);
 
-
     void setGroupManager(GroupManager * group_manager);
-
 
 signals:
     /**
@@ -197,15 +195,6 @@ signals:
      * @param line_width The new line width in pixels
      */
     void lineWidthChanged(float line_width);
-
-
-
-    /**
-     * @brief Emitted when pan offset changes
-     * @param offset_x The new X pan offset
-     * @param offset_y The new Y pan offset
-     */
-    void panOffsetChanged(float offset_x, float offset_y);
 
     /**
      * @brief Emitted when tooltip enabled state changes
