@@ -269,6 +269,7 @@ void BasePlotOpenGLWidget::renderBackground() {
 void BasePlotOpenGLWidget::renderOverlays() {
     // Default implementation for selection highlights, hover effects, etc.
     // This can be enhanced later with common overlay rendering
+    requestThrottledUpdate();
 }
 
 void BasePlotOpenGLWidget::renderUI() {

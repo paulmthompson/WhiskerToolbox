@@ -9,22 +9,21 @@
 #include "Selection/LineSelectionHandler.hpp"
 #include "Selection/NoneSelectionHandler.hpp"
 
-// Include existing visualization structs
 #include "Visualizers/Points/PointDataVisualization.hpp"
 #include "Visualizers/Masks/MaskDataVisualization.hpp"
 #include "Visualizers/Lines/LineDataVisualization.hpp"
-
-// Forward declarations for data types - these need to be included/declared properly
-class PointData;
-class MaskData;
-class LineData;
 
 #include <QDebug>
 #include <QContextMenuEvent>
 #include <QMenu>
 #include <QAction>
+
 #include <algorithm>
 #include <limits>
+
+class PointData;
+class MaskData;
+class LineData;
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget* parent)
     : BasePlotOpenGLWidget(parent)
@@ -40,9 +39,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget* parent)
     qDebug() << "SpatialOverlayOpenGLWidget: Created with composition-based design";
 }
 
-SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
-    // Cleanup is handled by smart pointers and base class
-}
+SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() = default;
 
 void SpatialOverlayOpenGLWidget::initializeGL() {
     // Call base class initialization first
