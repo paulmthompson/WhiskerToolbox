@@ -84,6 +84,9 @@ protected:
 
     // Context menu support
     void contextMenuEvent(QContextMenuEvent* event) override;
+    
+    // Mouse events - override to add hover logic
+    void mouseMoveEvent(QMouseEvent* event) override;
 
 private slots:
     void onSelectionChanged(size_t total_selected);
@@ -117,6 +120,7 @@ private:
     void updateVisualizationData();
     void initializeContextMenu();
     void updateContextMenuState();
+    void ensureSelectionManager();
 
     friend class SpatialOverlayViewAdapter;
 };

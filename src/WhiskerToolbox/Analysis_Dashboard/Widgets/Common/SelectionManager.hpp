@@ -68,6 +68,7 @@ public:
     void clearSelection();
     void selectAll();
 
+
     // Group operations  
     void assignSelectedToNewGroup();
     void assignSelectedToGroup(int group_id);
@@ -83,6 +84,11 @@ public:
 
     // Hit testing for tooltips/hover
     std::optional<size_t> findPointNear(float world_x, float world_y, float tolerance) const;
+
+    // Get selection Adapter
+    SelectionDataAdapter* getDataAdapter() const {
+        return _data_adapter.get();
+    }
 
 signals:
     void selectionChanged(size_t total_selected);

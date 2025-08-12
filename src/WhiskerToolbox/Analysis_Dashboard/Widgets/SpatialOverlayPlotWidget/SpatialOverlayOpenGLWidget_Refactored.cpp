@@ -79,13 +79,8 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
     // Calculate bounds
     calculateDataBounds();
 
-    // Create selection manager with appropriate adapter
-    if (!_selection_manager) {
-        _selection_manager = createSelectionManager();
-        if (_selection_manager && _group_manager) {
-            _selection_manager->setGroupManager(_group_manager);
-        }
-    }
+    // Ensure selection manager is created/updated
+    ensureSelectionManager();
 
     requestThrottledUpdate();
 }
@@ -111,6 +106,10 @@ void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::sh
     }
 
     calculateDataBounds();
+    
+    // Ensure selection manager is created/updated
+    ensureSelectionManager();
+    
     requestThrottledUpdate();
 }
 
@@ -135,6 +134,10 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
     }
 
     calculateDataBounds();
+    
+    // Ensure selection manager is created/updated
+    ensureSelectionManager();
+    
     requestThrottledUpdate();
 }
 
@@ -187,18 +190,69 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
 }
 
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
-    // TODO: Implement by querying visualization or selection manager
-    return 0;
+    if (!_selection_manager) {
+        return 0;
+    }
+    
+    // Get the spatial overlay adapter and count selected points by type
+    auto adapter = dynamic_cast<SpatialOverlaySelectionAdapter*>(_selection_manager->getDataAdapter());
+    if (!adapter) {
+        return 0;
+    }
+    
+    size_t point_count = 0;
+    auto selected_indices = adapter->getSelectedIndices();
+    for (size_t index : selected_indices) {
+        auto element_info = adapter->getElementInfo(index);
+        if (element_info.type == SpatialOverlaySelectionAdapter::ElementInfo::Point) {
+            point_count++;
+        }
+    }
+    return point_count;
 }
 
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
-    // TODO: Implement by querying visualization or selection manager
-    return 0;
+    if (!_selection_manager) {
+        return 0;
+    }
+    
+    // Get the spatial overlay adapter and count selected masks by type
+    auto adapter = dynamic_cast<SpatialOverlaySelectionAdapter*>(_selection_manager->getDataAdapter());
+    if (!adapter) {
+        return 0;
+    }
+    
+    size_t mask_count = 0;
+    auto selected_indices = adapter->getSelectedIndices();
+    for (size_t index : selected_indices) {
+        auto element_info = adapter->getElementInfo(index);
+        if (element_info.type == SpatialOverlaySelectionAdapter::ElementInfo::Mask) {
+            mask_count++;
+        }
+    }
+    return mask_count;
 }
 
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
-    // TODO: Implement by querying visualization or selection manager
-    return 0;
+    if (!_selection_manager) {
+        return 0;
+    }
+    
+    // Get the spatial overlay adapter and count selected lines by type
+    auto adapter = dynamic_cast<SpatialOverlaySelectionAdapter*>(_selection_manager->getDataAdapter());
+    if (!adapter) {
+        return 0;
+    }
+    
+    size_t line_count = 0;
+    auto selected_indices = adapter->getSelectedIndices();
+    for (size_t index : selected_indices) {
+        auto element_info = adapter->getElementInfo(index);
+        if (element_info.type == SpatialOverlaySelectionAdapter::ElementInfo::Line) {
+            line_count++;
+        }
+    }
+    return line_count;
 }
 
 void SpatialOverlayOpenGLWidget::hideSelectedItems() {
@@ -337,6 +391,20 @@ std::unique_ptr<SelectionManager> SpatialOverlayOpenGLWidget::createSelectionMan
     return manager;
 }
 
+void SpatialOverlayOpenGLWidget::ensureSelectionManager() {
+    // Create selection manager if it doesn't exist
+    if (!_selection_manager) {
+        _selection_manager = createSelectionManager();
+        if (_selection_manager && _group_manager) {
+            _selection_manager->setGroupManager(_group_manager);
+        }
+    } else {
+        // Update existing selection manager with new data
+        auto adapter = std::make_unique<SpatialOverlaySelectionAdapter>(_point_data, _mask_data, _line_data);
+        _selection_manager->setDataAdapter(std::move(adapter));
+    }
+}
+
 void SpatialOverlayOpenGLWidget::renderUI() {
     // TODO: Render axis labels, legends, etc.
     // This can include drawing text overlays, coordinate system indicators, etc.
@@ -417,4 +485,29 @@ void SpatialOverlayOpenGLWidget::initializeContextMenu() {
 
 void SpatialOverlayOpenGLWidget::updateContextMenuState() {
     // TODO: Enable/disable menu items based on current selection state
+}
+
+void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent* event) {
+    // Call base class implementation first (handles interaction controller and tooltips)
+    BasePlotOpenGLWidget::mouseMoveEvent(event);
+    
+    // Add hover logic for point enlargement
+    if (_tooltips_enabled && _opengl_resources_initialized) {
+        auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
+        float tolerance = 10.0f; // 10 pixel tolerance for hover detection
+        
+        bool hover_changed = false;
+        
+        // Handle hover for all point visualizations
+        for (auto const& [key, viz] : _point_data_visualizations) {
+            if (viz && viz->handleHover(world_pos, tolerance)) {
+                hover_changed = true;
+            }
+        }
+        
+        // Request update if hover state changed (to redraw enlarged point)
+        if (hover_changed) {
+            requestThrottledUpdate();
+        }
+    }
 }
