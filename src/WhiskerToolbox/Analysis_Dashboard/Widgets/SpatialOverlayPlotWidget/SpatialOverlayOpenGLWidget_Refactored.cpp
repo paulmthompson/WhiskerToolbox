@@ -1,6 +1,6 @@
 #include "SpatialOverlayOpenGLWidget_Refactored.hpp"
-#include "SpatialOverlayViewAdapter.hpp"
-#include "../Common/PlotInteractionController.hpp"
+#include "Widgets/Common/GenericViewAdapter.hpp"
+#include "Widgets/Common/PlotInteractionController.hpp"
 #include "Selection/SelectionHandlers.hpp"
 
 #include "Visualizers/Points/PointDataVisualization.hpp"
@@ -42,7 +42,7 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
     
     // Initialize interaction controller with spatial overlay view adapter
     if (!_interaction) {
-        auto adapter = std::make_unique<SpatialOverlayViewAdapter>(this);
+        auto adapter = std::make_unique<GenericViewAdapter>(this);
         _interaction = std::make_unique<PlotInteractionController>(this, std::move(adapter));
         
         // Connect interaction signals

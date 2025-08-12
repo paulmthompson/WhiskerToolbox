@@ -105,8 +105,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.ui
-    Widgets/SpatialOverlayPlotWidget/SpatialOverlayViewAdapter.hpp
-    Widgets/SpatialOverlayPlotWidget/SpatialOverlayViewAdapter.cpp
+   # Widgets/SpatialOverlayPlotWidget/SpatialOverlayViewAdapter.hpp
+   # Widgets/SpatialOverlayPlotWidget/SpatialOverlayViewAdapter.cpp
 
     Visualizers/RenderingContext.hpp
     Visualizers/Lines/LineDataVisualization.hpp

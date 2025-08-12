@@ -1,4 +1,5 @@
 #include "TooltipManager.hpp"
+
 #include <QToolTip>
 #include <QApplication>
 #include <QWidget>
