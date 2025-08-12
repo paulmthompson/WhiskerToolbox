@@ -20,6 +20,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/Common/PlotInteractionController.hpp
     Widgets/Common/PlotInteractionController.cpp
     Widgets/Common/ViewAdapter.hpp
+    Widgets/Common/GenericViewAdapter.hpp
+    Widgets/Common/GenericViewAdapter.cpp
     Widgets/Common/InteractiveOpenGLWidgetBase.hpp
     Widgets/Common/BasePlotOpenGLWidget.hpp
     Widgets/Common/BasePlotOpenGLWidget.cpp
@@ -29,6 +31,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/Common/PlotSelectionAdapters.cpp
     Widgets/Common/TooltipManager.hpp
     Widgets/Common/TooltipManager.cpp
+    Widgets/Common/ViewState.hpp
+    Widgets/Common/ViewState.cpp
 
 
     # Plots
@@ -97,8 +101,10 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/EventPlotWidget/EventPlotViewAdapter.hpp
     Widgets/EventPlotWidget/EventPlotViewAdapter.cpp
 
-    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
-    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
+    #Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
+    #Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
+    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget_Refactored.hpp
+    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget_Refactored.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp

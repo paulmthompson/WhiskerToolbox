@@ -1,6 +1,9 @@
 #include "PlotSelectionAdapters.hpp"
 #include "Groups/GroupManager.hpp"
 
+#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
 #include <QDebug>
 #include <algorithm>
 
@@ -316,4 +319,205 @@ size_t EventPlotSelectionAdapter::eventIdToFlatIndex(int64_t event_id) const {
         return static_cast<size_t>(event_id);
     }
     return 0;
+}
+
+// ============================================================================
+// SpatialOverlaySelectionAdapter Implementation
+// ============================================================================
+
+SpatialOverlaySelectionAdapter::SpatialOverlaySelectionAdapter(
+    const std::unordered_map<QString, std::shared_ptr<PointData>>& point_data,
+    const std::unordered_map<QString, std::shared_ptr<MaskData>>& mask_data,
+    const std::unordered_map<QString, std::shared_ptr<LineData>>& line_data)
+    : _point_data(point_data)
+    , _mask_data(mask_data)
+    , _line_data(line_data)
+    , _group_manager(nullptr)
+    , _total_elements(0) {
+    
+    buildElementMapping();
+    ensureCorrectSize();
+    
+    qDebug() << "SpatialOverlaySelectionAdapter: Created for" 
+             << point_data.size() << "point datasets,"
+             << mask_data.size() << "mask datasets,"
+             << line_data.size() << "line datasets with"
+             << _total_elements << "total elements";
+}
+
+void SpatialOverlaySelectionAdapter::applySelection(const std::vector<size_t>& indices) {
+    // Clear current selection
+    _selected_elements.clear();
+    
+    // Apply new selection - convert flat indices to element IDs
+    for (size_t index : indices) {
+        if (index < _total_elements) {
+            int64_t element_id = flatIndexToElementId(index);
+            _selected_elements.insert(element_id);
+        }
+    }
+    
+    qDebug() << "SpatialOverlaySelectionAdapter: Applied selection to" << indices.size() << "elements";
+}
+
+std::vector<size_t> SpatialOverlaySelectionAdapter::getSelectedIndices() const {
+    std::vector<size_t> indices;
+    indices.reserve(_selected_elements.size());
+    
+    for (int64_t element_id : _selected_elements) {
+        // Convert element_id back to flat index
+        if (element_id >= 0 && static_cast<size_t>(element_id) < _total_elements) {
+            indices.push_back(static_cast<size_t>(element_id));
+        }
+    }
+    
+    return indices;
+}
+
+void SpatialOverlaySelectionAdapter::clearSelection() {
+    _selected_elements.clear();
+}
+
+void SpatialOverlaySelectionAdapter::assignSelectedToGroup(int group_id) {
+    if (!_group_manager) {
+        qWarning() << "SpatialOverlaySelectionAdapter::assignSelectedToGroup: No group manager set";
+        return;
+    }
+    
+    if (_selected_elements.empty()) {
+        qDebug() << "SpatialOverlaySelectionAdapter: No elements selected to assign to group";
+        return;
+    }
+    
+    _group_manager->assignPointsToGroup(group_id, _selected_elements);
+    
+    qDebug() << "SpatialOverlaySelectionAdapter: Assigned" << _selected_elements.size()
+             << "elements to group" << group_id;
+}
+
+void SpatialOverlaySelectionAdapter::removeSelectedFromGroups() {
+    if (!_group_manager) {
+        return;
+    }
+    
+    if (_selected_elements.empty()) {
+        return;
+    }
+    
+    _group_manager->ungroupPoints(_selected_elements);
+    
+    qDebug() << "SpatialOverlaySelectionAdapter: Removed" << _selected_elements.size()
+             << "elements from groups";
+}
+
+void SpatialOverlaySelectionAdapter::hideSelected() {
+    for (int64_t element_id : _selected_elements) {
+        _visible_elements.erase(element_id);
+    }
+    
+    qDebug() << "SpatialOverlaySelectionAdapter: Hid" << _selected_elements.size() << "elements";
+}
+
+void SpatialOverlaySelectionAdapter::showAll() {
+    // Rebuild visible elements set with all elements
+    _visible_elements.clear();
+    for (size_t i = 0; i < _total_elements; ++i) {
+        _visible_elements.insert(static_cast<int64_t>(i));
+    }
+    
+    qDebug() << "SpatialOverlaySelectionAdapter: Showed all" << _visible_elements.size() << "elements";
+}
+
+size_t SpatialOverlaySelectionAdapter::getTotalSelected() const {
+    return _selected_elements.size();
+}
+
+bool SpatialOverlaySelectionAdapter::isPointSelected(size_t index) const {
+    return _selected_elements.count(static_cast<int64_t>(index)) > 0;
+}
+
+size_t SpatialOverlaySelectionAdapter::getPointCount() const {
+    return _total_elements;
+}
+
+std::pair<float, float> SpatialOverlaySelectionAdapter::getPointPosition(size_t index) const {
+    if (index >= _element_mapping.size()) {
+        return {0.0f, 0.0f};
+    }
+    
+    // TODO: Get actual position from the data element
+    // This is a placeholder implementation
+    const auto& element_info = _element_mapping[index];
+    
+    // For now, return a default position
+    return {0.0f, 0.0f};
+}
+
+void SpatialOverlaySelectionAdapter::setGroupManager(GroupManager* group_manager) {
+    _group_manager = group_manager;
+}
+
+SpatialOverlaySelectionAdapter::ElementInfo SpatialOverlaySelectionAdapter::getElementInfo(size_t flat_index) const {
+    if (flat_index < _element_mapping.size()) {
+        return _element_mapping[flat_index];
+    }
+    return {ElementInfo::Point, QString(), 0};
+}
+
+void SpatialOverlaySelectionAdapter::buildElementMapping() {
+    _element_mapping.clear();
+    _total_elements = 0;
+    
+    // Add points from all datasets
+    for (const auto& [key, point_data] : _point_data) {
+        if (point_data) {
+            // TODO: Get actual point count from PointData interface
+            // For now, assume each dataset has some points
+            size_t point_count = 100; // Placeholder
+            
+            for (size_t i = 0; i < point_count; ++i) {
+                _element_mapping.push_back({ElementInfo::Point, key, i});
+                _total_elements++;
+            }
+        }
+    }
+    
+    // Add masks from all datasets
+    for (const auto& [key, mask_data] : _mask_data) {
+        if (mask_data) {
+            // TODO: Get actual mask count from MaskData interface
+            size_t mask_count = 10; // Placeholder
+            
+            for (size_t i = 0; i < mask_count; ++i) {
+                _element_mapping.push_back({ElementInfo::Mask, key, i});
+                _total_elements++;
+            }
+        }
+    }
+    
+    // Add lines from all datasets
+    for (const auto& [key, line_data] : _line_data) {
+        if (line_data) {
+            // TODO: Get actual line count from LineData interface
+            size_t line_count = 20; // Placeholder
+            
+            for (size_t i = 0; i < line_count; ++i) {
+                _element_mapping.push_back({ElementInfo::Line, key, i});
+                _total_elements++;
+            }
+        }
+    }
+}
+
+void SpatialOverlaySelectionAdapter::ensureCorrectSize() {
+    // Initialize all elements as visible
+    _visible_elements.clear();
+    for (size_t i = 0; i < _total_elements; ++i) {
+        _visible_elements.insert(static_cast<int64_t>(i));
+    }
+}
+
+int64_t SpatialOverlaySelectionAdapter::flatIndexToElementId(size_t flat_index) const {
+    // For now, use a simple mapping: element_id = flat_index
+    return static_cast<int64_t>(flat_index);
 }

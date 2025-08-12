@@ -13,11 +13,13 @@
 
 #include "CoreGeometry/boundingbox.hpp"
 #include "Visualizers/RenderingContext.hpp"
+#include "ViewState.hpp"
 
 class GroupManager;
 class PlotInteractionController;
 class SelectionManager;
 class TooltipManager;
+class GenericViewAdapter;
 
 struct BoundingBox;
 
@@ -42,6 +44,20 @@ public:
     virtual QPoint worldToScreen(float world_x, float world_y) const;
     void resetView();
 
+    // ViewState access for adapters
+    ViewState& getViewState() { return _view_state; }
+    const ViewState& getViewState() const { return _view_state; }
+
+        // Selection management
+    void clearSelection();
+    
+    // Public event handlers for external access (e.g., event filters)
+    virtual void handleKeyPress(QKeyEvent* event);
+
+    float getPointSize() const { return _point_size; }
+    float getLineWidth() const { return _line_width; }
+    bool getTooltipsEnabled() const { return _tooltips_enabled; }
+
 signals:
     void viewBoundsChanged(float left, float right, float bottom, float top);
     void mouseWorldMoved(float world_x, float world_y);
@@ -59,6 +75,8 @@ protected:
     void mouseReleaseEvent(QMouseEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
     void leaveEvent(QEvent* event) override;
+
+
 
     // Hooks for subclasses to implement
     virtual void renderData() = 0;
@@ -92,15 +110,13 @@ protected:
     bool _tooltips_enabled = true;
     bool _opengl_resources_initialized = false;
 
-    // View and projection
+    // View state (encapsulates zoom, pan, bounds, etc.)
+    ViewState _view_state;
+
+    // View and projection matrices
     QMatrix4x4 _model_matrix;
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _projection_matrix;
-    float _zoom_level_x = 1.0f;
-    float _zoom_level_y = 1.0f;
-    float _pan_offset_x = 0.0f;
-    float _pan_offset_y = 0.0f;
-    float _padding_factor = 1.1f;
 
     // Shared services
     std::unique_ptr<PlotInteractionController> _interaction;
@@ -110,6 +126,8 @@ protected:
     // Update throttling
     QTimer* _fps_limiter_timer;
     bool _pending_update = false;
+
+    friend GenericViewAdapter; // Allow GenericViewAdapter to access private members
 
 private:
     bool initializeRendering();

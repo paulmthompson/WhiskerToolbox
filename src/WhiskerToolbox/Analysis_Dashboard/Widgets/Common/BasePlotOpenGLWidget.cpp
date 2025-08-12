@@ -4,6 +4,7 @@
 #include "TooltipManager.hpp"
 #include "widget_utilities.hpp"
 #include "Groups/GroupManager.hpp"
+#include "GenericViewAdapter.hpp"
 
 #include <QDebug>
 #include <QMouseEvent>
@@ -18,11 +19,6 @@ BasePlotOpenGLWidget::BasePlotOpenGLWidget(QWidget* parent)
     , _line_width(2.0f)
     , _tooltips_enabled(true)
     , _opengl_resources_initialized(false)
-    , _zoom_level_x(1.0f)
-    , _zoom_level_y(1.0f)
-    , _pan_offset_x(0.0f)
-    , _pan_offset_y(0.0f)
-    , _padding_factor(1.1f)
     , _pending_update(false) {
     
     // Set up widget properties
@@ -91,35 +87,32 @@ void BasePlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
 }
 
 QVector2D BasePlotOpenGLWidget::screenToWorld(QPoint const& screen_pos) const {
-    // Convert screen to NDC
-    float x_ndc = (2.0f * screen_pos.x()) / std::max(1, width()) - 1.0f;
-    float y_ndc = 1.0f - (2.0f * screen_pos.y()) / std::max(1, height());
-
-    // Invert full MVP (model is identity)
-    QMatrix4x4 mvp = _projection_matrix * _view_matrix * _model_matrix;
-    QMatrix4x4 inv = mvp.inverted();
-    QVector4D world4 = inv * QVector4D(x_ndc, y_ndc, 0.0f, 1.0f);
-    return QVector2D(world4.x(), world4.y());
+    // Update view state dimensions for accurate conversion
+    const_cast<ViewState&>(_view_state).widget_width = width();
+    const_cast<ViewState&>(_view_state).widget_height = height();
+    
+    auto world_point = ViewUtils::screenToWorld(_view_state, screen_pos.x(), screen_pos.y());
+    return QVector2D(world_point.x, world_point.y);
 }
 
 QPoint BasePlotOpenGLWidget::worldToScreen(float world_x, float world_y) const {
-    QMatrix4x4 mvp = _projection_matrix * _view_matrix * _model_matrix;
-    QVector4D world4(world_x, world_y, 0.0f, 1.0f);
-    QVector4D screen4 = mvp * world4;
+    // Update view state dimensions for accurate conversion
+    const_cast<ViewState&>(_view_state).widget_width = width();
+    const_cast<ViewState&>(_view_state).widget_height = height();
     
-    // Convert from NDC to screen coordinates
-    int screen_x = static_cast<int>(((screen4.x() + 1.0f) * 0.5f) * width());
-    int screen_y = static_cast<int>(((1.0f - screen4.y()) * 0.5f) * height());
-    
-    return QPoint(screen_x, screen_y);
+    auto screen_point = ViewUtils::worldToScreen(_view_state, world_x, world_y);
+    return QPoint(screen_point.x, screen_point.y);
 }
 
 void BasePlotOpenGLWidget::resetView() {
-    _zoom_level_x = 1.0f;
-    _zoom_level_y = 1.0f;
-    _pan_offset_x = 0.0f;
-    _pan_offset_y = 0.0f;
+    // Ensure ViewState has current data bounds before resetting
+    auto data_bounds = getDataBounds();
+    _view_state.data_bounds = data_bounds;
+    _view_state.data_bounds_valid = true;
+    _view_state.widget_width = width();
+    _view_state.widget_height = height();
     
+    ViewUtils::resetView(_view_state);
     updateViewMatrices();
     requestThrottledUpdate();
 }
@@ -243,6 +236,31 @@ void BasePlotOpenGLWidget::leaveEvent(QEvent* event) {
     QOpenGLWidget::leaveEvent(event);
 }
 
+void BasePlotOpenGLWidget::handleKeyPress(QKeyEvent* event) {
+    // Default implementation - subclasses can override for specific behavior
+    // For now, just handle basic navigation keys that might be common
+    switch (event->key()) {
+        case Qt::Key_R:
+            // Reset view
+            resetView();
+            event->accept();
+            break;
+        default:
+            // Let the widget handle it normally
+            keyPressEvent(event);
+            break;
+    }
+}
+
+void BasePlotOpenGLWidget::clearSelection() {
+    if (_selection_manager) {
+        _selection_manager->clearSelection();
+        requestThrottledUpdate();
+        
+        qDebug() << "BasePlotOpenGLWidget: Selection cleared";
+    }
+}
+
 void BasePlotOpenGLWidget::renderBackground() {
     // Default implementation - just clear
     // Subclasses can override for custom backgrounds
@@ -287,6 +305,13 @@ void BasePlotOpenGLWidget::updateViewMatrices() {
     _model_matrix.setToIdentity();
     
     auto data_bounds = getDataBounds();
+    
+    // Update ViewState with current data bounds and widget dimensions
+    _view_state.data_bounds = data_bounds;
+    _view_state.data_bounds_valid = true;
+    _view_state.widget_width = width();
+    _view_state.widget_height = height();
+    
     if (width() <= 0 || height() <= 0) {
         _view_matrix.setToIdentity();
         _projection_matrix.setToIdentity();
@@ -345,10 +370,7 @@ bool BasePlotOpenGLWidget::initializeRendering() {
 
 void BasePlotOpenGLWidget::computeCameraWorldView(float& center_x, float& center_y, 
                                                  float& world_width, float& world_height) const {
-    auto data_bounds = getDataBounds();
-    compute_camera_world_view(data_bounds, _zoom_level_x, _zoom_level_y,
-                             _pan_offset_x, _pan_offset_y, _padding_factor,
-                             center_x, center_y, world_width, world_height);
+    ViewUtils::computeCameraWorldView(_view_state, center_x, center_y, world_width, world_height);
 }
 
 bool BasePlotOpenGLWidget::validateOpenGLContext() const {

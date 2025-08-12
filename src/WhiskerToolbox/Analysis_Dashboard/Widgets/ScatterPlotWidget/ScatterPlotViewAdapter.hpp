@@ -1,29 +1,19 @@
 #ifndef SCATTERPLOTVIEWADAPTER_HPP
 #define SCATTERPLOTVIEWADAPTER_HPP
 
-
-#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
+#include "../Common/GenericViewAdapter.hpp"
 
 class ScatterPlotOpenGLWidget;
 
-
-class ScatterPlotViewAdapter final : public ViewAdapter {
+/**
+ * @brief View adapter for ScatterPlotOpenGLWidget
+ * 
+ * This is now just a thin wrapper around GenericViewAdapter since all the
+ * common functionality has been moved to ViewState and ViewUtils.
+ */
+class ScatterPlotViewAdapter final : public GenericViewAdapter {
 public:
-    explicit ScatterPlotViewAdapter(ScatterPlotOpenGLWidget * widget);
-
-    void getProjectionBounds(float & left, float & right, float & bottom, float & top) const override;
-    void getPerAxisZoom(float & zoom_x, float & zoom_y) const override;
-    void setPerAxisZoom(float zoom_x, float zoom_y) override;
-    void getPan(float & pan_x, float & pan_y) const override;
-    void setPan(float pan_x, float pan_y) override;
-    float getPadding() const override;
-    int viewportWidth() const override;
-    int viewportHeight() const override;
-    void requestUpdate() override;
-    void applyBoxZoomToWorldRect(float min_x, float max_x, float min_y, float max_y) override;
-
-private:
-    ScatterPlotOpenGLWidget * _w;
+    explicit ScatterPlotViewAdapter(ScatterPlotOpenGLWidget* widget);
 };
 
 #endif // SCATTERPLOTVIEWADAPTER_HPP

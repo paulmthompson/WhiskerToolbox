@@ -198,8 +198,8 @@ void SelectionManager::createHandlerForMode(SelectionMode mode) {
         case SelectionMode::PointSelection:
             // _current_handler = std::make_unique<PointSelectionHandler>(10.0f);
             break;
-        case SelectionMode::LineSelection:
-            // _current_handler = std::make_unique<LineSelectionHandler>();
+        case SelectionMode::LineIntersection:
+            // _current_handler = std::make_unique<LineIntersectionHandler>();
             break;
         case SelectionMode::PolygonSelection:
             // _current_handler = std::make_unique<PolygonSelectionHandler>();

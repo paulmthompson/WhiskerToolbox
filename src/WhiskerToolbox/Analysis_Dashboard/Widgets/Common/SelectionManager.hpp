@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Selection/SelectionHandlers.hpp"
+#include "Selection/SelectionModes.hpp"
 
 #include <QObject>
 
@@ -52,12 +53,6 @@ class SelectionManager : public QObject {
     Q_OBJECT
 
 public:
-    enum class SelectionMode {
-        None,
-        PointSelection,
-        LineSelection, 
-        PolygonSelection
-    };
 
     explicit SelectionManager(QObject* parent = nullptr);
     virtual ~SelectionManager();
