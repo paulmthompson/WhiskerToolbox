@@ -44,10 +44,6 @@ public:
     // Time filtering
     void applyTimeRangeFilter(int start_frame, int end_frame);
 
-    // Selection mode (extends base selection)
-    void setSelectionMode(SelectionMode mode);
-    SelectionMode getSelectionMode() const { return _selection_mode; }
-
     // Selection queries
     size_t getTotalSelectedPoints() const;
     size_t getTotalSelectedMasks() const;
@@ -55,6 +51,7 @@ public:
     
     // Selection management
     void clearSelection();
+    void setSelectionMode(SelectionMode mode) override;
 
     // Visibility management
     void hideSelectedItems();
@@ -73,7 +70,6 @@ public:
 signals:
     void frameJumpRequested(int64_t time_frame_index, QString const& data_key);
     void lineWidthChanged(float line_width);
-    void selectionModeChanged(SelectionMode mode);
     void pointSizeChanged(float point_size);
     void tooltipsEnabledChanged(bool enabled);
 
@@ -88,7 +84,6 @@ protected:
     void initializeGL() override;
 
     // Optional overrides
-    void renderOverlays() override;
     void renderUI() override;
     std::optional<QString> generateTooltipContent(QPoint const& screen_pos) const override;
 
@@ -108,10 +103,6 @@ private:
     std::unordered_map<QString, std::unique_ptr<PointDataVisualization>> _point_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
-    
-    // Selection mode and handler
-    SelectionMode _selection_mode = SelectionMode::None;
-    SelectionVariant _selection_handler;
     
     // Time filtering
     int _start_frame = -1;
@@ -142,7 +133,6 @@ private:
     void updateContextMenuState();
     void updateDynamicGroupActions();
     void makeSelection();
-    void createSelectionHandler(SelectionMode mode);
     void ensureSelectionManager();
 
     friend class SpatialOverlayViewAdapter;

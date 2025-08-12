@@ -4,10 +4,6 @@
 #include "../Common/PlotSelectionAdapters.hpp"
 #include "../Common/PlotInteractionController.hpp"
 #include "Selection/SelectionHandlers.hpp"
-#include "Selection/PointSelectionHandler.hpp"
-#include "Selection/PolygonSelectionHandler.hpp"
-#include "Selection/LineSelectionHandler.hpp"
-#include "Selection/NoneSelectionHandler.hpp"
 
 #include "Visualizers/Points/PointDataVisualization.hpp"
 #include "Visualizers/Masks/MaskDataVisualization.hpp"
@@ -30,12 +26,13 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget* parent)
     , _data_bounds_valid(false),
     _data_bounds({0.0f, 0.0f, 0.0f, 0.0f}) {
     
-    // Initialize default selection handler
-    createSelectionHandler(_selection_mode);
-    
     // Initialize context menu
     initializeContextMenu();
-    
+
+    _selection_callback = [this]() {
+        makeSelection();
+    };
+
     qDebug() << "SpatialOverlayOpenGLWidget: Created with composition-based design";
 }
 
@@ -182,17 +179,9 @@ void SpatialOverlayOpenGLWidget::applyTimeRangeFilter(int start_frame, int end_f
 }
 
 void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
-    if (_selection_mode != mode) {
-        _selection_mode = mode;
-        
-        // Create appropriate selection handler
-        createSelectionHandler(mode);
-        
-        if (_selection_manager) {
-            _selection_manager->setSelectionMode(mode);
-        }
-        
-        emit selectionModeChanged(mode);
+    auto old_mode = _selection_mode;
+    BasePlotOpenGLWidget::setSelectionMode(mode);
+    if (old_mode != mode) {
         updateContextMenuState();
     }
 }
@@ -302,21 +291,6 @@ void SpatialOverlayOpenGLWidget::renderData() {
             viz->render(mvp_matrix, _point_size);
         }
     }
-}
-
-void SpatialOverlayOpenGLWidget::renderOverlays() {
-    // Render selection handlers (polygon outlines, rubber band lines, etc.)
-    auto context = createRenderingContext();
-    auto mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
-    
-    std::visit([mvp_matrix](auto & handler) {
-        if (handler) {
-            handler->render(mvp_matrix);
-        }
-    }, _selection_handler);
-    
-    // Call base implementation for any additional overlay rendering
-    BasePlotOpenGLWidget::renderOverlays();
 }
 
 void SpatialOverlayOpenGLWidget::calculateDataBounds() {
@@ -541,22 +515,7 @@ void SpatialOverlayOpenGLWidget::updateContextMenuState() {
 }
 
 void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent* event) {
-    // Ensure this widget gets keyboard focus so Enter/Escape reach selection handlers
-    if (!hasFocus()) {
-        setFocus(Qt::MouseFocusReason);
-    }
-    
-    // Convert to world coordinates for selection handlers
-    auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
 
-    // Delegate to selection handler using std::visit
-    std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            handler->mousePressEvent(event, world_pos);
-        }
-    }, _selection_handler);
-
-    // Call base class implementation for interaction controller
     BasePlotOpenGLWidget::mousePressEvent(event);
     
     // Accept the event
@@ -568,21 +527,7 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent* event) {
 }
 
 void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent* event) {
-    // Convert to world coordinates for selection handlers
-    auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
-
-    // Delegate to selection handler using std::visit
-    std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            handler->mouseReleaseEvent(event, world_pos);
-        }
-    }, _selection_handler);
-
-    // For point selection, apply the selection on release
-    if (_selection_mode == SelectionMode::PointSelection && event->button() == Qt::LeftButton) {
-        makeSelection();
-    }
-
+    
     // Call base class implementation
     BasePlotOpenGLWidget::mouseReleaseEvent(event);
     
@@ -592,13 +537,6 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent* event) {
 void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent* event) {
     // Convert to world coordinates for selection handlers
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
-
-    // Delegate to selection handler using std::visit
-    std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            handler->mouseMoveEvent(event, world_pos);
-        }
-    }, _selection_handler);
 
     // Call base class implementation first (handles interaction controller and tooltips)
     BasePlotOpenGLWidget::mouseMoveEvent(event);
@@ -639,17 +577,7 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
     if (_selection_mode == SelectionMode::None) {
         should_clear = true;
     } else {
-        should_clear = std::visit([](auto & handler) {
-            using HandlerType = std::decay_t<decltype(handler)>;
-            if constexpr (std::is_same_v<HandlerType, std::unique_ptr<PointSelectionHandler>>) {
-                return false;// point selection never uses a persistent region
-            } else if constexpr (std::is_same_v<HandlerType, std::unique_ptr<NoneSelectionHandler>>) {
-                return true;
-            } else {
-                return handler->getActiveSelectionRegion() == nullptr;
-            }
-        },
-                                  _selection_handler);
+        should_clear = false;
     }
 
     if (should_clear) {
@@ -673,30 +601,6 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
     emit selectionChanged(total_selected, QString(), 0);
 
     requestThrottledUpdate();
-}
-
-void SpatialOverlayOpenGLWidget::createSelectionHandler(SelectionMode mode) {
-    switch (mode) {
-        case SelectionMode::None:
-            _selection_handler = std::make_unique<NoneSelectionHandler>();
-            break;
-        case SelectionMode::PointSelection:
-            _selection_handler = std::make_unique<PointSelectionHandler>(10.0f); // 10 pixel tolerance
-            break;
-        case SelectionMode::PolygonSelection:
-            _selection_handler = std::make_unique<PolygonSelectionHandler>();
-            break;
-        case SelectionMode::LineIntersection:
-            _selection_handler = std::make_unique<LineSelectionHandler>();
-            break;
-    }
-    
-    // Set up notification callback for the handler
-    std::visit([this](auto & handler) {
-        if (handler) {
-            handler->setNotificationCallback([this]() { makeSelection(); });
-        }
-    }, _selection_handler);
 }
 
 void SpatialOverlayOpenGLWidget::updateDynamicGroupActions() {

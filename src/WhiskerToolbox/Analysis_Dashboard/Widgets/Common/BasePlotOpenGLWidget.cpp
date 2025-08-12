@@ -5,6 +5,10 @@
 #include "widget_utilities.hpp"
 #include "Groups/GroupManager.hpp"
 #include "GenericViewAdapter.hpp"
+#include "Selection/PointSelectionHandler.hpp"
+#include "Selection/PolygonSelectionHandler.hpp"
+#include "Selection/LineSelectionHandler.hpp"
+#include "Selection/NoneSelectionHandler.hpp"
 
 #include <QDebug>
 #include <QMouseEvent>
@@ -24,6 +28,10 @@ BasePlotOpenGLWidget::BasePlotOpenGLWidget(QWidget* parent)
     // Set up widget properties
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
+
+    // Initialize default selection handler
+    _selection_callback = nullptr;
+    createSelectionHandler(_selection_mode);
     
     // Set up OpenGL context with subclass-specified requirements
     auto [major, minor] = getRequiredOpenGLVersion();
@@ -172,14 +180,28 @@ void BasePlotOpenGLWidget::resizeGL(int w, int h) {
 }
 
 void BasePlotOpenGLWidget::mousePressEvent(QMouseEvent* event) {
-    // Suppress tooltips during interactions
+
     if (_tooltip_manager) {
         _tooltip_manager->setSuppressed(true);
     }
     
-    if (_interaction && _interaction->handleMousePress(event)) {
-        return;
+    if (_interaction ) {
+        _interaction->handleMousePress(event);
     }
+
+    //if (!hasFocus()) {
+    //    setFocus(Qt::MouseFocusReason);
+    //}
+    
+    auto world_pos = screenToWorld(event->pos());
+
+    std::visit([event, world_pos](auto & handler) {
+        if (handler) {
+            handler->mousePressEvent(event, world_pos);
+        }
+    }, _selection_handler);
+
+    requestThrottledUpdate();
     
     // Default behavior if interaction controller doesn't handle it
     QOpenGLWidget::mousePressEvent(event);
@@ -198,6 +220,12 @@ void BasePlotOpenGLWidget::mouseMoveEvent(QMouseEvent* event) {
     // Emit world coordinates for other components to use
     auto world_pos = screenToWorld(event->pos());
     emit mouseWorldMoved(world_pos.x(), world_pos.y());
+
+    std::visit([event, world_pos](auto & handler) {
+        if (handler) {
+            handler->mouseMoveEvent(event, world_pos);
+        }
+    }, _selection_handler);
     
     QOpenGLWidget::mouseMoveEvent(event);
 }
@@ -211,6 +239,15 @@ void BasePlotOpenGLWidget::mouseReleaseEvent(QMouseEvent* event) {
     if (_interaction && _interaction->handleMouseRelease(event)) {
         return;
     }
+
+    auto world_pos = screenToWorld(event->pos());
+
+    std::visit([event, world_pos](auto & handler) {
+        if (handler) {
+            handler->mouseReleaseEvent(event, world_pos);
+        }
+    }, _selection_handler);
+
     
     QOpenGLWidget::mouseReleaseEvent(event);
 }
@@ -252,6 +289,45 @@ void BasePlotOpenGLWidget::handleKeyPress(QKeyEvent* event) {
     }
 }
 
+void BasePlotOpenGLWidget::setSelectionMode(SelectionMode mode) {
+    if (_selection_mode != mode) {
+        _selection_mode = mode;
+        
+        createSelectionHandler(mode);
+        
+        if (_selection_manager) {
+            _selection_manager->setSelectionMode(mode);
+        }
+        
+        emit selectionModeChanged(mode);
+    }
+}
+
+
+void BasePlotOpenGLWidget::createSelectionHandler(SelectionMode mode) {
+    switch (mode) {
+        case SelectionMode::None:
+            _selection_handler = std::make_unique<NoneSelectionHandler>();
+            break;
+        case SelectionMode::PointSelection:
+            _selection_handler = std::make_unique<PointSelectionHandler>(10.0f); // 10 pixel tolerance
+            break;
+        case SelectionMode::PolygonSelection:
+            _selection_handler = std::make_unique<PolygonSelectionHandler>();
+            break;
+        case SelectionMode::LineIntersection:
+            _selection_handler = std::make_unique<LineSelectionHandler>();
+            break;
+    }
+
+    // Set up notification callback for the handler
+    std::visit([this](auto & handler) {
+        if (handler) {
+            handler->setNotificationCallback(_selection_callback);
+        }
+    }, _selection_handler);
+}
+
 void BasePlotOpenGLWidget::clearSelection() {
     if (_selection_manager) {
         _selection_manager->clearSelection();
@@ -267,8 +343,14 @@ void BasePlotOpenGLWidget::renderBackground() {
 }
 
 void BasePlotOpenGLWidget::renderOverlays() {
-    // Default implementation for selection highlights, hover effects, etc.
-    // This can be enhanced later with common overlay rendering
+    auto context = createRenderingContext();
+    auto mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
+    
+    std::visit([mvp_matrix](auto & handler) {
+        if (handler) {
+            handler->render(mvp_matrix);
+        }
+    }, _selection_handler);
     requestThrottledUpdate();
 }
 

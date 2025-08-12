@@ -2,6 +2,7 @@
 
 #include "../Common/BasePlotOpenGLWidget.hpp"
 #include "../Common/PlotSelectionAdapters.hpp"
+
 #include <vector>
 #include <memory>
 

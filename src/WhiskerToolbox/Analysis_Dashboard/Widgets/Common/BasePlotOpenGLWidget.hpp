@@ -1,5 +1,11 @@
 #pragma once
 
+#include "CoreGeometry/boundingbox.hpp"
+#include "Visualizers/RenderingContext.hpp"
+#include "ViewState.hpp"
+#include "Selection/SelectionModes.hpp"
+#include "Selection/SelectionHandlers.hpp"
+
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QMatrix4x4>
@@ -8,19 +14,16 @@
 #include <QWheelEvent>
 #include <QKeyEvent>
 #include <QString>
+
+#include <functional>
 #include <memory>
 #include <optional>
-
-#include "CoreGeometry/boundingbox.hpp"
-#include "Visualizers/RenderingContext.hpp"
-#include "ViewState.hpp"
 
 class GroupManager;
 class PlotInteractionController;
 class SelectionManager;
 class TooltipManager;
 class GenericViewAdapter;
-
 struct BoundingBox;
 
 /**
@@ -48,7 +51,10 @@ public:
     ViewState& getViewState() { return _view_state; }
     const ViewState& getViewState() const { return _view_state; }
 
-        // Selection management
+    // Selection management
+    virtual void setSelectionMode(SelectionMode mode);
+    void createSelectionHandler(SelectionMode mode);
+    SelectionMode getSelectionMode() const { return _selection_mode; }
     void clearSelection();
     
     // Public event handlers for external access (e.g., event filters)
@@ -61,6 +67,7 @@ public:
 signals:
     void viewBoundsChanged(float left, float right, float bottom, float top);
     void mouseWorldMoved(float world_x, float world_y);
+    void selectionModeChanged(SelectionMode mode);
     void selectionChanged(size_t total_selected, QString dataset_name, int point_index);
     void highlightStateChanged();
 protected:
@@ -109,6 +116,11 @@ protected:
     float _line_width = 2.0f;
     bool _tooltips_enabled = true;
     bool _opengl_resources_initialized = false;
+
+    // Selection mode
+    SelectionMode _selection_mode = SelectionMode::None;
+    SelectionVariant _selection_handler;
+    std::function<void()> _selection_callback;
 
     // View state (encapsulates zoom, pan, bounds, etc.)
     ViewState _view_state;
