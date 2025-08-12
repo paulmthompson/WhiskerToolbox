@@ -274,8 +274,15 @@ void BasePlotOpenGLWidget::leaveEvent(QEvent* event) {
 }
 
 void BasePlotOpenGLWidget::handleKeyPress(QKeyEvent* event) {
-    // Default implementation - subclasses can override for specific behavior
-    // For now, just handle basic navigation keys that might be common
+
+
+    std::visit([event](auto & handler) {
+        if (handler) {
+            handler->keyPressEvent(event);
+        }
+    },
+               _selection_handler);
+
     switch (event->key()) {
         case Qt::Key_R:
             // Reset view
