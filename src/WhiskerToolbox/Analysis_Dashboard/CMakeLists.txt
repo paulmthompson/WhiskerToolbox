@@ -22,13 +22,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/Common/ViewAdapter.hpp
     Widgets/Common/GenericViewAdapter.hpp
     Widgets/Common/GenericViewAdapter.cpp
-    Widgets/Common/InteractiveOpenGLWidgetBase.hpp
     Widgets/Common/BasePlotOpenGLWidget.hpp
     Widgets/Common/BasePlotOpenGLWidget.cpp
-    Widgets/Common/SelectionManager.hpp
-    Widgets/Common/SelectionManager.cpp
-    Widgets/Common/PlotSelectionAdapters.hpp
-    Widgets/Common/PlotSelectionAdapters.cpp
     Widgets/Common/TooltipManager.hpp
     Widgets/Common/TooltipManager.cpp
     Widgets/Common/ViewState.hpp

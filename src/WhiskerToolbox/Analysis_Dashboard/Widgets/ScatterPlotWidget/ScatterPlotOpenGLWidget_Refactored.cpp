@@ -1,7 +1,5 @@
 #include "ScatterPlotOpenGLWidget_Refactored.hpp"
 #include "Visualizers/Points/ScatterPlotVisualization.hpp"
-#include "../Common/SelectionManager.hpp"
-#include "../Common/PlotSelectionAdapters.hpp"
 #include "../Common/TooltipManager.hpp"
 #include "../Common/PlotInteractionController.hpp"
 #include "ScatterPlotViewAdapter.hpp"
@@ -65,9 +63,6 @@ void ScatterPlotOpenGLWidget::setScatterData(const std::vector<float>& x_data,
         doneCurrent();
     }
 
-    // Create selection manager with appropriate adapter
-    _selection_manager = createSelectionManager();
-
     // Update view
     updateViewMatrices();
     requestThrottledUpdate();
@@ -128,21 +123,14 @@ BoundingBox ScatterPlotOpenGLWidget::getDataBounds() const {
     return _data_bounds_valid ? _data_bounds : BoundingBox(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
-std::unique_ptr<SelectionManager> ScatterPlotOpenGLWidget::createSelectionManager() {
-    auto selection_manager = std::make_unique<SelectionManager>(this);
-    
-    // Create adapter for our vector-based data
-    auto adapter = std::make_unique<ScatterPlotSelectionAdapter>(_x_data, _y_data);
-    
-    // Set group manager on both selection manager and adapter
-    selection_manager->setGroupManager(_group_manager);
-    selection_manager->setDataAdapter(std::move(adapter));
-    
-    // Connect signals
-    connect(selection_manager.get(), &SelectionManager::selectionChanged,
-            this, &ScatterPlotOpenGLWidget::onSelectionChanged);
-    
-    return selection_manager;
+void ScatterPlotOpenGLWidget::clearSelection() {
+    /*
+    if (_selection_manager) {
+        _selection_manager->clearSelection();
+        requestThrottledUpdate();
+        qDebug() << "ScatterPlotOpenGLWidget: Selection cleared";
+    }
+        */
 }
 
 void ScatterPlotOpenGLWidget::renderUI() {

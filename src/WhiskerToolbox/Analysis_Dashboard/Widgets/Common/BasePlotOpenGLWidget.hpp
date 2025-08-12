@@ -21,7 +21,6 @@
 
 class GroupManager;
 class PlotInteractionController;
-class SelectionManager;
 class TooltipManager;
 class GenericViewAdapter;
 struct BoundingBox;
@@ -55,7 +54,7 @@ public:
     virtual void setSelectionMode(SelectionMode mode);
     void createSelectionHandler(SelectionMode mode);
     SelectionMode getSelectionMode() const { return _selection_mode; }
-    void clearSelection();
+    virtual void clearSelection() = 0;
     
     // Public event handlers for external access (e.g., event filters)
     virtual void handleKeyPress(QKeyEvent* event);
@@ -89,7 +88,6 @@ protected:
     virtual void renderData() = 0;
     virtual void calculateDataBounds() = 0;
     virtual BoundingBox getDataBounds() const = 0;
-    virtual std::unique_ptr<SelectionManager> createSelectionManager() = 0;
 
     // Optional hooks
     virtual void renderBackground();
@@ -132,7 +130,6 @@ protected:
 
     // Shared services
     std::unique_ptr<PlotInteractionController> _interaction;
-    std::unique_ptr<SelectionManager> _selection_manager;
     std::unique_ptr<TooltipManager> _tooltip_manager;
 
     // Update throttling

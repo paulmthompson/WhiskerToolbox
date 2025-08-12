@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Common/BasePlotOpenGLWidget.hpp"
-#include "../Common/PlotSelectionAdapters.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include <QString>
@@ -21,7 +20,6 @@ struct LineDataVisualization;
  * 
  * This replaces the original "god class" by breaking down responsibilities:
  * - Data visualization handled by individual PointDataVisualization, MaskDataVisualization, LineDataVisualization
- * - Selection handled by SelectionManager (from base)
  * - Tooltips handled by TooltipManager (from base)
  * - Interaction handled by PlotInteractionController (from base)
  */
@@ -78,7 +76,6 @@ protected:
     void renderData() override;
     void calculateDataBounds() override;
     BoundingBox getDataBounds() const override;
-    std::unique_ptr<SelectionManager> createSelectionManager() override;
 
     // OpenGL lifecycle
     void initializeGL() override;
@@ -133,7 +130,6 @@ private:
     void updateContextMenuState();
     void updateDynamicGroupActions();
     void makeSelection();
-    void ensureSelectionManager();
 
     friend class SpatialOverlayViewAdapter;
 };

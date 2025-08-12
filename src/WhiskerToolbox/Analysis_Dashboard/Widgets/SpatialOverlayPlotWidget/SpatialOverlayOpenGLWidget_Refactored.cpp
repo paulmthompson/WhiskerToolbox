@@ -1,7 +1,5 @@
 #include "SpatialOverlayOpenGLWidget_Refactored.hpp"
 #include "SpatialOverlayViewAdapter.hpp"
-#include "../Common/SelectionManager.hpp"
-#include "../Common/PlotSelectionAdapters.hpp"
 #include "../Common/PlotInteractionController.hpp"
 #include "Selection/SelectionHandlers.hpp"
 
@@ -81,9 +79,6 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
     // Calculate bounds
     calculateDataBounds();
 
-    // Ensure selection manager is created/updated
-    ensureSelectionManager();
-
     requestThrottledUpdate();
 }
 
@@ -109,9 +104,6 @@ void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::sh
 
     calculateDataBounds();
     
-    // Ensure selection manager is created/updated
-    ensureSelectionManager();
-    
     requestThrottledUpdate();
 }
 
@@ -136,9 +128,6 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
     }
 
     calculateDataBounds();
-    
-    // Ensure selection manager is created/updated
-    ensureSelectionManager();
     
     requestThrottledUpdate();
 }
@@ -366,34 +355,6 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
 
 BoundingBox SpatialOverlayOpenGLWidget::getDataBounds() const {
     return _data_bounds;
-}
-
-std::unique_ptr<SelectionManager> SpatialOverlayOpenGLWidget::createSelectionManager() {
-    auto manager = std::make_unique<SelectionManager>();
-    
-    // Create and set adapter for spatial overlay data
-    auto adapter = std::make_unique<SpatialOverlaySelectionAdapter>(_point_data, _mask_data, _line_data);
-    manager->setDataAdapter(std::move(adapter));
-    
-    // Connect selection change signal
-    connect(manager.get(), &SelectionManager::selectionChanged,
-            this, &SpatialOverlayOpenGLWidget::onSelectionChanged);
-    
-    return manager;
-}
-
-void SpatialOverlayOpenGLWidget::ensureSelectionManager() {
-    // Create selection manager if it doesn't exist
-    if (!_selection_manager) {
-        _selection_manager = createSelectionManager();
-        if (_selection_manager && _group_manager) {
-            _selection_manager->setGroupManager(_group_manager);
-        }
-    } else {
-        // Update existing selection manager with new data
-        auto adapter = std::make_unique<SpatialOverlaySelectionAdapter>(_point_data, _mask_data, _line_data);
-        _selection_manager->setDataAdapter(std::move(adapter));
-    }
 }
 
 void SpatialOverlayOpenGLWidget::renderUI() {

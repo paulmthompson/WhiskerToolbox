@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Common/BasePlotOpenGLWidget.hpp"
-#include "../Common/PlotSelectionAdapters.hpp"
 #include <vector>
 #include <memory>
 
@@ -25,6 +24,7 @@ public:
     // Advanced features that require OpenGL 4.3
     void enableComputeShaderClustering(bool enable);
     void setInstancingEnabled(bool enable);
+    
 
 protected:
     // Override OpenGL requirements for advanced features
@@ -35,7 +35,6 @@ protected:
     void renderData() override;
     void calculateDataBounds() override;
     BoundingBox getDataBounds() const override;
-    std::unique_ptr<SelectionManager> createSelectionManager() override;
 
     // Advanced initialization
     void initializeGL() override;

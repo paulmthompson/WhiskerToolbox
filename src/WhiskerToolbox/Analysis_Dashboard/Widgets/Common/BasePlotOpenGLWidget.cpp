@@ -1,6 +1,5 @@
 #include "BasePlotOpenGLWidget.hpp"
 #include "PlotInteractionController.hpp"
-#include "SelectionManager.hpp"
 #include "TooltipManager.hpp"
 #include "widget_utilities.hpp"
 #include "Groups/GroupManager.hpp"
@@ -70,11 +69,6 @@ BasePlotOpenGLWidget::~BasePlotOpenGLWidget() = default;
 
 void BasePlotOpenGLWidget::setGroupManager(GroupManager* group_manager) {
     _group_manager = group_manager;
-    
-    // Notify subclasses that group manager has changed by recreating selection manager
-    if (_selection_manager) {
-        _selection_manager->setGroupManager(_group_manager);
-    }
     
     qDebug() << "BasePlotOpenGLWidget: Set group manager";
 }
@@ -302,10 +296,6 @@ void BasePlotOpenGLWidget::setSelectionMode(SelectionMode mode) {
         
         createSelectionHandler(mode);
         
-        if (_selection_manager) {
-            _selection_manager->setSelectionMode(mode);
-        }
-        
         emit selectionModeChanged(mode);
     }
 }
@@ -333,15 +323,6 @@ void BasePlotOpenGLWidget::createSelectionHandler(SelectionMode mode) {
             handler->setNotificationCallback(_selection_callback);
         }
     }, _selection_handler);
-}
-
-void BasePlotOpenGLWidget::clearSelection() {
-    if (_selection_manager) {
-        _selection_manager->clearSelection();
-        requestThrottledUpdate();
-        
-        qDebug() << "BasePlotOpenGLWidget: Selection cleared";
-    }
 }
 
 void BasePlotOpenGLWidget::renderBackground() {

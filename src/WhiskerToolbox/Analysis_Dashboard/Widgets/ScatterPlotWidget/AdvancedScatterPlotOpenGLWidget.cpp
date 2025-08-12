@@ -1,9 +1,8 @@
 #include "AdvancedScatterPlotOpenGLWidget.hpp"
-#include "../Common/SelectionManager.hpp"
-#include "../Common/PlotSelectionAdapters.hpp"
 
 #include <QDebug>
 #include <QOpenGLFunctions_4_3_Core>
+
 #include <algorithm>
 
 AdvancedScatterPlotOpenGLWidget::AdvancedScatterPlotOpenGLWidget(QWidget* parent)
@@ -63,9 +62,6 @@ void AdvancedScatterPlotOpenGLWidget::setScatterData(const std::vector<float>& x
         // TODO: Initialize AdvancedScatterPlotVisualization
         doneCurrent();
     }
-
-    // Create selection manager with appropriate adapter
-    _selection_manager = createSelectionManager();
 
     // Update view
     updateViewMatrices();
@@ -139,23 +135,6 @@ void AdvancedScatterPlotOpenGLWidget::calculateDataBounds() {
 
 BoundingBox AdvancedScatterPlotOpenGLWidget::getDataBounds() const {
     return _data_bounds_valid ? _data_bounds : BoundingBox();
-}
-
-std::unique_ptr<SelectionManager> AdvancedScatterPlotOpenGLWidget::createSelectionManager() {
-    auto selection_manager = std::make_unique<SelectionManager>(this);
-    
-    // Create adapter for our vector-based data
-    auto adapter = std::make_unique<ScatterPlotSelectionAdapter>(_x_data, _y_data);
-    
-    // Set group manager on both selection manager and adapter
-    selection_manager->setGroupManager(_group_manager);
-    selection_manager->setDataAdapter(std::move(adapter));
-    
-    // Connect signals
-    connect(selection_manager.get(), &SelectionManager::selectionChanged,
-            this, &AdvancedScatterPlotOpenGLWidget::onSelectionChanged);
-    
-    return selection_manager;
 }
 
 void AdvancedScatterPlotOpenGLWidget::onSelectionChanged(size_t total_selected) {

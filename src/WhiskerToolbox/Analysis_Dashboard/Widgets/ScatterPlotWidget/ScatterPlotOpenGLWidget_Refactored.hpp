@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Common/BasePlotOpenGLWidget.hpp"
-#include "../Common/PlotSelectionAdapters.hpp"
+
 
 #include <vector>
 #include <memory>
@@ -34,6 +34,9 @@ public:
      */
     void setTooltipsEnabled(bool enabled);
 
+    //Selection
+    void clearSelection();
+
 signals:
 
     /**
@@ -47,7 +50,6 @@ protected:
     void renderData() override;
     void calculateDataBounds() override;
     BoundingBox getDataBounds() const override;
-    std::unique_ptr<SelectionManager> createSelectionManager() override;
 
     // OpenGL lifecycle
     void initializeGL() override;
