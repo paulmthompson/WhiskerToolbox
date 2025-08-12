@@ -170,7 +170,7 @@ void MainWindow::Load_Video() {
         return;
     }
 
-    _LoadData();
+    loadData();
 }
 
 void MainWindow::Load_Images() {
@@ -187,7 +187,7 @@ void MainWindow::Load_Images() {
     media->LoadMedia(dir_name.toStdString());
     _data_manager->setData<ImageData>("media", media, TimeKey("time"));
 
-    _LoadData();
+    loadData();
 }
 
 void MainWindow::_loadJSONConfig() {
@@ -223,7 +223,7 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
     
     // Only update media-related components if we loaded media data
     if (hasMediaData) {
-        _LoadData();
+        loadData();
     } else {
         // If no media data was loaded, we might still need to update the time scrollbar
         // if new time-based data was added
@@ -231,7 +231,7 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
     }
 }
 
-void MainWindow::_LoadData() {
+void MainWindow::loadData() {
 
     _updateFrameCount();
 
@@ -272,7 +272,7 @@ void MainWindow::_updateFrameCount() {
 void MainWindow::openWhiskerTracking() {
     std::string const key = "whisker_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto whiskerWidget = std::make_unique<Whisker_Widget>(
                 _data_manager);
         connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, whiskerWidget.get(), &Whisker_Widget::LoadFrame);
@@ -303,7 +303,7 @@ ads::CDockWidget * MainWindow::findDockWidget(std::string const & key) const {
 void MainWindow::openTongueTracking() {
     std::string const key = "tongue_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto tongueWidget = std::make_unique<Tongue_Widget>(_data_manager);
         tongueWidget->setObjectName(key);
         registerDockWidget(key, tongueWidget.get(), ads::RightDockWidgetArea);
@@ -319,7 +319,7 @@ void MainWindow::openTongueTracking() {
 void MainWindow::openMLWidget() {
     std::string const key = "ML_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto MLWidget = std::make_unique<ML_Widget>(
                 _data_manager);
 
@@ -337,7 +337,7 @@ void MainWindow::openMLWidget() {
 void MainWindow::openDataViewer() {
     std::string const key = "DataViewer_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
                 _data_manager,
                 ui->time_scrollbar,
@@ -357,7 +357,7 @@ void MainWindow::openDataViewer() {
 void MainWindow::openBatchProcessingWidget() {
     std::string const key = "BatchProcessing_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto batchProcessingWidget = std::make_unique<BatchProcessing_Widget>(_data_manager, this, this);
 
         batchProcessingWidget->setObjectName(key);
@@ -421,6 +421,10 @@ bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
                 return true; // Event handled
             }
         }
+        
+        // For all other keys, let them pass through to the focused widget
+        qDebug() << "MainWindow::eventFilter - Passing key through to focused widget";
+        return false;
     }
     
     // For all other events, let them be handled normally
@@ -436,7 +440,7 @@ void MainWindow::keyPressEvent(QKeyEvent * event) {
 void MainWindow::openPointLoaderWidget() {
     std::string const key = "PointLoader_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto PointLoaderWidget = std::make_unique<Point_Loader_Widget>(
                 _data_manager,
                 this);
@@ -454,7 +458,7 @@ void MainWindow::openPointLoaderWidget() {
 void MainWindow::openMaskLoaderWidget() {
     std::string const key = "MaskLoader_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto MaskLoaderWidget = std::make_unique<Mask_Loader_Widget>(
                 _data_manager,
                 this);
@@ -472,7 +476,7 @@ void MainWindow::openMaskLoaderWidget() {
 void MainWindow::openLineLoaderWidget() {
     std::string const key = "LineLoader_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto LineLoaderWidget = std::make_unique<Line_Loader_Widget>(
                 _data_manager,
                 this);
@@ -490,7 +494,7 @@ void MainWindow::openLineLoaderWidget() {
 void MainWindow::openIntervalLoaderWidget() {
     std::string const key = "IntervalLoader_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto DigitalIntervalLoaderWidget = std::make_unique<Digital_Interval_Loader_Widget>(
                 _data_manager,
                 this);
@@ -508,7 +512,7 @@ void MainWindow::openIntervalLoaderWidget() {
 void MainWindow::openEventLoaderWidget() {
     std::string const key = "EventLoader_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto DigitalEventLoaderWidget = std::make_unique<Digital_Event_Loader_Widget>(
                 _data_manager,
                 this);
@@ -526,7 +530,7 @@ void MainWindow::openEventLoaderWidget() {
 void MainWindow::openTensorLoaderWidget() {
     std::string const key = "TensorLoader_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto tensor_loader_widget = std::make_unique<Tensor_Loader_Widget>(
                 _data_manager,
                 this);
@@ -544,7 +548,7 @@ void MainWindow::openTensorLoaderWidget() {
 void MainWindow::openDataManager() {
     std::string const key = "DataManager_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto dm_widget = std::make_unique<DataManager_Widget>(
                 _data_manager,
                 ui->time_scrollbar,
@@ -578,7 +582,7 @@ void MainWindow::openDataManager() {
 void MainWindow::openVideoExportWidget() {
     std::string const key = "VideoExport_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto vid_widget = std::make_unique<Export_Video_Widget>(
                 _data_manager,
                 _scene,
@@ -600,7 +604,7 @@ void MainWindow::openVideoExportWidget() {
 void MainWindow::openSpreadsheetExportWidget() {
     std::string const key = "SpreadsheetExport_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto vid_widget = std::make_unique<DataAggregationExporter_Widget>(
                 this);
 
@@ -620,7 +624,7 @@ void MainWindow::openSpreadsheetExportWidget() {
 void MainWindow::openDataTransforms() {
     std::string const key = "DataTransform_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto dt_widget = std::make_unique<DataTransform_Widget>(
                 _data_manager,
                 this);
@@ -654,7 +658,7 @@ void MainWindow::openDataTransforms() {
 void MainWindow::openTerminalWidget() {
     std::string const key = "Terminal_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto terminal_widget = std::make_unique<TerminalWidget>(this);
 
         terminal_widget->setObjectName(key);
@@ -671,7 +675,7 @@ void MainWindow::openTerminalWidget() {
 void MainWindow::openAnalysisDashboard() {
     std::string const key = "Analysis_Dashboard_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto analysis_dashboard_widget = std::make_unique<Analysis_Dashboard>(
                 _data_manager,
                 ui->time_scrollbar,
@@ -692,7 +696,7 @@ void MainWindow::openAnalysisDashboard() {
 void MainWindow::openTableDesignerWidget() {
     std::string const key = "TableDesigner_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto td_widget = std::make_unique<TableDesignerWidget>(_data_manager, this);
         td_widget->setObjectName(QString::fromStdString(key));
         registerDockWidget(key, td_widget.get(), ads::RightDockWidgetArea);
@@ -705,7 +709,7 @@ void MainWindow::openTableDesignerWidget() {
 void MainWindow::openTestWidget() {
     std::string const key = "Test_widget";
 
-    if (_widgets.find(key) == _widgets.end()) {
+    if (!_widgets.contains(key)) {
         auto test_widget = std::make_unique<Test_Widget>(this);
 
         test_widget->setObjectName(key);

@@ -4,10 +4,12 @@
 #include <QFocusEvent>
 #include <QGraphicsScene>
 #include <QGraphicsView>
+#include <QKeyEvent>
 #include <QOpenGLWidget>
 #include <QVBoxLayout>
 #include <QEvent>
 #include <QResizeEvent>
+
 
 PlotDockWidgetContent::PlotDockWidgetContent(QString const& plot_id,
                                              AbstractPlotWidget* plot_item,
@@ -73,7 +75,25 @@ bool PlotDockWidgetContent::eventFilter(QObject* watched, QEvent* event)
         case QEvent::MouseButtonPress:
         case QEvent::MouseButtonDblClick:
         case QEvent::FocusIn:
+            qDebug() << "PlotDockWidgetContent::eventFilter - Activating plot" << _plot_id;
             emit activated(_plot_id);
+            // Push focus down into the plot item (and its embedded GL widget via proxy)
+            if (_plot_item) {
+                qDebug() << "PlotDockWidgetContent::eventFilter - Setting focus on plot item";
+                _plot_item->setFocus(Qt::OtherFocusReason);
+            } else {
+                qDebug() << "PlotDockWidgetContent::eventFilter - No plot item available";
+            }
+            break;
+        case QEvent::KeyPress:
+            /*
+            Main window catches the key press event and forwards it to the plot item.
+            */
+            if (_plot_item) {
+                QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+                _plot_item->handleKeyPress(keyEvent);
+                return true; // Event handled
+            }
             break;
         default:
             break;

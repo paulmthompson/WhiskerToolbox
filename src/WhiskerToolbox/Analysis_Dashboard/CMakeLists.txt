@@ -18,8 +18,16 @@ set(ANALYSIS_DASHBOARD_SOURCES
 
     # Common 
     Widgets/Common/PlotInteractionController.hpp
+    Widgets/Common/PlotInteractionController.cpp
     Widgets/Common/ViewAdapter.hpp
-    Widgets/Common/InteractiveOpenGLWidgetBase.hpp
+    Widgets/Common/GenericViewAdapter.hpp
+    Widgets/Common/GenericViewAdapter.cpp
+    Widgets/Common/BasePlotOpenGLWidget.hpp
+    Widgets/Common/BasePlotOpenGLWidget.cpp
+    Widgets/Common/TooltipManager.hpp
+    Widgets/Common/TooltipManager.cpp
+    Widgets/Common/ViewState.hpp
+    Widgets/Common/ViewState.cpp
 
 
     # Plots
@@ -66,8 +74,10 @@ set(ANALYSIS_DASHBOARD_SOURCES
     # Widgets
     Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
     Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
-    Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget.hpp
-    Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget.cpp
+   # Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget.hpp
+   # Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget.cpp
+    Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget_Refactored.hpp
+    Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget_Refactored.cpp
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.cpp
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.ui
@@ -86,8 +96,10 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/EventPlotWidget/EventPlotViewAdapter.hpp
     Widgets/EventPlotWidget/EventPlotViewAdapter.cpp
 
-    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
-    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
+    #Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
+    #Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
+    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget_Refactored.hpp
+    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget_Refactored.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp

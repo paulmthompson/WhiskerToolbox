@@ -1,12 +1,16 @@
 #ifndef SCATTERPLOTOPENGLWIDGET_HPP
 #define SCATTERPLOTOPENGLWIDGET_HPP
 
+#include "Selection/SelectionHandlers.hpp"
+#include "Selection/SelectionModes.hpp"
+#include "Widgets/Common/PlotInteractionController.hpp"
+#include "CoreGeometry/boundingbox.hpp"
+
 #include <QMatrix4x4>
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLWidget>
 #include <QTimer>
-#include <QRubberBand>
-#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
+
 
 #include <memory>
 #include <vector>
@@ -15,6 +19,7 @@
 class ScatterPlotVisualization;
 class GroupManager;
 class ScatterPlotViewAdapter; // adapter (friend)
+class QKeyEvent;
 
 /**
  * @brief OpenGL widget for rendering scatter plot data with high performance
@@ -59,29 +64,6 @@ public:
     float getPointSize() const { return _point_size; }
 
     /**
-     * @brief Set zoom level (1.0 = default, >1.0 = zoomed in, <1.0 = zoomed out)
-     * @param zoom_level The zoom level
-     */
-    void setZoomLevel(float zoom_level);
-
-    /**
-     * @brief Get current zoom level
-     */
-    float getZoomLevel() const { return _zoom_level; }
-
-    /**
-     * @brief Set pan offset
-     * @param offset_x X offset in normalized coordinates
-     * @param offset_y Y offset in normalized coordinates
-     */
-    void setPanOffset(float offset_x, float offset_y);
-
-    /**
-     * @brief Get current pan offset
-     */
-    QVector2D getPanOffset() const { return QVector2D(_pan_offset_x, _pan_offset_y); }
-
-    /**
      * @brief Enable or disable tooltips
      * @param enabled Whether tooltips should be enabled
      */
@@ -99,18 +81,6 @@ signals:
      */
     void pointClicked(size_t point_index);
 
-    /**
-     * @brief Emitted when zoom level changes
-     * @param zoom_level The new zoom level
-     */
-    void zoomLevelChanged(float zoom_level);
-
-    /**
-     * @brief Emitted when pan offset changes
-     * @param offset_x The new X pan offset
-     * @param offset_y The new Y pan offset
-     */
-    void panOffsetChanged(float offset_x, float offset_y);
 
     /**
      * @brief Emitted when the current world view bounds change (after zoom/pan/resize/box-zoom)
@@ -122,6 +92,11 @@ signals:
      */
     void mouseWorldMoved(float world_x, float world_y);
 
+    /**
+     * @brief Emitted when the highlight state changes, requiring scene graph update
+     */
+    void highlightStateChanged();
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -132,13 +107,19 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
     void leaveEvent(QEvent * event) override;
+    void keyPressEvent(QKeyEvent * event) override;
 
 
 private slots:
     /**
      * @brief Handle tooltip timer timeout
      */
-    void handleTooltipTimer();
+    void _handleTooltipTimer();
+
+    /**
+     * @brief Handle tooltip refresh timer timeout
+     */
+    void _handleTooltipRefresh();
 
 private:
   // Grant adapter access to private state for interaction
@@ -152,8 +133,12 @@ private:
     std::vector<float> _x_data;
     std::vector<float> _y_data;
 
+    SelectionMode _selection_mode;// Current selection mode
+
+    SelectionVariant _selection_handler;
+
     // Data bounds for projection calculation
-    float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
+    BoundingBox _data_bounds;
     bool _data_bounds_valid;
 
     // OpenGL state
@@ -161,7 +146,8 @@ private:
 
     // View transformation
     QMatrix4x4 _projection_matrix;
-    float _zoom_level;
+    QMatrix4x4 _view_matrix;
+    QMatrix4x4 _model_matrix;
     float _zoom_level_x;
     float _zoom_level_y;
     float _pan_offset_x;
@@ -169,16 +155,14 @@ private:
     float _padding_factor;
 
     // Mouse interaction
-    bool _dragging;
     QPoint _last_mouse_pos;
     QPoint _current_mouse_pos;
     bool _tooltips_enabled;
-    bool _is_panning;  // Track panning state
 
     // Tooltip system
     QTimer * _tooltip_timer;
+    QTimer * _tooltip_refresh_timer;
     QPoint _tooltip_mouse_pos;
-    static constexpr int TOOLTIP_DELAY_MS = 500;
 
     // FPS limiter timer (30 FPS = ~33ms interval)
     QTimer * _fps_limiter_timer;
@@ -187,13 +171,8 @@ private:
   // Interaction controller (composition)
   std::unique_ptr<PlotInteractionController> _interaction;
 
-    // Box-zoom state
-    bool _box_zoom_active = false;
-    QRubberBand * _rubber_band = nullptr;
-    QPoint _rubber_origin;
-
     /**
-     * @brief Update the projection matrix based on current data bounds and zoom/pan
+     * @brief Update view and projection matrices based on current camera state
      */
     void updateProjectionMatrix();
 
@@ -210,12 +189,6 @@ private:
     QVector2D screenToWorld(QPoint const & screen_pos) const;
 
     /**
-     * @brief Handle mouse hover for tooltips
-     * @param pos Mouse position
-     */
-    void handleMouseHover(QPoint const & pos);
-
-    /**
      * @brief Calculate the current orthographic projection bounds based on data
      * @param left Output: left bound
      * @param right Output: right bound  
@@ -228,6 +201,15 @@ private:
      * @brief Calculate data bounds from the stored data
      */
   void calculateDataBounds();
+
+  /**
+   * @brief Compute camera center and visible world extents for current view
+   * @pre _data_bounds_valid must be true and widget size positive
+   */
+  void computeCameraWorldView(float & center_x,
+                              float & center_y,
+                              float & world_width,
+                              float & world_height) const;
 };
 
 #endif// SCATTERPLOTOPENGLWIDGET_HPP

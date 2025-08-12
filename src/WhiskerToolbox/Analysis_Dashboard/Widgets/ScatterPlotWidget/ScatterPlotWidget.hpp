@@ -57,17 +57,6 @@ public:
     float getPointSize() const;
 
     /**
-     * @brief Set zoom level (1.0 = default, >1.0 = zoomed in, <1.0 = zoomed out)
-     * @param zoom_level The zoom level
-     */
-    void setZoomLevel(float zoom_level);
-
-    /**
-     * @brief Get current zoom level
-     */
-    float getZoomLevel() const;
-
-    /**
      * @brief Set pan offset
      * @param offset_x X offset in normalized coordinates
      * @param offset_y Y offset in normalized coordinates

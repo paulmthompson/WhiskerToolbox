@@ -12,6 +12,7 @@
 class DataManager;
 class GroupManager;
 class QGraphicsSceneMouseEvent;
+class QKeyEvent;
 
 /**
  * @brief Abstract base class for all plot widgets in the Analysis Dashboard
@@ -72,6 +73,12 @@ public:
      * @return Unique ID string
      */
     QString getPlotId() const;
+
+    /**
+     * @brief Public method to handle key press events from external sources
+     * @param event The key event to handle
+     */
+    void handleKeyPress(QKeyEvent* event);
 
 signals:
     /**

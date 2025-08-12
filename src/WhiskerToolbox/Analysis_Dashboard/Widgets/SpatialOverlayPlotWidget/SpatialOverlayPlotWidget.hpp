@@ -15,7 +15,7 @@ class PointData;
 class QGraphicsProxyWidget;
 class SpatialOverlayOpenGLWidget;
 class TimeFrameIndex;
-
+class QKeyEvent;
 
 /**
  * @brief Spatial overlay plot widget for visualizing PointData across all time frames
@@ -110,6 +110,7 @@ protected:
     void paint(QPainter * painter, QStyleOptionGraphicsItem const * option, QWidget * widget = nullptr) override;
     void resizeEvent(QGraphicsSceneResizeEvent * event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
+    void keyPressEvent(QKeyEvent * event) override;
 
 private slots:
     /**

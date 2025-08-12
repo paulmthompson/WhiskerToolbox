@@ -48,28 +48,11 @@ void ScatterPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget
 
     if (_scatter_plot_widget) {
         updateFromPlot();
-
-        // Connect to property changes to update the UI
-        if (_scatter_plot_widget->getOpenGLWidget()) {
-            connect(_scatter_plot_widget->getOpenGLWidget(), &ScatterPlotOpenGLWidget::zoomLevelChanged,
-                    this, &ScatterPlotPropertiesWidget::updateFromPlot);
-            connect(_scatter_plot_widget->getOpenGLWidget(), &ScatterPlotOpenGLWidget::panOffsetChanged,
-                    this, &ScatterPlotPropertiesWidget::updateFromPlot);
-        }
     }
 }
 
 void ScatterPlotPropertiesWidget::setScatterPlotWidget(ScatterPlotWidget * scatter_widget) {
     _scatter_plot_widget = scatter_widget;
-
-    // Connect to OpenGL widget signals for coordinate range updates
-    if (_scatter_plot_widget && _scatter_plot_widget->getOpenGLWidget()) {
-        auto opengl_widget = _scatter_plot_widget->getOpenGLWidget();
-        connect(opengl_widget, &ScatterPlotOpenGLWidget::zoomLevelChanged,
-                this, &ScatterPlotPropertiesWidget::onZoomLevelChanged);
-        connect(opengl_widget, &ScatterPlotOpenGLWidget::panOffsetChanged,
-                this, &ScatterPlotPropertiesWidget::onPanOffsetChanged);
-    }
 
     updateFromPlot();
 }
@@ -741,10 +724,8 @@ QMap<QString, QString> ScatterPlotPropertiesWidget::getAvailableNumericColumnsWi
     return columns_with_types;
 }
 
-
-// Removed legacy getNumericColumnsFromRegistry
-
 void ScatterPlotPropertiesWidget::updateCoordinateRange() {
+    /*
     if (!_scatter_plot_widget || !_scatter_plot_widget->getOpenGLWidget()) {
         ui->x_range_value->setText("No data");
         ui->y_range_value->setText("No data");
@@ -814,6 +795,7 @@ void ScatterPlotPropertiesWidget::updateCoordinateRange() {
 
     ui->x_range_value->setText(x_range_text);
     ui->y_range_value->setText(y_range_text);
+    */
 }
 
 void ScatterPlotPropertiesWidget::onZoomLevelChanged(float zoom_level) {

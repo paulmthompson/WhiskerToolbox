@@ -1,5 +1,5 @@
 #include "ScatterPlotWidget.hpp"
-#include "ScatterPlotOpenGLWidget.hpp"
+#include "ScatterPlotOpenGLWidget_Refactored.hpp"
 
 #include <QDebug>
 #include <QGraphicsProxyWidget>
@@ -14,9 +14,6 @@ ScatterPlotWidget::ScatterPlotWidget(QGraphicsItem * parent)
     qDebug() << "ScatterPlotWidget::ScatterPlotWidget constructor called";
 
     setPlotTitle("Scatter Plot");
-    
-    // Disable item caching to ensure live updates from embedded OpenGL widget
-    setCacheMode(QGraphicsItem::NoCache);
 
     setupOpenGLWidget();
 
@@ -67,35 +64,9 @@ void ScatterPlotWidget::setPointSize(float point_size) {
 
 float ScatterPlotWidget::getPointSize() const {
     if (_opengl_widget) {
-        return _opengl_widget->getPointSize();
+        //return _opengl_widget->getPointSize();
     }
     return 3.0f; // Default value
-}
-
-void ScatterPlotWidget::setZoomLevel(float zoom_level) {
-    if (_opengl_widget) {
-        _opengl_widget->setZoomLevel(zoom_level);
-    }
-}
-
-float ScatterPlotWidget::getZoomLevel() const {
-    if (_opengl_widget) {
-        return _opengl_widget->getZoomLevel();
-    }
-    return 1.0f; // Default value
-}
-
-void ScatterPlotWidget::setPanOffset(float offset_x, float offset_y) {
-    if (_opengl_widget) {
-        _opengl_widget->setPanOffset(offset_x, offset_y);
-    }
-}
-
-QVector2D ScatterPlotWidget::getPanOffset() const {
-    if (_opengl_widget) {
-        return _opengl_widget->getPanOffset();
-    }
-    return QVector2D(0.0f, 0.0f); // Default value
 }
 
 void ScatterPlotWidget::setTooltipsEnabled(bool enabled) {
@@ -106,7 +77,7 @@ void ScatterPlotWidget::setTooltipsEnabled(bool enabled) {
 
 bool ScatterPlotWidget::getTooltipsEnabled() const {
     if (_opengl_widget) {
-        return _opengl_widget->getTooltipsEnabled();
+        //return _opengl_widget->getTooltipsEnabled();
     }
     return true; // Default value
 }
@@ -179,24 +150,28 @@ void ScatterPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
 }
 
 void ScatterPlotWidget::updateVisualization() {
-    // This method can be called when data sources change
-    // For now, it's a placeholder for future data loading logic
-    emit renderingPropertiesChanged();
+    if (!_parameters.data_manager || !_opengl_widget) {
+        return;
+    }
+
+    update();
+    emit renderUpdateRequested(getPlotId());
 }
 
 void ScatterPlotWidget::setupOpenGLWidget() {
-    // Create the OpenGL widget
     _opengl_widget = new ScatterPlotOpenGLWidget();
-    
-    // Create a proxy widget to embed the OpenGL widget in the graphics scene
-    _proxy_widget = new QGraphicsProxyWidget(this);
-    _proxy_widget->setWidget(_opengl_widget);
 
-    // Configure OpenGL widget for better compatibility inside QGraphicsScene
     _opengl_widget->setAttribute(Qt::WA_AlwaysStackOnTop, false);
     _opengl_widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
     _opengl_widget->setAttribute(Qt::WA_NoSystemBackground, true);
+
     _opengl_widget->setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+
+    qDebug() << "ScatterPlotWidget: Created OpenGL widget with format:" << _opengl_widget->format().majorVersion() << "." << _opengl_widget->format().minorVersion();
+
+    // Create a proxy widget to embed the OpenGL widget in the graphics scene
+    _proxy_widget = new QGraphicsProxyWidget(this);
+    _proxy_widget->setWidget(_opengl_widget);
 
     // Configure the proxy widget to not interfere with parent interactions
     _proxy_widget->setFlag(QGraphicsItem::ItemIsMovable, false);
@@ -205,12 +180,8 @@ void ScatterPlotWidget::setupOpenGLWidget() {
     // Disable proxy caching so that it repaints each update from the child widget
     _proxy_widget->setCacheMode(QGraphicsItem::NoCache);
     
-    // Position the proxy widget within this graphics item
-    // Leave space for title, border, and resize handles
-    QRectF rect = boundingRect();
-    QRectF content_rect = isFrameAndTitleVisible()
-        ? rect.adjusted(8, 30, -8, -8)
-        : rect;
+    QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
+    _opengl_widget->resize(content_rect.size().toSize());
     _proxy_widget->setGeometry(content_rect);
     
     // Connect signals after widget is created
@@ -227,22 +198,13 @@ void ScatterPlotWidget::connectOpenGLSignals() {
     // Connect OpenGL widget signals to this widget's signals
     connect(_opengl_widget, &ScatterPlotOpenGLWidget::pointClicked,
             this, &ScatterPlotWidget::pointClicked);
-    
-    // Connect property change signals
-    connect(_opengl_widget, &ScatterPlotOpenGLWidget::zoomLevelChanged,
-            this, &ScatterPlotWidget::renderingPropertiesChanged);
-    connect(_opengl_widget, &ScatterPlotOpenGLWidget::panOffsetChanged,
-            this, &ScatterPlotWidget::renderingPropertiesChanged);
 
-    // Force proxy and item repaints on interactive changes to ensure on-screen updates
-    auto requestRepaint = [this]() {
-        if (_proxy_widget) {
-            _proxy_widget->update();
-        }
-        this->update();
-    };
-    connect(_opengl_widget, &ScatterPlotOpenGLWidget::zoomLevelChanged, this, requestRepaint);
-    connect(_opengl_widget, &ScatterPlotOpenGLWidget::panOffsetChanged, this, requestRepaint);
-    
+    // Connect highlight state changes to trigger scene graph updates
+    connect(_opengl_widget, &ScatterPlotOpenGLWidget::highlightStateChanged,
+        this, [this]() {
+            update();// Trigger graphics item update
+            emit renderUpdateRequested(getPlotId());
+        });
+
     qDebug() << "ScatterPlotWidget: OpenGL signals connected";
 }
