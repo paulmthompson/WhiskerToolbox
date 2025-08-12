@@ -77,7 +77,7 @@ private:
     void _createActions();
     void _buildInitialLayout();
 
-    void _LoadData();
+    void loadData();
     void _updateFrameCount();
 
 private slots:

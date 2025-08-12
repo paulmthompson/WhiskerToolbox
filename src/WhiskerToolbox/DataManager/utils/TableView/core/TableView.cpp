@@ -23,7 +23,7 @@ TableView::TableView(TableView && other) noexcept
       m_colNameToIndex(std::move(other.m_colNameToIndex)),
       m_planCache(std::move(other.m_planCache)) {}
 
-TableView & TableView::operator=(TableView && other) noexcept {
+TableView & TableView::operator=(TableView && other) {
     if (this != &other) {
         m_rowSelector = std::move(other.m_rowSelector);
         m_dataManager = std::move(other.m_dataManager);
