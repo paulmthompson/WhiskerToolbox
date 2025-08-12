@@ -1,5 +1,5 @@
 #include "ScatterPlotWidget.hpp"
-#include "ScatterPlotOpenGLWidget.hpp"
+#include "ScatterPlotOpenGLWidget_Refactored.hpp"
 
 #include <QDebug>
 #include <QGraphicsProxyWidget>
@@ -64,7 +64,7 @@ void ScatterPlotWidget::setPointSize(float point_size) {
 
 float ScatterPlotWidget::getPointSize() const {
     if (_opengl_widget) {
-        return _opengl_widget->getPointSize();
+        //return _opengl_widget->getPointSize();
     }
     return 3.0f; // Default value
 }
@@ -77,7 +77,7 @@ void ScatterPlotWidget::setTooltipsEnabled(bool enabled) {
 
 bool ScatterPlotWidget::getTooltipsEnabled() const {
     if (_opengl_widget) {
-        return _opengl_widget->getTooltipsEnabled();
+        //return _opengl_widget->getTooltipsEnabled();
     }
     return true; // Default value
 }
@@ -198,7 +198,6 @@ void ScatterPlotWidget::connectOpenGLSignals() {
     // Connect OpenGL widget signals to this widget's signals
     connect(_opengl_widget, &ScatterPlotOpenGLWidget::pointClicked,
             this, &ScatterPlotWidget::pointClicked);
-
 
     // Connect highlight state changes to trigger scene graph updates
     connect(_opengl_widget, &ScatterPlotOpenGLWidget::highlightStateChanged,

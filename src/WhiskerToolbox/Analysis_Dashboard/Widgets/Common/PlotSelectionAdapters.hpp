@@ -1,0 +1,91 @@
+#pragma once
+
+#include "SelectionManager.hpp"
+#include <vector>
+#include <unordered_set>
+#include <cstdint>
+
+/**
+ * Selection adapter for scatter plot data (vector<float> x_data, vector<float> y_data)
+ * Implements SelectionDataAdapter for simple vector-based point data
+ */
+class ScatterPlotSelectionAdapter : public SelectionDataAdapter {
+public:
+    ScatterPlotSelectionAdapter(const std::vector<float>& x_data, 
+                               const std::vector<float>& y_data);
+
+    // SelectionDataAdapter interface
+    void applySelection(const std::vector<size_t>& indices) override;
+    std::vector<size_t> getSelectedIndices() const override;
+    void clearSelection() override;
+    
+    void assignSelectedToGroup(int group_id) override;
+    void removeSelectedFromGroups() override;
+    
+    void hideSelected() override;
+    void showAll() override;
+    
+    size_t getTotalSelected() const override;
+    bool isPointSelected(size_t index) const override;
+    
+    size_t getPointCount() const override;
+    std::pair<float, float> getPointPosition(size_t index) const override;
+
+    // ScatterPlot specific
+    void setGroupManager(GroupManager* group_manager);
+    const std::unordered_set<int64_t>& getSelectedPointIds() const { return _selected_points; }
+    const std::unordered_set<int64_t>& getVisiblePointIds() const { return _visible_points; }
+
+private:
+    const std::vector<float>& _x_data;
+    const std::vector<float>& _y_data;
+    std::unordered_set<int64_t> _selected_points;
+    std::unordered_set<int64_t> _visible_points;
+    GroupManager* _group_manager = nullptr;
+    
+    void ensureCorrectSize();
+};
+
+/**
+ * Selection adapter for event plot data (vector<vector<float>>)
+ * Each inner vector represents events for one trial
+ */
+class EventPlotSelectionAdapter : public SelectionDataAdapter {
+public:
+    explicit EventPlotSelectionAdapter(const std::vector<std::vector<float>>& event_data);
+
+    // SelectionDataAdapter interface  
+    void applySelection(const std::vector<size_t>& indices) override;
+    std::vector<size_t> getSelectedIndices() const override;
+    void clearSelection() override;
+    
+    void assignSelectedToGroup(int group_id) override;
+    void removeSelectedFromGroups() override;
+    
+    void hideSelected() override;
+    void showAll() override;
+    
+    size_t getTotalSelected() const override;
+    bool isPointSelected(size_t index) const override;
+    
+    size_t getPointCount() const override;
+    std::pair<float, float> getPointPosition(size_t index) const override;
+
+    // EventPlot specific
+    void setGroupManager(GroupManager* group_manager);
+    std::pair<size_t, size_t> getTrialAndEventIndex(size_t flat_index) const;
+
+private:
+    const std::vector<std::vector<float>>& _event_data;
+    std::unordered_set<int64_t> _selected_events;
+    std::unordered_set<int64_t> _visible_events;
+    GroupManager* _group_manager = nullptr;
+    
+    size_t _total_events = 0;
+    std::vector<size_t> _trial_offsets;  // Cumulative event counts for indexing
+    
+    void buildIndexMapping();
+    void ensureCorrectSize();
+    int64_t flatIndexToEventId(size_t flat_index) const;
+    size_t eventIdToFlatIndex(int64_t event_id) const;
+};

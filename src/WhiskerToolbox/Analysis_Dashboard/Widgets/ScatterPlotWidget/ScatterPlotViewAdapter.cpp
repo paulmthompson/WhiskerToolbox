@@ -1,12 +1,45 @@
 #include "ScatterPlotViewAdapter.hpp"
-#include "ScatterPlotOpenGLWidget.hpp"
+#include "ScatterPlotOpenGLWidget_Refactored.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 
 ScatterPlotViewAdapter::ScatterPlotViewAdapter(ScatterPlotOpenGLWidget * widget)
     : _w(widget) {}
 
 void ScatterPlotViewAdapter::getProjectionBounds(float & left, float & right, float & bottom, float & top) const {
-    _w->calculateProjectionBounds(left, right, bottom, top);
+    // Use the base class method to compute camera world view
+    auto data_bounds = _w->getDataBounds();
+    float padding = _w->_padding_factor;
+    
+    // Calculate world bounds based on current view state
+    float data_width = data_bounds.width();
+    float data_height = data_bounds.height();
+    float center_x = data_bounds.center_x();
+    float center_y = data_bounds.center_y();
+    
+    if (data_width <= 0 || data_height <= 0) {
+        left = right = bottom = top = 0.0f;
+        return;
+    }
+    
+    // Apply zoom and pan transformations
+    float aspect = static_cast<float>(_w->width()) / std::max(1, _w->height());
+    float half_w, half_h;
+    
+    if (aspect > 1.0f) {
+        half_w = (data_width * padding * aspect) / (2.0f * _w->_zoom_level_x);
+        half_h = (data_height * padding) / (2.0f * _w->_zoom_level_y);
+    } else {
+        half_w = (data_width * padding) / (2.0f * _w->_zoom_level_x);
+        half_h = (data_height * padding / aspect) / (2.0f * _w->_zoom_level_y);
+    }
+    
+    float pan_world_x = (_w->_pan_offset_x * data_width) / _w->_zoom_level_x;
+    float pan_world_y = (_w->_pan_offset_y * data_height) / _w->_zoom_level_y;
+    
+    left = center_x - half_w + pan_world_x;
+    right = center_x + half_w + pan_world_x;
+    bottom = center_y - half_h + pan_world_y;
+    top = center_y + half_h + pan_world_y;
 }
 
 void ScatterPlotViewAdapter::getPerAxisZoom(float & zoom_x, float & zoom_y) const {
@@ -44,15 +77,16 @@ int ScatterPlotViewAdapter::viewportHeight() const {
 }
 
 void ScatterPlotViewAdapter::requestUpdate() {
-    _w->updateProjectionMatrix();
+    _w->updateViewMatrices();
     _w->requestThrottledUpdate();
 }
 
 void ScatterPlotViewAdapter::applyBoxZoomToWorldRect(float min_x, float max_x, float min_y, float max_y) {
-    float data_width = _w->_data_bounds.width();
-    float data_height = _w->_data_bounds.height();
-    float center_x = _w->_data_bounds.center_x();
-    float center_y = _w->_data_bounds.center_y();
+    auto data_bounds = _w->getDataBounds();
+    float data_width = data_bounds.width();
+    float data_height = data_bounds.height();
+    float center_x = data_bounds.center_x();
+    float center_y = data_bounds.center_y();
     float target_width = std::max(1e-6f, max_x - min_x);
     float target_height = std::max(1e-6f, max_y - min_y);
     float aspect_ratio = static_cast<float>(_w->width()) / std::max(1, _w->height());
