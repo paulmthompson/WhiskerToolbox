@@ -3,6 +3,7 @@
 #include "../Common/BasePlotOpenGLWidget.hpp"
 #include "../Common/PlotSelectionAdapters.hpp"
 #include "Selection/SelectionModes.hpp"
+#include "Selection/SelectionHandlers.hpp"
 #include <QString>
 #include <memory>
 #include <unordered_map>
@@ -51,11 +52,19 @@ public:
     size_t getTotalSelectedPoints() const;
     size_t getTotalSelectedMasks() const;
     size_t getTotalSelectedLines() const;
+    
+    // Selection management
+    void clearSelection();
 
     // Visibility management
     void hideSelectedItems();
     void showAllItemsCurrentDataset();
     void showAllItemsAllDatasets();
+    
+    // Group management
+    void assignSelectedPointsToNewGroup();
+    void assignSelectedPointsToGroup(int group_id);
+    void ungroupSelectedPoints();
 
     // Coordinate conversion (public interface)
     QVector2D screenToWorld(int screen_x, int screen_y) const;
@@ -79,14 +88,17 @@ protected:
     void initializeGL() override;
 
     // Optional overrides
+    void renderOverlays() override;
     void renderUI() override;
     std::optional<QString> generateTooltipContent(QPoint const& screen_pos) const override;
 
     // Context menu support
     void contextMenuEvent(QContextMenuEvent* event) override;
     
-    // Mouse events - override to add hover logic
+    // Mouse events - override to add hover logic and selection
     void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
 
 private slots:
     void onSelectionChanged(size_t total_selected);
@@ -97,8 +109,9 @@ private:
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
     
-    // Selection mode
+    // Selection mode and handler
     SelectionMode _selection_mode = SelectionMode::None;
+    SelectionVariant _selection_handler;
     
     // Time filtering
     int _start_frame = -1;
@@ -115,11 +128,21 @@ private:
     
     // Context menu
     std::unique_ptr<QMenu> _context_menu;
+    QMenu* _assign_group_menu = nullptr;
+    QAction* _action_create_new_group = nullptr;
+    QAction* _action_ungroup_selected = nullptr;
+    QAction* _action_hide_selected = nullptr;
+    QAction* _action_show_all_current = nullptr;
+    QAction* _action_show_all_datasets = nullptr;
+    QList<QAction*> _dynamic_group_actions;
 
     void initializeVisualizations();
     void updateVisualizationData();
     void initializeContextMenu();
     void updateContextMenuState();
+    void updateDynamicGroupActions();
+    void makeSelection();
+    void createSelectionHandler(SelectionMode mode);
     void ensureSelectionManager();
 
     friend class SpatialOverlayViewAdapter;

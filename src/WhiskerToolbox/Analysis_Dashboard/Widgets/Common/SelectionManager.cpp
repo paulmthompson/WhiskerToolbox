@@ -4,6 +4,7 @@
 #include "Selection/LineSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
 #include "Selection/NoneSelectionHandler.hpp"
+#include "CoreGeometry/points.hpp"
 
 #include <QDebug>
 #include <QString>
@@ -74,6 +75,21 @@ void SelectionManager::makeSelection() {
     emit selectionChanged(selected_indices.size());
     
     qDebug() << "SelectionManager::makeSelection: Applied selection of" << selected_indices.size() << "points";
+}
+
+void SelectionManager::applySelectionFromHandler(const SelectionVariant& handler) {
+    if (!_data_adapter) {
+        qWarning() << "SelectionManager::applySelectionFromHandler: No data adapter set";
+        return;
+    }
+    
+    // Get selected indices based on the handler type and its selection region
+    std::vector<size_t> selected_indices = getSelectedIndicesFromHandler(handler);
+    
+    _data_adapter->applySelection(selected_indices);
+    emit selectionChanged(selected_indices.size());
+    
+    qDebug() << "SelectionManager::applySelectionFromHandler: Applied selection of" << selected_indices.size() << "points";
 }
 
 void SelectionManager::clearSelection() {
@@ -207,4 +223,53 @@ void SelectionManager::createHandlerForMode(SelectionMode mode) {
     }
     
     qDebug() << "SelectionManager: Created handler for mode" << static_cast<int>(mode);
+}
+
+std::vector<size_t> SelectionManager::getSelectedIndicesFromHandler(const SelectionVariant& handler) const {
+    std::vector<size_t> selected_indices;
+    
+    if (!_data_adapter) {
+        return selected_indices;
+    }
+    
+    std::visit([&](auto const& h) {
+        using HandlerType = std::decay_t<decltype(h)>;
+        if constexpr (std::is_same_v<HandlerType, std::unique_ptr<PointSelectionHandler>>) {
+            // For point selection, find the point near the selection position
+            if (h) {
+                QVector2D world_pos = h->getWorldPos();
+                float tolerance = h->getWorldTolerance();
+                
+                auto point_index = findPointNear(world_pos.x(), world_pos.y(), tolerance);
+                if (point_index.has_value()) {
+                    selected_indices.push_back(point_index.value());
+                }
+            }
+        } else if constexpr (std::is_same_v<HandlerType, std::unique_ptr<PolygonSelectionHandler>>) {
+            // For polygon selection, check which points are inside the polygon
+            if (h && h->getActiveSelectionRegion()) {
+                size_t count = _data_adapter->getPointCount();
+                for (size_t i = 0; i < count; ++i) {
+                    auto [px, py] = _data_adapter->getPointPosition(i);
+                    if (h->getActiveSelectionRegion()->containsPoint(Point2D<float>(px, py))) {
+                        selected_indices.push_back(i);
+                    }
+                }
+            }
+        } else if constexpr (std::is_same_v<HandlerType, std::unique_ptr<LineSelectionHandler>>) {
+            // For line selection, check which points intersect the line
+            if (h && h->getActiveSelectionRegion()) {
+                size_t count = _data_adapter->getPointCount();
+                for (size_t i = 0; i < count; ++i) {
+                    auto [px, py] = _data_adapter->getPointPosition(i);
+                    if (h->getActiveSelectionRegion()->containsPoint(Point2D<float>(px, py))) {
+                        selected_indices.push_back(i);
+                    }
+                }
+            }
+        }
+        // NoneSelectionHandler returns empty selection
+    }, handler);
+    
+    return selected_indices;
 }

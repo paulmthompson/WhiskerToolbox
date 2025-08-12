@@ -65,6 +65,7 @@ public:
 
     // Selection operations
     void makeSelection();
+    void applySelectionFromHandler(const SelectionVariant& handler);
     void clearSelection();
     void selectAll();
 
@@ -101,4 +102,5 @@ private:
     GroupManager* _group_manager = nullptr;
 
     void createHandlerForMode(SelectionMode mode);
+    std::vector<size_t> getSelectedIndicesFromHandler(const SelectionVariant& handler) const;
 };
