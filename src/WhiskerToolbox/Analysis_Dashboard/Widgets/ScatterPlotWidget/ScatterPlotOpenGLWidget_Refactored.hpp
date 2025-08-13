@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Widgets/Common/BasePlotOpenGLWidget.hpp"
+#include "Selection/SelectionModes.hpp"
+#include "Selection/SelectionHandlers.hpp"
 
 #include <memory>
 #include <vector>
@@ -34,6 +36,8 @@ public:
 
     //Selection
     void clearSelection();
+    void setSelectionMode(SelectionMode mode) override;
+    size_t getTotalSelectedPoints() const;
 
 signals:
 
@@ -77,4 +81,5 @@ private:
 
     void initializeVisualization();
     void updateVisualizationData();
+    void makeSelection();
 };

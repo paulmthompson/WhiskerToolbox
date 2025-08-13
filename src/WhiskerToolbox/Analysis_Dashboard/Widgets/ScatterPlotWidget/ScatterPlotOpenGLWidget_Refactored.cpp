@@ -15,6 +15,10 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
       _data_bounds_valid(false),
       _data_bounds({0.0f, 0.0f, 0.0f, 0.0f}) {
 
+        _selection_callback = [this]() {
+            makeSelection();
+        };
+
     qDebug() << "ScatterPlotOpenGLWidget: Created with composition-based design";
 }
 
@@ -233,4 +237,49 @@ std::optional<QString> ScatterPlotOpenGLWidget::generateTooltipContent(QPoint co
                               .arg(_y_data[closest_index], 0, 'f', 3);
 
     return tooltip;
+}
+
+//========== Selection ==========
+
+void ScatterPlotOpenGLWidget::makeSelection() {
+    auto context = createRenderingContext();
+
+    if (_selection_handler.valueless_by_exception()) {
+        return;
+    }
+
+    // Determine if we should clear selection. For point selection, there is no region
+    // concept, so we should NOT clear. Only clear when selection mode is None or when
+    // region-based handlers have no active region.
+    bool should_clear = false;
+    if (_selection_mode == SelectionMode::None) {
+        should_clear = true;
+    } else {
+        should_clear = false;
+    }
+
+    if (should_clear) {
+        clearSelection();
+        return;
+    }
+
+    _visualization->applySelection(_selection_handler);
+
+    // Emit selection changed signal with updated counts
+    size_t total_selected = getTotalSelectedPoints();
+    emit selectionChanged(total_selected, QString(), 0);
+
+    requestThrottledUpdate();
+}
+
+size_t ScatterPlotOpenGLWidget::getTotalSelectedPoints() const {
+    return _visualization->m_selected_points.size();
+}
+
+void ScatterPlotOpenGLWidget::setSelectionMode(SelectionMode mode) {
+    auto old_mode = _selection_mode;
+    BasePlotOpenGLWidget::setSelectionMode(mode);
+    if (old_mode != mode) {
+        //updateContextMenuState();
+    }
 }

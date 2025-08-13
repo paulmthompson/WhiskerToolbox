@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Common/BasePlotOpenGLWidget.hpp"
+#include "Widgets/Common/BasePlotOpenGLWidget.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "Selection/SelectionHandlers.hpp"
 
