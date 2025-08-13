@@ -129,16 +129,6 @@ BoundingBox ScatterPlotOpenGLWidget::getDataBounds() const {
     return _data_bounds_valid ? _data_bounds : BoundingBox(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
-void ScatterPlotOpenGLWidget::clearSelection() {
-    /*
-    if (_selection_manager) {
-        _selection_manager->clearSelection();
-        requestThrottledUpdate();
-        qDebug() << "ScatterPlotOpenGLWidget: Selection cleared";
-    }
-        */
-}
-
 void ScatterPlotOpenGLWidget::renderUI() {
     // TODO: Render axis labels using text rendering system
     // This would be implemented similarly to how SpatialOverlayOpenGLWidget
@@ -281,5 +271,23 @@ void ScatterPlotOpenGLWidget::setSelectionMode(SelectionMode mode) {
     BasePlotOpenGLWidget::setSelectionMode(mode);
     if (old_mode != mode) {
         //updateContextMenuState();
+    }
+}
+
+void ScatterPlotOpenGLWidget::clearSelection() {
+    
+    bool had_selection = false;
+
+    if (!_visualization->m_selected_points.empty()) {
+        _visualization->clearSelection();
+        had_selection = true;
+    }
+
+    if (had_selection) {
+        size_t total_selected = getTotalSelectedPoints();
+        emit selectionChanged(total_selected, QString(), 0);
+        requestThrottledUpdate();
+
+        qDebug() << "ScatterPlotOpenGLWidget: Selection cleared";
     }
 }
