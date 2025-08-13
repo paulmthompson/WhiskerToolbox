@@ -423,22 +423,37 @@ RowDescriptor TableView::getRowDescriptor(size_t row_index) const {
 }
 
 std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
-    // Walk all cached plans and try to construct contributing entity ids for this row
-    // Strategy: if any plan has entity-expanded rows cached, use its rows mapping to resolve
+    // Prefer entity-expanded plans if present
     for (auto const & [name, plan] : m_planCache) {
         (void)name;
         auto const & rows = plan.getRows();
-        if (!rows.empty() && row_index < rows.size()) {
-            // For line sources, a row with entityIndex maps 1:1 to a line entity at that timestamp
-            auto const & row = rows[row_index];
-            if (row.entityIndex.has_value()) {
-                // Reconstruct EntityId using the source adapter
-                auto lineSource = m_dataManager->getLineSource(DataSourceNameInterner::instance().nameOf(plan.getSourceId()));
-                if (lineSource) {
-                    // LineData adapter can be downcast to obtain underlying LineData for EntityIds
-                    // Fallback: derive EntityId via EntityRegistry if available (not wired here)
-                }
+        if (rows.empty() || row_index >= rows.size()) continue;
+        auto const & row = rows[row_index];
+        if (!row.entityIndex.has_value()) continue;
+
+        // Resolve by source kind
+        auto const sourceName = DataSourceNameInterner::instance().nameOf(plan.getSourceId());
+        switch (plan.getSourceKind()) {
+            case ExecutionPlan::DataSourceKind::Line: {
+                auto lineSource = m_dataManager->getLineSource(sourceName);
+                if (!lineSource) break;
+                EntityId id = lineSource->getEntityIdAt(row.timeIndex, *row.entityIndex);
+                if (id != 0) return {id};
+                break;
             }
+            case ExecutionPlan::DataSourceKind::Event: {
+                auto eventSource = m_dataManager->getEventSource(sourceName);
+                if (!eventSource) break;
+                // For events we typically do not expand per-entity rows yet; fall through
+                break;
+            }
+            case ExecutionPlan::DataSourceKind::Interval: {
+                auto intervalSource = m_dataManager->getIntervalSource(sourceName);
+                if (!intervalSource) break;
+                // Interval entity expansion not yet implemented here
+                break;
+            }
+            default: break;
         }
     }
     return {};
