@@ -9,7 +9,7 @@ find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport OpenGLWidgets OpenGL)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport OpenGLWidgets OpenGL Concurrent)
 
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
@@ -51,6 +51,8 @@ set(PROJECT_SOURCES
         TableDesignerWidget/TableDesignerWidget.hpp
         TableDesignerWidget/TableDesignerWidget.cpp
         TableDesignerWidget/TableDesignerWidget.ui
+        TableDesignerWidget/PreviewTableModel.hpp
+        TableDesignerWidget/PreviewTableModel.cpp
 
         DataManager_Widget/DataManager_Widget.hpp
         DataManager_Widget/DataManager_Widget.cpp
@@ -497,7 +499,7 @@ qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
 )
 
-target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)
+target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL Qt6::Concurrent)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)

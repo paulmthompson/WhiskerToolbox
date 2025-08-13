@@ -238,11 +238,11 @@
      </layout>
     </widget>
    </item>
-   <item>
-    <widget class="QGroupBox" name="column_design_group">
-     <property name="title">
-      <string>Column Design</string>
-     </property>
+    <item>
+     <widget class="QGroupBox" name="column_design_group">
+      <property name="title">
+       <string>Column Computers</string>
+      </property>
      <layout class="QVBoxLayout" name="column_design_layout">
       <item>
        <widget class="QSplitter" name="column_splitter">
@@ -252,11 +252,11 @@
         <widget class="QWidget" name="column_list_widget" native="true">
          <layout class="QVBoxLayout" name="column_list_layout">
           <item>
-           <widget class="QLabel" name="columns_label">
-            <property name="text">
-             <string>Columns:</string>
-            </property>
-           </widget>
+            <widget class="QLabel" name="columns_label">
+             <property name="text">
+              <string>Computers:</string>
+             </property>
+            </widget>
           </item>
           <item>
            <widget class="QListWidget" name="column_list">
@@ -268,18 +268,18 @@
           <item>
            <layout class="QHBoxLayout" name="column_buttons_layout">
             <item>
-             <widget class="QPushButton" name="add_column_btn">
-              <property name="text">
-               <string>Add</string>
-              </property>
-             </widget>
+              <widget class="QPushButton" name="add_column_btn">
+               <property name="text">
+                <string>Add Computer</string>
+               </property>
+              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="remove_column_btn">
-              <property name="text">
-               <string>Remove</string>
-              </property>
-             </widget>
+              <widget class="QPushButton" name="remove_column_btn">
+               <property name="text">
+                <string>Remove</string>
+               </property>
+              </widget>
             </item>
             <item>
              <spacer name="horizontalSpacer">
@@ -301,11 +301,11 @@
         <widget class="QWidget" name="column_config_widget" native="true">
          <layout class="QVBoxLayout" name="column_config_layout">
           <item>
-           <widget class="QLabel" name="column_config_label">
-            <property name="text">
-             <string>Column Configuration:</string>
-            </property>
-           </widget>
+            <widget class="QLabel" name="column_config_label">
+             <property name="text">
+              <string>Computer Configuration:</string>
+             </property>
+            </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="col_name_row">
@@ -388,10 +388,69 @@
        </widget>
       </item>
      </layout>
-    </widget>
-   </item>
-   <item>
-     <widget class="QGroupBox" name="transform_group">
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="preview_group">
+      <property name="title">
+       <string>Preview</string>
+      </property>
+      <layout class="QVBoxLayout" name="preview_layout">
+       <item>
+        <widget class="QTableView" name="preview_table">
+         <property name="alternatingRowColors"><bool>true</bool></property>
+         <property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property>
+         <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
+         <property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property>
+         <property name="sortingEnabled"><bool>false</bool></property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="preview_controls_layout">
+         <item>
+          <widget class="QLabel" name="preview_start_label">
+           <property name="text"><string>Start row:</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="preview_slider">
+           <property name="orientation"><enum>Qt::Horizontal</enum></property>
+           <property name="tickPosition"><enum>QSlider::NoTicks</enum></property>
+           <property name="minimum"><number>0</number></property>
+           <property name="maximum"><number>0</number></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="preview_window_label">
+           <property name="text"><string>Window:</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="preview_window_size_spinbox">
+           <property name="minimum"><number>1</number></property>
+           <property name="maximum"><number>500</number></property>
+           <property name="value"><number>8</number></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="preview_auto_refresh_checkbox">
+           <property name="text"><string>Auto-refresh</string></property>
+           <property name="checked"><bool>true</bool></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="preview_refresh_btn">
+           <property name="text"><string>Refresh</string></property>
+           <property name="enabled"><bool>false</bool></property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+      <widget class="QGroupBox" name="transform_group">
       <property name="title">
        <string>Transforms</string>
       </property>
@@ -497,6 +556,65 @@
         </property>
        </widget>
       </item>
+    <item>
+     <widget class="QGroupBox" name="preview_group">
+      <property name="title">
+       <string>Preview</string>
+      </property>
+      <layout class="QVBoxLayout" name="preview_layout">
+       <item>
+        <widget class="QTableView" name="preview_table">
+         <property name="alternatingRowColors"><bool>true</bool></property>
+         <property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property>
+         <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
+         <property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property>
+         <property name="sortingEnabled"><bool>false</bool></property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="preview_controls_layout">
+         <item>
+          <widget class="QLabel" name="preview_start_label">
+           <property name="text"><string>Start row:</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="preview_slider">
+           <property name="orientation"><enum>Qt::Horizontal</enum></property>
+           <property name="tickPosition"><enum>QSlider::NoTicks</enum></property>
+           <property name="minimum"><number>0</number></property>
+           <property name="maximum"><number>0</number></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="preview_window_label">
+           <property name="text"><string>Window:</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="preview_window_size_spinbox">
+           <property name="minimum"><number>1</number></property>
+           <property name="maximum"><number>500</number></property>
+           <property name="value"><number>8</number></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="preview_auto_refresh_checkbox">
+           <property name="text"><string>Auto-refresh</string></property>
+           <property name="checked"><bool>true</bool></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="preview_refresh_btn">
+           <property name="text"><string>Refresh</string></property>
+           <property name="enabled"><bool>false</bool></property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
       <item>
        <widget class="QLabel" name="build_status_label">
         <property name="text">

@@ -19,6 +19,8 @@ class ComputerRegistry;
 class IRowSelector;
 class TableViewBuilder;
 class IParameterDescriptor;
+class PreviewTableModel;
+class QTimer;
 
 namespace Ui {
 class TableDesignerWidget;
@@ -157,6 +159,11 @@ private:
     QVBoxLayout * _parameter_layout = nullptr;
     std::map<std::string, QWidget*> _parameter_controls;
 
+    // Preview support
+    PreviewTableModel * _preview_model = nullptr;
+    QTimer * _preview_debounce_timer = nullptr;
+    size_t _total_preview_rows = 0;
+
     /**
      * @brief Connect all signals and slots
      */
@@ -240,6 +247,15 @@ private:
      * @return True if interval itself is selected, false otherwise
      */
     bool isIntervalItselfSelected() const;
+
+    // Preview helpers
+    void triggerPreviewDebounced();
+    void rebuildPreviewNow();
+    void updatePreviewSliderRange();
+    [[nodiscard]] size_t computeTotalRowCountForRowSource(QString const & row_source) const;
+    [[nodiscard]] std::unique_ptr<IRowSelector> createRowSelectorForWindow(QString const & row_source,
+                                                                           size_t start,
+                                                                           size_t size) const;
 
     /**
      * @brief Load column configuration from table manager into UI
