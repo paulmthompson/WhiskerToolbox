@@ -134,6 +134,7 @@ void LineDataVisualization::initializeOpenGLResources() {
     // Create vertex buffer
     m_vertex_buffer.create();
     m_line_id_buffer.create();
+    m_group_id_buffer.create();
 
     m_vertex_array_object.create();
     m_vertex_array_object.bind();
@@ -145,8 +146,13 @@ void LineDataVisualization::initializeOpenGLResources() {
     m_line_id_buffer.bind();
     glEnableVertexAttribArray(1);
     glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(uint32_t), nullptr);
-
     m_line_id_buffer.release();
+
+    // Attribute 2: group palette index as float
+    m_group_id_buffer.bind();
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(float), nullptr);
+
     m_vertex_buffer.release();
     m_vertex_array_object.release();
 
@@ -314,6 +320,9 @@ void LineDataVisualization::updateOpenGLBuffers() {
     m_line_id_buffer.allocate(m_line_id_data.data(), static_cast<int>(m_line_id_data.size() * sizeof(uint32_t)));
     m_line_id_buffer.release();
 
+    // Update group palette indices buffer (compute or default to 0)
+    _updateGroupVertexData();
+
     // Initialize selection mask (all unselected initially)
     m_selection_mask.assign(m_line_identifiers.size(), 0);
     m_selection_mask_buffer.bind();
@@ -348,7 +357,11 @@ void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_wid
         m_cachedMvpMatrix = mvp_matrix;
     }
 
-    if (m_viewIsDirty) {
+    if (m_viewIsDirty || m_group_data_needs_update) {
+        if (m_group_data_needs_update) {
+            _updateGroupVertexData();
+            m_group_data_needs_update = false;
+        }
         _renderLinesToSceneBuffer(mvp_matrix, m_line_shader_program, line_width);
         m_viewIsDirty = false;
     }
@@ -403,6 +416,22 @@ void LineDataVisualization::_renderLinesToSceneBuffer(QMatrix4x4 const & mvp_mat
     m_visibility_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_visibility_mask_buffer.bufferId());
     m_visibility_mask_buffer.release();
+
+    // Set group palette uniform array (256 entries). If group manager is null, default to m_color
+    {
+        std::vector<QVector4D> group_colors(256, m_color);
+        if (m_group_manager) {
+            auto const & groups = m_group_manager->getGroups();
+            int color_index = 1;
+            for (auto it = groups.begin(); it != groups.end() && color_index < 256; ++it) {
+                auto const & group = it.value();
+                group_colors[color_index] = QVector4D(group.color.redF(), group.color.greenF(), group.color.blueF(), group.color.alphaF());
+                color_index++;
+            }
+        }
+        shader_program->setUniformValueArray("u_group_colors", group_colors.data(), 256);
+        shader_program->setUniformValue("u_num_groups", 256);
+    }
 
     m_vertex_array_object.bind();
     if (!m_vertex_data.empty()) {
@@ -815,6 +844,43 @@ void LineDataVisualization::_updateVisibilityMask() {
     size_t total_filters = m_hidden_lines.size() + (m_time_range_enabled ? 1 : 0);
     qDebug() << "LineDataVisualization: Updated visibility mask with" << total_filters << "filters in"
              << total_duration.count() << "μs (CPU:" << cpu_duration.count() << "μs, GPU:" << gpu_duration.count() << "μs)";
+}
+
+void LineDataVisualization::_updateGroupVertexData() {
+    // Build per-vertex palette indices (float) from per-line EntityIds and GroupManager
+    std::vector<float> palette_indices;
+    palette_indices.reserve(m_entity_id_per_vertex.size());
+
+    if (!m_group_manager || m_entity_id_per_vertex.empty()) {
+        // Default all to 0 (ungrouped)
+        palette_indices.assign(m_vertex_data.size() / 2, 0.0f);
+    } else {
+        // Map group IDs to palette slots [1..255], 0 = ungrouped
+        std::unordered_map<int, int> group_id_to_slot;
+        int next_slot = 1;
+
+        for (auto const eid : m_entity_id_per_vertex) {
+            int gid = m_group_manager->getEntityGroup(eid);
+            if (gid == -1) {
+                palette_indices.push_back(0.0f);
+                continue;
+            }
+            auto it = group_id_to_slot.find(gid);
+            int slot;
+            if (it == group_id_to_slot.end()) {
+                slot = (next_slot < 256 ? next_slot++ : 255);
+                group_id_to_slot.emplace(gid, slot);
+            } else {
+                slot = it->second;
+            }
+            palette_indices.push_back(static_cast<float>(slot));
+        }
+    }
+
+    // Upload to GPU buffer
+    m_group_id_buffer.bind();
+    m_group_id_buffer.allocate(palette_indices.data(), static_cast<int>(palette_indices.size() * sizeof(float)));
+    m_group_id_buffer.release();
 }
 
 std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(

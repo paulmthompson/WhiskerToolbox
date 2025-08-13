@@ -2,6 +2,7 @@
 #define IEVENT_SOURCE_H
 
 #include "TimeFrame.hpp"
+#include "Entity/EntityTypes.hpp"
 
 
 #include <span>
@@ -59,6 +60,12 @@ public:
     virtual std::vector<float> getDataInRange(TimeFrameIndex start,
                                               TimeFrameIndex end,
                                               TimeFrame const * target_timeFrame) = 0;
+
+    /**
+     * @brief Optional: get the EntityId for the k-th event in the source ordering.
+     * Implementors that don't support EntityIds may return 0.
+     */
+    [[nodiscard]] virtual auto getEntityIdAt(size_t index) const -> EntityId { (void)index; return 0; }
 
 protected:
     // Protected constructor to prevent direct instantiation

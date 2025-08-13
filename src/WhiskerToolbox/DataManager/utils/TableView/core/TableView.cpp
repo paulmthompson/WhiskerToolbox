@@ -245,7 +245,6 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
             }
 
             std::cout << "WARNING: IndexSelector is not supported for analog data" << std::endl;
-
             return ExecutionPlan(std::move(timeFrameIndices), nullptr);
         }
     }
@@ -276,7 +275,6 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
             }
 
             std::cout << "WARNING: IndexSelector is not supported for interval data" << std::endl;
-
             return ExecutionPlan(std::move(timeFrameIndices), nullptr);
         }
     }
@@ -361,6 +359,7 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
             plan.setRows(std::move(rows));
             plan.setTimeToRowSpan(std::move(spans));
             plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
+            plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
             return plan;
         }
 
@@ -379,7 +378,10 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
                 timeFrameIndices.emplace_back(static_cast<int64_t>(index));
             }
             std::cout << "WARNING: IndexSelector is not supported for line data" << std::endl;
-            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+            auto plan = ExecutionPlan(std::move(timeFrameIndices), nullptr);
+            plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
+            plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
+            return plan;
         }
     }
 
