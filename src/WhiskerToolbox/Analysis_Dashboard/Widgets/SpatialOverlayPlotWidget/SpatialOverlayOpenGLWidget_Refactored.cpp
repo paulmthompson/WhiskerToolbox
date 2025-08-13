@@ -24,28 +24,23 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _data_bounds_valid(false),
       _data_bounds({0.0f, 0.0f, 0.0f, 0.0f}) {
 
-    // Initialize context menu
     initializeContextMenu();
 
     _selection_callback = [this]() {
         makeSelection();
     };
-
-    qDebug() << "SpatialOverlayOpenGLWidget: Created with composition-based design";
 }
 
 SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() = default;
 
 void SpatialOverlayOpenGLWidget::initializeGL() {
-    // Call base class initialization first
+
     BasePlotOpenGLWidget::initializeGL();
 
-    // Initialize interaction controller with spatial overlay view adapter
     if (!_interaction) {
         auto adapter = std::make_unique<GenericViewAdapter>(this);
         _interaction = std::make_unique<PlotInteractionController>(this, std::move(adapter));
 
-        // Connect interaction signals
         connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged,
                 this, &SpatialOverlayOpenGLWidget::viewBoundsChanged);
         connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved,
@@ -182,6 +177,12 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
     if (old_mode != mode) {
         updateContextMenuState();
     }
+}
+
+void SpatialOverlayOpenGLWidget::onSelectionChanged(size_t total_selected) {
+    // Emit signals for compatibility with existing code
+    emit selectionChanged(total_selected, QString(), 0);
+    requestThrottledUpdate();
 }
 
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
@@ -402,11 +403,7 @@ std::optional<QString> SpatialOverlayOpenGLWidget::generateTooltipContent(QPoint
     return tooltip;
 }
 
-void SpatialOverlayOpenGLWidget::onSelectionChanged(size_t total_selected) {
-    // Emit signals for compatibility with existing code
-    emit selectionChanged(total_selected, QString(), 0);
-    requestThrottledUpdate();
-}
+
 
 void SpatialOverlayOpenGLWidget::updateVisualizationData() {
     // Data is updated through individual visualization creation

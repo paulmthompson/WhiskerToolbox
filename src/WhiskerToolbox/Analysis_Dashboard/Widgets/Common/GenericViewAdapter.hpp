@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CoreGeometry/boundingbox.hpp"
 #include "ViewAdapter.hpp"
 #include "ViewState.hpp"
 
@@ -14,19 +15,19 @@ class BasePlotOpenGLWidget;
  */
 class GenericViewAdapter : public ViewAdapter {
 public:
-    explicit GenericViewAdapter(BasePlotOpenGLWidget* widget);
-    
-    void getProjectionBounds(float& left, float& right, float& bottom, float& top) const override;
-    void getPerAxisZoom(float& zoom_x, float& zoom_y) const override;
+    explicit GenericViewAdapter(BasePlotOpenGLWidget * widget);
+
+    BoundingBox getProjectionBounds() const override;
+    void getPerAxisZoom(float & zoom_x, float & zoom_y) const override;
     void setPerAxisZoom(float zoom_x, float zoom_y) override;
-    void getPan(float& pan_x, float& pan_y) const override;
+    void getPan(float & pan_x, float & pan_y) const override;
     void setPan(float pan_x, float pan_y) override;
     float getPadding() const override;
     int viewportWidth() const override;
     int viewportHeight() const override;
     void requestUpdate() override;
-    void applyBoxZoomToWorldRect(float min_x, float max_x, float min_y, float max_y) override;
+    void applyBoxZoomToWorldRect(BoundingBox const & bounds) override;
 
 private:
-    BasePlotOpenGLWidget* _widget;
+    BasePlotOpenGLWidget * _widget;
 };

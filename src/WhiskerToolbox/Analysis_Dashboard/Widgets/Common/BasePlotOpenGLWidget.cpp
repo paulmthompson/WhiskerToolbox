@@ -412,7 +412,8 @@ void BasePlotOpenGLWidget::updateViewMatrices() {
     // Emit the current visible world bounds
     float half_w = w_world * 0.5f;
     float half_h = h_world * 0.5f;
-    emit viewBoundsChanged(cx - half_w, cx + half_w, cy - half_h, cy + half_h);
+    BoundingBox view_bounds(cx - half_w, cy - half_h, cx + half_w, cy + half_h);
+    emit viewBoundsChanged(view_bounds);
 }
 
 void BasePlotOpenGLWidget::requestThrottledUpdate() {

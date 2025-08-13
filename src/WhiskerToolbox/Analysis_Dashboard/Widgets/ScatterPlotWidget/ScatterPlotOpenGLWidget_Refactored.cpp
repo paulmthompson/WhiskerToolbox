@@ -18,17 +18,14 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
         _selection_callback = [this]() {
             makeSelection();
         };
-
-    qDebug() << "ScatterPlotOpenGLWidget: Created with composition-based design";
 }
 
 ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() = default;
 
 void ScatterPlotOpenGLWidget::initializeGL() {
-    // Call base class initialization first
+
     BasePlotOpenGLWidget::initializeGL();
 
-    // Create interaction controller with ScatterPlot view adapter
     if (!_interaction) {
         _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<GenericViewAdapter>(this));
         connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &ScatterPlotOpenGLWidget::viewBoundsChanged);
@@ -88,7 +85,6 @@ void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
         doneCurrent();
     }
 
-    // Update view
     updateViewMatrices();
     requestThrottledUpdate();
 }
@@ -165,11 +161,6 @@ std::pair<float, float> ScatterPlotOpenGLWidget::getDataPoint(size_t index) cons
     return {_x_data[index], _y_data[index]};
 }
 
-void ScatterPlotOpenGLWidget::onSelectionChanged(size_t total_selected) {
-    // Emit the base class signal with scatter plot specific information
-    emit selectionChanged(total_selected, "scatter_data", -1);
-    requestThrottledUpdate();
-}
 
 
 void ScatterPlotOpenGLWidget::updateVisualizationData() {
@@ -275,6 +266,12 @@ void ScatterPlotOpenGLWidget::setSelectionMode(SelectionMode mode) {
     if (old_mode != mode) {
         //updateContextMenuState();
     }
+}
+
+void ScatterPlotOpenGLWidget::onSelectionChanged(size_t total_selected) {
+    // Emit the base class signal with scatter plot specific information
+    emit selectionChanged(total_selected, "scatter_data", -1);
+    requestThrottledUpdate();
 }
 
 void ScatterPlotOpenGLWidget::clearSelection() {
