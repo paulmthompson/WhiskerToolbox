@@ -245,7 +245,6 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
             }
 
             std::cout << "WARNING: IndexSelector is not supported for analog data" << std::endl;
-
             return ExecutionPlan(std::move(timeFrameIndices), nullptr);
         }
     }
@@ -276,7 +275,6 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
             }
 
             std::cout << "WARNING: IndexSelector is not supported for interval data" << std::endl;
-
             return ExecutionPlan(std::move(timeFrameIndices), nullptr);
         }
     }
@@ -361,6 +359,7 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
             plan.setRows(std::move(rows));
             plan.setTimeToRowSpan(std::move(spans));
             plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
+            plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
             return plan;
         }
 
@@ -379,7 +378,10 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
                 timeFrameIndices.emplace_back(static_cast<int64_t>(index));
             }
             std::cout << "WARNING: IndexSelector is not supported for line data" << std::endl;
-            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+            auto plan = ExecutionPlan(std::move(timeFrameIndices), nullptr);
+            plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
+            plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
+            return plan;
         }
     }
 
@@ -420,6 +422,43 @@ RowDescriptor TableView::getRowDescriptor(size_t row_index) const {
         return m_rowSelector->getDescriptor(row_index);
     }
     return std::monostate{};
+}
+
+std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
+    // Prefer entity-expanded plans if present
+    for (auto const & [name, plan] : m_planCache) {
+        (void)name;
+        auto const & rows = plan.getRows();
+        if (rows.empty() || row_index >= rows.size()) continue;
+        auto const & row = rows[row_index];
+        if (!row.entityIndex.has_value()) continue;
+
+        // Resolve by source kind
+        auto const sourceName = DataSourceNameInterner::instance().nameOf(plan.getSourceId());
+        switch (plan.getSourceKind()) {
+            case ExecutionPlan::DataSourceKind::Line: {
+                auto lineSource = m_dataManager->getLineSource(sourceName);
+                if (!lineSource) break;
+                EntityId id = lineSource->getEntityIdAt(row.timeIndex, *row.entityIndex);
+                if (id != 0) return {id};
+                break;
+            }
+            case ExecutionPlan::DataSourceKind::Event: {
+                auto eventSource = m_dataManager->getEventSource(sourceName);
+                if (!eventSource) break;
+                // For events we typically do not expand per-entity rows yet; fall through
+                break;
+            }
+            case ExecutionPlan::DataSourceKind::Interval: {
+                auto intervalSource = m_dataManager->getIntervalSource(sourceName);
+                if (!intervalSource) break;
+                // Interval entity expansion not yet implemented here
+                break;
+            }
+            default: break;
+        }
+    }
+    return {};
 }
 
 std::unique_ptr<IRowSelector> TableView::cloneRowSelectorFiltered(std::vector<size_t> const & keep_indices) const {
