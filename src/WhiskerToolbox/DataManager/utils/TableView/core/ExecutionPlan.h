@@ -19,6 +19,7 @@
  */
 class ExecutionPlan {
 public:
+    enum class DataSourceKind : std::uint8_t { Unknown=0, Analog, Event, Interval, Line };
     /**
      * @brief Default constructor.
      */
@@ -102,6 +103,9 @@ public:
     void setSourceId(DataSourceId id) { m_sourceId = id; }
     DataSourceId getSourceId() const { return m_sourceId; }
 
+    void setSourceKind(DataSourceKind kind) { m_sourceKind = kind; }
+    DataSourceKind getSourceKind() const { return m_sourceKind; }
+
     // Group spans per timestamp for fast broadcast
     void setTimeToRowSpan(std::map<TimeFrameIndex, std::pair<size_t,size_t>> map) {
         m_timeToRowSpan = std::move(map);
@@ -124,6 +128,7 @@ private:
     std::shared_ptr<TimeFrame> m_timeFrame;
     // Extended entity-aware plan
     DataSourceId m_sourceId{0};
+    DataSourceKind m_sourceKind{DataSourceKind::Unknown};
     std::vector<RowId> m_rows;
     std::map<TimeFrameIndex, std::pair<size_t,size_t>> m_timeToRowSpan;
 };
