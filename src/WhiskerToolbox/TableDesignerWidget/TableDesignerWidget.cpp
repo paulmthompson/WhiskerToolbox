@@ -71,6 +71,13 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     refreshRowDataSourceCombo();
     clearUI();
 
+    // Add observer to automatically refresh dropdowns when DataManager changes
+    if (_data_manager) {
+        _data_manager->addObserver([this]() {
+            refreshAllDataSources();
+        });
+    }
+
     qDebug() << "TableDesignerWidget initialized (legacy path - to be removed)";
 }
 
