@@ -16,6 +16,9 @@
 #include <variant>      // std::variant
 #include <vector>       // std::vector
 
+// Forward declarations for identity
+class EntityRegistry;
+
 class TableRegistry;
 struct TableEvent;
 
@@ -280,6 +283,11 @@ public:
 
     void notifyTableObservers(TableEvent const & ev);
 
+    /**
+     * @brief Access the session-scoped EntityRegistry.
+     */
+    [[nodiscard]] EntityRegistry * getEntityRegistry() const { return _entity_registry.get(); }
+
 private:
     std::unordered_map<TimeKey, std::shared_ptr<TimeFrame>> _times;
 
@@ -300,6 +308,9 @@ private:
     std::unique_ptr<TableRegistry> _table_registry;
     std::unordered_map<int, TableObserver> _table_observers;
     int _next_table_observer_id{1};
+
+    // ======= Identity / Entity registry =======
+    std::unique_ptr<EntityRegistry> _entity_registry;
 
 };
 

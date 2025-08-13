@@ -1,7 +1,7 @@
 #version 410 core
 
 uniform vec4 u_color;
-uniform vec4 u_group_colors[32]; // Array of group colors (max 32 groups)
+uniform vec4 u_group_colors[256]; // Array of group colors (max 256 groups)
 uniform int u_num_groups;
 
 // Input from vertex shader

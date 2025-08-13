@@ -6,10 +6,15 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <map>
 #include <ranges>
 #include <vector>
+
+
+
+class EntityRegistry;
 
 /**
  * @brief PointData
@@ -350,12 +355,39 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
 
+    /**
+     * @brief Set identity context for automatic EntityId maintenance.
+     * @pre registry != nullptr
+     */
+    void setIdentityContext(std::string const & data_key, EntityRegistry * registry);
+
+    /**
+     * @brief Rebuild EntityIds for all points using the current identity context.
+     * @pre Identity context has been set via setIdentityContext
+     */
+    void rebuildAllEntityIds();
+
+    /**
+     * @brief Get EntityIds aligned with points at a specific time.
+     */
+    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
+
+    /**
+     * @brief Get flattened EntityIds for all points across all times.
+     */
+    [[nodiscard]] std::vector<EntityId> getAllEntityIds() const;
+
 protected:
 private:
     std::map<TimeFrameIndex, std::vector<Point2D<float>>> _data;
     std::vector<Point2D<float>> _empty{};
     ImageSize _image_size;
     std::shared_ptr<TimeFrame> _time_frame {nullptr};
+
+    // Identity management
+    std::string _identity_data_key;
+    EntityRegistry * _identity_registry {nullptr};
+    std::map<TimeFrameIndex, std::vector<EntityId>> _entity_ids_by_time;
 };
 
 #endif// POINT_DATA_HPP

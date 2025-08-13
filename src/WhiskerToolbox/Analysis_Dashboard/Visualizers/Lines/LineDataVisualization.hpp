@@ -6,6 +6,7 @@
 #include "Selection/SelectionModes.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Entity/EntityTypes.hpp"
 #include "LineIdentifier.hpp"
 
 #include <QGenericMatrix>
@@ -39,6 +40,8 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
 
     std::vector<float> m_vertex_data;              // All line segments as pairs of vertices
     std::vector<uint32_t> m_line_id_data;          // Line ID for each vertex
+    std::vector<EntityId> m_entity_id_per_vertex;  // EntityId for each vertex (duplicates per line segment)
+    std::vector<EntityId> m_line_entity_ids;       // EntityId per logical line (aligned with m_line_identifiers)
     std::vector<LineIdentifier> m_line_identifiers;// Mapping from line index to identifier
 
     // Vertex range tracking for efficient hover rendering

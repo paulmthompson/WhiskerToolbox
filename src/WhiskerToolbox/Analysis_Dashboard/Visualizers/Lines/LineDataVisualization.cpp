@@ -43,6 +43,8 @@ void LineDataVisualization::buildVertexData() {
     m_vertex_data.clear();
     m_line_identifiers.clear();
     m_line_vertex_ranges.clear();
+    m_line_entity_ids.clear();
+    m_entity_id_per_vertex.clear();
 
     if (!m_line_data_ptr) {
         return;
@@ -68,6 +70,7 @@ void LineDataVisualization::buildVertexData() {
     uint32_t line_index = 0;
 
     for (auto const & [time_frame, lines]: m_line_data_ptr->GetAllLinesAsRange()) {
+        auto const & ids_at_time = m_line_data_ptr->getEntityIdsAtTime(time_frame);
         for (int line_id = 0; line_id < static_cast<int>(lines.size()); ++line_id) {
             Line2D const & line = lines[line_id];
 
@@ -76,6 +79,12 @@ void LineDataVisualization::buildVertexData() {
             }
 
             m_line_identifiers.push_back({time_frame.getValue(), line_id});
+            // Record line-level EntityId (aligned to identifier index)
+            if (line_id < static_cast<int>(ids_at_time.size())) {
+                m_line_entity_ids.push_back(ids_at_time[line_id]);
+            } else {
+                m_line_entity_ids.push_back(0);
+            }
 
             uint32_t line_start_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
 
@@ -87,10 +96,12 @@ void LineDataVisualization::buildVertexData() {
                 segment_vertices.push_back(p0.x);
                 segment_vertices.push_back(p0.y);
                 segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
+                m_entity_id_per_vertex.push_back(m_line_entity_ids.back());
 
                 segment_vertices.push_back(p1.x);
                 segment_vertices.push_back(p1.y);
                 segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
+                m_entity_id_per_vertex.push_back(m_line_entity_ids.back());
             }
 
             uint32_t line_end_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
