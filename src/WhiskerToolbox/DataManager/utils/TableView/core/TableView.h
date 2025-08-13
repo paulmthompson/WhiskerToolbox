@@ -144,6 +144,12 @@ public:
     [[nodiscard]] auto getRowDescriptor(size_t row_index) const -> RowDescriptor;
 
     /**
+     * @brief Get contributing EntityIds for a given row, if available.
+     * @return Vector of EntityIds; empty if not available.
+     */
+    [[nodiscard]] auto getRowEntityIds(size_t row_index) const -> std::vector<EntityId>;
+
+    /**
      * @brief Create a new row selector of the same concrete type, filtered to a subset of rows.
      *
      * @param keep_indices Indices of rows to keep (relative to this table's current rows), in ascending order.

@@ -422,6 +422,28 @@ RowDescriptor TableView::getRowDescriptor(size_t row_index) const {
     return std::monostate{};
 }
 
+std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
+    // Walk all cached plans and try to construct contributing entity ids for this row
+    // Strategy: if any plan has entity-expanded rows cached, use its rows mapping to resolve
+    for (auto const & [name, plan] : m_planCache) {
+        (void)name;
+        auto const & rows = plan.getRows();
+        if (!rows.empty() && row_index < rows.size()) {
+            // For line sources, a row with entityIndex maps 1:1 to a line entity at that timestamp
+            auto const & row = rows[row_index];
+            if (row.entityIndex.has_value()) {
+                // Reconstruct EntityId using the source adapter
+                auto lineSource = m_dataManager->getLineSource(DataSourceNameInterner::instance().nameOf(plan.getSourceId()));
+                if (lineSource) {
+                    // LineData adapter can be downcast to obtain underlying LineData for EntityIds
+                    // Fallback: derive EntityId via EntityRegistry if available (not wired here)
+                }
+            }
+        }
+    }
+    return {};
+}
+
 std::unique_ptr<IRowSelector> TableView::cloneRowSelectorFiltered(std::vector<size_t> const & keep_indices) const {
     if (!m_rowSelector) {
         return nullptr;
