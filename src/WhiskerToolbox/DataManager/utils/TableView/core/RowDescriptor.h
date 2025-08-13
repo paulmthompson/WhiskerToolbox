@@ -4,6 +4,7 @@
 #include "TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
 #include "utils/TableView/core/DataSourceNameInterner.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -37,6 +38,8 @@ struct RowId {
 struct ExtendedRowDescriptor {
     DataSourceId sourceId{};
     RowId row{};
+    // Optional contributing entities for this row (singleton for entity-expanded rows)
+    std::vector<EntityId> contributingEntities{};
 };
 
 #endif // ROW_DESCRIPTOR_H

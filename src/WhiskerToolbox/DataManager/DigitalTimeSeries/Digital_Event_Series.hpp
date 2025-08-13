@@ -3,10 +3,12 @@
 
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <ranges>
 #include <vector>
 
+class EntityRegistry;
 /**
  * @brief Digital Event Series class
  *
@@ -111,12 +113,25 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
 
+    // ===== Identity =====
+    void setIdentityContext(std::string const & data_key, EntityRegistry * registry) {
+        _identity_data_key = data_key;
+        _identity_registry = registry;
+    }
+    void rebuildAllEntityIds();
+    [[nodiscard]] std::vector<EntityId> const & getEntityIds() const { return _entity_ids; }
+
 private:
     std::vector<float> _data{};
     std::shared_ptr<TimeFrame> _time_frame {nullptr};
 
     // Sort the events in ascending order
     void _sortEvents();
+
+    // Identity
+    std::string _identity_data_key;
+    EntityRegistry * _identity_registry {nullptr};
+    std::vector<EntityId> _entity_ids;
 };
 
 #endif//BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP

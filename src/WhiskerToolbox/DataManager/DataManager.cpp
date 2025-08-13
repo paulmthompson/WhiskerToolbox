@@ -33,6 +33,8 @@
 #include "transforms/TransformRegistry.hpp"
 #include "utils/string_manip.hpp"
 
+#include "Entity/EntityRegistry.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -50,6 +52,9 @@ DataManager::DataManager() {
 
     // Initialize TableRegistry
     _table_registry = std::make_unique<TableRegistry>(*this);
+
+    // Initialize EntityRegistry
+    _entity_registry = std::make_unique<EntityRegistry>();
 }
 
 DataManager::~DataManager() = default;
@@ -83,6 +88,11 @@ void DataManager::reset() {
     _notifyObservers();
     
     std::cout << "DataManager: Reset complete. Default 'time' frame and 'media' data restored." << std::endl;
+
+    // Reset entity registry for a new session context
+    if (_entity_registry) {
+         _entity_registry->clear();
+    }
 }
 
 bool DataManager::setTime(TimeKey const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite) {
@@ -427,6 +437,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 auto point_data = load_into_PointData(file_path, item);
 
+                // Attach identity context and generate EntityIds
+                if (point_data) {
+                    point_data->setIdentityContext(name, dm->getEntityRegistry());
+                    point_data->rebuildAllEntityIds();
+                }
+
                 dm->setData<PointData>(name, point_data, TimeKey("time"));
 
                 std::string const color = item.value("color", "#0000FF");
@@ -462,6 +478,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 auto line_data = load_into_LineData(file_path, item);
 
+                // Attach identity context and generate EntityIds
+                if (line_data) {
+                    line_data->setIdentityContext(name, dm->getEntityRegistry());
+                    line_data->rebuildAllEntityIds();
+                }
+
                 dm->setData<LineData>(name, line_data, TimeKey("time"));
 
                 std::string const color = item.value("color", "0000FF");
@@ -494,6 +516,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 for (int channel = 0; channel < digital_event_series.size(); channel++) {
                     std::string const channel_name = name + "_" + std::to_string(channel);
 
+                    // Attach identity context and generate EntityIds
+                    if (digital_event_series[channel]) {
+                        digital_event_series[channel]->setIdentityContext(channel_name, dm->getEntityRegistry());
+                        digital_event_series[channel]->rebuildAllEntityIds();
+                    }
+
                     dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel], TimeKey("time"));
 
                     if (item.contains("clock")) {
@@ -507,6 +535,10 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             case DM_DataType::DigitalInterval: {
 
                 auto digital_interval_series = load_into_DigitalIntervalSeries(file_path, item);
+                if (digital_interval_series) {
+                    digital_interval_series->setIdentityContext(name, dm->getEntityRegistry());
+                    digital_interval_series->rebuildAllEntityIds();
+                }
                 dm->setData<DigitalIntervalSeries>(name, digital_interval_series, TimeKey("time"));
 
                 break;

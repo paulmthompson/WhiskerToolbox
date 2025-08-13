@@ -1,7 +1,8 @@
 #include "Digital_Interval_Series.hpp"
+#include "Entity/EntityRegistry.hpp"
 
 #include <algorithm>
-#include <utility>
+#include <utility>  
 #include <vector>
 
 // ========== Constructors ==========
@@ -132,6 +133,21 @@ void DigitalIntervalSeries::_removeEventAtTime(TimeFrameIndex const time) {
 
 void DigitalIntervalSeries::_sortData() {
     std::sort(_data.begin(), _data.end());
+}
+
+void DigitalIntervalSeries::rebuildAllEntityIds() {
+    if (!_identity_registry) {
+        _entity_ids.assign(_data.size(), 0);
+        return;
+    }
+    _entity_ids.clear();
+    _entity_ids.reserve(_data.size());
+    for (int i = 0; i < static_cast<int>(_data.size()); ++i) {
+        // Use start as the discrete time index representative, and i as stable local index
+        _entity_ids.push_back(
+            _identity_registry->ensureId(_identity_data_key, EntityKind::Interval, TimeFrameIndex{_data[i].start}, i)
+        );
+    }
 }
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time) {

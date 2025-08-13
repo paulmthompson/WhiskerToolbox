@@ -8,6 +8,7 @@
 #include "Groups/GroupManager.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "ShaderManager/ShaderManager.hpp"
+#include "DataManager/Entity/EntityTypes.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -44,6 +45,7 @@ class GenericPointVisualization : protected QOpenGLFunctions_4_1_Core {
 public:
     std::unique_ptr<QuadTree<RowIndicatorType>> m_spatial_index;
     std::vector<float> m_vertex_data;// Format: x, y, group_id per vertex (3 floats per point)
+    std::vector<EntityId> m_entity_ids; // 1:1 with points when available
     QOpenGLBuffer m_vertex_buffer;
     QOpenGLVertexArrayObject m_vertex_array_object;
     QString m_key;
@@ -166,6 +168,16 @@ public:
         }
     }
 
+    /**
+     * @brief Set per-point EntityIds aligned to the current vertex order
+     * @pre entity_ids.size() == m_total_point_count
+     */
+    void setPerPointEntityIds(std::vector<EntityId> entity_ids) {
+        if (entity_ids.size() != m_total_point_count) return;
+        m_entity_ids = std::move(entity_ids);
+        m_group_data_needs_update = true;
+    }
+
     //========== Selection Handlers ==========
 
     /**
@@ -259,6 +271,17 @@ public:
      * @brief Refresh group-based rendering data (call when group assignments change)
      */
     void refreshGroupRenderData();
+
+    /**
+     * @brief Get selected EntityIds if RowIndicatorType is EntityId; otherwise returns empty set.
+     */
+    std::unordered_set<EntityId> getSelectedEntityIds() const {
+        std::unordered_set<EntityId> out;
+        if constexpr (std::is_same_v<RowIndicatorType, EntityId>) {
+            for (auto const * p : m_selected_points) out.insert(p->data);
+        }
+        return out;
+    }
 
 protected:
     /**
@@ -567,12 +590,12 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_renderPoints(QOpen
         auto const & groups = m_group_manager->getGroups();
 
         // Prepare color array - index 0 is for ungrouped points
-        std::vector<QVector4D> group_colors(32, m_color);
+        std::vector<QVector4D> group_colors(256, m_color);
         group_colors[0] = m_color;// Index 0 = ungrouped color
 
         // Map group colors to consecutive indices starting from 1
         int color_index = 1;
-        for (auto it = groups.begin(); it != groups.end() && color_index < 32; ++it) {
+        for (auto it = groups.begin(); it != groups.end() && color_index < 256; ++it) {
             auto const & group = it.value();
             group_colors[color_index] = QVector4D(group.color.redF(), group.color.greenF(),
                                                   group.color.blueF(), group.color.alphaF());
@@ -580,13 +603,13 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_renderPoints(QOpen
         }
 
         // Pass color array to shader
-        shader_program->setUniformValueArray("u_group_colors", group_colors.data(), 32);
-        shader_program->setUniformValue("u_num_groups", 32);
+        shader_program->setUniformValueArray("u_group_colors", group_colors.data(), 256);
+        shader_program->setUniformValue("u_num_groups", 256);
     } else {
         // No groups, all points use default color
-        std::vector<QVector4D> group_colors(32, m_color);
-        shader_program->setUniformValueArray("u_group_colors", group_colors.data(), 32);
-        shader_program->setUniformValue("u_num_groups", 32);
+        std::vector<QVector4D> group_colors(256, m_color);
+        shader_program->setUniformValueArray("u_group_colors", group_colors.data(), 256);
+        shader_program->setUniformValue("u_num_groups", 256);
     }
 
     shader_program->setUniformValue("u_color", m_color);
@@ -923,7 +946,7 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::refreshGroupRenderD
 
 template<typename CoordType, typename RowIndicatorType>
 void GenericPointVisualization<CoordType, RowIndicatorType>::_updateGroupVertexData() {
-    if (!m_group_manager || !m_spatial_index) {
+    if (!m_group_manager) {
         return;
     }
 
@@ -931,35 +954,41 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_updateGroupVertexD
     auto const & groups = m_group_manager->getGroups();
     std::unordered_map<int, int> group_id_to_color_index;
     int color_index = 1;// Start from index 1 (0 is for ungrouped)
-    for (auto it = groups.begin(); it != groups.end() && color_index < 32; ++it) {
+    for (auto it = groups.begin(); it != groups.end() && color_index < 256; ++it) {
         group_id_to_color_index[it.key()] = color_index;
         color_index++;
     }
 
-    // Update group IDs in vertex data using direct row indicator lookup
-    for (size_t i = 0; i < m_vertex_data.size(); i += 3) {
-        float x = m_vertex_data[i];
-        float y = m_vertex_data[i + 1];
+    bool can_use_entity_ids = (m_entity_ids.size() == m_total_point_count);
 
-        // Find the row indicator for this vertex position using spatial index
-        auto const * point_ptr = m_spatial_index->findNearest(x, y, 0.0001f);
-
-        int group_id = -1;
-        if (point_ptr) {
-            // Use row indicator-based group lookup - much more efficient
-            group_id = m_group_manager->getPointGroup(point_ptr->data);
-        }
-
-        // Map to shader color index
-        float shader_group_id = 0.0f;// Default to ungrouped (index 0)
-        if (group_id != -1) {
-            auto it = group_id_to_color_index.find(group_id);
-            if (it != group_id_to_color_index.end()) {
-                shader_group_id = static_cast<float>(it->second);
+    if (can_use_entity_ids) {
+        // Fast path: use per-vertex EntityIds to compute group palette indices in O(N)
+        for (size_t i = 0; i < m_total_point_count; ++i) {
+            int gid = m_group_manager->getEntityGroup(m_entity_ids[i]);
+            float shader_group_id = 0.0f;
+            if (gid != -1) {
+                auto it = group_id_to_color_index.find(gid);
+                if (it != group_id_to_color_index.end()) shader_group_id = static_cast<float>(it->second);
             }
+            m_vertex_data[i * 3 + 2] = shader_group_id;
         }
-
-        m_vertex_data[i + 2] = shader_group_id;
+    } else if (m_spatial_index) {
+        // Fallback path: derive using spatial index (legacy behavior)
+        for (size_t i = 0; i < m_vertex_data.size(); i += 3) {
+            float x = m_vertex_data[i];
+            float y = m_vertex_data[i + 1];
+            auto const * point_ptr = m_spatial_index->findNearest(x, y, 0.0001f);
+            int group_id = -1;
+            if (point_ptr) {
+                group_id = m_group_manager->getPointGroup(point_ptr->data);
+            }
+            float shader_group_id = 0.0f;
+            if (group_id != -1) {
+                auto it = group_id_to_color_index.find(group_id);
+                if (it != group_id_to_color_index.end()) shader_group_id = static_cast<float>(it->second);
+            }
+            m_vertex_data[i + 2] = shader_group_id;
+        }
     }
 
     // Update OpenGL buffer

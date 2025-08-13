@@ -2,6 +2,7 @@
 
 #include "CoreGeometry/points.hpp"
 #include "utils/map_timeseries.hpp"
+#include "Entity/EntityRegistry.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -20,6 +21,7 @@ LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data)
 bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
 
     if (clear_at_time(time, _data)) {
+        _entity_ids_by_time.erase(time);
         if (notify) {
             notifyObservers();
         }
@@ -31,6 +33,15 @@ bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
 bool LineData::clearAtTime(TimeFrameIndex const time, int const line_id, bool notify) {
 
     if (clear_at_time(time, line_id, _data)) {
+        auto it = _entity_ids_by_time.find(time);
+        if (it != _entity_ids_by_time.end()) {
+            if (line_id < static_cast<int>(it->second.size())) {
+                it->second.erase(it->second.begin() + line_id);
+            }
+            if (it->second.empty()) {
+                _entity_ids_by_time.erase(it);
+            }
+        }
         if (notify) {
             notifyObservers();
         }
@@ -44,6 +55,15 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<float> const & x
     auto new_line = create_line(x, y);
     add_at_time(time, new_line, _data);
 
+    int const local_index = static_cast<int>(_data[time].size()) - 1;
+    if (_identity_registry) {
+        _entity_ids_by_time[time].push_back(
+            _identity_registry->ensureId(_identity_data_key, EntityKind::Line, time, local_index)
+        );
+    } else {
+        _entity_ids_by_time[time].push_back(0);
+    }
+
     if (notify) {
         notifyObservers();
     }
@@ -55,6 +75,15 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> 
 
 void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool notify) {
     add_at_time(time, line, _data);
+
+    int const local_index = static_cast<int>(_data[time].size()) - 1;
+    if (_identity_registry) {
+        _entity_ids_by_time[time].push_back(
+            _identity_registry->ensureId(_identity_data_key, EntityKind::Line, time, local_index)
+        );
+    } else {
+        _entity_ids_by_time[time].push_back(0);
+    }
 
     if (notify) {
         notifyObservers();
@@ -116,6 +145,24 @@ std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time,
     return get_at_time(time, _data, _empty, source_timeframe, line_timeframe);
 }
 
+std::vector<EntityId> const & LineData::getEntityIdsAtTime(TimeFrameIndex const time) const {
+    auto it = _entity_ids_by_time.find(time);
+    if (it == _entity_ids_by_time.end()) {
+        static const std::vector<EntityId> kEmpty;
+        return kEmpty;
+    }
+    return it->second;
+}
+
+std::vector<EntityId> LineData::getAllEntityIds() const {
+    std::vector<EntityId> out;
+    for (auto const & [t, ids] : _entity_ids_by_time) {
+        (void)t;
+        out.insert(out.end(), ids.begin(), ids.end());
+    }
+    return out;
+}
+
 // ========== Image Size ==========
 
 void LineData::changeImageSize(ImageSize const & image_size)
@@ -143,6 +190,28 @@ void LineData::changeImageSize(ImageSize const & image_size)
     }
     _image_size = image_size;
 
+}
+
+void LineData::setIdentityContext(std::string const & data_key, EntityRegistry * registry) {
+    _identity_data_key = data_key;
+    _identity_registry = registry;
+}
+
+void LineData::rebuildAllEntityIds() {
+    if (!_identity_registry) {
+        for (auto & [t, lines] : _data) {
+            _entity_ids_by_time[t].assign(lines.size(), 0);
+        }
+        return;
+    }
+    for (auto & [t, lines] : _data) {
+        auto & ids = _entity_ids_by_time[t];
+        ids.clear();
+        ids.reserve(lines.size());
+        for (int i = 0; i < static_cast<int>(lines.size()); ++i) {
+            ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::Line, t, i));
+        }
+    }
 }
 
 // ========== Copy and Move ==========

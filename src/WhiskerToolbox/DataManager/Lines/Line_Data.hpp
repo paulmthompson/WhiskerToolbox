@@ -7,11 +7,14 @@
 #include "TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <cstddef>
 #include <map>
 #include <ranges>
 #include <vector>
+
+class EntityRegistry;
 
 /*
  * @brief LineData
@@ -169,6 +172,16 @@ public:
                                                         TimeFrame const * source_timeframe,
                                                         TimeFrame const * line_timeframe) const;
 
+    /**
+     * @brief Get EntityIds aligned with lines at a specific time.
+     */
+    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
+
+    /**
+     * @brief Get flattened EntityIds for all lines across all times.
+     */
+    [[nodiscard]] std::vector<EntityId> getAllEntityIds() const;
+
      /**
     * @brief Get all lines with their associated times as a range
     *
@@ -312,12 +325,27 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
 
+    /**
+     * @brief Set identity context for automatic EntityId maintenance.
+     */
+    void setIdentityContext(std::string const & data_key, EntityRegistry * registry);
+
+    /**
+     * @brief Rebuild EntityIds for all lines using the current identity context.
+     */
+    void rebuildAllEntityIds();
+
 protected:
 private:
     std::map<TimeFrameIndex, std::vector<Line2D>> _data;
     std::vector<Line2D> _empty{};
     ImageSize _image_size;
     std::shared_ptr<TimeFrame> _time_frame {nullptr};
+
+    // Identity management
+    std::string _identity_data_key;
+    EntityRegistry * _identity_registry {nullptr};
+    std::map<TimeFrameIndex, std::vector<EntityId>> _entity_ids_by_time;
 };
 
 
