@@ -22,9 +22,7 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     qDebug() << "ScatterPlotOpenGLWidget: Created with composition-based design";
 }
 
-ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() {
-    // Cleanup is handled by smart pointers and base class
-}
+ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() = default;
 
 void ScatterPlotOpenGLWidget::initializeGL() {
     // Call base class initialization first
@@ -37,8 +35,29 @@ void ScatterPlotOpenGLWidget::initializeGL() {
         connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &ScatterPlotOpenGLWidget::mouseWorldMoved);
     }
 
-    qDebug() << "ScatterPlotOpenGLWidget::initializeGL completed with interaction controller";
+    initializeVisualization();
 }
+
+void ScatterPlotOpenGLWidget::initializeVisualization() {
+    if (_x_data.empty() || _y_data.empty()) {
+        return;
+    }
+
+    _visualization = std::make_unique<ScatterPlotVisualization>(
+            "scatter_data",
+            _x_data,
+            _y_data,
+            _group_manager,
+            false// Initialize OpenGL resources immediately
+    );
+
+    _visualization->setAxisLabels(_x_label, _y_label);
+
+    qDebug() << "ScatterPlotOpenGLWidget: Visualization initialized with"
+             << _x_data.size() << "points";
+}
+
+// ========== Data ==========
 
 void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
                                              std::vector<float> const & y_data) {
@@ -152,30 +171,14 @@ void ScatterPlotOpenGLWidget::onSelectionChanged(size_t total_selected) {
     requestThrottledUpdate();
 }
 
-void ScatterPlotOpenGLWidget::initializeVisualization() {
-    if (_x_data.empty() || _y_data.empty()) {
-        return;
-    }
-
-    _visualization = std::make_unique<ScatterPlotVisualization>(
-            "scatter_data",
-            _x_data,
-            _y_data,
-            _group_manager,
-            false// Initialize OpenGL resources immediately
-    );
-
-    _visualization->setAxisLabels(_x_label, _y_label);
-
-    qDebug() << "ScatterPlotOpenGLWidget: Visualization initialized with"
-             << _x_data.size() << "points";
-}
 
 void ScatterPlotOpenGLWidget::updateVisualizationData() {
     if (_visualization) {
         _visualization->updateData(_x_data, _y_data);
     }
 }
+
+// ========== Tooltips ==========
 
 void ScatterPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
     if (_tooltip_manager) {

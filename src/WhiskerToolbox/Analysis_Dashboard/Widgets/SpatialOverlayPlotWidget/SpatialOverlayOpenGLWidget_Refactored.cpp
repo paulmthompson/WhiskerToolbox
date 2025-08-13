@@ -52,9 +52,16 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
                 this, &SpatialOverlayOpenGLWidget::mouseWorldMoved);
     }
 
-    // Initialize visualizations
     initializeVisualizations();
 }
+
+void SpatialOverlayOpenGLWidget::initializeVisualizations() {
+    // Visualizations are created when data is set
+    // This method can be used for any common initialization
+    qDebug() << "SpatialOverlayOpenGLWidget: Initialized visualizations";
+}
+
+// ========== Data ==========
 
 void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
     qDebug() << "SpatialOverlayOpenGLWidget::setPointData called with" << point_data_map.size() << "datasets";
@@ -166,6 +173,8 @@ void SpatialOverlayOpenGLWidget::applyTimeRangeFilter(int start_frame, int end_f
 
     requestThrottledUpdate();
 }
+
+// ========== Selection ==========
 
 void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
     auto old_mode = _selection_mode;
@@ -362,6 +371,8 @@ void SpatialOverlayOpenGLWidget::renderUI() {
     // This can include drawing text overlays, coordinate system indicators, etc.
 }
 
+// ========== Tooltips ==========
+
 std::optional<QString> SpatialOverlayOpenGLWidget::generateTooltipContent(QPoint const & screen_pos) const {
     if (_point_data_visualizations.empty() && _mask_data_visualizations.empty() && _line_data_visualizations.empty() || !_tooltips_enabled) {
         return std::nullopt;
@@ -391,23 +402,10 @@ std::optional<QString> SpatialOverlayOpenGLWidget::generateTooltipContent(QPoint
     return tooltip;
 }
 
-void SpatialOverlayOpenGLWidget::contextMenuEvent(QContextMenuEvent * event) {
-    if (_context_menu) {
-        updateContextMenuState();
-        _context_menu->popup(event->globalPos());
-    }
-}
-
 void SpatialOverlayOpenGLWidget::onSelectionChanged(size_t total_selected) {
     // Emit signals for compatibility with existing code
     emit selectionChanged(total_selected, QString(), 0);
     requestThrottledUpdate();
-}
-
-void SpatialOverlayOpenGLWidget::initializeVisualizations() {
-    // Visualizations are created when data is set
-    // This method can be used for any common initialization
-    qDebug() << "SpatialOverlayOpenGLWidget: Initialized visualizations";
 }
 
 void SpatialOverlayOpenGLWidget::updateVisualizationData() {
@@ -679,6 +677,13 @@ void SpatialOverlayOpenGLWidget::initializeContextMenu() {
 
     auto * resetViewAction = _context_menu->addAction("Reset View");
     connect(resetViewAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::resetView);
+}
+
+void SpatialOverlayOpenGLWidget::contextMenuEvent(QContextMenuEvent * event) {
+    if (_context_menu) {
+        updateContextMenuState();
+        _context_menu->popup(event->globalPos());
+    }
 }
 
 void SpatialOverlayOpenGLWidget::updateContextMenuState() {
