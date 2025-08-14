@@ -1,6 +1,7 @@
 #ifndef TRANSFORMREGISTRY_HPP
 #define TRANSFORMREGISTRY_HPP
 
+#include "data_transforms.hpp"
 
 #include <map>
 #include <memory>// unique_ptr
@@ -8,7 +9,6 @@
 #include <typeindex>
 #include <vector>
 
-#include "data_transforms.hpp"
 
 class TransformRegistry {
 public:
