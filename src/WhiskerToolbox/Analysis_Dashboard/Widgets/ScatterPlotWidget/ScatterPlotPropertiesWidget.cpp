@@ -2,6 +2,7 @@
 #include "ScatterPlotPropertiesWidget.hpp"
 #include "ScatterPlotWidget.hpp"
 
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "DataManager/utils/TableView/TableRegistry.hpp"

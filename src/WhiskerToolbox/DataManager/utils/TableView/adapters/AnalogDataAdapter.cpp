@@ -1,5 +1,7 @@
 #include "AnalogDataAdapter.h"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+
 #include <stdexcept>
 
 AnalogDataAdapter::AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData,

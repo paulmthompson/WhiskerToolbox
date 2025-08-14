@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/ComputerRegistry.hpp"

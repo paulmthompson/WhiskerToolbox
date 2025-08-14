@@ -1,11 +1,12 @@
 #ifndef ANALOG_DATA_ADAPTER_H
 #define ANALOG_DATA_ADAPTER_H
 
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 
 #include <memory>
 #include <vector>
+
+class AnalogTimeSeries;
 
 /**
  * @brief Adapter that exposes AnalogTimeSeries as an IAnalogSource.

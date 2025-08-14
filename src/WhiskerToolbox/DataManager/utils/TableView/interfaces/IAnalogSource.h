@@ -4,8 +4,10 @@
 #include "TimeFrame.hpp"
 
 #include <cstddef>
+#include <memory>
 #include <span>
 #include <string>
+#include <vector>
 
 /**
  * @brief Interface for any data source that can be viewed as an analog signal.

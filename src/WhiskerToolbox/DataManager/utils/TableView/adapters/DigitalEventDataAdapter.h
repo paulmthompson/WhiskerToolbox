@@ -1,11 +1,12 @@
 #ifndef DIGITAL_EVENT_DATA_ADAPTER_H
 #define DIGITAL_EVENT_DATA_ADAPTER_H
 
-#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "utils/TableView/interfaces/IEventSource.h"
 
 #include <memory>
 #include <vector>
+
+class DigitalEventSeries;
 
 /**
  * @brief Adapter that exposes DigitalEventSeries as an IEventSource.
@@ -63,10 +64,7 @@ public:
                                       TimeFrameIndex end,
                                       TimeFrame const * target_timeFrame) override;
 
-    [[nodiscard]] auto getEntityIdAt(size_t index) const -> EntityId override {
-        auto const & ids = m_digitalEventSeries->getEntityIds();
-        return (index < ids.size()) ? ids[index] : 0;
-    }
+    [[nodiscard]] EntityId getEntityIdAt(size_t index) const override;
 
 private:
     std::shared_ptr<DigitalEventSeries> m_digitalEventSeries;
