@@ -1,200 +1,188 @@
 #include "SpatialOverlayOpenGLWidget.hpp"
-#include "ShaderManager/ShaderManager.hpp"
+#include "Selection/SelectionHandlers.hpp"
+#include "Widgets/Common/GenericViewAdapter.hpp"
+#include "Widgets/Common/PlotInteractionController.hpp"
 
-#include "Analysis_Dashboard/Widgets/Common/PlotInteractionController.hpp"
-#include "Analysis_Dashboard/Widgets/Common/ViewAdapter.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
-#include "Groups/GroupManager.hpp"
-#include "Selection/LineSelectionHandler.hpp"
-#include "Selection/NoneSelectionHandler.hpp"
-#include "Selection/PointSelectionHandler.hpp"
-#include "Selection/PolygonSelectionHandler.hpp"
-#include "SpatialOverlayViewAdapter.hpp"
 #include "Visualizers/Lines/LineDataVisualization.hpp"
 #include "Visualizers/Masks/MaskDataVisualization.hpp"
 #include "Visualizers/Points/PointDataVisualization.hpp"
-#include "Widgets/Common/widget_utilities.hpp"
 
-#include <QApplication>
+#include <QAction>
+#include <QContextMenuEvent>
 #include <QDebug>
 #include <QMenu>
-#include <QMouseEvent>
-#include <QToolTip>
-#include <QWheelEvent>
 
 #include <algorithm>
-#include <unordered_set>
+#include <limits>
 
+class PointData;
+class MaskData;
+class LineData;
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
-    : _opengl_resources_initialized(false),
-      _pan_offset_x(0.0f),
-      _pan_offset_y(0.0f),
-      _point_size(8.0f),
-      _line_width(2.0f),
+    : BasePlotOpenGLWidget(parent),
       _data_bounds_valid(false),
-      _tooltips_enabled(true),
-      _pending_update(false),
-      _hover_processing_active(false),
-      _selection_mode(SelectionMode::PointSelection),
-      _data_bounds(0.0f, 0.0f, 0.0f, 0.0f) {
+      _data_bounds({0.0f, 0.0f, 0.0f, 0.0f}) {
 
-    if (parent) setParent(parent);
-    setMouseTracking(true);
-    setFocusPolicy(Qt::StrongFocus);
+    initializeContextMenu();
 
-    try_create_opengl_context_with_version(this, 4, 3);
-
-    _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// Use fixed tolerance initially
-
-    std::visit([this](auto & handler) {
-        if (handler) {
-            handler->setNotificationCallback([this]() { makeSelection(); });
-        }
-    },
-               _selection_handler);
-
-    _tooltip_timer = new QTimer(this);
-    _tooltip_timer->setSingleShot(true);
-    _tooltip_timer->setInterval(500);// 500ms delay for tooltip
-    connect(_tooltip_timer, &QTimer::timeout, this, &SpatialOverlayOpenGLWidget::_handleTooltipTimer);
-
-    _tooltip_refresh_timer = new QTimer(this);
-    _tooltip_refresh_timer->setInterval(100);// Refresh every 100ms to keep tooltip visible
-    connect(_tooltip_refresh_timer, &QTimer::timeout, this, &SpatialOverlayOpenGLWidget::handleTooltipRefresh);
-
-    // Hover debounce timer - delays expensive polygon union calculations
-    _hover_debounce_timer = new QTimer(this);
-    _hover_debounce_timer->setSingleShot(true);
-    _hover_debounce_timer->setInterval(50);// 50ms delay for hover processing
-    connect(_hover_debounce_timer, &QTimer::timeout, this, &SpatialOverlayOpenGLWidget::processHoverDebounce);
-
-    // FPS limiter timer (30 FPS = ~33ms interval)
-    _fps_limiter_timer = new QTimer(this);
-    _fps_limiter_timer->setSingleShot(true);
-    _fps_limiter_timer->setInterval(33);// ~30 FPS
-    connect(_fps_limiter_timer, &QTimer::timeout, this, [this]() {
-        if (_pending_update) {
-            _pending_update = false;
-            update();
-            emit highlightStateChanged();
-        }
-    });
-
-    // Initialize data bounds
-    _data_bounds = BoundingBox(0.0f, 0.0f, 0.0f, 0.0f);
-
-    // Initialize per-axis zoom defaults and padding
-    _zoom_level_x = 1.0f;
-    _zoom_level_y = 1.0f;
-    _padding_factor = 1.1f;
-
-    // Setup composition interaction controller
-    _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<SpatialOverlayViewAdapter>(this));
-    connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &SpatialOverlayOpenGLWidget::viewBoundsChanged);
-    connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &SpatialOverlayOpenGLWidget::mouseWorldMoved);
-
-    _initializeContextMenu();
+    _selection_callback = [this]() {
+        makeSelection();
+    };
 }
 
-SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
-    cleanupOpenGLResources();
-}
+SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() = default;
 
-void SpatialOverlayOpenGLWidget::setGroupManager(GroupManager * group_manager) {
-    _group_manager = group_manager;
+void SpatialOverlayOpenGLWidget::initializeGL() {
 
-    // Connect to group manager signals to handle updates
-    if (_group_manager) {
-        connect(_group_manager, &GroupManager::pointAssignmentsChanged,
-                this, [this](std::unordered_set<int> const & affected_groups) {
-                    Q_UNUSED(affected_groups)
-                    // Refresh visualization data for all point visualizations
-                    for (auto & [key, viz]: _point_data_visualizations) {
-                        if (viz) {
-                            viz->refreshGroupRenderData();
-                        }
-                    }
-                    update();// Trigger a repaint
-                });
+    BasePlotOpenGLWidget::initializeGL();
 
-        connect(_group_manager, &GroupManager::groupModified,
-                this, [this](int group_id) {
-                    Q_UNUSED(group_id)
-                    // Color changes don't require vertex data refresh, just re-render
-                    update();
-                });
+    if (!_interaction) {
+        auto adapter = std::make_unique<GenericViewAdapter>(this);
+        _interaction = std::make_unique<PlotInteractionController>(this, std::move(adapter));
+
+        connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged,
+                this, &SpatialOverlayOpenGLWidget::viewBoundsChanged);
+        connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved,
+                this, &SpatialOverlayOpenGLWidget::mouseWorldMoved);
     }
 
-    // Update existing point data visualizations with the group manager
-    for (auto & [key, viz]: _point_data_visualizations) {
-        if (viz) {
-            viz->setGroupManager(_group_manager);
-        }
-    }
-
-    qDebug() << "SpatialOverlayOpenGLWidget: Set group manager for" << _point_data_visualizations.size() << "visualizations";
+    initializeVisualizations();
 }
 
-//========== Point Data ==========
+void SpatialOverlayOpenGLWidget::initializeVisualizations() {
+    // Visualizations are created when data is set
+    // This method can be used for any common initialization
+    qDebug() << "SpatialOverlayOpenGLWidget: Initialized visualizations";
+}
+
+// ========== Data ==========
 
 void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
+    qDebug() << "SpatialOverlayOpenGLWidget::setPointData called with" << point_data_map.size() << "datasets";
+
+    _point_data = point_data_map;
+
     // Clear existing visualizations
     _point_data_visualizations.clear();
 
-    // Set different colors for different datasets
-    static std::vector<QVector4D> colors = {
-            QVector4D(1.0f, 0.0f, 0.0f, 1.0f),// Red
-            QVector4D(0.0f, 1.0f, 0.0f, 1.0f),// Green
-            QVector4D(0.0f, 0.0f, 1.0f, 1.0f),// Blue
-            QVector4D(1.0f, 1.0f, 0.0f, 1.0f),// Yellow
-            QVector4D(1.0f, 0.0f, 1.0f, 1.0f),// Magenta
-            QVector4D(0.0f, 1.0f, 1.0f, 1.0f),// Cyan
-    };
-
-    // Create visualization for each PointData
-    size_t color_index = 0;
-    for (auto const & [key, point_data]: point_data_map) {
-        if (!point_data) {
-            qDebug() << "SpatialOverlayOpenGLWidget: Null point data for key:" << key;
-            continue;
+    // Create new visualizations
+    if (_opengl_resources_initialized) {
+        makeCurrent();
+        for (auto const & [key, point_data]: _point_data) {
+            if (point_data) {
+                auto viz = std::make_unique<PointDataVisualization>(key, point_data, _group_manager);
+                _point_data_visualizations[key] = std::move(viz);
+            }
         }
+        doneCurrent();
+    }
 
-        auto viz = std::make_unique<PointDataVisualization>(key, point_data, _group_manager);
-        viz->m_color = colors[color_index % colors.size()];
-        color_index++;
+    // Calculate bounds
+    calculateDataBounds();
 
-        qDebug() << "SpatialOverlayOpenGLWidget: Created visualization for" << key
-                 << "with" << viz->m_vertex_data.size() / 3 << "points";
+    requestThrottledUpdate();
+}
 
-        _point_data_visualizations[key] = std::move(viz);
+void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map) {
+    qDebug() << "SpatialOverlayOpenGLWidget::setMaskData called with" << mask_data_map.size() << "datasets";
+
+    _mask_data = mask_data_map;
+
+    // Clear existing visualizations
+    _mask_data_visualizations.clear();
+
+    // Create new visualizations
+    if (_opengl_resources_initialized) {
+        makeCurrent();
+        for (auto const & [key, mask_data]: _mask_data) {
+            if (mask_data) {
+                auto viz = std::make_unique<MaskDataVisualization>(key, mask_data);
+                _mask_data_visualizations[key] = std::move(viz);
+            }
+        }
+        doneCurrent();
     }
 
     calculateDataBounds();
-    updateViewMatrices();
 
-    // Ensure OpenGL context is current before forcing repaint
-    if (context() && context()->isValid()) {
+    requestThrottledUpdate();
+}
+
+void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map) {
+    qDebug() << "SpatialOverlayOpenGLWidget::setLineData called with" << line_data_map.size() << "datasets";
+
+    _line_data = line_data_map;
+
+    // Clear existing visualizations
+    _line_data_visualizations.clear();
+
+    // Create new visualizations
+    if (_opengl_resources_initialized) {
         makeCurrent();
-        update();
-        repaint();
-        QApplication::processEvents();
+        for (auto const & [key, line_data]: _line_data) {
+            if (line_data) {
+                auto viz = std::make_unique<LineDataVisualization>(key, line_data);
+                _line_data_visualizations[key] = std::move(viz);
+            }
+        }
         doneCurrent();
-    } else {
-        update();
+    }
+
+    calculateDataBounds();
+
+    requestThrottledUpdate();
+}
+
+void SpatialOverlayOpenGLWidget::setLineWidth(float line_width) {
+    float new_line_width = std::max(1.0f, std::min(20.0f, line_width));
+    if (new_line_width != _line_width) {
+        _line_width = new_line_width;
+        emit lineWidthChanged(_line_width);
+        requestThrottledUpdate();
     }
 }
 
-void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
-    float new_point_size = std::max(1.0f, std::min(50.0f, point_size));// Clamp between 1 and 50 pixels
-    if (new_point_size != _point_size) {
-        _point_size = new_point_size;
-        emit pointSizeChanged(_point_size);
+void SpatialOverlayOpenGLWidget::applyTimeRangeFilter(int start_frame, int end_frame) {
+    _start_frame = start_frame;
+    _end_frame = end_frame;
 
-        // Use throttled update for better performance
-        requestThrottledUpdate();
+    // Apply time filtering to existing visualizations
+    for (auto & [key, viz]: _point_data_visualizations) {
+        if (viz) {
+            //viz->applyTimeRangeFilter(start_frame, end_frame);
+        }
     }
+
+    for (auto & [key, viz]: _mask_data_visualizations) {
+        if (viz) {
+            //viz->applyTimeRangeFilter(start_frame, end_frame);
+        }
+    }
+
+    for (auto & [key, viz]: _line_data_visualizations) {
+        if (viz) {
+            //viz->applyTimeRangeFilter(start_frame, end_frame);
+        }
+    }
+
+    requestThrottledUpdate();
+}
+
+// ========== Selection ==========
+
+void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
+    auto old_mode = _selection_mode;
+    BasePlotOpenGLWidget::setSelectionMode(mode);
+    if (old_mode != mode) {
+        updateContextMenuState();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::onSelectionChanged(size_t total_selected) {
+    // Emit signals for compatibility with existing code
+    emit selectionChanged(total_selected, QString(), 0);
+    requestThrottledUpdate();
 }
 
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
@@ -206,58 +194,6 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
     return total;
 }
 
-//========== Mask Data ==========
-
-void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map) {
-    // Clear existing visualizations
-    _mask_data_visualizations.clear();
-
-    qDebug() << "SpatialOverlayOpenGLWidget: Setting mask data with" << mask_data_map.size() << "keys";
-
-    // Set different colors for different datasets
-    static std::vector<QVector4D> colors = {
-            QVector4D(1.0f, 0.0f, 0.0f, 0.5f),// Red with transparency
-            QVector4D(1.0f, 0.0f, 0.0f, 0.5f),// Red with transparency
-            QVector4D(1.0f, 0.0f, 0.0f, 0.5f),// Red with transparency
-            QVector4D(1.0f, 0.0f, 0.0f, 0.5f),// Red with transparency
-            QVector4D(1.0f, 0.0f, 0.0f, 0.5f),// Red with transparency
-            QVector4D(1.0f, 0.0f, 0.0f, 0.5f),// Red with transparency
-    };
-
-    // Create visualization for each MaskData
-    size_t color_index = 0;
-    for (auto const & [key, mask_data]: mask_data_map) {
-        if (!mask_data) {
-            qDebug() << "SpatialOverlayOpenGLWidget: Null mask data for key:" << key;
-            continue;
-        }
-
-        auto viz = std::make_unique<MaskDataVisualization>(key, mask_data);
-        viz->color = colors[color_index % colors.size()];
-        color_index++;
-
-        qDebug() << "SpatialOverlayOpenGLWidget: Created mask visualization for" << key
-                 << "with" << mask_data->size() << "time frames"
-                 << "color:" << viz->color.x() << viz->color.y() << viz->color.z() << viz->color.w();
-
-        _mask_data_visualizations[key] = std::move(viz);
-    }
-
-    calculateDataBounds();
-    updateViewMatrices();
-
-    // Ensure OpenGL context is current before forcing repaint
-    if (context() && context()->isValid()) {
-        makeCurrent();
-        update();
-        repaint();
-        QApplication::processEvents();
-        doneCurrent();
-    } else {
-        update();
-    }
-}
-
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
     size_t total = 0;
     for (auto const & [key, viz]: _mask_data_visualizations) {
@@ -267,66 +203,6 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
     return total;
 }
 
-//========== Line Data ==========
-
-void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map) {
-    // Clear existing visualizations
-    _line_data_visualizations.clear();
-
-    // Set different colors for different datasets
-    static std::vector<QVector4D> colors = {
-            QVector4D(0.0f, 0.0f, 1.0f, 1.0f),// Blue
-            QVector4D(0.0f, 1.0f, 0.0f, 1.0f),// Green
-            QVector4D(1.0f, 0.0f, 0.0f, 1.0f),// Red
-            QVector4D(1.0f, 1.0f, 0.0f, 1.0f),// Yellow
-            QVector4D(1.0f, 0.0f, 1.0f, 1.0f),// Magenta
-            QVector4D(0.0f, 1.0f, 1.0f, 1.0f),// Cyan
-    };
-
-    // Create visualization for each LineData
-    size_t color_index = 0;
-    for (auto const & [key, line_data]: line_data_map) {
-        if (!line_data) {
-            qDebug() << "SpatialOverlayOpenGLWidget: Null line data for key:" << key;
-            continue;
-        }
-
-        auto viz = std::make_unique<LineDataVisualization>(key, line_data);
-        viz->m_color = colors[color_index % colors.size()];
-        color_index++;
-
-        qDebug() << "SpatialOverlayOpenGLWidget: Created line visualization for" << key
-                 << "with" << viz->m_line_identifiers.size() << "lines";
-
-        _line_data_visualizations[key] = std::move(viz);
-    }
-
-    calculateDataBounds();
-    updateViewMatrices();
-
-    // Ensure OpenGL context is current before forcing repaint
-    if (context() && context()->isValid()) {
-        makeCurrent();
-        update();
-        repaint();
-        QApplication::processEvents();
-        doneCurrent();
-    } else {
-        update();
-    }
-}
-
-void SpatialOverlayOpenGLWidget::setLineWidth(float line_width) {
-    float new_line_width = std::max(0.5f, std::min(20.0f, line_width));// Clamp between 0.5 and 20 pixels
-    if (new_line_width != _line_width) {
-        _line_width = new_line_width;
-        emit lineWidthChanged(_line_width);
-
-        // Use throttled update for better performance
-        requestThrottledUpdate();
-    }
-}
-
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
     size_t total = 0;
     for (auto const & [key, viz]: _line_data_visualizations) {
@@ -334,236 +210,6 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
         total += viz->m_selected_lines.size();
     }
     return total;
-}
-
-//========== Filters ==========
-
-void SpatialOverlayOpenGLWidget::applyTimeRangeFilter(int start_frame, int end_frame) {
-
-    for (auto & [key, pointViz]: _point_data_visualizations) {
-        pointViz->setDataRangeEnabled(true);
-        pointViz->setDataRange(start_frame, end_frame);
-    }
-
-    for (auto & [key, lineViz]: _line_data_visualizations) {
-
-        lineViz->setTimeRangeEnabled(true);
-        lineViz->setTimeRange(start_frame, end_frame);
-    }
-    requestThrottledUpdate();
-}
-
-void SpatialOverlayOpenGLWidget::calculateDataBounds() {
-    if (_point_data_visualizations.empty() && _mask_data_visualizations.empty() && _line_data_visualizations.empty()) {
-        _data_bounds_valid = false;
-        return;
-    }
-
-    float min_x = std::numeric_limits<float>::max();
-    float max_x = std::numeric_limits<float>::lowest();
-    float min_y = std::numeric_limits<float>::max();
-    float max_y = std::numeric_limits<float>::lowest();
-
-    bool has_points = false;
-
-    // Calculate bounds from point data
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (!viz->m_visible || viz->m_vertex_data.empty()) continue;
-
-        // Iterate through vertex data (x, y, group_id triplets)
-        for (size_t i = 0; i < viz->m_vertex_data.size(); i += 3) {
-            float x = viz->m_vertex_data[i];
-            float y = viz->m_vertex_data[i + 1];
-            // Skip group_id at i + 2
-
-            min_x = std::min(min_x, x);
-            max_x = std::max(max_x, x);
-            min_y = std::min(min_y, y);
-            max_y = std::max(max_y, y);
-            has_points = true;
-        }
-    }
-
-    // Calculate bounds from mask data
-    for (auto const & [key, viz]: _mask_data_visualizations) {
-        if (!viz->visible) continue;
-
-        min_x = std::min(min_x, viz->world_min_x);
-        max_x = std::max(max_x, viz->world_max_x);
-        min_y = std::min(min_y, viz->world_min_y);
-        max_y = std::max(max_y, viz->world_max_y);
-        has_points = true;
-    }
-
-    // Calculate bounds from line data
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        if (!viz->m_visible || viz->m_vertex_data.empty()) continue;
-
-        // Iterate through vertex data (x, y pairs)
-        for (size_t i = 0; i < viz->m_vertex_data.size(); i += 2) {
-            float x = viz->m_vertex_data[i];
-            float y = viz->m_vertex_data[i + 1];
-
-            min_x = std::min(min_x, x);
-            max_x = std::max(max_x, x);
-            min_y = std::min(min_y, y);
-            max_y = std::max(max_y, y);
-            has_points = true;
-        }
-    }
-
-    if (!has_points) {
-        _data_bounds_valid = false;
-        return;
-    }
-
-    // Add some padding
-    float padding_x = (max_x - min_x) * 0.1f;
-    float padding_y = (max_y - min_y) * 0.1f;
-
-    _data_bounds = BoundingBox(min_x - padding_x, min_y - padding_y,
-                               max_x + padding_x, max_y + padding_y);
-    _data_bounds_valid = true;
-}
-
-//========== View and MVP Matrices ==========
-
-void SpatialOverlayOpenGLWidget::resetView() {
-    // Reset zoom and pan to defaults
-    _zoom_level_x = 1.0f;
-    _zoom_level_y = 1.0f;
-    _pan_offset_x = 0.0f;
-    _pan_offset_y = 0.0f;
-
-    // Update view matrices and trigger render
-    updateViewMatrices();
-    requestThrottledUpdate();
-}
-
-QVector2D SpatialOverlayOpenGLWidget::screenToWorld(int screen_x, int screen_y) const {
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
-
-    if (left == right || bottom == top) {
-        return QVector2D(0, 0);
-    }
-
-    // Convert screen coordinates to world coordinates using the projection bounds
-    float world_x = left + (static_cast<float>(screen_x) / width()) * (right - left);
-    float world_y = top - (static_cast<float>(screen_y) / height()) * (top - bottom);// Y is flipped in screen coordinates
-
-    return QVector2D(world_x, world_y);
-}
-
-QPoint SpatialOverlayOpenGLWidget::worldToScreen(float world_x, float world_y) const {
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
-
-    if (left == right || bottom == top) {
-        return QPoint(0, 0);
-    }
-
-    // Convert world coordinates to screen coordinates using the projection bounds
-    int screen_x = static_cast<int>(((world_x - left) / (right - left)) * width());
-    int screen_y = static_cast<int>(((top - world_y) / (top - bottom)) * height());// Y is flipped in screen coordinates
-
-    return QPoint(screen_x, screen_y);
-}
-
-float SpatialOverlayOpenGLWidget::calculateWorldTolerance(float screen_tolerance) const {
-    QVector2D world_pos = screenToWorld(0, 0);
-    QVector2D world_pos_offset = screenToWorld(static_cast<int>(screen_tolerance), 0);
-    return std::abs(world_pos_offset.x() - world_pos.x());
-}
-
-void SpatialOverlayOpenGLWidget::updateViewMatrices() {
-    // Build clear M, V, P matrices
-    _model_matrix.setToIdentity();
-
-    if (!_data_bounds_valid || width() <= 0 || height() <= 0) {
-        _projection_matrix.setToIdentity();
-        _view_matrix.setToIdentity();
-        return;
-    }
-
-    // Compute camera center and world-space visible extents
-    float cx, cy, w_world, h_world;
-    computeCameraWorldView(cx, cy, w_world, h_world);
-
-    // View matrix encodes pan/zoom: V = S * T(-center)
-    _view_matrix.setToIdentity();
-    float aspect = static_cast<float>(width()) / std::max(1, height());
-    float scale_x = (w_world > 0.0f) ? ((2.0f * aspect) / w_world) : 1.0f;
-    float scale_y = (h_world > 0.0f) ? (2.0f / h_world) : 1.0f;
-    // Order matters: m = S * T so that final mapping is correct with our orthographic P
-    _view_matrix.scale(scale_x, scale_y, 1.0f);
-    _view_matrix.translate(-cx, -cy, 0.0f);
-
-    // Projection handles aspect only. Choose unit vertical span = 2, horizontal = 2*aspect
-    _projection_matrix.setToIdentity();
-    float left = -aspect;
-    float right = aspect;
-    float bottom = -1.0f;
-    float top = 1.0f;
-    _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
-
-    // Emit the current visible world bounds for external UI, computed consistently
-    float half_w = w_world * 0.5f;
-    float half_h = h_world * 0.5f;
-    emit viewBoundsChanged(cx - half_w, cx + half_w, cy - half_h, cy + half_h);
-}
-
-//========== Selection ==========
-
-void SpatialOverlayOpenGLWidget::makeSelection() {
-    auto context = createRenderingContext();
-
-    std::cout << "makeSelection" << std::endl;
-
-    if (_selection_handler.valueless_by_exception()) {
-        return;
-    }
-
-    // Determine if we should clear selection. For point selection, there is no region
-    // concept, so we should NOT clear. Only clear when selection mode is None or when
-    // region-based handlers have no active region.
-    bool should_clear = false;
-    if (_selection_mode == SelectionMode::None) {
-        should_clear = true;
-    } else {
-        should_clear = std::visit([](auto & handler) {
-            using HandlerType = std::decay_t<decltype(handler)>;
-            if constexpr (std::is_same_v<HandlerType, std::unique_ptr<PointSelectionHandler>>) {
-                return false;// point selection never uses a persistent region
-            } else if constexpr (std::is_same_v<HandlerType, std::unique_ptr<NoneSelectionHandler>>) {
-                return true;
-            } else {
-                return handler->getActiveSelectionRegion() == nullptr;
-            }
-        },
-                                  _selection_handler);
-    }
-
-    if (should_clear) {
-        clearSelection();
-        return;
-    }
-
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        viz->applySelection(_selection_handler);
-    }
-    for (auto const & [key, viz]: _mask_data_visualizations) {
-        viz->applySelection(_selection_handler);
-    }
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        viz->applySelection(_selection_handler, context);
-    }
-
-    // Emit selection changed signal with updated counts
-    size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
-    emit selectionChanged(total_selected, QString(), 0);
-
-    requestThrottledUpdate();
 }
 
 void SpatialOverlayOpenGLWidget::clearSelection() {
@@ -591,830 +237,272 @@ void SpatialOverlayOpenGLWidget::clearSelection() {
     }
 
     if (had_selection) {
-        emit selectionChanged(0, QString(), 0);
+        size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
+        emit selectionChanged(total_selected, QString(), 0);
         requestThrottledUpdate();
-        qDebug() << "SpatialOverlayOpenGLWidget: All selections cleared";
+
+        qDebug() << "SpatialOverlayOpenGLWidget: Selection cleared";
     }
 }
 
-void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
-    if (mode != _selection_mode) {
+void SpatialOverlayOpenGLWidget::hideSelectedItems() {
+    // TODO: Implement by updating visualization visibility
+    requestThrottledUpdate();
+}
 
-        std::visit([](auto & handler) {
-            handler->deactivate();
-            handler->clearNotificationCallback();
-        },
-                   _selection_handler);
+void SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset() {
+    // TODO: Implement by updating visualization visibility
+    requestThrottledUpdate();
+}
 
-        _selection_mode = mode;
-        emit selectionModeChanged(_selection_mode);
+void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
+    // TODO: Implement by updating visualization visibility
+    requestThrottledUpdate();
+}
 
-        // Update cursor based on selection mode
-        if (_selection_mode == SelectionMode::PolygonSelection) {
-            _selection_handler = std::make_unique<PolygonSelectionHandler>();
-            setCursor(Qt::CrossCursor);
-        } else if (_selection_mode == SelectionMode::LineIntersection) {
-            _selection_handler = std::make_unique<LineSelectionHandler>();
-            setCursor(Qt::CrossCursor);
-        } else if (_selection_mode == SelectionMode::PointSelection) {
-            _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// Use fixed tolerance
-            setCursor(Qt::ArrowCursor);
-        } else if (_selection_mode == SelectionMode::None) {
-            _selection_handler = std::make_unique<NoneSelectionHandler>();
-            setCursor(Qt::ArrowCursor);
+QVector2D SpatialOverlayOpenGLWidget::screenToWorld(int screen_x, int screen_y) const {
+    return BasePlotOpenGLWidget::screenToWorld(QPoint(screen_x, screen_y));
+}
+
+QPoint SpatialOverlayOpenGLWidget::worldToScreen(float world_x, float world_y) const {
+    return BasePlotOpenGLWidget::worldToScreen(world_x, world_y);
+}
+
+void SpatialOverlayOpenGLWidget::renderData() {
+    auto context = createRenderingContext();
+    auto mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
+
+    // Render in order: masks (background), lines (middle), points (foreground)
+    for (auto const & [key, viz]: _mask_data_visualizations) {
+        if (viz) {
+            viz->render(mvp_matrix);
         }
-
-        std::visit([this](auto & handler) {
-            handler->setNotificationCallback([this]() {
-                makeSelection();
-            });
-        },
-                   _selection_handler);
-
-        requestThrottledUpdate();
-    }
-}
-
-//========== OpenGL Initialization ==========
-
-void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
-    qDebug() << "SpatialOverlayOpenGLWidget: Initializing OpenGL resources";
-
-    if (!ShaderManager::instance().loadProgram("point", ":/shaders/point.vert", ":/shaders/point.frag", "", ShaderSourceType::Resource)) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to load point shader program from ShaderManager";
-        return;
     }
 
-    if (!ShaderManager::instance().loadProgram("line", ":/shaders/line.vert", ":/shaders/line.frag", "", ShaderSourceType::Resource)) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to load line shader program from ShaderManager";
-        return;
-    }
-
-    if (!ShaderManager::instance().loadProgram("texture", ":/shaders/texture.vert", ":/shaders/texture.frag", "", ShaderSourceType::Resource)) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to load texture shader program from ShaderManager";
-        return;
-    }
-
-    _opengl_resources_initialized = true;
-    qDebug() << "SpatialOverlayOpenGLWidget: OpenGL resources initialized successfully";
-}
-
-void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
-    if (_opengl_resources_initialized) {
-        makeCurrent();
-
-        for (auto const & [key, viz]: _point_data_visualizations) {
-            viz->cleanupOpenGLResources();
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        if (viz) {
+            viz->render(mvp_matrix, _line_width);
         }
+    }
 
-        for (auto const & [key, viz]: _mask_data_visualizations) {
-            viz->cleanupOpenGLResources();
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz) {
+            viz->render(mvp_matrix, _point_size);
         }
-
-        _opengl_resources_initialized = false;
-
-        doneCurrent();
     }
 }
 
-void SpatialOverlayOpenGLWidget::initializeGL() {
-    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL called";
+void SpatialOverlayOpenGLWidget::calculateDataBounds() {
+    // Reset bounds
+    _data_bounds = BoundingBox{0.0f, 0.0f, 0.0f, 0.0f};
+    _data_bounds_valid = false;
 
-    // Check if OpenGL functions can be initialized
-    if (!initializeOpenGLFunctions()) {
-        qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Failed to initialize OpenGL functions";
+    if (_point_data_visualizations.empty() && _mask_data_visualizations.empty() && _line_data_visualizations.empty()) {
         return;
     }
 
-    // Check if context is valid
-    if (!context() || !context()->isValid()) {
-        qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Invalid OpenGL context";
-        return;
-    }
+    bool has_data = false;
+    float min_x = std::numeric_limits<float>::max();
+    float max_x = std::numeric_limits<float>::lowest();
+    float min_y = std::numeric_limits<float>::max();
+    float max_y = std::numeric_limits<float>::lowest();
 
-    // Check format validity
-    auto fmt = format();
+    // Calculate bounds from point data visualizations
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz && viz->m_visible && !viz->m_vertex_data.empty()) {
+            // Iterate through vertex data (x, y, group_id triplets)
+            for (size_t i = 0; i < viz->m_vertex_data.size(); i += 3) {
+                float x = viz->m_vertex_data[i];
+                float y = viz->m_vertex_data[i + 1];
+                // Skip group_id at i + 2
 
-    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - OpenGL version:" << fmt.majorVersion() << "." << fmt.minorVersion();
-    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Profile:" << (fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
-    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Samples:" << fmt.samples();
-
-    // Check what OpenGL version was actually created
-    if (context() && context()->isValid()) {
-        qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Context created successfully";
-        qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Requested format:" << fmt.majorVersion() << "." << fmt.minorVersion();
-        qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Actual OpenGL version:" << context()->format().majorVersion() << "." << context()->format().minorVersion();
-
-        // Check if we got the version we requested
-        if (fmt.majorVersion() != context()->format().majorVersion() || fmt.minorVersion() != context()->format().minorVersion()) {
-            qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - OpenGL version mismatch!";
-            qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Requested:" << fmt.majorVersion() << "." << fmt.minorVersion();
-            qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Got:" << context()->format().majorVersion() << "." << context()->format().minorVersion();
+                min_x = std::min(min_x, x);
+                max_x = std::max(max_x, x);
+                min_y = std::min(min_y, y);
+                max_y = std::max(max_y, y);
+                has_data = true;
+            }
         }
-    } else {
-        qWarning() << "SpatialOverlayOpenGLWidget::initializeGL - Context creation failed!";
     }
 
-    // Set clear color
-    glClearColor(0.95f, 0.95f, 0.95f, 1.0f);
-
-    // Enable blending for transparency with premultiplied alpha
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Enable multisampling if available
-    if (fmt.samples() > 1) {
-        glEnable(GL_MULTISAMPLE);
-    }
-
-    // Enable programmable point size
-    glEnable(GL_PROGRAM_POINT_SIZE);
-
-    // Check OpenGL capabilities
-    GLint max_point_size;
-    glGetIntegerv(GL_POINT_SIZE_RANGE, &max_point_size);
-    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL - Max point size:" << max_point_size;
-
-    // Initialize OpenGL resources
-    initializeOpenGLResources();
-    updateViewMatrices();
-
-    qDebug() << "SpatialOverlayOpenGLWidget::initializeGL completed successfully";
-}
-
-void SpatialOverlayOpenGLWidget::paintGL() {
-    // Check if OpenGL context is valid
-    if (!context() || !context()->isValid()) {
-        qWarning() << "SpatialOverlayOpenGLWidget::paintGL - Invalid OpenGL context";
-        return;
-    }
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    if (!_data_bounds_valid || !_opengl_resources_initialized) {
-        return;
-    }
-
-    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-
-    renderPoints();
-    renderMasks();
-    renderLines();
-
-    std::visit([mvp_matrix](auto & handler) {
-        if (handler) {
-            handler->render(mvp_matrix);
+    // Calculate bounds from mask data visualizations
+    for (auto const & [key, viz]: _mask_data_visualizations) {
+        if (viz && viz->visible) {
+            min_x = std::min(min_x, viz->world_min_x);
+            max_x = std::max(max_x, viz->world_max_x);
+            min_y = std::min(min_y, viz->world_min_y);
+            max_y = std::max(max_y, viz->world_max_y);
+            has_data = true;
         }
-    },
-               _selection_handler);
-
-    renderCommonOverlay();
-}
-
-void SpatialOverlayOpenGLWidget::paintEvent(QPaintEvent * event) {
-    QOpenGLWidget::paintEvent(event);
-}
-
-void SpatialOverlayOpenGLWidget::resizeGL(int w, int h) {
-    glViewport(0, 0, w, h);
-    updateViewMatrices();
-
-    // No need to update vertex buffer during resize - the data is already on GPU
-    // Just update the viewport and projection matrix
-}
-
-
-bool SpatialOverlayOpenGLWidget::isOpenGLContextValid() const {
-    return context() && context()->isValid() && _opengl_resources_initialized;
-}
-
-QString SpatialOverlayOpenGLWidget::getOpenGLErrorInfo() const {
-    QString error_info;
-
-    if (!context()) {
-        error_info += "No OpenGL context available\n";
-    } else if (!context()->isValid()) {
-        error_info += "OpenGL context is invalid\n";
     }
 
-    if (!_opengl_resources_initialized) {
-        error_info += "OpenGL resources not initialized\n";
+    // Calculate bounds from line data visualizations
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        if (viz && viz->m_visible && !viz->m_vertex_data.empty()) {
+            // Iterate through line vertex data (x, y pairs)
+            for (size_t i = 0; i < viz->m_vertex_data.size(); i += 2) {
+                float x = viz->m_vertex_data[i];
+                float y = viz->m_vertex_data[i + 1];
+
+                min_x = std::min(min_x, x);
+                max_x = std::max(max_x, x);
+                min_y = std::min(min_y, y);
+                max_y = std::max(max_y, y);
+                has_data = true;
+            }
+        }
     }
 
-    auto fmt = format();
+    if (has_data) {
+        _data_bounds = BoundingBox{min_x, min_y, max_x, max_y};
+        _data_bounds_valid = true;
+    }
 
-    error_info += QString("Surface format: OpenGL %1.%2 %3 Profile\n")
-                          .arg(fmt.majorVersion())
-                          .arg(fmt.minorVersion())
-                          .arg(fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
-
-
-    return error_info;
+    qDebug() << "SpatialOverlayOpenGLWidget: Calculated data bounds:"
+             << _data_bounds.min_x << _data_bounds.min_y
+             << _data_bounds.max_x << _data_bounds.max_y;
 }
 
-bool SpatialOverlayOpenGLWidget::forceContextCreation() {
-    qDebug() << "SpatialOverlayOpenGLWidget::forceContextCreation called";
+BoundingBox SpatialOverlayOpenGLWidget::getDataBounds() const {
+    return _data_bounds;
+}
 
-    // Try to make the context current
-    if (!context()) {
-        qWarning() << "SpatialOverlayOpenGLWidget::forceContextCreation - No context available";
-        return false;
+void SpatialOverlayOpenGLWidget::renderUI() {
+    // TODO: Render axis labels, legends, etc.
+    // This can include drawing text overlays, coordinate system indicators, etc.
+}
+
+// ========== Tooltips ==========
+
+std::optional<QString> SpatialOverlayOpenGLWidget::generateTooltipContent(QPoint const & screen_pos) const {
+    if (_point_data_visualizations.empty() && _mask_data_visualizations.empty() && _line_data_visualizations.empty() || !_tooltips_enabled) {
+        return std::nullopt;
     }
 
-    qDebug() << "SpatialOverlayOpenGLWidget::forceContextCreation - Context made current successfully";
-    qDebug() << "SpatialOverlayOpenGLWidget::forceContextCreation - Context format:" << context()->format().majorVersion() << "." << context()->format().minorVersion();
+    // Convert screen position to world coordinates
+    auto world_pos = screenToWorld(screen_pos.x(), screen_pos.y());
+    float world_x = world_pos.x();
+    float world_y = world_pos.y();
 
-    doneCurrent();
-    return true;
+    // Query visualizations for closest data element
+    // This would ideally use the hit testing methods of the visualizations
+    // For now, provide basic coordinate information
+
+    QString tooltip = QString("Position: (%1, %2)")
+                              .arg(world_x, 0, 'f', 3)
+                              .arg(world_y, 0, 'f', 3);
+
+    // Add data counts if available
+    if (!_point_data_visualizations.empty() || !_mask_data_visualizations.empty() || !_line_data_visualizations.empty()) {
+        tooltip += QString("\nData: %1 points, %2 masks, %3 lines")
+                           .arg(_point_data_visualizations.size())
+                           .arg(_mask_data_visualizations.size())
+                           .arg(_line_data_visualizations.size());
+    }
+
+    return tooltip;
+}
+
+
+
+void SpatialOverlayOpenGLWidget::updateVisualizationData() {
+    // Data is updated through individual visualization creation
+    // This method can be used for updating existing visualizations
+    qDebug() << "SpatialOverlayOpenGLWidget: Updated visualization data";
 }
 
 //========== Mouse Events ==========
 
 void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
-    // Ensure this widget gets keyboard focus so Enter/Escape reach selection handlers
-    if (!hasFocus()) {
-        setFocus(Qt::MouseFocusReason);
-    }
-    auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
 
-    std::visit([this, event, world_pos](auto & handler) {
-        if (handler) {
-            handler->mousePressEvent(event, world_pos);
-        }
-    },
-               _selection_handler);
+    BasePlotOpenGLWidget::mousePressEvent(event);
 
-    if (_interaction) {
-        _interaction->handleMousePress(event);
-    }
-
-    if (event->button() == Qt::LeftButton) {
-        event->accept();
-    } else if (event->button() == Qt::RightButton) {
-        // Accept right click so we get the corresponding mouseReleaseEvent
+    // Accept the event
+    if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
         event->accept();
     } else {
-        // Let other mouse buttons propagate to parent widget
         event->ignore();
-        return;
-    }
-
-    // Clear tooltips and hover processing during interaction
-    _tooltip_timer->stop();
-    _tooltip_refresh_timer->stop();
-    _hover_debounce_timer->stop();
-    _hover_processing_active = false;
-    QToolTip::hideText();
-
-    qDebug() << "SpatialOverlayOpenGLWidget: Mouse press - disabled hover processing, selection mode:" << (int) _selection_mode;
-
-    // Clear hover states
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        viz->m_current_hover_point = nullptr;
-    }
-
-    // Clear line hover states as well
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        viz->setHoverLine(std::nullopt);
-    }
-
-    requestThrottledUpdate();
-}
-
-void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
-    _current_mouse_pos = event->pos();
-    if (_interaction && _interaction->handleMouseMove(event)) return;
-
-    auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
-    std::visit([event, world_pos](auto & handler) {
-        handler->mouseMoveEvent(event, world_pos);
-    },
-               _selection_handler);
-
-    if (!(_interaction && _interaction->handleMouseMove(event))) {
-
-        if (_last_mouse_pos == _current_mouse_pos) {
-            return;
-        } else {
-            qDebug() << "SpatialOverlayOpenGLWidget: Mouse moved from"
-                     << _last_mouse_pos << "to" << _current_mouse_pos;
-        }
-
-        // Handle tooltip logic if tooltips are enabled
-        if (_tooltips_enabled) {
-            // Store the current mouse position for debounced processing
-            _pending_hover_pos = _current_mouse_pos;
-
-            // If hover processing is currently active, skip this event
-            if (_hover_processing_active) {
-                qDebug() << "SpatialOverlayOpenGLWidget: Skipping hover processing - already active";
-                return;
-            }
-
-            // Start or restart the debounce timer
-            _hover_debounce_timer->stop();
-            _hover_debounce_timer->start();
-
-            qDebug() << "SpatialOverlayOpenGLWidget: Starting hover debounce timer for position" << _pending_hover_pos;
-        }
-        _last_mouse_pos = _current_mouse_pos;
-        event->accept();
     }
 }
 
 void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
-    auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
-    std::visit([event, world_pos](auto & handler) {
-        handler->mouseReleaseEvent(event, world_pos);
-    },
-               _selection_handler);
-
-    if (event->button() == Qt::LeftButton) {
-        if (_interaction && _interaction->handleMouseRelease(event)) return;
-
-        // Re-enable hover processing after interaction ends
-        // This ensures hover works again even if the click was in an incompatible selection mode
-        _hover_processing_active = false;
-
-        // Trigger hover processing to restart immediately if mouse is over content
-        if (_tooltips_enabled && _data_bounds_valid) {
-            _pending_hover_pos = event->pos();
-            _hover_debounce_timer->stop();
-            _hover_debounce_timer->start();
-            qDebug() << "SpatialOverlayOpenGLWidget: Mouse release - restarted hover processing at" << event->pos();
-        } else {
-            qDebug() << "SpatialOverlayOpenGLWidget: Mouse release - hover processing not restarted (tooltips:" << _tooltips_enabled << ", bounds_valid:" << _data_bounds_valid << ")";
-        }
-
-        event->accept();
-    } else if (event->button() == Qt::RightButton) {
-        // Only show context menu when not in polygon selection, to avoid interfering with completion
-        if (_selection_mode != SelectionMode::PolygonSelection) {
-            qDebug() << "SpatialOverlayOpenGLWidget: Right-click detected at" << event->pos();
-            _showContextMenu(event->pos());
-            event->accept();
-        } else {
-            // In polygon mode, right-click is ignored to prevent menu; completion is done via Enter
-            event->ignore();
-        }
-    } else {
-        event->ignore();
-    }
-
-    requestThrottledUpdate();
-}
-
-void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
-    if (event->button() == Qt::LeftButton) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Double-click detected at" << event->pos();
-
-        QVector2D world_pos = screenToWorld(event->pos().x(), event->pos().y());
-        float tolerance = 10.0f;// Use fixed tolerance
-
-        for (auto const & [key, viz]: _point_data_visualizations) {
-            auto frame_index = viz->handleDoubleClick(world_pos, tolerance);
-            if (frame_index.has_value()) {
-                qDebug() << "SpatialOverlayOpenGLWidget: Double-click on point in" << key
-                         << "frame:" << frame_index.value();
-                emit frameJumpRequested(frame_index.value(), key);
-                event->accept();
-                return;
-            }
-        }
-
-        qDebug() << "SpatialOverlayOpenGLWidget: Double-click but no point found near cursor";
-        event->ignore();
-    } else {
-        event->ignore();
-    }
-}
-
-void SpatialOverlayOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    if (_interaction && _interaction->handleWheel(event)) return;
-    QOpenGLWidget::wheelEvent(event);
-}
-
-void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
-    // Hide tooltips when mouse leaves the widget
-    _tooltip_timer->stop();
-    _tooltip_refresh_timer->stop();
-    _hover_debounce_timer->stop();
-    QToolTip::hideText();
-
-    // Clear hover processing state
-    _hover_processing_active = false;
-
-    // Clear all hover states
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        viz->clearHover();
-    }
-
-    // Clear line hover states
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        viz->setHoverLine(std::nullopt);
-    }
-
-    for (auto const & [key, viz]: _mask_data_visualizations) {
-        viz->clearHover();
-    }
-
-    requestThrottledUpdate();
-
-    QOpenGLWidget::leaveEvent(event);
-}
-
-void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
-    qDebug() << "SpatialOverlayOpenGLWidget::keyPressEvent - Key:" << event->key() << "Text:" << event->text();
-
-    std::visit([event](auto & handler) {
-        if (handler) {
-            handler->keyPressEvent(event);
-        }
-    },
-               _selection_handler);
-
-    if (event->key() == Qt::Key_Escape || event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace) {
-        if (getTotalSelectedPoints() > 0) {
-            clearSelection();
-        }
-    }
-
-    //if (_interaction) {
-    //    _interaction->handleKeyPress(event);
-    //}
+    // Call base class implementation
+    BasePlotOpenGLWidget::mouseReleaseEvent(event);
 
     event->accept();
 }
 
-void SpatialOverlayOpenGLWidget::handleKeyPress(QKeyEvent * event) {
-    qDebug() << "SpatialOverlayOpenGLWidget::handleKeyPress - Public method called for key:" << event->key();
-    // Simply call the protected keyPressEvent method
-    keyPressEvent(event);
-}
+void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
+    // Convert to world coordinates for selection handlers
+    auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
 
-void SpatialOverlayOpenGLWidget::requestThrottledUpdate() {
-    if (!_fps_limiter_timer->isActive()) {
-        // If timer is not running, update immediately and start timer
-        update();
-        emit highlightStateChanged();
-        _fps_limiter_timer->start();
-    } else {
-        // Timer is running, just mark that we have a pending update
-        _pending_update = true;
-    }
-}
+    // Call base class implementation first (handles interaction controller and tooltips)
+    BasePlotOpenGLWidget::mouseMoveEvent(event);
 
-//========== Tooltips ==========
+    // Add hover logic for point enlargement
+    if (_tooltips_enabled && _opengl_resources_initialized) {
+        float tolerance = 10.0f;// 10 pixel tolerance for hover detection
 
-void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
-    if (enabled != _tooltips_enabled) {
-        _tooltips_enabled = enabled;
-        emit tooltipsEnabledChanged(_tooltips_enabled);
+        bool hover_changed = false;
 
-        // Hide any currently visible tooltip when disabling
-        if (!_tooltips_enabled) {
-            _tooltip_timer->stop();
-            _tooltip_refresh_timer->stop();
-            QToolTip::hideText();
-
-            // Clear all hover states
-            for (auto const & [key, viz]: _point_data_visualizations) {
-                viz->m_current_hover_point = nullptr;
+        // Handle hover for all point visualizations
+        for (auto const & [key, viz]: _point_data_visualizations) {
+            if (viz && viz->handleHover(world_pos, tolerance)) {
+                hover_changed = true;
             }
         }
+
+        // Request update if hover state changed (to redraw enlarged point)
+        if (hover_changed) {
+            requestThrottledUpdate();
+        }
     }
 }
 
-void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
-    if (!_data_bounds_valid || !_tooltips_enabled) return;
+//========== Selection ==========
 
-    QStringList tooltip_parts;
+void SpatialOverlayOpenGLWidget::makeSelection() {
+    auto context = createRenderingContext();
 
-    // Get tooltips from point visualizations
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (viz->m_current_hover_point) {
-            tooltip_parts << viz->getTooltipText();
-        }
+    std::cout << "makeSelection" << std::endl;
+
+    if (_selection_handler.valueless_by_exception()) {
+        return;
     }
 
-    // Get tooltips from mask visualizations
-    for (auto const & [key, viz]: _mask_data_visualizations) {
-        if (!viz->current_hover_entries.empty()) {
-            tooltip_parts << viz->getTooltipText();
-        }
-    }
-
-    // Get tooltips from line visualizations
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        if (viz->m_has_hover_line) {
-            tooltip_parts << viz->getTooltipText();
-        }
-    }
-
-    if (!tooltip_parts.isEmpty()) {
-        QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_parts.join("<hr>"), this);
-        _tooltip_refresh_timer->start();
+    // Determine if we should clear selection. For point selection, there is no region
+    // concept, so we should NOT clear. Only clear when selection mode is None or when
+    // region-based handlers have no active region.
+    bool should_clear = false;
+    if (_selection_mode == SelectionMode::None) {
+        should_clear = true;
     } else {
-        _tooltip_refresh_timer->stop();
-        QToolTip::hideText();
+        should_clear = false;
     }
-}
 
-void SpatialOverlayOpenGLWidget::handleTooltipRefresh() {
-    if (!_data_bounds_valid || !_tooltips_enabled) {
-        _tooltip_refresh_timer->stop();
+    if (should_clear) {
+        clearSelection();
         return;
     }
 
-    // The logic is the same as the initial timer, so we can just call it.
-    _handleTooltipTimer();
-}
-
-
-void SpatialOverlayOpenGLWidget::renderPoints() {
-    if (_point_data_visualizations.empty() || !_opengl_resources_initialized) {
-        return;
-    }
-
-    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-
+    // Apply selection to all visualization structs using their existing applySelection methods
     for (auto const & [key, viz]: _point_data_visualizations) {
-        viz->render(mvp_matrix, _point_size);
+        viz->applySelection(_selection_handler);
     }
-}
-
-void SpatialOverlayOpenGLWidget::renderMasks() {
-    if (_mask_data_visualizations.empty() || !_opengl_resources_initialized) {
-        return;
-    }
-
-    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
     for (auto const & [key, viz]: _mask_data_visualizations) {
-        viz->render(mvp_matrix);
+        viz->applySelection(_selection_handler);
     }
-}
-
-void SpatialOverlayOpenGLWidget::renderLines() {
-    if (_line_data_visualizations.empty() || !_opengl_resources_initialized) {
-        return;
-    }
-
-    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-
-    // Render all lines for each LineData
     for (auto const & [key, viz]: _line_data_visualizations) {
-        viz->render(mvp_matrix, _line_width);// Use member variable for line width
-    }
-}
-
-void SpatialOverlayOpenGLWidget::calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const {
-    if (!_data_bounds_valid || width() <= 0 || height() <= 0) {
-        left = right = bottom = top = 0.0f;
-        return;
+        viz->applySelection(_selection_handler, context);
     }
 
-    float cx, cy, w_world, h_world;
-    computeCameraWorldView(cx, cy, w_world, h_world);
-    left = cx - 0.5f * w_world;
-    right = cx + 0.5f * w_world;
-    bottom = cy - 0.5f * h_world;
-    top = cy + 0.5f * h_world;
-}
-
-void SpatialOverlayOpenGLWidget::computeCameraWorldView(float & center_x,
-                                                        float & center_y,
-                                                        float & world_width,
-                                                        float & world_height) const {
-    compute_camera_world_view(_data_bounds, _zoom_level_x, _zoom_level_y,
-                              _pan_offset_x, _pan_offset_y, _padding_factor,
-                              center_x, center_y, world_width, world_height);
-}
-
-void SpatialOverlayOpenGLWidget::processHoverDebounce() {
-    if (!_data_bounds_valid || !_tooltips_enabled || _hover_processing_active) {
-        // Skip processing if data is invalid, tooltips are disabled, or we're already processing
-        return;
-    }
-
-    // Set processing flag to prevent new hover calculations
-    _hover_processing_active = true;
-
-    qDebug() << "SpatialOverlayOpenGLWidget: Processing debounced hover at" << _pending_hover_pos;
-
-    QVector2D world_pos = screenToWorld(_pending_hover_pos.x(), _pending_hover_pos.y());
-    float tolerance = 10.0f;// Use fixed tolerance
-    bool needs_tooltip_update = false;
-
-    // Delegate hover handling to each point data visualization
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (viz->handleHover(world_pos, tolerance)) {
-            needs_tooltip_update = true;
-        }
-    }
-
-    // Delegate hover handling to each mask data visualization
-    for (auto const & [key, viz]: _mask_data_visualizations) {
-        if (viz->handleHover(world_pos)) {
-            needs_tooltip_update = true;
-        }
-    }
-
-    // Delegate hover handling to each line data visualization
-    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-    qDebug() << "SpatialOverlayOpenGLWidget: Processing" << _line_data_visualizations.size() << "line visualizations";
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Calling handleHover on line viz" << key;
-        if (viz->handleHover(_pending_hover_pos, size(), mvp_matrix)) {
-            needs_tooltip_update = true;
-        }
-    }
-
-    if (needs_tooltip_update) {
-        _tooltip_timer->stop();
-        _tooltip_refresh_timer->stop();
-        _tooltip_timer->start();
-    }
+    // Emit selection changed signal with updated counts
+    size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
+    emit selectionChanged(total_selected, QString(), 0);
 
     requestThrottledUpdate();
-
-    // Clear processing flag to allow new hover calculations
-    _hover_processing_active = false;
 }
-
-RenderingContext SpatialOverlayOpenGLWidget::createRenderingContext() const {
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
-
-    return {
-            _model_matrix,
-            _view_matrix,
-            _projection_matrix,
-            rect(),
-            QRectF(QPointF(left, top), QPointF(right, bottom))};
-}
-
-
-void SpatialOverlayOpenGLWidget::updateMouseWorldPosition(int screen_x, int screen_y) {
-    _current_mouse_world_pos = screenToWorld(screen_x, screen_y);
-}
-
-void SpatialOverlayOpenGLWidget::renderCommonOverlay() {
-    // Render tooltips and other common overlay elements
-    // This will be expanded to handle tooltip rendering and other common UI elements
-}
-
-//========== Visibility Management ==========
-
-void SpatialOverlayOpenGLWidget::hideSelectedItems() {
-    size_t total_hidden = 0;
-
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        total_hidden += viz->hideSelectedLines();
-    }
-
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        total_hidden += viz->hideSelectedPoints();
-    }
-
-    // TODO: Hide selected masks (no-op for now)
-
-    if (total_hidden > 0) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Hidden" << total_hidden << "items";
-        requestThrottledUpdate();
-
-        // Update selection count since hidden items are no longer selected
-        emit selectionChanged(getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines(), QString(), 0);
-    }
-}
-
-void SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset() {
-    // For now, we'll show all items across all datasets since we don't have a concept of "current" dataset
-    // This can be enhanced later when there's a UI concept of active/current dataset
-    showAllItemsAllDatasets();
-}
-
-void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
-    size_t total_shown = 0;
-
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        total_shown += viz->showAllLines();
-    }
-
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        total_shown += viz->showAllPoints();
-    }
-
-    // TODO: Show all hidden masks (no-op for now)
-
-    if (total_shown > 0) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Showed" << total_shown << "items";
-        requestThrottledUpdate();
-    }
-}
-
-//========== Context Menu ==========
-
-void SpatialOverlayOpenGLWidget::_initializeContextMenu() {
-
-    _contextMenu = new QMenu(nullptr);
-    //_contextMenu->setAttribute(Qt::WA_DeleteOnClose);
-    // Global context is necessary because otherwise the left mouse
-    // click is captured by the complex widget infrastructure and the left click
-    // to select a menu item is never propagated to the menu.
-    //_contextMenu->setParent(this);
-
-    _actionCreateNewGroup = new QAction("Create New Group", this);
-    connect(_actionCreateNewGroup, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup);
-    _actionUngroupSelected = new QAction("Ungroup Selected", this);
-    connect(_actionUngroupSelected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::ungroupSelectedPoints);
-
-    _actionHideSelected = new QAction("Hide Selected", this);
-    connect(_actionHideSelected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
-
-    _actionShowAllCurrent = new QAction("Show All (Current Dataset)", this);
-    connect(_actionShowAllCurrent, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset);
-
-    _actionShowAllDatasets = new QAction("Show All (All Datasets)", this);
-    connect(_actionShowAllDatasets, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
-
-
-    _assignGroupMenu = _contextMenu->addMenu("Assign to Group");
-
-    // Add the persistent "Create New Group" action
-    _assignGroupMenu->addAction(_actionCreateNewGroup);
-    _assignGroupMenu->addSeparator();
-
-    // Dynamic group actions will be inserted here by updateDynamicGroupActions()
-
-    // Add ungroup action
-    _contextMenu->addAction(_actionUngroupSelected);
-    _contextMenu->addSeparator();
-
-    // Add hide selected action
-    _contextMenu->addAction(_actionHideSelected);
-
-    // Add show all submenu
-    QMenu * showAllMenu = _contextMenu->addMenu("Show All");
-    showAllMenu->addAction(_actionShowAllCurrent);
-    showAllMenu->addAction(_actionShowAllDatasets);
-}
-
-void SpatialOverlayOpenGLWidget::_updateContextMenuState() {
-    size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
-    bool has_selection = total_selected > 0;
-    bool has_group_manager = _group_manager != nullptr;
-
-    // Show/hide sections based on current state
-    _assignGroupMenu->menuAction()->setVisible(has_selection && has_group_manager);
-    _actionUngroupSelected->setVisible(has_selection && has_group_manager);
-    _actionHideSelected->setVisible(has_selection);
-    _actionHideSelected->setText(QString("Hide Selected (%1 items)").arg(total_selected));
-
-    // Update dynamic group actions
-    _updateDynamicGroupActions();
-}
-
-void SpatialOverlayOpenGLWidget::_showContextMenu(QPoint const & pos) {
-
-    _updateContextMenuState();
-
-    // Show the menu at the cursor position
-    if (qEnvironmentVariableIsSet("WT_TESTING_NON_MODAL_MENUS")) {
-        // Non-blocking for tests
-        _contextMenu->popup(mapToGlobal(pos));
-    } else {
-        _contextMenu->exec(mapToGlobal(pos));
-        // 'exec' returns when the menu is closed; the menu will remain parented and cleaned up
-    }
-}
-
-void SpatialOverlayOpenGLWidget::_updateDynamicGroupActions() {
-
-    // Clear existing dynamic actions
-    for (QAction * action: _dynamicGroupActions) {
-        _assignGroupMenu->removeAction(action);
-        action->deleteLater();
-    }
-    _dynamicGroupActions.clear();
-
-    if (!_group_manager) {
-        return;
-    }
-
-    auto const & groups = _group_manager->getGroups();
-    for (auto it = groups.begin(); it != groups.end(); ++it) {
-        auto const & group = it.value();
-        QAction * groupAction = _assignGroupMenu->addAction(group.name);
-        int group_id = group.id;
-        connect(groupAction, &QAction::triggered, this, [this, group_id]() {
-            assignSelectedPointsToGroup(group_id);
-        });
-        _dynamicGroupActions.append(groupAction);
-    }
-}
-
-//========== Group Assignment Methods ==========
 
 void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
     if (!_group_manager) {
@@ -1443,11 +531,24 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
     // Assign selected points to the new group
     _group_manager->assignPointsToGroup(group_id, selected_point_ids);
 
+    // Refresh group colors in all point visualizations
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz) {
+            viz->refreshGroupRenderData();
+        }
+    }
+
     // Clear selection after assignment
     clearSelection();
 
     qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size()
              << "points to new group" << group_id;
+
+    // Update the context menu to reflect the new group
+    updateDynamicGroupActions();
+
+    // Request update to show color changes
+    requestThrottledUpdate();
 }
 
 void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
@@ -1466,18 +567,28 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
     }
 
     if (selected_point_ids.empty()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to group" << group_id;
+        qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to group";
         return;
     }
 
     // Assign selected points to the specified group
     _group_manager->assignPointsToGroup(group_id, selected_point_ids);
 
+    // Refresh group colors in all point visualizations
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz) {
+            viz->refreshGroupRenderData();
+        }
+    }
+
     // Clear selection after assignment
     clearSelection();
 
     qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size()
              << "points to group" << group_id;
+
+    // Request update to show color changes
+    requestThrottledUpdate();
 }
 
 void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
@@ -1500,11 +611,116 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
         return;
     }
 
-    // Remove selected points from all groups
+    // Remove selected points from their groups
     _group_manager->ungroupPoints(selected_point_ids);
+
+    // Refresh group colors in all point visualizations
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz) {
+            viz->refreshGroupRenderData();
+        }
+    }
 
     // Clear selection after ungrouping
     clearSelection();
 
     qDebug() << "SpatialOverlayOpenGLWidget: Ungrouped" << selected_point_ids.size() << "points";
+
+    // Update the context menu to reflect group changes
+    updateDynamicGroupActions();
+
+    // Request update to show color changes
+    requestThrottledUpdate();
+}
+
+//========== Context Menu ==========
+
+void SpatialOverlayOpenGLWidget::initializeContextMenu() {
+    _context_menu = std::make_unique<QMenu>(nullptr);
+
+    // Create actions
+    _action_create_new_group = new QAction("Create New Group", this);
+    connect(_action_create_new_group, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup);
+
+    _action_ungroup_selected = new QAction("Ungroup Selected", this);
+    connect(_action_ungroup_selected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::ungroupSelectedPoints);
+
+    _action_hide_selected = new QAction("Hide Selected", this);
+    connect(_action_hide_selected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
+
+    _action_show_all_current = new QAction("Show All (Current Dataset)", this);
+    connect(_action_show_all_current, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset);
+
+    _action_show_all_datasets = new QAction("Show All (All Datasets)", this);
+    connect(_action_show_all_datasets, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
+
+    // Create assign to group submenu
+    _assign_group_menu = _context_menu->addMenu("Assign to Group");
+    _assign_group_menu->addAction(_action_create_new_group);
+    _assign_group_menu->addSeparator();
+    // Dynamic group actions will be added by updateDynamicGroupActions()
+
+    // Add other menu items
+    _context_menu->addAction(_action_ungroup_selected);
+    _context_menu->addSeparator();
+    _context_menu->addAction(_action_hide_selected);
+
+    // Show All submenu
+    QMenu * showAllMenu = _context_menu->addMenu("Show All");
+    showAllMenu->addAction(_action_show_all_current);
+    showAllMenu->addAction(_action_show_all_datasets);
+
+    _context_menu->addSeparator();
+
+    auto * resetViewAction = _context_menu->addAction("Reset View");
+    connect(resetViewAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::resetView);
+}
+
+void SpatialOverlayOpenGLWidget::contextMenuEvent(QContextMenuEvent * event) {
+    if (_context_menu) {
+        updateContextMenuState();
+        _context_menu->popup(event->globalPos());
+    }
+}
+
+void SpatialOverlayOpenGLWidget::updateContextMenuState() {
+    size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
+    bool has_selection = total_selected > 0;
+    bool has_group_manager = _group_manager != nullptr;
+
+    // Update group-related actions
+    _assign_group_menu->menuAction()->setVisible(has_selection && has_group_manager);
+    _action_ungroup_selected->setVisible(has_selection && has_group_manager);
+
+    // Update other actions
+    _action_hide_selected->setEnabled(has_selection);
+
+    // Update dynamic group actions if we have a group manager
+    if (has_group_manager && has_selection) {
+        updateDynamicGroupActions();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::updateDynamicGroupActions() {
+    // Clear existing dynamic actions
+    for (QAction * action: _dynamic_group_actions) {
+        _assign_group_menu->removeAction(action);
+        action->deleteLater();
+    }
+    _dynamic_group_actions.clear();
+
+    if (!_group_manager) {
+        return;
+    }
+
+    auto const & groups = _group_manager->getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        auto const & group = it.value();
+        QAction * groupAction = _assign_group_menu->addAction(group.name);
+        int group_id = group.id;
+        connect(groupAction, &QAction::triggered, this, [this, group_id]() {
+            assignSelectedPointsToGroup(group_id);
+        });
+        _dynamic_group_actions.append(groupAction);
+    }
 }

@@ -1,11 +1,13 @@
 #include "GenericViewAdapter.hpp"
+
 #include "BasePlotOpenGLWidget.hpp"
+#include "ViewState.hpp"
 
 GenericViewAdapter::GenericViewAdapter(BasePlotOpenGLWidget* widget)
     : _widget(widget) {}
 
-void GenericViewAdapter::getProjectionBounds(float& left, float& right, float& bottom, float& top) const {
-    ViewUtils::calculateProjectionBounds(_widget->getViewState(), left, right, bottom, top);
+BoundingBox GenericViewAdapter::getProjectionBounds() const {
+    return ViewUtils::calculateProjectionBounds(_widget->getViewState());
 }
 
 void GenericViewAdapter::getPerAxisZoom(float& zoom_x, float& zoom_y) const {
@@ -57,13 +59,13 @@ void GenericViewAdapter::requestUpdate() {
     _widget->requestThrottledUpdate();
 }
 
-void GenericViewAdapter::applyBoxZoomToWorldRect(float min_x, float max_x, float min_y, float max_y) {
+void GenericViewAdapter::applyBoxZoomToWorldRect(BoundingBox const& bounds) {
     auto& state = _widget->getViewState();
     
     // Update widget dimensions before box zoom calculation
     state.widget_width = _widget->width();
     state.widget_height = _widget->height();
     
-    ViewUtils::applyBoxZoom(state, min_x, max_x, min_y, max_y);
+    ViewUtils::applyBoxZoom(state, bounds);
     requestUpdate();
 }

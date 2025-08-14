@@ -15,26 +15,46 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
       _data_bounds_valid(false),
       _data_bounds({0.0f, 0.0f, 0.0f, 0.0f}) {
 
-    qDebug() << "ScatterPlotOpenGLWidget: Created with composition-based design";
+        _selection_callback = [this]() {
+            makeSelection();
+        };
 }
 
-ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() {
-    // Cleanup is handled by smart pointers and base class
-}
+ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget() = default;
 
 void ScatterPlotOpenGLWidget::initializeGL() {
-    // Call base class initialization first
+
     BasePlotOpenGLWidget::initializeGL();
 
-    // Create interaction controller with ScatterPlot view adapter
     if (!_interaction) {
         _interaction = std::make_unique<PlotInteractionController>(this, std::make_unique<GenericViewAdapter>(this));
         connect(_interaction.get(), &PlotInteractionController::viewBoundsChanged, this, &ScatterPlotOpenGLWidget::viewBoundsChanged);
         connect(_interaction.get(), &PlotInteractionController::mouseWorldMoved, this, &ScatterPlotOpenGLWidget::mouseWorldMoved);
     }
 
-    qDebug() << "ScatterPlotOpenGLWidget::initializeGL completed with interaction controller";
+    initializeVisualization();
 }
+
+void ScatterPlotOpenGLWidget::initializeVisualization() {
+    if (_x_data.empty() || _y_data.empty()) {
+        return;
+    }
+
+    _visualization = std::make_unique<ScatterPlotVisualization>(
+            "scatter_data",
+            _x_data,
+            _y_data,
+            _group_manager,
+            false// Initialize OpenGL resources immediately
+    );
+
+    _visualization->setAxisLabels(_x_label, _y_label);
+
+    qDebug() << "ScatterPlotOpenGLWidget: Visualization initialized with"
+             << _x_data.size() << "points";
+}
+
+// ========== Data ==========
 
 void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
                                              std::vector<float> const & y_data) {
@@ -65,7 +85,6 @@ void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
         doneCurrent();
     }
 
-    // Update view
     updateViewMatrices();
     requestThrottledUpdate();
 }
@@ -125,16 +144,6 @@ BoundingBox ScatterPlotOpenGLWidget::getDataBounds() const {
     return _data_bounds_valid ? _data_bounds : BoundingBox(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
-void ScatterPlotOpenGLWidget::clearSelection() {
-    /*
-    if (_selection_manager) {
-        _selection_manager->clearSelection();
-        requestThrottledUpdate();
-        qDebug() << "ScatterPlotOpenGLWidget: Selection cleared";
-    }
-        */
-}
-
 void ScatterPlotOpenGLWidget::renderUI() {
     // TODO: Render axis labels using text rendering system
     // This would be implemented similarly to how SpatialOverlayOpenGLWidget
@@ -152,36 +161,15 @@ std::pair<float, float> ScatterPlotOpenGLWidget::getDataPoint(size_t index) cons
     return {_x_data[index], _y_data[index]};
 }
 
-void ScatterPlotOpenGLWidget::onSelectionChanged(size_t total_selected) {
-    // Emit the base class signal with scatter plot specific information
-    emit selectionChanged(total_selected, "scatter_data", -1);
-    requestThrottledUpdate();
-}
 
-void ScatterPlotOpenGLWidget::initializeVisualization() {
-    if (_x_data.empty() || _y_data.empty()) {
-        return;
-    }
-
-    _visualization = std::make_unique<ScatterPlotVisualization>(
-            "scatter_data",
-            _x_data,
-            _y_data,
-            _group_manager,
-            false// Initialize OpenGL resources immediately
-    );
-
-    _visualization->setAxisLabels(_x_label, _y_label);
-
-    qDebug() << "ScatterPlotOpenGLWidget: Visualization initialized with"
-             << _x_data.size() << "points";
-}
 
 void ScatterPlotOpenGLWidget::updateVisualizationData() {
     if (_visualization) {
         _visualization->updateData(_x_data, _y_data);
     }
 }
+
+// ========== Tooltips ==========
 
 void ScatterPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
     if (_tooltip_manager) {
@@ -233,4 +221,73 @@ std::optional<QString> ScatterPlotOpenGLWidget::generateTooltipContent(QPoint co
                               .arg(_y_data[closest_index], 0, 'f', 3);
 
     return tooltip;
+}
+
+//========== Selection ==========
+
+void ScatterPlotOpenGLWidget::makeSelection() {
+    auto context = createRenderingContext();
+
+    if (_selection_handler.valueless_by_exception()) {
+        return;
+    }
+
+    // Determine if we should clear selection. For point selection, there is no region
+    // concept, so we should NOT clear. Only clear when selection mode is None or when
+    // region-based handlers have no active region.
+    bool should_clear = false;
+    if (_selection_mode == SelectionMode::None) {
+        should_clear = true;
+    } else {
+        should_clear = false;
+    }
+
+    if (should_clear) {
+        clearSelection();
+        return;
+    }
+
+    _visualization->applySelection(_selection_handler);
+
+    // Emit selection changed signal with updated counts
+    size_t total_selected = getTotalSelectedPoints();
+    emit selectionChanged(total_selected, QString(), 0);
+
+    requestThrottledUpdate();
+}
+
+size_t ScatterPlotOpenGLWidget::getTotalSelectedPoints() const {
+    return _visualization->m_selected_points.size();
+}
+
+void ScatterPlotOpenGLWidget::setSelectionMode(SelectionMode mode) {
+    auto old_mode = _selection_mode;
+    BasePlotOpenGLWidget::setSelectionMode(mode);
+    if (old_mode != mode) {
+        //updateContextMenuState();
+    }
+}
+
+void ScatterPlotOpenGLWidget::onSelectionChanged(size_t total_selected) {
+    // Emit the base class signal with scatter plot specific information
+    emit selectionChanged(total_selected, "scatter_data", -1);
+    requestThrottledUpdate();
+}
+
+void ScatterPlotOpenGLWidget::clearSelection() {
+    
+    bool had_selection = false;
+
+    if (!_visualization->m_selected_points.empty()) {
+        _visualization->clearSelection();
+        had_selection = true;
+    }
+
+    if (had_selection) {
+        size_t total_selected = getTotalSelectedPoints();
+        emit selectionChanged(total_selected, QString(), 0);
+        requestThrottledUpdate();
+
+        qDebug() << "ScatterPlotOpenGLWidget: Selection cleared";
+    }
 }

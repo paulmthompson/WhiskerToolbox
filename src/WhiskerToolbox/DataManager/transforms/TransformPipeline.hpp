@@ -8,6 +8,7 @@
 #include <nlohmann/json.hpp>
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -163,7 +164,7 @@ private:
     nlohmann::json metadata_;
     
     // Execution state
-    std::unordered_map<std::string, DataTypeVariant> temporary_data_;
+    std::map<std::string, DataTypeVariant> temporary_data_;
     
     /**
      * @brief Parse a single step from JSON
@@ -225,7 +226,7 @@ private:
      * 
      * @return std::unordered_map<int, std::vector<int>> Map from phase to step indices
      */
-    std::unordered_map<int, std::vector<int>> groupStepsByPhase() const;
+    std::map<int, std::vector<int>> groupStepsByPhase() const;
     
     /**
      * @brief Execute steps in a specific phase (potentially in parallel)

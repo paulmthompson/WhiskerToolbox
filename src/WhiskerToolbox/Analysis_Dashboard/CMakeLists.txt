@@ -94,10 +94,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/EventPlotWidget/EventPlotViewAdapter.hpp
     Widgets/EventPlotWidget/EventPlotViewAdapter.cpp
 
-    #Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
-    #Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
-    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget_Refactored.hpp
-    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget_Refactored.cpp
+    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
+    Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp

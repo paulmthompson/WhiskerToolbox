@@ -8,7 +8,7 @@ class EventPlotOpenGLWidget;
 class EventPlotViewAdapter final : public ViewAdapter {
 public:
     explicit EventPlotViewAdapter(EventPlotOpenGLWidget * widget);
-    void getProjectionBounds(float & left, float & right, float & bottom, float & top) const override;
+    BoundingBox getProjectionBounds() const override;
     void getPerAxisZoom(float & zoom_x, float & zoom_y) const override;
     void setPerAxisZoom(float zoom_x, float zoom_y) override;
     void getPan(float & pan_x, float & pan_y) const override;
@@ -17,7 +17,7 @@ public:
     int viewportWidth() const override;
     int viewportHeight() const override;
     void requestUpdate() override;
-    void applyBoxZoomToWorldRect(float min_x, float max_x, float min_y, float max_y) override;
+    void applyBoxZoomToWorldRect(BoundingBox const& bounds) override;
 
 private:
     EventPlotOpenGLWidget * _w;

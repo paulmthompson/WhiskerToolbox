@@ -1,6 +1,7 @@
 #ifndef PLOTINTERACTIONCONTROLLER_HPP
 #define PLOTINTERACTIONCONTROLLER_HPP
 
+#include "CoreGeometry/boundingbox.hpp"
 #include "ViewAdapter.hpp"
 
 #include <QObject>
@@ -22,13 +23,13 @@ public:
     bool handleMousePress(QMouseEvent * event);
 
     bool handleMouseMove(QMouseEvent * event);
-            
+
     bool handleMouseRelease(QMouseEvent * event);
 
     void handleLeave();
 
 signals:
-    void viewBoundsChanged(float left, float right, float bottom, float top);
+    void viewBoundsChanged(BoundingBox const & bounds);
     void mouseWorldMoved(float world_x, float world_y);
 
 private:
@@ -41,5 +42,4 @@ private:
     QPoint _rubber_origin;
 };
 
-#endif // PLOTINTERACTIONCONTROLLER_HPP
-
+#endif// PLOTINTERACTIONCONTROLLER_HPP

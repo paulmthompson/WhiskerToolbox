@@ -449,8 +449,8 @@ void TransformPipeline::storeOutputData(std::string const& output_key,
     }
 }
 
-std::unordered_map<int, std::vector<int>> TransformPipeline::groupStepsByPhase() const {
-    std::unordered_map<int, std::vector<int>> phase_groups;
+std::map<int, std::vector<int>> TransformPipeline::groupStepsByPhase() const {
+    std::map<int, std::vector<int>> phase_groups;
     
     for (size_t i = 0; i < steps_.size(); ++i) {
         phase_groups[steps_[i].phase].push_back(static_cast<int>(i));
