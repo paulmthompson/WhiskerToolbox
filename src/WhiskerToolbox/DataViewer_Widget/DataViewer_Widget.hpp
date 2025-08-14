@@ -17,6 +17,7 @@ class QTableWidget;
 class TimeScrollBar;
 class TimeFrame;
 class Feature_Table_Widget;
+class Feature_Tree_Model;
 class QWheelEvent;
 class QResizeEvent;
 class AnalogViewer_Widget;
@@ -112,6 +113,9 @@ private:
 
     // Plotting management
     std::unique_ptr<PlottingManager> _plotting_manager;
+
+    // Model for Feature_Tree_Widget
+    std::unique_ptr<Feature_Tree_Model> _feature_tree_model;
 
     void _updateLabels();
 

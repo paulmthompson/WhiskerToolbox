@@ -2,7 +2,6 @@
 
 #include "CoreGeometry/boundingbox.hpp"
 #include "ViewAdapter.hpp"
-#include "ViewState.hpp"
 
 class BasePlotOpenGLWidget;
 

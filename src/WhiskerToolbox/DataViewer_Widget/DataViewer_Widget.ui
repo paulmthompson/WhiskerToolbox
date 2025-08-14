@@ -121,7 +121,7 @@
       <number>12</number>
      </property>
      <item>
-      <widget class="DataViewer_Tree_Widget" name="feature_tree_widget">
+      <widget class="Feature_Tree_Widget" name="feature_tree_widget">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>3</horstretch>
@@ -134,11 +134,6 @@
          <height>250</height>
         </size>
        </property>
-       <column>
-        <property name="text">
-         <string notr="true">1</string>
-        </property>
-       </column>
       </widget>
      </item>
      <item>
@@ -345,9 +340,9 @@
    <header>DataViewer_Widget/OpenGLWidget.hpp</header>
   </customwidget>
   <customwidget>
-   <class>DataViewer_Tree_Widget</class>
-   <extends>QTreeWidget</extends>
-   <header>DataViewer_Widget/DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp</header>
+   <class>Feature_Tree_Widget</class>
+   <extends>QWidget</extends>
+   <header>Feature_Tree_Widget/Feature_Tree_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -1,5 +1,7 @@
 #include "GenericViewAdapter.hpp"
+
 #include "BasePlotOpenGLWidget.hpp"
+#include "ViewState.hpp"
 
 GenericViewAdapter::GenericViewAdapter(BasePlotOpenGLWidget* widget)
     : _widget(widget) {}
