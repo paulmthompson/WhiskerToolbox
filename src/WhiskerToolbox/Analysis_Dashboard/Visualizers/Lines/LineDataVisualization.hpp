@@ -6,7 +6,9 @@
 #include "Selection/SelectionModes.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Entity/EntityTypes.hpp"
 #include "LineIdentifier.hpp"
+#include "Groups/GroupManager.hpp"
 
 #include <QGenericMatrix>
 #include <QMatrix4x4>
@@ -39,6 +41,8 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
 
     std::vector<float> m_vertex_data;              // All line segments as pairs of vertices
     std::vector<uint32_t> m_line_id_data;          // Line ID for each vertex
+    std::vector<EntityId> m_entity_id_per_vertex;  // EntityId for each vertex (duplicates per line segment)
+    std::vector<EntityId> m_line_entity_ids;       // EntityId per logical line (aligned with m_line_identifiers)
     std::vector<LineIdentifier> m_line_identifiers;// Mapping from line index to identifier
 
     // Vertex range tracking for efficient hover rendering
@@ -51,6 +55,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     // OpenGL resources
     QOpenGLBuffer m_vertex_buffer;
     QOpenGLBuffer m_line_id_buffer;
+    QOpenGLBuffer m_group_id_buffer;            // Per-vertex palette index (float)
     QOpenGLVertexArrayObject m_vertex_array_object;
 
     // Framebuffers
@@ -107,6 +112,10 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     bool m_dataIsDirty = true;
     QMatrix4x4 m_cachedMvpMatrix;// Cached MVP matrix to detect view changes
 
+    // Group management
+    GroupManager * m_group_manager = nullptr;
+    bool m_group_data_needs_update = false;
+
     LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data);
     ~LineDataVisualization();
 
@@ -140,6 +149,10 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
      * @brief Render lines for this LineData
      */
     void render(QMatrix4x4 const & mvp_matrix, float line_width);
+
+    // Group management API
+    void setGroupManager(GroupManager * group_manager) { m_group_manager = group_manager; m_group_data_needs_update = true; }
+    void refreshGroupRenderData() { m_group_data_needs_update = true; }
 
     /**
      * @brief Get line identifier at screen position
@@ -273,6 +286,7 @@ private:
     void _updateLineSegmentsBuffer();
     void _updateSelectionMask();
     void _updateVisibilityMask();
+    void _updateGroupVertexData();
 };
 
 #endif// LINEDATAVISUALIZATION_HPP

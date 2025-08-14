@@ -3,7 +3,9 @@
 #include "../Common/BasePlotOpenGLWidget.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "Selection/SelectionHandlers.hpp"
+
 #include <QString>
+
 #include <memory>
 #include <unordered_map>
 
@@ -131,5 +133,5 @@ private:
     void updateDynamicGroupActions();
     void makeSelection();
 
-    friend class SpatialOverlayViewAdapter;
+    friend class GenericViewAdapter;
 };

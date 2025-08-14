@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <unordered_set>
 
+#include "DataManager/Entity/EntityTypes.hpp"
+
 /**
  * @brief Manages groups for data visualization with colors and point assignments
  * 
@@ -24,6 +26,7 @@ public:
         QString name;
         QColor color;
         std::unordered_set<int64_t> point_ids;// Time stamp IDs of points in this group
+        std::unordered_set<EntityId> entity_ids; // EntityId membership
 
         Group(int group_id, QString const & group_name, QColor const & group_color)
             : id(group_id),
@@ -122,6 +125,32 @@ public:
      */
     QColor getPointColor(int64_t point_id, QColor const & default_color) const;
 
+    // ===== New EntityId-based API (non-breaking, additive) =====
+    /**
+     * @brief Assign entities (EntityId) to a group
+     */
+    bool assignEntitiesToGroup(int group_id, std::unordered_set<EntityId> const & entity_ids);
+
+    /**
+     * @brief Remove entities (EntityId) from a group
+     */
+    bool removeEntitiesFromGroup(int group_id, std::unordered_set<EntityId> const & entity_ids);
+
+    /**
+     * @brief Ungroup a set of entities
+     */
+    void ungroupEntities(std::unordered_set<EntityId> const & entity_ids);
+
+    /**
+     * @brief Get which group an entity belongs to
+     */
+    int getEntityGroup(EntityId id) const;
+
+    /**
+     * @brief Get the color for an entity based on its group assignment
+     */
+    QColor getEntityColor(EntityId id, QColor const & default_color) const;
+
     /**
      * @brief Get all point IDs assigned to a specific group
      * @param group_id The group ID
@@ -169,6 +198,7 @@ signals:
 private:
     QMap<int, Group> m_groups;
     QMap<int64_t, int> m_point_to_group;// Fast lookup for point -> group mapping
+    QMap<qulonglong, int> m_entity_to_group; // Fast lookup for entity -> group mapping
     int m_next_group_id;
 
     static QVector<QColor> const DEFAULT_COLORS;

@@ -29,7 +29,14 @@
 #include <QGroupBox>
 #include <QFileDialog>
 
+#include <QFutureWatcher>
+#include <QTimer>
+#include <QtConcurrent>
+
+#include "PreviewTableModel.hpp"
+
 #include <algorithm>
+#include <limits>
 #include <typeindex>
 #include <vector>
 #include <tuple>
@@ -49,6 +56,16 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     _parameter_layout->setContentsMargins(0, 0, 0, 0);
     _parameter_layout->setSpacing(4);
     
+    // Initialize preview model and debounce timer
+    _preview_model = new PreviewTableModel(this);
+    if (ui->preview_table) {
+        ui->preview_table->setModel(_preview_model);
+    }
+    _preview_debounce_timer = new QTimer(this);
+    _preview_debounce_timer->setSingleShot(true);
+    _preview_debounce_timer->setInterval(150);
+    connect(_preview_debounce_timer, &QTimer::timeout, this, &TableDesignerWidget::rebuildPreviewNow);
+
     connectSignals();
     refreshTableCombo();
     refreshRowDataSourceCombo();
@@ -130,6 +147,26 @@ void TableDesignerWidget::connectSignals() {
     if (ui->export_csv_btn) {
         connect(ui->export_csv_btn, &QPushButton::clicked,
                 this, &TableDesignerWidget::onExportCsv);
+    }
+
+    // Preview controls
+    if (ui->preview_slider) {
+        connect(ui->preview_slider, &QSlider::valueChanged, this, [this](int) { triggerPreviewDebounced(); });
+    }
+    if (ui->preview_window_size_spinbox) {
+        connect(ui->preview_window_size_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int) {
+            updatePreviewSliderRange();
+            triggerPreviewDebounced();
+        });
+    }
+    if (ui->preview_auto_refresh_checkbox) {
+        connect(ui->preview_auto_refresh_checkbox, &QCheckBox::toggled, this, [this](bool checked) {
+            if (ui->preview_refresh_btn) ui->preview_refresh_btn->setEnabled(!checked);
+            if (checked) triggerPreviewDebounced();
+        });
+    }
+    if (ui->preview_refresh_btn) {
+        connect(ui->preview_refresh_btn, &QPushButton::clicked, this, &TableDesignerWidget::rebuildPreviewNow);
     }
 
     // Subscribe to DataManager table observer
@@ -249,6 +286,8 @@ void TableDesignerWidget::onRowDataSourceChanged() {
     refreshColumnComputerCombo();
 
     qDebug() << "Row data source changed to:" << selected;
+    updatePreviewSliderRange();
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::onCaptureRangeChanged() {
@@ -257,6 +296,7 @@ void TableDesignerWidget::onCaptureRangeChanged() {
     if (!selected.isEmpty()) {
         updateRowInfoLabel(selected);
     }
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::onIntervalSettingChanged() {
@@ -268,6 +308,7 @@ void TableDesignerWidget::onIntervalSettingChanged() {
     
     // Update capture range visibility based on interval setting
     updateIntervalSettingsVisibility();
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::onAddColumn() {
@@ -370,6 +411,7 @@ void TableDesignerWidget::onColumnDataSourceChanged() {
     }
     
     qDebug() << "Column data source changed to:" << ui->column_data_source_combo->currentText();
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::onColumnComputerChanged() {
@@ -402,6 +444,7 @@ void TableDesignerWidget::onColumnComputerChanged() {
     } else {
         qDebug() << "Column computer changed to:" << ui->column_computer_combo->currentText();
     }
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::onColumnSelectionChanged() {
@@ -411,6 +454,7 @@ void TableDesignerWidget::onColumnSelectionChanged() {
     } else {
         clearColumnConfiguration();
     }
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::onColumnNameChanged() {
@@ -421,10 +465,12 @@ void TableDesignerWidget::onColumnNameChanged() {
     if (current_item) {
         current_item->setText(ui->column_name_edit->text());
     }
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::onColumnDescriptionChanged() {
     saveCurrentColumnConfiguration();
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::onBuildTable() {
@@ -1030,6 +1076,8 @@ void TableDesignerWidget::loadTableInfo(QString const & table_id) {
     }
 
     updateBuildStatus(QString("Loaded table: %1").arg(info.name));
+    updatePreviewSliderRange();
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::clearUI() {
@@ -1065,6 +1113,7 @@ void TableDesignerWidget::clearUI() {
     ui->build_table_btn->setEnabled(false);
 
     updateBuildStatus("No table selected");
+    if (_preview_model) _preview_model->clearPreview();
 }
 
 void TableDesignerWidget::updateBuildStatus(QString const & message, bool is_error) {
@@ -1749,6 +1798,163 @@ bool TableDesignerWidget::isIntervalItselfSelected() const {
     return false;// Default to not selected
 }
 
+size_t TableDesignerWidget::computeTotalRowCountForRowSource(QString const & row_source) const {
+    if (!_data_manager) return 0;
+    if (row_source.startsWith("TimeFrame: ")) {
+        auto name = row_source.mid(11).toStdString();
+        auto tf = _data_manager->getTime(TimeKey(name));
+        return tf ? static_cast<size_t>(tf->getTotalFrameCount()) : 0;
+    }
+    if (row_source.startsWith("Events: ")) {
+        auto name = row_source.mid(8).toStdString();
+        auto es = _data_manager->getData<DigitalEventSeries>(name);
+        return es ? es->getEventSeries().size() : 0;
+    }
+    if (row_source.startsWith("Intervals: ")) {
+        auto name = row_source.mid(11).toStdString();
+        auto is = _data_manager->getData<DigitalIntervalSeries>(name);
+        return is ? is->getDigitalIntervalSeries().size() : 0;
+    }
+    return 0;
+}
+
+std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelectorForWindow(QString const & row_source, size_t start, size_t size) const {
+    if (!_data_manager) return nullptr;
+    auto endExclusive = start + size;
+
+    if (row_source.startsWith("TimeFrame: ")) {
+        auto name = row_source.mid(11).toStdString();
+        auto tf = _data_manager->getTime(TimeKey(name));
+        if (!tf) return nullptr;
+        size_t total = static_cast<size_t>(tf->getTotalFrameCount());
+        start = std::min(start, total);
+        endExclusive = std::min(endExclusive, total);
+        std::vector<TimeFrameIndex> indices;
+        indices.reserve(endExclusive - start);
+        for (size_t i = start; i < endExclusive; ++i) indices.emplace_back(static_cast<int64_t>(i));
+        return std::make_unique<TimestampSelector>(std::move(indices), tf);
+    }
+
+    if (row_source.startsWith("Events: ")) {
+        auto name = row_source.mid(8).toStdString();
+        auto es = _data_manager->getData<DigitalEventSeries>(name);
+        if (!es) return nullptr;
+        auto tfKey = _data_manager->getTimeKey(name);
+        auto tf = _data_manager->getTime(tfKey);
+        if (!tf) return nullptr;
+        auto const & events = es->getEventSeries();
+        size_t total = events.size();
+        start = std::min(start, total);
+        endExclusive = std::min(endExclusive, total);
+        std::vector<TimeFrameIndex> indices;
+        indices.reserve(endExclusive - start);
+        for (size_t i = start; i < endExclusive; ++i) indices.emplace_back(static_cast<int64_t>(events[i]));
+        return std::make_unique<TimestampSelector>(std::move(indices), tf);
+    }
+
+    if (row_source.startsWith("Intervals: ")) {
+        auto name = row_source.mid(11).toStdString();
+        auto is = _data_manager->getData<DigitalIntervalSeries>(name);
+        if (!is) return nullptr;
+        auto tfKey = _data_manager->getTimeKey(name);
+        auto tf = _data_manager->getTime(tfKey);
+        if (!tf) return nullptr;
+        auto const & intervals = is->getDigitalIntervalSeries();
+        size_t total = intervals.size();
+        start = std::min(start, total);
+        endExclusive = std::min(endExclusive, total);
+
+        int capture = getCaptureRange();
+        bool begin = isIntervalBeginningSelected();
+        bool useSelf = isIntervalItselfSelected();
+
+        std::vector<TimeFrameInterval> out;
+        out.reserve(endExclusive - start);
+        for (size_t i = start; i < endExclusive; ++i) {
+            auto const & iv = intervals[i];
+            if (useSelf) {
+                out.emplace_back(TimeFrameIndex(iv.start), TimeFrameIndex(iv.end));
+            } else {
+                int64_t ref = begin ? iv.start : iv.end;
+                int64_t s = std::max<int64_t>(0, ref - capture);
+                int64_t e = std::min<int64_t>(tf->getTotalFrameCount() - 1, ref + capture);
+                out.emplace_back(TimeFrameIndex(s), TimeFrameIndex(e));
+            }
+        }
+        return std::make_unique<IntervalSelector>(std::move(out), tf);
+    }
+
+    return nullptr;
+}
+
+void TableDesignerWidget::updatePreviewSliderRange() {
+    if (!ui->preview_slider) return;
+    QString row_source = ui->row_data_source_combo ? ui->row_data_source_combo->currentText() : QString();
+    _total_preview_rows = computeTotalRowCountForRowSource(row_source);
+    int window = ui->preview_window_size_spinbox ? ui->preview_window_size_spinbox->value() : 8;
+    long long maxStart = 0;
+    if (_total_preview_rows > static_cast<size_t>(window)) maxStart = static_cast<long long>(_total_preview_rows - window);
+    ui->preview_slider->blockSignals(true);
+    ui->preview_slider->setMinimum(0);
+    ui->preview_slider->setMaximum(static_cast<int>(std::min<long long>(std::numeric_limits<int>::max(), maxStart)));
+    ui->preview_slider->blockSignals(false);
+}
+
+void TableDesignerWidget::triggerPreviewDebounced() {
+    if (!ui->preview_auto_refresh_checkbox || ui->preview_auto_refresh_checkbox->isChecked()) {
+        if (_preview_debounce_timer) _preview_debounce_timer->start();
+    }
+}
+
+void TableDesignerWidget::rebuildPreviewNow() {
+    if (!_data_manager || !_preview_model) return;
+    if (_current_table_id.isEmpty()) { _preview_model->clearPreview(); return; }
+
+    QString row_source = ui->row_data_source_combo ? ui->row_data_source_combo->currentText() : QString();
+    if (row_source.isEmpty()) { _preview_model->clearPreview(); return; }
+    if (ui->column_list->count() == 0) { _preview_model->clearPreview(); return; }
+
+    int start = ui->preview_slider ? ui->preview_slider->value() : 0;
+    int window = ui->preview_window_size_spinbox ? ui->preview_window_size_spinbox->value() : 8;
+
+    auto * reg = _data_manager->getTableRegistry();
+    if (!reg) { _preview_model->clearPreview(); return; }
+    auto table_info = reg->getTableInfo(_current_table_id);
+    if (table_info.columns.isEmpty()) { _preview_model->clearPreview(); return; }
+    auto data_manager_extension = reg->getDataManagerExtension();
+    if (!data_manager_extension) { _preview_model->clearPreview(); return; }
+
+    auto future = QtConcurrent::run([this, row_source, start, window, table_info, data_manager_extension]() -> std::shared_ptr<TableView> {
+        try {
+            auto selector = createRowSelectorForWindow(row_source, static_cast<size_t>(start), static_cast<size_t>(window));
+            if (!selector) return nullptr;
+            TableViewBuilder builder(data_manager_extension);
+            builder.setRowSelector(std::move(selector));
+            for (auto const & col : table_info.columns) {
+                if (!addColumnToBuilder(builder, col)) {
+                    return nullptr;
+                }
+            }
+            auto view = std::make_shared<TableView>(builder.build());
+            view->materializeAll();
+            return view;
+        } catch (...) {
+            return nullptr;
+        }
+    });
+
+    auto * watcher = new QFutureWatcher<std::shared_ptr<TableView>>(this);
+    connect(watcher, &QFutureWatcher<std::shared_ptr<TableView>>::finished, this, [this, watcher]() {
+        auto result = watcher->result();
+        watcher->deleteLater();
+        if (result) {
+            _preview_model->setPreview(std::move(result));
+        } else {
+            _preview_model->clearPreview();
+        }
+    });
+    watcher->setFuture(future);
+}
 void TableDesignerWidget::setupParameterUI(QString const & computerName) {
     clearParameterUI();
     

@@ -47,6 +47,10 @@ bool GroupManager::removeGroup(int group_id) {
     for (int64_t point_id: point_ids) {
         m_point_to_group.remove(point_id);
     }
+    auto const & ents = it->entity_ids;
+    for (auto const eid : ents) {
+        m_entity_to_group.remove(static_cast<qulonglong>(eid));
+    }
 
     m_groups.erase(it);
 
@@ -205,6 +209,7 @@ void GroupManager::clearAllGroups() {
 
     m_groups.clear();
     m_point_to_group.clear();
+    m_entity_to_group.clear();
     m_next_group_id = 1;
 
     // Note: We don't emit specific signals here since everything is being cleared
@@ -218,4 +223,93 @@ QColor GroupManager::getNextDefaultColor() const {
     // Cycle through the default colors based on current group count
     int color_index = m_groups.size() % DEFAULT_COLORS.size();
     return DEFAULT_COLORS[color_index];
+}
+
+// ===== EntityId-based API =====
+bool GroupManager::assignEntitiesToGroup(int group_id, std::unordered_set<EntityId> const & entity_ids) {
+    auto it = m_groups.find(group_id);
+    if (it == m_groups.end()) {
+        return false;
+    }
+
+    std::unordered_set<int> affected_groups;
+    affected_groups.insert(group_id);
+
+    for (auto const id : entity_ids) {
+        // Move from old group if needed
+        auto qit = m_entity_to_group.find(static_cast<qulonglong>(id));
+        if (qit != m_entity_to_group.end()) {
+            int old_group_id = qit.value();
+            if (old_group_id != group_id) {
+                auto old_group_it = m_groups.find(old_group_id);
+                if (old_group_it != m_groups.end()) {
+                    old_group_it.value().entity_ids.erase(id);
+                    affected_groups.insert(old_group_id);
+                }
+            }
+        }
+
+        it.value().entity_ids.insert(id);
+        m_entity_to_group[static_cast<qulonglong>(id)] = group_id;
+    }
+
+    qDebug() << "GroupManager: Assigned" << entity_ids.size() << "entities to group" << group_id;
+    emit pointAssignmentsChanged(affected_groups);
+    return true;
+}
+
+bool GroupManager::removeEntitiesFromGroup(int group_id, std::unordered_set<EntityId> const & entity_ids) {
+    auto it = m_groups.find(group_id);
+    if (it == m_groups.end()) {
+        return false;
+    }
+    size_t removed_count = 0;
+    for (auto const id : entity_ids) {
+        if (it.value().entity_ids.erase(id) > 0) {
+            m_entity_to_group.remove(static_cast<qulonglong>(id));
+            removed_count++;
+        }
+    }
+
+    if (removed_count > 0) {
+        qDebug() << "GroupManager: Removed" << removed_count << "entities from group" << group_id;
+        std::unordered_set<int> affected_groups = {group_id};
+        emit pointAssignmentsChanged(affected_groups);
+    }
+
+    return true;
+}
+
+void GroupManager::ungroupEntities(std::unordered_set<EntityId> const & entity_ids) {
+    std::unordered_set<int> affected_groups;
+
+    for (auto const id : entity_ids) {
+        auto it = m_entity_to_group.find(static_cast<qulonglong>(id));
+        if (it != m_entity_to_group.end()) {
+            int group_id = it.value();
+            affected_groups.insert(group_id);
+            auto group_it = m_groups.find(group_id);
+            if (group_it != m_groups.end()) {
+                group_it.value().entity_ids.erase(id);
+            }
+            m_entity_to_group.erase(it);
+        }
+    }
+
+    if (!affected_groups.empty()) {
+        qDebug() << "GroupManager: Ungrouped" << entity_ids.size() << "entities from" << affected_groups.size() << "groups";
+        emit pointAssignmentsChanged(affected_groups);
+    }
+}
+
+int GroupManager::getEntityGroup(EntityId id) const {
+    auto it = m_entity_to_group.find(static_cast<qulonglong>(id));
+    return (it != m_entity_to_group.end()) ? it.value() : -1;
+}
+
+QColor GroupManager::getEntityColor(EntityId id, QColor const & default_color) const {
+    int gid = getEntityGroup(id);
+    if (gid == -1) return default_color;
+    Group const * grp = getGroup(gid);
+    return grp ? grp->color : default_color;
 }

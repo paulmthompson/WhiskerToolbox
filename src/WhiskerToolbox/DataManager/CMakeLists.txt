@@ -25,6 +25,10 @@ set(DATAMANAGER_SOURCES
         TimeFrame.hpp
         TimeFrame.cpp
 
+        Entity/EntityTypes.hpp
+        Entity/EntityRegistry.hpp
+        Entity/EntityRegistry.cpp
+
         Media/Image_Data.cpp
         Media/Image_Data.hpp
         Media/Video_Data.cpp

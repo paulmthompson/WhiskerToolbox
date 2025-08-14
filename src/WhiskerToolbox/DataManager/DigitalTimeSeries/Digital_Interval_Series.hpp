@@ -4,6 +4,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "interval_data.hpp"
 #include "TimeFrame.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <cstdint>
 #include <iostream>
@@ -11,6 +12,9 @@
 #include <utility>
 #include <vector>
 
+
+
+class EntityRegistry;
 template<typename T>
 inline constexpr bool always_false_v = false;
 
@@ -182,6 +186,14 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
 
+    // ===== Identity =====
+    void setIdentityContext(std::string const & data_key, EntityRegistry * registry) {
+        _identity_data_key = data_key;
+        _identity_registry = registry;
+    }
+    void rebuildAllEntityIds();
+    [[nodiscard]] std::vector<EntityId> const & getEntityIds() const { return _entity_ids; }
+
 private:
     std::vector<Interval> _data{};
     std::shared_ptr<TimeFrame> _time_frame {nullptr};
@@ -227,6 +239,10 @@ private:
 
         return result;
     }
+    // Identity
+    std::string _identity_data_key;
+    EntityRegistry * _identity_registry {nullptr};
+    std::vector<EntityId> _entity_ids;
 };
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time);

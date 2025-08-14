@@ -73,6 +73,13 @@ public:
     [[nodiscard]] auto getEntityCountAt(TimeFrameIndex t) const -> size_t override;
     [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* override;
 
+    // IEntityProvider addition: expose EntityId if present
+    [[nodiscard]] auto getEntityIdAt(TimeFrameIndex t, int entityIndex) const -> EntityId override {
+        auto const & ids = m_lineData->getEntityIdsAtTime(t);
+        if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= ids.size()) return 0;
+        return ids[static_cast<size_t>(entityIndex)];
+    }
+
 private:
     std::shared_ptr<LineData> m_lineData;
     std::shared_ptr<TimeFrame> m_timeFrame;

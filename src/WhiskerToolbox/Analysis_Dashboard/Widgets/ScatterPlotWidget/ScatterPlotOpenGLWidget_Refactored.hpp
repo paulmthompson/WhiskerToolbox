@@ -1,13 +1,11 @@
 #pragma once
 
-#include "../Common/BasePlotOpenGLWidget.hpp"
+#include "Widgets/Common/BasePlotOpenGLWidget.hpp"
 
-
-#include <vector>
 #include <memory>
+#include <vector>
 
 class ScatterPlotVisualization;
-class ScatterPlotViewAdapter; // adapter (friend)
 
 /**
  * Refactored ScatterPlotOpenGLWidget using composition-based design
@@ -17,12 +15,12 @@ class ScatterPlotOpenGLWidget : public BasePlotOpenGLWidget {
     Q_OBJECT
 
 public:
-    explicit ScatterPlotOpenGLWidget(QWidget* parent = nullptr);
+    explicit ScatterPlotOpenGLWidget(QWidget * parent = nullptr);
     ~ScatterPlotOpenGLWidget() override;
 
     // Data management
-    void setScatterData(const std::vector<float>& x_data, const std::vector<float>& y_data);
-    void setAxisLabels(const QString& x_label, const QString& y_label);
+    void setScatterData(std::vector<float> const & x_data, std::vector<float> const & y_data);
+    void setAxisLabels(QString const & x_label, QString const & y_label);
 
     // Query methods
     size_t getDataPointCount() const;
@@ -55,8 +53,8 @@ protected:
     void initializeGL() override;
 
     // Optional overrides
-    void renderUI() override;  // For axis labels
-    std::optional<QString> generateTooltipContent(QPoint const& screen_pos) const override;
+    void renderUI() override;// For axis labels
+    std::optional<QString> generateTooltipContent(QPoint const & screen_pos) const override;
 
 private slots:
     void onSelectionChanged(size_t total_selected);
@@ -70,12 +68,12 @@ private:
 
     // Visualization
     std::unique_ptr<ScatterPlotVisualization> _visualization;
-    
+
     // Axis labels
     QString _x_label;
     QString _y_label;
 
-    friend class ScatterPlotViewAdapter;
+    friend class GenericViewAdapter;
 
     void initializeVisualization();
     void updateVisualizationData();

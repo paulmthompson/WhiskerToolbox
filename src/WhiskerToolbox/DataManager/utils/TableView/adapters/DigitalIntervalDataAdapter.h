@@ -69,6 +69,11 @@ public:
                                               TimeFrameIndex end,
                                               TimeFrame const * target_timeFrame) override;
 
+    [[nodiscard]] auto getEntityIdAt(size_t index) const -> EntityId override {
+        auto const & ids = m_digitalIntervalSeries->getEntityIds();
+        return (index < ids.size()) ? ids[index] : 0;
+    }
+
 private:
     std::shared_ptr<DigitalIntervalSeries> m_digitalIntervalSeries;
     std::shared_ptr<TimeFrame> m_timeFrame;
