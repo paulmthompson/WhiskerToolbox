@@ -4,6 +4,7 @@
 #include "Lines/line_angle.hpp"
 #include "Masks/mask_median_filter.hpp"
 #include "Masks/mask_area.hpp"
+#include "AnalogTimeSeries/analog_interval_threshold.hpp"
 
 #include <iostream>
 
@@ -62,6 +63,31 @@ void ParameterFactory::initializeDefaultSetters() {
     registerEnumParameter<LineAlignmentParameters, FWHMApproach>(
         "Line Alignment", "approach", &LineAlignmentParameters::approach, fwhm_approach_map);
     
+    // Register Analog Interval Threshold parameters
+    registerBasicParameter<IntervalThresholdParams, double>(
+        "Threshold Interval Detection", "threshold_value", &IntervalThresholdParams::thresholdValue);
+
+    std::unordered_map<std::string, IntervalThresholdParams::ThresholdDirection> threshold_direction_map = {
+        {"Positive (Rising)", IntervalThresholdParams::ThresholdDirection::POSITIVE},
+        {"Negative (Falling)", IntervalThresholdParams::ThresholdDirection::NEGATIVE},
+        {"Absolute (Magnitude)", IntervalThresholdParams::ThresholdDirection::ABSOLUTE}
+    };
+    registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::ThresholdDirection>(
+        "Threshold Interval Detection", "direction", &IntervalThresholdParams::direction, threshold_direction_map);
+
+    registerBasicParameter<IntervalThresholdParams, double>(
+        "Threshold Interval Detection", "lockout_time", &IntervalThresholdParams::lockoutTime);
+
+    registerBasicParameter<IntervalThresholdParams, double>(
+        "Threshold Interval Detection", "min_duration", &IntervalThresholdParams::minDuration);
+
+    std::unordered_map<std::string, IntervalThresholdParams::MissingDataMode> missing_data_mode_map = {
+        {"Treat as Zero (Default)", IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO},
+        {"Ignore Missing Points", IntervalThresholdParams::MissingDataMode::IGNORE}
+    };
+    registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::MissingDataMode>(
+        "Threshold Interval Detection", "missing_data_mode", &IntervalThresholdParams::missingDataMode, missing_data_mode_map); 
+
     // Example: Register LineResample parameters (uncomment when parameters exist)
     // registerBasicParameter<LineResampleParameters, int>(
     //     "Line Resample", "num_points", &LineResampleParameters::num_points);

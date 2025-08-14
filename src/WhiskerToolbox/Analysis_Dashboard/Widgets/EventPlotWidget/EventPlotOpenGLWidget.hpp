@@ -166,7 +166,7 @@ signals:
     /**
      * @brief Emitted when the current world view bounds change (after zoom/pan/resize/box-zoom)
      */
-    void viewBoundsChanged(float left, float right, float bottom, float top);
+    void viewBoundsChanged(BoundingBox const& bounds);
 
     /**
      * @brief Emitted when the mouse moves, reporting world coordinates under the cursor
@@ -285,12 +285,9 @@ private:
 
     /**
      * @brief Calculate projection bounds for coordinate transformation
-     * @param left Output: left bound
-     * @param right Output: right bound  
-     * @param bottom Output: bottom bound
-     * @param top Output: top bound
+     * @return Bounding box of the projection bounds
      */
-    void calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const;
+    BoundingBox calculateProjectionBounds() const;
 
     /**
      * @brief Handle mouse panning

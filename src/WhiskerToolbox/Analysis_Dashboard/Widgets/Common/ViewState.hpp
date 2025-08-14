@@ -43,26 +43,15 @@ namespace ViewUtils {
     /**
      * @brief Calculate orthographic projection bounds for current view
      * @param state Current view state
-     * @param left Output: left bound
-     * @param right Output: right bound
-     * @param bottom Output: bottom bound
-     * @param top Output: top bound
      */
-    void calculateProjectionBounds(const ViewState& state, 
-                                 float& left, float& right, 
-                                 float& bottom, float& top);
+    BoundingBox calculateProjectionBounds(const ViewState& state);
     
     /**
      * @brief Apply box zoom to specified world rectangle
      * @param state View state to modify
-     * @param min_x Left edge of zoom rectangle
-     * @param max_x Right edge of zoom rectangle
-     * @param min_y Bottom edge of zoom rectangle
-     * @param max_y Top edge of zoom rectangle
+     * @param bounds Bounding box to apply zoom to
      */
-    void applyBoxZoom(ViewState& state, 
-                     float min_x, float max_x, 
-                     float min_y, float max_y);
+    void applyBoxZoom(ViewState& state, BoundingBox const& bounds);
     
     /**
      * @brief Reset view to fit all data

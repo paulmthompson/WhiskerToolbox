@@ -13,7 +13,8 @@
 #include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
-#include "DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp"
+#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
+#include "Feature_Tree_Model.hpp"
 #include "OpenGLWidget.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -47,53 +48,78 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Provide PlottingManager reference to OpenGL widget
     ui->openGLWidget->setPlottingManager(_plotting_manager.get());
 
-    ui->feature_tree_widget->setTypeFilter({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
+    // Initialize feature tree model
+    _feature_tree_model = std::make_unique<Feature_Tree_Model>(this);
+    _feature_tree_model->setDataManager(_data_manager);
 
+    // Configure Feature_Tree_Widget
+    ui->feature_tree_widget->setTypeFilters({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
     ui->feature_tree_widget->setDataManager(_data_manager);
 
-    connect(ui->feature_tree_widget, &DataViewer_Tree_Widget::seriesSelected, this, &DataViewer_Widget::_handleFeatureSelected);
-    connect(ui->feature_tree_widget, &DataViewer_Tree_Widget::seriesToggled, this, [this](QString const & series_key, bool enabled) {
-        std::cout << "Signal received in DataViewer_Widget: " << series_key.toStdString() << " enabled: " << enabled << std::endl;
-        _addFeatureToModel(series_key, enabled);
+    // Connect Feature_Tree_Widget signals using the new interface
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::featureSelected, this, [this](std::string const & feature) {
+        _handleFeatureSelected(QString::fromStdString(feature));
+    });
+    
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeature, this, [this](std::string const & feature) {
+        std::cout << "Adding single feature: " << feature << std::endl;
+        _addFeatureToModel(QString::fromStdString(feature), true);
+    });
+    
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeature, this, [this](std::string const & feature) {
+        std::cout << "Removing single feature: " << feature << std::endl;
+        _addFeatureToModel(QString::fromStdString(feature), false);
     });
 
-    connect(ui->feature_tree_widget, &DataViewer_Tree_Widget::groupToggled, this, [this](QString const & group_prefix, DM_DataType data_type, bool enabled) {
-        // Handle group toggle - enable/disable all series in the group
-        std::cout << "Group " << group_prefix.toStdString() << " toggled: " << enabled << std::endl;
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeatures, this, [this](std::vector<std::string> const & features) {
+        std::cout << "Adding " << features.size() << " features as group" << std::endl;
 
-        // Collect all keys that belong to this group
-        std::vector<std::string> group_keys;
-        auto all_keys = _data_manager->getAllKeys();
-        for (auto const & key: all_keys) {
-            if (_data_manager->getType(key) == data_type) {
-                // Check if this key belongs to the group by checking if it starts with the prefix
-                if (key.find(group_prefix.toStdString()) == 0) {
-                    group_keys.push_back(key);
-                }
-            }
-        }
-
-        std::cout << "Found " << group_keys.size() << " series in group " << group_prefix.toStdString() << std::endl;
-
-        // Process all series in the group without triggering individual canvas updates
-        for (auto const & key: group_keys) {
-            if (enabled) {
-                _plotSelectedFeatureWithoutUpdate(key);
-            } else {
-                _removeSelectedFeatureWithoutUpdate(key);
-            }
+        // Process all features in the group without triggering individual canvas updates
+        for (auto const & key: features) {
+            _plotSelectedFeatureWithoutUpdate(key);
         }
 
         // Auto-arrange and auto-fill when toggling a group to optimize space usage
-        if (!group_keys.empty()) {
+        if (!features.empty()) {
             std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
             autoArrangeVerticalSpacing();// This now includes auto-fill functionality
         }
 
         // Trigger a single canvas update at the end
-        if (!group_keys.empty()) {
+        if (!features.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
             ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+        }
+    });
+
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeatures, this, [this](std::vector<std::string> const & features) {
+        std::cout << "Removing " << features.size() << " features as group" << std::endl;
+
+        // Process all features in the group without triggering individual canvas updates
+        for (auto const & key: features) {
+            _removeSelectedFeatureWithoutUpdate(key);
+        }
+
+        // Auto-arrange and auto-fill when toggling a group to optimize space usage
+        if (!features.empty()) {
+            std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
+            autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+        }
+
+        // Trigger a single canvas update at the end
+        if (!features.empty()) {
+            std::cout << "Triggering single canvas update for group toggle" << std::endl;
+            ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+        }
+    });
+
+    // Connect color change signals from the model
+    connect(_feature_tree_model.get(), &Feature_Tree_Model::featureColorChanged, this, &DataViewer_Widget::_handleColorChanged);
+    
+    // Connect color change signals from the tree widget to the model
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::colorChangeFeatures, this, [this](std::vector<std::string> const & features, std::string const & hex_color) {
+        for (auto const & feature : features) {
+            _feature_tree_model->setFeatureColor(feature, hex_color);
         }
     });
 
@@ -174,11 +200,8 @@ void DataViewer_Widget::openWidget() {
     std::cout << "DataViewer Widget Opened" << std::endl;
 
     // Tree is already populated by observer pattern in setDataManager()
-    // Only populate if tree is somehow empty (fallback safety check)
-    if (ui->feature_tree_widget->topLevelItemCount() == 0) {
-        std::cout << "Tree is empty, triggering manual population as fallback" << std::endl;
-        ui->feature_tree_widget->populateTree();
-    }
+    // Trigger refresh in case of manual opening
+    ui->feature_tree_widget->refreshTree();
 
     this->show();
 
@@ -237,8 +260,8 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         return;
     }
 
-    // Get color from tree widget
-    std::string color = ui->feature_tree_widget->getSeriesColor(key);
+    // Get color from model
+    std::string color = _feature_tree_model->getFeatureColor(key);
     std::cout << "Using color: " << color << " for series: " << key << std::endl;
 
     auto data_type = _data_manager->getType(key);
@@ -674,8 +697,8 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
         return;
     }
 
-    // Get color from tree widget
-    std::string color = ui->feature_tree_widget->getSeriesColor(key);
+    // Get color from model
+    std::string color = _feature_tree_model->getFeatureColor(key);
     std::cout << "Using color: " << color << " for series: " << key << std::endl;
 
     auto data_type = _data_manager->getType(key);

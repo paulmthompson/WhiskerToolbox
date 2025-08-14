@@ -35,9 +35,8 @@ bool PlotInteractionController::handleWheel(QWheelEvent * event) {
     }
     _adapter->setPerAxisZoom(zx, zy);
     _adapter->requestUpdate();
-    float l, r, b, t;
-    _adapter->getProjectionBounds(l, r, b, t);
-    emit viewBoundsChanged(l, r, b, t);
+    BoundingBox bounds = _adapter->getProjectionBounds();
+    emit viewBoundsChanged(bounds);
     event->accept();
     return true;
 }
@@ -60,11 +59,10 @@ bool PlotInteractionController::handleMousePress(QMouseEvent * event) {
 }
 
 bool PlotInteractionController::handleMouseMove(QMouseEvent * event) {
-    float l, r, b, t;
-    _adapter->getProjectionBounds(l, r, b, t);
-    if (r != l && t != b && _adapter->viewportWidth() > 0 && _adapter->viewportHeight() > 0) {
-        float wx = l + (static_cast<float>(event->pos().x()) / _adapter->viewportWidth()) * (r - l);
-        float wy = t - (static_cast<float>(event->pos().y()) / _adapter->viewportHeight()) * (t - b);
+    BoundingBox bounds = _adapter->getProjectionBounds();
+    if (bounds.width() > 0 && bounds.height() > 0 && _adapter->viewportWidth() > 0 && _adapter->viewportHeight() > 0) {
+        float wx = bounds.min_x + (static_cast<float>(event->pos().x()) / _adapter->viewportWidth()) * (bounds.width());
+        float wy = bounds.max_y + (static_cast<float>(event->pos().y()) / _adapter->viewportHeight()) * (bounds.height());
         emit mouseWorldMoved(wx, wy);
     }
 
@@ -80,8 +78,8 @@ bool PlotInteractionController::handleMouseMove(QMouseEvent * event) {
         int vh = std::max(1, _adapter->viewportHeight());
 
         // World units per pixel in current view
-        float world_per_pixel_x = (r - l) / vw;
-        float world_per_pixel_y = (t - b) / vh;
+        float world_per_pixel_x = (bounds.width()) / vw;
+        float world_per_pixel_y = (bounds.height()) / vh;
         float dx_world = delta.x() * world_per_pixel_x;
         float dy_world = -delta.y() * world_per_pixel_y;
 
@@ -89,8 +87,8 @@ bool PlotInteractionController::handleMouseMove(QMouseEvent * event) {
         float padding = _adapter->getPadding();
         float aspect = static_cast<float>(vw) / vh;
         // denom_x = data_width * zoom_x; denom_y = data_height * zoom_y
-        float denom_x = (aspect > 1.0f) ? ((r - l) / (padding * aspect)) : ((r - l) / padding);
-        float denom_y = (aspect > 1.0f) ? ((t - b) / padding) : (((t - b) * aspect) / padding);
+        float denom_x = (aspect > 1.0f) ? ((bounds.width()) / (padding * aspect)) : ((bounds.width()) / padding);
+        float denom_y = (aspect > 1.0f) ? ((bounds.height()) / padding) : (((bounds.height()) * aspect) / padding);
         if (denom_x == 0.0f) denom_x = 1.0f;
         if (denom_y == 0.0f) denom_y = 1.0f;
 
@@ -116,17 +114,17 @@ bool PlotInteractionController::handleMouseRelease(QMouseEvent * event) {
         QRect rect = _rubber->geometry();
         _box_zoom = false;
         if (rect.width() > 3 && rect.height() > 3) {
-            float l, r, b, t;
-            _adapter->getProjectionBounds(l, r, b, t);
-            float min_x = l + (static_cast<float>(rect.left()) / _adapter->viewportWidth()) * (r - l);
-            float max_x = l + (static_cast<float>(rect.right()) / _adapter->viewportWidth()) * (r - l);
-            float min_y = t - (static_cast<float>(rect.bottom()) / _adapter->viewportHeight()) * (t - b);
-            float max_y = t - (static_cast<float>(rect.top()) / _adapter->viewportHeight()) * (t - b);
+            auto bounds = _adapter->getProjectionBounds();
+            float min_x = bounds.min_x + (static_cast<float>(rect.left()) / _adapter->viewportWidth()) * (bounds.width());
+            float max_x = bounds.min_x + (static_cast<float>(rect.right()) / _adapter->viewportWidth()) * (bounds.width());
+            float min_y = bounds.max_y - (static_cast<float>(rect.bottom()) / _adapter->viewportHeight()) * (bounds.height());
+            float max_y = bounds.max_y - (static_cast<float>(rect.top()) / _adapter->viewportHeight()) * (bounds.height());
             if (min_x > max_x) std::swap(min_x, max_x);
             if (min_y > max_y) std::swap(min_y, max_y);
-            _adapter->applyBoxZoomToWorldRect(min_x, max_x, min_y, max_y);
+            BoundingBox box(min_x, min_y, max_x, max_y);
+            _adapter->applyBoxZoomToWorldRect(box);
             _adapter->requestUpdate();
-            emit viewBoundsChanged(min_x, max_x, min_y, max_y);
+            emit viewBoundsChanged(box);
         }
         event->accept();
         return true;

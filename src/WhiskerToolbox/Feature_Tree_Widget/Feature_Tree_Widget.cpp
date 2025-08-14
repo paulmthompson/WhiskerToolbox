@@ -87,10 +87,11 @@ void Feature_Tree_Widget::_itemSelected(QTreeWidgetItem * item, int column) {
 
     // Check if it's a group
     if (_features.find(key) != _features.end()) {
-        if (_features[key].isGroup) {
+        if (_features[key].isGroup || _features[key].isDataTypeGroup) {
             selectedFeatures = _features[key].children;
         } else {
             selectedFeatures = {key};
+            emit featureSelected(key);// Emit single feature selection
         }
     }
 
@@ -110,7 +111,7 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
         std::vector<std::string> affectedFeatures;
 
         // Handle group toggling
-        if (_features[key].isGroup) {
+        if (_features[key].isGroup || _features[key].isDataTypeGroup) {
             // Update all children checkboxes
             _updateChildrenState(item, column);
 
@@ -121,9 +122,16 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
 
             // Update parent state if needed
             _updateParentState(item, column);
+
+            // Emit single feature signals
+            if (enabled) {
+                emit addFeature(key);
+            } else {
+                emit removeFeature(key);
+            }
         }
 
-        // Emit signals
+        // Emit signals for multiple features
         if (enabled) {
             emit addFeatures(affectedFeatures);
         } else {
@@ -137,6 +145,7 @@ void Feature_Tree_Widget::_refreshFeatures() {
     ui->treeWidget->clear();
     _feature_items.clear();
     _group_items.clear();
+    _datatype_items.clear();
     _features.clear();
 
     // Populate tree
@@ -144,8 +153,134 @@ void Feature_Tree_Widget::_refreshFeatures() {
 }
 
 void Feature_Tree_Widget::_populateTree() {
+
+    if (!_data_manager) {
+        return;
+    }
+
     // Get all keys
     auto allKeys = _data_manager->getAllKeys();
+
+    if (_organize_by_datatype) {
+        _populateTreeByDataType(allKeys);
+    } else {
+        _populateTreeFlat(allKeys);
+    }
+}
+
+void Feature_Tree_Widget::_populateTreeByDataType(std::vector<std::string> const & allKeys) {
+
+    if (!_data_manager) {
+        return;
+    }
+
+    // Organize by data type first
+    std::unordered_map<DM_DataType, std::vector<std::string>> dataTypeGroups;
+
+    for (auto const & key: allKeys) {
+        auto const type = _data_manager->getType(key);
+        if (!_type_filters.empty() && !_hasTypeFilter(type)) {
+            continue;
+        }
+        dataTypeGroups[type].push_back(key);
+    }
+
+    // Create data type groups and organize within each
+    for (auto const & [dataType, keys]: dataTypeGroups) {
+        if (keys.empty()) continue;
+
+        // Create data type group item
+        QTreeWidgetItem * dataTypeItem = _getOrCreateDataTypeItem(dataType);
+
+        // Within each data type, group by underscore pattern
+        std::unordered_map<std::string, std::vector<std::string>> nameGroups;
+
+        for (auto const & key: keys) {
+            std::string const groupName = _extractGroupName(key);
+            if (!groupName.empty() && groupName != key) {
+                nameGroups[groupName].push_back(key);
+            }
+        }
+
+        // Add grouped items
+        for (auto const & [groupName, members]: nameGroups) {
+            if (members.size() > 1) {
+                // Create a name group under the data type
+                TreeFeature groupFeature;
+                groupFeature.key = groupName;
+                groupFeature.type = "Group";
+                groupFeature.isGroup = true;
+                groupFeature.isDataTypeGroup = false;
+                groupFeature.children = members;
+                groupFeature.dataType = dataType;
+                _features[groupName] = groupFeature;
+
+                auto * groupItem = new QTreeWidgetItem(dataTypeItem);
+                groupItem->setText(0, QString::fromStdString(groupName));
+                groupItem->setText(1, "Group");
+                groupItem->setFlags(groupItem->flags() | Qt::ItemIsUserCheckable);
+                setup_checkbox_column(groupItem, 2, false);
+                _group_items[groupName] = groupItem;
+
+                // Add children
+                for (auto const & member: members) {
+                    TreeFeature childFeature;
+                    childFeature.key = member;
+                    childFeature.type = convert_data_type_to_string(dataType);
+                    childFeature.timeFrame = _data_manager->getTimeKey(member).str();
+                    childFeature.isGroup = false;
+                    childFeature.isDataTypeGroup = false;
+                    childFeature.dataType = dataType;
+                    _features[member] = childFeature;
+
+                    auto * childItem = new QTreeWidgetItem(groupItem);
+                    childItem->setText(0, QString::fromStdString(member));
+                    childItem->setText(1, QString::fromStdString(childFeature.type));
+                    childItem->setFlags(childItem->flags() | Qt::ItemIsUserCheckable);
+                    setup_checkbox_column(childItem, 2, false);
+                    _feature_items[member] = childItem;
+                }
+            }
+        }
+
+        // Add standalone items
+        for (auto const & key: keys) {
+            bool inGroup = false;
+            for (auto const & [groupName, members]: nameGroups) {
+                if (members.size() > 1 && std::find(members.begin(), members.end(), key) != members.end()) {
+                    inGroup = true;
+                    break;
+                }
+            }
+
+            if (!inGroup && _features.find(key) == _features.end()) {
+                TreeFeature feature;
+                feature.key = key;
+                feature.type = convert_data_type_to_string(dataType);
+                feature.timeFrame = _data_manager->getTimeKey(key).str();
+                feature.isGroup = false;
+                feature.isDataTypeGroup = false;
+                feature.dataType = dataType;
+                _features[key] = feature;
+
+                auto * item = new QTreeWidgetItem(dataTypeItem);
+                item->setText(0, QString::fromStdString(key));
+                item->setText(1, QString::fromStdString(feature.type));
+                item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+                setup_checkbox_column(item, 2, false);
+                _feature_items[key] = item;
+            }
+        }
+    }
+
+    ui->treeWidget->expandAll();
+}
+
+void Feature_Tree_Widget::_populateTreeFlat(std::vector<std::string> const & allKeys) {
+
+    if (!_data_manager) {
+        return;
+    }
 
     // First pass: identify groups
     std::unordered_map<std::string, std::vector<std::string>> groups;
@@ -262,7 +397,7 @@ std::vector<std::string> get_child_features(QTreeWidgetItem * item) {
     return children;
 }
 
-void Feature_Tree_Widget::_addFeatureToTree(std::string const & key, bool isGroup) {
+void Feature_Tree_Widget::_addFeatureToTree(std::string const & key, bool isGroup, bool isDataTypeGroup) {
     if (_features.find(key) == _features.end()) {
         return;
     }
@@ -274,7 +409,9 @@ void Feature_Tree_Widget::_addFeatureToTree(std::string const & key, bool isGrou
 
     setup_checkbox_column(item, 2, false);
 
-    if (isGroup) {
+    if (isDataTypeGroup) {
+        _datatype_items[key] = item;
+    } else if (isGroup) {
         _group_items[key] = item;
     } else {
         _feature_items[key] = item;
@@ -345,4 +482,34 @@ void Feature_Tree_Widget::_updateParentState(QTreeWidgetItem * child, int column
     if (_features.find(parentKey) != _features.end()) {
         _features[parentKey].enabled = (parent->checkState(column) == Qt::Checked);
     }
+}
+
+QTreeWidgetItem * Feature_Tree_Widget::_getOrCreateDataTypeItem(DM_DataType dataType) {
+    std::string const dataTypeName = _getDataTypeGroupName(dataType);
+
+    if (_datatype_items.find(dataTypeName) != _datatype_items.end()) {
+        return _datatype_items[dataTypeName];
+    }
+
+    // Create new data type group
+    TreeFeature dataTypeFeature;
+    dataTypeFeature.key = dataTypeName;
+    dataTypeFeature.type = "Data Type";
+    dataTypeFeature.isGroup = true;
+    dataTypeFeature.isDataTypeGroup = true;
+    dataTypeFeature.dataType = dataType;
+    _features[dataTypeName] = dataTypeFeature;
+
+    auto * item = new QTreeWidgetItem(ui->treeWidget);
+    item->setText(0, QString::fromStdString(dataTypeName));
+    item->setText(1, "Data Type");
+    item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+    setup_checkbox_column(item, 2, false);
+
+    _datatype_items[dataTypeName] = item;
+    return item;
+}
+
+std::string Feature_Tree_Widget::_getDataTypeGroupName(DM_DataType dataType) {
+    return convert_data_type_to_string(dataType);
 }

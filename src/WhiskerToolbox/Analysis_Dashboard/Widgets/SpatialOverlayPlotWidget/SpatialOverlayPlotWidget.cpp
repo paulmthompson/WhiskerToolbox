@@ -3,7 +3,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/TimeFrame.hpp"
-#include "SpatialOverlayOpenGLWidget_Refactored.hpp"   
+#include "SpatialOverlayOpenGLWidget.hpp"   
 
 
 #include <QDebug>
@@ -226,8 +226,8 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
 
     // Connect signals from the refactored base class
     connect(_opengl_widget, &BasePlotOpenGLWidget::viewBoundsChanged,
-            this, [this](float left, float right, float bottom, float top) {
-                Q_UNUSED(left) Q_UNUSED(right) Q_UNUSED(bottom) Q_UNUSED(top)
+            this, [this](BoundingBox const& bounds) {
+                Q_UNUSED(bounds)
                 update();
                 emit renderUpdateRequested(getPlotId());
             });

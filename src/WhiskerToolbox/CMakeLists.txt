@@ -27,6 +27,7 @@ add_subdirectory(ShaderManager)
 add_subdirectory(TimeScrollBar)
 add_subdirectory(Analysis_Dashboard)    
 add_subdirectory(Feature_Table_Widget)
+add_subdirectory(Feature_Tree_Widget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -302,6 +303,8 @@ set(PROJECT_SOURCES
         DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.cpp
         DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.hpp
         DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.ui
+        DataViewer_Widget/Feature_Tree_Model.hpp
+        DataViewer_Widget/Feature_Tree_Model.cpp
 
 
         ML_Widget/ML_Widget.hpp
@@ -347,10 +350,6 @@ set(PROJECT_SOURCES
         Tongue_Widget/Tongue_Widget.hpp
         Tongue_Widget/Tongue_Widget.cpp
         Tongue_Widget/Tongue_Widget.ui
-
-        Feature_Tree_Widget/Feature_Tree_Widget.cpp
-        Feature_Tree_Widget/Feature_Tree_Widget.hpp
-        Feature_Tree_Widget/Feature_Tree_Widget.ui
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp
@@ -539,6 +538,7 @@ target_link_libraries(WhiskerToolbox PRIVATE ShaderManager)
 target_link_libraries(WhiskerToolbox PRIVATE TimeScrollBar)
 target_link_libraries(WhiskerToolbox PRIVATE Analysis_Dashboard)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE Feature_Tree_Widget)
 
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)

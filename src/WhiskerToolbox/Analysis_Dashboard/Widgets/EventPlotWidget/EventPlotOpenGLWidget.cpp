@@ -503,8 +503,11 @@ void EventPlotOpenGLWidget::updateMatrices() {
     // Update projection matrix (orthographic)
     _projection_matrix.setToIdentity();
 
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
+    auto bounds = calculateProjectionBounds();
+    float left = bounds.min_x;
+    float right = bounds.max_x;
+    float bottom = bounds.min_y;
+    float top = bounds.max_y;
 
     // Always ensure valid bounds
     if (left >= right) {
@@ -522,7 +525,7 @@ void EventPlotOpenGLWidget::updateMatrices() {
              << "left:" << left << "right:" << right
              << "bottom:" << bottom << "top:" << top
              << "y_zoom:" << _y_zoom_level;
-    emit viewBoundsChanged(left, right, bottom, top);
+    emit viewBoundsChanged(bounds);
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
@@ -568,8 +571,9 @@ void EventPlotOpenGLWidget::getXAxisRange(int & negative_range, int & positive_r
 
 void EventPlotOpenGLWidget::getVisibleBounds(float & left_bound, float & right_bound) const {
     // Calculate the actual visible bounds including pan offset
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
+    auto bounds = calculateProjectionBounds();
+    float left = bounds.min_x;
+    float right = bounds.max_x;
 
     left_bound = left;
     right_bound = right;
@@ -737,15 +741,11 @@ void EventPlotOpenGLWidget::renderCenterLine() {
     glUseProgram(0);
 }
 
-void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const {
+BoundingBox EventPlotOpenGLWidget::calculateProjectionBounds() const {
     if (_widget_width <= 0 || _widget_height <= 0) {
         // Use safe default bounds
-        left = -static_cast<float>(_negative_range);
-        right = static_cast<float>(_positive_range);
-        bottom = -1.0f;
-        top = 1.0f;
         qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - using default bounds with ranges";
-        return;
+        return BoundingBox(-static_cast<float>(_negative_range), -1.0f, static_cast<float>(_positive_range), 1.0f);
     }
 
     // Use the user-specified X-axis range (no X zoom, controlled by spinboxes)
@@ -775,16 +775,12 @@ void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & righ
     float pan_x = _pan_offset_x * x_range_width * x_zoom_factor;
     float pan_y = _pan_offset_y * y_range_height * y_zoom_factor;
 
-    left = center_x - half_width + pan_x;
-    right = center_x + half_width + pan_x;
-    bottom = center_y - half_height + pan_y;
-    top = center_y + half_height + pan_y;
+    float left = center_x - half_width + pan_x;
+    float right = center_x + half_width + pan_x;
+    float bottom = center_y - half_height + pan_y;
+    float top = center_y + half_height + pan_y;
 
-    qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - user-specified bounds:"
-             << "left:" << left << "right:" << right
-             << "bottom:" << bottom << "top:" << top
-             << "ranges: -" << _negative_range << "to +" << _positive_range
-             << "y_zoom:" << _y_zoom_level;
+    return BoundingBox(left, bottom, right, top);
 }
 
 void EventPlotOpenGLWidget::processHoverDebounce() {
@@ -824,12 +820,11 @@ void EventPlotOpenGLWidget::processHoverDebounce() {
 
 float EventPlotOpenGLWidget::calculateWorldTolerance(float screen_tolerance) const {
     // Calculate projection bounds
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
+    auto bounds = calculateProjectionBounds();
 
     // Calculate world units per pixel
-    float world_width = right - left;
-    float world_height = top - bottom;
+    float world_width = bounds.width();
+    float world_height = bounds.height();
     float world_per_pixel_x = world_width / _widget_width;
     float world_per_pixel_y = world_height / _widget_height;
 
@@ -841,14 +836,13 @@ float EventPlotOpenGLWidget::calculateWorldTolerance(float screen_tolerance) con
 
 void EventPlotOpenGLWidget::screenToWorld(int screen_x, int screen_y, float & world_x, float & world_y) {
     // Calculate projection bounds
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
+    auto bounds = calculateProjectionBounds();
 
     // Convert screen coordinates to normalized coordinates [0, 1]
     float norm_x = static_cast<float>(screen_x) / _widget_width;
     float norm_y = 1.0f - static_cast<float>(screen_y) / _widget_height;// Flip Y axis
 
     // Convert to world coordinates
-    world_x = left + norm_x * (right - left);
-    world_y = bottom + norm_y * (top - bottom);
+    world_x = bounds.min_x + norm_x * (bounds.width());
+    world_y = bounds.min_y + norm_y * (bounds.height());
 }
