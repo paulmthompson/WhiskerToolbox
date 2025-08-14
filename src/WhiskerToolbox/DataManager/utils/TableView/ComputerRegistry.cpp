@@ -11,6 +11,8 @@
 #include "interfaces/ILineSource.h"
 #include "computers/LineSamplingMultiComputer.h"
 #include "Points/Point_Data.hpp"
+#include "Lines/Line_Data.hpp"
+
 
 #include <iostream>
 #include <sstream>

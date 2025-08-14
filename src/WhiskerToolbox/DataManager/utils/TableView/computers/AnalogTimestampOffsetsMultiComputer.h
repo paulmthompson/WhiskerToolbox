@@ -2,11 +2,13 @@
 #define ANALOG_TIMESTAMP_OFFSETS_MULTI_COMPUTER_H
 
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
-#include "utils/TableView/interfaces/IAnalogSource.h"
+
 
 #include <memory>
 #include <string>
 #include <vector>
+
+class IAnalogSource;
 
 /**
  * @brief Multi-output computer that samples an analog source at timestamp offsets.

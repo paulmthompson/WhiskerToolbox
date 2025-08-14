@@ -1,5 +1,7 @@
 #include "DigitalIntervalDataAdapter.h"
 
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+
 #include <stdexcept>
 
 DigitalIntervalDataAdapter::DigitalIntervalDataAdapter(std::shared_ptr<DigitalIntervalSeries> digitalIntervalSeries,
@@ -45,4 +47,9 @@ std::vector<Interval> DigitalIntervalDataAdapter::getIntervalsInRange(TimeFrameI
     }
     
     return result;
+}
+
+EntityId DigitalIntervalDataAdapter::getEntityIdAt(size_t index) const {
+    auto const & ids = m_digitalIntervalSeries->getEntityIds();
+    return (index < ids.size()) ? ids[index] : 0;
 }

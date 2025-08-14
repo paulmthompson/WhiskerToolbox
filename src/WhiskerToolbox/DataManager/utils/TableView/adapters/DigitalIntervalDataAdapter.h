@@ -1,11 +1,12 @@
 #ifndef DIGITAL_INTERVAL_DATA_ADAPTER_H
 #define DIGITAL_INTERVAL_DATA_ADAPTER_H
 
-#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "utils/TableView/interfaces/IIntervalSource.h"
 
 #include <memory>
 #include <vector>
+
+class DigitalIntervalSeries;
 
 /**
  * @brief Adapter that exposes DigitalIntervalSeries as an IIntervalSource.
@@ -69,10 +70,7 @@ public:
                                               TimeFrameIndex end,
                                               TimeFrame const * target_timeFrame) override;
 
-    [[nodiscard]] auto getEntityIdAt(size_t index) const -> EntityId override {
-        auto const & ids = m_digitalIntervalSeries->getEntityIds();
-        return (index < ids.size()) ? ids[index] : 0;
-    }
+    [[nodiscard]] EntityId getEntityIdAt(size_t index) const override;
 
 private:
     std::shared_ptr<DigitalIntervalSeries> m_digitalIntervalSeries;

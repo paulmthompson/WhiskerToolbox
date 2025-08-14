@@ -1,5 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/ComputerRegistry.hpp"

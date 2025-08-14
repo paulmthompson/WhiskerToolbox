@@ -2,6 +2,8 @@
 
 #include "utils/TableView/columns/Column.h"
 #include "utils/TableView/interfaces/MultiComputerOutputView.hpp"
+#include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/core/TableViewBuilder.h"
 
 #include <algorithm>
 #include <cmath>

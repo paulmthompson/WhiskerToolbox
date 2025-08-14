@@ -1,5 +1,6 @@
 #include "AnalogTimestampOffsetsMultiComputer.h"
 
+#include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/core/ExecutionPlan.h"
 
 #include <limits>

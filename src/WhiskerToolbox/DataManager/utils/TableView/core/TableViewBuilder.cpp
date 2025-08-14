@@ -1,6 +1,13 @@
 #include "TableViewBuilder.h"
 
+#include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
+#include "utils/TableView/interfaces/IMultiColumnComputer.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
+
 #include <stdexcept>
+
+TableViewBuilder::~TableViewBuilder() = default;
 
 TableViewBuilder::TableViewBuilder(std::shared_ptr<DataManagerExtension> dataManager)
     : m_dataManager(std::move(dataManager)) {

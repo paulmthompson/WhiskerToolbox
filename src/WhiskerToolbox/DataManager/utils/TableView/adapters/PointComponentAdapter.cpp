@@ -1,5 +1,7 @@
 #include "PointComponentAdapter.h"
 
+#include "Points/Point_Data.hpp"
+
 #include <algorithm>
 #include <stdexcept>
 

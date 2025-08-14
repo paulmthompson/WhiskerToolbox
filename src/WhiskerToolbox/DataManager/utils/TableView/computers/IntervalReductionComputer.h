@@ -2,11 +2,13 @@
 #define INTERVAL_REDUCTION_COMPUTER_H
 
 #include "utils/TableView/interfaces/IColumnComputer.h"
-#include "utils/TableView/interfaces/IAnalogSource.h"
 
 #include <cstdint>
 #include <memory>
+#include <span>
 #include <string>
+
+class IAnalogSource;
 
 /**
  * @brief Reduction operation types for interval computations.

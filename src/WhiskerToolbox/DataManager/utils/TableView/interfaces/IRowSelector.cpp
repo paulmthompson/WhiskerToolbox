@@ -1,5 +1,7 @@
 #include "IRowSelector.h"
 
+IRowSelector::~IRowSelector() = default;
+
 // IndexSelector implementation
 IndexSelector::IndexSelector(std::vector<size_t> indices)
     : m_indices(std::move(indices)) {

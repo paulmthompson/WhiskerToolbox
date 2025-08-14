@@ -3,8 +3,7 @@
 
 #include "TableEvents.hpp"
 #include "utils/TableView/core/TableView.h"
-#include "utils/TableView/adapters/DataManagerExtension.h"
-#include "utils/TableView/ComputerRegistry.hpp"
+
 
 #include "utils/TableView/TableInfo.hpp"
 
@@ -14,7 +13,9 @@
 #include <tuple>
 #include <vector>
 
+class ComputerRegistry;
 class DataManager;
+class DataManagerExtension;
 struct ComputerInfo;
 
 /**

@@ -1,6 +1,9 @@
 #include "TableRegistry.hpp"
+
 #include "DataManager.hpp"
 #include "TableObserverBridge.hpp"
+#include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/ComputerRegistry.hpp"
 
 #include <iostream>
 

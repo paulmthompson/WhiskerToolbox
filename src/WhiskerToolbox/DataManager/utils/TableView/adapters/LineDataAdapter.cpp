@@ -1,5 +1,7 @@
 #include "LineDataAdapter.h"
 
+#include "Lines/Line_Data.hpp"
+
 #include <stdexcept>
 
 LineDataAdapter::LineDataAdapter(std::shared_ptr<LineData> lineData,
@@ -77,4 +79,10 @@ auto LineDataAdapter::getLineAt(TimeFrameIndex t, int entityIndex) const -> Line
         return nullptr;
     }
     return &lines_ref[static_cast<size_t>(entityIndex)];
+}
+
+EntityId LineDataAdapter::getEntityIdAt(TimeFrameIndex t, int entityIndex) const {
+    auto const & ids = m_lineData->getEntityIdsAtTime(t);
+    if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= ids.size()) return 0;
+    return ids[static_cast<size_t>(entityIndex)];
 }

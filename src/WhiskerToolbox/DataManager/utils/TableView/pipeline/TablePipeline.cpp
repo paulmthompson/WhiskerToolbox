@@ -6,6 +6,7 @@
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
 #include "utils/TableView/transforms/PCATransform.hpp"
+#include "utils/TableView/ComputerRegistry.hpp"
 
 #include <fstream>
 #include <iostream>
