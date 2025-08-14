@@ -186,11 +186,11 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
                     if (is_plottable_numeric) {
                         QString type_display = QString::fromStdString(type_info.elementTypeName);
                         QString display_text = QString("Table: %1.%2 (%3)")
-                                                       .arg(table_id)
+                                                       .arg(QString::fromStdString(table_id))
                                                        .arg(QString::fromStdString(column_name))
                                                        .arg(type_display);
                         QString data_key = QString("table:%1:%2")
-                                                   .arg(table_id)
+                                                   .arg(QString::fromStdString(table_id))
                                                    .arg(QString::fromStdString(column_name));
 
                         ui->x_axis_combo->addItem(display_text, data_key);
@@ -460,7 +460,7 @@ std::vector<float> ScatterPlotPropertiesWidget::loadDataFromKey(QString const & 
             if (auto * registry = _data_manager->getTableRegistry()) {
                 try {
                     // Use TableView's variant accessor directly
-                    auto view = registry->getBuiltTable(table_id);
+                    auto view = registry->getBuiltTable(table_id.toStdString());
                     if (view) {
                         auto column_variant = view->getColumnDataVariant(column_name.toStdString());
 
@@ -632,7 +632,7 @@ QStringList ScatterPlotPropertiesWidget::getAvailableNumericColumns() const {
                 try {
                     auto idx = table_view->getColumnTypeIndex(column_name);
                     if (isNumericIndex(idx)) {
-                        QString data_key = QString("table:%1:%2").arg(table_id).arg(QString::fromStdString(column_name));
+                        QString data_key = QString("table:%1:%2").arg(QString::fromStdString(table_id)).arg(QString::fromStdString(column_name));
                         numeric_columns.append(data_key);
                     }
                 } catch (...) {
@@ -646,7 +646,7 @@ QStringList ScatterPlotPropertiesWidget::getAvailableNumericColumns() const {
         auto info = registry->getTableInfo(table_id);
         for (auto const & col : info.columns) {
             if (isNumericFromInfo(col.typeInfo)) {
-                QString data_key = QString("table:%1:%2").arg(table_id).arg(col.name);
+                QString data_key = QString("table:%1:%2").arg(QString::fromStdString(table_id)).arg(QString::fromStdString(col.name));
                 numeric_columns.append(data_key);
             }
         }
@@ -697,7 +697,7 @@ QMap<QString, QString> ScatterPlotPropertiesWidget::getAvailableNumericColumnsWi
                 try {
                     auto idx = table_view->getColumnTypeIndex(column_name);
                     if (isNumericIndex(idx)) {
-                        QString key = QString("table:%1:%2").arg(table_id).arg(QString::fromStdString(column_name));
+                        QString key = QString("table:%1:%2").arg(QString::fromStdString(table_id)).arg(QString::fromStdString(column_name));
                         columns_with_types[key] = describeIndex(idx);
                     }
                 } catch (...) {
@@ -710,7 +710,7 @@ QMap<QString, QString> ScatterPlotPropertiesWidget::getAvailableNumericColumnsWi
         auto info = registry->getTableInfo(table_id);
         for (auto const & col : info.columns) {
             if (isNumericFromInfo(col.typeInfo)) {
-                QString key = QString("table:%1:%2").arg(table_id).arg(col.name);
+                QString key = QString("table:%1:%2").arg(QString::fromStdString(table_id)).arg(QString::fromStdString(col.name));
                 QString desc;
                 if (col.typeInfo.isVectorType) {
                     desc = QString("std::vector<%1>").arg(QString::fromStdString(col.typeInfo.elementTypeName));

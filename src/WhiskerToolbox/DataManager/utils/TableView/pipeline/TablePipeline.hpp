@@ -14,7 +14,6 @@
 #include <vector>
 #include <unordered_map>
 
-// Forward declarations
 class TableManager;
 class DataManager;
 class ComputerRegistry;

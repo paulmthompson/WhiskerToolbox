@@ -9,10 +9,9 @@
 #include "utils/TableView/TableInfo.hpp"
 
 #include <QMap>
-#include <QString>
-#include <QStringList>
 
 #include <memory>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -34,46 +33,46 @@ public:
     std::shared_ptr<DataManagerExtension> getDataManagerExtension() const { return _data_manager_extension; }
 
     // CRUD
-    bool createTable(QString const & table_id, QString const & table_name, QString const & table_description = "");
-    bool removeTable(QString const & table_id);
-    bool hasTable(QString const & table_id) const;
-    TableInfo getTableInfo(QString const & table_id) const;
-    std::vector<QString> getTableIds() const;
+    bool createTable(std::string const & table_id, std::string const & table_name, std::string const & table_description = "");
+    bool removeTable(std::string const & table_id);
+    bool hasTable(std::string const & table_id) const;
+    TableInfo getTableInfo(std::string const & table_id) const;
+    std::vector<std::string> getTableIds() const;
     std::vector<TableInfo> getAllTableInfo() const;
-    bool setTableView(QString const & table_id, std::shared_ptr<TableView> table_view);
-    bool updateTableInfo(QString const & table_id, QString const & table_name, QString const & table_description = "");
-    bool updateTableRowSource(QString const & table_id, QString const & row_source_name);
+    bool setTableView(std::string const & table_id, std::shared_ptr<TableView> table_view);
+    bool updateTableInfo(std::string const & table_id, std::string const & table_name, std::string const & table_description = "");
+    bool updateTableRowSource(std::string const & table_id, std::string const & row_source_name);
 
     // Columns
-    bool addTableColumn(QString const & table_id, ColumnInfo const & column_info);
-    bool updateTableColumn(QString const & table_id, int column_index, ColumnInfo const & column_info);
-    bool removeTableColumn(QString const & table_id, int column_index);
-    ColumnInfo getTableColumn(QString const & table_id, int column_index) const;
+    bool addTableColumn(std::string const & table_id, ColumnInfo const & column_info);
+    bool updateTableColumn(std::string const & table_id, int column_index, ColumnInfo const & column_info);
+    bool removeTableColumn(std::string const & table_id, int column_index);
+    ColumnInfo getTableColumn(std::string const & table_id, int column_index) const;
 
     // Built views
-    bool storeBuiltTable(QString const & table_id, TableView table_view);
-    std::shared_ptr<TableView> getBuiltTable(QString const & table_id) const;
+    bool storeBuiltTable(std::string const & table_id, TableView table_view);
+    std::shared_ptr<TableView> getBuiltTable(std::string const & table_id) const;
 
     // Utilities
-    QString generateUniqueTableId(QString const & base_name = "Table") const;
+    std::string generateUniqueTableId(std::string const & base_name = "Table") const;
 
     // Type-aware helpers
-    bool addTableColumnWithTypeInfo(QString const & table_id, ColumnInfo & column_info);
-    QStringList getAvailableComputersForDataSource(QString const & row_selector_type, QString const & data_source_name) const;
-    std::tuple<QString, bool, QString> getComputerTypeInfo(QString const & computer_name) const;
-    ComputerInfo const * getComputerInfo(QString const & computer_name) const;
-    QStringList getAvailableOutputTypes() const;
+    bool addTableColumnWithTypeInfo(std::string const & table_id, ColumnInfo & column_info);
+    std::vector<std::string> getAvailableComputersForDataSource(std::string const & row_selector_type, std::string const & data_source_name) const;
+    std::tuple<std::string, bool, std::string> getComputerTypeInfo(std::string const & computer_name) const;
+    ComputerInfo const * getComputerInfo(std::string const & computer_name) const;
+    std::vector<std::string> getAvailableOutputTypes() const;
 
 private:
     DataManager & _data_manager;
     std::shared_ptr<DataManagerExtension> _data_manager_extension;
     std::unique_ptr<ComputerRegistry> _computer_registry;
 
-    QMap<QString, TableInfo> _table_info;
-    QMap<QString, std::shared_ptr<TableView>> _table_views;
+    QMap<std::string, TableInfo> _table_info;
+    QMap<std::string, std::shared_ptr<TableView>> _table_views;
     mutable int _next_table_counter = 1;
 
-    void notify(TableEventType type, QString const & table_id) const;
+    void notify(TableEventType type, std::string const & table_id) const;
 };
 
 #endif // TABLE_REGISTRY_HPP

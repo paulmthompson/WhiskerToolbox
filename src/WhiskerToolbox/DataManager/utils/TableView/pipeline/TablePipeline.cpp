@@ -146,15 +146,10 @@ TableBuildResult TablePipeline::buildTable(TableConfiguration const& config,
     result.total_columns = static_cast<int>(config.columns.size());
     
     try {
-        // Create or update table info in TableManager
-        QString q_table_id = QString::fromStdString(config.table_id);
-        QString q_name = QString::fromStdString(config.name);
-        QString q_description = QString::fromStdString(config.description);
-        
-        if (table_registry_->hasTable(q_table_id)) {
-            table_registry_->updateTableInfo(q_table_id, q_name, q_description);
+        if (table_registry_->hasTable(config.table_id)) {
+            table_registry_->updateTableInfo(config.table_id, config.name, config.description);
         } else {
-            table_registry_->createTable(q_table_id, q_name, q_description);
+            table_registry_->createTable(config.table_id, config.name, config.description);
         }
         
         // Create TableViewBuilder
@@ -216,7 +211,7 @@ TableBuildResult TablePipeline::buildTable(TableConfiguration const& config,
         TableView table_view = builder.build();
         
         // Store the built table in TableManager
-        if (!table_registry_->storeBuiltTable(q_table_id, std::move(table_view))) {
+        if (!table_registry_->storeBuiltTable(config.table_id, std::move(table_view))) {
             result.error_message = "Failed to store built table in TableManager";
             return result;
         }
@@ -288,7 +283,7 @@ TableConfiguration TablePipeline::parseTableConfiguration(nlohmann::json const& 
 bool TablePipeline::applyTransforms(TableConfiguration const& config) {
     if (config.transforms.empty()) return true;
 
-    auto base_id = QString::fromStdString(config.table_id);
+    auto base_id = config.table_id;
     auto base_view_sp = table_registry_->getBuiltTable(base_id);
     if (!base_view_sp) {
         std::cerr << "TablePipeline: Cannot apply transforms, base table not found: " << config.table_id << "\n";
@@ -313,13 +308,13 @@ bool TablePipeline::applyTransforms(TableConfiguration const& config) {
                 TableView derived = pca.apply(*base_view_sp);
 
                 // Prepare output id/name
-                QString out_id = t.output_table_id.empty()
-                                 ? table_registry_->generateUniqueTableId(QString::fromStdString(config.table_id + "_pca"))
-                                 : QString::fromStdString(t.output_table_id);
-                QString out_name = t.output_name.empty()
-                                   ? QString::fromStdString(config.name + " (PCA)")
-                                   : QString::fromStdString(t.output_name);
-                QString out_desc = QString::fromStdString(t.output_description);
+                std::string out_id = t.output_table_id.empty()
+                                 ? table_registry_->generateUniqueTableId(config.table_id + "_pca")
+                                 : t.output_table_id;
+                std::string out_name = t.output_name.empty()
+                                   ? config.name + " (PCA)"
+                                   : t.output_name;
+                std::string out_desc = t.output_description;
 
                 if (!table_registry_->hasTable(out_id)) {
                     table_registry_->createTable(out_id, out_name, out_desc);
@@ -327,7 +322,7 @@ bool TablePipeline::applyTransforms(TableConfiguration const& config) {
                     table_registry_->updateTableInfo(out_id, out_name, out_desc);
                 }
                 if (!table_registry_->storeBuiltTable(out_id, std::move(derived))) {
-                    std::cerr << "TablePipeline: Failed to store transformed table: " << out_id.toStdString() << "\n";
+                    std::cerr << "TablePipeline: Failed to store transformed table: " << out_id << "\n";
                     all_ok = false;
                 }
             } else {
