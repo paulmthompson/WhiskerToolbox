@@ -3,7 +3,7 @@
 #include <QSignalSpy>
 #include <QTest>
 
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget_Refactored.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp"
 #include "Selection/SelectionModes.hpp"
 
 #include "DataManager/Points/Point_Data.hpp"

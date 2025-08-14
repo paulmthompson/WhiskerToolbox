@@ -3,7 +3,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/TimeFrame.hpp"
-#include "SpatialOverlayOpenGLWidget_Refactored.hpp"   
+#include "SpatialOverlayOpenGLWidget.hpp"   
 
 
 #include <QDebug>
