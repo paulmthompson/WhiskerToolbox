@@ -3,8 +3,6 @@
 
 #include "ColumnTypeInfo.hpp"
 #include "IColumn.h"
-#include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/IColumnComputer.h"
 
 #include <memory>
 #include <string>
@@ -12,7 +10,8 @@
 #include <variant>
 #include <vector>
 
-// Forward declaration
+template<typename T>
+class IColumnComputer;
 class TableView;
 
 /**

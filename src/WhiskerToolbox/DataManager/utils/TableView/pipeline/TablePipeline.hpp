@@ -1,23 +1,25 @@
 #ifndef TABLE_PIPELINE_HPP
 #define TABLE_PIPELINE_HPP
 
-#include "DataManager.hpp"
-#include "utils/TableView/core/TableView.h"
-#include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/TableInfo.hpp"
-#include "utils/TableView/TableRegistry.hpp"
+#include "utils/TableView/ComputerRegistryTypes.hpp"
 
 #include <nlohmann/json.hpp>
+
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 #include <unordered_map>
 
-class TableManager;
-class DataManager;
 class ComputerRegistry;
+class DataManager;
 class DataManagerExtension;
+class IComputerBase;
+class IRowSelector;
+class TableManager;
+class TableRegistry;
+class TableViewBuilder;
 
 /**
  * @brief Progress callback for table pipeline execution

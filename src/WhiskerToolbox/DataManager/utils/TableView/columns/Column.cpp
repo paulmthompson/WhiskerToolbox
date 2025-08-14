@@ -1,4 +1,6 @@
 #include "Column.h"
+
+#include "utils/TableView/interfaces/IColumnComputer.h"
 #include "utils/TableView/core/TableView.h"
 
 template<SupportedColumnType T>

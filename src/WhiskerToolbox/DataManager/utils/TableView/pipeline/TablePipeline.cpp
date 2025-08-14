@@ -1,4 +1,6 @@
 #include "TablePipeline.hpp"
+
+#include "utils/TableView/TableRegistry.hpp"
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
