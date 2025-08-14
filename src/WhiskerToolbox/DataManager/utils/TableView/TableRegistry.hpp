@@ -8,10 +8,9 @@
 
 #include "utils/TableView/TableInfo.hpp"
 
-#include <QMap>
-
 #include <memory>
 #include <string>
+#include <map>
 #include <tuple>
 #include <vector>
 
@@ -68,8 +67,8 @@ private:
     std::shared_ptr<DataManagerExtension> _data_manager_extension;
     std::unique_ptr<ComputerRegistry> _computer_registry;
 
-    QMap<std::string, TableInfo> _table_info;
-    QMap<std::string, std::shared_ptr<TableView>> _table_views;
+    std::map<std::string, TableInfo> _table_info;
+    std::map<std::string, std::shared_ptr<TableView>> _table_views;
     mutable int _next_table_counter = 1;
 
     void notify(TableEventType type, std::string const & table_id) const;

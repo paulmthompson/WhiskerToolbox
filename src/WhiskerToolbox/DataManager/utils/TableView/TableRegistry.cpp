@@ -31,21 +31,21 @@ bool TableRegistry::removeTable(std::string const & table_id) {
     if (!hasTable(table_id)) {
         return false;
     }
-    _table_info.remove(table_id);
-    _table_views.remove(table_id);
+    _table_info.erase(table_id);
+    _table_views.erase(table_id);
     std::cout << "Removed table: " << table_id << std::endl;
     notify(TableEventType::Removed, table_id);
     return true;
 }
 
 bool TableRegistry::hasTable(std::string const & table_id) const {
-    return _table_info.contains(table_id);
+    return _table_info.find(table_id) != _table_info.end();
 }
 
 TableInfo TableRegistry::getTableInfo(std::string const & table_id) const {
     auto it = _table_info.find(table_id);
     if (it != _table_info.end()) {
-        return it.value();
+        return it->second;
     }
     return TableInfo();
 }
@@ -54,7 +54,7 @@ std::vector<std::string> TableRegistry::getTableIds() const {
     std::vector<std::string> ids;
     ids.reserve(_table_info.size());
     for (auto it = _table_info.begin(); it != _table_info.end(); ++it) {
-        ids.push_back(it.key());
+        ids.push_back(it->first);
     }
     return ids;
 }
@@ -63,7 +63,7 @@ std::vector<TableInfo> TableRegistry::getAllTableInfo() const {
     std::vector<TableInfo> infos;
     infos.reserve(_table_info.size());
     for (auto it = _table_info.begin(); it != _table_info.end(); ++it) {
-        infos.push_back(it.value());
+        infos.push_back(it->second);
     }
     return infos;
 }
@@ -163,7 +163,7 @@ ColumnInfo TableRegistry::getTableColumn(std::string const & table_id, int colum
     if (!hasTable(table_id)) {
         return ColumnInfo();
     }
-    auto const & table = _table_info.value(table_id);
+    auto const & table = _table_info.at(table_id);
     if (column_index < 0 || column_index >= table.columns.size()) {
         return ColumnInfo();
     }
@@ -191,7 +191,7 @@ bool TableRegistry::storeBuiltTable(std::string const & table_id, TableView tabl
 std::shared_ptr<TableView> TableRegistry::getBuiltTable(std::string const & table_id) const {
     auto it = _table_views.find(table_id);
     if (it != _table_views.end()) {
-        return it.value();
+        return it->second;
     }
     return nullptr;
 }
