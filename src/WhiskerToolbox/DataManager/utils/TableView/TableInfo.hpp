@@ -3,41 +3,40 @@
 
 #include "utils/TableView/columns/ColumnTypeInfo.hpp"
 
-#include <QString>
-#include <QStringList>
 #include <typeindex>
 #include <map>
 #include <string>
+#include <vector>
 
 struct ColumnInfo {
-    QString name;
-    QString description;
-    QString dataSourceName;
-    QString computerName;
+    std::string name;
+    std::string description;
+    std::string dataSourceName;
+    std::string computerName;
 
     ColumnTypeInfo typeInfo;
 
     std::type_index outputType = typeid(void);
-    QString outputTypeName;
+    std::string outputTypeName;
     bool isVectorType = false;
     std::type_index elementType = typeid(void);
-    QString elementTypeName;
+    std::string elementTypeName;
 
     std::map<std::string, std::string> parameters;
 
     ColumnInfo() = default;
-    ColumnInfo(QString column_name, QString column_description = "",
-               QString data_source = "", QString computer = "")
+    ColumnInfo(std::string column_name, std::string column_description = "",
+               std::string data_source = "", std::string computer = "")
         : name(std::move(column_name)),
           description(std::move(column_description)),
           dataSourceName(std::move(data_source)),
           computerName(std::move(computer)) {}
 
-    ColumnInfo(QString column_name, QString column_description,
-               QString data_source, QString computer,
-               std::type_index output_type, QString output_type_name,
+    ColumnInfo(std::string column_name, std::string column_description,
+               std::string data_source, std::string computer,
+               std::type_index output_type, std::string output_type_name,
                bool is_vector_type = false,
-               std::type_index element_type = typeid(void), QString element_type_name = "")
+               std::type_index element_type = typeid(void), std::string element_type_name = "")
         : name(std::move(column_name)),
           description(std::move(column_description)),
           dataSourceName(std::move(data_source)),
@@ -50,15 +49,15 @@ struct ColumnInfo {
 };
 
 struct TableInfo {
-    QString id;
-    QString name;
-    QString description;
-    QString rowSourceName;
-    QStringList columnNames;
-    QList<ColumnInfo> columns;
+    std::string id;
+    std::string name;
+    std::string description;
+    std::string rowSourceName;
+    std::vector<std::string> columnNames;
+    std::vector<ColumnInfo> columns;
 
     TableInfo() = default;
-    TableInfo(QString table_id, QString table_name, QString table_description = "")
+    TableInfo(std::string table_id, std::string table_name, std::string table_description = "")
         : id(std::move(table_id)),
           name(std::move(table_name)),
           description(std::move(table_description)) {}

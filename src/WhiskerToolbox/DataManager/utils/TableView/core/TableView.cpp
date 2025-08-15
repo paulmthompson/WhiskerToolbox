@@ -1,5 +1,11 @@
 #include "TableView.h"
 
+#include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/interfaces/ILineSource.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
+
+
 #include <algorithm>
 #include <set>
 #include <stdexcept>

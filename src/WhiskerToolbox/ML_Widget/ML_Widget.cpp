@@ -53,8 +53,8 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
         auto * reg = _data_manager->getTableRegistry();
         if (!reg) return;
         for (auto const & info: reg->getAllTableInfo()) {
-            if (info.name == name) {
-                _onSelectedTableChanged(info.id);
+            if (QString::fromStdString(info.name) == name) {
+                _onSelectedTableChanged(QString::fromStdString(info.id));
                 break;
             }
         }
@@ -138,7 +138,7 @@ void ML_Widget::_populateAvailableTablesAndColumns() {
     ui->table_select_combo->blockSignals(true);
     ui->table_select_combo->clear();
     for (auto const & info: reg->getAllTableInfo()) {
-        ui->table_select_combo->addItem(info.name);
+        ui->table_select_combo->addItem(QString::fromStdString(info.name));
     }
     ui->table_select_combo->blockSignals(false);
 
@@ -149,8 +149,8 @@ void ML_Widget::_populateAvailableTablesAndColumns() {
         // Trigger for first item
         auto first = ui->table_select_combo->itemText(0);
         for (auto const & info: reg->getAllTableInfo()) {
-            if (info.name == first) {
-                _onSelectedTableChanged(info.id);
+            if (QString::fromStdString(info.name) == first) {
+                _onSelectedTableChanged(QString::fromStdString(info.id));
                 break;
             }
         }
@@ -165,11 +165,11 @@ void ML_Widget::_onSelectedTableChanged(QString const & table_id) {
     ui->prediction_target_combo->clear();
     auto * reg = _data_manager->getTableRegistry();
     if (!reg) return;
-    auto info = reg->getTableInfo(table_id);
+    auto info = reg->getTableInfo(table_id.toStdString());
     // Populate eligible columns: numeric for features; boolean/int for masks/labels; any for prediction target series
     for (int i = 0; i < info.columns.size(); ++i) {
         auto const & c = info.columns[i];
-        QString display = c.name;
+        QString display = QString::fromStdString(c.name);
         // Features: numeric types (double/float/int)
         if (c.outputType == typeid(double) || c.outputType == typeid(float) || c.outputType == typeid(int) || c.outputType == typeid(int64_t)) {
             auto * item = new QListWidgetItem(display, ui->feature_columns_list);
@@ -426,7 +426,7 @@ void ML_Widget::_fitModel() {
     auto * reg = _data_manager->getTableRegistry();
     std::shared_ptr<TableView> table;
     if (reg && !_selected_table_id.isEmpty()) {
-        table = reg->getBuiltTable(_selected_table_id);
+        table = reg->getBuiltTable(_selected_table_id.toStdString());
     }
     arma::Mat<double> feature_array;
     arma::Row<size_t> labels;
@@ -666,7 +666,7 @@ bool ML_Widget::_predictNewData(std::vector<FeatureProcessingWidget::ProcessedFe
     // New table-based prediction if table is selected
     auto * reg = _data_manager->getTableRegistry();
     std::shared_ptr<TableView> table;
-    if (reg && !_selected_table_id.isEmpty()) table = reg->getBuiltTable(_selected_table_id);
+    if (reg && !_selected_table_id.isEmpty()) table = reg->getBuiltTable(_selected_table_id.toStdString());
     arma::Mat<double> prediction_feature_array;
     std::vector<std::size_t> prediction_timestamps; // legacy path only
     std::vector<size_t> kept_rows;

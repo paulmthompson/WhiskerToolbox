@@ -1,5 +1,7 @@
 #include "IntervalReductionComputer.h"
 
+#include "utils/TableView/interfaces/IAnalogSource.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>

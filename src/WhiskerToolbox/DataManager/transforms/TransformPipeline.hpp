@@ -1,9 +1,9 @@
 #ifndef TRANSFORM_PIPELINE_HPP
 #define TRANSFORM_PIPELINE_HPP
 
+#include "TimeFrame/StrongTimeTypes.hpp"
+
 #include "data_transforms.hpp"
-#include "TransformRegistry.hpp"
-#include "../DataManager.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -14,7 +14,6 @@
 #include <vector>
 #include <unordered_map>
 
-// Forward declarations
 class DataManager;
 class TransformRegistry;
 

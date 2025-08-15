@@ -49,6 +49,10 @@ enum class IntervalOverlapOperation : std::uint8_t {
 /**
  * @brief Templated computer for analyzing overlaps between row intervals and column intervals.
  * 
+ * Source type: IIntervalSource
+ * Selector type: Interval
+ * Output type: T
+ * 
  * This computer works with two sets of intervals: the row intervals (from the ExecutionPlan)
  * and the column intervals (from an IIntervalSource). It can perform different operations
  * to analyze their relationships:

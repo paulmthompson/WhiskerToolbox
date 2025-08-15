@@ -7,7 +7,6 @@
 #include <typeindex>
 #include <vector>
 
-// Forward declarations
 class TableView;
 class TableRegistry;
 
@@ -21,7 +20,7 @@ inline std::optional<std::vector<double>> loadScalarAsDoubles(TableRegistry * re
                                                               QString const & columnName,
                                                               size_t expectedRowCount) {
     if (!registry) return std::nullopt;
-    auto view = registry->getBuiltTable(tableId);
+    auto view = registry->getBuiltTable(tableId.toStdString());
     if (!view) return std::nullopt;
     try {
         auto type_idx = view->getColumnTypeIndex(columnName.toStdString());

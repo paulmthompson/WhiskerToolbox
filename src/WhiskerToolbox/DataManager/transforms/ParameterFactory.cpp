@@ -1,4 +1,5 @@
 #include "ParameterFactory.hpp"
+
 #include "Lines/line_alignment.hpp"
 #include "Lines/line_resample.hpp"
 #include "Lines/line_angle.hpp"

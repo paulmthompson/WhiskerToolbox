@@ -1,5 +1,8 @@
 #include "TransformPipeline.hpp"
+
+#include "DataManager.hpp"
 #include "ParameterFactory.hpp"
+#include "TransformRegistry.hpp"
 
 #include <algorithm>
 #include <chrono>

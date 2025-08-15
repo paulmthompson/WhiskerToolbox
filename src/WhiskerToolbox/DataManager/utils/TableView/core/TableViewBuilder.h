@@ -2,17 +2,21 @@
 #define TABLE_VIEW_BUILDER_H
 
 #include "TableView.h"
-#include "utils/TableView/adapters/DataManagerExtension.h"
+
 #include "utils/TableView/columns/Column.h"
 #include "utils/TableView/columns/IColumn.h"
-#include "utils/TableView/interfaces/IColumnComputer.h"
-#include "utils/TableView/interfaces/IMultiColumnComputer.h"
 #include "utils/TableView/interfaces/MultiComputerOutputView.hpp"
-#include "utils/TableView/interfaces/IRowSelector.h"
 
 #include <memory>
 #include <string>
 #include <vector>
+
+class DataManagerExtension;
+template<typename T>
+class IColumnComputer;
+template<typename T>
+class IMultiColumnComputer;
+class IRowSelector;
 
 /**
  * @brief Builder class for constructing TableView objects with a fluent API.
@@ -27,6 +31,8 @@ public:
      * @param dataManager Shared pointer to the data manager extension.
      */
     explicit TableViewBuilder(std::shared_ptr<DataManagerExtension> dataManager);
+
+    ~TableViewBuilder();
 
     /**
      * @brief Sets the row selector that defines the table rows.

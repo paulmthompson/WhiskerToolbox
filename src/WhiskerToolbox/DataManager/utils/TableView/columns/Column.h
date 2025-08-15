@@ -3,8 +3,6 @@
 
 #include "ColumnTypeInfo.hpp"
 #include "IColumn.h"
-#include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/IColumnComputer.h"
 
 #include <memory>
 #include <string>
@@ -12,7 +10,9 @@
 #include <variant>
 #include <vector>
 
-// Forward declaration
+template<typename>
+class IColumnComputer;
+
 class TableView;
 
 /**
@@ -69,25 +69,19 @@ public:
      * @brief Gets the source dependency for this column.
      * @return The name of the required data source.
      */
-    [[nodiscard]] auto getSourceDependency() const -> std::string override {
-        return m_computer->getSourceDependency();
-    }
+    [[nodiscard]]  std::string getSourceDependency() const override;
 
     /**
      * @brief Gets the column dependencies for this column.
      * @return Vector of column names this column depends on.
      */
-    [[nodiscard]] auto getDependencies() const -> std::vector<std::string> override {
-        return m_computer->getDependencies();
-    }
+    [[nodiscard]] std::vector<std::string> getDependencies() const override;
 
     /**
      * @brief Checks if the column data has been materialized.
      * @return True if data is cached, false otherwise.
      */
-    [[nodiscard]] auto isMaterialized() const -> bool override {
-        return std::holds_alternative<std::vector<T>>(m_cache);
-    }
+    [[nodiscard]] bool isMaterialized() const override;
 
     /**
      * @brief Clears the cached data, forcing recomputation on next access.
@@ -104,9 +98,7 @@ private:
      * @param name The name of the column.
      * @param computer The computation strategy for this column.
      */
-    Column(std::string name, std::unique_ptr<IColumnComputer<T>> computer)
-        : m_name(std::move(name)),
-          m_computer(std::move(computer)) {}
+    Column(std::string name, std::unique_ptr<IColumnComputer<T>> computer);
 
     std::string m_name;
     std::unique_ptr<IColumnComputer<T>> m_computer;

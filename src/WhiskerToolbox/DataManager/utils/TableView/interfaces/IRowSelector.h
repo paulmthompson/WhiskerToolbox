@@ -16,7 +16,7 @@
  */
 class IRowSelector {
 public:
-    virtual ~IRowSelector() = default;
+    virtual ~IRowSelector();
     
     /**
      * @brief Gets the total number of rows in the table.

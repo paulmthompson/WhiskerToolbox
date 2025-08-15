@@ -1,6 +1,7 @@
 #include "AnalogTimestampOffsetsMultiComputer.h"
 
 #include "utils/TableView/core/ExecutionPlan.h"
+#include "utils/TableView/interfaces/IAnalogSource.h"
 
 #include <limits>
 #include <stdexcept>
@@ -8,13 +9,13 @@
 #include <utility>
 #include <vector>
 
-auto AnalogTimestampOffsetsMultiComputer::computeBatch(ExecutionPlan const & plan) const -> std::vector<std::vector<double>> {
+std::vector<std::vector<double>> AnalogTimestampOffsetsMultiComputer::computeBatch(ExecutionPlan const & plan) const {
     // Determine base indices from plan: prefer entity-expanded rows, then timestamp indices, else intervals' starts
     std::vector<TimeFrameIndex> baseIndices;
     if (!plan.getRows().empty()) {
         auto const & rows = plan.getRows();
         baseIndices.reserve(rows.size());
-        for (auto const & r : rows) {
+        for (auto const & r: rows) {
             baseIndices.push_back(r.timeIndex);
         }
     } else if (plan.hasIndices()) {
@@ -22,7 +23,7 @@ auto AnalogTimestampOffsetsMultiComputer::computeBatch(ExecutionPlan const & pla
     } else if (plan.hasIntervals()) {
         auto const & intervals = plan.getIntervals();
         baseIndices.reserve(intervals.size());
-        for (auto const & itv : intervals) {
+        for (auto const & itv: intervals) {
             baseIndices.push_back(itv.start);
         }
     } else {
@@ -37,7 +38,7 @@ auto AnalogTimestampOffsetsMultiComputer::computeBatch(ExecutionPlan const & pla
     size_t const rowCount = baseIndices.size();
     std::vector<std::vector<double>> outputs;
     outputs.resize(m_offsets.size());
-    for (auto & vec : outputs) vec.resize(rowCount);
+    for (auto & vec: outputs) vec.resize(rowCount);
 
     // For each offset, compute the shifted indices and fetch values
     for (size_t oi = 0; oi < m_offsets.size(); ++oi) {
@@ -57,19 +58,17 @@ auto AnalogTimestampOffsetsMultiComputer::computeBatch(ExecutionPlan const & pla
     return outputs;
 }
 
-auto AnalogTimestampOffsetsMultiComputer::getOutputNames() const -> std::vector<std::string> {
+std::vector<std::string> AnalogTimestampOffsetsMultiComputer::getOutputNames() const {
     std::vector<std::string> names;
     names.reserve(m_offsets.size());
-    for (int off : m_offsets) {
+    for (int off: m_offsets) {
         if (off == 0) {
             names.emplace_back(".t+0");
         } else if (off > 0) {
             names.emplace_back(".t+" + std::to_string(off));
         } else {
-            names.emplace_back(".t" + std::to_string(off)); // off is negative, already has '-'
+            names.emplace_back(".t" + std::to_string(off));// off is negative, already has '-'
         }
     }
     return names;
 }
-
-

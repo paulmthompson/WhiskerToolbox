@@ -2,12 +2,9 @@
 #define TABLE_VIEW_H
 
 #include "utils/TableView/columns/ColumnTypeInfo.hpp"
-#include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/columns/Column.h"
-#include "utils/TableView/columns/IColumn.h"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/core/RowDescriptor.h"
-#include "utils/TableView/interfaces/IRowSelector.h"
 
 #include <map>
 #include <memory>
@@ -17,7 +14,9 @@
 #include <string>
 #include <vector>
 
-
+class DataManagerExtension;
+class IColumn;
+class IRowSelector;
 class TableViewBuilder;
 
 /**

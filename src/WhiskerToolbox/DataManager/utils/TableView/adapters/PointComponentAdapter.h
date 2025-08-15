@@ -1,13 +1,14 @@
 #ifndef POINT_COMPONENT_ADAPTER_H
 #define POINT_COMPONENT_ADAPTER_H
 
-#include "Points/Point_Data.hpp"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+
+class PointData;
 
 /**
  * @brief Adapter that exposes a component (x or y) of PointData as an analog source.

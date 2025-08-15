@@ -11,6 +11,10 @@
 /**
  * @brief Computer that standardizes (Z-scores) a numerical column.
  * 
+ * Source type: IAnalogSource
+ * Selector type: Timestamp
+ * Output type: double
+ * 
  * This computer takes a single column name as a dependency and produces
  * a standardized version where each value is transformed to:
  * z = (x - mean) / stddev

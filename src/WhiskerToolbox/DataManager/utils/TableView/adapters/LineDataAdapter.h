@@ -1,11 +1,12 @@
 #ifndef LINE_DATA_ADAPTER_H
 #define LINE_DATA_ADAPTER_H
 
-#include "Lines/Line_Data.hpp"
 #include "utils/TableView/interfaces/ILineSource.h"
 
 #include <memory>
 #include <vector>
+
+class LineData;
 
 /**
  * @brief Adapter that exposes LineData as an ILineSource.
@@ -74,11 +75,7 @@ public:
     [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* override;
 
     // IEntityProvider addition: expose EntityId if present
-    [[nodiscard]] auto getEntityIdAt(TimeFrameIndex t, int entityIndex) const -> EntityId override {
-        auto const & ids = m_lineData->getEntityIdsAtTime(t);
-        if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= ids.size()) return 0;
-        return ids[static_cast<size_t>(entityIndex)];
-    }
+    [[nodiscard]] EntityId getEntityIdAt(TimeFrameIndex t, int entityIndex) const override;
 
 private:
     std::shared_ptr<LineData> m_lineData;

@@ -7,7 +7,6 @@ find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Core)
 
 #find_package(unofficial-lmdb CONFIG REQUIRED)
 find_package(CapnProto CONFIG REQUIRED)
@@ -83,6 +82,7 @@ set(DATAMANAGER_SOURCES
         utils/hdf5_mask_load.hpp
         utils/json_helpers.hpp
         utils/map_timeseries.hpp
+        utils/metaprogramming_utils.hpp
         utils/opencv_utility.hpp
         utils/opencv_utility.cpp
         utils/polynomial/polynomial_fit.hpp
@@ -263,7 +263,7 @@ target_link_libraries(DataManager PRIVATE armadillo)
 target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
-target_link_libraries(DataManager PUBLIC Qt6::Core)
+
 #target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
 target_link_libraries(DataManager PRIVATE CapnProto::capnp)
 target_link_libraries(DataManager PRIVATE Whisker-Analysis)

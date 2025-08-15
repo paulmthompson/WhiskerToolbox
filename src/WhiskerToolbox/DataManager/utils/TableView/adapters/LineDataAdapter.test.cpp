@@ -11,7 +11,7 @@
 #include <memory>
 #include <vector>
 
-TEST_CASE("LineDataAdapter getLinesInRange with identical start/end index", "[LineDataAdapter][Lines][Range][SingleIndex]") {
+TEST_CASE("DM - TV - LineDataAdapter getLinesInRange with identical start/end index", "[LineDataAdapter][Lines][Range][SingleIndex]") {
     // Arrange: timeframe and line data with a single time populated
     auto times = std::vector<int>{1,2,3,4,5,6};
     auto timeFrame = std::make_shared<TimeFrame>(times);

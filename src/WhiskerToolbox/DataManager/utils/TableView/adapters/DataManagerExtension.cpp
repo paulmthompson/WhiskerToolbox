@@ -1,5 +1,16 @@
 #include "DataManagerExtension.h"
 
+#include "DataManager.hpp"
+#include "utils/TableView/adapters/AnalogDataAdapter.h"
+#include "utils/TableView/adapters/DigitalEventDataAdapter.h"
+#include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
+#include "utils/TableView/adapters/LineDataAdapter.h"
+#include "utils/TableView/interfaces/IAnalogSource.h"
+#include "utils/TableView/interfaces/IEventSource.h"
+#include "utils/TableView/interfaces/IIntervalSource.h"
+#include "utils/TableView/interfaces/ILineSource.h"
+
+
 #include <iostream>
 
 // Define the static regex

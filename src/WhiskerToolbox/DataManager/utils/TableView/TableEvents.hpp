@@ -1,7 +1,6 @@
 #ifndef TABLE_EVENTS_HPP
 #define TABLE_EVENTS_HPP
 
-#include <optional>
 #include <string>
 
 /**

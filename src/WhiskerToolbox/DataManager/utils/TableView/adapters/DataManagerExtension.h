@@ -1,22 +1,24 @@
 #ifndef DATA_MANAGER_EXTENSION_H
 #define DATA_MANAGER_EXTENSION_H
 
-#include "DataManager.hpp"
-#include "utils/TableView/adapters/AnalogDataAdapter.h"
 #include "utils/TableView/adapters/PointComponentAdapter.h"
-#include "utils/TableView/adapters/DigitalEventDataAdapter.h"
-#include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
-#include "utils/TableView/adapters/LineDataAdapter.h"
-#include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/IEventSource.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
-#include "utils/TableView/interfaces/ILineSource.h"
 
 #include <map>
 #include <memory>
 #include <regex>
 #include <string>
 #include <utility>
+
+class AnalogDataAdapter;
+class DataManager;
+class DigitalEventDataAdapter;
+class DigitalIntervalDataAdapter;
+class IAnalogSource;
+class IEventSource;
+class IIntervalSource;
+class ILineSource;
+class LineDataAdapter;
+
 
 /**
  * @brief Extension to DataManager that provides the TableView factory interface.

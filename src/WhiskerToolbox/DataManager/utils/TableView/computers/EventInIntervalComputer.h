@@ -1,28 +1,34 @@
 #ifndef EVENT_IN_INTERVAL_COMPUTER_H
 #define EVENT_IN_INTERVAL_COMPUTER_H
 
-#include "utils/TableView/interfaces/IColumnComputer.h"
-#include "utils/TableView/interfaces/IEventSource.h"
 #include "utils/TableView/core/ExecutionPlan.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
 
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
+
+class IEventSource;
 
 /**
  * @brief Enumeration of operations that can be performed on events within intervals.
  */
 enum class EventOperation : std::uint8_t {
-    Presence,      ///< Returns bool: true if any events exist in the interval
-    Count,         ///< Returns int: number of events in the interval
-    Gather,        ///< Returns std::vector<float>: all events in the interval
-    Gather_Center  ///< Returns std::vector<float>: all events in the interval, centered relative to interval center
+    Presence,    ///< Returns bool: true if any events exist in the interval
+    Count,       ///< Returns int: number of events in the interval
+    Gather,      ///< Returns std::vector<float>: all events in the interval
+    Gather_Center///< Returns std::vector<float>: all events in the interval, centered relative to interval center
 };
 
 /**
  * @brief Templated computer for processing events within time intervals.
+ * 
+ * Source type: IEventSource
+ * Selector type: Interval
+ * Output type: T
  * 
  * This computer analyzes event data from an IEventSource and performs statistical operations
  * on events that fall within specified time intervals. It supports different analysis modes
@@ -95,10 +101,12 @@ public:
      * @post The computer is ready to process events from the specified source
      * @post getSourceDependency() returns @p sourceName
      */
-    EventInIntervalComputer(std::shared_ptr<IEventSource> source, 
-                           EventOperation operation,
-                           std::string sourceName)
-        : m_source(std::move(source)), m_operation(operation), m_sourceName(std::move(sourceName)) {}
+    EventInIntervalComputer(std::shared_ptr<IEventSource> source,
+                            EventOperation operation,
+                            std::string sourceName)
+        : m_source(std::move(source)),
+          m_operation(operation),
+          m_sourceName(std::move(sourceName)) {}
 
     /**
      * @brief Computes the result for all intervals in the execution plan.
@@ -130,7 +138,7 @@ public:
      * @throws std::runtime_error if the operation type doesn't match the template parameter T
      * @throws std::runtime_error if the source time frame is incompatible with the destination time frame
      */
-    [[nodiscard]] auto compute(const ExecutionPlan& plan) const -> std::vector<T> override;
+    [[nodiscard]] std::vector<T> compute(ExecutionPlan const & plan) const;
 
     /**
      * @brief Returns the name of the data source this computer depends on.
@@ -140,7 +148,7 @@ public:
      * 
      * @return The name of the source dependency as specified in the constructor.
      */
-    [[nodiscard]] auto getSourceDependency() const -> std::string override {
+    [[nodiscard]] std::string getSourceDependency() const {
         return m_sourceName;
     }
 
@@ -171,19 +179,19 @@ private:
      * 
      * @note Time complexity: O(log n) where n is the number of events
      */
-    [[nodiscard]] auto findEventsInInterval(std::span<const TimeFrameIndex> events,
-                                           TimeFrameIndex startIdx,
-                                           TimeFrameIndex endIdx) const -> std::vector<TimeFrameIndex>;
+    [[nodiscard]] std::vector<TimeFrameIndex> findEventsInInterval(std::span<TimeFrameIndex const> events,
+                                                                   TimeFrameIndex startIdx,
+                                                                   TimeFrameIndex endIdx) const;
 };
 
 // Template specializations for different operation types
 template<>
-[[nodiscard]] auto EventInIntervalComputer<bool>::compute(const ExecutionPlan& plan) const -> std::vector<bool>;
+[[nodiscard]] std::vector<bool> EventInIntervalComputer<bool>::compute(ExecutionPlan const & plan) const;
 
 template<>
-[[nodiscard]] auto EventInIntervalComputer<int>::compute(const ExecutionPlan& plan) const -> std::vector<int>;
+[[nodiscard]] std::vector<int> EventInIntervalComputer<int>::compute(ExecutionPlan const & plan) const;
 
 template<>
-[[nodiscard]] auto EventInIntervalComputer<std::vector<float>>::compute(const ExecutionPlan& plan) const -> std::vector<std::vector<float>>;
+[[nodiscard]] std::vector<std::vector<float>> EventInIntervalComputer<std::vector<float>>::compute(ExecutionPlan const & plan) const;
 
-#endif // EVENT_IN_INTERVAL_COMPUTER_H
+#endif// EVENT_IN_INTERVAL_COMPUTER_H

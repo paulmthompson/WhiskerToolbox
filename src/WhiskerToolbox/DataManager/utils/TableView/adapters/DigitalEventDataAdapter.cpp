@@ -1,5 +1,7 @@
 #include "DigitalEventDataAdapter.h"
 
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+
 #include <stdexcept>
 
 DigitalEventDataAdapter::DigitalEventDataAdapter(std::shared_ptr<DigitalEventSeries> digitalEventSeries,
@@ -39,4 +41,9 @@ std::vector<float> DigitalEventDataAdapter::getDataInRange(TimeFrameIndex start,
     }
 
     return result;
+}
+
+EntityId DigitalEventDataAdapter::getEntityIdAt(size_t index) const {
+    auto const & ids = m_digitalEventSeries->getEntityIds();
+    return (index < ids.size()) ? ids[index] : 0;
 }

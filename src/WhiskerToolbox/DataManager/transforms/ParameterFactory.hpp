@@ -2,7 +2,8 @@
 #define PARAMETER_FACTORY_HPP
 
 #include "data_transforms.hpp"
-#include "../DataManager.hpp"
+
+#include "DataManager.hpp"
 
 #include <nlohmann/json.hpp>
 #include <functional>

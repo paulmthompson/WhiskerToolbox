@@ -12,6 +12,10 @@
 /**
  * @brief Multi-output computer that samples x and y at equally spaced positions along a line.
  *
+ * Source type: ILineSource
+ * Selector type: Timestamp
+ * Output type: double
+ * 
  * Given a line source and a Timestamp-based ExecutionPlan, divides the [0,1] fractional
  * length into (segments) equal parts, yielding (segments+1) sample positions. For each
  * position, outputs two columns: x and y, in that order, resulting in 2*(segments+1)

@@ -567,14 +567,15 @@ void EventPlotPropertiesWidget::updateAvailableTables() {
     ui->table_combo->addItem("Select a table...", "");
 
     auto * regTables = _data_manager->getTableRegistry();
-    auto table_ids = regTables ? regTables->getTableIds() : std::vector<QString>{};
+    auto table_ids = regTables ? regTables->getTableIds() : std::vector<std::string>{};
 
     if (table_ids.empty()) {
         ui->table_combo->addItem("No tables available", "");
         ui->table_info_label->setText("Create tables using the Table Designer widget.");
     } else {
         for (const auto& table_id : table_ids) {
-            ui->table_combo->addItem(table_id, table_id);
+            ui->table_combo->addItem(QString::fromStdString(table_id),
+                                     QString::fromStdString(table_id));
         }
         ui->table_info_label->setText(QString("Found %1 tables with built data.").arg(table_ids.size()));
     }
@@ -598,7 +599,7 @@ void EventPlotPropertiesWidget::updateAvailableColumns() {
     }
 
     auto * regA = _data_manager->getTableRegistry();
-    auto table_view = regA->getBuiltTable(selected_table_id);
+    auto table_view = regA->getBuiltTable(selected_table_id.toStdString());
     if (!table_view) {
         ui->column_combo->addItem("Table not built", "");
         return;
@@ -627,7 +628,7 @@ void EventPlotPropertiesWidget::updateAvailableSortColumns() {
     // Row count should match the selected table
     QString base_table_id = getSelectedTableId();
     if (base_table_id.isEmpty()) return;
-    auto base_view = regB->getBuiltTable(base_table_id);
+    auto base_view = regB->getBuiltTable(base_table_id.toStdString());
     if (!base_view) return;
     size_t row_count = base_view->getRowCount();
 
@@ -649,8 +650,8 @@ void EventPlotPropertiesWidget::updateAvailableSortColumns() {
             }
             
 
-            QString label = QString("%1.%2").arg(table_id).arg(QString::fromStdString(column_name));
-            QString key = QString("table:%1:%2").arg(table_id).arg(QString::fromStdString(column_name));
+            QString label = QString("%1.%2").arg(QString::fromStdString(table_id)).arg(QString::fromStdString(column_name));
+            QString key = QString("table:%1:%2").arg(QString::fromStdString(table_id)).arg(QString::fromStdString(column_name));
             ui->sort_primary_combo->addItem(label, key);
             ui->sort_secondary_combo->addItem(label, key);
         }
@@ -784,7 +785,7 @@ void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QSt
     try {
         qDebug() << "EventPlotPropertiesWidget: Attempting to load table data...";
         auto * reg0 = _data_manager->getTableRegistry();
-        auto view0 = reg0 ? reg0->getBuiltTable(table_id) : nullptr;
+        auto view0 = reg0 ? reg0->getBuiltTable(table_id.toStdString()) : nullptr;
         std::vector<std::vector<float>> event_data;
         if (view0) {
             auto variant = view0->getColumnDataVariant(column_name.toStdString());
@@ -800,7 +801,7 @@ void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QSt
             // Evaluate pipeline to get row order/mask, then apply to event_data
             if (_data_manager) {
                 auto * reg2 = _data_manager->getTableRegistry();
-                auto view2 = reg2 ? reg2->getBuiltTable(table_id) : nullptr;
+                auto view2 = reg2 ? reg2->getBuiltTable(table_id.toStdString()) : nullptr;
                 if (view2) {
                     DataViewContext ctx;
                     ctx.tableId = table_id;

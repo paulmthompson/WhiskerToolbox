@@ -2,12 +2,9 @@
 #define COMPUTER_REGISTRY_HPP
 
 #include "utils/TableView/interfaces/IColumnComputer.h"
-#include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/IEventSource.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
-#include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
 
 #include <deque>
 #include <functional>
