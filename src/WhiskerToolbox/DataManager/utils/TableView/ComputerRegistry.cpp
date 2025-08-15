@@ -2,6 +2,7 @@
 
 #include "computers/AnalogTimestampOffsetsMultiComputer.h"
 #include "computers/EventInIntervalComputer.h"
+#include "computers/IntervalOverlapComputer.h"
 #include "computers/IntervalPropertyComputer.h"
 #include "computers/IntervalReductionComputer.h"
 #include "computers/LineSamplingMultiComputer.h"
@@ -721,6 +722,94 @@ void ComputerRegistry::registerBuiltInComputers() {
         };
 
         registerMultiComputer(std::move(info), std::move(factory));
+    }
+
+    // IntervalOverlapComputer - AssignID operation
+    {
+        ComputerInfo info("Interval Overlap Assign ID",
+                         "Find the ID of the column interval that overlaps with each row interval",
+                         typeid(int64_t),
+                         "int64_t",
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IIntervalSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                auto computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+                    *intervalSrc, IntervalOverlapOperation::AssignID, (*intervalSrc)->getName());
+                return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // IntervalOverlapComputer - CountOverlaps operation
+    {
+        ComputerInfo info("Interval Overlap Count",
+                         "Count the number of column intervals that overlap with each row interval",
+                         typeid(int64_t),
+                         "int64_t",
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IIntervalSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                auto computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+                    *intervalSrc, IntervalOverlapOperation::CountOverlaps, (*intervalSrc)->getName());
+                return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // IntervalOverlapComputer - AssignID_Start operation
+    {
+        ComputerInfo info("Interval Overlap Assign Start",
+                         "Find the start index of the column interval that overlaps with each row interval",
+                         typeid(int64_t),
+                         "int64_t",
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IIntervalSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                auto computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+                    *intervalSrc, IntervalOverlapOperation::AssignID_Start, (*intervalSrc)->getName());
+                return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // IntervalOverlapComputer - AssignID_End operation
+    {
+        ComputerInfo info("Interval Overlap Assign End",
+                         "Find the end index of the column interval that overlaps with each row interval",
+                         typeid(int64_t),
+                         "int64_t",
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IIntervalSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                auto computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+                    *intervalSrc, IntervalOverlapOperation::AssignID_End, (*intervalSrc)->getName());
+                return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
     }
     
     std::cout << "Finished registering built-in computers." << std::endl;
