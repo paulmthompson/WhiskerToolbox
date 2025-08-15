@@ -4,6 +4,11 @@
 #include "utils/TableView/core/TableView.h"
 
 template<SupportedColumnType T>
+Column<T>::Column(std::string name, std::unique_ptr<IColumnComputer<T>> computer)
+    : m_name(std::move(name)),
+      m_computer(std::move(computer)) {};
+
+template<SupportedColumnType T>
 auto Column<T>::getValues(TableView * table) -> std::vector<T> const & {
     if (!isMaterialized()) {
         materialize(table);
@@ -26,6 +31,21 @@ void Column<T>::materialize(TableView * table) {
     m_cache = std::move(computed);
 }
 
+template<SupportedColumnType T>
+std::string Column<T>::getSourceDependency() const {
+    return m_computer->getSourceDependency();
+}
+
+
+template<SupportedColumnType T>
+std::vector<std::string> Column<T>::getDependencies() const {
+    return m_computer->getDependencies();
+}
+
+template<SupportedColumnType T>
+bool Column<T>::isMaterialized() const {
+    return std::holds_alternative<std::vector<T>>(m_cache);
+}
 
 // Explicit instantiation for commonly used types
 template class Column<double>;
