@@ -193,9 +193,43 @@ TEST_CASE_METHOD(TableRegistryTestFixture, "DM - TV - AnalogTimestampOffsets via
     REQUIRE(config.row_selector["timestamps"][1] == 500);
     REQUIRE(config.row_selector["timestamps"][2] == 700);
 
-    // Note: Full pipeline execution test would require implementing createRowSelector
-    // in TablePipeline for timestamp selectors. For now, we test configuration parsing.
+    // Now that TimestampSelector is implemented, let's try executing the pipeline
     std::cout << "JSON pipeline configuration loaded and parsed successfully" << std::endl;
+
+    // Execute the pipeline
+    auto pipeline_result = pipeline.execute([](int table_index, std::string const & table_name, int table_progress, int overall_progress) {
+        std::cout << "Building table " << table_index << " (" << table_name << "): "
+                  << table_progress << "% (Overall: " << overall_progress << "%)" << std::endl;
+    });
+
+    if (pipeline_result.success) {
+        std::cout << "Pipeline executed successfully!" << std::endl;
+        std::cout << "Tables completed: " << pipeline_result.tables_completed << "/" << pipeline_result.total_tables << std::endl;
+        std::cout << "Execution time: " << pipeline_result.total_execution_time_ms << " ms" << std::endl;
+
+        // Verify the built table exists
+        auto & registry = getTableRegistry();
+        REQUIRE(registry.hasTable("analog_offsets_test"));
+
+        // Get the built table and verify its structure
+        auto built_table = registry.getBuiltTable("analog_offsets_test");
+        REQUIRE(built_table != nullptr);
+
+        // Check that the table has the expected columns
+        auto column_names = built_table->getColumnNames();
+        std::cout << "Built table has " << column_names.size() << " columns" << std::endl;
+        for (auto const & name: column_names) {
+            std::cout << "  Column: " << name << std::endl;
+        }
+
+        // We expect multiple columns from the multi-output computer
+        REQUIRE(column_names.size() >= 3);// Should have at least 3 columns for offsets -50,0,50
+
+    } else {
+        std::cout << "Pipeline execution failed: " << pipeline_result.error_message << std::endl;
+        // For now, don't fail the test if pipeline execution fails - the implementation may not be complete
+        REQUIRE(pipeline_result.success);
+    }
 }
 
 

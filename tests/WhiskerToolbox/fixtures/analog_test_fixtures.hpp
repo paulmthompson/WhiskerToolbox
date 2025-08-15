@@ -224,11 +224,11 @@ class TableRegistryTestFixture : public AnalogTestFixture {
 protected:
     TableRegistryTestFixture()
         : AnalogTestFixture() {
-        // Initialize TableRegistry with the DataManager
-        m_table_registry = std::make_unique<TableRegistry>(getDataManager());
+        // Use the DataManager's existing TableRegistry instead of creating a new one
+        m_table_registry_ptr = getDataManager().getTableRegistry();
 
-        // Initialize TablePipeline with the TableRegistry
-        m_table_pipeline = std::make_unique<TablePipeline>(m_table_registry.get(), &getDataManager());
+        // Initialize TablePipeline with the existing TableRegistry
+        m_table_pipeline = std::make_unique<TablePipeline>(m_table_registry_ptr, &getDataManager());
     }
 
     ~TableRegistryTestFixture() = default;
@@ -237,19 +237,19 @@ protected:
      * @brief Get the TableRegistry instance
      * @return Reference to the TableRegistry
      */
-    TableRegistry & getTableRegistry() { return *m_table_registry; }
+    TableRegistry & getTableRegistry() { return *m_table_registry_ptr; }
 
     /**
      * @brief Get the TableRegistry instance (const version)
      * @return Const reference to the TableRegistry
      */
-    TableRegistry const & getTableRegistry() const { return *m_table_registry; }
+    TableRegistry const & getTableRegistry() const { return *m_table_registry_ptr; }
 
     /**
      * @brief Get a pointer to the TableRegistry
      * @return Raw pointer to the TableRegistry
      */
-    TableRegistry * getTableRegistryPtr() { return m_table_registry.get(); }
+    TableRegistry * getTableRegistryPtr() { return m_table_registry_ptr; }
 
     /**
      * @brief Get the TablePipeline instance
@@ -270,7 +270,7 @@ protected:
     TablePipeline * getTablePipelinePtr() { return m_table_pipeline.get(); }
 
 private:
-    std::unique_ptr<TableRegistry> m_table_registry;
+    TableRegistry * m_table_registry_ptr; // Points to DataManager's TableRegistry
     std::unique_ptr<TablePipeline> m_table_pipeline;
 };
 
