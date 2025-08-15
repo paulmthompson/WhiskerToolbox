@@ -17,7 +17,7 @@
 #include <vector>
 #include <iostream>
 
-TEST_CASE("LineSamplingMultiComputer basic integration", "[LineSamplingMultiComputer]") {
+TEST_CASE("DM - TV - LineSamplingMultiComputer basic integration", "[LineSamplingMultiComputer]") {
     // Build a simple DataManager and inject LineData
     DataManager dm;
 
@@ -115,7 +115,7 @@ TEST_CASE("LineSamplingMultiComputer basic integration", "[LineSamplingMultiComp
     }
 }
 
-TEST_CASE("LineSamplingMultiComputer handles missing lines as zeros", "[LineSamplingMultiComputer]") {
+TEST_CASE("DM - TV - LineSamplingMultiComputer handles missing lines as zeros", "[LineSamplingMultiComputer]") {
     DataManager dm;
 
     std::vector<int> timeValues = {0, 1, 2};
@@ -173,7 +173,7 @@ TEST_CASE("LineSamplingMultiComputer handles missing lines as zeros", "[LineSamp
     REQUIRE(ys1[1] == Catch::Approx(0.0));
 }
 
-TEST_CASE("LineSamplingMultiComputer can be created via registry", "[LineSamplingMultiComputer][Registry]") {
+TEST_CASE("DM - TV - LineSamplingMultiComputer can be created via registry", "[LineSamplingMultiComputer][Registry]") {
     DataManager dm;
 
     std::vector<int> timeValues = {0, 1};
@@ -248,7 +248,7 @@ TEST_CASE("LineSamplingMultiComputer can be created via registry", "[LineSamplin
     REQUIRE(names.size() == 6);
 }
 
-TEST_CASE("LineSamplingMultiComputer with per-line row expansion drops empty timestamps and samples per entity", "[LineSamplingMultiComputer][Expansion]") {
+TEST_CASE("DM - TV - LineSamplingMultiComputer with per-line row expansion drops empty timestamps and samples per entity", "[LineSamplingMultiComputer][Expansion]") {
     DataManager dm;
 
     // Timeframe with 5 timestamps
@@ -338,7 +338,7 @@ TEST_CASE("LineSamplingMultiComputer with per-line row expansion drops empty tim
     REQUIRE(ysMid[3] == Catch::Approx(5.0));
 }
 
-TEST_CASE("LineSamplingMultiComputer expansion with coexisting analog column retains empty-line timestamps for analog", "[LineSamplingMultiComputer][Expansion][AnalogBroadcast]") {
+TEST_CASE("DM - TV - LineSamplingMultiComputer expansion with coexisting analog column retains empty-line timestamps for analog", "[LineSamplingMultiComputer][Expansion][AnalogBroadcast]") {
     DataManager dm;
 
     std::vector<int> timeValues = {0, 1, 2, 3};
