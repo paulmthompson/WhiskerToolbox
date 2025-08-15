@@ -6,6 +6,8 @@
 #include "Masks/mask_median_filter.hpp"
 #include "Masks/mask_area.hpp"
 #include "AnalogTimeSeries/analog_interval_threshold.hpp"
+#include "DigitalIntervalSeries/digital_interval_group.hpp"
+#include "AnalogTimeSeries/analog_event_threshold.hpp"
 
 #include <iostream>
 
@@ -73,6 +75,7 @@ void ParameterFactory::initializeDefaultSetters() {
         {"Negative (Falling)", IntervalThresholdParams::ThresholdDirection::NEGATIVE},
         {"Absolute (Magnitude)", IntervalThresholdParams::ThresholdDirection::ABSOLUTE}
     };
+
     registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::ThresholdDirection>(
         "Threshold Interval Detection", "direction", &IntervalThresholdParams::direction, threshold_direction_map);
 
@@ -87,14 +90,40 @@ void ParameterFactory::initializeDefaultSetters() {
         {"Ignore Missing Points", IntervalThresholdParams::MissingDataMode::IGNORE}
     };
     registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::MissingDataMode>(
-        "Threshold Interval Detection", "missing_data_mode", &IntervalThresholdParams::missingDataMode, missing_data_mode_map); 
+        "Threshold Interval Detection", "missing_data_mode", &IntervalThresholdParams::missingDataMode, missing_data_mode_map);
 
-    // Example: Register LineResample parameters (uncomment when parameters exist)
-    // registerBasicParameter<LineResampleParameters, int>(
-    //     "Line Resample", "num_points", &LineResampleParameters::num_points);
-    // registerBasicParameter<LineResampleParameters, bool>(
-    //     "Line Resample", "preserve_endpoints", &LineResampleParameters::preserve_endpoints);
-    
+    registerBasicParameter<GroupParams, double>(
+        "Group Intervals", "max_spacing", &GroupParams::maxSpacing);
+
+    registerBasicParameter<ThresholdParams, double>(
+        "Threshold Event Detection", "threshold_value", &ThresholdParams::thresholdValue);
+
+    std::unordered_map<std::string, ThresholdParams::ThresholdDirection> event_direction_map = {
+        {"Positive (Rising)", ThresholdParams::ThresholdDirection::POSITIVE},
+        {"Negative (Falling)", ThresholdParams::ThresholdDirection::NEGATIVE},
+        {"Absolute (Magnitude)", ThresholdParams::ThresholdDirection::ABSOLUTE}
+    };
+
+    registerEnumParameter<ThresholdParams, ThresholdParams::ThresholdDirection>(
+        "Threshold Event Detection", "direction", &ThresholdParams::direction, event_direction_map);
+
+    registerBasicParameter<ThresholdParams, double>(
+        "Threshold Event Detection", "lockout_time", &ThresholdParams::lockoutTime);
+
+    // Register Line Resample parameters
+    std::unordered_map<std::string, LineSimplificationAlgorithm> line_simplification_map = {
+        {"Fixed Spacing", LineSimplificationAlgorithm::FixedSpacing},
+        {"Douglas-Peucker", LineSimplificationAlgorithm::DouglasPeucker}
+    };
+    registerEnumParameter<LineResampleParameters, LineSimplificationAlgorithm>(
+        "Resample Line", "algorithm", &LineResampleParameters::algorithm, line_simplification_map);
+
+    registerBasicParameter<LineResampleParameters, float>(
+        "Resample Line", "target_spacing", &LineResampleParameters::target_spacing);
+
+    registerBasicParameter<LineResampleParameters, float>(
+        "Resample Line", "epsilon", &LineResampleParameters::epsilon);
+
     // Example: Register LineAngle parameters
     // registerBasicParameter<LineAngleParameters, float>(
     //     "Line Angle", "segment_length", &LineAngleParameters::segment_length);
