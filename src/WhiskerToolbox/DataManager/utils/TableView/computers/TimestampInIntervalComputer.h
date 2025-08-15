@@ -12,6 +12,10 @@
 /**
  * @brief Computer that returns true if each timestamp lies within any digital interval.
  *
+ * Source type: IIntervalSource
+ * Selector type: Timestamp
+ * Output type: bool
+ * 
  * Works with a TimestampSelector-backed ExecutionPlan. For each row timestamp t,
  * returns true if there exists an interval [start, end] from the interval source
  * such that start <= t <= end (with timeframe conversion handled by the adapter).

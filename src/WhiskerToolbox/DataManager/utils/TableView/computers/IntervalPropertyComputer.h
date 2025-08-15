@@ -22,6 +22,10 @@ enum class IntervalProperty : std::uint8_t {
 /**
  * @brief Templated computer for extracting properties from time intervals.
  * 
+ * Source type: IIntervalSource
+ * Selector type: Interval
+ * Output type: T
+ * 
  * This computer works with IIntervalSource data and can extract different properties
  * from intervals that are used as row selectors. The template parameter T
  * determines the return type based on the property being extracted:

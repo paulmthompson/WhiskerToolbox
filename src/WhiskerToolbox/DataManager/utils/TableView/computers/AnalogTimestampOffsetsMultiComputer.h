@@ -3,7 +3,6 @@
 
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
 
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -12,6 +11,10 @@ class IAnalogSource;
 
 /**
  * @brief Multi-output computer that samples an analog source at timestamp offsets.
+ * 
+ * Source type: IAnalogSource
+ * Selector type: Timestamp
+ * Output type: double
  *
  * Given a timestamp-based ExecutionPlan, this computer produces one output column per
  * configured offset. For each row timestamp t and for each integer offset o, the output
@@ -38,7 +41,7 @@ public:
      * @param plan Execution plan (Timestamp or entity-expanded rows supported).
      * @return Vector of columns; size equals number of offsets.
      */
-    [[nodiscard]] auto computeBatch(ExecutionPlan const & plan) const -> std::vector<std::vector<double>> override;
+    [[nodiscard]] std::vector<std::vector<double>> computeBatch(ExecutionPlan const & plan) const;
 
     /**
      * @brief Suffix names for each offset output.
@@ -49,12 +52,12 @@ public:
     /**
      * @brief Source dependency name for this computation.
      */
-    [[nodiscard]] auto getSourceDependency() const -> std::string override { return m_sourceName; }
+    [[nodiscard]] std::string getSourceDependency() const { return m_sourceName; }
 
     /**
      * @brief Additional column dependencies (none).
      */
-    [[nodiscard]] auto getDependencies() const -> std::vector<std::string> override { return {}; }
+    [[nodiscard]] std::vector<std::string> getDependencies() const { return {}; }
 
 private:
     std::shared_ptr<IAnalogSource> m_source;

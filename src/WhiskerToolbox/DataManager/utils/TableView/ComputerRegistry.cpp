@@ -1,15 +1,18 @@
 #include "ComputerRegistry.hpp"
 
-#include "computers/IntervalReductionComputer.h"
+#include "computers/AnalogTimestampOffsetsMultiComputer.h"
 #include "computers/EventInIntervalComputer.h"
 #include "computers/IntervalPropertyComputer.h"
-#include "computers/TimestampValueComputer.h"
-#include "computers/AnalogTimestampOffsetsMultiComputer.h"
+#include "computers/IntervalReductionComputer.h"
+#include "computers/LineSamplingMultiComputer.h"
 #include "computers/TimestampInIntervalComputer.h"
+#include "computers/TimestampValueComputer.h"
+
 #include "adapters/PointComponentAdapter.h"
 #include "adapters/LineDataAdapter.h"
+#include "interfaces/IEventSource.h"
 #include "interfaces/ILineSource.h"
-#include "computers/LineSamplingMultiComputer.h"
+
 #include "Points/Point_Data.hpp"
 #include "Lines/Line_Data.hpp"
 

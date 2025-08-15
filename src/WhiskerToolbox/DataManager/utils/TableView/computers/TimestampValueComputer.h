@@ -12,6 +12,10 @@
 /**
  * @brief Computer for extracting values from analog sources at specific timestamps.
  * 
+ * Source type: IAnalogSource
+ * Selector type: Timestamp
+ * Output type: double
+ * 
  * This computer works with timestamp-based row selectors (TimestampSelector) and
  * extracts single values from an analog source at each specified timestamp. It's
  * designed for cases where you want to sample analog data at specific time points

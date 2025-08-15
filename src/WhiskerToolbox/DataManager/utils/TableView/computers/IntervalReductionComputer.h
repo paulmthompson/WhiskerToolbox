@@ -25,6 +25,10 @@ enum class ReductionType : std::uint8_t {
 /**
  * @brief Column computer that performs reduction operations over intervals.
  * 
+ * Source type: IAnalogSource
+ * Selector type: Interval
+ * Output type: double
+ * 
  * This computer takes an analog source and performs reduction operations
  * (mean, max, min, std dev, etc.) over specified intervals. It uses the
  * ExecutionPlan to get interval pairs and computes the reduction for each
