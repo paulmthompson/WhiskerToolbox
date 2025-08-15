@@ -14,8 +14,10 @@
 
 #include "../fixtures/analog_test_fixtures.hpp"
 
+#include <iostream>
 #include <map>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <vector>
 
 TEST_CASE_METHOD(AnalogTestFixture, "DM - TV - AnalogTimestampOffsets with fixture triangular signals", "[AnalogTimestampOffsetsMultiComputer][Fixture]") {
@@ -124,6 +126,76 @@ TEST_CASE_METHOD(AnalogTestFixture, "DM - TV - AnalogTimestampOffsets cross-time
 
     // At t=700 in time frame -> value should be 300 (1000-700)
     REQUIRE(c_0[2] == Catch::Approx(300.0));
+}
+
+TEST_CASE_METHOD(TableRegistryTestFixture, "DM - TV - AnalogTimestampOffsets via JSON pipeline", "[AnalogTimestampOffsetsMultiComputer][JSON][Pipeline]") {
+    // JSON configuration for testing AnalogTimestampOffsetsMultiComputer through TablePipeline
+    char const * json_config = R"({
+        "metadata": {
+            "name": "Analog Timestamp Offsets Test",
+            "description": "Test JSON execution of AnalogTimestampOffsetsMultiComputer",
+            "version": "1.0"
+        },
+        "tables": [
+            {
+                "table_id": "analog_offsets_test",
+                "name": "Analog Timestamp Offsets Test Table",
+                "description": "Test table using AnalogTimestampOffsetsMultiComputer",
+                "row_selector": {
+                    "type": "timestamp",
+                    "timestamps": [100, 500, 700]
+                },
+                "columns": [
+                    {
+                        "name": "AnalogOffsets",
+                        "description": "Analog values at timestamp offsets",
+                        "data_source": "A",
+                        "computer": "Analog Timestamp Offsets",
+                        "parameters": {
+                            "offsets": "-50,0,50"
+                        }
+                    }
+                ]
+            }
+        ]
+    })";
+
+    auto & pipeline = getTablePipeline();
+
+    // Parse the JSON configuration
+    nlohmann::json json_obj = nlohmann::json::parse(json_config);
+
+    // Load configuration into pipeline
+    bool load_success = pipeline.loadFromJson(json_obj);
+    REQUIRE(load_success);
+
+    // Execute the pipeline (this should be mocked/simplified since full pipeline may not be implemented)
+    // For now, let's test that the configuration was loaded correctly
+    auto table_configs = pipeline.getTableConfigurations();
+    REQUIRE(table_configs.size() == 1);
+
+    auto const & config = table_configs[0];
+    REQUIRE(config.table_id == "analog_offsets_test");
+    REQUIRE(config.name == "Analog Timestamp Offsets Test Table");
+    REQUIRE(config.columns.size() == 1);
+
+    auto const & column = config.columns[0];
+    REQUIRE(column["name"] == "AnalogOffsets");
+    REQUIRE(column["computer"] == "Analog Timestamp Offsets");
+    REQUIRE(column["data_source"] == "A");
+    REQUIRE(column["parameters"]["offsets"] == "-50,0,50");
+
+    // Test row selector configuration
+    REQUIRE(config.row_selector["type"] == "timestamp");
+    REQUIRE(config.row_selector["timestamps"].is_array());
+    REQUIRE(config.row_selector["timestamps"].size() == 3);
+    REQUIRE(config.row_selector["timestamps"][0] == 100);
+    REQUIRE(config.row_selector["timestamps"][1] == 500);
+    REQUIRE(config.row_selector["timestamps"][2] == 700);
+
+    // Note: Full pipeline execution test would require implementing createRowSelector
+    // in TablePipeline for timestamp selectors. For now, we test configuration parsing.
+    std::cout << "JSON pipeline configuration loaded and parsed successfully" << std::endl;
 }
 
 

@@ -8,6 +8,8 @@
 #include "DataManager.hpp"
 #include "TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "utils/TableView/TableRegistry.hpp"
+#include "utils/TableView/pipeline/TablePipeline.hpp"
 
 #include <cmath>
 #include <memory>
@@ -177,7 +179,7 @@ private:
         float const amplitude = 100.0f;
 
         for (int i = 0; i <= 1000; ++i) {
-            float value = amplitude * std::sin(2.0f * M_PI * frequency * static_cast<float>(i));
+            float value = amplitude * std::sin(2.0f * static_cast<float>(M_PI) * frequency * static_cast<float>(i));
             sine_values.push_back(value);
             sine_times.emplace_back(i);
         }
@@ -200,7 +202,7 @@ private:
 
         for (int i = 0; i <= 100; ++i) {
             int time_index = i * 10;// 0, 10, 20, ..., 1000
-            float value = amplitude * std::cos(2.0f * M_PI * frequency * static_cast<float>(time_index));
+            float value = amplitude * std::cos(2.0f * static_cast<float>(M_PI) * frequency * static_cast<float>(time_index));
             cosine_values.push_back(value);
             cosine_times.emplace_back(i);// Using i (0-100) as index in time_10 frame
         }
@@ -208,6 +210,68 @@ private:
         auto cosine_signal = std::make_shared<AnalogTimeSeries>(cosine_values, cosine_times);
         getDataManagerPtr()->setData<AnalogTimeSeries>("D", cosine_signal, TimeKey("time_10"));
     }
+};
+
+/**
+ * @brief Test fixture combining AnalogTestFixture with TableRegistry and TablePipeline
+ * 
+ * This fixture provides everything needed to test JSON-based table pipeline execution:
+ * - DataManager with analog test data (from AnalogTestFixture)
+ * - TableRegistry for managing table configurations
+ * - TablePipeline for executing JSON configurations
+ */
+class TableRegistryTestFixture : public AnalogTestFixture {
+protected:
+    TableRegistryTestFixture()
+        : AnalogTestFixture() {
+        // Initialize TableRegistry with the DataManager
+        m_table_registry = std::make_unique<TableRegistry>(getDataManager());
+
+        // Initialize TablePipeline with the TableRegistry
+        m_table_pipeline = std::make_unique<TablePipeline>(m_table_registry.get(), &getDataManager());
+    }
+
+    ~TableRegistryTestFixture() = default;
+
+    /**
+     * @brief Get the TableRegistry instance
+     * @return Reference to the TableRegistry
+     */
+    TableRegistry & getTableRegistry() { return *m_table_registry; }
+
+    /**
+     * @brief Get the TableRegistry instance (const version)
+     * @return Const reference to the TableRegistry
+     */
+    TableRegistry const & getTableRegistry() const { return *m_table_registry; }
+
+    /**
+     * @brief Get a pointer to the TableRegistry
+     * @return Raw pointer to the TableRegistry
+     */
+    TableRegistry * getTableRegistryPtr() { return m_table_registry.get(); }
+
+    /**
+     * @brief Get the TablePipeline instance
+     * @return Reference to the TablePipeline
+     */
+    TablePipeline & getTablePipeline() { return *m_table_pipeline; }
+
+    /**
+     * @brief Get the TablePipeline instance (const version)
+     * @return Const reference to the TablePipeline
+     */
+    TablePipeline const & getTablePipeline() const { return *m_table_pipeline; }
+
+    /**
+     * @brief Get a pointer to the TablePipeline
+     * @return Raw pointer to the TablePipeline
+     */
+    TablePipeline * getTablePipelinePtr() { return m_table_pipeline.get(); }
+
+private:
+    std::unique_ptr<TableRegistry> m_table_registry;
+    std::unique_ptr<TablePipeline> m_table_pipeline;
 };
 
 #endif// ANALOG_TEST_FIXTURES_HPP
