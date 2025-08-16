@@ -1,11 +1,5 @@
 #include "EntityRegistry.hpp"
 
-// Other project headers
-
-
-// Third-party
-
-// Standard
 #include <cassert>
 
 EntityId EntityRegistry::ensureId(std::string const & data_key,

@@ -17,6 +17,9 @@ find_package(LAPACK REQUIRED)
 # Add Observer subdirectory to build the ObserverData library
 add_subdirectory(Observer)
 
+# Add TimeFrame subdirectory to build the TimeFrame library
+add_subdirectory(TimeFrame)
+
 # Add IO plugin system
 add_subdirectory(IO)
 
@@ -24,9 +27,6 @@ set(DATAMANAGER_SOURCES
         DataManager.hpp
         DataManager.cpp
         DataManagerTypes.hpp
-        TimeFrame/TimeFrame.hpp
-        TimeFrame/TimeFrame.cpp
-        TimeFrame/interval_data.hpp
         ConcreteDataFactory.hpp
         ConcreteDataFactory.cpp
 
@@ -67,8 +67,6 @@ set(DATAMANAGER_SOURCES
         Tensors/Tensor_Data.cpp
         Tensors/IO/numpy/Tensor_Data_numpy.cpp
         Tensors/IO/numpy/Tensor_Data_numpy.hpp
-
-        TimeFrame/StrongTimeTypes.hpp
 
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp
@@ -278,6 +276,8 @@ target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 
 # Link to the ObserverData library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
+# Link to the TimeFrame library
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 
 # Link to plugin system

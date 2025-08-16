@@ -18,7 +18,6 @@ message(STATUS ${DATAMANAGER_TEST_SOURCES_TEMP})
 
 add_executable(test_data_manager
         test_data_manager.cpp
-        test_time_frame.cpp
         test_filename_timeframe.cpp
         test_tableview.cpp
         test_data_manager_fixtures.cpp
