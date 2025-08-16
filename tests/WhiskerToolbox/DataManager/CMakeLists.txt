@@ -37,7 +37,8 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/LineSamplingMultiComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/AnalogTimestampOffsetsMultiComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/TimestampInIntervalComputer.test.cpp
-        
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/TimestampValueComputer.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/adapters/LineDataAdapter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/filter/NewFilterInterface.test.cpp
 
