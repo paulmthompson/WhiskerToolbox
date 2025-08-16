@@ -1,6 +1,13 @@
 # CapnProto Plugin CMakeLists.txt
 
-find_package(CapnProto CONFIG REQUIRED)
+# Find CapnProto - make it conditional
+if(ENABLE_CAPNPROTO)
+    find_package(CapnProto CONFIG REQUIRED)
+else()
+    # Create a dummy target so linking doesn't fail
+    add_library(DataManagerIO_CapnProto INTERFACE)
+    return()
+endif()
 
 # Generate CapnProto files
 capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS line_data.capnp)

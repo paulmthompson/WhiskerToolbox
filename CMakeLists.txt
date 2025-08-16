@@ -2,6 +2,20 @@
 # Preamble
 #=============================
 cmake_minimum_required(VERSION 3.25)
+
+# CapnProto data format support - MUST be before project() call
+option(ENABLE_CAPNPROTO "Enable CapnProto serialization support for data loading/saving" ON)
+
+# Configure vcpkg features based on CMake options - MUST be before project() call
+if(ENABLE_CAPNPROTO)
+    set(VCPKG_MANIFEST_FEATURES "capnproto")
+    message(STATUS "CapnProto support: ENABLED")
+else()
+    message(STATUS "CapnProto support: DISABLED")
+endif()
+
+message(STATUS "VCPKG_MANIFEST_FEATURES: ${VCPKG_MANIFEST_FEATURES}")
+
 project(BehaviorToolbox VERSION 0.3.5 LANGUAGES CXX)
 
 include(CTest)
@@ -42,9 +56,6 @@ if (LINUX)
         add_link_options(--coverage)
     endif()
 endif()
-
-# CapnProto data format support
-option(ENABLE_CAPNPROTO "Enable CapnProto serialization support for data loading/saving" ON)
 
 #[[
 Manifest mode from VCPKG will make all dependencies specified in vcpkg.json be associated and installed

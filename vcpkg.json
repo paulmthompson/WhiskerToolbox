@@ -9,9 +9,6 @@
             "name": "boost-circular-buffer"
         },
         {
-            "name": "capnproto"
-        },
-        {
             "name": "ffmpeg",
             "default-features": true,
             "features": [
@@ -51,6 +48,14 @@
         }
 
     ],
+    "features": {
+        "capnproto": {
+            "description": "CapnProto serialization support for binary data formats",
+            "dependencies": [
+                "capnproto"
+            ]
+        }
+    },
     "builtin-baseline": "3508985146f1b1d248c67ead13f8f54be5b4f5da",
     "$comment": "hash corresponds to 2024.08.23",
     "overrides": [
