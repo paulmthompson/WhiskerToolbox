@@ -588,6 +588,9 @@ DataSourceVariant TablePipeline::resolveDataSource(nlohmann::json const & data_s
         if (auto interval_source = data_manager_extension_->getIntervalSource(key)) {
             return interval_source;
         }
+        if (auto line_source = data_manager_extension_->getLineSource(key)) {
+            return line_source;
+        }
 
         std::cerr << "TablePipeline: Could not resolve data source: " << key << std::endl;
         return {};
