@@ -3,7 +3,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TimestampValueComputer.h"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"

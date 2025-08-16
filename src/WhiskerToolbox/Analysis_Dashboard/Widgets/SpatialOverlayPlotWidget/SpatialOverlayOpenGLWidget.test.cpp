@@ -7,7 +7,7 @@
 #include "Selection/SelectionModes.hpp"
 
 #include "DataManager/Points/Point_Data.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
 
 #include <QComboBox>

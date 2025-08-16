@@ -1,7 +1,7 @@
 #ifndef IANALOG_SOURCE_H
 #define IANALOG_SOURCE_H
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <cstddef>
 #include <memory>

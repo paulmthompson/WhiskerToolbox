@@ -1,7 +1,7 @@
 #ifndef IENTITY_PROVIDER_H
 #define IENTITY_PROVIDER_H
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "Entity/EntityTypes.hpp"
 

@@ -2,7 +2,7 @@
 #define BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
 
 #include "Observer/Observer_Data.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityTypes.hpp"
 
 #include <ranges>

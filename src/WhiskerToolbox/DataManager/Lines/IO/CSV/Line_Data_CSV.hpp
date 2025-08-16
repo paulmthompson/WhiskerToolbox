@@ -2,7 +2,7 @@
 #define LINE_DATA_LOADER_HPP
 
 #include "CoreGeometry/lines.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <map>
 #include <string>

@@ -1,7 +1,7 @@
 #ifndef ILINE_SOURCE_H
 #define ILINE_SOURCE_H
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "utils/TableView/interfaces/IEntityProvider.h"
 

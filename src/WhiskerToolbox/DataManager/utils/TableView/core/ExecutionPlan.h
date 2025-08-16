@@ -2,7 +2,7 @@
 #define EXECUTION_PLAN_H
 
 #include "DigitalTimeSeries/interval_data.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/core/DataSourceNameInterner.hpp"
 #include "utils/TableView/core/RowDescriptor.h"
 

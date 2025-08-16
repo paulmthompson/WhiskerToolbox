@@ -1,7 +1,7 @@
 #ifndef IROW_SELECTOR_H
 #define IROW_SELECTOR_H
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
 #include "utils/TableView/core/RowDescriptor.h"
 

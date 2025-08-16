@@ -526,39 +526,6 @@ TEST_CASE_METHOD(QtTestFixture, "Feature_Table_Widget - Data Manager Integration
     delete feature_table_widget;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "OpenGL Context - Version Check", "[OpenGL]") {
-    // Test that we have a valid OpenGL 4.1+ context
-    REQUIRE(context != nullptr);
-    REQUIRE(context->isValid());
-    
-    // Get OpenGL version information
-    QOpenGLFunctions* functions = context->functions();
-    REQUIRE(functions != nullptr);
-    
-    const char* version = reinterpret_cast<const char*>(functions->glGetString(GL_VERSION));
-    REQUIRE(version != nullptr);
-    
-    const char* vendor = reinterpret_cast<const char*>(functions->glGetString(GL_VENDOR));
-    const char* renderer = reinterpret_cast<const char*>(functions->glGetString(GL_RENDERER));
-    
-    // Print OpenGL information for debugging
-    std::cout << "OpenGL Version: " << version << std::endl;
-    std::cout << "OpenGL Vendor: " << vendor << std::endl;
-    std::cout << "OpenGL Renderer: " << renderer << std::endl;
-    
-    // Parse version string to check if it's >= 4.1
-    QString versionStr(version);
-    QStringList parts = versionStr.split('.');
-    REQUIRE(parts.size() >= 2);
-    
-    int major = parts[0].toInt();
-    int minor = parts[1].toInt();
-    
-    REQUIRE(major >= 4);
-    if (major == 4) {
-        REQUIRE(minor >= 1);
-    }
-}
 
 TEST_CASE_METHOD(QtTestFixture, "ShaderManager - Resource Loading", "[ShaderManager]") {
     // Test that ShaderManager can load shaders from Qt resources

@@ -1,7 +1,7 @@
 #include "TablePipeline.hpp"
 
 #include "DataManager.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
 #include "utils/TableView/TableRegistry.hpp"

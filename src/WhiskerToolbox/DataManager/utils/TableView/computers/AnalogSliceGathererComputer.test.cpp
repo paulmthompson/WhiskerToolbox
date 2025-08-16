@@ -6,7 +6,7 @@
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 // Additional includes for extended testing
 #include "DataManager.hpp"

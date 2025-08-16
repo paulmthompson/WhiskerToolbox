@@ -1,7 +1,7 @@
 #ifndef IFILTER_HPP
 #define IFILTER_HPP
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <span>
 #include <vector>

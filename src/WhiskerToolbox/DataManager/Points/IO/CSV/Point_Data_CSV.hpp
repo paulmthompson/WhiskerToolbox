@@ -2,7 +2,7 @@
 #define POINT_DATA_CSV_HPP
 
 #include "CoreGeometry/points.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <map>
 #include <memory>

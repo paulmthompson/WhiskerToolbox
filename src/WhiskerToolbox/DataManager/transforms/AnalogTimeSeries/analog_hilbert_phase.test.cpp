@@ -7,7 +7,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
 #include "transforms/data_transforms.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <vector>
 #include <memory>

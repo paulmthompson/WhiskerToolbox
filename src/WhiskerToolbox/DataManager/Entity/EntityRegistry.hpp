@@ -1,17 +1,9 @@
 #ifndef ENTITYREGISTRY_HPP
 #define ENTITYREGISTRY_HPP
 
-// Prototype/interface header for this implementation
-
-// Other project headers
 #include "Entity/EntityTypes.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
-// Third-party library headers
-
-// Almost-standard headers
-
-// Standard C++ headers
 #include <optional>
 #include <unordered_map>
 

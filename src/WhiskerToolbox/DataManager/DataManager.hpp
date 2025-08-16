@@ -3,7 +3,7 @@
 
 #include "DataManagerTypes.hpp"
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
 #include <filesystem>

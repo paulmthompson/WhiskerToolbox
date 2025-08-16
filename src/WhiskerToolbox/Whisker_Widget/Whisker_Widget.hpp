@@ -5,7 +5,7 @@
 #include "CoreGeometry/points.hpp"// for Point2D
 #include "CoreGeometry/lines.hpp"
 
-#include "DataManager/TimeFrame.hpp"
+#include "DataManager/TimeFrame/TimeFrame.hpp"
 
 #include <QMainWindow>
 #include <QPointer>

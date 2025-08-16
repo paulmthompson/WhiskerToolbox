@@ -1,7 +1,7 @@
 #ifndef IINTERVAL_SOURCE_H
 #define IINTERVAL_SOURCE_H
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
 #include "Entity/EntityTypes.hpp"
 

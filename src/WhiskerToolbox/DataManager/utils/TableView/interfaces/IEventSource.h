@@ -1,7 +1,7 @@
 #ifndef IEVENT_SOURCE_H
 #define IEVENT_SOURCE_H
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityTypes.hpp"
 
 

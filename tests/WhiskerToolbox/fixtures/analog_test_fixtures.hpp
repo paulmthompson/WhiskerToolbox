@@ -6,7 +6,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 #include "utils/TableView/pipeline/TablePipeline.hpp"

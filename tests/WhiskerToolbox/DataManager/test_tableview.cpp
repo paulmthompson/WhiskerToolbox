@@ -16,7 +16,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
 
 #include <memory>

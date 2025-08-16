@@ -3,7 +3,7 @@
 
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <cstdint>
 #include <functional>

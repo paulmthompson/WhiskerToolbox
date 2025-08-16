@@ -1,7 +1,7 @@
 #ifndef ANALOG_TIME_SERIES_STATISTICS_HPP
 #define ANALOG_TIME_SERIES_STATISTICS_HPP
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
 class AnalogTimeSeries;

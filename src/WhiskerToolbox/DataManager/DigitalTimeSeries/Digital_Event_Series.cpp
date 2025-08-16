@@ -1,6 +1,6 @@
 #include "Digital_Event_Series.hpp"
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityRegistry.hpp"
 
 #include <algorithm> // std::sort

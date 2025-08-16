@@ -5,7 +5,7 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 #include "Observer/Observer_Data.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
 
 

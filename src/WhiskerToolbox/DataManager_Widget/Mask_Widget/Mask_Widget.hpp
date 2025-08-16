@@ -3,7 +3,7 @@
 
 #include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
-#include "DataManager/TimeFrame.hpp"
+#include "DataManager/TimeFrame/TimeFrame.hpp"
 
 #include <QModelIndex>
 #include <QWidget>

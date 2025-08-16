@@ -24,8 +24,8 @@ set(DATAMANAGER_SOURCES
         DataManager.hpp
         DataManager.cpp
         DataManagerTypes.hpp
-        TimeFrame.hpp
-        TimeFrame.cpp
+        TimeFrame/TimeFrame.hpp
+        TimeFrame/TimeFrame.cpp
         ConcreteDataFactory.hpp
         ConcreteDataFactory.cpp
 

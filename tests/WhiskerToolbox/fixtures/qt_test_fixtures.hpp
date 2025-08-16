@@ -37,7 +37,7 @@ class TimeFrameIndex;
 #include "ShaderManager/ShaderSourceType.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "CoreGeometry/points.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 

@@ -1,7 +1,7 @@
 #ifndef INTERVAL_DATA_HPP
 #define INTERVAL_DATA_HPP
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <cstdint>
 

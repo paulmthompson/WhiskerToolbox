@@ -2,7 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
 #include <map>

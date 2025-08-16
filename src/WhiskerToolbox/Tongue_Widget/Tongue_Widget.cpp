@@ -7,7 +7,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 
 #include "Grabcut_Widget/Grabcut_Widget.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <QElapsedTimer>

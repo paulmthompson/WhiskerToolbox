@@ -2,7 +2,7 @@
 #define ANALOG_ARMADILLO_HPP
 
 #include "TimeFrame/StrongTimeTypes.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <armadillo>
 

@@ -2,7 +2,7 @@
 #include <catch2/catch_approx.hpp>
 
 #include "Lines/Line_Data.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/interfaces/ILineSource.h"
 #include "CoreGeometry/lines.hpp"

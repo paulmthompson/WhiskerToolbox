@@ -4,7 +4,7 @@
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
 #include "DigitalTimeSeries/interval_data.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 // Additional includes for extended testing
 #include "DataManager.hpp"

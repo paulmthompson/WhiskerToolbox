@@ -4,7 +4,7 @@
 
 #include "DigitalTimeSeries/interval_data.hpp"
 #include "IntervalPropertyComputer.h"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
 

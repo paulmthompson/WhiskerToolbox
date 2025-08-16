@@ -1,7 +1,7 @@
 #ifndef MAP_TIMESERIES_HPP
 #define MAP_TIMESERIES_HPP
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <map>
 #include <vector>

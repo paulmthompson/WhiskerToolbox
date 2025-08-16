@@ -1,16 +1,6 @@
 #ifndef ENTITYTYPES_HPP
 #define ENTITYTYPES_HPP
 
-// Project headers (Lakos order)
-
-// Other project headers
-#include <cstdint>
-
-// Third-party library headers
-
-// Almost-standard/Boost headers
-
-// Standard C++ headers
 #include <cstdint>
 #include <functional>
 #include <string>

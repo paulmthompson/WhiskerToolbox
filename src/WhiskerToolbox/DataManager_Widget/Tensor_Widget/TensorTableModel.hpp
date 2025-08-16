@@ -1,7 +1,7 @@
 #ifndef TENSORTABLEMODEL_HPP
 #define TENSORTABLEMODEL_HPP
 
-#include "DataManager/TimeFrame.hpp"
+#include "DataManager/TimeFrame/TimeFrame.hpp"
 
 #include <QAbstractTableModel>
 
