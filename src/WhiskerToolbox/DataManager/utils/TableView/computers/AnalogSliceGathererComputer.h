@@ -13,6 +13,10 @@
 /**
  * @brief Computer for gathering analog data slices within intervals.
  * 
+ * Source type: IAnalogSource
+ * Selector type: Interval
+ * Output type: std::vector<T>
+ * 
  * This computer strategy is responsible for iterating through an ExecutionPlan
  * of interval index pairs and, for each pair, copying the corresponding slice
  * of data from an IAnalogSource into a new vector. The result is a column where

@@ -1,4 +1,5 @@
 #include "DataManager.hpp"
+#include "ConcreteDataFactory.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -22,6 +23,9 @@
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 
+// Plugin system includes
+#include "IO/PluginLoader.hpp"
+
 #include "loaders/binary_loaders.hpp"
 #include "transforms/Masks/mask_area.hpp"
 
@@ -42,6 +46,65 @@
 #include <regex>
 
 using namespace nlohmann;
+
+/**
+ * @brief Try loading data using plugin system first, fallback to legacy if needed
+ */
+bool tryPluginThenLegacyLoad(
+    DataManager* dm,
+    std::string const& file_path,
+    DM_DataType data_type,
+    nlohmann::json const& item,
+    std::string const& name,
+    std::vector<DataInfo>& data_info_list,
+    class DataFactory* factory
+) {
+    // Extract format if available
+    if (item.contains("format")) {
+        std::string const format = item["format"];
+        
+        // Try plugin system first
+        if (PluginLoader::isFormatSupported(format, data_type)) {
+            std::cout << "Using plugin loader for " << name << " (format: " << format << ")" << std::endl;
+            
+            LoadResult result = PluginLoader::loadData(file_path, data_type, item, factory);
+            if (result.success) {
+                // Handle data setting and post-loading setup based on data type
+                switch (data_type) {
+                    case DM_DataType::Line: {
+                        // Set the LineData in DataManager
+                        if (std::holds_alternative<std::shared_ptr<LineData>>(result.data)) {
+                            auto line_data = std::get<std::shared_ptr<LineData>>(result.data);
+                            
+                            // Set up identity context
+                            if (line_data) {
+                                line_data->setIdentityContext(name, dm->getEntityRegistry());
+                                line_data->rebuildAllEntityIds();
+                            }
+                            
+                            dm->setData<LineData>(name, line_data, TimeKey("time"));
+                            
+                            std::string const color = item.value("color", "0000FF");
+                            data_info_list.push_back({name, "LineData", color});
+                        }
+                        break;
+                    }
+                    // Add other data types as they get plugin support...
+                    default:
+                        std::cerr << "Plugin loaded unsupported data type: " << static_cast<int>(data_type) << std::endl;
+                        return false;
+                }
+                
+                return true;
+            } else {
+                std::cout << "Plugin loading failed for " << name << ": " << result.error_message 
+                         << ", falling back to legacy loader" << std::endl;
+            }
+        }
+    }
+    
+    return false; // Indicates we should use legacy loading
+}
 
 DataManager::DataManager() {
     _times[TimeKey("time")] = std::make_shared<TimeFrame>();
@@ -387,6 +450,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
     // get base path of filepath
     std::filesystem::path const base_path = std::filesystem::path(json_filepath).parent_path();
 
+    // Create factory for plugin system
+    ConcreteDataFactory factory;
+
     // Iterate through JSON array
     for (auto const & item: j) {
 
@@ -475,7 +541,13 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 break;
             }
             case DM_DataType::Line: {
-
+                
+                // Try plugin system first, then fallback to legacy
+                if (tryPluginThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list, &factory)) {
+                    break; // Successfully loaded with plugin
+                }
+                
+                // Legacy loading fallback
                 auto line_data = load_into_LineData(file_path, item);
 
                 // Attach identity context and generate EntityIds

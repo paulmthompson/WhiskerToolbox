@@ -17,12 +17,17 @@ find_package(LAPACK REQUIRED)
 # Add Observer subdirectory to build the ObserverData library
 add_subdirectory(Observer)
 
+# Add IO plugin system
+add_subdirectory(IO)
+
 set(DATAMANAGER_SOURCES
         DataManager.hpp
         DataManager.cpp
         DataManagerTypes.hpp
         TimeFrame.hpp
         TimeFrame.cpp
+        ConcreteDataFactory.hpp
+        ConcreteDataFactory.cpp
 
         Entity/EntityTypes.hpp
         Entity/EntityRegistry.hpp
@@ -276,6 +281,10 @@ target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 # Link to the ObserverData library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
+
+# Link to plugin system
+target_link_libraries(DataManager PRIVATE DataManagerIO)
+target_link_libraries(DataManager PRIVATE DataManagerIO_CapnProto)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManager PRIVATE ${CLANG_OPTIONS})
