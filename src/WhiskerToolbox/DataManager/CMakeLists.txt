@@ -69,8 +69,6 @@ set(DATAMANAGER_SOURCES
         Tensors/IO/numpy/Tensor_Data_numpy.hpp
 
         TimeFrame/StrongTimeTypes.hpp
-        TimeFrame/TimeFrameV2.hpp
-        TimeFrame/TimeFrameV2.cpp
 
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp

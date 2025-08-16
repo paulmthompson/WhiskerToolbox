@@ -17,7 +17,6 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "TimeFrame.hpp"
-#include "TimeFrame/TimeFrameV2.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
 #include <memory>
