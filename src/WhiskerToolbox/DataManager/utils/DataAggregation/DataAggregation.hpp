@@ -2,7 +2,7 @@
 #define DATAMANAGER_DATA_AGGREGATION_HPP
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "Points/Point_Data.hpp"
 
 #include <cstdint>

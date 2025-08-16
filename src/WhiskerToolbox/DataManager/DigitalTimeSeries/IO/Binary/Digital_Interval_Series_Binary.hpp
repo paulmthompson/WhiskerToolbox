@@ -1,7 +1,7 @@
 #ifndef DIGITAL_INTERVAL_SERIES_BINARY_HPP
 #define DIGITAL_INTERVAL_SERIES_BINARY_HPP
 
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 
 #include <string>
 #include <vector>

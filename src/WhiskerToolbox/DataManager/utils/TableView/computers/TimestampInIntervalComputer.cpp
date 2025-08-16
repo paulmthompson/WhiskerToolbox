@@ -1,6 +1,6 @@
 #include "TimestampInIntervalComputer.h"
 
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 
 #include <stdexcept>
 

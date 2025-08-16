@@ -2,7 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "IntervalPropertyComputer.h"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/core/ExecutionPlan.h"

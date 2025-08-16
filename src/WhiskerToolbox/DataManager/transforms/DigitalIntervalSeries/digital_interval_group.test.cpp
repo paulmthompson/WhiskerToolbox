@@ -1,7 +1,7 @@
 #include "digital_interval_group.hpp"
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "transforms/data_transforms.hpp"
 
 #include <catch2/catch_test_macros.hpp>

@@ -1,7 +1,7 @@
 #ifndef MVP_DIGITALINTERVAL_HPP
 #define MVP_DIGITALINTERVAL_HPP
 
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 

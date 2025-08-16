@@ -2,7 +2,7 @@
 #define DIGITAL_INTERVAL_SERIES_HPP
 
 #include "Observer/Observer_Data.hpp"
-#include "interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityTypes.hpp"
 

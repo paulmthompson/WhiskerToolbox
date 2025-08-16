@@ -1,7 +1,7 @@
 #ifndef DIGITAL_INTERVAL_SERIES_CSV_HPP
 #define DIGITAL_INTERVAL_SERIES_CSV_HPP
 
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 
 #include <string>
 #include <vector>

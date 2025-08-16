@@ -4,7 +4,7 @@
 #include "EventInIntervalComputer.h"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IEventSource.h"
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 // Additional includes for extended testing

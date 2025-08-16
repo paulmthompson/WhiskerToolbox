@@ -11,11 +11,11 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DigitalTimeSeries/interval_data.hpp"
 #include "CoreGeometry/points.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/ImageSize.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 

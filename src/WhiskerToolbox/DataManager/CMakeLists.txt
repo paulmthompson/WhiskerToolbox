@@ -26,6 +26,7 @@ set(DATAMANAGER_SOURCES
         DataManagerTypes.hpp
         TimeFrame/TimeFrame.hpp
         TimeFrame/TimeFrame.cpp
+        TimeFrame/interval_data.hpp
         ConcreteDataFactory.hpp
         ConcreteDataFactory.cpp
 
@@ -55,7 +56,6 @@ set(DATAMANAGER_SOURCES
         DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.cpp
         DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp
         DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.cpp
-        DigitalTimeSeries/interval_data.hpp
         DigitalTimeSeries/Digital_Event_Series.hpp
         DigitalTimeSeries/Digital_Event_Series.cpp
         DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.cpp

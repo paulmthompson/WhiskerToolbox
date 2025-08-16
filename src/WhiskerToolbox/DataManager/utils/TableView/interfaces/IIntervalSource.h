@@ -2,7 +2,7 @@
 #define IINTERVAL_SOURCE_H
 
 #include "TimeFrame/TimeFrame.hpp"
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "Entity/EntityTypes.hpp"
 
 #include <memory>

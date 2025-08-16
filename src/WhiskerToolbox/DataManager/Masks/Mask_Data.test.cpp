@@ -1,5 +1,5 @@
 #include "Masks/Mask_Data.hpp"
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include <catch2/catch_test_macros.hpp>
 

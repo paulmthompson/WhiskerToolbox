@@ -1,7 +1,7 @@
 #ifndef EXECUTION_PLAN_H
 #define EXECUTION_PLAN_H
 
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/core/DataSourceNameInterner.hpp"
 #include "utils/TableView/core/RowDescriptor.h"

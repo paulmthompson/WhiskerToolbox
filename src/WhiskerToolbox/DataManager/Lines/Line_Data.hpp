@@ -5,7 +5,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "DigitalTimeSeries/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "Entity/EntityTypes.hpp"
 
