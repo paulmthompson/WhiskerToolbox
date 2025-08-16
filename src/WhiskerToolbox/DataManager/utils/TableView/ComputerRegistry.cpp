@@ -410,6 +410,48 @@ void ComputerRegistry::registerBuiltInComputers() {
         registerComputer(std::move(info), std::move(factory));
     }
     
+    // IntervalReductionComputer - Sum
+    {
+        ComputerInfo info("Interval Sum",
+                         "Calculate sum of values over intervals",
+                         typeid(double),
+                         "double",
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IAnalogSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
+                auto computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Sum);
+                return std::make_unique<ComputerWrapper<double>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // IntervalReductionComputer - Count
+    {
+        ComputerInfo info("Interval Count",
+                         "Count number of values over intervals",
+                         typeid(double),
+                         "double",
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IAnalogSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
+                auto computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Count);
+                return std::make_unique<ComputerWrapper<double>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
     // EventInIntervalComputer - Presence
     {
         ComputerInfo info("Event Presence",
