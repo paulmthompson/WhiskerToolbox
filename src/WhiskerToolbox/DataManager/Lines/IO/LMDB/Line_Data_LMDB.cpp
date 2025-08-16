@@ -1,7 +1,7 @@
 
 #include "Line_Data_LMDB.hpp"
 
-#include "Lines/IO/CAPNP/Line_Data_CAPNP.hpp"
+#include "IO/CapnProto/Serialization.hpp"
 
 #include <capnp/message.h>
 #include <capnp/serialize.h>
@@ -63,7 +63,7 @@ bool saveLineDataToLMDB(LineData const * lineData, std::string const & dbPath, s
     }
 
     // Serialize data
-    auto words = serializeLineData(lineData);
+    auto words = IO::CapnProto::serializeLineData(lineData);
     kj::ArrayPtr<kj::byte> buffer = words.asBytes();
 
     // Set up LMDB values
@@ -135,7 +135,7 @@ std::shared_ptr<LineData> loadLineDataFromLMDB(std::string const & dbPath, std::
             dbValue.mv_size / sizeof(capnp::word));
 
     // Deserialize
-    auto lineData = deserializeLineData(messageData);
+    auto lineData = IO::CapnProto::deserializeLineData(messageData);
 
     // Cleanup
     mdb_txn_abort(txn);

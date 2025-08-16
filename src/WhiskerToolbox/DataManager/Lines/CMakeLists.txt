@@ -6,10 +6,6 @@ set(lines_subdirectory_sources
         IO/CSV/Line_Data_CSV.cpp
         IO/HDF5/Line_Data_HDF5.hpp
         IO/HDF5/Line_Data_HDF5.cpp
-        IO/CAPNP/Line_Data_CAPNP.hpp
-        IO/CAPNP/Line_Data_CAPNP.cpp
-        IO/CAPNP/line_data.capnp.h
-        IO/CAPNP/line_data.capnp.c++
         IO/Binary/Line_Data_Binary.hpp
         IO/Binary/Line_Data_Binary.cpp
         IO/JSON/Line_Data_JSON.hpp

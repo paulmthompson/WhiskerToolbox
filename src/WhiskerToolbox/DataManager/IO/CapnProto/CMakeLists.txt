@@ -8,6 +8,8 @@ capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS line_data.capnp)
 set(CAPNPROTO_PLUGIN_SOURCES
     CapnProtoLoader.hpp
     CapnProtoLoader.cpp
+    Serialization.hpp
+    Serialization.cpp
     ${CAPNP_SRCS}
     ${CAPNP_HDRS}
 )

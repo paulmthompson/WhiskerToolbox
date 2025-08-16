@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 find_package(nlohmann_json CONFIG REQUIRED)
 
 #find_package(unofficial-lmdb CONFIG REQUIRED)
-find_package(CapnProto CONFIG REQUIRED)
+#find_package(CapnProto CONFIG REQUIRED)
 #find_package(RocksDB CONFIG REQUIRED)
 
 find_package(LAPACK REQUIRED)
@@ -270,7 +270,7 @@ target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 
 #target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
-target_link_libraries(DataManager PRIVATE CapnProto::capnp)
+#target_link_libraries(DataManager PRIVATE CapnProto::capnp)
 target_link_libraries(DataManager PRIVATE Whisker-Analysis)
 #target_link_libraries(DataManager PRIVATE RocksDB::rocksdb RocksDB::rocksdb-shared)
 

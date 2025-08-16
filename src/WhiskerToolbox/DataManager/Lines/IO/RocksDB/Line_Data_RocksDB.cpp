@@ -1,6 +1,7 @@
 
 #include "Line_Data_RocksDB.hpp"
-#include "Lines/IO/CAPNP/line_data.capnp.h" // Generated Cap'n Proto header
+#include "IO/CapnProto/line_data.capnp.h" // Generated Cap'n Proto header
+#include "IO/CapnProto/Serialization.hpp"
 
 #include <rocksdb/db.h>
 #include <rocksdb/options.h>

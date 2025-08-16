@@ -1,13 +1,17 @@
-#include "Line_Data_CAPNP.hpp"
-
+#include "Serialization.hpp"
 #include "line_data.capnp.h"
 
+// Include the actual LineData implementation
 #include "Lines/Line_Data.hpp"
+#include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/points.hpp"
 
 #include <vector>
 #include <iostream>
 
-kj::Array<capnp::word> serializeLineData(LineData const * lineData) {
+namespace IO::CapnProto {
+
+kj::Array<capnp::word> serializeLineData(LineData const* lineData) {
     capnp::MallocMessageBuilder message;
     LineDataProto::Builder lineDataProto = message.initRoot<LineDataProto>();
 
@@ -23,7 +27,7 @@ kj::Array<capnp::word> serializeLineData(LineData const * lineData) {
         auto linesList = timeLine.initLines(lines.size());
 
         for (size_t j = 0; j < lines.size(); j++) {
-            Line2D const & line = lines[j];
+            Line2D const& line = lines[j];
             auto lineBuilder = linesList[j];
             auto pointsList = lineBuilder.initPoints(line.size());
 
@@ -82,3 +86,5 @@ std::shared_ptr<LineData> deserializeLineData(
 
     return std::make_shared<LineData>(dataMap);
 }
+
+} // namespace IO::CapnProto

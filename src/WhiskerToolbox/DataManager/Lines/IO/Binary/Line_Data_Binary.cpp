@@ -1,6 +1,6 @@
 #include "Line_Data_Binary.hpp"
 
-#include "Lines/IO/CAPNP/Line_Data_CAPNP.hpp"
+#include "IO/CapnProto/Serialization.hpp"
 #include "Lines/Line_Data.hpp"
 
 #include <capnp/message.h>
@@ -25,7 +25,7 @@ bool save(LineData const & data, BinaryLineSaverOptions & opts) {
 
     try {
 
-        kj::Array<capnp::word> message_words = serializeLineData(&data);
+        kj::Array<capnp::word> message_words = IO::CapnProto::serializeLineData(&data);
         kj::ArrayPtr<char const> message_chars = message_words.asChars();
 
         std::ofstream outfile(file_path, std::ios::binary | std::ios::trunc);
@@ -88,7 +88,7 @@ std::shared_ptr<LineData> load(BinaryLineLoaderOptions & opts) {
 
         capnp::ReaderOptions options;
         options.traversalLimitInWords = 256ull * 1024 * 1024;
-        return deserializeLineData(words.asPtr(), options);
+        return IO::CapnProto::deserializeLineData(words.asPtr(), options);
 
     } catch (kj::Exception const & e) {
         std::cerr << "Cap'n Proto Exception during load: " << e.getDescription().cStr() << std::endl;
