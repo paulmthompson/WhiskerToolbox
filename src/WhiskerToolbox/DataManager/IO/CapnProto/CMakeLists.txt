@@ -10,6 +10,8 @@ set(CAPNPROTO_PLUGIN_SOURCES
     CapnProtoLoader.cpp
     Serialization.hpp
     Serialization.cpp
+    Line_Data_Binary.hpp
+    Line_Data_Binary.cpp
     ${CAPNP_SRCS}
     ${CAPNP_HDRS}
 )

@@ -43,6 +43,9 @@ if (LINUX)
     endif()
 endif()
 
+# CapnProto data format support
+option(ENABLE_CAPNPROTO "Enable CapnProto serialization support for data loading/saving" ON)
+
 #[[
 Manifest mode from VCPKG will make all dependencies specified in vcpkg.json be associated and installed
 with this particular project

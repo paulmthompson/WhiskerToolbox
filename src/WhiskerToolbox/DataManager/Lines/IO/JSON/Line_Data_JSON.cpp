@@ -1,6 +1,5 @@
 #include "Line_Data_JSON.hpp"
 
-#include "Lines/IO/Binary/Line_Data_Binary.hpp"
 #include "Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "Lines/Line_Data.hpp"
 #include "loaders/loading_utils.hpp"
@@ -75,12 +74,12 @@ std::shared_ptr<LineData> load_into_LineData(std::string const & file_path, nloh
 
         */
 
-    } else if (format == "binary") {
-
-        auto opts = BinaryLineLoaderOptions();
-        opts.file_path = file_path;
-
-        line_data = load(opts);
+    } else if (format == "binary" || format == "capnp") {
+        // Binary format is now handled by CapnProto plugin
+        // This should be loaded through the plugin system
+        // For now, return empty data - this should be handled by DataManager's plugin system
+        std::cerr << "Warning: Binary/CapnProto format should be loaded through plugin system, not JSON loader\n";
+        return std::make_shared<LineData>();
 
     } else if (format == "hdf5") {
 

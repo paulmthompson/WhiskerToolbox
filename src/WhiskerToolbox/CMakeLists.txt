@@ -384,9 +384,6 @@ set(PROJECT_SOURCES
         IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.cpp
         IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp
         IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.ui
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.ui
 
         IO_Widgets/Points/Point_Loader_Widget.hpp
         IO_Widgets/Points/Point_Loader_Widget.cpp
@@ -426,12 +423,6 @@ set(PROJECT_SOURCES
         IO_Widgets/Lines/CSV/CSVLineSaver_Widget.cpp
         IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp
         IO_Widgets/Lines/CSV/CSVLineSaver_Widget.ui
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.cpp
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.ui
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.cpp
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.hpp
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.ui
         IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.hpp
         IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.cpp
         IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.ui
@@ -442,9 +433,6 @@ set(PROJECT_SOURCES
         IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.cpp
         IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp
         IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.ui
         IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.cpp
         IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp
         IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.ui
@@ -489,6 +477,29 @@ set(PROJECT_SOURCES
         Test_Widget/Test_Widget.ui
 )
 
+# Conditionally add CapnProto-dependent Binary widget sources
+if(ENABLE_CAPNPROTO)
+    list(APPEND PROJECT_SOURCES
+        # Line Binary Widgets
+        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.cpp
+        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp
+        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.ui
+        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.cpp
+        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.hpp
+        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.ui
+        
+        # AnalogTimeSeries Binary Widgets
+        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.cpp
+        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp
+        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.ui
+        
+        # DigitalTimeSeries Binary Widgets
+        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.cpp
+        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp
+        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.ui
+    )
+endif()
+
 if (WIN32)
 
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
@@ -532,6 +543,12 @@ target_include_directories(WhiskerToolbox PRIVATE
 
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer)
+
+# Conditionally link CapnProto plugin for Binary IO widgets
+if(ENABLE_CAPNPROTO)
+    target_link_libraries(WhiskerToolbox PRIVATE DataManagerIO_CapnProto)
+endif()
+
 target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(WhiskerToolbox PRIVATE ShaderManager)

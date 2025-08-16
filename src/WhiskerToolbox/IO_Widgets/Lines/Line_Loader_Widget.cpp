@@ -5,7 +5,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/loaders/hdf5_loaders.hpp"
-#include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp"
+#include "DataManager/IO/CapnProto/Line_Data_Binary.hpp"
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp"
 #include "IO_Widgets/Lines/CSV/CSVLineLoader_Widget.hpp"

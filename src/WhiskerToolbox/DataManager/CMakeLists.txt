@@ -284,7 +284,12 @@ target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 
 # Link to plugin system
 target_link_libraries(DataManager PRIVATE DataManagerIO)
-target_link_libraries(DataManager PRIVATE DataManagerIO_CapnProto)
+
+# Conditionally link CapnProto plugin
+if(ENABLE_CAPNPROTO)
+    target_link_libraries(DataManager PRIVATE DataManagerIO_CapnProto)
+    target_compile_definitions(DataManager PRIVATE ENABLE_CAPNPROTO)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManager PRIVATE ${CLANG_OPTIONS})
