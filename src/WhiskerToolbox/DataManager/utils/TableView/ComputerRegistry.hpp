@@ -16,8 +16,6 @@
 #include <variant>
 #include <vector>
 
-class DataManagerExtension;
-class PointData;
 class TimeFrame;
 
 /**

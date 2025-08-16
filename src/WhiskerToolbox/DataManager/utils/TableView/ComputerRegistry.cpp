@@ -1,5 +1,6 @@
 #include "ComputerRegistry.hpp"
 
+#include "computers/AnalogSliceGathererComputer.h"
 #include "computers/AnalogTimestampOffsetsMultiComputer.h"
 #include "computers/EventInIntervalComputer.h"
 #include "computers/IntervalOverlapComputer.h"
@@ -847,6 +848,52 @@ void ComputerRegistry::registerBuiltInComputers() {
                 auto computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
                     *intervalSrc, IntervalOverlapOperation::AssignID_End, (*intervalSrc)->getName());
                 return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // AnalogSliceGathererComputer - Gather analog data slices within intervals
+    {
+        ComputerInfo info("Analog Slice Gatherer",
+                         "Gather analog data slices within intervals as vectors",
+                         typeid(std::vector<double>),
+                         "std::vector<double>",
+                         typeid(double),
+                         "double",
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IAnalogSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
+                auto computer = std::make_unique<AnalogSliceGathererComputer<std::vector<double>>>(*analogSrc, (*analogSrc)->getName());
+                return std::make_unique<ComputerWrapper<std::vector<double>>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // AnalogSliceGathererComputer - Float version
+    {
+        ComputerInfo info("Analog Slice Gatherer Float",
+                         "Gather analog data slices within intervals as vectors of floats",
+                         typeid(std::vector<float>),
+                         "std::vector<float>",
+                         typeid(float),
+                         "float",
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IAnalogSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
+                auto computer = std::make_unique<AnalogSliceGathererComputer<std::vector<float>>>(*analogSrc, (*analogSrc)->getName());
+                return std::make_unique<ComputerWrapper<std::vector<float>>>(std::move(computer));
             }
             return nullptr;
         };

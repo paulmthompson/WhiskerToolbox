@@ -30,6 +30,7 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/DataAggregation/DataAggregation.test.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/AnalogSliceGathererComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/EventInIntervalComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/IntervalOverlapComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/IntervalPropertyComputer.test.cpp

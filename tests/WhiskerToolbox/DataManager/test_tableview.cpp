@@ -352,9 +352,9 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         
         // Add columns for gathering X and Y slices
         builder.addColumn<std::vector<double>>("X_Slices", 
-            std::make_unique<AnalogSliceGathererComputer<double>>(xSource));
+            std::make_unique<AnalogSliceGathererComputer<std::vector<double>>>(xSource));
         builder.addColumn<std::vector<double>>("Y_Slices", 
-            std::make_unique<AnalogSliceGathererComputer<double>>(ySource));
+            std::make_unique<AnalogSliceGathererComputer<std::vector<double>>>(ySource));
         
         // Build the table
         TableView table = builder.build();
@@ -453,7 +453,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         
         // Add column for gathering X slices
         builder.addColumn<std::vector<double>>("X_Slices", 
-            std::make_unique<AnalogSliceGathererComputer<double>>(xSource));
+            std::make_unique<AnalogSliceGathererComputer<std::vector<double>>>(xSource));
         
         // Build the table
         TableView table = builder.build();
@@ -481,7 +481,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
         
         // Test with null source
-        REQUIRE_THROWS_AS(AnalogSliceGathererComputer<double>(nullptr), std::invalid_argument);
+        REQUIRE_THROWS_AS(AnalogSliceGathererComputer<std::vector<double>>(nullptr), std::invalid_argument);
         
         // Test with valid source but invalid ExecutionPlan (no intervals)
         std::vector<Point2D<float>> points = {{1.0f, 2.0f}};
@@ -496,7 +496,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
         REQUIRE(xSource != nullptr);
         
-        auto computer = std::make_unique<AnalogSliceGathererComputer<double>>(xSource);
+        auto computer = std::make_unique<AnalogSliceGathererComputer<std::vector<double>>>(xSource);
         
         // Create an ExecutionPlan with indices instead of intervals
         ExecutionPlan planWithIndices(std::vector<TimeFrameIndex>{TimeFrameIndex(0)}, nullptr);

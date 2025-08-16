@@ -1,7 +1,7 @@
 #ifndef ANALOG_SLICE_GATHERER_COMPUTER_H
 #define ANALOG_SLICE_GATHERER_COMPUTER_H
 
-#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 
@@ -20,8 +20,8 @@
  * 
  * @tparam T The numeric type for the gathered data (typically double or float).
  */
-template<typename T = double>
-class AnalogSliceGathererComputer : public IColumnComputer<std::vector<T>> {
+template<typename T>
+class AnalogSliceGathererComputer : public IColumnComputer<T> {
 public:
     /**
      * @brief Constructor for AnalogSliceGathererComputer.
@@ -56,7 +56,7 @@ public:
      * @param plan The execution plan containing interval boundaries.
      * @return Vector of vectors, where each inner vector contains the data slice for one interval.
      */
-    [[nodiscard]] auto compute(ExecutionPlan const & plan) const -> std::vector<std::vector<T>> override {
+    [[nodiscard]] auto compute(ExecutionPlan const & plan) const -> std::vector<T> override {
         if (!plan.hasIntervals()) {
             throw std::invalid_argument("ExecutionPlan must contain intervals for AnalogSliceGathererComputer");
         }
@@ -68,7 +68,7 @@ public:
         auto destinationTimeFrame = plan.getTimeFrame();
 
         // This is our final result: a vector of vectors
-        std::vector<std::vector<T>> results;
+        std::vector<T> results;
         results.reserve(intervals.size());
 
         for (auto const & interval: intervals) {
