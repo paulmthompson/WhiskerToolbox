@@ -4,6 +4,10 @@
 #include "IO/DataFactory.hpp"
 #include "IO/DataLoader.hpp"
 
+#include "TimeFrame/TimeFrame.hpp"
+#include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/points.hpp"
+
 /**
  * @brief Concrete factory implementation that creates actual data objects
  * 

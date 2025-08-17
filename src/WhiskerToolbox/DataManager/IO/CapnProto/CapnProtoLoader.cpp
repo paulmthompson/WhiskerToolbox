@@ -97,13 +97,13 @@ LineDataRaw CapnProtoLoader::extractLineDataRaw(
 
     for (auto timeLine: lineDataProto.getTimeLines()) {
         int32_t const time = timeLine.getTime();
-        std::vector<std::vector<std::pair<float, float>>> lines_raw;
+        std::vector<Line2D> lines_raw;
 
         for (auto line: timeLine.getLines()) {
-            std::vector<std::pair<float, float>> line_raw;
+            Line2D line_raw;
 
             for (auto point: line.getPoints()) {
-                line_raw.emplace_back(point.getX(), point.getY());
+                line_raw.push_back(Point2D(point.getX(), point.getY()));
             }
 
             lines_raw.push_back(line_raw);

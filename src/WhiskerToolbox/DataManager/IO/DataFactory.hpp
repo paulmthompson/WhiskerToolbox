@@ -4,12 +4,12 @@
 #include "DataLoader.hpp"
 #include "CoreGeometry/points.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/masks.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+
 #include <memory>
 #include <map>
 #include <vector>
-
-// Forward declarations for time types
-class TimeFrameIndex;
 
 /**
  * @brief Raw data container for deserialized CapnProto data
@@ -18,7 +18,7 @@ class TimeFrameIndex;
  * without depending on specific data type implementations.
  */
 struct LineDataRaw {
-    std::map<int32_t, std::vector<std::vector<std::pair<float, float>>>> time_lines;
+    std::map<int32_t, std::vector<Line2D>> time_lines;
     uint32_t image_width = 0;
     uint32_t image_height = 0;
 };
@@ -30,7 +30,7 @@ struct LineDataRaw {
  * without depending on specific data type implementations.
  */
 struct MaskDataRaw {
-    std::map<int32_t, std::vector<std::vector<std::pair<uint32_t, uint32_t>>>> time_masks;
+    std::map<int32_t, std::vector<Mask2D>> time_masks;
     uint32_t image_width = 0;
     uint32_t image_height = 0;
 };

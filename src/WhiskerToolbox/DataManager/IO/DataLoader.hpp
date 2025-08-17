@@ -2,13 +2,13 @@
 #define DATAMANAGER_IO_DATALOADER_HPP
 
 #include "IOTypes.hpp"
+
 #include <nlohmann/json.hpp>
 
 #include <memory>
 #include <string>
 #include <variant>
 
-// Forward declarations
 class LineData;
 class PointData;
 class MaskData;
