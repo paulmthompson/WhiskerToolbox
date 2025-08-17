@@ -33,7 +33,6 @@ target_link_libraries(LineData PUBLIC
     WhiskerToolbox::ObserverData  # Observer
     TimeFrame                # TimeFrame  
     Entity                   # Entity
-    HighFive                 # For HDF5 support
     nlohmann_json::nlohmann_json  # For JSON support
 )
 
