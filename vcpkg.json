@@ -25,13 +25,6 @@
             "name": "glm"
         },
         {
-            "name": "hdf5",
-            "features": ["cpp"]
-        },
-        {
-            "name": "highfive"
-        },
-        {
             "name": "lapack"
         },
         {
@@ -53,6 +46,16 @@
             "description": "CapnProto serialization support for binary data formats",
             "dependencies": [
                 "capnproto"
+            ]
+        },
+        "hdf5": {
+            "description": "HDF5 support for hierarchical data format loading/saving",
+            "dependencies": [
+                {
+                    "name": "hdf5",
+                    "features": ["cpp"]
+                },
+                "highfive"
             ]
         }
     },

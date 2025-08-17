@@ -43,6 +43,19 @@ target_link_libraries(MaskData PUBLIC
     opencv_core opencv_imgproc opencv_imgcodecs opencv_photo  # For Image processing
 )
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(MaskData PRIVATE ${CLANG_OPTIONS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(MaskData PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(MaskData PRIVATE ${MSVC_WARNINGS})
+endif()
+
 # Set properties
 set_target_properties(MaskData PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}

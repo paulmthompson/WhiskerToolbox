@@ -41,6 +41,19 @@ else()
     target_link_libraries(DataManagerHDF5 PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(DataManagerHDF5 PRIVATE ${CLANG_OPTIONS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(DataManagerHDF5 PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(DataManagerHDF5 PRIVATE ${MSVC_WARNINGS})
+endif()
+
 # Set properties
 set_target_properties(DataManagerHDF5 PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}

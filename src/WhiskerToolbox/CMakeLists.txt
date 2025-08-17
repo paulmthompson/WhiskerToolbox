@@ -1,4 +1,4 @@
-find_package(HighFive CONFIG REQUIRED)
+
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
@@ -523,7 +523,6 @@ qt_add_executable(WhiskerToolbox
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL Qt6::Concurrent)
 
-target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(WhiskerToolbox PRIVATE glm::glm)

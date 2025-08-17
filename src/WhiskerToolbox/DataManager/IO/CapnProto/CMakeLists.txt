@@ -38,6 +38,19 @@ target_link_libraries(DataManagerIO_CapnProto PRIVATE
     NEURALYZER_GEOMETRY
 )
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(DataManagerIO_CapnProto PRIVATE ${CLANG_OPTIONS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(DataManagerIO_CapnProto PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(DataManagerIO_CapnProto PRIVATE ${MSVC_WARNINGS})
+endif()
+
 # The plugin will be linked into DataManager which has access to the data types
 # so we don't need to link them here - we'll use forward declarations and 
 # the parent will provide the implementations

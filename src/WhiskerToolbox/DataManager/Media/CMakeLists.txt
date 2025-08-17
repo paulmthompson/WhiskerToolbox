@@ -62,6 +62,19 @@ if(ENABLE_HDF5)
     target_compile_definitions(MediaData PRIVATE ENABLE_HDF5)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(MediaData PRIVATE ${CLANG_OPTIONS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(MediaData PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(MediaData PRIVATE ${MSVC_WARNINGS})
+endif()
+
 # Set properties
 set_target_properties(MediaData PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}

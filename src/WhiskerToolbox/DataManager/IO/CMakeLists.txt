@@ -32,6 +32,19 @@ if(ENABLE_CAPNPROTO)
     add_subdirectory(CapnProto)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(DataManagerIO PRIVATE ${CLANG_OPTIONS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(DataManagerIO PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(DataManagerIO PRIVATE ${MSVC_WARNINGS})
+endif()
+
 # Set properties
 set_target_properties(DataManagerIO PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}

@@ -36,6 +36,19 @@ target_link_libraries(LineData PUBLIC
     nlohmann_json::nlohmann_json  # For JSON support
 )
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(LineData PRIVATE ${CLANG_OPTIONS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(LineData PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(LineData PRIVATE ${MSVC_WARNINGS})
+endif()
+
 # Set properties
 set_target_properties(LineData PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}

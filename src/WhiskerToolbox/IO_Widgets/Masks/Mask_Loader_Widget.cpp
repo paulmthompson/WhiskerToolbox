@@ -3,13 +3,18 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/IO/HDF5/Mask_Data_HDF5.hpp"
+#include "DataManager/IO/LoaderRegistry.hpp"
+#include "DataManager/ConcreteDataFactory.hpp"
+#include "DataManager/DataManagerTypes.hpp"
 #include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>
 #include <QStackedWidget> // Required for ui->stacked_loader_options
 #include <QComboBox> // Required for ui->loader_type_combo
+#include <QMessageBox>
+
+#include <nlohmann/json.hpp>
 
 #include <filesystem>
 #include <iostream>
@@ -105,25 +110,73 @@ void Mask_Loader_Widget::_loadMultiHDF5MaskFiles(QString const& dir_name, QStrin
 void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, std::string const & mask_suffix) {
     auto mask_key = ui->data_name_text->text().toStdString();
     if (mask_key.empty()) {
-        mask_key = "mask"; 
+        mask_key = std::filesystem::path(filename).stem().string();
+        if (mask_key.empty()) {
+            mask_key = "hdf5_mask"; 
+        }
     }
     if (!mask_suffix.empty()) {
         mask_key += "_" + mask_suffix;
     }
 
-    auto opts = HDF5MaskLoaderOptions();
-    opts.filename = filename;
+    try {
+        // Use the HDF5 loader through the plugin system
+        auto& registry = LoaderRegistry::getInstance();
+        auto const* loader = registry.findLoader("hdf5", toIODataType(DM_DataType::Mask));
+        
+        if (!loader) {
+            QMessageBox::critical(this, "Load Error", "HDF5 loader not found. Please ensure the HDF5 plugin is loaded.");
+            return;
+        }
+        
+        // Create factory for data creation
+        ConcreteDataFactory factory;
+        
+        // Configure HDF5 loading parameters
+        nlohmann::json config;
+        config["frame_key"] = "frames";
+        config["x_key"] = "widths";
+        config["y_key"] = "heights";
+        
+        // Add image size from scaling widget if available
+        ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
+        if (original_size.width > 0 && original_size.height > 0) {
+            config["image_width"] = original_size.width;
+            config["image_height"] = original_size.height;
+        }
+        
+        // Load the data
+        auto result = loader->loadData(filename, toIODataType(DM_DataType::Mask), config, &factory);
+        
+        if (!result.success) {
+            QMessageBox::critical(this, "Load Error", QString::fromStdString("Failed to load HDF5 file: " + result.error_message));
+            return;
+        }
+        
+        // Extract the MaskData from the variant
+        if (!std::holds_alternative<std::shared_ptr<MaskData>>(result.data)) {
+            QMessageBox::critical(this, "Load Error", "Unexpected data type returned from HDF5 loader");
+            return;
+        }
+        
+        auto mask_data_ptr = std::get<std::shared_ptr<MaskData>>(result.data);
+        
+        // Apply scaling if enabled
+        if (ui->scaling_widget->isScalingEnabled()) {
+            ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
+            if (scaled_size.width > 0 && scaled_size.height > 0) {
+                mask_data_ptr->changeImageSize(scaled_size);
+            }
+        }
+        
+        // Store in DataManager
+        _data_manager->setData<MaskData>(mask_key, mask_data_ptr, TimeKey("time"));
+        
+        QMessageBox::information(this, "Load Successful", QString::fromStdString("HDF5 Mask data loaded into " + mask_key));
 
-    auto mask_data_ptr = load(opts);
-
-    _data_manager->setData<MaskData>(mask_key, mask_data_ptr, TimeKey("time"));
-
-    ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
-    mask_data_ptr->setImageSize(original_size);
-
-    if (ui->scaling_widget->isScalingEnabled()) {
-        ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
-        mask_data_ptr->changeImageSize(scaled_size);
+    } catch (std::exception const& e) {
+        std::cerr << "Error loading HDF5 file " << filename << ": " << e.what() << std::endl;
+        QMessageBox::critical(this, "Load Error", QString::fromStdString("Error loading HDF5: " + std::string(e.what())));
     }
 }
 
