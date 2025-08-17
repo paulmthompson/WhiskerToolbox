@@ -6,9 +6,6 @@
             "name": "armadillo"
         },
         {
-            "name": "boost-circular-buffer"
-        },
-        {
             "name": "glib"
         },
         {
@@ -60,6 +57,9 @@
                             "platform": "!osx"
                         }
                     ]
+                },
+                {
+                    "name": "boost-circular-buffer"
                 }
             ]
         }
