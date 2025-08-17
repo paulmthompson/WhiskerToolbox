@@ -14,14 +14,13 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 find_package(LAPACK REQUIRED)
 
-# Add Observer subdirectory to build the ObserverData library
 add_subdirectory(Observer)
 
-# Add TimeFrame subdirectory to build the TimeFrame library
 add_subdirectory(TimeFrame)
 
-# Add Entity subdirectory to build the Entity library
 add_subdirectory(Entity)
+
+add_subdirectory(Lines)
 
 # Add IO plugin system
 add_subdirectory(IO)
@@ -228,7 +227,7 @@ set(DATAMANAGER_SOURCES
 set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
 add_subdirectory(AnalogTimeSeries)
-add_subdirectory(Lines)
+#add_subdirectory(Lines)
 add_subdirectory(Masks)
 add_subdirectory(Points)
 
@@ -279,6 +278,7 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
 # Link to the Entity library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 
 # Link to plugin system

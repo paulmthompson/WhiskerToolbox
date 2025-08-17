@@ -27,12 +27,12 @@ set(CAPNPROTO_PLUGIN_SOURCES
 add_library(DataManagerIO_CapnProto ${CAPNPROTO_PLUGIN_SOURCES})
 
 target_include_directories(DataManagerIO_CapnProto PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../..
     ${CMAKE_CURRENT_BINARY_DIR}  # For generated CapnProto headers
 )
 
 target_link_libraries(DataManagerIO_CapnProto PRIVATE
     DataManagerIO
+    WhiskerToolbox::LineData  # Link to LineData library instead of accessing headers
     CapnProto::capnp
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
