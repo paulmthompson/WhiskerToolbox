@@ -70,8 +70,6 @@ set(DATAMANAGER_SOURCES
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp
         loaders/binary_loaders.hpp
-        loaders/hdf5_loaders.hpp
-        loaders/hdf5_loaders.cpp
         loaders/loading_utils.hpp
         loaders/loading_utils.cpp
 

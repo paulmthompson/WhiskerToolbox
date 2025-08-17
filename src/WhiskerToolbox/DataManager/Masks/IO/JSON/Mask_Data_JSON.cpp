@@ -2,7 +2,6 @@
 #include "Mask_Data_JSON.hpp"
 
 #include "Masks/Mask_Data.hpp"
-#include "Masks/IO/HDF5/Mask_Data_HDF5.hpp"
 #include "Masks/IO/Image/Mask_Data_Image.hpp"
 
 #include "utils/json_helpers.hpp"
@@ -13,7 +12,7 @@ std::shared_ptr<MaskData> load_into_MaskData(std::string const & file_path, nloh
 
     if (!requiredFieldsExist(item,
                              {"format"},
-                             "Error: Missing required field format. Supported options include hdf5, image"))
+                             "Error: Missing required field format. Supported options include image"))
     {
         return std::make_shared<MaskData>();
     }
@@ -21,25 +20,14 @@ std::shared_ptr<MaskData> load_into_MaskData(std::string const & file_path, nloh
     auto const format = item["format"];
 
     if (format == "hdf5") {
-        if (!requiredFieldsExist(item,
-                                 {"frame_key", "x_key", "y_key"},
-                                 "Error: Missing required fields in Mask Data"))
-        {
-            return std::make_shared<MaskData>();
-        }
-
-        auto opts = HDF5MaskLoaderOptions();
-        opts.filename = file_path;
-        opts.frame_key = item["frame_key"];
-        opts.x_key = item["x_key"];
-        opts.y_key = item["y_key"];
-
-        //std::string const prob_key = item["probability_key"];
-
-        auto mask_data = load(opts);
-
+        // For HDF5 format, delegate to factory to avoid circular dependency
+        // The actual HDF5 loading will be handled by the DataManagerHDF5 plugin
+        
+        std::cerr << "Warning: HDF5 loading through JSON configuration requires DataManagerHDF5 plugin" << std::endl;
+        std::cerr << "Returning empty MaskData. Use direct HDF5 loader instead." << std::endl;
+        
+        auto mask_data = std::make_shared<MaskData>();
         change_image_size_json(mask_data, item);
-
         return mask_data;
 
     } else if (format == "image") {
@@ -70,7 +58,8 @@ std::shared_ptr<MaskData> load_into_MaskData(std::string const & file_path, nloh
         return mask_data;
 
     } else {
-        std::cerr << "Error: Unsupported format '" << format << "' for MaskData. Supported formats: hdf5, image" << std::endl;
+        std::cerr << "Error: Unsupported format '" << format << "' for MaskData. Supported formats: image" << std::endl;
+        std::cerr << "Note: HDF5 format requires direct loading through DataManagerHDF5 plugin" << std::endl;
         return std::make_shared<MaskData>();
     }
 }

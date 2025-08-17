@@ -10,7 +10,7 @@
  * This loader supports loading various data types from HDF5 format files.
  * Currently supports:
  * - MaskData
- * - LineData (future)
+ * - LineData
  */
 class HDF5Loader : public DataLoader {
 public:
@@ -39,6 +39,15 @@ private:
      * @brief Load MaskData from HDF5 file
      */
     LoadResult loadMaskData(
+        std::string const& file_path,
+        nlohmann::json const& config,
+        DataFactory* factory
+    ) const;
+    
+    /**
+     * @brief Load LineData from HDF5 file
+     */
+    LoadResult loadLineData(
         std::string const& file_path,
         nlohmann::json const& config,
         DataFactory* factory

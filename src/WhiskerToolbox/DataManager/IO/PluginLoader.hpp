@@ -7,9 +7,6 @@
 #include <string>
 #include <nlohmann/json.hpp>
 
-// Forward declarations
-class DataManager;
-
 /**
  * @brief High-level interface for loading data using plugins
  * 

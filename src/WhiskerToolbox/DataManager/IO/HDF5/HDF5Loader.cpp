@@ -12,9 +12,8 @@ bool HDF5Loader::supportsDataType(IODataType data_type) const {
     using enum IODataType;
     switch (data_type) {
         case Mask:
+        case Line:
             return true;
-        // case Line:  // Future support
-        //     return true;
         default:
             return false;
     }
@@ -34,6 +33,9 @@ LoadResult HDF5Loader::loadData(
         using enum IODataType;
         if (data_type == Mask) {
             return loadMaskData(file_path, config, factory);
+        }
+        if (data_type == Line) {
+            return loadLineData(file_path, config, factory);
         }
         return LoadResult("Unsupported data type for HDF5 loader");
     } catch (std::exception const& e) {
@@ -119,6 +121,84 @@ LoadResult HDF5Loader::loadMaskData(
         
     } catch (std::exception const& e) {
         return LoadResult("Error loading HDF5 mask data: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5Loader::loadLineData(
+    std::string const& file_path,
+    nlohmann::json const& config,
+    DataFactory* factory
+) const {
+    try {
+        // Extract configuration with defaults
+        std::string frame_key = "frames";
+        std::string x_key = "y";  // Note: x and y are swapped in the original implementation
+        std::string y_key = "x";
+        
+        if (config.contains("frame_key")) {
+            frame_key = config["frame_key"].get<std::string>();
+        }
+        if (config.contains("x_key")) {
+            x_key = config["x_key"].get<std::string>();
+        }
+        if (config.contains("y_key")) {
+            y_key = config["y_key"].get<std::string>();
+        }
+        
+        // Load data using HDF5 utilities
+        auto frames = Loader::read_array_hdf5({file_path, frame_key});
+        auto x_coords = Loader::read_ragged_hdf5({file_path, x_key});
+        auto y_coords = Loader::read_ragged_hdf5({file_path, y_key});
+        
+        if (frames.empty() && x_coords.empty() && y_coords.empty()) {
+            return LoadResult("No data found in HDF5 file: " + file_path);
+        }
+        
+        // Convert to raw data format
+        LineDataRaw raw_data;
+        
+        for (std::size_t i = 0; i < frames.size(); i++) {
+            int32_t frame = frames[i];
+            std::vector<std::vector<std::pair<float, float>>> frame_lines;
+            
+            if (i < x_coords.size() && i < y_coords.size()) {
+                std::vector<std::pair<float, float>> line_points;
+                
+                auto const& x_vec = x_coords[i];
+                auto const& y_vec = y_coords[i];
+                
+                size_t min_size = std::min(x_vec.size(), y_vec.size());
+                for (size_t j = 0; j < min_size; j++) {
+                    line_points.emplace_back(x_vec[j], y_vec[j]);
+                }
+                
+                if (!line_points.empty()) {
+                    frame_lines.push_back(std::move(line_points));
+                }
+            }
+            
+            if (!frame_lines.empty()) {
+                raw_data.time_lines[frame] = std::move(frame_lines);
+            }
+        }
+        
+        // Extract image size from config if available
+        if (config.contains("image_width")) {
+            raw_data.image_width = config["image_width"].get<uint32_t>();
+        }
+        if (config.contains("image_height")) {
+            raw_data.image_height = config["image_height"].get<uint32_t>();
+        }
+        
+        // Create LineData using factory
+        auto line_data = factory->createLineDataFromRaw(raw_data);
+        
+        std::cout << "HDF5 line loading complete: " << frames.size() << " frames loaded" << std::endl;
+        
+        return LoadResult(std::move(line_data));
+        
+    } catch (std::exception const& e) {
+        return LoadResult("Error loading HDF5 line data: " + std::string(e.what()));
     }
 }
 

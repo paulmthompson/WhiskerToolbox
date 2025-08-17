@@ -9,8 +9,6 @@ set(MASKDATA_SOURCES
     IO/Image/Mask_Data_Image.cpp
     IO/JSON/Mask_Data_JSON.hpp
     IO/JSON/Mask_Data_JSON.cpp
-    IO/HDF5/Mask_Data_HDF5.hpp
-    IO/HDF5/Mask_Data_HDF5.cpp
     utils/connected_component.hpp
     utils/connected_component.cpp
     utils/hole_filling.hpp
@@ -43,7 +41,6 @@ target_link_libraries(MaskData PUBLIC
     Entity                   # Entity
     nlohmann_json::nlohmann_json  # For JSON support
     opencv_core opencv_imgproc opencv_imgcodecs opencv_photo  # For Image processing
-    DataManagerHDF5          # For HDF5 utilities
 )
 
 # Set properties

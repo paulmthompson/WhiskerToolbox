@@ -10,13 +10,15 @@ set(DATAMANAGER_HDF5_SOURCES
     HDF5Loader.cpp
     HDF5Init.hpp
     HDF5Init.cpp
+    Mask_Data_HDF5.hpp
+    Mask_Data_HDF5.cpp
 )
 
 # Create the DataManagerHDF5 shared library
 add_library(DataManagerHDF5 SHARED ${DATAMANAGER_HDF5_SOURCES})
 
 # Set up include directories
-target_include_directories(DataManagerHDF5 PUBLIC
+target_include_directories(DataManagerHDF5 PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
@@ -25,9 +27,11 @@ target_include_directories(DataManagerHDF5 PUBLIC
 find_package(HDF5 COMPONENTS CXX REQUIRED)
 
 # Link to required libraries
-target_link_libraries(DataManagerHDF5 PUBLIC
+target_link_libraries(DataManagerHDF5 PRIVATE
     NEURALYZER_GEOMETRY      # CoreGeometry for Point2D
     nlohmann_json::nlohmann_json  # For JSON config parsing
+    WhiskerToolbox::LineData
+    WhiskerToolbox::MaskData
 )
 
 # Platform-specific HDF5 linking

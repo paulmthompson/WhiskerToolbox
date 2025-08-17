@@ -549,6 +549,8 @@ if(ENABLE_CAPNPROTO)
     target_link_libraries(WhiskerToolbox PRIVATE DataManagerIO_CapnProto)
 endif()
 
+target_link_libraries(WhiskerToolbox PRIVATE DataManagerHDF5)
+
 target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(WhiskerToolbox PRIVATE ShaderManager)

@@ -4,7 +4,9 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/loaders/hdf5_loaders.hpp"
+#include "DataManager/IO/LoaderRegistry.hpp"
+#include "DataManager/ConcreteDataFactory.hpp"
+#include "DataManager/DataManagerTypes.hpp"
 #include "DataManager/IO/CapnProto/Line_Data_Binary.hpp"
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp"
@@ -165,36 +167,70 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
     }
     
     try {
-        auto frames = Loader::read_array_hdf5({filename,  "frames"});
-        auto y_coords = Loader::read_ragged_hdf5({filename, "x"}); 
-        auto x_coords = Loader::read_ragged_hdf5({filename, "y"});
-
-        if (frames.empty() && x_coords.empty() && y_coords.empty()){
-            std::cout << "No data loaded from HDF5 file: " << filename << ". File might be empty or datasets not found." << std::endl;
-            QMessageBox::warning(this, "Load Warning", QString::fromStdString("No data found in HDF5 file: " + filename));
+        // Use the new HDF5 loader through the plugin system
+        auto& registry = LoaderRegistry::getInstance();
+        auto const* loader = registry.findLoader("hdf5", toIODataType(DM_DataType::Line));
+        
+        if (!loader) {
+            QMessageBox::critical(this, "Load Error", "HDF5 loader not found. Please ensure the HDF5 plugin is loaded.");
             return;
         }
-
-        _data_manager->setData<LineData>(line_key, TimeKey("time"));
-        auto line_data_ptr = _data_manager->getData<LineData>(line_key);
-
-        for (std::size_t i = 0; i < frames.size(); i++) {
-            if (i < x_coords.size() && i < y_coords.size()) {
-                line_data_ptr->addAtTime(TimeFrameIndex(frames[i]), x_coords[i], y_coords[i]);
-            } else {
-                std::cerr << "Warning: Missing x/y coordinates for frame " << frames[i] << " in file " << filename << std::endl;
-            }
-        }
-
+        
+        // Create factory for data creation
+        ConcreteDataFactory factory;
+        
+        // Configure HDF5 loading parameters
+        nlohmann::json config;
+        config["frame_key"] = "frames";
+        config["x_key"] = "y";  // Note: x and y are swapped in the original implementation
+        config["y_key"] = "x";
+        
+        // Add image size from scaling widget if available
         ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
-        line_data_ptr->setImageSize(original_size);
-
+        if (original_size.width > 0 && original_size.height > 0) {
+            config["image_width"] = original_size.width;
+            config["image_height"] = original_size.height;
+        }
+        
+        // Load the data
+        auto result = loader->loadData(filename, toIODataType(DM_DataType::Line), config, &factory);
+        
+        if (!result.success) {
+            QMessageBox::critical(this, "Load Error", QString::fromStdString("Failed to load HDF5 file: " + result.error_message));
+            return;
+        }
+        
+        // Extract the LineData from the variant
+        if (!std::holds_alternative<std::shared_ptr<LineData>>(result.data)) {
+            QMessageBox::critical(this, "Load Error", "Unexpected data type returned from HDF5 loader");
+            return;
+        }
+        
+        auto line_data_ptr = std::get<std::shared_ptr<LineData>>(result.data);
+        
+        // Apply scaling if enabled
         if (ui->scaling_widget->isScalingEnabled()) {
             ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
             if (scaled_size.width > 0 && scaled_size.height > 0) {
                 line_data_ptr->changeImageSize(scaled_size);
             }
         }
+        
+        // Store in DataManager
+        _data_manager->setData<LineData>(line_key, TimeKey("time"));
+        auto data_manager_line_data = _data_manager->getData<LineData>(line_key);
+        
+        // Copy the loaded data to the DataManager's LineData
+        for (auto const& time : line_data_ptr->getTimesWithData()) {
+            auto const& lines = line_data_ptr->getAtTime(time);
+            for (auto const& line : lines) {
+                data_manager_line_data->addAtTime(time, line, false);
+            }
+        }
+        
+        // Set image size
+        data_manager_line_data->setImageSize(line_data_ptr->getImageSize());
+        
         QMessageBox::information(this, "Load Successful", QString::fromStdString("HDF5 Line data loaded into " + line_key));
 
     } catch (std::exception const& e) {
