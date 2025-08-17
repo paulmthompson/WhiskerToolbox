@@ -13,7 +13,6 @@ set(TIMESCROLLBAR_SOURCES
 # Add conditional video support
 if(ENABLE_FFMPEG)
     list(APPEND TIMESCROLLBAR_SOURCES TimeScrollBar_Video.cpp)
-    target_compile_definitions(TimeScrollBar PRIVATE ENABLE_FFMPEG)
 else()
     list(APPEND TIMESCROLLBAR_SOURCES TimeScrollBar_NoVideo.cpp)
 endif()
@@ -40,6 +39,7 @@ target_link_libraries(TimeScrollBar PRIVATE DataManager)
 # Conditionally link to MediaData when FFMPEG is enabled for video-specific functionality
 if(ENABLE_FFMPEG)
     target_link_libraries(TimeScrollBar PRIVATE MediaData)
+    #target_compile_definitions(TimeScrollBar PRIVATE ENABLE_FFMPEG)
 endif()
 
 # Include directories

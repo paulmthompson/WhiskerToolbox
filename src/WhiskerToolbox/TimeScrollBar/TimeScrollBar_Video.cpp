@@ -1,7 +1,7 @@
 #include "TimeScrollBar.hpp"
-#include "DataManager/DataManager.hpp"
-#include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/Media/Video_Data.hpp"
+#include "DataManager.hpp"
+#include "Media/Media_Data.hpp"
+#include "Media/Video_Data.hpp"
 
 int TimeScrollBar::_getSnapFrame(int current_frame) {
     auto media = _data_manager->getData<MediaData>("media");

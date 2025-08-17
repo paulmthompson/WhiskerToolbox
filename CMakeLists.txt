@@ -10,7 +10,7 @@ option(ENABLE_CAPNPROTO "Enable CapnProto serialization support for data loading
 option(ENABLE_HDF5 "Enable HDF5 support for data loading/saving" ON)
 
 # FFmpeg video support - MUST be before project() call
-option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/processing" OFF)
+option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/processing" ON)
 
 # Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")
