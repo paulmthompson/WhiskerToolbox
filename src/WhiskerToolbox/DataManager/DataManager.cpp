@@ -5,11 +5,13 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "Points/Point_Data.hpp"
+#include "Tensors/Tensor_Data.hpp"
+
+// Media includes - now from separate MediaData library
 #include "Media/Image_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
-#include "Points/Point_Data.hpp"
-#include "Tensors/Tensor_Data.hpp"
 
 #include "AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"

@@ -25,6 +25,9 @@ add_subdirectory(Lines)
 # Add IO plugin system
 add_subdirectory(IO)
 
+# Add Media as a separate library
+add_subdirectory(Media)
+
 set(DATAMANAGER_SOURCES
         DataManager.hpp
         DataManager.cpp
@@ -32,20 +35,6 @@ set(DATAMANAGER_SOURCES
         DataManagerTypes.cpp
         ConcreteDataFactory.hpp
         ConcreteDataFactory.cpp
-
-        Media/Image_Data.cpp
-        Media/Image_Data.hpp
-        Media/Video_Data.cpp
-        Media/Video_Data.hpp
-        Media/Media_Data.hpp
-        Media/Media_Data.cpp
-        Media/HDF5_Data.hpp
-        Media/HDF5_Data.cpp
-        Media/Video_Data_Loader.hpp
-        Media/IO/Image_Data_Loader.hpp
-        Media/IO/Image_Data_Loader.cpp
-        Media/IO/JSON/Image_Data_JSON.hpp
-        Media/IO/JSON/Image_Data_JSON.cpp
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
@@ -245,8 +234,6 @@ target_include_directories(DataManager PRIVATE
     )
 
 
-target_link_libraries(DataManager PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
-
 target_link_libraries(DataManager PRIVATE HighFive)
 
 if (APPLE)
@@ -254,8 +241,6 @@ if (APPLE)
 else()
     target_link_libraries(DataManager PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
 endif()
-
-target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgcodecs opencv_photo)
 
 target_link_libraries(DataManager PRIVATE armadillo)
 target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)
@@ -279,6 +264,7 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 
 # Link to plugin system
