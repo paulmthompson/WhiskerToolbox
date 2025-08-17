@@ -5,7 +5,7 @@
 
 LoadResult PluginLoader::loadData(
     std::string const& file_path,
-    DM_DataType data_type,
+    IODataType data_type,
     nlohmann::json const& config,
     DataFactory* factory
 ) {
@@ -33,7 +33,7 @@ LoadResult PluginLoader::loadData(
     return loader->loadData(file_path, data_type, config, factory);
 }
 
-bool PluginLoader::isFormatSupported(std::string const& format_id, DM_DataType data_type) {
+bool PluginLoader::isFormatSupported(std::string const& format_id, IODataType data_type) {
     auto& registry = LoaderRegistry::getInstance();
     return registry.findLoader(format_id, data_type) != nullptr;
 }

@@ -2,6 +2,7 @@
 #define DATAMANAGER_IO_LOADERREGISTRY_HPP
 
 #include "DataLoader.hpp"
+#include "IOTypes.hpp"
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -35,7 +36,7 @@ public:
      * @param data_type The data type to load
      * @return Pointer to the loader, or nullptr if not found
      */
-    DataLoader const* findLoader(std::string const& format_id, DM_DataType data_type) const;
+    DataLoader const* findLoader(std::string const& format_id, IODataType data_type) const;
     
     /**
      * @brief Get all registered format IDs
@@ -45,7 +46,7 @@ public:
     /**
      * @brief Get all data types supported by a format
      */
-    std::vector<DM_DataType> getSupportedDataTypes(std::string const& format_id) const;
+    std::vector<IODataType> getSupportedDataTypes(std::string const& format_id) const;
 
 private:
     LoaderRegistry() = default;

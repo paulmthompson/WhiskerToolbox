@@ -29,6 +29,7 @@ set(DATAMANAGER_SOURCES
         DataManager.hpp
         DataManager.cpp
         DataManagerTypes.hpp
+        DataManagerTypes.cpp
         ConcreteDataFactory.hpp
         ConcreteDataFactory.cpp
 

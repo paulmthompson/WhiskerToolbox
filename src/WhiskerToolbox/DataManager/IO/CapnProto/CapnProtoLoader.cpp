@@ -12,27 +12,27 @@
 
 CapnProtoLoader::CapnProtoLoader() {
     // Register supported data types
-    _supported_types.insert(DM_DataType::Line);
-    // Future: _supported_types.insert(DM_DataType::Points);
-    // Future: _supported_types.insert(DM_DataType::Mask);
+    _supported_types.insert(IODataType::Line);
+    // Future: _supported_types.insert(IODataType::Points);
+    // Future: _supported_types.insert(IODataType::Mask);
 }
 
 std::string CapnProtoLoader::getFormatId() const {
     return "capnp";
 }
 
-bool CapnProtoLoader::supportsDataType(DM_DataType data_type) const {
+bool CapnProtoLoader::supportsDataType(IODataType data_type) const {
     return _supported_types.find(data_type) != _supported_types.end();
 }
 
 LoadResult CapnProtoLoader::loadData(
     std::string const& file_path,
-    DM_DataType data_type,
+    IODataType data_type,
     nlohmann::json const& config,
     DataFactory* factory
 ) const {
     switch (data_type) {
-        case DM_DataType::Line:
+        case IODataType::Line:
             return loadLineData(file_path, config, factory);
         
         default:

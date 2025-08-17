@@ -1,11 +1,12 @@
 #ifndef DATAMANAGER_IO_DATALOADER_HPP
 #define DATAMANAGER_IO_DATALOADER_HPP
 
-#include "DataManagerTypes.hpp"
+#include "IOTypes.hpp"
+#include <nlohmann/json.hpp>
+
 #include <memory>
 #include <string>
 #include <variant>
-#include <nlohmann/json.hpp>
 
 // Forward declarations
 class LineData;
@@ -64,7 +65,7 @@ public:
     /**
      * @brief Check if this loader supports the given data type
      */
-    virtual bool supportsDataType(DM_DataType data_type) const = 0;
+    virtual bool supportsDataType(IODataType data_type) const = 0;
     
     /**
      * @brief Load data from file
@@ -77,7 +78,7 @@ public:
      */
     virtual LoadResult loadData(
         std::string const& file_path,
-        DM_DataType data_type,
+        IODataType data_type,
         nlohmann::json const& config,
         class DataFactory* factory
     ) const = 0;

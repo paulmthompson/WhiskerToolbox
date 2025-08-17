@@ -64,10 +64,10 @@ bool tryPluginThenLegacyLoad(
         std::string const format = item["format"];
         
         // Try plugin system first
-        if (PluginLoader::isFormatSupported(format, data_type)) {
+        if (PluginLoader::isFormatSupported(format, toIODataType(data_type))) {
             std::cout << "Using plugin loader for " << name << " (format: " << format << ")" << std::endl;
-            
-            LoadResult result = PluginLoader::loadData(file_path, data_type, item, factory);
+
+            LoadResult result = PluginLoader::loadData(file_path, toIODataType(data_type), item, factory);
             if (result.success) {
                 // Handle data setting and post-loading setup based on data type
                 switch (data_type) {

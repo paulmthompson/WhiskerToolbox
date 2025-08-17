@@ -3,6 +3,7 @@
 
 #include "../DataLoader.hpp"
 #include "../DataFactory.hpp"
+#include "../IOTypes.hpp"
 #include <set>
 #include <capnp/common.h>
 #include <kj/array.h>
@@ -23,17 +24,17 @@ public:
     CapnProtoLoader();
     
     std::string getFormatId() const override;
-    bool supportsDataType(DM_DataType data_type) const override;
+    bool supportsDataType(IODataType data_type) const override;
     LoadResult loadData(
         std::string const& file_path,
-        DM_DataType data_type,
+        IODataType data_type,
         nlohmann::json const& config,
         DataFactory* factory
     ) const override;
 
 private:
-    std::set<DM_DataType> _supported_types;
-    
+    std::set<IODataType> _supported_types;
+
     // Type-specific loading methods
     LoadResult loadLineData(std::string const& file_path, nlohmann::json const& config, DataFactory* factory) const;
     // Future: LoadResult loadPointData(std::string const& file_path, nlohmann::json const& config, DataFactory* factory) const;

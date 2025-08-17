@@ -25,7 +25,7 @@ bool LoaderRegistry::registerLoader(std::unique_ptr<DataLoader> loader) {
     return true;
 }
 
-DataLoader const* LoaderRegistry::findLoader(std::string const& format_id, DM_DataType data_type) const {
+DataLoader const* LoaderRegistry::findLoader(std::string const& format_id, IODataType data_type) const {
     auto it = _loaders.find(format_id);
     if (it == _loaders.end()) {
         return nullptr;
@@ -49,29 +49,22 @@ std::vector<std::string> LoaderRegistry::getRegisteredFormats() const {
     return formats;
 }
 
-std::vector<DM_DataType> LoaderRegistry::getSupportedDataTypes(std::string const& format_id) const {
+std::vector<IODataType> LoaderRegistry::getSupportedDataTypes(std::string const& format_id) const {
     auto it = _loaders.find(format_id);
     if (it == _loaders.end()) {
         return {};
     }
     
-    std::vector<DM_DataType> supported_types;
+    std::vector<IODataType> supported_types;
     
     // Check all possible data types
-    std::vector<DM_DataType> all_types = {
-        DM_DataType::Line,
-        DM_DataType::Points,
-        DM_DataType::Mask,
-        DM_DataType::Images,
-        DM_DataType::Video,
-        DM_DataType::Analog,
-        DM_DataType::DigitalEvent,
-        DM_DataType::DigitalInterval,
-        DM_DataType::Tensor,
-        DM_DataType::Time
+    using enum IODataType;
+    std::vector<IODataType> all_types = {
+        Line, Points, Mask, Images, Video,
+        Analog, DigitalEvent, DigitalInterval, Tensor, Time
     };
     
-    for (DM_DataType type : all_types) {
+    for (IODataType type : all_types) {
         if (it->second->supportsDataType(type)) {
             supported_types.push_back(type);
         }

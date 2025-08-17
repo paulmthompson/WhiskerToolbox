@@ -2,7 +2,7 @@
 #define DATAMANAGER_IO_PLUGINLOADER_HPP
 
 #include "DataLoader.hpp"
-#include "DataManagerTypes.hpp"
+#include "IOTypes.hpp"
 #include <memory>
 #include <string>
 #include <nlohmann/json.hpp>
@@ -29,7 +29,7 @@ public:
      */
     static LoadResult loadData(
         std::string const& file_path,
-        DM_DataType data_type,
+        IODataType data_type,
         nlohmann::json const& config,
         class DataFactory* factory
     );
@@ -41,8 +41,8 @@ public:
      * @param data_type Data type to check support for
      * @return true if the format is supported for this data type
      */
-    static bool isFormatSupported(std::string const& format_id, DM_DataType data_type);
-    
+    static bool isFormatSupported(std::string const& format_id, IODataType data_type);
+
     /**
      * @brief Get all formats supported by the plugin system
      */

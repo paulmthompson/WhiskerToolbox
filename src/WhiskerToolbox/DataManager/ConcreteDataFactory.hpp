@@ -17,6 +17,11 @@ public:
     LoadedDataVariant createLineDataFromRaw(LineDataRaw const& raw_data) override;
     void setLineDataImageSize(LoadedDataVariant& data, int width, int height) override;
     
+    // MaskData factory methods
+    LoadedDataVariant createMaskData() override;
+    LoadedDataVariant createMaskDataFromRaw(MaskDataRaw const& raw_data) override;
+    void setMaskDataImageSize(LoadedDataVariant& data, int width, int height) override;
+    
     // Future implementations for other data types...
 };
 
@@ -24,5 +29,10 @@ public:
  * @brief Helper function to convert raw line data to proper types
  */
 std::map<TimeFrameIndex, std::vector<Line2D>> convertRawLineData(LineDataRaw const& raw_data);
+
+/**
+ * @brief Helper function to convert raw mask data to proper types
+ */
+std::map<TimeFrameIndex, std::vector<std::vector<Point2D<uint32_t>>>> convertRawMaskData(MaskDataRaw const& raw_data);
 
 #endif // DATAMANAGER_CONCRETEDATAFACTORY_HPP

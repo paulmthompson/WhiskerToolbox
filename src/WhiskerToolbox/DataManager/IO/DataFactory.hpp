@@ -23,6 +23,18 @@ struct LineDataRaw {
     uint32_t image_height = 0;
 };
 
+/**
+ * @brief Raw data container for deserialized Mask data
+ * 
+ * This struct contains the raw data extracted from HDF5/other formats
+ * without depending on specific data type implementations.
+ */
+struct MaskDataRaw {
+    std::map<int32_t, std::vector<std::vector<std::pair<uint32_t, uint32_t>>>> time_masks;
+    uint32_t image_width = 0;
+    uint32_t image_height = 0;
+};
+
 
 /**
  * @brief Abstract factory interface for creating data objects
@@ -40,11 +52,13 @@ public:
     virtual LoadedDataVariant createLineDataFromRaw(LineDataRaw const& raw_data) = 0;
     virtual void setLineDataImageSize(LoadedDataVariant& data, int width, int height) = 0;
     
+    // MaskData factory methods
+    virtual LoadedDataVariant createMaskData() = 0;
+    virtual LoadedDataVariant createMaskDataFromRaw(MaskDataRaw const& raw_data) = 0;
+    virtual void setMaskDataImageSize(LoadedDataVariant& data, int width, int height) = 0;
+    
     // Future: PointData factory methods
     // virtual LoadedDataVariant createPointData() = 0;
-    
-    // Future: MaskData factory methods  
-    // virtual LoadedDataVariant createMaskData() = 0;
 };
 
 

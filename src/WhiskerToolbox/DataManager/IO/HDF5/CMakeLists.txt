@@ -6,6 +6,10 @@ set(DATAMANAGER_HDF5_SOURCES
     hdf5_utilities.cpp
     hdf5_loaders.hpp
     hdf5_loaders.cpp
+    HDF5Loader.hpp
+    HDF5Loader.cpp
+    HDF5Init.hpp
+    HDF5Init.cpp
 )
 
 # Create the DataManagerHDF5 shared library
@@ -23,6 +27,7 @@ find_package(HDF5 COMPONENTS CXX REQUIRED)
 # Link to required libraries
 target_link_libraries(DataManagerHDF5 PUBLIC
     NEURALYZER_GEOMETRY      # CoreGeometry for Point2D
+    nlohmann_json::nlohmann_json  # For JSON config parsing
 )
 
 # Platform-specific HDF5 linking
