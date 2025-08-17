@@ -12,7 +12,7 @@
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 
-#include "../fixtures/analog_test_fixtures.hpp"
+#include "fixtures/analog_test_fixtures.hpp"
 
 #include <iostream>
 #include <map>

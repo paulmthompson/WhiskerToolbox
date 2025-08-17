@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-#include "../fixtures/data_manager_test_fixtures.hpp"
+#include "fixtures/data_manager_test_fixtures.hpp"
 
 TEST_CASE_METHOD(DataManagerTestFixture, "DataManagerTestFixture - Basic Data Population", "[DataManager][fixtures]") {
     // Test that the DataManager was properly initialized
