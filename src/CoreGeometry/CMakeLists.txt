@@ -48,7 +48,7 @@ set(core_geometry_test_sources
 set(CORE_GEOMETRY_TEST_SOURCES ${core_geometry_test_sources} PARENT_SCOPE)
 
 add_tests_to_global(core_geometry_test_sources
-                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/CoreGeometry"
+                    "${CMAKE_SOURCE_DIR}/src/CoreGeometry"
                     CORE_GEOMETRY_TEST_SOURCES)
 
 

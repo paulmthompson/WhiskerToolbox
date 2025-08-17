@@ -19,7 +19,6 @@ find_package(glm CONFIG REQUIRED)
 
 qt_standard_project_setup()
 
-add_subdirectory(CoreGeometry)
 add_subdirectory(DataManager)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
