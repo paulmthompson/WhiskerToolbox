@@ -1,5 +1,8 @@
 
-find_package(HDF5 COMPONENTS CXX REQUIRED)
+# Find packages conditionally
+if(ENABLE_HDF5)
+    find_package(HDF5 COMPONENTS CXX REQUIRED)
+endif()
 
 set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
 
@@ -233,13 +236,15 @@ target_include_directories(DataManager PRIVATE
         
     )
 
-
-target_link_libraries(DataManager PRIVATE HighFive)
-
-if (APPLE)
-    target_link_libraries(DataManager PRIVATE hdf5::hdf5-static hdf5::hdf5_cpp-static)
-else()
-    target_link_libraries(DataManager PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
+# Conditionally link HDF5 and HighFive
+if(ENABLE_HDF5)
+    target_link_libraries(DataManager PRIVATE HighFive)
+    
+    if (APPLE)
+        target_link_libraries(DataManager PRIVATE hdf5::hdf5-static hdf5::hdf5_cpp-static)
+    else()
+        target_link_libraries(DataManager PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
+    endif()
 endif()
 
 target_link_libraries(DataManager PRIVATE armadillo)
@@ -269,7 +274,12 @@ target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 
 # Link to plugin system
 target_link_libraries(DataManager PRIVATE DataManagerIO)
-target_link_libraries(DataManager PRIVATE DataManagerHDF5)
+
+# Conditionally link HDF5 plugin
+if(ENABLE_HDF5)
+    target_link_libraries(DataManager PRIVATE DataManagerHDF5)
+    target_compile_definitions(DataManager PRIVATE ENABLE_HDF5)
+endif()
 
 # Conditionally link CapnProto plugin
 if(ENABLE_CAPNPROTO)

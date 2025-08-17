@@ -1,4 +1,6 @@
 
+#ifdef ENABLE_HDF5
+
 #include "HDF5_Data.hpp"
 
 #include <H5Cpp.h>
@@ -66,3 +68,5 @@ void HDF5Data::doLoadFrame(int frame_id) {
 std::string HDF5Data::GetFrameID(int frame_id) const {
     return std::to_string(frame_id);
 }
+
+#endif // ENABLE_HDF5

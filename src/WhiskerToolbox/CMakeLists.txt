@@ -48,6 +48,7 @@ set(PROJECT_SOURCES
         Main_Window/mainwindow.cpp
         Main_Window/mainwindow.hpp
         Main_Window/mainwindow.ui
+        Main_Window/video_loader.hpp
 
         TableDesignerWidget/TableDesignerWidget.hpp
         TableDesignerWidget/TableDesignerWidget.cpp
@@ -500,6 +501,17 @@ if(ENABLE_CAPNPROTO)
     )
 endif()
 
+# Conditionally add video loader implementation based on HDF5 support
+if(ENABLE_HDF5)
+    list(APPEND PROJECT_SOURCES
+        Main_Window/video_loader_hdf5.cpp
+    )
+else()
+    list(APPEND PROJECT_SOURCES
+        Main_Window/video_loader_no_hdf5.cpp
+    )
+endif()
+
 if (WIN32)
 
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
@@ -549,7 +561,10 @@ if(ENABLE_CAPNPROTO)
     target_link_libraries(WhiskerToolbox PRIVATE DataManagerIO_CapnProto)
 endif()
 
-target_link_libraries(WhiskerToolbox PRIVATE DataManagerHDF5)
+# Conditionally link HDF5 plugin
+if(ENABLE_HDF5)
+    target_link_libraries(WhiskerToolbox PRIVATE DataManagerHDF5)
+endif()
 
 target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)

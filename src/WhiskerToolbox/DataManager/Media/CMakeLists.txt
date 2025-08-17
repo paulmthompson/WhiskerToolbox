@@ -1,8 +1,9 @@
 # MediaData Library CMakeLists.txt
 
-# Find required packages
-find_package(HDF5 COMPONENTS CXX REQUIRED)
-#find_package(opencv REQUIRED COMPONENTS core imgproc imgcodecs photo)
+# Find required packages conditionally
+if(ENABLE_HDF5)
+    find_package(HDF5 COMPONENTS CXX REQUIRED)
+endif()
 
 # Create MediaData as a separate shared library including all IO formats
 set(MEDIADATA_SOURCES
@@ -12,8 +13,6 @@ set(MEDIADATA_SOURCES
     Video_Data.cpp
     Image_Data.hpp
     Image_Data.cpp
-    HDF5_Data.hpp
-    HDF5_Data.cpp
     Video_Data_Loader.hpp
     IO/Image_Data_Loader.hpp
     IO/Image_Data_Loader.cpp
@@ -22,6 +21,14 @@ set(MEDIADATA_SOURCES
     utils/opencv_utility.hpp
     utils/opencv_utility.cpp
 )
+
+# Add HDF5-specific sources conditionally
+if(ENABLE_HDF5)
+    list(APPEND MEDIADATA_SOURCES
+        HDF5_Data.hpp
+        HDF5_Data.cpp
+    )
+endif()
 
 # Create the MediaData shared library
 add_library(MediaData SHARED ${MEDIADATA_SOURCES})
@@ -45,10 +52,14 @@ target_link_libraries(MediaData PUBLIC
 )
 
 # Link HDF5 libraries conditionally
-if (APPLE)
-    target_link_libraries(MediaData PRIVATE hdf5::hdf5-static hdf5::hdf5_cpp-static)
-else()
-    target_link_libraries(MediaData PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
+if(ENABLE_HDF5)
+    if (APPLE)
+        target_link_libraries(MediaData PRIVATE hdf5::hdf5-static hdf5::hdf5_cpp-static)
+    else()
+        target_link_libraries(MediaData PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
+    endif()
+    # Add HDF5 compile definition for conditional compilation
+    target_compile_definitions(MediaData PRIVATE ENABLE_HDF5)
 endif()
 
 # Set properties

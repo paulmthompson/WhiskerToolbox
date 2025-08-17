@@ -23,5 +23,4 @@ private:
     uint16_t _max_val = 65535;
 };
 
-
 #endif// HDF5_DATA_HPP
