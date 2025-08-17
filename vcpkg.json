@@ -9,16 +9,6 @@
             "name": "boost-circular-buffer"
         },
         {
-            "name": "ffmpeg",
-            "default-features": true,
-            "features": [
-                {
-                    "name": "nvcodec",
-                    "platform": "!osx"
-                }
-            ]
-        },
-        {
             "name": "glib"
         },
         {
@@ -56,6 +46,21 @@
                     "features": ["cpp"]
                 },
                 "highfive"
+            ]
+        },
+        "ffmpeg": {
+            "description": "FFmpeg support for video loading and processing",
+            "dependencies": [
+                {
+                    "name": "ffmpeg",
+                    "default-features": true,
+                    "features": [
+                        {
+                            "name": "nvcodec",
+                            "platform": "!osx"
+                        }
+                    ]
+                }
             ]
         }
     },

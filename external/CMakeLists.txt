@@ -3,12 +3,16 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include(FetchContent)
 set(BUILD_TESTING OFF)
-FetchContent_Declare(
-  ffmpeg_wrapper
-  GIT_REPOSITORY https://github.com/paulmthompson/ffmpeg_wrapper.git
-  #GIT_TAG 807db81584dbf72d34db3659ac01f286bcf7fe53
-  GIT_TAG 694f346e5eeaca6c464bb88aa30f43b306c63047
-)
+
+# Conditionally fetch ffmpeg_wrapper based on ENABLE_FFMPEG flag
+if(ENABLE_FFMPEG)
+    FetchContent_Declare(
+      ffmpeg_wrapper
+      GIT_REPOSITORY https://github.com/paulmthompson/ffmpeg_wrapper.git
+      #GIT_TAG 807db81584dbf72d34db3659ac01f286bcf7fe53
+      GIT_TAG 694f346e5eeaca6c464bb88aa30f43b306c63047
+    )
+endif()
 
 #add_subdirectory(ffmpeg_wrapper)
 
@@ -75,10 +79,23 @@ elseif (WIN32)
     endif()
 endif()
 
-#We should use make avaiable
-FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking Torch npy iir)
+#We should use make available
+set(FETCHCONTENT_TARGETS "Whisker-Analysis;qt6advanceddocking;Torch;npy;iir")
+if(ENABLE_FFMPEG)
+    list(PREPEND FETCHCONTENT_TARGETS "ffmpeg_wrapper")
+endif()
 
-set_target_properties(ffmpeg_wrapper PROPERTIES EXCLUDE_FROM_ALL TRUE)
+# Convert the list to individual arguments for FetchContent_MakeAvailable
+if(ENABLE_FFMPEG)
+    FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking Torch npy iir)
+else()
+    FetchContent_MakeAvailable(Whisker-Analysis qt6advanceddocking Torch npy iir)
+endif()
+
+# Conditionally set ffmpeg_wrapper properties if it was built
+if(ENABLE_FFMPEG)
+    set_target_properties(ffmpeg_wrapper PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
 set_target_properties(Whisker-Analysis PROPERTIES EXCLUDE_FROM_ALL TRUE)
 set_target_properties(qt6advanceddocking PROPERTIES
         EXCLUDE_FROM_ALL TRUE

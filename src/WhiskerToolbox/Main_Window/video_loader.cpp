@@ -66,8 +66,33 @@ bool loadVideoData(const std::string& file_path, DataManager* data_manager) {
     auto detected_type = detectMediaTypeFromExtension(file_path);
     if (!detected_type) {
         auto vid_path = std::filesystem::path(file_path);
-        std::cout << "Video file with extension " << vid_path.extension() 
+        std::cout << "Media file with extension " << vid_path.extension() 
                   << " not supported" << std::endl;
+        return false;
+    }
+    
+    // Check if the detected type is available and provide specific error messages
+    if (!MediaDataFactory::isMediaTypeAvailable(*detected_type)) {
+        auto vid_path = std::filesystem::path(file_path);
+        std::string feature_name;
+        
+        switch (*detected_type) {
+            case MediaData::MediaType::Video:
+                feature_name = "ENABLE_FFMPEG";
+                break;
+            case MediaData::MediaType::HDF5:
+                feature_name = "ENABLE_HDF5";
+                break;
+            case MediaData::MediaType::Images:
+                // Images should always be available
+                feature_name = "base feature";
+                break;
+        }
+        
+        std::cout << "Support for " << vid_path.extension() 
+                  << " files is not enabled in this build. "
+                  << "Please rebuild with " << feature_name << "=ON to load this file type." 
+                  << std::endl;
         return false;
     }
     

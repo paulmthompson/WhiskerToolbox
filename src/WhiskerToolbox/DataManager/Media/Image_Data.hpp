@@ -12,6 +12,9 @@
 class ImageData : public MediaData {
 public:
     ImageData();
+    
+    MediaType getMediaType() const override { return MediaType::Images; }
+    
     [[nodiscard]] std::string GetFrameID(int frame_id) const override;
 
     int getFrameIndexFromNumber(int frame_id) override;

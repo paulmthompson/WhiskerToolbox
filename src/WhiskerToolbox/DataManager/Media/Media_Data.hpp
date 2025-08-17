@@ -18,9 +18,21 @@ class Mat;
 
 class MediaData : public ObserverData {
 public:
+    enum class MediaType {
+        Video,
+        Images,
+        HDF5
+    };
+
     MediaData();
 
-    virtual ~MediaData() = default;
+    virtual ~MediaData();
+
+    /**
+     * @brief Get the media type of this instance
+     * @return The MediaType enum value
+     */
+    virtual MediaType getMediaType() const = 0;
 
     [[nodiscard]] std::string getFilename() const { return _filename; };
     void setFilename(std::string const & filename) { _filename = filename; };
@@ -119,6 +131,34 @@ private:
     std::shared_ptr<TimeFrame> _time_frame {nullptr};
 
     void _processData();
+};
+
+/**
+ * @brief Empty MediaData implementation for default/placeholder use
+ * 
+ * This class provides a concrete implementation of MediaData that can be
+ * used as a default/placeholder when no specific media type is loaded.
+ */
+class EmptyMediaData : public MediaData {
+public:
+    EmptyMediaData() = default;
+    
+    MediaType getMediaType() const override { 
+        // Return Images as a default - this matches the old behavior
+        // where MediaData defaulted to Video type detection
+        return MediaType::Images; 
+    }
+    
+protected:
+    void doLoadMedia(std::string const& name) override {
+        // No-op for empty media data
+        static_cast<void>(name);
+    }
+    
+    void doLoadFrame(int frame_id) override {
+        // No-op for empty media data
+        static_cast<void>(frame_id);
+    }
 };
 
 

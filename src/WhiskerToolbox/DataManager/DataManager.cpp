@@ -1,4 +1,6 @@
 #include "DataManager.hpp"
+
+#include "Media/MediaDataFactory.hpp"
 #include "ConcreteDataFactory.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -9,9 +11,9 @@
 #include "Tensors/Tensor_Data.hpp"
 
 // Media includes - now from separate MediaData library
-#include "Media/Image_Data.hpp"
+//#include "Media/Image_Data.hpp"
 #include "Media/Media_Data.hpp"
-#include "Media/Video_Data.hpp"
+//#include "Media/Video_Data.hpp"
 
 #include "AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
@@ -20,7 +22,6 @@
 #include "Lines/IO/JSON/Line_Data_JSON.hpp"
 #include "Masks/IO/JSON/Mask_Data_JSON.hpp"
 #include "Media/IO/JSON/Image_Data_JSON.hpp"
-#include "Media/Video_Data_Loader.hpp"
 #include "Points/IO/JSON/Point_Data_JSON.hpp"
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 #include "utils/TableView/TableRegistry.hpp"
@@ -110,7 +111,7 @@ bool tryPluginThenLegacyLoad(
 
 DataManager::DataManager() {
     _times[TimeKey("time")] = std::make_shared<TimeFrame>();
-    _data["media"] = std::make_shared<MediaData>();
+    _data["media"] = std::make_shared<EmptyMediaData>();
 
     setTimeKey("media", TimeKey("time"));
     _output_path = std::filesystem::current_path();
@@ -132,7 +133,7 @@ void DataManager::reset() {
     _data.clear();
     
     // Reset media to a fresh empty MediaData object
-    _data["media"] = std::make_shared<MediaData>();
+    _data["media"] = std::make_shared<EmptyMediaData>();
     
     // Clear all TimeFrame objects except the default "time" frame
     auto defaultTime = _times.find(TimeKey("time"));
@@ -486,19 +487,23 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
         switch (data_type) {
             case DM_DataType::Video: {
-
-                auto video_data = load_video_into_VideoData(file_path);
-                dm->setData<VideoData>("media", video_data, TimeKey("time"));
-
-                data_info_list.push_back({name, "VideoData", ""});
+                auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
+                if (media_data) {
+                    dm->setData<MediaData>("media", media_data, TimeKey("time"));
+                    data_info_list.push_back({name, "VideoData", ""});
+                } else {
+                    std::cerr << "Failed to load video data: " << file_path << std::endl;
+                }
                 break;
             }
             case DM_DataType::Images: {
-
-                auto media = load_into_ImageData(file_path, item);
-                dm->setData<ImageData>("media", media, TimeKey("time"));
-
-                data_info_list.push_back({name, "ImageData", ""});
+                auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
+                if (media_data) {
+                    dm->setData<MediaData>("media", media_data, TimeKey("time"));
+                    data_info_list.push_back({name, "ImageData", ""});
+                } else {
+                    std::cerr << "Failed to load image data: " << file_path << std::endl;
+                }
                 break;
             }
             case DM_DataType::Points: {
@@ -771,15 +776,18 @@ DM_DataType DataManager::getType(std::string const & key) const {
     auto it = _data.find(key);
     if (it != _data.end()) {
         if (std::holds_alternative<std::shared_ptr<MediaData>>(it->second)) {
-            //Dynamic cast to videodata or image data
-
             auto media_data = std::get<std::shared_ptr<MediaData>>(it->second);
-            if (dynamic_cast<VideoData *>(media_data.get()) != nullptr) {
-                return DM_DataType::Video;
-            } else if (dynamic_cast<ImageData *>(media_data.get()) != nullptr) {
-                return DM_DataType::Images;
-            } else {
-                return DM_DataType::Video;//Old behavior
+            switch (media_data->getMediaType()) {
+                case MediaData::MediaType::Video:
+                    return DM_DataType::Video;
+                case MediaData::MediaType::Images:
+                    return DM_DataType::Images;
+                case MediaData::MediaType::HDF5:
+                    // For HDF5, we might need additional logic to determine if it's video or images
+                    // For now, defaulting to Video (old behavior)
+                    return DM_DataType::Video;
+                default:
+                    return DM_DataType::Video; // Old behavior for unknown types
             }
         } else if (std::holds_alternative<std::shared_ptr<PointData>>(it->second)) {
             return DM_DataType::Points;

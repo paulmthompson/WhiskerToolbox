@@ -502,15 +502,10 @@ if(ENABLE_CAPNPROTO)
 endif()
 
 # Conditionally add video loader implementation based on HDF5 support
-if(ENABLE_HDF5)
-    list(APPEND PROJECT_SOURCES
-        Main_Window/video_loader_hdf5.cpp
-    )
-else()
-    list(APPEND PROJECT_SOURCES
-        Main_Window/video_loader_no_hdf5.cpp
-    )
-endif()
+# Use unified video loader that handles all media types via factory
+list(APPEND PROJECT_SOURCES
+    Main_Window/video_loader.cpp
+)
 
 if (WIN32)
 

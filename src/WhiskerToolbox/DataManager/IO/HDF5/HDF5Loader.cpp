@@ -2,6 +2,10 @@
 #include "../DataFactory.hpp"
 #include "../LoaderRegistry.hpp"
 #include "hdf5_loaders.hpp"
+#include "CoreGeometry/points.hpp"
+#include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/lines.hpp"
+
 #include <iostream>
 
 std::string HDF5Loader::getFormatId() const {
@@ -78,19 +82,19 @@ LoadResult HDF5Loader::loadMaskData(
         
         for (std::size_t i = 0; i < frames.size(); i++) {
             int32_t frame = frames[i];
-            std::vector<std::vector<std::pair<uint32_t, uint32_t>>> frame_masks;
+            std::vector<Mask2D> frame_masks;
             
             if (i < x_coords.size() && i < y_coords.size()) {
-                std::vector<std::pair<uint32_t, uint32_t>> mask_points;
+                Mask2D mask_points;
                 
                 auto const& x_vec = x_coords[i];
                 auto const& y_vec = y_coords[i];
                 
                 size_t min_size = std::min(x_vec.size(), y_vec.size());
                 for (size_t j = 0; j < min_size; j++) {
-                    mask_points.emplace_back(
+                    mask_points.push_back(Point2D<uint32_t>(
                         static_cast<uint32_t>(x_vec[j]),
-                        static_cast<uint32_t>(y_vec[j])
+                        static_cast<uint32_t>(y_vec[j]))
                     );
                 }
                 
@@ -159,21 +163,21 @@ LoadResult HDF5Loader::loadLineData(
         
         for (std::size_t i = 0; i < frames.size(); i++) {
             int32_t frame = frames[i];
-            std::vector<std::vector<std::pair<float, float>>> frame_lines;
+            std::vector<Line2D> frame_lines;
             
             if (i < x_coords.size() && i < y_coords.size()) {
-                std::vector<std::pair<float, float>> line_points;
+                Line2D line;
                 
                 auto const& x_vec = x_coords[i];
                 auto const& y_vec = y_coords[i];
                 
                 size_t min_size = std::min(x_vec.size(), y_vec.size());
                 for (size_t j = 0; j < min_size; j++) {
-                    line_points.emplace_back(x_vec[j], y_vec[j]);
+                    line.push_back(Point2D<float>(x_vec[j], y_vec[j]));
                 }
-                
-                if (!line_points.empty()) {
-                    frame_lines.push_back(std::move(line_points));
+
+                if (!line.empty()) {
+                    frame_lines.push_back(std::move(line));
                 }
             }
             

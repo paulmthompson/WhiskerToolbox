@@ -238,7 +238,7 @@ target_include_directories(DataManager PRIVATE
 
 # Conditionally link HDF5 and HighFive
 if(ENABLE_HDF5)
-    target_link_libraries(DataManager PRIVATE HighFive)
+   # target_link_libraries(DataManager PRIVATE HighFive)
     
     if (APPLE)
         target_link_libraries(DataManager PRIVATE hdf5::hdf5-static hdf5::hdf5_cpp-static)

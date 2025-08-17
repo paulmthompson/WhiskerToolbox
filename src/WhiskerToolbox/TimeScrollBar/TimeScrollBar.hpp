@@ -38,6 +38,13 @@ private:
 
     void _updateFrameLabels(int frame_num);
     void _vidLoop();
+    
+    /**
+     * @brief Handle snap-to-keyframe logic for video data
+     * @param current_frame The current frame position
+     * @return The frame to snap to (may be the same as input if no snapping needed)
+     */
+    int _getSnapFrame(int current_frame);
 
 private slots:
     void Slider_Drag(int newPos);

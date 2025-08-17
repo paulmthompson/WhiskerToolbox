@@ -9,11 +9,11 @@ endif()
 set(MEDIADATA_SOURCES
     Media_Data.hpp
     Media_Data.cpp
-    Video_Data.hpp
-    Video_Data.cpp
+    MediaDataFactory.hpp
+    MediaDataFactory.cpp
     Image_Data.hpp
     Image_Data.cpp
-    Video_Data_Loader.hpp
+    ImageDataRegistration.cpp
     IO/Image_Data_Loader.hpp
     IO/Image_Data_Loader.cpp
     IO/JSON/Image_Data_JSON.hpp
@@ -27,6 +27,16 @@ if(ENABLE_HDF5)
     list(APPEND MEDIADATA_SOURCES
         HDF5_Data.hpp
         HDF5_Data.cpp
+        HDF5DataRegistration.cpp
+    )
+endif()
+
+if(ENABLE_FFMPEG)
+    list(APPEND MEDIADATA_SOURCES
+        Video_Data.hpp
+        Video_Data.cpp
+        Video_Data_Loader.hpp
+        VideoDataRegistration.cpp
     )
 endif()
 
@@ -48,7 +58,6 @@ target_link_libraries(MediaData PUBLIC
     Entity                   # Entity
     nlohmann_json::nlohmann_json  # For JSON support
     opencv_core opencv_imgproc opencv_imgcodecs opencv_photo  # For Image processing
-    ffmpeg_wrapper::ffmpeg_wrapper  # For Video support
 )
 
 # Link HDF5 libraries conditionally
@@ -60,6 +69,12 @@ if(ENABLE_HDF5)
     endif()
     # Add HDF5 compile definition for conditional compilation
     target_compile_definitions(MediaData PRIVATE ENABLE_HDF5)
+endif()
+
+if(ENABLE_FFMPEG)
+    target_link_libraries(MediaData PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
+    # Add FFMPEG compile definition for conditional compilation
+    target_compile_definitions(MediaData PRIVATE ENABLE_FFMPEG)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

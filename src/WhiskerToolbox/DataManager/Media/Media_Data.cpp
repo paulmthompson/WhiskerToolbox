@@ -12,6 +12,8 @@ MediaData::MediaData() {
     setFormat(DisplayFormat::Gray);
 };
 
+MediaData::~MediaData() = default;
+
 void MediaData::setFormat(DisplayFormat const format) {
     _format = format;
     switch (_format) {

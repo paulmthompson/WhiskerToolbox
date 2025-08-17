@@ -20,6 +20,8 @@ public:
 
     ~VideoData() override;
 
+    MediaType getMediaType() const override { return MediaType::Video; }
+
     [[nodiscard]] std::string GetFrameID(int frame_id) const override;
 
     /**
@@ -42,6 +44,5 @@ private:
     int _last_decoded_frame{0};
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> _vd;
 };
-
 
 #endif//WHISKERTOOLBOX_VIDEO_DATA_HPP

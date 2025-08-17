@@ -10,6 +10,9 @@
 class HDF5Data : public MediaData {
 public:
     HDF5Data() = default;
+    
+    MediaType getMediaType() const override { return MediaType::HDF5; }
+    
     std::string GetFrameID(int frame_id) const override;
 
     int getFrameIndexFromNumber(int frame_id) override { return frame_id; };
