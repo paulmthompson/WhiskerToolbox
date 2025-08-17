@@ -22,6 +22,7 @@ if("${CLANG_OPTIONS}" STREQUAL "")
             -Wimplicit-fallthrough # warn on statements that fallthrough without an explicit annotation
             -fsave-optimization-record
             -Rpass-analysis=loop-vectorize
+            -fPIC
     )
 endif()
 
