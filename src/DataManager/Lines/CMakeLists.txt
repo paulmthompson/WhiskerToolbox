@@ -66,7 +66,7 @@ set(lines_test_sources
 )
 
 add_tests_to_global(lines_test_sources 
-                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Lines" 
+                    "${CMAKE_SOURCE_DIR}/src/DataManager/Lines" 
                     DATAMANAGER_TEST_SOURCES)
 
 # No longer add sources to DataManager since they're now in the LineData library

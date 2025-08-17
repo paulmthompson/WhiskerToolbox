@@ -1,19 +1,16 @@
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(OpenCV CONFIG REQUIRED)
+
+set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
+find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 # Find packages conditionally
 if(ENABLE_HDF5)
     find_package(HDF5 COMPONENTS CXX REQUIRED)
 endif()
 
-set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
-
-find_package(Torch REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-
-find_package(nlohmann_json CONFIG REQUIRED)
-
-#find_package(unofficial-lmdb CONFIG REQUIRED)
-#find_package(CapnProto CONFIG REQUIRED)
-#find_package(RocksDB CONFIG REQUIRED)
+find_package(Armadillo REQUIRED)
 
 find_package(LAPACK REQUIRED)
 

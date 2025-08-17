@@ -22,5 +22,5 @@ prefix_list_items(analog_subdirectory_sources "AnalogTimeSeries")
 set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${analog_subdirectory_sources} PARENT_SCOPE)
 
 add_tests_to_global(analog_test_sources
-                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/AnalogTimeSeries"
+                    "${CMAKE_SOURCE_DIR}/src/DataManager/AnalogTimeSeries"
                     DATAMANAGER_TEST_SOURCES)

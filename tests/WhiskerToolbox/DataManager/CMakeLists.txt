@@ -22,46 +22,46 @@ add_executable(test_data_manager
         test_tableview.cpp
         test_data_manager_fixtures.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Observer/Observer_Data.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Observer/Observer_Data.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/DataAggregation/DataAggregation.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/DataAggregation/DataAggregation.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/AnalogSliceGathererComputer.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/EventInIntervalComputer.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/IntervalOverlapComputer.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/IntervalPropertyComputer.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/IntervalReductionComputer.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/LineSamplingMultiComputer.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/AnalogTimestampOffsetsMultiComputer.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/TimestampInIntervalComputer.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/computers/TimestampValueComputer.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/AnalogSliceGathererComputer.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/EventInIntervalComputer.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/IntervalOverlapComputer.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/IntervalPropertyComputer.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/IntervalReductionComputer.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/LineSamplingMultiComputer.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/AnalogTimestampOffsetsMultiComputer.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/TimestampInIntervalComputer.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/TimestampValueComputer.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/TableView/adapters/LineDataAdapter.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/filter/NewFilterInterface.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/adapters/LineDataAdapter.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/filter/NewFilterInterface.test.cpp
 
         ${DATAMANAGER_TEST_SOURCES_TEMP}
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/AnalogTimeSeries/analog_filter.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/AnalogTimeSeries/analog_hilbert_phase.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_filter.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_hilbert_phase.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp
 
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/DigitalIntervalSeries/digital_interval_group.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/DigitalIntervalSeries/digital_interval_group.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Lines/line_angle.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Lines/line_min_point_dist.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Lines/line_alignment.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_angle.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_min_point_dist.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_alignment.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_area.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_centroid.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_connected_component.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_hole_filling.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_median_filter.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_principal_axis.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_area.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_centroid.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_connected_component.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_hole_filling.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_median_filter.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_principal_axis.test.cpp
 )
 
 # Add VideoData tests only if FFmpeg is enabled

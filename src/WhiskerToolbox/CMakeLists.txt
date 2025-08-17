@@ -19,7 +19,6 @@ find_package(glm CONFIG REQUIRED)
 
 qt_standard_project_setup()
 
-add_subdirectory(DataManager)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
 add_subdirectory(ShaderManager)
@@ -532,7 +531,7 @@ message(STATUS ${MLPACK_INCLUDE_DIRS})
 target_include_directories(WhiskerToolbox PRIVATE
 
   #      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" 
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/TableDesignerWidget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"

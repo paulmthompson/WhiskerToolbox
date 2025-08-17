@@ -18,5 +18,5 @@ prefix_list_items(points_sources "Points")
 set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${points_sources} PARENT_SCOPE)
 
 add_tests_to_global(points_test_sources
-                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Points"
+                    "${CMAKE_SOURCE_DIR}/src/DataManager/Points"
                     DATAMANAGER_TEST_SOURCES)

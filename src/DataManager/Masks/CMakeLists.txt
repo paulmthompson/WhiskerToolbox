@@ -79,7 +79,7 @@ set(masks_test_sources
 )
 
 add_tests_to_global(masks_test_sources 
-                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Masks" 
+                    "${CMAKE_SOURCE_DIR}/src/DataManager/Masks" 
                     DATAMANAGER_TEST_SOURCES)
 
 # No longer add sources to DataManager since they're now in the MaskData library
