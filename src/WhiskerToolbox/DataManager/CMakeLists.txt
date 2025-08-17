@@ -20,6 +20,9 @@ add_subdirectory(Observer)
 # Add TimeFrame subdirectory to build the TimeFrame library
 add_subdirectory(TimeFrame)
 
+# Add Entity subdirectory to build the Entity library
+add_subdirectory(Entity)
+
 # Add IO plugin system
 add_subdirectory(IO)
 
@@ -29,10 +32,6 @@ set(DATAMANAGER_SOURCES
         DataManagerTypes.hpp
         ConcreteDataFactory.hpp
         ConcreteDataFactory.cpp
-
-        Entity/EntityTypes.hpp
-        Entity/EntityRegistry.hpp
-        Entity/EntityRegistry.cpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
@@ -278,6 +277,8 @@ target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
 # Link to the TimeFrame library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
+# Link to the Entity library
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 
 # Link to plugin system
