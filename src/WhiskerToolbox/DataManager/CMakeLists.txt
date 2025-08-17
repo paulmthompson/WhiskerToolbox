@@ -78,7 +78,6 @@ set(DATAMANAGER_SOURCES
         utils/armadillo_wrap/analog_armadillo.cpp
         utils/color.hpp
         utils/color.cpp
-        utils/hdf5_mask_load.hpp
         utils/json_helpers.hpp
         utils/map_timeseries.hpp
         utils/metaprogramming_utils.hpp
@@ -228,6 +227,7 @@ set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
 add_subdirectory(AnalogTimeSeries)
 #add_subdirectory(Lines)
+#add_subdirectory(Masks)  # Masks are now a separate library
 add_subdirectory(Masks)
 add_subdirectory(Points)
 
@@ -279,10 +279,12 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
 # Link to the Entity library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 
 # Link to plugin system
 target_link_libraries(DataManager PRIVATE DataManagerIO)
+target_link_libraries(DataManager PRIVATE DataManagerHDF5)
 
 # Conditionally link CapnProto plugin
 if(ENABLE_CAPNPROTO)

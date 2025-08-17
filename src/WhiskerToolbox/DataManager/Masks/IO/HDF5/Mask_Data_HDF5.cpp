@@ -1,7 +1,7 @@
 #include "Mask_Data_HDF5.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
-#include "loaders/hdf5_loaders.hpp"
+#include "IO/HDF5/hdf5_loaders.hpp"
 #include "Masks/Mask_Data.hpp"
 
 std::shared_ptr<MaskData> load(HDF5MaskLoaderOptions & opts) {

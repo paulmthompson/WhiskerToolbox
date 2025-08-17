@@ -1,13 +1,16 @@
 
-set(mask_sources
+# MaskData Library CMakeLists.txt
+
+# Create MaskData as a separate shared library including all IO formats
+set(MASKDATA_SOURCES
     Mask_Data.hpp
     Mask_Data.cpp
-    IO/HDF5/Mask_Data_HDF5.hpp
-    IO/HDF5/Mask_Data_HDF5.cpp
     IO/Image/Mask_Data_Image.hpp
     IO/Image/Mask_Data_Image.cpp
     IO/JSON/Mask_Data_JSON.hpp
     IO/JSON/Mask_Data_JSON.cpp
+    IO/HDF5/Mask_Data_HDF5.hpp
+    IO/HDF5/Mask_Data_HDF5.cpp
     utils/connected_component.hpp
     utils/connected_component.cpp
     utils/hole_filling.hpp
@@ -19,19 +22,54 @@ set(mask_sources
     utils/mask_utils.hpp
     utils/mask_utils.cpp
     utils/skeletonize.cpp
-    utils/skeletonize.hpp)
+    utils/skeletonize.hpp
+)
 
-set(mask_test_sources
+# Create the MaskData shared library
+add_library(MaskData SHARED ${MASKDATA_SOURCES})
+
+# Set up include directories
+target_include_directories(MaskData PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>  # For DataManager/utils and other utils
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>     # For IO subdirectories
+    $<INSTALL_INTERFACE:include>
+)
+
+# Link to required libraries
+target_link_libraries(MaskData PUBLIC
+    NEURALYZER_GEOMETRY      # CoreGeometry
+    WhiskerToolbox::ObserverData  # Observer
+    TimeFrame                # TimeFrame  
+    Entity                   # Entity
+    nlohmann_json::nlohmann_json  # For JSON support
+    opencv_core opencv_imgproc opencv_imgcodecs opencv_photo  # For Image processing
+    DataManagerHDF5          # For HDF5 utilities
+)
+
+# Set properties
+set_target_properties(MaskData PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    VERSION 1.0.0
+    SOVERSION 1
+)
+
+# Create alias for consistent naming
+add_library(WhiskerToolbox::MaskData ALIAS MaskData)
+
+# Test sources
+set(masks_test_sources
     Mask_Data.test.cpp
     utils/connected_component.test.cpp
     utils/hole_filling.test.cpp
     utils/median_filter.test.cpp
     utils/Image.test.cpp
-    utils/skeletonize.test.cpp)
+    utils/skeletonize.test.cpp
+    utils/mask_utils.test.cpp
+)
 
-prefix_list_items(mask_sources "Masks")
-set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${mask_sources} PARENT_SCOPE)
-
-add_tests_to_global(mask_test_sources
-                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Masks"
+add_tests_to_global(masks_test_sources 
+                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Masks" 
                     DATAMANAGER_TEST_SOURCES)
+
+# No longer add sources to DataManager since they're now in the MaskData library

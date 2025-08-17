@@ -24,6 +24,8 @@ target_link_libraries(DataManagerIO PUBLIC
 )
 
 # Add subdirectories for specific format plugins
+add_subdirectory(HDF5)
+
 if(ENABLE_CAPNPROTO)
     add_subdirectory(CapnProto)
 endif()

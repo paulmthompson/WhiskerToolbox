@@ -1,6 +1,6 @@
 #include "hdf5_loaders.hpp"
 
-#include "IO/HDF5/hdf5_utilities.hpp"
+#include "hdf5_utilities.hpp"
 #include <vector>
 
 namespace Loader {
@@ -18,4 +18,4 @@ std::vector<int> read_array_hdf5(HDF5LoadOptions const & opts) {
     return hdf5::load_array<int>(convert_options(opts));
 }
 
-} // Loader
+} // namespace Loader
