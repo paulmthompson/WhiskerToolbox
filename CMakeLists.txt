@@ -12,6 +12,8 @@ option(ENABLE_HDF5 "Enable HDF5 support for data loading/saving" ON)
 # FFmpeg video support - MUST be before project() call
 option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/processing" ON)
 
+option(ENABLE_UI "Enable UI" ON)
+
 # Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")
 if(ENABLE_CAPNPROTO)
@@ -33,6 +35,13 @@ if(ENABLE_FFMPEG)
     message(STATUS "FFmpeg support: ENABLED")
 else()
     message(STATUS "FFmpeg support: DISABLED")
+endif()
+
+if(ENABLE_UI)
+    list(APPEND VCPKG_MANIFEST_FEATURES "ui")
+    message(STATUS "UI support: ENABLED")
+else()
+    message(STATUS "UI support: DISABLED")
 endif()
 
 message(STATUS "VCPKG_MANIFEST_FEATURES: ${VCPKG_MANIFEST_FEATURES}")

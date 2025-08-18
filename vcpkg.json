@@ -14,10 +14,6 @@
         {
             "name": "lapack"
         },
-        {
-            "name": "mlpack",
-            "version>=": "4.4.0"
-        },
         {   "name": "nlohmann-json"
         },
         {
@@ -60,6 +56,14 @@
                 },
                 {
                     "name": "boost-circular-buffer"
+                }
+            ]
+        },
+        "ui": {
+            "description": "User interface components",
+            "dependencies": [
+                {
+                    "name": "mlpack"
                 }
             ]
         }

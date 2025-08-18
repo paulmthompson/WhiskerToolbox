@@ -15,4 +15,6 @@ include(Catch)
 
 add_subdirectory(CoreGeometry)
 add_subdirectory(DataManager)
-add_subdirectory(WhiskerToolbox)
+if (ENABLE_UI)
+        add_subdirectory(WhiskerToolbox)
+endif()
