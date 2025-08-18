@@ -74,11 +74,7 @@
                     "name": "mlpack"
                 },
                 {
-                    "name": "opencv4",
-                    "features": [
-                        "dnn",
-                        "gtk"
-                    ]
+                    "name": "opencv4"
                 }
             ]
         }
