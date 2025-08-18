@@ -21,7 +21,7 @@
 #include "MLParameterWidgetBase.hpp"
 #include "ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp"
 #include "ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "Transformations/IdentityTransform.hpp"
 #include "Transformations/LagLeadTransform.hpp"
 #include "Transformations/SquaredTransform.hpp"

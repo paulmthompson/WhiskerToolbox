@@ -2,7 +2,7 @@
 #define MVP_ANALOGTIMESERIES_HPP
 
 #include "AnalogTimeSeriesDisplayOptions.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

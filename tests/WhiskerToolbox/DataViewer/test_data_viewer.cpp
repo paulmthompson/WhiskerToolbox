@@ -8,7 +8,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "PlottingManager/PlottingManager.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "XAxis.hpp"
 
 #include <catch2/catch_test_macros.hpp>

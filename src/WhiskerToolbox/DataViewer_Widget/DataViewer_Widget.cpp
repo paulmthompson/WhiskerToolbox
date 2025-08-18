@@ -16,7 +16,7 @@
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "Feature_Tree_Model.hpp"
 #include "OpenGLWidget.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include "AnalogTimeSeries/AnalogViewer_Widget.hpp"

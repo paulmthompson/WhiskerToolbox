@@ -1,0 +1,165 @@
+#ifndef WHISKERTOOLBOX_MEDIA_DATA_HPP
+#define WHISKERTOOLBOX_MEDIA_DATA_HPP
+
+#include "CoreGeometry/ImageSize.hpp"
+#include "Observer/Observer_Data.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace cv {
+class Mat;
+}
+
+class MediaData : public ObserverData {
+public:
+    enum class MediaType {
+        Video,
+        Images,
+        HDF5
+    };
+
+    MediaData();
+
+    virtual ~MediaData();
+
+    /**
+     * @brief Get the media type of this instance
+     * @return The MediaType enum value
+     */
+    virtual MediaType getMediaType() const = 0;
+
+    [[nodiscard]] std::string getFilename() const { return _filename; };
+    void setFilename(std::string const & filename) { _filename = filename; };
+
+    enum DisplayFormat {
+        Gray,
+        Color
+    };
+
+    void setFormat(DisplayFormat format);
+
+    [[nodiscard]] DisplayFormat getFormat() const { return _format; };
+
+    [[nodiscard]] int getHeight() const { return _height; };
+    [[nodiscard]] int getWidth() const { return _width; };
+    [[nodiscard]] ImageSize getImageSize() const {return ImageSize{.width=_width, .height=_height};};
+
+    void updateHeight(int height);
+
+    void updateWidth(int width);
+
+    [[nodiscard]] int getTotalFrameCount() const { return _totalFrameCount; };
+    void setTotalFrameCount(int total_frame_count) { _totalFrameCount = total_frame_count; };
+
+    /**
+     *
+     *
+     *
+     * @brief LoadMedia
+     * @param name points to the path to the file or folder
+     */
+    void LoadMedia(std::string const & name);
+
+    /**
+     *
+     * Subclasses will specify how to load a specific frame given by frame_id
+     * This will populate the data class member with a vector of raw uint8_t
+     *
+     *
+     *
+     * @brief LoadFrame
+     * @param frame_id
+     */
+    void LoadFrame(int frame_id);
+
+    [[nodiscard]] virtual std::string GetFrameID(int frame_id) const {
+        static_cast<void>(frame_id);
+        return "";
+    };
+
+    virtual int getFrameIndexFromNumber(int frame_id) {
+        static_cast<void>(frame_id);
+        return 0;
+    };
+
+    std::vector<uint8_t> const & getRawData(int frame_number);
+    void setRawData(std::vector<uint8_t> data) { _rawData = std::move(data); };
+
+    std::vector<uint8_t> getProcessedData(int frame_number);
+
+    void setProcess(std::string const & key, std::function<void(cv::Mat & input)> process);
+    void removeProcess(std::string const & key);
+
+    // ========== Time Frame ==========
+
+    /**
+     * @brief Set the time frame
+     * 
+     * @param time_frame The time frame to set
+     */
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
+
+protected:
+    virtual void doLoadMedia(std::string const & name) {
+        static_cast<void>(name);
+    };
+    virtual void doLoadFrame(int frame_id) {
+        static_cast<void>(frame_id);
+    };
+
+private:
+    std::string _filename;
+    int _totalFrameCount = 0;
+
+    int _height = 480;
+    int _width = 640;
+    DisplayFormat _format = DisplayFormat::Gray;
+    int _display_format_bytes = 1;
+
+    std::vector<uint8_t> _rawData;
+    std::vector<uint8_t> _processedData;
+    std::map<std::string, std::function<void(cv::Mat & input)>> _process_chain;
+    int _last_loaded_frame = -1;
+    int _last_processed_frame = -1;
+
+    std::shared_ptr<TimeFrame> _time_frame {nullptr};
+
+    void _processData();
+};
+
+/**
+ * @brief Empty MediaData implementation for default/placeholder use
+ * 
+ * This class provides a concrete implementation of MediaData that can be
+ * used as a default/placeholder when no specific media type is loaded.
+ */
+class EmptyMediaData : public MediaData {
+public:
+    EmptyMediaData() = default;
+    
+    MediaType getMediaType() const override { 
+        // Return Images as a default - this matches the old behavior
+        // where MediaData defaulted to Video type detection
+        return MediaType::Images; 
+    }
+    
+protected:
+    void doLoadMedia(std::string const& name) override {
+        // No-op for empty media data
+        static_cast<void>(name);
+    }
+    
+    void doLoadFrame(int frame_id) override {
+        // No-op for empty media data
+        static_cast<void>(frame_id);
+    }
+};
+
+
+#endif//WHISKERTOOLBOX_MEDIA_DATA_HPP

@@ -1,6 +1,6 @@
 
-add_subdirectory(CoreGeometry)
-add_subdirectory(DataManager)
+add_subdirectory(TimeFrame)
+add_subdirectory(Entity)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
 add_subdirectory(Analysis_Dashboard)

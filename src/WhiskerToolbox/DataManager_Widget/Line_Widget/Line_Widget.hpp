@@ -1,7 +1,7 @@
 #ifndef LINE_WIDGET_HPP
 #define LINE_WIDGET_HPP
 
-#include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp"
+#include "DataManager/IO/CapnProto/Line_Data_Binary.hpp"
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "IO_Widgets/Media/MediaExport_Widget.hpp"

@@ -6,40 +6,13 @@
             "name": "armadillo"
         },
         {
-            "name": "boost-circular-buffer"
-        },
-        {
-            "name": "capnproto"
-        },
-        {
-            "name": "ffmpeg",
-            "default-features": true,
-            "features": [
-                {
-                    "name": "nvcodec",
-                    "platform": "!osx"
-                }
-            ]
-        },
-        {
             "name": "glib"
         },
         {
             "name": "glm"
         },
         {
-            "name": "hdf5",
-            "features": ["cpp"]
-        },
-        {
-            "name": "highfive"
-        },
-        {
             "name": "lapack"
-        },
-        {
-            "name": "mlpack",
-            "version>=": "4.4.0"
         },
         {   "name": "nlohmann-json"
         },
@@ -47,10 +20,65 @@
             "name": "openblas"
         },
         {
-            "name": "opencv4"
+            "name": "opencv4",
+            "default-features": false,
+            "features": [ 
+                "jpeg", 
+                "png", 
+                "quirc", 
+                "tiff", 
+                "webp"
+            ]
         }
 
     ],
+    "features": {
+        "capnproto": {
+            "description": "CapnProto serialization support for binary data formats",
+            "dependencies": [
+                "capnproto"
+            ]
+        },
+        "hdf5": {
+            "description": "HDF5 support for hierarchical data format loading/saving",
+            "dependencies": [
+                {
+                    "name": "hdf5",
+                    "features": ["cpp"]
+                },
+                "highfive"
+            ]
+        },
+        "ffmpeg": {
+            "description": "FFmpeg support for video loading and processing",
+            "dependencies": [
+                {
+                    "name": "ffmpeg",
+                    "default-features": true,
+                    "features": [
+                        {
+                            "name": "nvcodec",
+                            "platform": "!osx"
+                        }
+                    ]
+                },
+                {
+                    "name": "boost-circular-buffer"
+                }
+            ]
+        },
+        "ui": {
+            "description": "User interface components",
+            "dependencies": [
+                {
+                    "name": "mlpack"
+                },
+                {
+                    "name": "opencv4"
+                }
+            ]
+        }
+    },
     "builtin-baseline": "3508985146f1b1d248c67ead13f8f54be5b4f5da",
     "$comment": "hash corresponds to 2024.08.23",
     "overrides": [

@@ -1,10 +1,9 @@
 #include "mainwindow.hpp"
 
 #include "ui_mainwindow.h"
-
+#include "video_loader.hpp"
 
 #include "DataManager.hpp"
-#include "DataManager/Media/HDF5_Data.hpp"
 #include "DataManager/Media/Image_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
@@ -28,7 +27,7 @@
 #include "ML_Widget/ML_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
 #include "Terminal_Widget/TerminalWidget.hpp"
@@ -150,27 +149,10 @@ void MainWindow::Load_Video() {
         return;
     }
 
-    auto vid_path = std::filesystem::path(vid_name.toStdString());
-    auto extension = vid_path.extension();
-
-    if (extension == ".mp4") {
-
-        auto media = std::make_shared<VideoData>();
-        media->LoadMedia(vid_name.toStdString());
-        _data_manager->setData<VideoData>("media", media, TimeKey("time"));
-
-    } else if (extension == ".h5" || extension == ".mat") {
-
-        auto media = std::make_shared<HDF5Data>();
-        media->LoadMedia(vid_name.toStdString());
-        _data_manager->setData<HDF5Data>("media", media, TimeKey("time"));
-
-    } else {
-        std::cout << "Video file with extension " << vid_path.extension() << " not supported" << std::endl;
-        return;
+    // Use the conditional video loader
+    if (loadVideoData(vid_name.toStdString(), _data_manager.get())) {
+        loadData();
     }
-
-    loadData();
 }
 
 void MainWindow::Load_Images() {

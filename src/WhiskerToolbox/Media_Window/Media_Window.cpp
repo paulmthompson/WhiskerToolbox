@@ -17,7 +17,7 @@
 #include "DataManager/Tensors/Tensor_Data.hpp"
 #define slots Q_SLOTS
 
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 
 #include <QElapsedTimer>

@@ -3,7 +3,7 @@
 
 
 #include "CoreGeometry/lines.hpp"
-#include "DataManager/TimeFrame.hpp"
+#include "DataManager/TimeFrame/TimeFrame.hpp"
 
 #include <QMap>
 #include <QWidget>

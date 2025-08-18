@@ -4,7 +4,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Tensors/Tensor_Data.hpp"
-#include "DataManager/TimeFrame.hpp"
+#include "DataManager/TimeFrame/TimeFrame.hpp"
 
 /**
  * Convert a DigitalIntervalSeries to an mlpack row vector

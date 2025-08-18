@@ -3,8 +3,7 @@
 #include "ui_TimeScrollBar.h"
 
 #include "DataManager.hpp"
-#include "Media/Video_Data.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QFileDialog>
 #include <QTimer>
@@ -48,12 +47,9 @@ void TimeScrollBar::Slider_Drag(int newPos)
 {
     static_cast<void>(newPos);
 
-    auto media = _data_manager->getData<MediaData>("media");
-    if (dynamic_cast<VideoData*>(media.get())) {
-        auto current_frame = ui->horizontalScrollBar->sliderPosition();
-        auto keyframe = dynamic_cast<VideoData*>(media.get())->FindNearestSnapFrame(current_frame);
-        ui->horizontalScrollBar->setSliderPosition(keyframe);
-    }
+    auto current_frame = ui->horizontalScrollBar->sliderPosition();
+    auto snap_frame = _getSnapFrame(current_frame);
+    ui->horizontalScrollBar->setSliderPosition(snap_frame);
 }
 
 

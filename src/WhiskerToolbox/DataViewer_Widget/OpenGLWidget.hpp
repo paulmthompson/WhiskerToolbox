@@ -4,7 +4,7 @@
 #include "ShaderManager/ShaderManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataViewer/XAxis.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>

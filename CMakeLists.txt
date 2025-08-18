@@ -2,6 +2,50 @@
 # Preamble
 #=============================
 cmake_minimum_required(VERSION 3.25)
+
+# CapnProto data format support - MUST be before project() call
+option(ENABLE_CAPNPROTO "Enable CapnProto serialization support for data loading/saving" ON)
+
+# HDF5 data format support - MUST be before project() call
+option(ENABLE_HDF5 "Enable HDF5 support for data loading/saving" ON)
+
+# FFmpeg video support - MUST be before project() call
+option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/processing" ON)
+
+option(ENABLE_UI "Enable UI" ON)
+
+# Configure vcpkg features based on CMake options - MUST be before project() call
+set(VCPKG_MANIFEST_FEATURES "")
+if(ENABLE_CAPNPROTO)
+    list(APPEND VCPKG_MANIFEST_FEATURES "capnproto")
+    message(STATUS "CapnProto support: ENABLED")
+else()
+    message(STATUS "CapnProto support: DISABLED")
+endif()
+
+if(ENABLE_HDF5)
+    list(APPEND VCPKG_MANIFEST_FEATURES "hdf5")
+    message(STATUS "HDF5 support: ENABLED")
+else()
+    message(STATUS "HDF5 support: DISABLED")
+endif()
+
+if(ENABLE_FFMPEG)
+    list(APPEND VCPKG_MANIFEST_FEATURES "ffmpeg")
+    message(STATUS "FFmpeg support: ENABLED")
+else()
+    message(STATUS "FFmpeg support: DISABLED")
+endif()
+
+if(ENABLE_UI)
+    list(APPEND VCPKG_MANIFEST_FEATURES "ui")
+    message(STATUS "UI support: ENABLED")
+else()
+    message(STATUS "UI support: DISABLED")
+endif()
+
+message(STATUS "VCPKG_MANIFEST_FEATURES: ${VCPKG_MANIFEST_FEATURES}")
+
 project(BehaviorToolbox VERSION 0.3.5 LANGUAGES CXX)
 
 include(CTest)

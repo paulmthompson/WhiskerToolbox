@@ -2,7 +2,7 @@
 #define BINARY_LINE_SAVER_WIDGET_HPP
 
 #include <QWidget>
-#include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp" // For BinaryLineSaverOptions
+#include "DataManager/IO/CapnProto/Line_Data_Binary.hpp" // For BinaryLineSaverOptions
 
 // Forward declaration
 namespace Ui {

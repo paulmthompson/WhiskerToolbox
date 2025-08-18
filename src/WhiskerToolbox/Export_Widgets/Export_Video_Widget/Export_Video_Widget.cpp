@@ -6,7 +6,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
-#include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include "Media_Window/Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
