@@ -20,7 +20,15 @@
             "name": "openblas"
         },
         {
-            "name": "opencv4"
+            "name": "opencv4",
+            "default-features": false,
+            "features": [ 
+                "jpeg", 
+                "png", 
+                "quirc", 
+                "tiff", 
+                "webp"
+            ]
         }
 
     ],
@@ -64,6 +72,13 @@
             "dependencies": [
                 {
                     "name": "mlpack"
+                },
+                {
+                    "name": "opencv4",
+                    "features": [
+                        "dnn",
+                        "gtk"
+                    ]
                 }
             ]
         }
