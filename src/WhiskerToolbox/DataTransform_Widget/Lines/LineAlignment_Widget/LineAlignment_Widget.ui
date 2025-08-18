@@ -33,7 +33,7 @@
    <item>
     <widget class="QLabel" name="descriptionLabel">
      <property name="text">
-      <string>Aligns line vertices to bright linear objects in media data using FWHM analysis. The algorithm will automatically use the first available media data.</string>
+      <string>Aligns line vertices to bright linear objects in media data using FWHM analysis. The algorithm calculates perpendicular directions at each vertex and finds the optimal displacement to align with bright features in the image.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
