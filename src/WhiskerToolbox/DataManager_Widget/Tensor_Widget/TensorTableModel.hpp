@@ -3,31 +3,38 @@
 
 #include "DataManager/TimeFrame/TimeFrame.hpp"
 
-#include <QAbstractTableModel>
-
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
-#include <torch/torch.h>
+#include "DataManager/Tensors/Tensor_Data.hpp"
 #define slots Q_SLOTS
 
+#include <QAbstractTableModel>
+
 #include <map>
+
+class TensorData; // Forward declaration
 
 class TensorTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
     explicit TensorTableModel(QObject * parent = nullptr)
-        : QAbstractTableModel(parent) {}
+        : QAbstractTableModel(parent), _tensor_data(nullptr) {}
 
-    void setTensors(std::map<TimeFrameIndex, torch::Tensor> const & tensors) {
+    void setTensorData(TensorData* tensor_data) {
         beginResetModel();
-        _tensors = tensors;
+        _tensor_data = tensor_data;
+        if (_tensor_data) {
+            _frame_indices = _tensor_data->getTimesWithTensors();
+        } else {
+            _frame_indices.clear();
+        }
         endResetModel();
     }
 
     [[nodiscard]] int rowCount(QModelIndex const & parent) const override {
         Q_UNUSED(parent);
-        return static_cast<int>(_tensors.size());
+        return static_cast<int>(_frame_indices.size());
     }
 
     [[nodiscard]] int columnCount(QModelIndex const & parent) const override {
@@ -36,22 +43,27 @@ public:
     }
 
     [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override {
-        if (!index.isValid() || role != Qt::DisplayRole) {
+        if (!index.isValid() || role != Qt::DisplayRole || !_tensor_data) {
             return QVariant{};
         }
 
-        auto it = std::next(_tensors.begin(), index.row());
-        auto const frame = it->first.getValue();
-        torch::Tensor const & tensor = it->second;
+        if (index.row() >= static_cast<int>(_frame_indices.size())) {
+            return QVariant{};
+        }
+
+        auto const frame = _frame_indices[index.row()];
 
         if (index.column() == 0) {
-            return QVariant::fromValue(frame);
+            return QVariant::fromValue(frame.getValue());
         } else if (index.column() == 1) {
-
-            auto tensor_size = tensor.sizes();
-            QString shape = QString::number(tensor_size[0]);
-            for (int i = 1; i < tensor_size.size(); i++) {
-                shape += "x" + QString::number(tensor_size[i]);
+            auto tensor_shape = _tensor_data->getTensorShapeAtTime(frame);
+            if (tensor_shape.empty()) {
+                return QString("Unknown");
+            }
+            
+            QString shape = QString::number(tensor_shape[0]);
+            for (size_t i = 1; i < tensor_shape.size(); i++) {
+                shape += "x" + QString::number(tensor_shape[i]);
             }
             return shape;
         }
@@ -76,7 +88,8 @@ public:
     }
 
 private:
-    std::map<TimeFrameIndex, torch::Tensor> _tensors;
+    TensorData* _tensor_data;
+    std::vector<TimeFrameIndex> _frame_indices;
 };
 
 #endif// TENSORTABLEMODEL_HPP

@@ -25,9 +25,7 @@
             "features": [ 
                 "jpeg", 
                 "png", 
-                "quirc", 
-                "tiff", 
-                "webp"
+                "tiff"
             ]
         }
 

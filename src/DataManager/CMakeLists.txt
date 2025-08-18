@@ -1,9 +1,12 @@
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
-set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
-find_package(Torch REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+# Only find Torch if using LibTorch backend
+if(TENSOR_BACKEND_LIBTORCH)
+    set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
+    find_package(Torch REQUIRED)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")# Link TensorData library
+endif()
 
 # Find packages conditionally
 if(ENABLE_HDF5)
@@ -27,6 +30,9 @@ add_subdirectory(IO)
 
 # Add Media as a separate library
 add_subdirectory(Media)
+
+# Add Tensors as a separate library
+add_subdirectory(Tensors)
 
 set(DATAMANAGER_SOURCES
         DataManager.hpp
@@ -52,7 +58,6 @@ set(DATAMANAGER_SOURCES
         DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.cpp
 
         Tensors/Tensor_Data.hpp
-        Tensors/Tensor_Data.cpp
         Tensors/IO/numpy/Tensor_Data_numpy.cpp
         Tensors/IO/numpy/Tensor_Data_numpy.hpp
 
@@ -256,7 +261,14 @@ target_link_libraries(DataManager PRIVATE Whisker-Analysis)
 
 target_link_libraries(DataManager PUBLIC iir::iir)
 
-target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
+# Link TensorData library
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::TensorData)
+
+# Only link LibTorch if using LibTorch backend
+if(TENSOR_BACKEND_LIBTORCH)
+    target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
+    target_compile_definitions(DataManager PRIVATE TENSOR_BACKEND_LIBTORCH)
+endif()
 
 # Link to the ObserverData library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)

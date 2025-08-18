@@ -145,20 +145,19 @@ arma::Mat<double> convertTensorDataToMlpackMatrix(
 
     // Fill the matrix with the tensor data
     for (std::size_t col = 0; col < numCols; ++col) {
-        auto tensor = tensor_data->getTensorAtTime(TimeFrameIndex(timestamps[col]));
+        // Use the backend-agnostic interface
+        auto tensor_data_vec = tensor_data->getTensorDataAtTime(TimeFrameIndex(timestamps[col]));
 
-        if (tensor.numel() == 0) {
+        if (tensor_data_vec.empty()) {
             for (std::size_t row = 0; row < numRows; ++row) {
                 result(row, col) = arma::datum::nan;
             }
             continue;
         }
 
-        auto flattened_tensor = tensor.flatten();
-        auto tensor_data_ptr = flattened_tensor.data_ptr<float>();
-
-        for (std::size_t row = 0; row < flattened_tensor.numel(); ++row) {
-            result(row, col) = static_cast<double>(tensor_data_ptr[row]);
+        // tensor_data_vec is already flattened as a std::vector<float>
+        for (std::size_t row = 0; row < tensor_data_vec.size() && row < numRows; ++row) {
+            result(row, col) = static_cast<double>(tensor_data_vec[row]);
         }
     }
 
@@ -176,12 +175,18 @@ inline void updateTensorDataFromMlpackMatrix(
         std::vector<std::size_t> const & timestamps,
         TensorData & tensor_data) {
     auto feature_shape = tensor_data.getFeatureShape();
-    std::vector<int64_t> const shape(feature_shape.begin(), feature_shape.end());
 
     for (std::size_t i = 0; i < timestamps.size(); ++i) {
         auto col = copyMatrixRowToVector<double>(matrix.col(i));
-        torch::Tensor const tensor = torch::from_blob(col.data(), shape, torch::kDouble).clone();
-        tensor_data.overwriteTensorAtTime(TimeFrameIndex(timestamps[i]), tensor);
+        
+        // Convert double vector to float vector for the backend-agnostic interface
+        std::vector<float> float_data;
+        float_data.reserve(col.size());
+        for (double val : col) {
+            float_data.push_back(static_cast<float>(val));
+        }
+        
+        tensor_data.overwriteTensorAtTime(TimeFrameIndex(timestamps[i]), float_data, feature_shape);
     }
 }
 

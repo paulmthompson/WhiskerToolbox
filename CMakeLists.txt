@@ -12,6 +12,9 @@ option(ENABLE_HDF5 "Enable HDF5 support for data loading/saving" ON)
 # FFmpeg video support - MUST be before project() call
 option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/processing" ON)
 
+# Tensor backend selection - MUST be before project() call
+option(TENSOR_BACKEND_LIBTORCH "Use LibTorch as tensor backend (enables deep learning)" ON)
+
 option(ENABLE_UI "Enable UI" ON)
 
 # Configure vcpkg features based on CMake options - MUST be before project() call
@@ -42,6 +45,12 @@ if(ENABLE_UI)
     message(STATUS "UI support: ENABLED")
 else()
     message(STATUS "UI support: DISABLED")
+endif()
+
+if(TENSOR_BACKEND_LIBTORCH)
+    message(STATUS "Tensor backend: LibTorch (deep learning enabled)")
+else()
+    message(STATUS "Tensor backend: Armadillo (lightweight, no deep learning)")
 endif()
 
 message(STATUS "VCPKG_MANIFEST_FEATURES: ${VCPKG_MANIFEST_FEATURES}")

@@ -44,8 +44,8 @@ void Tensor_Widget::setActiveKey(std::string const & key) {
 }
 
 void Tensor_Widget::updateTable() {
-    auto tensors = _data_manager->getData<TensorData>(_active_key)->getData();
-    _tensor_table_model->setTensors(tensors);
+    auto tensor_data = _data_manager->getData<TensorData>(_active_key);
+    _tensor_table_model->setTensorData(tensor_data.get());
 }
 
 void Tensor_Widget::_saveTensorCSV() {
