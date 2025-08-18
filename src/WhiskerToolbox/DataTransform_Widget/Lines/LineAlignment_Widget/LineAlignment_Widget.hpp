@@ -25,7 +25,6 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
 private slots:
-    void _mediaFeatureSelected(QString const & feature);
     void _widthValueChanged(int value);
     void _perpendicularRangeValueChanged(int value);
     void _useProcessedDataToggled(bool checked);
@@ -33,4 +32,4 @@ private slots:
     void _outputModeChanged(int index);
 };
 
-#endif// LINEALIGNMENT_WIDGET_HPP 
+#endif// LINEALIGNMENT_WIDGET_HPP
