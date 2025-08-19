@@ -15,6 +15,8 @@ capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS line_data.capnp)
 set(CAPNPROTO_PLUGIN_SOURCES
     CapnProtoLoader.hpp
     CapnProtoLoader.cpp
+    CapnProtoFormatLoader.hpp
+    CapnProtoFormatLoader.cpp
     Serialization.hpp
     Serialization.cpp
     Line_Data_Binary.hpp

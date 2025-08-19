@@ -2,6 +2,8 @@
 
 #include "Media/MediaDataFactory.hpp"
 #include "ConcreteDataFactory.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "IO/LoaderRegistration.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -51,26 +53,27 @@
 using namespace nlohmann;
 
 /**
- * @brief Try loading data using plugin system first, fallback to legacy if needed
+ * @brief Try loading data using new registry system first, fallback to legacy if needed
  */
-bool tryPluginThenLegacyLoad(
+bool tryRegistryThenLegacyLoad(
     DataManager* dm,
     std::string const& file_path,
     DM_DataType data_type,
     nlohmann::json const& item,
     std::string const& name,
     std::vector<DataInfo>& data_info_list,
-    class DataFactory* factory
+    DataFactory* factory
 ) {
     // Extract format if available
     if (item.contains("format")) {
         std::string const format = item["format"];
         
-        // Try plugin system first
-        if (PluginLoader::isFormatSupported(format, toIODataType(data_type))) {
-            std::cout << "Using plugin loader for " << name << " (format: " << format << ")" << std::endl;
+        // Try registry system first
+        LoaderRegistry& registry = LoaderRegistry::getInstance();
+        if (registry.isFormatSupported(format, toIODataType(data_type))) {
+            std::cout << "Using registry loader for " << name << " (format: " << format << ")" << std::endl;
 
-            LoadResult result = PluginLoader::loadData(file_path, toIODataType(data_type), item, factory);
+            LoadResult result = registry.tryLoad(format, toIODataType(data_type), file_path, item, factory);
             if (result.success) {
                 // Handle data setting and post-loading setup based on data type
                 switch (data_type) {
@@ -94,13 +97,13 @@ bool tryPluginThenLegacyLoad(
                     }
                     // Add other data types as they get plugin support...
                     default:
-                        std::cerr << "Plugin loaded unsupported data type: " << static_cast<int>(data_type) << std::endl;
+                        std::cerr << "Registry loaded unsupported data type: " << static_cast<int>(data_type) << std::endl;
                         return false;
                 }
                 
                 return true;
             } else {
-                std::cout << "Plugin loading failed for " << name << ": " << result.error_message 
+                std::cout << "Registry loading failed for " << name << ": " << result.error_message 
                          << ", falling back to legacy loader" << std::endl;
             }
         }
@@ -121,6 +124,13 @@ DataManager::DataManager() {
 
     // Initialize EntityRegistry
     _entity_registry = std::make_unique<EntityRegistry>();
+
+    // Register all available loaders
+    static bool loaders_registered = false;
+    if (!loaders_registered) {
+        registerAllLoaders();
+        loaders_registered = true;
+    }
 }
 
 DataManager::~DataManager() = default;
@@ -549,8 +559,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             }
             case DM_DataType::Line: {
                 
-                // Try plugin system first, then fallback to legacy
-                if (tryPluginThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list, &factory)) {
+                // Try registry system first, then fallback to legacy
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list, &factory)) {
                     break; // Successfully loaded with plugin
                 }
                 

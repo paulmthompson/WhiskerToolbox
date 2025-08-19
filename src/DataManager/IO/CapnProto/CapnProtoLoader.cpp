@@ -115,5 +115,5 @@ LineDataRaw CapnProtoLoader::extractLineDataRaw(
     return raw_data;
 }
 
-// Static registration - this will be called during static initialization
-REGISTER_LOADER(CapnProtoLoader);
+// Note: CapnProto registration is now handled by the LoaderRegistration system
+// The CapnProtoFormatLoader wraps this class for the new registry system

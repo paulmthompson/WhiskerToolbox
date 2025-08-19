@@ -62,11 +62,18 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_hole_filling.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_median_filter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_principal_axis.test.cpp
+
+        # IO tests
 )
 
 # Add VideoData tests only if FFmpeg is enabled
 if(ENABLE_FFMPEG)
     target_sources(test_data_manager PRIVATE test_video_data_manager.cpp)
+endif()
+
+if(ENABLE_CAPNPROTO)
+    target_sources(test_data_manager PRIVATE IO/line_data_binary.test.cpp)
+    target_link_libraries(test_data_manager PRIVATE DataManagerIO_CapnProto)
 endif()
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)

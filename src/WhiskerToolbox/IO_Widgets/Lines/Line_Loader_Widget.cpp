@@ -169,9 +169,8 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
     try {
         // Use the new HDF5 loader through the plugin system
         auto& registry = LoaderRegistry::getInstance();
-        auto const* loader = registry.findLoader("hdf5", toIODataType(DM_DataType::Line));
         
-        if (!loader) {
+        if (!registry.isFormatSupported("hdf5", toIODataType(DM_DataType::Line))) {
             QMessageBox::critical(this, "Load Error", "HDF5 loader not found. Please ensure the HDF5 plugin is loaded.");
             return;
         }
@@ -181,6 +180,7 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
         
         // Configure HDF5 loading parameters
         nlohmann::json config;
+        config["format"] = "hdf5";  // Required by new system
         config["frame_key"] = "frames";
         config["x_key"] = "y";  // Note: x and y are swapped in the original implementation
         config["y_key"] = "x";
@@ -192,8 +192,8 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
             config["image_height"] = original_size.height;
         }
         
-        // Load the data
-        auto result = loader->loadData(filename, toIODataType(DM_DataType::Line), config, &factory);
+        // Load the data using new registry system
+        auto result = registry.tryLoad("hdf5", toIODataType(DM_DataType::Line), filename, config, &factory);
         
         if (!result.success) {
             QMessageBox::critical(this, "Load Error", QString::fromStdString("Failed to load HDF5 file: " + result.error_message));

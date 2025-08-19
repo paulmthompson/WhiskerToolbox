@@ -122,9 +122,8 @@ void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, s
     try {
         // Use the HDF5 loader through the plugin system
         auto& registry = LoaderRegistry::getInstance();
-        auto const* loader = registry.findLoader("hdf5", toIODataType(DM_DataType::Mask));
         
-        if (!loader) {
+        if (!registry.isFormatSupported("hdf5", toIODataType(DM_DataType::Mask))) {
             QMessageBox::critical(this, "Load Error", "HDF5 loader not found. Please ensure the HDF5 plugin is loaded.");
             return;
         }
@@ -134,6 +133,7 @@ void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, s
         
         // Configure HDF5 loading parameters
         nlohmann::json config;
+        config["format"] = "hdf5";  // Required by new system
         config["frame_key"] = "frames";
         config["x_key"] = "widths";
         config["y_key"] = "heights";
@@ -145,8 +145,8 @@ void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, s
             config["image_height"] = original_size.height;
         }
         
-        // Load the data
-        auto result = loader->loadData(filename, toIODataType(DM_DataType::Mask), config, &factory);
+        // Load the data using new registry system
+        auto result = registry.tryLoad("hdf5", toIODataType(DM_DataType::Mask), filename, config, &factory);
         
         if (!result.success) {
             QMessageBox::critical(this, "Load Error", QString::fromStdString("Failed to load HDF5 file: " + result.error_message));

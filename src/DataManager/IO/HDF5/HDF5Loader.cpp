@@ -206,10 +206,11 @@ LoadResult HDF5Loader::loadLineData(
     }
 }
 
-// Register the HDF5 loader
-REGISTER_LOADER(HDF5Loader);
+// Note: HDF5 registration is now handled by the LoaderRegistration system
+// The HDF5FormatLoader wraps this class for the new registry system
 
-// Force linking of this object file - call this function to ensure registration
+// Keep this function for backward compatibility - some code may still call it
 extern "C" void ensure_hdf5_loader_registration() {
     // This function does nothing but ensures the object file is linked
+    // Registration is now handled automatically by LoaderRegistration
 }

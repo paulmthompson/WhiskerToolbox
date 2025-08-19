@@ -1,84 +1,116 @@
-#ifndef DATAMANAGER_IO_LOADERREGISTRY_HPP
-#define DATAMANAGER_IO_LOADERREGISTRY_HPP
+#ifndef LOADER_REGISTRY_HPP
+#define LOADER_REGISTRY_HPP
 
-#include "DataLoader.hpp"
 #include "IOTypes.hpp"
+#include "DataFactory.hpp"
+#include "DataLoader.hpp"
+
+#include "nlohmann/json.hpp"
+
 #include <memory>
-#include <unordered_map>
+#include <string>
 #include <vector>
-#include <functional>
 
 /**
- * @brief Registry for data loader plugins
- * 
- * This singleton manages all registered data loaders and provides
- * lookup functionality to find appropriate loaders for given formats.
+ * @brief Interface for format-specific loaders
+ */
+class IFormatLoader {
+public:
+    virtual ~IFormatLoader() = default;
+    
+    /**
+     * @brief Load data from file
+     * 
+     * @param filepath Path to the file to load
+     * @param dataType Type of data being loaded
+     * @param config JSON configuration for loading
+     * @param factory Factory for creating data objects
+     * @return LoadResult containing loaded data or error
+     */
+    virtual LoadResult load(std::string const& filepath, 
+                           IODataType dataType, 
+                           nlohmann::json const& config, 
+                           DataFactory* factory) const = 0;
+    
+    /**
+     * @brief Check if this loader supports the given format and data type
+     * 
+     * @param format Format string (e.g., "csv", "capnp", "hdf5")
+     * @param dataType Type of data (e.g., IODataType::Line, IODataType::Points)
+     * @return true if this loader can handle the format/dataType combination
+     */
+    virtual bool supportsFormat(std::string const& format, IODataType dataType) const = 0;
+    
+    /**
+     * @brief Get the name of this loader (for logging/debugging)
+     */
+    virtual std::string getLoaderName() const = 0;
+};
+
+/**
+ * @brief Registry for managing data format loaders
  */
 class LoaderRegistry {
 public:
-    /**
-     * @brief Get the singleton instance
-     */
-    static LoaderRegistry& getInstance();
+    LoaderRegistry() = default;
+    ~LoaderRegistry() = default;
+    
+    // Non-copyable, non-movable for simplicity
+    LoaderRegistry(LoaderRegistry const&) = delete;
+    LoaderRegistry& operator=(LoaderRegistry const&) = delete;
+    LoaderRegistry(LoaderRegistry&&) = delete;
+    LoaderRegistry& operator=(LoaderRegistry&&) = delete;
     
     /**
-     * @brief Register a data loader
+     * @brief Register a loader plugin
      * 
      * @param loader Unique pointer to the loader implementation
-     * @return true if registration was successful, false if format already exists
      */
-    bool registerLoader(std::unique_ptr<DataLoader> loader);
+    void registerLoader(std::unique_ptr<IFormatLoader> loader);
     
     /**
-     * @brief Find a loader for the given format and data type
+     * @brief Try to load data using registered loaders
      * 
-     * @param format_id Format identifier (e.g., "capnp", "hdf5")
-     * @param data_type The data type to load
-     * @return Pointer to the loader, or nullptr if not found
+     * Attempts to find a suitable loader for the given format and data type.
+     * Returns the first successful load result, or failure if no loader can handle it.
+     * 
+     * @param format Format string from JSON config
+     * @param dataType Type of data being loaded
+     * @param filepath Path to the file to load
+     * @param config Full JSON configuration object
+     * @param factory Factory for creating data objects
+     * @return LoadResult with loaded data or error message
      */
-    DataLoader const* findLoader(std::string const& format_id, IODataType data_type) const;
+    LoadResult tryLoad(std::string const& format, 
+                      IODataType dataType,
+                      std::string const& filepath, 
+                      nlohmann::json const& config, 
+                      DataFactory* factory);
     
     /**
-     * @brief Get all registered format IDs
+     * @brief Check if any registered loader supports the given format/dataType
+     * 
+     * @param format Format string
+     * @param dataType Type of data
+     * @return true if at least one loader supports this combination
      */
-    std::vector<std::string> getRegisteredFormats() const;
+    bool isFormatSupported(std::string const& format, IODataType dataType) const;
     
     /**
-     * @brief Get all data types supported by a format
+     * @brief Get list of all supported formats for a data type
+     * 
+     * @param dataType Type of data
+     * @return Vector of format strings supported for this data type
      */
-    std::vector<IODataType> getSupportedDataTypes(std::string const& format_id) const;
+    std::vector<std::string> getSupportedFormats(IODataType dataType) const;
+    
+    /**
+     * @brief Get singleton instance
+     */
+    static LoaderRegistry& getInstance();
 
 private:
-    LoaderRegistry() = default;
-    
-    // Map from format_id to loader instance
-    std::unordered_map<std::string, std::unique_ptr<DataLoader>> _loaders;
+    std::vector<std::unique_ptr<IFormatLoader>> m_loaders;
 };
 
-/**
- * @brief Helper class for automatic loader registration
- * 
- * Plugin implementations should create a static instance of this class
- * to automatically register their loader during static initialization.
- */
-template<typename LoaderType>
-class LoaderRegistration {
-public:
-    LoaderRegistration() {
-        auto& registry = LoaderRegistry::getInstance();
-        registry.registerLoader(std::make_unique<LoaderType>());
-    }
-};
-
-/**
- * @brief Macro to simplify loader registration
- * 
- * Usage in plugin:
- * REGISTER_LOADER(MyCapnProtoLoader);
- */
-#define REGISTER_LOADER(LoaderClass) \
-    namespace { \
-        static LoaderRegistration<LoaderClass> g_##LoaderClass##_registration; \
-    }
-
-#endif // DATAMANAGER_IO_LOADERREGISTRY_HPP
+#endif // LOADER_REGISTRY_HPP

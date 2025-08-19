@@ -1,74 +1,91 @@
 #include "LoaderRegistry.hpp"
+
+#include <algorithm>
 #include <iostream>
+#include <sstream>
 
-LoaderRegistry& LoaderRegistry::getInstance() {
-    static LoaderRegistry instance;
-    return instance;
-}
-
-bool LoaderRegistry::registerLoader(std::unique_ptr<DataLoader> loader) {
+void LoaderRegistry::registerLoader(std::unique_ptr<IFormatLoader> loader) {
     if (!loader) {
         std::cerr << "LoaderRegistry: Attempted to register null loader" << std::endl;
-        return false;
+        return;
     }
     
-    std::string const format_id = loader->getFormatId();
-    
-    if (_loaders.find(format_id) != _loaders.end()) {
-        std::cerr << "LoaderRegistry: Format '" << format_id 
-                  << "' is already registered" << std::endl;
-        return false;
-    }
-    
-    std::cout << "LoaderRegistry: Registered loader for format '" << format_id << "'" << std::endl;
-    _loaders[format_id] = std::move(loader);
-    return true;
+    std::cout << "LoaderRegistry: Registered loader '" << loader->getLoaderName() << "'" << std::endl;
+    m_loaders.push_back(std::move(loader));
 }
 
-DataLoader const* LoaderRegistry::findLoader(std::string const& format_id, IODataType data_type) const {
-    auto it = _loaders.find(format_id);
-    if (it == _loaders.end()) {
-        return nullptr;
+LoadResult LoaderRegistry::tryLoad(std::string const& format, 
+                                  IODataType dataType,
+                                  std::string const& filepath, 
+                                  nlohmann::json const& config, 
+                                  DataFactory* factory) {
+    if (!factory) {
+        return LoadResult("DataFactory is null");
     }
     
-    if (!it->second->supportsDataType(data_type)) {
-        return nullptr;
+    // Try each registered loader
+    for (auto const& loader : m_loaders) {
+        if (loader->supportsFormat(format, dataType)) {
+            std::cout << "LoaderRegistry: Trying loader '" << loader->getLoaderName() 
+                     << "' for format '" << format << "'" << std::endl;
+            
+            try {
+                LoadResult result = loader->load(filepath, dataType, config, factory);
+                if (result.success) {
+                    std::cout << "LoaderRegistry: Successfully loaded with '" 
+                             << loader->getLoaderName() << "'" << std::endl;
+                    return result;
+                } else {
+                    std::cout << "LoaderRegistry: Loader '" << loader->getLoaderName() 
+                             << "' failed: " << result.error_message << std::endl;
+                }
+            } catch (std::exception const& e) {
+                std::cout << "LoaderRegistry: Loader '" << loader->getLoaderName() 
+                         << "' threw exception: " << e.what() << std::endl;
+            } catch (...) {
+                std::cout << "LoaderRegistry: Loader '" << loader->getLoaderName() 
+                         << "' threw unknown exception" << std::endl;
+            }
+        }
     }
     
-    return it->second.get();
+    // No loader could handle this format
+    std::ostringstream error_msg;
+    error_msg << "No registered loader supports format '" << format 
+              << "' for data type " << static_cast<int>(dataType);
+    return LoadResult(error_msg.str());
 }
 
-std::vector<std::string> LoaderRegistry::getRegisteredFormats() const {
+bool LoaderRegistry::isFormatSupported(std::string const& format, IODataType dataType) const {
+    return std::any_of(m_loaders.begin(), m_loaders.end(),
+                      [&](auto const& loader) {
+                          return loader->supportsFormat(format, dataType);
+                      });
+}
+
+std::vector<std::string> LoaderRegistry::getSupportedFormats(IODataType dataType) const {
     std::vector<std::string> formats;
-    formats.reserve(_loaders.size());
     
-    for (auto const& [format_id, loader] : _loaders) {
-        formats.push_back(format_id);
+    // This is a simplified implementation - in practice you might want to query each loader
+    // for its supported formats to avoid hardcoding
+    for (auto const& loader : m_loaders) {
+        // For now, we'll need to check common formats
+        // A more sophisticated approach would have loaders expose their supported formats
+        std::vector<std::string> common_formats = {"csv", "capnp", "binary", "hdf5", "json"};
+        
+        for (auto const& format : common_formats) {
+            if (loader->supportsFormat(format, dataType)) {
+                if (std::find(formats.begin(), formats.end(), format) == formats.end()) {
+                    formats.push_back(format);
+                }
+            }
+        }
     }
     
     return formats;
 }
 
-std::vector<IODataType> LoaderRegistry::getSupportedDataTypes(std::string const& format_id) const {
-    auto it = _loaders.find(format_id);
-    if (it == _loaders.end()) {
-        return {};
-    }
-    
-    std::vector<IODataType> supported_types;
-    
-    // Check all possible data types
-    using enum IODataType;
-    std::vector<IODataType> all_types = {
-        Line, Points, Mask, Images, Video,
-        Analog, DigitalEvent, DigitalInterval, Tensor, Time
-    };
-    
-    for (IODataType type : all_types) {
-        if (it->second->supportsDataType(type)) {
-            supported_types.push_back(type);
-        }
-    }
-    
-    return supported_types;
+LoaderRegistry& LoaderRegistry::getInstance() {
+    static LoaderRegistry instance;
+    return instance;
 }

@@ -8,6 +8,8 @@ set(DATAMANAGER_HDF5_SOURCES
     hdf5_loaders.cpp
     HDF5Loader.hpp
     HDF5Loader.cpp
+    HDF5FormatLoader.hpp
+    HDF5FormatLoader.cpp
     HDF5Init.hpp
     HDF5Init.cpp
     Mask_Data_HDF5.hpp

@@ -5,10 +5,14 @@ set(IO_CORE_SOURCES
     DataLoader.hpp
     LoaderRegistry.hpp
     LoaderRegistry.cpp
+    LoaderRegistration.hpp
+    LoaderRegistration.cpp
     PluginLoader.hpp
     PluginLoader.cpp
     DataFactory.hpp
     PluginDemo.hpp
+    loaders/CSVLoader.hpp
+    loaders/CSVLoader.cpp
 )
 
 # Create the core IO library
@@ -44,6 +48,8 @@ endif()
 if (MSVC)
     target_compile_options(DataManagerIO PRIVATE ${MSVC_WARNINGS})
 endif()
+
+target_compile_definitions(DataManagerIO PUBLIC ENABLE_CAPNPROTO)
 
 # Set properties
 set_target_properties(DataManagerIO PROPERTIES
