@@ -7,8 +7,6 @@ set(LINEDATA_SOURCES
     Line_Data.cpp
     IO/CSV/Line_Data_CSV.hpp
     IO/CSV/Line_Data_CSV.cpp
-    IO/HDF5/Line_Data_HDF5.hpp
-    IO/HDF5/Line_Data_HDF5.cpp
     IO/JSON/Line_Data_JSON.hpp
     IO/JSON/Line_Data_JSON.cpp
     #IO/RocksDB/Line_Data_RocksDB.hpp  # Commented out - may depend on CapnProto

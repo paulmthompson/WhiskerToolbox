@@ -76,6 +76,11 @@ if(ENABLE_CAPNPROTO)
     target_link_libraries(test_data_manager PRIVATE DataManagerIO_CapnProto)
 endif()
 
+if(ENABLE_HDF5)
+    target_sources(test_data_manager PRIVATE IO/line_data_hdf5.test.cpp)
+    target_link_libraries(test_data_manager PRIVATE DataManagerHDF5)
+endif()
+
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
 
 target_include_directories(test_data_manager PRIVATE

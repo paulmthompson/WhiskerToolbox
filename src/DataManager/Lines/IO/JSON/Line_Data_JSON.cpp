@@ -77,14 +77,18 @@ std::shared_ptr<LineData> load_into_LineData(std::string const & file_path, nloh
     } else if (format == "binary" || format == "capnp") {
         // Binary format is now handled by CapnProto plugin
         // This should be loaded through the plugin system
-        // For now, return empty data - this should be handled by DataManager's plugin system
         std::cerr << "Warning: Binary/CapnProto format should be loaded through plugin system, not JSON loader\n";
         return std::make_shared<LineData>();
 
     } else if (format == "hdf5") {
+        // HDF5 format is now handled by HDF5 plugin
+        // This should be loaded through the plugin system
+        std::cerr << "Warning: HDF5 format should be loaded through plugin system, not JSON loader\n";
+        return std::make_shared<LineData>();
 
     } else {
-
+        std::cerr << "Warning: Unknown format '" << format << "' - should be handled through plugin system\n";
+        return std::make_shared<LineData>();
     }
 
     change_image_size_json(line_data, item);
