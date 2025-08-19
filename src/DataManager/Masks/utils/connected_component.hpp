@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_CONNECTED_COMPONENT_HPP
 #define WHISKERTOOLBOX_CONNECTED_COMPONENT_HPP
 
-#include "Image.hpp"
+#include "CoreGeometry/Image.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 
 #include <cstdint>

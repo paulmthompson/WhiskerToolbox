@@ -4,6 +4,7 @@
 set(NEURALYZER_GEOMETRY_INCLUDES
     include/CoreGeometry/boundingbox.hpp
     include/CoreGeometry/geometry.hpp
+    include/CoreGeometry/Image.hpp
     include/CoreGeometry/ImageSize.hpp
     include/CoreGeometry/lines.hpp
     include/CoreGeometry/line_geometry.hpp
@@ -23,6 +24,7 @@ set(NEURALYZER_GEOMETRY_INCLUDES
 )
 
 set(NEURALYZER_GEOMETRY_SOURCES
+   src/Image.cpp
    src/lines.cpp
    src/line_geometry.cpp
    src/order_line.cpp
@@ -40,6 +42,7 @@ set(NEURALYZER_GEOMETRY_SOURCES
 set_property(GLOBAL PROPERTY CORE_GEOMETRY_TEST_SOURCES )
 
 set(core_geometry_test_sources
+    src/Image.test.cpp
     src/line_geometry.test.cpp
     src/masks.test.cpp
     src/polygon.test.cpp

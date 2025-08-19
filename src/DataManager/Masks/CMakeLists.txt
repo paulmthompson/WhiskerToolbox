@@ -15,8 +15,6 @@ set(MASKDATA_SOURCES
     utils/hole_filling.cpp
     utils/median_filter.hpp
     utils/median_filter.cpp
-    utils/Image.hpp
-    utils/Image.cpp
     utils/mask_utils.hpp
     utils/mask_utils.cpp
     utils/skeletonize.cpp
@@ -73,7 +71,6 @@ set(masks_test_sources
     utils/connected_component.test.cpp
     utils/hole_filling.test.cpp
     utils/median_filter.test.cpp
-    utils/Image.test.cpp
     utils/skeletonize.test.cpp
     utils/mask_utils.test.cpp
 )
@@ -82,4 +79,3 @@ add_tests_to_global(masks_test_sources
                     "${CMAKE_SOURCE_DIR}/src/DataManager/Masks" 
                     DATAMANAGER_TEST_SOURCES)
 
-# No longer add sources to DataManager since they're now in the MaskData library

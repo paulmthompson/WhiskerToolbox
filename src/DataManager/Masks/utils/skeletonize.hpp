@@ -1,7 +1,7 @@
 #ifndef SKELETONIZE_HPP
 #define SKELETONIZE_HPP
 
-#include "Image.hpp"
+#include "CoreGeometry/Image.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 
 #include <cstdint>

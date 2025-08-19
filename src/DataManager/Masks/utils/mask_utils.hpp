@@ -1,7 +1,7 @@
 #ifndef MASK_UTILS_HPP
 #define MASK_UTILS_HPP
 
-#include "Image.hpp"
+#include "CoreGeometry/Image.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"

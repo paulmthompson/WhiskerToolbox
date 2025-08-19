@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_HOLE_FILLING_HPP
 #define WHISKERTOOLBOX_HOLE_FILLING_HPP
 
-#include "Image.hpp"
+#include "CoreGeometry/Image.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 
 #include <cstdint>

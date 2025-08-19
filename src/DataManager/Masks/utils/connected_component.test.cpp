@@ -2,7 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "connected_component.hpp"
-#include "Image.hpp"
+#include "CoreGeometry/Image.hpp"
 
 #include <vector>
 #include <algorithm>

@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_IMAGE_HPP
 #define WHISKERTOOLBOX_IMAGE_HPP
 
-#include "CoreGeometry/ImageSize.hpp"
+#include "ImageSize.hpp"
 
 #include <cstdint>
 #include <vector>

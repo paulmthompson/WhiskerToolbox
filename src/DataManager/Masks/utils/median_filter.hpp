@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_MEDIAN_FILTER_HPP
 #define WHISKERTOOLBOX_MEDIAN_FILTER_HPP
 
-#include "Image.hpp"
+#include "CoreGeometry/Image.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 
 #include <cstdint>
