@@ -2,42 +2,35 @@
 
 
 
-install(TARGETS DataManager
-        BUNDLE DESTINATION .
-        LIBRARY
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
-        INCLUDES
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+# Function to install targets with consistent configuration
+function(install_targets target_list)
+    foreach(target IN LISTS target_list)
+        install(TARGETS ${target}
+                BUNDLE DESTINATION .
+                LIBRARY
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                ARCHIVE
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                RUNTIME
+                DESTINATION ${CMAKE_INSTALL_BINDIR}
+                INCLUDES
+                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        )
+    endforeach()
+endfunction()
+
+# Install all main targets
+set(MAIN_TARGETS
+    DataManager
+    TensorData
+    MaskData
+    LineData 
+    MediaData
+    DataViewer
+    WhiskerToolbox
 )
 
-install(TARGETS DataViewer
-        BUNDLE DESTINATION .
-        LIBRARY
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
-        INCLUDES
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-
-
-install(TARGETS WhiskerToolbox
-        BUNDLE DESTINATION .
-        LIBRARY
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
-        INCLUDES
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+install_targets("${MAIN_TARGETS}")
 
 # QT thinks thinks that dependency qt6ad
 # is a library, and tries to install it, but doesn't find it with qt6 and errors
