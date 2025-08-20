@@ -11,9 +11,6 @@ LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // Setup the media data feature table widget
-    ui->media_feature_table_widget->setColumns({"Feature", "Type"});
-    
     // Setup approach combo box
     ui->approachComboBox->addItem("Peak Width Half Max", static_cast<int>(FWHMApproach::PEAK_WIDTH_HALF_MAX));
     ui->approachComboBox->addItem("Gaussian Fit", static_cast<int>(FWHMApproach::GAUSSIAN_FIT));
@@ -32,8 +29,6 @@ LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
     ui->approachComboBox->setCurrentIndex(0);
     
     // Connect signals and slots
-    connect(ui->media_feature_table_widget, &Feature_Table_Widget::featureSelected, 
-            this, &LineAlignment_Widget::_mediaFeatureSelected);
     connect(ui->widthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &LineAlignment_Widget::_widthValueChanged);
     connect(ui->perpendicularRangeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
@@ -53,15 +48,16 @@ LineAlignment_Widget::~LineAlignment_Widget() {
 std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() const {
     auto params = std::make_unique<LineAlignmentParameters>();
     
-    // Get selected media data key from the UI
-    QString selectedFeature = ui->selectedMediaLineEdit->text();
-    if (!selectedFeature.isEmpty() && _data_manager) {
-        // Get the actual MediaData from the DataManager
-        auto media_data_variant = _data_manager->getDataVariant(selectedFeature.toStdString());
-        if (media_data_variant.has_value() && 
-            std::holds_alternative<std::shared_ptr<MediaData>>(*media_data_variant)) {
-            // Store the MediaData pointer directly in the parameters
-            params->media_data = std::get<std::shared_ptr<MediaData>>(*media_data_variant);
+    // Auto-find the first available media data instead of requiring user selection
+    if (_data_manager) {
+        auto all_keys = _data_manager->getKeys<MediaData>();
+        for (const auto& key : all_keys) {
+            auto data_variant = _data_manager->getDataVariant(key);
+            if (data_variant.has_value() &&
+                std::holds_alternative<std::shared_ptr<MediaData>>(*data_variant)) {
+                params->media_data = std::get<std::shared_ptr<MediaData>>(*data_variant);
+                break; // Use the first media data found
+            }
         }
     }
     
@@ -70,8 +66,6 @@ std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() c
     params->perpendicular_range = ui->perpendicularRangeSpinBox->value();
     params->use_processed_data = ui->useProcessedDataCheckBox->isChecked();
     params->approach = static_cast<FWHMApproach>(ui->approachComboBox->currentData().toInt());
-    
-    // Get the output mode
     params->output_mode = static_cast<LineAlignmentOutputMode>(ui->outputModeComboBox->currentData().toInt());
     
     return params;
@@ -79,16 +73,6 @@ std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() c
 
 void LineAlignment_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = data_manager;
-    
-    // Configure the feature table widget to only show media data
-    ui->media_feature_table_widget->setDataManager(_data_manager);
-    ui->media_feature_table_widget->setTypeFilter({DM_DataType::Images, DM_DataType::Video});
-    ui->media_feature_table_widget->populateTable();
-}
-
-void LineAlignment_Widget::_mediaFeatureSelected(QString const & feature) {
-    // Update the selected media data display
-    ui->selectedMediaLineEdit->setText(feature);
 }
 
 void LineAlignment_Widget::_widthValueChanged(int value) {
@@ -124,4 +108,4 @@ void LineAlignment_Widget::_outputModeChanged(int index) {
         LineAlignmentOutputMode output_mode = static_cast<LineAlignmentOutputMode>(ui->outputModeComboBox->itemData(index).toInt());
         // You can add any additional logic here if needed
     }
-} 
+}

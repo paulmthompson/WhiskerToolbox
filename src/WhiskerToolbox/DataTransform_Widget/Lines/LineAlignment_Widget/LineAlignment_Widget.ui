@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>500</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -39,44 +39,6 @@
       <bool>true</bool>
      </property>
     </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="mediaSelectionLabel">
-     <property name="text">
-      <string>Select Media Data:</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="Feature_Table_Widget" name="media_feature_table_widget" native="true">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>150</height>
-      </size>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="selectedMediaLabel">
-       <property name="text">
-        <string>Selected Media Data:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="selectedMediaLineEdit">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-       <property name="placeholderText">
-        <string>No media data selected</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
    </item>
    <item>
     <widget class="QGroupBox" name="parametersGroupBox">
@@ -198,14 +160,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>Feature_Table_Widget</class>
-   <extends>QWidget</extends>
-   <header>Feature_Table_Widget/Feature_Table_Widget.hpp</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
-</ui> 
+</ui>

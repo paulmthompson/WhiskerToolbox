@@ -387,21 +387,33 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
     auto const * typed_params =
             transformParameters ? dynamic_cast<LineAlignmentParameters const *>(transformParameters) : nullptr;
 
-    if (!typed_params || !typed_params->media_data) {
-        std::cerr << "LineAlignmentOperation::execute: Missing media data in parameters." << std::endl;
+    // Auto-find media data if not provided in parameters
+    std::shared_ptr<MediaData> media_data;
+    if (typed_params && typed_params->media_data) {
+        media_data = typed_params->media_data;
+    } else {
+        std::cerr << "LineAlignmentOperation::execute: No media data provided. Operation requires media data to align lines to bright features." << std::endl;
         if (progressCallback) progressCallback(100);
         return {};
     }
 
     if (progressCallback) progressCallback(0);
+
+    // Use default parameters if none provided
+    int width = typed_params ? typed_params->width : 20;
+    int perpendicular_range = typed_params ? typed_params->perpendicular_range : 50;
+    bool use_processed_data = typed_params ? typed_params->use_processed_data : true;
+    FWHMApproach approach = typed_params ? typed_params->approach : FWHMApproach::PEAK_WIDTH_HALF_MAX;
+    LineAlignmentOutputMode output_mode = typed_params ? typed_params->output_mode : LineAlignmentOutputMode::ALIGNED_VERTICES;
+
     std::shared_ptr<LineData> result = line_alignment(
             line_data.get(),
-            typed_params->media_data.get(),
-            typed_params->width,
-            typed_params->perpendicular_range,
-            typed_params->use_processed_data,
-            typed_params->approach,
-            typed_params->output_mode,
+            media_data.get(),
+            width,
+            perpendicular_range,
+            use_processed_data,
+            approach,
+            output_mode,
             progressCallback
     );
 
@@ -553,4 +565,5 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
 
     if (progressCallback) progressCallback(100);
     return aligned_line_data;
-} 
+}
+
