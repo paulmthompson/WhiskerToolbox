@@ -2,14 +2,21 @@
 #include "Media/Media_Data.hpp"
 
 #include "utils/opencv_utility.hpp"
+#include "ImageProcessor.hpp"
+#include "OpenCVImageProcessor.hpp"
 
 #include <opencv2/core/mat.hpp>
 
 MediaData::MediaData() {
-    int const new_size = _height * _width * _display_format_bytes;
-    _rawData.resize(static_cast<size_t>(new_size));
-    _processedData.resize(static_cast<size_t>(new_size));
-    setFormat(DisplayFormat::Gray);
+    // Register OpenCV processor
+    static bool opencv_registered = false;
+    if (!opencv_registered) {
+        ImageProcessing::registerOpenCVProcessor();
+        opencv_registered = true;
+    }
+    
+    // Default to OpenCV processor
+    setImageProcessor("opencv");
 };
 
 MediaData::~MediaData() = default;
@@ -92,19 +99,76 @@ void MediaData::removeProcess(std::string const & key) {
     //NOTIFY
 }
 
-void MediaData::_processData() {
+// New ImageProcessor-based methods
+bool MediaData::setImageProcessor(std::string const& processor_name) {
+    auto new_processor = ImageProcessing::ProcessorRegistry::createProcessor(processor_name);
+    if (new_processor) {
+        _image_processor = std::move(new_processor);
+        _processor_name = processor_name;
+        // Reprocess data with new processor
+        if (_last_loaded_frame != -1) {
+            _processData();
+            notifyObservers();
+        }
+        return true;
+    }
+    return false;
+}
 
+std::string MediaData::getImageProcessorName() const {
+    return _processor_name;
+}
+
+void MediaData::addProcessingStep(std::string const& key, std::function<void(void*)> processor) {
+    if (_image_processor) {
+        _image_processor->addProcessingStep(key, std::move(processor));
+        _processData();
+        notifyObservers();
+    }
+}
+
+void MediaData::removeProcessingStep(std::string const& key) {
+    if (_image_processor) {
+        _image_processor->removeProcessingStep(key);
+        _processData();
+        notifyObservers();
+    }
+}
+
+void MediaData::clearProcessingSteps() {
+    if (_image_processor) {
+        _image_processor->clearProcessingSteps();
+        _processData();
+        notifyObservers();
+    }
+}
+
+bool MediaData::hasProcessingStep(std::string const& key) const {
+    return _image_processor ? _image_processor->hasProcessingStep(key) : false;
+}
+
+size_t MediaData::getProcessingStepCount() const {
+    return _image_processor ? _image_processor->getProcessingStepCount() : 0;
+}
+
+void MediaData::_processData() {
     _processedData = _rawData;
 
-    auto m2 = convert_vector_to_mat(_processedData, getImageSize());
-
-    for (auto const & [key, process]: _process_chain) {
-        process(m2);
+    // Use new ImageProcessor system if available
+    if (_image_processor && _image_processor->getProcessingStepCount() > 0) {
+        _processedData = _image_processor->processImage(_processedData, getImageSize());
     }
+    // Fallback to legacy OpenCV system for backward compatibility
+    else if (!_process_chain.empty()) {
+        auto m2 = convert_vector_to_mat(_processedData, getImageSize());
 
-    m2.reshape(1, getWidth() * getHeight());
+        for (auto const & [key, process]: _process_chain) {
+            process(m2);
+        }
 
-    _processedData.assign(m2.data, m2.data + m2.total() * m2.channels());
+        m2.reshape(1, getWidth() * getHeight());
+        _processedData.assign(m2.data, m2.data + m2.total() * m2.channels());
+    }
 
     _last_processed_frame = _last_loaded_frame;
 }

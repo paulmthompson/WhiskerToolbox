@@ -47,6 +47,7 @@ set(PROJECT_SOURCES
         Main_Window/mainwindow.hpp
         Main_Window/mainwindow.ui
         Main_Window/video_loader.hpp
+        Main_Window/video_loader.cpp
 
         TableDesignerWidget/TableDesignerWidget.hpp
         TableDesignerWidget/TableDesignerWidget.cpp
@@ -499,16 +500,6 @@ if(ENABLE_CAPNPROTO)
     )
 endif()
 
-# Conditionally add video loader implementation based on HDF5 support
-# Use unified video loader that handles all media types via factory
-list(APPEND PROJECT_SOURCES
-    Main_Window/video_loader.cpp
-)
-
-if (WIN32)
-
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
-endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}

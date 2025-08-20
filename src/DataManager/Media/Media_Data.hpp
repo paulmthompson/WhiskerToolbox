@@ -4,6 +4,7 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "ImageProcessor.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -93,8 +94,54 @@ public:
 
     std::vector<uint8_t> getProcessedData(int frame_number);
 
+    // Legacy OpenCV-based processing methods (deprecated, maintained for compatibility)
     void setProcess(std::string const & key, std::function<void(cv::Mat & input)> process);
     void removeProcess(std::string const & key);
+
+    // New flexible processing methods using ImageProcessor system
+    /**
+     * @brief Set the image processor backend (e.g., "opencv", "simd", etc.)
+     * @param processor_name Name of the registered processor
+     * @return true if the processor was successfully set, false otherwise
+     */
+    bool setImageProcessor(std::string const& processor_name);
+
+    /**
+     * @brief Get the current image processor backend name
+     * @return Name of the current processor, or empty string if none set
+     */
+    std::string getImageProcessorName() const;
+
+    /**
+     * @brief Add a processing step using the current processor
+     * @param key Unique identifier for the processing step
+     * @param processor Generic processing function
+     */
+    void addProcessingStep(std::string const& key, std::function<void(void*)> processor);
+
+    /**
+     * @brief Remove a processing step
+     * @param key Identifier of the processing step to remove
+     */
+    void removeProcessingStep(std::string const& key);
+
+    /**
+     * @brief Clear all processing steps
+     */
+    void clearProcessingSteps();
+
+    /**
+     * @brief Check if a processing step exists
+     * @param key Identifier to check
+     * @return true if the step exists, false otherwise
+     */
+    bool hasProcessingStep(std::string const& key) const;
+
+    /**
+     * @brief Get the number of processing steps
+     * @return Number of steps in the processing chain
+     */
+    size_t getProcessingStepCount() const;
 
     // ========== Time Frame ==========
 
@@ -124,7 +171,14 @@ private:
 
     std::vector<uint8_t> _rawData;
     std::vector<uint8_t> _processedData;
+    
+    // Legacy OpenCV-based processing chain (deprecated)
     std::map<std::string, std::function<void(cv::Mat & input)>> _process_chain;
+    
+    // New flexible processing system
+    std::unique_ptr<ImageProcessing::ImageProcessor> _image_processor;
+    std::string _processor_name;
+    
     int _last_loaded_frame = -1;
     int _last_processed_frame = -1;
 

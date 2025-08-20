@@ -20,6 +20,10 @@ set(MEDIADATA_SOURCES
     IO/JSON/Image_Data_JSON.cpp
     utils/opencv_utility.hpp
     utils/opencv_utility.cpp
+    ImageProcessor.hpp
+    ImageProcessor.cpp
+    OpenCVImageProcessor.hpp
+    OpenCVImageProcessor.cpp
 )
 
 # Add HDF5-specific sources conditionally
@@ -57,8 +61,15 @@ target_link_libraries(MediaData PUBLIC
     TimeFrame                # TimeFrame  
     Entity                   # Entity
     nlohmann_json::nlohmann_json  # For JSON support
-    opencv_core opencv_imgproc opencv_imgcodecs opencv_photo  # For Image processing
 )
+
+# Link OpenCV libraries conditionally
+if(ENABLE_OPENCV)
+    target_link_libraries(MediaData PUBLIC
+        opencv_core opencv_imgproc opencv_imgcodecs opencv_photo  # For Image processing
+    )
+    target_compile_definitions(MediaData PUBLIC ENABLE_OPENCV)
+endif()
 
 # Link HDF5 libraries conditionally
 if(ENABLE_HDF5)

@@ -1,4 +1,5 @@
 #include "utils/opencv_utility.hpp"
+
 #include <iostream>
 
 cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, ImageSize image_size) {
