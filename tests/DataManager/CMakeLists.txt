@@ -64,6 +64,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_principal_axis.test.cpp
 
         # IO tests
+        IO/line_data_csv.test.cpp
 )
 
 # Add VideoData tests only if FFmpeg is enabled
