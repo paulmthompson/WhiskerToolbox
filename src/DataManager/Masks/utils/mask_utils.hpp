@@ -53,10 +53,10 @@ Image mask_to_binary_image(std::vector<Point2D<uint32_t>> const & mask, ImageSiz
 std::vector<Point2D<uint32_t>> binary_image_to_mask(Image const & binary_image);
 
 /**
- * @brief Resize a mask from one image size to another using nearest interpolation
+ * @brief Resize a mask from one image size to another using nearest neighbor interpolation
  *
  * Converts mask coordinates from source image dimensions to destination image dimensions
- * using OpenCV's nearest neighbor interpolation. This ensures the mask remains homogeneous
+ * using custom nearest neighbor interpolation. This ensures the mask remains homogeneous
  * (binary) after resizing.
  *
  * @param mask The input mask to resize
@@ -65,7 +65,8 @@ std::vector<Point2D<uint32_t>> binary_image_to_mask(Image const & binary_image);
  * @return New mask with coordinates scaled to the destination image size
  *
  * @note If source or destination dimensions are invalid (<=0), returns empty mask
- * @note Uses OpenCV's INTER_NEAREST interpolation to maintain binary mask properties
+ * @note Uses custom nearest neighbor interpolation to maintain binary mask properties
+ * @note Does not depend on OpenCV - uses only standard library functions
  */
 Mask2D resize_mask(Mask2D const & mask, ImageSize const & source_size, ImageSize const & dest_size);
 

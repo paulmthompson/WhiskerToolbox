@@ -36,7 +36,6 @@ target_link_libraries(MaskData PUBLIC
     TimeFrame                # TimeFrame  
     Entity                   # Entity
     nlohmann_json::nlohmann_json  # For JSON support
-    opencv_core opencv_imgproc opencv_imgcodecs opencv_photo  # For Image processing
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
