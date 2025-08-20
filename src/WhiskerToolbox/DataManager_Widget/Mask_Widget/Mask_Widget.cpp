@@ -8,6 +8,8 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "CoreGeometry/points.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
+#include "DataManager/IO/LoaderRegistry.hpp"
+#include "DataManager/ConcreteDataFactory.hpp"
 #include "MaskTableModel.hpp"
 
 #include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
@@ -437,16 +439,15 @@ void Mask_Widget::_onExportTypeChanged(int index) {
     }
 }
 
-void Mask_Widget::_handleSaveImageMaskRequested(ImageMaskSaverOptions options) {
-    MaskSaverOptionsVariant options_variant = options;
-    _initiateSaveProcess(SaverType::IMAGE, options_variant);
+void Mask_Widget::_handleSaveImageMaskRequested(QString format, nlohmann::json config) {
+    _initiateSaveProcess(format, config);
 }
 
 void Mask_Widget::_onExportMediaFramesCheckboxToggled(bool checked) {
     ui->media_export_options_widget->setVisible(checked);
 }
 
-void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVariant & options_variant) {
+void Mask_Widget::_initiateSaveProcess(QString const& format, MaskSaverConfig const& config) {
     if (_active_key.empty()) {
         QMessageBox::warning(this, "No Data Selected", "Please select a MaskData item to save.");
         return;
@@ -458,23 +459,12 @@ void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVar
         return;
     }
 
-    bool save_successful = false;
-    std::string saved_parent_dir;
+    // Update config with full path
+    MaskSaverConfig updated_config = config;
+    std::string parent_dir = config.value("parent_dir", ".");
+    updated_config["parent_dir"] = _data_manager->getOutputPath().string() + "/" + parent_dir;
 
-    switch (saver_type) {
-        case SaverType::IMAGE: {
-            ImageMaskSaverOptions & specific_image_options = std::get<ImageMaskSaverOptions>(options_variant);
-            specific_image_options.parent_dir = _data_manager->getOutputPath().string() + "/" + specific_image_options.parent_dir;
-            saved_parent_dir = specific_image_options.parent_dir;
-            save_successful = _performActualImageSave(specific_image_options);
-            break;
-        }
-        case SaverType::HDF5: {
-            // TODO: Implement HDF5 saving when HDF5MaskSaver_Widget is complete
-            QMessageBox::information(this, "Not Implemented", "HDF5 mask saving is not yet implemented.");
-            return;
-        }
-    }
+    bool save_successful = _performRegistrySave(format, updated_config);
 
     if (!save_successful) {
         return;
@@ -491,27 +481,56 @@ void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVar
         if (frame_ids_to_export.empty()) {
             QMessageBox::information(this, "No Frames", "No masks found in data, so no media frames to export.");
         } else {
-            export_media_frames(_data_manager.get(),
-                                ui->media_export_options_widget,
-                                options_variant,
-                                this,
-                                frame_ids_to_export);
+            // TODO: Update export_media_frames to work with JSON config
+            QMessageBox::information(this, "Media Export", "Media frame export with JSON config not yet implemented.");
         }
     }
 }
 
-bool Mask_Widget::_performActualImageSave(ImageMaskSaverOptions & options) {
+bool Mask_Widget::_performRegistrySave(QString const& format, MaskSaverConfig const& config) {
     auto mask_data_ptr = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data_ptr) {
         QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve MaskData for saving. Key: " + QString::fromStdString(_active_key));
         return false;
     }
 
+    // Check if format is supported through registry
+    LoaderRegistry& registry = LoaderRegistry::getInstance();
+    std::string format_str = format.toStdString();
+    
+    if (!registry.isFormatSupported(format_str, IODataType::Mask)) {
+        QMessageBox::warning(this, "Format Not Supported", 
+            QString("Format '%1' saving is not available. This may require additional plugins to be enabled.\n\n"
+                   "To enable format support:\n"
+                   "1. Ensure required libraries are available in your build environment\n"
+                   "2. Build with appropriate -DENABLE_* flags\n"
+                   "3. Restart the application").arg(format));
+        
+        std::cout << "Format '" << format_str << "' saving not available - plugin not registered" << std::endl;
+        return false;
+    }
+
     try {
-        save(mask_data_ptr.get(), options);
-        QMessageBox::information(this, "Save Successful", QString::fromStdString("Mask data saved to directory: " + options.parent_dir));
-        std::cout << "Mask data saved to directory: " << options.parent_dir << std::endl;
-        return true;
+        // Use registry to save through the new save interface
+        LoadResult result = registry.trySave(format_str, 
+                                           IODataType::Mask, 
+                                           "", // filepath not used for directory-based saving 
+                                           config, 
+                                           mask_data_ptr.get());
+        
+        if (result.success) {
+            std::string save_location = config.value("parent_dir", ".");
+            QMessageBox::information(this, "Save Successful", 
+                QString("Mask data saved successfully to: %1").arg(QString::fromStdString(save_location)));
+            std::cout << "Mask data saved successfully using " << format_str << " format" << std::endl;
+            return true;
+        } else {
+            QMessageBox::critical(this, "Save Error", 
+                QString("Failed to save mask data: %1").arg(QString::fromStdString(result.error_message)));
+            std::cerr << "Failed to save mask data: " << result.error_message << std::endl;
+            return false;
+        }
+        
     } catch (std::exception const & e) {
         QMessageBox::critical(this, "Save Error", "Failed to save mask data: " + QString::fromStdString(e.what()));
         std::cerr << "Failed to save mask data: " << e.what() << std::endl;

@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <QString>
-#include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
+#include "nlohmann/json.hpp"
 
 namespace Ui {
 class ImageMaskLoader_Widget;
@@ -16,7 +16,7 @@ public:
     ~ImageMaskLoader_Widget() override;
 
 signals:
-    void loadImageMaskRequested(ImageMaskLoaderOptions options);
+    void loadImageMaskRequested(QString format, nlohmann::json config);
 
 private slots:
     void _onBrowseDirectoryClicked();

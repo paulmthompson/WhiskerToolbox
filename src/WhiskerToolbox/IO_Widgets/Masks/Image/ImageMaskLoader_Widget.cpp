@@ -51,15 +51,15 @@ void ImageMaskLoader_Widget::_onLoadButtonClicked()
         return;
     }
     
-    // Collect options from UI
-    ImageMaskLoaderOptions options;
-    options.directory_path = directoryPath.toStdString();
-    options.file_pattern = ui->file_pattern_combo->currentText().toStdString();
-    options.filename_prefix = ui->filename_prefix_edit->text().toStdString();
-    options.frame_number_padding = ui->frame_padding_spinbox->value();
-    options.threshold_value = ui->threshold_spinbox->value();
-    options.invert_mask = ui->invert_mask_checkbox->isChecked();
+    // Collect options from UI as JSON
+    nlohmann::json config;
+    config["directory_path"] = directoryPath.toStdString();
+    config["file_pattern"] = ui->file_pattern_combo->currentText().toStdString();
+    config["filename_prefix"] = ui->filename_prefix_edit->text().toStdString();
+    config["frame_number_padding"] = ui->frame_padding_spinbox->value();
+    config["threshold_value"] = ui->threshold_spinbox->value();
+    config["invert_mask"] = ui->invert_mask_checkbox->isChecked();
     
-    // Emit signal with options
-    emit loadImageMaskRequested(options);
+    // Emit signal with JSON config
+    emit loadImageMaskRequested("image", config);
 } 

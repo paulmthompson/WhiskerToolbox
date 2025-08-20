@@ -30,10 +30,17 @@ target_link_libraries(DataManagerIO PUBLIC
 # Add subdirectories for specific format plugins
 if(ENABLE_HDF5)
     add_subdirectory(HDF5)
+    target_compile_definitions(DataManagerIO PUBLIC ENABLE_HDF5)
 endif()
 
 if(ENABLE_CAPNPROTO)
     add_subdirectory(CapnProto)
+    target_compile_definitions(DataManagerIO PUBLIC ENABLE_CAPNPROTO)
+endif()
+
+if(ENABLE_OPENCV)
+    add_subdirectory(OpenCV)
+    target_compile_definitions(DataManagerIO PUBLIC ENABLE_OPENCV)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -49,7 +56,19 @@ if (MSVC)
     target_compile_options(DataManagerIO PRIVATE ${MSVC_WARNINGS})
 endif()
 
-target_compile_definitions(DataManagerIO PUBLIC ENABLE_CAPNPROTO)
+# Conditionally define preprocessor macros based on actual library availability
+if(ENABLE_CAPNPROTO)
+
+endif()
+
+if(ENABLE_HDF5)
+
+endif()
+
+if(ENABLE_OPENCV)
+
+endif()
+
 
 # Set properties
 set_target_properties(DataManagerIO PROPERTIES

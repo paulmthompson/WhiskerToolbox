@@ -33,6 +33,22 @@ public:
                            DataFactory* factory) const = 0;
     
     /**
+     * @brief Save data to file (optional - not all loaders support saving)
+     * 
+     * @param filepath Path where to save the file
+     * @param dataType Type of data being saved
+     * @param config JSON configuration for saving
+     * @param data Pointer to the data object to save
+     * @return LoadResult indicating success/failure (data field unused)
+     */
+    virtual LoadResult save(std::string const& filepath, 
+                           IODataType dataType, 
+                           nlohmann::json const& config, 
+                           void const* data) const {
+        return LoadResult("Saving not supported by this loader: " + getLoaderName());
+    }
+    
+    /**
      * @brief Check if this loader supports the given format and data type
      * 
      * @param format Format string (e.g., "csv", "capnp", "hdf5")
@@ -86,6 +102,25 @@ public:
                       std::string const& filepath, 
                       nlohmann::json const& config, 
                       DataFactory* factory);
+    
+    /**
+     * @brief Try to save data using registered loaders
+     * 
+     * Attempts to find a suitable loader for the given format and data type that supports saving.
+     * Returns the first successful save result, or failure if no loader can handle it.
+     * 
+     * @param format Format string from JSON config
+     * @param dataType Type of data being saved
+     * @param filepath Path where to save the file
+     * @param config Full JSON configuration object
+     * @param data Pointer to the data object to save
+     * @return LoadResult indicating success/failure (data field unused)
+     */
+    LoadResult trySave(std::string const& format, 
+                      IODataType dataType,
+                      std::string const& filepath, 
+                      nlohmann::json const& config, 
+                      void const* data);
     
     /**
      * @brief Check if any registered loader supports the given format/dataType

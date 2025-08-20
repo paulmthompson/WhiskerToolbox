@@ -6,7 +6,7 @@
 #include "DataManager/IO/LoaderRegistry.hpp"
 #include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/DataManagerTypes.hpp"
-#include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
+// Remove direct OpenCV dependency - use registry system instead
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>
@@ -180,21 +180,73 @@ void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, s
     }
 }
 
-void Mask_Loader_Widget::_handleImageMaskLoadRequested(ImageMaskLoaderOptions options) {
+void Mask_Loader_Widget::_handleImageMaskLoadRequested(QString format, nlohmann::json config) {
     auto mask_key = ui->data_name_text->text().toStdString();
     if (mask_key.empty()) {
         mask_key = "mask";
     }
 
-    auto mask_data_ptr = load(options);
+    try {
+        // Use the registry system for image loading
+        auto& registry = LoaderRegistry::getInstance();
+        std::string format_str = format.toStdString();
+        
+        if (!registry.isFormatSupported(format_str, toIODataType(DM_DataType::Mask))) {
+            QMessageBox::critical(this, "Load Error", 
+                QString("Format '%1' loader not found. Please ensure the required plugin is loaded.").arg(format));
+            return;
+        }
+        
+        // Create factory for data creation
+        ConcreteDataFactory factory;
+        
+        // Extract directory path from config for loading
+        std::string directory_path = config.value("directory_path", "");
+        if (directory_path.empty()) {
+            QMessageBox::critical(this, "Load Error", "Directory path is required for image loading");
+            return;
+        }
+        
+        // Load the data using registry system
+        auto result = registry.tryLoad(format_str, toIODataType(DM_DataType::Mask), directory_path, config, &factory);
+        
+        if (!result.success) {
+            QMessageBox::critical(this, "Load Error", 
+                QString::fromStdString("Failed to load image masks: " + result.error_message));
+            return;
+        }
+        
+        // Extract the MaskData from the variant
+        if (!std::holds_alternative<std::shared_ptr<MaskData>>(result.data)) {
+            QMessageBox::critical(this, "Load Error", "Unexpected data type returned from image loader");
+            return;
+        }
+        
+        auto mask_data_ptr = std::get<std::shared_ptr<MaskData>>(result.data);
+        
+        // Apply original image size from scaling widget if available
+        ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
+        if (original_size.width > 0 && original_size.height > 0) {
+            mask_data_ptr->setImageSize(original_size);
+        }
 
-    _data_manager->setData<MaskData>(mask_key, mask_data_ptr, TimeKey("time"));
+        // Apply scaling if enabled
+        if (ui->scaling_widget->isScalingEnabled()) {
+            ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
+            if (scaled_size.width > 0 && scaled_size.height > 0) {
+                mask_data_ptr->changeImageSize(scaled_size);
+            }
+        }
+        
+        // Store in DataManager
+        _data_manager->setData<MaskData>(mask_key, mask_data_ptr, TimeKey("time"));
+        
+        QMessageBox::information(this, "Load Successful", 
+            QString::fromStdString("Image mask data loaded into " + mask_key));
 
-    ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
-    mask_data_ptr->setImageSize(original_size);
-
-    if (ui->scaling_widget->isScalingEnabled()) {
-        ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
-        mask_data_ptr->changeImageSize(scaled_size);
+    } catch (std::exception const& e) {
+        std::cerr << "Error loading image masks: " << e.what() << std::endl;
+        QMessageBox::critical(this, "Load Error", 
+            QString::fromStdString("Error loading image masks: " + std::string(e.what())));
     }
 } 

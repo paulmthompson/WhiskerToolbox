@@ -1,9 +1,10 @@
 #ifndef MASK_WIDGET_HPP
 #define MASK_WIDGET_HPP
 
-#include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
+// Remove direct OpenCV dependency - use registry system instead
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
 #include "DataManager/TimeFrame/TimeFrame.hpp"
+#include "nlohmann/json.hpp"
 
 #include <QModelIndex>
 #include <QWidget>
@@ -26,7 +27,8 @@ class ImageMaskSaver_Widget;
 class HDF5MaskSaver_Widget;
 class MediaExport_Widget;
 
-using MaskSaverOptionsVariant = std::variant<ImageMaskSaverOptions>;
+// JSON-based saver options - no need for variant types
+using MaskSaverConfig = nlohmann::json;
 
 class Mask_Widget : public QWidget {
     Q_OBJECT
@@ -88,8 +90,8 @@ private:
 
     enum SaverType { HDF5,
                      IMAGE };
-    void _initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVariant & options_variant);
-    bool _performActualImageSave(ImageMaskSaverOptions & options);
+    void _initiateSaveProcess(QString const& format, MaskSaverConfig const& config);
+    bool _performRegistrySave(QString const& format, MaskSaverConfig const& config);
 
 private slots:
     void _loadSamModel();
@@ -99,7 +101,7 @@ private slots:
 
     // Export slots
     void _onExportTypeChanged(int index);
-    void _handleSaveImageMaskRequested(ImageMaskSaverOptions options);
+    void _handleSaveImageMaskRequested(QString format, nlohmann::json config);
     void _onExportMediaFramesCheckboxToggled(bool checked);
 };
 

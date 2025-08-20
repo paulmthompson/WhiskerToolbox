@@ -50,31 +50,31 @@ void ImageMaskSaver_Widget::_onSaveButtonClicked()
         return;
     }
     
-    // Create options structure
-    ImageMaskSaverOptions options;
-    options.parent_dir = directoryPath.toStdString();
-    options.image_format = ui->image_format_combo->currentText().toStdString();
-    options.filename_prefix = ui->filename_prefix_edit->text().toStdString();
-    options.frame_number_padding = ui->frame_padding_spinbox->value();
-    options.image_width = ui->image_width_spinbox->value();
-    options.image_height = ui->image_height_spinbox->value();
-    options.background_value = ui->background_value_spinbox->value();
-    options.mask_value = ui->mask_value_spinbox->value();
-    options.overwrite_existing = ui->overwrite_existing_checkbox->isChecked();
+    // Create JSON configuration structure
+    nlohmann::json config;
+    config["parent_dir"] = directoryPath.toStdString();
+    config["image_format"] = ui->image_format_combo->currentText().toStdString();
+    config["filename_prefix"] = ui->filename_prefix_edit->text().toStdString();
+    config["frame_number_padding"] = ui->frame_padding_spinbox->value();
+    config["image_width"] = ui->image_width_spinbox->value();
+    config["image_height"] = ui->image_height_spinbox->value();
+    config["background_value"] = ui->background_value_spinbox->value();
+    config["mask_value"] = ui->mask_value_spinbox->value();
+    config["overwrite_existing"] = ui->overwrite_existing_checkbox->isChecked();
     
     // Validate image dimensions
-    if (options.image_width <= 0 || options.image_height <= 0) {
+    if (config["image_width"] <= 0 || config["image_height"] <= 0) {
         QMessageBox::warning(this, "Invalid Dimensions", 
                            "Image width and height must be greater than 0.");
         return;
     }
     
     // Validate pixel values
-    if (options.background_value == options.mask_value) {
+    if (config["background_value"] == config["mask_value"]) {
         QMessageBox::warning(this, "Invalid Pixel Values", 
                            "Background value and mask value cannot be the same.");
         return;
     }
     
-    emit saveImageMaskRequested(options);
+    emit saveImageMaskRequested("image", config);
 } 

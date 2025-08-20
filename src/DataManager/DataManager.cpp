@@ -95,6 +95,31 @@ bool tryRegistryThenLegacyLoad(
                         }
                         break;
                     }
+                    case DM_DataType::Mask: {
+                        // Set the MaskData in DataManager
+                        if (std::holds_alternative<std::shared_ptr<MaskData>>(result.data)) {
+                            auto mask_data = std::get<std::shared_ptr<MaskData>>(result.data);
+                            
+                            dm->setData<MaskData>(name, mask_data, TimeKey("time"));
+                            
+                            std::string const color = item.value("color", "0000FF");
+                            data_info_list.push_back({name, "MaskData", color});
+                            
+                            // Handle operations if present (same as legacy)
+                            if (item.contains("operations")) {
+                                for (auto const & operation: item["operations"]) {
+                                    std::string const operation_type = operation["type"];
+                                    if (operation_type == "area") {
+                                        std::cout << "Calculating area for mask: " << name << std::endl;
+                                        auto area_data = area(dm->getData<MaskData>(name).get());
+                                        std::string const output_name = name + "_area";
+                                        dm->setData<AnalogTimeSeries>(output_name, area_data, TimeKey("time"));
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
                     // Add other data types as they get plugin support...
                     default:
                         std::cerr << "Registry loaded unsupported data type: " << static_cast<int>(data_type) << std::endl;
@@ -534,6 +559,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             }
             case DM_DataType::Mask: {
 
+                // Try registry system first, then fallback to legacy
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list, &factory)) {
+                    break; // Successfully loaded with plugin
+                }
+
+                // Legacy loading fallback
                 auto mask_data = load_into_MaskData(file_path, item);
 
                 std::string const color = item.value("color", "0000FF");

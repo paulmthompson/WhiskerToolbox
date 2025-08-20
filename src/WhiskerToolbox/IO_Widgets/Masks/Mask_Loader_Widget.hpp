@@ -7,6 +7,8 @@
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QWidget>
+#include <QString>
+#include "nlohmann/json.hpp"
 
 #include <memory>
 #include <string>
@@ -36,7 +38,7 @@ private slots:
     void _onLoaderTypeChanged(int index);
     void _handleSingleHDF5LoadRequested();
     void _handleMultiHDF5LoadRequested(QString pattern);
-    void _handleImageMaskLoadRequested(ImageMaskLoaderOptions options);
+    void _handleImageMaskLoadRequested(QString format, nlohmann::json config);
 
 };
 

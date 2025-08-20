@@ -2,7 +2,8 @@
 #define IMAGEMASKSAVER_WIDGET_HPP
 
 #include <QWidget>
-#include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
+#include <QString>
+#include "nlohmann/json.hpp"
 
 namespace Ui {
 class ImageMaskSaver_Widget;
@@ -16,7 +17,7 @@ public:
     ~ImageMaskSaver_Widget() override;
 
 signals:
-    void saveImageMaskRequested(ImageMaskSaverOptions options);
+    void saveImageMaskRequested(QString format, nlohmann::json config);
 
 private slots:
     void _onBrowseDirectoryButtonClicked();

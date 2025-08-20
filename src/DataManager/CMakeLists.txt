@@ -296,6 +296,12 @@ if(ENABLE_CAPNPROTO)
     target_compile_definitions(DataManager PRIVATE ENABLE_CAPNPROTO)
 endif()
 
+# Conditionally link OpenCV plugin
+if(ENABLE_OPENCV)
+    target_link_libraries(DataManager PRIVATE DataManagerOpenCV)
+    target_compile_definitions(DataManager PRIVATE ENABLE_OPENCV)
+endif()
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManager PRIVATE ${CLANG_OPTIONS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")

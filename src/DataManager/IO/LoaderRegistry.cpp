@@ -56,6 +56,48 @@ LoadResult LoaderRegistry::tryLoad(std::string const& format,
     return LoadResult(error_msg.str());
 }
 
+LoadResult LoaderRegistry::trySave(std::string const& format, 
+                                  IODataType dataType,
+                                  std::string const& filepath, 
+                                  nlohmann::json const& config, 
+                                  void const* data) {
+    if (!data) {
+        return LoadResult("Data pointer is null");
+    }
+    
+    // Try each registered loader
+    for (auto const& loader : m_loaders) {
+        if (loader->supportsFormat(format, dataType)) {
+            std::cout << "LoaderRegistry: Trying to save with loader '" << loader->getLoaderName() 
+                     << "' for format '" << format << "'" << std::endl;
+            
+            try {
+                LoadResult result = loader->save(filepath, dataType, config, data);
+                if (result.success) {
+                    std::cout << "LoaderRegistry: Successfully saved with '" 
+                             << loader->getLoaderName() << "'" << std::endl;
+                    return result;
+                } else {
+                    std::cout << "LoaderRegistry: Saver '" << loader->getLoaderName() 
+                             << "' failed: " << result.error_message << std::endl;
+                }
+            } catch (std::exception const& e) {
+                std::cout << "LoaderRegistry: Saver '" << loader->getLoaderName() 
+                         << "' threw exception: " << e.what() << std::endl;
+            } catch (...) {
+                std::cout << "LoaderRegistry: Saver '" << loader->getLoaderName() 
+                         << "' threw unknown exception" << std::endl;
+            }
+        }
+    }
+    
+    // No loader could handle this format for saving
+    std::ostringstream error_msg;
+    error_msg << "No registered loader supports saving format '" << format 
+              << "' for data type " << static_cast<int>(dataType);
+    return LoadResult(error_msg.str());
+}
+
 bool LoaderRegistry::isFormatSupported(std::string const& format, IODataType dataType) const {
     return std::any_of(m_loaders.begin(), m_loaders.end(),
                       [&](auto const& loader) {
@@ -71,7 +113,7 @@ std::vector<std::string> LoaderRegistry::getSupportedFormats(IODataType dataType
     for (auto const& loader : m_loaders) {
         // For now, we'll need to check common formats
         // A more sophisticated approach would have loaders expose their supported formats
-        std::vector<std::string> common_formats = {"csv", "capnp", "binary", "hdf5", "json"};
+        std::vector<std::string> common_formats = {"csv", "capnp", "binary", "hdf5", "json", "image"};
         
         for (auto const& format : common_formats) {
             if (loader->supportsFormat(format, dataType)) {

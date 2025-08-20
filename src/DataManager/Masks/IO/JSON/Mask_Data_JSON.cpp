@@ -2,7 +2,6 @@
 #include "Mask_Data_JSON.hpp"
 
 #include "Masks/Mask_Data.hpp"
-#include "Masks/IO/Image/Mask_Data_Image.hpp"
 
 #include "utils/json_helpers.hpp"
 #include "loaders/loading_utils.hpp"
@@ -31,31 +30,10 @@ std::shared_ptr<MaskData> load_into_MaskData(std::string const & file_path, nloh
         return mask_data;
 
     } else if (format == "image") {
-        auto opts = ImageMaskLoaderOptions();
-        opts.directory_path = file_path;
-        
-        // Parse optional image loading options
-        if (item.contains("file_pattern")) {
-            opts.file_pattern = item["file_pattern"];
-        }
-        if (item.contains("filename_prefix")) {
-            opts.filename_prefix = item["filename_prefix"];
-        }
-        if (item.contains("frame_number_padding")) {
-            opts.frame_number_padding = item["frame_number_padding"];
-        }
-        if (item.contains("threshold_value")) {
-            opts.threshold_value = item["threshold_value"];
-        }
-        if (item.contains("invert_mask")) {
-            opts.invert_mask = item["invert_mask"];
-        }
-
-        auto mask_data = load(opts);
-
-        change_image_size_json(mask_data, item);
-
-        return mask_data;
+        // Image format is now handled by OpenCV plugin
+        // This should be loaded through the plugin system
+        std::cerr << "Warning: Image format should be loaded through plugin system, not JSON loader\n";
+        return std::make_shared<MaskData>();
 
     } else {
         std::cerr << "Error: Unsupported format '" << format << "' for MaskData. Supported formats: image" << std::endl;

@@ -15,6 +15,8 @@ option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/processing" ON)
 # Tensor backend selection - MUST be before project() call
 option(TENSOR_BACKEND_LIBTORCH "Use LibTorch as tensor backend (enables deep learning)" ON)
 
+option(ENABLE_OPENCV "Enable OpenCV support for image mask loading/saving" ON)
+
 option(ENABLE_UI "Enable UI" ON)
 
 # Configure vcpkg features based on CMake options - MUST be before project() call
@@ -38,6 +40,13 @@ if(ENABLE_FFMPEG)
     message(STATUS "FFmpeg support: ENABLED")
 else()
     message(STATUS "FFmpeg support: DISABLED")
+endif()
+
+if(ENABLE_OPENCV)
+   # list(APPEND VCPKG_MANIFEST_FEATURES "opencv") // Not ready to do this yet
+    message(STATUS "OpenCV support: ENABLED")
+else()
+    message(STATUS "OpenCV support: DISABLED")
 endif()
 
 if(ENABLE_UI)

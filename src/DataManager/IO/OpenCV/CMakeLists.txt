@@ -4,6 +4,8 @@
 set(DATAMANAGER_OPENCV_SOURCES
     OpenCVLoader.hpp
     OpenCVLoader.cpp
+    OpenCVFormatLoader.hpp
+    OpenCVFormatLoader.cpp
     OpenCVInit.hpp
     OpenCVInit.cpp
     Mask_Data_Image.hpp
