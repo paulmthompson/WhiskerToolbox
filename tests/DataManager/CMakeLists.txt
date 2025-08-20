@@ -65,6 +65,8 @@ add_executable(test_data_manager
 
         # IO tests
         IO/line_data_csv.test.cpp
+        IO/analog_time_series_csv.test.cpp
+        IO/digital_interval_series_csv.test.cpp
 )
 
 # Add VideoData tests only if FFmpeg is enabled

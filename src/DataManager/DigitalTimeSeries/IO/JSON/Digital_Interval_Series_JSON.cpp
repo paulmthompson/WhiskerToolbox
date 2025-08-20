@@ -62,6 +62,22 @@ std::shared_ptr<DigitalIntervalSeries> load_into_DigitalIntervalSeries(std::stri
         case IntervalDataType::csv: {
 
             auto opts = Loader::CSVPairColumnOptions{.filename = file_path};
+            
+            // Configure CSV loading options from JSON
+            if (item.contains("skip_header")) {
+                opts.skip_header = item["skip_header"];
+            } else {
+                // Default to skipping header if not specified
+                opts.skip_header = true;
+            }
+            
+            if (item.contains("delimiter")) {
+                opts.col_delimiter = item["delimiter"];
+            }
+            
+            if (item.contains("flip_column_order")) {
+                opts.flip_column_order = item["flip_column_order"];
+            }
 
             auto intervals = Loader::loadPairColumnCSV(opts);
             std::cout << "Loaded " << intervals.size() << " intervals " << std::endl;

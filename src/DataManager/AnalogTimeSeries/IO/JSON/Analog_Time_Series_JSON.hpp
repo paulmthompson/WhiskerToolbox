@@ -9,6 +9,7 @@
 
 enum class AnalogDataType {
     int16,
+    csv,
     Unknown
 };
 

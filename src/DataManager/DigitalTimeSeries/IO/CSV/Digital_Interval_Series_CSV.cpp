@@ -22,12 +22,29 @@ std::vector<Interval> load_digital_series_from_csv(
         return {};
     }
 
-    int64_t start, end;
     auto output = std::vector<Interval>();
     while (getline(myfile, csv_line)) {
-        std::stringstream ss(csv_line);
-        ss >> start >> delimiter >> end;
-        output.emplace_back(Interval{start, end});
+        if (csv_line.empty()) continue;
+        
+        // Split by delimiter
+        size_t delimiter_pos = csv_line.find(delimiter);
+        if (delimiter_pos == std::string::npos) {
+            std::cerr << "Warning: No delimiter found in line: " << csv_line << std::endl;
+            continue;
+        }
+        
+        try {
+            std::string start_str = csv_line.substr(0, delimiter_pos);
+            std::string end_str = csv_line.substr(delimiter_pos + 1);
+            
+            int64_t start = std::stoll(start_str);
+            int64_t end = std::stoll(end_str);
+            
+            output.emplace_back(Interval{start, end});
+        } catch (std::exception const & e) {
+            std::cerr << "Warning: Could not parse line: " << csv_line << " - " << e.what() << std::endl;
+            continue;
+        }
     }
 
     return output;

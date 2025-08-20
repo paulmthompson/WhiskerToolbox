@@ -1,6 +1,8 @@
 
 #include "CSV_Loaders.hpp"
+
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 namespace Loader {
@@ -29,8 +31,21 @@ std::vector<std::pair<float, float>> loadPairColumnCSV(CSVPairColumnOptions cons
     std::vector<std::pair<float, float>> data;
     std::ifstream file(opts.filename);
     std::string line;
+    bool first_line = true;
 
     while (std::getline(file, line)) {
+        // Skip header if requested
+        if (first_line && opts.skip_header) {
+            first_line = false;
+            continue;
+        }
+        first_line = false;
+        
+        // Skip empty lines
+        if (line.empty()) {
+            continue;
+        }
+        
         std::stringstream ss(line);
         std::string item;
         std::vector<std::string> tokens;
@@ -40,12 +55,17 @@ std::vector<std::pair<float, float>> loadPairColumnCSV(CSVPairColumnOptions cons
         }
 
         if (tokens.size() >= 2) {
-            float first = std::stof(tokens[0]);
-            float second = std::stof(tokens[1]);
-            if (opts.flip_column_order) {
-                std::swap(first, second);
+            try {
+                float first = std::stof(tokens[0]);
+                float second = std::stof(tokens[1]);
+                if (opts.flip_column_order) {
+                    std::swap(first, second);
+                }
+                data.emplace_back(first, second);
+            } catch (std::exception const & e) {
+                std::cerr << "Warning: Could not parse line: " << line << " - " << e.what() << std::endl;
+                continue;
             }
-            data.emplace_back(first, second);
         }
     }
 
