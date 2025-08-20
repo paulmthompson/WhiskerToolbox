@@ -74,13 +74,10 @@ set(DATAMANAGER_SOURCES
         utils/json_helpers.hpp
         utils/map_timeseries.hpp
         utils/metaprogramming_utils.hpp
-        utils/opencv_utility.hpp
-        utils/opencv_utility.cpp
         utils/polynomial/polynomial_fit.hpp
         utils/polynomial/polynomial_fit.cpp
         utils/polynomial/parametric_polynomial_utils.cpp
         utils/polynomial/parametric_polynomial_utils.hpp
-        utils/ProcessingOptions.hpp
         utils/string_manip.hpp
         utils/DataAggregation/DataAggregation.hpp
         utils/DataAggregation/DataAggregation.cpp
@@ -280,6 +277,7 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
+target_link_libraries(DataManager PUBLIC ImageProcessing)
 
 # Link to plugin system
 target_link_libraries(DataManager PRIVATE DataManagerIO)

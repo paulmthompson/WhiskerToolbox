@@ -1,7 +1,7 @@
 #ifndef CONTRAST_WIDGET_HPP
 #define CONTRAST_WIDGET_HPP
 
-#include "DataManager/utils/ProcessingOptions.hpp"
+#include "ImageProcessing/ProcessingOptions.hpp"
 
 #include <QWidget>
 

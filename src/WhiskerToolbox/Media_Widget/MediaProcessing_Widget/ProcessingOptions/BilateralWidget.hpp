@@ -1,7 +1,7 @@
 #ifndef BILATERAL_WIDGET_HPP
 #define BILATERAL_WIDGET_HPP
 
-#include "DataManager/utils/ProcessingOptions.hpp"
+#include "ImageProcessing/ProcessingOptions.hpp"
 
 #include <QWidget>
 

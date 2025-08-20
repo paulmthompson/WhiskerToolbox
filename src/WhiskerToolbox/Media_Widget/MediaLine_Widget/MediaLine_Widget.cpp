@@ -7,7 +7,7 @@
 #include "DataManager/Media/Video_Data.hpp"
 #include "Media_Window/Media_Window.hpp"
 #include "DataManager/transforms/Lines/line_angle.hpp"
-#include "DataManager/utils/opencv_utility.hpp"
+#include "ImageProcessing/OpenCVUtility.hpp"
 #include "DataManager/utils/polynomial/polynomial_fit.hpp"
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
 #include "SelectionWidgets/LineAddSelectionWidget.hpp"
@@ -628,8 +628,8 @@ void MediaLine_Widget::_detectEdges() {
         cv::cvtColor(_current_frame, gray_image, cv::COLOR_RGBA2GRAY);
     }
     */
-    auto gray_image = convert_vector_to_mat(frame_data, media->getImageSize());
-    
+    auto gray_image = ImageProcessing::convert_vector_to_mat(frame_data, media->getImageSize());
+
     //cv::Mat blurred;
     //cv::GaussianBlur(gray_image, blurred, cv::Size(5, 5), 1.5);
     //cv::Canny(blurred, _current_edges, _edge_threshold / 2, _edge_threshold);

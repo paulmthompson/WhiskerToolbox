@@ -538,6 +538,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer)
+target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

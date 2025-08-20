@@ -1,13 +1,15 @@
-#ifndef OPENCV_UTILITY_HPP
-#define OPENCV_UTILITY_HPP
+#ifndef IMAGE_PROCESSING_OPENCV_UTILITY_HPP
+#define IMAGE_PROCESSING_OPENCV_UTILITY_HPP
 
+#include "ProcessingOptions.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
-#include "ProcessingOptions.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <vector>
+
+namespace ImageProcessing {
 
 // Image loading and conversion functions
 cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, ImageSize image_size);
@@ -111,4 +113,6 @@ std::vector<uint8_t> apply_magic_eraser_with_options(std::vector<uint8_t> const&
  */
 void apply_magic_eraser(cv::Mat& mat, MagicEraserOptions const& options);
 
-#endif // OPENCV_UTILITY_HPP
+} // namespace ImageProcessing
+
+#endif // IMAGE_PROCESSING_OPENCV_UTILITY_HPP

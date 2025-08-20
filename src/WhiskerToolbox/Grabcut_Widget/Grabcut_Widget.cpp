@@ -3,7 +3,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "utils/opencv_utility.hpp"
+#include "ImageProcessing/OpenCVUtility.hpp"
 
 #include <opencv2/imgcodecs.hpp>
 #include <QMouseEvent>
@@ -223,7 +223,7 @@ void Grabcut_Widget::_saveMask(){
             }
         }
     }
-    auto pts = create_mask(mask);
+    auto pts = ImageProcessing::create_mask(mask);
     auto mask_data = _data_manager->getData<MaskData>(mask_name);
     mask_data->setImageSize({_width,_height});
 

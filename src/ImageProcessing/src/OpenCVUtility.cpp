@@ -1,10 +1,12 @@
-#include "opencv_utility.hpp"
+#include "ImageProcessing/OpenCVUtility.hpp"
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/photo.hpp>
 #include <iostream>
+
+namespace ImageProcessing {
 
 cv::Mat load_mask_from_image(std::string const & filename, bool const invert) {
     cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
@@ -307,3 +309,5 @@ void apply_magic_eraser(cv::Mat& mat, MagicEraserOptions const& options) {
         mat = outputImage;
     }
 }
+
+} // namespace ImageProcessing

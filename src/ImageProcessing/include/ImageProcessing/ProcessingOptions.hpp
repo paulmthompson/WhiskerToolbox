@@ -1,5 +1,5 @@
-#ifndef PROCESSING_OPTIONS_HPP
-#define PROCESSING_OPTIONS_HPP
+#ifndef IMAGE_PROCESSING_OPTIONS_HPP
+#define IMAGE_PROCESSING_OPTIONS_HPP
 
 #include "CoreGeometry/ImageSize.hpp"
 
@@ -81,4 +81,4 @@ struct MagicEraserOptions {
     ImageSize image_size;
 };
 
-#endif // PROCESSING_OPTIONS_HPP 
+#endif // IMAGE_PROCESSING_OPTIONS_HPP

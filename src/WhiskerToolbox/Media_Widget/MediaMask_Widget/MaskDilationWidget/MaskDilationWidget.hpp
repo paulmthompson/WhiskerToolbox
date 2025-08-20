@@ -1,7 +1,7 @@
 #ifndef MASK_DILATION_WIDGET_HPP
 #define MASK_DILATION_WIDGET_HPP
 
-#include "DataManager/utils/ProcessingOptions.hpp"
+#include "ImageProcessing/ProcessingOptions.hpp"
 
 #include <QWidget>
 

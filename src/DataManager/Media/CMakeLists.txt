@@ -65,8 +65,8 @@ target_link_libraries(MediaData PUBLIC
 
 # Link OpenCV libraries conditionally
 if(ENABLE_OPENCV)
-    target_link_libraries(MediaData PUBLIC
-        opencv_core opencv_imgproc opencv_imgcodecs opencv_photo  # For Image processing
+    target_link_libraries(MediaData PRIVATE
+       ImageProcessing
     )
     target_compile_definitions(MediaData PUBLIC ENABLE_OPENCV)
 endif()

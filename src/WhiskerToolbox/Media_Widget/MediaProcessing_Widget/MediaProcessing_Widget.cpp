@@ -11,7 +11,7 @@
 #include "Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/utils/opencv_utility.hpp"
+#include "ImageProcessing/OpenCVUtility.hpp"
 #include "Media_Window/Media_Window.hpp"
 
 #include <QHideEvent>
@@ -368,7 +368,7 @@ void MediaProcessing_Widget::_applyContrastFilter() {
     if (_contrast_options.active) {
         // Add or update the contrast filter in the processing chain using the options structure
         media_data->setProcess("1__lineartransform", [options = _contrast_options](cv::Mat & input) {
-            linear_transform(input, options);
+            ImageProcessing::linear_transform(input, options);
         });
     } else {
         // Remove the contrast filter from the processing chain
@@ -390,7 +390,7 @@ void MediaProcessing_Widget::_applyGammaFilter() {
     if (_gamma_options.active) {
         // Add or update the gamma filter in the processing chain using the options structure
         media_data->setProcess("2__gamma", [options = _gamma_options](cv::Mat & input) {
-            gamma_transform(input, options);
+            ImageProcessing::gamma_transform(input, options);
         });
     } else {
         // Remove the gamma filter from the processing chain
@@ -412,7 +412,7 @@ void MediaProcessing_Widget::_applySharpenFilter() {
     if (_sharpen_options.active) {
         // Add or update the sharpen filter in the processing chain using the options structure
         media_data->setProcess("3__sharpen", [options = _sharpen_options](cv::Mat & input) {
-            sharpen_image(input, options);
+            ImageProcessing::sharpen_image(input, options);
         });
     } else {
         // Remove the sharpen filter from the processing chain
@@ -434,7 +434,7 @@ void MediaProcessing_Widget::_applyClaheFilter() {
     if (_clahe_options.active) {
         // Add or update the CLAHE filter in the processing chain using the options structure
         media_data->setProcess("4__clahe", [options = _clahe_options](cv::Mat & input) {
-            clahe(input, options);
+            ImageProcessing::clahe(input, options);
         });
     } else {
         // Remove the CLAHE filter from the processing chain
@@ -456,7 +456,7 @@ void MediaProcessing_Widget::_applyBilateralFilter() {
     if (_bilateral_options.active) {
         // Add or update the bilateral filter in the processing chain using the options structure
         media_data->setProcess("5__bilateral", [options = _bilateral_options](cv::Mat & input) {
-            bilateral_filter(input, options);
+            ImageProcessing::bilateral_filter(input, options);
         });
     } else {
         // Remove the bilateral filter from the processing chain
@@ -478,7 +478,7 @@ void MediaProcessing_Widget::_applyMedianFilter() {
     if (_median_options.active) {
         // Add or update the median filter in the processing chain using the options structure
         media_data->setProcess("6__median", [options = _median_options](cv::Mat & input) {
-            median_filter(input, options);
+            ImageProcessing::median_filter(input, options);
         });
     } else {
         // Remove the median filter from the processing chain
@@ -500,7 +500,7 @@ void MediaProcessing_Widget::_applyMagicEraser() {
     if (_magic_eraser_options.active && !_magic_eraser_options.mask.empty()) {
         // Add or update the magic eraser filter in the processing chain
         media_data->setProcess("7__magic_eraser", [options = _magic_eraser_options](cv::Mat & input) {
-            apply_magic_eraser(input, options);
+            ImageProcessing::apply_magic_eraser(input, options);
         });
     } else {
         // Remove the magic eraser filter from the processing chain

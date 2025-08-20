@@ -2,7 +2,7 @@
 #define MEDIAMASK_WIDGET_HPP
 
 #include "CoreGeometry/points.hpp"
-#include "DataManager/utils/ProcessingOptions.hpp"
+#include "ImageProcessing/ProcessingOptions.hpp"
 #include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 
 #include <QMap>

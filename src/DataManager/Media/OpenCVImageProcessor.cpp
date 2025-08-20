@@ -1,5 +1,5 @@
 #include "OpenCVImageProcessor.hpp"
-#include "utils/opencv_utility.hpp"
+#include "ImageProcessing/OpenCVUtility.hpp"
 #include <memory>
 
 namespace ImageProcessing {

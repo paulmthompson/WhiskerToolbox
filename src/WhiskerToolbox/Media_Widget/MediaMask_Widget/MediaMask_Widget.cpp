@@ -5,7 +5,7 @@
 #include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/utils/opencv_utility.hpp"
+#include "ImageProcessing/OpenCVUtility.hpp"
 #include "MaskDilationWidget/MaskDilationWidget.hpp"
 #include "Media_Window/Media_Window.hpp"
 #include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
@@ -333,7 +333,7 @@ void MediaMask_Widget::_applyMaskDilation(MaskDilationOptions const & options) {
 
     for (auto const & single_mask: original_masks) {
         if (!single_mask.empty()) {
-            auto dilated_mask = dilate_mask(single_mask, image_size, options);
+            auto dilated_mask = ImageProcessing::dilate_mask(single_mask, image_size, options);
             dilated_masks.push_back(dilated_mask);
         }
     }
