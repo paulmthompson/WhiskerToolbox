@@ -32,6 +32,39 @@ bool CapnProtoFormatLoader::supportsFormat(std::string const& format, IODataType
     return false;
 }
 
+LoadResult CapnProtoFormatLoader::save(std::string const& filepath, 
+                                       IODataType dataType, 
+                                       nlohmann::json const& config, 
+                                       void const* data) const {
+    if (dataType != IODataType::Line) {
+        return LoadResult("CapnProtoFormatLoader only supports saving LineData");
+    }
+    
+    if (!data) {
+        return LoadResult("Data pointer is null");
+    }
+    
+    try {
+        // Cast void pointer back to LineData
+        auto const* line_data = static_cast<LineData const*>(data);
+        
+        // Convert JSON config to BinaryLineSaverOptions
+        BinaryLineSaverOptions save_opts;
+        save_opts.parent_dir = config.value("parent_dir", ".");
+        save_opts.filename = config.value("filename", "line_data.capnp");
+        
+        // Call the existing save function
+        if (::save(*line_data, save_opts)) {
+            return LoadResult(""); // Success
+        } else {
+            return LoadResult("CapnProto save operation failed");
+        }
+        
+    } catch (std::exception const& e) {
+        return LoadResult("CapnProtoFormatLoader save failed: " + std::string(e.what()));
+    }
+}
+
 std::string CapnProtoFormatLoader::getLoaderName() const {
     return "CapnProtoLoader";
 }

@@ -1,17 +1,17 @@
 #ifndef LINE_WIDGET_HPP
 #define LINE_WIDGET_HPP
 
-#include "DataManager/IO/CapnProto/Line_Data_Binary.hpp"
-#include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
+// Remove direct IO dependencies - use JSON registry pattern
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "IO_Widgets/Media/MediaExport_Widget.hpp"
 
 #include <QModelIndex>
 #include <QWidget>
+#include <QString>
+#include "nlohmann/json.hpp"
 
 #include <memory>
 #include <string>
-#include <variant>
 
 namespace Ui {
 class Line_Widget;
@@ -24,7 +24,8 @@ class QStackedWidget;
 class QComboBox;
 class QCheckBox;
 
-using LineSaverOptionsVariant = std::variant<CSVSingleFileLineSaverOptions, CSVMultiFileLineSaverOptions, BinaryLineSaverOptions>;
+// JSON-based saver configuration - no need for variant types
+using LineSaverConfig = nlohmann::json;
 
 class Line_Widget : public QWidget {
     Q_OBJECT
@@ -47,8 +48,7 @@ private:
     std::string _active_key;
     int _callback_id{-1};
 
-    enum SaverType { CSV,
-                     BINARY };
+    // No longer need SaverType enum - use format strings directly
 
     /**
      * @brief Move selected line to the specified target key
@@ -77,16 +77,14 @@ private slots:
     void _deleteSelectedLine();
 
     void _onExportTypeChanged(int index);
-    void _handleSaveCSVRequested(CSVSingleFileLineSaverOptions options);
-    void _handleSaveMultiFileCSVRequested(CSVMultiFileLineSaverOptions options);
-    void _handleSaveBinaryRequested(BinaryLineSaverOptions options);
+    void _handleSaveCSVRequested(QString format, nlohmann::json config);
+    void _handleSaveMultiFileCSVRequested(QString format, nlohmann::json config);
+    void _handleSaveBinaryRequested(QString format, nlohmann::json config);
     void _onExportMediaFramesCheckboxToggled(bool checked);
 
 private:
-    void _initiateSaveProcess(SaverType saver_type, LineSaverOptionsVariant & options_variant);
-    bool _performActualCSVSave(CSVSingleFileLineSaverOptions & options);
-    bool _performActualMultiFileCSVSave(CSVMultiFileLineSaverOptions & options);
-    bool _performActualBinarySave(BinaryLineSaverOptions & options);
+    void _initiateSaveProcess(QString const& format, LineSaverConfig const& config);
+    bool _performRegistrySave(QString const& format, LineSaverConfig const& config);
 
     /**
      * @brief Get selected frames from the table view

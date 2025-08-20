@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <QString>
-#include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
+#include "nlohmann/json.hpp"
 
 // Forward declaration
 namespace Ui {
@@ -17,8 +17,8 @@ public:
     ~CSVLineSaver_Widget() override;
 
 signals:
-    void saveCSVRequested(CSVSingleFileLineSaverOptions options);
-    void saveMultiFileCSVRequested(CSVMultiFileLineSaverOptions options);
+    void saveCSVRequested(QString format, nlohmann::json config);
+    void saveMultiFileCSVRequested(QString format, nlohmann::json config);
 
 private slots:
     void _onSaveHeaderCheckboxToggled(bool checked);

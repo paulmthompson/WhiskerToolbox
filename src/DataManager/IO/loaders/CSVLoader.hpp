@@ -22,6 +22,14 @@ public:
                    IODataType dataType, 
                    nlohmann::json const& config, 
                    DataFactory* factory) const override;
+    
+    /**
+     * @brief Save data to CSV file
+     */
+    LoadResult save(std::string const& filepath, 
+                   IODataType dataType, 
+                   nlohmann::json const& config, 
+                   void const* data) const override;
 
     /**
      * @brief Check if this loader supports the format/dataType combination

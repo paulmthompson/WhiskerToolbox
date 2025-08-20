@@ -6,6 +6,8 @@
 #include "DataManager/TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>
+#include <QString>
+#include "nlohmann/json.hpp"
 
 #include <memory>
 #include <string>
@@ -20,10 +22,6 @@ class DataManager;
 class QComboBox;
 class QStackedWidget;
 class BinaryLineLoader_Widget;
-
-// Forward declare the CSV options structs
-struct CSVSingleFileLineLoaderOptions;
-struct CSVMultiFileLineLoaderOptions;
 
 class Line_Loader_Widget : public QWidget {
     Q_OBJECT
@@ -44,8 +42,8 @@ private slots:
     void _loadMultiHdf5Line(QString dir_name, QString pattern);
     void _onLoaderTypeChanged(int index);
     void _handleLoadBinaryFileRequested(QString filepath);
-    void _handleLoadSingleFileCSVRequested(CSVSingleFileLineLoaderOptions options);
-    void _handleLoadMultiFileCSVRequested(CSVMultiFileLineLoaderOptions options);
+    void _handleLoadSingleFileCSVRequested(QString format, nlohmann::json config);
+    void _handleLoadMultiFileCSVRequested(QString format, nlohmann::json config);
 };
 
 

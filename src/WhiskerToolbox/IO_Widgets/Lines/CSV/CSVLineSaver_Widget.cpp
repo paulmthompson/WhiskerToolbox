@@ -19,83 +19,54 @@ CSVLineSaver_Widget::CSVLineSaver_Widget(QWidget *parent) :
     ui->setupUi(this);
     
     connect(ui->save_action_button, &QPushButton::clicked, this, [this]() {
+        nlohmann::json config;
+        
+        // Get delimiter
+        QString delimiterText = ui->delimiter_saver_combo->currentText();
+        if (delimiterText == "Comma") {
+            config["delimiter"] = ",";
+        } else if (delimiterText == "Space") {
+            config["delimiter"] = " ";
+        } else if (delimiterText == "Tab") {
+            config["delimiter"] = "\t";
+        } else {
+            config["delimiter"] = ","; // Default
+        }
+
+        // Get line ending
+        QString lineEndingText = ui->line_ending_combo->currentText();
+        if (lineEndingText == "LF (\n)") {
+            config["line_delim"] = "\n";
+        } else if (lineEndingText == "CRLF (\r\n)") {
+            config["line_delim"] = "\r\n";
+        } else {
+            config["line_delim"] = "\n"; // Default
+        }
+
+        config["precision"] = ui->precision_spinbox->value();
+        config["save_header"] = ui->save_header_checkbox->isChecked();
+        
+        if (ui->save_header_checkbox->isChecked()) {
+            config["header"] = ui->header_text_edit->text().toStdString();
+        } else {
+            config["header"] = "";
+        }
+
         if (ui->single_file_radio->isChecked()) {
             // Single file mode
-            CSVSingleFileLineSaverOptions options;
-            options.filename = ui->save_filename_edit->text().toStdString();
+            config["save_type"] = "single";
+            config["filename"] = ui->save_filename_edit->text().toStdString();
+            config["parent_dir"] = "."; // Will be set by Line_Widget
             
-            // Delimiter
-            QString delimiterText = ui->delimiter_saver_combo->currentText();
-            if (delimiterText == "Comma") {
-                options.delimiter = ",";
-            } else if (delimiterText == "Space") {
-                options.delimiter = " ";
-            } else if (delimiterText == "Tab") {
-                options.delimiter = "\t";
-            } else {
-                options.delimiter = ","; // Default
-            }
-
-            // Line Ending
-            QString lineEndingText = ui->line_ending_combo->currentText();
-            if (lineEndingText == "LF (\n)") {
-                options.line_delim = "\n";
-            } else if (lineEndingText == "CRLF (\r\n)") {
-                options.line_delim = "\r\n";
-            } else {
-                options.line_delim = "\n"; // Default
-            }
-
-            options.precision = ui->precision_spinbox->value();
-
-            options.save_header = ui->save_header_checkbox->isChecked();
-            if (options.save_header) {
-                options.header = ui->header_text_edit->text().toStdString();
-            } else {
-                options.header = ""; // Clear header if not saving
-            }
-
-            emit saveCSVRequested(options);
+            emit saveCSVRequested("csv", config);
         } else {
             // Multi file mode
-            CSVMultiFileLineSaverOptions options;
-            options.parent_dir = ui->save_filename_edit->text().toStdString();
+            config["save_type"] = "multi";
+            config["parent_dir"] = ui->save_filename_edit->text().toStdString();
+            config["frame_id_padding"] = ui->frame_padding_spinbox->value();
+            config["overwrite_existing"] = ui->overwrite_existing_checkbox->isChecked();
             
-            // Delimiter
-            QString delimiterText = ui->delimiter_saver_combo->currentText();
-            if (delimiterText == "Comma") {
-                options.delimiter = ",";
-            } else if (delimiterText == "Space") {
-                options.delimiter = " ";
-            } else if (delimiterText == "Tab") {
-                options.delimiter = "\t";
-            } else {
-                options.delimiter = ","; // Default
-            }
-
-            // Line Ending
-            QString lineEndingText = ui->line_ending_combo->currentText();
-            if (lineEndingText == "LF (\n)") {
-                options.line_delim = "\n";
-            } else if (lineEndingText == "CRLF (\r\n)") {
-                options.line_delim = "\r\n";
-            } else {
-                options.line_delim = "\n"; // Default
-            }
-
-            options.precision = ui->precision_spinbox->value();
-
-            options.save_header = ui->save_header_checkbox->isChecked();
-            if (options.save_header) {
-                options.header = ui->header_text_edit->text().toStdString();
-            } else {
-                options.header = ""; // Clear header if not saving
-            }
-
-            options.frame_id_padding = ui->frame_padding_spinbox->value();
-            options.overwrite_existing = ui->overwrite_existing_checkbox->isChecked();
-
-            emit saveMultiFileCSVRequested(options);
+            emit saveMultiFileCSVRequested("csv", config);
         }
     });
 

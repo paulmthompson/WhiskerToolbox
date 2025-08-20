@@ -3,7 +3,7 @@
 
 #include <QString>
 #include <QWidget>
-#include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
+#include "nlohmann/json.hpp"
 
 namespace Ui {
 class CSVLineLoader_Widget;
@@ -16,8 +16,8 @@ public:
     ~CSVLineLoader_Widget() override;
 
 signals:
-    void loadSingleFileCSVRequested(CSVSingleFileLineLoaderOptions options);
-    void loadMultiFileCSVRequested(CSVMultiFileLineLoaderOptions options);
+    void loadSingleFileCSVRequested(QString format, nlohmann::json config);
+    void loadMultiFileCSVRequested(QString format, nlohmann::json config);
 
 private slots:
     void _onLoadModeChanged();

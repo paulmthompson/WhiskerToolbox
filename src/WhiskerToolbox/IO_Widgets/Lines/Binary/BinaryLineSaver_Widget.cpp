@@ -10,10 +10,11 @@ BinaryLineSaver_Widget::BinaryLineSaver_Widget(QWidget *parent) :
 {
     ui->setupUi(this);
     connect(ui->save_action_button, &QPushButton::clicked, this, [this]() {
-        BinaryLineSaverOptions options;
-        options.filename = ui->save_filename_edit->text().toStdString();
-        // parent_dir will be set by the calling widget (Line_Widget)
-        emit saveBinaryRequested(options);
+        nlohmann::json config;
+        config["filename"] = ui->save_filename_edit->text().toStdString();
+        config["parent_dir"] = "."; // Will be set by Line_Widget
+        
+        emit saveBinaryRequested("binary", config);
     });
 }
 

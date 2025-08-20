@@ -7,8 +7,7 @@
 #include "DataManager/IO/LoaderRegistry.hpp"
 #include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/DataManagerTypes.hpp"
-#include "DataManager/IO/CapnProto/Line_Data_Binary.hpp"
-#include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
+// Remove direct IO includes - use registry pattern instead
 #include "IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp"
 #include "IO_Widgets/Lines/CSV/CSVLineLoader_Widget.hpp"
 #include "IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.hpp"
@@ -85,11 +84,43 @@ void Line_Loader_Widget::_loadSingleBinaryFile(QString const & filepath) {
         }
     }
 
-    auto opts = BinaryLineLoaderOptions();
-    opts.file_path = file_path_std;
-    std::shared_ptr<LineData> line_data = load(opts);
+    try {
+        // Use LoaderRegistry instead of direct binary loading
+        LoaderRegistry& registry = LoaderRegistry::getInstance();
+        
+        if (!registry.isFormatSupported("binary", IODataType::Line)) {
+            QMessageBox::warning(this, "Format Not Supported", 
+                "Binary format loading is not available. This may require CapnProto to be enabled at build time.");
+            return;
+        }
+        
+        // Create JSON config for binary loading
+        nlohmann::json config;
+        config["file_path"] = file_path_std;
+        
+        ConcreteDataFactory factory;
+        LoadResult result = registry.tryLoad("binary", IODataType::Line, file_path_std, config, &factory);
+        
+        if (!result.success) {
+            QMessageBox::critical(this, "Load Error", QString("Failed to load binary line data: %1").arg(QString::fromStdString(result.error_message)));
+            return;
+        }
+        
+        if (!std::holds_alternative<std::shared_ptr<LineData>>(result.data)) {
+            QMessageBox::critical(this, "Load Error", "Unexpected data type returned from binary loader.");
+            return;
+        }
+        
+        auto line_data = std::get<std::shared_ptr<LineData>>(result.data);
+        if (!line_data) {
+            QMessageBox::critical(this, "Load Error", "Failed to load binary line data.");
+            return;
+        }
 
-    if (line_data) {
+        // Ensure line_data has identity context
+        line_data->setIdentityContext(line_key, _data_manager->getEntityRegistry());
+        line_data->rebuildAllEntityIds();
+
         _data_manager->setData<LineData>(line_key, line_data, TimeKey("time"));
         std::cout << "Successfully loaded binary line data: " << file_path_std << " into key: " << line_key << std::endl;
 
@@ -103,9 +134,10 @@ void Line_Loader_Widget::_loadSingleBinaryFile(QString const & filepath) {
             }
         }        
         QMessageBox::information(this, "Load Successful", QString::fromStdString("Binary Line data loaded into " + line_key));
-    } else {
-        std::cerr << "Failed to load binary line data: " << file_path_std << std::endl;
-        QMessageBox::critical(this, "Load Failed", QString::fromStdString("Could not load binary line data from " + file_path_std));
+        
+    } catch (std::exception const & e) {
+        std::cerr << "Failed to load binary line data: " << e.what() << std::endl;
+        QMessageBox::critical(this, "Load Failed", QString("Could not load binary line data: %1").arg(e.what()));
     }
 }
 
@@ -239,50 +271,144 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
     }
 }
 
-void Line_Loader_Widget::_handleLoadSingleFileCSVRequested(CSVSingleFileLineLoaderOptions options) {
+void Line_Loader_Widget::_handleLoadSingleFileCSVRequested(QString format, nlohmann::json config) {
     try {
-        std::map<TimeFrameIndex, std::vector<Line2D>> data_map = load(options);
+        // Use LoaderRegistry instead of direct CSV loading
+        LoaderRegistry& registry = LoaderRegistry::getInstance();
         
-        if (data_map.empty()) {
-            QMessageBox::warning(this, "Load Warning", "No data found in CSV file.");
+        if (!registry.isFormatSupported("csv", IODataType::Line)) {
+            QMessageBox::warning(this, "Format Not Supported", 
+                "CSV format loading is not available. This should not happen as CSV is an internal loader.");
             return;
         }
         
-        // Use the filepath to determine a base key
-        std::filesystem::path filepath(options.filepath);
-        std::string base_key = filepath.stem().string();
+        // Extract filepath from config for determining key
+        std::string filepath = config.value("filepath", "");
+        if (filepath.empty()) {
+            QMessageBox::critical(this, "Load Error", "No filepath provided in CSV config.");
+            return;
+        }
+        
+        ConcreteDataFactory factory;
+        LoadResult result = registry.tryLoad("csv", IODataType::Line, filepath, config, &factory);
+        
+        if (!result.success) {
+            QMessageBox::critical(this, "Load Error", QString("Failed to load CSV file: %1").arg(QString::fromStdString(result.error_message)));
+            return;
+        }
+        
+        if (!std::holds_alternative<std::shared_ptr<LineData>>(result.data)) {
+            QMessageBox::critical(this, "Load Error", "Unexpected data type returned from CSV loader.");
+            return;
+        }
+        
+        auto line_data = std::get<std::shared_ptr<LineData>>(result.data);
+        if (!line_data) {
+            QMessageBox::critical(this, "Load Error", "Failed to load CSV line data.");
+            return;
+        }
+        
+        // Determine base key from filepath
+        std::filesystem::path file_path(filepath);
+        std::string base_key = file_path.stem().string();
         if (base_key.empty()) {
             base_key = "csv_single_file_line";
         }
         
-        _loadCSVData(data_map, base_key);
+        // Check if user has specified a data name
+        if (!ui->data_name_text->text().isEmpty()) {
+            base_key = ui->data_name_text->text().toStdString();
+        }
+        
+        // Ensure line_data has identity context
+        line_data->setIdentityContext(base_key, _data_manager->getEntityRegistry());
+        line_data->rebuildAllEntityIds();
+        
+        // Apply scaling if enabled
+        if (ui->scaling_widget->isScalingEnabled()) {
+            ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
+            if (scaled_size.width > 0 && scaled_size.height > 0) {
+                line_data->changeImageSize(scaled_size);
+            }
+        }
+        
+        _data_manager->setData<LineData>(base_key, line_data, TimeKey("time"));
+        QMessageBox::information(this, "Load Successful", QString("CSV line data loaded successfully as '%1'.").arg(QString::fromStdString(base_key)));
+        std::cout << "CSV line data loaded: " << base_key << std::endl;
         
     } catch (std::exception const& e) {
-        std::cerr << "Error loading single CSV file " << options.filepath << ": " << e.what() << std::endl;
+        std::cerr << "Error loading single CSV file: " << e.what() << std::endl;
         QMessageBox::critical(this, "Load Error", QString::fromStdString("Error loading CSV: " + std::string(e.what())));
     }
 }
 
-void Line_Loader_Widget::_handleLoadMultiFileCSVRequested(CSVMultiFileLineLoaderOptions options) {
+void Line_Loader_Widget::_handleLoadMultiFileCSVRequested(QString format, nlohmann::json config) {
     try {
-        std::map<TimeFrameIndex, std::vector<Line2D>> data_map = load(options);
+        // Use LoaderRegistry instead of direct CSV loading
+        LoaderRegistry& registry = LoaderRegistry::getInstance();
         
-        if (data_map.empty()) {
-            QMessageBox::warning(this, "Load Warning", "No data found in CSV files.");
+        if (!registry.isFormatSupported("csv", IODataType::Line)) {
+            QMessageBox::warning(this, "Format Not Supported", 
+                "CSV format loading is not available. This should not happen as CSV is an internal loader.");
             return;
         }
         
-        // Use the parent directory to determine a base key
-        std::filesystem::path parent_dir(options.parent_dir);
-        std::string base_key = parent_dir.filename().string();
+        // Extract parent_dir from config for determining key
+        std::string parent_dir = config.value("parent_dir", "");
+        if (parent_dir.empty()) {
+            QMessageBox::critical(this, "Load Error", "No parent directory provided in CSV config.");
+            return;
+        }
+        
+        ConcreteDataFactory factory;
+        LoadResult result = registry.tryLoad("csv", IODataType::Line, parent_dir, config, &factory);
+        
+        if (!result.success) {
+            QMessageBox::critical(this, "Load Error", QString("Failed to load CSV files: %1").arg(QString::fromStdString(result.error_message)));
+            return;
+        }
+        
+        if (!std::holds_alternative<std::shared_ptr<LineData>>(result.data)) {
+            QMessageBox::critical(this, "Load Error", "Unexpected data type returned from CSV loader.");
+            return;
+        }
+        
+        auto line_data = std::get<std::shared_ptr<LineData>>(result.data);
+        if (!line_data) {
+            QMessageBox::critical(this, "Load Error", "Failed to load CSV line data.");
+            return;
+        }
+        
+        // Determine base key from parent directory
+        std::filesystem::path parent_path(parent_dir);
+        std::string base_key = parent_path.filename().string();
         if (base_key.empty() || base_key == "." || base_key == "..") {
             base_key = "csv_multi_file_line";
         }
         
-        _loadCSVData(data_map, base_key);
+        // Check if user has specified a data name
+        if (!ui->data_name_text->text().isEmpty()) {
+            base_key = ui->data_name_text->text().toStdString();
+        }
+        
+        // Ensure line_data has identity context
+        line_data->setIdentityContext(base_key, _data_manager->getEntityRegistry());
+        line_data->rebuildAllEntityIds();
+        
+        // Apply scaling if enabled
+        if (ui->scaling_widget->isScalingEnabled()) {
+            ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
+            if (scaled_size.width > 0 && scaled_size.height > 0) {
+                line_data->changeImageSize(scaled_size);
+            }
+        }
+        
+        _data_manager->setData<LineData>(base_key, line_data, TimeKey("time"));
+        QMessageBox::information(this, "Load Successful", QString("CSV line data loaded successfully as '%1'.").arg(QString::fromStdString(base_key)));
+        std::cout << "Multi-file CSV line data loaded: " << base_key << std::endl;
         
     } catch (std::exception const& e) {
-        std::cerr << "Error loading multi CSV files from " << options.parent_dir << ": " << e.what() << std::endl;
+        std::cerr << "Error loading multi CSV files: " << e.what() << std::endl;
         QMessageBox::critical(this, "Load Error", QString::fromStdString("Error loading CSV: " + std::string(e.what())));
     }
 }

@@ -69,68 +69,58 @@ void CSVLineLoader_Widget::_onLoadButtonClicked() {
         return;
     }
     
+    nlohmann::json config;
+    
+    // Get delimiter (common to both modes)
+    QString delimiterText = ui->delimiter_combo->currentText();
+    if (delimiterText == "Comma") {
+        config["delimiter"] = ",";
+    } else if (delimiterText == "Space") {
+        config["delimiter"] = " ";
+    } else if (delimiterText == "Tab") {
+        config["delimiter"] = "\t";
+    } else {
+        config["delimiter"] = ","; // Default
+    }
+    
+    config["has_header"] = ui->has_header_checkbox->isChecked();
+    
     if (ui->single_file_radio->isChecked()) {
         // Single file mode
-        CSVSingleFileLineLoaderOptions options;
-        options.filepath = filePath.toStdString();
+        config["filepath"] = filePath.toStdString();
+        config["multi_file"] = false;
         
-        // Get delimiter
-        QString delimiterText = ui->delimiter_combo->currentText();
-        if (delimiterText == "Comma") {
-            options.delimiter = ",";
-        } else if (delimiterText == "Space") {
-            options.delimiter = " ";
-        } else if (delimiterText == "Tab") {
-            options.delimiter = "\t";
-        } else {
-            options.delimiter = ","; // Default
-        }
-        
-        // Get coordinate delimiter
+        // Get coordinate delimiter (single-file specific)
         QString coordDelimiterText = ui->coordinate_delimiter_combo->currentText();
         if (coordDelimiterText == "Comma") {
-            options.coordinate_delimiter = ",";
+            config["coordinate_delimiter"] = ",";
         } else if (coordDelimiterText == "Space") {
-            options.coordinate_delimiter = " ";
+            config["coordinate_delimiter"] = " ";
         } else if (coordDelimiterText == "Tab") {
-            options.coordinate_delimiter = "\t";
+            config["coordinate_delimiter"] = "\t";
         } else {
-            options.coordinate_delimiter = ","; // Default
+            config["coordinate_delimiter"] = ","; // Default
         }
         
-        options.has_header = ui->has_header_checkbox->isChecked();
-        options.header_identifier = ui->header_identifier_edit->text().toStdString();
+        config["header_identifier"] = ui->header_identifier_edit->text().toStdString();
         
-        emit loadSingleFileCSVRequested(options);
+        emit loadSingleFileCSVRequested("csv", config);
+        
     } else {
         // Multi file mode
-        CSVMultiFileLineLoaderOptions options;
-        options.parent_dir = filePath.toStdString();
-        
-        // Get delimiter
-        QString delimiterText = ui->delimiter_combo->currentText();
-        if (delimiterText == "Comma") {
-            options.delimiter = ",";
-        } else if (delimiterText == "Space") {
-            options.delimiter = " ";
-        } else if (delimiterText == "Tab") {
-            options.delimiter = "\t";
-        } else {
-            options.delimiter = ","; // Default
-        }
-        
-        options.x_column = ui->x_column_spinbox->value();
-        options.y_column = ui->y_column_spinbox->value();
-        options.has_header = ui->has_header_checkbox->isChecked();
+        config["parent_dir"] = filePath.toStdString();
+        config["multi_file"] = true;
+        config["x_column"] = ui->x_column_spinbox->value();
+        config["y_column"] = ui->y_column_spinbox->value();
         
         // Validate column indices
-        if (options.x_column == options.y_column) {
+        if (config["x_column"] == config["y_column"]) {
             QMessageBox::warning(this, "Invalid Column Configuration", 
                                 "X and Y columns cannot be the same. Please select different column indices.");
             return;
         }
         
-        emit loadMultiFileCSVRequested(options);
+        emit loadMultiFileCSVRequested("csv", config);
     }
 }
 

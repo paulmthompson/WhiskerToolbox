@@ -2,7 +2,8 @@
 #define BINARY_LINE_SAVER_WIDGET_HPP
 
 #include <QWidget>
-#include "DataManager/IO/CapnProto/Line_Data_Binary.hpp" // For BinaryLineSaverOptions
+#include <QString>
+#include "nlohmann/json.hpp"
 
 // Forward declaration
 namespace Ui {
@@ -16,7 +17,7 @@ public:
     ~BinaryLineSaver_Widget() override;
 
 signals:
-    void saveBinaryRequested(BinaryLineSaverOptions options);
+    void saveBinaryRequested(QString format, nlohmann::json config);
 
 private:
     Ui::BinaryLineSaver_Widget *ui;

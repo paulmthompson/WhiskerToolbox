@@ -4,6 +4,8 @@
 #include "DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
+#include "DataManager/IO/LoaderRegistry.hpp"
+#include "DataManager/ConcreteDataFactory.hpp"
 #include "LineTableModel.hpp"
 
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
@@ -269,26 +271,23 @@ void Line_Widget::_onExportTypeChanged(int index) {
     }
 }
 
-void Line_Widget::_handleSaveCSVRequested(CSVSingleFileLineSaverOptions csv_options) {
-    LineSaverOptionsVariant options_variant = csv_options;
-    _initiateSaveProcess(SaverType::CSV, options_variant);
+void Line_Widget::_handleSaveCSVRequested(QString format, nlohmann::json config) {
+    _initiateSaveProcess(format, config);
 }
 
-void Line_Widget::_handleSaveMultiFileCSVRequested(CSVMultiFileLineSaverOptions csv_options) {
-    LineSaverOptionsVariant options_variant = csv_options;
-    _initiateSaveProcess(SaverType::CSV, options_variant);
+void Line_Widget::_handleSaveMultiFileCSVRequested(QString format, nlohmann::json config) {
+    _initiateSaveProcess(format, config);
 }
 
-void Line_Widget::_handleSaveBinaryRequested(BinaryLineSaverOptions binary_options) {
-    LineSaverOptionsVariant options_variant = binary_options;
-    _initiateSaveProcess(SaverType::BINARY, options_variant);
+void Line_Widget::_handleSaveBinaryRequested(QString format, nlohmann::json config) {
+    _initiateSaveProcess(format, config);
 }
 
 void Line_Widget::_onExportMediaFramesCheckboxToggled(bool checked) {
     ui->media_export_options_widget->setVisible(checked);
 }
 
-void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVariant & options_variant) {
+void Line_Widget::_initiateSaveProcess(QString const& format, LineSaverConfig const& config) {
     if (_active_key.empty()) {
         QMessageBox::warning(this, "No Data Selected", "Please select a LineData item to save.");
         return;
@@ -300,36 +299,14 @@ void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVar
         return;
     }
 
-    bool save_successful = false;
-    std::string saved_parent_dir;
+    // Update config with full path
+    LineSaverConfig updated_config = config;
+    std::string parent_dir = config.value("parent_dir", ".");
+    updated_config["parent_dir"] = _data_manager->getOutputPath().string() + "/" + parent_dir;
 
-    switch (saver_type) {
-        case SaverType::CSV: {
-            if (std::holds_alternative<CSVSingleFileLineSaverOptions>(options_variant)) {
-                CSVSingleFileLineSaverOptions & specific_csv_options = std::get<CSVSingleFileLineSaverOptions>(options_variant);
-                specific_csv_options.parent_dir = _data_manager->getOutputPath().string();
-                saved_parent_dir = specific_csv_options.parent_dir;// Store for media export
-                save_successful = _performActualCSVSave(specific_csv_options);
-            } else if (std::holds_alternative<CSVMultiFileLineSaverOptions>(options_variant)) {
-                CSVMultiFileLineSaverOptions & specific_multi_csv_options = std::get<CSVMultiFileLineSaverOptions>(options_variant);
-                specific_multi_csv_options.parent_dir = _data_manager->getOutputPath().string() + "/" + specific_multi_csv_options.parent_dir;
-                saved_parent_dir = specific_multi_csv_options.parent_dir;// Store for media export
-                save_successful = _performActualMultiFileCSVSave(specific_multi_csv_options);
-            }
-            break;
-        }
-        case SaverType::BINARY: {
-            BinaryLineSaverOptions & specific_binary_options = std::get<BinaryLineSaverOptions>(options_variant);
-            specific_binary_options.parent_dir = _data_manager->getOutputPath().string();
-            saved_parent_dir = specific_binary_options.parent_dir;// Store for media export
-            save_successful = _performActualBinarySave(specific_binary_options);
-            break;
-        }
-            // Future saver types can be added here
-    }
+    bool save_successful = _performRegistrySave(format, updated_config);
 
     if (!save_successful) {
-        // Error message is shown in _performActualCSVSave or if data ptr is null
         return;
     }
 
@@ -344,84 +321,59 @@ void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVar
         if (frame_ids_to_export.empty()) {
             QMessageBox::information(this, "No Frames", "No lines found in data, so no media frames to export.");
         } else {
-            // Ensure frame ID padding consistency with multi-file CSV when media export is enabled
-            if (std::holds_alternative<CSVMultiFileLineSaverOptions>(options_variant)) {
-                auto media_export_opts = ui->media_export_options_widget->getOptions();
-                CSVMultiFileLineSaverOptions & multi_csv_opts = std::get<CSVMultiFileLineSaverOptions>(options_variant);
-                // Update the media export widget's frame padding to match CSV multi-file padding
-                // This ensures consistency between CSV filenames and media frame filenames
-                // Note: This is a design choice to keep frame numbering consistent
-            }
-
-            export_media_frames(_data_manager.get(),
-                                ui->media_export_options_widget,
-                                options_variant,// Pass the original variant with parent_dir set
-                                this,
-                                frame_ids_to_export);
+            // TODO: Update export_media_frames to work with JSON config
+            QMessageBox::information(this, "Media Export", "Media frame export with JSON config not yet implemented.");
         }
     }
 }
 
-bool Line_Widget::_performActualCSVSave(CSVSingleFileLineSaverOptions & options) {
+bool Line_Widget::_performRegistrySave(QString const& format, LineSaverConfig const& config) {
     auto line_data_ptr = _data_manager->getData<LineData>(_active_key);
     if (!line_data_ptr) {
         QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve LineData for saving. Key: " + QString::fromStdString(_active_key));
         return false;
     }
 
+    // Check if format is supported through registry
+    LoaderRegistry& registry = LoaderRegistry::getInstance();
+    std::string format_str = format.toStdString();
+    
+    if (!registry.isFormatSupported(format_str, IODataType::Line)) {
+        QMessageBox::warning(this, "Format Not Supported", 
+            QString("Format '%1' saving is not available. This may require additional plugins to be enabled.\n\n"
+                   "To enable format support:\n"
+                   "1. Ensure required libraries are available in your build environment\n"
+                   "2. Build with appropriate -DENABLE_* flags\n"
+                   "3. Restart the application").arg(format));
+        
+        std::cout << "Format '" << format_str << "' saving not available - plugin not registered" << std::endl;
+        return false;
+    }
+
     try {
-        save(line_data_ptr.get(), options);// options.parent_dir and options.filename are used by this function
-        std::string full_path = options.parent_dir + "/" + options.filename;
-        QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to " + full_path));
-        std::cout << "Line data saved to: " << full_path << std::endl;
-        return true;
+        // Use registry to save through the new save interface
+        LoadResult result = registry.trySave(format_str, 
+                                           IODataType::Line, 
+                                           "", // filepath will be constructed from config
+                                           config, 
+                                           line_data_ptr.get());
+        
+        if (result.success) {
+            std::string save_location = config.value("parent_dir", ".");
+            QMessageBox::information(this, "Save Successful", 
+                QString("Line data saved successfully to: %1").arg(QString::fromStdString(save_location)));
+            std::cout << "Line data saved successfully using " << format_str << " format" << std::endl;
+            return true;
+        } else {
+            QMessageBox::critical(this, "Save Error", 
+                QString("Failed to save line data: %1").arg(QString::fromStdString(result.error_message)));
+            std::cerr << "Failed to save line data: " << result.error_message << std::endl;
+            return false;
+        }
+        
     } catch (std::exception const & e) {
         QMessageBox::critical(this, "Save Error", "Failed to save line data: " + QString::fromStdString(e.what()));
         std::cerr << "Failed to save line data: " << e.what() << std::endl;
-        return false;
-    }
-}
-
-bool Line_Widget::_performActualBinarySave(BinaryLineSaverOptions & options) {
-    auto line_data_ptr = _data_manager->getData<LineData>(_active_key);
-    if (!line_data_ptr) {
-        QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve LineData for saving. Key: " + QString::fromStdString(_active_key));
-        return false;
-    }
-
-    try {
-        // The save method already handles parent_dir and filename
-        if (save(*line_data_ptr, options)) {
-            std::string full_path = options.parent_dir + "/" + options.filename;
-            QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to " + full_path));
-            std::cout << "Line data saved to: " << full_path << std::endl;
-            return true;
-        } else {
-            QMessageBox::critical(this, "Save Error", "Failed to save line data to binary format. Check console for details.");
-            return false;
-        }
-    } catch (std::exception const & e) {
-        QMessageBox::critical(this, "Save Error", "Failed to save line data: " + QString::fromStdString(e.what()));
-        std::cerr << "Failed to save line data (binary): " << e.what() << std::endl;
-        return false;
-    }
-}
-
-bool Line_Widget::_performActualMultiFileCSVSave(CSVMultiFileLineSaverOptions & options) {
-    auto line_data_ptr = _data_manager->getData<LineData>(_active_key);
-    if (!line_data_ptr) {
-        QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve LineData for saving. Key: " + QString::fromStdString(_active_key));
-        return false;
-    }
-
-    try {
-        save(line_data_ptr.get(), options);// options.parent_dir is used by this function
-        QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to directory: " + options.parent_dir));
-        std::cout << "Line data saved to directory: " << options.parent_dir << std::endl;
-        return true;
-    } catch (std::exception const & e) {
-        QMessageBox::critical(this, "Save Error", "Failed to save multi-file line data: " + QString::fromStdString(e.what()));
-        std::cerr << "Failed to save multi-file line data: " << e.what() << std::endl;
         return false;
     }
 }
