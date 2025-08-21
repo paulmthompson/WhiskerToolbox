@@ -96,6 +96,7 @@ if(ENABLE_OPENCV)
 endif()
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
+target_link_libraries(test_data_manager PRIVATE DataManagerIO)
 
 target_include_directories(test_data_manager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"

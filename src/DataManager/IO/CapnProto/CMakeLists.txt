@@ -26,7 +26,7 @@ set(CAPNPROTO_PLUGIN_SOURCES
 )
 
 # Create the CapnProto plugin library
-add_library(DataManagerIO_CapnProto ${CAPNPROTO_PLUGIN_SOURCES})
+add_library(DataManagerIO_CapnProto SHARED ${CAPNPROTO_PLUGIN_SOURCES})
 
 target_include_directories(DataManagerIO_CapnProto PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}  # For generated CapnProto headers

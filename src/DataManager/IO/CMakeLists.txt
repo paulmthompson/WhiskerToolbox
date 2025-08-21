@@ -16,7 +16,7 @@ set(IO_CORE_SOURCES
 )
 
 # Create the core IO library
-add_library(DataManagerIO ${IO_CORE_SOURCES})
+add_library(DataManagerIO SHARED ${IO_CORE_SOURCES})
 
 target_include_directories(DataManagerIO PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/..

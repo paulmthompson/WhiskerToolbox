@@ -234,7 +234,9 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
-target_link_libraries(DataManager PUBLIC ImageProcessing)
+if(ENABLE_OPENCV)
+    target_link_libraries(DataManager PUBLIC ImageProcessing)
+endif()
 
 target_link_libraries(DataManager PRIVATE DataManagerIO)
 
