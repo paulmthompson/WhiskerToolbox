@@ -30,7 +30,7 @@ find_package(HDF5 COMPONENTS CXX REQUIRED)
 
 # Link to required libraries
 target_link_libraries(DataManagerHDF5 PRIVATE
-    DataManagerIO            # For LoaderRegistry access
+#    DataManagerIO            # For LoaderRegistry access
     NEURALYZER_GEOMETRY      # CoreGeometry for Point2D
     nlohmann_json::nlohmann_json  # For JSON config parsing
     WhiskerToolbox::LineData

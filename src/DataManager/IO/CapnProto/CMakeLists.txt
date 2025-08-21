@@ -33,7 +33,7 @@ target_include_directories(DataManagerIO_CapnProto PRIVATE
 )
 
 target_link_libraries(DataManagerIO_CapnProto PRIVATE
-    DataManagerIO
+ #   DataManagerIO
     WhiskerToolbox::LineData  # Link to LineData library instead of accessing headers
     CapnProto::capnp
     nlohmann_json::nlohmann_json

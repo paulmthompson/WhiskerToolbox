@@ -1,9 +1,9 @@
 #ifndef LOADER_REGISTRY_HPP
 #define LOADER_REGISTRY_HPP
 
-#include "IOTypes.hpp"
-#include "DataFactory.hpp"
-#include "DataLoader.hpp"
+#include "interface/DataFactory.hpp"
+#include "interface/DataLoader.hpp"
+#include "interface/IOTypes.hpp"
 
 #include "nlohmann/json.hpp"
 

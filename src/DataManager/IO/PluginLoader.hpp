@@ -1,11 +1,11 @@
 #ifndef DATAMANAGER_IO_PLUGINLOADER_HPP
 #define DATAMANAGER_IO_PLUGINLOADER_HPP
 
-#include "DataLoader.hpp"
-#include "IOTypes.hpp"
+#include "interface/DataLoader.hpp"
+#include "interface/IOTypes.hpp"
 #include <memory>
-#include <string>
 #include <nlohmann/json.hpp>
+#include <string>
 
 /**
  * @brief High-level interface for loading data using plugins

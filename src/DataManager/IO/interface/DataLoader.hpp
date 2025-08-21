@@ -3,7 +3,7 @@
 
 #include "IOTypes.hpp"
 
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 
 #include <memory>
 #include <string>

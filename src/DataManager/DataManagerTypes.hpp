@@ -1,7 +1,7 @@
 #ifndef DATAMANAGERTYPES_HPP
 #define DATAMANAGERTYPES_HPP
 
-#include "IO/IOTypes.hpp"
+#include "IO/interface/IOTypes.hpp"
 #include <memory>
 #include <string>
 #include <variant>

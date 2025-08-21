@@ -1,10 +1,10 @@
 #include "HDF5Loader.hpp"
-#include "../DataFactory.hpp"
 #include "../LoaderRegistry.hpp"
-#include "hdf5_loaders.hpp"
-#include "CoreGeometry/points.hpp"
-#include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
+#include "IO/interface/DataFactory.hpp"
+#include "hdf5_loaders.hpp"
 
 #include <iostream>
 

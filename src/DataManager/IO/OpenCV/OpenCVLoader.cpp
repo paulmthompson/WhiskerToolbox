@@ -1,8 +1,8 @@
 #include "OpenCVLoader.hpp"
-#include "../DataFactory.hpp"
 #include "../LoaderRegistry.hpp"
-#include "CoreGeometry/points.hpp"
 #include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
+#include "IO/interface/DataFactory.hpp"
 #include "utils/string_manip.hpp"
 
 #include <opencv2/imgcodecs.hpp>

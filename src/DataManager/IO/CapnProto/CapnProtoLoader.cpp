@@ -1,5 +1,5 @@
 #include "CapnProtoLoader.hpp"
-#include "../LoaderRegistry.hpp"
+//#include "../LoaderRegistry.hpp"
 
 // Only include CapnProto-specific headers, no data type dependencies
 #include "line_data.capnp.h"

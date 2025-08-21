@@ -2,14 +2,14 @@
 
 # Core plugin interface
 set(IO_CORE_SOURCES
-    DataLoader.hpp
+        interface/DataLoader.hpp
     LoaderRegistry.hpp
     LoaderRegistry.cpp
     LoaderRegistration.hpp
     LoaderRegistration.cpp
     PluginLoader.hpp
     PluginLoader.cpp
-    DataFactory.hpp
+        interface/DataFactory.hpp
     PluginDemo.hpp
     loaders/CSVLoader.hpp
     loaders/CSVLoader.cpp
@@ -25,22 +25,26 @@ target_include_directories(DataManagerIO PUBLIC
 target_link_libraries(DataManagerIO PUBLIC
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
+        LineData # Needed to populate CSV line data
 )
 
 # Add subdirectories for specific format plugins
 if(ENABLE_HDF5)
     add_subdirectory(HDF5)
     target_compile_definitions(DataManagerIO PUBLIC ENABLE_HDF5)
+    target_link_libraries(DataManagerIO PRIVATE DataManagerHDF5)
 endif()
 
 if(ENABLE_CAPNPROTO)
     add_subdirectory(CapnProto)
     target_compile_definitions(DataManagerIO PUBLIC ENABLE_CAPNPROTO)
+    target_link_libraries(DataManagerIO PRIVATE DataManagerIO_CapnProto)
 endif()
 
 if(ENABLE_OPENCV)
     add_subdirectory(OpenCV)
     target_compile_definitions(DataManagerIO PUBLIC ENABLE_OPENCV)
+    target_link_libraries(DataManagerIO PRIVATE DataManagerOpenCV)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

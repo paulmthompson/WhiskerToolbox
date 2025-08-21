@@ -1,8 +1,8 @@
 #ifndef DATAMANAGER_CONCRETEDATAFACTORY_HPP
 #define DATAMANAGER_CONCRETEDATAFACTORY_HPP
 
-#include "IO/DataFactory.hpp"
-#include "IO/DataLoader.hpp"
+#include "IO/interface/DataFactory.hpp"
+#include "IO/interface/DataLoader.hpp"
 
 #include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/lines.hpp"

@@ -26,7 +26,7 @@ find_package(OpenCV CONFIG REQUIRED)
 
 # Link to required libraries
 target_link_libraries(DataManagerOpenCV PRIVATE
-    DataManagerIO            # For LoaderRegistry access
+ #   DataManagerIO            # For LoaderRegistry access
     NEURALYZER_GEOMETRY      # CoreGeometry for Point2D
     nlohmann_json::nlohmann_json  # For JSON config parsing
     WhiskerToolbox::MaskData

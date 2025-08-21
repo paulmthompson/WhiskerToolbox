@@ -1,12 +1,12 @@
 #ifndef DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 #define DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 
-#include "../DataLoader.hpp"
-#include "../DataFactory.hpp"
-#include "../IOTypes.hpp"
-#include <set>
+#include "IO/interface/DataFactory.hpp"
+#include "IO/interface/DataLoader.hpp"
+#include "IO/interface/IOTypes.hpp"
 #include <capnp/common.h>
 #include <kj/array.h>
+#include <set>
 
 // Forward declarations
 namespace capnp { 

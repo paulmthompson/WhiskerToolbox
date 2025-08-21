@@ -1,8 +1,8 @@
 #ifndef DATAMANAGER_IO_OPENCVLOADER_HPP
 #define DATAMANAGER_IO_OPENCVLOADER_HPP
 
-#include "../DataLoader.hpp"
-#include "../IOTypes.hpp"
+#include "IO/interface/DataLoader.hpp"
+#include "IO/interface/IOTypes.hpp"
 
 /**
  * @brief OpenCV data loader implementation
