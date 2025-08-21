@@ -2,7 +2,7 @@
 #define DATA_MANAGER_WIDGET_UTILS_HPP
 
 #include "DataManager/DataManager.hpp"
-#include "IO_Widgets/Media/MediaExport_Widget.hpp"
+#include "MediaExport/MediaExport_Widget.hpp"
 
 #include <QComboBox>
 #include <QMenu>

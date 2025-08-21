@@ -2,7 +2,7 @@
 #define MEDIA_EXPORT_WIDGET_HPP
 
 #include <QWidget>
-#include "IO_Widgets/Media/media_export.hpp" // For MediaExportOptions struct
+#include "media_export.hpp" // For MediaExportOptions struct
 
 namespace Ui {
 class MediaExport_Widget;

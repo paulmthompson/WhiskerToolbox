@@ -182,7 +182,7 @@
   <customwidget>
    <class>MediaExport_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Media/MediaExport_Widget.hpp</header>
+           <header>MediaExport/MediaExport_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

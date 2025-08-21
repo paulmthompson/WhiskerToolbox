@@ -16,7 +16,7 @@
 
 #include "IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp"
 #include "IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp"
-#include "IO_Widgets/Media/MediaExport_Widget.hpp"
+#include "MediaExport/MediaExport_Widget.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>

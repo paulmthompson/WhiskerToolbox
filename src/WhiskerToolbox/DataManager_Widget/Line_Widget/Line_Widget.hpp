@@ -3,7 +3,7 @@
 
 // Remove direct IO dependencies - use JSON registry pattern
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
-#include "IO_Widgets/Media/MediaExport_Widget.hpp"
+#include "MediaExport/MediaExport_Widget.hpp"
 
 #include <QModelIndex>
 #include <QWidget>
