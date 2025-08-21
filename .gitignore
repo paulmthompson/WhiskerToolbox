@@ -12,3 +12,6 @@ style.rst
 .codechecker
 
 infer-out
+
+vcpkg_installed
+vcpkg
