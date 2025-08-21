@@ -9,7 +9,7 @@
  * @brief Test file for lines utility functions
  */
 
-TEST_CASE("get_position_at_percentage - Basic functionality", "[get_position_at_percentage]") {
+TEST_CASE("CoreGeometry - Line2D - get_position_at_percentage - Basic functionality", "[get_position_at_percentage]") {
     SECTION("Empty line") {
         Line2D empty_line;
         auto result = get_position_at_percentage(empty_line, 0.5f);
@@ -47,7 +47,7 @@ TEST_CASE("get_position_at_percentage - Basic functionality", "[get_position_at_
     }
 }
 
-TEST_CASE("get_position_at_percentage - Complex line", "[get_position_at_percentage]") {
+TEST_CASE("CoreGeometry - Line2D - get_position_at_percentage - Complex line", "[get_position_at_percentage]") {
     // Create a right triangle: (0,0) -> (3,0) -> (3,4)
     // Total length = 3 + 4 = 7
     auto triangle = Line2D({
@@ -75,7 +75,7 @@ TEST_CASE("get_position_at_percentage - Complex line", "[get_position_at_percent
     }
 }
 
-TEST_CASE("get_position_at_percentage - Edge cases", "[get_position_at_percentage]") {
+TEST_CASE("CoreGeometry - Line2D - get_position_at_percentage - Edge cases", "[get_position_at_percentage]") {
     auto line = Line2D({
             Point2D<float>{0.0f, 0.0f},
             Point2D<float>{10.0f, 10.0f}
@@ -94,7 +94,7 @@ TEST_CASE("get_position_at_percentage - Edge cases", "[get_position_at_percentag
     }
 }
 
-TEST_CASE("Line segment extraction functionality", "[lines][segment]") {
+TEST_CASE("CoreGeometry - Line2D -Line segment extraction functionality", "[lines][segment]") {
 
     SECTION("Basic segment extraction") {
         // Create a simple horizontal line
@@ -150,7 +150,7 @@ TEST_CASE("Line segment extraction functionality", "[lines][segment]") {
     }
 }
 
-TEST_CASE("Line segment extraction edge cases", "[lines][segment][edge-cases]") {
+TEST_CASE("CoreGeometry - Line2D - Line segment extraction edge cases", "[lines][segment][edge-cases]") {
 
     SECTION("Empty line") {
         Line2D empty_line;
@@ -208,7 +208,7 @@ TEST_CASE("Line segment extraction edge cases", "[lines][segment][edge-cases]") 
     }
 }
 
-TEST_CASE("calculate_perpendicular_direction - Core functionality", "[calculate_perpendicular_direction]") {
+TEST_CASE("CoreGeometry - Line2D - calculate_perpendicular_direction - Core functionality", "[calculate_perpendicular_direction]") {
     SECTION("Horizontal line - perpendicular should be vertical") {
         Line2D horizontal_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}});
         
@@ -270,7 +270,7 @@ TEST_CASE("calculate_perpendicular_direction - Core functionality", "[calculate_
     }
 }
 
-TEST_CASE("calculate_perpendicular_direction - Edge cases and error handling", "[calculate_perpendicular_direction][edge]") {
+TEST_CASE("CoreGeometry - Line2D - calculate_perpendicular_direction - Edge cases and error handling", "[calculate_perpendicular_direction][edge]") {
     SECTION("Line with fewer than 2 points") {
         Line2D short_line = Line2D({{5.0f, 5.0f}});
         Point2D<float> perp_dir = calculate_perpendicular_direction(short_line, 0);
