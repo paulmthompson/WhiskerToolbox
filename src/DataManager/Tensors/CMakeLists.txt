@@ -1,7 +1,12 @@
-# TensorData Library CMakeLists.txt
 
 # Find common dependencies
 find_package(nlohmann_json CONFIG REQUIRED)
+
+if(TENSOR_BACKEND_LIBTORCH)
+    set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
+    find_package(Torch REQUIRED)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+endif()
 
 # Set backend-specific variables
 if(TENSOR_BACKEND_LIBTORCH)
@@ -67,7 +72,7 @@ target_link_libraries(TensorData PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(TensorData PUBLIC WhiskerToolbox::TimeFrame)
 
 # Link backend-specific libraries
-target_link_libraries(TensorData PRIVATE ${BACKEND_LIBRARIES})
+target_link_libraries(TensorData PUBLIC ${BACKEND_LIBRARIES})
 
 # Set backend-specific compile definitions
 message(STATUS "Using Backend definition: ${BACKEND_DEFINITIONS}")

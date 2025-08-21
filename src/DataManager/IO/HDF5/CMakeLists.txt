@@ -1,4 +1,4 @@
-# DataManagerHDF5 Library CMakeLists.txt
+find_package(HDF5 COMPONENTS CXX REQUIRED)
 
 # Create DataManagerHDF5 as a separate shared library for HDF5 utilities
 set(DATAMANAGER_HDF5_SOURCES

@@ -1,18 +1,6 @@
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
-# Only find Torch if using LibTorch backend
-if(TENSOR_BACKEND_LIBTORCH)
-    set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
-    find_package(Torch REQUIRED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")# Link TensorData library
-endif()
-
-# Find packages conditionally
-if(ENABLE_HDF5)
-    find_package(HDF5 COMPONENTS CXX REQUIRED)
-endif()
-
 find_package(Armadillo REQUIRED)
 
 find_package(LAPACK REQUIRED)
@@ -25,13 +13,10 @@ add_subdirectory(Entity)
 
 add_subdirectory(Lines)
 
-# Add IO plugin system
 add_subdirectory(IO)
 
-# Add Media as a separate library
 add_subdirectory(Media)
 
-# Add Tensors as a separate library
 add_subdirectory(Tensors)
 
 set(DATAMANAGER_SOURCES
@@ -56,10 +41,6 @@ set(DATAMANAGER_SOURCES
         DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp
         DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp
         DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.cpp
-
-        Tensors/Tensor_Data.hpp
-        Tensors/IO/numpy/Tensor_Data_numpy.cpp
-        Tensors/IO/numpy/Tensor_Data_numpy.hpp
 
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp
@@ -216,8 +197,6 @@ set(DATAMANAGER_SOURCES
 set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
 add_subdirectory(AnalogTimeSeries)
-#add_subdirectory(Lines)
-#add_subdirectory(Masks)  # Masks are now a separate library
 add_subdirectory(Masks)
 add_subdirectory(Points)
 
@@ -235,43 +214,20 @@ target_include_directories(DataManager PRIVATE
         
     )
 
-# Conditionally link HDF5 and HighFive
-if(ENABLE_HDF5)
-   # target_link_libraries(DataManager PRIVATE HighFive)
-    
-    if (APPLE)
-        target_link_libraries(DataManager PRIVATE hdf5::hdf5-static hdf5::hdf5_cpp-static)
-    else()
-        target_link_libraries(DataManager PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
-    endif()
-endif()
-
 target_link_libraries(DataManager PRIVATE armadillo)
 target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 
-#target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
-#target_link_libraries(DataManager PRIVATE CapnProto::capnp)
 target_link_libraries(DataManager PRIVATE Whisker-Analysis)
-#target_link_libraries(DataManager PRIVATE RocksDB::rocksdb RocksDB::rocksdb-shared)
 
 target_link_libraries(DataManager PUBLIC iir::iir)
 
-# Link TensorData library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::TensorData)
 
-# Only link LibTorch if using LibTorch backend
-if(TENSOR_BACKEND_LIBTORCH)
-    target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
-    target_compile_definitions(DataManager PRIVATE TENSOR_BACKEND_LIBTORCH)
-endif()
 
-# Link to the ObserverData library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
-# Link to the TimeFrame library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
-# Link to the Entity library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
@@ -279,22 +235,18 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(DataManager PUBLIC ImageProcessing)
 
-# Link to plugin system
 target_link_libraries(DataManager PRIVATE DataManagerIO)
 
-# Conditionally link HDF5 plugin
 if(ENABLE_HDF5)
     target_link_libraries(DataManager PRIVATE DataManagerHDF5)
     target_compile_definitions(DataManager PRIVATE ENABLE_HDF5)
 endif()
 
-# Conditionally link CapnProto plugin
 if(ENABLE_CAPNPROTO)
     target_link_libraries(DataManager PRIVATE DataManagerIO_CapnProto)
     target_compile_definitions(DataManager PRIVATE ENABLE_CAPNPROTO)
 endif()
 
-# Conditionally link OpenCV plugin
 if(ENABLE_OPENCV)
     target_link_libraries(DataManager PRIVATE DataManagerOpenCV)
     target_compile_definitions(DataManager PRIVATE ENABLE_OPENCV)
