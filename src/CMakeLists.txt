@@ -1,6 +1,8 @@
 
 add_subdirectory(CoreGeometry)
-add_subdirectory(ImageProcessing)
+if (ENABLE_OPENCV)
+    add_subdirectory(ImageProcessing)
+endif()
 add_subdirectory(DataManager)
 if (ENABLE_UI)
     add_subdirectory(WhiskerToolbox)
