@@ -1,4 +1,4 @@
-# MediaData Library CMakeLists.txt
+
 
 # Find required packages conditionally
 if(ENABLE_HDF5)
@@ -18,13 +18,17 @@ set(MEDIADATA_SOURCES
     IO/Image_Data_Loader.cpp
     IO/JSON/Image_Data_JSON.hpp
     IO/JSON/Image_Data_JSON.cpp
-    utils/opencv_utility.hpp
-    utils/opencv_utility.cpp
     ImageProcessor.hpp
     ImageProcessor.cpp
-    OpenCVImageProcessor.hpp
-    OpenCVImageProcessor.cpp
 )
+
+# Add OpenCV-specific sources conditionally
+if(ENABLE_OPENCV)
+    list(APPEND MEDIADATA_SOURCES
+        OpenCVImageProcessor.hpp
+        OpenCVImageProcessor.cpp
+    )
+endif()
 
 # Add HDF5-specific sources conditionally
 if(ENABLE_HDF5)

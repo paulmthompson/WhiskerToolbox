@@ -1,4 +1,4 @@
-# DataManagerOpenCV Library CMakeLists.txt
+find_package(OpenCV CONFIG REQUIRED)
 
 # Create DataManagerOpenCV as a separate shared library for OpenCV utilities
 set(DATAMANAGER_OPENCV_SOURCES

@@ -367,12 +367,13 @@ void MediaProcessing_Widget::_applyContrastFilter() {
 
     if (_contrast_options.active) {
         // Add or update the contrast filter in the processing chain using the options structure
-        media_data->setProcess("1__lineartransform", [options = _contrast_options](cv::Mat & input) {
-            ImageProcessing::linear_transform(input, options);
+        media_data->addProcessingStep("1__lineartransform", [options = _contrast_options](void* input) {
+            cv::Mat* mat = static_cast<cv::Mat*>(input);
+            ImageProcessing::linear_transform(*mat, options);
         });
     } else {
         // Remove the contrast filter from the processing chain
-        media_data->removeProcess("1__lineartransform");
+        media_data->removeProcessingStep("1__lineartransform");
     }
 
     // Update the canvas
@@ -389,12 +390,13 @@ void MediaProcessing_Widget::_applyGammaFilter() {
 
     if (_gamma_options.active) {
         // Add or update the gamma filter in the processing chain using the options structure
-        media_data->setProcess("2__gamma", [options = _gamma_options](cv::Mat & input) {
-            ImageProcessing::gamma_transform(input, options);
+        media_data->addProcessingStep("2__gamma", [options = _gamma_options](void* input) {
+            cv::Mat* mat = static_cast<cv::Mat*>(input);
+            ImageProcessing::gamma_transform(*mat, options);
         });
     } else {
         // Remove the gamma filter from the processing chain
-        media_data->removeProcess("2__gamma");
+        media_data->removeProcessingStep("2__gamma");
     }
 
     // Update the canvas
@@ -411,12 +413,13 @@ void MediaProcessing_Widget::_applySharpenFilter() {
 
     if (_sharpen_options.active) {
         // Add or update the sharpen filter in the processing chain using the options structure
-        media_data->setProcess("3__sharpen", [options = _sharpen_options](cv::Mat & input) {
-            ImageProcessing::sharpen_image(input, options);
+        media_data->addProcessingStep("3__sharpen", [options = _sharpen_options](void* input) {
+            cv::Mat* mat = static_cast<cv::Mat*>(input);
+            ImageProcessing::sharpen_image(*mat, options);
         });
     } else {
         // Remove the sharpen filter from the processing chain
-        media_data->removeProcess("3__sharpen");
+        media_data->removeProcessingStep("3__sharpen");
     }
 
     // Update the canvas
@@ -433,12 +436,13 @@ void MediaProcessing_Widget::_applyClaheFilter() {
 
     if (_clahe_options.active) {
         // Add or update the CLAHE filter in the processing chain using the options structure
-        media_data->setProcess("4__clahe", [options = _clahe_options](cv::Mat & input) {
-            ImageProcessing::clahe(input, options);
+        media_data->addProcessingStep("4__clahe", [options = _clahe_options](void* input) {
+            cv::Mat* mat = static_cast<cv::Mat*>(input);
+            ImageProcessing::clahe(*mat, options);
         });
     } else {
         // Remove the CLAHE filter from the processing chain
-        media_data->removeProcess("4__clahe");
+        media_data->removeProcessingStep("4__clahe");
     }
 
     // Update the canvas
@@ -455,12 +459,13 @@ void MediaProcessing_Widget::_applyBilateralFilter() {
 
     if (_bilateral_options.active) {
         // Add or update the bilateral filter in the processing chain using the options structure
-        media_data->setProcess("5__bilateral", [options = _bilateral_options](cv::Mat & input) {
-            ImageProcessing::bilateral_filter(input, options);
+        media_data->addProcessingStep("5__bilateral", [options = _bilateral_options](void* input) {
+            cv::Mat* mat = static_cast<cv::Mat*>(input);
+            ImageProcessing::bilateral_filter(*mat, options);
         });
     } else {
         // Remove the bilateral filter from the processing chain
-        media_data->removeProcess("5__bilateral");
+        media_data->removeProcessingStep("5__bilateral");
     }
 
     // Update the canvas
@@ -477,12 +482,13 @@ void MediaProcessing_Widget::_applyMedianFilter() {
 
     if (_median_options.active) {
         // Add or update the median filter in the processing chain using the options structure
-        media_data->setProcess("6__median", [options = _median_options](cv::Mat & input) {
-            ImageProcessing::median_filter(input, options);
+        media_data->addProcessingStep("6__median", [options = _median_options](void* input) {
+            cv::Mat* mat = static_cast<cv::Mat*>(input);
+            ImageProcessing::median_filter(*mat, options);
         });
     } else {
         // Remove the median filter from the processing chain
-        media_data->removeProcess("6__median");
+        media_data->removeProcessingStep("6__median");
     }
 
     // Update the canvas
@@ -499,12 +505,13 @@ void MediaProcessing_Widget::_applyMagicEraser() {
 
     if (_magic_eraser_options.active && !_magic_eraser_options.mask.empty()) {
         // Add or update the magic eraser filter in the processing chain
-        media_data->setProcess("7__magic_eraser", [options = _magic_eraser_options](cv::Mat & input) {
-            ImageProcessing::apply_magic_eraser(input, options);
+        media_data->addProcessingStep("7__magic_eraser", [options = _magic_eraser_options](void* input) {
+            cv::Mat* mat = static_cast<cv::Mat*>(input);
+            ImageProcessing::apply_magic_eraser(*mat, options);
         });
     } else {
         // Remove the magic eraser filter from the processing chain
-        media_data->removeProcess("7__magic_eraser");
+        media_data->removeProcessingStep("7__magic_eraser");
     }
 
     // Update the canvas

@@ -1,13 +1,11 @@
 
 #include "Media/Media_Data.hpp"
-
-#include "utils/opencv_utility.hpp"
-#include "ImageProcessor.hpp"
+#ifdef ENABLE_OPENCV
 #include "OpenCVImageProcessor.hpp"
-
-#include <opencv2/core/mat.hpp>
+#endif
 
 MediaData::MediaData() {
+#ifdef ENABLE_OPENCV
     // Register OpenCV processor
     static bool opencv_registered = false;
     if (!opencv_registered) {
@@ -17,6 +15,7 @@ MediaData::MediaData() {
     
     // Default to OpenCV processor
     setImageProcessor("opencv");
+#endif
 };
 
 MediaData::~MediaData() = default;
@@ -83,23 +82,8 @@ std::vector<uint8_t> MediaData::getProcessedData(int const frame_number) {
     return _processedData;
 }
 
-void MediaData::setProcess(std::string const & key, std::function<void(cv::Mat & input)> process) {
-    this->_process_chain[key] = std::move(process);
-    _processData();
 
-    notifyObservers();
-    //NOTIFY
-}
-
-void MediaData::removeProcess(std::string const & key) {
-    _process_chain.erase(key);
-    _processData();
-
-    notifyObservers();
-    //NOTIFY
-}
-
-// New ImageProcessor-based methods
+// ImageProcessor-based methods
 bool MediaData::setImageProcessor(std::string const& processor_name) {
     auto new_processor = ImageProcessing::ProcessorRegistry::createProcessor(processor_name);
     if (new_processor) {
@@ -154,20 +138,9 @@ size_t MediaData::getProcessingStepCount() const {
 void MediaData::_processData() {
     _processedData = _rawData;
 
-    // Use new ImageProcessor system if available
+    // Use ImageProcessor system if available
     if (_image_processor && _image_processor->getProcessingStepCount() > 0) {
         _processedData = _image_processor->processImage(_processedData, getImageSize());
-    }
-    // Fallback to legacy OpenCV system for backward compatibility
-    else if (!_process_chain.empty()) {
-        auto m2 = convert_vector_to_mat(_processedData, getImageSize());
-
-        for (auto const & [key, process]: _process_chain) {
-            process(m2);
-        }
-
-        m2.reshape(1, getWidth() * getHeight());
-        _processedData.assign(m2.data, m2.data + m2.total() * m2.channels());
     }
 
     _last_processed_frame = _last_loaded_frame;

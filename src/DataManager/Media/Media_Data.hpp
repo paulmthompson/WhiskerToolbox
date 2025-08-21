@@ -13,10 +13,6 @@
 #include <string>
 #include <vector>
 
-namespace cv {
-class Mat;
-}
-
 class MediaData : public ObserverData {
 public:
     enum class MediaType {
@@ -94,11 +90,7 @@ public:
 
     std::vector<uint8_t> getProcessedData(int frame_number);
 
-    // Legacy OpenCV-based processing methods (deprecated, maintained for compatibility)
-    void setProcess(std::string const & key, std::function<void(cv::Mat & input)> process);
-    void removeProcess(std::string const & key);
-
-    // New flexible processing methods using ImageProcessor system
+    // Image processing methods using ImageProcessor system
     /**
      * @brief Set the image processor backend (e.g., "opencv", "simd", etc.)
      * @param processor_name Name of the registered processor
@@ -172,10 +164,7 @@ private:
     std::vector<uint8_t> _rawData;
     std::vector<uint8_t> _processedData;
     
-    // Legacy OpenCV-based processing chain (deprecated)
-    std::map<std::string, std::function<void(cv::Mat & input)>> _process_chain;
-    
-    // New flexible processing system
+    // Flexible processing system
     std::unique_ptr<ImageProcessing::ImageProcessor> _image_processor;
     std::string _processor_name;
     

@@ -1,5 +1,11 @@
+
+
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(OpenCV CONFIG REQUIRED)
+
+if (ENABLE_OPENCV)
+# OPEN CV INTERFERES WITH TENSOR DATA. we need to import it first
+    find_package(OpenCV CONFIG REQUIRED) 
+endif()
 
 find_package(Armadillo REQUIRED)
 
@@ -203,15 +209,11 @@ add_subdirectory(Points)
 add_library(DataManager SHARED ${DATAMANAGER_SOURCES}
     )
 
-message(STATUS "NPY source dir:")
-message(STATUS ${npy_SOURCE_DIR})
 
 target_include_directories(DataManager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-        "${npy_SOURCE_DIR}/include"
-        "${iir_SOURCE_DIR}"
-        
+        "${iir_SOURCE_DIR}"   
     )
 
 target_link_libraries(DataManager PRIVATE armadillo)
