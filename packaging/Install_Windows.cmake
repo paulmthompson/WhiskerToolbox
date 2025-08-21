@@ -34,6 +34,16 @@ set(MAIN_TARGETS
     WhiskerToolbox
 )
 
+if(ENABLE_OPENCV)
+    list(APPEND MAIN_TARGETS DataManagerOpenCV)
+endif()
+if(ENABLE_CAPNPROTO)
+    list(APPEND MAIN_TARGETS DataManagerIO_CapnProto)
+endif()
+if(ENABLE_HDF5)
+    list(APPEND MAIN_TARGETS DataManagerHDF5)
+endif()
+
 install_targets("${MAIN_TARGETS}")
 
 # QT thinks thinks that dependency qt6ad
