@@ -18,15 +18,6 @@
         },
         {
             "name": "openblas"
-        },
-        {
-            "name": "opencv4",
-            "default-features": false,
-            "features": [ 
-                "jpeg", 
-                "png", 
-                "tiff"
-            ]
         }
 
     ],

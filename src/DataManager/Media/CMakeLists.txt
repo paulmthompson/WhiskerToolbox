@@ -11,13 +11,6 @@ set(MEDIADATA_SOURCES
     Media_Data.cpp
     MediaDataFactory.hpp
     MediaDataFactory.cpp
-    Image_Data.hpp
-    Image_Data.cpp
-    ImageDataRegistration.cpp
-    IO/Image_Data_Loader.hpp
-    IO/Image_Data_Loader.cpp
-    IO/JSON/Image_Data_JSON.hpp
-    IO/JSON/Image_Data_JSON.cpp
     ImageProcessor.hpp
     ImageProcessor.cpp
 )
@@ -25,6 +18,13 @@ set(MEDIADATA_SOURCES
 # Add OpenCV-specific sources conditionally
 if(ENABLE_OPENCV)
     list(APPEND MEDIADATA_SOURCES
+        Image_Data.hpp
+        Image_Data.cpp
+        ImageDataRegistration.cpp
+        IO/Image_Data_Loader.hpp
+        IO/Image_Data_Loader.cpp
+        IO/JSON/Image_Data_JSON.hpp
+        IO/JSON/Image_Data_JSON.cpp
         OpenCVImageProcessor.hpp
         OpenCVImageProcessor.cpp
     )

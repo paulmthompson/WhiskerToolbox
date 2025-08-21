@@ -23,7 +23,9 @@
 #include "DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp"
 #include "Lines/IO/JSON/Line_Data_JSON.hpp"
 #include "Masks/IO/JSON/Mask_Data_JSON.hpp"
+#ifdef ENABLE_OPENCV
 #include "Media/IO/JSON/Image_Data_JSON.hpp"
+#endif
 #include "Points/IO/JSON/Point_Data_JSON.hpp"
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 #include "utils/TableView/TableRegistry.hpp"
@@ -531,6 +533,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
+#ifdef ENABLE_OPENCV
             case DM_DataType::Images: {
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
@@ -541,6 +544,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
+#endif
             case DM_DataType::Points: {
 
                 auto point_data = load_into_PointData(file_path, item);

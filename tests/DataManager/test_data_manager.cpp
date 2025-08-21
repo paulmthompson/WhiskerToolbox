@@ -2,7 +2,9 @@
 
 #include "DataManager.hpp"
 #include "Media/Media_Data.hpp"
+#ifdef ENABLE_OPENCV
 #include "Media/Image_Data.hpp"
+#endif
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
@@ -579,6 +581,7 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         REQUIRE(dm.getType("media") == DM_DataType::Video);
     }
 
+    #ifdef ENABLE_OPENCV
     SECTION("ImageData type detection") {
         // Create ImageData object without loading from folder
         auto image_data = std::make_shared<ImageData>();
@@ -591,6 +594,7 @@ TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getT
         REQUIRE(dm.getType("test_images") != DM_DataType::Video);
         REQUIRE(dm.getType("test_images") != DM_DataType::Unknown);
     }
+    #endif
 
     SECTION("All supported data types") {
         // Test all data types that getType should recognize

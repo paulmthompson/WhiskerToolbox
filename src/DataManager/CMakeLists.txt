@@ -10,6 +10,7 @@ endif()
 find_package(Armadillo REQUIRED)
 
 find_package(LAPACK REQUIRED)
+find_package(OpenBLAS REQUIRED)
 
 add_subdirectory(Observer)
 
@@ -216,8 +217,6 @@ target_include_directories(DataManager PRIVATE
         "${iir_SOURCE_DIR}"   
     )
 
-target_link_libraries(DataManager PRIVATE armadillo)
-target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 
@@ -239,6 +238,7 @@ target_link_libraries(DataManager PUBLIC ImageProcessing)
 
 target_link_libraries(DataManager PRIVATE DataManagerIO)
 
+
 if(ENABLE_HDF5)
     target_link_libraries(DataManager PRIVATE DataManagerHDF5)
     target_compile_definitions(DataManager PRIVATE ENABLE_HDF5)
@@ -253,6 +253,13 @@ if(ENABLE_OPENCV)
     target_link_libraries(DataManager PRIVATE DataManagerOpenCV)
     target_compile_definitions(DataManager PRIVATE ENABLE_OPENCV)
 endif()
+
+#It is important to put these last to avoid linker errors with no OpenCV
+#I don't know exactly why
+target_link_libraries(DataManager PRIVATE armadillo)
+target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)
+target_link_libraries(DataManager PRIVATE OpenBLAS::OpenBLAS)
+
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManager PRIVATE ${CLANG_OPTIONS})

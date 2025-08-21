@@ -34,16 +34,15 @@ else()
     
     # Find Armadillo
     find_package(Armadillo REQUIRED)
-    find_package(LAPACK REQUIRED)
-    
+
     # Backend sources
     set(BACKEND_SOURCES
         Tensor_Data_Armadillo.cpp
     )
     
     # Backend libraries
-    set(BACKEND_LIBRARIES armadillo LAPACK::LAPACK)
-    
+    set(BACKEND_LIBRARIES armadillo  ${ARMADILLO_LIBRARIES})
+
     # Backend definitions
     set(BACKEND_DEFINITIONS TENSOR_BACKEND_ARMADILLO)
     
