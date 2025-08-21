@@ -62,7 +62,10 @@ LoadResult OpenCVFormatLoader::save(std::string const& filepath,
         // Call the existing save function
         ::save(mask_data, save_opts);
         
-        return LoadResult(""); // Success with empty data
+        // Return success
+        LoadResult result;
+        result.success = true;
+        return result;
         
     } catch (std::exception const& e) {
         return LoadResult("OpenCVFormatLoader save failed: " + std::string(e.what()));

@@ -5,6 +5,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/IO/LoaderRegistry.hpp"
+#include "DataManager/IO/interface/IOTypes.hpp"
 #include "DataManager/ConcreteDataFactory.hpp"
 #include "LineTableModel.hpp"
 
@@ -302,7 +303,16 @@ void Line_Widget::_initiateSaveProcess(QString const& format, LineSaverConfig co
     // Update config with full path
     LineSaverConfig updated_config = config;
     std::string parent_dir = config.value("parent_dir", ".");
-    updated_config["parent_dir"] = _data_manager->getOutputPath().string() + "/" + parent_dir;
+    
+    // Only prepend output path if parent_dir is relative (starts with "." or doesn't start with "/")
+    if (parent_dir == "." || (!parent_dir.empty() && parent_dir[0] != '/')) {
+        if (parent_dir == ".") {
+            updated_config["parent_dir"] = _data_manager->getOutputPath().string();
+        } else {
+            updated_config["parent_dir"] = _data_manager->getOutputPath().string() + "/" + parent_dir;
+        }
+    }
+    // If parent_dir is absolute, use it as-is
 
     bool save_successful = _performRegistrySave(format, updated_config);
 
@@ -351,10 +361,22 @@ bool Line_Widget::_performRegistrySave(QString const& format, LineSaverConfig co
     }
 
     try {
+        // Construct filepath for the registry (though CSVLoader doesn't use it directly)
+        std::string save_type = config.value("save_type", "single");
+        std::string filepath = "";
+        
+        if (save_type == "single") {
+            std::string parent_dir = config.value("parent_dir", ".");
+            std::string filename = config.value("filename", "line_data.csv");
+            filepath = parent_dir + "/" + filename;
+        } else if (save_type == "multi") {
+            filepath = config.value("parent_dir", ".");
+        }
+        
         // Use registry to save through the new save interface
         LoadResult result = registry.trySave(format_str, 
                                            IODataType::Line, 
-                                           "", // filepath will be constructed from config
+                                           filepath,
                                            config, 
                                            line_data_ptr.get());
         

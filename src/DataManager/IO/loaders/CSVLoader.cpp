@@ -85,7 +85,10 @@ LoadResult CSVLoader::save(std::string const& filepath,
             return LoadResult("Unsupported CSV save_type: " + save_type + ". Use 'single' or 'multi'");
         }
         
-        return LoadResult(""); // Success
+        // Return success - use default constructor which sets success=true by default
+        LoadResult result;
+        result.success = true;
+        return result;
         
     } catch (std::exception const& e) {
         return LoadResult("CSVLoader save failed: " + std::string(e.what()));
