@@ -1,0 +1,483 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Release"
+  CMAKE_CXX_COMPILER="g++"
+  CMAKE_C_COMPILER="gcc"
+  CMAKE_INSTALL_PREFIX="/app/out/install/GCC/Release"
+  CMAKE_TOOLCHAIN_FILE:FILEPATH="/app/vcpkg/scripts/buildsystems/vcpkg.cmake"
+  VCPKG_TARGET_TRIPLET="x64-linux-dynamic"
+
+Preset environment variables:
+
+  VCPKG_FEATURE_FLAGS="manifests,versions,binarycaching,registries"
+
+-- CapnProto support: DISABLED
+-- HDF5 support: DISABLED
+-- FFmpeg support: DISABLED
+-- OpenCV support: DISABLED
+-- UI support: DISABLED
+-- Tensor backend: Armadillo (lightweight, no deep learning)
+-- VCPKG_MANIFEST_FEATURES:
+-- Running vcpkg install
+Detecting compiler hash for triplet x64-linux...
+Compiler found: /usr/bin/c++
+Detecting compiler hash for triplet x64-linux-dynamic...
+Compiler found: /usr/bin/c++
+The following packages are already installed:
+    armadillo:x64-linux-dynamic@12.8.4
+  * blas:x64-linux-dynamic@2023-04-14#1
+  * dirent:x64-linux-dynamic@1.24
+  * gettext[core,tools]:x64-linux@0.22.5#1
+  * gettext-libintl:x64-linux-dynamic@0.22.5#2
+  * gettext-libintl:x64-linux@0.22.5#2
+    lapack:x64-linux-dynamic@2023-06-10
+  * lapack-reference[blas-select,core,noblas]:x64-linux-dynamic@3.11.0#6
+  * libffi:x64-linux-dynamic@3.4.6
+  * libiconv:x64-linux@1.17#4
+  * libiconv:x64-linux-dynamic@1.17#4
+  * openblas:x64-linux@0.3.27
+    openblas:x64-linux-dynamic@0.3.27
+  * pcre2[core,jit,platform-default-features]:x64-linux-dynamic@10.43
+  * pthread:x64-linux@3.0.0#2
+  * pthread:x64-linux-dynamic@3.0.0#2
+  * pthreads:x64-linux@3.0.0#14
+  * pthreads:x64-linux-dynamic@3.0.0#14
+  * vcpkg-cmake:x64-linux@2024-04-23
+  * vcpkg-cmake-config:x64-linux@2024-05-23
+  * vcpkg-cmake-get-vars:x64-linux@2023-12-31
+  * vcpkg-tool-meson:x64-linux@1.5.1
+  * zlib:x64-linux-dynamic@1.3.1
+The following packages will be built and installed:
+    glib:x64-linux-dynamic@2.80.0
+    glm:x64-linux-dynamic@1.0.1#3
+    nlohmann-json:x64-linux-dynamic@3.11.3
+Restored 0 package(s) from /home/jules/.cache/vcpkg/archives in 46.6 us. Use --debug to see more details.
+Installing 1/3 glib:x64-linux-dynamic@2.80.0...
+Building glib:x64-linux-dynamic@2.80.0...
+/app/vcpkg/triplets/community/x64-linux-dynamic.cmake: info: loaded community triplet from here. Community triplets are not built in the curated registry and are thus less likely to succeed.
+-- Found Python version '3.12.11 at /home/jules/.pyenv/shims/python3'
+-- Using meson: /app/vcpkg/downloads/tools/meson-1.5.1-81f7e3/meson.py
+-- Using cached glib-2.80.0.tar.xz
+-- Cleaning sources at /app/vcpkg/buildtrees/glib/src/glib-2-0931cd8d4d.clean. Use --editable to skip cleaning for the packages you specify.
+-- Extracting source /app/vcpkg/downloads/glib-2.80.0.tar.xz
+-- Applying patch use-libiconv-on-windows.patch
+-- Applying patch libintl.patch
+-- Applying patch 0005-pr-4133-4143-avoid-package-packaging.patch
+-- Using source at /app/vcpkg/buildtrees/glib/src/glib-2-0931cd8d4d.clean
+-- Configuring x64-linux-dynamic-dbg
+-- Getting CMake variables for x64-linux-dynamic
+-- Configuring x64-linux-dynamic-dbg done
+-- Configuring x64-linux-dynamic-rel
+-- Configuring x64-linux-dynamic-rel done
+-- Package x64-linux-dynamic-dbg
+-- Package x64-linux-dynamic-rel
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/lib/pkgconfig/gio-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/lib/pkgconfig/gio-unix-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/lib/pkgconfig/girepository-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/lib/pkgconfig/glib-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/lib/pkgconfig/gmodule-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/lib/pkgconfig/gmodule-export-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/lib/pkgconfig/gmodule-no-export-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/lib/pkgconfig/gobject-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/lib/pkgconfig/gthread-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/pkgconfig/gio-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/pkgconfig/gio-unix-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/pkgconfig/girepository-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/pkgconfig/glib-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/pkgconfig/gmodule-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/pkgconfig/gmodule-export-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/pkgconfig/gmodule-no-export-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/pkgconfig/gobject-2.0.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/pkgconfig/gthread-2.0.pc
+-- Installing: /app/vcpkg/packages/glib_x64-linux-dynamic/share/glib/copyright
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/libgio-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/libgirepository-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/libglib-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/libgmodule-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/libgobject-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/debug/lib/libgthread-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/debug/libexec/gio-launch-desktop' (From '' -> To '$ORIGIN:$ORIGIN/../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/lib/libgio-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/lib/libgirepository-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/lib/libglib-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/lib/libgmodule-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/lib/libgobject-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/lib/libgthread-2.0.so.0.8000.0' (From '' -> To '$ORIGIN')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/libexec/gio-launch-desktop' (From '' -> To '$ORIGIN:$ORIGIN/../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gapplication' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gdbus' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gi-compile-repository' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gi-decompile-typelib' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gi-inspect-typelib' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gio' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gio-querymodules' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/glib-compile-resources' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/glib-compile-schemas' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gobject-query' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gresource' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gsettings' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Adjusted RPATH of '/app/vcpkg/packages/glib_x64-linux-dynamic/tools/glib/gtester' (From '' -> To '$ORIGIN:$ORIGIN/../../lib')
+-- Performing post-build validation
+Starting submission of glib:x64-linux-dynamic@2.80.0 to 1 binary cache(s) in the background
+Elapsed time to handle glib:x64-linux-dynamic: 1.9 min
+glib:x64-linux-dynamic package ABI: adf9875819c296593edecbf8dcb256a54033162d9546c807900d02f39e010001
+Installing 2/3 glm:x64-linux-dynamic@1.0.1#3...
+Building glm:x64-linux-dynamic@1.0.1#3...
+/app/vcpkg/triplets/community/x64-linux-dynamic.cmake: info: loaded community triplet from here. Community triplets are not built in the curated registry and are thus less likely to succeed.
+-- Note: glm only supports static library linkage. Building static library.
+-- Using cached g-truc-glm-1.0.1.tar.gz
+-- Cleaning sources at /app/vcpkg/buildtrees/glm/src/1.0.1-cf6930f99d.clean. Use --editable to skip cleaning for the packages you specify.
+-- Extracting source /app/vcpkg/downloads/g-truc-glm-1.0.1.tar.gz
+-- Applying patch fix-clang.patch
+-- Using source at /app/vcpkg/buildtrees/glm/src/1.0.1-cf6930f99d.clean
+-- Configuring x64-linux-dynamic
+-- Building x64-linux-dynamic-dbg
+-- Building x64-linux-dynamic-rel
+-- Installing: /app/vcpkg/packages/glm_x64-linux-dynamic/share/glm/copyright
+-- Installing: /app/vcpkg/packages/glm_x64-linux-dynamic/share/glm/usage
+-- Performing post-build validation
+Starting submission of glm:x64-linux-dynamic@1.0.1#3 to 1 binary cache(s) in the background
+Elapsed time to handle glm:x64-linux-dynamic: 13 s
+glm:x64-linux-dynamic package ABI: 79c7716cdc087b0b65df69efb6d12cd4757e0e537fecdbe6bfb75ff515fb8e0d
+Completed submission of glib:x64-linux-dynamic@2.80.0 to 1 binary cache(s) in 2.5 s
+Installing 3/3 nlohmann-json:x64-linux-dynamic@3.11.3...
+Building nlohmann-json:x64-linux-dynamic@3.11.3...
+/app/vcpkg/triplets/community/x64-linux-dynamic.cmake: info: loaded community triplet from here. Community triplets are not built in the curated registry and are thus less likely to succeed.
+-- Using cached nlohmann-json-v3.11.3.tar.gz
+-- Cleaning sources at /app/vcpkg/buildtrees/nlohmann-json/src/v3.11.3-434e7fbc3e.clean. Use --editable to skip cleaning for the packages you specify.
+-- Extracting source /app/vcpkg/downloads/nlohmann-json-v3.11.3.tar.gz
+-- Using source at /app/vcpkg/buildtrees/nlohmann-json/src/v3.11.3-434e7fbc3e.clean
+-- Configuring x64-linux-dynamic
+-- Building x64-linux-dynamic-dbg
+-- Building x64-linux-dynamic-rel
+-- Fixing pkgconfig file: /app/vcpkg/packages/nlohmann-json_x64-linux-dynamic/share/pkgconfig/nlohmann_json.pc
+-- Fixing pkgconfig file: /app/vcpkg/packages/nlohmann-json_x64-linux-dynamic/debug/share/pkgconfig/nlohmann_json.pc
+CMake Warning at scripts/cmake/vcpkg_replace_string.cmake:17 (message):
+  vcpkg_replace_string made no changes.
+Call Stack (most recent call first):
+  buildtrees/versioning_/versions/nlohmann-json/a728b86fa36d4885a4c57c79432660950644d6d4/portfile.cmake:30 (vcpkg_replace_string)
+  scripts/ports.cmake:206 (include)
+
+
+-- Installing: /app/vcpkg/packages/nlohmann-json_x64-linux-dynamic/share/nlohmann-json/copyright
+-- Performing post-build validation
+Starting submission of nlohmann-json:x64-linux-dynamic@3.11.3 to 1 binary cache(s) in the background
+Elapsed time to handle nlohmann-json:x64-linux-dynamic: 1.3 s
+nlohmann-json:x64-linux-dynamic package ABI: 57fd77952503e3eeaf5f9325ed87f881405be56b4864d3623cf183238669c86e
+Installed contents are licensed to you by owners. Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Packages installed in this vcpkg installation declare the following licenses:
+LGPL-2.1-or-later
+MIT
+openblas provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(OpenBLAS CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE OpenBLAS::OpenBLAS)
+
+openblas provides pkg-config modules:
+
+  # OpenBLAS is an optimized BLAS library based on GotoBLAS2 1.13 BSD version
+  openblas
+
+lapack provides pkg-config modules:
+
+  # Implementation of LAPACK
+  lapack
+
+armadillo provides CMake targets:
+
+    find_package(Armadillo CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE armadillo)
+
+armadillo is compatible with built-in CMake variables:
+
+    find_package(Armadillo REQUIRED)
+    target_include_directories(main PRIVATE ${ARMADILLO_INCLUDE_DIRS})
+    target_link_libraries(main PRIVATE ${ARMADILLO_LIBRARIES})
+
+glib provides pkg-config modules:
+
+  # glib I/O library
+  gio-2.0
+
+  # unix specific headers for glib I/O library
+  gio-unix-2.0
+
+  # GObject Introspection repository parser
+  girepository-2.0
+
+  # C Utility Library
+  glib-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-export-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-no-export-2.0
+
+  # GLib Type, Object, Parameter and Signal Library
+  gobject-2.0
+
+  # Thread support for GLib
+  gthread-2.0
+
+The package glm provides CMake targets:
+
+    find_package(glm CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE glm::glm)
+
+    # Or use the header-only version
+    find_package(glm CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE glm::glm-header-only)
+
+The package nlohmann-json provides CMake targets:
+
+    find_package(nlohmann_json CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE nlohmann_json::nlohmann_json)
+
+The package nlohmann-json can be configured to not provide implicit conversions via a custom triplet file:
+
+    set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
+
+For more information, see the docs here:
+
+    https://json.nlohmann.me/api/macros/json_use_implicit_conversions/
+
+Completed submission of glm:x64-linux-dynamic@1.0.1#3 to 1 binary cache(s) in 211 ms
+Waiting for 1 remaining binary cache submissions...
+Completed submission of nlohmann-json:x64-linux-dynamic@3.11.3 to 1 binary cache(s) in 31.5 ms (1/1)
+All requested installations completed successfully in: 2.1 min
+-- Running vcpkg install - done
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found OpenMP_CXX: -fopenmp (found version "4.5")
+-- Found OpenMP: TRUE (found version "4.5")
+-- OpenMP_CXX_FLAGS: -fopenmp
+-- The C compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Found nlohmann_json: /app/out/build/GCC/Release/vcpkg_installed/x64-linux-dynamic/share/nlohmann_json/nlohmann_jsonConfig.cmake (found version "3.11.3")
+-- Using VCPKG FindLAPACK from package 'lapack-reference'
+-- Looking for sgemm_
+-- Looking for sgemm_ - found
+-- Found BLAS: /app/out/build/GCC/Release/vcpkg_installed/x64-linux-dynamic/lib/libopenblas.so
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Looking for cheev_
+-- Looking for cheev_ - not found
+-- Looking for cheev_
+-- Looking for cheev_ - not found
+-- Looking for cheev_
+-- Looking for cheev_ - found
+-- A library with LAPACK API found.
+-- TensorData: Using Armadillo backend
+-- Using Backend definition: TENSOR_BACKEND_ARMADILLO
+-- Performing Test HAVE_FLAG__ffile_prefix_map__app_out_build_GCC_Release__deps_catch2_src__
+-- Performing Test HAVE_FLAG__ffile_prefix_map__app_out_build_GCC_Release__deps_catch2_src__ - Success
+-- CORE_GEOMETRY_TEST_SOURCES_TEMP: /app/src/CoreGeometry/src/Image.test.cpp;/app/src/CoreGeometry/src/line_geometry.test.cpp;/app/src/CoreGeometry/src/masks.test.cpp;/app/src/CoreGeometry/src/polygon.test.cpp
+-- /app/src/DataManager/AnalogTimeSeries/Analog_Time_Series.test.cpp/app/src/DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.test.cpp/app/src/DataManager/AnalogTimeSeries/utils/statistics.test.cpp/app/src/DataManager/Masks/Mask_Data.test.cpp/app/src/DataManager/Masks/utils/connected_component.test.cpp/app/src/DataManager/Masks/utils/hole_filling.test.cpp/app/src/DataManager/Masks/utils/median_filter.test.cpp/app/src/DataManager/Masks/utils/skeletonize.test.cpp/app/src/DataManager/Masks/utils/mask_utils.test.cpp/app/src/DataManager/Points/Point_Data.test.cpp
+-- Using VCPKG FindLAPACK from package 'lapack-reference'
+-- A library with LAPACK API found.
+-- Configuring done (153.1s)
+CMake Warning (dev) in out/build/GCC/Release/_deps/whisker-analysis-src/src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target Whisker-Analysis.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target janelia.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target iir.  AUTOMOC, AUTOUIC and
+  AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target iir_static.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/demo/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target iirdemo.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/demo/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target rbj_update.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/demo/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target ecg50hzfilt.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/CoreGeometry/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target NEURALYZER_GEOMETRY.
+  AUTOMOC, AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target DataManager.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Observer/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target ObserverData.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/TimeFrame/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target TimeFrame.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Entity/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target Entity.  AUTOMOC, AUTOUIC and
+  AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Lines/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target LineData.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/IO/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target DataManagerIO.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Media/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target MediaData.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Tensors/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target TensorData.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Masks/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target MaskData.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/catch2-src/src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target Catch2.  AUTOMOC, AUTOUIC and
+  AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/catch2-src/src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target Catch2WithMain.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in tests/CoreGeometry/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target test_core_geometry.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in tests/DataManager/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target test_data_manager.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Generating done (0.1s)
+-- Build files have been written to: /app/out/build/GCC/Release
