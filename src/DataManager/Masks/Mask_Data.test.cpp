@@ -54,7 +54,7 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         mask_data.addAtTime(TimeFrameIndex(0), x2, y2);
         mask_data.addAtTime(TimeFrameIndex(10), points);
 
-        mask_data.clearAtTime(TimeFrameIndex(0));
+        (void)mask_data.clearAtTime(TimeFrameIndex(0));
 
         auto masks_at_0 = mask_data.getAtTime(TimeFrameIndex(0));
         auto masks_at_10 = mask_data.getAtTime(TimeFrameIndex(10));
@@ -243,15 +243,15 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
         REQUIRE(notification_count == 0);
 
         // Clear with notification
-        mask_data.clearAtTime(TimeFrameIndex(0));
+        (void)mask_data.clearAtTime(TimeFrameIndex(0));
         REQUIRE(notification_count == 1);
 
         // Clear with notification disabled
-        mask_data.clearAtTime(TimeFrameIndex(0), false);
+        (void)mask_data.clearAtTime(TimeFrameIndex(0), false);
         REQUIRE(notification_count == 1);  // Still 1, not incremented
 
         // Clear non-existent time (shouldn't notify)
-        mask_data.clearAtTime(TimeFrameIndex(42));
+        (void)mask_data.clearAtTime(TimeFrameIndex(42));
         REQUIRE(notification_count == 1);  // Still 1, not incremented
     }
 

@@ -33,25 +33,26 @@ bool CSVLoader::supportsFormat(std::string const& format, IODataType dataType) c
     return false;
 }
 
-LoadResult CSVLoader::save(std::string const& filepath, 
-                           IODataType dataType, 
-                           nlohmann::json const& config, 
+LoadResult CSVLoader::save(std::string const& filepath,
+                           IODataType dataType,
+                           nlohmann::json const& config,
                            void const* data) const {
+    static_cast<void>(filepath);
     if (dataType != IODataType::Line) {
         return LoadResult("CSVLoader only supports saving LineData");
     }
-    
+
     if (!data) {
         return LoadResult("Data pointer is null");
     }
-    
+
     try {
         // Cast void pointer back to LineData
         auto const* line_data = static_cast<LineData const*>(data);
-        
+
         // Check if it's single-file or multi-file format
         std::string save_type = config.value("save_type", "single");
-        
+
         if (save_type == "single") {
             // Convert JSON config to CSVSingleFileLineSaverOptions
             CSVSingleFileLineSaverOptions save_opts;
@@ -62,10 +63,10 @@ LoadResult CSVLoader::save(std::string const& filepath,
             save_opts.save_header = config.value("save_header", true);
             save_opts.header = config.value("header", "Frame,X,Y");
             save_opts.precision = config.value("precision", 1);
-            
+
             // Call the existing save function
             ::save(line_data, save_opts);
-            
+
         } else if (save_type == "multi") {
             // Convert JSON config to CSVMultiFileLineSaverOptions
             CSVMultiFileLineSaverOptions save_opts;
@@ -77,19 +78,19 @@ LoadResult CSVLoader::save(std::string const& filepath,
             save_opts.precision = config.value("precision", 1);
             save_opts.frame_id_padding = config.value("frame_id_padding", 7);
             save_opts.overwrite_existing = config.value("overwrite_existing", false);
-            
+
             // Call the existing save function
             ::save(line_data, save_opts);
-            
+
         } else {
             return LoadResult("Unsupported CSV save_type: " + save_type + ". Use 'single' or 'multi'");
         }
-        
+
         // Return success - use default constructor which sets success=true by default
         LoadResult result;
         result.success = true;
         return result;
-        
+
     } catch (std::exception const& e) {
         return LoadResult("CSVLoader save failed: " + std::string(e.what()));
     }

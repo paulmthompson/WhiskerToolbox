@@ -288,7 +288,7 @@ std::size_t LineData::moveTo(LineData& target, TimeFrameInterval const & interva
 
     // Then, clear all the times from source
     for (TimeFrameIndex time : times_to_clear) {
-        clearAtTime(time, false); // Don't notify for each operation
+        (void)clearAtTime(time, false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested
@@ -318,7 +318,7 @@ std::size_t LineData::moveTo(LineData& target, std::vector<TimeFrameIndex> const
 
     // Then, clear all the times from source
     for (TimeFrameIndex time : times_to_clear) {
-        clearAtTime(time, false); // Don't notify for each operation
+        (void)clearAtTime(time, false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested

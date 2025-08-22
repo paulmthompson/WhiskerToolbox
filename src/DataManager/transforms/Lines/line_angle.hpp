@@ -86,6 +86,10 @@ public:
      * or an empty variant on failure.
      */
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                            TransformParametersBase const * transformParameters,
+                            ProgressCallback progressCallback) override;
+
+    DataTypeVariant execute(DataTypeVariant const & dataVariant,
                             TransformParametersBase const * transformParameters) override;
 };
 

@@ -199,11 +199,11 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
 
         // Convert squared distance back to actual distance by taking square root
         float min_distance = std::sqrt(min_distance_squared);
-        distances[time.getValue()] = min_distance;
+        distances[static_cast<int>(time.getValue())] = min_distance;
 
         processed_time_points++;
         if (progressCallback) {
-            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / total_time_points * 100.0));
+            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
             progressCallback(current_progress);
         }
     }

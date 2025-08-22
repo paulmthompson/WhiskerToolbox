@@ -31,7 +31,7 @@ bool MaskData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, bool 
     }
 
     auto time = time_index_and_frame.time_frame->getTimeAtIndex(time_index_and_frame.index);
-    auto time_index = _time_frame->getIndexAtTime(time);
+    auto time_index = _time_frame->getIndexAtTime(static_cast<float>(time));
 
 
     if (clear_at_time(time_index, _data)) {
@@ -87,7 +87,7 @@ void MaskData::addAtTime(TimeIndexAndFrame const & time_index_and_frame,
     }
 
     auto time = time_index_and_frame.time_frame->getTimeAtIndex(time_index_and_frame.index);
-    auto time_index = _time_frame->getIndexAtTime(time);
+    auto time_index = _time_frame->getIndexAtTime(static_cast<float>(time));
 
     add_at_time(time_index, std::move(mask), _data);
 }
@@ -240,7 +240,7 @@ std::size_t MaskData::moveTo(MaskData & target, TimeFrameInterval const & interv
 
     // Then, clear all the times from source
     for (TimeFrameIndex time: times_to_clear) {
-        clearAtTime(time, false);// Don't notify for each operation
+        (void)clearAtTime(time, false);// Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested
@@ -270,7 +270,7 @@ std::size_t MaskData::moveTo(MaskData & target, std::vector<TimeFrameIndex> cons
 
     // Then, clear all the times from source
     for (TimeFrameIndex time: times_to_clear) {
-        clearAtTime(time, false);// Don't notify for each operation
+        (void)clearAtTime(time, false);// Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested

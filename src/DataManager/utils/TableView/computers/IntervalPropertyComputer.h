@@ -66,13 +66,13 @@ public:
         for (const auto& interval : intervals) {
             switch (m_property) {
                 case IntervalProperty::Start:
-                    results.push_back(interval.start.getValue());
+                    results.push_back(static_cast<T>(interval.start.getValue()));
                     break;
                 case IntervalProperty::End:
-                    results.push_back(interval.end.getValue());
+                    results.push_back(static_cast<T>(interval.end.getValue()));
                     break;
                 case IntervalProperty::Duration:
-                    results.push_back(interval.end.getValue() - interval.start.getValue());
+                    results.push_back(static_cast<T>(interval.end.getValue() - interval.start.getValue()));
                     break;
                 default:
                     throw std::runtime_error("Unknown IntervalProperty");

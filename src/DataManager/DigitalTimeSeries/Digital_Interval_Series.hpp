@@ -175,7 +175,7 @@ public:
             auto target_stop_index = interval_timeframe->getIndexAtTime(static_cast<float>(stop_time_value));
 
             return getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
-        };
+        }
 
     // ========== Time Frame ==========
 

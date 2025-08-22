@@ -71,8 +71,8 @@ std::optional<float> calculate_polynomial_curvature(
     // Calculate derivatives using central differences
     // Note: The effective h for points that hit the boundary (0 or 1) will be smaller.
     // We should use the actual distance between evaluated points.
-    double h_actual_fwd = t_plus_h - t_eval;
-    double h_actual_bwd = t_eval - t_minus_h;
+    //double h_actual_fwd = t_plus_h - t_eval;
+    //double h_actual_bwd = t_eval - t_minus_h;
 
     // If t_eval is at 0 or 1, central difference for 1st derivative is not ideal.
     // However, for curvature we need x_prime, y_prime, x_double_prime, y_double_prime all at t_eval.
@@ -152,7 +152,8 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
 
     // Determine total number of time points for progress calculation
     size_t total_time_points = 0;
-    for (auto const & _: line_data->GetAllLinesAsRange()) {
+    for (auto const & time_lines_pair: line_data->GetAllLinesAsRange()) {
+        (void)time_lines_pair;
         total_time_points++;
     }
     if (total_time_points == 0) {
@@ -170,7 +171,7 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
     for (auto const & time_lines_pair: line_data->GetAllLinesAsRange()) {
         if (time_lines_pair.lines.empty()) {
             processed_time_points++;
-            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / total_time_points * 100.0));
+            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
             progressCallback(current_progress);
             continue;
         }
@@ -180,7 +181,7 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
 
         if (line.size() < 2) {// Need at least two points to define a direction/curvature
             processed_time_points++;
-            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / total_time_points * 100.0));
+            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
             progressCallback(current_progress);
             continue;
         }
@@ -192,12 +193,12 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
         // else if (params->method == AnotherMethod) { ... }
 
         if (curvature_val.has_value()) {
-            curvatures_map[time_lines_pair.time.getValue()] = curvature_val.value();
+            curvatures_map[static_cast<int>(time_lines_pair.time.getValue())] = curvature_val.value();
         }
         // If curvature_val is std::nullopt, this time point is simply omitted from the AnalogTimeSeries
 
         processed_time_points++;
-        int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / total_time_points * 100.0));
+        int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
         progressCallback(current_progress);
     }
 

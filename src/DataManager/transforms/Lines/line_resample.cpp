@@ -70,7 +70,7 @@ DataTypeVariant LineResampleOperation::execute(DataTypeVariant const & dataVaria
     auto resampled_line_map = std::map<TimeFrameIndex, std::vector<Line2D>>();
     int total_lines = 0;
     for (auto const & time_lines_pair: input_line_data->GetAllLinesAsRange()) {
-        total_lines += time_lines_pair.lines.size();
+        total_lines += static_cast<int>(time_lines_pair.lines.size());
     }
     if (total_lines == 0) {
         progressCallback(100);

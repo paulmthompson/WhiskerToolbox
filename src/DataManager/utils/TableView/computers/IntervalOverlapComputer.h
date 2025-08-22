@@ -117,11 +117,11 @@ public:
 
                         if (m_operation == IntervalOverlapOperation::AssignID_Start) {
                             // Convert into row time frame
-                            auto source_start_index = destinationTimeFrame->getIndexAtTime(source_start);
+                            auto source_start_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_start));
                             results.push_back(static_cast<T>(source_start_index.getValue()));
                         } else if (m_operation == IntervalOverlapOperation::AssignID_End) {
                             // Convert into row time frame
-                            auto source_end_index = destinationTimeFrame->getIndexAtTime(source_end);
+                            auto source_end_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_end));
                             results.push_back(static_cast<T>(source_end_index.getValue()));
                         } else {
                             results.push_back(static_cast<T>(columnIntervals.size() - 1));

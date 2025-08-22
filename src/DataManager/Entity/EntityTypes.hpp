@@ -17,7 +17,7 @@ enum class EntityKind : std::uint8_t {
     Point = 0,
     Line = 1,
     Event = 2,
-    Interval = 3
+    IntervalType = 3
 };
 
 /**

@@ -80,8 +80,8 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
 
         if (event_detected) {
 
-            auto timestamp = std::visit([i](auto const & time_storage) -> TimeFrameIndex {
-                return time_storage.getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i));
+            auto timestamp = std::visit([i](auto const & storage) -> TimeFrameIndex {
+                return storage.getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i));
             }, time_storage);
 
             // Check if the event is not too close to the last one

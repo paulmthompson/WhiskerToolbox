@@ -1,0 +1,1186 @@
+[0/1] Re-running CMake...
+-- CapnProto support: DISABLED
+-- HDF5 support: DISABLED
+-- FFmpeg support: DISABLED
+-- OpenCV support: DISABLED
+-- UI support: DISABLED
+-- Tensor backend: Armadillo (lightweight, no deep learning)
+-- VCPKG_MANIFEST_FEATURES:
+-- Running vcpkg install
+Detecting compiler hash for triplet x64-linux...
+Compiler found: /usr/bin/c++
+Detecting compiler hash for triplet x64-linux-dynamic...
+Compiler found: /usr/bin/c++
+The following packages are already installed:
+    armadillo:x64-linux-dynamic@12.8.4
+  * blas:x64-linux-dynamic@2023-04-14#1
+  * dirent:x64-linux-dynamic@1.24
+  * gettext[core,tools]:x64-linux@0.22.5#1
+  * gettext-libintl:x64-linux@0.22.5#2
+  * gettext-libintl:x64-linux-dynamic@0.22.5#2
+    glib:x64-linux-dynamic@2.80.0
+    glm:x64-linux-dynamic@1.0.1#3
+    lapack:x64-linux-dynamic@2023-06-10
+  * lapack-reference[blas-select,core,noblas]:x64-linux-dynamic@3.11.0#6
+  * libffi:x64-linux-dynamic@3.4.6
+  * libiconv:x64-linux@1.17#4
+  * libiconv:x64-linux-dynamic@1.17#4
+    nlohmann-json:x64-linux-dynamic@3.11.3
+  * openblas:x64-linux@0.3.27
+    openblas:x64-linux-dynamic@0.3.27
+  * pcre2[core,jit,platform-default-features]:x64-linux-dynamic@10.43
+  * pthread:x64-linux@3.0.0#2
+  * pthread:x64-linux-dynamic@3.0.0#2
+  * pthreads:x64-linux-dynamic@3.0.0#14
+  * pthreads:x64-linux@3.0.0#14
+  * vcpkg-cmake:x64-linux@2024-04-23
+  * vcpkg-cmake-config:x64-linux@2024-05-23
+  * vcpkg-cmake-get-vars:x64-linux@2023-12-31
+  * vcpkg-tool-meson:x64-linux@1.5.1
+  * zlib:x64-linux-dynamic@1.3.1
+openblas provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(OpenBLAS CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE OpenBLAS::OpenBLAS)
+
+openblas provides pkg-config modules:
+
+  # OpenBLAS is an optimized BLAS library based on GotoBLAS2 1.13 BSD version
+  openblas
+
+lapack provides pkg-config modules:
+
+  # Implementation of LAPACK
+  lapack
+
+armadillo provides CMake targets:
+
+    find_package(Armadillo CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE armadillo)
+
+armadillo is compatible with built-in CMake variables:
+
+    find_package(Armadillo REQUIRED)
+    target_include_directories(main PRIVATE ${ARMADILLO_INCLUDE_DIRS})
+    target_link_libraries(main PRIVATE ${ARMADILLO_LIBRARIES})
+
+glib provides pkg-config modules:
+
+  # glib I/O library
+  gio-2.0
+
+  # unix specific headers for glib I/O library
+  gio-unix-2.0
+
+  # GObject Introspection repository parser
+  girepository-2.0
+
+  # C Utility Library
+  glib-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-export-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-no-export-2.0
+
+  # GLib Type, Object, Parameter and Signal Library
+  gobject-2.0
+
+  # Thread support for GLib
+  gthread-2.0
+
+The package glm provides CMake targets:
+
+    find_package(glm CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE glm::glm)
+
+    # Or use the header-only version
+    find_package(glm CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE glm::glm-header-only)
+
+The package nlohmann-json provides CMake targets:
+
+    find_package(nlohmann_json CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE nlohmann_json::nlohmann_json)
+
+The package nlohmann-json can be configured to not provide implicit conversions via a custom triplet file:
+
+    set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
+
+For more information, see the docs here:
+
+    https://json.nlohmann.me/api/macros/json_use_implicit_conversions/
+
+All requested installations completed successfully in: 342 us
+-- Running vcpkg install - done
+-- OpenMP_CXX_FLAGS: -fopenmp
+-- Using VCPKG FindLAPACK from package 'lapack-reference'
+-- A library with LAPACK API found.
+-- TensorData: Using Armadillo backend
+-- Using Backend definition: TENSOR_BACKEND_ARMADILLO
+-- CORE_GEOMETRY_TEST_SOURCES_TEMP: /app/src/CoreGeometry/src/Image.test.cpp;/app/src/CoreGeometry/src/line_geometry.test.cpp;/app/src/CoreGeometry/src/masks.test.cpp;/app/src/CoreGeometry/src/polygon.test.cpp
+-- /app/src/DataManager/AnalogTimeSeries/Analog_Time_Series.test.cpp/app/src/DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.test.cpp/app/src/DataManager/AnalogTimeSeries/utils/statistics.test.cpp/app/src/DataManager/Masks/Mask_Data.test.cpp/app/src/DataManager/Masks/utils/connected_component.test.cpp/app/src/DataManager/Masks/utils/hole_filling.test.cpp/app/src/DataManager/Masks/utils/median_filter.test.cpp/app/src/DataManager/Masks/utils/skeletonize.test.cpp/app/src/DataManager/Masks/utils/mask_utils.test.cpp/app/src/DataManager/Points/Point_Data.test.cpp
+-- Using VCPKG FindLAPACK from package 'lapack-reference'
+-- A library with LAPACK API found.
+-- Configuring done (3.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: /app/out/build/GCC/Release
+[1/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/Digital_Interval_Series.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.cpp:1:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:5:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+[2/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.cpp:3:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.hpp:4,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.cpp:1:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+[3/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.cpp:3:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp:4,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.cpp:1:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+[4/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/Digital_Event_Series.cpp.o
+[5/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.cpp:7:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:5:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+[6/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/TableView/adapters/DigitalEventDataAdapter.cpp.o
+[7/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.cpp.o
+[8/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/TableView/adapters/DigitalIntervalDataAdapter.cpp.o
+In file included from /app/src/DataManager/utils/TableView/interfaces/IIntervalSource.h:6,
+                 from /app/src/DataManager/utils/TableView/adapters/DigitalIntervalDataAdapter.h:4,
+                 from /app/src/DataManager/utils/TableView/adapters/DigitalIntervalDataAdapter.cpp:1:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/utils/TableView/interfaces/IIntervalSource.h:5:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+[9/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/AnalogTimeSeries/analog_event_threshold.cpp.o
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.cpp: In lambda function:
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.cpp:83:58: warning: declaration of ‘time_storage’ shadows a previous local [-Wshadow]
+   83 |             auto timestamp = std::visit([i](auto const & time_storage) -> TimeFrameIndex {
+      |                                             ~~~~~~~~~~~~~^~~~~~~~~~~~
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.cpp:47:18: note: shadowed declaration is here
+   47 |     auto const & time_storage = analog_time_series->getTimeStorage();
+      |                  ^~~~~~~~~~~~
+[10/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.cpp.o
+[11/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/AnalogTimeSeries/analog_interval_threshold.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.cpp:4:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:5:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.cpp: In function ‘std::shared_ptr<DigitalIntervalSeries> interval_threshold(const AnalogTimeSeries*, const IntervalThresholdParams&, ProgressCallback)’:
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.cpp:135:49: warning: conversion to ‘int64_t’ {aka ‘long int’} from ‘long unsigned int’ may change the sign of the result [-Wsign-conversion]
+  135 |                     last_valid_time = curr_time - typical_time_step;
+      |                                       ~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.cpp:137:39: warning: conversion to ‘int64_t’ {aka ‘long int’} from ‘size_t’ {aka ‘long unsigned int’} may change the sign of the result [-Wsign-conversion]
+  137 |                     last_valid_time = prev_time;
+      |                                       ^~~~~~~~~
+[12/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/DigitalIntervalSeries/digital_interval_group.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/transforms/DigitalIntervalSeries/digital_interval_group.cpp:3:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:5:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+[13/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp.o
+[14/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp.o
+[15/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/test_data_manager_fixtures.cpp.o
+[16/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/test_tableview.cpp.o
+[17/29] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DataManager.cpp.o
+In file included from /app/src/DataManager/DataManager.cpp:5:
+/app/src/DataManager/IO/LoaderRegistry.hpp: In member function ‘virtual LoadResult IFormatLoader::save(const std::string&, IODataType, const nlohmann::json_abi_v3_11_3::json&, const void*) const’:
+/app/src/DataManager/IO/LoaderRegistry.hpp:44:48: warning: unused parameter ‘filepath’ [-Wunused-parameter]
+   44 |     virtual LoadResult save(std::string const& filepath,
+      |                             ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+/app/src/DataManager/IO/LoaderRegistry.hpp:45:39: warning: unused parameter ‘dataType’ [-Wunused-parameter]
+   45 |                            IODataType dataType,
+      |                            ~~~~~~~~~~~^~~~~~~~
+/app/src/DataManager/IO/LoaderRegistry.hpp:46:50: warning: unused parameter ‘config’ [-Wunused-parameter]
+   46 |                            nlohmann::json const& config,
+      |                            ~~~~~~~~~~~~~~~~~~~~~~^~~~~~
+/app/src/DataManager/IO/LoaderRegistry.hpp:47:40: warning: unused parameter ‘data’ [-Wunused-parameter]
+   47 |                            void const* data) const {
+      |                            ~~~~~~~~~~~~^~~~
+In file included from /app/src/DataManager/utils/TableView/core/TableView.h:6,
+                 from /app/src/DataManager/utils/TableView/TableRegistry.hpp:5,
+                 from /app/src/DataManager/DataManager.cpp:31:
+/app/src/DataManager/utils/TableView/core/ExecutionPlan.h: At global scope:
+/app/src/DataManager/utils/TableView/core/ExecutionPlan.h:22:74: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   22 |     enum class DataSourceKind : std::uint8_t { Unknown=0, Analog, Event, Interval, Line };
+      |                                                                          ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:5,
+                 from /app/src/DataManager/DataManager.cpp:9:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+In file included from /app/src/DataManager/transforms/Masks/mask_area.hpp:4,
+                 from /app/src/DataManager/DataManager.cpp:37:
+/app/src/DataManager/transforms/data_transforms.hpp:36:29: warning: ‘virtual DataTypeVariant TransformOperation::execute(const DataTypeVariant&, const TransformParametersBase*, ProgressCallback)’ was hidden [-Woverloaded-virtual=]
+   36 |     virtual DataTypeVariant execute(DataTypeVariant const & dataVariant,
+      |                             ^~~~~~~
+/app/src/DataManager/transforms/Masks/mask_area.hpp:58:21: note:   by ‘virtual DataTypeVariant MaskAreaOperation::execute(const DataTypeVariant&, const TransformParametersBase*)’
+   58 |     DataTypeVariant execute(DataTypeVariant const & dataVariant,
+      |                     ^~~~~~~
+[18/29] Linking CXX shared library libDataManager.so
+[19/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/utils/TableView/computers/AnalogSliceGathererComputer.test.cpp.o
+[20/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/utils/TableView/computers/EventInIntervalComputer.test.cpp.o
+[21/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/utils/TableView/computers/IntervalOverlapComputer.test.cpp.o
+[22/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/utils/TableView/computers/IntervalPropertyComputer.test.cpp.o
+[23/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp.o
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp: In lambda function:
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:27:9: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+   27 |         call_count++;
+      |         ^~~~~~~~~~
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp: In lambda function:
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:160:13: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+  160 |             call_count++;
+      |             ^~~~~~~~~~
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp: In lambda function:
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:189:9: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+  189 |         call_count++;
+      |         ^~~~~~~~~~
+In file included from /usr/include/c++/13/string:51,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/internal/catch_stringref.hpp:12,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/catch_assertion_info.hpp:13,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/internal/catch_assertion_handler.hpp:11,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/internal/catch_test_macro_impl.hpp:12,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/catch_test_macros.hpp:11,
+                 from /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:2:
+In static member function ‘static constexpr _Up* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(_Tp*, _Tp*, _Up*) [with _Tp = const float; _Up = float; bool _IsMove = false]’,
+    inlined from ‘constexpr _OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:506:30,
+    inlined from ‘constexpr _OI std::__copy_move_a1(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:533:42,
+    inlined from ‘constexpr _OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:540:31,
+    inlined from ‘constexpr _OI std::copy(_II, _II, _OI) [with _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:633:7,
+    inlined from ‘static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:147:27,
+    inlined from ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:185:15,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, allocator<_Tp>&) [with _InputIterator = const float*; _ForwardIterator = float*; _Tp = float]’ at /usr/include/c++/13/bits/stl_uninitialized.h:373:37,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:345:35,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:71:51:
+/usr/include/c++/13/bits/stl_algobase.h:437:30: warning: ‘void* __builtin_memcpy(void*, const void*, long unsigned int)’ writing between 5 and 20 bytes into a region of size 4 overflows the destination [-Wstringop-overflow=]
+  437 |             __builtin_memmove(__result, __first, sizeof(_Tp) * _Num);
+      |             ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/x86_64-linux-gnu/c++/13/bits/c++allocator.h:33,
+                 from /usr/include/c++/13/bits/allocator.h:46,
+                 from /usr/include/c++/13/string:43:
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 24 into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In static member function ‘static constexpr _Up* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(_Tp*, _Tp*, _Up*) [with _Tp = const float; _Up = float; bool _IsMove = false]’,
+    inlined from ‘constexpr _OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:506:30,
+    inlined from ‘constexpr _OI std::__copy_move_a1(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:533:42,
+    inlined from ‘constexpr _OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:540:31,
+    inlined from ‘constexpr _OI std::copy(_II, _II, _OI) [with _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:633:7,
+    inlined from ‘static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:147:27,
+    inlined from ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:185:15,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, allocator<_Tp>&) [with _InputIterator = const float*; _ForwardIterator = float*; _Tp = float]’ at /usr/include/c++/13/bits/stl_uninitialized.h:373:37,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:345:35,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:84:57:
+/usr/include/c++/13/bits/stl_algobase.h:437:30: warning: ‘void* __builtin_memcpy(void*, const void*, long unsigned int)’ writing between 5 and 24 bytes into a region of size 4 overflows the destination [-Wstringop-overflow=]
+  437 |             __builtin_memmove(__result, __first, sizeof(_Tp) * _Num);
+      |             ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 24 into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:71:51:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 20] into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 24 into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In static member function ‘static constexpr _Up* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(_Tp*, _Tp*, _Up*) [with _Tp = const float; _Up = float; bool _IsMove = false]’,
+    inlined from ‘constexpr _OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:506:30,
+    inlined from ‘constexpr _OI std::__copy_move_a1(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:533:42,
+    inlined from ‘constexpr _OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:540:31,
+    inlined from ‘constexpr _OI std::copy(_II, _II, _OI) [with _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:633:7,
+    inlined from ‘static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:147:27,
+    inlined from ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:185:15,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, allocator<_Tp>&) [with _InputIterator = const float*; _ForwardIterator = float*; _Tp = float]’ at /usr/include/c++/13/bits/stl_uninitialized.h:373:37,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:345:35,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:97:55:
+/usr/include/c++/13/bits/stl_algobase.h:437:30: warning: ‘void* __builtin_memcpy(void*, const void*, long unsigned int)’ writing between 5 and 24 bytes into a region of size 4 overflows the destination [-Wstringop-overflow=]
+  437 |             __builtin_memmove(__result, __first, sizeof(_Tp) * _Num);
+      |             ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 24 into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:71:51:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 20] into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 24 into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:84:57:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 24 into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 20] into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:71:51:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 20] into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 20] into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 24 into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:71:51:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 20] into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:31:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_0()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp:51:53:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 24 into destination object of size 24 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+[24/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/transforms/DigitalIntervalSeries/digital_interval_group.test.cpp.o
+/app/src/DataManager/transforms/DigitalIntervalSeries/digital_interval_group.test.cpp: In lambda function:
+/app/src/DataManager/transforms/DigitalIntervalSeries/digital_interval_group.test.cpp:292:13: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+  292 |             call_count++;
+      |             ^~~~~~~~~~
+[25/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp.o
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp: In lambda function:
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:62:9: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+   62 |         call_count++;
+      |         ^~~~~~~~~~
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp: In lambda function:
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:300:13: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+  300 |             call_count++;
+      |             ^~~~~~~~~~
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp: In lambda function:
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:365:9: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+  365 |         call_count++;
+      |         ^~~~~~~~~~
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp: In lambda function:
+/app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:738:13: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+  738 |             call_count++;
+      |             ^~~~~~~~~~
+In file included from /usr/include/c++/13/string:51,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/internal/catch_stringref.hpp:12,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/catch_assertion_info.hpp:13,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/internal/catch_assertion_handler.hpp:11,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/internal/catch_test_macro_impl.hpp:12,
+                 from /app/out/build/GCC/Release/_deps/catch2-src/src/catch2/../catch2/catch_test_macros.hpp:11,
+                 from /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:2:
+In static member function ‘static constexpr _Up* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(_Tp*, _Tp*, _Up*) [with _Tp = const float; _Up = float; bool _IsMove = false]’,
+    inlined from ‘constexpr _OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:506:30,
+    inlined from ‘constexpr _OI std::__copy_move_a1(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:533:42,
+    inlined from ‘constexpr _OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:540:31,
+    inlined from ‘constexpr _OI std::copy(_II, _II, _OI) [with _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:633:7,
+    inlined from ‘static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:147:27,
+    inlined from ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:185:15,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, allocator<_Tp>&) [with _InputIterator = const float*; _ForwardIterator = float*; _Tp = float]’ at /usr/include/c++/13/bits/stl_uninitialized.h:373:37,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:345:35,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:881:43:
+/usr/include/c++/13/bits/stl_algobase.h:437:30: warning: ‘void* __builtin_memcpy(void*, const void*, long unsigned int)’ writing between 5 and 16 bytes into a region of size 4 overflows the destination [-Wstringop-overflow=]
+  437 |             __builtin_memmove(__result, __first, sizeof(_Tp) * _Num);
+      |             ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/x86_64-linux-gnu/c++/13/bits/c++allocator.h:33,
+                 from /usr/include/c++/13/bits/allocator.h:46,
+                 from /usr/include/c++/13/string:43:
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In static member function ‘static constexpr _Up* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(_Tp*, _Tp*, _Up*) [with _Tp = const float; _Up = float; bool _IsMove = false]’,
+    inlined from ‘constexpr _OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:506:30,
+    inlined from ‘constexpr _OI std::__copy_move_a1(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:533:42,
+    inlined from ‘constexpr _OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:540:31,
+    inlined from ‘constexpr _OI std::copy(_II, _II, _OI) [with _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:633:7,
+    inlined from ‘static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:147:27,
+    inlined from ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:185:15,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, allocator<_Tp>&) [with _InputIterator = const float*; _ForwardIterator = float*; _Tp = float]’ at /usr/include/c++/13/bits/stl_uninitialized.h:373:37,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:345:35,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:910:47:
+/usr/include/c++/13/bits/stl_algobase.h:437:30: warning: ‘void* __builtin_memcpy(void*, const void*, long unsigned int)’ writing between 5 and 20 bytes into a region of size 4 overflows the destination [-Wstringop-overflow=]
+  437 |             __builtin_memmove(__result, __first, sizeof(_Tp) * _Num);
+      |             ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:881:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In static member function ‘static constexpr _Up* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(_Tp*, _Tp*, _Up*) [with _Tp = const float; _Up = float; bool _IsMove = false]’,
+    inlined from ‘constexpr _OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:506:30,
+    inlined from ‘constexpr _OI std::__copy_move_a1(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:533:42,
+    inlined from ‘constexpr _OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:540:31,
+    inlined from ‘constexpr _OI std::copy(_II, _II, _OI) [with _II = const float*; _OI = float*]’ at /usr/include/c++/13/bits/stl_algobase.h:633:7,
+    inlined from ‘static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:147:27,
+    inlined from ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = const float*; _ForwardIterator = float*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:185:15,
+    inlined from ‘constexpr _ForwardIterator std::__uninitialized_copy_a(_InputIterator, _InputIterator, _ForwardIterator, allocator<_Tp>&) [with _InputIterator = const float*; _ForwardIterator = float*; _Tp = float]’ at /usr/include/c++/13/bits/stl_uninitialized.h:373:37,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:345:35,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:942:47:
+/usr/include/c++/13/bits/stl_algobase.h:437:30: warning: ‘void* __builtin_memcpy(void*, const void*, long unsigned int)’ writing between 5 and 20 bytes into a region of size 4 overflows the destination [-Wstringop-overflow=]
+  437 |             __builtin_memmove(__result, __first, sizeof(_Tp) * _Num);
+      |             ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:881:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:910:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:881:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:881:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 20 into destination object of size 20 allocated by ‘operator new’
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:852:43:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset 16 into destination object of size 16 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = float]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = float]’ at /usr/include/c++/13/bits/allocator.h:198:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_CharT> >::allocate(allocator_type&, size_type) [with _Tp = float]’ at /usr/include/c++/13/bits/alloc_traits.h:482:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:381:33,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::pointer std::vector<_Tp, _Alloc>::_M_allocate_and_copy(size_type, _ForwardIterator, _ForwardIterator) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:1619:40,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_assign_aux(_ForwardIterator, _ForwardIterator, std::forward_iterator_tag) [with _ForwardIterator = const float*; _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/vector.tcc:324:40,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(std::initializer_list<_Tp>) [with _Tp = float; _Alloc = std::allocator<float>]’ at /usr/include/c++/13/bits/stl_vector.h:790:21,
+    inlined from ‘void CATCH2_INTERNAL_TEST_37()’ at /app/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp:820:47:
+/usr/include/c++/13/bits/new_allocator.h:151:55: note: at offset [0, 16] into destination object of size 20 allocated by ‘operator new’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+[26/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/utils/TableView/computers/IntervalReductionComputer.test.cpp.o
+[27/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/IO/digital_interval_series_csv.test.cpp.o
+[28/29] Building CXX object tests/DataManager/CMakeFiles/test_data_manager.dir/__/__/src/DataManager/utils/TableView/computers/TimestampInIntervalComputer.test.cpp.o
+[29/29] Linking CXX executable bin/test_data_manager
