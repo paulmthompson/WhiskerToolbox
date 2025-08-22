@@ -58,7 +58,7 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<float> const & x
     int const local_index = static_cast<int>(_data[time].size()) - 1;
     if (_identity_registry) {
         _entity_ids_by_time[time].push_back(
-            _identity_registry->ensureId(_identity_data_key, EntityKind::Line, time, local_index)
+            _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index)
         );
     } else {
         _entity_ids_by_time[time].push_back(0);
@@ -79,7 +79,7 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool no
     int const local_index = static_cast<int>(_data[time].size()) - 1;
     if (_identity_registry) {
         _entity_ids_by_time[time].push_back(
-            _identity_registry->ensureId(_identity_data_key, EntityKind::Line, time, local_index)
+            _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index)
         );
     } else {
         _entity_ids_by_time[time].push_back(0);
@@ -209,7 +209,7 @@ void LineData::rebuildAllEntityIds() {
         ids.clear();
         ids.reserve(lines.size());
         for (int i = 0; i < static_cast<int>(lines.size()); ++i) {
-            ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::Line, t, i));
+            ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, t, i));
         }
     }
 }

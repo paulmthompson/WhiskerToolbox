@@ -142,7 +142,7 @@ void DigitalIntervalSeries::rebuildAllEntityIds() {
     for (size_t i = 0; i < _data.size(); ++i) {
         // Use start as the discrete time index representative, and i as stable local index
         _entity_ids.push_back(
-            _identity_registry->ensureId(_identity_data_key, EntityKind::Interval, TimeFrameIndex{_data[i].start}, static_cast<int>(i))
+            _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, TimeFrameIndex{_data[i].start}, static_cast<int>(i))
         );
     }
 }

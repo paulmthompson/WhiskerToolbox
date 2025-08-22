@@ -14,10 +14,10 @@ using EntityId = std::uint64_t;
  * @brief Kinds of discrete entities that can be identified by an EntityId.
  */
 enum class EntityKind : std::uint8_t {
-    Point = 0,
-    Line = 1,
-    Event = 2,
-    Interval = 3
+    PointEntity = 0,
+    LineEntity = 1,
+    EventEntity = 2,
+    IntervalEntity = 3
 };
 
 /**
