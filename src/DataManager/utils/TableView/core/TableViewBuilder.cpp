@@ -5,6 +5,7 @@
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/interfaces/ILineSource.h"
+#include "utils/TableView/interfaces/IPointSource.h"
 
 #include <stdexcept>
 #include <set>
@@ -90,6 +91,12 @@ void TableViewBuilder::validateMultiSampleSources() {
             if (lineSource && lineSource->hasMultiSamples()) {
                 multiSampleSources.insert(dep);
             }
+            
+            // Check if this dependency is a point source
+            auto pointSource = m_dataManager->getPointSource(dep);
+            if (pointSource && pointSource->hasMultiSamples()) {
+                multiSampleSources.insert(dep);
+            }
         }
         
         // Also check the source dependency if it exists
@@ -99,13 +106,18 @@ void TableViewBuilder::validateMultiSampleSources() {
             if (lineSource && lineSource->hasMultiSamples()) {
                 multiSampleSources.insert(sourceDep);
             }
+            
+            auto pointSource = m_dataManager->getPointSource(sourceDep);
+            if (pointSource && pointSource->hasMultiSamples()) {
+                multiSampleSources.insert(sourceDep);
+            }
         }
     }
     
     // If we have more than one multi-sample source, throw an error
     if (multiSampleSources.size() > 1) {
         std::ostringstream oss;
-        oss << "Cannot build TableView with multiple multi-sample line sources. "
+        oss << "Cannot build TableView with multiple multi-sample sources. "
             << "Entity expansion is undefined when multiple sources have multiple entities per timestamp. "
             << "Multi-sample sources detected: ";
         
@@ -116,7 +128,7 @@ void TableViewBuilder::validateMultiSampleSources() {
             first = false;
         }
         
-        oss << ". Please ensure only one line source has multiple samples per timestamp.";
+        oss << ". Please ensure only one line or point source has multiple samples per timestamp.";
         
         throw std::runtime_error(oss.str());
     }

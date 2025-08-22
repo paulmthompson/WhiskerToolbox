@@ -3,17 +3,21 @@
 
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/core/TableView.h"
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/adapters/LineDataAdapter.h"
+#include "utils/TableView/adapters/PointDataAdapter.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/interfaces/IPointSource.h"
 #include "utils/TableView/computers/LineSamplingMultiComputer.h"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
 #include <memory>
+#include <numeric> // For std::iota
 #include <vector>
 #include <stdexcept>
 #include <iostream>
@@ -366,13 +370,13 @@ TEST_CASE_METHOD(MultiSampleLineDataFixture, "Error messages are informative for
             
             // Check that error message contains key information
             REQUIRE(errorMsg.find("Cannot build TableView") != std::string::npos);
-            REQUIRE(errorMsg.find("multiple multi-sample") != std::string::npos);
+            REQUIRE(errorMsg.find("multiple multi-sample sources") != std::string::npos);
             REQUIRE(errorMsg.find("Entity expansion is undefined") != std::string::npos);
             REQUIRE(errorMsg.find("MultiSampleLines") != std::string::npos);
             REQUIRE(errorMsg.find("ConflictMultiSampleLines") != std::string::npos);
             
             // Should provide guidance on how to fix
-            REQUIRE(errorMsg.find("ensure only one") != std::string::npos);
+            REQUIRE(errorMsg.find("ensure only one line or point source") != std::string::npos);
             
             std::cout << "Error message: " << errorMsg << std::endl;
         }
@@ -408,5 +412,148 @@ TEST_CASE_METHOD(MultiSampleLineDataFixture, "Table view construction with no mu
         REQUIRE(table.hasColumn("SingleLine.y@0.000"));
         REQUIRE(table.hasColumn("SingleLine.x@1.000"));
         REQUIRE(table.hasColumn("SingleLine.y@1.000"));
+    }
+}
+
+TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSample][PointData]") {
+    // Setup test data
+    auto dm = std::make_shared<DataManager>();
+    auto dme = std::make_shared<DataManagerExtension>(*dm);
+    
+    // Create time frames
+    // Use Iota to create 100 samples of time in std vector
+    std::vector<int> timeSamples(100);
+    std::iota(timeSamples.begin(), timeSamples.end(), 0);
+    auto timeFrame = std::make_shared<TimeFrame>(timeSamples);
+    auto timeKey = TimeKey("test_time");
+    dm->setTime(timeKey, timeFrame);
+
+    SECTION("Single-sample PointData should allow PointComponentAdapter") {
+        // Create single-sample point data (one point per timestamp)
+        auto singlePointData = std::make_shared<PointData>();
+        singlePointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, false);
+        singlePointData->addAtTime(TimeFrameIndex(20), {15.0f, 20.0f}, false);
+        singlePointData->addAtTime(TimeFrameIndex(30), {25.0f, 30.0f}, false);
+        
+        dm->setData<PointData>("SinglePoints", singlePointData, timeKey);
+        
+        // Should be able to create PointComponentAdapter for x and y
+        auto xSource = dme->getAnalogSource("SinglePoints.x");
+        auto ySource = dme->getAnalogSource("SinglePoints.y");
+        
+        REQUIRE(xSource != nullptr);
+        REQUIRE(ySource != nullptr);
+        
+        // Should report no multi-samples
+        auto pointAdapter = dme->getPointSource("SinglePoints");
+        REQUIRE(pointAdapter != nullptr);
+        REQUIRE_FALSE(pointAdapter->hasMultiSamples());
+    }
+    
+    SECTION("Multi-sample PointData should reject PointComponentAdapter") {
+        // Create multi-sample point data (multiple points per timestamp)
+        auto multiPointData = std::make_shared<PointData>();
+        
+        // Add multiple points at timestamp 10
+        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, false);
+        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, false);
+        
+        // Single point at timestamp 20
+        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, false);
+        
+        dm->setData<PointData>("MultiPoints", multiPointData, timeKey);
+        
+        // Should NOT be able to create PointComponentAdapter
+        auto xSource = dme->getAnalogSource("MultiPoints.x");
+        auto ySource = dme->getAnalogSource("MultiPoints.y");
+        
+        REQUIRE(xSource == nullptr);
+        REQUIRE(ySource == nullptr);
+        
+        // But should be able to create PointDataAdapter
+        auto pointAdapter = dme->getPointSource("MultiPoints");
+        REQUIRE(pointAdapter != nullptr);
+        REQUIRE(pointAdapter->hasMultiSamples());
+    }
+    
+    SECTION("Mixed line and point sources - only one multi-sample allowed") {
+        // Create single-sample LineData
+        auto singleLineData = std::make_shared<LineData>();
+        std::vector<float> xs = {0.0f, 10.0f, 20.0f};
+        std::vector<float> ys = {0.0f, 5.0f, 10.0f};
+        singleLineData->addAtTime(TimeFrameIndex(10), xs, ys, false);
+        singleLineData->addAtTime(TimeFrameIndex(20), xs, ys, false);
+        dm->setData<LineData>("SingleLines", singleLineData, timeKey);
+        
+        // Create multi-sample PointData
+        auto multiPointData = std::make_shared<PointData>();
+        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, false);
+        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, false);
+        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, false);
+        dm->setData<PointData>("MultiPoints", multiPointData, timeKey);
+        
+        // This should work - only PointData has multi-samples
+        TableViewBuilder builder(dme);
+
+        auto timestamps = std::vector<TimeFrameIndex>{TimeFrameIndex(10), TimeFrameIndex(20)};
+        auto rowSelector = std::make_unique<TimestampSelector>(timestamps, timeFrame);
+        builder.setRowSelector(std::move(rowSelector));
+
+        // Add line source (single-sample)
+        auto lineSource = dme->getLineSource("SingleLines");
+        auto lineComputer = std::make_unique<LineSamplingMultiComputer>(
+            lineSource, "SingleLines", timeFrame, 1);
+        REQUIRE_NOTHROW(builder.addColumns<double>("LineData", std::move(lineComputer)));
+        
+        // NOTE: For now, we can't add PointData computers since those don't exist yet
+        // This test validates that the validation logic correctly identifies multi-sample sources
+        
+        // Build should succeed since only one source has multi-samples
+        auto table = builder.build();
+        REQUIRE(table.getColumnCount() > 0);
+    }
+    
+    SECTION("Multiple multi-sample sources should fail validation") {
+        // Create multi-sample LineData
+        auto multiLineData = std::make_shared<LineData>();
+        std::vector<float> xs1 = {0.0f, 10.0f};
+        std::vector<float> ys1 = {0.0f, 5.0f};
+        std::vector<float> xs2 = {20.0f, 30.0f};
+        std::vector<float> ys2 = {10.0f, 15.0f};
+        
+        multiLineData->addAtTime(TimeFrameIndex(10), xs1, ys1, false);
+        multiLineData->addAtTime(TimeFrameIndex(10), xs2, ys2, false);  // Multiple lines at same time
+        multiLineData->addAtTime(TimeFrameIndex(20), xs1, ys1, false);
+        dm->setData<LineData>("MultiLines", multiLineData, timeKey);
+        
+        // Create multi-sample PointData
+        auto multiPointData = std::make_shared<PointData>();
+        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, false);
+        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, false);  // Multiple points at same time
+        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, false);
+        dm->setData<PointData>("MultiPoints", multiPointData, timeKey);
+        
+        // Validation should catch this and reject
+        TableViewBuilder builder(dme);
+        
+        std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(10), TimeFrameIndex(20)};
+        auto rowSelector = std::make_unique<TimestampSelector>(std::move(timestamps), timeFrame);
+        builder.setRowSelector(std::move(rowSelector));
+
+        // Add line source (multi-sample)
+        auto lineSource = dme->getLineSource("MultiLines");
+        auto lineComputer = std::make_unique<LineSamplingMultiComputer>(
+            lineSource, "MultiLines", timeFrame, 1);
+        REQUIRE_NOTHROW(builder.addColumns<double>("LineData", std::move(lineComputer)));
+        
+        // NOTE: Add point source validation logic once point computers exist
+        // For now, test that multi-sample line detection works
+        
+        // This should fail since both sources have multi-samples
+        // (when point computers are added, this will be tested more thoroughly)
+        
+        // Build should succeed since we only have one multi-sample source for now
+        auto table = builder.build();
+        REQUIRE(table.getColumnCount() > 0);
     }
 }

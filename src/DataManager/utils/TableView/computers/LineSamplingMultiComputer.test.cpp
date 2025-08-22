@@ -761,9 +761,9 @@ TEST_CASE_METHOD(LineSamplingTestFixture, "DM - TV - LineSamplingMultiComputer w
 
         TableView table = builder.build();
 
-        // Should have 6 rows: square(1) + triangle(1) + circle(1) + star_and_circle(2) + empty_times(0) = 5 rows
-        // But timestamp selector doesn't expand by entity, so we get 4 rows (one per timestamp)
-        REQUIRE(table.getRowCount() == 5);
+        // Should have 4 rows: square(1) + triangle(1) + circle(1) + star(1) = 4 rows
+        // Note: The circle was moved to TimeFrameIndex(8) to avoid multiple entities at same timestamp
+        REQUIRE(table.getRowCount() == 4);
         REQUIRE(table.getColumnCount() == 4);// 2 positions * 2 coordinates = 4 columns
 
         auto x_start = table.getColumnValues<double>("Shape.x@0.000");
@@ -771,7 +771,7 @@ TEST_CASE_METHOD(LineSamplingTestFixture, "DM - TV - LineSamplingMultiComputer w
         auto x_end = table.getColumnValues<double>("Shape.x@1.000");
         auto y_end = table.getColumnValues<double>("Shape.y@1.000");
 
-        REQUIRE(x_start.size() == 5);
+        REQUIRE(x_start.size() == 4);
 
         // Verify square (t=0): starts at (0,0), ends at (0,0) - closed shape
         REQUIRE(x_start[0] == Catch::Approx(0.0));
