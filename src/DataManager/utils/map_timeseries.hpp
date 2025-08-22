@@ -25,7 +25,7 @@ template<typename T>
         if (index >= it->second.size()) {
             return false;
         }
-        it->second.erase(it->second.begin() + index);
+        it->second.erase(it->second.begin() + static_cast<std::ptrdiff_t>(index));
         return true;
     }
     return false;

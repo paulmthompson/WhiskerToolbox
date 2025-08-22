@@ -10,7 +10,7 @@ option(ENABLE_CAPNPROTO "Enable CapnProto serialization support for data loading
 option(ENABLE_HDF5 "Enable HDF5 support for data loading/saving" ON)
 
 # FFmpeg video support - MUST be before project() call
-option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/processing" ON)
+option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/saving" ON)
 
 # Tensor backend selection - MUST be before project() call
 option(TENSOR_BACKEND_LIBTORCH "Use LibTorch as tensor backend (enables deep learning)" ON)

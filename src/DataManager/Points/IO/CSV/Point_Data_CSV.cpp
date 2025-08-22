@@ -90,15 +90,19 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_po
     std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> data;
     while (getline(file, ln)) {
         std::stringstream ss(ln);
-        int col_no = 0;
+        size_t col_no = 0;
         TimeFrameIndex frame_no(0);
         while (getline(ss, ele, ',')) {
-            if (col_no == frame_column) {
+            if (static_cast<int>(col_no) == frame_column) {
                 frame_no = TimeFrameIndex(std::stoi(extract_numbers_from_string(ele)));
-            } else if (dims[col_no] == "x") {
-                data[bodyparts[col_no]][frame_no].x = std::stof(ele);
-            } else if (dims[col_no] == "y") {
-                data[bodyparts[col_no]][frame_no].y = std::stof(ele);
+            } else if (col_no < dims.size() && dims[col_no] == "x") {
+                if (col_no < bodyparts.size()) {
+                    data[bodyparts[col_no]][frame_no].x = std::stof(ele);
+                }
+            } else if (col_no < dims.size() && dims[col_no] == "y") {
+                if (col_no < bodyparts.size()) {
+                    data[bodyparts[col_no]][frame_no].y = std::stof(ele);
+                }
             }
             ++col_no;
         }

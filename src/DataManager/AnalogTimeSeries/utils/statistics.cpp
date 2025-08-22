@@ -13,7 +13,7 @@ float calculate_mean_impl(std::vector<float> const & data, size_t start, size_t 
     if (data.empty() || start >= end || start >= data.size() || end > data.size()) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    return calculate_mean_impl(data.begin() + start, data.begin() + end);
+    return calculate_mean_impl(data.begin() + static_cast<std::ptrdiff_t>(start), data.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
 float calculate_mean(std::span<const float> data_span) {
@@ -45,7 +45,7 @@ float calculate_std_dev_impl(std::vector<float> const & data, size_t start, size
     if (data.empty() || start >= end || start >= data.size() || end > data.size()) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    return calculate_std_dev_impl(data.begin() + start, data.begin() + end);
+    return calculate_std_dev_impl(data.begin() + static_cast<std::ptrdiff_t>(start), data.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
 float calculate_std_dev(std::span<const float> data_span) {
@@ -79,7 +79,7 @@ float calculate_std_dev_approximate(AnalogTimeSeries const & series,
     }
 
     size_t const data_size = data.size();
-    size_t const target_sample_size = static_cast<size_t>(data_size * sample_percentage / 100.0f);
+    size_t const target_sample_size = static_cast<size_t>(static_cast<float>(data_size) * sample_percentage / 100.0f);
 
     // Fall back to exact calculation if sample would be too small
     if (target_sample_size < min_sample_threshold) {
@@ -181,7 +181,7 @@ float calculate_std_dev_approximate_in_time_range(AnalogTimeSeries const & serie
     }
 
     size_t const data_size = data_span.size();
-    size_t const target_sample_size = static_cast<size_t>(data_size * sample_percentage / 100.0f);
+    size_t const target_sample_size = static_cast<size_t>(static_cast<float>(data_size) * sample_percentage / 100.0f);
 
     // Fall back to exact calculation if sample would be too small
     if (target_sample_size < min_sample_threshold) {
@@ -219,7 +219,7 @@ float calculate_min_impl(std::vector<float> const & data, size_t start, size_t e
     if (data.empty() || start >= end || start >= data.size() || end > data.size()) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    return calculate_min_impl(data.begin() + start, data.begin() + end);
+    return calculate_min_impl(data.begin() + static_cast<std::ptrdiff_t>(start), data.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
 float calculate_min(std::span<const float> data_span) {
@@ -250,7 +250,7 @@ float calculate_max_impl(std::vector<float> const & data, size_t start, size_t e
     if (data.empty() || start >= end || start >= data.size() || end > data.size()) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    return calculate_max_impl(data.begin() + start, data.begin() + end);
+    return calculate_max_impl(data.begin() + static_cast<std::ptrdiff_t>(start), data.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
 float calculate_max(std::span<const float> data_span) {

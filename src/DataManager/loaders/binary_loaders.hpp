@@ -75,7 +75,7 @@ inline std::vector<std::vector<T>> readBinaryFileMultiChannel(BinaryAnalogOption
     }
 
     std::streampos const file_size_bytes = file.tellg();
-    if (file_size_bytes < options.header_size_bytes) {
+    if (file_size_bytes < static_cast<std::streamoff>(options.header_size_bytes)) {
         std::cout << "File size is smaller than header size" << std::endl;
         return std::vector<std::vector<T>>();
     }
@@ -102,7 +102,7 @@ inline std::vector<std::vector<T>> readBinaryFileMultiChannel(BinaryAnalogOption
     std::vector<T> time_slice_buffer(options.num_channels);
 
     size_t current_time_index = 0;
-    while (file.read(reinterpret_cast<char *>(&time_slice_buffer[0]), sizeof(T) * options.num_channels)) {
+    while (file.read(reinterpret_cast<char *>(&time_slice_buffer[0]), static_cast<std::streamsize>(sizeof(T) * options.num_channels))) {
         for (size_t i = 0; i < options.num_channels; ++i) {
             //data[i].push_back(time_slice_buffer[i]);
             data[i][current_time_index] = time_slice_buffer[i];
