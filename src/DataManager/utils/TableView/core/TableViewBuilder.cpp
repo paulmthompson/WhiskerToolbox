@@ -4,8 +4,11 @@
 #include "utils/TableView/interfaces/IColumnComputer.h"
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/interfaces/ILineSource.h"
 
 #include <stdexcept>
+#include <set>
+#include <sstream>
 
 TableViewBuilder::~TableViewBuilder() = default;
 
@@ -55,6 +58,9 @@ TableView TableViewBuilder::build() {
         throw std::runtime_error("At least one column must be added before building");
     }
 
+    // Validate multi-sample source constraints
+    validateMultiSampleSources();
+
     // Create the TableView
     TableView tableView(std::move(m_rowSelector), m_dataManager);
 
@@ -68,4 +74,50 @@ TableView TableViewBuilder::build() {
     m_rowSelector.reset();
 
     return tableView;
+}
+
+void TableViewBuilder::validateMultiSampleSources() {
+    std::set<std::string> multiSampleSources;
+    
+    // Check each column for dependencies on multi-sample line sources
+    for (auto const & column : m_columns) {
+        // Get dependencies from the column's computer
+        auto dependencies = column->getDependencies();
+        
+        for (auto const & dep : dependencies) {
+            // Check if this dependency is a line source
+            auto lineSource = m_dataManager->getLineSource(dep);
+            if (lineSource && lineSource->hasMultiSamples()) {
+                multiSampleSources.insert(dep);
+            }
+        }
+        
+        // Also check the source dependency if it exists
+        auto sourceDep = column->getSourceDependency();
+        if (!sourceDep.empty()) {
+            auto lineSource = m_dataManager->getLineSource(sourceDep);
+            if (lineSource && lineSource->hasMultiSamples()) {
+                multiSampleSources.insert(sourceDep);
+            }
+        }
+    }
+    
+    // If we have more than one multi-sample source, throw an error
+    if (multiSampleSources.size() > 1) {
+        std::ostringstream oss;
+        oss << "Cannot build TableView with multiple multi-sample line sources. "
+            << "Entity expansion is undefined when multiple sources have multiple entities per timestamp. "
+            << "Multi-sample sources detected: ";
+        
+        bool first = true;
+        for (auto const & source : multiSampleSources) {
+            if (!first) oss << ", ";
+            oss << "'" << source << "'";
+            first = false;
+        }
+        
+        oss << ". Please ensure only one line source has multiple samples per timestamp.";
+        
+        throw std::runtime_error(oss.str());
+    }
 }

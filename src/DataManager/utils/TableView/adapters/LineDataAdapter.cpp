@@ -68,6 +68,16 @@ auto LineDataAdapter::getLinesInRange(TimeFrameIndex start,
     return result;
 } 
 
+bool LineDataAdapter::hasMultiSamples() const {
+    // Check if any timestamp has more than one line
+    for (auto const & [time, lines]: m_lineData->GetAllLinesAsRange()) {
+        if (lines.size() > 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
 auto LineDataAdapter::getEntityCountAt(TimeFrameIndex t) const -> size_t {
     auto const& lines_ref = m_lineData->getAtTime(t, m_timeFrame.get(), m_timeFrame.get());
     return lines_ref.size();
