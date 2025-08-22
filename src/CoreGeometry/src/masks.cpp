@@ -293,9 +293,9 @@ std::vector<Point2D<uint32_t>> extract_line_pixels(
     std::vector<Point2D<uint32_t>> line_pixels;
     line_pixels.reserve(width * height / 10);// Reserve space to avoid reallocations
 
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
-            if (binary_img[row * width + col] > 0) {
+    for (size_t row = 0; row < static_cast<size_t>(height); ++row) {
+        for (size_t col = 0; col < static_cast<size_t>(width); ++col) {
+            if (binary_img[row * static_cast<size_t>(width) + col] > 0) {
                 line_pixels.push_back({static_cast<uint32_t>(col), static_cast<uint32_t>(row)});
             }
         }

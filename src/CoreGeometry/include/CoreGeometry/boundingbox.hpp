@@ -6,11 +6,11 @@
 struct BoundingBox {
     float min_x, min_y, max_x, max_y;
 
-    BoundingBox(float min_x, float min_y, float max_x, float max_y)
-        : min_x(min_x),
-          min_y(min_y),
-          max_x(max_x),
-          max_y(max_y) {}
+    BoundingBox(float min_x_, float min_y_, float max_x_, float max_y_)
+        : min_x(min_x_),
+          min_y(min_y_),
+          max_x(max_x_),
+          max_y(max_y_) {}
 
     bool contains(float x, float y) const {
         return x >= min_x && x <= max_x && y >= min_y && y <= max_y;
