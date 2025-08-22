@@ -64,11 +64,11 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
 
         try {
             // Parse event timestamp
-            float event_time = std::stof(tokens[options.event_column]);
+            float event_time = std::stof(tokens[static_cast<size_t>(options.event_column)]);
             
             if (has_identifier_column) {
                 // Multi-column case: group by identifier
-                std::string identifier = tokens[options.identifier_column];
+                std::string identifier = tokens[static_cast<size_t>(options.identifier_column)];
                 events_by_identifier[identifier].push_back(event_time);
             } else {
                 // Single column case: add to main vector

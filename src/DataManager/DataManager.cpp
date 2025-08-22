@@ -166,14 +166,12 @@ void DataManager::reset() {
     std::cout << "DataManager: Resetting to initial state..." << std::endl;
     
     // Clear all data objects except media (which we'll reset)
-    auto mediaData = _data.find("media");
     _data.clear();
     
     // Reset media to a fresh empty MediaData object
     _data["media"] = std::make_shared<EmptyMediaData>();
     
     // Clear all TimeFrame objects except the default "time" frame
-    auto defaultTime = _times.find(TimeKey("time"));
     _times.clear();
     
     // Recreate the default "time" TimeFrame
@@ -620,7 +618,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 auto analog_time_series = load_into_AnalogTimeSeries(file_path, item);
 
-                for (int channel = 0; channel < analog_time_series.size(); channel++) {
+                for (size_t channel = 0; channel < analog_time_series.size(); channel++) {
                     std::string const channel_name = name + "_" + std::to_string(channel);
 
                     dm->setData<AnalogTimeSeries>(channel_name, analog_time_series[channel], TimeKey("time"));
@@ -637,7 +635,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 auto digital_event_series = load_into_DigitalEventSeries(file_path, item);
 
-                for (int channel = 0; channel < digital_event_series.size(); channel++) {
+                for (size_t channel = 0; channel < digital_event_series.size(); channel++) {
                     std::string const channel_name = name + "_" + std::to_string(channel);
 
                     // Attach identity context and generate EntityIds

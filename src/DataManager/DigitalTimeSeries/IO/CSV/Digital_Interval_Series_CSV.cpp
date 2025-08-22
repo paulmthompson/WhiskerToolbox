@@ -95,8 +95,8 @@ std::vector<Interval> load(CSVIntervalLoaderOptions const & options) {
         }
 
         try {
-            int64_t start = std::stoll(tokens[options.start_column]);
-            int64_t end = std::stoll(tokens[options.end_column]);
+            int64_t start = std::stoll(tokens[static_cast<size_t>(options.start_column)]);
+            int64_t end = std::stoll(tokens[static_cast<size_t>(options.end_column)]);
             
             if (start > end) {
                 std::cerr << "Warning: Start time (" << start << ") is greater than end time (" 

@@ -4,20 +4,20 @@
 cmake_minimum_required(VERSION 3.25)
 
 # CapnProto data format support - MUST be before project() call
-option(ENABLE_CAPNPROTO "Enable CapnProto serialization support for data loading/saving" ON)
+option(ENABLE_CAPNPROTO "Enable CapnProto serialization support for data loading/saving" OFF)
 
 # HDF5 data format support - MUST be before project() call
-option(ENABLE_HDF5 "Enable HDF5 support for data loading/saving" ON)
+option(ENABLE_HDF5 "Enable HDF5 support for data loading/saving" OFF)
 
 # FFmpeg video support - MUST be before project() call
-option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/processing" ON)
+option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/saving" OFF)
 
 # Tensor backend selection - MUST be before project() call
-option(TENSOR_BACKEND_LIBTORCH "Use LibTorch as tensor backend (enables deep learning)" ON)
+option(TENSOR_BACKEND_LIBTORCH "Use LibTorch as tensor backend (enables deep learning)" OFF)
 
-option(ENABLE_OPENCV "Enable OpenCV support for image mask loading/saving" ON)
+option(ENABLE_OPENCV "Enable OpenCV support for image mask loading/saving" OFF)
 
-option(ENABLE_UI "Enable UI" ON)
+option(ENABLE_UI "Enable UI" OFF)
 
 # Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")

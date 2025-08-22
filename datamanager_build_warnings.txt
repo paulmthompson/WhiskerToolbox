@@ -1,0 +1,540 @@
+[0/1] Re-running CMake...
+-- CapnProto support: DISABLED
+-- HDF5 support: DISABLED
+-- FFmpeg support: DISABLED
+-- OpenCV support: DISABLED
+-- UI support: DISABLED
+-- Tensor backend: Armadillo (lightweight, no deep learning)
+-- VCPKG_MANIFEST_FEATURES:
+-- Running vcpkg install
+Detecting compiler hash for triplet x64-linux...
+Compiler found: /usr/bin/c++
+Detecting compiler hash for triplet x64-linux-dynamic...
+Compiler found: /usr/bin/c++
+The following packages are already installed:
+    armadillo:x64-linux-dynamic@12.8.4
+  * blas:x64-linux-dynamic@2023-04-14#1
+  * dirent:x64-linux-dynamic@1.24
+  * gettext[core,tools]:x64-linux@0.22.5#1
+  * gettext-libintl:x64-linux@0.22.5#2
+  * gettext-libintl:x64-linux-dynamic@0.22.5#2
+    glib:x64-linux-dynamic@2.80.0
+    glm:x64-linux-dynamic@1.0.1#3
+    lapack:x64-linux-dynamic@2023-06-10
+  * lapack-reference[blas-select,core,noblas]:x64-linux-dynamic@3.11.0#6
+  * libffi:x64-linux-dynamic@3.4.6
+  * libiconv:x64-linux@1.17#4
+  * libiconv:x64-linux-dynamic@1.17#4
+    nlohmann-json:x64-linux-dynamic@3.11.3
+  * openblas:x64-linux@0.3.27
+    openblas:x64-linux-dynamic@0.3.27
+  * pcre2[core,jit,platform-default-features]:x64-linux-dynamic@10.43
+  * pthread:x64-linux@3.0.0#2
+  * pthread:x64-linux-dynamic@3.0.0#2
+  * pthreads:x64-linux-dynamic@3.0.0#14
+  * pthreads:x64-linux@3.0.0#14
+  * vcpkg-cmake:x64-linux@2024-04-23
+  * vcpkg-cmake-config:x64-linux@2024-05-23
+  * vcpkg-cmake-get-vars:x64-linux@2023-12-31
+  * vcpkg-tool-meson:x64-linux@1.5.1
+  * zlib:x64-linux-dynamic@1.3.1
+openblas provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(OpenBLAS CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE OpenBLAS::OpenBLAS)
+
+openblas provides pkg-config modules:
+
+  # OpenBLAS is an optimized BLAS library based on GotoBLAS2 1.13 BSD version
+  openblas
+
+lapack provides pkg-config modules:
+
+  # Implementation of LAPACK
+  lapack
+
+armadillo provides CMake targets:
+
+    find_package(Armadillo CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE armadillo)
+
+armadillo is compatible with built-in CMake variables:
+
+    find_package(Armadillo REQUIRED)
+    target_include_directories(main PRIVATE ${ARMADILLO_INCLUDE_DIRS})
+    target_link_libraries(main PRIVATE ${ARMADILLO_LIBRARIES})
+
+glib provides pkg-config modules:
+
+  # glib I/O library
+  gio-2.0
+
+  # unix specific headers for glib I/O library
+  gio-unix-2.0
+
+  # GObject Introspection repository parser
+  girepository-2.0
+
+  # C Utility Library
+  glib-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-export-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-no-export-2.0
+
+  # GLib Type, Object, Parameter and Signal Library
+  gobject-2.0
+
+  # Thread support for GLib
+  gthread-2.0
+
+The package glm provides CMake targets:
+
+    find_package(glm CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE glm::glm)
+
+    # Or use the header-only version
+    find_package(glm CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE glm::glm-header-only)
+
+The package nlohmann-json provides CMake targets:
+
+    find_package(nlohmann_json CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE nlohmann_json::nlohmann_json)
+
+The package nlohmann-json can be configured to not provide implicit conversions via a custom triplet file:
+
+    set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
+
+For more information, see the docs here:
+
+    https://json.nlohmann.me/api/macros/json_use_implicit_conversions/
+
+All requested installations completed successfully in: 412 us
+-- Running vcpkg install - done
+-- OpenMP_CXX_FLAGS: -fopenmp
+-- Using VCPKG FindLAPACK from package 'lapack-reference'
+-- A library with LAPACK API found.
+-- TensorData: Using Armadillo backend
+-- Using Backend definition: TENSOR_BACKEND_ARMADILLO
+-- CORE_GEOMETRY_TEST_SOURCES_TEMP: /app/src/CoreGeometry/src/Image.test.cpp;/app/src/CoreGeometry/src/line_geometry.test.cpp;/app/src/CoreGeometry/src/masks.test.cpp;/app/src/CoreGeometry/src/polygon.test.cpp
+-- /app/src/DataManager/AnalogTimeSeries/Analog_Time_Series.test.cpp/app/src/DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.test.cpp/app/src/DataManager/AnalogTimeSeries/utils/statistics.test.cpp/app/src/DataManager/Masks/Mask_Data.test.cpp/app/src/DataManager/Masks/utils/connected_component.test.cpp/app/src/DataManager/Masks/utils/hole_filling.test.cpp/app/src/DataManager/Masks/utils/median_filter.test.cpp/app/src/DataManager/Masks/utils/skeletonize.test.cpp/app/src/DataManager/Masks/utils/mask_utils.test.cpp/app/src/DataManager/Points/Point_Data.test.cpp
+-- Using VCPKG FindLAPACK from package 'lapack-reference'
+-- A library with LAPACK API found.
+-- Configuring done (3.7s)
+CMake Warning (dev) in out/build/GCC/Release/_deps/whisker-analysis-src/src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target Whisker-Analysis.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target janelia.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target iir.  AUTOMOC, AUTOUIC and
+  AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target iir_static.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/demo/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target iirdemo.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/demo/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target rbj_update.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/iir-src/demo/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target ecg50hzfilt.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/CoreGeometry/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target NEURALYZER_GEOMETRY.
+  AUTOMOC, AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target DataManager.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Observer/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target ObserverData.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/TimeFrame/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target TimeFrame.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Entity/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target Entity.  AUTOMOC, AUTOUIC and
+  AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Lines/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target LineData.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/IO/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target DataManagerIO.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Media/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target MediaData.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Tensors/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target TensorData.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in src/DataManager/Masks/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target MaskData.  AUTOMOC, AUTOUIC
+  and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/catch2-src/src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target Catch2.  AUTOMOC, AUTOUIC and
+  AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in out/build/GCC/Release/_deps/catch2-src/src/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target Catch2WithMain.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in tests/CoreGeometry/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target test_core_geometry.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) in tests/DataManager/CMakeLists.txt:
+  AUTOGEN: No valid Qt version found for target test_data_manager.  AUTOMOC,
+  AUTOUIC and AUTORCC disabled.  Consider adding:
+
+    find_package(Qt<QTVERSION> COMPONENTS Widgets)
+
+  to your CMakeLists.txt file.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Generating done (0.1s)
+-- Build files have been written to: /app/out/build/GCC/Release
+[1/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/Digital_Interval_Series.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.cpp:1:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:5:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+/app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:178:10: warning: extra ‘;’ [-Wpedantic]
+  178 |         };
+      |          ^
+      |          -
+[2/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.cpp:3:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp:4,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.cpp:1:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+/app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:178:10: warning: extra ‘;’ [-Wpedantic]
+  178 |         };
+      |          ^
+      |          -
+[3/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.cpp:3:
+/app/src/DataManager/DigitalTimeSeries/Digital_Event_Series.hpp: In lambda function:
+/app/src/DataManager/DigitalTimeSeries/Digital_Event_Series.hpp:49:54: warning: conversion from ‘int64_t’ {aka ‘long int’} to ‘float’ may change value [-Wconversion]
+   49 |                    return time >= start_time.getValue() && time <= stop_time.getValue();
+      |                                   ~~~~~~~~~~~~~~~~~~~^~
+/app/src/DataManager/DigitalTimeSeries/Digital_Event_Series.hpp:49:86: warning: conversion from ‘int64_t’ {aka ‘long int’} to ‘float’ may change value [-Wconversion]
+   49 |                    return time >= start_time.getValue() && time <= stop_time.getValue();
+      |                                                                    ~~~~~~~~~~~~~~~~~~^~
+[4/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.cpp:3:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.hpp:4,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.cpp:1:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+/app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:178:10: warning: extra ‘;’ [-Wpedantic]
+  178 |         };
+      |          ^
+      |          -
+[5/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:7,
+                 from /app/src/DataManager/DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.cpp:7:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:5:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+/app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:178:10: warning: extra ‘;’ [-Wpedantic]
+  178 |         };
+      |          ^
+      |          -
+[6/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.cpp.o
+[7/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/AnalogTimeSeries/utils/statistics.cpp.o
+[8/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.cpp.o
+In file included from /app/src/DataManager/DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.cpp:5:
+/app/src/DataManager/DigitalTimeSeries/Digital_Event_Series.hpp: In lambda function:
+/app/src/DataManager/DigitalTimeSeries/Digital_Event_Series.hpp:49:54: warning: conversion from ‘int64_t’ {aka ‘long int’} to ‘float’ may change value [-Wconversion]
+   49 |                    return time >= start_time.getValue() && time <= stop_time.getValue();
+      |                                   ~~~~~~~~~~~~~~~~~~~^~
+/app/src/DataManager/DigitalTimeSeries/Digital_Event_Series.hpp:49:86: warning: conversion from ‘int64_t’ {aka ‘long int’} to ‘float’ may change value [-Wconversion]
+   49 |                    return time >= start_time.getValue() && time <= stop_time.getValue();
+      |                                                                    ~~~~~~~~~~~~~~~~~~^~
+[9/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/Points/Point_Data.cpp.o
+In file included from /app/src/DataManager/Points/Point_Data.hpp:9,
+                 from /app/src/DataManager/Points/Point_Data.cpp:1:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/Points/Point_Data.hpp:8:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+[10/19] Building CXX object src/DataManager/Masks/CMakeFiles/MaskData.dir/Mask_Data.cpp.o
+/app/src/DataManager/Masks/Mask_Data.cpp: In member function ‘bool MaskData::clearAtTime(const TimeIndexAndFrame&, bool)’:
+/app/src/DataManager/Masks/Mask_Data.cpp:34:51: warning: conversion from ‘int’ to ‘float’ may change value [-Wconversion]
+   34 |     auto time_index = _time_frame->getIndexAtTime(time);
+      |                                                   ^~~~
+/app/src/DataManager/Masks/Mask_Data.cpp: In member function ‘void MaskData::addAtTime(const TimeIndexAndFrame&, std::vector<Point2D<unsigned int> >, bool)’:
+/app/src/DataManager/Masks/Mask_Data.cpp:90:51: warning: conversion from ‘int’ to ‘float’ may change value [-Wconversion]
+   90 |     auto time_index = _time_frame->getIndexAtTime(time);
+      |                                                   ^~~~
+/app/src/DataManager/Masks/Mask_Data.cpp: In member function ‘std::size_t MaskData::moveTo(MaskData&, const TimeFrameInterval&, bool)’:
+/app/src/DataManager/Masks/Mask_Data.cpp:243:20: warning: ignoring return value of ‘bool MaskData::clearAtTime(TimeFrameIndex, bool)’, declared with attribute ‘nodiscard’ [-Wunused-result]
+  243 |         clearAtTime(time, false);// Don't notify for each operation
+      |         ~~~~~~~~~~~^~~~~~~~~~~~~
+/app/src/DataManager/Masks/Mask_Data.cpp:13:6: note: declared here
+   13 | bool MaskData::clearAtTime(TimeFrameIndex const time, bool notify) {
+      |      ^~~~~~~~
+/app/src/DataManager/Masks/Mask_Data.cpp: In member function ‘std::size_t MaskData::moveTo(MaskData&, const std::vector<TimeFrameIndex>&, bool)’:
+/app/src/DataManager/Masks/Mask_Data.cpp:273:20: warning: ignoring return value of ‘bool MaskData::clearAtTime(TimeFrameIndex, bool)’, declared with attribute ‘nodiscard’ [-Wunused-result]
+  273 |         clearAtTime(time, false);// Don't notify for each operation
+      |         ~~~~~~~~~~~^~~~~~~~~~~~~
+/app/src/DataManager/Masks/Mask_Data.cpp:13:6: note: declared here
+   13 | bool MaskData::clearAtTime(TimeFrameIndex const time, bool notify) {
+      |      ^~~~~~~~
+[11/19] Linking CXX shared library libMaskData.so.1.0.0
+[12/19] Creating library symlink libMaskData.so.1 libMaskData.so
+[13/19] Building CXX object src/DataManager/Lines/CMakeFiles/LineData.dir/Line_Data.cpp.o
+In file included from /app/src/DataManager/Lines/Line_Data.hpp:10,
+                 from /app/src/DataManager/Lines/Line_Data.cpp:1:
+/app/src/DataManager/Lines/../Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/Lines/Line_Data.hpp:8:
+/app/src/DataManager/Lines/../TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp: In member function ‘bool LineData::clearAtTime(TimeFrameIndex, int, bool)’:
+/app/src/DataManager/Lines/Line_Data.cpp:35:29: warning: conversion to ‘size_t’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   35 |     if (clear_at_time(time, line_id, _data)) {
+      |                             ^~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp: In member function ‘void LineData::addPointToLine(TimeFrameIndex, int, Point2D<float>, bool)’:
+/app/src/DataManager/Lines/Line_Data.cpp:95:17: warning: comparison of integer expressions of different signedness: ‘const int’ and ‘std::vector<Line2D>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   95 |     if (line_id < _data[time].size()) {
+      |         ~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp:96:21: warning: conversion to ‘std::vector<Line2D>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   96 |         _data[time][line_id].push_back(point);
+      |                     ^~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp: In member function ‘void LineData::addPointToLineInterpolate(TimeFrameIndex, int, Point2D<float>, bool)’:
+/app/src/DataManager/Lines/Line_Data.cpp:110:17: warning: comparison of integer expressions of different signedness: ‘const int’ and ‘std::vector<Line2D>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+  110 |     if (line_id >= _data[time].size()) {
+      |         ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp:115:33: warning: conversion to ‘std::vector<Line2D>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  115 |     Line2D & line = _data[time][line_id];
+      |                                 ^~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp:119:49: warning: implicit conversion from ‘float’ to ‘double’ to match other operand of binary expression [-Wdouble-promotion]
+  119 |         int const n = static_cast<int>(distance / 2.0f);
+      |                                        ~~~~~~~~~^~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp: In member function ‘std::size_t LineData::moveTo(LineData&, const TimeFrameInterval&, bool)’:
+/app/src/DataManager/Lines/Line_Data.cpp:291:20: warning: ignoring return value of ‘bool LineData::clearAtTime(TimeFrameIndex, bool)’, declared with attribute ‘nodiscard’ [-Wunused-result]
+  291 |         clearAtTime(time, false); // Don't notify for each operation
+      |         ~~~~~~~~~~~^~~~~~~~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp:21:6: note: declared here
+   21 | bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
+      |      ^~~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp: In member function ‘std::size_t LineData::moveTo(LineData&, const std::vector<TimeFrameIndex>&, bool)’:
+/app/src/DataManager/Lines/Line_Data.cpp:321:20: warning: ignoring return value of ‘bool LineData::clearAtTime(TimeFrameIndex, bool)’, declared with attribute ‘nodiscard’ [-Wunused-result]
+  321 |         clearAtTime(time, false); // Don't notify for each operation
+      |         ~~~~~~~~~~~^~~~~~~~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp:21:6: note: declared here
+   21 | bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
+      |      ^~~~~~~~
+[14/19] Linking CXX shared library libLineData.so.1.0.0
+[15/19] Creating library symlink libLineData.so.1 libLineData.so
+[16/19] Linking CXX shared library libDataManagerIO.so
+[17/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/Points/IO/CSV/Point_Data_CSV.cpp.o
+In file included from /app/src/DataManager/Points/Point_Data.hpp:9,
+                 from /app/src/DataManager/Points/IO/CSV/Point_Data_CSV.cpp:3:
+/app/src/DataManager/Entity/EntityTypes.hpp:20:5: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   20 |     Interval = 3
+      |     ^~~~~~~~
+In file included from /app/src/DataManager/Points/Point_Data.hpp:8:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+[18/19] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/DataManager.cpp.o
+In file included from /app/src/DataManager/DataManager.cpp:5:
+/app/src/DataManager/IO/LoaderRegistry.hpp: In member function ‘virtual LoadResult IFormatLoader::save(const std::string&, IODataType, const nlohmann::json_abi_v3_11_3::json&, const void*) const’:
+/app/src/DataManager/IO/LoaderRegistry.hpp:44:48: warning: unused parameter ‘filepath’ [-Wunused-parameter]
+   44 |     virtual LoadResult save(std::string const& filepath,
+      |                             ~~~~~~~~~~~~~~~~~~~^~~~~~~~
+/app/src/DataManager/IO/LoaderRegistry.hpp:45:39: warning: unused parameter ‘dataType’ [-Wunused-parameter]
+   45 |                            IODataType dataType,
+      |                            ~~~~~~~~~~~^~~~~~~~
+/app/src/DataManager/IO/LoaderRegistry.hpp:46:50: warning: unused parameter ‘config’ [-Wunused-parameter]
+   46 |                            nlohmann::json const& config,
+      |                            ~~~~~~~~~~~~~~~~~~~~~~^~~~~~
+/app/src/DataManager/IO/LoaderRegistry.hpp:47:40: warning: unused parameter ‘data’ [-Wunused-parameter]
+   47 |                            void const* data) const {
+      |                            ~~~~~~~~~~~~^~~~
+In file included from /app/src/DataManager/DataManager.cpp:8:
+/app/src/DataManager/DigitalTimeSeries/Digital_Event_Series.hpp: In lambda function:
+/app/src/DataManager/DigitalTimeSeries/Digital_Event_Series.hpp:49:54: warning: conversion from ‘int64_t’ {aka ‘long int’} to ‘float’ may change value [-Wconversion]
+   49 |                    return time >= start_time.getValue() && time <= stop_time.getValue();
+      |                                   ~~~~~~~~~~~~~~~~~~~^~
+/app/src/DataManager/DigitalTimeSeries/Digital_Event_Series.hpp:49:86: warning: conversion from ‘int64_t’ {aka ‘long int’} to ‘float’ may change value [-Wconversion]
+   49 |                    return time >= start_time.getValue() && time <= stop_time.getValue();
+      |                                                                    ~~~~~~~~~~~~~~~~~~^~
+In file included from /app/src/DataManager/DataManager.cpp:9:
+/app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp: At global scope:
+/app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:178:10: warning: extra ‘;’ [-Wpedantic]
+  178 |         };
+      |          ^
+      |          -
+In file included from /app/src/DataManager/utils/TableView/core/TableView.h:6,
+                 from /app/src/DataManager/utils/TableView/TableRegistry.hpp:5,
+                 from /app/src/DataManager/DataManager.cpp:31:
+/app/src/DataManager/utils/TableView/core/ExecutionPlan.h:22:74: warning: declaration of ‘Interval’ shadows a global declaration [-Wshadow]
+   22 |     enum class DataSourceKind : std::uint8_t { Unknown=0, Analog, Event, Interval, Line };
+      |                                                                          ^~~~~~~~
+In file included from /app/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp:5:
+/app/src/DataManager/TimeFrame/interval_data.hpp:18:7: note: shadowed declaration is here
+   18 | using Interval = IntervalT<int64_t>;
+      |       ^~~~~~~~
+In file included from /app/src/DataManager/transforms/Masks/mask_area.hpp:4,
+                 from /app/src/DataManager/DataManager.cpp:37:
+/app/src/DataManager/transforms/data_transforms.hpp:36:29: warning: ‘virtual DataTypeVariant TransformOperation::execute(const DataTypeVariant&, const TransformParametersBase*, ProgressCallback)’ was hidden [-Woverloaded-virtual=]
+   36 |     virtual DataTypeVariant execute(DataTypeVariant const & dataVariant,
+      |                             ^~~~~~~
+/app/src/DataManager/transforms/Masks/mask_area.hpp:58:21: note:   by ‘virtual DataTypeVariant MaskAreaOperation::execute(const DataTypeVariant&, const TransformParametersBase*)’
+   58 |     DataTypeVariant execute(DataTypeVariant const & dataVariant,
+      |                     ^~~~~~~
+[19/19] Linking CXX shared library libDataManager.so
