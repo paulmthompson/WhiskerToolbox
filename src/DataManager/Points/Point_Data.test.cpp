@@ -3,7 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-TEST_CASE("PointData - Core functionality", "[points][data][core]") {
+TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
     PointData point_data;
 
     // Setup some test data
@@ -326,7 +326,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
     }
 }
 
-TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") {
+TEST_CASE("DM - PointData - Edge cases and error handling", "[points][data][error]") {
     PointData point_data;
 
     SECTION("Getting points at non-existent time") {
@@ -430,7 +430,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
     }
 }
 
-TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") {
+TEST_CASE("DM - PointData - Copy and Move operations", "[points][data][copy][move]") {
     PointData source_data;
     PointData target_data;
 
@@ -661,7 +661,7 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
     }
 }
 
-TEST_CASE("PointData - Image scaling", "[points][data][scaling]") {
+TEST_CASE("DM - PointData - Image scaling", "[points][data][scaling]") {
     PointData point_data;
     
     // Setup test data with known coordinates

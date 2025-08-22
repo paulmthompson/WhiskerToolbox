@@ -105,10 +105,10 @@ Line2D order_line(
     auto [first_endpoint_idx, second_endpoint_idx] = find_line_endpoints(line_pixels);
     
     // Calculate the distance from the origin to both endpoints to determine orientation
-    float dist_origin_to_first = std::powf(line_pixels[first_endpoint_idx].x - origin.x, 2) +
-                                 std::powf(line_pixels[first_endpoint_idx].y - origin.y, 2);
-    float dist_origin_to_second = std::powf(line_pixels[second_endpoint_idx].x - origin.x, 2) +
-                                  std::powf(line_pixels[second_endpoint_idx].y - origin.y, 2);
+    float dist_origin_to_first = std::pow(line_pixels[first_endpoint_idx].x - origin.x, 2) +
+                                 std::pow(line_pixels[first_endpoint_idx].y - origin.y, 2);
+    float dist_origin_to_second = std::pow(line_pixels[second_endpoint_idx].x - origin.x, 2) +
+                                  std::pow(line_pixels[second_endpoint_idx].y - origin.y, 2);
     
     // Start ordering from the endpoint farthest from the origin
     size_t start_point_idx = (dist_origin_to_first > dist_origin_to_second) ? 
@@ -183,10 +183,10 @@ Line2D order_line(
     bool should_flip = false;
     
     if (!ordered_pixels.empty()) {
-        float dist_first_to_origin = std::powf(ordered_pixels.front().x - origin.x, 2) +
-                                     std::powf(ordered_pixels.front().y - origin.y, 2);
-        float dist_last_to_origin = std::powf(ordered_pixels.back().x - origin.x, 2) +
-                                    std::powf(ordered_pixels.back().y - origin.y, 2);
+        float dist_first_to_origin = std::pow(ordered_pixels.front().x - origin.x, 2) +
+                                     std::pow(ordered_pixels.front().y - origin.y, 2);
+        float dist_last_to_origin = std::pow(ordered_pixels.back().x - origin.x, 2) +
+                                    std::pow(ordered_pixels.back().y - origin.y, 2);
                                    
         should_flip = dist_first_to_origin > dist_last_to_origin;
         
