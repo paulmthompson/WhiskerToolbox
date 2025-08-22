@@ -29,7 +29,7 @@ void registerAllLoaders() {
 }
 
 void registerInternalLoaders() {
-    [[maybe_unused]] LoaderRegistry& registry = LoaderRegistry::getInstance();
+    LoaderRegistry& registry = LoaderRegistry::getInstance();
     
     // Register CSV loader (always available)
     std::cout << "LoaderRegistration: Registering CSV loader..." << std::endl;
