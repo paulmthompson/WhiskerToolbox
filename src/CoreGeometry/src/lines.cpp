@@ -40,8 +40,10 @@ std::vector<uint8_t> line_to_image(Line2D & line, int height, int width) {
         auto x = std::lround(point.x);
         auto y = std::lround(point.y);
 
-        auto index = width * y + x;
-        image[index] = 255;
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            auto index = static_cast<size_t>(width * y + x);
+            image[index] = 255;
+        }
     }
 
     return image;
