@@ -45,6 +45,9 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/adapters/LineDataAdapter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/filter/NewFilterInterface.test.cpp
 
+        # Integration tests in tests/DataManager/TableView/
+        TableView/multisample_data.test.cpp
+
         ${DATAMANAGER_TEST_SOURCES_TEMP}
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp

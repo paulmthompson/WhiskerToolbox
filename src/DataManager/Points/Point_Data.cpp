@@ -59,7 +59,7 @@ void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> c
     _data[time] = {point};
     if (_identity_registry) {
         _entity_ids_by_time[time] = {
-            _identity_registry->ensureId(_identity_data_key, EntityKind::Point, time, 0)
+            _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, 0)
         };
     } else {
         _entity_ids_by_time[time] = {0};
@@ -76,7 +76,7 @@ void PointData::overwritePointsAtTime(TimeFrameIndex const time, std::vector<Poi
     for (int i = 0; i < static_cast<int>(points.size()); ++i) {
         if (_identity_registry) {
             _entity_ids_by_time[time].push_back(
-                _identity_registry->ensureId(_identity_data_key, EntityKind::Point, time, i)
+                _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, i)
             );
         } else {
             _entity_ids_by_time[time].push_back(0);
@@ -103,7 +103,7 @@ void PointData::overwritePointsAtTimes(
         for (int j = 0; j < static_cast<int>(points[i].size()); ++j) {
             if (_identity_registry) {
                 _entity_ids_by_time[times[i]].push_back(
-                    _identity_registry->ensureId(_identity_data_key, EntityKind::Point, times[i], j)
+                    _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, times[i], j)
                 );
             } else {
                 _entity_ids_by_time[times[i]].push_back(0);
@@ -119,7 +119,7 @@ void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point,
     add_at_time(time, point, _data);
     int local_index = static_cast<int>(_data[time].size()) - 1;
     if (_identity_registry) {
-        EntityId id = _identity_registry->ensureId(_identity_data_key, EntityKind::Point, time, local_index);
+        EntityId id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
         _entity_ids_by_time[time].push_back(id);
     } else {
         _entity_ids_by_time[time].push_back(0);
@@ -136,7 +136,7 @@ void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<f
     for (int i = 0; i < static_cast<int>(points.size()); ++i) {
         if (_identity_registry) {
             _entity_ids_by_time[time].push_back(
-                _identity_registry->ensureId(_identity_data_key, EntityKind::Point, time, start_index + i)
+                _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, start_index + i)
             );
         } else {
             _entity_ids_by_time[time].push_back(0);
@@ -321,7 +321,7 @@ void PointData::rebuildAllEntityIds() {
         ids.clear();
         ids.reserve(pts.size());
         for (int i = 0; i < static_cast<int>(pts.size()); ++i) {
-            ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::Point, t, i));
+            ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, t, i));
         }
     }
 }

@@ -187,9 +187,9 @@ public:
     EmptyMediaData() = default;
     
     MediaType getMediaType() const override { 
-        // Return Images as a default - this matches the old behavior
+        // Return Video as a default - this matches the old behavior
         // where MediaData defaulted to Video type detection
-        return MediaType::Images; 
+        return MediaType::Video; 
     }
     
 protected:

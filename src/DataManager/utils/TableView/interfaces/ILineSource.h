@@ -68,6 +68,17 @@ public:
                                                  TimeFrameIndex end,
                                                  TimeFrame const * target_timeFrame) = 0;
 
+    /**
+     * @brief Checks if this source has multiple samples (lines) at any timestamp.
+     * 
+     * This method determines if the source contains more than one line at any given
+     * timestamp. This is important for TableView construction because having multiple
+     * multi-sample sources leads to undefined row expansion behavior.
+     * 
+     * @return True if any timestamp has more than one line, false otherwise.
+     */
+    virtual bool hasMultiSamples() const = 0;
+
     // IEntityProvider
     [[nodiscard]] auto getEntityCountAt(TimeFrameIndex t) const -> size_t override = 0;
     [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* override = 0;

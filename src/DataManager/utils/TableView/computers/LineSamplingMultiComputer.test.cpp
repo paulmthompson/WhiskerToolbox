@@ -567,9 +567,9 @@ private:
             shape_lines->addAtTime(TimeFrameIndex(4), xs, ys, false);
         }
 
-        // Multiple shapes at t=60 - star and circle
+        // Multiple shapes at different times - star at t=60, circle at t=80
         {
-            // Star shape
+            // Star shape at t=60
             std::vector<float> xs1, ys1;
             for (int i = 0; i <= 10; ++i) {
                 float angle = static_cast<float>(i) * 2.0f * 3.14159f / 10.0f;
@@ -579,14 +579,14 @@ private:
             }
             shape_lines->addAtTime(TimeFrameIndex(6), xs1, ys1, false);
 
-            // Small circle
+            // Small circle at t=80
             std::vector<float> xs2, ys2;
             for (int i = 0; i <= 6; ++i) {
                 float angle = static_cast<float>(i) * 2.0f * 3.14159f / 6.0f;
                 xs2.push_back(25.0f + 3.0f * std::cos(angle));
                 ys2.push_back(25.0f + 3.0f * std::sin(angle));
             }
-            shape_lines->addAtTime(TimeFrameIndex(6), xs2, ys2, false);
+            shape_lines->addAtTime(TimeFrameIndex(8), xs2, ys2, false);
         }
 
         m_data_manager->setData<LineData>("GeometricShapes", shape_lines, TimeKey("shape_time"));
@@ -761,9 +761,9 @@ TEST_CASE_METHOD(LineSamplingTestFixture, "DM - TV - LineSamplingMultiComputer w
 
         TableView table = builder.build();
 
-        // Should have 6 rows: square(1) + triangle(1) + circle(1) + star_and_circle(2) + empty_times(0) = 5 rows
-        // But timestamp selector doesn't expand by entity, so we get 4 rows (one per timestamp)
-        REQUIRE(table.getRowCount() == 5);
+        // Should have 4 rows: square(1) + triangle(1) + circle(1) + star(1) = 4 rows
+        // Note: The circle was moved to TimeFrameIndex(8) to avoid multiple entities at same timestamp
+        REQUIRE(table.getRowCount() == 4);
         REQUIRE(table.getColumnCount() == 4);// 2 positions * 2 coordinates = 4 columns
 
         auto x_start = table.getColumnValues<double>("Shape.x@0.000");
@@ -771,7 +771,7 @@ TEST_CASE_METHOD(LineSamplingTestFixture, "DM - TV - LineSamplingMultiComputer w
         auto x_end = table.getColumnValues<double>("Shape.x@1.000");
         auto y_end = table.getColumnValues<double>("Shape.y@1.000");
 
-        REQUIRE(x_start.size() == 5);
+        REQUIRE(x_start.size() == 4);
 
         // Verify square (t=0): starts at (0,0), ends at (0,0) - closed shape
         REQUIRE(x_start[0] == Catch::Approx(0.0));
@@ -1272,8 +1272,8 @@ TEST_CASE_METHOD(LineSamplingTableRegistryTestFixture, "DM - TV - LineSamplingMu
             auto built_table = registry.getBuiltTable("multi_source_line_test");
             REQUIRE(built_table != nullptr);
 
-            // Should have 3 rows due to entity expansion: t=30(2 whiskers) + t=60(1 shape) = 3 rows
-            // Note: The actual count depends on how the multi-source expansion works
+            // Should have 3 rows due to entity expansion: t=30(2 whiskers from WhiskerTraces) + t=60(1 whisker from WhiskerTraces) = 3 rows
+            // Note: Only WhiskerTraces has multiple entities, GeometricShapes has single entities at each timestamp
             REQUIRE(built_table->getRowCount() >= 2);  // At least 2 rows, may be more due to expansion
             // Should have 16 columns: 2 sources * 4 positions * 2 coordinates
             REQUIRE(built_table->getColumnCount() == 16);

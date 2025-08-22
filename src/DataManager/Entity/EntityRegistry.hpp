@@ -37,7 +37,7 @@ public:
 private:
     std::unordered_map<EntityTupleKey, EntityId, EntityTupleKeyHash> m_tuple_to_id;
     std::unordered_map<EntityId, EntityDescriptor> m_id_to_descriptor;
-    EntityId m_next_id {1};
+    EntityId m_next_id {0};
 };
 
 #endif // ENTITYREGISTRY_HPP

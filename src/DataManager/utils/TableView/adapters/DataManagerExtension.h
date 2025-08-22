@@ -17,7 +17,9 @@ class IAnalogSource;
 class IEventSource;
 class IIntervalSource;
 class ILineSource;
+class IPointSource;
 class LineDataAdapter;
+class PointDataAdapter;
 
 
 /**
@@ -89,6 +91,17 @@ public:
      */
     auto getLineSource(std::string const & name) -> std::shared_ptr<ILineSource>;
 
+    /**
+     * @brief Gets a point source by name.
+     * 
+     * This method provides access to IPointSource implementations for
+     * point data such as PointData.
+     * 
+     * @param name The name of the point source.
+     * @return Shared pointer to IPointSource, or nullptr if not found.
+     */
+    auto getPointSource(std::string const & name) -> std::shared_ptr<IPointSource>;
+
 private:
     /**
      * @brief Creates an AnalogDataAdapter for the given name.
@@ -119,6 +132,13 @@ private:
     auto createLineDataAdapter(std::string const & name) -> std::shared_ptr<ILineSource>;
 
     /**
+     * @brief Creates a PointDataAdapter for the given name.
+     * @param name The name of the PointData.
+     * @return Shared pointer to the adapter, or nullptr if not found.
+     */
+    auto createPointDataAdapter(std::string const & name) -> std::shared_ptr<IPointSource>;
+
+    /**
      * @brief Creates a PointComponentAdapter for the given name and component.
      * @param pointDataName The name of the PointData.
      * @param component The component type (X or Y).
@@ -141,6 +161,7 @@ private:
     mutable std::map<std::string, std::shared_ptr<IEventSource>> m_eventSourceCache;
     mutable std::map<std::string, std::shared_ptr<IIntervalSource>> m_intervalSourceCache;
     mutable std::map<std::string, std::shared_ptr<ILineSource>> m_lineSourceCache;
+    mutable std::map<std::string, std::shared_ptr<IPointSource>> m_pointSourceCache;
 
     // Regex for parsing virtual source names
     static std::regex const s_virtualSourceRegex;

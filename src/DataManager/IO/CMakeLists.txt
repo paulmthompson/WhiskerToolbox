@@ -2,15 +2,12 @@
 
 # Core plugin interface
 set(IO_CORE_SOURCES
-        interface/DataLoader.hpp
+    interface/DataLoader.hpp
     LoaderRegistry.hpp
     LoaderRegistry.cpp
     LoaderRegistration.hpp
     LoaderRegistration.cpp
-    PluginLoader.hpp
-    PluginLoader.cpp
-        interface/DataFactory.hpp
-    PluginDemo.hpp
+    interface/DataFactory.hpp
     loaders/CSVLoader.hpp
     loaders/CSVLoader.cpp
 )

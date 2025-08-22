@@ -66,7 +66,7 @@ void DigitalEventSeries::rebuildAllEntityIds() {
     _entity_ids.reserve(_data.size());
     for (int i = 0; i < static_cast<int>(_data.size()); ++i) {
         // Use time index = i (since data is float times, but consistent order gives stable local index)
-        _entity_ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::Event, TimeFrameIndex{i}, i));
+        _entity_ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::EventEntity, TimeFrameIndex{i}, i));
     }
 }
 

@@ -7,8 +7,8 @@ TEST_CASE("EntityRegistry - Basic ID generation", "[entityregistry][basic]") {
     EntityRegistry registry;
     
     TimeFrameIndex time_index(100);
-    EntityId id1 = registry.ensureId("data1", EntityKind::Point, time_index, 0);
-    EntityId id2 = registry.ensureId("data2", EntityKind::Line, time_index, 1);
+    EntityId id1 = registry.ensureId("data1", EntityKind::PointEntity, time_index, 0);
+    EntityId id2 = registry.ensureId("data2", EntityKind::LineEntity, time_index, 1);
     
     REQUIRE(id1 != id2);
     REQUIRE(id1 == 0); // First ID should be 0
@@ -21,9 +21,9 @@ TEST_CASE("EntityRegistry - Deterministic ID generation", "[entityregistry][dete
     TimeFrameIndex time_index(500);
     
     // Request same entity multiple times
-    EntityId id1 = registry.ensureId("test_data", EntityKind::Point, time_index, 5);
-    EntityId id2 = registry.ensureId("test_data", EntityKind::Point, time_index, 5);
-    EntityId id3 = registry.ensureId("test_data", EntityKind::Point, time_index, 5);
+    EntityId id1 = registry.ensureId("test_data", EntityKind::PointEntity, time_index, 5);
+    EntityId id2 = registry.ensureId("test_data", EntityKind::PointEntity, time_index, 5);
+    EntityId id3 = registry.ensureId("test_data", EntityKind::PointEntity, time_index, 5);
     
     REQUIRE(id1 == id2);
     REQUIRE(id2 == id3);
@@ -35,11 +35,11 @@ TEST_CASE("EntityRegistry - Different parameters generate different IDs", "[enti
     
     TimeFrameIndex time_index(200);
     
-    EntityId id1 = registry.ensureId("data1", EntityKind::Point, time_index, 0);
-    EntityId id2 = registry.ensureId("data2", EntityKind::Point, time_index, 0); // Different data_key
-    EntityId id3 = registry.ensureId("data1", EntityKind::Line, time_index, 0);  // Different kind
-    EntityId id4 = registry.ensureId("data1", EntityKind::Point, TimeFrameIndex(201), 0); // Different time
-    EntityId id5 = registry.ensureId("data1", EntityKind::Point, time_index, 1); // Different local_index
+    EntityId id1 = registry.ensureId("data1", EntityKind::PointEntity, time_index, 0);
+    EntityId id2 = registry.ensureId("data2", EntityKind::PointEntity, time_index, 0); // Different data_key
+    EntityId id3 = registry.ensureId("data1", EntityKind::LineEntity, time_index, 0);  // Different kind
+    EntityId id4 = registry.ensureId("data1", EntityKind::PointEntity, TimeFrameIndex(201), 0); // Different time
+    EntityId id5 = registry.ensureId("data1", EntityKind::PointEntity, time_index, 1); // Different local_index
     
     REQUIRE(id1 != id2);
     REQUIRE(id1 != id3);
@@ -57,14 +57,14 @@ TEST_CASE("EntityRegistry - Entity lookup", "[entityregistry][lookup]") {
     EntityRegistry registry;
     
     TimeFrameIndex time_index(750);
-    EntityId id = registry.ensureId("lookup_data", EntityKind::Event, time_index, 3);
+    EntityId id = registry.ensureId("lookup_data", EntityKind::EventEntity, time_index, 3);
     
     auto descriptor_opt = registry.get(id);
     REQUIRE(descriptor_opt.has_value());
     
     auto descriptor = descriptor_opt.value();
     REQUIRE(descriptor.data_key == "lookup_data");
-    REQUIRE(descriptor.kind == EntityKind::Event);
+    REQUIRE(descriptor.kind == EntityKind::EventEntity);
     REQUIRE(descriptor.time_value == 750);
     REQUIRE(descriptor.local_index == 3);
 }
@@ -81,8 +81,8 @@ TEST_CASE("EntityRegistry - Clear functionality", "[entityregistry][clear]") {
     EntityRegistry registry;
     
     TimeFrameIndex time_index(300);
-    EntityId id1 = registry.ensureId("clear_test", EntityKind::Interval, time_index, 0);
-    EntityId id2 = registry.ensureId("clear_test2", EntityKind::Point, time_index, 1);
+    EntityId id1 = registry.ensureId("clear_test", EntityKind::IntervalEntity, time_index, 0);
+    EntityId id2 = registry.ensureId("clear_test2", EntityKind::PointEntity, time_index, 1);
     
     // Verify entities exist
     REQUIRE(registry.get(id1).has_value());
@@ -96,7 +96,7 @@ TEST_CASE("EntityRegistry - Clear functionality", "[entityregistry][clear]") {
     REQUIRE_FALSE(registry.get(id2).has_value());
     
     // Verify new IDs start from 0 again
-    EntityId new_id = registry.ensureId("new_data", EntityKind::Point, time_index, 0);
+    EntityId new_id = registry.ensureId("new_data", EntityKind::PointEntity, time_index, 0);
     REQUIRE(new_id == 0);
 }
 
@@ -110,7 +110,7 @@ TEST_CASE("EntityRegistry - Multiple entities with different time indices", "[en
     for (int i = 0; i < 10; ++i) {
         TimeFrameIndex time(i * 100);
         times.push_back(time);
-        EntityId id = registry.ensureId("multi_data", EntityKind::Point, time, i);
+        EntityId id = registry.ensureId("multi_data", EntityKind::PointEntity, time, i);
         ids.push_back(id);
     }
     
@@ -128,7 +128,7 @@ TEST_CASE("EntityRegistry - Multiple entities with different time indices", "[en
         
         auto descriptor = descriptor_opt.value();
         REQUIRE(descriptor.data_key == "multi_data");
-        REQUIRE(descriptor.kind == EntityKind::Point);
+        REQUIRE(descriptor.kind == EntityKind::PointEntity);
         REQUIRE(descriptor.time_value == times[i].getValue());
         REQUIRE(descriptor.local_index == static_cast<int>(i));
     }
@@ -145,7 +145,7 @@ TEST_CASE("EntityRegistry - Large scale operations", "[entityregistry][scale]") 
     TimeFrameIndex time_index(1000);
     for (int i = 0; i < num_entities; ++i) {
         std::string data_key = "scale_data_" + std::to_string(i);
-        EntityId id = registry.ensureId(data_key, EntityKind::Point, time_index, 0);
+        EntityId id = registry.ensureId(data_key, EntityKind::PointEntity, time_index, 0);
         ids.push_back(id);
     }
     
