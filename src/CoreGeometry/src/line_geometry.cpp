@@ -72,7 +72,7 @@ std::optional<Point2D<float>> point_at_distance(
         return line.back();
     }
 
-    size_t index = std::distance(distances.begin(), it);
+    auto index = static_cast<size_t>(std::distance(distances.begin(), it));
 
     if (index == 0 || *it == target_distance || !use_interpolation) {
         // Exact match or no interpolation requested

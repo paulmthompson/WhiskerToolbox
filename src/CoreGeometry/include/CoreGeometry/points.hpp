@@ -10,7 +10,7 @@ struct Point2D {
 
     Point2D();
 
-    Point2D(T x, T y);
+    Point2D(T x_, T y_);
 
     bool operator==(Point2D<T> const & other) const;
 };
