@@ -30,9 +30,6 @@
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 
-// Plugin system includes
-#include "IO/PluginLoader.hpp"
-
 #include "loaders/binary_loaders.hpp"
 #include "transforms/Masks/mask_area.hpp"
 
