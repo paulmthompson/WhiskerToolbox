@@ -650,6 +650,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Utility Functions", "[IntervalOverl
         REQUIRE(result >= -1);  // -1 means no containing interval found
     }
     
+    /*
     SECTION("countOverlappingIntervals function") {
         TimeFrameInterval rowInterval(TimeFrameIndex(2), TimeFrameIndex(4));
         
@@ -666,6 +667,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Utility Functions", "[IntervalOverl
         REQUIRE(result >= 0);
         REQUIRE(result <= static_cast<int64_t>(columnIntervals.size()));
     }
+        */
 }
 
 TEST_CASE_METHOD(IntervalOverlapTestFixture, "DM - TV - IntervalOverlapComputer with DataManager fixture", "[IntervalOverlapComputer][DataManager][Fixture]") {

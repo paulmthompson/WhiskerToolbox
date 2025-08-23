@@ -26,14 +26,23 @@ int64_t findContainingInterval(const TimeFrameInterval& rowInterval,
 }
 
 int64_t countOverlappingIntervals(const TimeFrameInterval& rowInterval,
-                                 const std::vector<Interval>& columnIntervals) {
+                                 const std::vector<Interval>& columnIntervals,
+                                 const TimeFrame* sourceTimeFrame,
+                                 const TimeFrame* destinationTimeFrame) {
     int64_t count = 0;
     
+    // Convert row interval to absolute time coordinates
+    auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
+    auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
+    
     for (const auto& colInterval : columnIntervals) {
-        // Convert Interval to TimeFrameInterval for comparison
-        TimeFrameInterval colTimeFrameInterval{TimeFrameIndex(colInterval.start), TimeFrameIndex(colInterval.end)};
+        // Convert column interval to absolute time coordinates
+        auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.start));
+        auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.end));
         
-        if (intervalsOverlap(rowInterval, colTimeFrameInterval)) {
+        // Check overlap using absolute time coordinates
+        // Two intervals overlap if: source_start <= destination_end && destination_start <= source_end
+        if (source_start <= destination_end && destination_start <= source_end) {
             ++count;
         }
     }
@@ -54,6 +63,7 @@ auto IntervalOverlapComputer<size_t>::compute(const ExecutionPlan& plan) const -
     
     auto rowIntervals = plan.getIntervals();
     auto destinationTimeFrame = plan.getTimeFrame();
+    auto sourceTimeFrame = m_source->getTimeFrame();
     
     std::vector<size_t> results;
     results.reserve(rowIntervals.size());
@@ -73,7 +83,7 @@ auto IntervalOverlapComputer<size_t>::compute(const ExecutionPlan& plan) const -
     }
     
     for (const auto& rowInterval : rowIntervals) {
-        int64_t count = countOverlappingIntervals(rowInterval, columnIntervals);
+        int64_t count = countOverlappingIntervals(rowInterval, columnIntervals, sourceTimeFrame.get(), destinationTimeFrame.get());
         results.push_back(static_cast<size_t>(count));
     }
     

@@ -621,9 +621,9 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         
         // Create second DigitalIntervalSeries (will be used for overlap analysis)
         auto intervalSeries2 = std::make_shared<DigitalIntervalSeries>();
-        intervalSeries2->addEvent(TimeFrameIndex(0), TimeFrameIndex(2));  // Interval 0-2
-        intervalSeries2->addEvent(TimeFrameIndex(4), TimeFrameIndex(6));  // Interval 4-6
-        intervalSeries2->addEvent(TimeFrameIndex(7), TimeFrameIndex(8));  // Interval 7-8
+        intervalSeries2->addEvent(TimeFrameIndex(0), TimeFrameIndex(2));  // Interval 0-4 (indices 0-2 in timeFrame2)
+        intervalSeries2->addEvent(TimeFrameIndex(1), TimeFrameIndex(3));  // Interval 2-6 (indices 1-3 in timeFrame2)
+        intervalSeries2->addEvent(TimeFrameIndex(3), TimeFrameIndex(4));  // Interval 6-8 (indices 3-4 in timeFrame2)
         
         dataManager.setData<DigitalIntervalSeries>("ColumnIntervals", intervalSeries2, TimeKey("time2"));
         
@@ -705,11 +705,11 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         REQUIRE(rowDuration.size() == 3);
         
         // Expected overlap analysis:
-        // Row interval 1-3: overlaps with column interval 0-2 (1 overlap)
-        // Row interval 5-7: overlaps with column interval 4-8 (1 overlap)  
-        // Row interval 9-10: overlaps with column interval 4-8 (0 overlaps, because 9 > 8)
+        // Row interval 1-3: overlaps with column interval 0-4 (1 overlap)
+        // Row interval 5-7: overlaps with column interval 2-6 (1 overlap)  
+        // Row interval 9-10: overlaps with no column intervals (0 overlaps)
         std::vector<int64_t> expectedOverlapCount = {1, 1, 0};
-        std::vector<int64_t> expectedContainingID = {-1, 1, -1}; // Second row interval is contained by merged column interval
+        std::vector<int64_t> expectedContainingID = {0, 0, -1}; // First row interval is contained by first column interval
         
         // Expected row properties:
         // Row 1: start=1, end=3, duration=2
@@ -843,12 +843,12 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         REQUIRE(rowDuration.size() == 3);
         
         // Expected overlap analysis:
-        // Row interval 1000-2000: overlaps with column interval 0-100 (1 overlap)
-        // Row interval 5000-7000: overlaps with column interval 500-700 (1 overlap)
-        // Row interval 15000-16000: overlaps with column interval 1500-1600 (1 overlap)
-        std::vector<int64_t> expectedOverlapCount = {1, 1, 1};
-        std::vector<int64_t> expectedContainingID = {0, 1, 2}; // Each row interval is contained by its corresponding column interval
-        
+        // Row interval 1000-2000: overlaps with column interval 2 (1 overlap)
+        // Row interval 5000-7000: does NOT overlap with any column intervals (0 overlaps)
+        // Row interval 15000-16000: does NOT overlap with any column intervals (0 overlaps)
+        std::vector<int64_t> expectedOverlapCount = {1, 0, 0};
+        std::vector<int64_t> expectedContainingID = {2, -1, -1}; // No row intervals are contained by any column intervals
+
         // Expected row properties:
         // Row 1: start=1000, end=2000, duration=1000
         // Row 2: start=5000, end=7000, duration=2000

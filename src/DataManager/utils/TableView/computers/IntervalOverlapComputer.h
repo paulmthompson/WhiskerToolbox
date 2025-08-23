@@ -41,10 +41,14 @@ enum class IntervalOverlapOperation : std::uint8_t {
 * @brief Counts the number of column intervals that overlap with the given row interval.
 * @param rowInterval The row interval to check overlaps for.
 * @param columnIntervals The column intervals to check against.
+* @param sourceTimeFrame The timeframe for the column intervals.
+* @param destinationTimeFrame The timeframe for the row interval.
 * @return Number of overlapping column intervals.
 */
 [[nodiscard]] int64_t countOverlappingIntervals(TimeFrameInterval const & rowInterval,
-                                                std::vector<Interval> const & columnIntervals);
+                                                std::vector<Interval> const & columnIntervals,
+                                                TimeFrame const * sourceTimeFrame,
+                                                TimeFrame const * destinationTimeFrame);
 
 /**
  * @brief Templated computer for analyzing overlaps between row intervals and column intervals.
@@ -136,7 +140,8 @@ public:
                     rowInterval.start, 
                     rowInterval.end, 
                     destinationTimeFrame.get());
-                results.push_back(static_cast<T>(countOverlappingIntervals(rowInterval, columnIntervals)));
+
+                results.push_back(static_cast<T>(countOverlappingIntervals(rowInterval, columnIntervals, sourceTimeFrame.get(), destinationTimeFrame.get())));
             }
         }
 
