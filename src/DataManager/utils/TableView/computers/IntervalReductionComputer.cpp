@@ -96,7 +96,7 @@ float IntervalReductionComputer::computeMean(std::span<const float> data) const 
         return std::numeric_limits<float>::quiet_NaN();
     }
 
-    const float sum = std::accumulate(data.begin(), data.end(), 0.0);
+    const float sum = std::accumulate(data.begin(), data.end(), 0.0f);
     return sum / static_cast<float>(data.size());
 }
 
@@ -139,10 +139,10 @@ float IntervalReductionComputer::computeStdDev(std::span<const float> data) cons
 
 float IntervalReductionComputer::computeSum(std::span<const float> data) const {
     if (data.empty()) {
-        return 0.0;
+        return 0.0f;
     }
 
-    return std::accumulate(data.begin(), data.end(), 0.0);
+    return std::accumulate(data.begin(), data.end(), 0.0f);
 }
 
 float IntervalReductionComputer::computeCount(std::span<const float> data) const {

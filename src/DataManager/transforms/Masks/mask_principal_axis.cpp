@@ -125,7 +125,7 @@ std::pair<Point2D<float>, Point2D<float>> extend_line_to_bbox(
                 float dx = intersections[i].x - intersections[j].x;
                 float dy = intersections[i].y - intersections[j].y;
                 if (dx * dx + dy * dy < 1e-3f) {
-                    intersections.erase(intersections.begin() + j);
+                    intersections.erase(intersections.begin() + static_cast<long int>(j));
                 } else {
                     ++j;
                 }
@@ -276,7 +276,7 @@ std::shared_ptr<LineData> calculate_mask_principal_axis(
 
             // Update progress
             int progress = static_cast<int>(
-                    std::round(static_cast<double>(processed_masks) / total_masks * 100.0));
+                    std::round(static_cast<double>(processed_masks) / static_cast<double>(total_masks) * 100.0));
             progressCallback(progress);
         }
     }

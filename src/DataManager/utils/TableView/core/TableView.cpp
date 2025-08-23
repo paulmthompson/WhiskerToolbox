@@ -455,7 +455,7 @@ std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
                 // For events we typically do not expand per-entity rows yet; fall through
                 break;
             }
-            case ExecutionPlan::DataSourceKind::Interval: {
+            case ExecutionPlan::DataSourceKind::IntervalKind: {
                 auto intervalSource = m_dataManager->getIntervalSource(sourceName);
                 if (!intervalSource) break;
                 // Interval entity expansion not yet implemented here

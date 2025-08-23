@@ -132,9 +132,9 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
 
                 // If we're in an interval and zeros meet threshold, update last_valid_time to end of gap
                 if (in_interval && zeroMeetsThreshold) {
-                    last_valid_time = curr_time - typical_time_step;
+                    last_valid_time = curr_time - static_cast<int64_t>(typical_time_step);
                 } else {
-                    last_valid_time = prev_time;
+                    last_valid_time = static_cast<int64_t>(prev_time);
                 }
             } else {
                 last_valid_time = static_cast<int64_t>(prev_time);

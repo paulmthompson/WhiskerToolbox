@@ -46,7 +46,7 @@ public:
 
     [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
         return _data | std::views::filter([start_time, stop_time](float time) {
-                   return time >= start_time.getValue() && time <= stop_time.getValue();
+                   return time >= static_cast<float>(start_time.getValue()) && time <= static_cast<float>(stop_time.getValue());
                });
     }
 

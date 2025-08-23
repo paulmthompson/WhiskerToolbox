@@ -77,7 +77,7 @@ std::shared_ptr<PointData> calculate_mask_centroid(
 
             // Update progress
             int progress = static_cast<int>(
-                    std::round(static_cast<double>(processed_masks) / total_masks * 100.0));
+                    std::round(static_cast<double>(processed_masks) / static_cast<double>(total_masks) * 100.0));
             progressCallback(progress);
         }
     }

@@ -179,7 +179,7 @@ auto EventInIntervalComputer<std::vector<float>>::compute(ExecutionPlan const & 
         if (m_operation == EventOperation::Gather_Center) {
             auto center = (interval.start + interval.end).getValue() / 2;
             auto center_time_value = destinationTimeFrame->getTimeAtIndex(TimeFrameIndex(center));
-            auto source_time_index = sourceTimeFrame->getIndexAtTime(center_time_value);
+            auto source_time_index = sourceTimeFrame->getIndexAtTime(static_cast<float>(center_time_value));
             for (auto & event: events) {
                 event = event - static_cast<float>(source_time_index.getValue());
             }

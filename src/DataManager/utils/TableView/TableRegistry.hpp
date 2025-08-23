@@ -45,9 +45,9 @@ public:
 
     // Columns
     bool addTableColumn(std::string const & table_id, ColumnInfo const & column_info);
-    bool updateTableColumn(std::string const & table_id, int column_index, ColumnInfo const & column_info);
-    bool removeTableColumn(std::string const & table_id, int column_index);
-    ColumnInfo getTableColumn(std::string const & table_id, int column_index) const;
+    bool updateTableColumn(std::string const & table_id, size_t column_index, ColumnInfo const & column_info);
+    bool removeTableColumn(std::string const & table_id, size_t column_index);
+    ColumnInfo getTableColumn(std::string const & table_id, size_t column_index) const;
 
     // Built views
     bool storeBuiltTable(std::string const & table_id, TableView table_view);

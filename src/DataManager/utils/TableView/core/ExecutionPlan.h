@@ -19,7 +19,7 @@
  */
 class ExecutionPlan {
 public:
-    enum class DataSourceKind : std::uint8_t { Unknown=0, Analog, Event, Interval, Line };
+    enum class DataSourceKind : std::uint8_t { Unknown=0, Analog, Event, IntervalKind, Line };
     /**
      * @brief Default constructor.
      */

@@ -40,7 +40,7 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
                                      int perpendicular_range,
                                      std::vector<uint8_t> const & image_data,
                                      ImageSize const & image_size,
-                                     FWHMApproach approach) {
+                                     FWHMApproach /*approach*/) {
     if (width <= 0) {
         return vertex; // Return original vertex if no width
     }
@@ -54,8 +54,8 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
         Point2D<float> width_dir{-perpendicular_dir.y, perpendicular_dir.x}; // Perpendicular to perp dir
         
         Point2D<float> sample_start = {
-            vertex.x + width_dir.x * w,
-            vertex.y + width_dir.y * w
+            vertex.x + width_dir.x * static_cast<float>(w),
+            vertex.y + width_dir.y * static_cast<float>(w)
         };
         
         // Sample intensity profile along the perpendicular direction
@@ -65,8 +65,8 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
         // Sample up to perpendicular_range pixels in each direction along the perpendicular
         for (int d = -perpendicular_range/2; d <= perpendicular_range/2; ++d) {
             Point2D<float> sample_point = {
-                sample_start.x + perpendicular_dir.x * d,
-                sample_start.y + perpendicular_dir.y * d
+                sample_start.x + perpendicular_dir.x * static_cast<float>(d),
+                sample_start.y + perpendicular_dir.y * static_cast<float>(d)
             };
             
             uint8_t intensity = get_pixel_value(sample_point, image_data, image_size);
@@ -87,9 +87,9 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
         
         // Find all positions with the maximum intensity
         std::vector<int> max_indices;
-        for (int i = 0; i < static_cast<int>(profile.size()); ++i) {
+        for (size_t i = 0; i < profile.size(); ++i) {
             if (profile[i] == max_intensity) {
-                max_indices.push_back(i);
+                max_indices.push_back(static_cast<int>(i));
             }
         }
         
@@ -111,7 +111,7 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
         uint8_t min_intensity = *min_it;
         
         // Find the half-maximum threshold
-        uint8_t half_max = (static_cast<int>(max_intensity) + static_cast<int>(min_intensity)) / 2;
+        uint8_t half_max = static_cast<uint8_t>((static_cast<int>(max_intensity) + static_cast<int>(min_intensity)) / 2);
         
         // Find the left and right boundaries at half maximum, starting from the average max position
         int left_bound = max_offset;
@@ -120,22 +120,22 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
         // Work leftward from the average max position to find the first half-maximum
         int avg_max_index_int = static_cast<int>(std::round(avg_max_index));
         for (int i = avg_max_index_int; i >= 0; --i) {
-            if (profile[i] < half_max) {
+            if (profile[static_cast<size_t>(i)] < half_max) {
                 left_bound = i + 1 - perpendicular_range/2; // +1 to include the last point >= half_max
                 break;
             }
         }
         
         // Work rightward from the average max position to find the first half-maximum
-        for (int i = avg_max_index_int; i < static_cast<int>(profile.size()); ++i) {
+        for (size_t i = static_cast<size_t>(avg_max_index_int); i < profile.size(); ++i) {
             if (profile[i] < half_max) {
-                right_bound = i - 1 - perpendicular_range/2; // -1 to include the last point >= half_max
+                right_bound = static_cast<int>(i) - 1 - perpendicular_range/2; // -1 to include the last point >= half_max
                 break;
             }
         }
         
         // Calculate the center point of the FWHM region
-        float center_offset = (left_bound + right_bound) / 2.0f;
+        float center_offset = (static_cast<float>(left_bound) + static_cast<float>(right_bound)) / 2.0f;
         Point2D<float> center_point = {
             sample_start.x + perpendicular_dir.x * center_offset,
             sample_start.y + perpendicular_dir.y * center_offset
@@ -173,7 +173,7 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
                                       int perpendicular_range,
                                       std::vector<uint8_t> const & image_data,
                                       ImageSize const & image_size,
-                                      FWHMApproach approach) {
+                                      FWHMApproach /*approach*/) {
     if (width <= 0) {
         // Return a line with just the original vertex repeated
         Line2D debug_line;
@@ -194,8 +194,8 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
         Point2D<float> width_dir{-perpendicular_dir.y, perpendicular_dir.x}; // Perpendicular to perp dir
         
         Point2D<float> sample_start = {
-            vertex.x + width_dir.x * w,
-            vertex.y + width_dir.y * w
+            vertex.x + width_dir.x * static_cast<float>(w),
+            vertex.y + width_dir.y * static_cast<float>(w)
         };
         
         // Sample intensity profile along the perpendicular direction
@@ -205,8 +205,8 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
         // Sample up to perpendicular_range pixels in each direction along the perpendicular
         for (int d = -perpendicular_range/2; d <= perpendicular_range/2; ++d) {
             Point2D<float> sample_point = {
-                sample_start.x + perpendicular_dir.x * d,
-                sample_start.y + perpendicular_dir.y * d
+                sample_start.x + perpendicular_dir.x * static_cast<float>(d),
+                sample_start.y + perpendicular_dir.y * static_cast<float>(d)
             };
             
             uint8_t intensity = get_pixel_value(sample_point, image_data, image_size);
@@ -227,9 +227,9 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
         
         // Find all positions with the maximum intensity
         std::vector<int> max_indices;
-        for (int i = 0; i < static_cast<int>(profile.size()); ++i) {
+        for (size_t i = 0; i < profile.size(); ++i) {
             if (profile[i] == max_intensity) {
-                max_indices.push_back(i);
+                max_indices.push_back(static_cast<int>(i));
             }
         }
         
@@ -244,8 +244,8 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
         
         // Calculate the maximum point location
         Point2D<float> max_point = {
-            sample_start.x + perpendicular_dir.x * max_offset,
-            sample_start.y + perpendicular_dir.y * max_offset
+            sample_start.x + perpendicular_dir.x * static_cast<float>(max_offset),
+            sample_start.y + perpendicular_dir.y * static_cast<float>(max_offset)
         };
         
         // Find minimum in profile 
@@ -257,7 +257,7 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
         uint8_t min_intensity = *min_it;
         
         // Find the half-maximum threshold
-        uint8_t half_max = (static_cast<int>(max_intensity) + static_cast<int>(min_intensity)) / 2;
+        uint8_t half_max = static_cast<uint8_t>((static_cast<int>(max_intensity) + static_cast<int>(min_intensity)) / 2);
         
         // Find the left and right boundaries at half maximum, starting from the average max position
         int left_bound = max_offset;
@@ -266,29 +266,29 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
         // Work leftward from the average max position to find the first half-maximum
         int avg_max_index_int = static_cast<int>(std::round(avg_max_index));
         for (int i = avg_max_index_int; i >= 0; --i) {
-            if (profile[i] < half_max) {
+            if (profile[static_cast<size_t>(i)] < half_max) {
                 left_bound = i + 1 - perpendicular_range/2; // +1 to include the last point >= half_max
                 break;
             }
         }
         
         // Work rightward from the average max position to find the first half-maximum
-        for (int i = avg_max_index_int; i < static_cast<int>(profile.size()); ++i) {
+        for (size_t i = static_cast<size_t>(avg_max_index_int); i < profile.size(); ++i) {
             if (profile[i] < half_max) {
-                right_bound = i - 1 - perpendicular_range/2; // -1 to include the last point >= half_max
+                right_bound = static_cast<int>(i) - 1 - perpendicular_range/2; // -1 to include the last point >= half_max
                 break;
             }
         }
         
         // Calculate the left and right extent points
         Point2D<float> left_extent = {
-            sample_start.x + perpendicular_dir.x * left_bound,
-            sample_start.y + perpendicular_dir.y * left_bound
+            sample_start.x + perpendicular_dir.x * static_cast<float>(left_bound),
+            sample_start.y + perpendicular_dir.y * static_cast<float>(left_bound)
         };
         
         Point2D<float> right_extent = {
-            sample_start.x + perpendicular_dir.x * right_bound,
-            sample_start.y + perpendicular_dir.y * right_bound
+            sample_start.x + perpendicular_dir.x * static_cast<float>(right_bound),
+            sample_start.y + perpendicular_dir.y * static_cast<float>(right_bound)
         };
         
         left_extents.push_back(left_extent);
@@ -476,9 +476,9 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
         // Get media data for this time
         std::vector<uint8_t> image_data;
         if (use_processed_data) {
-            image_data = media_data->getProcessedData(time.getValue());
+            image_data = media_data->getProcessedData(static_cast<int>(time.getValue()));
         } else {
-            image_data = media_data->getRawData(time.getValue());
+            image_data = media_data->getRawData(static_cast<int>(time.getValue()));
         }
 
         if (image_data.empty()) {
@@ -558,7 +558,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
 
         processed_time_points++;
         if (progressCallback) {
-            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / total_time_points * 100.0));
+            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
             progressCallback(current_progress);
         }
     }

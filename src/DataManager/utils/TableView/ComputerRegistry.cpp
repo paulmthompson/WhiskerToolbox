@@ -337,7 +337,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IAnalogSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
                 auto computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Mean);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -358,7 +358,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IAnalogSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
                 auto computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Max);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -379,7 +379,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IAnalogSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
                 auto computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Min);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -400,7 +400,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IAnalogSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
                 auto computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::StdDev);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -421,7 +421,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IAnalogSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
                 auto computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Sum);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -442,7 +442,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IAnalogSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
                 auto computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Count);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -463,7 +463,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IEventSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto eventSrc = std::get_if<std::shared_ptr<IEventSource>>(&source)) {
                 auto computer = std::make_unique<EventInIntervalComputer<bool>>(*eventSrc, EventOperation::Presence, (*eventSrc)->getName());
                 return std::make_unique<ComputerWrapper<bool>>(std::move(computer));
@@ -484,7 +484,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IEventSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto eventSrc = std::get_if<std::shared_ptr<IEventSource>>(&source)) {
                 auto computer = std::make_unique<EventInIntervalComputer<int>>(*eventSrc, EventOperation::Count, (*eventSrc)->getName());
                 return std::make_unique<ComputerWrapper<int>>(std::move(computer));
@@ -505,7 +505,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IIntervalSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
                 auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::Start, (*intervalSrc)->getName());
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -526,7 +526,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IIntervalSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
                 auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::End, (*intervalSrc)->getName());
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -547,7 +547,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IIntervalSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
                 auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::Duration, (*intervalSrc)->getName());
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -612,7 +612,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                          typeid(std::shared_ptr<IAnalogSource>));
         
         ComputerFactory factory = [](DataSourceVariant const& source, 
-                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> std::unique_ptr<IComputerBase> {
             if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&source)) {
                 auto computer = std::make_unique<TimestampValueComputer>(*analogSrc);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
@@ -917,7 +917,7 @@ void ComputerRegistry::registerBuiltInAdapters() {
         AdapterFactory factory = [](std::shared_ptr<void> const& sourceData,
                                    std::shared_ptr<TimeFrame> const& timeFrame,
                                    std::string const& name,
-                                   std::map<std::string, std::string> const& parameters) -> DataSourceVariant {
+                                   std::map<std::string, std::string> const& /*parameters*/) -> DataSourceVariant {
             if (auto pointData = std::static_pointer_cast<PointData>(sourceData)) {
                 auto adapter = std::make_shared<PointComponentAdapter>(
                     pointData, 

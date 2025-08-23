@@ -15,7 +15,7 @@ std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data) {
         for (auto const & mask: mask_and_time.masks) {
             area += static_cast<float>(mask.size());
         }
-        areas[mask_and_time.time.getValue()] = area;
+        areas[static_cast<int>(mask_and_time.time.getValue())] = area;
     }
 
     return std::make_shared<AnalogTimeSeries>(areas);
@@ -47,6 +47,12 @@ bool MaskAreaOperation::canApply(DataTypeVariant const & dataVariant) const {
 
     // Return true only if get_if succeeded AND the contained shared_ptr is not null.
     return ptr_ptr && *ptr_ptr;
+}
+
+DataTypeVariant MaskAreaOperation::execute(DataTypeVariant const & dataVariant,
+                                             TransformParametersBase const * transformParameters,
+                                             ProgressCallback /*progressCallback*/) {
+    return execute(dataVariant, transformParameters);
 }
 
 DataTypeVariant MaskAreaOperation::execute(DataTypeVariant const & dataVariant, TransformParametersBase const * transformParameters) {

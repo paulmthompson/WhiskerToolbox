@@ -44,11 +44,11 @@ int findOverlappingIntervalIndex(Interval const & target_interval,
 
         case OverlapStrategy::MaxOverlap: {
             int best_index = overlapping_indices[0];
-            int64_t max_overlap = calculateOverlapDuration(target_interval, reference_intervals[best_index]);
+            int64_t max_overlap = calculateOverlapDuration(target_interval, reference_intervals[static_cast<size_t>(best_index)]);
 
             for (size_t i = 1; i < overlapping_indices.size(); ++i) {
                 const int current_index = overlapping_indices[i];
-                const int64_t current_overlap = calculateOverlapDuration(target_interval, reference_intervals[current_index]);
+                const int64_t current_overlap = calculateOverlapDuration(target_interval, reference_intervals[static_cast<size_t>(current_index)]);
 
                 if (current_overlap > max_overlap) {
                     max_overlap = current_overlap;
@@ -158,7 +158,7 @@ double applyTransformation(Interval const & interval,
             for (int64_t t = interval.start; t <= interval.end; ++t) {
                 const auto& points = it->second->getAtTime(TimeFrameIndex(t));
                 for (const auto& point : points) {
-                    sum_x += point.x;
+                    sum_x += static_cast<double>(point.x);
                     count++;
                 }
             }
@@ -183,7 +183,7 @@ double applyTransformation(Interval const & interval,
             for (int64_t t = interval.start; t <= interval.end; ++t) {
                 const auto& points = it->second->getAtTime(TimeFrameIndex(static_cast<int>(t)));
                 for (const auto& point : points) {
-                    sum_y += point.y;
+                    sum_y += static_cast<double>(point.y);
                     count++;
                 }
             }
