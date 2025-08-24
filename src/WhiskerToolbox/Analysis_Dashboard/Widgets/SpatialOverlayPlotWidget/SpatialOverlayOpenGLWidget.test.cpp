@@ -195,32 +195,25 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     widget.raise();
     widget.activateWindow();
     widget.setFocus(Qt::OtherFocusReason);
+
     QTest::mouseMove(&widget, a);
     QTest::qWait(5);
-
-    // Left clicks to add vertices
-    QMouseEvent p1(QEvent::MouseButtonPress, a, widget.mapToGlobal(a), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QCoreApplication::sendEvent(&widget, &p1);
-    QMouseEvent r1(QEvent::MouseButtonRelease, a, widget.mapToGlobal(a), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-    QCoreApplication::sendEvent(&widget, &r1);
-
+    QTest::mousePress(&widget, Qt::LeftButton, Qt::NoModifier, a);
+    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::NoModifier, a);
+    
     QTest::mouseMove(&widget, b);
     QTest::qWait(5);
-    QMouseEvent p2(QEvent::MouseButtonPress, b, widget.mapToGlobal(b), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QCoreApplication::sendEvent(&widget, &p2);
-    QMouseEvent r2(QEvent::MouseButtonRelease, b, widget.mapToGlobal(b), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-    QCoreApplication::sendEvent(&widget, &r2);
+    QTest::mousePress(&widget, Qt::LeftButton, Qt::NoModifier, b);
+    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::NoModifier, b);
 
     QTest::mouseMove(&widget, c);
     QTest::qWait(5);
-    QMouseEvent p3(QEvent::MouseButtonPress, c, widget.mapToGlobal(c), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QCoreApplication::sendEvent(&widget, &p3);
-    QMouseEvent r3(QEvent::MouseButtonRelease, c, widget.mapToGlobal(c), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-    QCoreApplication::sendEvent(&widget, &r3);
+    QTest::mousePress(&widget, Qt::LeftButton, Qt::NoModifier, c);
+    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::NoModifier, c);
 
     // Press Enter to complete polygon and trigger selection
-    QKeyEvent enterEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
-    QCoreApplication::sendEvent(&widget, &enterEvent);
+    QKeyEvent * enterEvent = new QKeyEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    widget.handleKeyPress(enterEvent);
     processEvents();
 
     // Expect both points selected
