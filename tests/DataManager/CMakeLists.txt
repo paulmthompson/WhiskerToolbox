@@ -16,9 +16,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 get_property(DATAMANAGER_TEST_SOURCES_TEMP GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES)
 message(STATUS ${DATAMANAGER_TEST_SOURCES_TEMP})
 
-find_package(LAPACK REQUIRED)
-find_package(OpenBLAS REQUIRED)
-
 add_executable(test_data_manager
         test_data_manager.cpp
         test_filename_timeframe.cpp
