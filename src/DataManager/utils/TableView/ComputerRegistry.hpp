@@ -229,7 +229,7 @@ struct ComputerInfo {
     ComputerInfo() 
         : name(), description(), outputType(typeid(void)), outputTypeName("void"),
           isVectorType(false), elementType(typeid(void)), elementTypeName("void"),
-          requiredRowSelector(RowSelectorType::Interval), requiredSourceType(typeid(void)), parameterDescriptors() {}
+          requiredRowSelector(RowSelectorType::IntervalBased), requiredSourceType(typeid(void)), parameterDescriptors() {}
     
     // Helper constructor for simple types
     ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
@@ -319,7 +319,7 @@ struct ComputerInfo {
     // Legacy convenience constructor for backward compatibility
     ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
                  RowSelectorType rowSelector, std::type_index sourceType, 
-                 std::vector<ComputerParameterInfo> params = {})
+                 std::vector<ComputerParameterInfo> = {})
         : name(std::move(name_)), description(std::move(description_)), outputType(outputType_),
           outputTypeName("unknown"), isVectorType(false), elementType(outputType_), elementTypeName("unknown"),
           requiredRowSelector(rowSelector), requiredSourceType(sourceType), parameterDescriptors() {}

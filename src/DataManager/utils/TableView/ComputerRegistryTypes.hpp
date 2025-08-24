@@ -14,7 +14,7 @@ class ILineSource;
  * @brief Enumeration of supported row selector types for matching computers.
  */
 enum class RowSelectorType : std::uint8_t {
-    Interval,   ///< IntervalSelector - works with time intervals
+    IntervalBased,   ///< IntervalSelector - works with time intervals
     Timestamp,  ///< TimestampSelector - works with specific timestamps
     Index       ///< IndexSelector - works with discrete indices
 };

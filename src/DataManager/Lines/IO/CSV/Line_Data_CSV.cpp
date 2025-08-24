@@ -94,7 +94,7 @@ void save(
         Line2D const & first_line = frame_and_line.lines[0];
         
         // Generate filename with zero-padded frame number
-        std::string const padded_frame = pad_frame_id(frame_and_line.time.getValue(), opts.frame_id_padding);
+        std::string const padded_frame = pad_frame_id(static_cast<int>(frame_and_line.time.getValue()), opts.frame_id_padding);
         std::string const filename = opts.parent_dir + "/" + padded_frame + ".csv";
 
         // Check if file exists and handle according to overwrite setting
@@ -314,15 +314,15 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
 
             // Check if we have enough columns
             int max_column = std::max(opts.x_column, opts.y_column);
-            if (static_cast<int>(columns.size()) <= max_column) {
+            if (columns.size() <= static_cast<size_t>(max_column)) {
                 std::cerr << "Warning: Not enough columns in line: " << line << " (file: " << filename << ")" << std::endl;
                 continue;
             }
 
             // Parse X and Y coordinates
             try {
-                float x = std::stof(columns[opts.x_column]);
-                float y = std::stof(columns[opts.y_column]);
+                float x = std::stof(columns[static_cast<size_t>(opts.x_column)]);
+                float y = std::stof(columns[static_cast<size_t>(opts.y_column)]);
                 line_points.push_back(Point2D<float>{x, y});
             } catch (std::exception const & e) {
                 std::cerr << "Warning: Could not parse coordinates from line: " << line << " (file: " << filename << ")" << std::endl;

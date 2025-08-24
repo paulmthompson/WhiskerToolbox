@@ -289,7 +289,7 @@ TEST_CASE("Group Operation Class Tests", "[transforms][digital_interval_group][o
         int volatile call_count = 0;
         ProgressCallback cb = [&](int p) {
             progress_val = p;
-            call_count++;
+            call_count = call_count + 1;
         };
 
         auto result = operation.execute(variant, &params, cb);

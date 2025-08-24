@@ -37,7 +37,6 @@ void registerInternalLoaders() {
 }
 
 void registerExternalLoaders() {
-    LoaderRegistry& registry = LoaderRegistry::getInstance();
     
 #ifdef ENABLE_CAPNPROTO
     // Register CapnProto loader if available

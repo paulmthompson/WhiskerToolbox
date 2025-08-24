@@ -821,13 +821,13 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         REQUIRE(assign_id_info->name == "Interval Overlap Assign ID");
         REQUIRE(assign_id_info->outputType == typeid(int64_t));
         REQUIRE(assign_id_info->outputTypeName == "int64_t");
-        REQUIRE(assign_id_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(assign_id_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(assign_id_info->requiredSourceType == typeid(std::shared_ptr<IIntervalSource>));
         
         REQUIRE(count_info->name == "Interval Overlap Count");
         REQUIRE(count_info->outputType == typeid(int64_t));
         REQUIRE(count_info->outputTypeName == "int64_t");
-        REQUIRE(count_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(count_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(count_info->requiredSourceType == typeid(std::shared_ptr<IIntervalSource>));
     }
     

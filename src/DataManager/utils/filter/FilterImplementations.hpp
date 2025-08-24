@@ -45,7 +45,7 @@ public:
 
         // Process all samples - the tight loop is inside the virtual function
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -92,7 +92,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -142,7 +142,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -192,7 +192,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -247,7 +247,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -295,7 +295,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -346,7 +346,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -397,7 +397,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -445,7 +445,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -493,7 +493,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -544,7 +544,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -595,7 +595,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -640,7 +640,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -685,7 +685,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -733,7 +733,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 
@@ -781,7 +781,7 @@ public:
         }
 
         for (float& sample : data) {
-            sample = static_cast<float>(filter_.filter(sample));
+            sample = filter_.filter(sample);
         }
     }
 

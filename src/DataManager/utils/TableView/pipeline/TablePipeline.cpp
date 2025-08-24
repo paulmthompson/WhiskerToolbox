@@ -618,14 +618,14 @@ DataSourceVariant TablePipeline::resolveDataSource(nlohmann::json const & data_s
 
 RowSelectorType TablePipeline::parseRowSelectorType(std::string const & type_string) {
     if (type_string == "interval") {
-        return RowSelectorType::Interval;
+        return RowSelectorType::IntervalBased;
     } else if (type_string == "timestamp") {
         return RowSelectorType::Timestamp;
     } else if (type_string == "index") {
         return RowSelectorType::Index;
     } else {
         std::cerr << "TablePipeline: Unknown row selector type: " << type_string << std::endl;
-        return RowSelectorType::Interval;// Default fallback
+        return RowSelectorType::IntervalBased;// Default fallback
     }
 }
 

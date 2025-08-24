@@ -43,13 +43,13 @@ std::vector<double> fit_polynomial_to_points(Line2D const & points, int order) {
     }
 
     // Create Armadillo matrix for Vandermonde matrix
-    arma::mat X(t_values.size(), order + 1);
+    arma::mat X(t_values.size(), static_cast<arma::uword>(order) + 1);
     arma::vec Y(y_coords.data(), y_coords.size());
 
     // Build Vandermonde matrix
     for (size_t i = 0; i < t_values.size(); ++i) {
         for (int j = 0; j <= order; ++j) {
-            X(i, j) = std::pow(t_values[i], j);
+            X(i, static_cast<arma::uword>(j)) = std::pow(t_values[i], static_cast<double>(j));
         }
     }
 
@@ -68,7 +68,7 @@ std::vector<double> fit_polynomial_to_points(Line2D const & points, int order) {
 
 ParametricCoefficients fit_parametric_polynomials(Line2D const & points, int order) {
     if (points.size() <= static_cast<size_t>(order)) {
-        return {{}, {}, false};// Not enough points
+        return {{}, {}, false};
     }
 
     std::vector<double> t_values = compute_t_values(points);
@@ -86,14 +86,14 @@ ParametricCoefficients fit_parametric_polynomials(Line2D const & points, int ord
         y_coords.push_back(static_cast<double>(point.y));
     }
 
-    std::vector<double> x_coeffs = fit_single_dimension_polynomial_internal(x_coords, t_values, order);
-    std::vector<double> y_coeffs = fit_single_dimension_polynomial_internal(y_coords, t_values, order);
+    std::vector<double> x_coeffs_fit = fit_single_dimension_polynomial_internal(x_coords, t_values, order);
+    std::vector<double> y_coeffs_fit = fit_single_dimension_polynomial_internal(y_coords, t_values, order);
 
-    if (x_coeffs.empty() || y_coeffs.empty()) {
+    if (x_coeffs_fit.empty() || y_coeffs_fit.empty()) {
         return {{}, {}, false};
     }
 
-    return {x_coeffs, y_coeffs, true};
+    return {x_coeffs_fit, y_coeffs_fit, true};
 }
 
 // Helper function to generate a smoothed line from parametric polynomial coefficients
@@ -111,17 +111,17 @@ Line2D generate_smoothed_line(
     }
 
     // Estimate total arc length from original points for determining number of samples
-    double total_length = 0.0;
+    float total_length = 0.0f;
     if (original_points.size() > 1) {
         for (size_t i = 1; i < original_points.size(); ++i) {
-            double dx = original_points[i].x - original_points[i - 1].x;
-            double dy = original_points[i].y - original_points[i - 1].y;
+            float dx = original_points[i].x - original_points[i - 1].x;
+            float dy = original_points[i].y - original_points[i - 1].y;
             total_length += std::sqrt(dx * dx + dy * dy);
         }
     }
 
     // If total length is very small or zero, or only one point, just return the (fitted) first point
-    if (total_length < 1e-6 || original_points.size() <= 1 || target_spacing <= 1e-6) {
+    if (total_length < 1e-6f || original_points.size() <= 1 || target_spacing <= 1e-6f) {
         if (!original_points.empty()) {
             // Evaluate polynomial at t=0 (or use the first point if no coeffs)
             if (!x_coeffs.empty() && !y_coeffs.empty()) {
@@ -137,12 +137,12 @@ Line2D generate_smoothed_line(
     }
 
     // Determine number of samples based on target_spacing
-    int num_samples = std::max(2, static_cast<int>(std::round(total_length / target_spacing)));
+    auto num_samples = static_cast<size_t>(std::max(2.0f, std::round(total_length / target_spacing)));
 
     std::vector<Point2D<float>> smoothed_line;
     smoothed_line.reserve(num_samples);
 
-    for (int i = 0; i < num_samples; ++i) {
+    for (size_t i = 0; i < num_samples; ++i) {
         double t = static_cast<double>(i) / static_cast<double>(num_samples - 1);// t in [0,1]
         float x = static_cast<float>(evaluate_polynomial(x_coeffs, t));
         float y = static_cast<float>(evaluate_polynomial(y_coeffs, t));
@@ -173,8 +173,8 @@ std::vector<float> calculate_fitting_errors(std::vector<Point2D<float>> const & 
         double fitted_y = evaluate_polynomial(y_coeffs, t_values[i]);
 
         // Use squared error directly (no square root)
-        float error_squared = std::pow(points[i].x - fitted_x, 2) +
-                              std::pow(points[i].y - fitted_y, 2);
+        float error_squared = static_cast<float>(std::pow(static_cast<double>(points[i].x) - fitted_x, 2) +
+                              std::pow(static_cast<double>(points[i].y) - fitted_y, 2));
         errors.push_back(error_squared);
     }
 
@@ -191,40 +191,40 @@ Line2D remove_outliers_recursive(Line2D const & points,
     }
 
     // Calculate t values for parameterization
-    std::vector<double> t_values = compute_t_values(points);
-    if (t_values.empty()) {
+    std::vector<double> t_values_recursive = compute_t_values(points);
+    if (t_values_recursive.empty()) {
         return points;
     }
 
     // Extract x and y coordinates
-    std::vector<double> x_coords;
-    std::vector<double> y_coords;
+    std::vector<double> x_coords_recursive;
+    std::vector<double> y_coords_recursive;
 
-    x_coords.reserve(points.size());
-    y_coords.reserve(points.size());
+    x_coords_recursive.reserve(points.size());
+    y_coords_recursive.reserve(points.size());
 
     for (auto const & point: points) {
-        x_coords.push_back(static_cast<double>(point.x));
-        y_coords.push_back(static_cast<double>(point.y));
+        x_coords_recursive.push_back(static_cast<double>(point.x));
+        y_coords_recursive.push_back(static_cast<double>(point.y));
     }
 
     // Create Armadillo matrices
-    arma::mat X(t_values.size(), polynomial_order + 1);
-    arma::vec X_vec(x_coords.data(), x_coords.size());
-    arma::vec Y_vec(y_coords.data(), y_coords.size());
+    arma::mat X(t_values_recursive.size(), static_cast<arma::uword>(polynomial_order) + 1);
+    arma::vec X_vec(x_coords_recursive.data(), x_coords_recursive.size());
+    arma::vec Y_vec(y_coords_recursive.data(), y_coords_recursive.size());
 
     // Build Vandermonde matrix
-    for (size_t i = 0; i < t_values.size(); ++i) {
+    for (size_t i = 0; i < t_values_recursive.size(); ++i) {
         for (int j = 0; j <= polynomial_order; ++j) {
-            X(i, j) = std::pow(t_values[i], j);
+            X(i, static_cast<arma::uword>(j)) = std::pow(t_values_recursive[i], static_cast<double>(j));
         }
     }
 
     // Solve least squares problems
-    arma::vec x_coeffs;
-    arma::vec y_coeffs;
-    bool success_x = arma::solve(x_coeffs, X, X_vec);
-    bool success_y = arma::solve(y_coeffs, X, Y_vec);
+    arma::vec x_coeffs_recursive;
+    arma::vec y_coeffs_recursive;
+    bool success_x = arma::solve(x_coeffs_recursive, X, X_vec);
+    bool success_y = arma::solve(y_coeffs_recursive, X, Y_vec);
 
     if (!success_x || !success_y) {
         return points;// Failed to fit, return original points
@@ -240,13 +240,13 @@ Line2D remove_outliers_recursive(Line2D const & points,
         double fitted_y = 0.0;
 
         for (int j = 0; j <= polynomial_order; ++j) {
-            fitted_x += x_coeffs(j) * std::pow(t_values[i], j);
-            fitted_y += y_coeffs(j) * std::pow(t_values[i], j);
+            fitted_x += x_coeffs_recursive(static_cast<arma::uword>(j)) * std::pow(t_values_recursive[i], static_cast<double>(j));
+            fitted_y += y_coeffs_recursive(static_cast<arma::uword>(j)) * std::pow(t_values_recursive[i], static_cast<double>(j));
         }
 
         // Use squared error directly (no square root)
-        float error_squared = std::pow(points[i].x - fitted_x, 2) +
-                              std::pow(points[i].y - fitted_y, 2);
+        float error_squared = static_cast<float>(std::pow(static_cast<double>(points[i].x) - fitted_x, 2) +
+                              std::pow(static_cast<double>(points[i].y) - fitted_y, 2));
 
         // Keep point if error is below threshold
         if (error_squared <= error_threshold_squared) {
@@ -339,7 +339,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
         image_size.height = 256;
     }
 
-    std::vector<uint8_t> binary_image(image_size.width * image_size.height, 0);
+    std::vector<uint8_t> binary_image(static_cast<size_t>(image_size.width * image_size.height), 0);
 
     // Timing variables
     std::vector<long long> skeletonize_times;
@@ -371,18 +371,18 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
             std::fill(binary_image.begin(), binary_image.end(), 0);
 
             for (auto const & point: mask) {
-                int x = static_cast<int>(point.x);
-                int y = static_cast<int>(point.y);
+                auto x = static_cast<int>(point.x);
+                auto y = static_cast<int>(point.y);
 
                 if (x >= 0 && x < image_size.width &&
                     y >= 0 && y < image_size.height) {
-                    binary_image[y * image_size.width + x] = 1;
+                    binary_image[static_cast<size_t>(y * image_size.width + x)] = 1;
                 }
             }
 
             // Time skeletonization
             auto skeletonize_start = std::chrono::high_resolution_clock::now();
-            auto skeleton = fast_skeletonize(binary_image, image_size.height, image_size.width);
+            auto skeleton = fast_skeletonize(binary_image, static_cast<size_t>(image_size.height), static_cast<size_t>(image_size.width));
             auto skeletonize_end = std::chrono::high_resolution_clock::now();
             skeletonize_times.push_back(
                     std::chrono::duration_cast<std::chrono::microseconds>(
@@ -459,31 +459,31 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
         if (processed_masks % 1000 == 0 || processed_masks == total_masks) {
             if (!skeletonize_times.empty()) {
                 double skeletonize_avg = std::accumulate(skeletonize_times.begin(), skeletonize_times.end(), 0.0) /
-                                         skeletonize_times.size();
+                                         static_cast<double>(skeletonize_times.size());
                 std::cout << "Average skeletonization time: " << skeletonize_avg << " μs" << std::endl;
             }
 
             if (!order_line_times.empty()) {
                 double order_avg = std::accumulate(order_line_times.begin(), order_line_times.end(), 0.0) /
-                                   order_line_times.size();
+                                   static_cast<double>(order_line_times.size());
                 std::cout << "Average order_line time: " << order_avg << " μs" << std::endl;
             }
 
             if (!outlier_removal_times.empty()) {
                 double outlier_avg = std::accumulate(outlier_removal_times.begin(), outlier_removal_times.end(), 0.0) /
-                                     outlier_removal_times.size();
+                                     static_cast<double>(outlier_removal_times.size());
                 std::cout << "Average outlier removal time: " << outlier_avg << " μs" << std::endl;
             }
 
             if (!map_insertion_times.empty()) {
                 double insertion_avg = std::accumulate(map_insertion_times.begin(), map_insertion_times.end(), 0.0) /
-                                       map_insertion_times.size();
+                                       static_cast<double>(map_insertion_times.size());
                 std::cout << "Average map insertion time: " << insertion_avg << " μs" << std::endl;
             }
 
             if (!smoothing_times.empty()) {
                 double smoothing_avg = std::accumulate(smoothing_times.begin(), smoothing_times.end(), 0.0) /
-                                       smoothing_times.size();
+                                       static_cast<double>(smoothing_times.size());
                 std::cout << "Average smoothing time: " << smoothing_avg << " μs" << std::endl;
             }
 
@@ -497,7 +497,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
             }
         }
 
-        int progress = static_cast<int>(std::round((static_cast<double>(processed_masks) / total_masks) * 100.0));
+        int progress = static_cast<int>(std::round((static_cast<double>(processed_masks) / static_cast<double>(total_masks)) * 100.0));
         progressCallback(progress);
     }
 
