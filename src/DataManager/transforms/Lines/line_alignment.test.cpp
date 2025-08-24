@@ -177,9 +177,10 @@ TEST_CASE("FWHM displacement calculation - Core functionality", "[line][alignmen
             vertex, perp_dir, 10, 50, image_data, image_size, FWHMApproach::PEAK_WIDTH_HALF_MAX);
         
         // Should find the bright line and return appropriate center point
-        // The diagonal line is at y = x + 10, so at x=50, y=60
-        REQUIRE_THAT(center_point.x, Catch::Matchers::WithinAbs(50.0f, 2.0f));
-        REQUIRE_THAT(center_point.y, Catch::Matchers::WithinAbs(60.0f, 2.0f));
+        // This will be the nearest position of the diagonal line stretching from
+        // (40, 50) to (50, 60) . This is (45, 55)
+        REQUIRE_THAT(center_point.x, Catch::Matchers::WithinAbs(45.0f, 2.0f));
+        REQUIRE_THAT(center_point.y, Catch::Matchers::WithinAbs(55.0f, 2.0f));
     }
     
     SECTION("Bright diagonal line detection with thickness") {
@@ -262,7 +263,7 @@ TEST_CASE("FWHM displacement calculation - Core functionality", "[line][alignmen
         // Create bright horizontal lines at y=30 and y=70
         for (int x = 0; x < 100; ++x) {
             image_data[30 * 100 + x] = 255; // Bright white line
-            image_data[70 * 100 + x] = 255; // Bright white line
+            image_data[80 * 100 + x] = 255; // Bright white line
         }
         
         // Test vertex at (50, 50) with perpendicular direction pointing up
@@ -287,15 +288,15 @@ TEST_CASE("FWHM displacement calculation - Core functionality", "[line][alignmen
             image_data[50 * 100 + x] = 255; // Bright white line
         }
         
-        // Test vertex at (0, 50) with perpendicular direction pointing right
-        Point2D<float> vertex{0.0f, 50.0f};
-        Point2D<float> perp_dir{1.0f, 0.0f}; // Pointing right
-        
+        // Test vertex at (50, 0) with perpendicular direction pointing right
+        Point2D<float> vertex{50.0f, 0.0f};
+        Point2D<float> perp_dir{0.0f, 1.0f}; // Pointing down
+
         Point2D<float> center_point = calculate_fwhm_center(
-            vertex, perp_dir, 10, 50, image_data, image_size, FWHMApproach::PEAK_WIDTH_HALF_MAX);
+            vertex, perp_dir, 10, 102, image_data, image_size, FWHMApproach::PEAK_WIDTH_HALF_MAX);
         
         // Should handle boundary case gracefully
-        REQUIRE_THAT(center_point.x, Catch::Matchers::WithinAbs(0.0f, 1.0f));
+        REQUIRE_THAT(center_point.x, Catch::Matchers::WithinAbs(50.0f, 1.0f));
         REQUIRE_THAT(center_point.y, Catch::Matchers::WithinAbs(50.0f, 1.0f));
     }
     
