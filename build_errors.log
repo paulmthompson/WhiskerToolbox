@@ -1,0 +1,302 @@
+[1/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/filter/FilterFactory.cpp.o
+In file included from /app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:41,
+                 from /app/out/build/GCC/Release/_deps/iir-src/Iir.h:45,
+                 from /app/src/DataManager/utils/filter/FilterImplementations.hpp:5,
+                 from /app/src/DataManager/utils/filter/FilterFactory.hpp:5,
+                 from /app/src/DataManager/utils/filter/FilterFactory.cpp:1:
+/app/out/build/GCC/Release/_deps/iir-src/iir/Layout.h:191:50: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  191 |                 PoleZeroPair m_pairs[(MaxPoles+1)/2] = {};
+      |                                      ~~~~~~~~~~~~^~
+/app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:136:65: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  136 |         void setup (const double (&sosCoefficients)[MaxStages][6]) {
+      |                                                                 ^
+/app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:176:39: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  176 |         Biquad m_stages[MaxStages] = {};
+      |                                       ^
+/app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:177:42: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  177 |         StateType m_states[MaxStages] = {};
+      |                                          ^
+In file included from /app/out/build/GCC/Release/_deps/iir-src/Iir.h:52:
+/app/out/build/GCC/Release/_deps/iir-src/iir/Custom.h:107:59: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  107 |         SOSCascade(const double (&sosCoefficients)[NSOS][6]) {
+      |                                                           ^
+/app/out/build/GCC/Release/_deps/iir-src/iir/Custom.h:120:60: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  120 |         void setup (const double (&sosCoefficients)[NSOS][6]) {
+      |                                                            ^
+In file included from /app/out/build/GCC/Release/_deps/iir-src/Iir.h:53:
+/app/out/build/GCC/Release/_deps/iir-src/iir/RBJ.h: In member function ‘Sample Iir::RBJ::RBJbase::filter(Sample)’:
+/app/out/build/GCC/Release/_deps/iir-src/iir/RBJ.h:72:73: warning: use of old-style cast to ‘double’ [-Wold-style-cast]
+   72 |                         return static_cast<Sample>(state.filter((double)s,*this));
+      |                                                                         ^
+[2/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/TableView/adapters/PointDataAdapter.cpp.o
+[3/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/TableView/TableRegistry.cpp.o
+[4/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/polynomial/polynomial_fit.cpp.o
+[5/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/TransformRegistry.cpp.o
+In file included from /app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:41,
+                 from /app/out/build/GCC/Release/_deps/iir-src/Iir.h:45,
+                 from /app/src/DataManager/utils/filter/FilterImplementations.hpp:5,
+                 from /app/src/DataManager/utils/filter/FilterFactory.hpp:5,
+                 from /app/src/DataManager/transforms/AnalogTimeSeries/analog_filter.hpp:6,
+                 from /app/src/DataManager/transforms/TransformRegistry.cpp:7:
+/app/out/build/GCC/Release/_deps/iir-src/iir/Layout.h:191:50: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  191 |                 PoleZeroPair m_pairs[(MaxPoles+1)/2] = {};
+      |                                      ~~~~~~~~~~~~^~
+/app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:136:65: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  136 |         void setup (const double (&sosCoefficients)[MaxStages][6]) {
+      |                                                                 ^
+/app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:176:39: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  176 |         Biquad m_stages[MaxStages] = {};
+      |                                       ^
+/app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:177:42: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  177 |         StateType m_states[MaxStages] = {};
+      |                                          ^
+In file included from /app/out/build/GCC/Release/_deps/iir-src/Iir.h:52:
+/app/out/build/GCC/Release/_deps/iir-src/iir/Custom.h:107:59: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  107 |         SOSCascade(const double (&sosCoefficients)[NSOS][6]) {
+      |                                                           ^
+/app/out/build/GCC/Release/_deps/iir-src/iir/Custom.h:120:60: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  120 |         void setup (const double (&sosCoefficients)[NSOS][6]) {
+      |                                                            ^
+In file included from /app/out/build/GCC/Release/_deps/iir-src/Iir.h:53:
+/app/out/build/GCC/Release/_deps/iir-src/iir/RBJ.h: In member function ‘Sample Iir::RBJ::RBJbase::filter(Sample)’:
+/app/out/build/GCC/Release/_deps/iir-src/iir/RBJ.h:72:73: warning: use of old-style cast to ‘double’ [-Wold-style-cast]
+   72 |                         return static_cast<Sample>(state.filter((double)s,*this));
+      |                                                                         ^
+[6/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/armadillo_wrap/analog_armadillo.cpp.o
+[7/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/polynomial/parametric_polynomial_utils.cpp.o
+[8/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/AnalogTimeSeries/analog_filter.cpp.o
+In file included from /app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:41,
+                 from /app/out/build/GCC/Release/_deps/iir-src/Iir.h:45,
+                 from /app/src/DataManager/utils/filter/FilterImplementations.hpp:5,
+                 from /app/src/DataManager/utils/filter/FilterFactory.hpp:5,
+                 from /app/src/DataManager/transforms/AnalogTimeSeries/analog_filter.hpp:6,
+                 from /app/src/DataManager/transforms/AnalogTimeSeries/analog_filter.cpp:1:
+/app/out/build/GCC/Release/_deps/iir-src/iir/Layout.h:191:50: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  191 |                 PoleZeroPair m_pairs[(MaxPoles+1)/2] = {};
+      |                                      ~~~~~~~~~~~~^~
+/app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:136:65: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  136 |         void setup (const double (&sosCoefficients)[MaxStages][6]) {
+      |                                                                 ^
+/app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:176:39: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  176 |         Biquad m_stages[MaxStages] = {};
+      |                                       ^
+/app/out/build/GCC/Release/_deps/iir-src/iir/Cascade.h:177:42: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  177 |         StateType m_states[MaxStages] = {};
+      |                                          ^
+In file included from /app/out/build/GCC/Release/_deps/iir-src/Iir.h:52:
+/app/out/build/GCC/Release/_deps/iir-src/iir/Custom.h:107:59: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  107 |         SOSCascade(const double (&sosCoefficients)[NSOS][6]) {
+      |                                                           ^
+/app/out/build/GCC/Release/_deps/iir-src/iir/Custom.h:120:60: warning: conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+  120 |         void setup (const double (&sosCoefficients)[NSOS][6]) {
+      |                                                            ^
+In file included from /app/out/build/GCC/Release/_deps/iir-src/Iir.h:53:
+/app/out/build/GCC/Release/_deps/iir-src/iir/RBJ.h: In member function ‘Sample Iir::RBJ::RBJbase::filter(Sample)’:
+/app/out/build/GCC/Release/_deps/iir-src/iir/RBJ.h:72:73: warning: use of old-style cast to ‘double’ [-Wold-style-cast]
+   72 |                         return static_cast<Sample>(state.filter((double)s,*this));
+      |                                                                         ^
+[9/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/AnalogTimeSeries/analog_interval_threshold.cpp.o
+[10/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/TableView/ComputerRegistry.cpp.o
+[11/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/Media/whisker_tracing.cpp.o
+In file included from /app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:9,
+                 from /app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/whiskertracker.hpp:5,
+                 from /app/src/DataManager/transforms/Media/whisker_tracing.cpp:3:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:29:25: warning: conversion from ‘double’ to ‘float’ changes value from ‘1.0000000000000001e-1’ to ‘1.00000001e-1f’ [-Wfloat-conversion]
+   29 |     float _offset_step {0.1}; // pixels
+      |                         ^~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:30:23: warning: conversion from ‘double’ to ‘float’ changes value from ‘4.0000000000000002e-1’ to ‘4.00000006e-1f’ [-Wfloat-conversion]
+   30 |     float _width_min {0.4}; // (pixels) must be a multiple of WIDTH_STEP
+      |                       ^~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:32:24: warning: conversion from ‘double’ to ‘float’ changes value from ‘2.0000000000000001e-1’ to ‘2.00000003e-1f’ [-Wfloat-conversion]
+   32 |     float _width_step {0.2}; // (pixels)
+      |                        ^~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp: In constructor ‘janelia::Array::Array(std::array<int, 5>&, int)’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:98:23: warning: conversion to ‘std::array<int, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   98 |         strides_bytes[ndim] = bytesperpixel;
+      |                       ^~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:99:20: warning: conversion to ‘std::array<int, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   99 |         strides_px[ndim] = 1;
+      |                    ^~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:103:27: warning: conversion to ‘std::array<int, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  103 |             strides_bytes[i] = strides_bytes[i + 1] * shape_in[ndim - 1 - i];//   strides = (whd, wh, w, 1)
+      |                           ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:103:48: warning: conversion to ‘std::array<int, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  103 |             strides_bytes[i] = strides_bytes[i + 1] * shape_in[ndim - 1 - i];//   strides = (whd, wh, w, 1)
+      |                                              ~~^~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:103:73: warning: conversion to ‘std::array<int, 5>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  103 |             strides_bytes[i] = strides_bytes[i + 1] * shape_in[ndim - 1 - i];//   strides = (whd, wh, w, 1)
+      |                                                                ~~~~~~~~~^~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:104:24: warning: conversion to ‘std::array<int, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  104 |             strides_px[i] = strides_bytes[i] / bytesperpixel;
+      |                        ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:104:43: warning: conversion to ‘std::array<int, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  104 |             strides_px[i] = strides_bytes[i] / bytesperpixel;
+      |                                           ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:105:19: warning: conversion to ‘std::array<int, 5>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  105 |             shape[i] = shape_in[i];
+      |                   ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:105:33: warning: conversion to ‘std::array<int, 5>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  105 |             shape[i] = shape_in[i];
+      |                                 ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/detector_bank.hpp:107:51: warning: conversion to ‘std::vector<float>::size_type’ {aka ‘long unsigned int’} from ‘std::array<int, 6>::value_type’ {aka ‘int’} may change the sign of the result [-Wsign-conversion]
+  107 |         data = std::vector<float>(strides_bytes[0]);
+      |                                                   ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp: In constructor ‘janelia::Whisker_Seg::Whisker_Seg(int)’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:19:23: warning: conversion to ‘std::vector<float>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   19 |             len{n}, x(n), y(n), thick(n), scores(n) {}
+      |                       ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:19:29: warning: conversion to ‘std::vector<float>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   19 |             len{n}, x(n), y(n), thick(n), scores(n) {}
+      |                             ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:19:39: warning: conversion to ‘std::vector<float>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   19 |             len{n}, x(n), y(n), thick(n), scores(n) {}
+      |                                       ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:19:50: warning: conversion to ‘std::vector<float>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   19 |             len{n}, x(n), y(n), thick(n), scores(n) {}
+      |                                                  ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp: In constructor ‘janelia::Image<T>::Image()’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:40:24: warning: declaration of ‘array’ shadows a member of ‘janelia::Image<T>’ [-Wshadow]
+   40 |         std::vector<T> array{};
+      |                        ^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:35:20: note: shadowed declaration is here
+   35 |     std::vector<T> array;
+      |                    ^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp: In constructor ‘janelia::record::record(float, float, float, float)’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:49: warning: declaration of ‘score’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |                                           ~~~~~~^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:92:11: note: shadowed declaration is here
+   92 |     float score;
+      |           ^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:36: warning: declaration of ‘thick’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |                              ~~~~~~^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:91:11: note: shadowed declaration is here
+   91 |     float thick;
+      |           ^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:27: warning: declaration of ‘y’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |                     ~~~~~~^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:90:11: note: shadowed declaration is here
+   90 |     float y;
+      |           ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:18: warning: declaration of ‘x’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |            ~~~~~~^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:89:11: note: shadowed declaration is here
+   89 |     float x;
+      |           ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp: In constructor ‘janelia::record::record(float, float, float, float)’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:49: warning: declaration of ‘score’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |                                           ~~~~~~^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:92:11: note: shadowed declaration is here
+   92 |     float score;
+      |           ^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:36: warning: declaration of ‘thick’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |                              ~~~~~~^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:91:11: note: shadowed declaration is here
+   91 |     float thick;
+      |           ^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:27: warning: declaration of ‘y’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |                     ~~~~~~^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:90:11: note: shadowed declaration is here
+   90 |     float y;
+      |           ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:18: warning: declaration of ‘x’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |            ~~~~~~^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:89:11: note: shadowed declaration is here
+   89 |     float x;
+      |           ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp: In constructor ‘janelia::record::record(float, float, float, float)’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:49: warning: declaration of ‘score’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |                                           ~~~~~~^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:92:11: note: shadowed declaration is here
+   92 |     float score;
+      |           ^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:36: warning: declaration of ‘thick’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |                              ~~~~~~^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:91:11: note: shadowed declaration is here
+   91 |     float thick;
+      |           ^~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:27: warning: declaration of ‘y’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |                     ~~~~~~^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:90:11: note: shadowed declaration is here
+   90 |     float y;
+      |           ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:87:18: warning: declaration of ‘x’ shadows a member of ‘janelia::record’ [-Wshadow]
+   87 |     record(float x, float y, float thick, float score) : x(x), y(y), thick(thick), score(score) {}
+      |            ~~~~~~^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/JaneliaWhiskerTracker/janelia.hpp:89:11: note: shadowed declaration is here
+   89 |     float x;
+      |           ^
+In file included from /app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/whisker.hpp:5,
+                 from /app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerTracking/whiskertracker.hpp:6:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp: In function ‘whisker::Line2D whisker::linspace(Point2D<float>, Point2D<float>, int)’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:51:48: warning: conversion from ‘int’ to ‘float’ may change value [-Wconversion]
+   51 |     float dx = (end.x - start.x) / (num_points - 1);
+      |                                    ~~~~~~~~~~~~^~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:52:48: warning: conversion from ‘int’ to ‘float’ may change value [-Wconversion]
+   52 |     float dy = (end.y - start.y) / (num_points - 1);
+      |                                    ~~~~~~~~~~~~^~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:54:35: warning: conversion from ‘int’ to ‘float’ may change value [-Wconversion]
+   54 |         line.push_back({start.x + i * dx, start.y + i * dy});
+      |                                   ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:54:53: warning: conversion from ‘int’ to ‘float’ may change value [-Wconversion]
+   54 |         line.push_back({start.x + i * dx, start.y + i * dy});
+      |                                                     ^
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp: In function ‘whisker::Point2D<float> whisker::point_at_pathlength(const Line2D&, float)’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:169:34: warning: conversion to ‘std::vector<whisker::Point2D<float> >::size_type’ {aka ‘long unsigned int’} from ‘std::tuple_element<0, const std::tuple<int, float> >::type’ {aka ‘int’} may change the sign of the result [-Wsign-conversion]
+  169 |     return point_along_path(line[closest_pre_ind], line[closest_pre_ind + 1], pathlength - dist);
+      |                                  ^~~~~~~~~~~~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:169:73: warning: conversion to ‘std::vector<whisker::Point2D<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  169 |     return point_along_path(line[closest_pre_ind], line[closest_pre_ind + 1], pathlength - dist);
+      |                                                         ~~~~~~~~~~~~~~~~^~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp: In function ‘void whisker::unit_linear_extend_base(Line2D&, int)’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:278:19: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<whisker::Point2D<float> >::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+  278 |     if (vec_index > line.size())
+      |         ~~~~~~~~~~^~~~~~~~~~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:283:42: warning: conversion to ‘std::vector<whisker::Point2D<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  283 |     auto dir_vector = create_vector(line[vec_index],line[0]);
+      |                                          ^~~~~~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp: In function ‘void whisker::unit_linear_extend_tip(Line2D&, int, bool)’:
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:293:23: warning: conversion to ‘std::vector<whisker::Point2D<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  293 |     if (line.size() - vec_index < 0)
+      |                       ^~~~~~~~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:293:33: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits]
+  293 |     if (line.size() - vec_index < 0)
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~^~~
+/app/out/build/GCC/Release/_deps/whisker-analysis-src/src/WhiskerParameterization/Geometry/lines.hpp:298:56: warning: conversion to ‘std::vector<whisker::Point2D<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  298 |     auto dir_vector = create_vector(line[line.size() - vec_index - 1], line.back());
+      |                                                        ^~~~~~~~~
+[12/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/Lines/line_angle.cpp.o
+[13/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/TransformPipeline.cpp.o
+[14/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/AnalogTimeSeries/analog_hilbert_phase.cpp.o
+[15/55] Building CXX object src/DataManager/Lines/CMakeFiles/LineData.dir/Line_Data.cpp.o
+FAILED: src/DataManager/Lines/CMakeFiles/LineData.dir/Line_Data.cpp.o
+/usr/bin/g++ -DENTITY_USING_DLL -DLineData_EXPORTS -DTIMEFRAME_USING_DLL -I/app/out/build/GCC/Release/src/DataManager/Lines -I/app/src/DataManager/Lines -I/app/src/DataManager/Lines/.. -I/app/src/CoreGeometry/include -I/app/src/DataManager/Observer -I/app/src/DataManager/TimeFrame -I/app/src/DataManager/Entity -I/app/src/DataManager/Entity/.. -isystem /app/out/build/GCC/Release/vcpkg_installed/x64-linux-dynamic/include -O3 -DNDEBUG -std=gnu++20 -fPIC -Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion -Wnull-dereference -Wdouble-promotion -Wformat=2 -Wimplicit-fallthrough -Wmisleading-indentation -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wuseless-cast -Wsuggest-override -Wuninitialized -MD -MT src/DataManager/Lines/CMakeFiles/LineData.dir/Line_Data.cpp.o -MF src/DataManager/Lines/CMakeFiles/LineData.dir/Line_Data.cpp.o.d -o src/DataManager/Lines/CMakeFiles/LineData.dir/Line_Data.cpp.o -c /app/src/DataManager/Lines/Line_Data.cpp
+/app/src/DataManager/Lines/Line_Data.cpp:33:6: error: no declaration matches ‘bool LineData::clearAtTime(TimeFrameIndex, size_t, bool)’
+   33 | bool LineData::clearAtTime(TimeFrameIndex const time, size_t const line_id, bool notify) {
+      |      ^~~~~~~~
+In file included from /app/src/DataManager/Lines/Line_Data.cpp:1:
+/app/src/DataManager/Lines/Line_Data.hpp:63:24: note: candidates are: ‘bool LineData::clearAtTime(TimeFrameIndex, int, bool)’
+   63 |     [[nodiscard]] bool clearAtTime(TimeFrameIndex time, int line_id, bool notify = true);
+      |                        ^~~~~~~~~~~
+/app/src/DataManager/Lines/Line_Data.cpp:21:6: note:                 ‘bool LineData::clearAtTime(TimeFrameIndex, bool)’
+   21 | bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
+      |      ^~~~~~~~
+/app/src/DataManager/Lines/Line_Data.hpp:26:7: note: ‘class LineData’ defined here
+   26 | class LineData : public ObserverData {
+      |       ^~~~~~~~
+[16/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.cpp.o
+[17/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/utils/TableView/pipeline/TablePipeline.cpp.o
+[18/55] Building CXX object src/DataManager/CMakeFiles/DataManager.dir/transforms/Masks/mask_to_line.cpp.o
+[19/55] Building CXX object src/DataManager/Lines/CMakeFiles/LineData.dir/IO/CSV/Line_Data_CSV.cpp.o
+[20/55] Building CXX object src/DataManager/TimeFrame/CMakeFiles/TimeFrame.dir/TimeFrame.cpp.o
+ninja: build stopped: subcommand failed.

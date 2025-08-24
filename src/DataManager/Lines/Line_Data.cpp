@@ -30,13 +30,13 @@ bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
     return false;   
 }
 
-bool LineData::clearAtTime(TimeFrameIndex const time, size_t const line_id, bool notify) {
+bool LineData::clearAtTime(TimeFrameIndex const time, int const line_id, bool notify) {
 
-    if (clear_at_time(time, static_cast<int>(line_id), _data)) {
+    if (clear_at_time(time, line_id, _data)) {
         auto it = _entity_ids_by_time.find(time);
         if (it != _entity_ids_by_time.end()) {
-            if (line_id < it->second.size()) {
-        it->second.erase(it->second.begin() + static_cast<long int>(line_id));
+            if (static_cast<size_t>(line_id) < it->second.size()) {
+                it->second.erase(it->second.begin() + static_cast<long int>(line_id));
             }
             if (it->second.empty()) {
                 _entity_ids_by_time.erase(it);
