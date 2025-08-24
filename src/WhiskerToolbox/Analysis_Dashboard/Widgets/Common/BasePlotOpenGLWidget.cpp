@@ -267,9 +267,7 @@ void BasePlotOpenGLWidget::leaveEvent(QEvent* event) {
     QOpenGLWidget::leaveEvent(event);
 }
 
-void BasePlotOpenGLWidget::
-handleKeyPress(QKeyEvent* event) {
-
+void BasePlotOpenGLWidget::handleKeyPress(QKeyEvent* event) {
 
     std::visit([event](auto & handler) {
         if (handler) {

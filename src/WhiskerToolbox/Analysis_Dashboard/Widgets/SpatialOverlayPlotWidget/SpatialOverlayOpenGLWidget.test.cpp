@@ -123,6 +123,9 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     SpatialOverlayOpenGLWidget widget;
     widget.resize(400, 300);
     widget.show();
+    widget.raise();
+    widget.activateWindow();
+    widget.setFocus(Qt::OtherFocusReason);
     processEvents();
 
     // Points in a known frame with non-zero Y span
@@ -144,13 +147,6 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     QTest::qWait(10);
     QTest::mouseDClick(&widget, Qt::LeftButton, Qt::NoModifier, s);
     processEvents();
-
-    if (jump_spy.count() == 0) {
-        // Fallback: synthesize a double-click event directly
-        QMouseEvent dbl(QEvent::MouseButtonDblClick, s, widget.mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-        QCoreApplication::sendEvent(&widget, &dbl);
-        processEvents();
-    }
 
     REQUIRE(jump_spy.count() >= 1);
     QVariantList args = jump_spy.takeFirst();
