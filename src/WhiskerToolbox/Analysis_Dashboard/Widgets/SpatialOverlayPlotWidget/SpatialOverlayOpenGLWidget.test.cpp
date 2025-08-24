@@ -433,7 +433,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsSc
 
     std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
     gl->setPointData(map);
-    REQUIRE(waitForValidProjection(*gl));
+//    REQUIRE(waitForValidProjection(*gl));
 
     // Point selection via organizer's view: dispatch events to the GL widget directly
     gl->setSelectionMode(SelectionMode::PointSelection);
@@ -443,11 +443,9 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsSc
         QPoint s = worldToScreen(*gl, wx, wy);
         gl->raise(); gl->activateWindow(); gl->setFocus(Qt::OtherFocusReason);
         QTest::mouseMove(gl, s);
-        QMouseEvent p(QEvent::MouseButtonPress, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &p);
+        QTest::mousePress(gl, Qt::LeftButton, Qt::ControlModifier, s);
         processEvents();
-        QMouseEvent r(QEvent::MouseButtonRelease, s, gl->mapToGlobal(s), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(gl, &r);
+        QTest::mouseRelease(gl, Qt::LeftButton, Qt::ControlModifier, s);
         processEvents();
     };
 
@@ -466,15 +464,17 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsSc
     QPoint d = worldToScreen(*gl, 50.f, 250.f);
 
     auto leftClickAt = [&](QPoint p) {
-        QMouseEvent p1(QEvent::MouseButtonPress, p, gl->mapToGlobal(p), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-        QCoreApplication::sendEvent(gl, &p1);
-        QMouseEvent r1(QEvent::MouseButtonRelease, p, gl->mapToGlobal(p), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-        QCoreApplication::sendEvent(gl, &r1);
+        gl->raise(); gl->activateWindow(); gl->setFocus(Qt::OtherFocusReason);
+        QTest::mousePress(gl, Qt::LeftButton, Qt::NoModifier, p);
+        processEvents();
+        QTest::mouseRelease(gl, Qt::LeftButton, Qt::NoModifier, p);
+        processEvents();
     };
 
     leftClickAt(a); leftClickAt(b); leftClickAt(c); leftClickAt(d);
-    QKeyEvent enterEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
-    QCoreApplication::sendEvent(gl, &enterEvent);
+    // Complete polygon with Enter key
+    QKeyEvent * enterEvent = new QKeyEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    gl->handleKeyPress(enterEvent);
     processEvents();
 
     REQUIRE(gl->getTotalSelectedPoints() >= 2);

@@ -78,8 +78,8 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
         doneCurrent();
     }
 
-    // Calculate bounds
     calculateDataBounds();
+    updateViewMatrices();
 
     requestThrottledUpdate();
 }
