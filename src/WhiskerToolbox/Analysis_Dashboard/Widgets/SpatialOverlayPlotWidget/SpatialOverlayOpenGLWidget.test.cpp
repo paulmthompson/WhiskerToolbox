@@ -113,11 +113,8 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     QTest::mouseMove(&widget, s0);
     QTest::qWait(10);
 
-    QMouseEvent press(QEvent::MouseButtonPress, s0, widget.mapToGlobal(s0), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
-    QCoreApplication::sendEvent(&widget, &press);
-    processEvents();
-    QMouseEvent release(QEvent::MouseButtonRelease, s0, widget.mapToGlobal(s0), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
-    QCoreApplication::sendEvent(&widget, &release);
+    QTest::mousePress(&widget, Qt::LeftButton, Qt::ControlModifier, s0);
+    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::ControlModifier, s0);
     processEvents();
     REQUIRE(widget.getTotalSelectedPoints() >= 1);
 }
