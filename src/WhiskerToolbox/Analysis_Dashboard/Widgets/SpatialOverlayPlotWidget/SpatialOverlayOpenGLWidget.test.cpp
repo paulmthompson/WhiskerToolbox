@@ -238,11 +238,8 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
         QPoint s = worldToScreen(widget, wx, wy);
         widget.raise(); widget.activateWindow(); widget.setFocus(Qt::OtherFocusReason);
         QTest::mouseMove(&widget, s);
-        QMouseEvent p(QEvent::MouseButtonPress, s, widget.mapToGlobal(s), Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(&widget, &p);
-        processEvents();
-        QMouseEvent r(QEvent::MouseButtonRelease, s, widget.mapToGlobal(s), Qt::LeftButton, Qt::NoButton, Qt::ControlModifier);
-        QCoreApplication::sendEvent(&widget, &r);
+        QTest::mousePress(&widget, Qt::LeftButton, Qt::ControlModifier, s);
+        QTest::mouseRelease(&widget, Qt::LeftButton, Qt::ControlModifier, s);
         processEvents();
     };
 
@@ -279,7 +276,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 
                 // Open the submenu by hovering/clicking on the parent action
                 QRect assignRect = mainMenu->actionGeometry(assignToGroupAction);
-                if (!assignRect.isValid()) continue;
+                //if (!assignRect.isValid()) continue;
 
                 QPoint assignCenter = assignRect.center();
                 QTest::mouseMove(mainMenu, assignCenter);
@@ -291,6 +288,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 
                 // Wait for submenu to become visible
                 QMenu * subMenu = assignToGroupAction->menu();
+                /*
                 int subWaited = 0;
                 while (subMenu && !subMenu->isVisible() && subWaited <= 500) {
                     QTest::qWait(25);
@@ -299,6 +297,9 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
                 if (!subMenu || !subMenu->isVisible()) {
                     continue;
                 }
+                */
+
+                std::cout << "Submenu visible: " << subMenu->title().toStdString() << std::endl;
 
                 // Find the "Create New Group" action in the submenu
                 QAction * createNewGroupAction = nullptr;

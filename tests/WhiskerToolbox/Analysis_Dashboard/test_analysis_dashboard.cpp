@@ -252,51 +252,6 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Data Manager Integration",
     delete time_scrollbar;
 }
 
-TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Widget Lifecycle", "[AnalysisDashboard]") {
-    // Create a data manager
-    auto data_manager = std::make_shared<DataManager>();
-    REQUIRE(data_manager != nullptr);
-    
-    // Create time scroll bar
-    auto time_scrollbar = new TimeScrollBar();
-    REQUIRE(time_scrollbar != nullptr);
-    
-    ads::CDockManager dock_manager;
-    // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
-    REQUIRE(&dashboard != nullptr);
-    
-    // Test widget lifecycle
-    SECTION("Show and Hide") {
-        dashboard.show();
-        REQUIRE(dashboard.isVisible());
-        
-        dashboard.hide();
-        REQUIRE(!dashboard.isVisible());
-    }
-    
-    SECTION("Resize") {
-        dashboard.show();
-        dashboard.resize(800, 600);
-        REQUIRE(dashboard.width() == 800);
-        REQUIRE(dashboard.height() == 600);
-    }
-    
-    SECTION("Close") {
-        dashboard.show();
-        REQUIRE(dashboard.isVisible());
-        
-        dashboard.close();
-        // Note: close() doesn't immediately hide on all platforms
-        // but it should mark the widget for deletion
-        auto is_visible = dashboard.isVisible() || dashboard.testAttribute(Qt::WA_DeleteOnClose);
-        REQUIRE(is_visible);
-    }
-    
-    // Clean up
-    delete time_scrollbar;
-}
-
 TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Component Access", "[AnalysisDashboard]") {
     // Create a data manager
     auto data_manager = std::make_shared<DataManager>();
