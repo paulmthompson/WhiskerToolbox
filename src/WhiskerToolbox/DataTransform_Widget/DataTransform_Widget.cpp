@@ -42,6 +42,8 @@
 #include <QMessageBox>
 #include <QFont>
 #include <QSplitter>
+#include <QScrollBar>
+#include <QTimer>
 
 
 DataTransform_Widget::DataTransform_Widget(
@@ -55,17 +57,22 @@ DataTransform_Widget::DataTransform_Widget(
       _jsonTextEdit(nullptr),
       _jsonStatusLabel(nullptr),
       _executeJsonButton(nullptr),
-      _pipelineProgressBar(nullptr) {
+      _pipelineProgressBar(nullptr),
+      _savedScrollPosition(0),
+      _preventScrolling(false) {
     ui->setupUi(this);
 
-    // Set explicit size policy and minimum size - increased for JSON section
+    // Set explicit size policy and minimum size - increased for better visibility
     setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-    setMinimumSize(250, 600);
+    setMinimumSize(350, 700);
 
     // Configure scroll area properties - enable scrolling for JSON section
     setWidgetResizable(true);
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    // Disable automatic scrolling to focused widgets
+    setFocusPolicy(Qt::NoFocus);
 
     _registry = std::make_unique<TransformRegistry>();
     
@@ -318,6 +325,7 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
         setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
         int const widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
+        Q_UNUSED(widgetIndex) // Suppress the warning about unused variable
         _currentParameterWidget = newParamWidget;// Set as active
 
         // If this is a scaling widget, set the current data key
@@ -333,26 +341,40 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
 }
 
 void DataTransform_Widget::_updateProgress(int progress) {
-
     if (progress > _current_progress) {
+        // Store current position before updating progress
+        int currentPos = verticalScrollBar()->value();
+
         ui->transform_progress_bar->setValue(progress);
         ui->transform_progress_bar->setFormat("%p%");// Show percentage text
         ui->transform_progress_bar->repaint();       // Force immediate repaint
         QApplication::processEvents();               // Process all pending events to ensure UI updates
+
+        // Restore position if we're preventing scrolling
+        if (_preventScrolling) {
+            verticalScrollBar()->setValue(currentPos);
+        }
+
         _current_progress = progress;
     }
 }
 
 void DataTransform_Widget::_doTransform() {
+    // Save current scroll position before starting transform
+    _savedScrollPosition = verticalScrollBar()->value();
+    _preventScrolling = true;
+
     auto const new_data_key = ui->output_name_edit->text().toStdString();
 
     if (new_data_key.empty()) {
         std::cout << "Output name is empty" << std::endl;
+        _preventScrolling = false;
         return;
     }
 
     if (!_currentSelectedOperation) {
         std::cout << "Does not have operation" << std::endl;
+        _preventScrolling = false;
         return;
     }
 
@@ -364,6 +386,9 @@ void DataTransform_Widget::_doTransform() {
     ui->transform_progress_bar->repaint();
     ui->do_transform_button->setEnabled(false);
     QApplication::processEvents();
+
+    // Restore scroll position after UI updates
+    verticalScrollBar()->setValue(_savedScrollPosition);
 
     std::unique_ptr<TransformParametersBase> params_owner_ptr;
     if (_currentParameterWidget) {// Check if a specific param widget is active
@@ -393,6 +418,10 @@ void DataTransform_Widget::_doTransform() {
 
     ui->transform_progress_bar->setValue(100);
     ui->do_transform_button->setEnabled(true);
+
+    // Restore scroll position after completion and re-enable scrolling
+    verticalScrollBar()->setValue(_savedScrollPosition);
+    _preventScrolling = false;
 }
 
 QString DataTransform_Widget::_generateOutputName() const {
@@ -454,14 +483,21 @@ void DataTransform_Widget::resizeEvent(QResizeEvent* event) {
 
     // Ensure the stackedWidget is properly sized
     ui->stackedWidget->updateGeometry();
+
+    // Maintain scroll position during resize if preventing scrolling
+    if (_preventScrolling) {
+        QTimer::singleShot(0, [this]() {
+            verticalScrollBar()->setValue(_savedScrollPosition);
+        });
+    }
 }
 
 QSize DataTransform_Widget::sizeHint() const {
-    return QSize(350, 800);
+    return QSize(400, 900);
 }
 
 QSize DataTransform_Widget::minimumSizeHint() const {
-    return QSize(250, 600);
+    return QSize(350, 700);
 }
 
 void DataTransform_Widget::_setupJsonPipelineUI() {
@@ -658,6 +694,10 @@ void DataTransform_Widget::_executeJsonPipeline() {
         return;
     }
     
+    // Save scroll position before starting pipeline
+    _savedScrollPosition = verticalScrollBar()->value();
+    _preventScrolling = true;
+
     // Load the current JSON content
     QString jsonText = _getCurrentJsonContent();
     nlohmann::json config;
@@ -727,6 +767,10 @@ void DataTransform_Widget::_executeJsonPipeline() {
     }
     
     _executeJsonButton->setEnabled(true);
+
+    // Restore scroll position and re-enable scrolling
+    verticalScrollBar()->setValue(_savedScrollPosition);
+    _preventScrolling = false;
 }
 
 QString DataTransform_Widget::_getCurrentJsonContent() const {
