@@ -1,4 +1,4 @@
-
+find_package(OpenMP REQUIRED)
 
 find_package(nlohmann_json CONFIG REQUIRED)
 
@@ -222,6 +222,9 @@ target_include_directories(DataManager PRIVATE
 
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
+
+# Link OpenMP for parallel processing
+target_link_libraries(DataManager PRIVATE OpenMP::OpenMP_CXX)
 
 target_link_libraries(DataManager PRIVATE Whisker-Analysis)
 

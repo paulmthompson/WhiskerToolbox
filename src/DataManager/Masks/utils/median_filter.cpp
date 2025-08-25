@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <omp.h>
 
 namespace {
     /**
@@ -62,14 +63,20 @@ std::vector<uint8_t> median_filter(std::vector<uint8_t> const & image, ImageSize
     std::vector<uint8_t> result(static_cast<size_t>(height * width));
     int const half_window = window_size / 2;
     
-    // For each pixel in the output image
+    // Parallelize the outer loop over rows using OpenMP
+    // Each thread processes different rows independently
+    #pragma omp parallel for schedule(dynamic, 4) default(none) \
+        shared(result, image, height, width, half_window, window_size)
     for (int row = 0; row < height; ++row) {
+        // Each thread has its own window_pixels vector to avoid race conditions
+        std::vector<uint8_t> window_pixels;
+        window_pixels.reserve(static_cast<size_t>(window_size * window_size));
+
         for (int col = 0; col < width; ++col) {
-            
+            // Clear and reuse the vector for each pixel
+            window_pixels.clear();
+
             // Collect pixels in the window
-            std::vector<uint8_t> window_pixels;
-            window_pixels.reserve(static_cast<size_t>(window_size * window_size));
-            
             for (int wr = -half_window; wr <= half_window; ++wr) {
                 for (int wc = -half_window; wc <= half_window; ++wc) {
                     uint8_t pixel = get_pixel_with_padding(image, width, height, row + wr, col + wc);
@@ -93,4 +100,4 @@ Image median_filter(Image const & input_image, int window_size) {
     
     // Return as Image struct
     return Image(std::move(result_data), input_image.size);
-} 
+}
