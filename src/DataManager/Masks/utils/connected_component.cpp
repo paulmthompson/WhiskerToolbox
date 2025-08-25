@@ -13,16 +13,16 @@ std::vector<uint8_t> remove_small_clusters(std::vector<uint8_t> const & image, I
     std::vector<int> cluster_sizes;
     int current_label = 1;
 
-    auto get_index = [width](int row, int col) {
-        return row * width + col;
+    auto get_index = [width](size_t row, size_t col) {
+        return row * static_cast<size_t>(width) + col;
     };
 
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
+    for (size_t row = 0; row < static_cast<size_t>(height); ++row) {
+        for (size_t col = 0; col < static_cast<size_t>(width); ++col) {
             if (image[get_index(row, col)] && !labeled_image[get_index(row, col)]) {
-                std::queue<std::pair<int, int>> q;
+                std::queue<std::pair<size_t, size_t>> q;
                 q.emplace(row, col);
-                labeled_image[get_index(row, col)] = current_label;
+                labeled_image[get_index(row, col)] = static_cast<uint8_t>(current_label);
                 int cluster_size = 0;
 
                 while (!q.empty()) {
@@ -32,12 +32,12 @@ std::vector<uint8_t> remove_small_clusters(std::vector<uint8_t> const & image, I
 
                     for (int dr = -1; dr <= 1; ++dr) {
                         for (int dc = -1; dc <= 1; ++dc) {
-                            int const nr = r + dr;
-                            int const nc = c + dc;
-                            if (nr >= 0 && nr < height && nc >= 0 && nc < width &&
+                            auto nr = static_cast<size_t>(static_cast<int>(r) + dr);
+                            auto nc = static_cast<size_t>(static_cast<int>(c) + dc);
+                            if (nr < static_cast<size_t>(height) && nc < static_cast<size_t>(width) &&
                                 image[get_index(nr, nc)] && !labeled_image[get_index(nr, nc)]) {
                                 q.emplace(nr, nc);
-                                labeled_image[get_index(nr, nc)] = current_label;
+                                labeled_image[get_index(nr, nc)] = static_cast<uint8_t>(current_label);
                             }
                         }
                     }
@@ -50,10 +50,10 @@ std::vector<uint8_t> remove_small_clusters(std::vector<uint8_t> const & image, I
     }
 
     std::vector<uint8_t> result(static_cast<size_t>(height * width), 0);
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
+    for (size_t row = 0; row < static_cast<size_t>(height); ++row) {
+        for (size_t col = 0; col < static_cast<size_t>(width); ++col) {
             int const label = labeled_image[get_index(row, col)];
-            if (label && cluster_sizes[label - 1] >= threshold) {
+            if (label && cluster_sizes[static_cast<size_t>(label) - 1] >= threshold) {
                 result[get_index(row, col)] = 1;
             }
         }

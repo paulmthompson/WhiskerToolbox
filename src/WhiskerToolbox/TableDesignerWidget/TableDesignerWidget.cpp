@@ -877,7 +877,7 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
     }
 
     // Convert row source to RowSelectorType
-    RowSelectorType row_selector_type = RowSelectorType::Interval;// Default
+    RowSelectorType row_selector_type = RowSelectorType::IntervalBased;// Default
     if (row_source.startsWith("TimeFrame: ")) {
         row_selector_type = RowSelectorType::Timestamp;// TimeFrames define timestamps
         qDebug() << "Row selector type: Timestamp (TimeFrame)";
@@ -885,7 +885,7 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
         row_selector_type = RowSelectorType::Timestamp;// Events define timestamps
         qDebug() << "Row selector type: Timestamp (Events)";
     } else if (row_source.startsWith("Intervals: ")) {
-        row_selector_type = RowSelectorType::Interval;// Intervals are intervals
+        row_selector_type = RowSelectorType::IntervalBased;// Intervals are intervals
         qDebug() << "Row selector type: Interval (Intervals)";
     }
 

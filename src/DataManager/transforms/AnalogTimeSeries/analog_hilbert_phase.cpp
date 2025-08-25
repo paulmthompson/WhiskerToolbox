@@ -124,7 +124,7 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
 
     // If all values were NaN, return empty vector
     if (clean_values.empty()) {
-        return std::vector<float>(chunk.output_end.getValue() - chunk.output_start.getValue(), 0.0f);
+        return std::vector<float>(static_cast<size_t>(chunk.output_end.getValue() - chunk.output_start.getValue()), 0.0f);
     }
 
     // Convert to arma::vec for processing
@@ -187,12 +187,12 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
     std::vector<float> phase_values = arma::conv_to<std::vector<float>>::from(phase);
 
     // Create output vector for this chunk only
-    size_t chunk_size = chunk.output_end.getValue() - chunk.output_start.getValue();
+    auto chunk_size = static_cast<size_t>(chunk.output_end.getValue() - chunk.output_start.getValue());
     std::vector<float> output_phase(chunk_size, 0.0f);
 
     // Fill in the original points (excluding NaN values)
     for (size_t i = 0; i < clean_times.size(); ++i) {
-        size_t output_idx = clean_times[i].getValue() - chunk.output_start.getValue();
+        auto output_idx = static_cast<size_t>(clean_times[i].getValue() - chunk.output_start.getValue());
         if (output_idx < output_phase.size()) {
             output_phase[output_idx] = phase_values[i];
         }
@@ -207,10 +207,10 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
             float phase_end = phase_values[i];
             
             // Handle phase wrapping
-            if (phase_end - phase_start > std::numbers::pi) {
-                phase_start += 2.0f * std::numbers::pi;
-            } else if (phase_start - phase_end > std::numbers::pi) {
-                phase_end += 2.0f * std::numbers::pi;
+            if (phase_end - phase_start > static_cast<float>(std::numbers::pi)) {
+                phase_start += 2.0f * static_cast<float>(std::numbers::pi);
+            } else if (phase_start - phase_end > static_cast<float>(std::numbers::pi)) {
+                phase_end += 2.0f * static_cast<float>(std::numbers::pi);
             }
 
             for (int64_t j = 1; j < gap; ++j) {
@@ -218,10 +218,10 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
                 float interpolated_phase = phase_start + t * (phase_end - phase_start);
                 
                 // Wrap back to [-π, π]
-                while (interpolated_phase > std::numbers::pi) interpolated_phase -= 2.0f * std::numbers::pi;
-                while (interpolated_phase <= -std::numbers::pi) interpolated_phase += 2.0f * std::numbers::pi;
+                while (interpolated_phase > static_cast<float>(std::numbers::pi)) interpolated_phase -= 2.0f * static_cast<float>(std::numbers::pi);
+                while (interpolated_phase <= -static_cast<float>(std::numbers::pi)) interpolated_phase += 2.0f * static_cast<float>(std::numbers::pi);
                 
-                size_t output_idx = (clean_times[i-1].getValue() + j) - chunk.output_start.getValue();
+                auto output_idx = static_cast<size_t>((clean_times[i-1].getValue() + j) - chunk.output_start.getValue());
                 if (output_idx < output_phase.size()) {
                     output_phase[output_idx] = interpolated_phase;
                 }
@@ -270,7 +270,7 @@ std::shared_ptr<AnalogTimeSeries> hilbert_phase(
 
     // Determine total output size based on last chunk's end
     auto const & last_chunk = chunks.back();
-    size_t total_size = last_chunk.output_end.getValue();
+    auto total_size = static_cast<size_t>(last_chunk.output_end.getValue());
 
     // Create output vectors with proper size
     std::vector<float> output_data(total_size, 0.0f);
@@ -290,16 +290,16 @@ std::shared_ptr<AnalogTimeSeries> hilbert_phase(
         
         // Copy chunk results to output
         if (!chunk_phase.empty()) {
-            size_t start_idx = chunk.output_start.getValue();
+            auto start_idx = static_cast<size_t>(chunk.output_start.getValue());
             size_t end_idx = std::min(start_idx + chunk_phase.size(), output_data.size());
             std::copy(chunk_phase.begin(), 
-                     chunk_phase.begin() + (end_idx - start_idx),
-                     output_data.begin() + start_idx);
+                     chunk_phase.begin() + static_cast<long int>(end_idx - start_idx),
+                     output_data.begin() + static_cast<long int>(start_idx));
         }
 
         // Update progress
         if (progressCallback) {
-            int progress = 5 + static_cast<int>((90.0f * (i + 1)) / total_chunks);
+            int progress = 5 + static_cast<int>((90.0f * static_cast<float>(i + 1)) / static_cast<float>(total_chunks));
             progressCallback(progress);
         }
     }

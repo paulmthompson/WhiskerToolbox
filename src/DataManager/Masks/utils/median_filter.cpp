@@ -25,7 +25,7 @@ namespace {
         row = std::max(0, std::min(row, height - 1));
         col = std::max(0, std::min(col, width - 1));
         
-        return image[row * width + col];
+        return image[static_cast<size_t>(row) * static_cast<size_t>(width) + static_cast<size_t>(col)];
     }
     
     /**
@@ -80,7 +80,7 @@ std::vector<uint8_t> median_filter(std::vector<uint8_t> const & image, ImageSize
             // Find median
             std::sort(window_pixels.begin(), window_pixels.end());
             size_t const median_index = window_pixels.size() / 2;
-            result[row * width + col] = window_pixels[median_index];
+            result[static_cast<size_t>(row) * static_cast<size_t>(width) + static_cast<size_t>(col)] = window_pixels[median_index];
         }
     }
     

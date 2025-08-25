@@ -98,8 +98,8 @@ Point2D<float> const* PointDataAdapter::getPointAt(TimeFrameIndex t, int entityI
             if (entityIndex >= 0 && static_cast<size_t>(entityIndex) < points.size()) {
                 // Convert from internal point format to Point2D
                 static thread_local Point2D<float> convertedPoint;
-                convertedPoint.x = points[entityIndex].x;
-                convertedPoint.y = points[entityIndex].y;
+                convertedPoint.x = points[static_cast<size_t>(entityIndex)].x;
+                convertedPoint.y = points[static_cast<size_t>(entityIndex)].y;
                 return &convertedPoint;
             }
             break;
@@ -108,8 +108,8 @@ Point2D<float> const* PointDataAdapter::getPointAt(TimeFrameIndex t, int entityI
     return nullptr;
 }
 
-EntityId PointDataAdapter::getEntityIdAt(TimeFrameIndex t, int entityIndex) const {
+EntityId PointDataAdapter::getEntityIdAt(TimeFrameIndex, int entityIndex) const {
     // For now, use the entity index as the ID
     // In the future, this could be extended to use actual entity IDs if PointData supports them
-    return entityIndex;
+    return static_cast<EntityId>(entityIndex);
 }

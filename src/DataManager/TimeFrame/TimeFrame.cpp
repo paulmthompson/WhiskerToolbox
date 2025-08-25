@@ -9,7 +9,7 @@ TimeFrame::TimeFrame(std::vector<int> const & times) {
 }
 
 int TimeFrame::getTimeAtIndex(TimeFrameIndex index) const {
-    if (index < TimeFrameIndex(0) || index.getValue() >= _times.size()) {
+    if (index < TimeFrameIndex(0) || static_cast<size_t>(index.getValue()) >= _times.size()) {
         std::cout << "Index " << index.getValue() << " out of range" << " for time frame of size " << _times.size() << std::endl;
         return 0;
     }
@@ -22,7 +22,7 @@ TimeFrameIndex TimeFrame::getIndexAtTime(float time, bool preceding) const {
 
     // If exact match found
     if (it != _times.end() && static_cast<float>(*it) == time) {
-        return TimeFrameIndex(static_cast<int64_t>(std::distance(_times.begin(), it)));
+        return TimeFrameIndex(std::distance(_times.begin(), it));
     }
 
     // If time is beyond the last time point
@@ -40,13 +40,13 @@ TimeFrameIndex TimeFrame::getIndexAtTime(float time, bool preceding) const {
     if (preceding) {
         auto prev = it - 1;
         if (std::abs(static_cast<float>(*prev) - time) <= std::abs(static_cast<float>(*it) - time)) {
-            return TimeFrameIndex(static_cast<int64_t>(std::distance(_times.begin(), prev)));
+            return TimeFrameIndex(std::distance(_times.begin(), prev));
         } else {
-            return TimeFrameIndex(static_cast<int64_t>(std::distance(_times.begin(), it)));
+            return TimeFrameIndex(std::distance(_times.begin(), it));
         }
     } else {
         // If not preceding, return the next time point
-        return TimeFrameIndex(static_cast<int64_t>(std::distance(_times.begin(), it)));
+        return TimeFrameIndex(std::distance(_times.begin(), it));
     }
 }
 

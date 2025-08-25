@@ -740,21 +740,21 @@ TEST_CASE_METHOD(IntervalPropertyTableRegistryTestFixture, "DM - TV - IntervalPr
         REQUIRE(start_info->name == "Interval Start");
         REQUIRE(start_info->outputType == typeid(double));
         REQUIRE(start_info->outputTypeName == "double");
-        REQUIRE(start_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(start_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(start_info->requiredSourceType == typeid(std::shared_ptr<IIntervalSource>));
 
         // Verify computer info details for End
         REQUIRE(end_info->name == "Interval End");
         REQUIRE(end_info->outputType == typeid(double));
         REQUIRE(end_info->outputTypeName == "double");
-        REQUIRE(end_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(end_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(end_info->requiredSourceType == typeid(std::shared_ptr<IIntervalSource>));
 
         // Verify computer info details for Duration
         REQUIRE(duration_info->name == "Interval Duration");
         REQUIRE(duration_info->outputType == typeid(double));
         REQUIRE(duration_info->outputTypeName == "double");
-        REQUIRE(duration_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(duration_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(duration_info->requiredSourceType == typeid(std::shared_ptr<IIntervalSource>));
     }
 

@@ -182,7 +182,7 @@ std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
             angle = calculate_polynomial_angle(line, position, polynomial_order, reference_x, reference_y);
         }
 
-        angles[line_and_time.time.getValue()] = angle;
+        angles[static_cast<int>(line_and_time.time.getValue())] = angle;
     }
 
     return std::make_shared<AnalogTimeSeries>(angles);
