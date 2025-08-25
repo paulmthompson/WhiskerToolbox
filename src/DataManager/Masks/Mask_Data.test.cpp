@@ -54,7 +54,7 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         mask_data.addAtTime(TimeFrameIndex(0), x2, y2);
         mask_data.addAtTime(TimeFrameIndex(10), points);
 
-        (void)mask_data.clearAtTime(TimeFrameIndex(0));
+        static_cast<void>(mask_data.clearAtTime(TimeFrameIndex(0)));
 
         auto masks_at_0 = mask_data.getAtTime(TimeFrameIndex(0));
         auto masks_at_10 = mask_data.getAtTime(TimeFrameIndex(10));
@@ -243,15 +243,15 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
         REQUIRE(notification_count == 0);
 
         // Clear with notification
-        (void)mask_data.clearAtTime(TimeFrameIndex(0));
+        REQUIRE(mask_data.clearAtTime(TimeFrameIndex(0)));
         REQUIRE(notification_count == 1);
 
-        // Clear with notification disabled
-        (void)mask_data.clearAtTime(TimeFrameIndex(0), false);
+        // Clear with notification disabled (should return false - nothing to clear)
+        REQUIRE_FALSE(mask_data.clearAtTime(TimeFrameIndex(0), false));
         REQUIRE(notification_count == 1);  // Still 1, not incremented
 
         // Clear non-existent time (shouldn't notify)
-        (void)mask_data.clearAtTime(TimeFrameIndex(42));
+        REQUIRE_FALSE(mask_data.clearAtTime(TimeFrameIndex(42)));
         REQUIRE(notification_count == 1);  // Still 1, not incremented
     }
 
@@ -309,7 +309,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
 
     SECTION("Clearing masks at non-existent time") {
         // Should not create an entry with empty vector
-        mask_data.clearAtTime(TimeFrameIndex(42));
+        REQUIRE_FALSE(mask_data.clearAtTime(TimeFrameIndex(42)));
 
         auto masks = mask_data.getAtTime(TimeFrameIndex(42));
         REQUIRE(masks.empty());
@@ -346,7 +346,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
         std::vector<Point2D<uint32_t>> points = {{1, 1}, {2, 2}};
 
         mask_data.addAtTime(TimeFrameIndex(5), points);
-        mask_data.clearAtTime(TimeFrameIndex(5));
+        REQUIRE(mask_data.clearAtTime(TimeFrameIndex(5)));
         mask_data.addAtTime(TimeFrameIndex(5), points);
 
         auto masks = mask_data.getAtTime(TimeFrameIndex(5));

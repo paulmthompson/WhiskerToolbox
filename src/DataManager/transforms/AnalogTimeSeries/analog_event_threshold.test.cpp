@@ -24,7 +24,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
     volatile int call_count = 0;    // Volatile for the same reason
     ProgressCallback cb = [&](int p) {
         progress_val = p;
-        call_count++;
+        call_count = call_count + 1;
     };
 
     SECTION("Positive threshold, no lockout") {
@@ -157,7 +157,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
         std::vector<int> progress_values_seen;
         ProgressCallback detailed_cb = [&](int p) {
             progress_val = p;
-            call_count++;
+            call_count = call_count + 1;
             progress_values_seen.push_back(p);
         };
 
@@ -186,7 +186,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
     volatile int call_count = 0;
     ProgressCallback cb = [&](int p) {
         progress_val = p;
-        call_count++;
+        call_count = call_count + 1;
     };
 
     SECTION("Null input AnalogTimeSeries") {

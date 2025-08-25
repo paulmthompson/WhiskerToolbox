@@ -71,13 +71,13 @@ std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options) {
                 // Single column format: only data, time is inferred as index
                 if (!row.empty()) {
                     data_values.push_back(std::stof(row[0]));
-                    time_values.push_back(TimeFrameIndex(time_values.size())); // Use index as time
+                    time_values.push_back(TimeFrameIndex(static_cast<int64_t>(time_values.size()))); // Use index as time
                 }
             } else {
                 // Two column format: time and data columns
-                if (row.size() > std::max(options.time_column, options.data_column)) {
-                    time_values.push_back(TimeFrameIndex(static_cast<int64_t>(std::stof(row[options.time_column]))));
-                    data_values.push_back(std::stof(row[options.data_column]));
+                if (row.size() > static_cast<size_t>(std::max(options.time_column, options.data_column))) {
+                    time_values.push_back(TimeFrameIndex(static_cast<int64_t>(std::stof(row[static_cast<size_t>(options.time_column)]))));
+                    data_values.push_back(std::stof(row[static_cast<size_t>(options.data_column)]));
                 }
             }
         } catch (std::exception const & e) {
