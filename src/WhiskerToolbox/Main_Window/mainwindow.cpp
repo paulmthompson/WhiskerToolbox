@@ -613,8 +613,8 @@ void MainWindow::openDataTransforms() {
 
         dt_widget->setObjectName(key);
 
-        // Set explicit minimum size constraints
-        dt_widget->setMinimumSize(250, 400);
+        // Set explicit minimum size constraints - increased for better visibility
+        dt_widget->setMinimumSize(350, 700);
         dt_widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 
         // Create dock widget with appropriate settings

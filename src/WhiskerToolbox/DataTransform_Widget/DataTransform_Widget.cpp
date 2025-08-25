@@ -42,6 +42,8 @@
 #include <QMessageBox>
 #include <QFont>
 #include <QSplitter>
+#include <QScrollBar>
+#include <QTimer>
 
 
 DataTransform_Widget::DataTransform_Widget(
@@ -55,17 +57,22 @@ DataTransform_Widget::DataTransform_Widget(
       _jsonTextEdit(nullptr),
       _jsonStatusLabel(nullptr),
       _executeJsonButton(nullptr),
-      _pipelineProgressBar(nullptr) {
+      _pipelineProgressBar(nullptr),
+      _savedScrollPosition(0),
+      _preventScrolling(false) {
     ui->setupUi(this);
 
-    // Set explicit size policy and minimum size - increased for JSON section
+    // Set explicit size policy and minimum size - increased for better visibility
     setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-    setMinimumSize(250, 600);
+    setMinimumSize(350, 700);
 
     // Configure scroll area properties - enable scrolling for JSON section
     setWidgetResizable(true);
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    // Disable automatic scrolling to focused widgets
+    setFocusPolicy(Qt::NoFocus);
 
     _registry = std::make_unique<TransformRegistry>();
     
@@ -286,46 +293,23 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
         widget->deleteLater();
     }
 
-    // Find the factory function for this operation name
     auto factoryIt = _parameterWidgetFactories.find(op_name);
-
-    if (factoryIt == _parameterWidgetFactories.end()) {
-        std::cout << op_name << " does not appear in the factory registry" << std::endl;
+    if (factoryIt == _parameterWidgetFactories.end() || !factoryIt->second) {
         ui->stackedWidget->setCurrentIndex(0);
         return;
     }
 
-    if (!factoryIt->second) {
-        std::cout << "Factory function not found for " << op_name << std::endl;
-        ui->stackedWidget->setCurrentIndex(0);
-        return;
-    }
-
-    std::cout << "Calling factory for widget " << op_name << std::endl;
-
-    std::function<TransformParameter_Widget *(QWidget *)> const factory = factoryIt->second;
-    TransformParameter_Widget * newParamWidget = factory(ui->stackedWidget);// Create with parent
-
+    TransformParameter_Widget * newParamWidget = factoryIt->second(ui->stackedWidget);
     if (newParamWidget) {
-        std::cout << "Adding Widget" << std::endl;
-
-        // Set size policy for dynamic resizing without scrollbars
         newParamWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         newParamWidget->setMaximumWidth(ui->stackedWidget->width());
-
-        // Ensure no scrollbars appear
-        setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
         int const widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
-        _currentParameterWidget = newParamWidget;// Set as active
-
-        // If this is a scaling widget, set the current data key
+        Q_UNUSED(widgetIndex)
+        _currentParameterWidget = newParamWidget;
         auto scalingWidget = dynamic_cast<AnalogScaling_Widget *>(newParamWidget);
         if (scalingWidget && !_highlighted_available_feature.isEmpty()) {
             scalingWidget->setCurrentDataKey(_highlighted_available_feature);
         }
-
         ui->stackedWidget->setCurrentWidget(newParamWidget);
     } else {
         ui->stackedWidget->setCurrentIndex(0);
@@ -333,66 +317,56 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
 }
 
 void DataTransform_Widget::_updateProgress(int progress) {
-
     if (progress > _current_progress) {
         ui->transform_progress_bar->setValue(progress);
-        ui->transform_progress_bar->setFormat("%p%");// Show percentage text
-        ui->transform_progress_bar->repaint();       // Force immediate repaint
-        QApplication::processEvents();               // Process all pending events to ensure UI updates
+        ui->transform_progress_bar->setFormat("%p%");
+        if (_preventScrolling) {
+            verticalScrollBar()->setValue(_lockedScrollPosition);
+        }
         _current_progress = progress;
     }
 }
 
 void DataTransform_Widget::_doTransform() {
+    _savedScrollPosition = verticalScrollBar()->value();
+    _lockedScrollPosition = _savedScrollPosition;
+    _preventScrolling = true;
+
     auto const new_data_key = ui->output_name_edit->text().toStdString();
-
-    if (new_data_key.empty()) {
-        std::cout << "Output name is empty" << std::endl;
+    if (new_data_key.empty() || !_currentSelectedOperation) {
+        _preventScrolling = false;
         return;
     }
 
-    if (!_currentSelectedOperation) {
-        std::cout << "Does not have operation" << std::endl;
-        return;
-    }
-
-    // Reset and show the progress bar
     ui->transform_progress_bar->setValue(0);
     _current_progress = 0;
     ui->transform_progress_bar->setFormat("%p%");
     ui->transform_progress_bar->setTextVisible(true);
     ui->transform_progress_bar->repaint();
     ui->do_transform_button->setEnabled(false);
-    QApplication::processEvents();
+
+    verticalScrollBar()->setValue(_lockedScrollPosition);
 
     std::unique_ptr<TransformParametersBase> params_owner_ptr;
-    if (_currentParameterWidget) {// Check if a specific param widget is active
+    if (_currentParameterWidget) {
         params_owner_ptr = _currentParameterWidget->getParameters();
-    } else {
-        // No specific widget active. Maybe get defaults from operation? (Optional)
-        // params_owner_ptr = currentSelectedOperation_->getDefaultParameters();
     }
 
-    std::cout << "Executing '" << _currentSelectedOperation->getName() << "'..." << std::endl;
+    auto progressCallback = [this](int progress) { _updateProgress(progress); };
 
-    // Create a progress callback - use direct connection for immediate updates
-    auto progressCallback = [this](int progress) {
-        // Update directly from the UI thread to ensure immediate updates
-        _updateProgress(progress);
-    };
-
-    // Pass non-owning raw pointer to the Qt-agnostic execute method with progress callback
     auto result_any = _currentSelectedOperation->execute(
             _currentSelectedDataVariant,
             params_owner_ptr.get(),
             progressCallback);
-
 
     auto input_time_key = _data_manager->getTimeKey(_highlighted_available_feature.toStdString());
     _data_manager->setData(new_data_key, result_any, input_time_key);
 
     ui->transform_progress_bar->setValue(100);
     ui->do_transform_button->setEnabled(true);
+
+    verticalScrollBar()->setValue(_savedScrollPosition);
+    _preventScrolling = false;
 }
 
 QString DataTransform_Widget::_generateOutputName() const {
@@ -454,14 +428,21 @@ void DataTransform_Widget::resizeEvent(QResizeEvent* event) {
 
     // Ensure the stackedWidget is properly sized
     ui->stackedWidget->updateGeometry();
+
+    // Maintain scroll position during resize if preventing scrolling
+    if (_preventScrolling) {
+        QTimer::singleShot(0, [this]() {
+            verticalScrollBar()->setValue(_savedScrollPosition);
+        });
+    }
 }
 
 QSize DataTransform_Widget::sizeHint() const {
-    return QSize(350, 800);
+    return QSize(400, 900);
 }
 
 QSize DataTransform_Widget::minimumSizeHint() const {
-    return QSize(250, 600);
+    return QSize(350, 700);
 }
 
 void DataTransform_Widget::_setupJsonPipelineUI() {
@@ -658,6 +639,10 @@ void DataTransform_Widget::_executeJsonPipeline() {
         return;
     }
     
+    // Save scroll position before starting pipeline
+    _savedScrollPosition = verticalScrollBar()->value();
+    _preventScrolling = true;
+
     // Load the current JSON content
     QString jsonText = _getCurrentJsonContent();
     nlohmann::json config;
@@ -727,6 +712,10 @@ void DataTransform_Widget::_executeJsonPipeline() {
     }
     
     _executeJsonButton->setEnabled(true);
+
+    // Restore scroll position and re-enable scrolling
+    verticalScrollBar()->setValue(_savedScrollPosition);
+    _preventScrolling = false;
 }
 
 QString DataTransform_Widget::_getCurrentJsonContent() const {

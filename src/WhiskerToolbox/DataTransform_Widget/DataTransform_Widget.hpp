@@ -65,6 +65,11 @@ private:
     QString _currentJsonFile;
     std::unique_ptr<TransformPipeline> _pipeline;
 
+    // Add these members to prevent unwanted scrolling
+    int _savedScrollPosition = 0;
+    bool _preventScrolling = false;
+    int _lockedScrollPosition = 0; // keep original scroll position during transform
+
     void _initializeParameterWidgetFactories();
     void _displayParameterWidget(std::string const & op_name);
     
