@@ -4,6 +4,9 @@
 #include <QTimer>
 #include <QApplication>
 #include <QResizeEvent>
+#include <QGraphicsView>
+#include <QWheelEvent>
+#include <algorithm>
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -34,6 +37,11 @@ Media_Widget::Media_Widget(QWidget * parent)
       ui(new Ui::Media_Widget) {
     ui->setupUi(this);
 
+    // Hide legacy zoom button (now replaced by menu/shortcuts + wheel zoom)
+    if (ui->pushButton) {
+        ui->pushButton->hide();
+    }
+
     // Configure splitter behavior
     ui->splitter->setStretchFactor(0, 0);// Left panel (scroll area) doesn't stretch
     ui->splitter->setStretchFactor(1, 1);// Right panel (graphics view) stretches
@@ -47,6 +55,13 @@ Media_Widget::Media_Widget(QWidget * parent)
 
     // Connect splitter moved signal to update canvas size
     connect(ui->splitter, &QSplitter::splitterMoved, this, &Media_Widget::_updateCanvasSize);
+
+    // Install event filter on graphics view viewport for wheel zoom
+    if (ui->graphicsView && ui->graphicsView->viewport()) {
+        ui->graphicsView->viewport()->installEventFilter(this);
+        ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+        ui->graphicsView->setResizeAnchor(QGraphicsView::AnchorViewCenter);
+    }
 
     // Create text overlay section
     _text_section = new Section(this, "Text Overlays");
@@ -197,8 +212,6 @@ void Media_Widget::_connectTextWidgetToScene() {
 }
 
 void Media_Widget::_featureSelected(QString const & feature) {
-
-
     auto const type = _data_manager->getType(feature.toStdString());
     auto key = feature.toStdString();
 
@@ -247,7 +260,6 @@ void Media_Widget::_featureSelected(QString const & feature) {
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
     } else if (type == DM_DataType::Images) {
-        // Images are handled similarly to Video, using the MediaProcessing_Widget
         int const stacked_widget_index = 6;
 
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
@@ -261,7 +273,15 @@ void Media_Widget::_featureSelected(QString const & feature) {
 
 void Media_Widget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
-    _updateCanvasSize();
+    // When user has zoomed, avoid rescaling scene contents destructively; just adjust scene rect
+    if (_user_zoom_active) {
+        if (_scene) {
+            auto size = ui->graphicsView->size();
+            _scene->setSceneRect(0,0,size.width(), size.height());
+        }
+    } else {
+        _updateCanvasSize();
+    }
 }
 
 void Media_Widget::_updateCanvasSize() {
@@ -269,36 +289,26 @@ void Media_Widget::_updateCanvasSize() {
         int width = ui->graphicsView->width();
         int height = ui->graphicsView->height();
 
-        std::cout << "Updating canvas size to: " << width << "x" << height << std::endl;
-
         _scene->setCanvasSize(
                 ImageSize{width, height});
         _scene->UpdateCanvas();
 
         // Ensure the view fits the scene properly
         ui->graphicsView->setSceneRect(0, 0, width, height);
-        ui->graphicsView->fitInView(0, 0, width, height, Qt::IgnoreAspectRatio);
-
-        // Update the feature table size to match the scroll area width with smaller right margin
+        if (!_user_zoom_active) {
+            ui->graphicsView->resetTransform();
+            _current_zoom = 1.0;
+        }
+        // Fit disabled: we manage zoom manually now
+        // Update left panel sizing
         int scrollAreaWidth = ui->scrollArea->width();
         int featureTableWidth = scrollAreaWidth - 10;
         ui->feature_table_widget->setFixedWidth(featureTableWidth);
-
-        // Update stacked widget width to match feature table
         ui->stackedWidget->setFixedWidth(featureTableWidth);
-
-        // Update all widgets in the stacked widget to match the width
         for (int i = 0; i < ui->stackedWidget->count(); ++i) {
             QWidget* widget = ui->stackedWidget->widget(i);
             if (widget) {
                 widget->setFixedWidth(featureTableWidth);
-
-                // For MediaProcessing_Widget, ensure it fills the available space
-                auto processingWidget = qobject_cast<MediaProcessing_Widget*>(widget);
-                if (processingWidget) {
-                    processingWidget->setMinimumWidth(featureTableWidth);
-                    processingWidget->adjustSize();
-                }
             }
         }
     }
@@ -319,13 +329,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        if (enabled) {
-            std::cout << "Enabling line data in scene" << std::endl;
-            opts.value()->is_visible = true;
-        } else {
-            std::cout << "Disabling line data from scene" << std::endl;
-            opts.value()->is_visible = false;
-        }
+        opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::Mask) {
         auto opts = _scene->getMaskConfig(feature_key);
         if (!opts.has_value()) {
@@ -335,13 +339,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        if (enabled) {
-            std::cout << "Enabling mask data in scene" << std::endl;
-            opts.value()->is_visible = true;
-        } else {
-            std::cout << "Disabling mask data from scene" << std::endl;
-            opts.value()->is_visible = false;
-        }
+        opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::Points) {
         auto opts = _scene->getPointConfig(feature_key);
         if (!opts.has_value()) {
@@ -351,13 +349,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        if (enabled) {
-            std::cout << "Enabling point data in scene" << std::endl;
-            opts.value()->is_visible = true;
-        } else {
-            std::cout << "Disabling point data from scene" << std::endl;
-            opts.value()->is_visible = false;
-        }
+        opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::DigitalInterval) {
         auto opts = _scene->getIntervalConfig(feature_key);
         if (!opts.has_value()) {
@@ -367,13 +359,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        if (enabled) {
-            std::cout << "Enabling digital interval series in scene" << std::endl;
-            opts.value()->is_visible = true;
-        } else {
-            std::cout << "Disabling digital interval series from scene" << std::endl;
-            opts.value()->is_visible = false;
-        }
+        opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::Tensor) {
         auto opts = _scene->getTensorConfig(feature_key);
         if (!opts.has_value()) {
@@ -383,20 +369,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        if (enabled) {
-            std::cout << "Enabling tensor data in scene" << std::endl;
-            opts.value()->is_visible = true;
-        } else {
-            std::cout << "Disabling tensor data from scene" << std::endl;
-            opts.value()->is_visible = false;
-        }
-    } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
-        // Video and Image data don't use the same overlay system as other data types
-        // They are handled through the MediaProcessing_Widget and don't need visibility toggling
-        // The checkbox functionality is mainly for overlay features, not base media
-        std::cout << "Media type " << convert_data_type_to_string(type) << " - feature display toggling not applicable" << std::endl;
-    } else {
-        std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
+        opts.value()->is_visible = enabled;
     }
     _scene->UpdateCanvas();
 
@@ -447,30 +420,56 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
 }
 
 void Media_Widget::LoadFrame(int frame_id) {
-    // First, update the Media_Window with the new frame
     if (_scene) {
         _scene->LoadFrame(frame_id);
     }
-
-    // Then propagate the frame change to any active subwidgets
-    // that need to respond to time changes
-
-    // Check if we have a MediaLine_Widget active in the stackedWidget
     int currentIndex = ui->stackedWidget->currentIndex();
-    if (currentIndex > 0) {// Index 0 is typically the empty widget
+    if (currentIndex > 0) {
         auto currentWidget = ui->stackedWidget->currentWidget();
-
-        // Check for each type of widget and propagate the frame change
         auto lineWidget = dynamic_cast<MediaLine_Widget *>(currentWidget);
         if (lineWidget) {
             lineWidget->LoadFrame(frame_id);
         }
-
-        // Add similar handling for other types of media subwidgets as needed
-        // For example:
-        // auto pointWidget = dynamic_cast<MediaPoint_Widget*>(currentWidget);
-        // if (pointWidget) {
-        //     pointWidget->LoadFrame(frame_id);
-        // }
     }
+}
+
+// Zoom API implementations
+void Media_Widget::zoomIn() { _applyZoom(_zoom_step, false); }
+void Media_Widget::zoomOut() { _applyZoom(1.0 / _zoom_step, false); }
+void Media_Widget::resetZoom() {
+    if (!ui->graphicsView) return;
+    ui->graphicsView->resetTransform();
+    _current_zoom = 1.0;
+    _user_zoom_active = false;
+}
+
+void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
+    if (!ui->graphicsView) return;
+    double new_zoom = _current_zoom * factor;
+    new_zoom = std::clamp(new_zoom, _min_zoom, _max_zoom);
+    factor = new_zoom / _current_zoom; // Adjust factor if clamped
+    if (qFuzzyCompare(factor, 1.0)) return;
+    if (anchor_under_mouse) {
+        ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    } else {
+        ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+    }
+    ui->graphicsView->scale(factor, factor);
+    _current_zoom = new_zoom;
+    _user_zoom_active = (_current_zoom != 1.0);
+}
+
+bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
+    if (watched == ui->graphicsView->viewport() && event->type() == QEvent::Wheel) {
+        auto * wheelEvent = static_cast<QWheelEvent *>(event);
+        double angle = wheelEvent->angleDelta().y();
+        if (angle > 0) {
+            _applyZoom(_zoom_step, true);
+        } else if (angle < 0) {
+            _applyZoom(1.0 / _zoom_step, true);
+        }
+        wheelEvent->accept();
+        return true;
+    }
+    return QWidget::eventFilter(watched, event);
 }
