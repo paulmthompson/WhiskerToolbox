@@ -105,5 +105,6 @@ private slots:
     void openAnalysisDashboard();
     void openTestWidget();
     void openTableDesignerWidget();
+    void takeSnapshot(); // new slot for snapshot action/context menu
 };
 #endif// MAINWINDOW_HPP

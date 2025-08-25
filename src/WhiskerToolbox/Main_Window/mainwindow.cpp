@@ -66,6 +66,9 @@ MainWindow::MainWindow(QWidget * parent)
 
     _scene = new Media_Window(_data_manager, this);
 
+    // Connect scene snapshot request (context menu) to main window slot
+    connect(_scene, &Media_Window::requestSnapshot, this, &MainWindow::takeSnapshot);
+
     _verbose = false;
 
     ui->time_scrollbar->setDataManager(_data_manager);
@@ -130,6 +133,8 @@ void MainWindow::_createActions() {
     connect(ui->actionAnalysis_Dashboard, &QAction::triggered, this, &MainWindow::openAnalysisDashboard);
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
+    // Snapshot action
+    connect(ui->actionTake_Snapshot, &QAction::triggered, this, &MainWindow::takeSnapshot);
 }
 
 /*
@@ -705,4 +710,34 @@ void MainWindow::openTestWidget() {
     }
 
     showDockWidget(key);
+}
+
+void MainWindow::takeSnapshot() {
+    // Ensure media is available
+    if (!_data_manager->getData<MediaData>("media")) { // replaced hasKey with getData null check
+        statusBar()->showMessage("No media loaded for snapshot", 3000);
+        return;
+    }
+
+    QImage snapshot = _scene->grabSnapshot();
+    if (snapshot.isNull()) {
+        statusBar()->showMessage("Failed to capture snapshot", 3000);
+        return;
+    }
+
+    // Open file dialog to save the snapshot
+    QString filename = QFileDialog::getSaveFileName(this,
+                                                    "Save Snapshot",
+                                                    QDir::currentPath() + "/snapshot.png",
+                                                    "PNG (*.png);;JPEG (*.jpg *.jpeg);;TIFF (*.tif *.tiff)");
+    if (filename.isEmpty()) {
+        return; // user cancelled
+    }
+
+    if (!snapshot.save(filename)) {
+        statusBar()->showMessage("Failed to save snapshot", 3000);
+        return;
+    }
+
+    statusBar()->showMessage("Snapshot saved: " + filename, 5000);
 }
