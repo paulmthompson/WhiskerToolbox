@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <omp.h>
 
 
 
@@ -33,58 +34,82 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
         result_mask_data->setImageSize(image_size);
     }
     
-    // Count total masks to process for progress calculation
-    size_t total_masks = 0;
+    // Collect all masks and their metadata for processing
+    struct MaskJob {
+        std::vector<Point2D<uint32_t>> mask;
+        TimeFrameIndex time;
+        size_t original_index;
+        bool is_empty;
+
+        // Constructor to help with initialization
+        MaskJob(std::vector<Point2D<uint32_t>> const& m, TimeFrameIndex t, size_t idx, bool empty)
+            : mask(m), time(t), original_index(idx), is_empty(empty) {}
+    };
+
+    std::vector<MaskJob> mask_jobs;
+
     for (auto const & mask_time_pair : mask_data->getAllAsRange()) {
-        if (!mask_time_pair.masks.empty()) {
-            total_masks += mask_time_pair.masks.size();
+        auto time = mask_time_pair.time;
+        auto const & masks = mask_time_pair.masks;
+
+        for (auto const & mask : masks) {
+            mask_jobs.emplace_back(mask, time, mask_jobs.size(), mask.empty());
         }
     }
     
-    if (total_masks == 0) {
+    if (mask_jobs.empty()) {
         progress_callback(100);
         return result_mask_data;
     }
     
     progress_callback(0);
     
-    size_t processed_masks = 0;
-    
-    for (auto const & mask_time_pair : mask_data->getAllAsRange()) {
-        auto time = mask_time_pair.time;
-        auto const & masks = mask_time_pair.masks;
-        
-        for (auto const & mask : masks) {
-            if (mask.empty()) {
-                if (preserve_empty_masks) {
-                    result_mask_data->addAtTime(time, std::vector<Point2D<uint32_t>>{}, false);
-                }
-                processed_masks++;
-                continue;
+    // Prepare results vector to store processed masks
+    std::vector<std::vector<Point2D<uint32_t>>> processed_masks(mask_jobs.size());
+    std::vector<bool> should_add_mask(mask_jobs.size(), false);
+
+    // Process masks in parallel using OpenMP
+    // Each thread processes different masks independently
+    #pragma omp parallel for schedule(dynamic, 4) default(none) \
+        shared(mask_jobs, processed_masks, should_add_mask, binary_processor, image_size, preserve_empty_masks)
+    for (size_t i = 0; i < mask_jobs.size(); ++i) {
+        auto const & job = mask_jobs[i];
+
+        if (job.is_empty) {
+            if (preserve_empty_masks) {
+                should_add_mask[i] = true;
+                processed_masks[i] = std::vector<Point2D<uint32_t>>{};
             }
-            
+        } else {
             // Convert mask to binary image
-            Image binary_image = mask_to_binary_image(mask, image_size);
-            
+            Image binary_image = mask_to_binary_image(job.mask, image_size);
+
             // Apply the binary processing algorithm
             Image processed_image = binary_processor(binary_image);
             
             // Convert processed image back to mask points
             std::vector<Point2D<uint32_t>> processed_points = binary_image_to_mask(processed_image);
             
-            // Add the processed mask to result (only if it has points)
+            // Store result if it has points
             if (!processed_points.empty()) {
-                result_mask_data->addAtTime(time, processed_points, false);
+                should_add_mask[i] = true;
+                processed_masks[i] = std::move(processed_points);
             }
-            
-            processed_masks++;
-            
-            // Update progress
-            int progress = static_cast<int>(
-                std::round(static_cast<double>(processed_masks) / total_masks * 100.0)
-            );
-            progress_callback(progress);
         }
+    }
+
+    // Add processed masks to result in original order
+    // This must be done sequentially to maintain thread safety
+    for (size_t i = 0; i < mask_jobs.size(); ++i) {
+        if (should_add_mask[i]) {
+            result_mask_data->addAtTime(mask_jobs[i].time, processed_masks[i], false);
+        }
+
+        // Update progress
+        int progress = static_cast<int>(
+            std::round(static_cast<double>(i + 1) / mask_jobs.size() * 100.0)
+        );
+        progress_callback(progress);
     }
     
     progress_callback(100);
