@@ -45,8 +45,8 @@ std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t
     std::vector<uint8_t> cleaned_skeleton(nrows * ncols, 0);
 
     // Copy image into skeleton with border, normalizing to binary 0/1 values
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
+    for (size_t row = 0; row < height; ++row) {
+        for (size_t col = 0; col < width; ++col) {
             skeleton[(row + 1) * ncols + (col + 1)] = (image[row * width + col] > 0) ? 1 : 0;
         }
     }
@@ -62,17 +62,17 @@ std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t
         for (int pass_num = 0; pass_num < 2; ++pass_num) {
             bool const first_pass = (pass_num == 0);
 
-            for (int row = 1; row < nrows - 1; ++row) {
-                for (int col = 1; col < ncols - 1; ++col) {
+            for (size_t row = 1; row < nrows - 1; ++row) {
+                for (size_t col = 1; col < ncols - 1; ++col) {
                     if (skeleton[row * ncols + col]) {
-                        uint8_t const neighbors = lut[skeleton[(row - 1) * ncols + (col - 1)] +
+                        uint8_t const neighbors = lut[static_cast<size_t>(skeleton[(row - 1) * ncols + (col - 1)] +
                                                       2 * skeleton[(row - 1) * ncols + col] +
                                                       4 * skeleton[(row - 1) * ncols + (col + 1)] +
                                                       8 * skeleton[row * ncols + (col + 1)] +
                                                       16 * skeleton[(row + 1) * ncols + (col + 1)] +
                                                       32 * skeleton[(row + 1) * ncols + col] +
                                                       64 * skeleton[(row + 1) * ncols + (col - 1)] +
-                                                      128 * skeleton[row * ncols + (col - 1)]];
+                                                      128 * skeleton[row * ncols + (col - 1)])];
 
                         if (neighbors == 0) {
                             continue;
@@ -91,8 +91,8 @@ std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t
 
     // Remove border and return the result
     std::vector<uint8_t> result(height * width, 0);
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
+    for (size_t row = 0; row < height; ++row) {
+        for (size_t col = 0; col < width; ++col) {
             result[row * width + col] = skeleton[(row + 1) * ncols + (col + 1)];
         }
     }

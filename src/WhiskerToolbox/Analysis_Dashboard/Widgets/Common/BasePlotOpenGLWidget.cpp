@@ -301,6 +301,11 @@ void BasePlotOpenGLWidget::setSelectionMode(SelectionMode mode) {
 
 
 void BasePlotOpenGLWidget::createSelectionHandler(SelectionMode mode) {
+    // Ensure OpenGL context is current for handlers that need OpenGL functions
+    if (mode == SelectionMode::PolygonSelection || mode == SelectionMode::LineIntersection) {
+        makeCurrent();
+    }
+    
     switch (mode) {
         case SelectionMode::None:
             _selection_handler = std::make_unique<NoneSelectionHandler>();

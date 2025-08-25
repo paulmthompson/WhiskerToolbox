@@ -638,7 +638,7 @@ TEST_CASE_METHOD(IntervalReductionTableRegistryTestFixture, "DM - TV - IntervalR
         REQUIRE(mean_info->name == "Interval Mean");
         REQUIRE(mean_info->outputType == typeid(double));
         REQUIRE(mean_info->outputTypeName == "double");
-        REQUIRE(mean_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(mean_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(mean_info->requiredSourceType == typeid(std::shared_ptr<IAnalogSource>));
         
         // Verify other computers have correct output types

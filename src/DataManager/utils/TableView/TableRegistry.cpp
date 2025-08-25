@@ -152,7 +152,7 @@ bool TableRegistry::removeTableColumn(std::string const & table_id, size_t colum
         return false;
     }
     std::string removed = table.columns[column_index].name;
-    table.columns.erase(table.columns.begin() + column_index);
+    table.columns.erase(table.columns.begin() + static_cast<long int>(column_index));
     table.columnNames.clear();
     for (auto const & column : table.columns) {
         table.columnNames.push_back(column.name);

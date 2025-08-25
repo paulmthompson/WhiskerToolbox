@@ -143,29 +143,29 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
         return {};
     }
 
-    size_t total_time_points = total_frame_count;
+    auto total_time_points = static_cast<size_t>(total_frame_count);
     size_t processed_time_points = 0;
 
     // Process frames in batches for parallel processing
     if (typed_params->use_parallel_processing && typed_params->batch_size > 1) {
-        for (size_t i = 0; i < total_frame_count; i += typed_params->batch_size) {
+        for (size_t i = 0; i < total_time_points; i += static_cast<size_t>(typed_params->batch_size)) {
             std::vector<std::vector<uint8_t>> batch_images;
             std::vector<int> batch_times;
 
             // Collect images for this batch
-            for (size_t j = 0; j < typed_params->batch_size && (i + j) < total_frame_count; ++j) {
+            for (size_t j = 0; j < static_cast<size_t>(typed_params->batch_size) && (i + j) < total_time_points; ++j) {
                 auto time = i + j;
                 std::vector<uint8_t> image_data;
 
                 if (typed_params->use_processed_data) {
-                    image_data = media_data->getProcessedData(time);
+                    image_data = media_data->getProcessedData(static_cast<int>(time));
                 } else {
-                    image_data = media_data->getRawData(time);
+                    image_data = media_data->getRawData(static_cast<int>(time));
                 }
 
                 if (!image_data.empty()) {
                     batch_images.push_back(std::move(image_data));
-                    batch_times.push_back(time);
+                    batch_times.push_back(static_cast<int>(time));
                 }
             }
 
@@ -185,32 +185,32 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
             }
 
             if (progressCallback) {
-                int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / total_time_points * 100.0));
+                int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
                 progressCallback(current_progress);
             }
         }
     } else {
         // Process frames one by one
-        for (size_t time = 0; time < total_frame_count; ++time) {
+        for (size_t time = 0; time < total_time_points; ++time) {
             std::vector<uint8_t> image_data;
 
             if (typed_params->use_processed_data) {
-                image_data = media_data->getProcessedData(time);
+                image_data = media_data->getProcessedData(static_cast<int>(time));
             } else {
-                image_data = media_data->getRawData(time);
+                image_data = media_data->getRawData(static_cast<int>(time));
             }
 
             if (!image_data.empty()) {
                 auto whisker_lines = trace_single_image(*whisker_tracker, image_data, media_data->getImageSize(), typed_params->clip_length);
 
                 for (auto const & line: whisker_lines) {
-                    traced_whiskers->addAtTime(TimeFrameIndex(time), line, false);
+                    traced_whiskers->addAtTime(TimeFrameIndex(static_cast<int64_t>(time)), line, false);
                 }
             }
 
             processed_time_points++;
             if (progressCallback) {
-                int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / total_time_points * 100.0));
+                int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
                 progressCallback(current_progress);
             }
         }

@@ -52,12 +52,12 @@ std::vector<double> fit_single_dimension_polynomial_internal(
         return {}; // Not enough data or mismatched sizes
     }
 
-    arma::mat X_vandermonde(t_values.size(), order + 1);
+    arma::mat X_vandermonde(t_values.size(), static_cast<arma::uword>(order) + 1);
     arma::vec Y_coords(const_cast<double*>(dimension_coords.data()), dimension_coords.size(), false); // Use const_cast and non-copy for efficiency
 
     for (size_t i = 0; i < t_values.size(); ++i) {
         for (int j = 0; j <= order; ++j) {
-            X_vandermonde(i, j) = std::pow(t_values[i], j);
+            X_vandermonde(i, static_cast<arma::uword>(j)) = std::pow(t_values[i], j);
         }
     }
 

@@ -7,18 +7,18 @@
 
 // Helper function to fit a polynomial of the specified order to the given data
 std::vector<double> fit_polynomial(std::vector<double> const &x, std::vector<double> const &y, int order) {
-    if (x.size() != y.size() || x.size() <= order) {
+    if (x.size() != y.size() || x.size() <= static_cast<size_t>(order)) {
         return {};  // Not enough data points or size mismatch
     }
 
     // Create Armadillo matrix for Vandermonde matrix
-    arma::mat X(x.size(), order + 1);
+    arma::mat X(x.size(), static_cast<arma::uword>(order) + 1);
     arma::vec Y(y.data(), y.size());
 
     // Build Vandermonde matrix
     for (size_t i = 0; i < x.size(); ++i) {
         for (int j = 0; j <= order; ++j) {
-            X(i, j) = std::pow(x[i], j);
+            X(i, static_cast<arma::uword>(j)) = std::pow(x[i], j);
         }
     }
 
@@ -39,7 +39,7 @@ std::vector<double> fit_polynomial(std::vector<double> const &x, std::vector<dou
 double evaluate_polynomial_derivative(std::vector<double> const &coeffs, double x) {
     double result = 0.0;
     for (size_t i = 1; i < coeffs.size(); ++i) {
-        result += i * coeffs[i] * std::pow(x, i - 1);
+        result += static_cast<double>(i) * coeffs[i] * std::pow(x, static_cast<double>(i) - 1.0);
     }
     return result;
 }

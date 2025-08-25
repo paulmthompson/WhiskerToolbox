@@ -60,7 +60,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
         point_data.addPointsAtTime(TimeFrameIndex(10), points);
         point_data.addPointsAtTime(TimeFrameIndex(20), more_points);
 
-        point_data.clearAtTime(TimeFrameIndex(10));
+        static_cast<void>(point_data.clearAtTime(TimeFrameIndex(10)));
 
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
@@ -335,7 +335,7 @@ TEST_CASE("DM - PointData - Edge cases and error handling", "[points][data][erro
     }
 
     SECTION("Clearing points at non-existent time") {
-        point_data.clearAtTime(TimeFrameIndex(42));
+        static_cast<void>(point_data.clearAtTime(TimeFrameIndex(42)));
         auto points = point_data.getAtTime(TimeFrameIndex(42));
         REQUIRE(points.empty());
 
@@ -404,7 +404,7 @@ TEST_CASE("DM - PointData - Edge cases and error handling", "[points][data][erro
 
         // Add, clear, add again to test internal state consistency
         point_data.addAtTime(TimeFrameIndex(5), p1);
-        point_data.clearAtTime(TimeFrameIndex(5));
+        static_cast<void>(point_data.clearAtTime(TimeFrameIndex(5)));
         point_data.addAtTime(TimeFrameIndex(5), p1);
 
         auto points = point_data.getAtTime(TimeFrameIndex(5));

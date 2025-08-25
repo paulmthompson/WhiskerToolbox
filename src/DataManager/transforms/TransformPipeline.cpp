@@ -461,7 +461,7 @@ std::map<int, std::vector<int>> TransformPipeline::groupStepsByPhase() const {
 
 std::vector<StepResult> TransformPipeline::executePhase(
     std::vector<int> const& phase_steps, 
-    int phase_number,
+    int,
     PipelineProgressCallback progress_callback) {
     
     std::vector<StepResult> results;
@@ -470,11 +470,11 @@ std::vector<StepResult> TransformPipeline::executePhase(
     if (phase_steps.size() == 1) {
         // Single step - execute directly
         int step_index = phase_steps[0];
-        auto const& step = steps_[step_index];
+        auto const& step = steps_[static_cast<size_t>(step_index)];
         
         ProgressCallback step_progress_callback;
         if (progress_callback) {
-            step_progress_callback = [=](int step_progress) {
+            step_progress_callback = [this, progress_callback, step_index, step](int step_progress) {
                 int overall_progress = (step_index * 100) / static_cast<int>(steps_.size());
                 progress_callback(step_index, step.step_id, step_progress, overall_progress);
             };
@@ -487,11 +487,11 @@ std::vector<StepResult> TransformPipeline::executePhase(
         futures.reserve(phase_steps.size());
         
         for (int step_index : phase_steps) {
-            auto const& step = steps_[step_index];
+            auto const& step = steps_[static_cast<size_t>(step_index)];
             
             ProgressCallback step_progress_callback;
             if (progress_callback) {
-                step_progress_callback = [=](int step_progress) {
+                step_progress_callback = [this, progress_callback, step_index, step](int step_progress) {
                     int overall_progress = (step_index * 100) / static_cast<int>(steps_.size());
                     progress_callback(step_index, step.step_id, step_progress, overall_progress);
                 };
