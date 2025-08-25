@@ -27,6 +27,8 @@
 #include <QGraphicsTextItem>
 #include <QImage>
 #include <QPainter>
+#include <QMenu>
+#include <QGraphicsSceneContextMenuEvent>
 
 #include <iostream>
 
@@ -1438,4 +1440,26 @@ void Media_Window::setPreviewMaskData(std::string const & mask_key,
         _preview_mask_data.erase(mask_key);
         _mask_preview_active = !_preview_mask_data.empty();
     }
+}
+
+QImage Media_Window::grabSnapshot() const {
+    QImage image(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
+    image.fill(Qt::transparent);
+    QPainter painter(&image);
+    // Render the current scene contents onto the painter
+    const_cast<Media_Window*>(this)->render(&painter, QRectF(0, 0, _canvasWidth, _canvasHeight), QRect(0, 0, _canvasWidth, _canvasHeight));
+    painter.end();
+    return image;
+}
+
+void Media_Window::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
+    QMenu menu;
+    QAction * snapshotAction = menu.addAction("Take Snapshot");
+    QAction * selected = menu.exec(event->screenPos());
+    if (selected == snapshotAction) {
+        emit requestSnapshot();
+        event->accept();
+        return;
+    }
+    QGraphicsScene::contextMenuEvent(event);
 }
