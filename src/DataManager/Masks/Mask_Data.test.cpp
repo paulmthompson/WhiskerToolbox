@@ -246,8 +246,8 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
         REQUIRE(mask_data.clearAtTime(TimeFrameIndex(0)));
         REQUIRE(notification_count == 1);
 
-        // Clear with notification disabled
-        REQUIRE(mask_data.clearAtTime(TimeFrameIndex(0), false));
+        // Clear with notification disabled (should return false - nothing to clear)
+        REQUIRE_FALSE(mask_data.clearAtTime(TimeFrameIndex(0), false));
         REQUIRE(notification_count == 1);  // Still 1, not incremented
 
         // Clear non-existent time (shouldn't notify)
