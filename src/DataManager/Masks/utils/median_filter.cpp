@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <array> // added for fixed-size window variant
 
 namespace {
     /**
@@ -39,7 +40,45 @@ namespace {
     }
 }
 
+// Fixed-size 3x3 median filter (stack allocated window via std::array)
+std::vector<uint8_t> median_filter_fixed3(std::vector<uint8_t> const & image, ImageSize const image_size) {
+    constexpr int window_size = 3;
+    auto const height = image_size.height;
+    auto const width = image_size.width;
+    if (width <= 0 || height <= 0) return {};
+    if (static_cast<size_t>(width) * static_cast<size_t>(height) != image.size()) return {};
+
+    std::vector<uint8_t> result(static_cast<size_t>(height) * static_cast<size_t>(width));
+
+    for (int row = 0; row < height; ++row) {
+        for (int col = 0; col < width; ++col) {
+            std::array<uint8_t, window_size * window_size> window{}; // 9 bytes on stack
+            size_t idx = 0;
+            for (int dr = -1; dr <= 1; ++dr) {
+                for (int dc = -1; dc <= 1; ++dc) {
+                    uint8_t pix = get_pixel_with_padding(image, width, height, row + dr, col + dc);
+                    window[idx++] = normalize_binary(pix);
+                }
+            }
+            int sum = 0; // count ones; median of 9 binary samples is 1 if sum >=5
+            for (auto v : window) sum += v;
+            result[static_cast<size_t>(row) * static_cast<size_t>(width) + static_cast<size_t>(col)] = static_cast<uint8_t>(sum >= 5 ? 1 : 0);
+        }
+    }
+    return result;
+}
+
+Image median_filter_fixed3(Image const & input_image) {
+    auto out = median_filter_fixed3(input_image.data, input_image.size);
+    return Image(std::move(out), input_image.size);
+}
+
 std::vector<uint8_t> median_filter(std::vector<uint8_t> const & image, ImageSize const image_size, int window_size) {
+    // Fast path for default 3x3 window
+    if (window_size == 3) {
+        return median_filter_fixed3(image, image_size);
+    }
+
     auto const height = image_size.height;
     auto const width = image_size.width;
     
@@ -93,4 +132,4 @@ Image median_filter(Image const & input_image, int window_size) {
     
     // Return as Image struct
     return Image(std::move(result_data), input_image.size);
-} 
+}
