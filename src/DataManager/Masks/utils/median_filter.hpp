@@ -57,4 +57,50 @@ std::vector<uint8_t> median_filter(std::vector<uint8_t> const & image, ImageSize
  */
 Image median_filter(Image const & input_image, int window_size);
 
-#endif//WHISKERTOOLBOX_MEDIAN_FILTER_HPP 
+/**
+ * @brief Applies a fixed-size 3x3 median filter to a binary image.
+ *
+ * This variant uses std::array for fixed-size stack allocation instead of a
+ * dynamically sized std::vector. It is intended for benchmarking and comparison
+ * purposes. The median is computed over a 3x3 neighborhood for each pixel.
+ *
+ * @param image Input binary image as a 1D vector where non-zero values represent foreground pixels
+ * @param image_size Dimensions of the input image (width and height)
+ *
+ * @pre image.size() must equal image_size.width * image_size.height
+ * @pre image_size.width and image_size.height must be greater than 0
+ * @pre Image data should be binary (0 or non-zero values)
+ * @pre Image data is expected in row-major order: index = row * width + col
+ *
+ * @post Returns a binary image of the same dimensions with median filtering applied
+ * @post Output values are normalized to 0 or 1
+ * @post Boundary pixels are handled using reflection padding
+ *
+ * @return std::vector<uint8_t> Filtered binary image (values 0 or 1) in row-major order
+ */
+std::vector<uint8_t> median_filter_fixed3(std::vector<uint8_t> const & image, ImageSize image_size);
+
+/**
+ * @brief Applies a fixed-size 3x3 median filter to a binary image.
+ *
+ * This variant uses the Image struct for fixed-size stack allocation instead of a
+ * dynamically sized std::vector. It is intended for benchmarking and comparison
+ * purposes. The median is computed over a 3x3 neighborhood for each pixel.
+ *
+ * @param input_image Input binary image where non-zero values represent foreground pixels
+ *
+ * @pre input_image.data.size() must equal input_image.size.width * input_image.size.height
+ * @pre input_image.size.width and input_image.size.height must be greater than 0
+ * @pre Image data should be binary (0 or non-zero values)
+ * @pre Image data must be in row-major order as documented in Image struct
+ *
+ * @post Returns a binary image of the same dimensions with median filtering applied
+ * @post Output values are normalized to 0 or 1
+ * @post Output image maintains row-major data layout
+ * @post Boundary pixels are handled using reflection padding
+ *
+ * @return Image Filtered binary image (values 0 or 1)
+ */
+Image median_filter_fixed3(Image const & input_image);
+
+#endif//WHISKERTOOLBOX_MEDIAN_FILTER_HPP
