@@ -4,7 +4,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
+#include "transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 #include "transforms/data_transforms.hpp" // For ProgressCallback
 
 #include <vector>
@@ -295,3 +295,76 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
     }
 }
 
+
+#include "DataManager.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/TransformPipeline.hpp"
+
+#include "transforms/TransformRegistry.hpp"
+
+TEST_CASE("Data Transform: Analog Event Threshold - JSON pipeline", "[transforms][analog_event_threshold][json]") {
+    const nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "threshold_step_1"},
+            {"transform_name", "Threshold Event Detection"},
+            {"input_key", "TestSignal.channel1"},
+            {"output_key", "DetectedEvents"},
+            {"parameters", {
+                {"threshold_value", 1.0},
+                {"direction", "Positive (Rising)"},
+                {"lockout_time", 0.0}
+            }}
+        }}}
+    };
+
+    DataManager dm;
+    TransformRegistry registry;
+
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+
+    std::vector<float> values = {0.5f, 1.5f, 0.8f, 2.5f, 1.2f};
+    std::vector<TimeFrameIndex> times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
+    auto ats = std::make_shared<AnalogTimeSeries>(values, times);
+    ats->setTimeFrame(time_frame);
+    dm.setData("TestSignal.channel1", ats, TimeKey("default"));
+
+    TransformPipeline pipeline(&dm, &registry);
+    pipeline.loadFromJson(json_config);
+    pipeline.execute();
+
+    // Verify the results
+    auto event_series = dm.getData<DigitalEventSeries>("DetectedEvents");
+    REQUIRE(event_series != nullptr);
+
+    std::vector<float> expected_events = {200.0f, 400.0f, 500.0f};
+    REQUIRE_THAT(event_series->getEventSeries(), Catch::Matchers::Equals(expected_events));
+}
+
+#include "transforms/ParameterFactory.hpp"
+#include "transforms/TransformRegistry.hpp"
+
+TEST_CASE("Data Transform: Analog Event Threshold - Parameter Factory", "[transforms][analog_event_threshold][factory]") {
+    auto& factory = ParameterFactory::getInstance();
+    factory.initializeDefaultSetters();
+
+    auto params_base = std::make_unique<ThresholdParams>();
+    REQUIRE(params_base != nullptr);
+
+    const nlohmann::json params_json = {
+        {"threshold_value", 2.5},
+        {"direction", "Negative (Falling)"},
+        {"lockout_time", 123.45}
+    };
+
+    for (auto const& [key, val] : params_json.items()) {
+        factory.setParameter("Threshold Event Detection", params_base.get(), key, val, nullptr);
+    }
+
+    auto* params = dynamic_cast<ThresholdParams*>(params_base.get());
+    REQUIRE(params != nullptr);
+
+    REQUIRE(params->thresholdValue == 2.5);
+    REQUIRE(params->direction == ThresholdParams::ThresholdDirection::NEGATIVE);
+    REQUIRE(params->lockoutTime == 123.45);
+}

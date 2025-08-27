@@ -53,6 +53,7 @@ website:
         - developer/data_transform_widget.qmd
         - developer/data_viewer_widget.qmd
         - developer/table_view.qmd
+        - developer/transforms.qmd
         - section: "Features"
           href: developer/Features/overview.qmd
           contents:
@@ -93,6 +94,7 @@ website:
         - section: "Data Transformations"
           contents:
             - user_guide/data_transformations/overview.qmd
+            - user_guide/data_transformations/threshold_event_detection.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd

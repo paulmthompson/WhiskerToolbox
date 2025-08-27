@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Image Processing – Neuralyzer</title>
+<title>Analysis Dashboard: Embedding OpenGL Widgets in QGraphicsScene – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +19,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -72,7 +106,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-sidebar docked nav-fixed">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -151,126 +185,32 @@ ul.task-list li input[type="checkbox"] {
 </div>
       </div> <!-- /container-fluid -->
     </nav>
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/image_processing.html">Image Processing</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-    </div>
-  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Developer Documentation</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Building</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Contributing Code</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">File IO</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Image Processing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Media Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_transform_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Transform Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Viewer Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/table_view.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Table View</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/transforms.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">transforms</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Features</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Collapsible Widget</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a></li>
+  <li><a href="#embedding-pattern-plot-item" id="toc-embedding-pattern-plot-item" class="nav-link" data-scroll-target="#embedding-pattern-plot-item">Embedding pattern (plot item)</a></li>
+  <li><a href="#opengl-widget-configuration" id="toc-opengl-widget-configuration" class="nav-link" data-scroll-target="#opengl-widget-configuration">OpenGL widget configuration</a></li>
+  <li><a href="#repaint-strategy" id="toc-repaint-strategy" class="nav-link" data-scroll-target="#repaint-strategy">Repaint strategy</a></li>
+  <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Image Processing</h1>
+<h1 class="title">Analysis Dashboard: Embedding OpenGL Widgets in QGraphicsScene</h1>
 </div>
 
 
@@ -287,8 +227,153 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>This note documents the pattern for embedding a <code>QOpenGLWidget</code> inside a <code>QGraphicsScene</code> via <code>QGraphicsProxyWidget</code>, as used by the Analysis Dashboard plots. The goal is to achieve smooth, interactive pan/zoom and reliable repainting while the plot lives as a <code>QGraphicsItem</code> within a scene.</p>
+<p>The core pieces:</p>
+<ul>
+<li>A plot <code>QGraphicsWidget</code> subclass that owns a <code>QGraphicsProxyWidget</code> hosting the OpenGL widget</li>
+<li>An OpenGL widget configured for proxy embedding and interactive input</li>
+<li>Intentional event routing so dragging and wheel actions reach the OpenGL widget (not the parent graphics item)</li>
+</ul>
+</section>
+<section id="architecture" class="level1">
+<h1>Architecture</h1>
+<ul>
+<li>Plot item: <code>QGraphicsWidget</code> (e.g., <code>SpatialOverlayPlotWidget</code>, <code>ScatterPlotWidget</code>)
+<ul>
+<li>Draws the plot frame and title in its <code>paint()</code></li>
+<li>Embeds an OpenGL child via <code>QGraphicsProxyWidget</code></li>
+<li>Routes mouse events: title area → item movement; content area → OpenGL interactivity</li>
+</ul></li>
+<li>OpenGL child: <code>QOpenGLWidget</code> (e.g., <code>SpatialOverlayOpenGLWidget</code>, <code>ScatterPlotOpenGLWidget</code>)
+<ul>
+<li>Holds visualization state and OpenGL resources</li>
+<li>Implements interactive behavior: mouse press/move/release, wheel zoom, tooltips</li>
+<li>Emits signals to trigger lightweight parent/proxy repaints</li>
+</ul></li>
+</ul>
+</section>
+<section id="embedding-pattern-plot-item" class="level1">
+<h1>Embedding pattern (plot item)</h1>
+<p>Configure the OpenGL widget and proxy to avoid stale frames and input conflicts when embedded in a <code>QGraphicsScene</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In PlotWidget::setupOpenGLWidget()</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>_opengl_widget <span class="op">=</span> <span class="kw">new</span> ScatterPlotOpenGLWidget<span class="op">();</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>_proxy_widget <span class="op">=</span> <span class="kw">new</span> <span class="ex">QGraphicsProxyWidget</span><span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>_proxy_widget<span class="op">-&gt;</span>setWidget<span class="op">(</span>_opengl_widget<span class="op">);</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// OpenGL widget attributes for proxy embedding</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>_opengl_widget<span class="op">-&gt;</span>setAttribute<span class="op">(</span><span class="ex">Qt::WA_AlwaysStackOnTop</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>_opengl_widget<span class="op">-&gt;</span>setAttribute<span class="op">(</span><span class="ex">Qt::WA_OpaquePaintEvent</span><span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>_opengl_widget<span class="op">-&gt;</span>setAttribute<span class="op">(</span><span class="ex">Qt::WA_NoSystemBackground</span><span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>_opengl_widget<span class="op">-&gt;</span>setUpdateBehavior<span class="op">(</span><span class="ex">QOpenGLWidget::NoPartialUpdate</span><span class="op">);</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Prevent the proxy from intercepting movement/selection</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>_proxy_widget<span class="op">-&gt;</span>setFlag<span class="op">(</span><span class="ex">QGraphicsItem::ItemIsMovable</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>_proxy_widget<span class="op">-&gt;</span>setFlag<span class="op">(</span><span class="ex">QGraphicsItem::ItemIsSelectable</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Make sure we repaint from the child every update</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>_proxy_widget<span class="op">-&gt;</span>setCacheMode<span class="op">(</span><span class="ex">QGraphicsItem::NoCache</span><span class="op">);</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Lay out inside the plot frame (leave room for title/border)</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="ex">QRectF</span> rect <span class="op">=</span> boundingRect<span class="op">();</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="ex">QRectF</span> content_rect <span class="op">=</span> rect<span class="op">.</span>adjusted<span class="op">(</span><span class="dv">8</span><span class="op">,</span> <span class="dv">30</span><span class="op">,</span> <span class="op">-</span><span class="dv">8</span><span class="op">,</span> <span class="op">-</span><span class="dv">8</span><span class="op">);</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>_proxy_widget<span class="op">-&gt;</span>setGeometry<span class="op">(</span>content_rect<span class="op">);</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>_proxy_widget<span class="op">-&gt;</span>widget<span class="op">()-&gt;</span>resize<span class="op">(</span>content_rect<span class="op">.</span>size<span class="op">().</span>toSize<span class="op">());</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Event routing in the plot item ensures that content-area interaction reaches the OpenGL widget:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In PlotWidget::mousePressEvent(QGraphicsSceneMouseEvent* event)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">QRectF</span> title_area <span class="op">=</span> boundingRect<span class="op">().</span>adjusted<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="op">-</span>boundingRect<span class="op">().</span>height<span class="op">()</span> <span class="op">+</span> <span class="dv">25</span><span class="op">);</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>title_area<span class="op">.</span>contains<span class="op">(</span>event<span class="op">-&gt;</span>pos<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Title: allow moving/selecting the plot item</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> plotSelected<span class="op">(</span>getPlotId<span class="op">());</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    setFlag<span class="op">(</span><span class="ex">QGraphicsItem::ItemIsMovable</span><span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    AbstractPlotWidget<span class="op">::</span>mousePressEvent<span class="op">(</span>event<span class="op">);</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Content: disable item movement so drag goes to the OpenGL child</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> plotSelected<span class="op">(</span>getPlotId<span class="op">());</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    setFlag<span class="op">(</span><span class="ex">QGraphicsItem::ItemIsMovable</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="opengl-widget-configuration" class="level1">
+<h1>OpenGL widget configuration</h1>
+<p>Configure the <code>QOpenGLWidget</code> so it reliably receives hover/wheel events and repaints well under a proxy:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In OpenGLWidget constructor</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>setMouseTracking<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>setFocusPolicy<span class="op">(</span><span class="ex">Qt::StrongFocus</span><span class="op">);</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Prefer a core profile and multisampling</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">QSurfaceFormat</span> fmt<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>setVersion<span class="op">(</span><span class="dv">4</span><span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>setProfile<span class="op">(</span><span class="ex">QSurfaceFormat::CoreProfile</span><span class="op">);</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>setSamples<span class="op">(</span><span class="dv">4</span><span class="op">);</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>setFormat<span class="op">(</span>fmt<span class="op">);</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Attributes for embedding in a QGraphicsProxyWidget</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>setAttribute<span class="op">(</span><span class="ex">Qt::WA_AlwaysStackOnTop</span><span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>setAttribute<span class="op">(</span><span class="ex">Qt::WA_OpaquePaintEvent</span><span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>setAttribute<span class="op">(</span><span class="ex">Qt::WA_NoSystemBackground</span><span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>setUpdateBehavior<span class="op">(</span><span class="ex">QOpenGLWidget::NoPartialUpdate</span><span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Typical interactive handlers (pan/zoom):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> OpenGLWidget<span class="op">::</span>mousePressEvent<span class="op">(</span><span class="ex">QMouseEvent</span><span class="op">*</span> e<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>e<span class="op">-&gt;</span>button<span class="op">()</span> <span class="op">==</span> <span class="ex">Qt::LeftButton</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        _is_panning <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        _last_mouse_pos <span class="op">=</span> e<span class="op">-&gt;</span>pos<span class="op">();</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        e<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        e<span class="op">-&gt;</span>ignore<span class="op">();</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> OpenGLWidget<span class="op">::</span>mouseMoveEvent<span class="op">(</span><span class="ex">QMouseEvent</span><span class="op">*</span> e<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_is_panning <span class="op">&amp;&amp;</span> <span class="op">(</span>e<span class="op">-&gt;</span>buttons<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::LeftButton</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QPoint</span> delta <span class="op">=</span> e<span class="op">-&gt;</span>pos<span class="op">()</span> <span class="op">-</span> _last_mouse_pos<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> world_scale <span class="op">=</span> <span class="fl">2.0</span><span class="bu">f</span> <span class="op">/</span> <span class="op">(</span>_zoom_level <span class="op">*</span> <span class="bu">std::</span>min<span class="op">(</span>width<span class="op">(),</span> height<span class="op">()));</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        setPanOffset<span class="op">(</span>_pan_offset_x <span class="op">+</span> delta<span class="op">.</span>x<span class="op">()</span> <span class="op">*</span> world_scale<span class="op">,</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>                     _pan_offset_y <span class="op">-</span> delta<span class="op">.</span>y<span class="op">()</span> <span class="op">*</span> world_scale<span class="op">);</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        _last_mouse_pos <span class="op">=</span> e<span class="op">-&gt;</span>pos<span class="op">();</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        e<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        e<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> OpenGLWidget<span class="op">::</span>wheelEvent<span class="op">(</span><span class="ex">QWheelEvent</span><span class="op">*</span> e<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> zoom_factor <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span> <span class="op">+</span> <span class="op">(</span>e<span class="op">-&gt;</span>angleDelta<span class="op">().</span>y<span class="op">()</span> <span class="op">/</span> <span class="fl">1200.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    setZoomLevel<span class="op">(</span>_zoom_level <span class="op">*</span> zoom_factor<span class="op">);</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    e<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="repaint-strategy" class="level1">
+<h1>Repaint strategy</h1>
+<ul>
+<li>The OpenGL widget calls <code>update()</code> (optionally throttled) on interaction; the proxy and parent item listen to signals like <code>zoomLevelChanged</code> / <code>panOffsetChanged</code> to call <code>update()</code> on themselves too.</li>
+<li>Disable caching (<code>QGraphicsItem::NoCache</code>) on the proxy so frames are not reused while the GL child is animating.</li>
+</ul>
+</section>
+<section id="troubleshooting" class="level1">
+<h1>Troubleshooting</h1>
+<ul>
+<li>Symptom: plot only updates after resize or clicking away
+<ul>
+<li>Ensure the GL child has <code>Qt::WA_OpaquePaintEvent</code>, <code>Qt::WA_NoSystemBackground</code>, and <code>NoPartialUpdate</code></li>
+<li>Ensure the proxy uses <code>NoCache</code></li>
+<li>Verify event routing: in content area, disable <code>ItemIsMovable</code> and accept the event so drag/wheel reach the GL widget</li>
+<li>Enable <code>setMouseTracking(true)</code> and <code>setFocusPolicy(Qt::StrongFocus)</code> on the GL widget</li>
+</ul></li>
+</ul>
+</section>
+<section id="references" class="level1">
+<h1>References</h1>
+<ul>
+<li>Plot items: <code>src/WhiskerToolbox/Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.cpp</code>, <code>src/WhiskerToolbox/Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp</code></li>
+<li>OpenGL widgets: <code>src/WhiskerToolbox/Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp</code>, <code>src/WhiskerToolbox/Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget.cpp</code></li>
+</ul>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

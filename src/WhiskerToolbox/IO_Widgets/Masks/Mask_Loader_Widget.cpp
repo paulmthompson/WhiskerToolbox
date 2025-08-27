@@ -6,8 +6,7 @@
 #include "DataManager/IO/LoaderRegistry.hpp"
 #include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/DataManagerTypes.hpp"
-// Remove direct OpenCV dependency - use registry system instead
-#include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
+#include "Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>
 #include <QStackedWidget> // Required for ui->stacked_loader_options

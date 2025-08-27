@@ -1,6 +1,6 @@
 #include "TransformRegistry.hpp"
 
-#include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
+#include "transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
 #include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_scaling.hpp"

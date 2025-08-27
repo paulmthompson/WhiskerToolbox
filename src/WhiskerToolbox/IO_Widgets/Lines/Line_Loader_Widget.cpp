@@ -7,12 +7,11 @@
 #include "DataManager/IO/LoaderRegistry.hpp"
 #include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/DataManagerTypes.hpp"
-// Remove direct IO includes - use registry pattern instead
-#include "IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp"
-#include "IO_Widgets/Lines/CSV/CSVLineLoader_Widget.hpp"
-#include "IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.hpp"
-#include "IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.hpp"
-#include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
+#include "Lines/HDF5/HDF5LineLoader_Widget.hpp"
+#include "Lines/CSV/CSVLineLoader_Widget.hpp"
+#include "Lines/LMDB/LMDBLineLoader_Widget.hpp"
+#include "Lines/Binary/BinaryLineLoader_Widget.hpp"
+#include "Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>
 #include <QComboBox>

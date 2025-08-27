@@ -1,13 +1,13 @@
 #ifndef DIGITAL_INTERVAL_LOADER_WIDGET_HPP
 #define DIGITAL_INTERVAL_LOADER_WIDGET_HPP
 
+#include "DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp"
+#include "DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp"
+
 #include <QWidget>
-#include "IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp"
-#include "IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp"
 
 #include <memory>
 #include <string>
-
 
 class DataManager;
 

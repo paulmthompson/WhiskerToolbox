@@ -19,6 +19,8 @@ find_package(glm CONFIG REQUIRED)
 
 qt_standard_project_setup()
 
+add_subdirectory(Collapsible_Widget)
+add_subdirectory(ColorPicker_Widget)
 add_subdirectory(MediaExport)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
@@ -27,6 +29,8 @@ add_subdirectory(TimeScrollBar)
 add_subdirectory(Analysis_Dashboard)    
 add_subdirectory(Feature_Table_Widget)
 add_subdirectory(Feature_Tree_Widget)
+add_subdirectory(IO_Widgets)
+add_subdirectory(DataViewer_Widget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -34,15 +38,9 @@ set(PROJECT_SOURCES
         my_stylesheet.qss
         color_scheme.hpp
 
-
-
         BatchProcessing_Widget/BatchProcessing_Widget.hpp
         BatchProcessing_Widget/BatchProcessing_Widget.cpp
         BatchProcessing_Widget/BatchProcessing_Widget.ui
-
-        ColorPicker_Widget/ColorPicker_Widget.hpp
-        ColorPicker_Widget/ColorPicker_Widget.cpp
-        ColorPicker_Widget/ColorPicker_Widget.ui
 
         Main_Window/mainwindow.cpp
         Main_Window/mainwindow.hpp
@@ -284,30 +282,6 @@ set(PROJECT_SOURCES
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui
 
-
-
-        DataViewer_Widget/DataViewer_Widget.cpp
-        DataViewer_Widget/DataViewer_Widget.hpp
-        DataViewer_Widget/DataViewer_Widget.ui
-        DataViewer_Widget/DataViewer_Tree_Widget/DataViewer_Tree_Widget.cpp
-        DataViewer_Widget/DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp
-        DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.cpp
-        DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.hpp
-        DataViewer_Widget/OpenGLWidget.cpp
-        DataViewer_Widget/OpenGLWidget.hpp
-        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.cpp
-        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.hpp
-        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.ui
-        DataViewer_Widget/DigitalEvent/EventViewer_Widget.cpp
-        DataViewer_Widget/DigitalEvent/EventViewer_Widget.hpp
-        DataViewer_Widget/DigitalEvent/EventViewer_Widget.ui
-        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.cpp
-        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.hpp
-        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.ui
-        DataViewer_Widget/Feature_Tree_Model.hpp
-        DataViewer_Widget/Feature_Tree_Model.cpp
-
-
         ML_Widget/ML_Widget.hpp
         ML_Widget/ML_Widget.cpp
         ML_Widget/ML_Widget.ui
@@ -358,98 +332,12 @@ set(PROJECT_SOURCES
         Grabcut_Widget/GrabCutTool.hpp
         Grabcut_Widget/Grabcut_Widget.ui
 
-        Collapsible_Widget/Section.cpp
-        Collapsible_Widget/Section.hpp
-
         Magic_Eraser_Widget/magic_eraser.hpp
         Magic_Eraser_Widget/magic_eraser.cpp
 
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.hpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.cpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.ui
-
-        IO_Widgets/Scaling_Widget/Scaling_Widget.cpp
-        IO_Widgets/Scaling_Widget/Scaling_Widget.hpp
-        IO_Widgets/Scaling_Widget/Scaling_Widget.ui
-
-        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.cpp
-        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.hpp
-        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.ui
-
-        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.ui
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.ui
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.ui
-
-        IO_Widgets/Points/Point_Loader_Widget.hpp
-        IO_Widgets/Points/Point_Loader_Widget.cpp
-        IO_Widgets/Points/Point_Loader_Widget.ui
-        IO_Widgets/Points/CSV/CSVPointLoader_Widget.cpp
-        IO_Widgets/Points/CSV/CSVPointLoader_Widget.hpp
-        IO_Widgets/Points/CSV/CSVPointLoader_Widget.ui
-        IO_Widgets/Points/CSV/CSVPointSaver_Widget.cpp
-        IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp
-        IO_Widgets/Points/CSV/CSVPointSaver_Widget.ui
-
-        IO_Widgets/Masks/Mask_Loader_Widget.hpp
-        IO_Widgets/Masks/Mask_Loader_Widget.cpp
-        IO_Widgets/Masks/Mask_Loader_Widget.ui
-        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.cpp
-        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.hpp
-        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.ui
-        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.cpp
-        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp
-        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.ui
-        IO_Widgets/Masks/Image/ImageMaskLoader_Widget.cpp
-        IO_Widgets/Masks/Image/ImageMaskLoader_Widget.hpp
-        IO_Widgets/Masks/Image/ImageMaskLoader_Widget.ui
-        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.cpp
-        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp
-        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.ui
-
-        IO_Widgets/Lines/Line_Loader_Widget.hpp
-        IO_Widgets/Lines/Line_Loader_Widget.cpp
-        IO_Widgets/Lines/Line_Loader_Widget.ui
-        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp
-        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.cpp
-        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.ui
-        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.hpp
-        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.cpp
-        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.ui
-        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.cpp
-        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp
-        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.ui
-        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.hpp
-        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.cpp
-        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.ui
-
-        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.ui
-
-        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.ui
-
-        IO_Widgets/Tensors/Tensor_Loader_Widget.hpp
-        IO_Widgets/Tensors/Tensor_Loader_Widget.cpp
-        IO_Widgets/Tensors/Tensor_Loader_Widget.ui
-
-
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
@@ -474,30 +362,6 @@ set(PROJECT_SOURCES
         Test_Widget/Test_Widget.ui
 )
 
-# Conditionally add CapnProto-dependent Binary widget sources
-if(ENABLE_CAPNPROTO)
-    list(APPEND PROJECT_SOURCES
-        # Line Binary Widgets
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.cpp
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.ui
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.cpp
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.hpp
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.ui
-        
-        # AnalogTimeSeries Binary Widgets
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.ui
-        
-        # DigitalTimeSeries Binary Widgets
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.ui
-    )
-endif()
-
-
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
 )
@@ -521,7 +385,6 @@ target_include_directories(WhiskerToolbox PRIVATE
   #      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" 
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/TableDesignerWidget>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
@@ -535,9 +398,13 @@ target_include_directories(WhiskerToolbox PRIVATE
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
-target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer DataManagerIO)
+target_link_libraries(WhiskerToolbox PRIVATE DataManager DataManagerIO)
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
+target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE IO_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE DataViewer_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)
@@ -563,8 +430,6 @@ target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_h
 target_link_libraries(WhiskerToolbox PRIVATE armadillo)
 target_link_libraries(WhiskerToolbox PRIVATE LAPACK::LAPACK)
 target_link_libraries(WhiskerToolbox PRIVATE OpenBLAS::OpenBLAS)
-
-#target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6::JKQTPlotter6)
 
 target_link_libraries(WhiskerToolbox PRIVATE qt6advanceddocking)
 

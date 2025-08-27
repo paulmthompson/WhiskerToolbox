@@ -7,7 +7,7 @@
 #include "Masks/mask_area.hpp"
 #include "AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "DigitalIntervalSeries/digital_interval_group.hpp"
-#include "AnalogTimeSeries/analog_event_threshold.hpp"
+#include "AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 
 #include <iostream>
 
