@@ -1,0 +1,83 @@
+---
+title: "Analog Filter"
+---
+
+## Purpose
+
+The Analog Filter transform applies a digital filter to an `AnalogTimeSeries`. This can be used to remove noise, isolate specific frequency bands, or perform other signal processing tasks.
+
+## Parameters
+
+| Name | Type | Description | Default |
+|---|---|---|---|
+| `filter_type` | string | The type of filter to apply. One of "lowpass", "highpass", "bandpass", "bandstop". | "lowpass" |
+| `cutoff_frequency`| double | The cutoff frequency for lowpass and highpass filters, or the lower cutoff frequency for bandpass and bandstop filters. | 10.0 |
+| `cutoff_frequency2`| double | The upper cutoff frequency for bandpass and bandstop filters. | 0.0 |
+| `order` | integer | The order of the filter. Must be between 1 and 8. | 4 |
+| `ripple` | double | The ripple for Chebyshev filters (in dB). Not used for Butterworth filters. | 0.0 |
+| `zero_phase` | boolean | If true, applies the filter forward and backward to eliminate phase distortion. | false |
+
+## JSON Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "transform": {
+      "type": "string",
+      "const": "Analog Filter"
+    },
+    "input": {
+      "type": "string"
+    },
+    "output": {
+      "type": "string"
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "filter_type": {
+          "type": "string",
+          "enum": ["lowpass", "highpass", "bandpass", "bandstop"]
+        },
+        "cutoff_frequency": {
+          "type": "number"
+        },
+        "cutoff_frequency2": {
+          "type": "number"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "ripple": {
+          "type": "number"
+        },
+        "zero_phase": {
+          "type": "boolean"
+        }
+      },
+      "required": ["filter_type", "cutoff_frequency", "order"]
+    }
+  },
+  "required": ["transform", "input", "output", "params"]
+}
+```
+
+## Minimal Example
+
+This example applies a 4th order lowpass Butterworth filter at 100 Hz.
+
+```json
+{
+  "transform": "Analog Filter",
+  "input": "my_analog_series",
+  "output": "filtered_series",
+  "params": {
+    "filter_type": "lowpass",
+    "cutoff_frequency": 100,
+    "order": 4
+  }
+}
+```
