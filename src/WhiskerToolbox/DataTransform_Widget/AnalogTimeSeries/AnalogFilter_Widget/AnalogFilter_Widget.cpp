@@ -1,6 +1,6 @@
 #include "AnalogFilter_Widget.hpp"
 #include "ui_AnalogFilter_Widget.h"
-#include "DataManager/transforms/AnalogTimeSeries/analog_filter.hpp"
+#include "DataManager/transforms/AnalogTimeSeries/AnalogFilter/analog_filter.hpp"
 #include "DataManager/utils/filter/FilterFactory.hpp"
 #include "DataManager/utils/filter/IFilter.hpp"
 
