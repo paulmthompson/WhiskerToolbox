@@ -4,7 +4,6 @@
 #include <QWidget>
 
 class DataManager;
-class MainWindow;
 class Media_Window;
 class MediaText_Widget;
 class Section;

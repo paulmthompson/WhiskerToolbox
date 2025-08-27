@@ -19,6 +19,7 @@ find_package(glm CONFIG REQUIRED)
 
 qt_standard_project_setup()
 
+add_subdirectory(Collapsible_Widget)
 add_subdirectory(MediaExport)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
@@ -33,8 +34,6 @@ set(PROJECT_SOURCES
         whiskertoolbox.qrc
         my_stylesheet.qss
         color_scheme.hpp
-
-
 
         BatchProcessing_Widget/BatchProcessing_Widget.hpp
         BatchProcessing_Widget/BatchProcessing_Widget.cpp
@@ -284,8 +283,6 @@ set(PROJECT_SOURCES
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui
 
-
-
         DataViewer_Widget/DataViewer_Widget.cpp
         DataViewer_Widget/DataViewer_Widget.hpp
         DataViewer_Widget/DataViewer_Widget.ui
@@ -306,7 +303,6 @@ set(PROJECT_SOURCES
         DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.ui
         DataViewer_Widget/Feature_Tree_Model.hpp
         DataViewer_Widget/Feature_Tree_Model.cpp
-
 
         ML_Widget/ML_Widget.hpp
         ML_Widget/ML_Widget.cpp
@@ -357,9 +353,6 @@ set(PROJECT_SOURCES
         Grabcut_Widget/GrabCutTool.cpp
         Grabcut_Widget/GrabCutTool.hpp
         Grabcut_Widget/Grabcut_Widget.ui
-
-        Collapsible_Widget/Section.cpp
-        Collapsible_Widget/Section.hpp
 
         Magic_Eraser_Widget/magic_eraser.hpp
         Magic_Eraser_Widget/magic_eraser.cpp
@@ -449,8 +442,6 @@ set(PROJECT_SOURCES
         IO_Widgets/Tensors/Tensor_Loader_Widget.cpp
         IO_Widgets/Tensors/Tensor_Loader_Widget.ui
 
-
-
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
 
@@ -538,6 +529,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer DataManagerIO)
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
+target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)
