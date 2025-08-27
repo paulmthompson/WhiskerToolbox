@@ -49,7 +49,7 @@ add_executable(test_data_manager
 
         ${DATAMANAGER_TEST_SOURCES_TEMP}
 
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_filter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_hilbert_phase.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp

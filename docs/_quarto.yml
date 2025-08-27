@@ -94,6 +94,7 @@ website:
         - section: "Data Transformations"
           contents:
             - user_guide/data_transformations/overview.qmd
+            - user_guide/data_transformations/threshold_event_detection.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd

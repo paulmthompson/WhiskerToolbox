@@ -1,0 +1,15 @@
+---
+title: "Threshold Event Detection"
+---
+
+The Threshold Event Detection transform is used to detect events in an analog time series based on a threshold.
+
+## Parameters
+
+-   **threshold_value**: The value that the signal must cross to be considered an event.
+-   **direction**: The direction of the threshold crossing. Can be "Positive (Rising)", "Negative (Falling)", or "Absolute (Magnitude)".
+-   **lockout_time**: The amount of time (in the same units as the time series) to wait after an event is detected before another event can be detected. This is useful for preventing multiple events from being detected for a single peak in the signal.
+
+## Output
+
+The output of this transform is a new `DigitalEventSeries` data object that contains the timestamps of the detected events.
