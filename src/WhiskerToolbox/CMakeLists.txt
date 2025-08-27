@@ -30,6 +30,7 @@ add_subdirectory(Analysis_Dashboard)
 add_subdirectory(Feature_Table_Widget)
 add_subdirectory(Feature_Tree_Widget)
 add_subdirectory(IO_Widgets)
+add_subdirectory(DataViewer_Widget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -281,23 +282,6 @@ set(PROJECT_SOURCES
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui
 
-        DataViewer_Widget/DataViewer_Widget.cpp
-        DataViewer_Widget/DataViewer_Widget.hpp
-        DataViewer_Widget/DataViewer_Widget.ui
-        DataViewer_Widget/OpenGLWidget.cpp
-        DataViewer_Widget/OpenGLWidget.hpp
-        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.cpp
-        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.hpp
-        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.ui
-        DataViewer_Widget/DigitalEvent/EventViewer_Widget.cpp
-        DataViewer_Widget/DigitalEvent/EventViewer_Widget.hpp
-        DataViewer_Widget/DigitalEvent/EventViewer_Widget.ui
-        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.cpp
-        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.hpp
-        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.ui
-        DataViewer_Widget/Feature_Tree_Model.hpp
-        DataViewer_Widget/Feature_Tree_Model.cpp
-
         ML_Widget/ML_Widget.hpp
         ML_Widget/ML_Widget.cpp
         ML_Widget/ML_Widget.ui
@@ -401,7 +385,6 @@ target_include_directories(WhiskerToolbox PRIVATE
   #      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" 
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/TableDesignerWidget>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
@@ -415,12 +398,13 @@ target_include_directories(WhiskerToolbox PRIVATE
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
-target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer DataManagerIO)
+target_link_libraries(WhiskerToolbox PRIVATE DataManager DataManagerIO)
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
 target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE IO_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE DataViewer_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)
@@ -446,8 +430,6 @@ target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_h
 target_link_libraries(WhiskerToolbox PRIVATE armadillo)
 target_link_libraries(WhiskerToolbox PRIVATE LAPACK::LAPACK)
 target_link_libraries(WhiskerToolbox PRIVATE OpenBLAS::OpenBLAS)
-
-#target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6::JKQTPlotter6)
 
 target_link_libraries(WhiskerToolbox PRIVATE qt6advanceddocking)
 
