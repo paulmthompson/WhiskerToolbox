@@ -284,10 +284,6 @@ set(PROJECT_SOURCES
         DataViewer_Widget/DataViewer_Widget.cpp
         DataViewer_Widget/DataViewer_Widget.hpp
         DataViewer_Widget/DataViewer_Widget.ui
-        DataViewer_Widget/DataViewer_Tree_Widget/DataViewer_Tree_Widget.cpp
-        DataViewer_Widget/DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp
-        DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.cpp
-        DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.hpp
         DataViewer_Widget/OpenGLWidget.cpp
         DataViewer_Widget/OpenGLWidget.hpp
         DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.cpp
