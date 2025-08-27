@@ -20,6 +20,7 @@ find_package(glm CONFIG REQUIRED)
 qt_standard_project_setup()
 
 add_subdirectory(Collapsible_Widget)
+add_subdirectory(ColorPicker_Widget)
 add_subdirectory(MediaExport)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
@@ -38,10 +39,6 @@ set(PROJECT_SOURCES
         BatchProcessing_Widget/BatchProcessing_Widget.hpp
         BatchProcessing_Widget/BatchProcessing_Widget.cpp
         BatchProcessing_Widget/BatchProcessing_Widget.ui
-
-        ColorPicker_Widget/ColorPicker_Widget.hpp
-        ColorPicker_Widget/ColorPicker_Widget.cpp
-        ColorPicker_Widget/ColorPicker_Widget.ui
 
         Main_Window/mainwindow.cpp
         Main_Window/mainwindow.hpp
@@ -530,6 +527,7 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer DataManagerI
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
 target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

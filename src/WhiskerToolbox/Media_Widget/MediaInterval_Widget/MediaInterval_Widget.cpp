@@ -1,6 +1,7 @@
 #include "MediaInterval_Widget.hpp"
 #include "ui_MediaInterval_Widget.h"
 
+#include "ColorPicker_Widget/ColorPicker_Widget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Media_Window/Media_Window.hpp"

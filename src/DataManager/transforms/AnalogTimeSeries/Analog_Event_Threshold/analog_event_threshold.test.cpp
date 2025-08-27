@@ -4,7 +4,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
+#include "transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 #include "transforms/data_transforms.hpp" // For ProgressCallback
 
 #include <vector>

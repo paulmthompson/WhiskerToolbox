@@ -24,7 +24,6 @@ class QImage;
 class MediaMask_Widget;
 class MediaText_Widget;
 
-// Forward declare the TextOverlay struct
 struct TextOverlay;
 
 int const default_width = 640;

@@ -3,7 +3,7 @@
 
 #include "ui_AnalogEventThreshold_Widget.h"
 
-#include "DataManager/transforms/AnalogTimeSeries/analog_event_threshold.hpp"
+#include "DataManager/transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 
 #include <iostream>
 

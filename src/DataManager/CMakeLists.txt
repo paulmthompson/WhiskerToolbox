@@ -155,9 +155,9 @@ set(DATAMANAGER_SOURCES
         transforms/TransformPipeline.cpp
         transforms/ParameterFactory.hpp
         transforms/ParameterFactory.cpp
-        transforms/AnalogTimeSeries/analog_event_threshold.cpp
-        transforms/AnalogTimeSeries/analog_event_threshold.hpp
-        transforms/AnalogTimeSeries/analog_filter.cpp 
+        transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.cpp
+        transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp
+        transforms/AnalogTimeSeries/analog_filter.cpp
         transforms/AnalogTimeSeries/analog_filter.hpp
         transforms/AnalogTimeSeries/analog_interval_threshold.cpp
         transforms/AnalogTimeSeries/analog_interval_threshold.hpp
