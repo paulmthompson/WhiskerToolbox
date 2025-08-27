@@ -77,6 +77,15 @@ std::vector<float> PointComponentAdapter::getDataInRange(TimeFrameIndex start,
     return componentValues;
 }
 
+bool PointComponentAdapter::hasMultiSamples() const {
+    for (auto const & [time, points] : m_pointData->GetAllPointsAsRange()) {
+        if (points.size() > 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void PointComponentAdapter::materializeData() {
     if (m_isMaterialized) {
         return;

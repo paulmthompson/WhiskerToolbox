@@ -14,13 +14,13 @@ std::map<DM_DataType, MediaDataFactory::MediaLoaderFunc>& MediaDataFactory::getL
 void MediaDataFactory::registerMediaType(MediaData::MediaType media_type, MediaCreatorFunc creator) {
     auto& registry = getCreatorRegistry();
     registry[media_type] = std::move(creator);
-    std::cout << "MediaDataFactory: Registered media type " << static_cast<int>(media_type) << std::endl;
+    //std::cout << "MediaDataFactory: Registered media type " << static_cast<int>(media_type) << std::endl;
 }
 
 void MediaDataFactory::registerMediaLoader(DM_DataType dm_type, MediaLoaderFunc loader) {
     auto& registry = getLoaderRegistry();
     registry[dm_type] = std::move(loader);
-    std::cout << "MediaDataFactory: Registered loader for DM_DataType " << static_cast<int>(dm_type) << std::endl;
+   // std::cout << "MediaDataFactory: Registered loader for DM_DataType " << static_cast<int>(dm_type) << std::endl;
 }
 
 std::shared_ptr<MediaData> MediaDataFactory::createMediaData(MediaData::MediaType media_type) {

@@ -78,6 +78,16 @@ public:
                                       TimeFrameIndex end,
                                       TimeFrame const * target_timeFrame) override;
 
+    /**
+     * @brief Checks if the underlying PointData has multiple samples at any timestamp.
+     * 
+     * This method is used by the TableView validation to ensure that PointComponentAdapter
+     * is only used with single-sample PointData (one point per timestamp).
+     * 
+     * @return True if any timestamp has more than one point, false otherwise.
+     */
+    bool hasMultiSamples() const;
+
 private:
     /**
      * @brief Materializes the component data if not already done.

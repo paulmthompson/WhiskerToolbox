@@ -78,8 +78,8 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
         doneCurrent();
     }
 
-    // Calculate bounds
     calculateDataBounds();
+    updateViewMatrices();
 
     requestThrottledUpdate();
 }
@@ -457,6 +457,29 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         if (hover_changed) {
             requestThrottledUpdate();
         }
+    }
+}
+
+void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
+    // Call base class implementation
+    BasePlotOpenGLWidget::mouseDoubleClickEvent(event);
+
+    // Handle double-click event
+    if (event->button() == Qt::LeftButton) {
+        event->accept();
+
+        QVector2D world_pos = screenToWorld(event->pos().x(), event->pos().y());
+
+        for (auto const & [key, viz]: _point_data_visualizations) {
+            if (!viz) continue;
+            auto nearest_point = viz->handleDoubleClick(world_pos, 10.0f);
+            if (nearest_point.has_value()) {
+                emit frameJumpRequested(nearest_point.value(), key);
+                return;
+            }
+        }
+    } else {
+        event->ignore();
     }
 }
 

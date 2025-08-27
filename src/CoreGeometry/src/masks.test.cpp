@@ -6,7 +6,7 @@
  * @brief Tests for mask utility functions
  */
 
-TEST_CASE("Mask utility functions", "[masks][utilities]") {
+TEST_CASE("CoreGeometry - Mask2D - Mask utility functions", "[masks][utilities]") {
 
     SECTION("get_bounding_box basic functionality") {
         // Create a simple rectangular mask
@@ -58,7 +58,7 @@ TEST_CASE("Mask utility functions", "[masks][utilities]") {
     }
 }
 
-TEST_CASE("create_mask utility function", "[masks][create]") {
+TEST_CASE("CoreGeometry - Mask2D - create_mask utility function", "[masks][create]") {
 
     SECTION("create_mask from vectors") {
         std::vector<float> x = {1.0f, 2.0f, 3.0f};
@@ -119,7 +119,7 @@ TEST_CASE("create_mask utility function", "[masks][create]") {
     }
 }
 
-TEST_CASE("get_mask_outline function", "[masks][outline]") {
+TEST_CASE("CoreGeometry - Mask2D - get_mask_outline function", "[masks][outline]") {
     SECTION("Empty mask returns empty outline") {
         Mask2D empty_mask;
         auto outline = get_mask_outline(empty_mask);
@@ -219,7 +219,7 @@ TEST_CASE("get_mask_outline function", "[masks][outline]") {
     }
 }
 
-TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
+TEST_CASE("CoreGeometry - Mask2D - generate_ellipse_pixels function", "[masks][ellipse]") {
 
     SECTION("Perfect circle with radius 1") {
         auto pixels = generate_ellipse_pixels(5.0f, 5.0f, 1.0f, 1.0f);
@@ -379,7 +379,7 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
     }
 }
 
-TEST_CASE("combine_masks function", "[masks][combination]") {
+TEST_CASE("CoreGeometry - Mask2D - combine_masks function", "[masks][combination]") {
 
     SECTION("Combine two non-overlapping masks") {
         Mask2D mask1 = {{1, 1}, {2, 2}};
@@ -446,7 +446,7 @@ TEST_CASE("combine_masks function", "[masks][combination]") {
     }
 }
 
-TEST_CASE("subtract_masks function", "[masks][subtraction]") {
+TEST_CASE("CoreGeometry - Mask2D - subtract_masks function", "[masks][subtraction]") {
 
     SECTION("Subtract non-overlapping masks") {
         Mask2D mask1 = {{1, 1}, {2, 2}, {3, 3}};
@@ -535,7 +535,7 @@ TEST_CASE("subtract_masks function", "[masks][subtraction]") {
     }
 }
 
-TEST_CASE("generate_outline_mask function", "[masks][outline_mask]") {
+TEST_CASE("CoreGeometry - Mask2D - generate_outline_mask function", "[masks][outline_mask]") {
 
     SECTION("Empty mask returns empty outline") {
         Mask2D empty_mask;

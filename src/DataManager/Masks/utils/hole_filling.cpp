@@ -24,8 +24,8 @@ std::vector<uint8_t> fill_holes(std::vector<uint8_t> const & image, ImageSize co
     }
     
     // Helper function to get linear index from row, col
-    auto get_index = [width](int row, int col) {
-        return row * width + col;
+    auto get_index = [width](size_t row, size_t col) {
+        return row * static_cast<size_t>(width) + col;
     };
     
     // Helper function to check if coordinates are valid
@@ -34,35 +34,35 @@ std::vector<uint8_t> fill_holes(std::vector<uint8_t> const & image, ImageSize co
     };
     
     // Flood fill from all boundary pixels to mark background regions connected to borders
-    std::queue<std::pair<int, int>> fill_queue;
+    std::queue<std::pair<size_t, size_t>> fill_queue;
     std::vector<bool> visited(static_cast<size_t>(height * width), false);
     
     // Add all boundary pixels that are background (value 1 in inverted image) to the queue
     // Top and bottom rows
-    for (int col = 0; col < width; ++col) {
+    for (size_t col = 0; col < static_cast<size_t>(width); ++col) {
         // Top row
         if (temp_image[get_index(0, col)] == 1 && !visited[get_index(0, col)]) {
             fill_queue.emplace(0, col);
             visited[get_index(0, col)] = true;
         }
         // Bottom row
-        if (temp_image[get_index(height - 1, col)] == 1 && !visited[get_index(height - 1, col)]) {
-            fill_queue.emplace(height - 1, col);
-            visited[get_index(height - 1, col)] = true;
+        if (temp_image[get_index(static_cast<size_t>(height) - 1, col)] == 1 && !visited[get_index(static_cast<size_t>(height) - 1, col)]) {
+            fill_queue.emplace(static_cast<size_t>(height) - 1, col);
+            visited[get_index(static_cast<size_t>(height) - 1, col)] = true;
         }
     }
     
     // Left and right columns (excluding corners already processed)
-    for (int row = 1; row < height - 1; ++row) {
+    for (size_t row = 1; row < static_cast<size_t>(height) - 1; ++row) {
         // Left column
         if (temp_image[get_index(row, 0)] == 1 && !visited[get_index(row, 0)]) {
             fill_queue.emplace(row, 0);
             visited[get_index(row, 0)] = true;
         }
         // Right column
-        if (temp_image[get_index(row, width - 1)] == 1 && !visited[get_index(row, width - 1)]) {
-            fill_queue.emplace(row, width - 1);
-            visited[get_index(row, width - 1)] = true;
+        if (temp_image[get_index(row, static_cast<size_t>(width) - 1)] == 1 && !visited[get_index(row, static_cast<size_t>(width) - 1)]) {
+            fill_queue.emplace(row, static_cast<size_t>(width) - 1);
+            visited[get_index(row, static_cast<size_t>(width) - 1)] = true;
         }
     }
     
@@ -77,11 +77,11 @@ std::vector<uint8_t> fill_holes(std::vector<uint8_t> const & image, ImageSize co
         
         // Check all 4 neighbors
         for (int i = 0; i < 4; ++i) {
-            int const new_row = row + dr[i];
-            int const new_col = col + dc[i];
+            auto new_row = static_cast<size_t>(static_cast<int>(row) + dr[i]);
+            auto new_col = static_cast<size_t>(static_cast<int>(col) + dc[i]);
             
-            if (is_valid(new_row, new_col)) {
-                int const index = get_index(new_row, new_col);
+            if (is_valid(static_cast<int>(new_row), static_cast<int>(new_col))) {
+                auto index = get_index(new_row, new_col);
                 if (temp_image[index] == 1 && !visited[index]) {
                     visited[index] = true;
                     fill_queue.emplace(new_row, new_col);
@@ -91,9 +91,9 @@ std::vector<uint8_t> fill_holes(std::vector<uint8_t> const & image, ImageSize co
     }
     
     // Fill holes: any background pixel (0 in original) that was NOT visited is a hole
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
-            int const index = get_index(row, col);
+    for (size_t row = 0; row < static_cast<size_t>(height); ++row) {
+        for (size_t col = 0; col < static_cast<size_t>(width); ++col) {
+            auto index = get_index(row, col);
             // If this was originally background (0) but not connected to boundary, it's a hole
             if (image[index] == 0 && !visited[index]) {
                 result[index] = 1;  // Fill the hole

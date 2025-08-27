@@ -41,10 +41,10 @@ public:
      * @param data Pointer to the data object to save
      * @return LoadResult indicating success/failure (data field unused)
      */
-    virtual LoadResult save(std::string const& filepath, 
-                           IODataType dataType, 
-                           nlohmann::json const& config, 
-                           void const* data) const {
+    virtual LoadResult save(std::string const& /*filepath*/,
+                           IODataType /*dataType*/,
+                           nlohmann::json const& /*config*/,
+                           void const* /*data*/) const {
         return LoadResult("Saving not supported by this loader: " + getLoaderName());
     }
     

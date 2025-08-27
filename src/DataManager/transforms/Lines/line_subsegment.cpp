@@ -65,8 +65,8 @@ std::vector<Point2D<float>> extract_parametric_subsegment(
     }
     
     // Convert fractional positions to actual distances
-    float start_distance = start_pos * total_length;
-    float end_distance = end_pos * total_length;
+    //float start_distance = start_pos * total_length;
+    //float end_distance = end_pos * total_length;
     
     // Create normalized t-values based on cumulative distance
     std::vector<double> t_values;
@@ -96,16 +96,16 @@ std::vector<Point2D<float>> extract_parametric_subsegment(
     
     // Generate subsegment points using distance-based parameterization
     std::vector<Point2D<float>> subsegment;
-    subsegment.reserve(output_points);
+    subsegment.reserve(static_cast<size_t>(output_points));
     
     for (int i = 0; i < output_points; ++i) {
         // Map from output point index to t-parameter in the subsegment range
-        double t_local = static_cast<double>(i) / static_cast<double>(output_points - 1);
-        double t_global = start_pos + t_local * (end_pos - start_pos);
+        float t_local = static_cast<float>(i) / static_cast<float>(output_points - 1);
+        float t_global = start_pos + t_local * (end_pos - start_pos);
         
         // Evaluate polynomials at this t-value
-        double x = evaluate_polynomial(x_coeffs, t_global);
-        double y = evaluate_polynomial(y_coeffs, t_global);
+        double x = evaluate_polynomial(x_coeffs, static_cast<double>(t_global));
+        double y = evaluate_polynomial(y_coeffs, static_cast<double>(t_global));
         
         subsegment.push_back({static_cast<float>(x), static_cast<float>(y)});
     }
@@ -180,7 +180,7 @@ std::shared_ptr<LineData> extract_line_subsegment(
         
         processed_times++;
         int progress = static_cast<int>(
-            std::round(static_cast<double>(processed_times) / times_with_data.size() * 100.0)
+            std::round(static_cast<double>(processed_times) / static_cast<double>(times_with_data.size()) * 100.0)
         );
         progressCallback(progress);
     }

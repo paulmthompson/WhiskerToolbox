@@ -3,7 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-TEST_CASE("PointData - Core functionality", "[points][data][core]") {
+TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
     PointData point_data;
 
     // Setup some test data
@@ -60,7 +60,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         point_data.addPointsAtTime(TimeFrameIndex(10), points);
         point_data.addPointsAtTime(TimeFrameIndex(20), more_points);
 
-        point_data.clearAtTime(TimeFrameIndex(10));
+        static_cast<void>(point_data.clearAtTime(TimeFrameIndex(10)));
 
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
@@ -326,7 +326,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
     }
 }
 
-TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") {
+TEST_CASE("DM - PointData - Edge cases and error handling", "[points][data][error]") {
     PointData point_data;
 
     SECTION("Getting points at non-existent time") {
@@ -335,7 +335,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
     }
 
     SECTION("Clearing points at non-existent time") {
-        point_data.clearAtTime(TimeFrameIndex(42));
+        static_cast<void>(point_data.clearAtTime(TimeFrameIndex(42)));
         auto points = point_data.getAtTime(TimeFrameIndex(42));
         REQUIRE(points.empty());
 
@@ -404,7 +404,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
 
         // Add, clear, add again to test internal state consistency
         point_data.addAtTime(TimeFrameIndex(5), p1);
-        point_data.clearAtTime(TimeFrameIndex(5));
+        static_cast<void>(point_data.clearAtTime(TimeFrameIndex(5)));
         point_data.addAtTime(TimeFrameIndex(5), p1);
 
         auto points = point_data.getAtTime(TimeFrameIndex(5));
@@ -430,7 +430,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
     }
 }
 
-TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") {
+TEST_CASE("DM - PointData - Copy and Move operations", "[points][data][copy][move]") {
     PointData source_data;
     PointData target_data;
 
@@ -661,7 +661,7 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
     }
 }
 
-TEST_CASE("PointData - Image scaling", "[points][data][scaling]") {
+TEST_CASE("DM - PointData - Image scaling", "[points][data][scaling]") {
     PointData point_data;
     
     // Setup test data with known coordinates

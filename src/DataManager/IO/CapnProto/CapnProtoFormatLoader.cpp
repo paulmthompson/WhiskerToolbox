@@ -55,7 +55,9 @@ LoadResult CapnProtoFormatLoader::save(std::string const& filepath,
         
         // Call the existing save function
         if (::save(*line_data, save_opts)) {
-            return LoadResult(""); // Success
+            LoadResult result;
+            result.success = true;
+            return result;
         } else {
             return LoadResult("CapnProto save operation failed");
         }

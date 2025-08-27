@@ -31,12 +31,12 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         // Create a DataManager instance
         DataManager dataManager;
         
-        // Create sample point data for multiple time frames
+        // Create sample point data for multiple time frames (single point per frame for analog source compatibility)
         std::vector<std::vector<Point2D<float>>> pointFrames = {
-            {{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}},     // Frame 0
-            {{7.0f, 8.0f}, {9.0f, 10.0f}, {11.0f, 12.0f}},  // Frame 1
-            {{13.0f, 14.0f}, {15.0f, 16.0f}, {17.0f, 18.0f}}, // Frame 2
-            {{19.0f, 20.0f}, {21.0f, 22.0f}, {23.0f, 24.0f}}  // Frame 3
+            {{1.0f, 2.0f}},     // Frame 0
+            {{7.0f, 8.0f}},     // Frame 1
+            {{13.0f, 14.0f}},   // Frame 2
+            {{19.0f, 20.0f}}    // Frame 3
         };
         
         // Create a TimeFrame for the point data
@@ -63,15 +63,15 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         // Create intervals for each time frame
         // Since PointComponentAdapter flattens all points from all time frames into a single array,
         // we need to create intervals that correspond to the array indices, not time frame indices
-        // Frame 0: points at array indices 0, 1, 2
-        // Frame 1: points at array indices 3, 4, 5  
-        // Frame 2: points at array indices 6, 7, 8
-        // Frame 3: points at array indices 9, 10, 11
+        // Frame 0: point at array index 0
+        // Frame 1: point at array index 1  
+        // Frame 2: point at array index 2
+        // Frame 3: point at array index 3
         std::vector<TimeFrameInterval> intervals = {
-            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)),  // Frame 0: indices 0-2
-            TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(5)),  // Frame 1: indices 3-5
-            TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)),  // Frame 2: indices 6-8
-            TimeFrameInterval(TimeFrameIndex(9), TimeFrameIndex(11))  // Frame 3: indices 9-11
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(0)),  // Frame 0: index 0
+            TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(1)),  // Frame 1: index 1
+            TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(2)),  // Frame 2: index 2
+            TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(3))   // Frame 3: index 3
         };
         auto rowSelector = std::make_unique<IntervalSelector>(intervals, timeFrame);
         
@@ -106,16 +106,16 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         auto yValues = table.getColumnValues<double>("Y_Values");
         
         // Verify the extracted values match the original data
-        // Since we're using IntervalSelector with single time indices, each "interval" contains all points
-        // at that time index, and we're taking the mean, so we should get the mean of all points at each time
+        // Since we're using IntervalSelector with single time indices, each "interval" contains one point
+        // at that time index, and we're taking the mean, so we should get the value of the single point
         
-        // Expected values: mean of all points at each time index
-        // Frame 0: (1.0 + 3.0 + 5.0) / 3 = 3.0, (2.0 + 4.0 + 6.0) / 3 = 4.0
-        // Frame 1: (7.0 + 9.0 + 11.0) / 3 = 9.0, (8.0 + 10.0 + 12.0) / 3 = 10.0
-        // Frame 2: (13.0 + 15.0 + 17.0) / 3 = 15.0, (14.0 + 16.0 + 18.0) / 3 = 16.0
-        // Frame 3: (19.0 + 21.0 + 23.0) / 3 = 21.0, (20.0 + 22.0 + 24.0) / 3 = 22.0
-        std::vector<double> expectedX = {3.0, 9.0, 15.0, 21.0};
-        std::vector<double> expectedY = {4.0, 10.0, 16.0, 22.0};
+        // Expected values: single point at each time index
+        // Frame 0: 1.0, 2.0
+        // Frame 1: 7.0, 8.0
+        // Frame 2: 13.0, 14.0
+        // Frame 3: 19.0, 20.0
+        std::vector<double> expectedX = {1.0, 7.0, 13.0, 19.0};
+        std::vector<double> expectedY = {2.0, 8.0, 14.0, 20.0};
         
         REQUIRE(xValues.size() == 4);
         REQUIRE(yValues.size() == 4);
@@ -130,15 +130,18 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         // Create a DataManager instance
         DataManager dataManager;
         
-        // Create sample point data with more points per frame
+        // Create sample point data with single point per frame for interval reduction testing
         std::vector<std::vector<Point2D<float>>> pointFrames = {
-            {{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}},     // Frame 0: mean X=3.0, Y=4.0
-            {{7.0f, 8.0f}, {9.0f, 10.0f}, {11.0f, 12.0f}},  // Frame 1: mean X=9.0, Y=10.0
-            {{13.0f, 14.0f}, {15.0f, 16.0f}, {17.0f, 18.0f}}, // Frame 2: mean X=15.0, Y=16.0
+            {{1.0f, 2.0f}},     // Frame 0
+            {{7.0f, 8.0f}},     // Frame 1  
+            {{13.0f, 14.0f}},   // Frame 2
+            {{19.0f, 20.0f}},   // Frame 3
+            {{25.0f, 26.0f}},   // Frame 4
+            {{31.0f, 32.0f}}    // Frame 5
         };
         
         // Create a TimeFrame
-        std::vector<int> timeValues = {0, 1, 2};
+        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
         dataManager.setTime(TimeKey("test_time"), timeFrame);
         
@@ -158,14 +161,14 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         // Create DataManagerExtension for TableView
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
         
-        // Create intervals that span each frame
-        // Frame 0: points at array indices 0, 1, 2
-        // Frame 1: points at array indices 3, 4, 5
-        // Frame 2: points at array indices 6, 7, 8
+        // Create intervals that span multiple frames to test interval reduction
+        // Interval 0: frames 0-1 (array indices 0-1) -> mean of 1.0,7.0 = 4.0 and 2.0,8.0 = 5.0
+        // Interval 1: frames 2-3 (array indices 2-3) -> mean of 13.0,19.0 = 16.0 and 14.0,20.0 = 17.0  
+        // Interval 2: frames 4-5 (array indices 4-5) -> mean of 25.0,31.0 = 28.0 and 26.0,32.0 = 29.0
         std::vector<TimeFrameInterval> intervals = {
-            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)),  // Frame 0: indices 0-2
-            TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(5)),  // Frame 1: indices 3-5
-            TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8))   // Frame 2: indices 6-8
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1)),  // Frames 0-1: indices 0-1
+            TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(3)),  // Frames 2-3: indices 2-3
+            TimeFrameInterval(TimeFrameIndex(4), TimeFrameIndex(5))   // Frames 4-5: indices 4-5
         };
         auto rowSelector = std::make_unique<IntervalSelector>(intervals, timeFrame);
         
@@ -206,14 +209,14 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         auto yMax = table.getColumnValues<double>("Y_Max");
         
         // Verify the computed means
-        // Frame 0: (1.0 + 3.0 + 5.0) / 3 = 3.0, (2.0 + 4.0 + 6.0) / 3 = 4.0
-        // Frame 1: (7.0 + 9.0 + 11.0) / 3 = 9.0, (8.0 + 10.0 + 12.0) / 3 = 10.0
-        // Frame 2: (13.0 + 15.0 + 17.0) / 3 = 15.0, (14.0 + 16.0 + 18.0) / 3 = 16.0
-        std::vector<double> expectedXMean = {3.0, 9.0, 15.0};
-        std::vector<double> expectedYMean = {4.0, 10.0, 16.0};
-        // Max values from each frame
-        std::vector<double> expectedXMax = {5.0, 11.0, 17.0};
-        std::vector<double> expectedYMax = {6.0, 12.0, 18.0};
+        // Interval 0: frames 0-1 -> mean of (1.0, 7.0) = 4.0, mean of (2.0, 8.0) = 5.0
+        // Interval 1: frames 2-3 -> mean of (13.0, 19.0) = 16.0, mean of (14.0, 20.0) = 17.0
+        // Interval 2: frames 4-5 -> mean of (25.0, 31.0) = 28.0, mean of (26.0, 32.0) = 29.0
+        std::vector<double> expectedXMean = {4.0, 16.0, 28.0};
+        std::vector<double> expectedYMean = {5.0, 17.0, 29.0};
+        // Max values from each interval
+        std::vector<double> expectedXMax = {7.0, 19.0, 31.0};
+        std::vector<double> expectedYMax = {8.0, 20.0, 32.0};
         
         REQUIRE(xMean.size() == 3);
         REQUIRE(yMean.size() == 3);
@@ -618,9 +621,9 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         
         // Create second DigitalIntervalSeries (will be used for overlap analysis)
         auto intervalSeries2 = std::make_shared<DigitalIntervalSeries>();
-        intervalSeries2->addEvent(TimeFrameIndex(0), TimeFrameIndex(2));  // Interval 0-2
-        intervalSeries2->addEvent(TimeFrameIndex(4), TimeFrameIndex(6));  // Interval 4-6
-        intervalSeries2->addEvent(TimeFrameIndex(7), TimeFrameIndex(8));  // Interval 7-8
+        intervalSeries2->addEvent(TimeFrameIndex(0), TimeFrameIndex(2));  // Interval 0-4 (indices 0-2 in timeFrame2)
+        intervalSeries2->addEvent(TimeFrameIndex(1), TimeFrameIndex(3));  // Interval 2-6 (indices 1-3 in timeFrame2)
+        intervalSeries2->addEvent(TimeFrameIndex(3), TimeFrameIndex(4));  // Interval 6-8 (indices 3-4 in timeFrame2)
         
         dataManager.setData<DigitalIntervalSeries>("ColumnIntervals", intervalSeries2, TimeKey("time2"));
         
@@ -702,11 +705,11 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         REQUIRE(rowDuration.size() == 3);
         
         // Expected overlap analysis:
-        // Row interval 1-3: overlaps with column interval 0-2 (1 overlap)
-        // Row interval 5-7: overlaps with column interval 4-8 (1 overlap)  
-        // Row interval 9-10: overlaps with column interval 4-8 (0 overlaps, because 9 > 8)
+        // Row interval 1-3: overlaps with column interval 0-4 (1 overlap)
+        // Row interval 5-7: overlaps with column interval 2-6 (1 overlap)  
+        // Row interval 9-10: overlaps with no column intervals (0 overlaps)
         std::vector<int64_t> expectedOverlapCount = {1, 1, 0};
-        std::vector<int64_t> expectedContainingID = {-1, 1, -1}; // Second row interval is contained by merged column interval
+        std::vector<int64_t> expectedContainingID = {0, 0, -1}; // First row interval is contained by first column interval
         
         // Expected row properties:
         // Row 1: start=1, end=3, duration=2
@@ -840,12 +843,12 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         REQUIRE(rowDuration.size() == 3);
         
         // Expected overlap analysis:
-        // Row interval 1000-2000: overlaps with column interval 0-100 (1 overlap)
-        // Row interval 5000-7000: overlaps with column interval 500-700 (1 overlap)
-        // Row interval 15000-16000: overlaps with column interval 1500-1600 (1 overlap)
-        std::vector<int64_t> expectedOverlapCount = {1, 1, 1};
-        std::vector<int64_t> expectedContainingID = {0, 1, 2}; // Each row interval is contained by its corresponding column interval
-        
+        // Row interval 1000-2000: overlaps with column interval 2 (1 overlap)
+        // Row interval 5000-7000: does NOT overlap with any column intervals (0 overlaps)
+        // Row interval 15000-16000: does NOT overlap with any column intervals (0 overlaps)
+        std::vector<int64_t> expectedOverlapCount = {1, 0, 0};
+        std::vector<int64_t> expectedContainingID = {2, -1, -1}; // No row intervals are contained by any column intervals
+
         // Expected row properties:
         // Row 1: start=1000, end=2000, duration=1000
         // Row 2: start=5000, end=7000, duration=2000

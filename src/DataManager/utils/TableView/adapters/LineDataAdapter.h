@@ -70,6 +70,13 @@ public:
                                          TimeFrameIndex end,
                                          TimeFrame const * target_timeFrame) override;
 
+    /**
+     * @brief Checks if this source has multiple samples (lines) at any timestamp.
+     * 
+     * @return True if any timestamp has more than one line, false otherwise.
+     */
+    bool hasMultiSamples() const override;
+
     // IEntityProvider implementation
     [[nodiscard]] auto getEntityCountAt(TimeFrameIndex t) const -> size_t override;
     [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* override;

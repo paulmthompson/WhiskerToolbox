@@ -138,7 +138,7 @@ public:
      * @throws std::runtime_error if the operation type doesn't match the template parameter T
      * @throws std::runtime_error if the source time frame is incompatible with the destination time frame
      */
-    [[nodiscard]] std::vector<T> compute(ExecutionPlan const & plan) const;
+    [[nodiscard]] std::vector<T> compute(ExecutionPlan const & plan) const override;
 
     /**
      * @brief Returns the name of the data source this computer depends on.
@@ -148,7 +148,7 @@ public:
      * 
      * @return The name of the source dependency as specified in the constructor.
      */
-    [[nodiscard]] std::string getSourceDependency() const {
+    [[nodiscard]] std::string getSourceDependency() const override {
         return m_sourceName;
     }
 

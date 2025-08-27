@@ -148,7 +148,7 @@ std::shared_ptr<PointData> extract_line_point(
         
         processed_times++;
         int progress = static_cast<int>(
-            std::round(static_cast<double>(processed_times) / times_with_data.size() * 100.0)
+            std::round(static_cast<double>(processed_times) / static_cast<double>(times_with_data.size()) * 100.0)
         );
         progressCallback(progress);
     }

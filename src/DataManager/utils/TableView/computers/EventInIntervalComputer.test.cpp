@@ -818,21 +818,21 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         REQUIRE(presence_info->name == "Event Presence");
         REQUIRE(presence_info->outputType == typeid(bool));
         REQUIRE(presence_info->outputTypeName == "bool");
-        REQUIRE(presence_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(presence_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(presence_info->requiredSourceType == typeid(std::shared_ptr<IEventSource>));
         
         // Verify computer info details for Count
         REQUIRE(count_info->name == "Event Count");
         REQUIRE(count_info->outputType == typeid(int));
         REQUIRE(count_info->outputTypeName == "int");
-        REQUIRE(count_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(count_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(count_info->requiredSourceType == typeid(std::shared_ptr<IEventSource>));
         
         // Verify computer info details for Gather
         REQUIRE(gather_info->name == "Event Gather");
         REQUIRE(gather_info->outputType == typeid(std::vector<float>));
         REQUIRE(gather_info->outputTypeName == "std::vector<float>");
-        REQUIRE(gather_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(gather_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(gather_info->requiredSourceType == typeid(std::shared_ptr<IEventSource>));
     }
     

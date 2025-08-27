@@ -19,6 +19,7 @@ find_package(glm CONFIG REQUIRED)
 
 qt_standard_project_setup()
 
+add_subdirectory(MediaExport)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
 add_subdirectory(ShaderManager)
@@ -448,11 +449,7 @@ set(PROJECT_SOURCES
         IO_Widgets/Tensors/Tensor_Loader_Widget.cpp
         IO_Widgets/Tensors/Tensor_Loader_Widget.ui
 
-        IO_Widgets/Media/media_export.hpp
-        IO_Widgets/Media/media_export.cpp
-        IO_Widgets/Media/MediaExport_Widget.cpp
-        IO_Widgets/Media/MediaExport_Widget.hpp
-        IO_Widgets/Media/MediaExport_Widget.ui
+
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
@@ -530,6 +527,7 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Grabcut_Widget>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../MediaExport>"
 
         ${MLPACK_INCLUDE_DIRS}
 
@@ -539,6 +537,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer DataManagerIO)
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
+target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

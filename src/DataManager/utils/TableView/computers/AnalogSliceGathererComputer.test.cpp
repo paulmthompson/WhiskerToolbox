@@ -621,7 +621,7 @@ TEST_CASE_METHOD(AnalogSliceTableRegistryTestFixture, "DM - TV - AnalogSliceGath
         REQUIRE(double_info->isVectorType == true);
         REQUIRE(double_info->elementType == typeid(double));
         REQUIRE(double_info->elementTypeName == "double");
-        REQUIRE(double_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(double_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(double_info->requiredSourceType == typeid(std::shared_ptr<IAnalogSource>));
         
         // Verify computer info details for float version
@@ -631,7 +631,7 @@ TEST_CASE_METHOD(AnalogSliceTableRegistryTestFixture, "DM - TV - AnalogSliceGath
         REQUIRE(float_info->isVectorType == true);
         REQUIRE(float_info->elementType == typeid(float));
         REQUIRE(float_info->elementTypeName == "float");
-        REQUIRE(float_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(float_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(float_info->requiredSourceType == typeid(std::shared_ptr<IAnalogSource>));
     }
     

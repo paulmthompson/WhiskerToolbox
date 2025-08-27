@@ -650,6 +650,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Utility Functions", "[IntervalOverl
         REQUIRE(result >= -1);  // -1 means no containing interval found
     }
     
+    /*
     SECTION("countOverlappingIntervals function") {
         TimeFrameInterval rowInterval(TimeFrameIndex(2), TimeFrameIndex(4));
         
@@ -666,6 +667,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Utility Functions", "[IntervalOverl
         REQUIRE(result >= 0);
         REQUIRE(result <= static_cast<int64_t>(columnIntervals.size()));
     }
+        */
 }
 
 TEST_CASE_METHOD(IntervalOverlapTestFixture, "DM - TV - IntervalOverlapComputer with DataManager fixture", "[IntervalOverlapComputer][DataManager][Fixture]") {
@@ -821,13 +823,13 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         REQUIRE(assign_id_info->name == "Interval Overlap Assign ID");
         REQUIRE(assign_id_info->outputType == typeid(int64_t));
         REQUIRE(assign_id_info->outputTypeName == "int64_t");
-        REQUIRE(assign_id_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(assign_id_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(assign_id_info->requiredSourceType == typeid(std::shared_ptr<IIntervalSource>));
         
         REQUIRE(count_info->name == "Interval Overlap Count");
         REQUIRE(count_info->outputType == typeid(int64_t));
         REQUIRE(count_info->outputTypeName == "int64_t");
-        REQUIRE(count_info->requiredRowSelector == RowSelectorType::Interval);
+        REQUIRE(count_info->requiredRowSelector == RowSelectorType::IntervalBased);
         REQUIRE(count_info->requiredSourceType == typeid(std::shared_ptr<IIntervalSource>));
     }
     

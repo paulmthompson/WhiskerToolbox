@@ -82,6 +82,18 @@ public:
     [[nodiscard]] auto build() -> TableView;
 
 private:
+    /**
+     * @brief Validates that at most one multi-sample source is used.
+     * 
+     * This method checks all columns for dependencies on multi-sample line sources.
+     * If more than one multi-sample source is found, it throws an exception with
+     * detailed information about the conflicting sources.
+     * 
+     * @throws std::runtime_error if multiple multi-sample sources are detected.
+     */
+    void validateMultiSampleSources();
+
+private:
     std::shared_ptr<DataManagerExtension> m_dataManager;
     std::unique_ptr<IRowSelector> m_rowSelector;
     std::vector<std::shared_ptr<IColumn>> m_columns;

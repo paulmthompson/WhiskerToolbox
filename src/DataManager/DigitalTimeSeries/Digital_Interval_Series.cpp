@@ -46,23 +46,20 @@ void DigitalIntervalSeries::addEvent(Interval new_interval) {
 }
 
 void DigitalIntervalSeries::_addEvent(Interval new_interval) {
-    bool merged = false;
-
-    for (auto it = _data.begin(); it != _data.end();) {
+    auto it = _data.begin();
+    while (it != _data.end()) {
         if (is_overlapping(*it, new_interval) || is_contiguous(*it, new_interval)) {
             new_interval.start = std::min(new_interval.start, it->start);
             new_interval.end = std::max(new_interval.end, it->end);
             it = _data.erase(it);
-            merged = true;
         } else if (is_contained(new_interval, *it)) {
+            // The new interval is completely contained within an existing interval, so we do nothing.
             return;
         } else {
             ++it;
         }
     }
-
     _data.push_back(new_interval);
-
     _sortData();
 }
 
@@ -142,10 +139,10 @@ void DigitalIntervalSeries::rebuildAllEntityIds() {
     }
     _entity_ids.clear();
     _entity_ids.reserve(_data.size());
-    for (int i = 0; i < static_cast<int>(_data.size()); ++i) {
+    for (size_t i = 0; i < _data.size(); ++i) {
         // Use start as the discrete time index representative, and i as stable local index
         _entity_ids.push_back(
-            _identity_registry->ensureId(_identity_data_key, EntityKind::Interval, TimeFrameIndex{_data[i].start}, i)
+            _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, TimeFrameIndex{_data[i].start}, static_cast<int>(i))
         );
     }
 }
@@ -154,17 +151,17 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFra
     auto const & events = digital_series->getDigitalIntervalSeries();
 
     // Check if sorted
-    for (int i = 1; i < events.size(); ++i) {
+    for (size_t i = 1; i < events.size(); ++i) {
         if (events[i].start < events[i - 1].start) {
             throw std::runtime_error("DigitalIntervalSeries is not sorted");
         }
     }
     int closest_index = -1;
-    for (int i = 0; i < events.size(); ++i) {
+    for (size_t i = 0; i < events.size(); ++i) {
         if (events[i].start <= time.getValue()) {
-            closest_index = i;
+            closest_index = static_cast<int>(i);
             if (time.getValue() <= events[i].end) {
-                return i;
+                return static_cast<int>(i);
             }
         } else {
             break;

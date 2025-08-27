@@ -125,12 +125,12 @@ bool TableRegistry::addTableColumn(std::string const & table_id, ColumnInfo cons
     return true;
 }
 
-bool TableRegistry::updateTableColumn(std::string const & table_id, int column_index, ColumnInfo const & column_info) {
+bool TableRegistry::updateTableColumn(std::string const & table_id, size_t column_index, ColumnInfo const & column_info) {
     if (!hasTable(table_id)) {
         return false;
     }
     auto & table = _table_info[table_id];
-    if (column_index < 0 || column_index >= table.columns.size()) {
+    if (column_index >= table.columns.size()) {
         return false;
     }
     table.columns[column_index] = column_info;
@@ -143,16 +143,16 @@ bool TableRegistry::updateTableColumn(std::string const & table_id, int column_i
     return true;
 }
 
-bool TableRegistry::removeTableColumn(std::string const & table_id, int column_index) {
+bool TableRegistry::removeTableColumn(std::string const & table_id, size_t column_index) {
     if (!hasTable(table_id)) {
         return false;
     }
     auto & table = _table_info[table_id];
-    if (column_index < 0 || column_index >= table.columns.size()) {
+    if (column_index >= table.columns.size()) {
         return false;
     }
     std::string removed = table.columns[column_index].name;
-    table.columns.erase(table.columns.begin() + column_index);
+    table.columns.erase(table.columns.begin() + static_cast<long int>(column_index));
     table.columnNames.clear();
     for (auto const & column : table.columns) {
         table.columnNames.push_back(column.name);
@@ -162,12 +162,12 @@ bool TableRegistry::removeTableColumn(std::string const & table_id, int column_i
     return true;
 }
 
-ColumnInfo TableRegistry::getTableColumn(std::string const & table_id, int column_index) const {
+ColumnInfo TableRegistry::getTableColumn(std::string const & table_id, size_t column_index) const {
     if (!hasTable(table_id)) {
         return ColumnInfo();
     }
     auto const & table = _table_info.at(table_id);
-    if (column_index < 0 || column_index >= table.columns.size()) {
+    if (column_index >= table.columns.size()) {
         return ColumnInfo();
     }
     return table.columns[column_index];
@@ -229,7 +229,7 @@ bool TableRegistry::addTableColumnWithTypeInfo(std::string const & table_id, Col
     return addTableColumn(table_id, column_info);
 }
 
-std::vector<std::string> TableRegistry::getAvailableComputersForDataSource(std::string const & row_selector_type, std::string const & data_source_name) const {
+std::vector<std::string> TableRegistry::getAvailableComputersForDataSource(std::string const & /*row_selector_type*/, std::string const & /*data_source_name*/) const {
     std::vector<std::string> computers;
     auto all_computer_names = _computer_registry->getAllComputerNames();
     for (auto const & name : all_computer_names) {

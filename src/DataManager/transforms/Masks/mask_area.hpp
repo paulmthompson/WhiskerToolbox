@@ -56,6 +56,10 @@ public:
      * or an empty on failure (e.g., type mismatch, null pointer, calculation failure).
      */
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                            TransformParametersBase const * transformParameters,
+                            ProgressCallback progressCallback) override;
+
+    DataTypeVariant execute(DataTypeVariant const & dataVariant,
                             TransformParametersBase const * transformParameters) override;
 };
 

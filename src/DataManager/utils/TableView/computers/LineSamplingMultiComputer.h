@@ -61,7 +61,7 @@ public:
         int const positions = m_segments + 1;
         int const outputs = positions * 2; // x then y per position
 
-        std::vector<std::vector<double>> results(outputs);
+        std::vector<std::vector<double>> results(static_cast<size_t>(outputs));
         for (auto & vec : results) {
             vec.resize(rowCount);
         }
@@ -89,8 +89,8 @@ public:
                 auto lines = m_lineSource->getLinesInRange(tfIndex, tfIndex, targetTF);
                 if (lines.empty()) {
                     for (int p = 0; p < positions; ++p) {
-                        results[2 * p][r] = 0.0;
-                        results[2 * p + 1][r] = 0.0;
+                        results[static_cast<size_t>(2 * p)][r] = 0.0;
+                        results[static_cast<size_t>(2 * p + 1)][r] = 0.0;
                     }
                     continue;
                 }
@@ -102,11 +102,11 @@ public:
             for (int p = 0; p < positions; ++p) {
                 auto optPoint = point_at_fractional_position(line, fractions[static_cast<size_t>(p)], true);
                 if (optPoint.has_value()) {
-                    results[2 * p][r] = static_cast<double>(optPoint->x);
-                    results[2 * p + 1][r] = static_cast<double>(optPoint->y);
+                    results[static_cast<size_t>(2 * p)][r] = static_cast<double>(optPoint->x);
+                    results[static_cast<size_t>(2 * p + 1)][r] = static_cast<double>(optPoint->y);
                 } else {
-                    results[2 * p][r] = 0.0;
-                    results[2 * p + 1][r] = 0.0;
+                    results[static_cast<size_t>(2 * p)][r] = 0.0;
+                    results[static_cast<size_t>(2 * p + 1)][r] = 0.0;
                 }
             }
         }

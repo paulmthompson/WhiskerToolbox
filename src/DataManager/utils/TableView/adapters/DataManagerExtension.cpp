@@ -5,10 +5,12 @@
 #include "utils/TableView/adapters/DigitalEventDataAdapter.h"
 #include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
 #include "utils/TableView/adapters/LineDataAdapter.h"
+#include "utils/TableView/adapters/PointDataAdapter.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/IEventSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/ILineSource.h"
+#include "utils/TableView/interfaces/IPointSource.h"
 
 
 #include <iostream>
@@ -48,6 +50,7 @@ void DataManagerExtension::clearCache() {
     m_eventSourceCache.clear();
     m_intervalSourceCache.clear();
     m_lineSourceCache.clear();
+    m_pointSourceCache.clear();
 }
 
 std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(std::string const & name) {
@@ -118,6 +121,24 @@ std::shared_ptr<ILineSource> DataManagerExtension::createLineDataAdapter(std::st
     }
 }
 
+std::shared_ptr<IPointSource> DataManagerExtension::createPointDataAdapter(std::string const & name) {
+    try {
+        auto pointData = m_dataManager.getData<PointData>(name);
+        if (!pointData) {
+            return nullptr;
+        }
+
+        auto timeFrame_key = m_dataManager.getTimeKey(name);
+        auto timeFrame = m_dataManager.getTime(timeFrame_key);
+
+        return std::make_shared<PointDataAdapter>(pointData, timeFrame, name);
+    } catch (std::exception const & e) {
+        std::cerr << "Error creating PointDataAdapter for '" << name << "': " << e.what() << std::endl;
+        return nullptr;
+    }
+}
+
+
 std::shared_ptr<IAnalogSource> DataManagerExtension::createPointComponentAdapter(
         std::string const & pointDataName,
         PointComponentAdapter::Component component) {
@@ -125,6 +146,16 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createPointComponentAdapter
     try {
         auto pointData = m_dataManager.getData<PointData>(pointDataName);
         if (!pointData) {
+            return nullptr;
+        }
+
+        // Check if PointData has multiple samples per timestamp
+        // PointComponentAdapter can only handle single-sample data
+        auto pointAdapter = std::make_shared<PointDataAdapter>(pointData, nullptr, pointDataName);
+        if (pointAdapter->hasMultiSamples()) {
+            std::cerr << "Cannot create PointComponentAdapter for '" << pointDataName 
+                      << "': PointData has multiple samples per timestamp. "
+                      << "Use PointDataAdapter with IPointSource interface instead." << std::endl;
             return nullptr;
         }
 
@@ -206,4 +237,21 @@ std::shared_ptr<ILineSource> DataManagerExtension::getLineSource(std::string con
         std::cerr << "Line source '" << name << "' not found." << std::endl;
     }
     return lineSource;
+}
+
+std::shared_ptr<IPointSource> DataManagerExtension::getPointSource(std::string const & name) {
+    // Check cache first
+    auto it = m_pointSourceCache.find(name);
+    if (it != m_pointSourceCache.end()) {
+        return it->second;
+    }
+
+    // Create a new point source adapter
+    auto pointSource = createPointDataAdapter(name);
+    if (pointSource) {
+        m_pointSourceCache[name] = pointSource;
+    } else {
+        std::cerr << "Point source '" << name << "' not found." << std::endl;
+    }
+    return pointSource;
 }

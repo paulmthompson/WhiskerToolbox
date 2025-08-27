@@ -3,7 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-TEST_CASE("Polygon - Construction and basic properties", "[polygon][construction]") {
+TEST_CASE("CoreGeometry - Polygon - Construction and basic properties", "[polygon][construction]") {
     SECTION("Empty polygon") {
         std::vector<Point2D<float>> empty_vertices;
         Polygon empty_polygon(empty_vertices);
@@ -37,7 +37,7 @@ TEST_CASE("Polygon - Construction and basic properties", "[polygon][construction
     }
 }
 
-TEST_CASE("Polygon - Bounding box calculation", "[polygon][bounding_box]") {
+TEST_CASE("CoreGeometry - Polygon - Bounding box calculation", "[polygon][bounding_box]") {
     SECTION("Triangle bounding box") {
         std::vector<Point2D<float>> triangle_vertices = {
             {1.0f, 2.0f},
@@ -70,7 +70,7 @@ TEST_CASE("Polygon - Bounding box calculation", "[polygon][bounding_box]") {
     }
 }
 
-TEST_CASE("Polygon - Point containment", "[polygon][containment]") {
+TEST_CASE("CoreGeometry - Polygon - Point containment", "[polygon][containment]") {
     SECTION("Triangle containment") {
         // Right triangle with vertices at (0,0), (10,0), (0,10)
         std::vector<Point2D<float>> triangle_vertices = {
@@ -161,7 +161,7 @@ TEST_CASE("Polygon - Point containment", "[polygon][containment]") {
     }
 }
 
-TEST_CASE("Polygon - Edge cases", "[polygon][edge_cases]") {
+TEST_CASE("CoreGeometry - Polygon - Edge cases", "[polygon][edge_cases]") {
     SECTION("Points outside bounding box are quickly rejected") {
         std::vector<Point2D<float>> triangle_vertices = {
             {0.0f, 0.0f},
@@ -191,7 +191,7 @@ TEST_CASE("Polygon - Edge cases", "[polygon][edge_cases]") {
     }
 }
 
-TEST_CASE("Polygon - BoundingBox constructor", "[polygon][construction][bounding_box]") {
+TEST_CASE("CoreGeometry - Polygon - BoundingBox constructor", "[polygon][construction][bounding_box]") {
     SECTION("Rectangle from bounding box") {
         BoundingBox bbox(1.0f, 2.0f, 10.0f, 8.0f);
         Polygon rect(bbox);
@@ -237,7 +237,7 @@ TEST_CASE("Polygon - BoundingBox constructor", "[polygon][construction][bounding
     }
 }
 
-TEST_CASE("Polygon - Intersection operations", "[polygon][intersection]") {
+TEST_CASE("CoreGeometry - Polygon - Intersection operations", "[polygon][intersection]") {
     SECTION("Rectangle intersection - overlapping") {
         // Create two overlapping rectangles
         Polygon rect1(BoundingBox(0.0f, 0.0f, 10.0f, 10.0f));
@@ -296,7 +296,7 @@ TEST_CASE("Polygon - Intersection operations", "[polygon][intersection]") {
     }
 }
 
-TEST_CASE("Polygon - Union operations", "[polygon][union]") {
+TEST_CASE("CoreGeometry - Polygon - Union operations", "[polygon][union]") {
     SECTION("Rectangle union - non-overlapping") {
         Polygon rect1(BoundingBox(0.0f, 0.0f, 5.0f, 5.0f));
         Polygon rect2(BoundingBox(10.0f, 10.0f, 15.0f, 15.0f));
@@ -347,7 +347,7 @@ TEST_CASE("Polygon - Union operations", "[polygon][union]") {
     }
 }
 
-TEST_CASE("Polygon - Complex intersection scenarios", "[polygon][intersection][complex]") {
+TEST_CASE("CoreGeometry - Polygon - Complex intersection scenarios", "[polygon][intersection][complex]") {
     SECTION("Self intersection") {
         Polygon rect(BoundingBox(0.0f, 0.0f, 10.0f, 10.0f));
         
@@ -383,7 +383,7 @@ TEST_CASE("Polygon - Complex intersection scenarios", "[polygon][intersection][c
     }
 }
 
-TEST_CASE("Polygon - Martinez-Rueda Boolean Operations", "[polygon][boolean][martinez_rueda]") {
+TEST_CASE("CoreGeometry - Polygon - Martinez-Rueda Boolean Operations", "[polygon][boolean][martinez_rueda]") {
     SECTION("Rectangle intersection using Martinez-Rueda") {
         // Create two overlapping rectangles
         Polygon rect1(BoundingBox(0.0f, 0.0f, 10.0f, 10.0f));
@@ -481,7 +481,7 @@ TEST_CASE("Polygon - Martinez-Rueda Boolean Operations", "[polygon][boolean][mar
     }
 }
 
-TEST_CASE("Polygon - Boolean operations with Martinez-Rueda adapter", "[polygon][boolean][adapter]") {
+TEST_CASE("CoreGeometry - Polygon - Boolean operations with Martinez-Rueda adapter", "[polygon][boolean][adapter]") {
     SECTION("Two overlapping rectangles - union") {
         // Create two overlapping rectangles
         BoundingBox bbox1(0.0f, 0.0f, 4.0f, 4.0f);

@@ -13,8 +13,11 @@ TEST_CASE("DataManager - Load Media VideoData", "[DataManager][Video]") {
         dm.setData<VideoData>("my_video", TimeKey("time"));
         //REQUIRE(dm.getKeys<VideoData>().size() == 1);
         //REQUIRE(dm.getKeys<VideoData>()[0] == "my_video");
-        REQUIRE(dm.getKeys<MediaData>().size() == 1);
-        REQUIRE(dm.getKeys<MediaData>()[0] == "my_video");
+        REQUIRE(dm.getKeys<MediaData>().size() == 2);
+        // Check that both the default "media" key and the new "my_video" key exist
+        auto media_keys = dm.getKeys<MediaData>();
+        REQUIRE(std::find(media_keys.begin(), media_keys.end(), "media") != media_keys.end());
+        REQUIRE(std::find(media_keys.begin(), media_keys.end(), "my_video") != media_keys.end());
     }
 }
 

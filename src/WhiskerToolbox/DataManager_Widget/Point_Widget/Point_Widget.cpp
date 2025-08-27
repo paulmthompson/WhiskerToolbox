@@ -4,7 +4,7 @@
 #include "DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
-#include "IO_Widgets/Media/MediaExport_Widget.hpp"
+#include "MediaExport/MediaExport_Widget.hpp"
 #include "IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "PointTableModel.hpp"
 

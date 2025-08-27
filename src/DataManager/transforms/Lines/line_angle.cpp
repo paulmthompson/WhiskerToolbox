@@ -182,7 +182,7 @@ std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
             angle = calculate_polynomial_angle(line, position, polynomial_order, reference_x, reference_y);
         }
 
-        angles[line_and_time.time.getValue()] = angle;
+        angles[static_cast<int>(line_and_time.time.getValue())] = angle;
     }
 
     return std::make_shared<AnalogTimeSeries>(angles);
@@ -213,8 +213,8 @@ std::unique_ptr<TransformParametersBase> LineAngleOperation::getDefaultParameter
 }
 
 DataTypeVariant LineAngleOperation::execute(DataTypeVariant const & dataVariant,
-                                            TransformParametersBase const * transformParameters) {
-
+                                            TransformParametersBase const * transformParameters,
+                                            ProgressCallback progressCallback) {
     auto const * ptr_ptr = std::get_if<std::shared_ptr<LineData>>(&dataVariant);
 
     if (!ptr_ptr || !(*ptr_ptr)) {
@@ -232,7 +232,7 @@ DataTypeVariant LineAngleOperation::execute(DataTypeVariant const & dataVariant,
         }
     }
 
-    std::shared_ptr<AnalogTimeSeries> result_ts = line_angle(line_raw_ptr, typed_params);
+    std::shared_ptr<AnalogTimeSeries> result_ts = line_angle(line_raw_ptr, typed_params, progressCallback);
 
     // Handle potential failure from the calculation function
     if (!result_ts) {
@@ -242,4 +242,10 @@ DataTypeVariant LineAngleOperation::execute(DataTypeVariant const & dataVariant,
 
     std::cout << "LineAngleOperation executed successfully using variant input." << std::endl;
     return result_ts;
+}
+
+DataTypeVariant LineAngleOperation::execute(DataTypeVariant const & dataVariant,
+                                            TransformParametersBase const * transformParameters) {
+
+    return execute(dataVariant, transformParameters, [](int){});
 }

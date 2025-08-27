@@ -4,6 +4,17 @@
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Lines/IO/CSV/Line_Data_CSV.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "IO/interface/IOTypes.hpp"
+#include "ConcreteDataFactory.hpp"
+#include "CoreGeometry/lines.hpp"
+
+
+#include "DataManager.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Lines/IO/CSV/Line_Data_CSV.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "IO/interface/IOTypes.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -270,5 +281,78 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV load through DataM
         
         // Clean up JSON config file
         std::filesystem::remove(json_filepath);
+    }
+}
+
+TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV save/load through LoaderRegistry", "[LineData][CSV][IO][LoaderRegistry]") {
+    
+    SECTION("Save LineData through LoaderRegistry") {
+        // Create DataManager (which triggers loader registration)
+        auto data_manager = std::make_unique<DataManager>();
+        
+        // Check if CSV loader is registered for Line data type
+        auto& registry = LoaderRegistry::getInstance();
+        REQUIRE(registry.isFormatSupported("csv", IODataType::Line));
+        
+        // Create a minimal JSON config for saving
+        nlohmann::json config;
+        config["save_type"] = "single";  // Use single-file mode
+        config["parent_dir"] = test_dir.string();
+        config["filename"] = csv_filepath.filename().string();
+        config["delimiter"] = ",";
+        config["line_delim"] = "\n";
+        config["save_header"] = true;
+        config["header"] = "Frame,X,Y";
+        config["precision"] = 2;
+        
+        // Test saving through registry - this exercises the same code path as the GUI
+        auto result = registry.trySave("csv", 
+                                     IODataType::Line, 
+                                     csv_filepath.string(),
+                                     config, 
+                                     original_line_data.get());
+        
+        // Debug: Print the result details
+        std::cout << "Save result success: " << result.success << std::endl;
+        std::cout << "Save result error: " << result.error_message << std::endl;
+        std::cout << "CSV filepath: " << csv_filepath.string() << std::endl;
+        
+        REQUIRE(result.success);
+        REQUIRE(result.error_message.empty());
+        
+        // Verify the file was actually created and has content
+        REQUIRE(std::filesystem::exists(csv_filepath));
+        REQUIRE(std::filesystem::file_size(csv_filepath) > 0);
+    }
+    
+    SECTION("Load LineData through LoaderRegistry") {
+        // First save the data using the direct method to ensure we have a file
+        REQUIRE(saveCSVLineData());
+        
+        // Now try to load through registry - this would test the loader interface
+        auto data_manager = std::make_unique<DataManager>();
+        auto& registry = LoaderRegistry::getInstance();
+        
+        // Create JSON config for loading
+        nlohmann::json config;
+        config["filepath"] = csv_filepath.string();
+        config["delimiter"] = ",";
+        config["coordinate_delimiter"] = ",";
+        config["has_header"] = true;
+        config["header_identifier"] = "Frame";
+        
+        ConcreteDataFactory factory;
+        auto load_result = registry.tryLoad("csv", 
+                                          IODataType::Line, 
+                                          csv_filepath.string(), 
+                                          config, 
+                                          &factory);
+        REQUIRE(load_result.success);
+        REQUIRE(std::holds_alternative<std::shared_ptr<LineData>>(load_result.data));
+        
+        // Verify the loaded data matches the original
+        auto loaded_line_data = std::get<std::shared_ptr<LineData>>(load_result.data);
+        REQUIRE(loaded_line_data != nullptr);
+        verifyLineDataEquality(*loaded_line_data);
     }
 }

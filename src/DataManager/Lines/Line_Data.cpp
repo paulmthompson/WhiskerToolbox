@@ -35,8 +35,8 @@ bool LineData::clearAtTime(TimeFrameIndex const time, int const line_id, bool no
     if (clear_at_time(time, line_id, _data)) {
         auto it = _entity_ids_by_time.find(time);
         if (it != _entity_ids_by_time.end()) {
-            if (line_id < static_cast<int>(it->second.size())) {
-                it->second.erase(it->second.begin() + line_id);
+            if (static_cast<size_t>(line_id) < it->second.size()) {
+                it->second.erase(it->second.begin() + static_cast<long int>(line_id));
             }
             if (it->second.empty()) {
                 _entity_ids_by_time.erase(it);
@@ -58,7 +58,7 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<float> const & x
     int const local_index = static_cast<int>(_data[time].size()) - 1;
     if (_identity_registry) {
         _entity_ids_by_time[time].push_back(
-            _identity_registry->ensureId(_identity_data_key, EntityKind::Line, time, local_index)
+            _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index)
         );
     } else {
         _entity_ids_by_time[time].push_back(0);
@@ -79,7 +79,7 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool no
     int const local_index = static_cast<int>(_data[time].size()) - 1;
     if (_identity_registry) {
         _entity_ids_by_time[time].push_back(
-            _identity_registry->ensureId(_identity_data_key, EntityKind::Line, time, local_index)
+            _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index)
         );
     } else {
         _entity_ids_by_time[time].push_back(0);
@@ -92,8 +92,8 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool no
 
 void LineData::addPointToLine(TimeFrameIndex const time, int const line_id, Point2D<float> point, bool notify) {
 
-    if (line_id < _data[time].size()) {
-        _data[time][line_id].push_back(point);
+    if (static_cast<size_t>(line_id) < _data[time].size()) {
+        _data[time][static_cast<size_t>(line_id)].push_back(point);
     } else {
         std::cerr << "LineData::addPointToLine: line_id out of range" << std::endl;
         _data[time].emplace_back();
@@ -107,15 +107,15 @@ void LineData::addPointToLine(TimeFrameIndex const time, int const line_id, Poin
 
 void LineData::addPointToLineInterpolate(TimeFrameIndex const time, int const line_id, Point2D<float> point, bool notify) {
 
-    if (line_id >= _data[time].size()) {
+    if (static_cast<size_t>(line_id) >= _data[time].size()) {
         std::cerr << "LineData::addPointToLineInterpolate: line_id out of range" << std::endl;
         _data[time].emplace_back();
     }
 
-    Line2D & line = _data[time][line_id];
+    Line2D & line = _data[time][static_cast<size_t>(line_id)];
     if (!line.empty()) {
         Point2D<float> const last_point = line.back();
-        double const distance = std::sqrt(std::pow(point.x - last_point.x, 2) + std::pow(point.y - last_point.y, 2));
+        float const distance = std::sqrt(std::pow(point.x - last_point.x, 2.0f) + std::pow(point.y - last_point.y, 2.0f));
         int const n = static_cast<int>(distance / 2.0f);
         for (int i = 1; i <= n; ++i) {
             float const t = static_cast<float>(i) / static_cast<float>(n + 1);
@@ -209,7 +209,7 @@ void LineData::rebuildAllEntityIds() {
         ids.clear();
         ids.reserve(lines.size());
         for (int i = 0; i < static_cast<int>(lines.size()); ++i) {
-            ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::Line, t, i));
+            ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, t, i));
         }
     }
 }
@@ -288,7 +288,7 @@ std::size_t LineData::moveTo(LineData& target, TimeFrameInterval const & interva
 
     // Then, clear all the times from source
     for (TimeFrameIndex time : times_to_clear) {
-        clearAtTime(time, false); // Don't notify for each operation
+        (void)clearAtTime(time, false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested
@@ -318,7 +318,7 @@ std::size_t LineData::moveTo(LineData& target, std::vector<TimeFrameIndex> const
 
     // Then, clear all the times from source
     for (TimeFrameIndex time : times_to_clear) {
-        clearAtTime(time, false); // Don't notify for each operation
+        (void)clearAtTime(time, false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested
