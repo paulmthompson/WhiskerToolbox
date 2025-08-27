@@ -6,13 +6,14 @@
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
 #include "DataManager/AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp"
-#include "IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.hpp"
-#include "IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp"
+#include "AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.hpp"
+#include "AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp"
 
 #include <QComboBox>
 #include <QStackedWidget>
 #include <QLineEdit>
 #include <QMessageBox>
+
 #include <iostream>
 
 Analog_Loader_Widget::Analog_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)

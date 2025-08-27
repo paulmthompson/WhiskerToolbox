@@ -29,6 +29,7 @@ add_subdirectory(TimeScrollBar)
 add_subdirectory(Analysis_Dashboard)    
 add_subdirectory(Feature_Table_Widget)
 add_subdirectory(Feature_Tree_Widget)
+add_subdirectory(IO_Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -358,87 +359,6 @@ set(PROJECT_SOURCES
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.cpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.ui
 
-        IO_Widgets/Scaling_Widget/Scaling_Widget.cpp
-        IO_Widgets/Scaling_Widget/Scaling_Widget.hpp
-        IO_Widgets/Scaling_Widget/Scaling_Widget.ui
-
-        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.cpp
-        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.hpp
-        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.ui
-
-        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.ui
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.ui
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.ui
-
-        IO_Widgets/Points/Point_Loader_Widget.hpp
-        IO_Widgets/Points/Point_Loader_Widget.cpp
-        IO_Widgets/Points/Point_Loader_Widget.ui
-        IO_Widgets/Points/CSV/CSVPointLoader_Widget.cpp
-        IO_Widgets/Points/CSV/CSVPointLoader_Widget.hpp
-        IO_Widgets/Points/CSV/CSVPointLoader_Widget.ui
-        IO_Widgets/Points/CSV/CSVPointSaver_Widget.cpp
-        IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp
-        IO_Widgets/Points/CSV/CSVPointSaver_Widget.ui
-
-        IO_Widgets/Masks/Mask_Loader_Widget.hpp
-        IO_Widgets/Masks/Mask_Loader_Widget.cpp
-        IO_Widgets/Masks/Mask_Loader_Widget.ui
-        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.cpp
-        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.hpp
-        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.ui
-        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.cpp
-        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp
-        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.ui
-        IO_Widgets/Masks/Image/ImageMaskLoader_Widget.cpp
-        IO_Widgets/Masks/Image/ImageMaskLoader_Widget.hpp
-        IO_Widgets/Masks/Image/ImageMaskLoader_Widget.ui
-        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.cpp
-        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp
-        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.ui
-
-        IO_Widgets/Lines/Line_Loader_Widget.hpp
-        IO_Widgets/Lines/Line_Loader_Widget.cpp
-        IO_Widgets/Lines/Line_Loader_Widget.ui
-        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp
-        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.cpp
-        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.ui
-        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.hpp
-        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.cpp
-        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.ui
-        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.cpp
-        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp
-        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.ui
-        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.hpp
-        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.cpp
-        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.ui
-
-        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.ui
-
-        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.ui
-
-        IO_Widgets/Tensors/Tensor_Loader_Widget.hpp
-        IO_Widgets/Tensors/Tensor_Loader_Widget.cpp
-        IO_Widgets/Tensors/Tensor_Loader_Widget.ui
-
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
 
@@ -461,30 +381,6 @@ set(PROJECT_SOURCES
         Test_Widget/Test_Widget.cpp
         Test_Widget/Test_Widget.ui
 )
-
-# Conditionally add CapnProto-dependent Binary widget sources
-if(ENABLE_CAPNPROTO)
-    list(APPEND PROJECT_SOURCES
-        # Line Binary Widgets
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.cpp
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.ui
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.cpp
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.hpp
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.ui
-        
-        # AnalogTimeSeries Binary Widgets
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.ui
-        
-        # DigitalTimeSeries Binary Widgets
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.ui
-    )
-endif()
-
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
@@ -528,6 +424,7 @@ target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
 target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE IO_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

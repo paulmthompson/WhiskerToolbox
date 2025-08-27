@@ -95,13 +95,13 @@
   <customwidget>
    <class>Scaling_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Scaling_Widget/Scaling_Widget.hpp</header>
+   <header>Scaling_Widget/Scaling_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>CSVPointLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Points/CSV/CSVPointLoader_Widget.hpp</header>
+   <header>Points/CSV/CSVPointLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
