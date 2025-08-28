@@ -20,9 +20,8 @@ struct DataChunk {
     DataArrayIndex end_idx;           // End index in original timestamps (exclusive)
     TimeFrameIndex output_start;      // Start position in output array
     TimeFrameIndex output_end;        // End position in output array (exclusive)
-    std::vector<float> values;// Values for this chunk
+    std::vector<float> values;        // Values for this chunk
     std::vector<TimeFrameIndex> times;// Timestamps for this chunk
-
 };
 
 /**
@@ -50,7 +49,7 @@ std::vector<DataChunk> detectChunks(AnalogTimeSeries const * analog_time_series,
 
         // If gap is larger than threshold, end current chunk and start new one
         if (gap.getValue() > static_cast<int64_t>(threshold)) {
-            
+
             std::vector<float> chunk_values;
             std::vector<TimeFrameIndex> chunk_times;
             chunk_values.reserve(i - chunk_start);
@@ -61,12 +60,12 @@ std::vector<DataChunk> detectChunks(AnalogTimeSeries const * analog_time_series,
             }
 
             // End chunk at last valid time + 1 (exclusive)
-            DataChunk chunk {.start_idx = chunk_start,
-                           .end_idx = i,
-                           .output_start = timestamps[chunk_start.getValue()],
-                           .output_end = last_time + TimeFrameIndex(1),
-                           .values = std::move(chunk_values),
-                           .times = std::move(chunk_times)};
+            DataChunk chunk{.start_idx = chunk_start,
+                            .end_idx = i,
+                            .output_start = timestamps[chunk_start.getValue()],
+                            .output_end = last_time + TimeFrameIndex(1),
+                            .values = std::move(chunk_values),
+                            .times = std::move(chunk_times)};
 
             chunks.push_back(std::move(chunk));
             chunk_start = i;
@@ -84,12 +83,12 @@ std::vector<DataChunk> detectChunks(AnalogTimeSeries const * analog_time_series,
         final_chunk_times.push_back(timestamps[j.getValue()]);
     }
 
-    DataChunk final_chunk {.start_idx = chunk_start,
-                         .end_idx = DataArrayIndex(timestamps.size()),
-                         .output_start = timestamps[chunk_start.getValue()],
-                         .output_end = timestamps.back() + TimeFrameIndex(1),
-                         .values = std::move(final_chunk_values),
-                         .times = std::move(final_chunk_times)};
+    DataChunk final_chunk{.start_idx = chunk_start,
+                          .end_idx = DataArrayIndex(timestamps.size()),
+                          .output_start = timestamps[chunk_start.getValue()],
+                          .output_end = timestamps.back() + TimeFrameIndex(1),
+                          .values = std::move(final_chunk_values),
+                          .times = std::move(final_chunk_times)};
 
     chunks.push_back(std::move(final_chunk));
 
@@ -114,7 +113,7 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
     std::vector<TimeFrameIndex> clean_times;
     clean_values.reserve(chunk.values.size());
     clean_times.reserve(chunk.times.size());
-    
+
     for (size_t i = 0; i < chunk.values.size(); ++i) {
         if (!std::isnan(chunk.values[i])) {
             clean_values.push_back(chunk.values[i]);
@@ -132,18 +131,18 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
     std::copy(clean_values.begin(), clean_values.end(), signal.begin());
 
     // Calculate sampling rate from timestamps
-    double dt = 1.0 / 1000.0;  // Default to 1kHz if we can't calculate
+    double dt = 1.0 / 1000.0;// Default to 1kHz if we can't calculate
     if (clean_times.size() > 1) {
         // Find minimum time difference between consecutive samples
         double min_dt = std::numeric_limits<double>::max();
         for (size_t i = 1; i < clean_times.size(); ++i) {
-            double diff = static_cast<double>(clean_times[i].getValue() - clean_times[i-1].getValue());
+            double diff = static_cast<double>(clean_times[i].getValue() - clean_times[i - 1].getValue());
             if (diff > 0) {
                 min_dt = std::min(min_dt, diff);
             }
         }
         if (min_dt != std::numeric_limits<double>::max()) {
-            dt = min_dt / 1000.0;  // Convert from TimeFrameIndex units to seconds
+            dt = min_dt / 1000.0;// Convert from TimeFrameIndex units to seconds
         }
     }
     double const Fs = 1.0 / dt;
@@ -200,12 +199,12 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
 
     // Interpolate small gaps within this chunk only
     for (size_t i = 1; i < clean_times.size(); ++i) {
-        int64_t gap = clean_times[i].getValue() - clean_times[i-1].getValue();
+        int64_t gap = clean_times[i].getValue() - clean_times[i - 1].getValue();
         if (gap > 1 && static_cast<size_t>(gap) <= phaseParams.discontinuityThreshold) {
             // Linear interpolation for points in between
-            float phase_start = phase_values[i-1];
+            float phase_start = phase_values[i - 1];
             float phase_end = phase_values[i];
-            
+
             // Handle phase wrapping
             if (phase_end - phase_start > static_cast<float>(std::numbers::pi)) {
                 phase_start += 2.0f * static_cast<float>(std::numbers::pi);
@@ -216,12 +215,12 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
             for (int64_t j = 1; j < gap; ++j) {
                 float t = static_cast<float>(j) / static_cast<float>(gap);
                 float interpolated_phase = phase_start + t * (phase_end - phase_start);
-                
+
                 // Wrap back to [-π, π]
                 while (interpolated_phase > static_cast<float>(std::numbers::pi)) interpolated_phase -= 2.0f * static_cast<float>(std::numbers::pi);
                 while (interpolated_phase <= -static_cast<float>(std::numbers::pi)) interpolated_phase += 2.0f * static_cast<float>(std::numbers::pi);
-                
-                auto output_idx = static_cast<size_t>((clean_times[i-1].getValue() + j) - chunk.output_start.getValue());
+
+                auto output_idx = static_cast<size_t>((clean_times[i - 1].getValue() + j) - chunk.output_start.getValue());
                 if (output_idx < output_phase.size()) {
                     output_phase[output_idx] = interpolated_phase;
                 }
@@ -284,17 +283,17 @@ std::shared_ptr<AnalogTimeSeries> hilbert_phase(
     size_t total_chunks = chunks.size();
     for (size_t i = 0; i < chunks.size(); ++i) {
         auto const & chunk = chunks[i];
-        
+
         // Process chunk
         auto chunk_phase = processChunk(chunk, phaseParams);
-        
+
         // Copy chunk results to output
         if (!chunk_phase.empty()) {
             auto start_idx = static_cast<size_t>(chunk.output_start.getValue());
             size_t end_idx = std::min(start_idx + chunk_phase.size(), output_data.size());
-            std::copy(chunk_phase.begin(), 
-                     chunk_phase.begin() + static_cast<long int>(end_idx - start_idx),
-                     output_data.begin() + static_cast<long int>(start_idx));
+            std::copy(chunk_phase.begin(),
+                      chunk_phase.begin() + static_cast<long int>(end_idx - start_idx),
+                      output_data.begin() + static_cast<long int>(start_idx));
         }
 
         // Update progress

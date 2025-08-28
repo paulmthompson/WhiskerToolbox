@@ -2,7 +2,7 @@
 
 #include "ui_AnalogHilbertPhase_Widget.h"
 
-#include "DataManager/transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
+#include "DataManager/transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 
 AnalogHilbertPhase_Widget::AnalogHilbertPhase_Widget(QWidget *parent) :
       TransformParameter_Widget(parent),
