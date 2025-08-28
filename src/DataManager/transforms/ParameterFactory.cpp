@@ -1,6 +1,7 @@
 #include "ParameterFactory.hpp"
 
 #include "AnalogTimeSeries/AnalogFilter/analog_filter.hpp"
+#include "AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 #include "AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 #include "AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "DigitalIntervalSeries/digital_interval_group.hpp"
@@ -161,6 +162,14 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<AnalogFilterParams, double>(
             "Analog Filter", "sampling_rate", &AnalogFilterParams::sampling_rate);
+
+    // Register Hilbert Phase parameters
+    registerBasicParameter<HilbertPhaseParams, double>(
+            "Hilbert Phase", "low_frequency", &HilbertPhaseParams::lowFrequency);
+    registerBasicParameter<HilbertPhaseParams, double>(
+            "Hilbert Phase", "high_frequency", &HilbertPhaseParams::highFrequency);
+    registerBasicParameter<HilbertPhaseParams, size_t>(
+            "Hilbert Phase", "discontinuity_threshold", &HilbertPhaseParams::discontinuityThreshold);
 
     std::cout << "Parameter factory initialized with default setters" << std::endl;
 }
