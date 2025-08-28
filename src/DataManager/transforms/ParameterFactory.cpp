@@ -2,8 +2,8 @@
 
 #include "AnalogTimeSeries/AnalogFilter/analog_filter.hpp"
 #include "AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
+#include "AnalogTimeSeries/AnalogIntervalThreshold/analog_interval_threshold.hpp"
 #include "AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
-#include "AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "DigitalIntervalSeries/digital_interval_group.hpp"
 #include "Lines/line_alignment.hpp"
 #include "Lines/line_angle.hpp"

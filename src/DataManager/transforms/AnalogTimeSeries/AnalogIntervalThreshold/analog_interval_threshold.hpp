@@ -17,8 +17,8 @@ struct IntervalThresholdParams : public TransformParametersBase {
                                     ABSOLUTE } direction = ThresholdDirection::POSITIVE;
     double lockoutTime = 0.0;
     double minDuration = 0.0;
-    enum class MissingDataMode { IGNORE,           // Current behavior: skip missing time points
-                                TREAT_AS_ZERO } missingDataMode = MissingDataMode::TREAT_AS_ZERO;  // Default: treat missing as zero
+    enum class MissingDataMode { IGNORE,                                                          // Current behavior: skip missing time points
+                                 TREAT_AS_ZERO } missingDataMode = MissingDataMode::TREAT_AS_ZERO;// Default: treat missing as zero
 };
 
 ///////////////////////////////////////////////////////////////////////////////

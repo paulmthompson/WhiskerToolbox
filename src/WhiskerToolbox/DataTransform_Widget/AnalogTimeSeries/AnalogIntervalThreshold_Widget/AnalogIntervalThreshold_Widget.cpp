@@ -3,14 +3,13 @@
 
 #include "ui_AnalogIntervalThreshold_Widget.h"
 
-#include "DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
+#include "DataManager/transforms/AnalogTimeSeries/AnalogIntervalThreshold/analog_interval_threshold.hpp"
 
 #include <iostream>
 
-AnalogIntervalThreshold_Widget::AnalogIntervalThreshold_Widget(QWidget *parent) :
-      TransformParameter_Widget(parent),
-      ui(new Ui::AnalogIntervalThreshold_Widget)
-{
+AnalogIntervalThreshold_Widget::AnalogIntervalThreshold_Widget(QWidget * parent)
+    : TransformParameter_Widget(parent),
+      ui(new Ui::AnalogIntervalThreshold_Widget) {
     ui->setupUi(this);
 }
 
@@ -51,4 +50,3 @@ std::unique_ptr<TransformParametersBase> AnalogIntervalThreshold_Widget::getPara
 
     return params;
 }
-

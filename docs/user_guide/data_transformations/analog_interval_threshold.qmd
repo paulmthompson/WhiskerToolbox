@@ -1,0 +1,76 @@
+---
+title: "Analog Interval Threshold"
+---
+
+## Purpose
+
+The Analog Interval Threshold transform detects intervals where an `AnalogTimeSeries` crosses a specified threshold. It creates a `DigitalIntervalSeries` containing the start and end times of these intervals.
+
+## Parameters
+
+| Name | Type | Description | Default |
+|---|---|---|---|
+| `threshold_value` | double | The value that the signal must cross to be considered a threshold crossing. | 0.0 |
+| `direction` | string | The direction of the threshold crossing. One of "Positive (Rising)", "Negative (Falling)", "Absolute (Magnitude)". | "Positive (Rising)" |
+| `lockout_time` | double | The minimum time (in seconds) between detected intervals. | 0.0 |
+| `min_duration` | double | The minimum duration (in seconds) for an interval to be kept. | 0.0 |
+| `missing_data_mode` | string | How to handle missing data points. One of "Treat as Zero (Default)", "Ignore Missing Points". | "Treat as Zero (Default)" |
+
+## JSON Schema
+
+```json
+{
+    "type" : "object",
+             "properties" : {
+                 "transform": {
+                     "type": "string",
+                     "const": "Threshold Interval Detection"
+                 },
+                 "input": {
+                     "type": "string"
+                 },
+                 "output": {
+                     "type": "string"
+                 },
+                 "params": {
+                     "type": "object",
+                     "properties": {
+                         "threshold_value": {
+                             "type": "number"
+                         },
+                         "direction": {
+                             "type": "string",
+                             "enum": ["Positive (Rising)", "Negative (Falling)", "Absolute (Magnitude)"]
+                         },
+                         "lockout_time": {
+                             "type": "number"
+                         },
+                         "min_duration": {
+                             "type": "number"
+                         },
+                         "missing_data_mode": {
+                             "type": "string",
+                             "enum": ["Treat as Zero (Default)", "Ignore Missing Points"]
+                         }
+                     },
+                     "required": ["threshold_value", "direction"]
+                 }
+             },
+                            "required" : ["transform", "input", "output", "params"]
+}
+```
+
+        ##Minimal Example
+
+                This example detects intervals where the `my_analog_series` signal rises above a value of 5.0.
+
+```json {
+    "transform" : "Threshold Interval Detection",
+                  "input" : "my_analog_series",
+                            "output" : "thresholded_intervals",
+                                       "params" : {
+        "threshold_value" : 5.0,
+                "direction" : "Positive (Rising)"
+    }
+}
+```

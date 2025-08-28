@@ -1,25 +1,25 @@
-#=============================
-# Preamble
-#=============================
+#== == == == == == == == == == == == == == =
+#Preamble
+#== == == == == == == == == == == == == == =
 cmake_minimum_required(VERSION 3.25)
 
-# CapnProto data format support - MUST be before project() call
+#CapnProto data format support - MUST be before project() call
 option(ENABLE_CAPNPROTO "Enable CapnProto serialization support for data loading/saving" ON)
 
-# HDF5 data format support - MUST be before project() call
+#HDF5 data format support - MUST be before project() call
 option(ENABLE_HDF5 "Enable HDF5 support for data loading/saving" ON)
 
-# FFmpeg video support - MUST be before project() call
+#FFmpeg video support - MUST be before project() call
 option(ENABLE_FFMPEG "Enable FFmpeg support for video loading/saving" ON)
 
-# Tensor backend selection - MUST be before project() call
+#Tensor backend selection - MUST be before project() call
 option(TENSOR_BACKEND_LIBTORCH "Use LibTorch as tensor backend (enables deep learning)" ON)
 
 option(ENABLE_OPENCV "Enable OpenCV support for image mask loading/saving" ON)
 
 option(ENABLE_UI "Enable UI" ON)
 
-# Configure vcpkg features based on CMake options - MUST be before project() call
+#Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")
 if(ENABLE_CAPNPROTO)
     list(APPEND VCPKG_MANIFEST_FEATURES "capnproto")
@@ -43,7 +43,7 @@ else()
 endif()
 
 if(ENABLE_OPENCV)
-   # list(APPEND VCPKG_MANIFEST_FEATURES "opencv") // Not ready to do this yet
+#list(APPEND VCPKG_MANIFEST_FEATURES "opencv")// Not ready to do this yet
     message(STATUS "OpenCV support: ENABLED")
 else()
     message(STATUS "OpenCV support: DISABLED")
@@ -68,9 +68,9 @@ project(BehaviorToolbox VERSION 0.3.5 LANGUAGES CXX)
 
 include(CTest)
 
-#=============================
-# Project Wide Setup
-#=============================
+#== == == == == == == == == == == == == == =
+#Project Wide Setup
+#== == == == == == == == == == == == == == =
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -112,30 +112,30 @@ with this particular project
 set(VCPKG_MANIFEST_MODE ON)
 set(VCPKG_INSTALL_OPTIONS "--allow-unsupported")
 
-#This is necessary to work on windows. A better way would be to define only the symbols that need to be exported
+#This is necessary to work on windows.A better way would be to define only the symbols that need to be exported
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(CMAKE_SUPPORT_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 
 #Fix header linting on vscode
-#e.g. add "compileCommands": "${workspaceFolder}/out/build/Clang/Release/compile_commands.json" to c_cpp_properties.json for Mac config
+#e.g.add "compileCommands" : "${workspaceFolder}/out/build/Clang/Release/compile_commands.json" to c_cpp_properties.json for Mac config
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 #set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-#=============================
-# Externally Provided Content
-#=============================
+#== == == == == == == == == == == == == == =
+#Externally Provided Content
+#== == == == == == == == == == == == == == =
 
 add_subdirectory(external)
 
-#=============================
-# Main Build Targets
-#=============================
+#== == == == == == == == == == == == == == =
+#Main Build Targets
+#== == == == == == == == == == == == == == =
 
 add_subdirectory(src)
 
-#=============================
-# Testing
-#=============================
+#== == == == == == == == == == == == == == =
+#Testing
+#== == == == == == == == == == == == == == =
 
 #[[
 BUILD_TESTING is a cache variable that defaults to true which was defined by the CTest module

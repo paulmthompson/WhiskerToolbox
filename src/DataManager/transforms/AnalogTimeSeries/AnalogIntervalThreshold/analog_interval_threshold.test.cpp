@@ -3,8 +3,13 @@
 #include "catch2/matchers/catch_matchers_vector.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/AnalogTimeSeries/AnalogIntervalThreshold/analog_interval_threshold.hpp"
+#include "transforms/ParameterFactory.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
 #include "transforms/data_transforms.hpp"
 
 #include <cmath>
@@ -64,13 +69,13 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
 
     SECTION("Positive threshold - simple case") {
         values = {0.5f, 1.5f, 2.0f, 1.8f, 0.8f, 2.5f, 1.2f, 0.3f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500), 
-                 TimeFrameIndex(600), 
-                 TimeFrameIndex(700), 
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(200),
+                 TimeFrameIndex(300),
+                 TimeFrameIndex(400),
+                 TimeFrameIndex(500),
+                 TimeFrameIndex(600),
+                 TimeFrameIndex(700),
                  TimeFrameIndex(800)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -105,13 +110,13 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
 
     SECTION("Negative threshold") {
         values = {0.5f, -1.5f, -2.0f, -1.8f, 0.8f, -2.5f, -1.2f, 0.3f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500), 
-                 TimeFrameIndex(600), 
-                 TimeFrameIndex(700), 
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(200),
+                 TimeFrameIndex(300),
+                 TimeFrameIndex(400),
+                 TimeFrameIndex(500),
+                 TimeFrameIndex(600),
+                 TimeFrameIndex(700),
                  TimeFrameIndex(800)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -138,13 +143,13 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
 
     SECTION("Absolute threshold") {
         values = {0.5f, 1.5f, -2.0f, 1.8f, 0.8f, -2.5f, 1.2f, 0.3f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500), 
-                 TimeFrameIndex(600), 
-                 TimeFrameIndex(700), 
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(200),
+                 TimeFrameIndex(300),
+                 TimeFrameIndex(400),
+                 TimeFrameIndex(500),
+                 TimeFrameIndex(600),
+                 TimeFrameIndex(700),
                  TimeFrameIndex(800)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -170,12 +175,12 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
 
     SECTION("With lockout time") {
         values = {0.5f, 1.5f, 0.8f, 1.8f, 0.5f, 1.2f, 0.3f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(250), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(450), 
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(200),
+                 TimeFrameIndex(250),
+                 TimeFrameIndex(300),
+                 TimeFrameIndex(400),
+                 TimeFrameIndex(450),
                  TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -203,12 +208,12 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
 
     SECTION("With minimum duration") {
         values = {0.5f, 1.5f, 0.8f, 1.8f, 1.2f, 1.1f, 0.5f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(250), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500), 
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(200),
+                 TimeFrameIndex(250),
+                 TimeFrameIndex(300),
+                 TimeFrameIndex(400),
+                 TimeFrameIndex(500),
                  TimeFrameIndex(600)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -232,10 +237,10 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
 
     SECTION("Signal ends while above threshold") {
         values = {0.5f, 1.5f, 2.0f, 1.8f, 1.2f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(200),
+                 TimeFrameIndex(300),
+                 TimeFrameIndex(400),
                  TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -259,10 +264,10 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
 
     SECTION("No intervals detected") {
         values = {0.1f, 0.2f, 0.3f, 0.4f, 0.5f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(200),
+                 TimeFrameIndex(300),
+                 TimeFrameIndex(400),
                  TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -280,10 +285,10 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
 
     SECTION("Progress callback detailed check") {
         values = {0.5f, 1.5f, 0.8f, 2.0f, 0.3f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(200),
+                 TimeFrameIndex(300),
+                 TimeFrameIndex(400),
                  TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -318,16 +323,16 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
 
     SECTION("Complex signal with multiple parameters") {
         values = {0.0f, 2.0f, 1.8f, 1.5f, 0.5f, 2.5f, 2.2f, 1.9f, 0.8f, 1.1f, 0.3f};
-        times = {TimeFrameIndex(0), 
-                 TimeFrameIndex(100), 
-                 TimeFrameIndex(150), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(450), 
-                 TimeFrameIndex(500), 
-                 TimeFrameIndex(600), 
-                 TimeFrameIndex(700), 
+        times = {TimeFrameIndex(0),
+                 TimeFrameIndex(100),
+                 TimeFrameIndex(150),
+                 TimeFrameIndex(200),
+                 TimeFrameIndex(300),
+                 TimeFrameIndex(400),
+                 TimeFrameIndex(450),
+                 TimeFrameIndex(500),
+                 TimeFrameIndex(600),
+                 TimeFrameIndex(700),
                  TimeFrameIndex(800)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -437,11 +442,11 @@ TEST_CASE("Data Transform: Interval Threshold - Error and Edge Cases", "[transfo
 
     SECTION("All values above threshold") {
         std::vector<float> values = {1.5f, 2.0f, 1.8f, 2.5f, 1.2f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400),
+                                             TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = 1.0;
@@ -460,11 +465,11 @@ TEST_CASE("Data Transform: Interval Threshold - Error and Edge Cases", "[transfo
 
     SECTION("Zero threshold") {
         std::vector<float> values = {-1.0f, 0.0f, 1.0f, -0.5f, 0.5f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400),
+                                             TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = 0.0;
@@ -485,11 +490,11 @@ TEST_CASE("Data Transform: Interval Threshold - Error and Edge Cases", "[transfo
 
     SECTION("Negative threshold value") {
         std::vector<float> values = {-2.0f, -1.0f, -0.5f, -1.5f, -0.8f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400),
+                                             TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = -1.0;
@@ -510,12 +515,12 @@ TEST_CASE("Data Transform: Interval Threshold - Error and Edge Cases", "[transfo
 
     SECTION("Very large lockout time") {
         std::vector<float> values = {0.5f, 1.5f, 0.8f, 1.8f, 0.5f, 1.2f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500), 
-                 TimeFrameIndex(600)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400),
+                                             TimeFrameIndex(500),
+                                             TimeFrameIndex(600)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = 1.0;
@@ -534,11 +539,11 @@ TEST_CASE("Data Transform: Interval Threshold - Error and Edge Cases", "[transfo
 
     SECTION("Very large minimum duration") {
         std::vector<float> values = {0.5f, 1.5f, 1.8f, 1.2f, 0.5f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400),
+                                             TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = 1.0;
@@ -555,11 +560,11 @@ TEST_CASE("Data Transform: Interval Threshold - Error and Edge Cases", "[transfo
 
     SECTION("Irregular timestamp spacing") {
         std::vector<float> values = {0.5f, 1.5f, 0.8f, 1.8f, 0.5f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0), 
-                 TimeFrameIndex(1), 
-                 TimeFrameIndex(100), 
-                 TimeFrameIndex(101), 
-                 TimeFrameIndex(1000)};// Irregular spacing
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0),
+                                             TimeFrameIndex(1),
+                                             TimeFrameIndex(100),
+                                             TimeFrameIndex(101),
+                                             TimeFrameIndex(1000)};// Irregular spacing
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = 1.0;
@@ -587,10 +592,10 @@ TEST_CASE("Data Transform: Interval Threshold - Single Sample Above Threshold Ze
         // During the interval, ALL signals should be above threshold.
 
         std::vector<float> values = {0.5f, 2.0f, 0.8f, 0.3f};// Only sample at index 1 is above threshold
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400)};
         auto ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         IntervalThresholdParams params;
@@ -618,13 +623,13 @@ TEST_CASE("Data Transform: Interval Threshold - Single Sample Above Threshold Ze
     SECTION("Multiple single samples above threshold") {
         // Test with multiple isolated single samples above threshold
         std::vector<float> values = {0.5f, 2.0f, 0.8f, 1.5f, 0.3f, 1.8f, 0.6f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400), 
-                 TimeFrameIndex(500), 
-                 TimeFrameIndex(600), 
-                 TimeFrameIndex(700)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400),
+                                             TimeFrameIndex(500),
+                                             TimeFrameIndex(600),
+                                             TimeFrameIndex(700)};
         auto ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         IntervalThresholdParams params;
@@ -670,10 +675,10 @@ TEST_CASE("Data Transform: Interval Threshold - Operation Class Tests", "[transf
 
     SECTION("canApply with valid data") {
         std::vector<float> values = {0.5f, 1.5f, 0.8f, 1.8f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400)};
         auto ats = std::make_shared<AnalogTimeSeries>(values, times);
         variant = ats;
 
@@ -689,10 +694,10 @@ TEST_CASE("Data Transform: Interval Threshold - Operation Class Tests", "[transf
 
     SECTION("execute with valid parameters") {
         std::vector<float> values = {0.5f, 1.5f, 0.8f, 1.8f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400)};
         auto ats = std::make_shared<AnalogTimeSeries>(values, times);
         variant = ats;
 
@@ -708,10 +713,10 @@ TEST_CASE("Data Transform: Interval Threshold - Operation Class Tests", "[transf
 
     SECTION("execute with null parameters") {
         std::vector<float> values = {0.5f, 1.5f, 0.8f, 1.8f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400)};
         auto ats = std::make_shared<AnalogTimeSeries>(values, times);
         variant = ats;
 
@@ -724,10 +729,10 @@ TEST_CASE("Data Transform: Interval Threshold - Operation Class Tests", "[transf
 
     SECTION("execute with progress callback") {
         std::vector<float> values = {0.5f, 1.5f, 0.8f, 1.8f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400)};
         auto ats = std::make_shared<AnalogTimeSeries>(values, times);
         variant = ats;
 
@@ -749,10 +754,10 @@ TEST_CASE("Data Transform: Interval Threshold - Operation Class Tests", "[transf
 
     SECTION("execute with wrong parameter type") {
         std::vector<float> values = {0.5f, 1.5f, 0.8f, 1.8f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400)};
         auto ats = std::make_shared<AnalogTimeSeries>(values, times);
         variant = ats;
 
@@ -771,10 +776,10 @@ TEST_CASE("Data Transform: Interval Threshold - Operation Class Tests", "[transf
 
     SECTION("execute with different threshold directions") {
         std::vector<float> values = {0.5f, -1.5f, 0.8f, 1.8f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(200), 
-                 TimeFrameIndex(300), 
-                 TimeFrameIndex(400)};
+        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100),
+                                             TimeFrameIndex(200),
+                                             TimeFrameIndex(300),
+                                             TimeFrameIndex(400)};
         auto ats = std::make_shared<AnalogTimeSeries>(values, times);
         variant = ats;
 
@@ -818,11 +823,11 @@ TEST_CASE("Data Transform: Interval Threshold - Missing Data Handling", "[transf
     SECTION("Missing data treated as zero - positive threshold") {
         // Signal with gaps: times are not consecutive (gaps of 50 vs normal step of 1)
         values = {0.5f, 1.5f, 1.8f, 0.5f, 1.2f};// above, above, above, below, above
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(101), 
-                 TimeFrameIndex(102), 
-                 TimeFrameIndex(152), 
-                 TimeFrameIndex(153)};      // Gap between 102 and 152 (50 missing samples)
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(101),
+                 TimeFrameIndex(102),
+                 TimeFrameIndex(152),
+                 TimeFrameIndex(153)};// Gap between 102 and 152 (50 missing samples)
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = 1.0;
@@ -850,10 +855,10 @@ TEST_CASE("Data Transform: Interval Threshold - Missing Data Handling", "[transf
     SECTION("Missing data treated as zero - negative threshold") {
         // Test case where zeros do NOT meet the threshold (negative threshold)
         values = {0.5f, -1.5f, 0.5f, -1.2f};// above, below, above, below
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(101), 
-                 TimeFrameIndex(151), 
-                 TimeFrameIndex(152)};       // Gap between 101 and 151 (50 missing samples)
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(101),
+                 TimeFrameIndex(151),
+                 TimeFrameIndex(152)};// Gap between 101 and 151 (50 missing samples)
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = -0.5;
@@ -879,10 +884,10 @@ TEST_CASE("Data Transform: Interval Threshold - Missing Data Handling", "[transf
     SECTION("Missing data treated as zero - negative threshold where zeros DO meet threshold") {
         // Test case where zeros DO meet the threshold (very negative threshold)
         values = {0.5f, -1.5f, 0.5f, -1.2f};// above, below, above, below
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(101), 
-                 TimeFrameIndex(151), 
-                 TimeFrameIndex(152)};       // Gap between 101 and 151 (50 missing samples)
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(101),
+                 TimeFrameIndex(151),
+                 TimeFrameIndex(152)};// Gap between 101 and 151 (50 missing samples)
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = 0.5;// threshold > 0, so zeros (0.0) < 0.5 meet negative threshold
@@ -908,10 +913,10 @@ TEST_CASE("Data Transform: Interval Threshold - Missing Data Handling", "[transf
     SECTION("Missing data ignored mode") {
         // Same data as first test but with IGNORE mode
         values = {0.5f, 1.5f, 1.8f, 0.5f, 1.2f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(101), 
-                 TimeFrameIndex(102), 
-                 TimeFrameIndex(152), 
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(101),
+                 TimeFrameIndex(102),
+                 TimeFrameIndex(152),
                  TimeFrameIndex(153)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
@@ -940,11 +945,11 @@ TEST_CASE("Data Transform: Interval Threshold - Missing Data Handling", "[transf
     SECTION("No gaps in data") {
         // Test that normal continuous data works the same regardless of mode
         values = {0.5f, 1.5f, 1.8f, 0.5f, 1.2f};
-        times = {TimeFrameIndex(100), 
-                 TimeFrameIndex(101), 
-                 TimeFrameIndex(102), 
-                 TimeFrameIndex(103), 
-                 TimeFrameIndex(104)}; // Consecutive times
+        times = {TimeFrameIndex(100),
+                 TimeFrameIndex(101),
+                 TimeFrameIndex(102),
+                 TimeFrameIndex(103),
+                 TimeFrameIndex(104)};// Consecutive times
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
         params.thresholdValue = 1.0;
@@ -973,4 +978,43 @@ TEST_CASE("Data Transform: Interval Threshold - Missing Data Handling", "[transf
             REQUIRE(intervals_zero[i].end == intervals_ignore[i].end);
         }
     }
+}
+
+#include "DataManager.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/ParameterFactory.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+
+TEST_CASE("Data Transform: Interval Threshold - JSON pipeline", "[transforms][analog_interval_threshold][json]") {
+    nlohmann::json const json_config = {
+            {"steps", {{{"step_id", "threshold_step_1"}, {"transform_name", "Threshold Interval Detection"}, {"input_key", "TestSignal.channel1"}, {"output_key", "DetectedIntervals"}, {"parameters", {{"threshold_value", 1.0}, {"direction", "Positive (Rising)"}, {"min_duration", 0.0}, {"lockout_time", 0.0}}}}}}};
+
+    DataManager dm;
+    TransformRegistry registry;
+    ParameterFactory::getInstance().initializeDefaultSetters();
+
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+
+    std::vector<float> values = {0.5f, 1.5f, 2.0f, 1.8f, 0.8f, 2.5f, 1.2f, 0.3f};
+    std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500), TimeFrameIndex(600), TimeFrameIndex(700), TimeFrameIndex(800)};
+    auto ats = std::make_shared<AnalogTimeSeries>(values, times);
+    ats->setTimeFrame(time_frame);
+    dm.setData("TestSignal.channel1", ats, TimeKey("default"));
+
+    TransformPipeline pipeline(&dm, &registry);
+    pipeline.loadFromJson(json_config);
+    pipeline.execute();
+
+    // Verify the results
+    auto interval_series = dm.getData<DigitalIntervalSeries>("DetectedIntervals");
+    REQUIRE(interval_series != nullptr);
+
+    auto const & intervals = interval_series->getDigitalIntervalSeries();
+    REQUIRE(intervals.size() == 2);
+    REQUIRE(intervals[0].start == 200);
+    REQUIRE(intervals[0].end == 400);
+    REQUIRE(intervals[1].start == 600);
+    REQUIRE(intervals[1].end == 700);
 }
