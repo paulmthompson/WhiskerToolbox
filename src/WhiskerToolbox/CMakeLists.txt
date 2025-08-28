@@ -31,6 +31,7 @@ add_subdirectory(Feature_Table_Widget)
 add_subdirectory(Feature_Tree_Widget)
 add_subdirectory(IO_Widgets)
 add_subdirectory(DataViewer_Widget)
+add_subdirectory(Media_Widget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -190,98 +191,6 @@ set(PROJECT_SOURCES
         Whisker_Widget/janelia_config.hpp
         Whisker_Widget/janelia_config.cpp
 
-        Media_Widget/Media_Window/Media_Window.hpp
-        Media_Widget/Media_Window/Media_Window.cpp
-
-        Media_Widget/Media_Widget.hpp
-        Media_Widget/Media_Widget.cpp
-        Media_Widget/Media_Widget.ui
-        Media_Widget/DisplayOptions/DisplayOptions.hpp
-        Media_Widget/DisplayOptions/CoordinateTypes.hpp
-
-        Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.cpp
-        Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp
-        Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/GammaWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/GammaWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/GammaWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/SharpenWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/SharpenWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/SharpenWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.ui
-
-        Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp
-        Media_Widget/MediaMask_Widget/MediaMask_Widget.cpp
-        Media_Widget/MediaMask_Widget/MediaMask_Widget.ui
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.cpp
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.hpp
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.ui
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.cpp
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.hpp
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.ui
-        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.cpp
-        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.hpp
-        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.ui
-
-        Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp
-        Media_Widget/MediaPoint_Widget/MediaPoint_Widget.cpp
-        Media_Widget/MediaPoint_Widget/MediaPoint_Widget.ui
-
-        Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp
-        Media_Widget/MediaTensor_Widget/MediaTensor_Widget.cpp
-        Media_Widget/MediaTensor_Widget/MediaTensor_Widget.ui
-
-        Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp
-        Media_Widget/MediaLine_Widget/MediaLine_Widget.cpp
-        Media_Widget/MediaLine_Widget/MediaLine_Widget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineNoneSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineNoneSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineNoneSelectionWidget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineAddSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineAddSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineAddSelectionWidget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.ui
-
-        Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp
-        Media_Widget/MediaInterval_Widget/MediaInterval_Widget.cpp
-        Media_Widget/MediaInterval_Widget/MediaInterval_Widget.ui
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.hpp
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.cpp
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.ui
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.hpp
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.cpp
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.ui
-
-        Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.hpp
-        Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.cpp
-        Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.ui
-
-        Media_Widget/MouseBrush_Widget/MouseBrush_Widget.hpp
-        Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
-        Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui
-
         ML_Widget/ML_Widget.hpp
         ML_Widget/ML_Widget.cpp
         ML_Widget/ML_Widget.ui
@@ -387,7 +296,6 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/TableDesignerWidget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Grabcut_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../MediaExport>"
@@ -405,6 +313,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE IO_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataViewer_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE Media_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

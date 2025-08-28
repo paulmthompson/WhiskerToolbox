@@ -25,7 +25,7 @@
 #include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
 #include "Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
 #include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
-#include "Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.hpp"
+#include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 #include "Media_Window/Media_Window.hpp"
 
 

@@ -10,7 +10,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
-#include "Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.hpp"
+#include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
