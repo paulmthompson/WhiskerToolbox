@@ -5,7 +5,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
-#include "Media_Window/Media_Window.hpp"
+#include "Media_Widget/Media_Window/Media_Window.hpp"
 #include "DataManager/transforms/Lines/line_angle.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "DataManager/utils/polynomial/polynomial_fit.hpp"

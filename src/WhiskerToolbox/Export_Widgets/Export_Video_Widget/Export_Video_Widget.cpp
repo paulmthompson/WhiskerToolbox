@@ -8,7 +8,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include "Media_Window/Media_Window.hpp"
+#include "Media_Widget/Media_Window/Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include "opencv2/opencv.hpp"

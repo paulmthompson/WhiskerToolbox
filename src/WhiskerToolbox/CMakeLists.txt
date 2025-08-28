@@ -190,8 +190,8 @@ set(PROJECT_SOURCES
         Whisker_Widget/janelia_config.hpp
         Whisker_Widget/janelia_config.cpp
 
-        Media_Window/Media_Window.hpp
-        Media_Window/Media_Window.cpp
+        Media_Widget/Media_Window/Media_Window.hpp
+        Media_Widget/Media_Window/Media_Window.cpp
 
         Media_Widget/Media_Widget.hpp
         Media_Widget/Media_Widget.cpp

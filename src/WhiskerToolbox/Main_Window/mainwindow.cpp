@@ -26,7 +26,7 @@
 #include "IO_Widgets/DataAggregation/DataAggregationExporter_Widget.hpp"
 #include "ML_Widget/ML_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
-#include "Media_Window.hpp"
+#include "Media_Widget/Media_Window/Media_Window.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
