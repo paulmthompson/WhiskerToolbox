@@ -35,7 +35,7 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         float max_amplitude = 0.0f;
         // Skip initial transient
         for (size_t i = 500; i < filtered->getNumSamples(); ++i) {
-            max_amplitude = std::max(max_amplitude, 
+            max_amplitude = std::max(max_amplitude,
                 std::abs(filtered->getDataAtDataArrayIndex(DataArrayIndex(i))));
         }
         REQUIRE(max_amplitude < 0.15f); // More stringent requirement
@@ -54,7 +54,7 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         float max_amplitude = 0.0f;
         // Skip initial transient
         for (size_t i = 500; i < filtered->getNumSamples(); ++i) {
-            max_amplitude = std::max(max_amplitude, 
+            max_amplitude = std::max(max_amplitude,
                 std::abs(filtered->getDataAtDataArrayIndex(DataArrayIndex(i))));
         }
         REQUIRE(max_amplitude < 0.15f); // More stringent requirement
@@ -73,7 +73,7 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         float max_amplitude = 0.0f;
         // Skip longer transient for bandpass
         for (size_t i = 500; i < filtered->getNumSamples(); ++i) {
-            max_amplitude = std::max(max_amplitude, 
+            max_amplitude = std::max(max_amplitude,
                 std::abs(filtered->getDataAtDataArrayIndex(DataArrayIndex(i))));
         }
         REQUIRE(max_amplitude > 0.7f); // Signal should be mostly preserved
@@ -138,7 +138,7 @@ TEST_CASE("Data Transform: Filter Analog Time Series - Operation Class Tests", "
             AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(filter))));
 
         bool progress_called = false;
-        auto result = operation.execute(input, params.get(), 
+        auto result = operation.execute(input, params.get(),
             [&progress_called](int progress) {
                 if (progress == 100) progress_called = true;
             });
@@ -184,7 +184,7 @@ TEST_CASE("Data Transform: Filter Analog Time Series - New Interface Features", 
         auto filtered = filter_analog(series.get(), params);
         REQUIRE(filtered);
         REQUIRE(filtered->getNumSamples() == num_samples);
-        
+
         // Check that filter name is available
         REQUIRE_FALSE(params.getFilterName().empty());
         REQUIRE(params.getFilterName().find("Chebyshev I") != std::string::npos);
@@ -205,7 +205,7 @@ TEST_CASE("Data Transform: Filter Analog Time Series - New Interface Features", 
 
         REQUIRE(params.isValid());
         REQUIRE_FALSE(params.getFilterName().empty());
-        
+
         auto filtered = filter_analog(series.get(), params);
         REQUIRE(filtered);
         REQUIRE(filtered->getNumSamples() == num_samples);
