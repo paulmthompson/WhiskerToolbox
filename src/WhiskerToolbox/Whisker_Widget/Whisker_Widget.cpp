@@ -7,7 +7,6 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "Media_Window.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"

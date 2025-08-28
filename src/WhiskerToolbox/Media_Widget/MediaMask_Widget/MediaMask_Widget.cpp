@@ -7,7 +7,7 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "MaskDilationWidget/MaskDilationWidget.hpp"
-#include "Media_Window/Media_Window.hpp"
+#include "Media_Widget/Media_Window/Media_Window.hpp"
 #include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 

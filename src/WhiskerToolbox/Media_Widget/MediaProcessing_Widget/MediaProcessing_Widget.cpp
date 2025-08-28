@@ -1,4 +1,6 @@
 #include "MediaProcessing_Widget.hpp"
+#include "ui_MediaProcessing_Widget.h"
+
 #include "ProcessingOptions/BilateralWidget.hpp"
 #include "ProcessingOptions/ClaheWidget.hpp"
 #include "ProcessingOptions/ContrastWidget.hpp"
@@ -6,13 +8,12 @@
 #include "ProcessingOptions/MagicEraserWidget.hpp"
 #include "ProcessingOptions/MedianWidget.hpp"
 #include "ProcessingOptions/SharpenWidget.hpp"
-#include "ui_MediaProcessing_Widget.h"
 
 #include "Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
-#include "Media_Window/Media_Window.hpp"
+#include "Media_Widget/Media_Window/Media_Window.hpp"
 
 #include <QHideEvent>
 #include <QScrollArea>

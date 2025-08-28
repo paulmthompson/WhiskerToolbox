@@ -3,8 +3,8 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
-#include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
-#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "../Media_Widget/DisplayOptions/CoordinateTypes.hpp"
+#include "../Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
 #include <QGraphicsEllipseItem>
 #include <QGraphicsItem>
@@ -51,6 +51,7 @@ class Media_Window : public QGraphicsScene {
 public:
     explicit Media_Window(std::shared_ptr<DataManager> data_manager, QObject * parent = nullptr);
 
+    ~Media_Window() override;
 
     void addLineDataToScene(std::string const & line_key);
     void removeLineDataFromScene(std::string const & line_key);

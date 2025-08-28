@@ -157,12 +157,12 @@ set(DATAMANAGER_SOURCES
         transforms/ParameterFactory.cpp
         transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.cpp
         transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp
-        transforms/AnalogTimeSeries/analog_filter.cpp
-        transforms/AnalogTimeSeries/analog_filter.hpp
+        transforms/AnalogTimeSeries/AnalogFilter/analog_filter.cpp
+        transforms/AnalogTimeSeries/AnalogFilter/analog_filter.hpp
         transforms/AnalogTimeSeries/analog_interval_threshold.cpp
         transforms/AnalogTimeSeries/analog_interval_threshold.hpp
-        transforms/AnalogTimeSeries/analog_hilbert_phase.hpp
-        transforms/AnalogTimeSeries/analog_hilbert_phase.cpp
+        transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp
+        transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.cpp
         transforms/AnalogTimeSeries/analog_scaling.cpp
         transforms/AnalogTimeSeries/analog_scaling.hpp
         transforms/DigitalIntervalSeries/digital_interval_group.cpp

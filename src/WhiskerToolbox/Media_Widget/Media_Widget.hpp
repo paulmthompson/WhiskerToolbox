@@ -2,6 +2,7 @@
 #define MEDIA_WIDGET_HPP
 
 #include <QWidget>
+#include <memory>
 
 class DataManager;
 class Media_Window;
@@ -20,10 +21,12 @@ public:
     ~Media_Widget() override;
 
     void setDataManager(std::shared_ptr<DataManager> data_manager);
-    void setScene(Media_Window * scene) {
-        _scene = scene;
-        _connectTextWidgetToScene();
-    };
+    
+    /**
+     * @brief Get the Media_Window owned by this widget
+     * @return Pointer to the Media_Window
+     */
+    Media_Window* getMediaWindow() const { return _scene.get(); }
 
     void updateMedia();
 
@@ -38,7 +41,7 @@ protected:
 private:
     Ui::Media_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
-    Media_Window * _scene = nullptr;
+    std::unique_ptr<Media_Window> _scene;
     std::map<std::string, std::vector<int>> _callback_ids;
 
     // Text overlay widgets
@@ -46,6 +49,7 @@ private:
     MediaText_Widget * _text_widget = nullptr;
 
     void _createOptions();
+    void _createMediaWindow();
     void _connectTextWidgetToScene();
 
 private slots:

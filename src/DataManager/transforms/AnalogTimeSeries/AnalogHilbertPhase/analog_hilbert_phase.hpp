@@ -11,9 +11,9 @@
 class AnalogTimeSeries;
 
 struct HilbertPhaseParams : public TransformParametersBase {
-    double lowFrequency = 5.0;  // Low cutoff frequency in Hz
-    double highFrequency = 15.0;// High cutoff frequency in Hz
-    size_t discontinuityThreshold = 1000; // Gap size (in samples) above which to split processing into chunks
+    double lowFrequency = 5.0;           // Low cutoff frequency in Hz
+    double highFrequency = 15.0;         // High cutoff frequency in Hz
+    size_t discontinuityThreshold = 1000;// Gap size (in samples) above which to split processing into chunks
 };
 
 /**

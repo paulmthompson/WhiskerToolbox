@@ -8,7 +8,8 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include "Media_Window/Media_Window.hpp"
+#include "Media_Widget/Media_Window/Media_Window.hpp"
+#include "MediaWidgetManager/MediaWidgetManager.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include "opencv2/opencv.hpp"
@@ -26,17 +27,18 @@
 
 Export_Video_Widget::Export_Video_Widget(
         std::shared_ptr<DataManager> data_manager,
-        Media_Window * scene,
+        MediaWidgetManager * media_manager,
         TimeScrollBar * time_scrollbar,
         QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Export_Video_Widget),
       _data_manager{std::move(data_manager)},
-      _scene{scene},
+      _media_manager{media_manager},
       _time_scrollbar{time_scrollbar} {
     ui->setupUi(this);
 
     connect(ui->export_video_button, &QPushButton::clicked, this, &Export_Video_Widget::_exportVideo);
+    connect(ui->media_widget_combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &Export_Video_Widget::_onMediaWidgetSelectionChanged);
 
     // Connect title sequence controls for live preview updates
     connect(ui->title_text_edit, &QTextEdit::textChanged, this, &Export_Video_Widget::_updateTitlePreview);
@@ -70,6 +72,13 @@ Export_Video_Widget::Export_Video_Widget(
     ui->end_frame_spinbox->setMaximum(_data_manager->getTime()->getTotalFrameCount());
 
     _video_writer = std::make_unique<cv::VideoWriter>();
+
+    // Initialize media widget selection
+    _updateMediaWidgetComboBox();
+    
+    // Connect to media manager signals
+    connect(_media_manager, &MediaWidgetManager::mediaWidgetCreated, this, &Export_Video_Widget::_updateMediaWidgetComboBox);
+    connect(_media_manager, &MediaWidgetManager::mediaWidgetRemoved, this, &Export_Video_Widget::_updateMediaWidgetComboBox);
 
     // Initialize output size to media dimensions
     _resetToMediaSize();
@@ -113,7 +122,13 @@ void Export_Video_Widget::_exportVideo() {
         return;
     }
 
-    connect(_scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
+    auto* scene = _getCurrentMediaWindow();
+    if (!scene) {
+        std::cout << "No media widget selected for export" << std::endl;
+        return;
+    }
+
+    connect(scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
 
     if (!_video_sequences.empty()) {
         // Multi-sequence mode
@@ -152,7 +167,9 @@ void Export_Video_Widget::_exportVideo() {
 
         if (start_num >= end_num) {
             std::cout << "Start frame must be less than end frame" << std::endl;
-            disconnect(_scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
+            if (auto* scene = _getCurrentMediaWindow()) {
+                disconnect(scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
+            }
             _video_writer->release();
             return;
         }
@@ -179,7 +196,9 @@ void Export_Video_Widget::_exportVideo() {
         }
     }
 
-    disconnect(_scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
+    if (auto* scene = _getCurrentMediaWindow()) {
+        disconnect(scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
+    }
     _video_writer->release();
 
     // Generate audio track if enabled
@@ -688,4 +707,41 @@ void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename,
     // 2. Using Qt's audio classes
     // 3. Using FFmpeg to combine video and audio
     // 4. Using a dedicated audio library like libsndfile
+}
+
+Media_Window* Export_Video_Widget::_getCurrentMediaWindow() const {
+    if (_selected_media_widget_id.empty()) {
+        return nullptr;
+    }
+    return _media_manager->getMediaWindow(_selected_media_widget_id);
+}
+
+void Export_Video_Widget::_updateMediaWidgetComboBox() {
+    if (!ui->media_widget_combobox) {
+        return;
+    }
+
+    ui->media_widget_combobox->clear();
+    auto widget_ids = _media_manager->getMediaWidgetIds();
+    
+    for (const auto& id : widget_ids) {
+        ui->media_widget_combobox->addItem(QString::fromStdString(id), QString::fromStdString(id));
+    }
+
+    // Select the first available widget if none is selected
+    if (_selected_media_widget_id.empty() && !widget_ids.empty()) {
+        _selected_media_widget_id = widget_ids[0];
+        ui->media_widget_combobox->setCurrentIndex(0);
+    }
+}
+
+void Export_Video_Widget::_onMediaWidgetSelectionChanged() {
+    if (!ui->media_widget_combobox) {
+        return;
+    }
+
+    QString selected = ui->media_widget_combobox->currentData().toString();
+    _selected_media_widget_id = selected.toStdString();
+    
+    std::cout << "Selected media widget for export: " << _selected_media_widget_id << std::endl;
 }

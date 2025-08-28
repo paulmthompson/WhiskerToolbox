@@ -3,8 +3,8 @@
 
 #include "DataManagerTypes.hpp"
 
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <filesystem>
 #include <functional>   // std::function
@@ -14,6 +14,8 @@
 #include <unordered_map>// std::unordered_map
 #include <variant>      // std::variant
 #include <vector>       // std::vector
+
+#include "nlohmann/json_fwd.hpp"
 
 // Forward declarations for identity
 class EntityRegistry;
@@ -139,7 +141,7 @@ public:
     */
     void reset();
 
-   
+
     int64_t getCurrentTime() { return _current_time; };
     void setCurrentTime(int64_t time) { _current_time = time; }
 
@@ -310,10 +312,10 @@ private:
 
     // ======= Identity / Entity registry =======
     std::unique_ptr<EntityRegistry> _entity_registry;
-
 };
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::filesystem::path const & base_path);
 
 std::string convert_data_type_to_string(DM_DataType type);
 
