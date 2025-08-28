@@ -1,14 +1,14 @@
 #include "DataManager.hpp"
 
-#include "Media/MediaDataFactory.hpp"
-#include "ConcreteDataFactory.hpp"
-#include "IO/LoaderRegistry.hpp"
-#include "IO/LoaderRegistration.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "ConcreteDataFactory.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "IO/LoaderRegistration.hpp"
+#include "IO/LoaderRegistry.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "Media/MediaDataFactory.hpp"
 #include "Points/Point_Data.hpp"
 #include "Tensors/Tensor_Data.hpp"
 
@@ -55,20 +55,19 @@ using namespace nlohmann;
  * @brief Try loading data using new registry system first, fallback to legacy if needed
  */
 bool tryRegistryThenLegacyLoad(
-    DataManager* dm,
-    std::string const& file_path,
-    DM_DataType data_type,
-    nlohmann::json const& item,
-    std::string const& name,
-    std::vector<DataInfo>& data_info_list,
-    DataFactory* factory
-) {
+        DataManager * dm,
+        std::string const & file_path,
+        DM_DataType data_type,
+        nlohmann::json const & item,
+        std::string const & name,
+        std::vector<DataInfo> & data_info_list,
+        DataFactory * factory) {
     // Extract format if available
     if (item.contains("format")) {
         std::string const format = item["format"];
-        
+
         // Try registry system first
-        LoaderRegistry& registry = LoaderRegistry::getInstance();
+        LoaderRegistry & registry = LoaderRegistry::getInstance();
         if (registry.isFormatSupported(format, toIODataType(data_type))) {
             std::cout << "Using registry loader for " << name << " (format: " << format << ")" << std::endl;
 
@@ -80,15 +79,15 @@ bool tryRegistryThenLegacyLoad(
                         // Set the LineData in DataManager
                         if (std::holds_alternative<std::shared_ptr<LineData>>(result.data)) {
                             auto line_data = std::get<std::shared_ptr<LineData>>(result.data);
-                            
+
                             // Set up identity context
                             if (line_data) {
                                 line_data->setIdentityContext(name, dm->getEntityRegistry());
                                 line_data->rebuildAllEntityIds();
                             }
-                            
+
                             dm->setData<LineData>(name, line_data, TimeKey("time"));
-                            
+
                             std::string const color = item.value("color", "0000FF");
                             data_info_list.push_back({name, "LineData", color});
                         }
@@ -98,12 +97,12 @@ bool tryRegistryThenLegacyLoad(
                         // Set the MaskData in DataManager
                         if (std::holds_alternative<std::shared_ptr<MaskData>>(result.data)) {
                             auto mask_data = std::get<std::shared_ptr<MaskData>>(result.data);
-                            
+
                             dm->setData<MaskData>(name, mask_data, TimeKey("time"));
-                            
+
                             std::string const color = item.value("color", "0000FF");
                             data_info_list.push_back({name, "MaskData", color});
-                            
+
                             // Handle operations if present (same as legacy)
                             if (item.contains("operations")) {
                                 for (auto const & operation: item["operations"]) {
@@ -124,16 +123,16 @@ bool tryRegistryThenLegacyLoad(
                         std::cerr << "Registry loaded unsupported data type: " << static_cast<int>(data_type) << std::endl;
                         return false;
                 }
-                
+
                 return true;
             } else {
-                std::cout << "Registry loading failed for " << name << ": " << result.error_message 
-                         << ", falling back to legacy loader" << std::endl;
+                std::cout << "Registry loading failed for " << name << ": " << result.error_message
+                          << ", falling back to legacy loader" << std::endl;
             }
         }
     }
-    
-    return false; // Indicates we should use legacy loading
+
+    return false;// Indicates we should use legacy loading
 }
 
 DataManager::DataManager() {
@@ -161,35 +160,35 @@ DataManager::~DataManager() = default;
 
 void DataManager::reset() {
     std::cout << "DataManager: Resetting to initial state..." << std::endl;
-    
+
     // Clear all data objects except media (which we'll reset)
     _data.clear();
-    
+
     // Reset media to a fresh empty MediaData object
     _data["media"] = std::make_shared<EmptyMediaData>();
-    
+
     // Clear all TimeFrame objects except the default "time" frame
     _times.clear();
-    
+
     // Recreate the default "time" TimeFrame
     _times[TimeKey("time")] = std::make_shared<TimeFrame>();
-    
+
     // Clear all data-to-timeframe mappings and recreate the default media mapping
     _time_frames.clear();
     setTimeKey("media", TimeKey("time"));
 
-    
+
     // Reset current time
     _current_time = 0;
-    
+
     // Notify observers that the state has changed
     _notifyObservers();
-    
+
     std::cout << "DataManager: Reset complete. Default 'time' frame and 'media' data restored." << std::endl;
 
     // Reset entity registry for a new session context
     if (_entity_registry) {
-         _entity_registry->clear();
+        _entity_registry->clear();
     }
 }
 
@@ -209,8 +208,8 @@ bool DataManager::setTime(TimeKey const & key, std::shared_ptr<TimeFrame> timefr
 
     _times[key] = std::move(timeframe);
 
-    // Move ptr to new time frame to all data that hold 
-    for (auto const & [data_key, data] : _data) {
+    // Move ptr to new time frame to all data that hold
+    for (auto const & [data_key, data]: _data) {
         if (_time_frames.find(data_key) != _time_frames.end()) {
             auto time_key = _time_frames[data_key];
             if (time_key == key) {
@@ -368,8 +367,8 @@ bool DataManager::removeTableObserver(int callback_id) {
 }
 
 void DataManager::notifyTableObservers(TableEvent const & ev) {
-    for (auto const & [id, cb] : _table_observers) {
-        (void)id;
+    for (auto const & [id, cb]: _table_observers) {
+        (void) id;
         cb(ev);
     }
 }
@@ -469,22 +468,8 @@ DM_DataType stringToDataType(std::string const & data_type_str) {
     return DM_DataType::Unknown;
 }
 
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::filesystem::path const & base_path) {
     std::vector<DataInfo> data_info_list;
-    // Open JSON file
-    std::ifstream ifs(json_filepath);
-    if (!ifs.is_open()) {
-        std::cerr << "Failed to open JSON file: " << json_filepath << std::endl;
-        return data_info_list;
-    }
-
-    // Parse JSON
-    json j;
-    ifs >> j;
-
-    // get base path of filepath
-    std::filesystem::path const base_path = std::filesystem::path(json_filepath).parent_path();
-
     // Create factory for plugin system
     ConcreteDataFactory factory;
 
@@ -560,7 +545,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 // Try registry system first, then fallback to legacy
                 if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list, &factory)) {
-                    break; // Successfully loaded with plugin
+                    break;// Successfully loaded with plugin
                 }
 
                 // Legacy loading fallback
@@ -588,12 +573,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 break;
             }
             case DM_DataType::Line: {
-                
+
                 // Try registry system first, then fallback to legacy
                 if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list, &factory)) {
-                    break; // Successfully loaded with plugin
+                    break;// Successfully loaded with plugin
                 }
-                
+
                 // Legacy loading fallback
                 auto line_data = load_into_LineData(file_path, item);
 
@@ -777,24 +762,24 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
     for (auto const & item: j) {
         if (item.contains("transformations")) {
             std::cout << "Found transformations section, executing pipeline..." << std::endl;
-            
+
             try {
                 // Create registry and pipeline with proper constructors
                 auto registry = std::make_unique<TransformRegistry>();
                 TransformPipeline pipeline(dm, registry.get());
-                
+
                 // Load the pipeline configuration from JSON
                 if (!pipeline.loadFromJson(item["transformations"])) {
                     std::cerr << "Failed to load pipeline configuration from JSON" << std::endl;
                     continue;
                 }
-                
+
                 // Execute the pipeline with a progress callback
-                auto result = pipeline.execute([](int step_index, const std::string& step_name, int step_progress, int overall_progress) {
-                    std::cout << "Step " << step_index << " ('" << step_name << "'): " 
+                auto result = pipeline.execute([](int step_index, std::string const & step_name, int step_progress, int overall_progress) {
+                    std::cout << "Step " << step_index << " ('" << step_name << "'): "
                               << step_progress << "% (Overall: " << overall_progress << "%)" << std::endl;
                 });
-                
+
                 if (result.success) {
                     std::cout << "Pipeline executed successfully!" << std::endl;
                     std::cout << "Steps completed: " << result.steps_completed << "/" << result.total_steps << std::endl;
@@ -802,14 +787,31 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 } else {
                     std::cerr << "Pipeline execution failed: " << result.error_message << std::endl;
                 }
-                
-            } catch (const std::exception& e) {
+
+            } catch (std::exception const & e) {
                 std::cerr << "Exception during pipeline execution: " << e.what() << std::endl;
             }
         }
     }
 
     return data_info_list;
+}
+
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {
+    // Open JSON file
+    std::ifstream ifs(json_filepath);
+    if (!ifs.is_open()) {
+        std::cerr << "Failed to open JSON file: " << json_filepath << std::endl;
+        return {};
+    }
+
+    // Parse JSON
+    json j;
+    ifs >> j;
+
+    // get base path of filepath
+    std::filesystem::path const base_path = std::filesystem::path(json_filepath).parent_path();
+    return load_data_from_json_config(dm, j, base_path);
 }
 
 DM_DataType DataManager::getType(std::string const & key) const {
@@ -827,7 +829,7 @@ DM_DataType DataManager::getType(std::string const & key) const {
                     // For now, defaulting to Video (old behavior)
                     return DM_DataType::Video;
                 default:
-                    return DM_DataType::Video; // Old behavior for unknown types
+                    return DM_DataType::Video;// Old behavior for unknown types
             }
         } else if (std::holds_alternative<std::shared_ptr<PointData>>(it->second)) {
             return DM_DataType::Points;
@@ -875,4 +877,3 @@ std::string convert_data_type_to_string(DM_DataType type) {
             return "unknown";
     }
 }
-
