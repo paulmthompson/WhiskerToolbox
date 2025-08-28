@@ -33,6 +33,11 @@
 #include "Terminal_Widget/TerminalWidget.hpp"
 #include "Test_Widget/Test_Widget.hpp"
 
+// NEW: Include MediaDisplay headers
+#include "MediaDisplay/MediaDisplayCoordinator.hpp"
+#include "MediaDisplay/MediaDisplayManager.hpp"
+#include "MediaDisplay/EnhancedMediaExport_Widget.hpp"
+
 #include <QFileDialog>
 #include <QImage>
 #include <QKeyEvent>
@@ -64,15 +69,25 @@ MainWindow::MainWindow(QWidget * parent)
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
 
-    _scene = new Media_Window(_data_manager, this);
+    // NEW: Create the media display coordinator instead of directly creating Media_Window
+    _media_coordinator = std::make_unique<MediaDisplayCoordinator>(_data_manager, this);
+
+    // Connect coordinator signals
+    connect(_media_coordinator.get(), &MediaDisplayCoordinator::displayCreated,
+            this, &MainWindow::_onMediaDisplayCreated);
+    
+    connect(_media_coordinator.get(), &MediaDisplayCoordinator::activeDisplayChanged,
+            this, &MainWindow::_onActiveDisplayChanged);
 
     _verbose = false;
 
     ui->time_scrollbar->setDataManager(_data_manager);
 
-    ui->media_widget->setScene(_scene);
-    ui->media_widget->updateMedia();
-    ui->media_widget->setDataManager(_data_manager);
+    // REMOVED: The old pattern of creating and setting scene
+    // _scene = new Media_Window(_data_manager, this);
+    // ui->media_widget->setScene(_scene);
+    // ui->media_widget->updateMedia();
+    // ui->media_widget->setDataManager(_data_manager);
 
     _createActions();// Creates callback functions
 
@@ -91,15 +106,21 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::_buildInitialLayout() {
-    auto media_dock_widget = new ads::CDockWidget(QString::fromStdString("media"));
-    media_dock_widget->setWidget(ui->media_widget);
-    auto dockArea = _m_DockManager->addDockWidget(ads::TopDockWidgetArea, media_dock_widget);
-
+    // Create the initial media display using the new architecture
+    auto* initial_display = createMediaDisplay("media", ads::TopDockWidgetArea);
+    
     registerDockWidget("scrollbar", ui->time_scrollbar, ads::BottomDockWidgetArea);
 
-    auto * splitter = ads::internal::findParent<ads::CDockSplitter *>(dockArea);
-    int const height = splitter->height();
-    splitter->setSizes({height * 85 / 100, height * 15 / 100});
+    // Find the splitter and set initial sizes
+    auto* dock_widget = findDockWidget("media");
+    if (dock_widget) {
+        auto dockArea = dock_widget->dockAreaWidget();
+        auto * splitter = ads::internal::findParent<ads::CDockSplitter *>(dockArea);
+        if (splitter) {
+            int const height = splitter->height();
+            splitter->setSizes({height * 85 / 100, height * 15 / 100});
+        }
+    }
 }
 
 void MainWindow::_createActions() {
@@ -109,7 +130,10 @@ void MainWindow::_createActions() {
 
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
 
-    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ui->media_widget, &Media_Widget::LoadFrame);
+    // Connect time scrollbar to synchronize all media displays
+    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, this, [this](int frame_id) {
+        _media_coordinator->synchronizeFrame(frame_id);
+    });
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
@@ -199,7 +223,8 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
                 (data.data_class == "PointData") ||
                 (data.data_class == "MaskData") ||
                 (data.data_class == "LineData")) {
-            ui->media_widget->setFeatureColor(data.key, data.color);
+            // Synchronize feature color across all media displays
+            _media_coordinator->synchronizeFeatureColor(data.key, data.color);
         }
     }
     
@@ -217,7 +242,11 @@ void MainWindow::loadData() {
 
     _updateFrameCount();
 
-    ui->media_widget->updateMedia();
+    // Update all media displays
+    auto displays = _media_coordinator->getActiveDisplays();
+    for (auto* display : displays) {
+        display->updateDisplay();
+    }
 }
 
 void MainWindow::_updateFrameCount() {
@@ -565,9 +594,13 @@ void MainWindow::openVideoExportWidget() {
     std::string const key = "VideoExport_widget";
 
     if (!_widgets.contains(key)) {
+        // Get the active display's scene, or all scenes for export
+        auto* active_display = _media_coordinator->getActiveDisplay();
+        Media_Window* scene = active_display ? active_display->getScene() : nullptr;
+        
         auto vid_widget = std::make_unique<Export_Video_Widget>(
                 _data_manager,
-                _scene,
+                scene,  // TODO: Could be enhanced to work with multiple scenes
                 ui->time_scrollbar,
                 this);
 
@@ -702,6 +735,52 @@ void MainWindow::openTestWidget() {
         dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
         _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
         _widgets[key] = std::move(test_widget);
+    }
+
+    showDockWidget(key);
+}
+
+MediaDisplayManager* MainWindow::createMediaDisplay(const std::string& dock_name, 
+                                                   ads::DockWidgetArea area) {
+    auto* display_manager = _media_coordinator->createMediaDisplay();
+    
+    // Create dock widget and add the display manager's widget
+    auto dock_widget = new ads::CDockWidget(QString::fromStdString(dock_name));
+    dock_widget->setWidget(display_manager->getWidget());
+    
+    auto dockArea = _m_DockManager->addDockWidget(area, dock_widget);
+    
+    return display_manager;
+}
+
+void MainWindow::createNewMediaDisplay() {
+    // This could be called from a menu action to create additional displays
+    static int display_counter = 1;
+    std::string dock_name = "media_" + std::to_string(++display_counter);
+    createMediaDisplay(dock_name, ads::RightDockWidgetArea);
+}
+
+void MainWindow::_onMediaDisplayCreated(const std::string& display_id) {
+    // Handle new display creation - could update menus, status, etc.
+    std::cout << "New media display created: " << display_id << std::endl;
+}
+
+void MainWindow::_onActiveDisplayChanged(const std::string& display_id) {
+    // Handle active display change - could update status bar, context menus, etc.
+    std::cout << "Active display changed to: " << display_id << std::endl;
+}
+
+void MainWindow::openEnhancedMediaExportWidget() {
+    std::string const key = "EnhancedMediaExport_widget";
+
+    if (!_widgets.contains(key)) {
+        auto export_widget = std::make_unique<EnhancedMediaExport_Widget>(
+                _media_coordinator.get(),
+                this);
+
+        export_widget->setObjectName(key);
+        registerDockWidget(key, export_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(export_widget);
     }
 
     showDockWidget(key);

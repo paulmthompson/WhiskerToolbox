@@ -12,7 +12,8 @@
 #include <string>
 
 class DataManager;
-class Media_Window;
+class MediaDisplayCoordinator;
+class MediaDisplayManager;
 
 
 namespace Ui {
@@ -56,6 +57,20 @@ public:
 
     void processLoadedData(std::vector<DataInfo> const & data_info);
 
+    /**
+     * @brief Get the media display coordinator for creating/managing media displays
+     */
+    MediaDisplayCoordinator* getMediaDisplayCoordinator() const { return _media_coordinator.get(); }
+
+    /**
+     * @brief Create a new media display and dock it
+     * @param dock_name Name for the dock widget
+     * @param area Dock area to place the new display
+     * @return Pointer to the created MediaDisplayManager
+     */
+    MediaDisplayManager* createMediaDisplay(const std::string& dock_name = "media", 
+                                           ads::DockWidgetArea area = ads::TopDockWidgetArea);
+
 
 protected:
     void keyPressEvent(QKeyEvent * event) override;
@@ -64,7 +79,7 @@ protected:
 private:
     Ui::MainWindow * ui;
 
-    Media_Window * _scene;
+    std::unique_ptr<MediaDisplayCoordinator> _media_coordinator;
 
     ads::CDockManager * _m_DockManager;
 
@@ -100,10 +115,16 @@ private slots:
     void openDataManager();
     void openVideoExportWidget();
     void openSpreadsheetExportWidget();
+    void openEnhancedMediaExportWidget(); // NEW: Enhanced export widget
     void openDataTransforms();
     void openTerminalWidget();
     void openAnalysisDashboard();
     void openTestWidget();
     void openTableDesignerWidget();
+    
+    // NEW: Slots for managing multiple media displays
+    void createNewMediaDisplay();
+    void _onMediaDisplayCreated(const std::string& display_id);
+    void _onActiveDisplayChanged(const std::string& display_id);
 };
 #endif// MAINWINDOW_HPP
