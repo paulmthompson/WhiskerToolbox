@@ -1,0 +1,63 @@
+---
+title: "Analog Hilbert Phase"
+format: html
+---
+
+## Overview
+
+The Analog Hilbert Phase transform calculates the instantaneous phase of an analog time series using the Hilbert transform. This is useful for analyzing oscillatory signals, as it provides a measure of the signal's phase at each point in time.
+
+The Hilbert transform is applied to the input signal to produce an analytic signal, which is a complex signal whose real part is the original signal and whose imaginary part is the Hilbert transform of the original signal. The instantaneous phase is then calculated as the angle of the analytic signal.
+
+## Parameters
+
+The Analog Hilbert Phase transform has the following parameters:
+
+*   `low_frequency`: The lower bound of the frequency band of interest. The signal will be band-pass filtered between `low_frequency` and `high_frequency` before the Hilbert transform is applied.
+*   `high_frequency`: The upper bound of the frequency band of interest.
+*   `discontinuity_threshold`: The maximum time gap between samples that is considered a continuous segment. If the time gap between two consecutive samples is greater than this threshold, the signal is considered to have a discontinuity, and the transform is applied to each continuous segment separately.
+
+## JSON Schema
+
+Here is the JSON schema for the Analog Hilbert Phase transform:
+
+```json
+{
+    "type": "object",
+    "properties": {
+        "low_frequency": {
+            "type": "number",
+            "description": "The lower bound of the frequency band of interest."
+        },
+        "high_frequency": {
+            "type": "number",
+            "description": "The upper bound of the frequency band of interest."
+        },
+        "discontinuity_threshold": {
+            "type": "integer",
+            "description": "The maximum time gap between samples that is considered a continuous segment."
+        }
+    },
+    "required": ["low_frequency", "high_frequency", "discontinuity_threshold"]
+}
+```
+
+## Example
+
+Here is a minimal working example of how to use the Analog Hilbert Phase transform in a JSON configuration:
+
+```json
+{
+    "steps": [{
+        "step_id": "hilbert_phase_step",
+        "transform_name": "Hilbert Phase",
+        "input_key": "raw_signal",
+        "output_key": "phase_signal",
+        "parameters": {
+            "low_frequency": 0.5,
+            "high_frequency": 2.0,
+            "discontinuity_threshold": 100
+        }
+    }]
+}
+```
