@@ -32,6 +32,7 @@ add_subdirectory(Feature_Tree_Widget)
 add_subdirectory(IO_Widgets)
 add_subdirectory(DataViewer_Widget)
 add_subdirectory(Media_Widget)
+add_subdirectory(MediaWidgetManager)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -314,6 +315,7 @@ target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE IO_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataViewer_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Media_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE MediaWidgetManager)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

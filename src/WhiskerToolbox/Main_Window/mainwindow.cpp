@@ -26,7 +26,7 @@
 #include "IO_Widgets/DataAggregation/DataAggregationExporter_Widget.hpp"
 #include "ML_Widget/ML_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
-#include "Media_Widget/Media_Window/Media_Window.hpp"
+#include "MediaWidgetManager/MediaWidgetManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
@@ -64,15 +64,20 @@ MainWindow::MainWindow(QWidget * parent)
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
 
-    _scene = new Media_Window(_data_manager, this);
+    // Create media widget manager
+    _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, this);
 
     _verbose = false;
 
     ui->time_scrollbar->setDataManager(_data_manager);
 
-    ui->media_widget->setScene(_scene);
-    ui->media_widget->updateMedia();
-    ui->media_widget->setDataManager(_data_manager);
+    // Create the main media widget through the manager
+    auto* main_media_widget = _media_manager->createMediaWidget("main", this);
+    
+    // Replace the UI media widget with the managed one
+    // We need to replace the widget in the UI
+    delete ui->media_widget;
+    ui->media_widget = main_media_widget;
 
     _createActions();// Creates callback functions
 
@@ -109,7 +114,7 @@ void MainWindow::_createActions() {
 
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
 
-    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ui->media_widget, &Media_Widget::LoadFrame);
+    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _media_manager.get(), &MediaWidgetManager::loadFrameForAll);
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
@@ -199,7 +204,7 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
                 (data.data_class == "PointData") ||
                 (data.data_class == "MaskData") ||
                 (data.data_class == "LineData")) {
-            ui->media_widget->setFeatureColor(data.key, data.color);
+            _media_manager->setFeatureColorForAll(data.key, data.color);
         }
     }
     
@@ -217,7 +222,7 @@ void MainWindow::loadData() {
 
     _updateFrameCount();
 
-    ui->media_widget->updateMedia();
+    _media_manager->updateMediaForAll();
 }
 
 void MainWindow::_updateFrameCount() {
@@ -567,7 +572,7 @@ void MainWindow::openVideoExportWidget() {
     if (!_widgets.contains(key)) {
         auto vid_widget = std::make_unique<Export_Video_Widget>(
                 _data_manager,
-                _scene,
+                _media_manager.get(),
                 ui->time_scrollbar,
                 this);
 

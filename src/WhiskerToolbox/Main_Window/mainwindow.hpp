@@ -12,7 +12,7 @@
 #include <string>
 
 class DataManager;
-class Media_Window;
+class MediaWidgetManager;
 
 
 namespace Ui {
@@ -64,7 +64,7 @@ protected:
 private:
     Ui::MainWindow * ui;
 
-    Media_Window * _scene;
+    std::unique_ptr<MediaWidgetManager> _media_manager;
 
     ads::CDockManager * _m_DockManager;
 

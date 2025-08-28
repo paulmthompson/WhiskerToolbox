@@ -10,6 +10,7 @@
 
 class DataManager;
 class Media_Window;
+class MediaWidgetManager;
 class TimeScrollBar;
 class DigitalEventSeries;
 class TimeFrame;
@@ -60,7 +61,7 @@ class Export_Video_Widget : public QWidget {
 public:
     Export_Video_Widget(
             std::shared_ptr<DataManager> data_manager,
-            Media_Window * scene,
+            MediaWidgetManager * media_manager,
             TimeScrollBar * time_scrollbar,
             QWidget * parent = nullptr);
     ~Export_Video_Widget() override;
@@ -70,9 +71,12 @@ public:
 private:
     Ui::Export_Video_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
-    Media_Window * _scene;
+    MediaWidgetManager * _media_manager;
     TimeScrollBar * _time_scrollbar;
     std::unique_ptr<cv::VideoWriter> _video_writer;
+
+    // Currently selected media widget for export
+    std::string _selected_media_widget_id;
 
     // Multi-sequence support
     std::vector<VideoSequence> _video_sequences;
@@ -91,11 +95,14 @@ private slots:
     void _resetToMediaSize();
     void _updateAudioSourcesTable();
     void _onAudioSourceTableItemChanged(QTableWidgetItem * item);
+    void _onMediaWidgetSelectionChanged();
 
 private:
     QImage _generateTitleFrame(int width, int height, QString const & text, int font_size);
     void _writeFrameToVideo(QImage const & frame);
     std::pair<int, int> _getMediaDimensions() const;
+    Media_Window* _getCurrentMediaWindow() const;
+    void _updateMediaWidgetComboBox();
 
     // Audio generation methods
     std::vector<float> _generateClickAudio(float duration_seconds, int sample_rate, double click_duration) const;

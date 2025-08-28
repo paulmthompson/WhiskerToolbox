@@ -1,11 +1,11 @@
 #include "Media_Window.hpp"
 
+#include "CoreGeometry/line_geometry.hpp"
+#include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
-#include "CoreGeometry/lines.hpp"
-#include "CoreGeometry/line_geometry.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
@@ -46,6 +46,22 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
     _data_manager->addObserver([this]() {
         _addRemoveData();
     });
+}
+
+Media_Window::~Media_Window() {
+    // Clear all items from the scene
+    clear();
+
+    // Delete all dynamically allocated items
+    _clearLines();
+    _clearMasks();
+    _clearMaskBoundingBoxes();
+    _clearMaskOutlines();
+    _clearPoints();
+    _clearIntervals();
+    _clearTensors();
+
+    _text_items.clear();
 }
 
 void Media_Window::addLineDataToScene(std::string const & line_key) {
@@ -344,14 +360,14 @@ void Media_Window::UpdateCanvas() {
 
     // Check if any masks are in transparency mode
     bool has_transparency_mask = false;
-    for (auto const & [mask_key, mask_config] : _mask_configs) {
+    for (auto const & [mask_key, mask_config]: _mask_configs) {
         if (mask_config->is_visible && mask_config->use_as_transparency) {
             has_transparency_mask = true;
             std::cout << "Found transparency mask: " << mask_key << std::endl;
             break;
         }
     }
-    
+
     std::cout << "Has transparency masks: " << (has_transparency_mask ? "YES" : "NO") << std::endl;
 
     // If we have transparency masks, modify the new_image
@@ -398,12 +414,12 @@ void Media_Window::UpdateCanvas() {
     QImage scene_image(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
     scene_image.fill(Qt::transparent);// Optional: fill with transparent background
     QPainter painter(&scene_image);
-    
+
     // Set the scene rect to match the canvas dimensions
     this->setSceneRect(0, 0, _canvasWidth, _canvasHeight);
-    
+
     // Render the scene with proper viewport mapping
-    this->render(&painter, QRectF(0, 0, _canvasWidth, _canvasHeight), 
+    this->render(&painter, QRectF(0, 0, _canvasWidth, _canvasHeight),
                  QRect(0, 0, _canvasWidth, _canvasHeight));
 
     emit canvasUpdated(scene_image);
@@ -472,9 +488,9 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
 
         // Emit strong-typed coordinate signals
         CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
-                                        static_cast<float>(event->scenePos().y()));
+                                              static_cast<float>(event->scenePos().y()));
         MediaCoordinates const media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
-                                      static_cast<float>(event->scenePos().y() / getYAspect()));
+                                            static_cast<float>(event->scenePos().y() / getYAspect()));
         emit leftClickCanvas(canvas_coords);
         emit leftClickMediaCoords(media_coords);
 
@@ -494,9 +510,9 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
 
         // Emit strong-typed coordinate signals
         CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
-                                        static_cast<float>(event->scenePos().y()));
+                                              static_cast<float>(event->scenePos().y()));
         MediaCoordinates const media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
-                                      static_cast<float>(event->scenePos().y() / getYAspect()));
+                                            static_cast<float>(event->scenePos().y() / getYAspect()));
         emit rightClickCanvas(canvas_coords);
         emit rightClickMediaCoords(media_coords);
 
@@ -557,7 +573,7 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
 
     // Emit strong-typed coordinate signal
     CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
-                                    static_cast<float>(event->scenePos().y()));
+                                          static_cast<float>(event->scenePos().y()));
     emit mouseMoveCanvas(canvas_coords);
 
     QGraphicsScene::mouseMoveEvent(event);
@@ -857,7 +873,7 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, Ima
     if (mask_config && mask_config->use_as_transparency) {
         return;
     }
-    
+
     for (auto const & single_mask: maskData) {
         // Normal mode: overlay mask on top of media
         QImage unscaled_mask_image(mask_size.width, mask_size.height, QImage::Format::Format_ARGB32);
@@ -877,49 +893,49 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, Ima
 
 QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
     std::cout << "Applying transparency masks..." << std::endl;
-    
+
     std::cout << "Media image size: " << media_image.width() << "x" << media_image.height() << std::endl;
     std::cout << "Canvas dimensions: " << _canvasWidth << "x" << _canvasHeight << std::endl;
 
     auto video_timeframe = _data_manager->getTime(TimeKey("time"));
-    
+
     QImage final_image = media_image;
-    
+
     int transparency_mask_count = 0;
     int const total_mask_points = 0;
-    
+
     // Process all transparency masks
-    for (auto const & [mask_key, mask_config] : _mask_configs) {
+    for (auto const & [mask_key, mask_config]: _mask_configs) {
         if (!mask_config->is_visible || !mask_config->use_as_transparency) {
             continue;
         }
-        
+
         transparency_mask_count++;
         std::cout << "Processing transparency mask: " << mask_key << std::endl;
-        
+
         auto mask_data = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask_data->getImageSize();
 
         auto mask_timeframe_key = _data_manager->getTimeKey(mask_key);
         auto mask_timeframe = _data_manager->getTime(mask_timeframe_key);
-        
+
         std::cout << "Mask image size: " << image_size.width << "x" << image_size.height << std::endl;
-        
+
         auto const current_time = _data_manager->getCurrentTime();
         auto maskData = mask_data->getAtTime(TimeFrameIndex(current_time), video_timeframe.get(), mask_timeframe.get());
 
         std::cout << "Mask data size: " << maskData.size() << std::endl;
-        
+
         // Calculate scaling factors
         float const xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
         float const yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
-        
+
         std::cout << "Scaling factors: x=" << xAspect << ", y=" << yAspect << std::endl;
 
         QImage unscaled_mask_image(image_size.width, image_size.height, QImage::Format::Format_ARGB32);
         unscaled_mask_image.fill(0);
         // Add mask points to combined mask
-        for (auto const & single_mask: maskData) {        
+        for (auto const & single_mask: maskData) {
             for (auto const point: single_mask) {
                 unscaled_mask_image.setPixel(
                         QPoint(static_cast<int>(point.x), static_cast<int>(point.y)),
@@ -939,8 +955,8 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
             }
         }
     }
-    
-    
+
+
     return final_image;
 }
 
@@ -1397,13 +1413,13 @@ void Media_Window::_addRemoveData() {
     //New data key was added. This is where we may want to repopulate a custom table
 }
 
-bool Media_Window::_needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe, 
-                                             const std::shared_ptr<TimeFrame>& interval_timeframe) {
+bool Media_Window::_needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe,
+                                             std::shared_ptr<TimeFrame> const & interval_timeframe) {
     // If either timeframe is null, no conversion is possible/needed
     if (!video_timeframe || !interval_timeframe) {
         return false;
     }
-    
+
     // Conversion is needed if the timeframes are different objects
     return video_timeframe.get() != interval_timeframe.get();
 }
