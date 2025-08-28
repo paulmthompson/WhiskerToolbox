@@ -3,8 +3,8 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
-#include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
-#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "../Media_Widget/DisplayOptions/CoordinateTypes.hpp"
+#include "../Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
 #include <QGraphicsEllipseItem>
 #include <QGraphicsItem>
