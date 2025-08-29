@@ -20,6 +20,9 @@ TransformPipeline::TransformPipeline(DataManager* data_manager, TransformRegistr
     if (!registry_) {
         throw std::invalid_argument("TransformRegistry cannot be null");
     }
+    auto& factory = ParameterFactory::getInstance();
+    factory.initializeDefaultSetters();
+
 }
 
 bool TransformPipeline::loadFromJson(nlohmann::json const& json_config) {

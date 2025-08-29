@@ -54,7 +54,6 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp
 
-
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/DigitalIntervalSeries/digital_interval_group.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_angle.test.cpp

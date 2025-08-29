@@ -1,4 +1,4 @@
-#define CATCH_CONFIG_MAIN
+
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/matchers/catch_matchers_vector.hpp"
 
@@ -376,7 +376,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Parameter Factory", "[transf
 TEST_CASE("Data Transform: Analog Event Threshold - load_data_from_json_config", "[transforms][analog_event_threshold][json_config]") {
     // Create DataManager and populate it with AnalogTimeSeries in code
     DataManager dm;
-    
+
     // Create a TimeFrame for our data
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
