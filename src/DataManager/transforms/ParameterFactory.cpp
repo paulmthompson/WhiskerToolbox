@@ -3,7 +3,7 @@
 #include "AnalogTimeSeries/AnalogFilter/analog_filter.hpp"
 #include "AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 #include "AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
-#include "AnalogTimeSeries/analog_interval_threshold.hpp"
+#include "AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "DigitalIntervalSeries/digital_interval_group.hpp"
 #include "Lines/line_alignment.hpp"
 #include "Lines/line_angle.hpp"
@@ -86,8 +86,8 @@ void ParameterFactory::initializeDefaultSetters() {
             "Threshold Interval Detection", "min_duration", &IntervalThresholdParams::minDuration);
 
     std::unordered_map<std::string, IntervalThresholdParams::MissingDataMode> missing_data_mode_map = {
-            {"Treat as Zero (Default)", IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO},
-            {"Ignore Missing Points", IntervalThresholdParams::MissingDataMode::IGNORE}};
+            {"Zero", IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO},
+            {"Ignore", IntervalThresholdParams::MissingDataMode::IGNORE}};
     registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::MissingDataMode>(
             "Threshold Interval Detection", "missing_data_mode", &IntervalThresholdParams::missingDataMode, missing_data_mode_map);
 

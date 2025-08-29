@@ -3,7 +3,7 @@
 
 #include "ui_AnalogIntervalThreshold_Widget.h"
 
-#include "DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
+#include "DataManager/transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 
 #include <iostream>
 

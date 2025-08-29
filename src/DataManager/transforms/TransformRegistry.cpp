@@ -3,7 +3,7 @@
 #include "transforms/AnalogTimeSeries/AnalogFilter/analog_filter.hpp"
 #include "transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 #include "transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
-#include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
+#include "transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_scaling.hpp"
 #include "transforms/DigitalIntervalSeries/digital_interval_group.hpp"
 #include "transforms/Lines/line_alignment.hpp"

@@ -196,6 +196,10 @@ bool IntervalThresholdOperation::canApply(DataTypeVariant const & dataVariant) c
     return ptr_ptr && *ptr_ptr;
 }
 
+std::unique_ptr<TransformParametersBase> IntervalThresholdOperation::getDefaultParameters() const {
+    return std::make_unique<IntervalThresholdParams>();
+}
+
 DataTypeVariant IntervalThresholdOperation::execute(
         DataTypeVariant const & dataVariant,
         TransformParametersBase const * transformParameters) {

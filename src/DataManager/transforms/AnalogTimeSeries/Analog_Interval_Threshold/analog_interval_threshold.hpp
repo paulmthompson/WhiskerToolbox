@@ -86,6 +86,8 @@ public:
      */
     [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
 
+    [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
+
     /**
      * @brief Executes the interval detection using data from the variant.
      * @param dataVariant The variant holding a non-null shared_ptr to the AnalogTimeSeries object.

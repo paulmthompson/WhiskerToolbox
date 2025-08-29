@@ -4,13 +4,21 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
+#include "transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "transforms/data_transforms.hpp"
+#include "DataManager.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+#include "transforms/ParameterFactory.hpp"
 
 #include <cmath>
 #include <functional>
 #include <memory>
 #include <vector>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 // Helper function to validate that all values during intervals are above threshold
 auto validateIntervalsAboveThreshold = [](
@@ -972,5 +980,280 @@ TEST_CASE("Data Transform: Interval Threshold - Missing Data Handling", "[transf
             REQUIRE(intervals_zero[i].start == intervals_ignore[i].start);
             REQUIRE(intervals_zero[i].end == intervals_ignore[i].end);
         }
+    }
+}
+
+TEST_CASE("Data Transform: Analog Interval Threshold - JSON pipeline", "[transforms][analog_interval_threshold][json]") {
+    const nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "interval_threshold_step_1"},
+            {"transform_name", "Threshold Interval Detection"},
+            {"input_key", "TestSignal.channel1"},
+            {"output_key", "DetectedIntervals"},
+            {"parameters", {
+                {"threshold_value", 1.0},
+                {"direction", "Positive (Rising)"},
+                {"lockout_time", 0.0},
+                {"min_duration", 0.0},
+                {"missing_data_mode", "Ignore"}
+            }}
+        }}}
+    };
+
+    DataManager dm;
+    TransformRegistry registry;
+
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+
+    std::vector<float> values = {0.5f, 1.5f, 2.0f, 1.8f, 0.8f, 2.5f, 1.2f, 0.3f};
+    std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), 
+                                         TimeFrameIndex(200), 
+                                         TimeFrameIndex(300), 
+                                         TimeFrameIndex(400), 
+                                         TimeFrameIndex(500), 
+                                         TimeFrameIndex(600), 
+                                         TimeFrameIndex(700), 
+                                         TimeFrameIndex(800)};
+    auto ats = std::make_shared<AnalogTimeSeries>(values, times);
+    ats->setTimeFrame(time_frame);
+    dm.setData("TestSignal.channel1", ats, TimeKey("default"));
+
+    TransformPipeline pipeline(&dm, &registry);
+    pipeline.loadFromJson(json_config);
+    pipeline.execute();
+
+    // Verify the results
+    auto interval_series = dm.getData<DigitalIntervalSeries>("DetectedIntervals");
+    REQUIRE(interval_series != nullptr);
+
+    auto const & intervals = interval_series->getDigitalIntervalSeries();
+    REQUIRE(intervals.size() == 2); // Two intervals: [200-400] and [600-700]
+
+    REQUIRE(intervals[0].start == 200);
+    REQUIRE(intervals[0].end == 400);
+    REQUIRE(intervals[1].start == 600);
+    REQUIRE(intervals[1].end == 700);
+}
+
+#include "transforms/ParameterFactory.hpp"
+#include "transforms/TransformRegistry.hpp"
+
+TEST_CASE("Data Transform: Analog Interval Threshold - Parameter Factory", "[transforms][analog_interval_threshold][factory]") {
+    auto& factory = ParameterFactory::getInstance();
+    factory.initializeDefaultSetters();
+
+    auto params_base = std::make_unique<IntervalThresholdParams>();
+    REQUIRE(params_base != nullptr);
+
+    const nlohmann::json params_json = {
+        {"threshold_value", 2.5},
+        {"direction", "Negative (Falling)"},
+        {"lockout_time", 123.45},
+        {"min_duration", 50.0},
+        {"missing_data_mode", "Treat as Zero"}
+    };
+
+    for (auto const& [key, val] : params_json.items()) {
+        factory.setParameter("Threshold Interval Detection", params_base.get(), key, val, nullptr);
+    }
+
+    auto* params = dynamic_cast<IntervalThresholdParams*>(params_base.get());
+    REQUIRE(params != nullptr);
+
+    REQUIRE(params->thresholdValue == 2.5);
+    REQUIRE(params->direction == IntervalThresholdParams::ThresholdDirection::NEGATIVE);
+    REQUIRE(params->lockoutTime == 123.45);
+    REQUIRE(params->minDuration == 50.0);
+    REQUIRE(params->missingDataMode == IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO);
+}
+
+TEST_CASE("Data Transform: Analog Interval Threshold - load_data_from_json_config", "[transforms][analog_interval_threshold][json_config]") {
+    // Create DataManager and populate it with AnalogTimeSeries in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test analog data in code
+    std::vector<float> values = {0.5f, 1.5f, 2.0f, 1.8f, 0.8f, 2.5f, 1.2f, 0.3f};
+    std::vector<TimeFrameIndex> times = {
+        TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), 
+        TimeFrameIndex(400), TimeFrameIndex(500), TimeFrameIndex(600),
+        TimeFrameIndex(700), TimeFrameIndex(800)
+    };
+    
+    auto test_analog = std::make_shared<AnalogTimeSeries>(values, times);
+    test_analog->setTimeFrame(time_frame);
+    
+    // Store the analog data in DataManager with a known key
+    dm.setData("test_signal", test_analog, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Interval Threshold Detection Pipeline\",\n"
+        "            \"description\": \"Test interval threshold detection on analog signal\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Threshold Interval Detection\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_signal\",\n"
+        "                \"output_key\": \"detected_intervals\",\n"
+        "                \"parameters\": {\n"
+        "                    \"threshold_value\": 1.0,\n"
+        "                    \"direction\": \"Positive (Rising)\",\n"
+        "                    \"lockout_time\": 0.0,\n"
+        "                    \"min_duration\": 0.0,\n"
+        "                    \"missing_data_mode\": \"Ignore\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "analog_interval_threshold_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    auto result_intervals = dm.getData<DigitalIntervalSeries>("detected_intervals");
+    REQUIRE(result_intervals != nullptr);
+    
+    // Verify the interval detection results
+    auto const & intervals = result_intervals->getDigitalIntervalSeries();
+    REQUIRE(intervals.size() == 2); // Two intervals: [200-400] and [600-700]
+
+    REQUIRE(intervals[0].start == 200);
+    REQUIRE(intervals[0].end == 400);
+    REQUIRE(intervals[1].start == 600);
+    REQUIRE(intervals[1].end == 700);
+    
+    // Test another pipeline with different parameters (lockout time and minimum duration)
+    const char* json_config_advanced = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Interval Threshold with Advanced Parameters\",\n"
+        "            \"description\": \"Test interval detection with lockout and minimum duration\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Threshold Interval Detection\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_signal\",\n"
+        "                \"output_key\": \"detected_intervals_advanced\",\n"
+        "                \"parameters\": {\n"
+        "                    \"threshold_value\": 1.0,\n"
+        "                    \"direction\": \"Positive (Rising)\",\n"
+        "                    \"lockout_time\": 100.0,\n"
+        "                    \"min_duration\": 150.0,\n"
+        "                    \"missing_data_mode\": \"Ignore\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_advanced = test_dir / "pipeline_config_advanced.json";
+    {
+        std::ofstream json_file(json_filepath_advanced);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_advanced;
+        json_file.close();
+    }
+    
+    // Execute the advanced pipeline
+    auto data_info_list_advanced = load_data_from_json_config(&dm, json_filepath_advanced.string());
+    
+    // Verify the advanced results
+    auto result_intervals_advanced = dm.getData<DigitalIntervalSeries>("detected_intervals_advanced");
+    REQUIRE(result_intervals_advanced != nullptr);
+    
+    auto const & intervals_advanced = result_intervals_advanced->getDigitalIntervalSeries();
+    REQUIRE(intervals_advanced.size() == 1); // Only one interval meets minimum duration: [200-400]
+    REQUIRE(intervals_advanced[0].start == 200);
+    REQUIRE(intervals_advanced[0].end == 400);
+    
+    // Test absolute threshold detection
+    const char* json_config_absolute = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Absolute Interval Threshold Detection\",\n"
+        "            \"description\": \"Test absolute threshold interval detection\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Threshold Interval Detection\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_signal\",\n"
+        "                \"output_key\": \"detected_intervals_absolute\",\n"
+        "                \"parameters\": {\n"
+        "                    \"threshold_value\": 1.3,\n"
+        "                    \"direction\": \"Absolute\",\n"
+        "                    \"lockout_time\": 0.0,\n"
+        "                    \"min_duration\": 0.0,\n"
+        "                    \"missing_data_mode\": \"Ignore\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_absolute = test_dir / "pipeline_config_absolute.json";
+    {
+        std::ofstream json_file(json_filepath_absolute);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_absolute;
+        json_file.close();
+    }
+    
+    // Execute the absolute threshold pipeline
+    auto data_info_list_absolute = load_data_from_json_config(&dm, json_filepath_absolute.string());
+    
+    // Verify the absolute threshold results
+    auto result_intervals_absolute = dm.getData<DigitalIntervalSeries>("detected_intervals_absolute");
+    REQUIRE(result_intervals_absolute != nullptr);
+    
+    auto const & intervals_absolute = result_intervals_absolute->getDigitalIntervalSeries();
+    REQUIRE(intervals_absolute.size() == 2); // Two intervals: [200-400] and [600-600]
+    REQUIRE(intervals_absolute[0].start == 200);
+    REQUIRE(intervals_absolute[0].end == 400);
+    REQUIRE(intervals_absolute[1].start == 600);
+    REQUIRE(intervals_absolute[1].end == 600);
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 }
