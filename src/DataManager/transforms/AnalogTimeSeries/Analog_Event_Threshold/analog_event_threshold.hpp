@@ -59,6 +59,9 @@ public:// Added public keyword here for clarity, assuming it was intended.
      */
     [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
 
+
+    [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
+
     /**
      * @brief Executes the mask area calculation using data from the variant.
      * @param dataVariant The variant holding a non-null shared_ptr to the AnalogTimeSeries object.
