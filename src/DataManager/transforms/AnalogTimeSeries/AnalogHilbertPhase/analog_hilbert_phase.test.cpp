@@ -265,71 +265,6 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 }
 
-#include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
-#include "transforms/ParameterFactory.hpp"
-#include "transforms/TransformPipeline.hpp"
-#include "transforms/TransformRegistry.hpp"
-
-TEST_CASE("Data Transform: Hilbert Phase - JSON pipeline", "[transforms][analog_hilbert_phase][json]") {
-    char const * json_config_string = R"({
-        "steps": [{
-            "step_id": "hilbert_phase_step",
-            "transform_name": "Hilbert Phase",
-            "input_key": "raw_signal",
-            "output_key": "phase_signal",
-            "parameters": {
-                "low_frequency": 0.5,
-                "high_frequency": 2.0,
-                "discontinuity_threshold": 100
-            }
-        }]
-    })";
-
-    auto json_config = nlohmann::json::parse(json_config_string);
-
-    DataManager dm;
-    TransformRegistry registry;
-    ParameterFactory::getInstance().initializeDefaultSetters();
-
-    auto time_frame = std::make_shared<TimeFrame>();
-    dm.setTime(TimeKey("default"), time_frame);
-
-    std::vector<float> values;
-    std::vector<TimeFrameIndex> times;
-    constexpr float frequency = 1.0f;
-    constexpr size_t sample_rate = 100;
-    constexpr size_t duration_samples = 200;
-
-    values.reserve(duration_samples);
-    times.reserve(duration_samples);
-
-    for (size_t i = 0; i < duration_samples; ++i) {
-        float t = static_cast<float>(i) / sample_rate;
-        values.push_back(std::sin(2.0f * std::numbers::pi_v<float> * frequency * t));
-        times.push_back(TimeFrameIndex(i));
-    }
-
-    auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-    ats->setTimeFrame(time_frame);
-    dm.setData("raw_signal", ats, TimeKey("default"));
-
-    TransformPipeline pipeline(&dm, &registry);
-    pipeline.loadFromJson(json_config);
-    pipeline.execute();
-
-    auto result_phase = dm.getData<AnalogTimeSeries>("phase_signal");
-    REQUIRE(result_phase != nullptr);
-    REQUIRE(!result_phase->getAnalogTimeSeries().empty());
-
-    auto const & phase_values = result_phase->getAnalogTimeSeries();
-
-    for (auto const & phase: phase_values) {
-        REQUIRE(phase >= -std::numbers::pi_v<float>);
-        REQUIRE(phase <= std::numbers::pi_v<float>);
-    }
-}
-
 TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][analog_hilbert_phase]") {
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<AnalogTimeSeries> result_phase;
@@ -650,5 +585,289 @@ TEST_CASE("Data Transform: Hilbert Phase - Irregularly Sampled Data", "[transfor
             // modifies values, but we can check the value exists
             REQUIRE(std::isfinite(result_data[result_idx]));
         }
+    }
+}
+
+#include "DataManager.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+#include "transforms/ParameterFactory.hpp"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+TEST_CASE("Data Transform: Analog Hilbert Phase - JSON pipeline", "[transforms][analog_hilbert_phase][json]") {
+    const nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "hilbert_phase_step_1"},
+            {"transform_name", "Hilbert Phase"},
+            {"input_key", "TestSignal.channel1"},
+            {"output_key", "PhaseSignal"},
+            {"parameters", {
+                {"low_frequency", 5.0},
+                {"high_frequency", 15.0},
+                {"discontinuity_threshold", 1000}
+            }}
+        }}}
+    };
+
+    DataManager dm;
+    TransformRegistry registry;
+
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+
+    // Create test analog data - a sine wave
+    constexpr size_t sample_rate = 100;
+    constexpr size_t duration_samples = 200;
+    std::vector<float> values;
+    std::vector<TimeFrameIndex> times;
+    
+    values.reserve(duration_samples);
+    times.reserve(duration_samples);
+    
+    for (size_t i = 0; i < duration_samples; ++i) {
+        float t = static_cast<float>(i) / sample_rate;
+        values.push_back(std::sin(2.0f * std::numbers::pi_v<float> * 10.0f * t)); // 10 Hz sine wave
+        times.push_back(TimeFrameIndex(i));
+    }
+    
+    auto ats = std::make_shared<AnalogTimeSeries>(values, times);
+    ats->setTimeFrame(time_frame);
+    dm.setData("TestSignal.channel1", ats, TimeKey("default"));
+
+    TransformPipeline pipeline(&dm, &registry);
+    pipeline.loadFromJson(json_config);
+    pipeline.execute();
+
+    // Verify the results
+    auto phase_series = dm.getData<AnalogTimeSeries>("PhaseSignal");
+    REQUIRE(phase_series != nullptr);
+    REQUIRE(!phase_series->getAnalogTimeSeries().empty());
+    
+    // Check that phase values are in the expected range [-π, π]
+    auto const& phase_values = phase_series->getAnalogTimeSeries();
+    for (auto const& phase : phase_values) {
+        REQUIRE(phase >= -std::numbers::pi_v<float>);
+        REQUIRE(phase <= std::numbers::pi_v<float>);
+    }
+}
+
+TEST_CASE("Data Transform: Analog Hilbert Phase - Parameter Factory", "[transforms][analog_hilbert_phase][factory]") {
+    auto& factory = ParameterFactory::getInstance();
+    factory.initializeDefaultSetters();
+
+    auto params_base = std::make_unique<HilbertPhaseParams>();
+    REQUIRE(params_base != nullptr);
+
+    const nlohmann::json params_json = {
+        {"low_frequency", 2.5},
+        {"high_frequency", 25.0},
+        {"discontinuity_threshold", 500}
+    };
+
+    for (auto const& [key, val] : params_json.items()) {
+        factory.setParameter("Hilbert Phase", params_base.get(), key, val, nullptr);
+    }
+
+    auto* params = dynamic_cast<HilbertPhaseParams*>(params_base.get());
+    REQUIRE(params != nullptr);
+
+    REQUIRE(params->lowFrequency == 2.5);
+    REQUIRE(params->highFrequency == 25.0);
+    REQUIRE(params->discontinuityThreshold == 500);
+}
+
+TEST_CASE("Data Transform: Analog Hilbert Phase - load_data_from_json_config", "[transforms][analog_hilbert_phase][json_config]") {
+    // Create DataManager and populate it with AnalogTimeSeries in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test analog data - a sine wave
+    constexpr size_t sample_rate = 100;
+    constexpr size_t duration_samples = 200;
+    std::vector<float> values;
+    std::vector<TimeFrameIndex> times;
+    
+    values.reserve(duration_samples);
+    times.reserve(duration_samples);
+    
+    for (size_t i = 0; i < duration_samples; ++i) {
+        float t = static_cast<float>(i) / sample_rate;
+        values.push_back(std::sin(2.0f * std::numbers::pi_v<float> * 10.0f * t)); // 10 Hz sine wave
+        times.push_back(TimeFrameIndex(i));
+    }
+    
+    auto test_analog = std::make_shared<AnalogTimeSeries>(values, times);
+    test_analog->setTimeFrame(time_frame);
+    
+    // Store the analog data in DataManager with a known key
+    dm.setData("test_signal", test_analog, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Hilbert Phase Pipeline\",\n"
+        "            \"description\": \"Test Hilbert phase calculation on analog signal\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Hilbert Phase\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_signal\",\n"
+        "                \"output_key\": \"phase_signal\",\n"
+        "                \"parameters\": {\n"
+        "                    \"low_frequency\": 5.0,\n"
+        "                    \"high_frequency\": 15.0,\n"
+        "                    \"discontinuity_threshold\": 1000\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "analog_hilbert_phase_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    auto result_phase = dm.getData<AnalogTimeSeries>("phase_signal");
+    REQUIRE(result_phase != nullptr);
+    REQUIRE(!result_phase->getAnalogTimeSeries().empty());
+    
+    // Verify the phase calculation results
+    auto const& phase_values = result_phase->getAnalogTimeSeries();
+    for (auto const& phase : phase_values) {
+        REQUIRE(phase >= -std::numbers::pi_v<float>);
+        REQUIRE(phase <= std::numbers::pi_v<float>);
+    }
+    
+    // Test another pipeline with different parameters (different frequency band)
+    const char* json_config_wideband = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Hilbert Phase Wideband\",\n"
+        "            \"description\": \"Test Hilbert phase with wider frequency band\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Hilbert Phase\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_signal\",\n"
+        "                \"output_key\": \"phase_signal_wideband\",\n"
+        "                \"parameters\": {\n"
+        "                    \"low_frequency\": 1.0,\n"
+        "                    \"high_frequency\": 50.0,\n"
+        "                    \"discontinuity_threshold\": 1000\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_wideband = test_dir / "pipeline_config_wideband.json";
+    {
+        std::ofstream json_file(json_filepath_wideband);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_wideband;
+        json_file.close();
+    }
+    
+    // Execute the wideband pipeline
+    auto data_info_list_wideband = load_data_from_json_config(&dm, json_filepath_wideband.string());
+    
+    // Verify the wideband results
+    auto result_phase_wideband = dm.getData<AnalogTimeSeries>("phase_signal_wideband");
+    REQUIRE(result_phase_wideband != nullptr);
+    REQUIRE(!result_phase_wideband->getAnalogTimeSeries().empty());
+    
+    auto const& phase_values_wideband = result_phase_wideband->getAnalogTimeSeries();
+    for (auto const& phase : phase_values_wideband) {
+        REQUIRE(phase >= -std::numbers::pi_v<float>);
+        REQUIRE(phase <= std::numbers::pi_v<float>);
+    }
+    
+    // Test with smaller discontinuity threshold
+    const char* json_config_small_threshold = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Hilbert Phase Small Threshold\",\n"
+        "            \"description\": \"Test Hilbert phase with small discontinuity threshold\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Hilbert Phase\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_signal\",\n"
+        "                \"output_key\": \"phase_signal_small_threshold\",\n"
+        "                \"parameters\": {\n"
+        "                    \"low_frequency\": 5.0,\n"
+        "                    \"high_frequency\": 15.0,\n"
+        "                    \"discontinuity_threshold\": 10\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_small_threshold = test_dir / "pipeline_config_small_threshold.json";
+    {
+        std::ofstream json_file(json_filepath_small_threshold);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_small_threshold;
+        json_file.close();
+    }
+    
+    // Execute the small threshold pipeline
+    auto data_info_list_small_threshold = load_data_from_json_config(&dm, json_filepath_small_threshold.string());
+    
+    // Verify the small threshold results
+    auto result_phase_small_threshold = dm.getData<AnalogTimeSeries>("phase_signal_small_threshold");
+    REQUIRE(result_phase_small_threshold != nullptr);
+    REQUIRE(!result_phase_small_threshold->getAnalogTimeSeries().empty());
+    
+    auto const& phase_values_small_threshold = result_phase_small_threshold->getAnalogTimeSeries();
+    for (auto const& phase : phase_values_small_threshold) {
+        REQUIRE(phase >= -std::numbers::pi_v<float>);
+        REQUIRE(phase <= std::numbers::pi_v<float>);
+    }
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 }
