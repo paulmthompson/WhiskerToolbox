@@ -1,7 +1,7 @@
 #include "LineCurvature_Widget.hpp"
 #include "ui_LineCurvature_Widget.h"
 
-#include "DataManager/transforms/Lines/line_curvature.hpp"
+#include "DataManager/transforms/Lines/Line_Curvature/line_curvature.hpp"
 
 LineCurvature_Widget::LineCurvature_Widget(QWidget *parent) :
     TransformParameter_Widget(parent),

@@ -175,8 +175,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/Line_Alignment/line_alignment.cpp
         transforms/Lines/Line_Resample/line_resample.cpp
         transforms/Lines/Line_Resample/line_resample.hpp
-        transforms/Lines/line_curvature.cpp
-        transforms/Lines/line_curvature.hpp
+        transforms/Lines/Line_Curvature/line_curvature.cpp
+        transforms/Lines/Line_Curvature/line_curvature.hpp
         transforms/Lines/line_subsegment.cpp
         transforms/Lines/line_subsegment.hpp
         transforms/Lines/line_point_extraction.cpp

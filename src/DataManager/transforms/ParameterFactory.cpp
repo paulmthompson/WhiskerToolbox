@@ -8,6 +8,7 @@
 #include "Lines/Line_Alignment/line_alignment.hpp"
 #include "Lines/Line_Angle/line_angle.hpp"
 #include "Lines/Line_Clip/line_clip.hpp"
+#include "Lines/Line_Curvature/line_curvature.hpp"
 #include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
@@ -212,6 +213,23 @@ void ParameterFactory::initializeDefaultSetters() {
     
     registerBasicParameter<LineClipParameters, int>(
             "Clip Line by Reference Line", "reference_frame", &LineClipParameters::reference_frame);
+
+
+    // ==================== Line Curvature ===============
+    registerBasicParameter<LineCurvatureParameters, float>(
+            "Calculate Line Curvature", "position", &LineCurvatureParameters::position);
+    
+    std::unordered_map<std::string, CurvatureCalculationMethod> curvature_calculation_method_map = {
+        {"PolynomialFit", CurvatureCalculationMethod::PolynomialFit}// Only method for now
+    };
+    registerEnumParameter<LineCurvatureParameters, CurvatureCalculationMethod>(
+            "Calculate Line Curvature", "method", &LineCurvatureParameters::method, curvature_calculation_method_map);
+    
+    registerBasicParameter<LineCurvatureParameters, int>(
+            "Calculate Line Curvature", "polynomial_order", &LineCurvatureParameters::polynomial_order);
+    
+    registerBasicParameter<LineCurvatureParameters, float>(
+            "Calculate Line Curvature", "fitting_window_percentage", &LineCurvatureParameters::fitting_window_percentage);
 
     // ==================== Line Min Point Dist ===============
 
