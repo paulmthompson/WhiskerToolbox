@@ -1,13 +1,95 @@
-#include "transforms/Lines/line_alignment.hpp"
+#include "transforms/Lines/Line_Alignment/line_alignment.hpp"
 #include "CoreGeometry/points.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/Image.hpp"
+#include "Media/Media_Data.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cmath>
 #include <vector>
+
+// Mock MediaData subclass for testing
+class MockMediaData : public MediaData {
+public:
+    MockMediaData() = default;
+    
+    MediaType getMediaType() const override { 
+        return MediaType::Images; 
+    }
+    
+    /**
+     * @brief Add an image to the mock media data
+     * 
+     * @param image The image to add
+     */
+    void addImage(Image const& image) {
+        _images.push_back(image);
+        setTotalFrameCount(static_cast<int>(_images.size()));
+        
+        // Update dimensions based on the first image
+        if (_images.size() == 1) {
+            updateWidth(image.size.width);
+            updateHeight(image.size.height);
+        }
+    }
+    
+    /**
+     * @brief Add image data directly
+     * 
+     * @param image_data The image data as uint8_t vector
+     * @param image_size The image dimensions
+     */
+    void addImage(std::vector<uint8_t> const& image_data, ImageSize const& image_size) {
+        Image image(image_data, image_size);
+        addImage(image);
+    }
+    
+    /**
+     * @brief Get the image at the specified frame
+     * 
+     * @param frame_id The frame index
+     * @return The image at the specified frame
+     */
+    Image getImage(int frame_id) const {
+        if (frame_id >= 0 && static_cast<size_t>(frame_id) < _images.size()) {
+            return _images[static_cast<size_t>(frame_id)];
+        }
+        return Image(); // Return empty image if frame not found
+    }
+    
+    /**
+     * @brief Get raw data for a frame (compatible with MediaData interface)
+     * 
+     * @param frame_number The frame number
+     * @return Raw data as uint8_t vector
+     */
+    std::vector<uint8_t> getRawDataForFrame(int frame_number) const {
+        if (frame_number >= 0 && static_cast<size_t>(frame_number) < _images.size()) {
+            return _images[static_cast<size_t>(frame_number)].data;
+        }
+        return std::vector<uint8_t>();
+    }
+    
+protected:
+    void doLoadMedia(std::string const& name) override {
+        // No-op for mock data
+        static_cast<void>(name);
+    }
+    
+    void doLoadFrame(int frame_id) override {
+        // Load the frame data into the base class's raw data
+        if (frame_id >= 0 && static_cast<size_t>(frame_id) < _images.size()) {
+            auto const& image = _images[static_cast<size_t>(frame_id)];
+            setRawData(image.data);
+        }
+    }
+    
+private:
+    std::vector<Image> _images;
+};
 
 TEST_CASE("FWHM displacement calculation - Core functionality", "[line][alignment][fwhm][transform]") {
     
@@ -613,4 +695,241 @@ TEST_CASE("FWHM profile extents calculation - Debug mode", "[line][alignment][fw
         REQUIRE_THAT(debug_line[2].y, Catch::Matchers::WithinAbs(60.0f, 5.0f));
     }
 }
-#endif 
+#endif
+
+#include "DataManager.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Media/Media_Data.hpp"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+TEST_CASE("Data Transform: Line Alignment - JSON pipeline", "[transforms][line_alignment][json]") {
+    // Create DataManager and populate it with LineData and MediaData in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test line data - a simple horizontal line
+    Line2D test_line;
+    test_line.push_back(Point2D<float>{10.0f, 50.0f});
+    test_line.push_back(Point2D<float>{50.0f, 50.0f});
+    test_line.push_back(Point2D<float>{90.0f, 50.0f});
+    
+    auto test_line_data = std::make_shared<LineData>();
+    test_line_data->setTimeFrame(time_frame);
+    test_line_data->addAtTime(TimeFrameIndex(0), test_line);
+    
+    // Store the line data in DataManager with a known key
+    dm.setData("test_line", test_line_data, TimeKey("default"));
+    
+    // Create test media data with a bright horizontal line at y=60
+    auto media_data = std::make_shared<MockMediaData>();
+    media_data->setTimeFrame(time_frame);
+    
+    // Create a test image with a bright horizontal line at y=60
+    ImageSize image_size{100, 100};
+    std::vector<uint8_t> image_data(100 * 100, 0); // All black initially
+    
+    // Create a bright horizontal line at y=60
+    for (int x = 0; x < 100; ++x) {
+        image_data[60 * 100 + x] = 255; // Bright white line
+    }
+    
+    // Add the image to media data
+    media_data->addImage(image_data, image_size);
+    
+    // Store the media data in DataManager with a known key
+    dm.setData("test_media", media_data, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Line Alignment Pipeline\",\n"
+        "            \"description\": \"Test line alignment to bright features in media\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Line Alignment to Bright Features\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_line\",\n"
+        "                \"output_key\": \"aligned_line\",\n"
+        "                \"parameters\": {\n"
+        "                    \"media_data\": \"test_media\",\n"
+        "                    \"width\": 20,\n"
+        "                    \"perpendicular_range\": 50,\n"
+        "                    \"use_processed_data\": true,\n"
+        "                    \"approach\": \"PEAK_WIDTH_HALF_MAX\",\n"
+        "                    \"output_mode\": \"ALIGNED_VERTICES\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_alignment_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    auto result_line = dm.getData<LineData>("aligned_line");
+    REQUIRE(result_line != nullptr);
+    
+    // Verify the line alignment results
+    // The original line was at y=50, but there's a bright line at y=60
+    // The aligned line should have vertices moved to y=60
+    auto aligned_lines = result_line->getAtTime(TimeFrameIndex(0));
+    REQUIRE(aligned_lines.size() == 1);
+    auto aligned_vertices = aligned_lines[0];
+    REQUIRE(aligned_vertices.size() == 3);
+    
+    // Check that vertices were aligned to the bright line at y=60
+    REQUIRE_THAT(aligned_vertices[0].x, Catch::Matchers::WithinAbs(10.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices[0].y, Catch::Matchers::WithinAbs(60.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices[1].x, Catch::Matchers::WithinAbs(50.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices[1].y, Catch::Matchers::WithinAbs(60.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices[2].x, Catch::Matchers::WithinAbs(90.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices[2].y, Catch::Matchers::WithinAbs(60.0f, 1.0f));
+    
+    // Test another pipeline with different parameters (different width and range)
+    const char* json_config_different_params = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Line Alignment with Different Parameters\",\n"
+        "            \"description\": \"Test line alignment with different width and range\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Line Alignment to Bright Features\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_line\",\n"
+        "                \"output_key\": \"aligned_line_different_params\",\n"
+        "                \"parameters\": {\n"
+        "                    \"media_data\": \"test_media\",\n"
+        "                    \"width\": 10,\n"
+        "                    \"perpendicular_range\": 30,\n"
+        "                    \"use_processed_data\": true,\n"
+        "                    \"approach\": \"PEAK_WIDTH_HALF_MAX\",\n"
+        "                    \"output_mode\": \"ALIGNED_VERTICES\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_different_params = test_dir / "pipeline_config_different_params.json";
+    {
+        std::ofstream json_file(json_filepath_different_params);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_different_params;
+        json_file.close();
+    }
+    
+    // Execute the different parameters pipeline
+    auto data_info_list_different_params = load_data_from_json_config(&dm, json_filepath_different_params.string());
+    
+    // Verify the different parameters results
+    auto result_line_different_params = dm.getData<LineData>("aligned_line_different_params");
+    REQUIRE(result_line_different_params != nullptr);
+    
+    auto aligned_lines_different_params = result_line_different_params->getAtTime(TimeFrameIndex(0));
+    REQUIRE(aligned_lines_different_params.size() == 1);
+    auto aligned_vertices_different_params = aligned_lines_different_params[0];
+    REQUIRE(aligned_vertices_different_params.size() == 3);
+    
+    // Should still align to the bright line at y=60
+    REQUIRE_THAT(aligned_vertices_different_params[0].x, Catch::Matchers::WithinAbs(10.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices_different_params[0].y, Catch::Matchers::WithinAbs(60.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices_different_params[1].x, Catch::Matchers::WithinAbs(50.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices_different_params[1].y, Catch::Matchers::WithinAbs(60.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices_different_params[2].x, Catch::Matchers::WithinAbs(90.0f, 1.0f));
+    REQUIRE_THAT(aligned_vertices_different_params[2].y, Catch::Matchers::WithinAbs(60.0f, 1.0f));
+    
+    // Test FWHM profile extents output mode
+    const char* json_config_fwhm_extents = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Line Alignment FWHM Extents\",\n"
+        "            \"description\": \"Test line alignment with FWHM profile extents output\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Line Alignment to Bright Features\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_line\",\n"
+        "                \"output_key\": \"fwhm_extents_line\",\n"
+        "                \"parameters\": {\n"
+        "                    \"media_data\": \"test_media\",\n"
+        "                    \"width\": 20,\n"
+        "                    \"perpendicular_range\": 50,\n"
+        "                    \"use_processed_data\": true,\n"
+        "                    \"approach\": \"PEAK_WIDTH_HALF_MAX\",\n"
+        "                    \"output_mode\": \"FWHM_PROFILE_EXTENTS\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_fwhm_extents = test_dir / "pipeline_config_fwhm_extents.json";
+    {
+        std::ofstream json_file(json_filepath_fwhm_extents);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_fwhm_extents;
+        json_file.close();
+    }
+    
+    // Execute the FWHM extents pipeline
+    auto data_info_list_fwhm_extents = load_data_from_json_config(&dm, json_filepath_fwhm_extents.string());
+    
+    // Verify the FWHM extents results
+    auto result_line_fwhm_extents = dm.getData<LineData>("fwhm_extents_line");
+    REQUIRE(result_line_fwhm_extents != nullptr);
+    
+    auto fwhm_extents_lines = result_line_fwhm_extents->getAtTime(TimeFrameIndex(0));
+    REQUIRE(fwhm_extents_lines.size() == 3); // One line per vertex
+    auto fwhm_extents_vertices = fwhm_extents_lines[0];
+    // Should have 3 points per vertex: [left_extent, max_point, right_extent]
+    // For 3 vertices, this should be 9 points total
+    REQUIRE(fwhm_extents_vertices.size() == 3);
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+} 

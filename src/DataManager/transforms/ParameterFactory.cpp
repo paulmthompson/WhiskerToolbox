@@ -5,7 +5,7 @@
 #include "AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 #include "AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
-#include "Lines/line_alignment.hpp"
+#include "Lines/Line_Alignment/line_alignment.hpp"
 #include "Lines/line_angle.hpp"
 #include "Lines/line_resample.hpp"
 #include "Masks/mask_area.hpp"
@@ -147,23 +147,29 @@ void ParameterFactory::initializeDefaultSetters() {
     // ================= Line Alignment ===============
 
     registerDataParameter<LineAlignmentParameters, MediaData>(
-            "Line Alignment", "media_data", &LineAlignmentParameters::media_data);
+            "Line Alignment to Bright Features", "media_data", &LineAlignmentParameters::media_data);
 
     registerBasicParameter<LineAlignmentParameters, int>(
-            "Line Alignment", "width", &LineAlignmentParameters::width);
+            "Line Alignment to Bright Features", "width", &LineAlignmentParameters::width);
 
     registerBasicParameter<LineAlignmentParameters, int>(
-            "Line Alignment", "perpendicular_range", &LineAlignmentParameters::perpendicular_range);
+            "Line Alignment to Bright Features", "perpendicular_range", &LineAlignmentParameters::perpendicular_range);
 
     registerBasicParameter<LineAlignmentParameters, bool>(
-            "Line Alignment", "use_processed_data", &LineAlignmentParameters::use_processed_data);
+            "Line Alignment to Bright Features", "use_processed_data", &LineAlignmentParameters::use_processed_data);
 
     std::unordered_map<std::string, FWHMApproach> fwhm_approach_map = {
             {"PEAK_WIDTH_HALF_MAX", FWHMApproach::PEAK_WIDTH_HALF_MAX},
             {"GAUSSIAN_FIT", FWHMApproach::GAUSSIAN_FIT},
             {"THRESHOLD_BASED", FWHMApproach::THRESHOLD_BASED}};
     registerEnumParameter<LineAlignmentParameters, FWHMApproach>(
-            "Line Alignment", "approach", &LineAlignmentParameters::approach, fwhm_approach_map);
+            "Line Alignment to Bright Features", "approach", &LineAlignmentParameters::approach, fwhm_approach_map);
+
+    std::unordered_map<std::string, LineAlignmentOutputMode> line_alignment_output_mode_map = {
+            {"ALIGNED_VERTICES", LineAlignmentOutputMode::ALIGNED_VERTICES},
+            {"FWHM_PROFILE_EXTENTS", LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS}};
+    registerEnumParameter<LineAlignmentParameters, LineAlignmentOutputMode>(
+            "Line Alignment to Bright Features", "output_mode", &LineAlignmentParameters::output_mode, line_alignment_output_mode_map);
 
     // ==================== Line Resample ===============
 

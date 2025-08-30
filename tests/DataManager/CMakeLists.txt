@@ -58,7 +58,7 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_angle.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_min_point_dist.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_alignment.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Alignment/line_alignment.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_area.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_centroid.test.cpp
