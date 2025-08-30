@@ -10,6 +10,7 @@
 #include "Lines/Line_Clip/line_clip.hpp"
 #include "Lines/Line_Curvature/line_curvature.hpp"
 #include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
+#include "Lines/Line_Point_Extraction/line_point_extraction.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
@@ -216,6 +217,7 @@ void ParameterFactory::initializeDefaultSetters() {
 
 
     // ==================== Line Curvature ===============
+
     registerBasicParameter<LineCurvatureParameters, float>(
             "Calculate Line Curvature", "position", &LineCurvatureParameters::position);
     
@@ -235,6 +237,24 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerDataParameter<LineMinPointDistParameters, PointData>(
             "Calculate Line to Point Distance", "point_data", &LineMinPointDistParameters::point_data);
+    
+    // ==================== Line Point Extraction ===============
+    
+    std::unordered_map<std::string, PointExtractionMethod> point_extraction_method_map = {
+        {"Direct", PointExtractionMethod::Direct},          // Direct point selection based on indices
+        {"Parametric", PointExtractionMethod::Parametric}       // Use parametric polynomial interpolation
+    };
+    registerEnumParameter<LinePointExtractionParameters, PointExtractionMethod>(
+            "Extract Point from Line", "method", &LinePointExtractionParameters::method, point_extraction_method_map);
+    
+    registerBasicParameter<LinePointExtractionParameters, float>(
+            "Extract Point from Line", "position", &LinePointExtractionParameters::position);
+
+    registerBasicParameter<LinePointExtractionParameters, int>(
+            "Extract Point from Line", "polynomial_order", &LinePointExtractionParameters::polynomial_order);
+    
+    registerBasicParameter<LinePointExtractionParameters, bool>(
+            "Extract Point from Line", "use_interpolation", &LinePointExtractionParameters::use_interpolation);
     
     // ==================== Line Resample ===============
 

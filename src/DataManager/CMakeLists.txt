@@ -179,8 +179,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/Line_Curvature/line_curvature.hpp
         transforms/Lines/line_subsegment.cpp
         transforms/Lines/line_subsegment.hpp
-        transforms/Lines/line_point_extraction.cpp
-        transforms/Lines/line_point_extraction.hpp
+        transforms/Lines/Line_Point_Extraction/line_point_extraction.cpp
+        transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp
         transforms/Lines/Line_Clip/line_clip.cpp
         transforms/Lines/Line_Clip/line_clip.hpp
         transforms/Masks/Mask_Area/mask_area.cpp

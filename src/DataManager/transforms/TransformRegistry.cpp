@@ -11,7 +11,7 @@
 #include "transforms/Lines/Line_Clip/line_clip.hpp"
 #include "transforms/Lines/Line_Curvature/line_curvature.hpp"
 #include "transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
-#include "transforms/Lines/line_point_extraction.hpp"
+#include "transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp"
 #include "transforms/Lines/Line_Resample/line_resample.hpp"
 #include "transforms/Lines/line_subsegment.hpp"
 #include "transforms/Masks/Mask_Area/mask_area.hpp"

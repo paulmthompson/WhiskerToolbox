@@ -1,7 +1,7 @@
 #include "LinePointExtraction_Widget.hpp"
 #include "ui_LinePointExtraction_Widget.h"
 
-#include "DataManager/transforms/Lines/line_point_extraction.hpp"
+#include "DataManager/transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp"
 
 LinePointExtraction_Widget::LinePointExtraction_Widget(QWidget *parent) :
     TransformParameter_Widget(parent),
