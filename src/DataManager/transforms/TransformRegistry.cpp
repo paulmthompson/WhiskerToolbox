@@ -12,7 +12,7 @@
 #include "transforms/Lines/line_curvature.hpp"
 #include "transforms/Lines/line_min_point_dist.hpp"
 #include "transforms/Lines/line_point_extraction.hpp"
-#include "transforms/Lines/line_resample.hpp"
+#include "transforms/Lines/Line_Resample/line_resample.hpp"
 #include "transforms/Lines/line_subsegment.hpp"
 #include "transforms/Masks/mask_area.hpp"
 #include "transforms/Masks/mask_centroid.hpp"

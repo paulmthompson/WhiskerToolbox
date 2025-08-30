@@ -7,7 +7,7 @@
 #include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "Lines/Line_Alignment/line_alignment.hpp"
 #include "Lines/line_angle.hpp"
-#include "Lines/line_resample.hpp"
+#include "Lines/Line_Resample/line_resample.hpp"
 #include "Masks/mask_area.hpp"
 #include "Masks/mask_median_filter.hpp"
 

@@ -173,8 +173,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/line_min_point_dist.cpp
         transforms/Lines/Line_Alignment/line_alignment.hpp
         transforms/Lines/Line_Alignment/line_alignment.cpp
-        transforms/Lines/line_resample.cpp
-        transforms/Lines/line_resample.hpp
+        transforms/Lines/Line_Resample/line_resample.cpp
+        transforms/Lines/Line_Resample/line_resample.hpp
         transforms/Lines/line_curvature.cpp
         transforms/Lines/line_curvature.hpp
         transforms/Lines/line_subsegment.cpp
