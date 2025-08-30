@@ -174,22 +174,25 @@ void ParameterFactory::initializeDefaultSetters() {
 
     // ==================== Line Angle ===============
 
+    registerBasicParameter<LineAngleParameters, float>(
+            "Calculate Line Angle", "position", &LineAngleParameters::position);
+
     std::unordered_map<std::string, AngleCalculationMethod> angle_calculation_method_map = {
         {"Direct Points", AngleCalculationMethod::DirectPoints},
         {"Polynomial Fit", AngleCalculationMethod::PolynomialFit}
     };
     
     registerEnumParameter<LineAngleParameters, AngleCalculationMethod>(
-            "Line Angle", "method", &LineAngleParameters::method, angle_calculation_method_map);
+            "Calculate Line Angle", "method", &LineAngleParameters::method, angle_calculation_method_map);
 
     registerBasicParameter<LineAngleParameters, int>(
-            "Line Angle", "polynomial_order", &LineAngleParameters::polynomial_order);
+            "Calculate Line Angle", "polynomial_order", &LineAngleParameters::polynomial_order);
 
     registerBasicParameter<LineAngleParameters, float>(
-            "Line Angle", "reference_x", &LineAngleParameters::reference_x);
+            "Calculate Line Angle", "reference_x", &LineAngleParameters::reference_x);
 
     registerBasicParameter<LineAngleParameters, float>(
-            "Line Angle", "reference_y", &LineAngleParameters::reference_y);
+            "Calculate Line Angle", "reference_y", &LineAngleParameters::reference_y);
     
     // ==================== Line Resample ===============
 
