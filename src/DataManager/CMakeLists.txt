@@ -165,8 +165,8 @@ set(DATAMANAGER_SOURCES
         transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.cpp
         transforms/AnalogTimeSeries/analog_scaling.cpp
         transforms/AnalogTimeSeries/analog_scaling.hpp
-        transforms/DigitalIntervalSeries/digital_interval_group.cpp
-        transforms/DigitalIntervalSeries/digital_interval_group.hpp
+        transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.cpp
+        transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp
         transforms/Lines/line_angle.hpp
         transforms/Lines/line_angle.cpp
         transforms/Lines/line_min_point_dist.hpp

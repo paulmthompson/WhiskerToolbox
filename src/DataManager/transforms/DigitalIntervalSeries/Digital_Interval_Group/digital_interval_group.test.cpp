@@ -406,3 +406,242 @@ TEST_CASE("Group Transform Edge Cases", "[transforms][digital_interval_group][ed
         REQUIRE(grouped[0].end == 99 * 3 + 1);
     }
 }
+
+#include "DataManager.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+TEST_CASE("Data Transform: Digital Interval Group - JSON pipeline", "[transforms][digital_interval_group][json]") {
+    const nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "group_step_1"},
+            {"transform_name", "Group Intervals"},
+            {"input_key", "TestIntervals.channel1"},
+            {"output_key", "GroupedIntervals"},
+            {"parameters", {
+                {"max_spacing", 3.0}
+            }}
+        }}}
+    };
+
+    DataManager dm;
+    TransformRegistry registry;
+
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+
+    // Create test intervals: (1,2), (4,5), (10,11) - same as documentation example
+    std::vector<Interval> intervals = {{1, 2}, {4, 5}, {10, 11}};
+    auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+    dis->setTimeFrame(time_frame);
+    dm.setData("TestIntervals.channel1", dis, TimeKey("default"));
+
+    TransformPipeline pipeline(&dm, &registry);
+    pipeline.loadFromJson(json_config);
+    pipeline.execute();
+
+    // Verify the results
+    auto grouped_series = dm.getData<DigitalIntervalSeries>("GroupedIntervals");
+    REQUIRE(grouped_series != nullptr);
+
+    auto const & grouped = grouped_series->getDigitalIntervalSeries();
+    REQUIRE(grouped.size() == 2);
+
+    // First group: (1,2) and (4,5) combined to (1,5)
+    REQUIRE(grouped[0].start == 1);
+    REQUIRE(grouped[0].end == 5);
+
+    // Second group: (10,11) remains separate
+    REQUIRE(grouped[1].start == 10);
+    REQUIRE(grouped[1].end == 11);
+}
+
+TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config", "[transforms][digital_interval_group][json_config]") {
+    // Create DataManager and populate it with DigitalIntervalSeries in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test interval data in code - same as documentation example
+    std::vector<Interval> intervals = {{1, 2}, {4, 5}, {10, 11}};
+    
+    auto test_intervals = std::make_shared<DigitalIntervalSeries>(intervals);
+    test_intervals->setTimeFrame(time_frame);
+    
+    // Store the interval data in DataManager with a known key
+    dm.setData("test_intervals", test_intervals, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Interval Grouping Pipeline\",\n"
+        "            \"description\": \"Test interval grouping on digital interval series\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Group Intervals\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_intervals\",\n"
+        "                \"output_key\": \"grouped_intervals\",\n"
+        "                \"parameters\": {\n"
+        "                    \"max_spacing\": 3.0\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "digital_interval_group_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    auto result_intervals = dm.getData<DigitalIntervalSeries>("grouped_intervals");
+    REQUIRE(result_intervals != nullptr);
+    
+    // Verify the grouping results - same as documentation example
+    auto const & grouped = result_intervals->getDigitalIntervalSeries();
+    REQUIRE(grouped.size() == 2);
+    
+    // First group: (1,2) and (4,5) combined to (1,5)
+    REQUIRE(grouped[0].start == 1);
+    REQUIRE(grouped[0].end == 5);
+    
+    // Second group: (10,11) remains separate
+    REQUIRE(grouped[1].start == 10);
+    REQUIRE(grouped[1].end == 11);
+    
+    // Test another pipeline with different parameters (smaller spacing)
+    const char* json_config_small_spacing = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Interval Grouping with Small Spacing\",\n"
+        "            \"description\": \"Test interval grouping with smaller spacing\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Group Intervals\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_intervals\",\n"
+        "                \"output_key\": \"grouped_intervals_small\",\n"
+        "                \"parameters\": {\n"
+        "                    \"max_spacing\": 1.0\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_small = test_dir / "pipeline_config_small.json";
+    {
+        std::ofstream json_file(json_filepath_small);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_small_spacing;
+        json_file.close();
+    }
+    
+    // Execute the small spacing pipeline
+    auto data_info_list_small = load_data_from_json_config(&dm, json_filepath_small.string());
+    
+    // Verify the small spacing results
+    auto result_intervals_small = dm.getData<DigitalIntervalSeries>("grouped_intervals_small");
+    REQUIRE(result_intervals_small != nullptr);
+    
+    auto const & grouped_small = result_intervals_small->getDigitalIntervalSeries();
+    REQUIRE(grouped_small.size() == 2);
+    
+    // With spacing=1.0, (1,2) and (4,5) still group (gap=1 ≤ 1.0)
+    REQUIRE(grouped_small[0].start == 1);
+    REQUIRE(grouped_small[0].end == 5);
+    
+    // (10,11) remains separate (gap=4 > 1.0)
+    REQUIRE(grouped_small[1].start == 10);
+    REQUIRE(grouped_small[1].end == 11);
+    
+    // Test zero spacing pipeline (only adjacent intervals group)
+    const char* json_config_zero = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Interval Grouping with Zero Spacing\",\n"
+        "            \"description\": \"Test interval grouping with zero spacing\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Group Intervals\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_intervals\",\n"
+        "                \"output_key\": \"grouped_intervals_zero\",\n"
+        "                \"parameters\": {\n"
+        "                    \"max_spacing\": 0.0\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_zero = test_dir / "pipeline_config_zero.json";
+    {
+        std::ofstream json_file(json_filepath_zero);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_zero;
+        json_file.close();
+    }
+    
+    // Execute the zero spacing pipeline
+    auto data_info_list_zero = load_data_from_json_config(&dm, json_filepath_zero.string());
+    
+    // Verify the zero spacing results
+    auto result_intervals_zero = dm.getData<DigitalIntervalSeries>("grouped_intervals_zero");
+    REQUIRE(result_intervals_zero != nullptr);
+    
+    auto const & grouped_zero = result_intervals_zero->getDigitalIntervalSeries();
+    REQUIRE(grouped_zero.size() == 3);
+    
+    // With spacing=0.0, no intervals group (gaps are 1 and 4, both > 0.0)
+    REQUIRE(grouped_zero[0].start == 1);
+    REQUIRE(grouped_zero[0].end == 2);
+    REQUIRE(grouped_zero[1].start == 4);
+    REQUIRE(grouped_zero[1].end == 5);
+    REQUIRE(grouped_zero[2].start == 10);
+    REQUIRE(grouped_zero[2].end == 11);
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}

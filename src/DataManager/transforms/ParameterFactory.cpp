@@ -4,7 +4,7 @@
 #include "AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 #include "AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 #include "AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
-#include "DigitalIntervalSeries/digital_interval_group.hpp"
+#include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "Lines/line_alignment.hpp"
 #include "Lines/line_angle.hpp"
 #include "Lines/line_resample.hpp"
@@ -46,53 +46,12 @@ ParameterFactory & ParameterFactory::getInstance() {
 }
 
 void ParameterFactory::initializeDefaultSetters() {
-    // Register LineAlignment parameters
-    registerDataParameter<LineAlignmentParameters, MediaData>(
-            "Line Alignment", "media_data", &LineAlignmentParameters::media_data);
 
-    registerBasicParameter<LineAlignmentParameters, int>(
-            "Line Alignment", "width", &LineAlignmentParameters::width);
+    // ==================================================
+    // =============== Analog Time Series ===============
+    // ==================================================
 
-    registerBasicParameter<LineAlignmentParameters, int>(
-            "Line Alignment", "perpendicular_range", &LineAlignmentParameters::perpendicular_range);
-
-    registerBasicParameter<LineAlignmentParameters, bool>(
-            "Line Alignment", "use_processed_data", &LineAlignmentParameters::use_processed_data);
-
-    // Register FWHM approach enum for LineAlignment
-    std::unordered_map<std::string, FWHMApproach> fwhm_approach_map = {
-            {"PEAK_WIDTH_HALF_MAX", FWHMApproach::PEAK_WIDTH_HALF_MAX},
-            {"GAUSSIAN_FIT", FWHMApproach::GAUSSIAN_FIT},
-            {"THRESHOLD_BASED", FWHMApproach::THRESHOLD_BASED}};
-    registerEnumParameter<LineAlignmentParameters, FWHMApproach>(
-            "Line Alignment", "approach", &LineAlignmentParameters::approach, fwhm_approach_map);
-
-    // Register Analog Interval Threshold parameters
-    registerBasicParameter<IntervalThresholdParams, double>(
-            "Threshold Interval Detection", "threshold_value", &IntervalThresholdParams::thresholdValue);
-
-    std::unordered_map<std::string, IntervalThresholdParams::ThresholdDirection> threshold_direction_map = {
-            {"Positive (Rising)", IntervalThresholdParams::ThresholdDirection::POSITIVE},
-            {"Negative (Falling)", IntervalThresholdParams::ThresholdDirection::NEGATIVE},
-            {"Absolute (Magnitude)", IntervalThresholdParams::ThresholdDirection::ABSOLUTE}};
-
-    registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::ThresholdDirection>(
-            "Threshold Interval Detection", "direction", &IntervalThresholdParams::direction, threshold_direction_map);
-
-    registerBasicParameter<IntervalThresholdParams, double>(
-            "Threshold Interval Detection", "lockout_time", &IntervalThresholdParams::lockoutTime);
-
-    registerBasicParameter<IntervalThresholdParams, double>(
-            "Threshold Interval Detection", "min_duration", &IntervalThresholdParams::minDuration);
-
-    std::unordered_map<std::string, IntervalThresholdParams::MissingDataMode> missing_data_mode_map = {
-            {"Zero", IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO},
-            {"Ignore", IntervalThresholdParams::MissingDataMode::IGNORE}};
-    registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::MissingDataMode>(
-            "Threshold Interval Detection", "missing_data_mode", &IntervalThresholdParams::missingDataMode, missing_data_mode_map);
-
-    registerBasicParameter<GroupParams, double>(
-            "Group Intervals", "max_spacing", &GroupParams::maxSpacing);
+    // =============== Threshold Event Detection ===============
 
     registerBasicParameter<ThresholdParams, double>(
             "Threshold Event Detection", "threshold_value", &ThresholdParams::thresholdValue);
@@ -108,33 +67,33 @@ void ParameterFactory::initializeDefaultSetters() {
     registerBasicParameter<ThresholdParams, double>(
             "Threshold Event Detection", "lockout_time", &ThresholdParams::lockoutTime);
 
-    // Register Line Resample parameters
-    std::unordered_map<std::string, LineSimplificationAlgorithm> line_simplification_map = {
-            {"Fixed Spacing", LineSimplificationAlgorithm::FixedSpacing},
-            {"Douglas-Peucker", LineSimplificationAlgorithm::DouglasPeucker}};
-    registerEnumParameter<LineResampleParameters, LineSimplificationAlgorithm>(
-            "Resample Line", "algorithm", &LineResampleParameters::algorithm, line_simplification_map);
+    // ============== Analog Interval Threshold ==============
 
-    registerBasicParameter<LineResampleParameters, float>(
-            "Resample Line", "target_spacing", &LineResampleParameters::target_spacing);
+    std::unordered_map<std::string, IntervalThresholdParams::ThresholdDirection> threshold_direction_map = {
+            {"Positive (Rising)", IntervalThresholdParams::ThresholdDirection::POSITIVE},
+            {"Negative (Falling)", IntervalThresholdParams::ThresholdDirection::NEGATIVE},
+            {"Absolute (Magnitude)", IntervalThresholdParams::ThresholdDirection::ABSOLUTE}};
 
-    registerBasicParameter<LineResampleParameters, float>(
-            "Resample Line", "epsilon", &LineResampleParameters::epsilon);
+    registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::ThresholdDirection>(
+            "Threshold Interval Detection", "direction", &IntervalThresholdParams::direction, threshold_direction_map);
 
-    // Example: Register LineAngle parameters
-    // registerBasicParameter<LineAngleParameters, float>(
-    //     "Line Angle", "segment_length", &LineAngleParameters::segment_length);
-    // registerBasicParameter<LineAngleParameters, int>(
-    //     "Line Angle", "smoothing_window", &LineAngleParameters::smoothing_window);
+    registerBasicParameter<IntervalThresholdParams, double>(
+            "Threshold Interval Detection", "lockout_time", &IntervalThresholdParams::lockoutTime);
 
-    // Example: Register MaskMedianFilter parameters
-    // registerBasicParameter<MaskMedianFilterParameters, int>(
-    //     "Mask Median Filter", "kernel_size", &MaskMedianFilterParameters::kernel_size);
-    // registerBasicParameter<MaskMedianFilterParameters, int>(
-    //     "Mask Median Filter", "iterations", &MaskMedianFilterParameters::iterations);
+    registerBasicParameter<IntervalThresholdParams, double>(
+            "Threshold Interval Detection", "min_duration", &IntervalThresholdParams::minDuration);
 
-    // MaskArea operation has no configurable parameters
-    // It will work automatically when referenced in JSON with operation: "Calculate Area"
+    registerBasicParameter<IntervalThresholdParams, double>(
+            "Threshold Interval Detection", "threshold_value", &IntervalThresholdParams::thresholdValue);
+
+    std::unordered_map<std::string, IntervalThresholdParams::MissingDataMode> missing_data_mode_map = {
+            {"Zero", IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO},
+            {"Ignore", IntervalThresholdParams::MissingDataMode::IGNORE}};
+    registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::MissingDataMode>(
+            "Threshold Interval Detection", "missing_data_mode", &IntervalThresholdParams::missingDataMode, missing_data_mode_map);
+
+
+    // ================ Analog Filter ================
 
     // Register Analog Filter parameters
     std::unordered_map<std::string, AnalogFilterParams::FilterType> filter_type_map = {
@@ -163,13 +122,62 @@ void ParameterFactory::initializeDefaultSetters() {
     registerBasicParameter<AnalogFilterParams, double>(
             "Analog Filter", "sampling_rate", &AnalogFilterParams::sampling_rate);
 
-    // Register Hilbert Phase parameters
+    // ================== Analog Hilbert Phase ==================
+
     registerBasicParameter<HilbertPhaseParams, double>(
             "Hilbert Phase", "low_frequency", &HilbertPhaseParams::lowFrequency);
     registerBasicParameter<HilbertPhaseParams, double>(
             "Hilbert Phase", "high_frequency", &HilbertPhaseParams::highFrequency);
     registerBasicParameter<HilbertPhaseParams, size_t>(
             "Hilbert Phase", "discontinuity_threshold", &HilbertPhaseParams::discontinuityThreshold);
+
+    // ====================================================
+    // ============== Digital Interval Series =============
+    // ====================================================
+
+    // ================= Digital Interval Group ===============
+
+    registerBasicParameter<GroupParams, double>(
+            "Group Intervals", "max_spacing", &GroupParams::maxSpacing);
+
+    // ====================================================
+    // ============== Line Series ==================
+    // ====================================================
+
+    // ================= Line Alignment ===============
+
+    registerDataParameter<LineAlignmentParameters, MediaData>(
+            "Line Alignment", "media_data", &LineAlignmentParameters::media_data);
+
+    registerBasicParameter<LineAlignmentParameters, int>(
+            "Line Alignment", "width", &LineAlignmentParameters::width);
+
+    registerBasicParameter<LineAlignmentParameters, int>(
+            "Line Alignment", "perpendicular_range", &LineAlignmentParameters::perpendicular_range);
+
+    registerBasicParameter<LineAlignmentParameters, bool>(
+            "Line Alignment", "use_processed_data", &LineAlignmentParameters::use_processed_data);
+
+    std::unordered_map<std::string, FWHMApproach> fwhm_approach_map = {
+            {"PEAK_WIDTH_HALF_MAX", FWHMApproach::PEAK_WIDTH_HALF_MAX},
+            {"GAUSSIAN_FIT", FWHMApproach::GAUSSIAN_FIT},
+            {"THRESHOLD_BASED", FWHMApproach::THRESHOLD_BASED}};
+    registerEnumParameter<LineAlignmentParameters, FWHMApproach>(
+            "Line Alignment", "approach", &LineAlignmentParameters::approach, fwhm_approach_map);
+
+    // ==================== Line Resample ===============
+
+    std::unordered_map<std::string, LineSimplificationAlgorithm> line_simplification_map = {
+            {"Fixed Spacing", LineSimplificationAlgorithm::FixedSpacing},
+            {"Douglas-Peucker", LineSimplificationAlgorithm::DouglasPeucker}};
+    registerEnumParameter<LineResampleParameters, LineSimplificationAlgorithm>(
+            "Resample Line", "algorithm", &LineResampleParameters::algorithm, line_simplification_map);
+
+    registerBasicParameter<LineResampleParameters, float>(
+            "Resample Line", "target_spacing", &LineResampleParameters::target_spacing);
+
+    registerBasicParameter<LineResampleParameters, float>(
+            "Resample Line", "epsilon", &LineResampleParameters::epsilon);
 
     std::cout << "Parameter factory initialized with default setters" << std::endl;
 }
