@@ -6,7 +6,7 @@
 #include "AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "Lines/Line_Alignment/line_alignment.hpp"
-#include "Lines/line_angle.hpp"
+#include "Lines/Line_Angle/line_angle.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Masks/mask_area.hpp"
 #include "Masks/mask_median_filter.hpp"
@@ -171,6 +171,26 @@ void ParameterFactory::initializeDefaultSetters() {
     registerEnumParameter<LineAlignmentParameters, LineAlignmentOutputMode>(
             "Line Alignment to Bright Features", "output_mode", &LineAlignmentParameters::output_mode, line_alignment_output_mode_map);
 
+
+    // ==================== Line Angle ===============
+
+    std::unordered_map<std::string, AngleCalculationMethod> angle_calculation_method_map = {
+        {"Direct Points", AngleCalculationMethod::DirectPoints},
+        {"Polynomial Fit", AngleCalculationMethod::PolynomialFit}
+    };
+    
+    registerEnumParameter<LineAngleParameters, AngleCalculationMethod>(
+            "Line Angle", "method", &LineAngleParameters::method, angle_calculation_method_map);
+
+    registerBasicParameter<LineAngleParameters, int>(
+            "Line Angle", "polynomial_order", &LineAngleParameters::polynomial_order);
+
+    registerBasicParameter<LineAngleParameters, float>(
+            "Line Angle", "reference_x", &LineAngleParameters::reference_x);
+
+    registerBasicParameter<LineAngleParameters, float>(
+            "Line Angle", "reference_y", &LineAngleParameters::reference_y);
+    
     // ==================== Line Resample ===============
 
     std::unordered_map<std::string, LineSimplificationAlgorithm> line_simplification_map = {

@@ -6,7 +6,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
 #include "Media_Widget/Media_Window/Media_Window.hpp"
-#include "DataManager/transforms/Lines/line_angle.hpp"
+#include "DataManager/transforms/Lines/Line_Angle/line_angle.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "DataManager/utils/polynomial/polynomial_fit.hpp"
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
