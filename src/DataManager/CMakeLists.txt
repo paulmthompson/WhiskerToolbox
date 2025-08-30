@@ -163,8 +163,8 @@ set(DATAMANAGER_SOURCES
         transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp
         transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp
         transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.cpp
-        transforms/AnalogTimeSeries/analog_scaling.cpp
-        transforms/AnalogTimeSeries/analog_scaling.hpp
+        transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.cpp
+        transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp
         transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.cpp
         transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp
         transforms/Lines/Line_Angle/line_angle.hpp

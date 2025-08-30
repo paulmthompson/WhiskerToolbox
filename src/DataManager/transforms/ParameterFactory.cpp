@@ -4,6 +4,7 @@
 #include "AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 #include "AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 #include "AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
+#include "AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
 #include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "Lines/Line_Alignment/line_alignment.hpp"
 #include "Lines/Line_Angle/line_angle.hpp"
@@ -13,8 +14,8 @@
 #include "Lines/Line_Point_Extraction/line_point_extraction.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Lines/Line_Subsegment/line_subsegment.hpp"
-#include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
+#include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
 #include "Masks/Mask_To_Line/mask_to_line.hpp"
 
@@ -138,6 +139,38 @@ void ParameterFactory::initializeDefaultSetters() {
     registerBasicParameter<HilbertPhaseParams, size_t>(
             "Hilbert Phase", "discontinuity_threshold", &HilbertPhaseParams::discontinuityThreshold);
 
+    // ================== Analog Scaling ==================
+
+    std::unordered_map<std::string, ScalingMethod> scaling_method_map = {
+            {"FixedGain", ScalingMethod::FixedGain},                // Multiply by constant factor
+            {"ZScore", ScalingMethod::ZScore},                      // (x - mean) / std
+            {"StandardDeviation", ScalingMethod::StandardDeviation},// Scale so X std devs = 1.0
+            {"MinMax", ScalingMethod::MinMax},                      // Scale to [0, 1] range
+            {"RobustScaling", ScalingMethod::RobustScaling},        // (x - median) / IQR
+            {"UnitVariance", ScalingMethod::UnitVariance},          // Scale to unit variance (std = 1)
+            {"Centering", ScalingMethod::Centering}                 // Subtract mean (center around 0)
+    };
+    registerEnumParameter<AnalogScalingParams, ScalingMethod>(
+            "Scale and Normalize", "method", &AnalogScalingParams::method, scaling_method_map);
+
+    registerBasicParameter<AnalogScalingParams, double>(
+            "Scale and Normalize", "gain_factor", &AnalogScalingParams::gain_factor);
+
+    registerBasicParameter<AnalogScalingParams, double>(
+            "Scale and Normalize", "std_dev_target", &AnalogScalingParams::std_dev_target);
+
+    registerBasicParameter<AnalogScalingParams, double>(
+            "Scale and Normalize", "min_target", &AnalogScalingParams::min_target);
+
+    registerBasicParameter<AnalogScalingParams, double>(
+            "Scale and Normalize", "max_target", &AnalogScalingParams::max_target);
+
+    registerBasicParameter<AnalogScalingParams, double>(
+            "Scale and Normalize", "quantile_low", &AnalogScalingParams::quantile_low);
+
+    registerBasicParameter<AnalogScalingParams, double>(
+            "Scale and Normalize", "quantile_high", &AnalogScalingParams::quantile_high);
+
     // ====================================================
     // ============== Digital Interval Series =============
     // ====================================================
@@ -185,10 +218,9 @@ void ParameterFactory::initializeDefaultSetters() {
             "Calculate Line Angle", "position", &LineAngleParameters::position);
 
     std::unordered_map<std::string, AngleCalculationMethod> angle_calculation_method_map = {
-        {"Direct Points", AngleCalculationMethod::DirectPoints},
-        {"Polynomial Fit", AngleCalculationMethod::PolynomialFit}
-    };
-    
+            {"Direct Points", AngleCalculationMethod::DirectPoints},
+            {"Polynomial Fit", AngleCalculationMethod::PolynomialFit}};
+
     registerEnumParameter<LineAngleParameters, AngleCalculationMethod>(
             "Calculate Line Angle", "method", &LineAngleParameters::method, angle_calculation_method_map);
 
@@ -204,15 +236,15 @@ void ParameterFactory::initializeDefaultSetters() {
     // ==================== Line Clip ===============
 
     std::unordered_map<std::string, ClipSide> clip_side_map = {
-        {"KeepBase", ClipSide::KeepBase},    // Keep the portion from line start to intersection
-        {"KeepDistal", ClipSide::KeepDistal}   // Keep the portion from intersection to line end
+            {"KeepBase", ClipSide::KeepBase},   // Keep the portion from line start to intersection
+            {"KeepDistal", ClipSide::KeepDistal}// Keep the portion from intersection to line end
     };
     registerEnumParameter<LineClipParameters, ClipSide>(
             "Clip Line by Reference Line", "clip_side", &LineClipParameters::clip_side, clip_side_map);
-    
+
     registerDataParameter<LineClipParameters, LineData>(
             "Clip Line by Reference Line", "reference_line_data", &LineClipParameters::reference_line_data);
-    
+
     registerBasicParameter<LineClipParameters, int>(
             "Clip Line by Reference Line", "reference_frame", &LineClipParameters::reference_frame);
 
@@ -221,16 +253,16 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<LineCurvatureParameters, float>(
             "Calculate Line Curvature", "position", &LineCurvatureParameters::position);
-    
+
     std::unordered_map<std::string, CurvatureCalculationMethod> curvature_calculation_method_map = {
-        {"PolynomialFit", CurvatureCalculationMethod::PolynomialFit}// Only method for now
+            {"PolynomialFit", CurvatureCalculationMethod::PolynomialFit}// Only method for now
     };
     registerEnumParameter<LineCurvatureParameters, CurvatureCalculationMethod>(
             "Calculate Line Curvature", "method", &LineCurvatureParameters::method, curvature_calculation_method_map);
-    
+
     registerBasicParameter<LineCurvatureParameters, int>(
             "Calculate Line Curvature", "polynomial_order", &LineCurvatureParameters::polynomial_order);
-    
+
     registerBasicParameter<LineCurvatureParameters, float>(
             "Calculate Line Curvature", "fitting_window_percentage", &LineCurvatureParameters::fitting_window_percentage);
 
@@ -238,25 +270,25 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerDataParameter<LineMinPointDistParameters, PointData>(
             "Calculate Line to Point Distance", "point_data", &LineMinPointDistParameters::point_data);
-    
+
     // ==================== Line Point Extraction ===============
-    
+
     std::unordered_map<std::string, PointExtractionMethod> point_extraction_method_map = {
-        {"Direct", PointExtractionMethod::Direct},          // Direct point selection based on indices
-        {"Parametric", PointExtractionMethod::Parametric}       // Use parametric polynomial interpolation
+            {"Direct", PointExtractionMethod::Direct},       // Direct point selection based on indices
+            {"Parametric", PointExtractionMethod::Parametric}// Use parametric polynomial interpolation
     };
     registerEnumParameter<LinePointExtractionParameters, PointExtractionMethod>(
             "Extract Point from Line", "method", &LinePointExtractionParameters::method, point_extraction_method_map);
-    
+
     registerBasicParameter<LinePointExtractionParameters, float>(
             "Extract Point from Line", "position", &LinePointExtractionParameters::position);
 
     registerBasicParameter<LinePointExtractionParameters, int>(
             "Extract Point from Line", "polynomial_order", &LinePointExtractionParameters::polynomial_order);
-    
+
     registerBasicParameter<LinePointExtractionParameters, bool>(
             "Extract Point from Line", "use_interpolation", &LinePointExtractionParameters::use_interpolation);
-    
+
     // ==================== Line Resample ===============
 
     std::unordered_map<std::string, LineSimplificationAlgorithm> line_simplification_map = {
@@ -274,24 +306,24 @@ void ParameterFactory::initializeDefaultSetters() {
     // ==================== Line Subsegment ===============
 
     std::unordered_map<std::string, SubsegmentExtractionMethod> subsegment_extraction_method_map = {
-        {"Direct", SubsegmentExtractionMethod::Direct},          // Direct point extraction based on indices
-        {"Parametric", SubsegmentExtractionMethod::Parametric}       // Use parametric polynomial interpolation
+            {"Direct", SubsegmentExtractionMethod::Direct},       // Direct point extraction based on indices
+            {"Parametric", SubsegmentExtractionMethod::Parametric}// Use parametric polynomial interpolation
     };
     registerEnumParameter<LineSubsegmentParameters, SubsegmentExtractionMethod>(
             "Extract Line Subsegment", "method", &LineSubsegmentParameters::method, subsegment_extraction_method_map);
-    
+
     registerBasicParameter<LineSubsegmentParameters, float>(
             "Extract Line Subsegment", "start_position", &LineSubsegmentParameters::start_position);
-    
+
     registerBasicParameter<LineSubsegmentParameters, float>(
             "Extract Line Subsegment", "end_position", &LineSubsegmentParameters::end_position);
-    
+
     registerBasicParameter<LineSubsegmentParameters, int>(
             "Extract Line Subsegment", "polynomial_order", &LineSubsegmentParameters::polynomial_order);
-    
+
     registerBasicParameter<LineSubsegmentParameters, int>(
             "Extract Line Subsegment", "output_points", &LineSubsegmentParameters::output_points);
-    
+
     registerBasicParameter<LineSubsegmentParameters, bool>(
             "Extract Line Subsegment", "preserve_original_spacing", &LineSubsegmentParameters::preserve_original_spacing);
 
@@ -318,10 +350,9 @@ void ParameterFactory::initializeDefaultSetters() {
 
     // ==================== Mask Principal Axis ===============
     std::unordered_map<std::string, PrincipalAxisType> principal_axis_type_map = {
-        {"Major", PrincipalAxisType::Major},
-        {"Minor", PrincipalAxisType::Minor}
-    };
-    
+            {"Major", PrincipalAxisType::Major},
+            {"Minor", PrincipalAxisType::Minor}};
+
     registerEnumParameter<MaskPrincipalAxisParameters, PrincipalAxisType>(
             "Calculate Mask Principal Axis", "axis_type", &MaskPrincipalAxisParameters::axis_type, principal_axis_type_map);
 
@@ -332,34 +363,32 @@ void ParameterFactory::initializeDefaultSetters() {
     // ==================== Mask To Line ===============
 
     std::unordered_map<std::string, LinePointSelectionMethod> line_point_selection_method_map = {
-        {"NearestToReference", LinePointSelectionMethod::NearestToReference},
-        {"Skeletonize", LinePointSelectionMethod::Skeletonize}
-    };
+            {"NearestToReference", LinePointSelectionMethod::NearestToReference},
+            {"Skeletonize", LinePointSelectionMethod::Skeletonize}};
     registerEnumParameter<MaskToLineParameters, LinePointSelectionMethod>(
             "Convert Mask To Line", "method", &MaskToLineParameters::method, line_point_selection_method_map);
-    
+
     registerBasicParameter<MaskToLineParameters, float>(
             "Convert Mask To Line", "reference_x", &MaskToLineParameters::reference_x);
-    
+
     registerBasicParameter<MaskToLineParameters, float>(
             "Convert Mask To Line", "reference_y", &MaskToLineParameters::reference_y);
-    
+
     registerBasicParameter<MaskToLineParameters, int>(
             "Convert Mask To Line", "polynomial_order", &MaskToLineParameters::polynomial_order);
-    
+
     registerBasicParameter<MaskToLineParameters, float>(
             "Convert Mask To Line", "error_threshold", &MaskToLineParameters::error_threshold);
-    
+
     registerBasicParameter<MaskToLineParameters, bool>(
             "Convert Mask To Line", "remove_outliers", &MaskToLineParameters::remove_outliers);
-    
+
     registerBasicParameter<MaskToLineParameters, int>(
             "Convert Mask To Line", "input_point_subsample_factor", &MaskToLineParameters::input_point_subsample_factor);
-    
+
     registerBasicParameter<MaskToLineParameters, bool>(
             "Convert Mask To Line", "should_smooth_line", &MaskToLineParameters::should_smooth_line);
-    
+
     registerBasicParameter<MaskToLineParameters, float>(
             "Convert Mask To Line", "output_resolution", &MaskToLineParameters::output_resolution);
-    
 }

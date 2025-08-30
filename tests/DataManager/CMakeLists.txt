@@ -53,7 +53,8 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/AnalogFilter/analog_filter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.test.cpp
-
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.test.cpp
+        
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Alignment/line_alignment.test.cpp

@@ -162,6 +162,10 @@ bool AnalogScalingOperation::canApply(DataTypeVariant const & dataVariant) const
     return ptr_ptr && *ptr_ptr;
 }
 
+std::unique_ptr<TransformParametersBase> AnalogScalingOperation::getDefaultParameters() const {
+    return std::make_unique<AnalogScalingParams>();
+}
+
 DataTypeVariant AnalogScalingOperation::execute(DataTypeVariant const & dataVariant,
                                                TransformParametersBase const * transformParameters) {
     return execute(dataVariant, transformParameters, [](int){});

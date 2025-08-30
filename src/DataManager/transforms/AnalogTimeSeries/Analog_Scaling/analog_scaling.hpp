@@ -77,6 +77,8 @@ public:
     [[nodiscard]] std::string getName() const override;
     [[nodiscard]] std::type_index getTargetInputTypeIndex() const override;
     [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
+
+    [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
     
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
                            TransformParametersBase const * transformParameters) override;
