@@ -229,4 +229,8 @@ void ParameterFactory::initializeDefaultSetters() {
     // ==================== Mask Connected Component ===============
     registerBasicParameter<MaskConnectedComponentParameters, int>(
             "Remove Small Connected Components", "threshold", &MaskConnectedComponentParameters::threshold);
+
+    // ==================== Mask Hole Filling ===============
+    // No parameters needed for mask hole filling calculation
+
 }

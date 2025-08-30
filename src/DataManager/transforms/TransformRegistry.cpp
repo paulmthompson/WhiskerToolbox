@@ -17,7 +17,7 @@
 #include "transforms/Masks/Mask_Area/mask_area.hpp"
 #include "transforms/Masks/Mask_Centroid/mask_centroid.hpp"
 #include "transforms/Masks/Mask_Connected_Component/mask_connected_component.hpp"
-#include "transforms/Masks/mask_hole_filling.hpp"
+#include "transforms/Masks/Mask_Hole_Filling/mask_hole_filling.hpp"
 #include "transforms/Masks/mask_median_filter.hpp"
 #include "transforms/Masks/mask_principal_axis.hpp"
 #include "transforms/Masks/mask_skeletonize.hpp"
