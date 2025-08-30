@@ -1,4 +1,4 @@
-#include "transforms/Masks/mask_centroid.hpp"
+#include "transforms/Masks/Mask_Centroid/mask_centroid.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 
@@ -264,5 +264,181 @@ TEST_CASE("MaskCentroidOperation - Operation interface", "[mask][centroid][opera
         REQUIRE(points.size() == 1);
         REQUIRE_THAT(points[0].x, Catch::Matchers::WithinAbs(2.0f, 0.001f));
         REQUIRE_THAT(points[0].y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+    }
+}
+
+#include "DataManager.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+TEST_CASE("Data Transform: Mask Centroid - JSON pipeline", "[transforms][mask_centroid][json]") {
+    // Create DataManager and populate it with MaskData in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test mask data in code
+    auto test_mask = std::make_shared<MaskData>();
+    test_mask->setTimeFrame(time_frame);
+    
+    // Add mask data at different timestamps
+    // Timestamp 100: Triangle mask
+    std::vector<uint32_t> x1 = {0, 3, 0};
+    std::vector<uint32_t> y1 = {0, 0, 3};
+    test_mask->addAtTime(TimeFrameIndex(100), x1, y1);
+    
+    // Timestamp 200: Square mask
+    std::vector<uint32_t> x2 = {1, 3, 1, 3};
+    std::vector<uint32_t> y2 = {1, 1, 3, 3};
+    test_mask->addAtTime(TimeFrameIndex(200), x2, y2);
+    
+    // Timestamp 300: Multiple masks
+    std::vector<uint32_t> x3a = {0, 2, 0, 2};
+    std::vector<uint32_t> y3a = {0, 0, 2, 2};
+    test_mask->addAtTime(TimeFrameIndex(300), x3a, y3a);
+    
+    std::vector<uint32_t> x3b = {5, 7, 5, 7};
+    std::vector<uint32_t> y3b = {5, 5, 7, 7};
+    test_mask->addAtTime(TimeFrameIndex(300), x3b, y3b);
+    
+    // Store the mask data in DataManager with a known key
+    dm.setData("test_masks", test_mask, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Mask Centroid Pipeline\",\n"
+        "            \"description\": \"Test mask centroid calculation on mask data\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Calculate Mask Centroid\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_masks\",\n"
+        "                \"output_key\": \"mask_centroids\",\n"
+        "                \"parameters\": {}\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_centroid_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    auto result_centroids = dm.getData<PointData>("mask_centroids");
+    REQUIRE(result_centroids != nullptr);
+    
+    // Verify the centroid calculation results
+    auto const & times = result_centroids->getTimesWithData();
+    REQUIRE(times.size() == 3); // Three timestamps
+    
+    // Check timestamp 100: Triangle centroid should be (1,1)
+    auto const & points100 = result_centroids->getAtTime(TimeFrameIndex(100));
+    REQUIRE(points100.size() == 1);
+    REQUIRE_THAT(points100[0].x, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    REQUIRE_THAT(points100[0].y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    
+    // Check timestamp 200: Square centroid should be (2,2)
+    auto const & points200 = result_centroids->getAtTime(TimeFrameIndex(200));
+    REQUIRE(points200.size() == 1);
+    REQUIRE_THAT(points200[0].x, Catch::Matchers::WithinAbs(2.0f, 0.001f));
+    REQUIRE_THAT(points200[0].y, Catch::Matchers::WithinAbs(2.0f, 0.001f));
+    
+    // Check timestamp 300: Two centroids from two masks
+    auto const & points300 = result_centroids->getAtTime(TimeFrameIndex(300));
+    REQUIRE(points300.size() == 2);
+    
+    // Sort points by x coordinate for consistent testing
+    auto sorted_points = points300;
+    std::sort(sorted_points.begin(), sorted_points.end(),
+              [](auto const & a, auto const & b) { return a.x < b.x; });
+    
+    // First centroid: (0+2+0+2)/4 = 1, (0+0+2+2)/4 = 1
+    REQUIRE_THAT(sorted_points[0].x, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    REQUIRE_THAT(sorted_points[0].y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    
+    // Second centroid: (5+7+5+7)/4 = 6, (5+5+7+7)/4 = 6
+    REQUIRE_THAT(sorted_points[1].x, Catch::Matchers::WithinAbs(6.0f, 0.001f));
+    REQUIRE_THAT(sorted_points[1].y, Catch::Matchers::WithinAbs(6.0f, 0.001f));
+    
+    // Test another pipeline with different mask data
+    const char* json_config_complex = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Complex Mask Centroid Pipeline\",\n"
+        "            \"description\": \"Test mask centroid calculation with complex masks\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Calculate Mask Centroid\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_masks\",\n"
+        "                \"output_key\": \"complex_centroids\",\n"
+        "                \"parameters\": {}\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_complex = test_dir / "pipeline_config_complex.json";
+    {
+        std::ofstream json_file(json_filepath_complex);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_complex;
+        json_file.close();
+    }
+    
+    // Execute the complex pipeline
+    auto data_info_list_complex = load_data_from_json_config(&dm, json_filepath_complex.string());
+    
+    // Verify the complex results (should be identical to the first test since same input)
+    auto result_centroids_complex = dm.getData<PointData>("complex_centroids");
+    REQUIRE(result_centroids_complex != nullptr);
+    
+    auto const & times_complex = result_centroids_complex->getTimesWithData();
+    REQUIRE(times_complex.size() == 3);
+    
+    // Verify one specific result to ensure the pipeline worked
+    auto const & points100_complex = result_centroids_complex->getAtTime(TimeFrameIndex(100));
+    REQUIRE(points100_complex.size() == 1);
+    REQUIRE_THAT(points100_complex[0].x, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    REQUIRE_THAT(points100_complex[0].y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 }

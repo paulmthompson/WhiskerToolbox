@@ -15,7 +15,7 @@
 #include "transforms/Lines/Line_Resample/line_resample.hpp"
 #include "transforms/Lines/line_subsegment.hpp"
 #include "transforms/Masks/Mask_Area/mask_area.hpp"
-#include "transforms/Masks/mask_centroid.hpp"
+#include "transforms/Masks/Mask_Centroid/mask_centroid.hpp"
 #include "transforms/Masks/mask_connected_component.hpp"
 #include "transforms/Masks/mask_hole_filling.hpp"
 #include "transforms/Masks/mask_median_filter.hpp"

@@ -221,4 +221,7 @@ void ParameterFactory::initializeDefaultSetters() {
 
     // ==================== Mask Area ===============
     // No parameters needed for mask area calculation
+
+    // ==================== Mask Centroid ===============
+    // No parameters needed for mask centroid calculation
 }

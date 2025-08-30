@@ -62,7 +62,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Resample/line_resample.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Area/mask_area.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_centroid.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Centroid/mask_centroid.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_connected_component.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_hole_filling.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_median_filter.test.cpp
