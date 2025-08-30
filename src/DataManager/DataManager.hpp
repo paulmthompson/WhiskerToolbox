@@ -320,4 +320,35 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::jso
 std::string convert_data_type_to_string(DM_DataType type);
 
 
+extern template std::shared_ptr<AnalogTimeSeries> DataManager::getData<AnalogTimeSeries>(std::string const & key);
+extern template void DataManager::setData<AnalogTimeSeries>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<AnalogTimeSeries>(std::string const & key, std::shared_ptr<AnalogTimeSeries> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<DigitalEventSeries> DataManager::getData<DigitalEventSeries>(std::string const & key);
+extern template void DataManager::setData<DigitalEventSeries>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<DigitalEventSeries>(std::string const & key, std::shared_ptr<DigitalEventSeries> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<DigitalIntervalSeries> DataManager::getData<DigitalIntervalSeries>(std::string const & key);
+extern template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, std::shared_ptr<DigitalIntervalSeries> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<LineData> DataManager::getData<LineData>(std::string const & key);
+extern template void DataManager::setData<LineData>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<LineData>(std::string const & key, std::shared_ptr<LineData> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<MaskData> DataManager::getData<MaskData>(std::string const & key);
+extern template void DataManager::setData<MaskData>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<MaskData>(std::string const & key, std::shared_ptr<MaskData> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<MediaData> DataManager::getData<MediaData>(std::string const & key);
+
+extern template std::shared_ptr<PointData> DataManager::getData<PointData>(std::string const & key);
+extern template void DataManager::setData<PointData>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<PointData>(std::string const & key, std::shared_ptr<PointData> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<TensorData> DataManager::getData<TensorData>(std::string const & key);
+extern template void DataManager::setData<TensorData>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<TensorData>(std::string const & key, std::shared_ptr<TensorData> data, TimeKey const & time_key);
+
+
 #endif// DATAMANAGER_HPP
