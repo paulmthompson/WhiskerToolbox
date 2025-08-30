@@ -9,7 +9,6 @@
 #include "Lines/Line_Angle/line_angle.hpp"
 #include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
-#include "Masks/mask_area.hpp"
 #include "Masks/mask_median_filter.hpp"
 
 #include <iostream>
@@ -215,4 +214,11 @@ void ParameterFactory::initializeDefaultSetters() {
             "Resample Line", "epsilon", &LineResampleParameters::epsilon);
 
     std::cout << "Parameter factory initialized with default setters" << std::endl;
+
+    // ====================================================
+    // ============== Mask Series ==================
+    // ====================================================
+
+    // ==================== Mask Area ===============
+    // No parameters needed for mask area calculation
 }

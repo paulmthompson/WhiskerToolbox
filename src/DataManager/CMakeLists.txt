@@ -183,8 +183,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/line_point_extraction.hpp
         transforms/Lines/line_clip.cpp
         transforms/Lines/line_clip.hpp
-        transforms/Masks/mask_area.cpp
-        transforms/Masks/mask_area.hpp
+        transforms/Masks/Mask_Area/mask_area.cpp
+        transforms/Masks/Mask_Area/mask_area.hpp
         transforms/Masks/mask_centroid.cpp
         transforms/Masks/mask_centroid.hpp
         transforms/Masks/mask_connected_component.cpp
