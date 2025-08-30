@@ -197,8 +197,8 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/Mask_Principal_Axis/mask_principal_axis.hpp
         transforms/Masks/mask_to_line.cpp
         transforms/Masks/mask_to_line.hpp
-        transforms/Masks/mask_skeletonize.cpp
-        transforms/Masks/mask_skeletonize.hpp
+        transforms/Masks/Mask_Skeletonize/mask_skeletonize.cpp
+        transforms/Masks/Mask_Skeletonize/mask_skeletonize.hpp
         transforms/Media/whisker_tracing.cpp
         transforms/Media/whisker_tracing.hpp
 )

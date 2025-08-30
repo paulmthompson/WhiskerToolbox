@@ -20,7 +20,7 @@
 #include "transforms/Masks/Mask_Hole_Filling/mask_hole_filling.hpp"
 #include "transforms/Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "transforms/Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
-#include "transforms/Masks/mask_skeletonize.hpp"
+#include "transforms/Masks/Mask_Skeletonize/mask_skeletonize.hpp"
 #include "transforms/Masks/mask_to_line.hpp"
 #include "transforms/Media/whisker_tracing.hpp"
 

@@ -247,4 +247,7 @@ void ParameterFactory::initializeDefaultSetters() {
     registerEnumParameter<MaskPrincipalAxisParameters, PrincipalAxisType>(
             "Calculate Mask Principal Axis", "axis_type", &MaskPrincipalAxisParameters::axis_type, principal_axis_type_map);
 
+
+    // ==================== Mask Skeletonize ===============
+    // No parameters needed for mask skeletonize calculation
 }
