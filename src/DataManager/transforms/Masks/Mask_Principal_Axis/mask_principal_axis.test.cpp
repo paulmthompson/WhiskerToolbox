@@ -1,4 +1,4 @@
-#include "transforms/Masks/mask_principal_axis.hpp"
+#include "transforms/Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 
@@ -6,6 +6,15 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <cmath>
 #include <memory>
+
+#include "DataManager.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][principal_axis][transform]") {
     auto mask_data = std::make_shared<MaskData>();
@@ -329,5 +338,223 @@ TEST_CASE("MaskPrincipalAxisOperation - Operation interface", "[mask][principal_
         auto const & lines = result->getAtTime(TimeFrameIndex(60));
         REQUIRE(lines.size() == 1);
         REQUIRE(lines[0].size() == 2);
+    }
+}
+
+TEST_CASE("Data Transform: Mask Principal Axis - JSON pipeline", "[mask][principal_axis][transform][json]") {
+    // Create DataManager and populate it with MaskData in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test mask data in code - horizontal line
+    auto test_mask = std::make_shared<MaskData>();
+    test_mask->setTimeFrame(time_frame);
+    
+    // Add horizontal line mask at time 100
+    std::vector<uint32_t> x_coords = {0, 1, 2, 3, 4, 5};
+    std::vector<uint32_t> y_coords = {2, 2, 2, 2, 2, 2};
+    test_mask->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    
+    // Add vertical line mask at time 200
+    std::vector<uint32_t> x_coords_vert = {3, 3, 3, 3, 3, 3};
+    std::vector<uint32_t> y_coords_vert = {0, 1, 2, 3, 4, 5};
+    test_mask->addAtTime(TimeFrameIndex(200), x_coords_vert, y_coords_vert);
+    
+    // Add diagonal line mask at time 300
+    std::vector<uint32_t> x_coords_diag = {0, 1, 2, 3, 4};
+    std::vector<uint32_t> y_coords_diag = {0, 1, 2, 3, 4};
+    test_mask->addAtTime(TimeFrameIndex(300), x_coords_diag, y_coords_diag);
+    
+    // Store the mask data in DataManager with a known key
+    dm.setData("test_mask", test_mask, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Mask Principal Axis Pipeline\",\n"
+        "            \"description\": \"Test mask principal axis calculation on mask data\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Calculate Mask Principal Axis\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_mask\",\n"
+        "                \"output_key\": \"principal_axes\",\n"
+        "                \"parameters\": {\n"
+        "                    \"axis_type\": \"Major\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_principal_axis_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    auto result_lines = dm.getData<LineData>("principal_axes");
+    REQUIRE(result_lines != nullptr);
+    
+    // Verify the principal axis results - should have lines at all three timestamps
+    auto const & times = result_lines->getTimesWithData();
+    REQUIRE(times.size() == 3);
+    
+    // Verify each timestamp has exactly one line with 2 points
+    for (auto const & time : times) {
+        auto const & lines = result_lines->getAtTime(time);
+        REQUIRE(lines.size() == 1);
+        REQUIRE(lines[0].size() == 2);
+    }
+    
+    // Test another pipeline with minor axis parameter
+    const char* json_config_minor = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Mask Principal Axis Minor Pipeline\",\n"
+        "            \"description\": \"Test mask principal axis calculation with minor axis\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Calculate Mask Principal Axis\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_mask\",\n"
+        "                \"output_key\": \"minor_axes\",\n"
+        "                \"parameters\": {\n"
+        "                    \"axis_type\": \"Minor\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_minor = test_dir / "pipeline_config_minor.json";
+    {
+        std::ofstream json_file(json_filepath_minor);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_minor;
+        json_file.close();
+    }
+    
+    // Execute the minor axis pipeline
+    auto data_info_list_minor = load_data_from_json_config(&dm, json_filepath_minor.string());
+    
+    // Verify the minor axis results
+    auto result_lines_minor = dm.getData<LineData>("minor_axes");
+    REQUIRE(result_lines_minor != nullptr);
+    
+    auto const & times_minor = result_lines_minor->getTimesWithData();
+    REQUIRE(times_minor.size() == 3);
+    
+    // Verify each timestamp has exactly one line with 2 points
+    for (auto const & time : times_minor) {
+        auto const & lines = result_lines_minor->getAtTime(time);
+        REQUIRE(lines.size() == 1);
+        REQUIRE(lines[0].size() == 2);
+    }
+    
+    // Test with rectangle mask to verify major vs minor axis behavior
+    auto rectangle_mask = std::make_shared<MaskData>();
+    rectangle_mask->setTimeFrame(time_frame);
+    
+    // Create a rectangle that's wider than it is tall
+    std::vector<uint32_t> x_rect, y_rect;
+    for (uint32_t x = 0; x <= 6; ++x) {
+        for (uint32_t y = 0; y <= 2; ++y) {
+            x_rect.push_back(x);
+            y_rect.push_back(y);
+        }
+    }
+    rectangle_mask->addAtTime(TimeFrameIndex(400), x_rect, y_rect);
+    
+    dm.setData("rectangle_mask", rectangle_mask, TimeKey("default"));
+    
+    // Test major axis on rectangle
+    const char* json_config_rect_major = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Rectangle Major Axis Pipeline\",\n"
+        "            \"description\": \"Test major axis on rectangle mask\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Calculate Mask Principal Axis\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"rectangle_mask\",\n"
+        "                \"output_key\": \"rectangle_major_axes\",\n"
+        "                \"parameters\": {\n"
+        "                    \"axis_type\": \"Major\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_rect_major = test_dir / "pipeline_config_rect_major.json";
+    {
+        std::ofstream json_file(json_filepath_rect_major);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_rect_major;
+        json_file.close();
+    }
+    
+    // Execute the rectangle major axis pipeline
+    auto data_info_list_rect_major = load_data_from_json_config(&dm, json_filepath_rect_major.string());
+    
+    // Verify the rectangle major axis results
+    auto result_lines_rect_major = dm.getData<LineData>("rectangle_major_axes");
+    REQUIRE(result_lines_rect_major != nullptr);
+    
+    auto const & times_rect = result_lines_rect_major->getTimesWithData();
+    REQUIRE(times_rect.size() == 1);
+    
+    auto const & lines_rect = result_lines_rect_major->getAtTime(TimeFrameIndex(400));
+    REQUIRE(lines_rect.size() == 1);
+    REQUIRE(lines_rect[0].size() == 2);
+    
+    // Verify major axis is more horizontal than vertical for the rectangle
+    auto const & line = lines_rect[0];
+    float dx = line[1].x - line[0].x;
+    float dy = line[1].y - line[0].y;
+    float angle = std::atan2(std::abs(dy), std::abs(dx));
+    
+    // Major axis should be more horizontal than vertical for a wide rectangle
+    REQUIRE(angle < M_PI / 4.0f);
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 }

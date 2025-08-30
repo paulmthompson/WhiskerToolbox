@@ -66,7 +66,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Connected_Component/mask_connected_component.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Hole_Filling/mask_hole_filling.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Median_Filter/mask_median_filter.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_principal_axis.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Principal_Axis/mask_principal_axis.test.cpp
 
         # IO tests
         IO/line_data_csv.test.cpp

@@ -1,6 +1,8 @@
 #include "MaskPrincipalAxis_Widget.hpp"
 #include "ui_MaskPrincipalAxis_Widget.h"
 
+#include "DataManager/transforms/Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
+
 MaskPrincipalAxis_Widget::MaskPrincipalAxis_Widget(QWidget * parent)
     : TransformParameter_Widget(parent),
       ui(new Ui::MaskPrincipalAxis_Widget) {

@@ -11,6 +11,7 @@
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
+#include "Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
 
 #include <iostream>
 
@@ -238,6 +239,12 @@ void ParameterFactory::initializeDefaultSetters() {
             "Apply Median Filter", "window_size", &MaskMedianFilterParameters::window_size);
 
     // ==================== Mask Principal Axis ===============
-    // No parameters needed for mask principal axis calculation
+    std::unordered_map<std::string, PrincipalAxisType> principal_axis_type_map = {
+        {"Major", PrincipalAxisType::Major},
+        {"Minor", PrincipalAxisType::Minor}
+    };
+    
+    registerEnumParameter<MaskPrincipalAxisParameters, PrincipalAxisType>(
+            "Calculate Mask Principal Axis", "axis_type", &MaskPrincipalAxisParameters::axis_type, principal_axis_type_map);
 
 }
