@@ -9,7 +9,7 @@
 #include "Lines/Line_Angle/line_angle.hpp"
 #include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
-#include "Masks/mask_median_filter.hpp"
+#include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
 
 #include <iostream>
@@ -232,5 +232,12 @@ void ParameterFactory::initializeDefaultSetters() {
 
     // ==================== Mask Hole Filling ===============
     // No parameters needed for mask hole filling calculation
+
+    // ==================== Mask Median Filter ===============
+    registerBasicParameter<MaskMedianFilterParameters, int>(
+            "Apply Median Filter", "window_size", &MaskMedianFilterParameters::window_size);
+
+    // ==================== Mask Principal Axis ===============
+    // No parameters needed for mask principal axis calculation
 
 }

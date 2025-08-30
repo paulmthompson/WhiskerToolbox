@@ -5,6 +5,15 @@
 #include "Masks/Mask_Data.hpp"
 #include "DataManagerTypes.hpp"
 
+#include "DataManager.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
 TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
     
     SECTION("filters noise from simple mask") {
@@ -342,5 +351,257 @@ TEST_CASE("MaskMedianFilterOperation interface tests", "[mask_median_filter][ope
         auto result_masks = result_mask_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_masks.size() == 1);
         REQUIRE(result_masks[0].size() > 0); // Should have some content preserved
+    }
+} 
+
+TEST_CASE("Data Transform: Median Filter - JSON pipeline", "[transforms][mask_median_filter][json]") {
+    const nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "median_filter_step_1"},
+            {"transform_name", "Apply Median Filter"},
+            {"input_key", "TestMask"},
+            {"output_key", "FilteredMask"},
+            {"parameters", {
+                {"window_size", 3}
+            }}
+        }}}
+    };
+
+    DataManager dm;
+    TransformRegistry registry;
+
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+
+    // Create test mask data with noise
+    auto mask_data = std::make_shared<MaskData>();
+    mask_data->setImageSize({10, 10});
+    mask_data->setTimeFrame(time_frame);
+    
+    // Create a 4x4 solid square with noise
+    std::vector<Point2D<uint32_t>> solid_square;
+    for (uint32_t row = 3; row < 7; ++row) {
+        for (uint32_t col = 3; col < 7; ++col) {
+            solid_square.emplace_back(col, row);
+        }
+    }
+    
+    // Add isolated noise pixels
+    solid_square.emplace_back(0, 0); // Top-left corner
+    solid_square.emplace_back(9, 9); // Bottom-right corner
+    solid_square.emplace_back(1, 8); // Isolated pixel
+    
+    mask_data->addAtTime(TimeFrameIndex(0), solid_square);
+    dm.setData("TestMask", mask_data, TimeKey("default"));
+
+    TransformPipeline pipeline(&dm, &registry);
+    pipeline.loadFromJson(json_config);
+    pipeline.execute();
+
+    // Verify the results
+    auto filtered_mask = dm.getData<MaskData>("FilteredMask");
+    REQUIRE(filtered_mask != nullptr);
+    REQUIRE(filtered_mask->getTimesWithData().size() == 1);
+    
+    auto filtered_masks = filtered_mask->getAtTime(TimeFrameIndex(0));
+    REQUIRE(filtered_masks.size() == 1);
+    
+    // The solid square should mostly survive, isolated noise should be reduced
+    REQUIRE(filtered_masks[0].size() > 0);
+    REQUIRE(filtered_masks[0].size() < solid_square.size()); // Some noise removed
+    
+    // Check that core structure is preserved
+    bool found_core = false;
+    for (auto const& point : filtered_masks[0]) {
+        if (point.x >= 4 && point.x <= 5 && point.y >= 4 && point.y <= 5) {
+            found_core = true;
+            break;
+        }
+    }
+    REQUIRE(found_core); // Core of solid square should be preserved
+}
+
+TEST_CASE("Data Transform: Median Filter - load_data_from_json_config", "[transforms][mask_median_filter][json_config]") {
+    // Create DataManager and populate it with MaskData in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test mask data with noise
+    auto mask_data = std::make_shared<MaskData>();
+    mask_data->setImageSize({12, 12});
+    mask_data->setTimeFrame(time_frame);
+    
+    // Create a 5x5 solid square with noise
+    std::vector<Point2D<uint32_t>> pattern;
+    for (uint32_t row = 3; row < 8; ++row) {
+        for (uint32_t col = 3; col < 8; ++col) {
+            pattern.emplace_back(col, row);
+        }
+    }
+    
+    // Add noise
+    pattern.emplace_back(0, 0);
+    pattern.emplace_back(11, 11);
+    pattern.emplace_back(0, 11);
+    pattern.emplace_back(11, 0);
+    
+    mask_data->addAtTime(TimeFrameIndex(0), pattern);
+    
+    // Store the mask data in DataManager with a known key
+    dm.setData("test_mask", mask_data, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Median Filter Pipeline\",\n"
+        "            \"description\": \"Test median filtering on mask data\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Apply Median Filter\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_mask\",\n"
+        "                \"output_key\": \"filtered_mask\",\n"
+        "                \"parameters\": {\n"
+        "                    \"window_size\": 3\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_median_filter_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    auto result_mask = dm.getData<MaskData>("filtered_mask");
+    REQUIRE(result_mask != nullptr);
+    
+    // Verify the median filtering results
+    auto result_masks = result_mask->getAtTime(TimeFrameIndex(0));
+    REQUIRE(result_masks.size() == 1);
+    
+    // Should have reduced noise (fewer total pixels)
+    REQUIRE(result_masks[0].size() < pattern.size());
+    REQUIRE(result_masks[0].size() > 0); // But not empty
+    
+    // Test another pipeline with different parameters (larger window size)
+    const char* json_config_large_window = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Median Filter with Large Window\",\n"
+        "            \"description\": \"Test median filtering with larger window size\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Apply Median Filter\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_mask\",\n"
+        "                \"output_key\": \"filtered_mask_large_window\",\n"
+        "                \"parameters\": {\n"
+        "                    \"window_size\": 5\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_large_window = test_dir / "pipeline_config_large_window.json";
+    {
+        std::ofstream json_file(json_filepath_large_window);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_large_window;
+        json_file.close();
+    }
+    
+    // Execute the large window pipeline
+    auto data_info_list_large_window = load_data_from_json_config(&dm, json_filepath_large_window.string());
+    
+    // Verify the large window results
+    auto result_mask_large_window = dm.getData<MaskData>("filtered_mask_large_window");
+    REQUIRE(result_mask_large_window != nullptr);
+    
+    auto result_masks_large_window = result_mask_large_window->getAtTime(TimeFrameIndex(0));
+    REQUIRE(result_masks_large_window.size() == 1);
+    
+    // Larger window should produce different results than smaller window
+    REQUIRE(result_masks_large_window[0].size() != result_masks[0].size());
+    
+    // Test with default parameters (no window_size specified)
+    const char* json_config_default = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Median Filter with Default Parameters\",\n"
+        "            \"description\": \"Test median filtering with default parameters\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Apply Median Filter\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_mask\",\n"
+        "                \"output_key\": \"filtered_mask_default\",\n"
+        "                \"parameters\": {}\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_default = test_dir / "pipeline_config_default.json";
+    {
+        std::ofstream json_file(json_filepath_default);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_default;
+        json_file.close();
+    }
+    
+    // Execute the default parameters pipeline
+    auto data_info_list_default = load_data_from_json_config(&dm, json_filepath_default.string());
+    
+    // Verify the default parameters results
+    auto result_mask_default = dm.getData<MaskData>("filtered_mask_default");
+    REQUIRE(result_mask_default != nullptr);
+    
+    auto result_masks_default = result_mask_default->getAtTime(TimeFrameIndex(0));
+    REQUIRE(result_masks_default.size() == 1);
+    
+    // Should work with default parameters (window_size = 3)
+    REQUIRE(result_masks_default[0].size() > 0);
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 } 
