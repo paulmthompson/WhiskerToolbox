@@ -57,7 +57,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Angle/line_angle.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_min_point_dist.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Alignment/line_alignment.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Resample/line_resample.test.cpp
 

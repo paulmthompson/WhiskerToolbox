@@ -169,8 +169,8 @@ set(DATAMANAGER_SOURCES
         transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp
         transforms/Lines/Line_Angle/line_angle.hpp
         transforms/Lines/Line_Angle/line_angle.cpp
-        transforms/Lines/line_min_point_dist.hpp
-        transforms/Lines/line_min_point_dist.cpp
+        transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp
+        transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.cpp
         transforms/Lines/Line_Alignment/line_alignment.hpp
         transforms/Lines/Line_Alignment/line_alignment.cpp
         transforms/Lines/Line_Resample/line_resample.cpp

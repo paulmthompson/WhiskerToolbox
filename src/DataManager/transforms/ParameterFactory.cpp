@@ -7,6 +7,7 @@
 #include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "Lines/Line_Alignment/line_alignment.hpp"
 #include "Lines/Line_Angle/line_angle.hpp"
+#include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Masks/mask_area.hpp"
 #include "Masks/mask_median_filter.hpp"
@@ -193,6 +194,11 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<LineAngleParameters, float>(
             "Calculate Line Angle", "reference_y", &LineAngleParameters::reference_y);
+
+    // ==================== Line Min Point Dist ===============
+
+    registerDataParameter<LineMinPointDistParameters, PointData>(
+            "Calculate Line to Point Distance", "point_data", &LineMinPointDistParameters::point_data);
     
     // ==================== Line Resample ===============
 
