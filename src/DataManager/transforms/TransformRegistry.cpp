@@ -8,7 +8,7 @@
 #include "transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "transforms/Lines/Line_Alignment/line_alignment.hpp"
 #include "transforms/Lines/Line_Angle/line_angle.hpp"
-#include "transforms/Lines/line_clip.hpp"
+#include "transforms/Lines/Line_Clip/line_clip.hpp"
 #include "transforms/Lines/line_curvature.hpp"
 #include "transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "transforms/Lines/line_point_extraction.hpp"

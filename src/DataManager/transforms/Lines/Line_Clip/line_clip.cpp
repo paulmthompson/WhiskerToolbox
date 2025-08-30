@@ -25,8 +25,8 @@ std::optional<Point2D<float>> line_segment_intersection(
     }
     
     // Calculate parameters for intersection point
-    float dx = p1.x - p3.x;
-    float dy = p1.y - p3.y;
+    float dx = p3.x - p1.x;
+    float dy = p3.y - p1.y;
     
     float t1 = (dx * d2y - dy * d2x) / denominator;
     float t2 = (dx * d1y - dy * d1x) / denominator;
@@ -37,6 +37,7 @@ std::optional<Point2D<float>> line_segment_intersection(
         Point2D<float> intersection;
         intersection.x = p1.x + t1 * d1x;
         intersection.y = p1.y + t1 * d1y;
+        
         return intersection;
     }
     
@@ -252,6 +253,5 @@ DataTypeVariant LineClipOperation::execute(DataTypeVariant const & dataVariant,
         return {};
     }
     
-    std::cout << "LineClipOperation executed successfully." << std::endl;
     return result;
 } 

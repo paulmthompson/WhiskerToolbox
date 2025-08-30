@@ -7,6 +7,7 @@
 #include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "Lines/Line_Alignment/line_alignment.hpp"
 #include "Lines/Line_Angle/line_angle.hpp"
+#include "Lines/Line_Clip/line_clip.hpp"
 #include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
@@ -196,6 +197,21 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<LineAngleParameters, float>(
             "Calculate Line Angle", "reference_y", &LineAngleParameters::reference_y);
+
+    // ==================== Line Clip ===============
+
+    std::unordered_map<std::string, ClipSide> clip_side_map = {
+        {"KeepBase", ClipSide::KeepBase},    // Keep the portion from line start to intersection
+        {"KeepDistal", ClipSide::KeepDistal}   // Keep the portion from intersection to line end
+    };
+    registerEnumParameter<LineClipParameters, ClipSide>(
+            "Clip Line by Reference Line", "clip_side", &LineClipParameters::clip_side, clip_side_map);
+    
+    registerDataParameter<LineClipParameters, LineData>(
+            "Clip Line by Reference Line", "reference_line_data", &LineClipParameters::reference_line_data);
+    
+    registerBasicParameter<LineClipParameters, int>(
+            "Clip Line by Reference Line", "reference_frame", &LineClipParameters::reference_frame);
 
     // ==================== Line Min Point Dist ===============
 
