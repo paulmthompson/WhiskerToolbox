@@ -12,6 +12,7 @@
 #include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
 #include "Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
+#include "Masks/Mask_To_Line/mask_to_line.hpp"
 
 #include <iostream>
 
@@ -250,4 +251,38 @@ void ParameterFactory::initializeDefaultSetters() {
 
     // ==================== Mask Skeletonize ===============
     // No parameters needed for mask skeletonize calculation
+
+    // ==================== Mask To Line ===============
+
+    std::unordered_map<std::string, LinePointSelectionMethod> line_point_selection_method_map = {
+        {"NearestToReference", LinePointSelectionMethod::NearestToReference},
+        {"Skeletonize", LinePointSelectionMethod::Skeletonize}
+    };
+    registerEnumParameter<MaskToLineParameters, LinePointSelectionMethod>(
+            "Convert Mask To Line", "method", &MaskToLineParameters::method, line_point_selection_method_map);
+    
+    registerBasicParameter<MaskToLineParameters, float>(
+            "Convert Mask To Line", "reference_x", &MaskToLineParameters::reference_x);
+    
+    registerBasicParameter<MaskToLineParameters, float>(
+            "Convert Mask To Line", "reference_y", &MaskToLineParameters::reference_y);
+    
+    registerBasicParameter<MaskToLineParameters, int>(
+            "Convert Mask To Line", "polynomial_order", &MaskToLineParameters::polynomial_order);
+    
+    registerBasicParameter<MaskToLineParameters, float>(
+            "Convert Mask To Line", "error_threshold", &MaskToLineParameters::error_threshold);
+    
+    registerBasicParameter<MaskToLineParameters, bool>(
+            "Convert Mask To Line", "remove_outliers", &MaskToLineParameters::remove_outliers);
+    
+    registerBasicParameter<MaskToLineParameters, int>(
+            "Convert Mask To Line", "input_point_subsample_factor", &MaskToLineParameters::input_point_subsample_factor);
+    
+    registerBasicParameter<MaskToLineParameters, bool>(
+            "Convert Mask To Line", "should_smooth_line", &MaskToLineParameters::should_smooth_line);
+    
+    registerBasicParameter<MaskToLineParameters, float>(
+            "Convert Mask To Line", "output_resolution", &MaskToLineParameters::output_resolution);
+    
 }

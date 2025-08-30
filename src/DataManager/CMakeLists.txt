@@ -195,8 +195,8 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/Mask_Median_Filter/mask_median_filter.hpp
         transforms/Masks/Mask_Principal_Axis/mask_principal_axis.cpp
         transforms/Masks/Mask_Principal_Axis/mask_principal_axis.hpp
-        transforms/Masks/mask_to_line.cpp
-        transforms/Masks/mask_to_line.hpp
+        transforms/Masks/Mask_To_Line/mask_to_line.cpp
+        transforms/Masks/Mask_To_Line/mask_to_line.hpp
         transforms/Masks/Mask_Skeletonize/mask_skeletonize.cpp
         transforms/Masks/Mask_Skeletonize/mask_skeletonize.hpp
         transforms/Media/whisker_tracing.cpp

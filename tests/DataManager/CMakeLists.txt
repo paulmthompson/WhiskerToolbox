@@ -68,6 +68,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Median_Filter/mask_median_filter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Principal_Axis/mask_principal_axis.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Skeletonize/mask_skeletonize.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_To_Line/mask_to_line.test.cpp
 
         # IO tests
         IO/line_data_csv.test.cpp

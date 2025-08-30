@@ -295,6 +295,11 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
                                        MaskToLineParameters const * params,
                                        ProgressCallback progressCallback) {
 
+    if (!mask_data) {
+        std::cerr << "Error: mask_data is null." << std::endl;
+        return std::make_shared<LineData>();
+    }
+
     auto line_map = std::map<TimeFrameIndex, std::vector<Line2D>>();
 
     // Use default parameters if none provided
@@ -514,7 +519,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
 ///////////////////////////////////////////////////////////////////////////////// 
 
 std::string MaskToLineOperation::getName() const {
-    return "Convert Mask to Line";
+    return "Convert Mask To Line";
 }
 
 std::type_index MaskToLineOperation::getTargetInputTypeIndex() const {
