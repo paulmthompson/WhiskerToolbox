@@ -10,6 +10,7 @@
 #include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Masks/mask_median_filter.hpp"
+#include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
 
 #include <iostream>
 
@@ -224,4 +225,8 @@ void ParameterFactory::initializeDefaultSetters() {
 
     // ==================== Mask Centroid ===============
     // No parameters needed for mask centroid calculation
+
+    // ==================== Mask Connected Component ===============
+    registerBasicParameter<MaskConnectedComponentParameters, int>(
+            "Remove Small Connected Components", "threshold", &MaskConnectedComponentParameters::threshold);
 }

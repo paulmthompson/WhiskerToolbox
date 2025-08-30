@@ -6,6 +6,16 @@
 
 #include <set>
 
+#include "DataManager.hpp"
+#include "IO/LoaderRegistry.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+#include "transforms/ParameterFactory.hpp"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
 TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_component]") {
     
     SECTION("removes small components while preserving large ones") {
@@ -258,5 +268,203 @@ TEST_CASE("MaskConnectedComponentOperation interface", "[mask_connected_componen
         auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_masks.size() == 1);  // Only large component preserved
         REQUIRE(result_masks[0].size() == 12);  // Large component has 12 pixels
+    }
+} 
+
+TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transforms][mask_connected_component][json]") {
+    // Create DataManager and populate it with MaskData in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test mask data with multiple components of different sizes
+    auto test_mask = std::make_shared<MaskData>();
+    test_mask->setImageSize({10, 10});
+    test_mask->setTimeFrame(time_frame);
+    
+    // Large component (9 pixels) - should be preserved
+    std::vector<Point2D<uint32_t>> large_component = {
+        {1, 1}, {2, 1}, {3, 1},  // Row 1
+        {1, 2}, {2, 2}, {3, 2},  // Row 2  
+        {1, 3}, {2, 3}, {3, 3}   // Row 3 (3x3 square)
+    };
+    
+    // Small component (1 pixel) - should be removed
+    std::vector<Point2D<uint32_t>> small_component1 = {
+        {7, 1}  // Single pixel
+    };
+    
+    // Medium component (4 pixels) - should be preserved
+    std::vector<Point2D<uint32_t>> medium_component = {
+        {5, 5}, {6, 5}, {5, 6}, {6, 6}  // 2x2 square
+    };
+    
+    // Add all components to the mask
+    test_mask->addAtTime(TimeFrameIndex(0), large_component, false);
+    test_mask->addAtTime(TimeFrameIndex(0), small_component1, false);
+    test_mask->addAtTime(TimeFrameIndex(0), medium_component, false);
+    
+    // Store the mask data in DataManager with a known key
+    dm.setData("test_mask", test_mask, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Mask Connected Component Pipeline\",\n"
+        "            \"description\": \"Test connected component analysis on mask data\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Remove Small Connected Components\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_mask\",\n"
+        "                \"output_key\": \"filtered_mask\",\n"
+        "                \"parameters\": {\n"
+        "                    \"threshold\": 3\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_connected_component_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    auto result_mask = dm.getData<MaskData>("filtered_mask");
+    REQUIRE(result_mask != nullptr);
+    
+    // Verify the connected component filtering results
+    auto const & result_masks = result_mask->getAtTime(TimeFrameIndex(0));
+    REQUIRE(result_masks.size() == 2);  // Should have 2 components (large and medium)
+    
+    // Check that we have the correct total number of pixels
+    size_t total_pixels = 0;
+    for (auto const & mask : result_masks) {
+        total_pixels += mask.size();
+    }
+    REQUIRE(total_pixels == 13);  // 9 (large) + 4 (medium) = 13 pixels
+    
+    // Test another pipeline with different threshold (should remove more components)
+    const char* json_config_strict = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Strict Connected Component Filtering\",\n"
+        "            \"description\": \"Test connected component filtering with higher threshold\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Remove Small Connected Components\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_mask\",\n"
+        "                \"output_key\": \"strictly_filtered_mask\",\n"
+        "                \"parameters\": {\n"
+        "                    \"threshold\": 5\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_strict = test_dir / "pipeline_config_strict.json";
+    {
+        std::ofstream json_file(json_filepath_strict);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_strict;
+        json_file.close();
+    }
+    
+    // Execute the strict filtering pipeline
+    auto data_info_list_strict = load_data_from_json_config(&dm, json_filepath_strict.string());
+    
+    // Verify the strict filtering results
+    auto result_mask_strict = dm.getData<MaskData>("strictly_filtered_mask");
+    REQUIRE(result_mask_strict != nullptr);
+    
+    auto const & result_masks_strict = result_mask_strict->getAtTime(TimeFrameIndex(0));
+    REQUIRE(result_masks_strict.size() == 1);  // Should have only 1 component (large)
+    REQUIRE(result_masks_strict[0].size() == 9);  // Large component has 9 pixels
+    
+    // Test pipeline with very low threshold (should preserve all components)
+    const char* json_config_permissive = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Permissive Connected Component Filtering\",\n"
+        "            \"description\": \"Test connected component filtering with very low threshold\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Remove Small Connected Components\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_mask\",\n"
+        "                \"output_key\": \"permissive_filtered_mask\",\n"
+        "                \"parameters\": {\n"
+        "                    \"threshold\": 1\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_permissive = test_dir / "pipeline_config_permissive.json";
+    {
+        std::ofstream json_file(json_filepath_permissive);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_permissive;
+        json_file.close();
+    }
+    
+    // Execute the permissive filtering pipeline
+    auto data_info_list_permissive = load_data_from_json_config(&dm, json_filepath_permissive.string());
+    
+    // Verify the permissive filtering results
+    auto result_mask_permissive = dm.getData<MaskData>("permissive_filtered_mask");
+    REQUIRE(result_mask_permissive != nullptr);
+    
+    auto const & result_masks_permissive = result_mask_permissive->getAtTime(TimeFrameIndex(0));
+    REQUIRE(result_masks_permissive.size() == 3);  // Should preserve all 3 components
+    
+    // Check total pixels in permissive result
+    size_t total_pixels_permissive = 0;
+    for (auto const & mask : result_masks_permissive) {
+        total_pixels_permissive += mask.size();
+    }
+    REQUIRE(total_pixels_permissive == 14);  // 9 + 1 + 4 = 14 pixels
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 } 
