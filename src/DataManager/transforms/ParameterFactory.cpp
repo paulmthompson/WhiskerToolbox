@@ -12,6 +12,7 @@
 #include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "Lines/Line_Point_Extraction/line_point_extraction.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
+#include "Lines/Line_Subsegment/line_subsegment.hpp"
 #include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
 #include "Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
@@ -270,7 +271,29 @@ void ParameterFactory::initializeDefaultSetters() {
     registerBasicParameter<LineResampleParameters, float>(
             "Resample Line", "epsilon", &LineResampleParameters::epsilon);
 
-    std::cout << "Parameter factory initialized with default setters" << std::endl;
+    // ==================== Line Subsegment ===============
+
+    std::unordered_map<std::string, SubsegmentExtractionMethod> subsegment_extraction_method_map = {
+        {"Direct", SubsegmentExtractionMethod::Direct},          // Direct point extraction based on indices
+        {"Parametric", SubsegmentExtractionMethod::Parametric}       // Use parametric polynomial interpolation
+    };
+    registerEnumParameter<LineSubsegmentParameters, SubsegmentExtractionMethod>(
+            "Extract Line Subsegment", "method", &LineSubsegmentParameters::method, subsegment_extraction_method_map);
+    
+    registerBasicParameter<LineSubsegmentParameters, float>(
+            "Extract Line Subsegment", "start_position", &LineSubsegmentParameters::start_position);
+    
+    registerBasicParameter<LineSubsegmentParameters, float>(
+            "Extract Line Subsegment", "end_position", &LineSubsegmentParameters::end_position);
+    
+    registerBasicParameter<LineSubsegmentParameters, int>(
+            "Extract Line Subsegment", "polynomial_order", &LineSubsegmentParameters::polynomial_order);
+    
+    registerBasicParameter<LineSubsegmentParameters, int>(
+            "Extract Line Subsegment", "output_points", &LineSubsegmentParameters::output_points);
+    
+    registerBasicParameter<LineSubsegmentParameters, bool>(
+            "Extract Line Subsegment", "preserve_original_spacing", &LineSubsegmentParameters::preserve_original_spacing);
 
     // ====================================================
     // ============== Mask Series ==================

@@ -13,7 +13,7 @@
 #include "transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp"
 #include "transforms/Lines/Line_Resample/line_resample.hpp"
-#include "transforms/Lines/line_subsegment.hpp"
+#include "transforms/Lines/Line_Subsegment/line_subsegment.hpp"
 #include "transforms/Masks/Mask_Area/mask_area.hpp"
 #include "transforms/Masks/Mask_Centroid/mask_centroid.hpp"
 #include "transforms/Masks/Mask_Connected_Component/mask_connected_component.hpp"

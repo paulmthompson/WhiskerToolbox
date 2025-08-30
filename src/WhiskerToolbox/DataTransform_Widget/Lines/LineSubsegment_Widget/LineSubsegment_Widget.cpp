@@ -1,7 +1,7 @@
 #include "LineSubsegment_Widget.hpp"
 #include "ui_LineSubsegment_Widget.h"
 
-#include "DataManager/transforms/Lines/line_subsegment.hpp"
+#include "DataManager/transforms/Lines/Line_Subsegment/line_subsegment.hpp"
 
 LineSubsegment_Widget::LineSubsegment_Widget(QWidget *parent) :
     TransformParameter_Widget(parent),
