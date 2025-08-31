@@ -182,7 +182,7 @@ protected:
     std::shared_ptr<LineData> original_line_data;
 };
 
-TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV save and load through direct functions", "[LineData][CSV][IO]") {
+TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save and load through direct functions", "[LineData][CSV][IO]") {
     
     SECTION("Save LineData to CSV format") {
         bool save_success = saveCSVLineData();
@@ -212,7 +212,7 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV save and load thro
     }
 }
 
-TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV load through DataManager JSON config", "[LineData][CSV][IO][DataManager]") {
+TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV load through DataManager JSON config", "[LineData][CSV][IO][DataManager]") {
     
     SECTION("Load CSV LineData through DataManager") {
         // First save the data
@@ -284,7 +284,7 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV load through DataM
     }
 }
 
-TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV save/load through LoaderRegistry", "[LineData][CSV][IO][LoaderRegistry]") {
+TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save/load through LoaderRegistry", "[LineData][CSV][IO][LoaderRegistry]") {
     
     SECTION("Save LineData through LoaderRegistry") {
         // Create DataManager (which triggers loader registration)

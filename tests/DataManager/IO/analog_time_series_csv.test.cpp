@@ -123,7 +123,7 @@ protected:
     std::shared_ptr<AnalogTimeSeries> original_analog_data;
 };
 
-TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - AnalogTimeSeries - CSV save and load through direct functions", "[AnalogTimeSeries][CSV][IO]") {
+TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - IO - AnalogTimeSeries - CSV save and load through direct functions", "[AnalogTimeSeries][CSV][IO]") {
     
     SECTION("Save AnalogTimeSeries to CSV format") {
         bool save_success = saveCSVAnalogData();
@@ -194,7 +194,7 @@ TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - AnalogTimeSeries - CSV sa
     }
 }
 
-TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - AnalogTimeSeries - CSV load through DataManager JSON config", "[AnalogTimeSeries][CSV][IO][DataManager]") {
+TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - IO - AnalogTimeSeries - CSV load through DataManager JSON config", "[AnalogTimeSeries][CSV][IO][DataManager]") {
     
     SECTION("Load CSV AnalogTimeSeries through DataManager") {
         // First save the data

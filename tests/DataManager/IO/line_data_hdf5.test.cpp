@@ -179,7 +179,7 @@ protected:
     std::shared_ptr<LineData> original_line_data;
 };
 
-TEST_CASE_METHOD(LineDataHDF5TestFixture, "DM - LineData - HDF5 loader registration and JSON config parsing", "[LineData][HDF5][IO][DataManager]") {
+TEST_CASE_METHOD(LineDataHDF5TestFixture, "DM - IO - LineData - HDF5 loader registration and JSON config parsing", "[LineData][HDF5][IO][DataManager]") {
     
     SECTION("Test HDF5 loader registration and JSON config handling") {
         // Create a mock HDF5 file
@@ -266,7 +266,7 @@ TEST_CASE_METHOD(LineDataHDF5TestFixture, "DM - LineData - HDF5 loader registrat
     }
 }
 
-TEST_CASE_METHOD(LineDataHDF5TestFixture, "DM - LineData - HDF5 loader registration and format support", "[LineData][HDF5][IO]") {
+TEST_CASE_METHOD(LineDataHDF5TestFixture, "DM - IO - LineData - HDF5 loader registration and format support", "[LineData][HDF5][IO]") {
     
     SECTION("Verify HDF5 loader is registered and supports line format") {
         // Create DataManager (which triggers loader registration)
