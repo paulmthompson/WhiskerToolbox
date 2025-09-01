@@ -44,11 +44,13 @@ The Media_Window class
 Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * parent)
     : QGraphicsScene(parent),
       _data_manager{std::move(data_manager)} {
-    _createCanvasForData();
 
     _data_manager->addObserver([this]() {
         _addRemoveData();
     });
+
+    _canvasImage = QImage(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
+    _canvasPixmap = addPixmap(QPixmap::fromImage(_canvasImage));
 }
 
 Media_Window::~Media_Window() {
@@ -64,6 +66,22 @@ Media_Window::~Media_Window() {
     _intervals.clear();
     _tensors.clear();
     _text_items.clear();
+}
+
+void Media_Window::addMediaDataToScene(std::string const & media_key) {
+    auto media_config = std::make_unique<MediaDisplayOptions>();
+
+    _media_configs[media_key] = std::move(media_config);
+    UpdateCanvas();
+}
+
+void Media_Window::removeMediaDataFromScene(std::string const & media_key) {
+    auto mediaItem = _media_configs.find(media_key);
+    if (mediaItem != _media_configs.end()) {
+        _media_configs.erase(mediaItem);
+    }
+
+    UpdateCanvas();
 }
 
 void Media_Window::addLineDataToScene(std::string const & line_key) {
@@ -305,17 +323,18 @@ void Media_Window::_clearTextOverlays() {
 
 void Media_Window::LoadFrame(int frame_id) {
     // Get MediaData using the active media key
-    if (_active_media_key.empty()) {
-        std::cout << "No active media key set, skipping frame load" << std::endl;
-        return;
+    for (auto const & [media_key, media_config]: _media_configs) {
+        if (!media_config.get()->is_visible) {
+            continue;
+        }
+
+        auto media = _data_manager->getData<MediaData>(media_key);
+        if (!media) {
+            std::cerr << "Warning: No media data found for key '" << media_key << "'" << std::endl;
+            return;
+        }
+        media->LoadFrame(frame_id);
     }
-    
-    auto media = _data_manager->getData<MediaData>(_active_media_key);
-    if (!media) {
-        std::cerr << "Warning: No media data found for key '" << _active_media_key << "'" << std::endl;
-        return;
-    }
-    media->LoadFrame(frame_id);
 
     // Clear any accumulated drawing points when changing frames
     // This ensures no cross-frame accumulation and explains why lag disappears on frame change
@@ -353,81 +372,8 @@ void Media_Window::UpdateCanvas() {
     _clearTensors();
     _clearTextOverlays();
 
-    //_convertNewMediaToQImage();
-    if (_active_media_key.empty()) {
-        std::cout << "No active media key set, skipping canvas update" << std::endl;
-        return;
-    }
-    
-    auto _media = _data_manager->getData<MediaData>(_active_media_key);
-    if (!_media) {
-        std::cerr << "Warning: No media data found for key '" << _active_media_key << "'" << std::endl;
-        return;
-    }
-    auto const current_time = _data_manager->getCurrentTime();
-    auto media_data = _media->getProcessedData(current_time);
 
-    // Check for multi-channel mode (multiple enabled grayscale media)
-    QImage unscaled_image;
-    std::set<std::string> enabled_media_keys = _getEnabledMediaKeys();
-    
-    if (enabled_media_keys.size() > 1) {
-        // Multi-channel mode: combine multiple media with colormaps
-        unscaled_image = _combineMultipleMedia(enabled_media_keys, current_time);
-    } else {
-        // Single media mode: apply colormap if enabled (for grayscale images only)
-        if (_media->getFormat() == MediaData::DisplayFormat::Gray) {
-            // Try to get colormap options from MediaProcessing_Widget
-            auto colormap_data = _getColormapOptions();
-            if (!colormap_data.empty()) {
-                // Apply colormap and get BGRA data
-                unscaled_image = QImage(&colormap_data[0],
-                                       _media->getWidth(),
-                                       _media->getHeight(),
-                                       QImage::Format_RGBA8888);
-            } else {
-                // No colormap, use original grayscale data
-                unscaled_image = QImage(&media_data[0],
-                                       _media->getWidth(),
-                                       _media->getHeight(),
-                                       _getQImageFormat());
-            }
-        } else {
-            // Color image, use original data
-            unscaled_image = QImage(&media_data[0],
-                                   _media->getWidth(),
-                                   _media->getHeight(),
-                                   _getQImageFormat());
-        }
-    }
-
-    auto new_image = unscaled_image.scaled(
-            _canvasWidth,
-            _canvasHeight,
-            Qt::IgnoreAspectRatio,
-            Qt::SmoothTransformation);
-
-    // Check if any masks are in transparency mode
-    bool has_transparency_mask = false;
-    for (auto const & [mask_key, mask_config]: _mask_configs) {
-        if (mask_config->is_visible && mask_config->use_as_transparency) {
-            has_transparency_mask = true;
-            std::cout << "Found transparency mask: " << mask_key << std::endl;
-            break;
-        }
-    }
-
-    std::cout << "Has transparency masks: " << (has_transparency_mask ? "YES" : "NO") << std::endl;
-
-    // If we have transparency masks, modify the new_image
-    if (has_transparency_mask) {
-        new_image = _applyTransparencyMasks(new_image);
-    }
-
-    _canvasPixmap->setPixmap(QPixmap::fromImage(new_image));
-    _canvasImage = new_image;
-
-    // Check for manual selection with the currently rendered frame;
+    _plotMediaData();
 
     _plotLineData();
 
@@ -475,29 +421,9 @@ void Media_Window::UpdateCanvas() {
 }
 
 
-//Load media designated by frame_id
-//Media frame is loaded. It is then scaled to the
-//Canvas size, and the canvas is updated
-void Media_Window::_convertNewMediaToQImage() {
-    auto _media = _data_manager->getData<MediaData>(_active_media_key);
-    if (!_media) {
-        std::cerr << "Warning: No media data found for key '" << _active_media_key << "'" << std::endl;
-        return;
-    }
-    auto const current_time = _data_manager->getCurrentTime();
-    auto media_data = _media->getProcessedData(current_time);
+QImage::Format Media_Window::_getQImageFormat(std::string const & media_key) {
 
-    auto unscaled_image = QImage(&media_data[0],
-                                 _media->getWidth(),
-                                 _media->getHeight(),
-                                 _getQImageFormat());
-
-    _canvasImage = unscaled_image.scaled(_canvasWidth, _canvasHeight);
-}
-
-QImage::Format Media_Window::_getQImageFormat() {
-
-    auto _media = _data_manager->getData<MediaData>(_active_media_key);
+    auto _media = _data_manager->getData<MediaData>(media_key);
     if (!_media) {
         // Return a default format if no media is available
         return QImage::Format_Grayscale8;
@@ -510,119 +436,152 @@ QImage::Format Media_Window::_getQImageFormat() {
     }
 }
 
-std::vector<uint8_t> Media_Window::_getColormapOptions() {
-    // Return empty vector if no processing widget is available
-    if (!_processing_widget) {
-        std::cout << "DEBUG: No processing widget available" << std::endl;
-        return {};
-    }
-
-    // Get colormap options from the processing widget
-    auto options = _processing_widget->getColormapOptions();
-    
-    // Return empty vector if colormap is not active
-    if (!options.active) {
-        std::cout << "DEBUG: Colormap not active" << std::endl;
-        return {};
-    }
-
-    // Get the current media data
-    auto _media = _data_manager->getData<MediaData>(_active_media_key);
-    if (!_media) {
-        std::cout << "DEBUG: No media data available" << std::endl;
-        return {};
-    }
+void Media_Window::_plotMediaData() {
 
     auto const current_time = _data_manager->getCurrentTime();
-    auto media_data = _media->getProcessedData(current_time);
 
-    // Apply colormap and return BGRA data
-    auto result = ImageProcessing::apply_colormap_for_display(media_data, _media->getImageSize(), options);
-        
-    return result;
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
+
+    int total_visible_media = 0;
+    std::string active_media_key;
+    for (auto const & [media_key, _media_config]: _media_configs) {
+        if (!_media_config.get()->is_visible) continue;
+        total_visible_media++;
+        active_media_key = media_key;
+    }
+
+    if (total_visible_media == 0) {
+        return;
+    }
+
+    QImage unscaled_image;
+
+    if (total_visible_media == 1) {
+        auto media = _data_manager->getData<MediaData>(active_media_key);
+        if (!media) {
+            std::cerr << "Warning: No media data found for key '" << active_media_key << "'" << std::endl;
+            return;
+        }
+        auto media_data = media->getProcessedData(current_time);
+
+        if (media->getFormat() == MediaData::DisplayFormat::Gray) {
+
+            // Apply colormap and return BGRA data
+            auto colormap_data = ImageProcessing::apply_colormap_for_display(
+                    media_data,
+                    media->getImageSize(),
+                    _media_configs[active_media_key].get()->colormap_options);
+
+            if (!colormap_data.empty()) {
+                // Apply colormap and get BGRA data
+                unscaled_image = QImage(&colormap_data[0],
+                                        media->getWidth(),
+                                        media->getHeight(),
+                                        QImage::Format_RGBA8888);
+            } else {
+                // No colormap, use original grayscale data
+                unscaled_image = QImage(&media_data[0],
+                                        media->getWidth(),
+                                        media->getHeight(),
+                                        _getQImageFormat(active_media_key));
+            }
+        } else {
+            // Color image, use original data
+            unscaled_image = QImage(&media_data[0],
+                                    media->getWidth(),
+                                    media->getHeight(),
+                                    _getQImageFormat(active_media_key));
+        }
+    }
+
+
+    // Check for multi-channel mode (multiple enabled grayscale media)
+    if (total_visible_media > 1) {
+        // Multi-channel mode: combine multiple media with colormaps
+        unscaled_image = _combineMultipleMedia(active_media_key);
+    }
+
+    auto new_image = unscaled_image.scaled(
+            _canvasWidth,
+            _canvasHeight,
+            Qt::IgnoreAspectRatio,
+            Qt::SmoothTransformation);
+
+    // Check if any masks are in transparency mode
+    bool has_transparency_mask = false;
+    for (auto const & [mask_key, mask_config]: _mask_configs) {
+        if (mask_config->is_visible && mask_config->use_as_transparency) {
+            has_transparency_mask = true;
+            std::cout << "Found transparency mask: " << mask_key << std::endl;
+            break;
+        }
+    }
+
+    std::cout << "Has transparency masks: " << (has_transparency_mask ? "YES" : "NO") << std::endl;
+
+    // If we have transparency masks, modify the new_image
+    if (has_transparency_mask) {
+        new_image = _applyTransparencyMasks(new_image);
+    }
+
+    _canvasPixmap->setPixmap(QPixmap::fromImage(new_image));
+    _canvasImage = new_image;
 }
 
-std::set<std::string> Media_Window::_getEnabledMediaKeys() {
-    // Get enabled media keys from parent Media_Widget
-    if (!_parent_widget) {
-        return {};
-    }
-    
-    // Cast to Media_Widget and get enabled keys
-    auto media_widget = dynamic_cast<Media_Widget*>(_parent_widget);
-    if (!media_widget) {
-        return {};
-    }
-    
-    return media_widget->getEnabledMediaKeys();
-}
 
-QImage Media_Window::_combineMultipleMedia(std::set<std::string> const & enabled_keys, int current_time) {
-    if (enabled_keys.empty()) {
-        // Fallback to single media
-        auto _media = _data_manager->getData<MediaData>(_active_media_key);
-        if (!_media) return QImage();
-        
-        auto media_data = _media->getProcessedData(current_time);
-        return QImage(&media_data[0], _media->getWidth(), _media->getHeight(), _getQImageFormat());
-    }
-    
-    // Get dimensions from the first media (assume all have same dimensions)
-    auto first_media_key = *enabled_keys.begin();
-    auto first_media = _data_manager->getData<MediaData>(first_media_key);
+QImage Media_Window::_combineMultipleMedia(std::string const & active_media_key) {
+
+    auto current_time = _data_manager->getCurrentTime();
+
+    auto first_media = _data_manager->getData<MediaData>(active_media_key);
     if (!first_media) return QImage();
-    
+
     int const width = first_media->getWidth();
     int const height = first_media->getHeight();
-    
+
     // Create combined RGBA image
     QImage combined_image(width, height, QImage::Format_RGBA8888);
-    combined_image.fill(qRgba(0, 0, 0, 255)); // Start with black background
-    
-    std::cout << "Combining " << enabled_keys.size() << " media channels" << std::endl;
-    
-    for (auto const & media_key : enabled_keys) {
+    combined_image.fill(qRgba(0, 0, 0, 255));// Start with black background
+
+    std::cout << "Combining media channels" << std::endl;
+
+    for (auto const & [media_key, media_config]: _media_configs) {
+        if (!media_config->is_visible) continue;
+
         auto media = _data_manager->getData<MediaData>(media_key);
         if (!media || media->getFormat() != MediaData::DisplayFormat::Gray) {
-            continue; // Skip non-grayscale media
+            continue;// Skip non-grayscale media
         }
-        
+
         // Get processed data for this media
         auto media_data = media->getProcessedData(current_time);
-        
-        // Apply colormap specific to this media channel
-        std::vector<uint8_t> colormap_data;
-        if (_processing_widget) {
-            auto options = _processing_widget->getColormapOptions(media_key);
-            if (options.active) {
-                colormap_data = ImageProcessing::apply_colormap_for_display(media_data, media->getImageSize(), options);
-                std::cout << "Applied colormap type " << static_cast<int>(options.colormap) 
-                          << " to media '" << media_key << "'" << std::endl;
-            } else {
-                std::cout << "No colormap active for media '" << media_key << "'" << std::endl;
-            }
-        }
-        
-        // Blend this channel into the combined image
+
+        // Apply colormap and return BGRA data
+        auto colormap_data = ImageProcessing::apply_colormap_for_display(
+                media_data,
+                media->getImageSize(),
+                _media_configs[media_key].get()->colormap_options);
+
+        // If colormap data is available, use it
         if (!colormap_data.empty()) {
             // Use colormap data (RGBA)
             for (int y = 0; y < height; ++y) {
                 for (int x = 0; x < width; ++x) {
                     int const pixel_idx = (y * width + x) * 4;
-                    
+
                     uint8_t const r = colormap_data[pixel_idx];
                     uint8_t const g = colormap_data[pixel_idx + 1];
                     uint8_t const b = colormap_data[pixel_idx + 2];
                     uint8_t const a = colormap_data[pixel_idx + 3];
-                    
+
                     // Get current pixel from combined image
                     QRgb current_pixel = combined_image.pixel(x, y);
-                    
+
                     // Additive blending (common for multi-channel microscopy)
                     uint8_t const new_r = std::min(255, qRed(current_pixel) + r);
                     uint8_t const new_g = std::min(255, qGreen(current_pixel) + g);
                     uint8_t const new_b = std::min(255, qBlue(current_pixel) + b);
-                    
+
                     combined_image.setPixel(x, y, qRgba(new_r, new_g, new_b, 255));
                 }
             }
@@ -632,32 +591,22 @@ QImage Media_Window::_combineMultipleMedia(std::set<std::string> const & enabled
                 for (int x = 0; x < width; ++x) {
                     int const pixel_idx = y * width + x;
                     uint8_t const gray_value = media_data[pixel_idx];
-                    
+
                     // Get current pixel from combined image
                     QRgb current_pixel = combined_image.pixel(x, y);
-                    
+
                     // Additive blending
                     uint8_t const new_r = std::min(255, qRed(current_pixel) + gray_value);
                     uint8_t const new_g = std::min(255, qGreen(current_pixel) + gray_value);
                     uint8_t const new_b = std::min(255, qBlue(current_pixel) + gray_value);
-                    
+
                     combined_image.setPixel(x, y, qRgba(new_r, new_g, new_b, 255));
                 }
             }
         }
     }
-    
+
     return combined_image;
-}
-
-void Media_Window::_createCanvasForData() {
-
-    auto image_format = _getQImageFormat();
-
-    _mediaImage = QImage(_canvasWidth, _canvasHeight, image_format);
-    _canvasImage = QImage(_canvasWidth, _canvasHeight, image_format);
-
-    _canvasPixmap = addPixmap(QPixmap::fromImage(_canvasImage));
 }
 
 void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
@@ -778,9 +727,21 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
 
 float Media_Window::getXAspect() const {
 
-    auto _media = _data_manager->getData<MediaData>(_active_media_key);
+    std::string active_media_key;
+    for (auto const & [config_key, config]: _media_configs) {
+        if (config->is_visible) {
+            active_media_key = config_key;
+            break;
+        }
+    }
+    if (active_media_key.empty()) {
+        // No active media, return default aspect ratio
+        return 1.0f;
+    }
+
+    auto _media = _data_manager->getData<MediaData>(active_media_key);
     if (!_media) {
-        return 1.0f;  // Default aspect ratio
+        return 1.0f;// Default aspect ratio
     }
 
     float const scale_width = static_cast<float>(_canvasWidth) / static_cast<float>(_media->getWidth());
@@ -790,9 +751,21 @@ float Media_Window::getXAspect() const {
 
 float Media_Window::getYAspect() const {
 
-    auto _media = _data_manager->getData<MediaData>(_active_media_key);
+    std::string active_media_key;
+    for (auto const & [config_key, config]: _media_configs) {
+        if (config->is_visible) {
+            active_media_key = config_key;
+            break;
+        }
+    }
+    if (active_media_key.empty()) {
+        // No active media, return default aspect ratio
+        return 1.0f;
+    }
+
+    auto _media = _data_manager->getData<MediaData>(active_media_key);
     if (!_media) {
-        return 1.0f;  // Default aspect ratio
+        return 1.0f;// Default aspect ratio
     }
 
     float const scale_height = static_cast<float>(_canvasHeight) / static_cast<float>(_media->getHeight());

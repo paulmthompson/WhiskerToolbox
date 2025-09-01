@@ -114,11 +114,6 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     // Create and store reference to MediaProcessing_Widget
     _processing_widget = new MediaProcessing_Widget(_data_manager, _scene.get());
     ui->stackedWidget->addWidget(_processing_widget);
-    
-    // Connect processing widget to scene now that both exist
-    if (_scene && _processing_widget) {
-        _scene->setProcessingWidget(_processing_widget);
-    }
 
     // Connect text widget to scene if both are available
     _connectTextWidgetToScene();
@@ -149,6 +144,16 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 }
 
 void Media_Widget::_createOptions() {
+
+    //Setup Media Data
+    auto media_keys = _data_manager->getKeys<MediaData>();
+    for (auto media_key: media_keys) {
+        auto opts = _scene.get()->getMediaConfig(media_key);
+        if (opts.has_value()) continue;
+
+        _scene.get()->addMediaDataToScene(media_key);
+    }
+
     // Setup line data
     auto line_keys = _data_manager->getKeys<LineData>();
     for (auto line_key: line_keys) {
@@ -258,9 +263,9 @@ void Media_Widget::_featureSelected(QString const & feature) {
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
         
-        // Also set this as the active media key in the scene
-        _scene.get()->setActiveMediaKey(key);
-        _scene.get()->UpdateCanvas();
+        // Do NOT set as active media key or update canvas - only show controls for configuration
+        // The media will only be displayed when it's enabled via the checkbox
+        
     } else if (type == DM_DataType::Images) {
         // Images are handled similarly to Video, using the MediaProcessing_Widget
         int const stacked_widget_index = 6;
@@ -269,9 +274,8 @@ void Media_Widget::_featureSelected(QString const & feature) {
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
         
-        // Also set this as the active media key in the scene
-        _scene.get()->setActiveMediaKey(key);
-        _scene.get()->UpdateCanvas();
+        // Do NOT set as active media key or update canvas - only show controls for configuration
+        // The media will only be displayed when it's enabled via the checkbox
     } else {
         ui->stackedWidget->setCurrentIndex(0);
         std::cout << "Unsupported feature type" << std::endl;
@@ -410,45 +414,24 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
-        // Handle media enable/disable functionality
-        if (enabled) {
-            std::cout << "Enabling media data: " << feature_key << std::endl;
-            
-            // Add to enabled media keys
-            _enabled_media_keys.insert(feature_key);
-            
-            // Check if this is the first enabled media or if we should update active media
-            if (_enabled_media_keys.size() == 1) {
-                // First media enabled, set it as active
-                _scene.get()->setActiveMediaKey(feature_key);
-                std::cout << "Set active media key to: " << feature_key << std::endl;
-            } else {
-                // Multiple media enabled - keep current active media key for processing chain
-                // but notify scene that we have multiple enabled media for combination
-                std::cout << "Multiple media enabled (" << _enabled_media_keys.size() << "), enabling multi-channel mode" << std::endl;
-            }
-            
-        } else {
-            std::cout << "Disabling media data: " << feature_key << std::endl;
-            
-            // Remove from enabled media keys
-            _enabled_media_keys.erase(feature_key);
-            
-            // If this was the active media, select another one
-            if (_scene.get()->getActiveMediaKey() == feature_key) {
-                if (!_enabled_media_keys.empty()) {
-                    // Set the first available enabled media as active
-                    auto new_active = *_enabled_media_keys.begin();
-                    _scene.get()->setActiveMediaKey(new_active);
-                    std::cout << "Changed active media key to: " << new_active << std::endl;
-                } else {
-                    // No more enabled media
-                    _scene.get()->setActiveMediaKey("");
-                    std::cout << "No more enabled media" << std::endl;
-                }
-            }
+        auto opts = _scene.get()->getMediaConfig(feature_key);
+        if (!opts.has_value()) {
+            std::cerr << "Table feature key "
+                      << feature_key
+                      << " not found in Media_Window Display Options"
+                      << std::endl;
+            return;
         }
-    } else {
+        if (enabled) {
+            std::cout << "Enabling media data in scene" << std::endl;
+            opts.value()->is_visible = true;
+
+        } else {
+            std::cout << "Disabling media data from scene" << std::endl;
+            opts.value()->is_visible = false;
+        }
+    }
+    else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }
     _scene.get()->UpdateCanvas();
@@ -532,70 +515,9 @@ void Media_Widget::_createMediaWindow() {
     if (_data_manager) {
         _scene = std::make_unique<Media_Window>(_data_manager, this);
         
-        // Connect processing widget to scene if both are available
-        if (_processing_widget) {
-            _scene->setProcessingWidget(_processing_widget);
-        }
-        
         // Set parent widget reference for accessing enabled media keys
         _scene->setParentWidget(this);
         
         _connectTextWidgetToScene();
-    }
-}
-
-void Media_Widget::_disableAllMediaExcept(std::string const & exception_key) {
-    // Get all media keys
-    auto video_keys = _data_manager->getKeys<MediaData>();
-    
-    // For each media key that's not the exception, we need to uncheck it in the feature table
-    // This is complex because we need to access the feature table's checkboxes directly
-    // For now, we'll just disable them logically and let the UI handle the update
-    for (auto const & media_key : video_keys) {
-        if (media_key != exception_key) {
-            auto media_type = _data_manager->getType(media_key);
-            if (media_type == DM_DataType::Video || media_type == DM_DataType::Images) {
-                std::cout << "Should disable media key in UI: " << media_key << std::endl;
-                // TODO: Programmatically uncheck the checkbox in the feature table
-                // This would require a method in Feature_Table_Widget to set checkbox states
-            }
-        }
-    }
-}
-
-void Media_Widget::_selectAlternativeMedia(std::string const & disabled_key) {
-    // Get all media keys
-    auto video_keys = _data_manager->getKeys<MediaData>();
-    
-    // Find the first available media key that's not the disabled one
-    for (auto const & media_key : video_keys) {
-        auto media_type = _data_manager->getType(media_key);
-        if ((media_type == DM_DataType::Video || media_type == DM_DataType::Images) && 
-            media_key != disabled_key) {
-            
-            _scene.get()->setActiveMediaKey(media_key);
-            std::cout << "Switched active media to: " << media_key << std::endl;
-            _scene.get()->UpdateCanvas();
-            return;
-        }
-    }
-    
-    // If no alternative found, set to default
-    std::cout << "No alternative media found, setting to default 'media' key" << std::endl;
-    _scene.get()->setActiveMediaKey("media");
-}
-
-void Media_Widget::_setupDefaultMediaState() {
-    // Get all media keys
-    auto video_keys = _data_manager->getKeys<MediaData>();
-    
-    if (!video_keys.empty()) {
-        // Enable the first media key by default
-        std::string default_key = video_keys[0];
-        _scene.get()->setActiveMediaKey(default_key);
-        std::cout << "Set default active media to: " << default_key << std::endl;
-        
-        // Update the feature table to reflect this (this will require the table to be populated)
-        // The table should show the first media as enabled and others as disabled
     }
 }

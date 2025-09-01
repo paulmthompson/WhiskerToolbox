@@ -24,7 +24,6 @@ class QGraphicsPixmapItem;
 class QImage;
 class MediaMask_Widget;
 class MediaText_Widget;
-class MediaProcessing_Widget;
 class Media_Widget;
 
 struct TextOverlay;
@@ -56,6 +55,9 @@ public:
 
     ~Media_Window() override;
 
+    void addMediaDataToScene(std::string const & media_key);
+    void removeMediaDataFromScene(std::string const & media_key);
+
     void addLineDataToScene(std::string const & line_key);
     void removeLineDataFromScene(std::string const & line_key);
 
@@ -74,20 +76,6 @@ public:
     // Text overlay methods
     void setTextWidget(MediaText_Widget * text_widget);
 
-    // Media key management
-    void setActiveMediaKey(std::string const & media_key) {
-        _active_media_key = media_key;
-    }
-    
-    [[nodiscard]] std::string const & getActiveMediaKey() const {
-        return _active_media_key;
-    }
-
-    // Processing widget management
-    void setProcessingWidget(MediaProcessing_Widget* processing_widget) {
-        _processing_widget = processing_widget;
-    }
-    
     // Parent widget access for enabled media keys
     void setParentWidget(QWidget* parent_widget) {
         _parent_widget = parent_widget;
@@ -122,6 +110,14 @@ public:
 
     void setShowHoverCircle(bool show);
     void setHoverCircleRadius(int radius);
+
+    [[nodiscard]] std::optional<MediaDisplayOptions *> getMediaConfig(std::string const & media_key) const
+    {
+        if (_media_configs.find(media_key) == _media_configs.end()) {
+            return std::nullopt;
+        }
+        return _media_configs.at(media_key).get();
+    }
 
     [[nodiscard]] std::optional<LineDisplayOptions *> getLineConfig(std::string const & line_key) const {
         if (_line_configs.find(line_key) == _line_configs.end()) {
@@ -189,10 +185,8 @@ protected:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
-    MediaProcessing_Widget* _processing_widget = nullptr;
     QWidget* _parent_widget = nullptr;
 
-    QImage _mediaImage;
     QGraphicsPixmapItem * _canvasPixmap = nullptr;
     QImage _canvasImage;
 
@@ -219,6 +213,7 @@ private:
 
     std::vector<QPointF> _drawing_points;
 
+    std::unordered_map<std::string, std::unique_ptr<MediaDisplayOptions>> _media_configs;
     std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
     std::unordered_map<std::string, std::unique_ptr<MaskDisplayOptions>> _mask_configs;
     std::unordered_map<std::string, std::unique_ptr<PointDisplayOptions>> _point_configs;
@@ -232,15 +227,10 @@ private:
     // Text overlay support
     MediaText_Widget * _text_widget = nullptr;
 
-    // Active media key support
-    std::string _active_media_key = "media";  // Default to "media" for backward compatibility
+    QImage::Format _getQImageFormat(const std::string & media_key);
+    QImage _combineMultipleMedia(const std::string & active_media_key);
 
-    QImage::Format _getQImageFormat();
-    std::vector<uint8_t> _getColormapOptions();
-    std::set<std::string> _getEnabledMediaKeys();
-    QImage _combineMultipleMedia(std::set<std::string> const & enabled_keys, int current_time);
-    void _createCanvasForData();
-    void _convertNewMediaToQImage();
+    void _plotMediaData();
 
     void _plotLineData();
     void _clearLines();

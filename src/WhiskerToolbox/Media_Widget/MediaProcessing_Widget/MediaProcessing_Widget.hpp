@@ -5,9 +5,9 @@
 
 #include <QWidget>
 
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
 
 namespace Ui {
 class MediaProcessing_Widget;
@@ -32,19 +32,6 @@ public:
     ~MediaProcessing_Widget() override;
 
     void setActiveKey(std::string const & key);
-
-    /**
-     * @brief Get the current colormap options for display purposes
-     * @return Current ColormapOptions structure for the active media
-     */
-    ColormapOptions getColormapOptions() const;
-    
-    /**
-     * @brief Get colormap options for a specific media key
-     * @param media_key The media key to get options for
-     * @return ColormapOptions for the specified media
-     */
-    ColormapOptions getColormapOptions(std::string const & media_key) const;
 
 protected:
     void hideEvent(QHideEvent * event) override;
@@ -73,29 +60,17 @@ private:
     ColormapWidget * _colormap_widget;
     Section * _colormap_section;
 
-    // Current processing options
-    ContrastOptions _contrast_options;
-    GammaOptions _gamma_options;
-    SharpenOptions _sharpen_options;
-    ClaheOptions _clahe_options;
-    BilateralOptions _bilateral_options;
-    MedianOptions _median_options;
-    MagicEraserOptions _magic_eraser_options;
-    
-    // Per-media colormap options for multi-channel support
-    std::map<std::string, ColormapOptions> _per_media_colormap_options;
-
     void _setupProcessingWidgets();
-    void _applyContrastFilter();
-    void _applyGammaFilter();
-    void _applySharpenFilter();
-    void _applyClaheFilter();
-    void _applyBilateralFilter();
-    void _applyMedianFilter();
-    void _applyMagicEraser();
-    void _applyColormap();
-    
+    void _applyContrastFilter(ContrastOptions const & options);
+    void _applyGammaFilter(GammaOptions const & options);
+    void _applySharpenFilter(SharpenOptions const & options);
+    void _applyClaheFilter(ClaheOptions const & options);
+    void _applyBilateralFilter(BilateralOptions const & options);
+    void _applyMedianFilter(MedianOptions const & options);
+    void _applyMagicEraser(MagicEraserOptions const & options);
+
     void _loadProcessingChainFromMedia();
+
     void _updateColormapAvailability();
 
 private slots:
