@@ -188,8 +188,8 @@ protected:
         }
         
         // Check image size
-      //  REQUIRE(original_mask_data->getImageSize().width == loaded_data.getImageSize().width);
-      //  REQUIRE(original_mask_data->getImageSize().height == loaded_data.getImageSize().height);
+        REQUIRE(original_mask_data->getImageSize().width == loaded_data.getImageSize().width);
+        REQUIRE(original_mask_data->getImageSize().height == loaded_data.getImageSize().height);
     }
 
 protected:

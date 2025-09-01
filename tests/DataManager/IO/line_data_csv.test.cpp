@@ -108,7 +108,9 @@ protected:
     "delimiter": ",",
     "coordinate_delimiter": ",",
     "has_header": true,
-    "header_identifier": "Frame"
+    "header_identifier": "Frame",
+    "image_height": 600,
+    "image_width": 800
 }
 ])";
     }
@@ -171,8 +173,8 @@ protected:
         }
         
         // Check image size
-        //REQUIRE(original_line_data->getImageSize().width == loaded_data.getImageSize().width);
-        //REQUIRE(original_line_data->getImageSize().height == loaded_data.getImageSize().height);
+        REQUIRE(original_line_data->getImageSize().width == loaded_data.getImageSize().width);
+        REQUIRE(original_line_data->getImageSize().height == loaded_data.getImageSize().height);
     }
 
 protected:
@@ -207,7 +209,8 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save and load
         auto loaded_line_data = std::make_shared<LineData>(line_map);
         REQUIRE(loaded_line_data != nullptr);
         
-        // Verify the loaded data matches the original
+        // We set the size outside of the loader function
+        loaded_line_data->setImageSize(ImageSize(800, 600));
         verifyLineDataEquality(*loaded_line_data);
     }
 }
@@ -340,7 +343,9 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save/load thr
         config["coordinate_delimiter"] = ",";
         config["has_header"] = true;
         config["header_identifier"] = "Frame";
-        
+        config["image_height"] = 600;
+        config["image_width"] = 800;
+
         ConcreteDataFactory factory;
         auto load_result = registry.tryLoad("csv", 
                                           IODataType::Line, 
