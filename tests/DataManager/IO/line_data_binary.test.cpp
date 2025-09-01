@@ -153,8 +153,8 @@ protected:
         }
         
         // Check image size
-        //REQUIRE(original_line_data->getImageSize().width == loaded_data.getImageSize().width);
-        //REQUIRE(original_line_data->getImageSize().height == loaded_data.getImageSize().height);
+        REQUIRE(original_line_data->getImageSize().width == loaded_data.getImageSize().width);
+        REQUIRE(original_line_data->getImageSize().height == loaded_data.getImageSize().height);
     }
 
 protected:
