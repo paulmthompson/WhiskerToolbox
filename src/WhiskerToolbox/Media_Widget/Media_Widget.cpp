@@ -414,20 +414,38 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         if (enabled) {
             std::cout << "Enabling media data: " << feature_key << std::endl;
             
-            // Disable any currently active media first (only one can be active at a time)
-            _disableAllMediaExcept(feature_key);
+            // Add to enabled media keys
+            _enabled_media_keys.insert(feature_key);
             
-            // Set this media as the active one in the scene
-            _scene.get()->setActiveMediaKey(feature_key);
+            // Check if this is the first enabled media or if we should update active media
+            if (_enabled_media_keys.size() == 1) {
+                // First media enabled, set it as active
+                _scene.get()->setActiveMediaKey(feature_key);
+                std::cout << "Set active media key to: " << feature_key << std::endl;
+            } else {
+                // Multiple media enabled - keep current active media key for processing chain
+                // but notify scene that we have multiple enabled media for combination
+                std::cout << "Multiple media enabled (" << _enabled_media_keys.size() << "), enabling multi-channel mode" << std::endl;
+            }
             
-            std::cout << "Set active media key to: " << feature_key << std::endl;
         } else {
             std::cout << "Disabling media data: " << feature_key << std::endl;
             
-            // If this is the currently active media, we need to find another one to activate
-            // or clear the display
+            // Remove from enabled media keys
+            _enabled_media_keys.erase(feature_key);
+            
+            // If this was the active media, select another one
             if (_scene.get()->getActiveMediaKey() == feature_key) {
-                _selectAlternativeMedia(feature_key);
+                if (!_enabled_media_keys.empty()) {
+                    // Set the first available enabled media as active
+                    auto new_active = *_enabled_media_keys.begin();
+                    _scene.get()->setActiveMediaKey(new_active);
+                    std::cout << "Changed active media key to: " << new_active << std::endl;
+                } else {
+                    // No more enabled media
+                    _scene.get()->setActiveMediaKey("");
+                    std::cout << "No more enabled media" << std::endl;
+                }
             }
         }
     } else {
@@ -518,6 +536,9 @@ void Media_Widget::_createMediaWindow() {
         if (_processing_widget) {
             _scene->setProcessingWidget(_processing_widget);
         }
+        
+        // Set parent widget reference for accessing enabled media keys
+        _scene->setParentWidget(this);
         
         _connectTextWidgetToScene();
     }

@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -24,6 +25,7 @@ class QImage;
 class MediaMask_Widget;
 class MediaText_Widget;
 class MediaProcessing_Widget;
+class Media_Widget;
 
 struct TextOverlay;
 
@@ -84,6 +86,11 @@ public:
     // Processing widget management
     void setProcessingWidget(MediaProcessing_Widget* processing_widget) {
         _processing_widget = processing_widget;
+    }
+    
+    // Parent widget access for enabled media keys
+    void setParentWidget(QWidget* parent_widget) {
+        _parent_widget = parent_widget;
     }
 
     /**
@@ -183,6 +190,7 @@ protected:
 private:
     std::shared_ptr<DataManager> _data_manager;
     MediaProcessing_Widget* _processing_widget = nullptr;
+    QWidget* _parent_widget = nullptr;
 
     QImage _mediaImage;
     QGraphicsPixmapItem * _canvasPixmap = nullptr;
@@ -229,6 +237,8 @@ private:
 
     QImage::Format _getQImageFormat();
     std::vector<uint8_t> _getColormapOptions();
+    std::set<std::string> _getEnabledMediaKeys();
+    QImage _combineMultipleMedia(std::set<std::string> const & enabled_keys, int current_time);
     void _createCanvasForData();
     void _convertNewMediaToQImage();
 

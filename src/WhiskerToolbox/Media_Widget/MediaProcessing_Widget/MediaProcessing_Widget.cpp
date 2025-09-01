@@ -85,6 +85,14 @@ void MediaProcessing_Widget::setActiveKey(std::string const & key) {
     
     // Update colormap availability based on media format
     _updateColormapAvailability();
+    
+    // Load colormap options for this media and update the UI
+    if (_colormap_widget) {
+        auto colormap_options = getColormapOptions(key);
+        _colormap_widget->setOptions(colormap_options);
+        std::cout << "Loaded colormap options for media '" << key 
+                  << "' - Active: " << colormap_options.active << std::endl;
+    }
 }
 
 void MediaProcessing_Widget::_setupProcessingWidgets() {
@@ -229,7 +237,7 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     scroll_layout->insertWidget(scroll_layout->count() - 1, _colormap_section);
 
     // Set initial colormap options
-    _colormap_widget->setOptions(_colormap_options);
+    //_colormap_widget->setOptions(_colormap_options);
 }
 
 void MediaProcessing_Widget::_onContrastOptionsChanged(ContrastOptions const & options) {
@@ -550,6 +558,22 @@ void MediaProcessing_Widget::_applyMagicEraser() {
               << ", Has mask: " << (!_magic_eraser_options.mask.empty()) << std::endl;
 }
 
+ColormapOptions MediaProcessing_Widget::getColormapOptions() const {
+    if (_active_key.empty()) {
+        return ColormapOptions{}; // Return default options
+    }
+    return getColormapOptions(_active_key);
+}
+
+ColormapOptions MediaProcessing_Widget::getColormapOptions(std::string const & media_key) const {
+    auto it = _per_media_colormap_options.find(media_key);
+    if (it != _per_media_colormap_options.end()) {
+        return it->second;
+    }
+    // Return default options if not found
+    return ColormapOptions{};
+}
+
 void MediaProcessing_Widget::_applyColormap() {
     if (_active_key.empty()) return;
 
@@ -561,8 +585,10 @@ void MediaProcessing_Widget::_applyColormap() {
         _scene->UpdateCanvas();
     }
 
-    std::cout << "Colormap display options updated - Active: " << _colormap_options.active
-              << ", Type: " << static_cast<int>(_colormap_options.colormap) << std::endl;
+    auto current_options = getColormapOptions(_active_key);
+    std::cout << "Colormap display options updated for '" << _active_key 
+              << "' - Active: " << current_options.active
+              << ", Type: " << static_cast<int>(current_options.colormap) << std::endl;
 }
 
 void MediaProcessing_Widget::_updateColormapAvailability() {
@@ -584,12 +610,16 @@ void MediaProcessing_Widget::_updateColormapAvailability() {
 }
 
 void MediaProcessing_Widget::_onColormapOptionsChanged(ColormapOptions const & options) {
-    _colormap_options = options;
-    _applyColormap();
+    // Store options for the current active media key
+    if (!_active_key.empty()) {
+        _per_media_colormap_options[_active_key] = options;
+        _applyColormap();
 
-    std::cout << "Colormap options changed - Active: " << options.active
-              << ", Type: " << static_cast<int>(options.colormap)
-              << ", Alpha: " << options.alpha << std::endl;
+        std::cout << "Colormap options changed for media '" << _active_key 
+                  << "' - Active: " << options.active
+                  << ", Type: " << static_cast<int>(options.colormap)
+                  << ", Alpha: " << options.alpha << std::endl;
+    }
 }
 
 void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
@@ -656,11 +686,6 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
         std::cout << "Found magic eraser processing step" << std::endl;
     }
     
-    if (media_data->hasProcessingStep("8__colormap")) {
-        _colormap_options.active = true;
-        std::cout << "Found colormap processing step" << std::endl;
-    }
-
     // Update all UI widgets with the loaded options
     if (_contrast_widget) {
         _contrast_widget->setOptions(_contrast_options);
@@ -684,7 +709,7 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
         _magic_eraser_widget->setOptions(_magic_eraser_options);
     }
     if (_colormap_widget) {
-        _colormap_widget->setOptions(_colormap_options);
+        _colormap_widget->setOptions(getColormapOptions(_active_key));
     }
 
     // Update colormap availability based on media format

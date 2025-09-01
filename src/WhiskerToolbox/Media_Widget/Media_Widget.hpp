@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <memory>
+#include <set>
 
 class DataManager;
 class Media_Window;
@@ -28,6 +29,12 @@ public:
      * @return Pointer to the Media_Window
      */
     Media_Window* getMediaWindow() const { return _scene.get(); }
+    
+    /**
+     * @brief Get the list of enabled media keys for multi-channel support
+     * @return Set of enabled media key strings
+     */
+    std::set<std::string> getEnabledMediaKeys() const { return _enabled_media_keys; }
 
     void updateMedia();
 
@@ -51,6 +58,9 @@ private:
     
     // Processing widget for colormap options
     MediaProcessing_Widget * _processing_widget = nullptr;
+    
+    // Track enabled media keys for multi-channel support
+    std::set<std::string> _enabled_media_keys;
 
     void _createOptions();
     void _createMediaWindow();

@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <map>
 
 namespace Ui {
 class MediaProcessing_Widget;
@@ -34,9 +35,16 @@ public:
 
     /**
      * @brief Get the current colormap options for display purposes
-     * @return Current ColormapOptions structure
+     * @return Current ColormapOptions structure for the active media
      */
-    ColormapOptions getColormapOptions() const { return _colormap_options; }
+    ColormapOptions getColormapOptions() const;
+    
+    /**
+     * @brief Get colormap options for a specific media key
+     * @param media_key The media key to get options for
+     * @return ColormapOptions for the specified media
+     */
+    ColormapOptions getColormapOptions(std::string const & media_key) const;
 
 protected:
     void hideEvent(QHideEvent * event) override;
@@ -73,7 +81,9 @@ private:
     BilateralOptions _bilateral_options;
     MedianOptions _median_options;
     MagicEraserOptions _magic_eraser_options;
-    ColormapOptions _colormap_options;
+    
+    // Per-media colormap options for multi-channel support
+    std::map<std::string, ColormapOptions> _per_media_colormap_options;
 
     void _setupProcessingWidgets();
     void _applyContrastFilter();
