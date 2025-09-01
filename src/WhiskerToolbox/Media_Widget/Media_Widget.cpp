@@ -110,7 +110,15 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene.get()));
     ui->stackedWidget->addWidget(new MediaInterval_Widget(_data_manager, _scene.get()));
     ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene.get()));
-    ui->stackedWidget->addWidget(new MediaProcessing_Widget(_data_manager, _scene.get()));
+    
+    // Create and store reference to MediaProcessing_Widget
+    _processing_widget = new MediaProcessing_Widget(_data_manager, _scene.get());
+    ui->stackedWidget->addWidget(_processing_widget);
+    
+    // Connect processing widget to scene now that both exist
+    if (_scene && _processing_widget) {
+        _scene->setProcessingWidget(_processing_widget);
+    }
 
     // Connect text widget to scene if both are available
     _connectTextWidgetToScene();
@@ -505,6 +513,12 @@ void Media_Widget::LoadFrame(int frame_id) {
 void Media_Widget::_createMediaWindow() {
     if (_data_manager) {
         _scene = std::make_unique<Media_Window>(_data_manager, this);
+        
+        // Connect processing widget to scene if both are available
+        if (_processing_widget) {
+            _scene->setProcessingWidget(_processing_widget);
+        }
+        
         _connectTextWidgetToScene();
     }
 }

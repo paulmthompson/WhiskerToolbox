@@ -3,6 +3,7 @@
 
 #include "ProcessingOptions/BilateralWidget.hpp"
 #include "ProcessingOptions/ClaheWidget.hpp"
+#include "ProcessingOptions/ColormapWidget.hpp"
 #include "ProcessingOptions/ContrastWidget.hpp"
 #include "ProcessingOptions/GammaWidget.hpp"
 #include "ProcessingOptions/MagicEraserWidget.hpp"
@@ -39,7 +40,9 @@ MediaProcessing_Widget::MediaProcessing_Widget(std::shared_ptr<DataManager> data
       _median_widget(nullptr),
       _median_section(nullptr),
       _magic_eraser_widget(nullptr),
-      _magic_eraser_section(nullptr) {
+      _magic_eraser_section(nullptr),
+      _colormap_widget(nullptr),
+      _colormap_section(nullptr) {
 
     ui->setupUi(this);
 
@@ -79,6 +82,9 @@ void MediaProcessing_Widget::setActiveKey(std::string const & key) {
     
     // Load the processing chain from the selected media
     _loadProcessingChainFromMedia();
+    
+    // Update colormap availability based on media format
+    _updateColormapAvailability();
 }
 
 void MediaProcessing_Widget::_setupProcessingWidgets() {
@@ -207,6 +213,23 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
 
     // Set initial magic eraser options
     _magic_eraser_widget->setOptions(_magic_eraser_options);
+
+    // Create colormap section
+    _colormap_widget = new ColormapWidget(this);
+    _colormap_section = new Section(this, "Colormap");
+    _colormap_section->setContentLayout(*new QVBoxLayout());
+    _colormap_section->layout()->addWidget(_colormap_widget);
+    _colormap_section->autoSetContentLayout();
+
+    // Connect colormap widget signals
+    connect(_colormap_widget, &ColormapWidget::optionsChanged,
+            this, &MediaProcessing_Widget::_onColormapOptionsChanged);
+
+    // Add colormap section to the scroll layout (before the spacer)
+    scroll_layout->insertWidget(scroll_layout->count() - 1, _colormap_section);
+
+    // Set initial colormap options
+    _colormap_widget->setOptions(_colormap_options);
 }
 
 void MediaProcessing_Widget::_onContrastOptionsChanged(ContrastOptions const & options) {
@@ -527,6 +550,48 @@ void MediaProcessing_Widget::_applyMagicEraser() {
               << ", Has mask: " << (!_magic_eraser_options.mask.empty()) << std::endl;
 }
 
+void MediaProcessing_Widget::_applyColormap() {
+    if (_active_key.empty()) return;
+
+    // Colormap is now applied at display level, not in processing chain
+    // Just store the options and update the canvas to trigger display-level colormap
+    
+    // Update the canvas to apply colormap at display level
+    if (_scene) {
+        _scene->UpdateCanvas();
+    }
+
+    std::cout << "Colormap display options updated - Active: " << _colormap_options.active
+              << ", Type: " << static_cast<int>(_colormap_options.colormap) << std::endl;
+}
+
+void MediaProcessing_Widget::_updateColormapAvailability() {
+    if (!_colormap_widget || _active_key.empty()) {
+        return;
+    }
+
+    auto media_data = _data_manager->getData<MediaData>(_active_key);
+    if (!media_data) {
+        _colormap_widget->setColormapEnabled(false);
+        return;
+    }
+
+    // Enable colormap only for grayscale images
+    bool is_grayscale = (media_data->getFormat() == MediaData::DisplayFormat::Gray);
+    _colormap_widget->setColormapEnabled(is_grayscale);
+
+    std::cout << "Colormap availability updated - Grayscale: " << (is_grayscale ? "YES" : "NO") << std::endl;
+}
+
+void MediaProcessing_Widget::_onColormapOptionsChanged(ColormapOptions const & options) {
+    _colormap_options = options;
+    _applyColormap();
+
+    std::cout << "Colormap options changed - Active: " << options.active
+              << ", Type: " << static_cast<int>(options.colormap)
+              << ", Alpha: " << options.alpha << std::endl;
+}
+
 void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
     if (_active_key.empty()) {
         std::cout << "No active key set, cannot load processing chain" << std::endl;
@@ -590,6 +655,11 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
         _magic_eraser_options.active = true;
         std::cout << "Found magic eraser processing step" << std::endl;
     }
+    
+    if (media_data->hasProcessingStep("8__colormap")) {
+        _colormap_options.active = true;
+        std::cout << "Found colormap processing step" << std::endl;
+    }
 
     // Update all UI widgets with the loaded options
     if (_contrast_widget) {
@@ -613,6 +683,12 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
     if (_magic_eraser_widget) {
         _magic_eraser_widget->setOptions(_magic_eraser_options);
     }
+    if (_colormap_widget) {
+        _colormap_widget->setOptions(_colormap_options);
+    }
+
+    // Update colormap availability based on media format
+    _updateColormapAvailability();
 
     std::cout << "Processing chain loaded and UI updated" << std::endl;
 }

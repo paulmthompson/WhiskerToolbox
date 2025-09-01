@@ -23,6 +23,7 @@ class QGraphicsPixmapItem;
 class QImage;
 class MediaMask_Widget;
 class MediaText_Widget;
+class MediaProcessing_Widget;
 
 struct TextOverlay;
 
@@ -78,6 +79,11 @@ public:
     
     [[nodiscard]] std::string const & getActiveMediaKey() const {
         return _active_media_key;
+    }
+
+    // Processing widget management
+    void setProcessingWidget(MediaProcessing_Widget* processing_widget) {
+        _processing_widget = processing_widget;
     }
 
     /**
@@ -176,6 +182,7 @@ protected:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
+    MediaProcessing_Widget* _processing_widget = nullptr;
 
     QImage _mediaImage;
     QGraphicsPixmapItem * _canvasPixmap = nullptr;
@@ -221,6 +228,7 @@ private:
     std::string _active_media_key = "media";  // Default to "media" for backward compatibility
 
     QImage::Format _getQImageFormat();
+    std::vector<uint8_t> _getColormapOptions();
     void _createCanvasForData();
     void _convertNewMediaToQImage();
 

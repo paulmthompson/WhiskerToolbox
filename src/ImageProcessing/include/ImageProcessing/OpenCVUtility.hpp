@@ -113,6 +113,26 @@ std::vector<uint8_t> apply_magic_eraser_with_options(std::vector<uint8_t> const&
  */
 void apply_magic_eraser(cv::Mat& mat, MagicEraserOptions const& options);
 
+/**
+ * @brief Apply colormap to grayscale image
+ * @param mat Input/output image matrix (modified in place)
+ * @param options Colormap options containing colormap type and parameters
+ * @note Only applies to single-channel (grayscale) images
+ */
+void apply_colormap(cv::Mat& mat, ColormapOptions const& options);
+
+/**
+ * @brief Apply colormap to grayscale data for display purposes only
+ * @param grayscale_data Input grayscale image data
+ * @param image_size Dimensions of the image  
+ * @param options Colormap options containing colormap type and parameters
+ * @return BGRA image data if colormap is applied, empty vector if not applied
+ * @note This function does not modify the input data, only creates display output
+ */
+std::vector<uint8_t> apply_colormap_for_display(std::vector<uint8_t> const& grayscale_data,
+                                               ImageSize image_size,
+                                               ColormapOptions const& options);
+
 } // namespace ImageProcessing
 
 #endif // IMAGE_PROCESSING_OPENCV_UTILITY_HPP

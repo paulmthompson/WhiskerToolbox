@@ -9,7 +9,9 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "ImageProcessing/OpenCVUtility.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
 #include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
@@ -364,10 +366,31 @@ void Media_Window::UpdateCanvas() {
     auto const current_time = _data_manager->getCurrentTime();
     auto media_data = _media->getProcessedData(current_time);
 
-    auto unscaled_image = QImage(&media_data[0],
-                                 _media->getWidth(),
-                                 _media->getHeight(),
-                                 _getQImageFormat());
+    // Apply colormap if enabled (for grayscale images only)
+    QImage unscaled_image;
+    if (_media->getFormat() == MediaData::DisplayFormat::Gray) {
+        // Try to get colormap options from MediaProcessing_Widget
+        auto colormap_data = _getColormapOptions();
+        if (!colormap_data.empty()) {
+            // Apply colormap and get BGRA data
+            unscaled_image = QImage(&colormap_data[0],
+                                   _media->getWidth(),
+                                   _media->getHeight(),
+                                   QImage::Format_RGBA8888);
+        } else {
+            // No colormap, use original grayscale data
+            unscaled_image = QImage(&media_data[0],
+                                   _media->getWidth(),
+                                   _media->getHeight(),
+                                   _getQImageFormat());
+        }
+    } else {
+        // Color image, use original data
+        unscaled_image = QImage(&media_data[0],
+                               _media->getWidth(),
+                               _media->getHeight(),
+                               _getQImageFormat());
+    }
 
     auto new_image = unscaled_image.scaled(
             _canvasWidth,
@@ -476,6 +499,38 @@ QImage::Format Media_Window::_getQImageFormat() {
         case MediaData::DisplayFormat::Color:
             return QImage::Format_RGBA8888;
     }
+}
+
+std::vector<uint8_t> Media_Window::_getColormapOptions() {
+    // Return empty vector if no processing widget is available
+    if (!_processing_widget) {
+        std::cout << "DEBUG: No processing widget available" << std::endl;
+        return {};
+    }
+
+    // Get colormap options from the processing widget
+    auto options = _processing_widget->getColormapOptions();
+    
+    // Return empty vector if colormap is not active
+    if (!options.active) {
+        std::cout << "DEBUG: Colormap not active" << std::endl;
+        return {};
+    }
+
+    // Get the current media data
+    auto _media = _data_manager->getData<MediaData>(_active_media_key);
+    if (!_media) {
+        std::cout << "DEBUG: No media data available" << std::endl;
+        return {};
+    }
+
+    auto const current_time = _data_manager->getCurrentTime();
+    auto media_data = _media->getProcessedData(current_time);
+
+    // Apply colormap and return BGRA data
+    auto result = ImageProcessing::apply_colormap_for_display(media_data, _media->getImageSize(), options);
+        
+    return result;
 }
 
 void Media_Window::_createCanvasForData() {

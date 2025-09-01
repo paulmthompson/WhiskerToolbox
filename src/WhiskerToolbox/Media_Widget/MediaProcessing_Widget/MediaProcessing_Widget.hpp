@@ -21,6 +21,7 @@ class ClaheWidget;
 class BilateralWidget;
 class MedianWidget;
 class MagicEraserWidget;
+class ColormapWidget;
 class Section;
 
 class MediaProcessing_Widget : public QWidget {
@@ -30,6 +31,12 @@ public:
     ~MediaProcessing_Widget() override;
 
     void setActiveKey(std::string const & key);
+
+    /**
+     * @brief Get the current colormap options for display purposes
+     * @return Current ColormapOptions structure
+     */
+    ColormapOptions getColormapOptions() const { return _colormap_options; }
 
 protected:
     void hideEvent(QHideEvent * event) override;
@@ -55,6 +62,8 @@ private:
     Section * _median_section;
     MagicEraserWidget * _magic_eraser_widget;
     Section * _magic_eraser_section;
+    ColormapWidget * _colormap_widget;
+    Section * _colormap_section;
 
     // Current processing options
     ContrastOptions _contrast_options;
@@ -64,6 +73,7 @@ private:
     BilateralOptions _bilateral_options;
     MedianOptions _median_options;
     MagicEraserOptions _magic_eraser_options;
+    ColormapOptions _colormap_options;
 
     void _setupProcessingWidgets();
     void _applyContrastFilter();
@@ -73,8 +83,10 @@ private:
     void _applyBilateralFilter();
     void _applyMedianFilter();
     void _applyMagicEraser();
+    void _applyColormap();
     
     void _loadProcessingChainFromMedia();
+    void _updateColormapAvailability();
 
 private slots:
     void _onContrastOptionsChanged(ContrastOptions const & options);
@@ -87,6 +99,7 @@ private slots:
     void _onMagicEraserDrawingModeChanged(bool enabled);
     void _onDrawingFinished();
     void _onMagicEraserClearMaskRequested();
+    void _onColormapOptionsChanged(ColormapOptions const & options);
 };
 
 #endif// MEDIAPROCESSING_WIDGET_HPP

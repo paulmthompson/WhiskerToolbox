@@ -7,6 +7,7 @@
 class DataManager;
 class Media_Window;
 class MediaText_Widget;
+class MediaProcessing_Widget;
 class Section;
 
 namespace Ui {
@@ -47,6 +48,9 @@ private:
     // Text overlay widgets
     Section * _text_section = nullptr;
     MediaText_Widget * _text_widget = nullptr;
+    
+    // Processing widget for colormap options
+    MediaProcessing_Widget * _processing_widget = nullptr;
 
     void _createOptions();
     void _createMediaWindow();

@@ -310,4 +310,205 @@ void apply_magic_eraser(cv::Mat& mat, MagicEraserOptions const& options) {
     }
 }
 
+void apply_colormap(cv::Mat& mat, ColormapOptions const& options) {
+    if (!options.active || options.colormap == ColormapType::None) {
+        return;
+    }
+    
+    // Only apply to grayscale images
+    if (mat.channels() != 1) {
+        return;
+    }
+    
+    cv::Mat normalized_mat;
+    if (options.normalize) {
+        // Normalize to 0-255 range
+        cv::normalize(mat, normalized_mat, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    } else {
+        normalized_mat = mat.clone();
+    }
+    
+    // Apply the colormap
+    cv::Mat colored_mat;
+    int cv_colormap = cv::COLORMAP_JET; // default
+    
+    switch (options.colormap) {
+        case ColormapType::Jet:
+            cv_colormap = cv::COLORMAP_JET;
+            break;
+        case ColormapType::Hot:
+            cv_colormap = cv::COLORMAP_HOT;
+            break;
+        case ColormapType::Cool:
+            cv_colormap = cv::COLORMAP_COOL;
+            break;
+        case ColormapType::Spring:
+            cv_colormap = cv::COLORMAP_SPRING;
+            break;
+        case ColormapType::Summer:
+            cv_colormap = cv::COLORMAP_SUMMER;
+            break;
+        case ColormapType::Autumn:
+            cv_colormap = cv::COLORMAP_AUTUMN;
+            break;
+        case ColormapType::Winter:
+            cv_colormap = cv::COLORMAP_WINTER;
+            break;
+        case ColormapType::Rainbow:
+            cv_colormap = cv::COLORMAP_RAINBOW;
+            break;
+        case ColormapType::Ocean:
+            cv_colormap = cv::COLORMAP_OCEAN;
+            break;
+        case ColormapType::Pink:
+            cv_colormap = cv::COLORMAP_PINK;
+            break;
+        case ColormapType::HSV:
+            cv_colormap = cv::COLORMAP_HSV;
+            break;
+        case ColormapType::Parula:
+            cv_colormap = cv::COLORMAP_PARULA;
+            break;
+        case ColormapType::Viridis:
+            cv_colormap = cv::COLORMAP_VIRIDIS;
+            break;
+        case ColormapType::Plasma:
+            cv_colormap = cv::COLORMAP_PLASMA;
+            break;
+        case ColormapType::Inferno:
+            cv_colormap = cv::COLORMAP_INFERNO;
+            break;
+        case ColormapType::Magma:
+            cv_colormap = cv::COLORMAP_MAGMA;
+            break;
+        case ColormapType::Turbo:
+            cv_colormap = cv::COLORMAP_TURBO;
+            break;
+        default:
+            cv_colormap = cv::COLORMAP_JET;
+            break;
+    }
+    
+    cv::applyColorMap(normalized_mat, colored_mat, cv_colormap);
+    
+    // Apply alpha blending if needed
+    if (options.alpha < 1.0) {
+        // Convert original grayscale to BGR for blending
+        cv::Mat gray_bgr;
+        cv::cvtColor(normalized_mat, gray_bgr, cv::COLOR_GRAY2BGR);
+        
+        // Blend colored image with grayscale
+        cv::addWeighted(colored_mat, options.alpha, gray_bgr, 1.0 - options.alpha, 0, colored_mat);
+    }
+    
+    // Return BGR format (not BGRA) to maintain compatibility
+    mat = colored_mat;
+}
+
+/**
+ * @brief Apply colormap to grayscale data for display purposes only
+ * @param grayscale_data Input grayscale image data
+ * @param image_size Dimensions of the image
+ * @param options Colormap options
+ * @return BGR image data if colormap is applied, empty vector if not
+ */
+std::vector<uint8_t> apply_colormap_for_display(std::vector<uint8_t> const& grayscale_data, 
+                                               ImageSize image_size,
+                                               ColormapOptions const& options) {
+    if (!options.active || options.colormap == ColormapType::None) {
+        return {}; // Return empty vector to indicate no colormap applied
+    }
+    
+    // Create cv::Mat from grayscale data
+    cv::Mat gray_mat(image_size.height, image_size.width, CV_8UC1, 
+                     const_cast<uint8_t*>(grayscale_data.data()));
+    
+    cv::Mat normalized_mat;
+    if (options.normalize) {
+        cv::normalize(gray_mat, normalized_mat, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    } else {
+        normalized_mat = gray_mat.clone();
+    }
+    
+    // Apply the colormap
+    cv::Mat colored_mat;
+    int cv_colormap = cv::COLORMAP_JET; // default
+    
+    switch (options.colormap) {
+        case ColormapType::Jet:
+            cv_colormap = cv::COLORMAP_JET;
+            break;
+        case ColormapType::Hot:
+            cv_colormap = cv::COLORMAP_HOT;
+            break;
+        case ColormapType::Cool:
+            cv_colormap = cv::COLORMAP_COOL;
+            break;
+        case ColormapType::Spring:
+            cv_colormap = cv::COLORMAP_SPRING;
+            break;
+        case ColormapType::Summer:
+            cv_colormap = cv::COLORMAP_SUMMER;
+            break;
+        case ColormapType::Autumn:
+            cv_colormap = cv::COLORMAP_AUTUMN;
+            break;
+        case ColormapType::Winter:
+            cv_colormap = cv::COLORMAP_WINTER;
+            break;
+        case ColormapType::Rainbow:
+            cv_colormap = cv::COLORMAP_RAINBOW;
+            break;
+        case ColormapType::Ocean:
+            cv_colormap = cv::COLORMAP_OCEAN;
+            break;
+        case ColormapType::Pink:
+            cv_colormap = cv::COLORMAP_PINK;
+            break;
+        case ColormapType::HSV:
+            cv_colormap = cv::COLORMAP_HSV;
+            break;
+        case ColormapType::Parula:
+            cv_colormap = cv::COLORMAP_PARULA;
+            break;
+        case ColormapType::Viridis:
+            cv_colormap = cv::COLORMAP_VIRIDIS;
+            break;
+        case ColormapType::Plasma:
+            cv_colormap = cv::COLORMAP_PLASMA;
+            break;
+        case ColormapType::Inferno:
+            cv_colormap = cv::COLORMAP_INFERNO;
+            break;
+        case ColormapType::Magma:
+            cv_colormap = cv::COLORMAP_MAGMA;
+            break;
+        case ColormapType::Turbo:
+            cv_colormap = cv::COLORMAP_TURBO;
+            break;
+        default:
+            cv_colormap = cv::COLORMAP_JET;
+            break;
+    }
+    
+    cv::applyColorMap(normalized_mat, colored_mat, cv_colormap);
+    
+    // Apply alpha blending if needed
+    if (options.alpha < 1.0) {
+        cv::Mat gray_bgr;
+        cv::cvtColor(normalized_mat, gray_bgr, cv::COLOR_GRAY2BGR);
+        cv::addWeighted(colored_mat, options.alpha, gray_bgr, 1.0 - options.alpha, 0, colored_mat);
+    }
+    
+    // Convert to BGRA for Qt display
+    cv::Mat bgra_mat;
+    cv::cvtColor(colored_mat, bgra_mat, cv::COLOR_BGR2BGRA);
+    
+    // Convert to vector
+    std::vector<uint8_t> result(bgra_mat.total() * bgra_mat.elemSize());
+    std::memcpy(result.data(), bgra_mat.data, result.size());
+    
+    return result;
+}
+
 } // namespace ImageProcessing

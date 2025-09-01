@@ -81,4 +81,38 @@ struct MagicEraserOptions {
     ImageSize image_size;
 };
 
+/**
+ * @brief Available colormap types for grayscale images
+ */
+enum class ColormapType {
+    None,       ///< No colormap (grayscale)
+    Jet,        ///< Blue to red colormap
+    Hot,        ///< Black-red-yellow-white colormap
+    Cool,       ///< Cyan-magenta colormap
+    Spring,     ///< Magenta-yellow colormap
+    Summer,     ///< Green-yellow colormap
+    Autumn,     ///< Red-yellow colormap
+    Winter,     ///< Blue-cyan colormap
+    Rainbow,    ///< Rainbow colormap
+    Ocean,      ///< Dark blue to cyan colormap
+    Pink,       ///< Pink colormap
+    HSV,        ///< HSV colormap
+    Parula,     ///< Blue-cyan-yellow colormap
+    Viridis,    ///< Purple-blue-green-yellow colormap
+    Plasma,     ///< Purple-pink-yellow colormap
+    Inferno,    ///< Black-purple-yellow colormap
+    Magma,      ///< Black-purple-pink-yellow colormap
+    Turbo       ///< Blue-cyan-green-yellow-red colormap
+};
+
+/**
+ * @brief Options for colormap application to grayscale images
+ */
+struct ColormapOptions {
+    bool active{false};              ///< Whether the colormap is active
+    ColormapType colormap{ColormapType::None}; ///< Selected colormap type
+    double alpha{1.0};              ///< Alpha blending with original image (0.0-1.0)
+    bool normalize{true};           ///< Whether to normalize image values before applying colormap
+};
+
 #endif // IMAGE_PROCESSING_OPTIONS_HPP
