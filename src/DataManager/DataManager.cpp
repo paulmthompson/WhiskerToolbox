@@ -493,7 +493,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::Video: {
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
-                    dm->setData<MediaData>("media", media_data, TimeKey("time"));
+                    auto item_key = item.value("name", "media");
+                    dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
                     data_info_list.push_back({name, "VideoData", ""});
                 } else {
                     std::cerr << "Failed to load video data: " << file_path << std::endl;
@@ -504,7 +505,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::Images: {
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
-                    dm->setData<MediaData>("media", media_data, TimeKey("time"));
+                    auto item_key = item.value("name", "media");
+                    dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
                     data_info_list.push_back({name, "ImageData", ""});
                 } else {
                     std::cerr << "Failed to load image data: " << file_path << std::endl;
