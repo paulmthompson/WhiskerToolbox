@@ -45,12 +45,18 @@ private slots:
     void _onActiveChanged();
     void _onAlphaChanged();
     void _onBetaChanged();
+    void _onDisplayMinChanged();
+    void _onDisplayMaxChanged();
 
 private:
     Ui::ContrastWidget* ui;
+    bool _updating_values {false};
 
     void _updateOptions();
     void _blockSignalsAndSetValues(ContrastOptions const& options);
+    void _updateAlphaBetaFromMinMax();
+    void _updateMinMaxFromAlphaBeta();
+    void _updateSpinboxRanges();
 };
 
-#endif // CONTRAST_WIDGET_HPP 
+#endif // CONTRAST_WIDGET_HPP

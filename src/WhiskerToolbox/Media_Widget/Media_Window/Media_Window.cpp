@@ -462,6 +462,7 @@ void Media_Window::_plotMediaData() {
     }
 
     QImage unscaled_image;
+    std::vector<uint8_t> unscaled_image_data;
 
     if (total_visible_media == 1) {
         auto media = _data_manager->getData<MediaData>(active_media_key);
@@ -469,32 +470,32 @@ void Media_Window::_plotMediaData() {
             std::cerr << "Warning: No media data found for key '" << active_media_key << "'" << std::endl;
             return;
         }
-        auto media_data = media->getProcessedData(current_time);
+        unscaled_image_data = media->getProcessedData(current_time);
 
         if (media->getFormat() == MediaData::DisplayFormat::Gray) {
 
             if (_media_configs[active_media_key].get()->colormap_options.active &&
                 _media_configs[active_media_key].get()->colormap_options.colormap != ColormapType::None) {
-                auto colormap_data = ImageProcessing::apply_colormap_for_display(
-                        media_data,
+                unscaled_image_data = ImageProcessing::apply_colormap_for_display(
+                        unscaled_image_data,
                         media->getImageSize(),
                         _media_configs[active_media_key].get()->colormap_options);
 
                 // Apply colormap and get BGRA data
-                unscaled_image = QImage(&colormap_data[0],
+                unscaled_image = QImage(&unscaled_image_data[0],
                                         media->getWidth(),
                                         media->getHeight(),
                                         QImage::Format_RGBA8888);
             } else {
                 // No colormap, use original grayscale data
-                unscaled_image = QImage(&media_data[0],
+                unscaled_image = QImage(&unscaled_image_data[0],
                                         media->getWidth(),
                                         media->getHeight(),
                                         _getQImageFormat(active_media_key));
             }
         } else {
             // Color image, use original data
-            unscaled_image = QImage(&media_data[0],
+            unscaled_image = QImage(&unscaled_image_data[0],
                                     media->getWidth(),
                                     media->getHeight(),
                                     _getQImageFormat(active_media_key));
@@ -514,17 +515,16 @@ void Media_Window::_plotMediaData() {
             Qt::IgnoreAspectRatio,
             Qt::SmoothTransformation);
 
+    std::cout << "Scaled image" << std::endl;
+
     // Check if any masks are in transparency mode
     bool has_transparency_mask = false;
     for (auto const & [mask_key, mask_config]: _mask_configs) {
         if (mask_config->is_visible && mask_config->use_as_transparency) {
             has_transparency_mask = true;
-            std::cout << "Found transparency mask: " << mask_key << std::endl;
             break;
         }
     }
-
-    std::cout << "Has transparency masks: " << (has_transparency_mask ? "YES" : "NO") << std::endl;
 
     // If we have transparency masks, modify the new_image
     if (has_transparency_mask) {
@@ -564,8 +564,6 @@ QImage Media_Window::_combineMultipleMedia() {
     // Create combined RGBA image
     QImage combined_image(width, height, QImage::Format_RGBA8888);
     combined_image.fill(qRgba(0, 0, 0, 255));// Start with black background
-
-    std::cout << "Combining media channels" << std::endl;
 
     for (auto const & [media_key, media_config]: _media_configs) {
         if (!media_config->is_visible) continue;

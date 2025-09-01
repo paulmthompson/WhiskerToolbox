@@ -100,7 +100,19 @@ void median_blur(cv::Mat & mat, int const kernel_size) {
 
 // New options-based implementations
 void linear_transform(cv::Mat & mat, ContrastOptions const& options) {
-    mat.convertTo(mat, -1, options.alpha, options.beta);
+    double alpha = options.alpha;
+    int beta = options.beta;
+
+    // Always calculate alpha and beta from min/max values for consistent behavior
+    if (options.display_max <= options.display_min) {
+        alpha = 1.0;
+        beta = 0;
+    } else {
+        alpha = 255.0 / (options.display_max - options.display_min);
+        beta = static_cast<int>(-alpha * options.display_min);
+    }
+
+    mat.convertTo(mat, -1, alpha, beta);
 }
 
 void gamma_transform(cv::Mat & mat, GammaOptions const& options) {
