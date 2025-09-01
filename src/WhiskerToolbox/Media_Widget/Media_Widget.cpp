@@ -426,6 +426,11 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             std::cout << "Enabling media data in scene" << std::endl;
             opts.value()->is_visible = true;
 
+            // This ensures new media is loaded from disk
+            // Before the update
+            auto current_time = _data_manager->getCurrentTime();
+            LoadFrame(current_time);
+
         } else {
             std::cout << "Disabling media data from scene" << std::endl;
             opts.value()->is_visible = false;

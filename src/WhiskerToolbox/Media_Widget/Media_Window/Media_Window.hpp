@@ -228,9 +228,10 @@ private:
     MediaText_Widget * _text_widget = nullptr;
 
     QImage::Format _getQImageFormat(const std::string & media_key);
-    QImage _combineMultipleMedia(const std::string & active_media_key);
+    QImage _combineMultipleMedia();
 
     void _plotMediaData();
+    void _clearMedia();
 
     void _plotLineData();
     void _clearLines();

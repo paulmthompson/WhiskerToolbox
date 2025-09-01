@@ -72,7 +72,14 @@ void Media_Window::addMediaDataToScene(std::string const & media_key) {
     auto media_config = std::make_unique<MediaDisplayOptions>();
 
     _media_configs[media_key] = std::move(media_config);
+
     UpdateCanvas();
+}
+
+void Media_Window::_clearMedia() {
+    // Set to black
+    _canvasImage.fill(Qt::black);
+    _canvasPixmap->setPixmap(QPixmap::fromImage(_canvasImage));
 }
 
 void Media_Window::removeMediaDataFromScene(std::string const & media_key) {
@@ -371,7 +378,7 @@ void Media_Window::UpdateCanvas() {
     _clearIntervals();
     _clearTensors();
     _clearTextOverlays();
-
+    _clearMedia();
 
     _plotMediaData();
 
@@ -466,13 +473,13 @@ void Media_Window::_plotMediaData() {
 
         if (media->getFormat() == MediaData::DisplayFormat::Gray) {
 
-            // Apply colormap and return BGRA data
-            auto colormap_data = ImageProcessing::apply_colormap_for_display(
-                    media_data,
-                    media->getImageSize(),
-                    _media_configs[active_media_key].get()->colormap_options);
+            if (_media_configs[active_media_key].get()->colormap_options.active &&
+                _media_configs[active_media_key].get()->colormap_options.colormap != ColormapType::None) {
+                auto colormap_data = ImageProcessing::apply_colormap_for_display(
+                        media_data,
+                        media->getImageSize(),
+                        _media_configs[active_media_key].get()->colormap_options);
 
-            if (!colormap_data.empty()) {
                 // Apply colormap and get BGRA data
                 unscaled_image = QImage(&colormap_data[0],
                                         media->getWidth(),
@@ -498,7 +505,7 @@ void Media_Window::_plotMediaData() {
     // Check for multi-channel mode (multiple enabled grayscale media)
     if (total_visible_media > 1) {
         // Multi-channel mode: combine multiple media with colormaps
-        unscaled_image = _combineMultipleMedia(active_media_key);
+        unscaled_image = _combineMultipleMedia();
     }
 
     auto new_image = unscaled_image.scaled(
@@ -529,15 +536,30 @@ void Media_Window::_plotMediaData() {
 }
 
 
-QImage Media_Window::_combineMultipleMedia(std::string const & active_media_key) {
+QImage Media_Window::_combineMultipleMedia() {
 
     auto current_time = _data_manager->getCurrentTime();
 
-    auto first_media = _data_manager->getData<MediaData>(active_media_key);
-    if (!first_media) return QImage();
+    // Loop through configs and get the largest image size
+    std::vector<ImageSize> media_sizes;
+    for (auto const & [media_key, media_config]: _media_configs) {
+        if (!media_config->is_visible) continue;
 
-    int const width = first_media->getWidth();
-    int const height = first_media->getHeight();
+        auto media = _data_manager->getData<MediaData>(media_key);
+        if (!media) continue;
+
+        media_sizes.push_back(media->getImageSize());
+    }
+
+    if (media_sizes.empty()) return QImage();
+
+    // Find the maximum width and height
+    int width = 0;
+    int height = 0;
+    for (auto const & size: media_sizes) {
+        width = std::max(width, size.width);
+        height = std::max(height, size.height);
+    }
 
     // Create combined RGBA image
     QImage combined_image(width, height, QImage::Format_RGBA8888);
@@ -557,17 +579,17 @@ QImage Media_Window::_combineMultipleMedia(std::string const & active_media_key)
         auto media_data = media->getProcessedData(current_time);
 
         // Apply colormap and return BGRA data
-        auto colormap_data = ImageProcessing::apply_colormap_for_display(
-                media_data,
-                media->getImageSize(),
-                _media_configs[media_key].get()->colormap_options);
+        if (media_config.get()->colormap_options.active && 
+        media_config.get()->colormap_options.colormap != ColormapType::None) {
+            auto colormap_data = ImageProcessing::apply_colormap_for_display(
+                    media_data,
+                    media->getImageSize(),
+                    media_config.get()->colormap_options);
 
-        // If colormap data is available, use it
-        if (!colormap_data.empty()) {
             // Use colormap data (RGBA)
-            for (int y = 0; y < height; ++y) {
-                for (int x = 0; x < width; ++x) {
-                    int const pixel_idx = (y * width + x) * 4;
+            for (int y = 0; y < media->getHeight(); ++y) {
+                for (int x = 0; x < media->getWidth(); ++x) {
+                    int const pixel_idx = (y * media->getWidth() + x) * 4;
 
                     uint8_t const r = colormap_data[pixel_idx];
                     uint8_t const g = colormap_data[pixel_idx + 1];
