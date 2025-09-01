@@ -49,18 +49,17 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
 }
 
 Media_Window::~Media_Window() {
-    // Clear all items from the scene
+    // Clear all items from the scene - this automatically removes and deletes all QGraphicsItems
     clear();
 
-    // Delete all dynamically allocated items
-    _clearLines();
-    _clearMasks();
-    _clearMaskBoundingBoxes();
-    _clearMaskOutlines();
-    _clearPoints();
-    _clearIntervals();
-    _clearTensors();
-
+    // Just clear the containers since the items are already deleted by clear()
+    _line_paths.clear();
+    _masks.clear();
+    _mask_bounding_boxes.clear();
+    _mask_outlines.clear();
+    _points.clear();
+    _intervals.clear();
+    _tensors.clear();
     _text_items.clear();
 }
 
