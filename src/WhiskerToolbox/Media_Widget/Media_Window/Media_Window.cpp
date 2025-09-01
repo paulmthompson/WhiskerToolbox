@@ -301,8 +301,17 @@ void Media_Window::_clearTextOverlays() {
 }
 
 void Media_Window::LoadFrame(int frame_id) {
-    // Get MediaData
-    auto media = _data_manager->getData<MediaData>("media");
+    // Get MediaData using the active media key
+    if (_active_media_key.empty()) {
+        std::cout << "No active media key set, skipping frame load" << std::endl;
+        return;
+    }
+    
+    auto media = _data_manager->getData<MediaData>(_active_media_key);
+    if (!media) {
+        std::cerr << "Warning: No media data found for key '" << _active_media_key << "'" << std::endl;
+        return;
+    }
     media->LoadFrame(frame_id);
 
     // Clear any accumulated drawing points when changing frames
@@ -342,7 +351,16 @@ void Media_Window::UpdateCanvas() {
     _clearTextOverlays();
 
     //_convertNewMediaToQImage();
-    auto _media = _data_manager->getData<MediaData>("media");
+    if (_active_media_key.empty()) {
+        std::cout << "No active media key set, skipping canvas update" << std::endl;
+        return;
+    }
+    
+    auto _media = _data_manager->getData<MediaData>(_active_media_key);
+    if (!_media) {
+        std::cerr << "Warning: No media data found for key '" << _active_media_key << "'" << std::endl;
+        return;
+    }
     auto const current_time = _data_manager->getCurrentTime();
     auto media_data = _media->getProcessedData(current_time);
 
@@ -429,7 +447,11 @@ void Media_Window::UpdateCanvas() {
 //Media frame is loaded. It is then scaled to the
 //Canvas size, and the canvas is updated
 void Media_Window::_convertNewMediaToQImage() {
-    auto _media = _data_manager->getData<MediaData>("media");
+    auto _media = _data_manager->getData<MediaData>(_active_media_key);
+    if (!_media) {
+        std::cerr << "Warning: No media data found for key '" << _active_media_key << "'" << std::endl;
+        return;
+    }
     auto const current_time = _data_manager->getCurrentTime();
     auto media_data = _media->getProcessedData(current_time);
 
@@ -443,7 +465,11 @@ void Media_Window::_convertNewMediaToQImage() {
 
 QImage::Format Media_Window::_getQImageFormat() {
 
-    auto _media = _data_manager->getData<MediaData>("media");
+    auto _media = _data_manager->getData<MediaData>(_active_media_key);
+    if (!_media) {
+        // Return a default format if no media is available
+        return QImage::Format_Grayscale8;
+    }
     switch (_media->getFormat()) {
         case MediaData::DisplayFormat::Gray:
             return QImage::Format_Grayscale8;
@@ -580,7 +606,10 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
 
 float Media_Window::getXAspect() const {
 
-    auto _media = _data_manager->getData<MediaData>("media");
+    auto _media = _data_manager->getData<MediaData>(_active_media_key);
+    if (!_media) {
+        return 1.0f;  // Default aspect ratio
+    }
 
     float const scale_width = static_cast<float>(_canvasWidth) / static_cast<float>(_media->getWidth());
 
@@ -589,7 +618,10 @@ float Media_Window::getXAspect() const {
 
 float Media_Window::getYAspect() const {
 
-    auto _media = _data_manager->getData<MediaData>("media");
+    auto _media = _data_manager->getData<MediaData>(_active_media_key);
+    if (!_media) {
+        return 1.0f;  // Default aspect ratio
+    }
 
     float const scale_height = static_cast<float>(_canvasHeight) / static_cast<float>(_media->getHeight());
 

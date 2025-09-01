@@ -73,6 +73,8 @@ private:
     void _applyBilateralFilter();
     void _applyMedianFilter();
     void _applyMagicEraser();
+    
+    void _loadProcessingChainFromMedia();
 
 private slots:
     void _onContrastOptionsChanged(ContrastOptions const & options);

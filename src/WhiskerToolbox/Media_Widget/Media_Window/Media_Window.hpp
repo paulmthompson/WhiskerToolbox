@@ -71,6 +71,15 @@ public:
     // Text overlay methods
     void setTextWidget(MediaText_Widget * text_widget);
 
+    // Media key management
+    void setActiveMediaKey(std::string const & media_key) {
+        _active_media_key = media_key;
+    }
+    
+    [[nodiscard]] std::string const & getActiveMediaKey() const {
+        return _active_media_key;
+    }
+
     /**
      *
      *
@@ -207,6 +216,9 @@ private:
 
     // Text overlay support
     MediaText_Widget * _text_widget = nullptr;
+
+    // Active media key support
+    std::string _active_media_key = "media";  // Default to "media" for backward compatibility
 
     QImage::Format _getQImageFormat();
     void _createCanvasForData();

@@ -76,6 +76,9 @@ void MediaProcessing_Widget::setActiveKey(std::string const & key) {
     ui->name_label->setText(QString::fromStdString(key));
 
     std::cout << "MediaProcessing_Widget active key set to: " << key << std::endl;
+    
+    // Load the processing chain from the selected media
+    _loadProcessingChainFromMedia();
 }
 
 void MediaProcessing_Widget::_setupProcessingWidgets() {
@@ -522,4 +525,94 @@ void MediaProcessing_Widget::_applyMagicEraser() {
 
     std::cout << "Magic eraser process chain updated - Active: " << _magic_eraser_options.active
               << ", Has mask: " << (!_magic_eraser_options.mask.empty()) << std::endl;
+}
+
+void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
+    if (_active_key.empty()) {
+        std::cout << "No active key set, cannot load processing chain" << std::endl;
+        return;
+    }
+
+    auto media_data = _data_manager->getData<MediaData>(_active_key);
+    if (!media_data) {
+        std::cout << "No media data found for key: " << _active_key << std::endl;
+        return;
+    }
+
+    std::cout << "Loading processing chain from media key: " << _active_key << std::endl;
+    std::cout << "Media has " << media_data->getProcessingStepCount() << " processing steps" << std::endl;
+
+    // Reset all options to defaults first
+    _contrast_options = ContrastOptions{};
+    _gamma_options = GammaOptions{};
+    _sharpen_options = SharpenOptions{};
+    _clahe_options = ClaheOptions{};
+    _bilateral_options = BilateralOptions{};
+    _median_options = MedianOptions{};
+    _magic_eraser_options = MagicEraserOptions{};
+
+    // Check each processing step and update options accordingly
+    // Note: The actual parameter values are stored in the lambda closures
+    // so we can only determine if steps are active, not their exact parameters
+    // To properly reconstruct parameters, the MediaData would need to store them separately
+    
+    if (media_data->hasProcessingStep("1__contrast")) {
+        _contrast_options.active = true;
+        std::cout << "Found contrast processing step" << std::endl;
+    }
+    
+    if (media_data->hasProcessingStep("2__gamma")) {
+        _gamma_options.active = true;
+        std::cout << "Found gamma processing step" << std::endl;
+    }
+    
+    if (media_data->hasProcessingStep("3__sharpen")) {
+        _sharpen_options.active = true;
+        std::cout << "Found sharpen processing step" << std::endl;
+    }
+    
+    if (media_data->hasProcessingStep("4__clahe")) {
+        _clahe_options.active = true;
+        std::cout << "Found CLAHE processing step" << std::endl;
+    }
+    
+    if (media_data->hasProcessingStep("5__bilateral")) {
+        _bilateral_options.active = true;
+        std::cout << "Found bilateral processing step" << std::endl;
+    }
+    
+    if (media_data->hasProcessingStep("6__median")) {
+        _median_options.active = true;
+        std::cout << "Found median processing step" << std::endl;
+    }
+    
+    if (media_data->hasProcessingStep("7__magic_eraser")) {
+        _magic_eraser_options.active = true;
+        std::cout << "Found magic eraser processing step" << std::endl;
+    }
+
+    // Update all UI widgets with the loaded options
+    if (_contrast_widget) {
+        _contrast_widget->setOptions(_contrast_options);
+    }
+    if (_gamma_widget) {
+        _gamma_widget->setOptions(_gamma_options);
+    }
+    if (_sharpen_widget) {
+        _sharpen_widget->setOptions(_sharpen_options);
+    }
+    if (_clahe_widget) {
+        _clahe_widget->setOptions(_clahe_options);
+    }
+    if (_bilateral_widget) {
+        _bilateral_widget->setOptions(_bilateral_options);
+    }
+    if (_median_widget) {
+        _median_widget->setOptions(_median_options);
+    }
+    if (_magic_eraser_widget) {
+        _magic_eraser_widget->setOptions(_magic_eraser_options);
+    }
+
+    std::cout << "Processing chain loaded and UI updated" << std::endl;
 }

@@ -249,6 +249,10 @@ void Media_Widget::_featureSelected(QString const & feature) {
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
+        
+        // Also set this as the active media key in the scene
+        _scene.get()->setActiveMediaKey(key);
+        _scene.get()->UpdateCanvas();
     } else if (type == DM_DataType::Images) {
         // Images are handled similarly to Video, using the MediaProcessing_Widget
         int const stacked_widget_index = 6;
@@ -256,6 +260,10 @@ void Media_Widget::_featureSelected(QString const & feature) {
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
+        
+        // Also set this as the active media key in the scene
+        _scene.get()->setActiveMediaKey(key);
+        _scene.get()->UpdateCanvas();
     } else {
         ui->stackedWidget->setCurrentIndex(0);
         std::cout << "Unsupported feature type" << std::endl;
@@ -394,10 +402,26 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
-        // Video and Image data don't use the same overlay system as other data types
-        // They are handled through the MediaProcessing_Widget and don't need visibility toggling
-        // The checkbox functionality is mainly for overlay features, not base media
-        std::cout << "Media type " << convert_data_type_to_string(type) << " - feature display toggling not applicable" << std::endl;
+        // Handle media enable/disable functionality
+        if (enabled) {
+            std::cout << "Enabling media data: " << feature_key << std::endl;
+            
+            // Disable any currently active media first (only one can be active at a time)
+            _disableAllMediaExcept(feature_key);
+            
+            // Set this media as the active one in the scene
+            _scene.get()->setActiveMediaKey(feature_key);
+            
+            std::cout << "Set active media key to: " << feature_key << std::endl;
+        } else {
+            std::cout << "Disabling media data: " << feature_key << std::endl;
+            
+            // If this is the currently active media, we need to find another one to activate
+            // or clear the display
+            if (_scene.get()->getActiveMediaKey() == feature_key) {
+                _selectAlternativeMedia(feature_key);
+            }
+        }
     } else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }
@@ -482,5 +506,61 @@ void Media_Widget::_createMediaWindow() {
     if (_data_manager) {
         _scene = std::make_unique<Media_Window>(_data_manager, this);
         _connectTextWidgetToScene();
+    }
+}
+
+void Media_Widget::_disableAllMediaExcept(std::string const & exception_key) {
+    // Get all media keys
+    auto video_keys = _data_manager->getKeys<MediaData>();
+    
+    // For each media key that's not the exception, we need to uncheck it in the feature table
+    // This is complex because we need to access the feature table's checkboxes directly
+    // For now, we'll just disable them logically and let the UI handle the update
+    for (auto const & media_key : video_keys) {
+        if (media_key != exception_key) {
+            auto media_type = _data_manager->getType(media_key);
+            if (media_type == DM_DataType::Video || media_type == DM_DataType::Images) {
+                std::cout << "Should disable media key in UI: " << media_key << std::endl;
+                // TODO: Programmatically uncheck the checkbox in the feature table
+                // This would require a method in Feature_Table_Widget to set checkbox states
+            }
+        }
+    }
+}
+
+void Media_Widget::_selectAlternativeMedia(std::string const & disabled_key) {
+    // Get all media keys
+    auto video_keys = _data_manager->getKeys<MediaData>();
+    
+    // Find the first available media key that's not the disabled one
+    for (auto const & media_key : video_keys) {
+        auto media_type = _data_manager->getType(media_key);
+        if ((media_type == DM_DataType::Video || media_type == DM_DataType::Images) && 
+            media_key != disabled_key) {
+            
+            _scene.get()->setActiveMediaKey(media_key);
+            std::cout << "Switched active media to: " << media_key << std::endl;
+            _scene.get()->UpdateCanvas();
+            return;
+        }
+    }
+    
+    // If no alternative found, set to default
+    std::cout << "No alternative media found, setting to default 'media' key" << std::endl;
+    _scene.get()->setActiveMediaKey("media");
+}
+
+void Media_Widget::_setupDefaultMediaState() {
+    // Get all media keys
+    auto video_keys = _data_manager->getKeys<MediaData>();
+    
+    if (!video_keys.empty()) {
+        // Enable the first media key by default
+        std::string default_key = video_keys[0];
+        _scene.get()->setActiveMediaKey(default_key);
+        std::cout << "Set default active media to: " << default_key << std::endl;
+        
+        // Update the feature table to reflect this (this will require the table to be populated)
+        // The table should show the first media as enabled and others as disabled
     }
 }

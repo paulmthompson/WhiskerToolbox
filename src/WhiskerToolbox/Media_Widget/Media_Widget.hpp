@@ -51,6 +51,11 @@ private:
     void _createOptions();
     void _createMediaWindow();
     void _connectTextWidgetToScene();
+    
+    // Media management helpers
+    void _disableAllMediaExcept(std::string const & enabled_key);
+    void _selectAlternativeMedia(std::string const & disabled_key);
+    void _setupDefaultMediaState();
 
 private slots:
     void _updateCanvasSize();
