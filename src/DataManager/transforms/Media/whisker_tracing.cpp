@@ -158,9 +158,10 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
                 std::vector<uint8_t> image_data;
 
                 if (typed_params->use_processed_data) {
-                    image_data = media_data->getProcessedData(static_cast<int>(time));
+                    // whisker tracking expects 8 bit
+                    image_data = media_data->getProcessedData8(static_cast<int>(time));
                 } else {
-                    image_data = media_data->getRawData(static_cast<int>(time));
+                    image_data = media_data->getRawData8(static_cast<int>(time));
                 }
 
                 if (!image_data.empty()) {
@@ -195,9 +196,9 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
             std::vector<uint8_t> image_data;
 
             if (typed_params->use_processed_data) {
-                image_data = media_data->getProcessedData(static_cast<int>(time));
+                image_data = media_data->getProcessedData8(static_cast<int>(time));
             } else {
-                image_data = media_data->getRawData(static_cast<int>(time));
+                image_data = media_data->getRawData8(static_cast<int>(time));
             }
 
             if (!image_data.empty()) {
