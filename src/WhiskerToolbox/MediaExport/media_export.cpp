@@ -5,6 +5,8 @@
 
 #include <QImage>
 
+#include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <iostream>
 
@@ -50,10 +52,34 @@ void save_image(MediaData * media, int const frame_id, MediaExportOptions const 
         std::cout << "Overwriting existing file: " << full_save_path.string() << std::endl;
     }
     
-    auto image = media->getRawData(frame_id);
     auto width = media->getWidth();
     auto height = media->getHeight();
-    QImage const labeled_image(&image[0], width, height, QImage::Format_Grayscale8);
+    QImage labeled_image;
+    
+    // Handle different bit depths appropriately
+    if (media->is8Bit()) {
+        // 8-bit data: use Grayscale8 format
+        auto image_8bit = media->getRawData8(frame_id);
+        labeled_image = QImage(reinterpret_cast<const uchar*>(image_8bit.data()), 
+                              width, height, QImage::Format_Grayscale8);
+    } else if (media->is32Bit()) {
+        // 32-bit float data: convert to 16-bit for higher precision saving
+        auto image_32bit = media->getRawData32(frame_id);
+        
+        // Convert float data (already in 0-255 range) to 16-bit (0-65535 range)
+        std::vector<uint16_t> image_16bit_converted;
+        image_16bit_converted.reserve(image_32bit.size());
+        
+        for (float pixel_value : image_32bit) {
+            // Scale from 0-255 range to 0-65535 range
+            uint16_t value_16bit = static_cast<uint16_t>(pixel_value * 257.0f); // 257 = 65535/255
+            image_16bit_converted.push_back(value_16bit);
+        }
+        
+        labeled_image = QImage(reinterpret_cast<const uchar*>(image_16bit_converted.data()), 
+                              width, height, width * sizeof(uint16_t), QImage::Format_Grayscale16);
+    }
+    
     labeled_image.save(QString::fromStdString(full_save_path.string()));
     std::cout << "Saved image to " << full_save_path.string() << std::endl;
 }
