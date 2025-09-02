@@ -28,6 +28,7 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsTextItem>
+#include <algorithm>
 #include <QImage>
 #include <QPainter>
 
@@ -435,11 +436,17 @@ QImage::Format Media_Window::_getQImageFormat(std::string const & media_key) {
         // Return a default format if no media is available
         return QImage::Format_Grayscale8;
     }
-    switch (_media->getFormat()) {
-        case MediaData::DisplayFormat::Gray:
-            return QImage::Format_Grayscale8;
-        case MediaData::DisplayFormat::Color:
-            return QImage::Format_RGBA8888;
+    
+    // Check bit depth for grayscale images
+    if (_media->getFormat() == MediaData::DisplayFormat::Gray) {
+        if (_media->is32Bit()) {
+            return QImage::Format_Grayscale16; // Use 16-bit for higher precision
+        } else {
+            return QImage::Format_Grayscale8;  // Default 8-bit
+        }
+    } else {
+        // Color format
+        return QImage::Format_RGBA8888;
     }
 }
 
@@ -462,7 +469,6 @@ void Media_Window::_plotMediaData() {
     }
 
     QImage unscaled_image;
-    std::vector<uint8_t> unscaled_image_data;
 
     if (total_visible_media == 1) {
         auto media = _data_manager->getData<MediaData>(active_media_key);
@@ -470,35 +476,86 @@ void Media_Window::_plotMediaData() {
             std::cerr << "Warning: No media data found for key '" << active_media_key << "'" << std::endl;
             return;
         }
-        unscaled_image_data = media->getProcessedData(current_time);
 
         if (media->getFormat() == MediaData::DisplayFormat::Gray) {
+            // Handle grayscale images with potential colormap application
+            bool apply_colormap = _media_configs[active_media_key].get()->colormap_options.active &&
+                                  _media_configs[active_media_key].get()->colormap_options.colormap != ColormapType::None;
 
-            if (_media_configs[active_media_key].get()->colormap_options.active &&
-                _media_configs[active_media_key].get()->colormap_options.colormap != ColormapType::None) {
-                unscaled_image_data = ImageProcessing::apply_colormap_for_display(
-                        unscaled_image_data,
-                        media->getImageSize(),
-                        _media_configs[active_media_key].get()->colormap_options);
+            if (media->is8Bit()) {
+                // 8-bit grayscale processing
+                auto unscaled_image_data_8bit = media->getProcessedData8(current_time);
+                
+                if (apply_colormap) {
+                    auto colormap_data = ImageProcessing::apply_colormap_for_display(
+                            unscaled_image_data_8bit,
+                            media->getImageSize(),
+                            _media_configs[active_media_key].get()->colormap_options);
 
-                // Apply colormap and get BGRA data
-                unscaled_image = QImage(&unscaled_image_data[0],
-                                        media->getWidth(),
-                                        media->getHeight(),
-                                        QImage::Format_RGBA8888);
-            } else {
-                // No colormap, use original grayscale data
-                unscaled_image = QImage(&unscaled_image_data[0],
-                                        media->getWidth(),
-                                        media->getHeight(),
-                                        _getQImageFormat(active_media_key));
+                    // Apply colormap and get RGBA data
+                    unscaled_image = QImage(colormap_data.data(),
+                                            media->getWidth(),
+                                            media->getHeight(),
+                                            QImage::Format_RGBA8888);
+                } else {
+                    // No colormap, use original 8-bit grayscale data
+                    unscaled_image = QImage(unscaled_image_data_8bit.data(),
+                                            media->getWidth(),
+                                            media->getHeight(),
+                                            QImage::Format_Grayscale8);
+                }
+            } else if (media->is32Bit()) {
+                // 32-bit float processing
+                auto unscaled_image_data_32bit = media->getProcessedData32(current_time);
+                
+                if (apply_colormap) {
+                    // TODO: Need to implement apply_colormap_for_display for float data
+                    // For now, convert to 8-bit and apply colormap
+                    std::vector<uint8_t> converted_8bit;
+                    converted_8bit.reserve(unscaled_image_data_32bit.size());
+                    
+                    for (float pixel_value : unscaled_image_data_32bit) {
+                        // Clamp to 0-255 range and convert to uint8_t
+                        uint8_t byte_value = static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, pixel_value)));
+                        converted_8bit.push_back(byte_value);
+                    }
+                    
+                    auto colormap_data = ImageProcessing::apply_colormap_for_display(
+                            converted_8bit,
+                            media->getImageSize(),
+                            _media_configs[active_media_key].get()->colormap_options);
+
+                    // Apply colormap and get RGBA data - make a deep copy to avoid use-after-free
+                    unscaled_image = QImage(colormap_data.data(),
+                                            media->getWidth(),
+                                            media->getHeight(),
+                                            QImage::Format_RGBA8888).copy();
+                } else {
+                    // No colormap, convert 32-bit float to 16-bit for higher precision display
+                    std::vector<uint16_t> converted_16bit;
+                    converted_16bit.reserve(unscaled_image_data_32bit.size());
+                    
+                    for (float pixel_value : unscaled_image_data_32bit) {
+                        // Scale from 0-255 range to 0-65535 range
+                        uint16_t value_16bit = static_cast<uint16_t>(std::max(0.0f, std::min(255.0f, pixel_value)) * 257.0f);
+                        converted_16bit.push_back(value_16bit);
+                    }
+                    
+                    // Create QImage and make a deep copy to avoid use-after-free
+                    unscaled_image = QImage(reinterpret_cast<const uchar*>(converted_16bit.data()),
+                                            media->getWidth(),
+                                            media->getHeight(),
+                                            media->getWidth() * sizeof(uint16_t),
+                                            QImage::Format_Grayscale16).copy();
+                }
             }
         } else {
-            // Color image, use original data
-            unscaled_image = QImage(&unscaled_image_data[0],
+            // Color image processing (always 8-bit for now)
+            auto unscaled_image_data = media->getProcessedData8(current_time);
+            unscaled_image = QImage(unscaled_image_data.data(),
                                     media->getWidth(),
                                     media->getHeight(),
-                                    _getQImageFormat(active_media_key));
+                                    QImage::Format_RGBA8888);
         }
     }
 
@@ -573,54 +630,117 @@ QImage Media_Window::_combineMultipleMedia() {
             continue;// Skip non-grayscale media
         }
 
-        // Get processed data for this media
-        auto media_data = media->getProcessedData(current_time);
+        bool apply_colormap = media_config.get()->colormap_options.active && 
+                             media_config.get()->colormap_options.colormap != ColormapType::None;
 
-        // Apply colormap and return BGRA data
-        if (media_config.get()->colormap_options.active && 
-        media_config.get()->colormap_options.colormap != ColormapType::None) {
-            auto colormap_data = ImageProcessing::apply_colormap_for_display(
-                    media_data,
-                    media->getImageSize(),
-                    media_config.get()->colormap_options);
+        if (media->is8Bit()) {
+            // Handle 8-bit media data
+            auto media_data_8bit = media->getProcessedData8(current_time);
 
-            // Use colormap data (RGBA)
-            for (int y = 0; y < media->getHeight(); ++y) {
-                for (int x = 0; x < media->getWidth(); ++x) {
-                    int const pixel_idx = (y * media->getWidth() + x) * 4;
+            if (apply_colormap) {
+                auto colormap_data = ImageProcessing::apply_colormap_for_display(
+                        media_data_8bit,
+                        media->getImageSize(),
+                        media_config.get()->colormap_options);
 
-                    uint8_t const r = colormap_data[pixel_idx];
-                    uint8_t const g = colormap_data[pixel_idx + 1];
-                    uint8_t const b = colormap_data[pixel_idx + 2];
-                    uint8_t const a = colormap_data[pixel_idx + 3];
+                // Use colormap data (RGBA)
+                for (int y = 0; y < media->getHeight(); ++y) {
+                    for (int x = 0; x < media->getWidth(); ++x) {
+                        int const pixel_idx = (y * media->getWidth() + x) * 4;
 
-                    // Get current pixel from combined image
-                    QRgb current_pixel = combined_image.pixel(x, y);
+                        uint8_t const r = colormap_data[pixel_idx];
+                        uint8_t const g = colormap_data[pixel_idx + 1];
+                        uint8_t const b = colormap_data[pixel_idx + 2];
+                        uint8_t const a = colormap_data[pixel_idx + 3];
 
-                    // Additive blending (common for multi-channel microscopy)
-                    uint8_t const new_r = std::min(255, qRed(current_pixel) + r);
-                    uint8_t const new_g = std::min(255, qGreen(current_pixel) + g);
-                    uint8_t const new_b = std::min(255, qBlue(current_pixel) + b);
+                        // Get current pixel from combined image
+                        QRgb current_pixel = combined_image.pixel(x, y);
 
-                    combined_image.setPixel(x, y, qRgba(new_r, new_g, new_b, 255));
+                        // Additive blending (common for multi-channel microscopy)
+                        uint8_t const new_r = std::min(255, qRed(current_pixel) + r);
+                        uint8_t const new_g = std::min(255, qGreen(current_pixel) + g);
+                        uint8_t const new_b = std::min(255, qBlue(current_pixel) + b);
+
+                        combined_image.setPixel(x, y, qRgba(new_r, new_g, new_b, 255));
+                    }
+                }
+            } else {
+                // Use 8-bit grayscale data directly (no colormap)
+                for (int y = 0; y < media->getHeight(); ++y) {
+                    for (int x = 0; x < media->getWidth(); ++x) {
+                        int const pixel_idx = y * media->getWidth() + x;
+                        uint8_t const gray_value = media_data_8bit[pixel_idx];
+
+                        // Get current pixel from combined image
+                        QRgb current_pixel = combined_image.pixel(x, y);
+
+                        // Additive blending
+                        uint8_t const new_r = std::min(255, qRed(current_pixel) + gray_value);
+                        uint8_t const new_g = std::min(255, qGreen(current_pixel) + gray_value);
+                        uint8_t const new_b = std::min(255, qBlue(current_pixel) + gray_value);
+
+                        combined_image.setPixel(x, y, qRgba(new_r, new_g, new_b, 255));
+                    }
                 }
             }
-        } else {
-            // Use grayscale data directly (no colormap)
-            for (int y = 0; y < height; ++y) {
-                for (int x = 0; x < width; ++x) {
-                    int const pixel_idx = y * width + x;
-                    uint8_t const gray_value = media_data[pixel_idx];
+        } else if (media->is32Bit()) {
+            // Handle 32-bit float media data
+            auto media_data_32bit = media->getProcessedData32(current_time);
 
-                    // Get current pixel from combined image
-                    QRgb current_pixel = combined_image.pixel(x, y);
+            if (apply_colormap) {
+                // Convert to 8-bit for colormap application (temporary until float colormap is implemented)
+                std::vector<uint8_t> converted_8bit;
+                converted_8bit.reserve(media_data_32bit.size());
+                
+                for (float pixel_value : media_data_32bit) {
+                    uint8_t byte_value = static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, pixel_value)));
+                    converted_8bit.push_back(byte_value);
+                }
 
-                    // Additive blending
-                    uint8_t const new_r = std::min(255, qRed(current_pixel) + gray_value);
-                    uint8_t const new_g = std::min(255, qGreen(current_pixel) + gray_value);
-                    uint8_t const new_b = std::min(255, qBlue(current_pixel) + gray_value);
+                auto colormap_data = ImageProcessing::apply_colormap_for_display(
+                        converted_8bit,
+                        media->getImageSize(),
+                        media_config.get()->colormap_options);
 
-                    combined_image.setPixel(x, y, qRgba(new_r, new_g, new_b, 255));
+                // Use colormap data (RGBA)
+                for (int y = 0; y < media->getHeight(); ++y) {
+                    for (int x = 0; x < media->getWidth(); ++x) {
+                        int const pixel_idx = (y * media->getWidth() + x) * 4;
+
+                        uint8_t const r = colormap_data[pixel_idx];
+                        uint8_t const g = colormap_data[pixel_idx + 1];
+                        uint8_t const b = colormap_data[pixel_idx + 2];
+                        uint8_t const a = colormap_data[pixel_idx + 3];
+
+                        // Get current pixel from combined image
+                        QRgb current_pixel = combined_image.pixel(x, y);
+
+                        // Additive blending
+                        uint8_t const new_r = std::min(255, qRed(current_pixel) + r);
+                        uint8_t const new_g = std::min(255, qGreen(current_pixel) + g);
+                        uint8_t const new_b = std::min(255, qBlue(current_pixel) + b);
+
+                        combined_image.setPixel(x, y, qRgba(new_r, new_g, new_b, 255));
+                    }
+                }
+            } else {
+                // Use 32-bit float data directly (no colormap)
+                for (int y = 0; y < media->getHeight(); ++y) {
+                    for (int x = 0; x < media->getWidth(); ++x) {
+                        int const pixel_idx = y * media->getWidth() + x;
+                        float const float_value = media_data_32bit[pixel_idx];
+                        uint8_t const gray_value = static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, float_value)));
+
+                        // Get current pixel from combined image
+                        QRgb current_pixel = combined_image.pixel(x, y);
+
+                        // Additive blending
+                        uint8_t const new_r = std::min(255, qRed(current_pixel) + gray_value);
+                        uint8_t const new_g = std::min(255, qGreen(current_pixel) + gray_value);
+                        uint8_t const new_b = std::min(255, qBlue(current_pixel) + gray_value);
+
+                        combined_image.setPixel(x, y, qRgba(new_r, new_g, new_b, 255));
+                    }
                 }
             }
         }
