@@ -143,7 +143,7 @@ void Whisker_Widget::_traceButton() {
     auto const current_time = _data_manager->getCurrentTime();
 
     if (ui->num_frames_to_trace->value() <= 1) {
-        _traceWhiskers(media->getProcessedData(current_time), media->getImageSize());
+        _traceWhiskers(media->getProcessedData8(current_time), media->getImageSize());
         //_traceWhiskers(media->getRawData(current_time), media->getImageSize());
     } else {
 
@@ -154,7 +154,7 @@ void Whisker_Widget::_traceButton() {
 
         while (num_to_trace < ui->num_frames_to_trace->value()) {
 
-            auto image = media->getProcessedData(num_to_trace + current_time);
+            auto image = media->getProcessedData8(num_to_trace + current_time);
 
             auto whiskers = _wt->trace(image, height, width);
 
@@ -187,7 +187,7 @@ void Whisker_Widget::_dlTraceButton() {
     auto media = _data_manager->getData<MediaData>("media");
     auto const current_time = _data_manager->getCurrentTime();
 
-    _traceWhiskersDL(media->getProcessedData(current_time), media->getImageSize());
+    _traceWhiskersDL(media->getProcessedData8(current_time), media->getImageSize());
 }
 
 void Whisker_Widget::_dlAddMemoryButton() {
@@ -200,7 +200,7 @@ void Whisker_Widget::_dlAddMemoryButton() {
     auto media = _data_manager->getData<MediaData>("media");
     auto const current_time = _data_manager->getCurrentTime();
 
-    auto image = media->getProcessedData(current_time);
+    auto image = media->getProcessedData8(current_time);
 
     dl_model->add_height_width(media->getImageSize());
 
