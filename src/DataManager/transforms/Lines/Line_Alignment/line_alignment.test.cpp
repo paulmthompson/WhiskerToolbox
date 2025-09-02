@@ -4,73 +4,65 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/Image.hpp"
 #include "Media/Media_Data.hpp"
+#include "Lines/Line_Data.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cmath>
 #include <vector>
+#include <type_traits>
 
 // Mock MediaData subclass for testing
 class MockMediaData : public MediaData {
 public:
-    MockMediaData() = default;
+    MockMediaData(BitDepth bit_depth = BitDepth::Bit8) {
+        setBitDepth(bit_depth);
+    }
     
     MediaType getMediaType() const override { 
         return MediaType::Images; 
     }
     
     /**
-     * @brief Add an image to the mock media data
-     * 
-     * @param image The image to add
-     */
-    void addImage(Image const& image) {
-        _images.push_back(image);
-        setTotalFrameCount(static_cast<int>(_images.size()));
-        
-        // Update dimensions based on the first image
-        if (_images.size() == 1) {
-            updateWidth(image.size.width);
-            updateHeight(image.size.height);
-        }
-    }
-    
-    /**
-     * @brief Add image data directly
+     * @brief Add an 8-bit image to the mock media data
      * 
      * @param image_data The image data as uint8_t vector
      * @param image_size The image dimensions
      */
-    void addImage(std::vector<uint8_t> const& image_data, ImageSize const& image_size) {
-        Image image(image_data, image_size);
-        addImage(image);
+    void addImage8(std::vector<uint8_t> const& image_data, ImageSize const& image_size) {
+        setBitDepth(BitDepth::Bit8);
+        _stored_image_8bit = image_data;
+        updateWidth(image_size.width);
+        updateHeight(image_size.height);
+        setTotalFrameCount(1); // Simple mock - only one frame
     }
     
     /**
-     * @brief Get the image at the specified frame
+     * @brief Add a 32-bit float image to the mock media data
      * 
-     * @param frame_id The frame index
-     * @return The image at the specified frame
+     * @param image_data The image data as float vector
+     * @param image_size The image dimensions
      */
-    Image getImage(int frame_id) const {
-        if (frame_id >= 0 && static_cast<size_t>(frame_id) < _images.size()) {
-            return _images[static_cast<size_t>(frame_id)];
-        }
-        return Image(); // Return empty image if frame not found
+    void addImage32(std::vector<float> const& image_data, ImageSize const& image_size) {
+        setBitDepth(BitDepth::Bit32);
+        _stored_image_32bit = image_data;
+        updateWidth(image_size.width);
+        updateHeight(image_size.height);
+        setTotalFrameCount(1); // Simple mock - only one frame
     }
     
     /**
-     * @brief Get raw data for a frame (compatible with MediaData interface)
-     * 
-     * @param frame_number The frame number
-     * @return Raw data as uint8_t vector
+     * @brief Add an image based on the current bit depth
      */
-    std::vector<uint8_t> getRawDataForFrame(int frame_number) const {
-        if (frame_number >= 0 && static_cast<size_t>(frame_number) < _images.size()) {
-            return _images[static_cast<size_t>(frame_number)].data;
+    template<typename T>
+    void addImage(std::vector<T> const& image_data, ImageSize const& image_size) {
+        if constexpr (std::is_same_v<T, uint8_t>) {
+            addImage8(image_data, image_size);
+        } else if constexpr (std::is_same_v<T, float>) {
+            addImage32(image_data, image_size);
         }
-        return std::vector<uint8_t>();
     }
     
 protected:
@@ -80,18 +72,22 @@ protected:
     }
     
     void doLoadFrame(int frame_id) override {
-        // Load the frame data into the base class's raw data
-        if (frame_id >= 0 && static_cast<size_t>(frame_id) < _images.size()) {
-            auto const& image = _images[static_cast<size_t>(frame_id)];
-            setRawData(image.data);
+        // Load the stored image data into the base class
+        static_cast<void>(frame_id); // We only have one frame (frame 0)
+        
+        if (is8Bit() && !_stored_image_8bit.empty()) {
+            setRawData(_stored_image_8bit);
+        } else if (is32Bit() && !_stored_image_32bit.empty()) {
+            setRawData(_stored_image_32bit);
         }
     }
-    
+
 private:
-    std::vector<Image> _images;
+    std::vector<uint8_t> _stored_image_8bit;
+    std::vector<float> _stored_image_32bit;
 };
 
-TEST_CASE("FWHM displacement calculation - Core functionality", "[line][alignment][fwhm][transform]") {
+TEST_CASE("Data Transform: Line Alignment - FWHM displacement calculation - Core functionality", "[line][alignment][fwhm][transform]") {
     
     SECTION("Simple bright line detection") {
         // Create a simple test image with a bright horizontal line
@@ -437,7 +433,7 @@ TEST_CASE("FWHM displacement calculation - Core functionality", "[line][alignmen
     }
 }
 
-TEST_CASE("Perpendicular direction calculation - Core functionality", "[line][alignment][perpendicular][transform]") {
+TEST_CASE("Data Transform: Line Alignment - Perpendicular direction calculation - Core functionality", "[line][alignment][perpendicular][transform]") {
     
     SECTION("Horizontal line - perpendicular should be vertical") {
         // Create a horizontal line from (0,0) to (10,0)
@@ -558,7 +554,7 @@ TEST_CASE("Perpendicular direction calculation - Core functionality", "[line][al
     }
 }
 
-TEST_CASE("FWHM center calculation - Edge cases and error handling", "[line][alignment][fwhm][edge]") {
+TEST_CASE("Data Transform: Line Alignment - FWHM center calculation - Edge cases and error handling", "[line][alignment][fwhm][edge]") {
     
     SECTION("Zero width parameter") {
         ImageSize image_size{100, 100};
@@ -622,7 +618,7 @@ TEST_CASE("FWHM center calculation - Edge cases and error handling", "[line][ali
 }
 
 #if LINE_ALIGNMENT_DEBUG_MODE
-TEST_CASE("FWHM profile extents calculation - Debug mode", "[line][alignment][fwhm][debug]") {
+TEST_CASE("Data Transform: Line Alignment - FWHM profile extents calculation - Debug mode", "[line][alignment][fwhm][debug]") {
     
     SECTION("Debug mode profile extents for bright line") {
         // Create a test image with a bright horizontal line
@@ -931,5 +927,183 @@ TEST_CASE("Data Transform: Line Alignment - JSON pipeline", "[transforms][line_a
         std::filesystem::remove_all(test_dir);
     } catch (const std::exception& e) {
         std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+} 
+
+TEST_CASE("Data Transform: Line Alignment - Line alignment with 8-bit and 32-bit media data", "[line][alignment][media][transform]") {
+    
+    SECTION("8-bit media data alignment") {
+        // Create a test image with a bright horizontal line
+        ImageSize image_size{100, 100};
+        std::vector<uint8_t> image_data(100 * 100, 0); // All black initially
+        
+        // Create a bright horizontal line at y=60
+        for (int x = 0; x < 100; ++x) {
+            image_data[60 * 100 + x] = 255; // Bright white line
+        }
+        
+        // Create mock media data with 8-bit data
+        auto media_data = std::make_shared<MockMediaData>(MediaData::BitDepth::Bit8);
+        media_data->addImage8(image_data, image_size);
+        
+        // Create test line data
+        auto line_data = std::make_shared<LineData>();
+        line_data->setImageSize(image_size);
+        
+        // Create a test line with vertices that should align to the bright line
+        Line2D test_line;
+        test_line.push_back(Point2D<float>{30.0f, 50.0f}); // Should move to y=60
+        test_line.push_back(Point2D<float>{50.0f, 55.0f}); // Should move to y=60
+        test_line.push_back(Point2D<float>{70.0f, 45.0f}); // Should move to y=60
+        
+        line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+        
+        // Test the line alignment function
+        auto aligned_line_data = line_alignment(
+            line_data.get(),
+            media_data.get(),
+            20,  // width
+            50,  // perpendicular_range
+            false, // use_processed_data
+            FWHMApproach::PEAK_WIDTH_HALF_MAX,
+            LineAlignmentOutputMode::ALIGNED_VERTICES
+        );
+        
+        REQUIRE(aligned_line_data != nullptr);
+        
+        // Check that the lines were aligned
+        auto aligned_lines = aligned_line_data->getAtTime(TimeFrameIndex(0));
+        REQUIRE(aligned_lines.size() == 1);
+        
+        auto const& aligned_line = aligned_lines[0];
+        REQUIRE(aligned_line.size() == 3);
+        
+        // All vertices should be aligned to y=60 (the bright line)
+        for (auto const& vertex : aligned_line) {
+            REQUIRE_THAT(vertex.y, Catch::Matchers::WithinAbs(60.0f, 2.0f));
+        }
+    }
+    
+    SECTION("32-bit media data alignment") {
+        // Create a test image with a bright horizontal line using 32-bit float data
+        ImageSize image_size{100, 100};
+        std::vector<float> image_data(100 * 100, 0.0f); // All black initially
+        
+        // Create a bright horizontal line at y=60 with float intensity
+        for (int x = 0; x < 100; ++x) {
+            image_data[60 * 100 + x] = 1.0f; // Bright white line (normalized to 0-1)
+        }
+        
+        // Create mock media data with 32-bit data
+        auto media_data = std::make_shared<MockMediaData>(MediaData::BitDepth::Bit32);
+        media_data->addImage32(image_data, image_size);
+        
+        // Create test line data
+        auto line_data = std::make_shared<LineData>();
+        line_data->setImageSize(image_size);
+        
+        // Create a test line with vertices that should align to the bright line
+        Line2D test_line;
+        test_line.push_back(Point2D<float>{30.0f, 50.0f}); // Should move to y=60
+        test_line.push_back(Point2D<float>{50.0f, 55.0f}); // Should move to y=60
+        test_line.push_back(Point2D<float>{70.0f, 45.0f}); // Should move to y=60
+        
+        line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+        
+        // Test the line alignment function
+        auto aligned_line_data = line_alignment(
+            line_data.get(),
+            media_data.get(),
+            20,  // width
+            50,  // perpendicular_range
+            false, // use_processed_data
+            FWHMApproach::PEAK_WIDTH_HALF_MAX,
+            LineAlignmentOutputMode::ALIGNED_VERTICES
+        );
+        
+        REQUIRE(aligned_line_data != nullptr);
+        
+        // Check that the lines were aligned
+        auto aligned_lines = aligned_line_data->getAtTime(TimeFrameIndex(0));
+        REQUIRE(aligned_lines.size() == 1);
+        
+        auto const& aligned_line = aligned_lines[0];
+        REQUIRE(aligned_line.size() == 3);
+        
+        // All vertices should be aligned to y=60 (the bright line)
+        for (auto const& vertex : aligned_line) {
+            REQUIRE_THAT(vertex.y, Catch::Matchers::WithinAbs(60.0f, 2.0f));
+        }
+    }
+    
+    SECTION("Compare 8-bit vs 32-bit alignment results") {
+        ImageSize image_size{100, 100};
+        
+        // Create identical bright horizontal lines in both formats
+        std::vector<uint8_t> image_data_8bit(100 * 100, 0);
+        std::vector<float> image_data_32bit(100 * 100, 0.0f);
+        
+        for (int x = 0; x < 100; ++x) {
+            image_data_8bit[60 * 100 + x] = 255;
+            image_data_32bit[60 * 100 + x] = 1.0f;
+        }
+        
+        // Create mock media data for both bit depths
+        auto media_data_8bit = std::make_shared<MockMediaData>(MediaData::BitDepth::Bit8);
+        media_data_8bit->addImage8(image_data_8bit, image_size);
+        
+        auto media_data_32bit = std::make_shared<MockMediaData>(MediaData::BitDepth::Bit32);
+        media_data_32bit->addImage32(image_data_32bit, image_size);
+        
+        // Create identical test line data for both tests
+        auto line_data = std::make_shared<LineData>();
+        line_data->setImageSize(image_size);
+        
+        Line2D test_line;
+        test_line.push_back(Point2D<float>{30.0f, 50.0f});
+        test_line.push_back(Point2D<float>{50.0f, 55.0f});
+        test_line.push_back(Point2D<float>{70.0f, 45.0f});
+        
+        line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+        
+        // Test alignment with 8-bit data
+        auto aligned_line_data_8bit = line_alignment(
+            line_data.get(),
+            media_data_8bit.get(),
+            20, 50, false,
+            FWHMApproach::PEAK_WIDTH_HALF_MAX,
+            LineAlignmentOutputMode::ALIGNED_VERTICES
+        );
+        
+        // Test alignment with 32-bit data
+        auto aligned_line_data_32bit = line_alignment(
+            line_data.get(),
+            media_data_32bit.get(),
+            20, 50, false,
+            FWHMApproach::PEAK_WIDTH_HALF_MAX,
+            LineAlignmentOutputMode::ALIGNED_VERTICES
+        );
+        
+        REQUIRE(aligned_line_data_8bit != nullptr);
+        REQUIRE(aligned_line_data_32bit != nullptr);
+        
+        // Get aligned lines from both results
+        auto aligned_lines_8bit = aligned_line_data_8bit->getAtTime(TimeFrameIndex(0));
+        auto aligned_lines_32bit = aligned_line_data_32bit->getAtTime(TimeFrameIndex(0));
+        
+        REQUIRE(aligned_lines_8bit.size() == 1);
+        REQUIRE(aligned_lines_32bit.size() == 1);
+        
+        auto const& aligned_line_8bit = aligned_lines_8bit[0];
+        auto const& aligned_line_32bit = aligned_lines_32bit[0];
+        
+        REQUIRE(aligned_line_8bit.size() == 3);
+        REQUIRE(aligned_line_32bit.size() == 3);
+        
+        // Results should be very similar between 8-bit and 32-bit
+        for (size_t i = 0; i < 3; ++i) {
+            REQUIRE_THAT(aligned_line_8bit[i].x, Catch::Matchers::WithinAbs(aligned_line_32bit[i].x, 1.0f));
+            REQUIRE_THAT(aligned_line_8bit[i].y, Catch::Matchers::WithinAbs(aligned_line_32bit[i].y, 1.0f));
+        }
     }
 } 

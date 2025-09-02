@@ -2,18 +2,17 @@
 #define LINE_ALIGNMENT_HPP
 
 
-
 #include "transforms/data_transforms.hpp"
 
-#include "CoreGeometry/points.hpp"
-#include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/line_geometry.hpp"
+#include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/points.hpp"
 
-#include <memory>       // std::shared_ptr
-#include <string>       // std::string
-#include <typeindex>    // std::type_index
-#include <vector>       // std::vector
+#include <memory>   // std::shared_ptr
+#include <string>   // std::string
+#include <typeindex>// std::type_index
+#include <vector>   // std::vector
 
 class LineData;
 class MediaData;
@@ -22,24 +21,24 @@ class MediaData;
  * @brief Enum for FWHM calculation approach
  */
 enum class FWHMApproach {
-    PEAK_WIDTH_HALF_MAX,    // Width at 1/2 maximum height
-    GAUSSIAN_FIT,           // Gaussian curve fitting
-    THRESHOLD_BASED         // Threshold-based peak detection
+    PEAK_WIDTH_HALF_MAX,// Width at 1/2 maximum height
+    GAUSSIAN_FIT,       // Gaussian curve fitting
+    THRESHOLD_BASED     // Threshold-based peak detection
 };
 
 /**
  * @brief Enum for output mode
  */
 enum class LineAlignmentOutputMode {
-    ALIGNED_VERTICES,       // Return aligned line vertices (normal mode)
-    FWHM_PROFILE_EXTENTS    // Return FWHM profile extents for debugging/analysis
+    ALIGNED_VERTICES,   // Return aligned line vertices (normal mode)
+    FWHM_PROFILE_EXTENTS// Return FWHM profile extents for debugging/analysis
 };
 
 
-// Helper function to get pixel value at a given position (exposed for testing)
-uint8_t get_pixel_value(Point2D<float> const & point, 
-                        std::vector<uint8_t> const & image_data, 
-                        ImageSize const & image_size);
+template<typename T>
+T get_pixel_value(Point2D<float> const & point,
+                  std::vector<T> const & image_data,
+                  ImageSize const & image_size);
 
 /**
  * @brief Calculate FWHM center point for a single vertex
@@ -52,11 +51,12 @@ uint8_t get_pixel_value(Point2D<float> const & point,
  * @param approach The FWHM calculation approach
  * @return The center point of the bright feature along the perpendicular direction
  */
+template<typename T>
 Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
                                      Point2D<float> const & perpendicular_dir,
                                      int width,
                                      int perpendicular_range,
-                                     std::vector<uint8_t> const & image_data,
+                                     std::vector<T> const & image_data,
                                      ImageSize const & image_size,
                                      FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
 
@@ -71,11 +71,12 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
  * @param approach The FWHM calculation approach
  * @return A line with 3 points: [left_extent, max_point, right_extent]
  */
+template<typename T>
 Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
                                       Point2D<float> const & perpendicular_dir,
                                       int width,
                                       int perpendicular_range,
-                                      std::vector<uint8_t> const & image_data,
+                                      std::vector<T> const & image_data,
                                       ImageSize const & image_size,
                                       FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
 
@@ -122,12 +123,12 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
 ///////////////////////////////////////////////////////////////////////////////
 
 struct LineAlignmentParameters : public TransformParametersBase {
-    std::shared_ptr<MediaData> media_data;  // Pointer to the MediaData
-    int width = 20;                         // Width of analysis strip
-    int perpendicular_range = 50;            // Range of perpendicular analysis (pixels)
-    bool use_processed_data = true;         // Whether to use processed or raw data
-    FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX; // FWHM calculation approach
-    LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES; // Output mode
+    std::shared_ptr<MediaData> media_data;                                          // Pointer to the MediaData
+    int width = 20;                                                                 // Width of analysis strip
+    int perpendicular_range = 50;                                                   // Range of perpendicular analysis (pixels)
+    bool use_processed_data = true;                                                 // Whether to use processed or raw data
+    FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX;                      // FWHM calculation approach
+    LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES;// Output mode
 };
 
 class LineAlignmentOperation final : public TransformOperation {
@@ -161,12 +162,54 @@ public:
      * or an empty variant on failure.
      */
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
-                           TransformParametersBase const * transformParameters) override;
+                            TransformParametersBase const * transformParameters) override;
 
     // Overload with progress
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
-                           TransformParametersBase const * transformParameters,
-                           ProgressCallback progressCallback) override;
+                            TransformParametersBase const * transformParameters,
+                            ProgressCallback progressCallback) override;
 };
 
-#endif//LINE_ALIGNMENT_HPP 
+extern template uint8_t get_pixel_value<uint8_t>(Point2D<float> const & point,
+                                                 std::vector<uint8_t> const & image_data,
+                                                 ImageSize const & image_size);
+
+extern template float get_pixel_value<float>(Point2D<float> const & point,
+                                             std::vector<float> const & image_data,
+                                             ImageSize const & image_size);
+
+
+extern template Point2D<float> calculate_fwhm_center<uint8_t>(Point2D<float> const & vertex,
+                                                              Point2D<float> const & perpendicular_dir,
+                                                              int width,
+                                                              int perpendicular_range,
+                                                              std::vector<uint8_t> const & image_data,
+                                                              ImageSize const & image_size,
+                                                              FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+
+extern template Point2D<float> calculate_fwhm_center<float>(Point2D<float> const & vertex,
+                                                              Point2D<float> const & perpendicular_dir,
+                                                              int width,
+                                                              int perpendicular_range,
+                                                              std::vector<float> const & image_data,
+                                                              ImageSize const & image_size,
+                                                              FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+
+
+extern template Line2D calculate_fwhm_profile_extents<uint8_t>(Point2D<float> const & vertex,
+                                                               Point2D<float> const & perpendicular_dir,
+                                                               int width,
+                                                               int perpendicular_range,
+                                                               std::vector<uint8_t> const & image_data,
+                                                               ImageSize const & image_size,
+                                                               FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+extern template Line2D calculate_fwhm_profile_extents<float>(Point2D<float> const & vertex,
+                                                               Point2D<float> const & perpendicular_dir,
+                                                               int width,
+                                                               int perpendicular_range,
+                                                               std::vector<float> const & image_data,
+                                                               ImageSize const & image_size,
+                                                               FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+
+
+#endif//LINE_ALIGNMENT_HPP
