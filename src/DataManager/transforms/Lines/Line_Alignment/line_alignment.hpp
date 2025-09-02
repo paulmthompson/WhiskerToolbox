@@ -185,7 +185,7 @@ extern template Point2D<float> calculate_fwhm_center<uint8_t>(Point2D<float> con
                                                               int perpendicular_range,
                                                               std::vector<uint8_t> const & image_data,
                                                               ImageSize const & image_size,
-                                                              FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+                                                              FWHMApproach approach);
 
 extern template Point2D<float> calculate_fwhm_center<float>(Point2D<float> const & vertex,
                                                               Point2D<float> const & perpendicular_dir,
@@ -193,7 +193,7 @@ extern template Point2D<float> calculate_fwhm_center<float>(Point2D<float> const
                                                               int perpendicular_range,
                                                               std::vector<float> const & image_data,
                                                               ImageSize const & image_size,
-                                                              FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+                                                              FWHMApproach approach);
 
 
 extern template Line2D calculate_fwhm_profile_extents<uint8_t>(Point2D<float> const & vertex,
@@ -202,14 +202,14 @@ extern template Line2D calculate_fwhm_profile_extents<uint8_t>(Point2D<float> co
                                                                int perpendicular_range,
                                                                std::vector<uint8_t> const & image_data,
                                                                ImageSize const & image_size,
-                                                               FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+                                                               FWHMApproach approach);
 extern template Line2D calculate_fwhm_profile_extents<float>(Point2D<float> const & vertex,
                                                                Point2D<float> const & perpendicular_dir,
                                                                int width,
                                                                int perpendicular_range,
                                                                std::vector<float> const & image_data,
                                                                ImageSize const & image_size,
-                                                               FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
+                                                               FWHMApproach approach);
 
 
 #endif//LINE_ALIGNMENT_HPP
