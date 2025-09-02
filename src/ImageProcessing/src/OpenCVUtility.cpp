@@ -116,17 +116,63 @@ void linear_transform(cv::Mat & mat, ContrastOptions const& options) {
 }
 
 void gamma_transform(cv::Mat & mat, GammaOptions const& options) {
-    cv::Mat lookupTable(1, 256, CV_8U);
-    uchar* p = lookupTable.ptr();
-    for (int i = 0; i < 256; ++i) {
-        p[i] = cv::saturate_cast<uchar>(pow(i / 255.0, options.gamma) * 255.0);
+    if (mat.depth() == CV_8U) {
+        // Original 8-bit implementation using lookup table
+        cv::Mat lookupTable(1, 256, CV_8U);
+        uchar* p = lookupTable.ptr();
+        for (int i = 0; i < 256; ++i) {
+            p[i] = cv::saturate_cast<uchar>(pow(i / 255.0, options.gamma) * 255.0);
+        }
+        cv::LUT(mat, lookupTable, mat);
+    } else if (mat.depth() == CV_32F) {
+        // 32-bit float implementation using direct computation
+        // For float data, we assume it's normalized to 0-255 range
+        mat.forEach<float>([&options](float& pixel, const int* /*position*/) {
+            // Normalize to 0-1 range, apply gamma, then scale back to 0-255
+            float normalized = pixel / 255.0f;
+            normalized = std::max(0.0f, std::min(1.0f, normalized)); // Clamp to valid range
+            pixel = std::pow(normalized, options.gamma) * 255.0f;
+        });
+    } else {
+        // For other bit depths, convert to 8-bit temporarily, apply gamma, then convert back
+        cv::Mat temp;
+        mat.convertTo(temp, CV_8U);
+        
+        cv::Mat lookupTable(1, 256, CV_8U);
+        uchar* p = lookupTable.ptr();
+        for (int i = 0; i < 256; ++i) {
+            p[i] = cv::saturate_cast<uchar>(pow(i / 255.0, options.gamma) * 255.0);
+        }
+        cv::LUT(temp, lookupTable, temp);
+        
+        temp.convertTo(mat, mat.depth());
     }
-    cv::LUT(mat, lookupTable, mat);
 }
 
 void clahe(cv::Mat & mat, ClaheOptions const& options) {
-    cv::Ptr<cv::CLAHE> clahe_ptr = cv::createCLAHE(options.clip_limit, cv::Size(options.grid_size, options.grid_size));
-    clahe_ptr->apply(mat, mat);
+    if (mat.depth() == CV_8U) {
+        // CLAHE works directly with 8-bit data
+        cv::Ptr<cv::CLAHE> clahe_ptr = cv::createCLAHE(options.clip_limit, cv::Size(options.grid_size, options.grid_size));
+        clahe_ptr->apply(mat, mat);
+    } else if (mat.depth() == CV_32F) {
+        // For 32-bit float, convert to 8-bit, apply CLAHE, then convert back
+        cv::Mat temp_8bit;
+        mat.convertTo(temp_8bit, CV_8U);
+        
+        cv::Ptr<cv::CLAHE> clahe_ptr = cv::createCLAHE(options.clip_limit, cv::Size(options.grid_size, options.grid_size));
+        clahe_ptr->apply(temp_8bit, temp_8bit);
+        
+        temp_8bit.convertTo(mat, CV_32F);
+    } else {
+        // For other bit depths, convert to 8-bit, apply CLAHE, then convert back
+        cv::Mat temp_8bit;
+        mat.convertTo(temp_8bit, CV_8U);
+        
+        cv::Ptr<cv::CLAHE> clahe_ptr = cv::createCLAHE(options.clip_limit, cv::Size(options.grid_size, options.grid_size));
+        clahe_ptr->apply(temp_8bit, temp_8bit);
+        
+        temp_8bit.convertTo(mat, mat.depth());
+    }
 }
 
 void sharpen_image(cv::Mat & mat, SharpenOptions const& options) {
@@ -334,10 +380,15 @@ void apply_colormap(cv::Mat& mat, ColormapOptions const& options) {
     
     cv::Mat normalized_mat;
     if (options.normalize) {
-        // Normalize to 0-255 range
+        // Normalize to 0-255 range and convert to 8-bit for colormap application
         cv::normalize(mat, normalized_mat, 0, 255, cv::NORM_MINMAX, CV_8UC1);
     } else {
-        normalized_mat = mat.clone();
+        // Convert to 8-bit if necessary for colormap application
+        if (mat.depth() == CV_8U) {
+            normalized_mat = mat.clone();
+        } else {
+            mat.convertTo(normalized_mat, CV_8U);
+        }
     }
     
     // Apply the colormap

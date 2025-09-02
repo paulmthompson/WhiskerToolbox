@@ -1,5 +1,4 @@
 #include "OpenCVImageProcessor.hpp"
-#include <opencv2/opencv.hpp>
 #include <memory>
 #include <cstring>
 
@@ -36,7 +35,7 @@ void OpenCVImageProcessor::addOpenCVProcessingStep(std::string const& key,
                                                  std::function<void(cv::Mat&)> processor) {
     // Wrap the cv::Mat& processor to work with void*
     auto wrapped_processor = [processor](void* mat_ptr) {
-        auto* mat = static_cast<cv::Mat*>(mat_ptr);
+        cv::Mat* mat = static_cast<cv::Mat*>(mat_ptr);
         processor(*mat);
     };
     _processing_steps[key] = std::move(wrapped_processor);
@@ -66,7 +65,7 @@ void* OpenCVImageProcessor::convertFromRaw(ImageData const& data, ImageSize cons
             return nullptr;
         }
         
-        int cv_type = CV_8UC1;  // Default initialization
+        int cv_type;
         if constexpr (std::is_same_v<T, uint8_t>) {
             cv_type = CV_8UC1;
         } else if constexpr (std::is_same_v<T, float>) {
@@ -77,14 +76,14 @@ void* OpenCVImageProcessor::convertFromRaw(ImageData const& data, ImageSize cons
         
         // Create cv::Mat from the vector data
         // Note: We create a copy to ensure the cv::Mat owns the data during processing
-        auto* mat = new cv::Mat(size.height, size.width, cv_type);
+        cv::Mat* mat = new cv::Mat(size.height, size.width, cv_type);
         std::memcpy(mat->data, vec.data(), vec.size() * sizeof(T));
         
         return mat;
     }, data);
 }
 
-ImageData OpenCVImageProcessor::convertToRaw(void* internal_data, ImageSize const& /*size*/, size_t output_type) {
+ImageData OpenCVImageProcessor::convertToRaw(void* internal_data, ImageSize const& size, size_t output_type) {
     if (!internal_data) {
         if (output_type == 0) {
             return std::vector<uint8_t>{};
@@ -93,7 +92,7 @@ ImageData OpenCVImageProcessor::convertToRaw(void* internal_data, ImageSize cons
         }
     }
     
-    auto* mat = static_cast<cv::Mat*>(internal_data);
+    cv::Mat* mat = static_cast<cv::Mat*>(internal_data);
     
     if (mat->empty()) {
         if (output_type == 0) {
@@ -106,7 +105,7 @@ ImageData OpenCVImageProcessor::convertToRaw(void* internal_data, ImageSize cons
     if (output_type == 0) {
         // Convert to uint8_t vector
         std::vector<uint8_t> result;
-        result.resize(static_cast<size_t>(mat->total() * mat->channels()));
+        result.resize(mat->total() * mat->channels());
         
         if (mat->type() == CV_8UC1) {
             // Direct copy for 8-bit data
@@ -116,9 +115,8 @@ ImageData OpenCVImageProcessor::convertToRaw(void* internal_data, ImageSize cons
                 size_t idx = 0;
                 for (int i = 0; i < mat->rows; ++i) {
                     uint8_t* row_ptr = mat->ptr<uint8_t>(i);
-                    auto cols_channels = static_cast<size_t>(mat->cols * mat->channels());
-                    std::memcpy(result.data() + idx, row_ptr, cols_channels);
-                    idx += cols_channels;
+                    std::memcpy(result.data() + idx, row_ptr, mat->cols * mat->channels());
+                    idx += mat->cols * mat->channels();
                 }
             }
         } else if (mat->type() == CV_32FC1) {
@@ -131,9 +129,8 @@ ImageData OpenCVImageProcessor::convertToRaw(void* internal_data, ImageSize cons
                 size_t idx = 0;
                 for (int i = 0; i < temp_mat.rows; ++i) {
                     uint8_t* row_ptr = temp_mat.ptr<uint8_t>(i);
-                    auto cols_channels = static_cast<size_t>(temp_mat.cols * temp_mat.channels());
-                    std::memcpy(result.data() + idx, row_ptr, cols_channels);
-                    idx += cols_channels;
+                    std::memcpy(result.data() + idx, row_ptr, temp_mat.cols * temp_mat.channels());
+                    idx += temp_mat.cols * temp_mat.channels();
                 }
             }
         }
@@ -141,7 +138,7 @@ ImageData OpenCVImageProcessor::convertToRaw(void* internal_data, ImageSize cons
     } else {
         // Convert to float vector  
         std::vector<float> result;
-        result.resize(static_cast<size_t>(mat->total() * mat->channels()));
+        result.resize(mat->total() * mat->channels());
         
         if (mat->type() == CV_32FC1) {
             // Direct copy for float data
@@ -151,9 +148,8 @@ ImageData OpenCVImageProcessor::convertToRaw(void* internal_data, ImageSize cons
                 size_t idx = 0;
                 for (int i = 0; i < mat->rows; ++i) {
                     float* row_ptr = mat->ptr<float>(i);
-                    auto cols_channels = static_cast<size_t>(mat->cols * mat->channels());
-                    std::memcpy(result.data() + idx, row_ptr, cols_channels * sizeof(float));
-                    idx += cols_channels;
+                    std::memcpy(result.data() + idx, row_ptr, mat->cols * mat->channels() * sizeof(float));
+                    idx += mat->cols * mat->channels();
                 }
             }
         } else if (mat->type() == CV_8UC1) {
@@ -166,9 +162,8 @@ ImageData OpenCVImageProcessor::convertToRaw(void* internal_data, ImageSize cons
                 size_t idx = 0;
                 for (int i = 0; i < temp_mat.rows; ++i) {
                     float* row_ptr = temp_mat.ptr<float>(i);
-                    auto cols_channels = static_cast<size_t>(temp_mat.cols * temp_mat.channels());
-                    std::memcpy(result.data() + idx, row_ptr, cols_channels * sizeof(float));
-                    idx += cols_channels;
+                    std::memcpy(result.data() + idx, row_ptr, temp_mat.cols * temp_mat.channels() * sizeof(float));
+                    idx += temp_mat.cols * temp_mat.channels();
                 }
             }
         }
