@@ -149,7 +149,14 @@ enum class ColormapType {
     Plasma, ///< Purple-pink-yellow colormap
     Inferno,///< Black-purple-yellow colormap
     Magma,  ///< Black-purple-pink-yellow colormap
-    Turbo   ///< Blue-cyan-green-yellow-red colormap
+    Turbo,  ///< Blue-cyan-green-yellow-red colormap
+    // Single-color channel mappings
+    Red,    ///< Black to red single-channel colormap
+    Green,  ///< Black to green single-channel colormap
+    Blue,   ///< Black to blue single-channel colormap
+    Cyan,   ///< Black to cyan single-channel colormap
+    Magenta,///< Black to magenta single-channel colormap
+    Yellow  ///< Black to yellow single-channel colormap
 };
 
 /**

@@ -104,6 +104,22 @@ void ColormapWidget::_blockSignalsAndSetValues(ColormapOptions const& options) {
 
 void ColormapWidget::_populateColormapComboBox() {
     ui->colormap_combobox->addItem("None", static_cast<int>(ColormapType::None));
+
+    // Add separator to distinguish single-color channel mappings
+    ui->colormap_combobox->insertSeparator(ui->colormap_combobox->count());
+    
+    // Single-color channel mappings
+    ui->colormap_combobox->addItem("Red Channel", static_cast<int>(ColormapType::Red));
+    ui->colormap_combobox->addItem("Green Channel", static_cast<int>(ColormapType::Green));
+    ui->colormap_combobox->addItem("Blue Channel", static_cast<int>(ColormapType::Blue));
+    ui->colormap_combobox->addItem("Cyan Channel", static_cast<int>(ColormapType::Cyan));
+    ui->colormap_combobox->addItem("Magenta Channel", static_cast<int>(ColormapType::Magenta));
+    ui->colormap_combobox->addItem("Yellow Channel", static_cast<int>(ColormapType::Yellow));
+    
+    // Add separator to distinguish single-color channel mappings
+    ui->colormap_combobox->insertSeparator(ui->colormap_combobox->count());
+
+    // Standard OpenCV colormaps
     ui->colormap_combobox->addItem("Jet", static_cast<int>(ColormapType::Jet));
     ui->colormap_combobox->addItem("Hot", static_cast<int>(ColormapType::Hot));
     ui->colormap_combobox->addItem("Cool", static_cast<int>(ColormapType::Cool));
@@ -121,6 +137,7 @@ void ColormapWidget::_populateColormapComboBox() {
     ui->colormap_combobox->addItem("Inferno", static_cast<int>(ColormapType::Inferno));
     ui->colormap_combobox->addItem("Magma", static_cast<int>(ColormapType::Magma));
     ui->colormap_combobox->addItem("Turbo", static_cast<int>(ColormapType::Turbo));
+
 }
 
 ColormapType ColormapWidget::_getColormapTypeFromIndex(int index) const {

@@ -98,6 +98,57 @@ void median_blur(cv::Mat & mat, int const kernel_size) {
     cv::medianBlur(mat, mat, kernel_size);
 }
 
+/**
+ * @brief Apply single-color channel mapping to grayscale image
+ * @param input_mat Input grayscale matrix (8-bit)
+ * @param output_mat Output BGR colored matrix
+ * @param colormap_type The single-color colormap type
+ */
+static void _applySingleColorMapping(cv::Mat const& input_mat, cv::Mat& output_mat, ColormapType colormap_type) {
+    // Create a 3-channel BGR image
+    output_mat = cv::Mat::zeros(input_mat.rows, input_mat.cols, CV_8UC3);
+    
+    // Define the color channel values (BGR format)
+    cv::Vec3b color_values;
+    
+    switch (colormap_type) {
+        case ColormapType::Red:
+            color_values = cv::Vec3b(0, 0, 255);    // Red in BGR
+            break;
+        case ColormapType::Green:
+            color_values = cv::Vec3b(0, 255, 0);    // Green in BGR
+            break;
+        case ColormapType::Blue:
+            color_values = cv::Vec3b(255, 0, 0);    // Blue in BGR
+            break;
+        case ColormapType::Cyan:
+            color_values = cv::Vec3b(255, 255, 0);  // Cyan in BGR
+            break;
+        case ColormapType::Magenta:
+            color_values = cv::Vec3b(255, 0, 255);  // Magenta in BGR
+            break;
+        case ColormapType::Yellow:
+            color_values = cv::Vec3b(0, 255, 255);  // Yellow in BGR
+            break;
+        default:
+            color_values = cv::Vec3b(0, 0, 255);    // Default to red
+            break;
+    }
+    
+    // Apply the color mapping
+    for (int y = 0; y < input_mat.rows; ++y) {
+        for (int x = 0; x < input_mat.cols; ++x) {
+            uint8_t intensity = input_mat.at<uint8_t>(y, x);
+            
+            // Scale each channel by the intensity
+            cv::Vec3b& pixel = output_mat.at<cv::Vec3b>(y, x);
+            pixel[0] = (color_values[0] * intensity) / 255;  // Blue channel
+            pixel[1] = (color_values[1] * intensity) / 255;  // Green channel
+            pixel[2] = (color_values[2] * intensity) / 255;  // Red channel
+        }
+    }
+}
+
 // New options-based implementations
 void linear_transform(cv::Mat & mat, ContrastOptions const& options) {
     double alpha = options.alpha;
@@ -391,68 +442,78 @@ void apply_colormap(cv::Mat& mat, ColormapOptions const& options) {
         }
     }
     
-    // Apply the colormap
     cv::Mat colored_mat;
-    int cv_colormap = cv::COLORMAP_JET; // default
     
-    switch (options.colormap) {
-        case ColormapType::Jet:
-            cv_colormap = cv::COLORMAP_JET;
-            break;
-        case ColormapType::Hot:
-            cv_colormap = cv::COLORMAP_HOT;
-            break;
-        case ColormapType::Cool:
-            cv_colormap = cv::COLORMAP_COOL;
-            break;
-        case ColormapType::Spring:
-            cv_colormap = cv::COLORMAP_SPRING;
-            break;
-        case ColormapType::Summer:
-            cv_colormap = cv::COLORMAP_SUMMER;
-            break;
-        case ColormapType::Autumn:
-            cv_colormap = cv::COLORMAP_AUTUMN;
-            break;
-        case ColormapType::Winter:
-            cv_colormap = cv::COLORMAP_WINTER;
-            break;
-        case ColormapType::Rainbow:
-            cv_colormap = cv::COLORMAP_RAINBOW;
-            break;
-        case ColormapType::Ocean:
-            cv_colormap = cv::COLORMAP_OCEAN;
-            break;
-        case ColormapType::Pink:
-            cv_colormap = cv::COLORMAP_PINK;
-            break;
-        case ColormapType::HSV:
-            cv_colormap = cv::COLORMAP_HSV;
-            break;
-        case ColormapType::Parula:
-            cv_colormap = cv::COLORMAP_PARULA;
-            break;
-        case ColormapType::Viridis:
-            cv_colormap = cv::COLORMAP_VIRIDIS;
-            break;
-        case ColormapType::Plasma:
-            cv_colormap = cv::COLORMAP_PLASMA;
-            break;
-        case ColormapType::Inferno:
-            cv_colormap = cv::COLORMAP_INFERNO;
-            break;
-        case ColormapType::Magma:
-            cv_colormap = cv::COLORMAP_MAGMA;
-            break;
-        case ColormapType::Turbo:
-            cv_colormap = cv::COLORMAP_TURBO;
-            break;
-        default:
-            cv_colormap = cv::COLORMAP_JET;
-            break;
+    // Check if it's a single-color channel mapping
+    if (options.colormap == ColormapType::Red || options.colormap == ColormapType::Green || 
+        options.colormap == ColormapType::Blue || options.colormap == ColormapType::Cyan ||
+        options.colormap == ColormapType::Magenta || options.colormap == ColormapType::Yellow) {
+        
+        // Apply single-color channel mapping
+        _applySingleColorMapping(normalized_mat, colored_mat, options.colormap);
+    } else {
+        // Apply standard OpenCV colormap
+        int cv_colormap = cv::COLORMAP_JET; // default
+        
+        switch (options.colormap) {
+            case ColormapType::Jet:
+                cv_colormap = cv::COLORMAP_JET;
+                break;
+            case ColormapType::Hot:
+                cv_colormap = cv::COLORMAP_HOT;
+                break;
+            case ColormapType::Cool:
+                cv_colormap = cv::COLORMAP_COOL;
+                break;
+            case ColormapType::Spring:
+                cv_colormap = cv::COLORMAP_SPRING;
+                break;
+            case ColormapType::Summer:
+                cv_colormap = cv::COLORMAP_SUMMER;
+                break;
+            case ColormapType::Autumn:
+                cv_colormap = cv::COLORMAP_AUTUMN;
+                break;
+            case ColormapType::Winter:
+                cv_colormap = cv::COLORMAP_WINTER;
+                break;
+            case ColormapType::Rainbow:
+                cv_colormap = cv::COLORMAP_RAINBOW;
+                break;
+            case ColormapType::Ocean:
+                cv_colormap = cv::COLORMAP_OCEAN;
+                break;
+            case ColormapType::Pink:
+                cv_colormap = cv::COLORMAP_PINK;
+                break;
+            case ColormapType::HSV:
+                cv_colormap = cv::COLORMAP_HSV;
+                break;
+            case ColormapType::Parula:
+                cv_colormap = cv::COLORMAP_PARULA;
+                break;
+            case ColormapType::Viridis:
+                cv_colormap = cv::COLORMAP_VIRIDIS;
+                break;
+            case ColormapType::Plasma:
+                cv_colormap = cv::COLORMAP_PLASMA;
+                break;
+            case ColormapType::Inferno:
+                cv_colormap = cv::COLORMAP_INFERNO;
+                break;
+            case ColormapType::Magma:
+                cv_colormap = cv::COLORMAP_MAGMA;
+                break;
+            case ColormapType::Turbo:
+                cv_colormap = cv::COLORMAP_TURBO;
+                break;
+            default:
+                cv_colormap = cv::COLORMAP_JET;
+                break;
+        }
+        
+        cv::applyColorMap(normalized_mat, colored_mat, cv_colormap);
     }
-    
-    cv::applyColorMap(normalized_mat, colored_mat, cv_colormap);
     
     // Apply alpha blending if needed
     if (options.alpha < 1.0) {
@@ -495,66 +556,77 @@ std::vector<uint8_t> apply_colormap_for_display(std::vector<uint8_t> const& gray
     
     // Apply the colormap
     cv::Mat colored_mat;
-    int cv_colormap = cv::COLORMAP_JET; // default
     
-    switch (options.colormap) {
-        case ColormapType::Jet:
-            cv_colormap = cv::COLORMAP_JET;
-            break;
-        case ColormapType::Hot:
-            cv_colormap = cv::COLORMAP_HOT;
-            break;
-        case ColormapType::Cool:
-            cv_colormap = cv::COLORMAP_COOL;
-            break;
-        case ColormapType::Spring:
-            cv_colormap = cv::COLORMAP_SPRING;
-            break;
-        case ColormapType::Summer:
-            cv_colormap = cv::COLORMAP_SUMMER;
-            break;
-        case ColormapType::Autumn:
-            cv_colormap = cv::COLORMAP_AUTUMN;
-            break;
-        case ColormapType::Winter:
-            cv_colormap = cv::COLORMAP_WINTER;
-            break;
-        case ColormapType::Rainbow:
-            cv_colormap = cv::COLORMAP_RAINBOW;
-            break;
-        case ColormapType::Ocean:
-            cv_colormap = cv::COLORMAP_OCEAN;
-            break;
-        case ColormapType::Pink:
-            cv_colormap = cv::COLORMAP_PINK;
-            break;
-        case ColormapType::HSV:
-            cv_colormap = cv::COLORMAP_HSV;
-            break;
-        case ColormapType::Parula:
-            cv_colormap = cv::COLORMAP_PARULA;
-            break;
-        case ColormapType::Viridis:
-            cv_colormap = cv::COLORMAP_VIRIDIS;
-            break;
-        case ColormapType::Plasma:
-            cv_colormap = cv::COLORMAP_PLASMA;
-            break;
-        case ColormapType::Inferno:
-            cv_colormap = cv::COLORMAP_INFERNO;
-            break;
-        case ColormapType::Magma:
-            cv_colormap = cv::COLORMAP_MAGMA;
-            break;
-        case ColormapType::Turbo:
-            cv_colormap = cv::COLORMAP_TURBO;
-            break;
-        default:
-            cv_colormap = cv::COLORMAP_JET;
-            break;
+    // Check if it's a single-color channel mapping
+    if (options.colormap == ColormapType::Red || options.colormap == ColormapType::Green || 
+        options.colormap == ColormapType::Blue || options.colormap == ColormapType::Cyan ||
+        options.colormap == ColormapType::Magenta || options.colormap == ColormapType::Yellow) {
+        
+        // Apply single-color channel mapping
+        _applySingleColorMapping(normalized_mat, colored_mat, options.colormap);
+    } else {
+        // Apply standard OpenCV colormap
+        int cv_colormap = cv::COLORMAP_JET; // default
+        
+        switch (options.colormap) {
+            case ColormapType::Jet:
+                cv_colormap = cv::COLORMAP_JET;
+                break;
+            case ColormapType::Hot:
+                cv_colormap = cv::COLORMAP_HOT;
+                break;
+            case ColormapType::Cool:
+                cv_colormap = cv::COLORMAP_COOL;
+                break;
+            case ColormapType::Spring:
+                cv_colormap = cv::COLORMAP_SPRING;
+                break;
+            case ColormapType::Summer:
+                cv_colormap = cv::COLORMAP_SUMMER;
+                break;
+            case ColormapType::Autumn:
+                cv_colormap = cv::COLORMAP_AUTUMN;
+                break;
+            case ColormapType::Winter:
+                cv_colormap = cv::COLORMAP_WINTER;
+                break;
+            case ColormapType::Rainbow:
+                cv_colormap = cv::COLORMAP_RAINBOW;
+                break;
+            case ColormapType::Ocean:
+                cv_colormap = cv::COLORMAP_OCEAN;
+                break;
+            case ColormapType::Pink:
+                cv_colormap = cv::COLORMAP_PINK;
+                break;
+            case ColormapType::HSV:
+                cv_colormap = cv::COLORMAP_HSV;
+                break;
+            case ColormapType::Parula:
+                cv_colormap = cv::COLORMAP_PARULA;
+                break;
+            case ColormapType::Viridis:
+                cv_colormap = cv::COLORMAP_VIRIDIS;
+                break;
+            case ColormapType::Plasma:
+                cv_colormap = cv::COLORMAP_PLASMA;
+                break;
+            case ColormapType::Inferno:
+                cv_colormap = cv::COLORMAP_INFERNO;
+                break;
+            case ColormapType::Magma:
+                cv_colormap = cv::COLORMAP_MAGMA;
+                break;
+            case ColormapType::Turbo:
+                cv_colormap = cv::COLORMAP_TURBO;
+                break;
+            default:
+                cv_colormap = cv::COLORMAP_JET;
+                break;
+        }
+        
+        cv::applyColorMap(normalized_mat, colored_mat, cv_colormap);
     }
-    
-    cv::applyColorMap(normalized_mat, colored_mat, cv_colormap);
     
     // Apply alpha blending if needed
     if (options.alpha < 1.0) {

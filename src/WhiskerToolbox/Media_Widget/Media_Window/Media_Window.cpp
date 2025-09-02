@@ -492,11 +492,11 @@ void Media_Window::_plotMediaData() {
                             media->getImageSize(),
                             _media_configs[active_media_key].get()->colormap_options);
 
-                    // Apply colormap and get RGBA data
+                    // Apply colormap and get BGRA data (OpenCV returns BGRA format)
                     unscaled_image = QImage(colormap_data.data(),
                                             media->getWidth(),
                                             media->getHeight(),
-                                            QImage::Format_RGBA8888);
+                                            QImage::Format_ARGB32);
                 } else {
                     // No colormap, use original 8-bit grayscale data
                     unscaled_image = QImage(unscaled_image_data_8bit.data(),
@@ -525,11 +525,11 @@ void Media_Window::_plotMediaData() {
                             media->getImageSize(),
                             _media_configs[active_media_key].get()->colormap_options);
 
-                    // Apply colormap and get RGBA data - make a deep copy to avoid use-after-free
+                    // Apply colormap and get BGRA data - make a deep copy to avoid use-after-free
                     unscaled_image = QImage(colormap_data.data(),
                                             media->getWidth(),
                                             media->getHeight(),
-                                            QImage::Format_RGBA8888).copy();
+                                            QImage::Format_ARGB32).copy();
                 } else {
                     // No colormap, convert 32-bit float to 16-bit for higher precision display
                     std::vector<uint16_t> converted_16bit;
@@ -643,15 +643,15 @@ QImage Media_Window::_combineMultipleMedia() {
                         media->getImageSize(),
                         media_config.get()->colormap_options);
 
-                // Use colormap data (RGBA)
+                // Use colormap data (BGRA format from OpenCV)
                 for (int y = 0; y < media->getHeight(); ++y) {
                     for (int x = 0; x < media->getWidth(); ++x) {
                         int const pixel_idx = (y * media->getWidth() + x) * 4;
 
-                        uint8_t const r = colormap_data[pixel_idx];
-                        uint8_t const g = colormap_data[pixel_idx + 1];
-                        uint8_t const b = colormap_data[pixel_idx + 2];
-                        uint8_t const a = colormap_data[pixel_idx + 3];
+                        uint8_t const b = colormap_data[pixel_idx];     // Blue channel
+                        uint8_t const g = colormap_data[pixel_idx + 1]; // Green channel  
+                        uint8_t const r = colormap_data[pixel_idx + 2]; // Red channel
+                        uint8_t const a = colormap_data[pixel_idx + 3]; // Alpha channel
 
                         // Get current pixel from combined image
                         QRgb current_pixel = combined_image.pixel(x, y);
@@ -702,15 +702,15 @@ QImage Media_Window::_combineMultipleMedia() {
                         media->getImageSize(),
                         media_config.get()->colormap_options);
 
-                // Use colormap data (RGBA)
+                // Use colormap data (BGRA format from OpenCV)
                 for (int y = 0; y < media->getHeight(); ++y) {
                     for (int x = 0; x < media->getWidth(); ++x) {
                         int const pixel_idx = (y * media->getWidth() + x) * 4;
 
-                        uint8_t const r = colormap_data[pixel_idx];
-                        uint8_t const g = colormap_data[pixel_idx + 1];
-                        uint8_t const b = colormap_data[pixel_idx + 2];
-                        uint8_t const a = colormap_data[pixel_idx + 3];
+                        uint8_t const b = colormap_data[pixel_idx];     // Blue channel
+                        uint8_t const g = colormap_data[pixel_idx + 1]; // Green channel
+                        uint8_t const r = colormap_data[pixel_idx + 2]; // Red channel
+                        uint8_t const a = colormap_data[pixel_idx + 3]; // Alpha channel
 
                         // Get current pixel from combined image
                         QRgb current_pixel = combined_image.pixel(x, y);
