@@ -99,6 +99,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 
     // Create the Media_Window now that we have a DataManager
     _createMediaWindow();
+    _createOptions();
 
     ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
     ui->feature_table_widget->setTypeFilter({DM_DataType::Line, DM_DataType::Mask, DM_DataType::Points, DM_DataType::DigitalInterval, DM_DataType::Tensor, DM_DataType::Video, DM_DataType::Images});
