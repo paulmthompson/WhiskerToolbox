@@ -173,6 +173,15 @@ private:
      * to minimize empty space.
      */
     void _autoFillCanvas();
+
+    /**
+     * @brief Clean up data references that have been deleted from the DataManager
+     * 
+     * This method is called by the DataManager observer to automatically
+     * remove data references when they are deleted from the DataManager.
+     * It cleans up both the OpenGLWidget and PlottingManager references.
+     */
+    void cleanupDeletedData();
 };
 
 

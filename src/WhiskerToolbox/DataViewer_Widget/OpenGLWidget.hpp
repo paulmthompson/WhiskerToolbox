@@ -325,7 +325,7 @@ public:
     [[nodiscard]] XAxis getXAxis() const { return _xAxis; }
 
     void setGlobalScale(float scale) {
-
+        
         std::cout << "Global zoom set to " << scale << std::endl;
         _global_zoom = scale;
         updateCanvas(_time);
@@ -488,6 +488,10 @@ private:
     // ShaderManager integration
     ShaderSourceType m_shaderSourceType = ShaderSourceType::Resource;
     void setShaderSourceType(ShaderSourceType type) { m_shaderSourceType = type; }
+
+    // GL lifecycle guards
+    bool _gl_initialized{false};
+    QMetaObject::Connection _ctxAboutToBeDestroyedConn;
 };
 
 namespace TimeSeriesDefaultValues {

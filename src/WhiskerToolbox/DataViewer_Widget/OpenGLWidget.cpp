@@ -205,14 +205,35 @@ void OpenGLWidget::setPlotTheme(PlotTheme theme) {
 }
 
 void OpenGLWidget::cleanup() {
-    if (m_program == nullptr)
+    // Avoid re-entrancy or cleanup without a valid context
+    if (!_gl_initialized) {
         return;
+    }
+
+    // Guard: QOpenGLContext may already be gone during teardown
+    if (QOpenGLContext::currentContext() == nullptr && context() == nullptr) {
+        _gl_initialized = false;
+        return;
+    }
+
+    // Safe to release our GL resources
     makeCurrent();
-    delete m_program;
-    delete m_dashedProgram;
-    m_program = nullptr;
-    m_dashedProgram = nullptr;
+
+    if (m_program) {
+        delete m_program;
+        m_program = nullptr;
+    }
+    if (m_dashedProgram) {
+        delete m_dashedProgram;
+        m_dashedProgram = nullptr;
+    }
+
+    m_vbo.destroy();
+    m_vao.destroy();
+
     doneCurrent();
+
+    _gl_initialized = false;
 }
 
 QOpenGLShaderProgram * create_shader_program(char const * vertexShaderSource,
@@ -236,8 +257,21 @@ QOpenGLShaderProgram * create_shader_program_from_resource(QString const & verte
 }
 
 void OpenGLWidget::initializeGL() {
-    connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &OpenGLWidget::cleanup);
+    // Ensure QOpenGLFunctions is initialized
     initializeOpenGLFunctions();
+
+    // Track GL init and connect context destruction
+    _gl_initialized = true;
+    if (context()) {
+        // Disconnect any previous connection to avoid duplicates
+        if (_ctxAboutToBeDestroyedConn) {
+            disconnect(_ctxAboutToBeDestroyedConn);
+        }
+        _ctxAboutToBeDestroyedConn = connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, [this]() {
+            cleanup();
+        });
+    }
+
     auto fmt = format();
     std::cout << "OpenGL major version: " << fmt.majorVersion() << std::endl;
     std::cout << "OpenGL minor version: " << fmt.minorVersion() << std::endl;
