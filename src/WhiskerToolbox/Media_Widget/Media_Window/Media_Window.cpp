@@ -496,13 +496,13 @@ void Media_Window::_plotMediaData() {
                     unscaled_image = QImage(colormap_data.data(),
                                             media->getWidth(),
                                             media->getHeight(),
-                                            QImage::Format_ARGB32);
+                                            QImage::Format_ARGB32).copy();
                 } else {
                     // No colormap, use original 8-bit grayscale data
                     unscaled_image = QImage(unscaled_image_data_8bit.data(),
                                             media->getWidth(),
                                             media->getHeight(),
-                                            QImage::Format_Grayscale8);
+                                            QImage::Format_Grayscale8).copy();
                 }
             } else if (media->is32Bit()) {
                 // 32-bit float processing
