@@ -1,5 +1,6 @@
 #include "Mask_Data_Image.hpp"
 
+#include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 #include "Masks/Mask_Data.hpp"
@@ -56,6 +57,8 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
     std::cout << "Loading mask images from directory: " << opts.directory_path << std::endl;
     std::cout << "Found " << image_files.size() << " image files matching pattern: " << opts.file_pattern << std::endl;
 
+    std::vector<ImageSize> mask_sizes;
+
     for (auto const & file_path: image_files) {
         std::string filename = file_path.filename().string();
         std::string stem = file_path.stem().string();// Remove extension
@@ -93,6 +96,7 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
         std::vector<Point2D<uint32_t>> mask_points;
         int const width = image.cols;
         int const height = image.rows;
+        mask_sizes.push_back(ImageSize{width, height});
 
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
@@ -121,6 +125,16 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
         } else {
             std::cout << "Warning: No mask pixels found in image: " << filename << std::endl;
             files_skipped++;
+        }
+    }
+
+    // If all masks loaded have same size, change image size to mask data to that size
+    if (!mask_sizes.empty()) {
+        auto first_size = mask_sizes[0];
+        if (std::all_of(mask_sizes.begin(), mask_sizes.end(), [&](ImageSize const & size) {
+                return size == first_size;
+            })) {
+            mask_data->setImageSize(first_size);
         }
     }
 

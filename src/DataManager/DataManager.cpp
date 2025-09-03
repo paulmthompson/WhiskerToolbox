@@ -31,7 +31,6 @@
 #include "utils/TableView/TableRegistry.hpp"
 
 #include "loaders/binary_loaders.hpp"
-#include "transforms/Masks/mask_area.hpp"
 
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -103,18 +102,6 @@ bool tryRegistryThenLegacyLoad(
                             std::string const color = item.value("color", "0000FF");
                             data_info_list.push_back({name, "MaskData", color});
 
-                            // Handle operations if present (same as legacy)
-                            if (item.contains("operations")) {
-                                for (auto const & operation: item["operations"]) {
-                                    std::string const operation_type = operation["type"];
-                                    if (operation_type == "area") {
-                                        std::cout << "Calculating area for mask: " << name << std::endl;
-                                        auto area_data = area(dm->getData<MaskData>(name).get());
-                                        std::string const output_name = name + "_area";
-                                        dm->setData<AnalogTimeSeries>(output_name, area_data, TimeKey("time"));
-                                    }
-                                }
-                            }
                         }
                         break;
                     }
@@ -506,7 +493,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::Video: {
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
-                    dm->setData<MediaData>("media", media_data, TimeKey("time"));
+                    auto item_key = item.value("name", "media");
+                    dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
                     data_info_list.push_back({name, "VideoData", ""});
                 } else {
                     std::cerr << "Failed to load video data: " << file_path << std::endl;
@@ -517,7 +505,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::Images: {
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
-                    dm->setData<MediaData>("media", media_data, TimeKey("time"));
+                    auto item_key = item.value("name", "media");
+                    dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
                     data_info_list.push_back({name, "ImageData", ""});
                 } else {
                     std::cerr << "Failed to load image data: " << file_path << std::endl;
@@ -556,20 +545,6 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
                 data_info_list.push_back({name, "MaskData", color});
 
-                if (item.contains("operations")) {
-
-                    for (auto const & operation: item["operations"]) {
-
-                        std::string const operation_type = operation["type"];
-
-                        if (operation_type == "area") {
-                            std::cout << "Calculating area for mask: " << name << std::endl;
-                            auto area_data = area(dm->getData<MaskData>(name).get());
-                            std::string const output_name = name + "_area";
-                            dm->setData<AnalogTimeSeries>(output_name, area_data, TimeKey("time"));
-                        }
-                    }
-                }
                 break;
             }
             case DM_DataType::Line: {
@@ -877,3 +852,33 @@ std::string convert_data_type_to_string(DM_DataType type) {
             return "unknown";
     }
 }
+
+template std::shared_ptr<AnalogTimeSeries> DataManager::getData<AnalogTimeSeries>(std::string const & key);
+template void DataManager::setData<AnalogTimeSeries>(std::string const & key, TimeKey const & time_key);
+template void DataManager::setData<AnalogTimeSeries>(std::string const & key, std::shared_ptr<AnalogTimeSeries> data, TimeKey const & time_key);
+
+template std::shared_ptr<DigitalEventSeries> DataManager::getData<DigitalEventSeries>(std::string const & key);
+template void DataManager::setData<DigitalEventSeries>(std::string const & key, TimeKey const & time_key);
+template void DataManager::setData<DigitalEventSeries>(std::string const & key, std::shared_ptr<DigitalEventSeries> data, TimeKey const & time_key);
+
+template std::shared_ptr<DigitalIntervalSeries> DataManager::getData<DigitalIntervalSeries>(std::string const & key);
+template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, TimeKey const & time_key);
+template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, std::shared_ptr<DigitalIntervalSeries> data, TimeKey const & time_key);
+
+template std::shared_ptr<LineData> DataManager::getData<LineData>(std::string const & key);
+template void DataManager::setData<LineData>(std::string const & key, TimeKey const & time_key);
+template void DataManager::setData<LineData>(std::string const & key, std::shared_ptr<LineData> data, TimeKey const & time_key);
+
+template std::shared_ptr<MaskData> DataManager::getData<MaskData>(std::string const & key);
+template void DataManager::setData<MaskData>(std::string const & key, TimeKey const & time_key);
+template void DataManager::setData<MaskData>(std::string const & key, std::shared_ptr<MaskData> data, TimeKey const & time_key);
+
+template std::shared_ptr<MediaData> DataManager::getData<MediaData>(std::string const & key);
+
+template std::shared_ptr<PointData> DataManager::getData<PointData>(std::string const & key);
+template void DataManager::setData<PointData>(std::string const & key, TimeKey const & time_key);
+template void DataManager::setData<PointData>(std::string const & key, std::shared_ptr<PointData> data, TimeKey const & time_key);
+
+template std::shared_ptr<TensorData> DataManager::getData<TensorData>(std::string const & key);
+template void DataManager::setData<TensorData>(std::string const & key, TimeKey const & time_key);
+template void DataManager::setData<TensorData>(std::string const & key, std::shared_ptr<TensorData> data, TimeKey const & time_key);

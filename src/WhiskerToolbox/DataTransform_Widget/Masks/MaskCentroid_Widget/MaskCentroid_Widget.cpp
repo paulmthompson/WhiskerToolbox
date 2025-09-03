@@ -1,6 +1,8 @@
 #include "MaskCentroid_Widget.hpp"
 #include "ui_MaskCentroid_Widget.h"
 
+#include "DataManager/transforms/Masks/Mask_Centroid/mask_centroid.hpp"
+
 MaskCentroid_Widget::MaskCentroid_Widget(QWidget * parent)
     : TransformParameter_Widget(parent),
       ui(new Ui::MaskCentroid_Widget) {

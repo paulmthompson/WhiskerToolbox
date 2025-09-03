@@ -1,6 +1,8 @@
 #include "MaskConnectedComponent_Widget.hpp"
 #include "ui_MaskConnectedComponent_Widget.h"
 
+#include "DataManager/transforms/Masks/Mask_Connected_Component/mask_connected_component.hpp"
+
 MaskConnectedComponent_Widget::MaskConnectedComponent_Widget(QWidget *parent) :
     TransformParameter_Widget(parent),
     ui(new Ui::MaskConnectedComponent_Widget)

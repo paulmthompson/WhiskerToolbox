@@ -2,7 +2,7 @@
 #define LINE_CURVATURE_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Lines/line_curvature.hpp"
+
 
 namespace Ui {
     class LineCurvature_Widget;

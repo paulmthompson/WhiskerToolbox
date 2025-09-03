@@ -2,7 +2,7 @@
 #include "ui_MaskToLine_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/transforms/Masks/mask_to_line.hpp"
+#include "DataManager/transforms/Masks/Mask_To_Line/mask_to_line.hpp"
 
 MaskToLine_Widget::MaskToLine_Widget(QWidget *parent) :
     TransformParameter_Widget(parent),

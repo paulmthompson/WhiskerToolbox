@@ -3,6 +3,8 @@
 #include "ui_LineMinDist_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
+#include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 #include "Points/Point_Data.hpp"
 
 LineMinDist_Widget::LineMinDist_Widget(QWidget *parent) :

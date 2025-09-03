@@ -2,10 +2,9 @@
 #define LINEMINDIST_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Lines/line_min_point_dist.hpp"
-#include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 
 namespace Ui { class LineMinDist_Widget; }
+class DataManager;
 
 class LineMinDist_Widget : public TransformParameter_Widget {
     Q_OBJECT

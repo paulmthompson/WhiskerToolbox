@@ -332,6 +332,10 @@ bool HilbertPhaseOperation::canApply(DataTypeVariant const & dataVariant) const 
     return ptr_ptr && *ptr_ptr;
 }
 
+std::unique_ptr<TransformParametersBase> HilbertPhaseOperation::getDefaultParameters() const {
+    return std::make_unique<HilbertPhaseParams>();
+}
+
 DataTypeVariant HilbertPhaseOperation::execute(
         DataTypeVariant const & dataVariant,
         TransformParametersBase const * transformParameters) {

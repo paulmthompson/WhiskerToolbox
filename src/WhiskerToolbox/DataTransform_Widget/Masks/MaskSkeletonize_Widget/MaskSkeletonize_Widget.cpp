@@ -1,6 +1,8 @@
 #include "MaskSkeletonize_Widget.hpp"
 #include "ui_MaskSkeletonize_Widget.h"
 
+#include "DataManager/transforms/Masks/Mask_Skeletonize/mask_skeletonize.hpp"
+
 MaskSkeletonize_Widget::MaskSkeletonize_Widget(QWidget *parent) :
     TransformParameter_Widget(parent),
     ui(new Ui::MaskSkeletonize_Widget)

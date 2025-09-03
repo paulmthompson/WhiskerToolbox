@@ -2,14 +2,13 @@
 #define LINEALIGNMENT_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Lines/line_alignment.hpp"
-#include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 
 #include <memory>
 
+class DataManager;
+
 namespace Ui { class LineAlignment_Widget; }
 
-class DataManager;
 
 class LineAlignment_Widget : public TransformParameter_Widget {
     Q_OBJECT

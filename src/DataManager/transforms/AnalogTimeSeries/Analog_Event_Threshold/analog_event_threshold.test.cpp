@@ -1,4 +1,4 @@
-#define CATCH_CONFIG_MAIN
+
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/matchers/catch_matchers_vector.hpp"
 
@@ -302,6 +302,10 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
 
 #include "transforms/TransformRegistry.hpp"
 
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
 TEST_CASE("Data Transform: Analog Event Threshold - JSON pipeline", "[transforms][analog_event_threshold][json]") {
     const nlohmann::json json_config = {
         {"steps", {{
@@ -367,4 +371,176 @@ TEST_CASE("Data Transform: Analog Event Threshold - Parameter Factory", "[transf
     REQUIRE(params->thresholdValue == 2.5);
     REQUIRE(params->direction == ThresholdParams::ThresholdDirection::NEGATIVE);
     REQUIRE(params->lockoutTime == 123.45);
+}
+
+TEST_CASE("Data Transform: Analog Event Threshold - load_data_from_json_config", "[transforms][analog_event_threshold][json_config]") {
+    // Create DataManager and populate it with AnalogTimeSeries in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test analog data in code
+    std::vector<float> values = {0.5f, 1.5f, 0.8f, 2.5f, 1.2f, 0.3f};
+    std::vector<TimeFrameIndex> times = {
+        TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), 
+        TimeFrameIndex(400), TimeFrameIndex(500), TimeFrameIndex(600)
+    };
+    
+    auto test_analog = std::make_shared<AnalogTimeSeries>(values, times);
+    test_analog->setTimeFrame(time_frame);
+    
+    // Store the analog data in DataManager with a known key
+    dm.setData("test_signal", test_analog, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Threshold Detection Pipeline\",\n"
+        "            \"description\": \"Test threshold event detection on analog signal\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Threshold Event Detection\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_signal\",\n"
+        "                \"output_key\": \"detected_events\",\n"
+        "                \"parameters\": {\n"
+        "                    \"threshold_value\": 1.0,\n"
+        "                    \"direction\": \"Positive (Rising)\",\n"
+        "                    \"lockout_time\": 0.0\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "analog_threshold_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    auto result_events = dm.getData<DigitalEventSeries>("detected_events");
+    REQUIRE(result_events != nullptr);
+    
+    // Verify the threshold detection results
+    std::vector<float> expected_events = {200.0f, 400.0f, 500.0f}; // Values > 1.0 threshold
+    REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+    
+    // Test another pipeline with different parameters (lockout time)
+    const char* json_config_lockout = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Threshold Detection with Lockout\",\n"
+        "            \"description\": \"Test threshold detection with lockout period\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Threshold Event Detection\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_signal\",\n"
+        "                \"output_key\": \"detected_events_lockout\",\n"
+        "                \"parameters\": {\n"
+        "                    \"threshold_value\": 1.0,\n"
+        "                    \"direction\": \"Positive (Rising)\",\n"
+        "                    \"lockout_time\": 150.0\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_lockout = test_dir / "pipeline_config_lockout.json";
+    {
+        std::ofstream json_file(json_filepath_lockout);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_lockout;
+        json_file.close();
+    }
+    
+    // Execute the lockout pipeline
+    auto data_info_list_lockout = load_data_from_json_config(&dm, json_filepath_lockout.string());
+    
+    // Verify the lockout results
+    auto result_events_lockout = dm.getData<DigitalEventSeries>("detected_events_lockout");
+    REQUIRE(result_events_lockout != nullptr);
+    
+    std::vector<float> expected_events_lockout = {200.0f, 400.0f}; // 500 filtered due to lockout from 400
+    REQUIRE_THAT(result_events_lockout->getEventSeries(), Catch::Matchers::Equals(expected_events_lockout));
+    
+    // Test absolute threshold detection
+    const char* json_config_absolute = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Absolute Threshold Detection\",\n"
+        "            \"description\": \"Test absolute threshold detection\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Threshold Event Detection\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"test_signal\",\n"
+        "                \"output_key\": \"detected_events_absolute\",\n"
+        "                \"parameters\": {\n"
+        "                    \"threshold_value\": 1.3,\n"
+        "                    \"direction\": \"Absolute\",\n"
+        "                    \"lockout_time\": 0.0\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_absolute = test_dir / "pipeline_config_absolute.json";
+    {
+        std::ofstream json_file(json_filepath_absolute);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_absolute;
+        json_file.close();
+    }
+    
+    // Execute the absolute threshold pipeline
+    auto data_info_list_absolute = load_data_from_json_config(&dm, json_filepath_absolute.string());
+    
+    // Verify the absolute threshold results
+    auto result_events_absolute = dm.getData<DigitalEventSeries>("detected_events_absolute");
+    REQUIRE(result_events_absolute != nullptr);
+    
+    std::vector<float> expected_events_absolute = {200.0f, 400.0f}; // Only 1.5 and 2.5 exceed |1.3|
+    REQUIRE_THAT(result_events_absolute->getEventSeries(), Catch::Matchers::Equals(expected_events_absolute));
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
 }

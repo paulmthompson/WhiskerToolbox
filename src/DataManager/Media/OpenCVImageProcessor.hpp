@@ -18,6 +18,8 @@ namespace ImageProcessing {
  * 
  * The internal format is cv::Mat, allowing the processing chain to work
  * directly with OpenCV functions without conversions between steps.
+ * 
+ * Uses variant approach to handle both 8-bit (CV_8U) and 32-bit float (CV_32F) processing.
  */
 class OpenCVImageProcessor : public ImageProcessor {
 public:
@@ -26,18 +28,16 @@ public:
 
     /**
      * @brief Process image data through the OpenCV processing chain
-     * @param input_data Raw image data as vector of uint8_t
+     * @param input_data Raw image data as ImageData variant
      * @param image_size Dimensions of the image
-     * @return Processed image data as vector of uint8_t
+     * @return Processed image data as ImageData variant (same type as input)
      */
-    std::vector<uint8_t> processImage(
-        std::vector<uint8_t> const& input_data,
-        ImageSize const& image_size) override;
+    ImageData processImage(ImageData const& input_data, ImageSize const& image_size) override;
 
     /**
      * @brief Add an OpenCV processing step to the chain
      * @param key Unique identifier for the processing step
-     * @param processor Function that operates on cv::Mat&
+     * @param processor Function that operates on cv::Mat* (cast from void*)
      */
     void addProcessingStep(std::string const& key, 
                          std::function<void(void*)> processor) override;
@@ -76,26 +76,24 @@ public:
 
 protected:
     /**
-     * @brief Convert from vector<uint8_t> to cv::Mat
-     * @param data Raw image data
+     * @brief Convert from ImageData variant to cv::Mat
+     * @param data Input data as variant
      * @param size Image dimensions
-     * @return Pointer to cv::Mat (caller takes ownership)
+     * @return Pointer to cv::Mat (as void*) - caller must cast and manage memory
      */
-    void* convertFromRaw(std::vector<uint8_t> const& data, 
-                        ImageSize const& size) override;
+    void* convertFromRaw(ImageData const& data, ImageSize const& size) override;
 
     /**
-     * @brief Convert from cv::Mat back to vector<uint8_t>
-     * @param internal_data Pointer to cv::Mat
-     * @param size Image dimensions
-     * @return Processed image data as vector
+     * @brief Convert from cv::Mat back to ImageData variant
+     * @param internal_data Pointer to cv::Mat (as void*)
+     * @param size Image dimensions  
+     * @param output_type Variant index (0 for uint8_t, 1 for float)
+     * @return ImageData variant in requested format
      */
-    std::vector<uint8_t> convertToRaw(void* internal_data, 
-                                    ImageSize const& size) override;
+    ImageData convertToRaw(void* internal_data, ImageSize const& size, size_t output_type) override;
 
 private:
-    /// Processing chain storing OpenCV functions
-    std::map<std::string, std::function<void(cv::Mat&)>> _opencv_process_chain;
+    std::map<std::string, std::function<void(void*)>> _processing_steps;
 };
 
 /**

@@ -2,7 +2,6 @@
 #define LINESUBSEGMENT_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Lines/line_subsegment.hpp"
 
 namespace Ui { class LineSubsegment_Widget; }
 

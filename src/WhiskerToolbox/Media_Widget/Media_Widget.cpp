@@ -110,7 +110,10 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene.get()));
     ui->stackedWidget->addWidget(new MediaInterval_Widget(_data_manager, _scene.get()));
     ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene.get()));
-    ui->stackedWidget->addWidget(new MediaProcessing_Widget(_data_manager, _scene.get()));
+    
+    // Create and store reference to MediaProcessing_Widget
+    _processing_widget = new MediaProcessing_Widget(_data_manager, _scene.get());
+    ui->stackedWidget->addWidget(_processing_widget);
 
     // Connect text widget to scene if both are available
     _connectTextWidgetToScene();
@@ -141,6 +144,16 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 }
 
 void Media_Widget::_createOptions() {
+
+    //Setup Media Data
+    auto media_keys = _data_manager->getKeys<MediaData>();
+    for (auto media_key: media_keys) {
+        auto opts = _scene.get()->getMediaConfig(media_key);
+        if (opts.has_value()) continue;
+
+        _scene.get()->addMediaDataToScene(media_key);
+    }
+
     // Setup line data
     auto line_keys = _data_manager->getKeys<LineData>();
     for (auto line_key: line_keys) {
@@ -249,6 +262,10 @@ void Media_Widget::_featureSelected(QString const & feature) {
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
+        
+        // Do NOT set as active media key or update canvas - only show controls for configuration
+        // The media will only be displayed when it's enabled via the checkbox
+        
     } else if (type == DM_DataType::Images) {
         // Images are handled similarly to Video, using the MediaProcessing_Widget
         int const stacked_widget_index = 6;
@@ -256,6 +273,9 @@ void Media_Widget::_featureSelected(QString const & feature) {
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
+        
+        // Do NOT set as active media key or update canvas - only show controls for configuration
+        // The media will only be displayed when it's enabled via the checkbox
     } else {
         ui->stackedWidget->setCurrentIndex(0);
         std::cout << "Unsupported feature type" << std::endl;
@@ -394,11 +414,29 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
-        // Video and Image data don't use the same overlay system as other data types
-        // They are handled through the MediaProcessing_Widget and don't need visibility toggling
-        // The checkbox functionality is mainly for overlay features, not base media
-        std::cout << "Media type " << convert_data_type_to_string(type) << " - feature display toggling not applicable" << std::endl;
-    } else {
+        auto opts = _scene.get()->getMediaConfig(feature_key);
+        if (!opts.has_value()) {
+            std::cerr << "Table feature key "
+                      << feature_key
+                      << " not found in Media_Window Display Options"
+                      << std::endl;
+            return;
+        }
+        if (enabled) {
+            std::cout << "Enabling media data in scene" << std::endl;
+            opts.value()->is_visible = true;
+
+            // This ensures new media is loaded from disk
+            // Before the update
+            auto current_time = _data_manager->getCurrentTime();
+            LoadFrame(current_time);
+
+        } else {
+            std::cout << "Disabling media data from scene" << std::endl;
+            opts.value()->is_visible = false;
+        }
+    }
+    else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }
     _scene.get()->UpdateCanvas();
@@ -481,6 +519,10 @@ void Media_Widget::LoadFrame(int frame_id) {
 void Media_Widget::_createMediaWindow() {
     if (_data_manager) {
         _scene = std::make_unique<Media_Window>(_data_manager, this);
+        
+        // Set parent widget reference for accessing enabled media keys
+        _scene->setParentWidget(this);
+        
         _connectTextWidgetToScene();
     }
 }

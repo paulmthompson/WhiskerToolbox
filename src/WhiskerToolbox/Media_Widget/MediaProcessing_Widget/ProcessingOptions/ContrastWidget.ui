@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>120</height>
+    <height>152</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -38,20 +38,10 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="beta_label">
+     <item row="3" column="0">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>Beta (Brightness):</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QCheckBox" name="active_checkbox">
-       <property name="toolTip">
-        <string>Enable/disable linear contrast and brightness transformation</string>
-       </property>
-       <property name="text">
-        <string>Active</string>
+        <string>Minimum</string>
        </property>
       </widget>
      </item>
@@ -67,13 +57,30 @@
         <double>0.001000000000000</double>
        </property>
        <property name="maximum">
-        <double>10.000000000000000</double>
+        <double>100.000000000000000</double>
        </property>
        <property name="singleStep">
         <double>0.010000000000000</double>
        </property>
        <property name="value">
         <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="beta_label">
+       <property name="text">
+        <string>Beta (Brightness):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="active_checkbox">
+       <property name="toolTip">
+        <string>Enable/disable linear contrast and brightness transformation</string>
+       </property>
+       <property name="text">
+        <string>Active</string>
        </property>
       </widget>
      </item>
@@ -93,6 +100,30 @@
        </property>
        <property name="value">
         <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Maximum</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QSpinBox" name="display_min_spinbox">
+       <property name="maximum">
+        <number>255</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QSpinBox" name="display_max_spinbox">
+       <property name="maximum">
+        <number>255</number>
+       </property>
+       <property name="value">
+        <number>255</number>
        </property>
       </widget>
      </item>

@@ -3,6 +3,8 @@
 
 #include "ui_MaskArea_Widget.h"
 
+#include "DataManager/transforms/Masks/Mask_Area/mask_area.hpp"
+
 MaskArea_Widget::MaskArea_Widget(QWidget *parent) :
       TransformParameter_Widget(parent),
       ui(new Ui::MaskArea_Widget)

@@ -5,6 +5,7 @@
 
 #include <QWidget>
 
+#include <map>
 #include <memory>
 #include <string>
 
@@ -21,6 +22,7 @@ class ClaheWidget;
 class BilateralWidget;
 class MedianWidget;
 class MagicEraserWidget;
+class ColormapWidget;
 class Section;
 
 class MediaProcessing_Widget : public QWidget {
@@ -55,24 +57,21 @@ private:
     Section * _median_section;
     MagicEraserWidget * _magic_eraser_widget;
     Section * _magic_eraser_section;
-
-    // Current processing options
-    ContrastOptions _contrast_options;
-    GammaOptions _gamma_options;
-    SharpenOptions _sharpen_options;
-    ClaheOptions _clahe_options;
-    BilateralOptions _bilateral_options;
-    MedianOptions _median_options;
-    MagicEraserOptions _magic_eraser_options;
+    ColormapWidget * _colormap_widget;
+    Section * _colormap_section;
 
     void _setupProcessingWidgets();
-    void _applyContrastFilter();
-    void _applyGammaFilter();
-    void _applySharpenFilter();
-    void _applyClaheFilter();
-    void _applyBilateralFilter();
-    void _applyMedianFilter();
-    void _applyMagicEraser();
+    void _applyContrastFilter(ContrastOptions const & options);
+    void _applyGammaFilter(GammaOptions const & options);
+    void _applySharpenFilter(SharpenOptions const & options);
+    void _applyClaheFilter(ClaheOptions const & options);
+    void _applyBilateralFilter(BilateralOptions const & options);
+    void _applyMedianFilter(MedianOptions const & options);
+    void _applyMagicEraser(MagicEraserOptions const & options);
+
+    void _loadProcessingChainFromMedia();
+
+    void _updateColormapAvailability();
 
 private slots:
     void _onContrastOptionsChanged(ContrastOptions const & options);
@@ -85,6 +84,7 @@ private slots:
     void _onMagicEraserDrawingModeChanged(bool enabled);
     void _onDrawingFinished();
     void _onMagicEraserClearMaskRequested();
+    void _onColormapOptionsChanged(ColormapOptions const & options);
 };
 
 #endif// MEDIAPROCESSING_WIDGET_HPP

@@ -120,6 +120,7 @@ void MainWindow::_createActions() {
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
+    connect(ui->actionNew_Media_Widget, &QAction::triggered, this, &MainWindow::openNewMediaWidget);
     connect(ui->actionBatch_Processing, &QAction::triggered, this, &MainWindow::openBatchProcessingWidget);
     connect(ui->actionLoad_Points, &QAction::triggered, this, &MainWindow::openPointLoaderWidget);
     connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
@@ -339,6 +340,36 @@ void MainWindow::openDataViewer() {
     ptr->openWidget();
 
     showDockWidget(key);
+}
+
+void MainWindow::openNewMediaWidget() {
+    // Generate unique ID for the new media widget
+    std::string const key = "MediaWidget_" + std::to_string(_media_widget_counter++);
+    
+    // Create the media widget through the manager
+    auto* media_widget = _media_manager->createMediaWidget(key, this);
+    if (!media_widget) {
+        std::cerr << "Failed to create media widget with ID: " << key << std::endl;
+        return;
+    }
+    
+    // Register the dock widget in the system
+    registerDockWidget(key, media_widget, ads::RightDockWidgetArea);
+    
+    // Find the dock widget that was just created and connect close signal
+    auto* dock_widget = findDockWidget(key);
+    if (dock_widget) {
+        connect(dock_widget, &ads::CDockWidget::closed, this, [this, key]() {
+            // Remove from media manager (this will properly destroy the widget)
+            _media_manager->removeMediaWidget(key);
+            std::cout << "Media widget " << key << " destroyed on close" << std::endl;
+        });
+    }
+    
+    // Show the dock widget
+    showDockWidget(key);
+    
+    std::cout << "Created new media widget: " << key << std::endl;
 }
 
 void MainWindow::openBatchProcessingWidget() {

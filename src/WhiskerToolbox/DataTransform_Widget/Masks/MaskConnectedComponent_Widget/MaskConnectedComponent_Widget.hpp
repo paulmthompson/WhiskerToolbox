@@ -2,7 +2,6 @@
 #define MASKCONNECTEDCOMPONENT_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Masks/mask_connected_component.hpp"
 
 namespace Ui { class MaskConnectedComponent_Widget; }
 

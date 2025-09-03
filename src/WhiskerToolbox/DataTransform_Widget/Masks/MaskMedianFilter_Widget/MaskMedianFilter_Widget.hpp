@@ -2,7 +2,6 @@
 #define MASKMEDIANFILTER_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Masks/mask_median_filter.hpp"
 
 namespace Ui { class MaskMedianFilter_Widget; }
 

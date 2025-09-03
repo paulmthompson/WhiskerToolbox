@@ -159,46 +159,46 @@ set(DATAMANAGER_SOURCES
         transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp
         transforms/AnalogTimeSeries/AnalogFilter/analog_filter.cpp
         transforms/AnalogTimeSeries/AnalogFilter/analog_filter.hpp
-        transforms/AnalogTimeSeries/analog_interval_threshold.cpp
-        transforms/AnalogTimeSeries/analog_interval_threshold.hpp
+        transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.cpp
+        transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp
         transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp
         transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.cpp
-        transforms/AnalogTimeSeries/analog_scaling.cpp
-        transforms/AnalogTimeSeries/analog_scaling.hpp
-        transforms/DigitalIntervalSeries/digital_interval_group.cpp
-        transforms/DigitalIntervalSeries/digital_interval_group.hpp
-        transforms/Lines/line_angle.hpp
-        transforms/Lines/line_angle.cpp
-        transforms/Lines/line_min_point_dist.hpp
-        transforms/Lines/line_min_point_dist.cpp
-        transforms/Lines/line_alignment.hpp
-        transforms/Lines/line_alignment.cpp
-        transforms/Lines/line_resample.cpp
-        transforms/Lines/line_resample.hpp
-        transforms/Lines/line_curvature.cpp
-        transforms/Lines/line_curvature.hpp
-        transforms/Lines/line_subsegment.cpp
-        transforms/Lines/line_subsegment.hpp
-        transforms/Lines/line_point_extraction.cpp
-        transforms/Lines/line_point_extraction.hpp
-        transforms/Lines/line_clip.cpp
-        transforms/Lines/line_clip.hpp
-        transforms/Masks/mask_area.cpp
-        transforms/Masks/mask_area.hpp
-        transforms/Masks/mask_centroid.cpp
-        transforms/Masks/mask_centroid.hpp
-        transforms/Masks/mask_connected_component.cpp
-        transforms/Masks/mask_connected_component.hpp
-        transforms/Masks/mask_hole_filling.cpp
-        transforms/Masks/mask_hole_filling.hpp
-        transforms/Masks/mask_median_filter.cpp
-        transforms/Masks/mask_median_filter.hpp
-        transforms/Masks/mask_principal_axis.cpp
-        transforms/Masks/mask_principal_axis.hpp
-        transforms/Masks/mask_to_line.cpp
-        transforms/Masks/mask_to_line.hpp
-        transforms/Masks/mask_skeletonize.cpp
-        transforms/Masks/mask_skeletonize.hpp
+        transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.cpp
+        transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp
+        transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.cpp
+        transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp
+        transforms/Lines/Line_Angle/line_angle.hpp
+        transforms/Lines/Line_Angle/line_angle.cpp
+        transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp
+        transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.cpp
+        transforms/Lines/Line_Alignment/line_alignment.hpp
+        transforms/Lines/Line_Alignment/line_alignment.cpp
+        transforms/Lines/Line_Resample/line_resample.cpp
+        transforms/Lines/Line_Resample/line_resample.hpp
+        transforms/Lines/Line_Curvature/line_curvature.cpp
+        transforms/Lines/Line_Curvature/line_curvature.hpp
+        transforms/Lines/Line_Subsegment/line_subsegment.cpp
+        transforms/Lines/Line_Subsegment/line_subsegment.hpp
+        transforms/Lines/Line_Point_Extraction/line_point_extraction.cpp
+        transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp
+        transforms/Lines/Line_Clip/line_clip.cpp
+        transforms/Lines/Line_Clip/line_clip.hpp
+        transforms/Masks/Mask_Area/mask_area.cpp
+        transforms/Masks/Mask_Area/mask_area.hpp
+        transforms/Masks/Mask_Centroid/mask_centroid.cpp
+        transforms/Masks/Mask_Centroid/mask_centroid.hpp
+        transforms/Masks/Mask_Connected_Component/mask_connected_component.cpp
+        transforms/Masks/Mask_Connected_Component/mask_connected_component.hpp
+        transforms/Masks/Mask_Hole_Filling/mask_hole_filling.cpp
+        transforms/Masks/Mask_Hole_Filling/mask_hole_filling.hpp
+        transforms/Masks/Mask_Median_Filter/mask_median_filter.cpp
+        transforms/Masks/Mask_Median_Filter/mask_median_filter.hpp
+        transforms/Masks/Mask_Principal_Axis/mask_principal_axis.cpp
+        transforms/Masks/Mask_Principal_Axis/mask_principal_axis.hpp
+        transforms/Masks/Mask_To_Line/mask_to_line.cpp
+        transforms/Masks/Mask_To_Line/mask_to_line.hpp
+        transforms/Masks/Mask_Skeletonize/mask_skeletonize.cpp
+        transforms/Masks/Mask_Skeletonize/mask_skeletonize.hpp
         transforms/Media/whisker_tracing.cpp
         transforms/Media/whisker_tracing.hpp
 )

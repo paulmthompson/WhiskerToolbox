@@ -1,6 +1,8 @@
 #include "MaskMedianFilter_Widget.hpp"
 #include "ui_MaskMedianFilter_Widget.h"
 
+#include "DataManager/transforms/Masks/Mask_Median_Filter/mask_median_filter.hpp"
+
 MaskMedianFilter_Widget::MaskMedianFilter_Widget(QWidget *parent) :
     TransformParameter_Widget(parent),
     ui(new Ui::MaskMedianFilter_Widget)

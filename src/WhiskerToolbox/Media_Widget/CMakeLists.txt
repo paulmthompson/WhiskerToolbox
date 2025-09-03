@@ -17,6 +17,9 @@ set(MEDIA_WIDGET_SOURCES
         MediaProcessing_Widget/MediaProcessing_Widget.cpp
         MediaProcessing_Widget/MediaProcessing_Widget.hpp
         MediaProcessing_Widget/MediaProcessing_Widget.ui
+        MediaProcessing_Widget/ProcessingOptions/ColormapWidget.cpp
+        MediaProcessing_Widget/ProcessingOptions/ColormapWidget.hpp
+        MediaProcessing_Widget/ProcessingOptions/ColormapWidget.ui
         MediaProcessing_Widget/ProcessingOptions/ContrastWidget.cpp
         MediaProcessing_Widget/ProcessingOptions/ContrastWidget.hpp
         MediaProcessing_Widget/ProcessingOptions/ContrastWidget.ui

@@ -2,11 +2,14 @@
 #define MEDIA_WIDGET_HPP
 
 #include <QWidget>
+
 #include <memory>
+#include <set>
 
 class DataManager;
 class Media_Window;
 class MediaText_Widget;
+class MediaProcessing_Widget;
 class Section;
 
 namespace Ui {
@@ -27,7 +30,7 @@ public:
      * @return Pointer to the Media_Window
      */
     Media_Window* getMediaWindow() const { return _scene.get(); }
-
+    
     void updateMedia();
 
     void setFeatureColor(std::string const & feature, std::string const & hex_color);
@@ -47,10 +50,14 @@ private:
     // Text overlay widgets
     Section * _text_section = nullptr;
     MediaText_Widget * _text_widget = nullptr;
+    
+    // Processing widget for colormap options
+    MediaProcessing_Widget * _processing_widget = nullptr;
 
     void _createOptions();
     void _createMediaWindow();
     void _connectTextWidgetToScene();
+    
 
 private slots:
     void _updateCanvasSize();

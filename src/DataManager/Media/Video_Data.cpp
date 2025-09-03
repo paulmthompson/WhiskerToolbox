@@ -49,6 +49,7 @@ void VideoData::doLoadFrame(int frame_id) {
     }
 
     // We load the data associated with the frame
+    // Videos are typically 8-bit, so we use the 8-bit setRawData method
     this->setRawData(_vd->getFrame(frame_id, frame_by_frame));
     _last_decoded_frame = frame_id;
 }

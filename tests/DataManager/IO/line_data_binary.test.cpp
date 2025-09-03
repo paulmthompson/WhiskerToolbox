@@ -153,8 +153,8 @@ protected:
         }
         
         // Check image size
-        //REQUIRE(original_line_data->getImageSize().width == loaded_data.getImageSize().width);
-        //REQUIRE(original_line_data->getImageSize().height == loaded_data.getImageSize().height);
+        REQUIRE(original_line_data->getImageSize().width == loaded_data.getImageSize().width);
+        REQUIRE(original_line_data->getImageSize().height == loaded_data.getImageSize().height);
     }
 
 protected:
@@ -164,7 +164,7 @@ protected:
     std::shared_ptr<LineData> original_line_data;
 };
 
-TEST_CASE_METHOD(LineDataBinaryTestFixture, "DM - LineData - Binary save and load through direct functions", "[LineData][Binary][IO]") {
+TEST_CASE_METHOD(LineDataBinaryTestFixture, "DM - IO - LineData - Binary save and load through direct functions", "[LineData][Binary][IO]") {
     
     SECTION("Save LineData to binary format") {
         bool save_success = saveBinaryLineData();
@@ -189,7 +189,7 @@ TEST_CASE_METHOD(LineDataBinaryTestFixture, "DM - LineData - Binary save and loa
     }
 }
 
-TEST_CASE_METHOD(LineDataBinaryTestFixture, "DM - LineData - Binary load through DataManager JSON config", "[LineData][Binary][IO][DataManager]") {
+TEST_CASE_METHOD(LineDataBinaryTestFixture, "DM - IO - LineData - Binary load through DataManager JSON config", "[LineData][Binary][IO][DataManager]") {
     
     SECTION("Load binary LineData through DataManager") {
         // First save the data

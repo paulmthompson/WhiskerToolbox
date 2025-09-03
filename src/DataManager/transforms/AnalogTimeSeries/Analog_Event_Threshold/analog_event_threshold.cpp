@@ -125,6 +125,10 @@ bool EventThresholdOperation::canApply(DataTypeVariant const & dataVariant) cons
     return ptr_ptr && *ptr_ptr;
 }
 
+std::unique_ptr<TransformParametersBase> EventThresholdOperation::getDefaultParameters() const {
+    return std::make_unique<ThresholdParams>();
+}
+
 DataTypeVariant EventThresholdOperation::execute(DataTypeVariant const & dataVariant, TransformParametersBase const * transformParameters) {
     // Call the version with a null progress callback
     return execute(dataVariant, transformParameters, nullptr);

@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -23,6 +24,7 @@ class QGraphicsPixmapItem;
 class QImage;
 class MediaMask_Widget;
 class MediaText_Widget;
+class Media_Widget;
 
 struct TextOverlay;
 
@@ -53,6 +55,9 @@ public:
 
     ~Media_Window() override;
 
+    void addMediaDataToScene(std::string const & media_key);
+    void removeMediaDataFromScene(std::string const & media_key);
+
     void addLineDataToScene(std::string const & line_key);
     void removeLineDataFromScene(std::string const & line_key);
 
@@ -70,6 +75,11 @@ public:
 
     // Text overlay methods
     void setTextWidget(MediaText_Widget * text_widget);
+
+    // Parent widget access for enabled media keys
+    void setParentWidget(QWidget* parent_widget) {
+        _parent_widget = parent_widget;
+    }
 
     /**
      *
@@ -100,6 +110,14 @@ public:
 
     void setShowHoverCircle(bool show);
     void setHoverCircleRadius(int radius);
+
+    [[nodiscard]] std::optional<MediaDisplayOptions *> getMediaConfig(std::string const & media_key) const
+    {
+        if (_media_configs.find(media_key) == _media_configs.end()) {
+            return std::nullopt;
+        }
+        return _media_configs.at(media_key).get();
+    }
 
     [[nodiscard]] std::optional<LineDisplayOptions *> getLineConfig(std::string const & line_key) const {
         if (_line_configs.find(line_key) == _line_configs.end()) {
@@ -167,8 +185,8 @@ protected:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
+    QWidget* _parent_widget = nullptr;
 
-    QImage _mediaImage;
     QGraphicsPixmapItem * _canvasPixmap = nullptr;
     QImage _canvasImage;
 
@@ -195,6 +213,7 @@ private:
 
     std::vector<QPointF> _drawing_points;
 
+    std::unordered_map<std::string, std::unique_ptr<MediaDisplayOptions>> _media_configs;
     std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
     std::unordered_map<std::string, std::unique_ptr<MaskDisplayOptions>> _mask_configs;
     std::unordered_map<std::string, std::unique_ptr<PointDisplayOptions>> _point_configs;
@@ -208,9 +227,11 @@ private:
     // Text overlay support
     MediaText_Widget * _text_widget = nullptr;
 
-    QImage::Format _getQImageFormat();
-    void _createCanvasForData();
-    void _convertNewMediaToQImage();
+    QImage::Format _getQImageFormat(const std::string & media_key);
+    QImage _combineMultipleMedia();
+
+    void _plotMediaData();
+    void _clearMedia();
 
     void _plotLineData();
     void _clearLines();

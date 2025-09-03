@@ -67,6 +67,8 @@ class HilbertPhaseOperation final : public TransformOperation {
      */
     [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
 
+    [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
+
     /**
      * @brief Executes the Hilbert phase calculation using data from the variant.
      * @param dataVariant The variant holding a non-null shared_ptr to the AnalogTimeSeries object.

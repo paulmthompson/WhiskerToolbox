@@ -1,7 +1,7 @@
 #include "LineResample_Widget.hpp"
 #include "ui_LineResample_Widget.h"// Generated from .ui file
 
-#include "DataManager/transforms/Lines/line_resample.hpp"
+#include "DataManager/transforms/Lines/Line_Resample/line_resample.hpp"
 
 LineResample_Widget::LineResample_Widget(QWidget * parent)
     : TransformParameter_Widget(parent),

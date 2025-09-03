@@ -3,6 +3,7 @@
 #include "ui_LineAlignment_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/transforms/Lines/Line_Alignment/line_alignment.hpp"
 #include "Media/Media_Data.hpp"
 
 LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
