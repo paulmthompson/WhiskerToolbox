@@ -1,14 +1,14 @@
 #include "Feature_Table_Widget.hpp"
 #include "ui_Feature_Table_Widget.h"
 
-#include "DataManager/utils/color.hpp"
 #include "DataManager.hpp"
+#include "DataManager/utils/color.hpp"
 
+#include <QHBoxLayout>
 #include <QPushButton>
 #include <QStringList>
 #include <QTableWidget>
 #include <qcheckbox.h>
-#include <QHBoxLayout>
 
 #include <iostream>
 
@@ -37,7 +37,6 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
 
     // Set equal column widths
     ui->available_features_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-
 
 
     // Apply dark mode compatible styling to maintain blue selection highlighting
@@ -93,7 +92,7 @@ void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_mana
 }
 
 void Feature_Table_Widget::_addFeatureName(std::string const & key, int row, int col) {
-    auto* item = new QTableWidgetItem(QString::fromStdString(key));
+    auto * item = new QTableWidgetItem(QString::fromStdString(key));
     item->setTextAlignment(Qt::AlignCenter);
     ui->available_features_table->setItem(row, col, item);
 }
@@ -106,7 +105,7 @@ void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int
     }
 
     std::string const type = convert_data_type_to_string(_data_manager->getType(key));
-    auto* item = new QTableWidgetItem(QString::fromStdString(type));
+    auto * item = new QTableWidgetItem(QString::fromStdString(type));
     item->setTextAlignment(Qt::AlignCenter);
     ui->available_features_table->setItem(row, col, item);
 }
@@ -119,7 +118,7 @@ void Feature_Table_Widget::_addFeatureClock(std::string const & key, int row, in
     }
 
     std::string const clock = _data_manager->getTimeKey(key).str();
-    auto* item = new QTableWidgetItem(QString::fromStdString(clock));
+    auto * item = new QTableWidgetItem(QString::fromStdString(clock));
     item->setTextAlignment(Qt::AlignCenter);
     ui->available_features_table->setItem(row, col, item);
 }
@@ -127,21 +126,24 @@ void Feature_Table_Widget::_addFeatureClock(std::string const & key, int row, in
 void Feature_Table_Widget::_addFeatureElements(std::string const & key, int row, int col) {
 
     static_cast<void>(key);
-    auto* item = new QTableWidgetItem("1");
+    auto * item = new QTableWidgetItem("1");
     item->setTextAlignment(Qt::AlignCenter);
     ui->available_features_table->setItem(row, col, item);
 }
 
 void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, int col) {
     // Create a widget to center the checkbox
-    QWidget* centerWidget = new QWidget();
-    QHBoxLayout* layout = new QHBoxLayout(centerWidget);
+    QWidget * centerWidget = new QWidget();
+    QHBoxLayout * layout = new QHBoxLayout(centerWidget);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setAlignment(Qt::AlignCenter);
 
     // Create the checkbox - standard QCheckBox with no text
     auto checkboxItem = new QCheckBox();
-    checkboxItem->setCheckState(Qt::Unchecked);
+
+    // Check if this feature should be enabled based on saved state
+    bool const shouldBeEnabled{_enabled_features.find(key) != _enabled_features.end()};
+    checkboxItem->setCheckState(shouldBeEnabled ? Qt::Checked : Qt::Unchecked);
 
     // Remove any text - we only want the checkbox indicator
     checkboxItem->setText("");
@@ -156,13 +158,16 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
     connect(checkboxItem, &QCheckBox::stateChanged, [this, key, checkboxItem](int state) {
         if (state == Qt::Checked) {
             // Feature is enabled
+            _enabled_features.insert(key);
             emit addFeature(QString::fromStdString(key));
 
             // Select the feature when checked
             _highlighted_feature = QString::fromStdString(key);
+            _selected_feature_for_restoration = key;
             emit featureSelected(_highlighted_feature);
         } else {
             // Feature is disabled
+            _enabled_features.erase(key);
             emit removeFeature(QString::fromStdString(key));
 
             // We don't change selection when unchecked
@@ -231,11 +236,15 @@ void Feature_Table_Widget::populateTable() {
     ui->available_features_table->setMinimumHeight(totalHeight);
     ui->available_features_table->setMaximumHeight(totalHeight);
 
+    // Restore state after rebuilding the table
+    _restoreState();
+
     // Force layout update
     updateGeometry();
 }
 
 void Feature_Table_Widget::_refreshFeatures() {
+    _saveCurrentState();
     populateTable();
 }
 
@@ -269,6 +278,7 @@ void Feature_Table_Widget::_highlightFeature(int row, int column) {
         QTableWidgetItem * featureItem = ui->available_features_table->item(row, featureColumnIndex);
         if (featureItem) {
             _highlighted_feature = featureItem->text();
+            _selected_feature_for_restoration = _highlighted_feature.toStdString();
             std::cout << "Emitting featureSelected: " << _highlighted_feature.toStdString() << std::endl;
             emit featureSelected(_highlighted_feature);
         } else {
@@ -280,7 +290,7 @@ void Feature_Table_Widget::_highlightFeature(int row, int column) {
 }
 
 
-void Feature_Table_Widget::resizeEvent(QResizeEvent* event) {
+void Feature_Table_Widget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
 
     // Prevent infinite resize loops
@@ -300,4 +310,97 @@ void Feature_Table_Widget::resizeEvent(QResizeEvent* event) {
     ui->available_features_table->setMaximumHeight(totalHeight);
 
     _is_resizing = false;
+}
+
+void Feature_Table_Widget::_saveCurrentState() {
+    // Clear previous state
+    _enabled_features.clear();
+    _selected_feature_for_restoration.clear();
+
+    // Save currently highlighted feature
+    if (!_highlighted_feature.isEmpty()) {
+        _selected_feature_for_restoration = _highlighted_feature.toStdString();
+    }
+
+    // Save enabled features by iterating through the table
+    for (int row = 0; row < ui->available_features_table->rowCount(); ++row) {
+        // Find the feature name column
+        int featureColumnIndex = -1;
+        for (int i = 0; i < _columns.size(); i++) {
+            if (_columns[i] == "Feature") {
+                featureColumnIndex = i;
+                break;
+            }
+        }
+
+        // Find the enabled column
+        int enabledColumnIndex = -1;
+        for (int i = 0; i < _columns.size(); i++) {
+            if (_columns[i] == "Enabled") {
+                enabledColumnIndex = i;
+                break;
+            }
+        }
+
+        if (featureColumnIndex != -1 && enabledColumnIndex != -1) {
+            QTableWidgetItem * featureItem = ui->available_features_table->item(row, featureColumnIndex);
+            QWidget * cellWidget = ui->available_features_table->cellWidget(row, enabledColumnIndex);
+
+            if (featureItem && cellWidget) {
+                // Find the checkbox within the cell widget
+                QCheckBox * checkbox = cellWidget->findChild<QCheckBox *>();
+                if (checkbox && checkbox->isChecked()) {
+                    _enabled_features.insert(featureItem->text().toStdString());
+                }
+            }
+        }
+    }
+}
+
+void Feature_Table_Widget::_restoreState() {
+    // Restore enabled checkboxes
+    for (int row = 0; row < ui->available_features_table->rowCount(); ++row) {
+        // Find the feature name column
+        int featureColumnIndex = -1;
+        for (int i = 0; i < _columns.size(); i++) {
+            if (_columns[i] == "Feature") {
+                featureColumnIndex = i;
+                break;
+            }
+        }
+
+        // Find the enabled column
+        int enabledColumnIndex = -1;
+        for (int i = 0; i < _columns.size(); i++) {
+            if (_columns[i] == "Enabled") {
+                enabledColumnIndex = i;
+                break;
+            }
+        }
+
+        if (featureColumnIndex != -1 && enabledColumnIndex != -1) {
+            QTableWidgetItem * featureItem = ui->available_features_table->item(row, featureColumnIndex);
+            QWidget * cellWidget = ui->available_features_table->cellWidget(row, enabledColumnIndex);
+
+            if (featureItem && cellWidget) {
+                std::string const featureName = featureItem->text().toStdString();
+
+                // Find the checkbox within the cell widget
+                QCheckBox * checkbox = cellWidget->findChild<QCheckBox *>();
+                if (checkbox) {
+                    // Restore checkbox state without triggering signals
+                    bool const wasEnabled{_enabled_features.find(featureName) != _enabled_features.end()};
+                    checkbox->blockSignals(true);
+                    checkbox->setChecked(wasEnabled);
+                    checkbox->blockSignals(false);
+                }
+
+                // Restore selection state
+                if (featureName == _selected_feature_for_restoration) {
+                    ui->available_features_table->selectRow(row);
+                    _highlighted_feature = QString::fromStdString(featureName);
+                }
+            }
+        }
+    }
 }

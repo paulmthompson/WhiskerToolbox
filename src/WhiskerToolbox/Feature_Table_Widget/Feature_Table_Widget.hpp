@@ -8,6 +8,7 @@
 #include <QWidget>
 
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -39,7 +40,7 @@ signals:
     void removeFeature(QString const & feature);
 
 protected:
-    void resizeEvent(QResizeEvent* event) override;
+    void resizeEvent(QResizeEvent * event) override;
 
 private slots:
     void _refreshFeatures();
@@ -52,13 +53,21 @@ private:
     QString _highlighted_feature;
     QStringList _columns;
     std::vector<DM_DataType> _type_filters;
-    bool _is_resizing = false;  // Guard to prevent infinite resize loops
+    bool _is_resizing = false;// Guard to prevent infinite resize loops
+
+    // State tracking for table rebuilds
+    std::set<std::string> _enabled_features;      // Track which features are enabled/checked
+    std::string _selected_feature_for_restoration;// Track which feature should be selected after rebuild
 
     void _addFeatureName(std::string const & key, int row, int col);
     void _addFeatureType(std::string const & key, int row, int col);
     void _addFeatureClock(std::string const & key, int row, int col);
     void _addFeatureElements(std::string const & key, int row, int col);
     void _addFeatureEnabled(std::string const & key, int row, int col);
+
+    // State management methods
+    void _saveCurrentState();
+    void _restoreState();
 };
 
 #endif// FEATURE_TABLE_WIDGET_HPP
