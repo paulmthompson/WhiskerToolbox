@@ -45,8 +45,8 @@ void Feature_Tree_Widget::setDataManager(std::shared_ptr<DataManager> data_manag
     _refreshFeatures();
 }
 
-void Feature_Tree_Widget::setGroupingPattern(std::string pattern) {
-    _grouping_pattern = std::move(pattern);
+void Feature_Tree_Widget::setGroupingPattern(std::string const & pattern) {
+    _grouping_pattern = pattern;
     _refreshFeatures();
 }
 
@@ -102,7 +102,7 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
     if (!item || column != 2) return;// Only process checkbox column
 
     std::string const key = item->text(0).toStdString();
-    bool const enabled = item->checkState(2) == Qt::Checked;
+    bool const enabled{item->checkState(2) == Qt::Checked};
 
     // Update the feature state
     if (_features.find(key) != _features.end()) {
@@ -112,8 +112,13 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
 
         // Handle group toggling
         if (_features[key].isGroup || _features[key].isDataTypeGroup) {
-            // Update all children checkboxes
-            _updateChildrenState(item, column);
+            // Only propagate to children when parent is explicitly Checked/Unchecked.
+            // If parent is PartiallyChecked (typically set programmatically from child changes),
+            // do not overwrite child states.
+            Qt::CheckState const parentState = item->checkState(column);
+            if (parentState == Qt::Checked || parentState == Qt::Unchecked) {
+                _updateChildrenState(item, column);
+            }
 
             // Add all children to affected features
             affectedFeatures = _features[key].children;
@@ -141,6 +146,9 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
 }
 
 void Feature_Tree_Widget::_refreshFeatures() {
+    // Save current state before rebuilding
+    _saveCurrentState();
+
     // Clear existing data
     ui->treeWidget->clear();
     _feature_items.clear();
@@ -150,6 +158,9 @@ void Feature_Tree_Widget::_refreshFeatures() {
 
     // Populate tree
     _populateTree();
+
+    // Restore state after rebuilding
+    _restoreState();
 }
 
 void Feature_Tree_Widget::_populateTree() {
@@ -375,8 +386,8 @@ void Feature_Tree_Widget::_populateTreeFlat(std::vector<std::string> const & all
 }
 
 std::string Feature_Tree_Widget::_extractGroupName(std::string const & key) {
-    std::regex const pattern(_grouping_pattern);
-    std::smatch matches;
+    std::regex const pattern{_grouping_pattern};
+    std::smatch matches{};
 
     if (std::regex_search(key, matches, pattern) && matches.size() > 1) {
         return matches[1].str();
@@ -512,4 +523,95 @@ QTreeWidgetItem * Feature_Tree_Widget::_getOrCreateDataTypeItem(DM_DataType data
 
 std::string Feature_Tree_Widget::_getDataTypeGroupName(DM_DataType dataType) {
     return convert_data_type_to_string(dataType);
+}
+
+std::string Feature_Tree_Widget::getSelectedFeature() const {
+    QTreeWidgetItem * item = ui->treeWidget->currentItem();
+    if (!item) {
+        return "";
+    }
+    return item->text(0).toStdString();
+}
+
+void Feature_Tree_Widget::_saveCurrentState() {
+    // Clear previous state
+    _enabled_features.clear();
+    _expanded_groups.clear();
+    _selected_feature_for_restoration.clear();
+
+    // Save currently selected feature
+    QTreeWidgetItem * currentItem = ui->treeWidget->currentItem();
+    if (currentItem) {
+        _selected_feature_for_restoration = currentItem->text(0).toStdString();
+    }
+
+    // Helper function to recursively save state for all items
+    std::function<void(QTreeWidgetItem *)> saveItemState = [&](QTreeWidgetItem * item) {
+        if (!item) return;
+
+        std::string const itemKey = item->text(0).toStdString();
+
+        // Save enabled state (checkbox in column 2)
+        if (item->checkState(2) == Qt::Checked) {
+            _enabled_features.insert(itemKey);
+        }
+
+        // Save expanded state
+        if (item->isExpanded()) {
+            _expanded_groups.insert(itemKey);
+        }
+
+        // Recursively save child states
+        for (int i = 0; i < item->childCount(); ++i) {
+            saveItemState(item->child(i));
+        }
+    };
+
+    // Save state for all top-level items
+    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
+        saveItemState(ui->treeWidget->topLevelItem(i));
+    }
+}
+
+void Feature_Tree_Widget::_restoreState() {
+    // Block signals during state restoration to avoid triggering itemChanged
+    ui->treeWidget->blockSignals(true);
+    
+    // Helper function to recursively restore state for all items
+    std::function<void(QTreeWidgetItem *)> restoreItemState = [&](QTreeWidgetItem * item) {
+        if (!item) return;
+
+        std::string const itemKey = item->text(0).toStdString();
+
+        // Restore enabled state (checkbox in column 2)
+        bool const shouldBeEnabled = _enabled_features.find(itemKey) != _enabled_features.end();
+        item->setCheckState(2, shouldBeEnabled ? Qt::Checked : Qt::Unchecked);
+
+        // Update the feature state in our internal tracking
+        if (_features.find(itemKey) != _features.end()) {
+            _features[itemKey].enabled = shouldBeEnabled;
+        }
+
+        // Restore expanded state
+        bool const shouldBeExpanded = _expanded_groups.find(itemKey) != _expanded_groups.end();
+        item->setExpanded(shouldBeExpanded);
+
+        // Restore selection state
+        if (itemKey == _selected_feature_for_restoration) {
+            ui->treeWidget->setCurrentItem(item);
+        }
+
+        // Recursively restore child states
+        for (int i = 0; i < item->childCount(); ++i) {
+            restoreItemState(item->child(i));
+        }
+    };
+
+    // Restore state for all top-level items
+    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
+        restoreItemState(ui->treeWidget->topLevelItem(i));
+    }
+    
+    // Unblock signals after restoration is complete
+    ui->treeWidget->blockSignals(false);
 }

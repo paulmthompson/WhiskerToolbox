@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <regex>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -32,7 +33,7 @@ public:
     void setDataManager(std::shared_ptr<DataManager> data_manager);
 
     // Set grouping pattern (e.g. "(.+)_\d+$" for name_number pattern)
-    void setGroupingPattern(std::string pattern);
+    void setGroupingPattern(std::string const & pattern);
 
     // Set types to filter
     void setTypeFilters(std::vector<DM_DataType> types);
@@ -42,6 +43,9 @@ public:
 
     // Get selected features (single item or group)
     [[nodiscard]] std::vector<std::string> getSelectedFeatures() const;
+
+    // Get currently selected/highlighted feature
+    [[nodiscard]] std::string getSelectedFeature() const;
 
     // Refresh the tree view
     void refreshTree();
@@ -91,6 +95,11 @@ private:
     // Stores information about features and groups
     std::unordered_map<std::string, TreeFeature> _features;
 
+    // State tracking for tree rebuilds
+    std::set<std::string> _enabled_features;      // Track which features are enabled/checked
+    std::set<std::string> _expanded_groups;       // Track which groups/nodes are expanded
+    std::string _selected_feature_for_restoration;// Track which feature should be selected after rebuild
+
     // Helper methods
     void _populateTree();
     void _populateTreeByDataType(std::vector<std::string> const & allKeys);
@@ -103,6 +112,10 @@ private:
     void _updateParentState(QTreeWidgetItem * child, int column);
     QTreeWidgetItem * _getOrCreateDataTypeItem(DM_DataType dataType);
     std::string _getDataTypeGroupName(DM_DataType dataType);
+
+    // State management methods
+    void _saveCurrentState();
+    void _restoreState();
 };
 
 void setup_checkbox_column(QTreeWidgetItem * item, int column, bool checked);
