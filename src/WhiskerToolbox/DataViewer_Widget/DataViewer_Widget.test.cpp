@@ -1,5 +1,7 @@
 #include "DataViewer_Widget.hpp"
 
+#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
@@ -15,6 +17,7 @@
 #include <QTimer>
 #include <QWidget>
 #include <QMetaObject>
+#include <QTreeWidget>
 
 #include "OpenGLWidget.hpp"
 #include <algorithm>
@@ -433,9 +436,15 @@ protected:
         m_time_scrollbar->setDataManager(m_data_manager);
 
         // Create a default time frame and register under key "time"
-        auto timeframe = std::make_shared<TimeFrame>();
+        std::vector<int> t(4000);
+        std::iota(std::begin(t), std::end(t), 0);
+
+        auto new_timeframe = std::make_shared<TimeFrame>(t);
+
         m_time_key = TimeKey("time");
-        m_data_manager->setTime(m_time_key, timeframe);
+
+        m_data_manager->removeTime(TimeKey("time"));
+        m_data_manager->setTime(TimeKey("time"), new_timeframe);
 
         // Populate with 5 analog time series
         populateAnalogSeries(5);
@@ -555,6 +564,62 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
         if (min_h > 0.0f) {
             REQUIRE((max_h / min_h) <= 1.4f);
         }
+    }
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Enable Five Analog Series via Group Toggle", "[DataViewer_Widget][Analog][Group]") {
+    auto & widget = getWidget();
+    auto const & keys = getAnalogKeys();
+    REQUIRE(keys.size() == 5);
+
+    std::cout << "CTEST_FULL_OUTPUT" << std::endl;
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Locate the Feature_Tree_Widget inside the DataViewer widget
+    auto ftw = widget.findChild<Feature_Tree_Widget *>("feature_tree_widget");
+    REQUIRE(ftw != nullptr);
+
+    // Ensure the tree is populated
+    ftw->refreshTree();
+    QApplication::processEvents();
+
+    QTreeWidget * tree = ftw->treeWidget();
+    REQUIRE(tree != nullptr);
+
+    // Find the top-level "Analog" node
+    QTreeWidgetItem * analogRoot = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        QTreeWidgetItem * item = tree->topLevelItem(i);
+        if (item && item->text(0) == QString("analog")) {
+            analogRoot = item;
+            break;
+        }
+    }
+    REQUIRE(analogRoot != nullptr);
+
+    // Find the group node for prefix "analog" (derived from keys like analog_1..analog_5)
+    QTreeWidgetItem * analogGroup = nullptr;
+    for (int i = 0; i < analogRoot->childCount(); ++i) {
+        QTreeWidgetItem * child = analogRoot->child(i);
+        if (child && child->text(0) == QString("analog")) {
+            analogGroup = child;
+            break;
+        }
+    }
+    REQUIRE(analogGroup != nullptr);
+
+    // Toggle the group checkbox (column 2 is the checkbox column)
+    analogGroup->setCheckState(2, Qt::Checked);
+    QApplication::processEvents();
+
+    // Verify that all five analog series became visible
+    for (auto const & key : keys) {
+        auto cfg = widget.getAnalogConfig(key);
+        REQUIRE(cfg.has_value());
+        REQUIRE(cfg.value() != nullptr);
+        REQUIRE(cfg.value()->is_visible);
     }
 }
 
