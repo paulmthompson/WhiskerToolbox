@@ -31,6 +31,9 @@
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QFileDialog>
+#include <QMenu>
+#include <QAction>
+#include <QTableWidgetItem>
 
 DataManager_Widget::DataManager_Widget(
         std::shared_ptr<DataManager> data_manager,
@@ -378,6 +381,94 @@ void DataManager_Widget::_changeScrollbar(int frame_id) {
     }
 
     _time_scrollbar->changeScrollBarValue(frame_id);
+}
+
+void DataManager_Widget::_deleteData(QString const & feature) {
+    if (feature.isEmpty()) {
+        return;
+    }
+
+    // If the currently highlighted feature is being deleted, clear the selection first
+    if (_highlighted_available_feature == feature) {
+        clearFeatureSelection();
+    }
+
+    // Delete the data from the DataManager
+    std::string const key = feature.toStdString();
+    if (_data_manager->deleteData(key)) {
+        // Refresh the feature table to reflect the deletion
+        ui->feature_table_widget->populateTable();
+        
+        // If we had a feature selected for restoration, clear it since it's no longer valid
+        if (!_highlighted_available_feature.isEmpty()) {
+            _highlighted_available_feature.clear();
+        }
+    }
+}
+
+void DataManager_Widget::contextMenuEvent(QContextMenuEvent* event) {
+    _showContextMenu(event->globalPos());
+}
+
+void DataManager_Widget::_showContextMenu(QPoint const & pos) {
+    // Get the feature at the current position
+    QString const feature = _getFeatureAtPosition(pos);
+    if (feature.isEmpty()) {
+        return;
+    }
+
+    // Create context menu
+    QMenu contextMenu(this);
+    
+    // Add delete action
+    QAction * deleteAction = contextMenu.addAction("Delete");
+    deleteAction->setIcon(QIcon::fromTheme("edit-delete"));
+    
+    // Show the menu and handle the action
+    QAction * selectedAction = contextMenu.exec(pos);
+    if (selectedAction == deleteAction) {
+        _deleteData(feature);
+    }
+}
+
+QString DataManager_Widget::_getFeatureAtPosition(QPoint const & pos) const {
+    // Convert global position to local widget position
+    QPoint const localPos = mapFromGlobal(pos);
+    
+    // Check if the click is within the feature table widget
+    if (!ui->feature_table_widget->geometry().contains(localPos)) {
+        return QString();
+    }
+    
+    // Convert to feature table widget coordinates
+    QPoint const tablePos = ui->feature_table_widget->mapFrom(this, localPos);
+    
+    // Get the table widget from the feature table widget
+    // We need to access the table widget directly to get the item at position
+    QTableWidget * table = ui->feature_table_widget->findChild<QTableWidget*>();
+    if (!table) {
+        return QString();
+    }
+    
+    // Find the table widget item at this position
+    QTableWidgetItem * item = table->itemAt(tablePos);
+    if (!item) {
+        return QString();
+    }
+    
+    // Get the row of the clicked item
+    int const row = item->row();
+    
+    // Find the feature name column (assuming it's the first column)
+    int const featureColumnIndex = 0;
+    
+    // Get the feature name from the feature column
+    QTableWidgetItem * featureItem = table->item(row, featureColumnIndex);
+    if (!featureItem) {
+        return QString();
+    }
+    
+    return featureItem->text();
 }
 
 void DataManager_Widget::resizeEvent(QResizeEvent* event) {

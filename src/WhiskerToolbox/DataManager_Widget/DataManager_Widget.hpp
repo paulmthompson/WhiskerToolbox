@@ -42,6 +42,7 @@ public:
 protected:
     void resizeEvent(QResizeEvent* event) override;
     void showEvent(QShowEvent* event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;
 
 private:
     Ui::DataManager_Widget * ui;
@@ -94,6 +95,31 @@ private slots:
      * @param frame_id The ID of the selected frame
      */
     void _changeScrollbar(int frame_id);
+
+    /**
+     * @brief Handle deletion of data from the feature table
+     * 
+     * This method deletes the specified data from the DataManager and handles
+     * cleanup of any currently selected features that might be affected.
+     * 
+     * @param feature The name/key of the feature to delete
+     */
+    void _deleteData(QString const & feature);
+
+    /**
+     * @brief Show context menu at the specified position
+     * 
+     * @param pos Global position where the context menu should appear
+     */
+    void _showContextMenu(QPoint const & pos);
+
+    /**
+     * @brief Get the feature name at the specified position in the feature table
+     * 
+     * @param pos Global position to check
+     * @return QString containing the feature name, or empty string if no feature found
+     */
+    QString _getFeatureAtPosition(QPoint const & pos) const;
 };
 
 

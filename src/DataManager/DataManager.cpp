@@ -388,6 +388,26 @@ void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey
     _notifyObservers();
 }
 
+bool DataManager::deleteData(std::string const & key) {
+    // Check if the key exists
+    if (_data.find(key) == _data.end()) {
+        std::cerr << "Error: Data key not found in DataManager: " << key << std::endl;
+        return false;
+    }
+
+    // Remove the time frame mapping if it exists
+    _time_frames.erase(key);
+    
+    // Remove the data from storage
+    _data.erase(key);
+    
+    // Notify all observers that data has changed
+    _notifyObservers();
+    
+    std::cout << "DataManager: Successfully deleted data with key: " << key << std::endl;
+    return true;
+}
+
 std::optional<std::string> processFilePath(
         std::string const & file_path,
         std::filesystem::path const & base_path) {

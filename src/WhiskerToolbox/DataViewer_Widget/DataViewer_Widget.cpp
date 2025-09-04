@@ -25,6 +25,8 @@
 
 #include <QTableWidget>
 #include <QWheelEvent>
+#include <QMetaObject>
+#include <QPointer>
 
 #include <algorithm>
 #include <cmath>
@@ -51,6 +53,11 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Initialize feature tree model
     _feature_tree_model = std::make_unique<Feature_Tree_Model>(this);
     _feature_tree_model->setDataManager(_data_manager);
+
+    // Set up observer to automatically clean up data when it's deleted from DataManager
+    _data_manager->addObserver([this]() {
+        cleanupDeletedData();
+    });
 
     // Configure Feature_Tree_Widget
     ui->feature_tree_widget->setTypeFilters({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
@@ -88,7 +95,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         // Trigger a single canvas update at the end
         if (!features.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+            ui->openGLWidget->updateCanvas();
         }
     });
 
@@ -109,7 +116,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         // Trigger a single canvas update at the end
         if (!features.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+            ui->openGLWidget->updateCanvas();
         }
     });
 
@@ -204,7 +211,6 @@ void DataViewer_Widget::openWidget() {
     ui->feature_tree_widget->refreshTree();
 
     this->show();
-
     _updateLabels();
 }
 
@@ -357,7 +363,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
     std::cout << "Series addition and auto-arrangement completed" << std::endl;
     // Trigger canvas update to show the new series
     std::cout << "Triggering canvas update" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
     std::cout << "Canvas update completed" << std::endl;
 }
 
@@ -409,7 +415,7 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
     std::cout << "Series removal and auto-arrangement completed" << std::endl;
     // Trigger canvas update to reflect the removal
     std::cout << "Triggering canvas update after removal" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
@@ -513,7 +519,7 @@ void DataViewer_Widget::_updateGlobalScale(double scale) {
         }
 
         // Trigger canvas update
-        ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+        ui->openGLWidget->updateCanvas();
     }
 }
 
@@ -589,7 +595,7 @@ void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std
     }
 
     // Trigger a redraw
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
 
     std::cout << "Color changed for " << feature_key << " to " << hex_color << std::endl;
 }
@@ -680,7 +686,7 @@ void DataViewer_Widget::_handleVerticalSpacingChanged(double spacing) {
         }
 
         // Trigger canvas update
-        ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+        ui->openGLWidget->updateCanvas();
     }
 }
 
@@ -999,7 +1005,7 @@ void DataViewer_Widget::autoArrangeVerticalSpacing() {
     _updateViewBounds();
 
     // Trigger canvas update to show new positions
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
 
     auto total_keys = analog_keys.size() + event_keys.size() + interval_keys.size();
     std::cout << "DataViewer_Widget: Auto-arrange completed for " << total_keys << " series" << std::endl;
@@ -1224,4 +1230,67 @@ void DataViewer_Widget::_autoFillCanvas() {
     }
 
     std::cout << "Auto-fill canvas completed" << std::endl;
+}
+
+void DataViewer_Widget::cleanupDeletedData() {
+    if (!_data_manager) {
+        return;
+    }
+
+    // Collect keys that no longer exist in DataManager
+    std::vector<std::string> keys_to_cleanup;
+
+    if (_plotting_manager) {
+        auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
+        for (auto const & key : analog_keys) {
+            if (!_data_manager->getData<AnalogTimeSeries>(key)) {
+                keys_to_cleanup.push_back(key);
+            }
+        }
+        auto event_keys = _plotting_manager->getVisibleDigitalEventSeriesKeys();
+        for (auto const & key : event_keys) {
+            if (!_data_manager->getData<DigitalEventSeries>(key)) {
+                keys_to_cleanup.push_back(key);
+            }
+        }
+        auto interval_keys = _plotting_manager->getVisibleDigitalIntervalSeriesKeys();
+        for (auto const & key : interval_keys) {
+            if (!_data_manager->getData<DigitalIntervalSeries>(key)) {
+                keys_to_cleanup.push_back(key);
+            }
+        }
+    }
+
+    if (keys_to_cleanup.empty()) {
+        return;
+    }
+
+    // De-duplicate keys in case the same key appears in multiple lists
+    std::sort(keys_to_cleanup.begin(), keys_to_cleanup.end());
+    keys_to_cleanup.erase(std::unique(keys_to_cleanup.begin(), keys_to_cleanup.end()), keys_to_cleanup.end());
+
+    // Post cleanup to OpenGLWidget's thread safely
+    QPointer<OpenGLWidget> glw = ui ? ui->openGLWidget : nullptr;
+    if (glw) {
+        QMetaObject::invokeMethod(glw, [glw, keys = keys_to_cleanup]() {
+            if (!glw) return;
+            for (auto const & key : keys) {
+                glw->removeAnalogTimeSeries(key);
+                glw->removeDigitalEventSeries(key);
+                glw->removeDigitalIntervalSeries(key);
+            }
+        }, Qt::QueuedConnection);
+    }
+
+    // Remove from PlottingManager defensively (all types) on our thread
+    if (_plotting_manager) {
+        for (auto const & key : keys_to_cleanup) {
+            (void) _plotting_manager->removeAnalogSeries(key);
+            (void) _plotting_manager->removeDigitalEventSeries(key);
+            (void) _plotting_manager->removeDigitalIntervalSeries(key);
+        }
+    }
+
+    // Re-arrange remaining data
+    autoArrangeVerticalSpacing();
 }

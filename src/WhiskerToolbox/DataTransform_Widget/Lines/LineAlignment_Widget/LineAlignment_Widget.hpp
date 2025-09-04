@@ -4,24 +4,31 @@
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
 
 #include <memory>
+#include <string>
 
 class DataManager;
 
-namespace Ui { class LineAlignment_Widget; }
+namespace Ui {
+class LineAlignment_Widget;
+}
 
 
 class LineAlignment_Widget : public TransformParameter_Widget {
     Q_OBJECT
 public:
-    explicit LineAlignment_Widget(QWidget *parent = nullptr);
+    explicit LineAlignment_Widget(QWidget * parent = nullptr);
     ~LineAlignment_Widget() override;
 
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getParameters() const override;
     void setDataManager(std::shared_ptr<DataManager> data_manager);
 
 private:
-    Ui::LineAlignment_Widget *ui;
+    Ui::LineAlignment_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    std::string _selected_media_key;
+
+    void _refreshMediaDataKeys();
+    void _updateMediaDataKeyComboBox();
 
 private slots:
     void _widthValueChanged(int value);
@@ -29,6 +36,7 @@ private slots:
     void _useProcessedDataToggled(bool checked);
     void _approachChanged(int index);
     void _outputModeChanged(int index);
+    void _mediaDataKeyChanged(int index);
 };
 
 #endif// LINEALIGNMENT_WIDGET_HPP

@@ -273,6 +273,22 @@ public:
         _notifyObservers();
     }
 
+    /**
+     * @brief Delete data associated with the specified key
+     * 
+     * Removes the data object and its associated time frame mapping from the DataManager.
+     * All observers are notified of the change, allowing dependent widgets to clean up.
+     * 
+     * @param key The key of the data to delete
+     * @return bool True if the data was successfully deleted, false if the key doesn't exist
+     * 
+     * @note This method will:
+     *       - Remove the data from the internal storage
+     *       - Remove the time frame mapping for this data
+     *       - Notify all observers of the change
+     *       - The shared_ptr will be automatically cleaned up when no other references exist
+     */
+    bool deleteData(std::string const & key);
 
     [[nodiscard]] DM_DataType getType(std::string const & key) const;
 
