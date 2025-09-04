@@ -2,6 +2,7 @@
 #define DATAVIEWER_WIDGET_HPP
 
 #include <QWidget>
+#include <QPoint>
 
 #include "DataManager/DataManagerTypes.hpp"
 #include "DataViewer/PlottingManager/PlottingManager.hpp"
@@ -99,6 +100,10 @@ private slots:
     void _handleGridLinesToggled(bool enabled);
     void _handleGridSpacingChanged(int spacing);
     void _handleVerticalSpacingChanged(double spacing);
+    void _showGroupContextMenu(std::string const & group_name, QPoint const & global_pos);
+    void _loadSpikeSorterConfigurationForGroup(QString const & group_name);
+    void _loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text);
+    void _clearConfigurationForGroup(QString const & group_name);
 
 private:
     std::shared_ptr<DataManager> _data_manager;
@@ -182,6 +187,9 @@ private:
      * It cleans up both the OpenGLWidget and PlottingManager references.
      */
     void cleanupDeletedData();
+
+    // Parsing helper
+    static std::vector<PlottingManager::AnalogGroupChannelPosition> _parseSpikeSorterConfig(std::string const & text);
 };
 
 

@@ -6,6 +6,7 @@
 
 #include <QTreeWidget>
 #include <QWidget>
+#include <QPoint>
 
 #include <functional>
 #include <memory>
@@ -18,6 +19,7 @@
 class DataManager;
 class QPushButton;
 class QTreeWidgetItem;
+class QTreeWidget;
 
 namespace Ui {
 class Feature_Tree_Widget;
@@ -64,6 +66,10 @@ private slots:
     void _itemChanged(QTreeWidgetItem * item, int column);
     void _refreshFeatures();
 
+public:
+    // Expose underlying tree widget for context menu handling by parent widgets
+    QTreeWidget * treeWidget() const;
+
 private:
     struct TreeFeature {
         std::string key;
@@ -99,6 +105,7 @@ private:
     std::set<std::string> _enabled_features;      // Track which features are enabled/checked
     std::set<std::string> _expanded_groups;       // Track which groups/nodes are expanded
     std::string _selected_feature_for_restoration;// Track which feature should be selected after rebuild
+    bool _is_rebuilding{false};                   // Guard to suppress emissions during rebuild
 
     // Helper methods
     void _populateTree();

@@ -701,7 +701,9 @@ void OpenGLWidget::drawAnalogSeries() {
         }
 
         float allocated_y_center, allocated_height;
-        _plotting_manager->calculateAnalogSeriesAllocation(i, allocated_y_center, allocated_height);
+        if (!_plotting_manager->getAnalogSeriesAllocationForKey(key, allocated_y_center, allocated_height)) {
+            _plotting_manager->calculateAnalogSeriesAllocation(i, allocated_y_center, allocated_height);
+        }
 
         display_options->allocated_y_center = allocated_y_center;
         display_options->allocated_height = allocated_height;

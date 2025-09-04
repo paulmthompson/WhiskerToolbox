@@ -33,6 +33,8 @@ Feature_Tree_Widget::~Feature_Tree_Widget() {
     delete ui;
 }
 
+QTreeWidget * Feature_Tree_Widget::treeWidget() const { return ui->treeWidget; }
+
 void Feature_Tree_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = std::move(data_manager);
 
@@ -80,6 +82,8 @@ void Feature_Tree_Widget::_itemSelected(QTreeWidgetItem * item, int column) {
 
     static_cast<void>(column);
 
+    if (_is_rebuilding) return;// Suppress selections during rebuild
+
     if (!item) return;
 
     std::string const key = item->text(0).toStdString();
@@ -99,6 +103,7 @@ void Feature_Tree_Widget::_itemSelected(QTreeWidgetItem * item, int column) {
 }
 
 void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
+    if (_is_rebuilding) return;      // Suppress changes during rebuild
     if (!item || column != 2) return;// Only process checkbox column
 
     std::string const key = item->text(0).toStdString();
@@ -147,6 +152,7 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
 
 void Feature_Tree_Widget::_refreshFeatures() {
     // Save current state before rebuilding
+    _is_rebuilding = true;// Guard emissions
     _saveCurrentState();
 
     // Clear existing data
@@ -161,6 +167,7 @@ void Feature_Tree_Widget::_refreshFeatures() {
 
     // Restore state after rebuilding
     _restoreState();
+    _is_rebuilding = false;// End guard
 }
 
 void Feature_Tree_Widget::_populateTree() {
@@ -576,7 +583,7 @@ void Feature_Tree_Widget::_saveCurrentState() {
 void Feature_Tree_Widget::_restoreState() {
     // Block signals during state restoration to avoid triggering itemChanged
     ui->treeWidget->blockSignals(true);
-    
+
     // Helper function to recursively restore state for all items
     std::function<void(QTreeWidgetItem *)> restoreItemState = [&](QTreeWidgetItem * item) {
         if (!item) return;
@@ -611,7 +618,7 @@ void Feature_Tree_Widget::_restoreState() {
     for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
         restoreItemState(ui->treeWidget->topLevelItem(i));
     }
-    
+
     // Unblock signals after restoration is complete
     ui->treeWidget->blockSignals(false);
 }

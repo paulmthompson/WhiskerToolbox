@@ -291,3 +291,84 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - Signal E
         }
     }
 }
+
+TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - No emissions during rebuild", "[Feature_Table_Widget][Signals]") {
+    auto & widget = getWidget();
+    auto & dm = getDataManager();
+
+    // Initial populate
+    widget.populateTable();
+    QApplication::processEvents();
+
+    // Counters for signals
+    int featureSelectedCount = 0;
+    int addFeatureCount = 0;
+    int removeFeatureCount = 0;
+
+    QObject::connect(&widget, &Feature_Table_Widget::featureSelected, [&featureSelectedCount](QString const &) {
+        featureSelectedCount++;
+    });
+    QObject::connect(&widget, &Feature_Table_Widget::addFeature, [&addFeatureCount](QString const &) {
+        addFeatureCount++;
+    });
+    QObject::connect(&widget, &Feature_Table_Widget::removeFeature, [&removeFeatureCount](QString const &) {
+        removeFeatureCount++;
+    });
+
+    // Trigger table rebuild by adding analog data
+    std::vector<float> values = {1.0f, 2.0f, 3.0f};
+    auto analog = std::make_shared<AnalogTimeSeries>(values, values.size());
+    TimeKey time_key("time");
+    dm.setData<AnalogTimeSeries>("probe_table_analog_1", analog, time_key);
+    QApplication::processEvents();
+
+    // No signals should be emitted during rebuild
+    REQUIRE(featureSelectedCount == 0);
+    REQUIRE(addFeatureCount == 0);
+    REQUIRE(removeFeatureCount == 0);
+
+    // Trigger another rebuild by adding digital events
+    auto ev = std::make_shared<DigitalEventSeries>();
+    ev->addEvent(1000);
+    dm.setData<DigitalEventSeries>("probe_table_events_1", ev, time_key);
+    QApplication::processEvents();
+
+    // Still no signals from rebuild
+    REQUIRE(featureSelectedCount == 0);
+    REQUIRE(addFeatureCount == 0);
+    REQUIRE(removeFeatureCount == 0);
+
+    // Now simulate user action by toggling a checkbox in the "Enabled" column
+    auto * table = widget.findChild<QTableWidget *>("available_features_table");
+    REQUIRE(table != nullptr);
+
+    int enabledCol = -1;
+    for (int col = 0; col < table->columnCount(); ++col) {
+        auto * headerItem = table->horizontalHeaderItem(col);
+        if (headerItem && headerItem->text() == "Enabled") {
+            enabledCol = col;
+            break;
+        }
+    }
+    REQUIRE(enabledCol != -1);
+
+    // Find a row with a checkbox and toggle it
+    bool toggled = false;
+    int prevAdd = addFeatureCount;
+    int prevRemove = removeFeatureCount;
+
+    for (int row = 0; row < table->rowCount(); ++row) {
+        QWidget * cell = table->cellWidget(row, enabledCol);
+        if (!cell) continue;
+        if (auto * cb = cell->findChild<QCheckBox *>()) {
+            cb->setChecked(!cb->isChecked());
+            QApplication::processEvents();
+            toggled = true;
+            break;
+        }
+    }
+
+    REQUIRE(toggled);
+    // One of add/remove should have incremented
+    REQUIRE((addFeatureCount > prevAdd || removeFeatureCount > prevRemove));
+}

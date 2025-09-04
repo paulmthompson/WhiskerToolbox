@@ -59,6 +59,8 @@ int PlottingManager::addAnalogSeries(std::string const & key,
     info.key = key;
     info.color = color.empty() ? generateDefaultColor(series_index) : color;
     info.visible = true;
+    // Extract group and channel id from key pattern name_idx
+    _extractGroupAndChannel(key, info.group_name, info.channel_id);
     
     analog_series_map[key] = std::move(info);
     total_analog_series++;
@@ -312,6 +314,92 @@ void PlottingManager::updateSeriesCounts() {
     total_digital_series = static_cast<int>(std::count_if(
         digital_interval_series_map.begin(), digital_interval_series_map.end(),
         [](auto const & pair) { return pair.second.visible; }));
+}
+
+bool PlottingManager::_extractGroupAndChannel(std::string const & key, std::string & group, int & channel_id) {
+    channel_id = -1;
+    group.clear();
+    auto const pos = key.rfind('_');
+    if (pos == std::string::npos || pos + 1 >= key.size()) {
+        return false;
+    }
+    group = key.substr(0, pos);
+    try {
+        int const parsed = std::stoi(key.substr(pos + 1));
+        channel_id = parsed > 0 ? parsed - 1 : parsed;
+    } catch (...) {
+        channel_id = -1;
+        return false;
+    }
+    return true;
+}
+
+void PlottingManager::loadAnalogSpikeSorterConfiguration(std::string const & group_name,
+                                                        std::vector<AnalogGroupChannelPosition> const & positions) {
+    _analog_group_configs[group_name] = positions;
+}
+
+void PlottingManager::clearAnalogGroupConfiguration(std::string const & group_name) {
+    _analog_group_configs.erase(group_name);
+}
+
+std::vector<std::string> PlottingManager::_orderedVisibleAnalogKeysByConfig() const {
+    // Group visible analog series by group_name
+    struct Item { std::string key; std::string group; int channel; };
+    std::vector<Item> items;
+    items.reserve(analog_series_map.size());
+    for (auto const & [key, info] : analog_series_map) {
+        if (!info.visible) continue;
+        Item it{key, info.group_name, info.channel_id};
+        items.push_back(std::move(it));
+    }
+
+    // Sort with configuration: by group; within group, if config present, by descending y; else by channel id
+    std::stable_sort(items.begin(), items.end(), [&](Item const & a, Item const & b) {
+        if (a.group != b.group) return a.group < b.group;
+        auto cfg_it = _analog_group_configs.find(a.group);
+        if (cfg_it == _analog_group_configs.end()) {
+            return a.channel < b.channel;
+        }
+        auto const & cfg = cfg_it->second;
+        auto find_y = [&](int ch) {
+            for (auto const & p : cfg) if (p.channel_id == ch) return p.y;
+            return 0.0f; };
+        float ya = find_y(a.channel);
+        float yb = find_y(b.channel);
+        if (ya == yb) return a.channel < b.channel;
+        return ya < yb; // ascending by y so larger y get larger index (top)
+    });
+
+    std::vector<std::string> keys;
+    keys.reserve(items.size());
+    for (auto const & it : items) keys.push_back(it.key);
+    return keys;
+}
+
+bool PlottingManager::getAnalogSeriesAllocationForKey(std::string const & key,
+                                                     float & allocated_center,
+                                                     float & allocated_height) const {
+    // Build ordered visible list considering configuration
+    auto ordered = _orderedVisibleAnalogKeysByConfig();
+    if (ordered.empty()) {
+        allocated_center = 0.0f;
+        allocated_height = viewport_y_max - viewport_y_min;
+        return false;
+    }
+    // Find index of key among visible
+    int index = -1;
+    for (size_t i = 0; i < ordered.size(); ++i) {
+        if (ordered[i] == key) { index = static_cast<int>(i); break; }
+    }
+    if (index < 0) {
+        return false;
+    }
+    // Use same formula as calculateAnalogSeriesAllocation but with index in ordered list and count = ordered.size()
+    float const total = static_cast<float>(ordered.size());
+    allocated_height = (viewport_y_max - viewport_y_min) / total;
+    allocated_center = viewport_y_min + allocated_height * (static_cast<float>(index) + 0.5f);
+    return true;
 }
 
 std::string PlottingManager::generateDefaultColor(int series_index) const {
