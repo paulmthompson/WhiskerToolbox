@@ -13,7 +13,9 @@ Thresholding is a fundamental method for event detection in time-series data. Th
 
 A "lockout" period can also be set. After an event is detected, the algorithm will ignore any further threshold crossings for the duration of this period, which helps prevent a single, noisy event from being counted multiple times.
 
-This transform takes an analog time series as input and produces a digital event series as output, where each event corresponds to a single point in time when a threshold crossing was detected.
+This transform takes an analog time series as input and produces a digital event series as output, where each event corresponds to a single point in time when a threshold crossing was detected.\
+\
+![](images/clipboard-2639982734.png)
 
 ::: {.content-hidden when-format="html"}
 ```{{python}}
