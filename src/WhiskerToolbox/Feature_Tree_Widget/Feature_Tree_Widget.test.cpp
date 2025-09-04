@@ -587,11 +587,64 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - No emissio
         int addFeatureBefore = addFeatureCount;
 
         leaf->setCheckState(2, Qt::Checked);
-        // Manually emit for reliability in headless test as in other sections
+        // Manually emit for reliability in headless test
         emit tree->itemChanged(leaf, 2);
         QApplication::processEvents();
 
-        REQUIRE(addFeaturesCount >= addFeaturesBefore); // may emit group and single depending on structure
-        REQUIRE(addFeatureCount >= addFeatureBefore);
+        // After our change, leaf toggle should only emit addFeature, not addFeatures
+        REQUIRE(addFeatureCount == addFeatureBefore + 1);
+        REQUIRE(addFeaturesCount == addFeaturesBefore);
     }
+}
+
+TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - Group toggle emits only group signal once", "[Feature_Tree_Widget][Signals][Group]") {
+    auto & widget = getWidget();
+    auto & dm = getDataManager();
+
+    // Ensure there is a true name-group under the analog data type (e.g., analog_1, analog_2)
+    TimeKey time_key("time");
+    std::vector<float> values = {1.0f, 2.0f, 3.0f};
+    auto s1 = std::make_shared<AnalogTimeSeries>(values, values.size());
+    auto s2 = std::make_shared<AnalogTimeSeries>(values, values.size());
+    dm.setData<AnalogTimeSeries>("analog_1", s1, time_key);
+    dm.setData<AnalogTimeSeries>("analog_2", s2, time_key);
+
+    widget.refreshTree();
+    QApplication::processEvents();
+
+    auto * tree = getTreeWidget();
+    REQUIRE(tree != nullptr);
+
+    int addFeaturesCount = 0;
+    int addFeatureCount = 0;
+    QObject::connect(&widget, &Feature_Tree_Widget::addFeatures, [&addFeaturesCount](std::vector<std::string> const &) {
+        addFeaturesCount++;
+    });
+    QObject::connect(&widget, &Feature_Tree_Widget::addFeature, [&addFeatureCount](std::string const &) {
+        addFeatureCount++;
+    });
+
+    // Find the "analog" top-level group and a child name-group under it
+    QTreeWidgetItem * analogTop = findItemByText(tree, "analog");
+    REQUIRE(analogTop != nullptr);
+    analogTop->setExpanded(true);
+    QApplication::processEvents();
+
+    QTreeWidgetItem * nameGroup = nullptr;
+    for (int i = 0; i < analogTop->childCount(); ++i) {
+        QTreeWidgetItem * child = analogTop->child(i);
+        if (child->text(1) == QString("Group") && child->childCount() > 0) { nameGroup = child; break; }
+    }
+    REQUIRE(nameGroup != nullptr);
+
+    int addFeaturesBefore = addFeaturesCount;
+    int addFeatureBefore = addFeatureCount;
+
+    // Toggle the group checkbox (column 2). Qt will emit itemChanged itself.
+    nameGroup->setCheckState(2, Qt::Checked);
+    QApplication::processEvents();
+
+    // Expect exactly one group emission and zero single-feature emissions
+    REQUIRE(addFeaturesCount == addFeaturesBefore + 1);
+    REQUIRE(addFeatureCount == addFeatureBefore);
 }

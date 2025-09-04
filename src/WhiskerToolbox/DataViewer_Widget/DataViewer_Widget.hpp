@@ -190,6 +190,9 @@ private:
 
     // Parsing helper
     static std::vector<PlottingManager::AnalogGroupChannelPosition> _parseSpikeSorterConfig(std::string const & text);
+
+    // Batch operations guard to suppress per-series auto-arrange/update thrash
+    bool _is_batch_add{false};
 };
 
 
