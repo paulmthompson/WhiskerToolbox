@@ -587,8 +587,6 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - No emissio
         int addFeatureBefore = addFeatureCount;
 
         leaf->setCheckState(2, Qt::Checked);
-        // Manually emit for reliability in headless test
-        emit tree->itemChanged(leaf, 2);
         QApplication::processEvents();
 
         // After our change, leaf toggle should only emit addFeature, not addFeatures
