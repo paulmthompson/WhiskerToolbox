@@ -1,0 +1,138 @@
+---
+title: "Analog Event Threshold"
+format: html
+---
+
+## Overview
+
+This transform detects moments in time (events) when an analog signal crosses a specified value, which is useful for identifying significant occurrences in the data.
+
+### Detailed Description
+
+Thresholding is a fundamental method for event detection in time-series data. This operation identifies every point in time where the signal's amplitude crosses a defined threshold in a specific direction (either rising above it, falling below it, or crossing it in either direction).
+
+A "lockout" period can also be set. After an event is detected, the algorithm will ignore any further threshold crossings for the duration of this period, which helps prevent a single, noisy event from being counted multiple times.
+
+This transform takes an analog time series as input and produces a digital event series as output, where each event corresponds to a single point in time when a threshold crossing was detected.
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Generate sample data ---
+    fs = 1000  # Sampling frequency
+    t = np.arange(0, 1.0, 1/fs)  # Time vector
+    # Create a signal with a couple of distinct peaks
+    signal = (np.sin(2 * np.pi * 5 * t) * np.exp(-t * 5) +
+              np.sin(2 * np.pi * 25 * t - np.pi/2) * np.exp(-(t-0.5)**2 / 0.01))
+    signal /= np.max(np.abs(signal))  # Normalize to [-1, 1]
+
+    threshold = 0.5
+    lockout_duration_sec = 0.150 # 150 ms
+    lockout_samples = int(lockout_duration_sec * fs)
+
+    # --- Detect events (positive-going crossings) ---
+    crossings_indices = np.where((signal[:-1] < threshold) & (signal[1:] >= threshold))[0] + 1
+
+    # --- Apply lockout logic ---
+    events_with_lockout_indices = []
+    if len(crossings_indices) > 0:
+        last_event_index = -np.inf
+        for index in crossings_indices:
+            if index > last_event_index + lockout_samples:
+                events_with_lockout_indices.append(index)
+                last_event_index = index
+
+    events_no_lockout_times = t[crossings_indices]
+    events_with_lockout_times = t[np.array(events_with_lockout_indices)]
+
+    # --- Create the plots ---
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True, sharey=True)
+    fig.suptitle('How Thresholding and Lockout Time Work', fontsize=16)
+
+    # Plot 1: No Lockout
+    ax1.plot(t, signal, label='Analog Signal')
+    ax1.axhline(threshold, color='r', linestyle='--', label=f'Threshold = {threshold}')
+    ax1.plot(events_no_lockout_times, np.full_like(events_no_lockout_times, threshold), 'go', markersize=8, label='Detected Events')
+    for event_time in events_no_lockout_times:
+        ax1.axvline(event_time, color='g', linestyle=':', ymax=0.75)
+    ax1.set_title('Events Detected (No Lockout)')
+    ax1.set_ylabel('Amplitude')
+    ax1.legend()
+    ax1.grid(True)
+
+    # Plot 2: With Lockout
+    ax2.plot(t, signal, label='Analog Signal')
+    ax2.axhline(threshold, color='r', linestyle='--', label=f'Threshold = {threshold}')
+    ax2.plot(events_with_lockout_times, np.full_like(events_with_lockout_times, threshold), 'go', markersize=8, label='Detected Events')
+    for i, event_time in enumerate(events_with_lockout_times):
+        ax2.axvline(event_time, color='g', linestyle=':', ymax=0.75)
+        # Shade the lockout period after each detected event
+        label = 'Lockout Period' if i == 0 else ""
+        ax2.axvspan(event_time, event_time + lockout_duration_sec, color='orange', alpha=0.3, label=label)
+
+    ax2.set_title(f'Events Detected (With Lockout Time = {lockout_duration_sec*1000:.0f} ms)')
+    ax2.set_xlabel('Time (s)')
+    ax2.set_ylabel('Amplitude')
+    ax2.legend()
+    ax2.grid(True)
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+### Neuroscience Use Cases
+
+In neuroscience, thresholding is a common technique for identifying meaningful events in continuous data streams:
+
+-   **Spike Detection:** In extracellular recordings, thresholding can be used to identify action potentials (spikes) that stand out from the background noise. A lockout time is critical here to avoid detecting the same spike multiple times as it repolarizes.
+-   **Behavioral Event Marking:** For data from sensors like accelerometers or force transducers, thresholding can mark the onset of specific behaviors, such as a mouse starting to run on a wheel or a bird pecking a key.
+-   **Calcium Imaging Analysis:** In calcium imaging data, which reflects neural activity, thresholding can be used to detect significant calcium transients that indicate a neuron or a group of neurons are firing.
+
+## Parameters
+
+This transform has the following parameters:
+
+-   `threshold_value`: The amplitude value the signal must cross to be considered an event.
+-   `direction`: Specifies the direction of the crossing required to trigger an event. This can be:
+    -   `Positive (Rising)`: An event is detected when the signal crosses the threshold from a lower to a higher value.
+    -   `Negative (Falling)`: An event is detected when the signal crosses the threshold from a higher to a lower value.
+    -   `Absolute`: An event is detected whenever the absolute value of the signal crosses the threshold value (useful for detecting deviations from baseline in either direction).
+-   `lockout_time`: A duration (in the same time units as the data, e.g., seconds) after each detected event during which no new events will be registered. This is useful for preventing multiple detections of a single, noisy event.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example detects events where the signal rises above an amplitude of `1.0`, with no lockout period.
+
+``` json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Threshold Detection Pipeline",
+            "description": "Test threshold event detection on analog signal",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Analog Event Threshold",
+                "phase": "analysis",
+                "input_key": "test_signal",
+                "output_key": "detected_events",
+                "parameters": {
+                    "threshold_value": 1.0,
+                    "direction": "Positive",
+                    "lockout_time": 0.0
+                }
+            }
+        ]
+    }
+}
+]
+```
