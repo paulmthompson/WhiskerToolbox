@@ -95,7 +95,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         // Trigger a single canvas update at the end
         if (!features.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+            ui->openGLWidget->updateCanvas();
         }
     });
 
@@ -116,7 +116,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         // Trigger a single canvas update at the end
         if (!features.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+            ui->openGLWidget->updateCanvas();
         }
     });
 
@@ -363,7 +363,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
     std::cout << "Series addition and auto-arrangement completed" << std::endl;
     // Trigger canvas update to show the new series
     std::cout << "Triggering canvas update" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
     std::cout << "Canvas update completed" << std::endl;
 }
 
@@ -415,7 +415,7 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
     std::cout << "Series removal and auto-arrangement completed" << std::endl;
     // Trigger canvas update to reflect the removal
     std::cout << "Triggering canvas update after removal" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
@@ -519,7 +519,7 @@ void DataViewer_Widget::_updateGlobalScale(double scale) {
         }
 
         // Trigger canvas update
-        ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+        ui->openGLWidget->updateCanvas();
     }
 }
 
@@ -595,7 +595,7 @@ void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std
     }
 
     // Trigger a redraw
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
 
     std::cout << "Color changed for " << feature_key << " to " << hex_color << std::endl;
 }
@@ -686,7 +686,7 @@ void DataViewer_Widget::_handleVerticalSpacingChanged(double spacing) {
         }
 
         // Trigger canvas update
-        ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+        ui->openGLWidget->updateCanvas();
     }
 }
 
@@ -1005,7 +1005,7 @@ void DataViewer_Widget::autoArrangeVerticalSpacing() {
     _updateViewBounds();
 
     // Trigger canvas update to show new positions
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
 
     auto total_keys = analog_keys.size() + event_keys.size() + interval_keys.size();
     std::cout << "DataViewer_Widget: Auto-arrange completed for " << total_keys << " series" << std::endl;

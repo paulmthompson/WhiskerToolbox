@@ -19,6 +19,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include "OpenGLWidget.hpp"
 
 /**
  * @brief Test fixture for DataViewer_Widget data cleanup tests
@@ -547,4 +548,67 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
             REQUIRE((max_h / min_h) <= 1.4f);
         }
     }
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X axis unchanged on global gain change", "[DataViewer_Widget][Analog][XAxis]") {
+    auto & widget = getWidget();
+    auto const keys = getAnalogKeys();
+    REQUIRE(keys.size() >= 1);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable a single analog series
+    bool invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_addFeatureToModel",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(keys[0])),
+            Q_ARG(bool, true));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    // Locate the OpenGLWidget to query XAxis
+    auto glw = widget.findChild<OpenGLWidget*>("openGLWidget");
+    REQUIRE(glw != nullptr);
+
+    // Set an initial center (time) and range width via widget slots
+    int const initial_time_index = 1000;
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_updatePlot",
+            Qt::DirectConnection,
+            Q_ARG(int, initial_time_index));
+    REQUIRE(invoked);
+
+    int const initial_range_width = 2000;
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleXAxisSamplesChanged",
+            Qt::DirectConnection,
+            Q_ARG(int, initial_range_width));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    auto x_before = glw->getXAxis();
+    auto const start_before = x_before.getStart();
+    auto const end_before = x_before.getEnd();
+
+    // Change global gain via the private slot and re-draw
+    double const new_gain = 2.0;
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_updateGlobalScale",
+            Qt::DirectConnection,
+            Q_ARG(double, new_gain));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    auto x_after = glw->getXAxis();
+    auto const start_after = x_after.getStart();
+    auto const end_after = x_after.getEnd();
+
+    // Verify X window did not change
+    REQUIRE(start_before == start_after);
+    REQUIRE(end_before == end_after);
 }

@@ -365,6 +365,7 @@ public:
     }
 
 public slots:
+    void updateCanvas() { updateCanvas(_time); }
     void updateCanvas(int time);
 
 signals:
