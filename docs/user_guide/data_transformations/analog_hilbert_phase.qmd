@@ -5,59 +5,106 @@ format: html
 
 ## Overview
 
-The Analog Hilbert Phase transform calculates the instantaneous phase of an analog time series using the Hilbert transform. This is useful for analyzing oscillatory signals, as it provides a measure of the signal's phase at each point in time.
+This transform calculates the instantaneous phase of an analog signal, which is useful for analyzing oscillations.
 
-The Hilbert transform is applied to the input signal to produce an analytic signal, which is a complex signal whose real part is the original signal and whose imaginary part is the Hilbert transform of the original signal. The instantaneous phase is then calculated as the angle of the analytic signal.
+### Detailed Description
+
+The Hilbert transform is a mathematical operation that shifts the phase of all positive frequency components of a signal by -90 degrees and all negative frequency components by +90 degrees. When this phase-shifted signal (the imaginary part) is combined with the original signal (the real part), it forms a complex-valued "analytic signal".
+
+The instantaneous phase is the angle of this complex number at each point in time. It provides a way to represent an oscillating signal in terms of its phase, which progresses from -π to +π for each cycle of the oscillation. This transform uses an efficient FFT-based method to compute the Hilbert transform.
+
+### Neuroscience Use Cases
+
+In neuroscience, analyzing the phase of neural signals is crucial for understanding brain function. Some common applications include:
+
+*   **Neural Oscillations:** Studying the phase of brain rhythms like theta (4-8 Hz), alpha (8-12 Hz), beta (13-30 Hz), and gamma (30-100 Hz) is fundamental to understanding their role in cognition, memory, and sensory processing.
+*   **Synchronization:** The phase of signals from different brain regions can be compared to measure their degree of synchronization. High synchronization (or "phase-locking") is thought to be a mechanism for communication between brain areas.
+*   **Phase-Amplitude Coupling (PAC):** This is a phenomenon where the phase of a low-frequency oscillation (e.g., theta) modulates the amplitude of a high-frequency oscillation (e.g., gamma). It is believed to be important for information processing and memory.
+*   **Rhythmic Behaviors:** The phase of signals from sensors tracking rhythmic behaviors like whisking, sniffing, or licking can be extracted to correlate them with neural activity.
 
 ## Parameters
 
-The Analog Hilbert Phase transform has the following parameters:
+This transform has the following parameters:
 
-*   `low_frequency`: The lower bound of the frequency band of interest. The signal will be band-pass filtered between `low_frequency` and `high_frequency` before the Hilbert transform is applied.
-*   `high_frequency`: The upper bound of the frequency band of interest.
-*   `discontinuity_threshold`: The maximum time gap between samples that is considered a continuous segment. If the time gap between two consecutive samples is greater than this threshold, the signal is considered to have a discontinuity, and the transform is applied to each continuous segment separately.
+*   `low_frequency`: The low-cut frequency for the bandpass filter, in Hertz. This determines the lower end of the frequency range you want to analyze.
+*   `high_frequency`: The high-cut frequency for the bandpass filter, in Hertz. This determines the upper end of the frequency range you want to analyze.
+*   `discontinuity_threshold`: A time gap, in samples, above which the signal is considered to have a break. The transform will process the continuous segments separately. This is useful for data with missing samples or interruptions.
 
-## JSON Schema
+## Example Configuration
 
-Here is the JSON schema for the Analog Hilbert Phase transform:
+Here is a complete example of a JSON configuration file that loads data and applies the Analog Hilbert Phase transform.
 
 ```json
+[
 {
-    "type": "object",
-    "properties": {
-        "low_frequency": {
-            "type": "number",
-            "description": "The lower bound of the frequency band of interest."
+    "transformations": {
+        "metadata": {
+            "name": "Hilbert Phase Pipeline",
+            "description": "Test Hilbert phase calculation on analog signal",
+            "version": "1.0"
         },
-        "high_frequency": {
-            "type": "number",
-            "description": "The upper bound of the frequency band of interest."
-        },
-        "discontinuity_threshold": {
-            "type": "integer",
-            "description": "The maximum time gap between samples that is considered a continuous segment."
-        }
-    },
-    "required": ["low_frequency", "high_frequency", "discontinuity_threshold"]
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Hilbert Phase",
+                "phase": "analysis",
+                "input_key": "test_signal",
+                "output_key": "phase_signal",
+                "parameters": {
+                    "low_frequency": 5.0,
+                    "high_frequency": 15.0,
+                    "discontinuity_threshold": 1000
+                }
+            }
+        ]
+    }
 }
+]
 ```
 
-## Example
+### Illustration
 
-Here is a minimal working example of how to use the Analog Hilbert Phase transform in a JSON configuration:
+The plot below illustrates the concept of the Hilbert Phase transform. The top panel shows an original signal (a sine wave) and its Hilbert transform (which is a cosine wave, i.e., a 90-degree phase shift). The bottom panel shows the instantaneous phase calculated from these two signals. Notice how the phase increases linearly over time, corresponding to the cycles of the sine wave.
 
-```json
-{
-    "steps": [{
-        "step_id": "hilbert_phase_step",
-        "transform_name": "Hilbert Phase",
-        "input_key": "raw_signal",
-        "output_key": "phase_signal",
-        "parameters": {
-            "low_frequency": 0.5,
-            "high_frequency": 2.0,
-            "discontinuity_threshold": 100
-        }
-    }]
-}
+```{python}
+#| echo: false
+#| fig-cap: "Illustration of the Hilbert Phase Transform"
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import hilbert
+
+# Use xkcd style
+with plt.xkcd():
+    # Generate a sine wave
+    fs = 100  # Sampling frequency
+    t = np.arange(0, 2, 1/fs)  # Time vector
+    frequency = 2  # Hz
+    signal = np.sin(2 * np.pi * frequency * t)
+
+    # Calculate the analytic signal and phase
+    analytic_signal = hilbert(signal)
+    instantaneous_phase = np.angle(analytic_signal) # np.unwrap is not needed for this illustration
+
+    # Create the plot
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+    fig.suptitle('What the Hilbert Phase Transform Does', fontsize=16)
+
+    # Plot the original signal and analytic signal
+    ax1.plot(t, signal, label='Original Signal')
+    ax1.plot(t, analytic_signal.imag, label='Hilbert Transform')
+    ax1.set_title('A Signal and its 90-degree Phase Shift')
+    ax1.set_ylabel('Amplitude')
+    ax1.legend()
+    ax1.grid(True)
+
+    # Plot the instantaneous phase
+    ax2.plot(t, instantaneous_phase, 'r')
+    ax2.set_title('The Calculated Instantaneous Phase')
+    ax2.set_xlabel('Time (s)')
+    ax2.set_ylabel('Phase (radians)')
+    ax2.grid(True)
+
+    plt.tight_layout()
+    plt.show()
 ```
