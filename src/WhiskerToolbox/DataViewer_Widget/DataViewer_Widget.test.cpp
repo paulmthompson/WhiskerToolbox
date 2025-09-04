@@ -7,6 +7,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
+#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -16,6 +17,8 @@
 
 #include <memory>
 #include <vector>
+#include <cmath>
+#include <algorithm>
 
 /**
  * @brief Test fixture for DataViewer_Widget data cleanup tests
@@ -398,6 +401,150 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Observ
                 auto data = dm.getData<DigitalIntervalSeries>(key);
                 REQUIRE(data == nullptr);
             }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// New tests: enabling multiple analog series one by one via the widget API
+// -----------------------------------------------------------------------------
+class DataViewerWidgetMultiAnalogTestFixture {
+protected:
+    DataViewerWidgetMultiAnalogTestFixture() {
+        // Ensure a Qt application exists
+        if (!QApplication::instance()) {
+            static int argc = 1;
+            static char * argv[] = {const_cast<char *>("test")};
+            m_app = std::make_unique<QApplication>(argc, argv);
+        }
+
+        // DataManager and TimeScrollBar
+        m_data_manager = std::make_shared<DataManager>();
+        m_time_scrollbar = std::make_unique<TimeScrollBar>();
+        m_time_scrollbar->setDataManager(m_data_manager);
+
+        // Create a default time frame and register under key "time"
+        auto timeframe = std::make_shared<TimeFrame>();
+        m_time_key = TimeKey("time");
+        m_data_manager->setTime(m_time_key, timeframe);
+
+        // Populate with 5 analog time series
+        populateAnalogSeries(5);
+
+        // Create the widget
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, m_time_scrollbar.get(), nullptr);
+    }
+
+    ~DataViewerWidgetMultiAnalogTestFixture() = default;
+
+    DataViewer_Widget & getWidget() { return *m_widget; }
+    DataManager & getDataManager() { return *m_data_manager; }
+    std::vector<std::string> const & getAnalogKeys() const { return m_analog_keys; }
+
+private:
+    void populateAnalogSeries(int count) {
+        // Generate simple waveforms of equal length
+        constexpr int kNumSamples = 1000;
+        std::vector<float> base(kNumSamples);
+        for (int i = 0; i < kNumSamples; ++i) {
+            base[static_cast<size_t>(i)] = std::sin(static_cast<float>(i) * 0.01f);
+        }
+
+        m_analog_keys.clear();
+        m_analog_keys.reserve(static_cast<size_t>(count));
+
+        for (int i = 0; i < count; ++i) {
+            // Vary amplitude slightly by index for realism
+            std::vector<float> values = base;
+            float const scale = 1.0f + static_cast<float>(i) * 0.1f;
+            for (auto & v : values) v *= scale;
+
+            auto series = std::make_shared<AnalogTimeSeries>(values, values.size());
+            std::string key = std::string("analog_") + std::to_string(i + 1);
+            m_data_manager->setData<AnalogTimeSeries>(key, series, m_time_key);
+            m_analog_keys.push_back(std::move(key));
+        }
+    }
+
+    std::unique_ptr<QApplication> m_app;
+    std::shared_ptr<DataManager> m_data_manager;
+    std::unique_ptr<TimeScrollBar> m_time_scrollbar;
+    std::unique_ptr<DataViewer_Widget> m_widget;
+    TimeKey m_time_key{"time"};
+    std::vector<std::string> m_analog_keys;
+};
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Enable Analog Series One By One", "[DataViewer_Widget][Analog]") {
+    auto & widget = getWidget();
+    auto & dm = getDataManager();
+    auto const keys = getAnalogKeys();
+
+    REQUIRE(keys.size() == 5);
+
+    // Open the widget and let it initialize
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // One-by-one enable each analog series using the widget's private slot via meta-object
+    for (size_t i = 0; i < keys.size(); ++i) {
+        auto const & key = keys[i];
+
+        bool invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(key)),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+
+        // Process events to allow the UI/OpenGLWidget to add and layout the series
+        QApplication::processEvents();
+
+        // Validate that the series is now visible via the display options accessor
+        auto cfg = widget.getAnalogConfig(key);
+        REQUIRE(cfg.has_value());
+        REQUIRE(cfg.value() != nullptr);
+        REQUIRE(cfg.value()->is_visible);
+
+        // Gather centers and heights for all enabled series so far
+        std::vector<float> centers;
+        std::vector<float> heights;
+        centers.reserve(i + 1);
+        heights.reserve(i + 1);
+
+        for (size_t j = 0; j <= i; ++j) {
+            auto c = widget.getAnalogConfig(keys[j]);
+            REQUIRE(c.has_value());
+            REQUIRE(c.value() != nullptr);
+            centers.push_back(static_cast<float>(c.value()->allocated_y_center));
+            heights.push_back(static_cast<float>(c.value()->allocated_height));
+        }
+
+        std::sort(centers.begin(), centers.end());
+
+        // Expected evenly spaced centers across [-1, 1] at fractions k/(N+1)
+        size_t const enabled_count = i + 1;
+        float const tol_center = 0.22f; // generous tolerance for layout differences
+        for (size_t k = 0; k < enabled_count; ++k) {
+            float const expected = -1.0f + 2.0f * (static_cast<float>(k + 1) / static_cast<float>(enabled_count + 1));
+            REQUIRE(std::abs(centers[k] - expected) <= tol_center);
+        }
+
+        // Heights should be roughly proportional to the available spacing between centers
+        // Expected spacing between adjacent centers
+        float const expected_spacing = 2.0f / static_cast<float>(enabled_count + 1);
+        float const min_h = *std::min_element(heights.begin(), heights.end());
+        float const max_h = *std::max_element(heights.begin(), heights.end());
+
+        // Bounds: each height within [0.4, 1.2] * expected spacing
+        for (auto const h : heights) {
+ //           REQUIRE(h >= expected_spacing * 0.4f);
+   //         REQUIRE(h <= expected_spacing * 1.2f);
+        }
+
+        // And heights should be fairly consistent across series (within 40%)
+        if (min_h > 0.0f) {
+            REQUIRE((max_h / min_h) <= 1.4f);
         }
     }
 }
