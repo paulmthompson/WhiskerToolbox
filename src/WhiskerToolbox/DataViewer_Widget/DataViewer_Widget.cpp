@@ -113,15 +113,18 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeatures, this, [this](std::vector<std::string> const & features) {
         std::cout << "Adding " << features.size() << " features as group" << std::endl;
 
+        // Mark batch add to suppress per-series auto-arrange
+        _is_batch_add = true;
         // Process all features in the group without triggering individual canvas updates
         for (auto const & key: features) {
             _plotSelectedFeatureWithoutUpdate(key);
         }
+        _is_batch_add = false;
 
-        // Auto-arrange and auto-fill when toggling a group to optimize space usage
+        // Auto-arrange and auto-fill once after batch
         if (!features.empty()) {
             std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
-            autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+            autoArrangeVerticalSpacing();// includes auto-fill functionality
         }
 
         // Trigger a single canvas update at the end
@@ -134,15 +137,17 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeatures, this, [this](std::vector<std::string> const & features) {
         std::cout << "Removing " << features.size() << " features as group" << std::endl;
 
+        _is_batch_add = true;
         // Process all features in the group without triggering individual canvas updates
         for (auto const & key: features) {
             _removeSelectedFeatureWithoutUpdate(key);
         }
+        _is_batch_add = false;
 
-        // Auto-arrange and auto-fill when toggling a group to optimize space usage
+        // Auto-arrange and auto-fill once after batch
         if (!features.empty()) {
             std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
-            autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+            autoArrangeVerticalSpacing();// includes auto-fill functionality
         }
 
         // Trigger a single canvas update at the end
@@ -389,13 +394,17 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
     }
 
     // Auto-arrange and auto-fill canvas to make optimal use of space
-    std::cout << "Auto-arranging and filling canvas after adding series" << std::endl;
-    autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+    if (!_is_batch_add) {
+        std::cout << "Auto-arranging and filling canvas after adding series" << std::endl;
+        autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+    }
 
     std::cout << "Series addition and auto-arrangement completed" << std::endl;
     // Trigger canvas update to show the new series
-    std::cout << "Triggering canvas update" << std::endl;
-    ui->openGLWidget->updateCanvas();
+    if (!_is_batch_add) {
+        std::cout << "Triggering canvas update" << std::endl;
+        ui->openGLWidget->updateCanvas();
+    }
     std::cout << "Canvas update completed" << std::endl;
 }
 
@@ -756,8 +765,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
 
-        // Register with plotting manager for later allocation
-        _plotting_manager->addAnalogSeries(key, series, time_frame, color);
+        // Register with plotting manager for later allocation (single call)
         _plotting_manager->addAnalogSeries(key, series, time_frame, color);
         ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
 
@@ -775,7 +783,6 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
         _plotting_manager->addDigitalEventSeries(key, series, time_frame, color);
-        _plotting_manager->addDigitalEventSeries(key, series, time_frame, color);
         ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
 
     } else if (data_type == DM_DataType::DigitalInterval) {
@@ -791,7 +798,6 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
             return;
         }
-        _plotting_manager->addDigitalIntervalSeries(key, series, time_frame, color);
         _plotting_manager->addDigitalIntervalSeries(key, series, time_frame, color);
         ui->openGLWidget->addDigitalIntervalSeries(key, series, time_frame, color);
 

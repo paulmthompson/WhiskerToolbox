@@ -3,6 +3,25 @@ title: "File IO"
 format: html
 ---
 
+# Current Architecture
+
+| Data Type | Format | Dependency | Raw Data for Testing? | IO Widget Testing | Datamanager IO Testing | JSON Validation Testing | User Guide |
+|----|----|----|----|----|----|----|----|
+| Analog | Binary |  |  |  |  |  |  |
+| Analog | CSV |  | Some |  |  |  |  |
+| DigitalEvent | CSV |  | Yes |  |  |  |  |
+| DigitalInterval | Binary |  |  |  |  |  |  |
+| DigitalInteral | CSV |  |  |  |  |  |  |
+| Line Data | Binary | Cap'n Proto |  |  |  |  |  |
+| Line Data | CSV |  |  |  |  |  |  |
+| Mask Data | HDF5 | HDF5 |  |  |  |  |  |
+| Mask Data | Image | OpenCV |  |  |  |  |  |
+| Media Data | Video | ffmpeg | Yes |  |  |  |  |
+| Media Data | Images | OpenCV |  |  |  |  |  |
+| Media Data | HDF5 | HDF5 |  |  |  |  |  |
+| Point Data | CSV |  | Yes |  |  |  |  |
+| Tensor | Numpy | Numpy |  |  |  |  |  |
+
 # File Input/Output and Memory Management Considerations
 
 ## Overview of File IO Requirements

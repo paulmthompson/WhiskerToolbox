@@ -95,6 +95,7 @@ website:
           contents:
             - user_guide/data_transformations/overview.qmd
             - user_guide/data_transformations/threshold_event_detection.qmd
+            - user_guide/data_transformations/analog_hilbert_phase.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd

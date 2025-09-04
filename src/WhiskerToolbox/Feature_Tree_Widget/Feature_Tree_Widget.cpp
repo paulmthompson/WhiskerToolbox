@@ -119,14 +119,24 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
         if (_features[key].isGroup || _features[key].isDataTypeGroup) {
             // Only propagate to children when parent is explicitly Checked/Unchecked.
             // If parent is PartiallyChecked (typically set programmatically from child changes),
-            // do not overwrite child states.
+            // do not overwrite child states and do not emit group signals.
             Qt::CheckState const parentState = item->checkState(column);
             if (parentState == Qt::Checked || parentState == Qt::Unchecked) {
+                // Block signals while updating children to avoid per-child emissions
+                if (ui && ui->treeWidget) ui->treeWidget->blockSignals(true);
                 _updateChildrenState(item, column);
-            }
+                if (ui && ui->treeWidget) ui->treeWidget->blockSignals(false);
 
-            // Add all children to affected features
-            affectedFeatures = _features[key].children;
+                // Add all children to affected features
+                affectedFeatures = _features[key].children;
+
+                // Emit signals for multiple features only once per group toggle
+                if (parentState == Qt::Checked) {
+                    emit addFeatures(affectedFeatures);
+                } else {
+                    emit removeFeatures(affectedFeatures);
+                }
+            }
         } else {
             affectedFeatures = {key};
 
@@ -139,13 +149,6 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
             } else {
                 emit removeFeature(key);
             }
-        }
-
-        // Emit signals for multiple features
-        if (enabled) {
-            emit addFeatures(affectedFeatures);
-        } else {
-            emit removeFeatures(affectedFeatures);
         }
     }
 }
