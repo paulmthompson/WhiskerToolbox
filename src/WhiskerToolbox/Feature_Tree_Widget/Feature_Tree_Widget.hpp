@@ -99,6 +99,7 @@ private:
     std::set<std::string> _enabled_features;      // Track which features are enabled/checked
     std::set<std::string> _expanded_groups;       // Track which groups/nodes are expanded
     std::string _selected_feature_for_restoration;// Track which feature should be selected after rebuild
+    bool _is_rebuilding{false};                   // Guard to suppress emissions during rebuild
 
     // Helper methods
     void _populateTree();

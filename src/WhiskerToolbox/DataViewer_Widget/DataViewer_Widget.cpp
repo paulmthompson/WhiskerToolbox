@@ -13,8 +13,8 @@
 #include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
-#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "Feature_Tree_Model.hpp"
+#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "OpenGLWidget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -23,10 +23,10 @@
 #include "DigitalEvent/EventViewer_Widget.hpp"
 #include "DigitalInterval/IntervalViewer_Widget.hpp"
 
-#include <QTableWidget>
-#include <QWheelEvent>
 #include <QMetaObject>
 #include <QPointer>
+#include <QTableWidget>
+#include <QWheelEvent>
 
 #include <algorithm>
 #include <cmath>
@@ -55,8 +55,12 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     _feature_tree_model->setDataManager(_data_manager);
 
     // Set up observer to automatically clean up data when it's deleted from DataManager
+    // Queue the cleanup to the Qt event loop to avoid running during mid-update mutations
     _data_manager->addObserver([this]() {
-        cleanupDeletedData();
+        QPointer<DataViewer_Widget> self = this;
+        QMetaObject::invokeMethod(self, [self]() {
+            if (!self) return;
+            self->cleanupDeletedData(); }, Qt::QueuedConnection);
     });
 
     // Configure Feature_Tree_Widget
@@ -67,12 +71,12 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::featureSelected, this, [this](std::string const & feature) {
         _handleFeatureSelected(QString::fromStdString(feature));
     });
-    
+
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeature, this, [this](std::string const & feature) {
         std::cout << "Adding single feature: " << feature << std::endl;
         _addFeatureToModel(QString::fromStdString(feature), true);
     });
-    
+
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeature, this, [this](std::string const & feature) {
         std::cout << "Removing single feature: " << feature << std::endl;
         _addFeatureToModel(QString::fromStdString(feature), false);
@@ -122,10 +126,10 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     // Connect color change signals from the model
     connect(_feature_tree_model.get(), &Feature_Tree_Model::featureColorChanged, this, &DataViewer_Widget::_handleColorChanged);
-    
+
     // Connect color change signals from the tree widget to the model
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::colorChangeFeatures, this, [this](std::vector<std::string> const & features, std::string const & hex_color) {
-        for (auto const & feature : features) {
+        for (auto const & feature: features) {
             _feature_tree_model->setFeatureColor(feature, hex_color);
         }
     });
@@ -1242,19 +1246,19 @@ void DataViewer_Widget::cleanupDeletedData() {
 
     if (_plotting_manager) {
         auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
-        for (auto const & key : analog_keys) {
+        for (auto const & key: analog_keys) {
             if (!_data_manager->getData<AnalogTimeSeries>(key)) {
                 keys_to_cleanup.push_back(key);
             }
         }
         auto event_keys = _plotting_manager->getVisibleDigitalEventSeriesKeys();
-        for (auto const & key : event_keys) {
+        for (auto const & key: event_keys) {
             if (!_data_manager->getData<DigitalEventSeries>(key)) {
                 keys_to_cleanup.push_back(key);
             }
         }
         auto interval_keys = _plotting_manager->getVisibleDigitalIntervalSeriesKeys();
-        for (auto const & key : interval_keys) {
+        for (auto const & key: interval_keys) {
             if (!_data_manager->getData<DigitalIntervalSeries>(key)) {
                 keys_to_cleanup.push_back(key);
             }
@@ -1278,13 +1282,12 @@ void DataViewer_Widget::cleanupDeletedData() {
                 glw->removeAnalogTimeSeries(key);
                 glw->removeDigitalEventSeries(key);
                 glw->removeDigitalIntervalSeries(key);
-            }
-        }, Qt::QueuedConnection);
+            } }, Qt::QueuedConnection);
     }
 
     // Remove from PlottingManager defensively (all types) on our thread
     if (_plotting_manager) {
-        for (auto const & key : keys_to_cleanup) {
+        for (auto const & key: keys_to_cleanup) {
             (void) _plotting_manager->removeAnalogSeries(key);
             (void) _plotting_manager->removeDigitalEventSeries(key);
             (void) _plotting_manager->removeDigitalIntervalSeries(key);

@@ -2,24 +2,24 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
+#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
-#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <QApplication>
-#include <QWidget>
 #include <QTimer>
+#include <QWidget>
 
+#include "OpenGLWidget.hpp"
+#include <algorithm>
+#include <cmath>
 #include <memory>
 #include <vector>
-#include <cmath>
-#include <algorithm>
-#include "OpenGLWidget.hpp"
 
 /**
  * @brief Test fixture for DataViewer_Widget data cleanup tests
@@ -189,9 +189,9 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Data C
 
         // Store weak pointers to verify cleanup
         std::vector<std::weak_ptr<void>> weak_refs;
-        
+
         // Get weak references to the data
-        for (const auto& key : test_keys) {
+        for (auto const & key: test_keys) {
             if (key == "test_analog") {
                 auto analog_data = dm.getData<AnalogTimeSeries>(key);
                 weak_refs.push_back(analog_data);
@@ -205,12 +205,12 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Data C
         }
 
         // Verify weak references are valid initially
-        for (const auto& weak_ref : weak_refs) {
+        for (auto const & weak_ref: weak_refs) {
             REQUIRE(!weak_ref.expired());
         }
 
         // Delete data from DataManager
-        for (const auto& key : test_keys) {
+        for (auto const & key: test_keys) {
             bool deleted = dm.deleteData(key);
             REQUIRE(deleted);
         }
@@ -219,7 +219,7 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Data C
         QApplication::processEvents();
 
         // Verify that weak references are now expired (data cleaned up)
-        for (const auto& weak_ref : weak_refs) {
+        for (auto const & weak_ref: weak_refs) {
             REQUIRE(weak_ref.expired());
         }
     }
@@ -250,7 +250,7 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Data C
     SECTION("Data cleanup with observer pattern") {
         // Test that the observer pattern properly notifies the widget
         // when data is deleted from the DataManager
-        
+
         // Open the widget to initialize it
         widget.openWidget();
         QApplication::processEvents();
@@ -259,8 +259,8 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Data C
         int initial_analog_count = 0;
         int initial_event_count = 0;
         int initial_interval_count = 0;
-        
-        for (const auto& key : test_keys) {
+
+        for (auto const & key: test_keys) {
             if (key == "test_analog") {
                 auto data = dm.getData<AnalogTimeSeries>(key);
                 if (data) initial_analog_count++;
@@ -278,7 +278,7 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Data C
         REQUIRE(initial_interval_count == 1);
 
         // Delete all data
-        for (const auto& key : test_keys) {
+        for (auto const & key: test_keys) {
             dm.deleteData(key);
         }
 
@@ -289,8 +289,8 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Data C
         int final_analog_count = 0;
         int final_event_count = 0;
         int final_interval_count = 0;
-        
-        for (const auto& key : test_keys) {
+
+        for (auto const & key: test_keys) {
             if (key == "test_analog") {
                 auto data = dm.getData<AnalogTimeSeries>(key);
                 if (data) final_analog_count++;
@@ -323,7 +323,7 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Memory
         auto event_data = dm.getData<DigitalEventSeries>("test_events");
         auto interval_data = dm.getData<DigitalIntervalSeries>("test_intervals");
 
-        REQUIRE(analog_data.use_count() > 1); // DataManager + any internal references
+        REQUIRE(analog_data.use_count() > 1);// DataManager + any internal references
         REQUIRE(event_data.use_count() > 1);
         REQUIRE(interval_data.use_count() > 1);
 
@@ -363,7 +363,7 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Observ
 
         // Verify that the observer is properly set up
         // This is implicit in the cleanup tests, but we can verify the behavior
-        
+
         // Delete data and verify cleanup happens automatically
         bool deleted = dm.deleteData("test_analog");
         REQUIRE(deleted);
@@ -383,14 +383,14 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Observ
 
         // Delete multiple data items in sequence
         std::vector<std::string> keys_to_delete = {"test_analog", "test_events", "test_intervals"};
-        
-        for (const auto& key : keys_to_delete) {
+
+        for (auto const & key: keys_to_delete) {
             bool deleted = dm.deleteData(key);
             REQUIRE(deleted);
-            
+
             // Process events after each deletion
             QApplication::processEvents();
-            
+
             // Verify the deleted data is no longer accessible
             if (key == "test_analog") {
                 auto data = dm.getData<AnalogTimeSeries>(key);
@@ -458,7 +458,7 @@ private:
             // Vary amplitude slightly by index for realism
             std::vector<float> values = base;
             float const scale = 1.0f + static_cast<float>(i) * 0.1f;
-            for (auto & v : values) v *= scale;
+            for (auto & v: values) v *= scale;
 
             auto series = std::make_shared<AnalogTimeSeries>(values, values.size());
             std::string key = std::string("analog_") + std::to_string(i + 1);
@@ -525,7 +525,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
 
         // Expected evenly spaced centers across [-1, 1] at fractions k/(N+1)
         size_t const enabled_count = i + 1;
-        float const tol_center = 0.22f; // generous tolerance for layout differences
+        float const tol_center = 0.22f;// generous tolerance for layout differences
         for (size_t k = 0; k < enabled_count; ++k) {
             float const expected = -1.0f + 2.0f * (static_cast<float>(k + 1) / static_cast<float>(enabled_count + 1));
             REQUIRE(std::abs(centers[k] - expected) <= tol_center);
@@ -538,9 +538,9 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
         float const max_h = *std::max_element(heights.begin(), heights.end());
 
         // Bounds: each height within [0.4, 1.2] * expected spacing
-        for (auto const h : heights) {
- //           REQUIRE(h >= expected_spacing * 0.4f);
-   //         REQUIRE(h <= expected_spacing * 1.2f);
+        for (auto const h: heights) {
+            //           REQUIRE(h >= expected_spacing * 0.4f);
+            //         REQUIRE(h <= expected_spacing * 1.2f);
         }
 
         // And heights should be fairly consistent across series (within 40%)
@@ -569,7 +569,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     QApplication::processEvents();
 
     // Locate the OpenGLWidget to query XAxis
-    auto glw = widget.findChild<OpenGLWidget*>("openGLWidget");
+    auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
     REQUIRE(glw != nullptr);
 
     // Set an initial center (time) and range width via widget slots
@@ -611,4 +611,61 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     // Verify X window did not change
     REQUIRE(start_before == start_after);
     REQUIRE(end_before == end_after);
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Preserve analog selections when adding digital interval", "[DataViewer_Widget][Analog][DigitalInterval]") {
+    auto & widget = getWidget();
+    auto & dm = getDataManager();
+    auto const keys = getAnalogKeys();
+    REQUIRE(keys.size() == 5);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable 3 out of 5 analog series (sparse selection)
+    std::vector<std::string> enabled = {keys[0], keys[2], keys[4]};
+    for (auto const & k: enabled) {
+        bool invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(k)),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+        QApplication::processEvents();
+    }
+
+    // Verify the enabled set is visible and others are not present/visible
+    auto isVisible = [&](std::string const & k) {
+        auto cfg = widget.getAnalogConfig(k);
+        return cfg.has_value() && cfg.value() != nullptr && cfg.value()->is_visible;
+    };
+
+    REQUIRE(isVisible(keys[0]));
+    REQUIRE(isVisible(keys[2]));
+    REQUIRE(isVisible(keys[4]));
+    // Not enabled yet: may be nullopt or not visible
+    auto c1 = widget.getAnalogConfig(keys[1]);
+    if (c1.has_value()) REQUIRE_FALSE(c1.value()->is_visible);
+    auto c3 = widget.getAnalogConfig(keys[3]);
+    if (c3.has_value()) REQUIRE_FALSE(c3.value()->is_visible);
+
+    // Add a new DigitalIntervalSeries to the DataManager (should NOT clear visible analog series)
+    auto interval_series = std::make_shared<DigitalIntervalSeries>();
+    interval_series->addEvent(TimeFrameIndex(100), TimeFrameIndex(300));
+    dm.setData<DigitalIntervalSeries>("interval_added_late", interval_series, TimeKey("time"));
+
+    // Process events so the feature tree and any observers react
+    QApplication::processEvents();
+
+    // Verify the originally enabled analog series remain visible
+    REQUIRE(isVisible(keys[0]));
+    REQUIRE(isVisible(keys[2]));
+    REQUIRE(isVisible(keys[4]));
+
+    // Still not enabled ones should remain not visible
+    c1 = widget.getAnalogConfig(keys[1]);
+    if (c1.has_value()) REQUIRE_FALSE(c1.value()->is_visible);
+    c3 = widget.getAnalogConfig(keys[3]);
+    if (c3.has_value()) REQUIRE_FALSE(c3.value()->is_visible);
 }
