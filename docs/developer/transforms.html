@@ -298,13 +298,13 @@ ul.task-list li input[type="checkbox"] {
 <p>The below table has all of the transformations currently available in the Data Transform widget. Each transform should have a test.cpp file (Column 2). The test.cpp file should include tests to make sure it can be populated by a JSON template (e.g.&nbsp;it can be run by loading data with a JSON file). Some transforms will “just work” because they are parameterless, but transforms with parameters will need to have them also described with a JSON link and put in the transform parameter factory. Documentation for users should be provided to describe the algorithm and its uses. Finally, a benchmark.cpp file should be created and placed in the same directory.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 15%">
-<col style="width: 12%">
-<col style="width: 13%">
-<col style="width: 15%">
-<col style="width: 12%">
-<col style="width: 15%">
-<col style="width: 16%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -321,26 +321,26 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td>Calculate Mask Centroid</td>
 <td>Yes</td>
-<td>No</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
 </tr>
 <tr class="even">
 <td>Convert Mask to Line</td>
-<td>No</td>
-<td>N/A</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
 </tr>
 <tr class="odd">
 <td>Skeletonize Mask</td>
-<td>No</td>
-<td>N/A</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -348,8 +348,8 @@ ul.task-list li input[type="checkbox"] {
 <tr class="even">
 <td>Remove Small Connected Components</td>
 <td>Yes</td>
-<td>No</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -357,8 +357,8 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td>Apply Median Filter</td>
 <td>Yes</td>
-<td>No</td>
-<td>Yes (commented out)</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -366,8 +366,8 @@ ul.task-list li input[type="checkbox"] {
 <tr class="even">
 <td>Calculate Area</td>
 <td>Yes</td>
-<td>No</td>
-<td>No (commented as no-op)</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -375,8 +375,8 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td>Fill Mask Holes</td>
 <td>Yes</td>
-<td>No</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -384,8 +384,8 @@ ul.task-list li input[type="checkbox"] {
 <tr class="even">
 <td>Calculate Mask Principal Axis</td>
 <td>Yes</td>
-<td>No</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -401,9 +401,9 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="even">
 <td>Clip Line by Reference Line</td>
-<td>No</td>
-<td>N/A</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -411,7 +411,7 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td>Line Alignment to Bright Features</td>
 <td>Yes</td>
-<td>No</td>
+<td>Yes</td>
 <td>Yes</td>
 <td>No</td>
 <td>No</td>
@@ -420,16 +420,16 @@ ul.task-list li input[type="checkbox"] {
 <tr class="even">
 <td>Calculate Line to Point Distance</td>
 <td>Yes</td>
-<td>No</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
 </tr>
 <tr class="odd">
 <td>Resample Line</td>
-<td>No</td>
-<td>N/A</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>Yes</td>
 <td>No</td>
 <td>No</td>
@@ -437,9 +437,9 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="even">
 <td>Extract Line Subsegment</td>
-<td>No</td>
-<td>N/A</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -447,26 +447,26 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td>Calculate Line Angle</td>
 <td>Yes</td>
-<td>No</td>
-<td>Yes (commented out)</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
 </tr>
 <tr class="even">
 <td>Calculate Line Curvature</td>
-<td>No</td>
-<td>N/A</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
 </tr>
 <tr class="odd">
 <td>Extract Point from Line</td>
-<td>No</td>
-<td>N/A</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -483,8 +483,8 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td>Hilbert Phase</td>
 <td>Yes</td>
-<td>No</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -492,7 +492,7 @@ ul.task-list li input[type="checkbox"] {
 <tr class="even">
 <td>Threshold Event Detection</td>
 <td>Yes</td>
-<td>No</td>
+<td>Yes</td>
 <td>Yes</td>
 <td>No</td>
 <td>No</td>
@@ -501,7 +501,7 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td>Threshold Interval Detection</td>
 <td>Yes</td>
-<td>No</td>
+<td>Yes</td>
 <td>Yes</td>
 <td>No</td>
 <td>No</td>
@@ -509,9 +509,9 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="even">
 <td>Scale and Normalize</td>
-<td>No</td>
-<td>N/A</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>No</td>
 <td></td>
@@ -519,7 +519,7 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td>Group Intervals</td>
 <td>Yes</td>
-<td>No</td>
+<td>Yes</td>
 <td>Yes</td>
 <td>No</td>
 <td>No</td>
