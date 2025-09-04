@@ -49,6 +49,8 @@ struct PlottingManager {
         std::string key;
         std::string color;
         bool visible{true};
+        std::string group_name;
+        int channel_id{-1};
     };
 
     struct DigitalEventSeriesInfo {
@@ -365,7 +367,26 @@ struct PlottingManager {
      */
     void updateSeriesCounts();
 
+    struct AnalogGroupChannelPosition {
+        int channel_id{0};
+        float x{0.0f};
+        float y{0.0f};
+    };
+
+    void loadAnalogSpikeSorterConfiguration(std::string const & group_name,
+                                            std::vector<AnalogGroupChannelPosition> const & positions);
+
+    void clearAnalogGroupConfiguration(std::string const & group_name);
+
+    bool getAnalogSeriesAllocationForKey(std::string const & key,
+                                         float & allocated_center,
+                                         float & allocated_height) const;
+
 private:
+    std::unordered_map<std::string, std::vector<AnalogGroupChannelPosition>> _analog_group_configs;
+
+    static bool _extractGroupAndChannel(std::string const & key, std::string & group, int & channel_id);
+    std::vector<std::string> _orderedVisibleAnalogKeysByConfig() const;
     /**
      * @brief Generate a default color for a series
      * 

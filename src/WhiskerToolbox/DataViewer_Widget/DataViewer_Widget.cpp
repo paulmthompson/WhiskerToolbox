@@ -27,10 +27,14 @@
 #include <QPointer>
 #include <QTableWidget>
 #include <QWheelEvent>
+#include <QMenu>
+#include <QFileDialog>
+#include <QFile>
 
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <sstream>
 
 DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
                                      TimeScrollBar * time_scrollbar,
@@ -75,6 +79,30 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeature, this, [this](std::string const & feature) {
         std::cout << "Adding single feature: " << feature << std::endl;
         _addFeatureToModel(QString::fromStdString(feature), true);
+    });
+
+    // Install context menu handling on the embedded tree widget
+    ui->feature_tree_widget->treeWidget()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->feature_tree_widget->treeWidget(), &QTreeWidget::customContextMenuRequested, this, [this](QPoint const & pos) {
+        auto * tw = ui->feature_tree_widget->treeWidget();
+        QTreeWidgetItem * item = tw->itemAt(pos);
+        if (!item) return;
+        std::string const key = item->text(0).toStdString();
+        // Group items have type column text "Group" and are under Analog data type parent
+        QString const type_text = item->text(1);
+        if (type_text == "Group") {
+            // Determine if parent is Analog data type or children are analog keys
+            bool isAnalogGroup = false;
+            if (auto * parent = item->parent()) {
+                if (parent->text(0) == QString::fromStdString(convert_data_type_to_string(DM_DataType::Analog))) {
+                    isAnalogGroup = true;
+                }
+            }
+            if (isAnalogGroup) {
+                QPoint const global_pos = tw->viewport()->mapToGlobal(pos);
+                _showGroupContextMenu(key, global_pos);
+            }
+        }
     });
 
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeature, this, [this](std::string const & feature) {
@@ -728,6 +756,9 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
 
+        // Register with plotting manager for later allocation
+        _plotting_manager->addAnalogSeries(key, series, time_frame, color);
+        _plotting_manager->addAnalogSeries(key, series, time_frame, color);
         ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
 
     } else if (data_type == DM_DataType::DigitalEvent) {
@@ -743,7 +774,8 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
             return;
         }
-
+        _plotting_manager->addDigitalEventSeries(key, series, time_frame, color);
+        _plotting_manager->addDigitalEventSeries(key, series, time_frame, color);
         ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
 
     } else if (data_type == DM_DataType::DigitalInterval) {
@@ -759,7 +791,8 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
             return;
         }
-
+        _plotting_manager->addDigitalIntervalSeries(key, series, time_frame, color);
+        _plotting_manager->addDigitalIntervalSeries(key, series, time_frame, color);
         ui->openGLWidget->addDigitalIntervalSeries(key, series, time_frame, color);
 
     } else {
@@ -1073,8 +1106,11 @@ void DataViewer_Widget::_applyPlottingManagerAllocation(std::string const & seri
     if (data_type == DM_DataType::Analog) {
         auto config = ui->openGLWidget->getAnalogConfig(series_key);
         if (config.has_value()) {
-            // Basic allocation - will be properly implemented when OpenGL widget is updated
-            std::cout << "  Applied basic allocation to analog '" << series_key << "'" << std::endl;
+            float yc, yh;
+            if (_plotting_manager->getAnalogSeriesAllocationForKey(series_key, yc, yh)) {
+                config.value()->allocated_y_center = yc;
+                config.value()->allocated_height = yh;
+            }
         }
 
     } else if (data_type == DM_DataType::DigitalEvent) {
@@ -1091,6 +1127,84 @@ void DataViewer_Widget::_applyPlottingManagerAllocation(std::string const & seri
             std::cout << "  Applied basic allocation to interval '" << series_key << "'" << std::endl;
         }
     }
+}
+
+// ===== Context menu and configuration handling =====
+void DataViewer_Widget::_showGroupContextMenu(std::string const & group_name, QPoint const & global_pos) {
+    QMenu menu;
+    QMenu * loadMenu = menu.addMenu("Load configuration");
+    QAction * loadSpikeSorter = loadMenu->addAction("spikesorter configuration");
+    QAction * clearConfig = menu.addAction("Clear configuration");
+
+    connect(loadSpikeSorter, &QAction::triggered, this, [this, group_name]() {
+        _loadSpikeSorterConfigurationForGroup(QString::fromStdString(group_name));
+    });
+    connect(clearConfig, &QAction::triggered, this, [this, group_name]() {
+        _clearConfigurationForGroup(QString::fromStdString(group_name));
+    });
+
+    menu.exec(global_pos);
+}
+
+void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & group_name) {
+    // For now, use a test constant string or file dialog; here we open a file dialog
+    QString path = QFileDialog::getOpenFileName(this, QString("Load spikesorter configuration for %1").arg(group_name), QString(), "Text Files (*.txt *.cfg *.conf);;All Files (*)");
+    if (path.isEmpty()) return;
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+    QByteArray data = file.readAll();
+    auto positions = _parseSpikeSorterConfig(data.toStdString());
+    if (positions.empty()) return;
+    _plotting_manager->loadAnalogSpikeSorterConfiguration(group_name.toStdString(), positions);
+
+    // Re-apply allocation to visible analog keys and update
+    auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
+    for (auto const & key : analog_keys) {
+        _applyPlottingManagerAllocation(key);
+    }
+    ui->openGLWidget->updateCanvas();
+}
+
+void DataViewer_Widget::_clearConfigurationForGroup(QString const & group_name) {
+    _plotting_manager->clearAnalogGroupConfiguration(group_name.toStdString());
+    auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
+    for (auto const & key : analog_keys) {
+        _applyPlottingManagerAllocation(key);
+    }
+    ui->openGLWidget->updateCanvas();
+}
+
+std::vector<PlottingManager::AnalogGroupChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {
+    std::vector<PlottingManager::AnalogGroupChannelPosition> out;
+    std::istringstream ss(text);
+    std::string line;
+    bool first = true;
+    while (std::getline(ss, line)) {
+        if (line.empty()) continue;
+        if (first) { first = false; continue; } // skip header row (electrode name)
+        std::istringstream ls(line);
+        int row = 0; int ch = 0; float x = 0.0f; float y = 0.0f;
+        if (!(ls >> row >> ch >> x >> y)) continue;
+        // SpikeSorter is 1-based; convert to 0-based for our program
+        if (ch > 0) ch -= 1;
+        PlottingManager::AnalogGroupChannelPosition p; p.channel_id = ch; p.x = x; p.y = y;
+        out.push_back(p);
+    }
+    return out;
+}
+
+void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text) {
+    auto positions = _parseSpikeSorterConfig(text.toStdString());
+    if (positions.empty()) {
+        std::cout << "No positions found in spike sorter configuration" << std::endl;
+        return;
+    }
+    _plotting_manager->loadAnalogSpikeSorterConfiguration(group_name.toStdString(), positions);
+    auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
+    for (auto const & key : analog_keys) {
+        _applyPlottingManagerAllocation(key);
+    }
+    ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::_autoFillCanvas() {

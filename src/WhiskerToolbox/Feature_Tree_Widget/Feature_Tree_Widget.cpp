@@ -33,6 +33,8 @@ Feature_Tree_Widget::~Feature_Tree_Widget() {
     delete ui;
 }
 
+QTreeWidget * Feature_Tree_Widget::treeWidget() const { return ui->treeWidget; }
+
 void Feature_Tree_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = std::move(data_manager);
 

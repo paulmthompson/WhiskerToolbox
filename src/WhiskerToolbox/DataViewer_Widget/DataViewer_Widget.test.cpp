@@ -14,6 +14,7 @@
 #include <QApplication>
 #include <QTimer>
 #include <QWidget>
+#include <QMetaObject>
 
 #include "OpenGLWidget.hpp"
 #include <algorithm>
@@ -74,9 +75,16 @@ protected:
 private:
     void populateWithTestData() {
         // Create a default time frame
-        auto timeframe = std::make_shared<TimeFrame>();
-        TimeKey time_key("time");
-        m_data_manager->setTime(time_key, timeframe);
+        std::vector<int> t(4000);
+        std::iota(std::begin(t), std::end(t), 0);
+
+        auto new_timeframe = std::make_shared<TimeFrame>(t);
+
+        auto time_key = TimeKey("time");
+
+        m_data_manager->removeTime(TimeKey("time"));
+        m_data_manager->setTime(TimeKey("time"), new_timeframe);
+
 
         // Add test AnalogTimeSeries
         std::vector<float> analog_values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
@@ -548,6 +556,96 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
             REQUIRE((max_h / min_h) <= 1.4f);
         }
     }
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Apply spikesorter configuration ordering", "[DataViewer_Widget][Analog][Config]") {
+    auto & widget = getWidget();
+    auto & dm = getDataManager();
+    auto const keys = getAnalogKeys();
+    REQUIRE(keys.size() >= 4);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable four channels from the same group (analog prefix)
+    for (size_t i = 0; i < 4; ++i) {
+        bool invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(keys[i])),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+        QApplication::processEvents();
+    }
+
+    // Capture centers before loading configuration
+    std::vector<std::pair<std::string, float>> centers_before;
+    for (size_t i = 0; i < 4; ++i) {
+        auto c = widget.getAnalogConfig(keys[i]);
+        REQUIRE(c.has_value());
+        centers_before.emplace_back(keys[i], static_cast<float>(c.value()->allocated_y_center));
+    }
+
+    // Build a small spikesorter configuration text with distinct y values
+    // Header + rows: row ch x y
+    char const * cfg =
+            "poly2\n"
+            "1 1 0 300\n"
+            "2 2 0 100\n"
+            "3 3 0 200\n"
+            "4 4 0 400\n";
+
+    // Load configuration directly via helper to avoid file dialogs
+    bool invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_loadSpikeSorterConfigurationFromText",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString("analog")),
+            Q_ARG(QString, QString(cfg)));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    // After config, the highest y (400) should be at the top (largest allocated_y_center)
+    std::vector<std::pair<std::string, float>> key_center;
+    for (size_t i = 0; i < 4; ++i) {
+        auto c = widget.getAnalogConfig(keys[i]);
+        REQUIRE(c.has_value());
+        key_center.emplace_back(keys[i], static_cast<float>(c.value()->allocated_y_center));
+    }
+    // Capture centers after
+    std::vector<std::pair<std::string, float>> centers_after = key_center;
+
+    INFO("Centers before:");
+    for (auto const & kv : centers_before) {
+        INFO(kv.first << " -> " << kv.second);
+    }
+    INFO("Centers after:");
+    for (auto const & kv : centers_after) {
+        INFO(kv.first << " -> " << kv.second);
+    }
+
+    // Ensure at least one center changed due to configuration ordering
+    bool any_changed = false;
+    for (size_t i = 0; i < centers_before.size(); ++i) {
+        for (size_t j = 0; j < centers_after.size(); ++j) {
+            if (centers_before[i].first == centers_after[j].first) {
+                if (std::abs(centers_before[i].second - centers_after[j].second) > 1e-6f) {
+                    any_changed = true;
+                }
+            }
+        }
+    }
+    REQUIRE(any_changed);
+    // Sort by center descending to get top-to-bottom order
+    std::sort(key_center.begin(), key_center.end(), [](auto const & a, auto const & b){ return a.second > b.second; });
+
+    // Expected order by y: 400 (ch 3)-> key 4, then 300 (ch 0)-> key 1, then 200 (ch 2)-> key 3, then 100 (ch 1)-> key 2
+    REQUIRE(key_center.size() == 4);
+    REQUIRE(key_center[0].first == keys[3]);
+    REQUIRE(key_center[1].first == keys[0]);
+    REQUIRE(key_center[2].first == keys[2]);
+    REQUIRE(key_center[3].first == keys[1]);
 }
 
 TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X axis unchanged on global gain change", "[DataViewer_Widget][Analog][XAxis]") {
