@@ -267,7 +267,8 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#file-inputoutput-and-memory-management-considerations" id="toc-file-inputoutput-and-memory-management-considerations" class="nav-link active" data-scroll-target="#file-inputoutput-and-memory-management-considerations">File Input/Output and Memory Management Considerations</a>
+  <li><a href="#current-architecture" id="toc-current-architecture" class="nav-link active" data-scroll-target="#current-architecture">Current Architecture</a></li>
+  <li><a href="#file-inputoutput-and-memory-management-considerations" id="toc-file-inputoutput-and-memory-management-considerations" class="nav-link" data-scroll-target="#file-inputoutput-and-memory-management-considerations">File Input/Output and Memory Management Considerations</a>
   <ul class="collapse">
   <li><a href="#overview-of-file-io-requirements" id="toc-overview-of-file-io-requirements" class="nav-link" data-scroll-target="#overview-of-file-io-requirements">Overview of File IO Requirements</a></li>
   <li><a href="#incremental-data-adjustments-and-key-value-stores" id="toc-incremental-data-adjustments-and-key-value-stores" class="nav-link" data-scroll-target="#incremental-data-adjustments-and-key-value-stores">Incremental Data Adjustments and Key-Value Stores</a></li>
@@ -301,6 +302,175 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="current-architecture" class="level1">
+<h1>Current Architecture</h1>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Data Type</th>
+<th>Format</th>
+<th>Dependency</th>
+<th>Raw Data for Testing?</th>
+<th>IO Widget Testing</th>
+<th>Datamanager IO Testing</th>
+<th>JSON Validation Testing</th>
+<th>User Guide</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Analog</td>
+<td>Binary</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Analog</td>
+<td>CSV</td>
+<td></td>
+<td>Some</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>DigitalEvent</td>
+<td>CSV</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>DigitalInterval</td>
+<td>Binary</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>DigitalInteral</td>
+<td>CSV</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Line Data</td>
+<td>Binary</td>
+<td>Cap’n Proto</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Line Data</td>
+<td>CSV</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Mask Data</td>
+<td>HDF5</td>
+<td>HDF5</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Mask Data</td>
+<td>Image</td>
+<td>OpenCV</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Media Data</td>
+<td>Video</td>
+<td>ffmpeg</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Media Data</td>
+<td>Images</td>
+<td>OpenCV</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Media Data</td>
+<td>HDF5</td>
+<td>HDF5</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Point Data</td>
+<td>CSV</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Tensor</td>
+<td>Numpy</td>
+<td>Numpy</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="file-inputoutput-and-memory-management-considerations" class="level1">
 <h1>File Input/Output and Memory Management Considerations</h1>
 <section id="overview-of-file-io-requirements" class="level2">
