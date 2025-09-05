@@ -1,0 +1,54 @@
+---
+title: "Point Data"
+format: html
+toc: true
+---
+
+# Overview
+
+The **Points** widget appears when **Points** are enabled in the Feature Tree. It’s designed for **viewing, styling, adding, and editing keypoints** visible in the Media Viewer.\
+If you haven’t loaded a keypoint dataset, you can still add keypoints; these changes will be tracked in the Data Manager (see *Data Manager → points \[link user-ref here\]*).
+
+::: callout-note
+**Saving and Export:** Any additions or edits to keypoints are recorded by the **Data Manager** and can be **exported** later as part of your dataset.
+:::
+
+## Widget Layout & Controls
+
+### Color & Opacity
+
+-   **RGB (0–255):** Enter the **Red**, **Green**, and **Blue** channels to set the keypoint color.\
+-   **Hex Color:** Optionally specify a color using a hex code (e.g., `#FF6600`).\
+-   **Color Preview:** Shows the current color selection.\
+-   **Alpha:** Controls **opacity/transparency** of the keypoint in the Media Viewer (higher = more opaque).
+
+### Size & Shape
+
+-   **Point Size:** Sets how large the keypoint appears **in the Media Viewer**.
+
+    ::: callout-note
+    **Data size vs. display size:** The **stored keypoint** in the **Data Manager** is always **one pixel** (a single coordinate). **Point Size/Shape** only affects **on-screen display**, not the underlying saved data.
+    :::
+
+-   **Marker Shape:** Choose how the keypoint is drawn in the display:
+
+    -   `circle`, `square`, `triangle`, `cross`, `x`, `diamond`
+
+## Adding & Editing Keypoints
+
+1.  In the **Points** widget, find **Mouse Mode** (dropdown).
+
+2.  Select **`Select Point`**.
+
+3.  Click **anywhere in the Media Viewer** to **add** a keypoint at that location.
+
+4.  To **modify** a keypoint, use the same mode to select it and then adjust its location in the media window.
+
+    ::: callout-note
+    **Deleting Keypoints:** To delete accidentally added or misplaced keypoints, open the data manager and find the frame that contains the keypoint and delete it (see *Data Manager → points \[link user-ref here\]*).
+    :::
+
+## Tips
+
+-   Keep **Alpha** low to ensure that imagery remains visible under points.\
+-   When working with multiple keypoints, use distinct **shapes** or **colors** to differentiate labels, annotators, or classes.
