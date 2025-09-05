@@ -4,12 +4,34 @@
 #include "CoreGeometry/points.hpp"
 
 #include <cstdint>
+#include <initializer_list>
+#include <type_traits>
 #include <vector>
 
 class Line2D {
 public:
     Line2D() = default;
     Line2D(std::vector<Point2D<float>> points) : points_(std::move(points)) {}
+
+    /**
+     * @brief Construct a Line2D from an initializer list of Point2D<float>.
+     *
+     * @pre None.
+     * @post The line contains the provided points in the same order.
+     */
+    Line2D(std::initializer_list<Point2D<float>> points) : points_(points) {}
+
+    /**
+     * @brief Construct a Line2D from a variable number of Point2D<float> arguments.
+     *
+     * Enables parenthesis initialization like: Line2D(p1, p2, p3).
+     *
+     * @pre None.
+     * @post The line contains the provided points in the same order.
+     */
+    template <typename... P,
+              typename = std::enable_if_t<(std::conjunction_v<std::is_same<std::decay_t<P>, Point2D<float>>...>)>>
+    explicit Line2D(P&&... pts) : points_{static_cast<Point2D<float>>(std::forward<P>(pts))...} {}
 
     size_t size() const {
         return points_.size();
