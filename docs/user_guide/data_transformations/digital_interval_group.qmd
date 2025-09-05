@@ -1,0 +1,153 @@
+---
+title: "Digital Interval Group"
+format: html
+---
+
+## Overview
+
+This transform groups nearby intervals in a digital interval series based on a specified maximum spacing, which is useful for consolidating fragmented temporal events.
+
+### Detailed Description
+
+This transform merges digital intervals that are close to each other. If the gap between the end of one interval and the start of the next is less than or equal to the `max_spacing` value, the two intervals are combined into a single, larger interval. This process is repeated until no more intervals can be grouped.
+
+This is particularly useful for cleaning up data where a single continuous event might be recorded as multiple, closely-spaced but separate intervals due to noise or transient interruptions in signal detection.
+
+![](images/digital_interval_group.png)
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# Create the directory if it doesn't exist
+output_dir = 'docs/user_guide/data_transformations/images'
+os.makedirs(output_dir, exist_ok=True)
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Sample Data: A series of intervals ---
+    intervals = [
+        (1, 2.5),
+        (3.5, 4.5), # gap = 1.0
+        (7, 8),     # gap = 2.5
+        (8.5, 9),   # gap = 0.5
+        (12, 13)    # gap = 3.0
+    ]
+
+    # --- Grouping logic function ---
+    def group_intervals(intervals, max_spacing):
+        if not intervals:
+            return []
+
+        # Sort intervals by start time
+        sorted_intervals = sorted(intervals, key=lambda x: x[0])
+
+        grouped = [list(sorted_intervals[0])]
+
+        for current_start, current_end in sorted_intervals[1:]:
+            last_end = grouped[-1][1]
+            gap = current_start - last_end
+
+            if gap <= max_spacing:
+                # Merge with the last group
+                grouped[-1][1] = max(last_end, current_end)
+            else:
+                # Start a new group
+                grouped.append([current_start, current_end])
+
+        return [tuple(g) for g in grouped]
+
+    # --- Grouping with different max_spacing values ---
+    grouped_1 = group_intervals(intervals, 1.0)
+    grouped_2 = group_intervals(intervals, 2.5)
+
+    # --- Plotting function ---
+    def plot_intervals(ax, intervals, title, y_pos=0):
+        ax.set_title(title)
+        for i, (start, end) in enumerate(intervals):
+            ax.plot([start, end], [y_pos, y_pos], 'o-', linewidth=4, markersize=8, label=f'Interval {i+1}')
+            ax.text((start + end) / 2, y_pos + 0.1, f'({start}, {end})', ha='center')
+        ax.set_yticks([])
+        ax.set_ylim(-0.5, 0.5)
+        ax.grid(True, axis='x')
+        ax.set_xlabel('Time')
+
+    # --- Create the plots ---
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
+    fig.suptitle('How Interval Grouping Works', fontsize=16)
+
+    # Plot 1: Original Intervals
+    plot_intervals(ax1, intervals, 'Original Intervals')
+
+    # Plot 2: Grouped with max_spacing = 1.0
+    plot_intervals(ax2, grouped_1, 'Grouped with max_spacing = 1.0')
+    ax2.annotate('Gap=1.0 <= 1.0 -> MERGE',
+                 xy=(3, 0), xytext=(3.5, 0.3),
+                 arrowprops=dict(facecolor='black', shrink=0.05),
+                 ha='center')
+    ax2.annotate('Gap=0.5 <= 1.0 -> MERGE',
+                 xy=(8.25, 0), xytext=(8.75, 0.3),
+                 arrowprops=dict(facecolor='black', shrink=0.05),
+                 ha='center')
+
+    # Plot 3: Grouped with max_spacing = 2.5
+    plot_intervals(ax3, grouped_2, 'Grouped with max_spacing = 2.5')
+    ax3.annotate('Gap=2.5 <= 2.5 -> MERGE',
+                 xy=(5.75, 0), xytext=(6, 0.3),
+                 arrowprops=dict(facecolor='black', shrink=0.05),
+                 ha='center')
+
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.savefig(os.path.join(output_dir, 'digital_interval_group.png'))
+    plt.show()
+
+```
+:::
+
+### Neuroscience Use Cases
+
+In neuroscience, this transform can be applied to refine event data:
+
+-   **Bout Analysis:** When analyzing behaviors that occur in bouts (e.g., sniffing, grooming, vocalizations), this transform can merge closely spaced, individual instances into a single, continuous behavioral bout. For example, a series of short sniffs could be grouped into one "sniffing bout".
+-   **Neural Firing Patterns:** In analyzing spike trains, grouping can consolidate bursts of high-frequency firing that are separated by very short pauses, treating them as a single firing event.
+-   **Movement Trajectories:** When tracking animal movement, brief pauses or tracking errors can fragment a continuous movement path. Grouping intervals of movement can help reconstruct a more accurate, continuous trajectory.
+
+## Parameters
+
+This transform has the following parameter:
+
+-   `max_spacing`: The maximum allowed gap between two consecutive intervals for them to be merged. The time unit should be consistent with the data's time representation (e.g., seconds or frames). If the gap is greater than this value, the intervals remain separate.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example groups intervals that are separated by 3.0 time units or less.
+
+```json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Interval Grouping Pipeline",
+            "description": "Test interval grouping on digital interval series",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Group Intervals",
+                "phase": "analysis",
+                "input_key": "test_intervals",
+                "output_key": "grouped_intervals",
+                "parameters": {
+                    "max_spacing": 3.0
+                }
+            }
+        ]
+    }
+}
+]
+```
