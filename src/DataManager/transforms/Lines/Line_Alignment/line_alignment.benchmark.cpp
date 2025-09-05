@@ -12,6 +12,7 @@
 #include <memory>
 #include <random>
 #include <vector>
+#include <utility>
 
 /**
  * @brief Generate a random test image with bright features
@@ -93,39 +94,69 @@ Line2D generateTestLine(ImageSize const & image_size, int num_vertices = 5) {
 }
 
 /**
- * @brief Create a test dataset with multiple images and lines
- * @param num_images Number of images to create
+ * @brief Create a single multi-frame dataset (8-bit) with multiple images and per-frame lines
+ * @param num_images Number of frames/images to create within one media instance
  * @param image_size Size of each image
- * @param lines_per_image Number of lines per image
- * @return A vector of pairs containing (media_data, line_data)
+ * @param lines_per_image Number of lines per frame
+ * @return A pair (media_data, line_data) sharing a common timeframe
  */
-std::vector<std::pair<std::shared_ptr<MockMediaData>, std::shared_ptr<LineData>>>
-createTestDataset(int num_images, ImageSize const & image_size, int lines_per_image = 3) {
-    std::vector<std::pair<std::shared_ptr<MockMediaData>, std::shared_ptr<LineData>>> dataset;
-
+std::pair<std::shared_ptr<MockMediaData>, std::shared_ptr<LineData>>
+createMultiFrameDataset8(int num_images, ImageSize const & image_size, int lines_per_image = 3) {
     auto time_frame = std::make_shared<TimeFrame>();
 
+    auto media_data = std::make_shared<MockMediaData>(MediaData::BitDepth::Bit8);
+    media_data->setTimeFrame(time_frame);
+
+    auto line_data = std::make_shared<LineData>();
+    line_data->setImageSize(image_size);
+    line_data->setTimeFrame(time_frame);
+
     for (int i = 0; i < num_images; ++i) {
-        // Create media data with random image
-        auto media_data = std::make_shared<MockMediaData>(MediaData::BitDepth::Bit8);
-        auto image_data = generateTestImage(image_size, 3 + (i % 3));// 3-5 features per image
+        // Append a frame to the single media instance
+        auto image_data = generateTestImage(image_size, 3 + (i % 3));
         media_data->addImage8(image_data, image_size);
-        media_data->setTimeFrame(time_frame);
 
-        // Create line data with random lines
-        auto line_data = std::make_shared<LineData>();
-        line_data->setImageSize(image_size);
-        line_data->setTimeFrame(time_frame);
-
+        // Add lines for this frame at time index i
         for (int j = 0; j < lines_per_image; ++j) {
             auto test_line = generateTestLine(image_size, 4 + (j % 3));// 4-6 vertices per line
-            line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+            line_data->addAtTime(TimeFrameIndex(i), test_line, false);
         }
-
-        dataset.emplace_back(media_data, line_data);
     }
 
-    return dataset;
+    return {media_data, line_data};
+}
+
+/**
+ * @brief Create a single multi-frame dataset (32-bit float) with multiple images and per-frame lines
+ */
+std::pair<std::shared_ptr<MockMediaData>, std::shared_ptr<LineData>>
+createMultiFrameDataset32(int num_images, ImageSize const & image_size, int lines_per_image = 3) {
+    auto time_frame = std::make_shared<TimeFrame>();
+
+    auto media_data = std::make_shared<MockMediaData>(MediaData::BitDepth::Bit32);
+    media_data->setTimeFrame(time_frame);
+
+    auto line_data = std::make_shared<LineData>();
+    line_data->setImageSize(image_size);
+    line_data->setTimeFrame(time_frame);
+
+    for (int i = 0; i < num_images; ++i) {
+        // Create an 8-bit synthetic image and convert to float [0,1]
+        auto image_data_8 = generateTestImage(image_size, 3 + (i % 3));
+        std::vector<float> image_data_32;
+        image_data_32.reserve(image_data_8.size());
+        for (uint8_t pixel: image_data_8) {
+            image_data_32.push_back(static_cast<float>(pixel) / 255.0f);
+        }
+        media_data->addImage32(image_data_32, image_size);
+
+        for (int j = 0; j < lines_per_image; ++j) {
+            auto test_line = generateTestLine(image_size, 4 + (j % 3));
+            line_data->addAtTime(TimeFrameIndex(i), test_line, false);
+        }
+    }
+
+    return {media_data, line_data};
 }
 
 TEST_CASE("Benchmark: Line Alignment - Single Image Processing", "[line][alignment][benchmark]") {
@@ -135,15 +166,8 @@ TEST_CASE("Benchmark: Line Alignment - Single Image Processing", "[line][alignme
 
     std::cout << "CTEST_FULL_OUTPUT" << std::endl;
 
-    // Create test data
-    auto media_data = std::make_shared<MockMediaData>(MediaData::BitDepth::Bit8);
-    auto image_data = generateTestImage(image_size, 5);
-    media_data->addImage8(image_data, image_size);
-
-    auto line_data = std::make_shared<LineData>();
-    line_data->setImageSize(image_size);
-    auto test_line = generateTestLine(image_size, 5);
-    line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+    // Create single-frame dataset
+    auto [media_data, line_data] = createMultiFrameDataset8(1, image_size, 1);
 
     BENCHMARK("Single Image Line Alignment - 8-bit") {
         return line_alignment(
@@ -165,26 +189,18 @@ TEST_CASE("Benchmark: Line Alignment - Multiple Images", "[line][alignment][benc
 
     std::cout << "CTEST_FULL_OUTPUT" << std::endl;
 
-    // Create test dataset
-    auto dataset = createTestDataset(num_images, image_size, 3);
+    // Create multi-frame dataset
+    auto [media_data, line_data] = createMultiFrameDataset8(num_images, image_size, 3);
 
     BENCHMARK("10 Images Line Alignment - 8-bit") {
-        std::vector<std::shared_ptr<LineData>> results;
-        results.reserve(num_images);
-
-        for (auto const & [media_data, line_data]: dataset) {
-            auto result = line_alignment(
-                    line_data.get(),
-                    media_data.get(),
-                    width,
-                    perpendicular_range,
-                    false,// use_processed_data
-                    FWHMApproach::PEAK_WIDTH_HALF_MAX,
-                    LineAlignmentOutputMode::ALIGNED_VERTICES);
-            results.push_back(result);
-        }
-
-        return results;
+        return line_alignment(
+                line_data.get(),
+                media_data.get(),
+                width,
+                perpendicular_range,
+                false,// use_processed_data
+                FWHMApproach::PEAK_WIDTH_HALF_MAX,
+                LineAlignmentOutputMode::ALIGNED_VERTICES);
     };
 }
 
@@ -197,49 +213,33 @@ TEST_CASE("Benchmark: Line Alignment - Different Image Sizes", "[line][alignment
 
     SECTION("50x50 Images") {
         constexpr ImageSize image_size{50, 50};
-        auto dataset = createTestDataset(num_images, image_size, 2);
+        auto [media_data, line_data] = createMultiFrameDataset8(num_images, image_size, 2);
 
         BENCHMARK("10 Images 50x50 Line Alignment") {
-            std::vector<std::shared_ptr<LineData>> results;
-            results.reserve(num_images);
-
-            for (auto const & [media_data, line_data]: dataset) {
-                auto result = line_alignment(
-                        line_data.get(),
-                        media_data.get(),
-                        width,
-                        perpendicular_range,
-                        false,
-                        FWHMApproach::PEAK_WIDTH_HALF_MAX,
-                        LineAlignmentOutputMode::ALIGNED_VERTICES);
-                results.push_back(result);
-            }
-
-            return results;
+            return line_alignment(
+                    line_data.get(),
+                    media_data.get(),
+                    width,
+                    perpendicular_range,
+                    false,
+                    FWHMApproach::PEAK_WIDTH_HALF_MAX,
+                    LineAlignmentOutputMode::ALIGNED_VERTICES);
         };
     }
 
     SECTION("200x200 Images") {
         constexpr ImageSize image_size{200, 200};
-        auto dataset = createTestDataset(num_images, image_size, 2);
+        auto [media_data, line_data] = createMultiFrameDataset8(num_images, image_size, 2);
 
         BENCHMARK("10 Images 200x200 Line Alignment") {
-            std::vector<std::shared_ptr<LineData>> results;
-            results.reserve(num_images);
-
-            for (auto const & [media_data, line_data]: dataset) {
-                auto result = line_alignment(
-                        line_data.get(),
-                        media_data.get(),
-                        width,
-                        perpendicular_range,
-                        false,
-                        FWHMApproach::PEAK_WIDTH_HALF_MAX,
-                        LineAlignmentOutputMode::ALIGNED_VERTICES);
-                results.push_back(result);
-            }
-
-            return results;
+            return line_alignment(
+                    line_data.get(),
+                    media_data.get(),
+                    width,
+                    perpendicular_range,
+                    false,
+                    FWHMApproach::PEAK_WIDTH_HALF_MAX,
+                    LineAlignmentOutputMode::ALIGNED_VERTICES);
         };
     }
 }
@@ -250,53 +250,38 @@ TEST_CASE("Benchmark: Line Alignment - Different Parameters", "[line][alignment]
 
     std::cout << "CTEST_FULL_OUTPUT" << std::endl;
 
-    auto dataset = createTestDataset(num_images, image_size, 2);
+    auto [media_data_small, line_data_small] = createMultiFrameDataset8(num_images, image_size, 2);
 
     SECTION("Small Width and Range") {
         constexpr int width = 10;
         constexpr int perpendicular_range = 25;
 
         BENCHMARK("Small Parameters (width=10, range=25)") {
-            std::vector<std::shared_ptr<LineData>> results;
-            results.reserve(num_images);
-
-            for (auto const & [media_data, line_data]: dataset) {
-                auto result = line_alignment(
-                        line_data.get(),
-                        media_data.get(),
-                        width,
-                        perpendicular_range,
-                        false,
-                        FWHMApproach::PEAK_WIDTH_HALF_MAX,
-                        LineAlignmentOutputMode::ALIGNED_VERTICES);
-                results.push_back(result);
-            }
-
-            return results;
+            return line_alignment(
+                    line_data_small.get(),
+                    media_data_small.get(),
+                    width,
+                    perpendicular_range,
+                    false,
+                    FWHMApproach::PEAK_WIDTH_HALF_MAX,
+                    LineAlignmentOutputMode::ALIGNED_VERTICES);
         };
     }
 
     SECTION("Large Width and Range") {
         constexpr int width = 40;
         constexpr int perpendicular_range = 100;
+        auto [media_data_large, line_data_large] = createMultiFrameDataset8(num_images, image_size, 2);
 
         BENCHMARK("Large Parameters (width=40, range=100)") {
-            std::vector<std::shared_ptr<LineData>> results;
-            results.reserve(num_images);
-
-            for (auto const & [media_data, line_data]: dataset) {
-                auto result = line_alignment(
-                        line_data.get(),
-                        media_data.get(),
-                        width,
-                        perpendicular_range,
-                        false,
-                        FWHMApproach::PEAK_WIDTH_HALF_MAX,
-                        LineAlignmentOutputMode::ALIGNED_VERTICES);
-                results.push_back(result);
-            }
-
-            return results;
+            return line_alignment(
+                    line_data_large.get(),
+                    media_data_large.get(),
+                    width,
+                    perpendicular_range,
+                    false,
+                    FWHMApproach::PEAK_WIDTH_HALF_MAX,
+                    LineAlignmentOutputMode::ALIGNED_VERTICES);
         };
     }
 }
@@ -309,25 +294,17 @@ TEST_CASE("Benchmark: Line Alignment - FWHM Profile Extents Mode", "[line][align
 
     std::cout << "CTEST_FULL_OUTPUT" << std::endl;
 
-    auto dataset = createTestDataset(num_images, image_size, 2);
+    auto [media_data_multi, line_data_multi] = createMultiFrameDataset8(num_images, image_size, 2);
 
     BENCHMARK("FWHM Profile Extents Mode") {
-        std::vector<std::shared_ptr<LineData>> results;
-        results.reserve(num_images);
-
-        for (auto const & [media_data, line_data]: dataset) {
-            auto result = line_alignment(
-                    line_data.get(),
-                    media_data.get(),
-                    width,
-                    perpendicular_range,
-                    false,
-                    FWHMApproach::PEAK_WIDTH_HALF_MAX,
-                    LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS);
-            results.push_back(result);
-        }
-
-        return results;
+        return line_alignment(
+                line_data_multi.get(),
+                media_data_multi.get(),
+                width,
+                perpendicular_range,
+                false,
+                FWHMApproach::PEAK_WIDTH_HALF_MAX,
+                LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS);
     };
 }
 
@@ -339,80 +316,33 @@ TEST_CASE("Benchmark: Line Alignment - 32-bit vs 8-bit", "[line][alignment][benc
 
     std::cout << "CTEST_FULL_OUTPUT" << std::endl;
 
-    // Create 8-bit dataset
-    auto dataset_8bit = createTestDataset(num_images, image_size, 2);
+    // Create 8-bit and 32-bit multi-frame datasets
+    auto [media_data_8bit, line_data_8bit] = createMultiFrameDataset8(num_images, image_size, 2);
+    auto [media_data_32bit, line_data_32bit] = createMultiFrameDataset32(num_images, image_size, 2);
 
-    // Create 32-bit dataset
-    std::vector<std::pair<std::shared_ptr<MockMediaData>, std::shared_ptr<LineData>>> dataset_32bit;
-    auto time_frame = std::make_shared<TimeFrame>();
-
-    for (int i = 0; i < num_images; ++i) {
-        // Create media data with 32-bit image
-        auto media_data = std::make_shared<MockMediaData>(MediaData::BitDepth::Bit32);
-        auto image_data_8bit = generateTestImage(image_size, 3 + (i % 3));
-
-        // Convert to 32-bit float
-        std::vector<float> image_data_32bit;
-        image_data_32bit.reserve(image_data_8bit.size());
-        for (uint8_t pixel: image_data_8bit) {
-            image_data_32bit.push_back(static_cast<float>(pixel) / 255.0f);
-        }
-
-        media_data->addImage32(image_data_32bit, image_size);
-        media_data->setTimeFrame(time_frame);
-
-        // Create line data (same as 8-bit version)
-        auto line_data = std::make_shared<LineData>();
-        line_data->setImageSize(image_size);
-        line_data->setTimeFrame(time_frame);
-
-        for (int j = 0; j < 2; ++j) {
-            auto test_line = generateTestLine(image_size, 4 + (j % 3));
-            line_data->addAtTime(TimeFrameIndex(0), test_line, false);
-        }
-
-        dataset_32bit.emplace_back(media_data, line_data);
-    }
-
-    SECTION("8-bit Data") {
+    SECTION("32-bit Float Data") {
         BENCHMARK("32-bit Float Data") {
-            std::vector<std::shared_ptr<LineData>> results;
-            results.reserve(num_images);
-
-            for (auto const & [media_data, line_data]: dataset_32bit) {
-                auto result = line_alignment(
-                        line_data.get(),
-                        media_data.get(),
-                        width,
-                        perpendicular_range,
-                        false,
-                        FWHMApproach::PEAK_WIDTH_HALF_MAX,
-                        LineAlignmentOutputMode::ALIGNED_VERTICES);
-                results.push_back(result);
-            }
-
-            return results;
+            return line_alignment(
+                    line_data_32bit.get(),
+                    media_data_32bit.get(),
+                    width,
+                    perpendicular_range,
+                    false,
+                    FWHMApproach::PEAK_WIDTH_HALF_MAX,
+                    LineAlignmentOutputMode::ALIGNED_VERTICES);
         };
     }
 
     SECTION("8-bit Data") {
         BENCHMARK("8-bit Data") {
-            std::vector<std::shared_ptr<LineData>> results;
-            results.reserve(num_images);
-
-            for (auto const & [media_data, line_data]: dataset_8bit) {
-                auto result = line_alignment(
-                        line_data.get(),
-                        media_data.get(),
-                        width,
-                        perpendicular_range,
-                        false,
-                        FWHMApproach::PEAK_WIDTH_HALF_MAX,
-                        LineAlignmentOutputMode::ALIGNED_VERTICES);
-                results.push_back(result);
-            }
-
-            return results;
+            return line_alignment(
+                    line_data_8bit.get(),
+                    media_data_8bit.get(),
+                    width,
+                    perpendicular_range,
+                    false,
+                    FWHMApproach::PEAK_WIDTH_HALF_MAX,
+                    LineAlignmentOutputMode::ALIGNED_VERTICES);
         };
     }
 }

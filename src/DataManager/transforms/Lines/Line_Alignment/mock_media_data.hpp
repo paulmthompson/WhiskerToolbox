@@ -36,10 +36,17 @@ public:
      */
     void addImage8(std::vector<uint8_t> const & image_data, ImageSize const & image_size) {
         setBitDepth(BitDepth::Bit8);
-        _stored_image_8bit = image_data;
-        updateWidth(image_size.width);
-        updateHeight(image_size.height);
-        setTotalFrameCount(1);// Simple mock - only one frame
+        // Reset 32-bit storage if switching bit depths
+        if (!_frames_32bit.empty()) {
+            _frames_32bit.clear();
+        }
+        // Initialize width/height on first insert, validate thereafter
+        if (_frames_8bit.empty()) {
+            updateWidth(image_size.width);
+            updateHeight(image_size.height);
+        }
+        _frames_8bit.push_back(image_data);
+        setTotalFrameCount(static_cast<int>(_frames_8bit.size()));
     }
 
     /**
@@ -50,10 +57,16 @@ public:
      */
     void addImage32(std::vector<float> const & image_data, ImageSize const & image_size) {
         setBitDepth(BitDepth::Bit32);
-        _stored_image_32bit = image_data;
-        updateWidth(image_size.width);
-        updateHeight(image_size.height);
-        setTotalFrameCount(1);// Simple mock - only one frame
+        // Reset 8-bit storage if switching bit depths
+        if (!_frames_8bit.empty()) {
+            _frames_8bit.clear();
+        }
+        if (_frames_32bit.empty()) {
+            updateWidth(image_size.width);
+            updateHeight(image_size.height);
+        }
+        _frames_32bit.push_back(image_data);
+        setTotalFrameCount(static_cast<int>(_frames_32bit.size()));
     }
 
     /**
@@ -85,18 +98,24 @@ protected:
      * @param frame_id The frame ID (unused, only frame 0 exists)
      */
     void doLoadFrame(int frame_id) override {
-        static_cast<void>(frame_id);// We only have one frame (frame 0)
-
-        if (is8Bit() && !_stored_image_8bit.empty()) {
-            setRawData(_stored_image_8bit);
-        } else if (is32Bit() && !_stored_image_32bit.empty()) {
-            setRawData(_stored_image_32bit);
+        // Load requested frame data based on current bit depth
+        if (is8Bit()) {
+            if (!_frames_8bit.empty()) {
+                int const index = frame_id < 0 ? 0 : (frame_id >= static_cast<int>(_frames_8bit.size()) ? static_cast<int>(_frames_8bit.size()) - 1 : frame_id);
+                setRawData(_frames_8bit[static_cast<size_t>(index)]);
+            }
+        } else if (is32Bit()) {
+            if (!_frames_32bit.empty()) {
+                int const index = frame_id < 0 ? 0 : (frame_id >= static_cast<int>(_frames_32bit.size()) ? static_cast<int>(_frames_32bit.size()) - 1 : frame_id);
+                setRawData(_frames_32bit[static_cast<size_t>(index)]);
+            }
         }
     }
 
 private:
-    std::vector<uint8_t> _stored_image_8bit;///< Stored 8-bit image data
-    std::vector<float> _stored_image_32bit; ///< Stored 32-bit image data
+    // Multi-frame storage for benchmarking and tests
+    std::vector<std::vector<uint8_t>> _frames_8bit; ///< Stored 8-bit frames
+    std::vector<std::vector<float>> _frames_32bit;  ///< Stored 32-bit frames
 };
 
 #endif// MOCK_MEDIA_DATA_HPP
