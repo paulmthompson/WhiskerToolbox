@@ -48,6 +48,8 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
 
     std::vector<Point2D<float>> center_points;
     std::vector<float> intensities;
+    std::vector<T> profile = std::vector<T>(perpendicular_range+1, 0);
+    std::vector<float> distances = std::vector<float>(perpendicular_range+1, 0);
 
     // Sample multiple points along the width of the analysis strip
     for (int w = -width / 2; w <= width / 2; ++w) {
@@ -59,18 +61,20 @@ Point2D<float> calculate_fwhm_center(Point2D<float> const & vertex,
                 vertex.y + width_dir.y * static_cast<float>(w)};
 
         // Sample intensity profile along the perpendicular direction
-        std::vector<T> profile;
-        std::vector<float> distances;
+        profile.assign(perpendicular_range+1, 0);
+        distances.assign(perpendicular_range+1, 0);
 
         // Sample up to perpendicular_range pixels in each direction along the perpendicular
+        int index = 0;
         for (int d = -perpendicular_range / 2; d <= perpendicular_range / 2; ++d) {
             Point2D<float> sample_point = {
                     sample_start.x + perpendicular_dir.x * static_cast<float>(d),
                     sample_start.y + perpendicular_dir.y * static_cast<float>(d)};
 
             T intensity = get_pixel_value(sample_point, image_data, image_size);
-            profile.push_back(intensity);
-            distances.push_back(static_cast<float>(d));
+            profile[index] = intensity;
+            distances[index] = static_cast<float>(d);
+            index++;
         }
 
         // Find the maximum intensity in the profile
@@ -187,6 +191,9 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
     std::vector<Point2D<float>> max_points;
     std::vector<float> intensities;
 
+    std::vector<T> profile = std::vector<T>(perpendicular_range+1, 0);
+    std::vector<float> distances = std::vector<float>(perpendicular_range+1, 0);
+
     // Sample multiple points along the width of the analysis strip
     for (int w = -width / 2; w <= width / 2; ++w) {
         // Calculate the sampling point along the width direction
@@ -197,18 +204,20 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
                 vertex.y + width_dir.y * static_cast<float>(w)};
 
         // Sample intensity profile along the perpendicular direction
-        std::vector<T> profile;
-        std::vector<float> distances;
+        profile.assign(perpendicular_range+1, 0);
+        distances.assign(perpendicular_range+1, 0);
 
         // Sample up to perpendicular_range pixels in each direction along the perpendicular
+        int index = 0;
         for (int d = -perpendicular_range / 2; d <= perpendicular_range / 2; ++d) {
             Point2D<float> sample_point = {
                     sample_start.x + perpendicular_dir.x * static_cast<float>(d),
                     sample_start.y + perpendicular_dir.y * static_cast<float>(d)};
 
             T intensity = get_pixel_value(sample_point, image_data, image_size);
-            profile.push_back(intensity);
-            distances.push_back(static_cast<float>(d));
+            profile[index] = intensity;
+            distances[index] = static_cast<float>(d);
+            index++;
         }
 
         // Find the maximum intensity in the profile
