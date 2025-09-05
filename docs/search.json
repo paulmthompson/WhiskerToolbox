@@ -43,61 +43,92 @@
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/overview.html",
-    "href": "user_guide/data_transformations/overview.html",
-    "title": "Data Transformations",
+    "objectID": "user_guide/data_transformations/analog_hilbert_phase.html",
+    "href": "user_guide/data_transformations/analog_hilbert_phase.html",
+    "title": "Analog Hilbert Phase",
     "section": "",
-    "text": "Data transformations are operations we perform on one kind of data that result in another kind of data.\nTransformations supported by Neuralyzer are listed below:",
+    "text": "This transform calculates the instantaneous phase of an analog signal, which is useful for analyzing oscillations.\n\n\nThe Hilbert transform is a mathematical operation that shifts the phase of all positive frequency components of a signal by -90 degrees and all negative frequency components by +90 degrees. When this phase-shifted signal (the imaginary part) is combined with the original signal (the real part), it forms a complex-valued “analytic signal”.\nThe instantaneous phase is the angle of this complex number at each point in time. It provides a way to represent an oscillating signal in terms of its phase, which progresses from -π to +π for each cycle of the oscillation. This transform uses an efficient FFT-based method to compute the Hilbert transform.\n\n\n\n\n\nIn neuroscience, analyzing the phase of neural signals is crucial for understanding brain function. Some common applications include:\n\nRhythmic Behaviors: The phase of signals from sensors tracking rhythmic behaviors like whisking, sniffing, or licking can be extracted to correlate them with neural activity.",
     "crumbs": [
       "Data Transformations",
-      "Data Transformations"
+      "Analog Hilbert Phase"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/overview.html#transformations",
-    "href": "user_guide/data_transformations/overview.html#transformations",
-    "title": "Data Transformations",
-    "section": "Transformations",
-    "text": "Transformations\n\nAnalog Time Series\n\nEvent Detection by Threshold Crossing\nGenerate events from a time series by comparing signal to some threshold value.\nThreshold Value:\nThe numerical level the signal must cross to be considered an event. The signal will be compared directly against this value based on the selected direction.\nThreshold Direction:\nHow the signal must cross the Threshold Value to trigger an event:\n\nPositive (Rising): Detects an event only when the signal value increases and crosses above the Threshold Value.\nNegative (Falling): Detects an event only when the signal value decreases and crosses below the Threshold Value.\nAbsolute (Magnitude): Detects an event when the absolute value of the signal (abs(signal)) rises above the Threshold Value. This detects crossings away from zero on either the positive or negative side.\n\nLockout Time (Samples):\nThe minimum number of samples that must pass after an event is detected before another threshold crossing can trigger a new event. Enter 0 (or less) to disable the lockout, allowing consecutive samples to trigger events if they cross the threshold. This helps prevent multiple detections from a single noisy crossing.\n\n\nFind Peaks\nAttempts to find peaks in analog time series (local maxima or minima).\n\n\nInstantaneous Amplitude Calculation\nDetermine the instantaneous amplitude of an oscillatory time series. uses Hilbert Transform.\n\n\nInstantaneous Phase Calculation\nDetermine the instantaneous phase of an oscillatory time series. Uses Hilbert Transform.\n\n\nInterval Detection\nDetermine an interval range where an angle signal is above (or below) a threshold value. Returns the beginning and end of the above/below threshold time period.\nThreshold Value:\nDescription: Enter the numerical level the signal must cross to be considered an event. The signal will be compared directly against this value based on the selected direction. The interval will be defined from the first to last sample that are above or below the Threshold Value.\nThreshold Direction:\nDescription: Select how the signal must cross the Threshold Value to trigger an interval:\n\nPositive (Rising): Detects an interval only when the signal value increases and remains above the Threshold Value.\nNegative (Falling): Detects an event only when the signal value decreases and remains below the Threshold Value.\nAbsolute (Magnitude): Detects an event when the absolute value of the signal (abs(signal)) rises above the Threshold Value. This detects crossings away from zero on either the positive or negative side. Once the absolute value is smaller than the abs(signal), the interval has ended.\n\nLockout Time (Samples):\nDescription: Specify the minimum number of samples that must pass after an interval has ended before another threshold crossing can trigger a new event. Enter 0 (or less) to disable the lockout.\nMinimum Duration (Samples):\nDescription: Specify the minimum number of samples that must be in an interval to be included. Threshold crossings with durations shorter than Minimum Duration will not be included in result.\n\n\n\nMasks\n\nArea\nTotal area of the mask in a frame is calculated.",
+    "objectID": "user_guide/data_transformations/analog_hilbert_phase.html#overview",
+    "href": "user_guide/data_transformations/analog_hilbert_phase.html#overview",
+    "title": "Analog Hilbert Phase",
+    "section": "",
+    "text": "This transform calculates the instantaneous phase of an analog signal, which is useful for analyzing oscillations.\n\n\nThe Hilbert transform is a mathematical operation that shifts the phase of all positive frequency components of a signal by -90 degrees and all negative frequency components by +90 degrees. When this phase-shifted signal (the imaginary part) is combined with the original signal (the real part), it forms a complex-valued “analytic signal”.\nThe instantaneous phase is the angle of this complex number at each point in time. It provides a way to represent an oscillating signal in terms of its phase, which progresses from -π to +π for each cycle of the oscillation. This transform uses an efficient FFT-based method to compute the Hilbert transform.\n\n\n\n\n\nIn neuroscience, analyzing the phase of neural signals is crucial for understanding brain function. Some common applications include:\n\nRhythmic Behaviors: The phase of signals from sensors tracking rhythmic behaviors like whisking, sniffing, or licking can be extracted to correlate them with neural activity.",
     "crumbs": [
       "Data Transformations",
-      "Data Transformations"
+      "Analog Hilbert Phase"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/analog_filter.html",
-    "href": "user_guide/data_transformations/analog_filter.html",
-    "title": "Analog Filter",
-    "section": "",
-    "text": "The Analog Filter transform applies a digital filter to an AnalogTimeSeries. This can be used to remove noise, isolate specific frequency bands, or perform other signal processing tasks."
-  },
-  {
-    "objectID": "user_guide/data_transformations/analog_filter.html#purpose",
-    "href": "user_guide/data_transformations/analog_filter.html#purpose",
-    "title": "Analog Filter",
-    "section": "",
-    "text": "The Analog Filter transform applies a digital filter to an AnalogTimeSeries. This can be used to remove noise, isolate specific frequency bands, or perform other signal processing tasks."
-  },
-  {
-    "objectID": "user_guide/data_transformations/analog_filter.html#parameters",
-    "href": "user_guide/data_transformations/analog_filter.html#parameters",
-    "title": "Analog Filter",
+    "objectID": "user_guide/data_transformations/analog_hilbert_phase.html#parameters",
+    "href": "user_guide/data_transformations/analog_hilbert_phase.html#parameters",
+    "title": "Analog Hilbert Phase",
     "section": "Parameters",
-    "text": "Parameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfilter_type\nstring\nThe type of filter to apply. One of “lowpass”, “highpass”, “bandpass”, “bandstop”.\n“lowpass”\n\n\ncutoff_frequency\ndouble\nThe cutoff frequency for lowpass and highpass filters, or the lower cutoff frequency for bandpass and bandstop filters.\n10.0\n\n\ncutoff_frequency2\ndouble\nThe upper cutoff frequency for bandpass and bandstop filters.\n0.0\n\n\norder\ninteger\nThe order of the filter. Must be between 1 and 8.\n4\n\n\nripple\ndouble\nThe ripple for Chebyshev filters (in dB). Not used for Butterworth filters.\n0.0\n\n\nzero_phase\nboolean\nIf true, applies the filter forward and backward to eliminate phase distortion.\nfalse"
+    "text": "Parameters\nThis transform has the following parameters:\n\nlow_frequency: The low-cut frequency for the bandpass filter, in Hertz. This determines the lower end of the frequency range you want to analyze.\nhigh_frequency: The high-cut frequency for the bandpass filter, in Hertz. This determines the upper end of the frequency range you want to analyze.\ndiscontinuity_threshold: A time gap, in samples, above which the signal is considered to have a break. The transform will process the continuous segments separately. This is useful for data with missing samples or interruptions.",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Hilbert Phase"
+    ]
   },
   {
-    "objectID": "user_guide/data_transformations/analog_filter.html#json-schema",
-    "href": "user_guide/data_transformations/analog_filter.html#json-schema",
-    "title": "Analog Filter",
-    "section": "JSON Schema",
-    "text": "JSON Schema\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"transform\": {\n      \"type\": \"string\",\n      \"const\": \"Analog Filter\"\n    },\n    \"input\": {\n      \"type\": \"string\"\n    },\n    \"output\": {\n      \"type\": \"string\"\n    },\n    \"params\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"filter_type\": {\n          \"type\": \"string\",\n          \"enum\": [\"lowpass\", \"highpass\", \"bandpass\", \"bandstop\"]\n        },\n        \"cutoff_frequency\": {\n          \"type\": \"number\"\n        },\n        \"cutoff_frequency2\": {\n          \"type\": \"number\"\n        },\n        \"order\": {\n          \"type\": \"integer\",\n          \"minimum\": 1,\n          \"maximum\": 8\n        },\n        \"ripple\": {\n          \"type\": \"number\"\n        },\n        \"zero_phase\": {\n          \"type\": \"boolean\"\n        }\n      },\n      \"required\": [\"filter_type\", \"cutoff_frequency\", \"order\"]\n    }\n  },\n  \"required\": [\"transform\", \"input\", \"output\", \"params\"]\n}"
+    "objectID": "user_guide/data_transformations/analog_hilbert_phase.html#example-configuration",
+    "href": "user_guide/data_transformations/analog_hilbert_phase.html#example-configuration",
+    "title": "Analog Hilbert Phase",
+    "section": "Example Configuration",
+    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that loads data and applies the Analog Hilbert Phase transform.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Hilbert Phase Pipeline\",\n            \"description\": \"Test Hilbert phase calculation on analog signal\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Hilbert Phase\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_signal\",\n                \"output_key\": \"phase_signal\",\n                \"parameters\": {\n                    \"low_frequency\": 5.0,\n                    \"high_frequency\": 15.0,\n                    \"discontinuity_threshold\": 1000\n                }\n            }\n        ]\n    }\n}\n]\n\nReferences\nHill, D.N., Curtis, J.C., Moore, J.D., Kleinfeld, D., 2011. Primary motor cortex reports efferent control of vibrissa motion on multiple timescales. Neuron 72, 344–356. https://doi.org/10.1016/j.neuron.2011.09.020",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Hilbert Phase"
+    ]
   },
   {
-    "objectID": "user_guide/data_transformations/analog_filter.html#minimal-example",
-    "href": "user_guide/data_transformations/analog_filter.html#minimal-example",
-    "title": "Analog Filter",
-    "section": "Minimal Example",
-    "text": "Minimal Example\nThis example applies a 4th order lowpass Butterworth filter at 100 Hz.\n{\n  \"transform\": \"Analog Filter\",\n  \"input\": \"my_analog_series\",\n  \"output\": \"filtered_series\",\n  \"params\": {\n    \"filter_type\": \"lowpass\",\n    \"cutoff_frequency\": 100,\n    \"order\": 4\n  }\n}"
+    "objectID": "user_guide/data_transformations/analog_event_threshold.html",
+    "href": "user_guide/data_transformations/analog_event_threshold.html",
+    "title": "Analog Event Threshold",
+    "section": "",
+    "text": "This transform detects moments in time (events) when an analog signal crosses a specified value, which is useful for identifying significant occurrences in the data.\n\n\nThresholding is a fundamental method for event detection in time-series data. This operation identifies every point in time where the signal’s amplitude crosses a defined threshold in a specific direction (either rising above it, falling below it, or crossing it in either direction).\nA “lockout” period can also be set. After an event is detected, the algorithm will ignore any further threshold crossings for the duration of this period, which helps prevent a single, noisy event from being counted multiple times.\nThis transform takes an analog time series as input and produces a digital event series as output, where each event corresponds to a single point in time when a threshold crossing was detected.\n\n\n\n\n\nIn neuroscience, thresholding is a common technique for identifying meaningful events in continuous data streams:\n\nSpike Detection: In extracellular recordings, thresholding can be used to identify action potentials (spikes) that stand out from the background noise. A lockout time is critical here to avoid detecting the same spike multiple times as it repolarizes.\nBehavioral Event Marking: For data from sensors like accelerometers or force transducers, thresholding can mark the onset of specific behaviors, such as a mouse starting to run on a wheel or a bird pecking a key.\nCalcium Imaging Analysis: In calcium imaging data, which reflects neural activity, thresholding can be used to detect significant calcium transients that indicate a neuron or a group of neurons are firing.",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Event Threshold"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/analog_event_threshold.html#overview",
+    "href": "user_guide/data_transformations/analog_event_threshold.html#overview",
+    "title": "Analog Event Threshold",
+    "section": "",
+    "text": "This transform detects moments in time (events) when an analog signal crosses a specified value, which is useful for identifying significant occurrences in the data.\n\n\nThresholding is a fundamental method for event detection in time-series data. This operation identifies every point in time where the signal’s amplitude crosses a defined threshold in a specific direction (either rising above it, falling below it, or crossing it in either direction).\nA “lockout” period can also be set. After an event is detected, the algorithm will ignore any further threshold crossings for the duration of this period, which helps prevent a single, noisy event from being counted multiple times.\nThis transform takes an analog time series as input and produces a digital event series as output, where each event corresponds to a single point in time when a threshold crossing was detected.\n\n\n\n\n\nIn neuroscience, thresholding is a common technique for identifying meaningful events in continuous data streams:\n\nSpike Detection: In extracellular recordings, thresholding can be used to identify action potentials (spikes) that stand out from the background noise. A lockout time is critical here to avoid detecting the same spike multiple times as it repolarizes.\nBehavioral Event Marking: For data from sensors like accelerometers or force transducers, thresholding can mark the onset of specific behaviors, such as a mouse starting to run on a wheel or a bird pecking a key.\nCalcium Imaging Analysis: In calcium imaging data, which reflects neural activity, thresholding can be used to detect significant calcium transients that indicate a neuron or a group of neurons are firing.",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Event Threshold"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/analog_event_threshold.html#parameters",
+    "href": "user_guide/data_transformations/analog_event_threshold.html#parameters",
+    "title": "Analog Event Threshold",
+    "section": "Parameters",
+    "text": "Parameters\nThis transform has the following parameters:\n\nthreshold_value: The amplitude value the signal must cross to be considered an event.\ndirection: Specifies the direction of the crossing required to trigger an event. This can be:\n\nPositive (Rising): An event is detected when the signal crosses the threshold from a lower to a higher value.\nNegative (Falling): An event is detected when the signal crosses the threshold from a higher to a lower value.\nAbsolute: An event is detected whenever the absolute value of the signal crosses the threshold value (useful for detecting deviations from baseline in either direction).\n\nlockout_time: A duration (in the same time units as the data, e.g., seconds) after each detected event during which no new events will be registered. This is useful for preventing multiple detections of a single, noisy event.",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Event Threshold"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/analog_event_threshold.html#example-configuration",
+    "href": "user_guide/data_transformations/analog_event_threshold.html#example-configuration",
+    "title": "Analog Event Threshold",
+    "section": "Example Configuration",
+    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example detects events where the signal rises above an amplitude of 1.0, with no lockout period.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Threshold Detection Pipeline\",\n            \"description\": \"Test threshold event detection on analog signal\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Analog Event Threshold\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_signal\",\n                \"output_key\": \"detected_events\",\n                \"parameters\": {\n                    \"threshold_value\": 1.0,\n                    \"direction\": \"Positive\",\n                    \"lockout_time\": 0.0\n                }\n            }\n        ]\n    }\n}\n]",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Event Threshold"
+    ]
   },
   {
     "objectID": "user_guide/behaviors/tongue.html",
@@ -702,7 +733,7 @@
     "href": "developer/transforms.html",
     "title": "transforms",
     "section": "",
-    "text": "Transform Catalog\nThe below table has all of the transformations currently available in the Data Transform widget. Each transform should have a test.cpp file (Column 2). The test.cpp file should include tests to make sure it can be populated by a JSON template (e.g. it can be run by loading data with a JSON file). Some transforms will “just work” because they are parameterless, but transforms with parameters will need to have them also described with a JSON link and put in the transform parameter factory. Documentation for users should be provided to describe the algorithm and its uses. Finally, a benchmark.cpp file should be created and placed in the same directory.\n\n\n\n\n\n\n\n\n\n\n\n\nTransform Name\nHas .test.cpp?\nJSON-based Test?\nParameters in ParameterFactory?\nUser Docs Exist?\nHas benchmark.cpp?\nBenchmark Results\n\n\n\n\nCalculate Mask Centroid\nYes\nYes\nYes\nNo\nNo\n\n\n\nConvert Mask to Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nSkeletonize Mask\nYes\nYes\nYes\nNo\nNo\n\n\n\nRemove Small Connected Components\nYes\nYes\nYes\nNo\nNo\n\n\n\nApply Median Filter\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Area\nYes\nYes\nYes\nNo\nNo\n\n\n\nFill Mask Holes\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Mask Principal Axis\nYes\nYes\nYes\nNo\nNo\n\n\n\nWhisker Tracing\nNo\nN/A\nNo\nNo\nNo\n\n\n\nClip Line by Reference Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nLine Alignment to Bright Features\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line to Point Distance\nYes\nYes\nYes\nNo\nNo\n\n\n\nResample Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nExtract Line Subsegment\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line Angle\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line Curvature\nYes\nYes\nYes\nNo\nNo\n\n\n\nExtract Point from Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nFilter\nYes\nNo\nNo\nNo\nNo\n\n\n\nHilbert Phase\nYes\nYes\nYes\nNo\nNo\n\n\n\nThreshold Event Detection\nYes\nYes\nYes\nNo\nNo\n\n\n\nThreshold Interval Detection\nYes\nYes\nYes\nNo\nNo\n\n\n\nScale and Normalize\nYes\nYes\nYes\nNo\nNo\n\n\n\nGroup Intervals\nYes\nYes\nYes\nNo\nNo",
+    "text": "Transform Catalog\nThe below table has all of the transformations currently available in the Data Transform widget. Each transform should have a test.cpp file (Column 2). The test.cpp file should include tests to make sure it can be populated by a JSON template (e.g. it can be run by loading data with a JSON file). Some transforms will “just work” because they are parameterless, but transforms with parameters will need to have them also described with a JSON link and put in the transform parameter factory. Documentation for users should be provided to describe the algorithm and its uses. Finally, a benchmark.cpp file should be created and placed in the same directory.\n\n\n\n\n\n\n\n\n\n\n\n\nTransform Name\nHas .test.cpp?\nJSON-based Test?\nParameters in ParameterFactory?\nUser Docs Exist?\nHas benchmark.cpp?\nBenchmark Results\n\n\n\n\nCalculate Mask Centroid\nYes\nYes\nYes\nNo\nNo\n\n\n\nConvert Mask to Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nSkeletonize Mask\nYes\nYes\nYes\nNo\nNo\n\n\n\nRemove Small Connected Components\nYes\nYes\nYes\nNo\nNo\n\n\n\nApply Median Filter\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Area\nYes\nYes\nYes\nNo\nNo\n\n\n\nFill Mask Holes\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Mask Principal Axis\nYes\nYes\nYes\nNo\nNo\n\n\n\nWhisker Tracing\nNo\nN/A\nNo\nNo\nNo\n\n\n\nClip Line by Reference Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nLine Alignment to Bright Features\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line to Point Distance\nYes\nYes\nYes\nNo\nNo\n\n\n\nResample Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nExtract Line Subsegment\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line Angle\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line Curvature\nYes\nYes\nYes\nNo\nNo\n\n\n\nExtract Point from Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nFilter\nYes\nNo\nNo\nNo\nNo\n\n\n\nHilbert Phase\nYes\nYes\nYes\nYes\nNo\n\n\n\nThreshold Event Detection\nYes\nYes\nYes\nNo\nNo\n\n\n\nThreshold Interval Detection\nYes\nYes\nYes\nNo\nNo\n\n\n\nScale and Normalize\nYes\nYes\nYes\nNo\nNo\n\n\n\nGroup Intervals\nYes\nYes\nYes\nNo\nNo",
     "crumbs": [
       "transforms"
     ]
@@ -772,80 +803,49 @@
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/analog_hilbert_phase.html",
-    "href": "user_guide/data_transformations/analog_hilbert_phase.html",
-    "title": "Analog Hilbert Phase",
+    "objectID": "user_guide/data_transformations/analog_filter.html",
+    "href": "user_guide/data_transformations/analog_filter.html",
+    "title": "Analog Filter",
     "section": "",
-    "text": "This transform calculates the instantaneous phase of an analog signal, which is useful for analyzing oscillations.\n\n\nThe Hilbert transform is a mathematical operation that shifts the phase of all positive frequency components of a signal by -90 degrees and all negative frequency components by +90 degrees. When this phase-shifted signal (the imaginary part) is combined with the original signal (the real part), it forms a complex-valued “analytic signal”.\nThe instantaneous phase is the angle of this complex number at each point in time. It provides a way to represent an oscillating signal in terms of its phase, which progresses from -π to +π for each cycle of the oscillation. This transform uses an efficient FFT-based method to compute the Hilbert transform.\n\n\n\n\n\nIn neuroscience, analyzing the phase of neural signals is crucial for understanding brain function. Some common applications include:\n\nRhythmic Behaviors: The phase of signals from sensors tracking rhythmic behaviors like whisking, sniffing, or licking can be extracted to correlate them with neural activity.",
-    "crumbs": [
-      "Data Transformations",
-      "Analog Hilbert Phase"
-    ]
+    "text": "The Analog Filter transform applies a digital filter to an AnalogTimeSeries. This can be used to remove noise, isolate specific frequency bands, or perform other signal processing tasks."
   },
   {
-    "objectID": "user_guide/data_transformations/analog_hilbert_phase.html#overview",
-    "href": "user_guide/data_transformations/analog_hilbert_phase.html#overview",
-    "title": "Analog Hilbert Phase",
+    "objectID": "user_guide/data_transformations/analog_filter.html#purpose",
+    "href": "user_guide/data_transformations/analog_filter.html#purpose",
+    "title": "Analog Filter",
     "section": "",
-    "text": "This transform calculates the instantaneous phase of an analog signal, which is useful for analyzing oscillations.\n\n\nThe Hilbert transform is a mathematical operation that shifts the phase of all positive frequency components of a signal by -90 degrees and all negative frequency components by +90 degrees. When this phase-shifted signal (the imaginary part) is combined with the original signal (the real part), it forms a complex-valued “analytic signal”.\nThe instantaneous phase is the angle of this complex number at each point in time. It provides a way to represent an oscillating signal in terms of its phase, which progresses from -π to +π for each cycle of the oscillation. This transform uses an efficient FFT-based method to compute the Hilbert transform.\n\n\n\n\n\nIn neuroscience, analyzing the phase of neural signals is crucial for understanding brain function. Some common applications include:\n\nRhythmic Behaviors: The phase of signals from sensors tracking rhythmic behaviors like whisking, sniffing, or licking can be extracted to correlate them with neural activity.",
-    "crumbs": [
-      "Data Transformations",
-      "Analog Hilbert Phase"
-    ]
+    "text": "The Analog Filter transform applies a digital filter to an AnalogTimeSeries. This can be used to remove noise, isolate specific frequency bands, or perform other signal processing tasks."
   },
   {
-    "objectID": "user_guide/data_transformations/analog_hilbert_phase.html#parameters",
-    "href": "user_guide/data_transformations/analog_hilbert_phase.html#parameters",
-    "title": "Analog Hilbert Phase",
+    "objectID": "user_guide/data_transformations/analog_filter.html#parameters",
+    "href": "user_guide/data_transformations/analog_filter.html#parameters",
+    "title": "Analog Filter",
     "section": "Parameters",
-    "text": "Parameters\nThis transform has the following parameters:\n\nlow_frequency: The low-cut frequency for the bandpass filter, in Hertz. This determines the lower end of the frequency range you want to analyze.\nhigh_frequency: The high-cut frequency for the bandpass filter, in Hertz. This determines the upper end of the frequency range you want to analyze.\ndiscontinuity_threshold: A time gap, in samples, above which the signal is considered to have a break. The transform will process the continuous segments separately. This is useful for data with missing samples or interruptions.",
-    "crumbs": [
-      "Data Transformations",
-      "Analog Hilbert Phase"
-    ]
+    "text": "Parameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfilter_type\nstring\nThe type of filter to apply. One of “lowpass”, “highpass”, “bandpass”, “bandstop”.\n“lowpass”\n\n\ncutoff_frequency\ndouble\nThe cutoff frequency for lowpass and highpass filters, or the lower cutoff frequency for bandpass and bandstop filters.\n10.0\n\n\ncutoff_frequency2\ndouble\nThe upper cutoff frequency for bandpass and bandstop filters.\n0.0\n\n\norder\ninteger\nThe order of the filter. Must be between 1 and 8.\n4\n\n\nripple\ndouble\nThe ripple for Chebyshev filters (in dB). Not used for Butterworth filters.\n0.0\n\n\nzero_phase\nboolean\nIf true, applies the filter forward and backward to eliminate phase distortion.\nfalse"
   },
   {
-    "objectID": "user_guide/data_transformations/analog_hilbert_phase.html#example-configuration",
-    "href": "user_guide/data_transformations/analog_hilbert_phase.html#example-configuration",
-    "title": "Analog Hilbert Phase",
-    "section": "Example Configuration",
-    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that loads data and applies the Analog Hilbert Phase transform.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Hilbert Phase Pipeline\",\n            \"description\": \"Test Hilbert phase calculation on analog signal\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Hilbert Phase\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_signal\",\n                \"output_key\": \"phase_signal\",\n                \"parameters\": {\n                    \"low_frequency\": 5.0,\n                    \"high_frequency\": 15.0,\n                    \"discontinuity_threshold\": 1000\n                }\n            }\n        ]\n    }\n}\n]\n\nReferences\nHill, D.N., Curtis, J.C., Moore, J.D., Kleinfeld, D., 2011. Primary motor cortex reports efferent control of vibrissa motion on multiple timescales. Neuron 72, 344–356. https://doi.org/10.1016/j.neuron.2011.09.020",
-    "crumbs": [
-      "Data Transformations",
-      "Analog Hilbert Phase"
-    ]
+    "objectID": "user_guide/data_transformations/analog_filter.html#json-schema",
+    "href": "user_guide/data_transformations/analog_filter.html#json-schema",
+    "title": "Analog Filter",
+    "section": "JSON Schema",
+    "text": "JSON Schema\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"transform\": {\n      \"type\": \"string\",\n      \"const\": \"Analog Filter\"\n    },\n    \"input\": {\n      \"type\": \"string\"\n    },\n    \"output\": {\n      \"type\": \"string\"\n    },\n    \"params\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"filter_type\": {\n          \"type\": \"string\",\n          \"enum\": [\"lowpass\", \"highpass\", \"bandpass\", \"bandstop\"]\n        },\n        \"cutoff_frequency\": {\n          \"type\": \"number\"\n        },\n        \"cutoff_frequency2\": {\n          \"type\": \"number\"\n        },\n        \"order\": {\n          \"type\": \"integer\",\n          \"minimum\": 1,\n          \"maximum\": 8\n        },\n        \"ripple\": {\n          \"type\": \"number\"\n        },\n        \"zero_phase\": {\n          \"type\": \"boolean\"\n        }\n      },\n      \"required\": [\"filter_type\", \"cutoff_frequency\", \"order\"]\n    }\n  },\n  \"required\": [\"transform\", \"input\", \"output\", \"params\"]\n}"
   },
   {
-    "objectID": "user_guide/data_transformations/threshold_event_detection.html",
-    "href": "user_guide/data_transformations/threshold_event_detection.html",
-    "title": "Threshold Event Detection",
+    "objectID": "user_guide/data_transformations/analog_filter.html#minimal-example",
+    "href": "user_guide/data_transformations/analog_filter.html#minimal-example",
+    "title": "Analog Filter",
+    "section": "Minimal Example",
+    "text": "Minimal Example\nThis example applies a 4th order lowpass Butterworth filter at 100 Hz.\n{\n  \"transform\": \"Analog Filter\",\n  \"input\": \"my_analog_series\",\n  \"output\": \"filtered_series\",\n  \"params\": {\n    \"filter_type\": \"lowpass\",\n    \"cutoff_frequency\": 100,\n    \"order\": 4\n  }\n}"
+  },
+  {
+    "objectID": "user_guide/data_transformations/overview.html",
+    "href": "user_guide/data_transformations/overview.html",
+    "title": "Data Transformations",
     "section": "",
-    "text": "The Threshold Event Detection transform is used to detect events in an analog time series based on a threshold.",
+    "text": "Data transformations are operations we perform on one kind of data that result in another kind of data.\n\n\n\nFigure: 1) Feature select from available loaded data 2) Tranformation select Dialog box; 3) Output name of new data created by transformation; 4) Execution Button; 5) Parameter window for selected transformation",
     "crumbs": [
       "Data Transformations",
-      "Threshold Event Detection"
-    ]
-  },
-  {
-    "objectID": "user_guide/data_transformations/threshold_event_detection.html#parameters",
-    "href": "user_guide/data_transformations/threshold_event_detection.html#parameters",
-    "title": "Threshold Event Detection",
-    "section": "Parameters",
-    "text": "Parameters\n\nthreshold_value: The value that the signal must cross to be considered an event.\ndirection: The direction of the threshold crossing. Can be “Positive (Rising)”, “Negative (Falling)”, or “Absolute (Magnitude)”.\nlockout_time: The amount of time (in the same units as the time series) to wait after an event is detected before another event can be detected. This is useful for preventing multiple events from being detected for a single peak in the signal.",
-    "crumbs": [
-      "Data Transformations",
-      "Threshold Event Detection"
-    ]
-  },
-  {
-    "objectID": "user_guide/data_transformations/threshold_event_detection.html#output",
-    "href": "user_guide/data_transformations/threshold_event_detection.html#output",
-    "title": "Threshold Event Detection",
-    "section": "Output",
-    "text": "Output\nThe output of this transform is a new DigitalEventSeries data object that contains the timestamps of the detected events.",
-    "crumbs": [
-      "Data Transformations",
-      "Threshold Event Detection"
+      "Data Transformations"
     ]
   },
   {
