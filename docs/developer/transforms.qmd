@@ -19,7 +19,7 @@ The below table has all of the transformations currently available in the Data T
 | Calculate Mask Principal Axis | Yes | Yes | Yes | No | No |  |
 | Whisker Tracing | No | N/A | No | No | No |  |
 | Clip Line by Reference Line | Yes | Yes | Yes | No | No |  |
-| Line Alignment to Bright Features | Yes | Yes | Yes | No | No |  |
+| Line Alignment to Bright Features | Yes | Yes | Yes | No | Yes | 10 images in 25ms |
 | Calculate Line to Point Distance | Yes | Yes | Yes | No | No |  |
 | Resample Line | Yes | Yes | Yes | No | No |  |
 | Extract Line Subsegment | Yes | Yes | Yes | No | No |  |

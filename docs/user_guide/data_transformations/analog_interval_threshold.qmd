@@ -13,13 +13,11 @@ This transformation is used to identify continuous periods, or "intervals," wher
 
 The user can define a threshold and specify whether the signal must be above (`Positive`), below (`Negative`), or have its absolute value exceed (`Absolute`) that threshold.
 
-Additionally, two timing parameters help refine the detection:
-- A `lockout_time` prevents the detection of new intervals for a set duration after the *start* of a previous interval.
-- A `min_duration` ensures that only intervals lasting longer than a specified duration are included in the final output.
+Additionally, two timing parameters help refine the detection: - A `lockout_time` prevents the detection of new intervals for a set duration after the *start* of a previous interval. - A `min_duration` ensures that only intervals lasting longer than a specified duration are included in the final output.
 
 This transform is useful for isolating epochs of interest in a continuous signal for further analysis. It takes an analog time series as input and produces a digital interval series as output.
 
-![](images/clipboard-1556985646.png)
+![](images/clipboard-2968981553.png)
 
 ::: {.content-hidden when-format="html"}
 ```{{python}}
@@ -146,14 +144,14 @@ This transform has the following parameters:
 -   `lockout_time`: A duration (in the same time units as the data) after the *start* of a detected interval, during which no new intervals can begin. This is useful for isolating the onset of distinct episodes of activity.
 -   `min_duration`: The minimum required length of an interval. Any detected period that is shorter than this value will be discarded.
 -   `missing_data_mode`: Defines how to handle non-consecutive time points in the signal.
-    - `Treat as Zero`: Missing time points are treated as if the signal's value is zero. This can terminate an interval if zero does not meet the threshold condition.
-    - `Ignore`: The algorithm proceeds to the next available data point, effectively ignoring the time gap.
+    -   `Treat as Zero`: Missing time points are treated as if the signal's value is zero. This can terminate an interval if zero does not meet the threshold condition.
+    -   `Ignore`: The algorithm proceeds to the next available data point, effectively ignoring the time gap.
 
 ## Example Configuration
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation. This example finds all intervals where a signal named "LFP_channel_1" remains above `1.5` for at least 50 milliseconds.
 
-```json
+``` json
 [
   {
     "transformations": {
