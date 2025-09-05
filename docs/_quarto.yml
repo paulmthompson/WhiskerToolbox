@@ -95,6 +95,7 @@ website:
           contents:
             - user_guide/data_transformations/overview.qmd
             - user_guide/data_transformations/analog_event_threshold.qmd
+            - user_guide/data_transformations/analog_interval_threshold.qmd
             - user_guide/data_transformations/analog_hilbert_phase.qmd
         - section: "Machine Learning"
           contents:
