@@ -1,0 +1,182 @@
+---
+title: "Analog Interval Threshold"
+format: html
+---
+
+## Overview
+
+This transform detects continuous time intervals during which an analog signal's value meets a specified threshold condition (e.g., staying above a value).
+
+### Detailed Description
+
+This transformation is used to identify continuous periods, or "intervals," where a signal's amplitude meets certain criteria. Unlike event detection, which marks a single point in time, interval detection finds the start and end times of periods that satisfy the condition.
+
+The user can define a threshold and specify whether the signal must be above (`Positive`), below (`Negative`), or have its absolute value exceed (`Absolute`) that threshold.
+
+Additionally, two timing parameters help refine the detection: - A `lockout_time` prevents the detection of new intervals for a set duration after the *start* of a previous interval. - A `min_duration` ensures that only intervals lasting longer than a specified duration are included in the final output.
+
+This transform is useful for isolating epochs of interest in a continuous signal for further analysis. It takes an analog time series as input and produces a digital interval series as output.
+
+![](images/clipboard-2968981553.png)
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+
+def find_intervals(signal, threshold, direction):
+    if direction == 'Positive':
+        above_threshold = signal >= threshold
+    elif direction == 'Negative':
+        above_threshold = signal <= threshold
+    else: # Absolute
+        above_threshold = np.abs(signal) >= threshold
+        
+    crossings = np.diff(above_threshold.astype(int))
+    starts = np.where(crossings == 1)[0] + 1
+    ends = np.where(crossings == -1)[0]
+    
+    # Handle cases where signal starts or ends above threshold
+    if len(above_threshold) > 0 and above_threshold[0]:
+        starts = np.insert(starts, 0, 0)
+    if len(above_threshold) > 0 and above_threshold[-1]:
+        ends = np.append(ends, len(signal) - 1)
+        
+    return list(zip(starts, ends))
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Generate sample data ---
+    fs = 1000  # Sampling frequency
+    t = np.arange(0, 2.0, 1/fs)  # Time vector
+    # Create a signal with some oscillatory bursts.
+    # A short burst that will be filtered by min_duration.
+    # Two longer bursts, where the second is within the lockout period of the first.
+    signal = (np.sin(2 * np.pi * 10 * t) * np.exp(-((t-0.3)**2)/0.002) * 0.8 + # Short burst
+              np.sin(2 * np.pi * 10 * t) * np.exp(-((t-0.8)**2)/0.02) * 1.5 + # Long burst
+              np.sin(2 * np.pi * 10 * t) * np.exp(-((t-1.1)**2)/0.015) * 1.2) # Second long burst, close to first
+    #signal += np.random.randn(len(t)) * 0.1 # Add some noise
+    signal /= np.max(np.abs(signal)) # Normalize
+
+    threshold = 0.3
+    min_duration_sec = 0.030 # 30 ms
+    lockout_sec = 0.300 # 300 ms
+
+    min_duration_samples = int(min_duration_sec * fs)
+    lockout_samples = int(lockout_sec * fs)
+
+    # --- Detect intervals ---
+    raw_intervals = find_intervals(signal, threshold, 'Positive')
+
+    # --- Apply min_duration ---
+    intervals_after_min_dur = [iv for iv in raw_intervals if (iv[1] - iv[0]) >= min_duration_samples]
+    
+    # --- Apply lockout ---
+    intervals_after_lockout = []
+    if intervals_after_min_dur:
+        last_interval_start = -np.inf
+        for start, end in raw_intervals:
+            if start > last_interval_start + lockout_samples:
+                intervals_after_lockout.append((start, end))
+                last_interval_start = start
+
+    # --- Create the plots ---
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 10), sharex=True, sharey=True)
+    fig.suptitle('How Interval Thresholding Works', fontsize=16)
+
+    # Plot 1: Basic Thresholding
+    ax1.plot(t, signal, label='Analog Signal')
+    ax1.axhline(threshold, color='r', linestyle='--', label=f'Threshold = {threshold}')
+    for i, (start, end) in enumerate(raw_intervals):
+        label = 'Detected Intervals' if i == 0 else ""
+        ax1.axvspan(t[start], t[end], color='purple', alpha=0.4, label=label)
+        print(f"Interval {i+1}: Start = {t[start]:.3f}s, End = {t[end]:.3f}s, Duration = {(end-start)/fs*1000:.1f} ms")
+    ax1.set_title('1. Basic Interval Detection (All Crossings)')
+    ax1.set_ylabel('Amplitude')
+    ax1.legend()
+    ax1.grid(True)
+
+    # Plot 2: With Minimum Duration
+    ax2.plot(t, signal, label='Analog Signal')
+    ax2.axhline(threshold, color='r', linestyle='--', label=f'Threshold = {threshold}')
+    for i, (start, end) in enumerate(intervals_after_min_dur):
+        label = 'Valid Intervals' if i == 0 else ""
+        ax2.axvspan(t[start], t[end], color='green', alpha=0.4, label=label)
+    ax2.set_title(f'2. After Applying Minimum Duration ({min_duration_sec*1000:.0f} ms)')
+    ax2.set_ylabel('Amplitude')
+    ax2.legend()
+    ax2.grid(True)
+    
+    # Plot 3: With Lockout Time
+    ax3.plot(t, signal, label='Analog Signal')
+    ax3.axhline(threshold, color='r', linestyle='--', label=f'Threshold = {threshold}')
+    for i, (start, end) in enumerate(intervals_after_lockout):
+        label_interval = 'Final Intervals' if i == 0 else ""
+        label_lockout = 'Lockout Period' if i == 0 else ""
+        ax3.axvspan(t[start], t[end], color='green', alpha=0.4, label=label_interval)
+        ax3.axvspan(t[start], t[start] + lockout_sec, color='orange', alpha=0.3, label=label_lockout)
+
+    ax3.set_title(f'3. After Applying Lockout Time ({lockout_sec*1000:.0f} ms)')
+    ax3.set_xlabel('Time (s)')
+    ax3.set_ylabel('Amplitude')
+    ax3.legend(loc='upper right')
+    ax3.grid(True)
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+### Neuroscience Use Cases
+
+This transform is particularly useful for identifying specific "states" or "epochs" in neural or behavioral data.
+
+-   **Identifying Periods of Movement:** From accelerometer or video tracking data, one can find intervals of high activity that correspond to an animal moving, versus periods of rest.
+-   **Analyzing Muscle Activation:** In electromyography (EMG), this can be used to determine the duration of muscle contractions by finding intervals where the rectified signal remains above a certain level of activity.
+
+## Parameters
+
+This transform has the following parameters:
+
+-   `threshold_value`: The amplitude value the signal must be above/below for the duration of the interval.
+-   `direction`: Specifies the condition the signal must meet. Valid options are: `"Positive"`, `"Negative"`, or `"Absolute"`.
+-   `lockout_time`: A duration (in the same time units as the data) after the *start* of a detected interval, during which no new intervals can begin. This is useful for isolating the onset of distinct episodes of activity.
+-   `min_duration`: The minimum required length of an interval. Any detected period that is shorter than this value will be discarded.
+-   `missing_data_mode`: Defines how to handle non-consecutive time points in the signal.
+    -   `Treat as Zero`: Missing time points are treated as if the signal's value is zero. This can terminate an interval if zero does not meet the threshold condition.
+    -   `Ignore`: The algorithm proceeds to the next available data point, effectively ignoring the time gap.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example finds all intervals where a signal named "LFP_channel_1" remains above `1.5` for at least 50 milliseconds.
+
+``` json
+[
+  {
+    "transformations": {
+      "metadata": {
+        "name": "Interval Threshold Detection Pipeline",
+        "description": "Detects intervals of high activity in an LFP signal.",
+        "version": "1.0"
+      },
+      "steps": [
+        {
+          "step_id": "1",
+          "transform_name": "Threshold Interval Detection",
+          "phase": "analysis",
+          "input_key": "LFP_channel_1",
+          "output_key": "detected_activity_intervals",
+          "parameters": {
+            "threshold_value": 1.5,
+            "direction": "Positive",
+            "lockout_time": 0.0,
+            "min_duration": 0.050,
+            "missing_data_mode": "Treat as Zero"
+          }
+        }
+      ]
+    }
+  }
+]
+```
