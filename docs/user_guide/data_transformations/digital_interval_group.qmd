@@ -13,7 +13,7 @@ This transform merges digital intervals that are close to each other. If the gap
 
 This is particularly useful for cleaning up data where a single continuous event might be recorded as multiple, closely-spaced but separate intervals due to noise or transient interruptions in signal detection.
 
-![](images/digital_interval_group.png)
+![](images/clipboard-2801639530.png)
 
 ::: {.content-hidden when-format="html"}
 ```{{python}}
@@ -113,8 +113,6 @@ with plt.xkcd():
 In neuroscience, this transform can be applied to refine event data:
 
 -   **Bout Analysis:** When analyzing behaviors that occur in bouts (e.g., sniffing, grooming, vocalizations), this transform can merge closely spaced, individual instances into a single, continuous behavioral bout. For example, a series of short sniffs could be grouped into one "sniffing bout".
--   **Neural Firing Patterns:** In analyzing spike trains, grouping can consolidate bursts of high-frequency firing that are separated by very short pauses, treating them as a single firing event.
--   **Movement Trajectories:** When tracking animal movement, brief pauses or tracking errors can fragment a continuous movement path. Grouping intervals of movement can help reconstruct a more accurate, continuous trajectory.
 
 ## Parameters
 
@@ -126,7 +124,7 @@ This transform has the following parameter:
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation. This example groups intervals that are separated by 3.0 time units or less.
 
-```json
+``` json
 [
 {
     "transformations": {
