@@ -34,17 +34,17 @@ def find_intervals(signal, threshold, direction):
         above_threshold = signal <= threshold
     else: # Absolute
         above_threshold = np.abs(signal) >= threshold
-
+        
     crossings = np.diff(above_threshold.astype(int))
     starts = np.where(crossings == 1)[0] + 1
     ends = np.where(crossings == -1)[0]
-
+    
     # Handle cases where signal starts or ends above threshold
     if len(above_threshold) > 0 and above_threshold[0]:
         starts = np.insert(starts, 0, 0)
     if len(above_threshold) > 0 and above_threshold[-1]:
         ends = np.append(ends, len(signal) - 1)
-
+        
     return list(zip(starts, ends))
 
 # Use xkcd style for the plot
@@ -55,15 +55,15 @@ with plt.xkcd():
     # Create a signal with some oscillatory bursts.
     # A short burst that will be filtered by min_duration.
     # Two longer bursts, where the second is within the lockout period of the first.
-    signal = (np.sin(2 * np.pi * 5 * t) * np.exp(-((t-0.3)**2)/0.002) * 0.8 + # Short burst
-              np.sin(2 * np.pi * 5 * t) * np.exp(-((t-0.8)**2)/0.02) * 1.5 + # Long burst
-              np.sin(2 * np.pi * 5 * t) * np.exp(-((t-1.1)**2)/0.015) * 1.2) # Second long burst, close to first
-    signal += np.random.randn(len(t)) * 0.1 # Add some noise
+    signal = (np.sin(2 * np.pi * 10 * t) * np.exp(-((t-0.3)**2)/0.002) * 0.8 + # Short burst
+              np.sin(2 * np.pi * 10 * t) * np.exp(-((t-0.8)**2)/0.02) * 1.5 + # Long burst
+              np.sin(2 * np.pi * 10 * t) * np.exp(-((t-1.1)**2)/0.015) * 1.2) # Second long burst, close to first
+    #signal += np.random.randn(len(t)) * 0.1 # Add some noise
     signal /= np.max(np.abs(signal)) # Normalize
 
     threshold = 0.3
-    min_duration_sec = 0.040 # 40 ms
-    lockout_sec = 0.400 # 400 ms
+    min_duration_sec = 0.030 # 30 ms
+    lockout_sec = 0.300 # 300 ms
 
     min_duration_samples = int(min_duration_sec * fs)
     lockout_samples = int(lockout_sec * fs)
@@ -73,12 +73,12 @@ with plt.xkcd():
 
     # --- Apply min_duration ---
     intervals_after_min_dur = [iv for iv in raw_intervals if (iv[1] - iv[0]) >= min_duration_samples]
-
+    
     # --- Apply lockout ---
     intervals_after_lockout = []
     if intervals_after_min_dur:
         last_interval_start = -np.inf
-        for start, end in intervals_after_min_dur:
+        for start, end in raw_intervals:
             if start > last_interval_start + lockout_samples:
                 intervals_after_lockout.append((start, end))
                 last_interval_start = start
@@ -93,6 +93,7 @@ with plt.xkcd():
     for i, (start, end) in enumerate(raw_intervals):
         label = 'Detected Intervals' if i == 0 else ""
         ax1.axvspan(t[start], t[end], color='purple', alpha=0.4, label=label)
+        print(f"Interval {i+1}: Start = {t[start]:.3f}s, End = {t[end]:.3f}s, Duration = {(end-start)/fs*1000:.1f} ms")
     ax1.set_title('1. Basic Interval Detection (All Crossings)')
     ax1.set_ylabel('Amplitude')
     ax1.legend()
@@ -108,7 +109,7 @@ with plt.xkcd():
     ax2.set_ylabel('Amplitude')
     ax2.legend()
     ax2.grid(True)
-
+    
     # Plot 3: With Lockout Time
     ax3.plot(t, signal, label='Analog Signal')
     ax3.axhline(threshold, color='r', linestyle='--', label=f'Threshold = {threshold}')
@@ -121,7 +122,7 @@ with plt.xkcd():
     ax3.set_title(f'3. After Applying Lockout Time ({lockout_sec*1000:.0f} ms)')
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Amplitude')
-    ax3.legend()
+    ax3.legend(loc='upper right')
     ax3.grid(True)
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
@@ -133,7 +134,6 @@ with plt.xkcd():
 
 This transform is particularly useful for identifying specific "states" or "epochs" in neural or behavioral data.
 
--   **Detecting Neural Oscillations:** In electrophysiology (e.g., LFP/EEG recordings), this can identify bursts of oscillations like theta-bursts or gamma-band activity. The `min_duration` parameter is key to ensuring that only sustained oscillations are captured.
 -   **Identifying Periods of Movement:** From accelerometer or video tracking data, one can find intervals of high activity that correspond to an animal moving, versus periods of rest.
 -   **Analyzing Muscle Activation:** In electromyography (EMG), this can be used to determine the duration of muscle contractions by finding intervals where the rectified signal remains above a certain level of activity.
 
