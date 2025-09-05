@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Media Viewer Overview – Neuralyzer</title>
+<title>Point Data – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -156,7 +156,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer Overview</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/points.html">Point Data</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -232,7 +232,7 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/media_viewer/overview.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../user_guide/media_viewer/overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Media Viewer Overview</span></a>
   </div>
 </li>
@@ -244,7 +244,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/media_viewer/points.html" class="sidebar-item-text sidebar-link">
+  <a href="../../user_guide/media_viewer/points.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Point Data</span></a>
   </div>
 </li>
@@ -457,19 +457,25 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#main-components" id="toc-main-components" class="nav-link active" data-scroll-target="#main-components">Main Components</a></li>
-  <li><a href="#supported-data-types" id="toc-supported-data-types" class="nav-link" data-scroll-target="#supported-data-types">Supported Data Types</a></li>
-  <li><a href="#feature-table" id="toc-feature-table" class="nav-link" data-scroll-target="#feature-table">Feature Table</a></li>
-  <li><a href="#subwidgets" id="toc-subwidgets" class="nav-link" data-scroll-target="#subwidgets">Subwidgets</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a>
+  <ul class="collapse">
+  <li><a href="#widget-layout-controls" id="toc-widget-layout-controls" class="nav-link" data-scroll-target="#widget-layout-controls">Widget Layout &amp; Controls</a>
+  <ul class="collapse">
+  <li><a href="#color-opacity" id="toc-color-opacity" class="nav-link" data-scroll-target="#color-opacity">Color &amp; Opacity</a></li>
+  <li><a href="#size-shape" id="toc-size-shape" class="nav-link" data-scroll-target="#size-shape">Size &amp; Shape</a></li>
+  </ul></li>
+  <li><a href="#adding-editing-keypoints" id="toc-adding-editing-keypoints" class="nav-link" data-scroll-target="#adding-editing-keypoints">Adding &amp; Editing Keypoints</a></li>
+  <li><a href="#tips" id="toc-tips" class="nav-link" data-scroll-target="#tips">Tips</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer Overview</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/points.html">Point Data</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Media Viewer Overview</h1>
+<h1 class="title">Point Data</h1>
 </div>
 
 
@@ -486,8 +492,10 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>The <strong>Media Viewer Widget</strong> provides a unified display for neuroscience videos or images.<br>
-It is the central place where behavioral, microscopic, and event data can be inspected visually, and in addition, you can also process video or images as well as manipulate or modify extracted features such as mask or keypoint data.</p>
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>The <strong>Points</strong> widget appears when <strong>Points</strong> are enabled in the Feature Tree. It’s designed for <strong>viewing, styling, adding, and editing keypoints</strong> visible in the Media Viewer.<br>
+If you haven’t loaded a keypoint dataset, you can still add keypoints; these changes will be tracked in the Data Manager (see <em>Data Manager → points [link user-ref here]</em>).</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -498,14 +506,27 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Additions or changes to feature data will be saved in the data manager, which can be later exported. This is useful for the preparation of training datasets, or for the refinement of predicted data.</p>
+<p><strong>Saving and Export:</strong> Any additions or edits to keypoints are recorded by the <strong>Data Manager</strong> and can be <strong>exported</strong> later as part of your dataset.</p>
 </div>
 </div>
-<p>In essence, the widget is designed to:</p>
+<section id="widget-layout-controls" class="level2">
+<h2 class="anchored" data-anchor-id="widget-layout-controls">Widget Layout &amp; Controls</h2>
+<section id="color-opacity" class="level3">
+<h3 class="anchored" data-anchor-id="color-opacity">Color &amp; Opacity</h3>
 <ul>
-<li><p>Display multiple data types together in a single media window.</p></li>
-<li><p>Provide specialized panels (“subwidgets”) for the processing of each data type.</p></li>
-<li><p>Allow users to toggle visibility of features.</p>
+<li><strong>RGB (0–255):</strong> Enter the <strong>Red</strong>, <strong>Green</strong>, and <strong>Blue</strong> channels to set the keypoint color.<br>
+</li>
+<li><strong>Hex Color:</strong> Optionally specify a color using a hex code (e.g., <code>#FF6600</code>).<br>
+</li>
+<li><strong>Color Preview:</strong> Shows the current color selection.<br>
+</li>
+<li><strong>Alpha:</strong> Controls <strong>opacity/transparency</strong> of the keypoint in the Media Viewer (higher = more opaque).</li>
+</ul>
+</section>
+<section id="size-shape" class="level3">
+<h3 class="anchored" data-anchor-id="size-shape">Size &amp; Shape</h3>
+<ul>
+<li><p><strong>Point Size:</strong> Sets how large the keypoint appears <strong>in the Media Viewer</strong>.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -516,104 +537,48 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>If you need to view multiple videos at the same time, or if you want to view masks independently of media, you can open an additional Media Viewer Widget from the <strong>Modules</strong> tab (link will be added later).</p>
+<p><strong>Data size vs.&nbsp;display size:</strong> The <strong>stored keypoint</strong> in the <strong>Data Manager</strong> is always <strong>one pixel</strong> (a single coordinate). <strong>Point Size/Shape</strong> only affects <strong>on-screen display</strong>, not the underlying saved data.</p>
 </div>
 </div></li>
-</ul>
-<hr>
-<section id="main-components" class="level2">
-<h2 class="anchored" data-anchor-id="main-components">Main Components</h2>
+<li><p><strong>Marker Shape:</strong> Choose how the keypoint is drawn in the display:</p>
 <ul>
-<li><p><strong>Media Window</strong><br>
-This is the main display area. All visual data and overlays will appear here.</p></li>
-<li><p><strong>Feature Table</strong><br>
-A table showing all available data streams. Each entry lists its name, type, and visibility.<br>
-Visibility can be toggled on or off.</p></li>
-<li><p><strong>Subwidgets</strong><br>
-Specialized panels for interacting with particular types of data. Only the relevant panel is active at a time, when selected.</p></li>
+<li><code>circle</code>, <code>square</code>, <code>triangle</code>, <code>cross</code>, <code>x</code>, <code>diamond</code></li>
+</ul></li>
 </ul>
-<hr>
 </section>
-<section id="supported-data-types" class="level2">
-<h2 class="anchored" data-anchor-id="supported-data-types">Supported Data Types</h2>
-<p>The widget supports multiple kinds of data. Each type has its own controls and visualization style.</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Data Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><strong>Keypoints (Points)</strong></td>
-<td>Individual locations, e.g.&nbsp;positions of body parts.</td>
-</tr>
-<tr class="even">
-<td><strong>Lines</strong></td>
-<td>Linear features, e.g.&nbsp;traces of movement or signals.</td>
-</tr>
-<tr class="odd">
-<td><strong>Masks</strong></td>
-<td>Regions of interest in an image or video frame.</td>
-</tr>
-<tr class="even">
-<td><strong>Digital Intervals</strong></td>
-<td>Time periods when a signal or event is active.</td>
-</tr>
-<tr class="odd">
-<td><strong>Tensors</strong></td>
-<td>Multi-dimensional data, often from machine learning.</td>
-</tr>
-<tr class="even">
-<td><strong>Media (Video/Images)</strong></td>
-<td>Raw recordings or still frames.</td>
-</tr>
-<tr class="odd">
-<td><strong>Text Overlays</strong></td>
-<td>Labels, annotations, or other text displayed on media.</td>
-</tr>
-</tbody>
-</table>
-<hr>
 </section>
-<section id="feature-table" class="level2">
-<h2 class="anchored" data-anchor-id="feature-table">Feature Table</h2>
-<p>The feature table lists all available data sources.</p>
+<section id="adding-editing-keypoints" class="level2">
+<h2 class="anchored" data-anchor-id="adding-editing-keypoints">Adding &amp; Editing Keypoints</h2>
+<ol type="1">
+<li><p>In the <strong>Points</strong> widget, find <strong>Mouse Mode</strong> (dropdown).</p></li>
+<li><p>Select <strong><code>Select Point</code></strong>.</p></li>
+<li><p>Click <strong>anywhere in the Media Viewer</strong> to <strong>add</strong> a keypoint at that location.</p></li>
+<li><p>To <strong>modify</strong> a keypoint, use the same mode to select it and then adjust its location in the media window.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Deleting Keypoints:</strong> To delete accidentally added or misplaced keypoints, open the data manager and find the frame that contains the keypoint and delete it (see <em>Data Manager → points [link user-ref here]</em>).</p>
+</div>
+</div></li>
+</ol>
+</section>
+<section id="tips" class="level2">
+<h2 class="anchored" data-anchor-id="tips">Tips</h2>
 <ul>
-<li><strong>Feature</strong> — the name of the data stream.<br>
+<li>Keep <strong>Alpha</strong> low to ensure that imagery remains visible under points.<br>
 </li>
-<li><strong>Type</strong> — the category of the data (e.g.&nbsp;Mask, Point, Line).<br>
-</li>
-<li><strong>Enabled</strong> — whether the data is visible in the media window.</li>
-</ul>
-<p>Enabling a feature makes it visible in the media window; disabling it hides it.</p>
-<hr>
-</section>
-<section id="subwidgets" class="level2">
-<h2 class="anchored" data-anchor-id="subwidgets">Subwidgets</h2>
-<p>Each data type provides its own subwidget.</p>
-<ul>
-<li><strong>Point Widget</strong> — shows and manages keypoints.<br>
-</li>
-<li><strong>Line Widget</strong> — displays traces or line data.<br>
-</li>
-<li><strong>Mask Widget</strong> — handles binary masks or segmented regions.<br>
-</li>
-<li><strong>Interval Widget</strong> — manages time-based event data.<br>
-</li>
-<li><strong>Tensor Widget</strong> — provides tools for visualizing complex arrays.<br>
-</li>
-<li><strong>Text Widget</strong> — adds and edits text overlays.<br>
-</li>
-<li><strong>Processing Widget</strong> — applies filters or transformations to media.</li>
+<li>When working with multiple keypoints, use distinct <strong>shapes</strong> or <strong>colors</strong> to differentiate labels, annotators, or classes.</li>
 </ul>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

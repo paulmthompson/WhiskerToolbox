@@ -3,3 +3,77 @@ title: "Media Viewer Overview"
 format: html
 ---
 
+The **Media Viewer Widget** provides a unified display for neuroscience videos or images.\
+It is the central place where behavioral, microscopic, and event data can be inspected visually, and in addition, you can also process video or images as well as manipulate or modify extracted features such as mask or keypoint data.
+
+::: callout-note
+Additions or changes to feature data will be saved in the data manager, which can be later exported. This is useful for the preparation of training datasets, or for the refinement of predicted data.
+:::
+
+In essence, the widget is designed to:
+
+-   Display multiple data types together in a single media window.
+
+-   Provide specialized panels ("subwidgets") for the processing of each data type.
+
+-   Allow users to toggle visibility of features.
+
+    ::: callout-note
+    If you need to view multiple videos at the same time, or if you want to view masks independently of media, you can open an additional Media Viewer Widget from the **Modules** tab (link will be added later).
+    :::
+
+------------------------------------------------------------------------
+
+## Main Components
+
+-   **Media Window**\
+    This is the main display area. All visual data and overlays will appear here.
+
+-   **Feature Table**\
+    A table showing all available data streams. Each entry lists its name, type, and visibility.\
+    Visibility can be toggled on or off.
+
+-   **Subwidgets**\
+    Specialized panels for interacting with particular types of data. Only the relevant panel is active at a time, when selected.
+
+------------------------------------------------------------------------
+
+## Supported Data Types
+
+The widget supports multiple kinds of data. Each type has its own controls and visualization style.
+
+| Data Type | Description |
+|------------------------------------|------------------------------------|
+| **Keypoints (Points)** | Individual locations, e.g. positions of body parts. |
+| **Lines** | Linear features, e.g. traces of movement or signals. |
+| **Masks** | Regions of interest in an image or video frame. |
+| **Digital Intervals** | Time periods when a signal or event is active. |
+| **Tensors** | Multi-dimensional data, often from machine learning. |
+| **Media (Video/Images)** | Raw recordings or still frames. |
+| **Text Overlays** | Labels, annotations, or other text displayed on media. |
+
+------------------------------------------------------------------------
+
+## Feature Table
+
+The feature table lists all available data sources.
+
+-   **Feature** — the name of the data stream.\
+-   **Type** — the category of the data (e.g. Mask, Point, Line).\
+-   **Enabled** — whether the data is visible in the media window.
+
+Enabling a feature makes it visible in the media window; disabling it hides it.
+
+------------------------------------------------------------------------
+
+## Subwidgets
+
+Each data type provides its own subwidget.
+
+-   **Point Widget** — shows and manages keypoints.\
+-   **Line Widget** — displays traces or line data.\
+-   **Mask Widget** — handles binary masks or segmented regions.\
+-   **Interval Widget** — manages time-based event data.\
+-   **Tensor Widget** — provides tools for visualizing complex arrays.\
+-   **Text Widget** — adds and edits text overlays.\
+-   **Processing Widget** — applies filters or transformations to media.

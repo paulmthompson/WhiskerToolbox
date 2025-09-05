@@ -858,5 +858,236 @@
       "Machine Learning",
       "Overview"
     ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/overview.html",
+    "href": "user_guide/media_viewer/overview.html",
+    "title": "Media Viewer Overview",
+    "section": "",
+    "text": "The Media Viewer Widget provides a unified display for neuroscience videos or images.\nIt is the central place where behavioral, microscopic, and event data can be inspected visually, and in addition, you can also process video or images as well as manipulate or modify extracted features such as mask or keypoint data.\nIn essence, the widget is designed to:",
+    "crumbs": [
+      "Media Viewer",
+      "Media Viewer Overview"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/overview.html#main-components",
+    "href": "user_guide/media_viewer/overview.html#main-components",
+    "title": "Media Viewer Overview",
+    "section": "Main Components",
+    "text": "Main Components\n\nMedia Window\nThis is the main display area. All visual data and overlays will appear here.\nFeature Table\nA table showing all available data streams. Each entry lists its name, type, and visibility.\nVisibility can be toggled on or off.\nSubwidgets\nSpecialized panels for interacting with particular types of data. Only the relevant panel is active at a time, when selected.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Viewer Overview"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/overview.html#supported-data-types",
+    "href": "user_guide/media_viewer/overview.html#supported-data-types",
+    "title": "Media Viewer Overview",
+    "section": "Supported Data Types",
+    "text": "Supported Data Types\nThe widget supports multiple kinds of data. Each type has its own controls and visualization style.\n\n\n\n\n\n\n\nData Type\nDescription\n\n\n\n\nKeypoints (Points)\nIndividual locations, e.g. positions of body parts.\n\n\nLines\nLinear features, e.g. traces of movement or signals.\n\n\nMasks\nRegions of interest in an image or video frame.\n\n\nDigital Intervals\nTime periods when a signal or event is active.\n\n\nTensors\nMulti-dimensional data, often from machine learning.\n\n\nMedia (Video/Images)\nRaw recordings or still frames.\n\n\nText Overlays\nLabels, annotations, or other text displayed on media.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Viewer Overview"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/overview.html#feature-table",
+    "href": "user_guide/media_viewer/overview.html#feature-table",
+    "title": "Media Viewer Overview",
+    "section": "Feature Table",
+    "text": "Feature Table\nThe feature table lists all available data sources.\n\nFeature — the name of the data stream.\n\nType — the category of the data (e.g. Mask, Point, Line).\n\nEnabled — whether the data is visible in the media window.\n\nEnabling a feature makes it visible in the media window; disabling it hides it.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Viewer Overview"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/overview.html#subwidgets",
+    "href": "user_guide/media_viewer/overview.html#subwidgets",
+    "title": "Media Viewer Overview",
+    "section": "Subwidgets",
+    "text": "Subwidgets\nEach data type provides its own subwidget.\n\nPoint Widget — shows and manages keypoints.\n\nLine Widget — displays traces or line data.\n\nMask Widget — handles binary masks or segmented regions.\n\nInterval Widget — manages time-based event data.\n\nTensor Widget — provides tools for visualizing complex arrays.\n\nText Widget — adds and edits text overlays.\n\nProcessing Widget — applies filters or transformations to media.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Viewer Overview"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/overview.html#notes",
+    "href": "user_guide/media_viewer/overview.html#notes",
+    "title": "Media Viewer Overview",
+    "section": "",
+    "text": "The Media Viewer Widget displays existing data; it does not record or acquire data.\n\nMultiple data types can be viewed at once.\n\nVisibility is controlled through the Feature Table.\n\nSubwidgets appear only when relevant data is available.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Viewer Overview"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/process.html",
+    "href": "user_guide/media_viewer/process.html",
+    "title": "Media Processing",
+    "section": "",
+    "text": "The Media Processing Widget provides a collection of tools to adjust, enhance, and transform media data (images or video) within the viewer.\nEach processing option can be enabled by checking the Active box, and its effect will be applied directly in the media viewer.\nThis guide introduces each option, its background, and how to use each effectively.\nWhen media is selected in the feature table within the media widget, you will be presented with the following actions:",
+    "crumbs": [
+      "Media Viewer",
+      "Media Processing"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/process.html#linear-transform",
+    "href": "user_guide/media_viewer/process.html#linear-transform",
+    "title": "Media Processing",
+    "section": "Linear Transform",
+    "text": "Linear Transform\nA linear transform modifies pixel intensity values by applying a simple linear function:\n\\[\nI_{out}(x, y) = \\alpha \\cdot I_{in}(x, y) + \\beta\n\\]\n\nAlpha (Contrast): Controls contrast. Values &gt;1 increase contrast, values between 0 and 1 decrease contrast.\n\nBeta (Brightness): Adjusts brightness by shifting all pixel values up or down.\n\nMinimum / Maximum: Sets intensity clipping or scaling boundaries. Pixels outside this range are clamped. This is often used for rescaling pixel intensities into a normalized display range.\n\nUse case: Brightening dark images, increasing contrast, or standardizing pixel intensity ranges.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Processing"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/process.html#gamma-correction",
+    "href": "user_guide/media_viewer/process.html#gamma-correction",
+    "title": "Media Processing",
+    "section": "Gamma Correction",
+    "text": "Gamma Correction\nGamma correction is a nonlinear intensity adjustment:\n\\[\nI_{out}(x, y) = I_{in}(x, y)^\\gamma\n\\]\n\nGamma: The power-law exponent.\n\nγ &lt; 1: Brightens images (boosts darker regions).\n\nγ &gt; 1: Darkens images (suppresses bright regions).\n\n\nThis compensates for human visual perception, which is more sensitive to relative changes in darker tones.\nUse case: Making hidden details in dark or bright regions more visible.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Processing"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/process.html#image-sharpening",
+    "href": "user_guide/media_viewer/process.html#image-sharpening",
+    "title": "Media Processing",
+    "section": "Image Sharpening",
+    "text": "Image Sharpening\nSharpening highlights edges by enhancing high-frequency details. This method uses an unsharp mask:\n\\[\nI_{out} = I_{in} + \\lambda \\cdot (I_{in} - G_\\sigma(I_{in}))\n\\]\nWhere \\(G_\\sigma\\) is a Gaussian blur applied with standard deviation σ.\n\nSigma: Controls the blur radius used before sharpening. Small values sharpen fine details; larger values enhance broader structures.\n\nUse case: Highlighting boundaries, edges, and fine structures in images.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Processing"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/process.html#clahe-contrast-limited-adaptive-histogram-equalization",
+    "href": "user_guide/media_viewer/process.html#clahe-contrast-limited-adaptive-histogram-equalization",
+    "title": "Media Processing",
+    "section": "CLAHE (Contrast-Limited Adaptive Histogram Equalization)",
+    "text": "CLAHE (Contrast-Limited Adaptive Histogram Equalization)\nCLAHE improves local contrast by redistributing pixel intensities based on local histograms. Unlike global histogram equalization, CLAHE works in small tiles (grid regions).\n\nClip Limit: Prevents noise amplification by limiting the contrast enhancement.\n\nGrid Size: Defines the size of the local regions used for histogram equalization.\n\nUse case: Bringing out local details in images with varying illumination, e.g., microscopy or medical images.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Processing"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/process.html#bilateral-filter",
+    "href": "user_guide/media_viewer/process.html#bilateral-filter",
+    "title": "Media Processing",
+    "section": "Bilateral Filter",
+    "text": "Bilateral Filter\nThe bilateral filter smooths images while preserving edges. It considers both spatial proximity and intensity similarity:\n\\[\nI_{out}(x, y) = \\frac{1}{W} \\sum_{i,j} G_s(||p-q||, d) \\cdot G_r(|I(p)-I(q)|, \\sigma_r) \\cdot I(q)\n\\]\n\nDiameter: Size of the filter kernel (neighborhood).\n\nColor Sigma (σr): How much intensity differences are preserved; large values allow smoothing across intensity changes, small values preserve edges.\n\nSpace Sigma (σs): How far pixels influence each other in space.\n\nUse case: Noise reduction while keeping edges sharp (useful for video or structural microscopy data).",
+    "crumbs": [
+      "Media Viewer",
+      "Media Processing"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/process.html#median-filter",
+    "href": "user_guide/media_viewer/process.html#median-filter",
+    "title": "Media Processing",
+    "section": "Median Filter",
+    "text": "Median Filter\nThe median filter replaces each pixel with the median value of its neighborhood.\n\nKernel Size: Defines the neighborhood size. Larger kernels smooth more but may lose detail.\n\nUse case: Removing salt-and-pepper noise or impulse noise.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Processing"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/process.html#magic-eraser",
+    "href": "user_guide/media_viewer/process.html#magic-eraser",
+    "title": "Media Processing",
+    "section": "Magic Eraser",
+    "text": "Magic Eraser\nThe magic eraser provides an interactive editing tool for masking unwanted regions.\n\nBrush Size: Size of the drawing tool when marking regions.\n\nMedian Filter Size: Strength of smoothing applied to the mask.\n\nStart Drawing Button: Enables drawing mode inside the media viewer.\n\nClear Mask Button: Resets the mask.\n\nUse case: Manually erasing artifacts, covering distracting elements, or excluding regions from processing.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Processing"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/process.html#colormap",
+    "href": "user_guide/media_viewer/process.html#colormap",
+    "title": "Media Processing",
+    "section": "Colormap",
+    "text": "Colormap\nA colormap maps grayscale intensity values to colors using a lookup table (LUT). This improves visibility and interpretation of data.\n\nLookup Table (LUT): Defines the mapping (e.g., Jet, Hot, Cool). Each intensity is assigned a unique color.\n\nAlpha (Blend): Controls transparency of the colormap overlay (0 = fully transparent, 1 = fully opaque).\n\nNormalize Checkbox: Rescales intensity values into a normalized range before applying the colormap, ensuring full use of the LUT range.\n\nUse case: Enhancing interpretability of microscopy, behavior, or heatmap-like data.",
+    "crumbs": [
+      "Media Viewer",
+      "Media Processing"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/points.html",
+    "href": "user_guide/media_viewer/points.html",
+    "title": "Point Data",
+    "section": "",
+    "text": "The Points widget appears when Points are enabled in the Feature Tree. It’s designed for viewing, styling, adding, and editing keypoints visible in the Media Viewer.\nIf you haven’t loaded a keypoint dataset, you can still add keypoints; these changes will be tracked in the Data Manager (see Data Manager → points [link user-ref here]).\n\n\n\n\n\n\nNote\n\n\n\nSaving and Export: Any additions or edits to keypoints are recorded by the Data Manager and can be exported later as part of your dataset.\n\n\n\n\n\n\n\nRGB (0–255): Enter the Red, Green, and Blue channels to set the keypoint color.\n\nHex Color: Optionally specify a color using a hex code (e.g., #FF6600).\n\nColor Preview: Shows the current color selection.\n\nAlpha: Controls opacity/transparency of the keypoint in the Media Viewer (higher = more opaque).\n\n\n\n\n\nPoint Size: Sets how large the keypoint appears in the Media Viewer.\n\n\n\n\n\n\nNote\n\n\n\nData size vs. display size: The stored keypoint in the Data Manager is always one pixel (a single coordinate). Point Size/Shape only affects on-screen display, not the underlying saved data.\n\n\nMarker Shape: Choose how the keypoint is drawn in the display:\n\ncircle, square, triangle, cross, x, diamond\n\n\n\n\n\n\n\nIn the Points widget, find Mouse Mode (dropdown).\nSelect Select Point.\nClick anywhere in the Media Viewer to add a keypoint at that location.\nTo modify a keypoint, use the same mode to select it and then adjust its location in the media window.\n\n\n\n\n\n\nNote\n\n\n\nDeleting Keypoints: To delete accidentally added or misplaced keypoints, open the data manager and find the frame that contains the keypoint and delete it (see Data Manager → points [link user-ref here]).\n\n\n\n\n\n\n\nKeep Alpha low to ensure that imagery remains visible under points.\n\nWhen working with multiple keypoints, use distinct shapes or colors to differentiate labels, annotators, or classes.",
+    "crumbs": [
+      "Media Viewer",
+      "Point Data"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/points.html#color-opacity",
+    "href": "user_guide/media_viewer/points.html#color-opacity",
+    "title": "Point Data",
+    "section": "Color & Opacity",
+    "text": "Color & Opacity\n\nRGB (0–255): Enter the Red, Green, and Blue channels to set the keypoint color.\n\nHex Color: Optionally specify a color using a hex code (e.g., #FF6600).\n\nColor Preview: Shows the current color selection.\n\nAlpha: Controls opacity/transparency of the keypoint in the Media Viewer (higher = more opaque).",
+    "crumbs": [
+      "Media Viewer",
+      "Point Data"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/points.html#size-shape",
+    "href": "user_guide/media_viewer/points.html#size-shape",
+    "title": "Point Data",
+    "section": "Size & Shape",
+    "text": "Size & Shape\n\nPoint Size: Sets how large the keypoint appears in the Media Viewer.\n\n\n\n\n\n\nNote\n\n\n\nData size vs. display size: The stored keypoint in the Data Manager is always one pixel (a single coordinate). Point Size only affects on-screen display, not the underlying saved data.\n\n\nMarker Shape: Choose how the keypoint is drawn:\n\ncircle, square, triangle, cross, x, diamond",
+    "crumbs": [
+      "Media Viewer",
+      "Point Data"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/points.html#widget-layout-controls",
+    "href": "user_guide/media_viewer/points.html#widget-layout-controls",
+    "title": "Point Data",
+    "section": "",
+    "text": "RGB (0–255): Enter the Red, Green, and Blue channels to set the keypoint color.\n\nHex Color: Optionally specify a color using a hex code (e.g., #FF6600).\n\nColor Preview: Shows the current color selection.\n\nAlpha: Controls opacity/transparency of the keypoint in the Media Viewer (higher = more opaque).\n\n\n\n\n\nPoint Size: Sets how large the keypoint appears in the Media Viewer.\n\n\n\n\n\n\nNote\n\n\n\nData size vs. display size: The stored keypoint in the Data Manager is always one pixel (a single coordinate). Point Size/Shape only affects on-screen display, not the underlying saved data.\n\n\nMarker Shape: Choose how the keypoint is drawn in the display:\n\ncircle, square, triangle, cross, x, diamond",
+    "crumbs": [
+      "Media Viewer",
+      "Point Data"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/points.html#adding-editing-keypoints",
+    "href": "user_guide/media_viewer/points.html#adding-editing-keypoints",
+    "title": "Point Data",
+    "section": "",
+    "text": "In the Points widget, find Mouse Mode (dropdown).\nSelect Select Point.\nClick anywhere in the Media Viewer to add a keypoint at that location.\nTo modify a keypoint, use the same mode to select it and then adjust its location in the media window.\n\n\n\n\n\n\nNote\n\n\n\nDeleting Keypoints: To delete accidentally added or misplaced keypoints, open the data manager and find the frame that contains the keypoint and delete it (see Data Manager → points [link user-ref here]).",
+    "crumbs": [
+      "Media Viewer",
+      "Point Data"
+    ]
+  },
+  {
+    "objectID": "user_guide/media_viewer/points.html#tips",
+    "href": "user_guide/media_viewer/points.html#tips",
+    "title": "Point Data",
+    "section": "",
+    "text": "Keep Alpha low to ensure that imagery remains visible under points.\n\nWhen working with multiple keypoints, use distinct shapes or colors to differentiate labels, annotators, or classes.",
+    "crumbs": [
+      "Media Viewer",
+      "Point Data"
+    ]
   }
 ]
