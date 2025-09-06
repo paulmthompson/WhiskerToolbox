@@ -11,6 +11,8 @@
 #include <QDebug>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLShaderProgram>
+#include <QOpenGLContext>
+#include <QSurfaceFormat>
 
 #include <algorithm>
 #include <chrono>
@@ -25,14 +27,16 @@ LineDataVisualization::LineDataVisualization(QString const & data_key, std::shar
       m_blit_shader_program(nullptr),
       m_line_intersection_compute_shader(nullptr) {
 
-    initializeOpenGLFunctions();
+    // Do NOT initialize OpenGL functions here; the context may not be current yet on Windows.
+    // Defer GL initialization until initializeOpenGLResources() is called with a current context.
 
     m_color = QVector4D(0.0f, 0.0f, 1.0f, 1.0f);
 
     buildVertexData();
 
-    initializeOpenGLResources();
-    m_dataIsDirty = false;// Data is clean after initial build and buffer creation
+    // Defer GPU resource creation until a valid 4.3 context is current (typically first render call)
+    // initializeOpenGLResources();
+    m_dataIsDirty = false;// Data is clean after initial build and buffer creation (to be uploaded during GL init)
 }
 
 LineDataVisualization::~LineDataVisualization() {
@@ -131,6 +135,31 @@ void LineDataVisualization::buildVertexData() {
 }
 
 void LineDataVisualization::initializeOpenGLResources() {
+    if (m_gl_initialized) {
+        return;
+    }
+
+    QOpenGLContext * ctx = QOpenGLContext::currentContext();
+    if (!ctx) {
+        qWarning() << "LineDataVisualization: No current OpenGL context; deferring GL resource init";
+        return;
+    }
+
+    QSurfaceFormat fmt = ctx->format();
+    if ((fmt.majorVersion() < 4) || (fmt.majorVersion() == 4 && fmt.minorVersion() < 3)) {
+        qWarning() << "LineDataVisualization: Requires OpenGL 4.3 core for compute shader, current is"
+                   << fmt.majorVersion() << "." << fmt.minorVersion() << "- skipping init";
+        return;
+    }
+
+    if (!m_gl_initialized) {
+        if (!initializeOpenGLFunctions()) {
+            qWarning() << "LineDataVisualization: initializeOpenGLFunctions() failed";
+            return;
+        }
+        m_gl_initialized = true;
+    }
+
     // Create vertex buffer
     m_vertex_buffer.create();
     m_line_id_buffer.create();
@@ -269,6 +298,8 @@ void LineDataVisualization::initializeOpenGLResources() {
     m_visibility_mask_buffer.create();
 
     updateOpenGLBuffers();
+
+    m_gl_initialized = true;
 }
 
 void LineDataVisualization::cleanupOpenGLResources() {
@@ -309,6 +340,8 @@ void LineDataVisualization::cleanupOpenGLResources() {
         delete m_line_intersection_compute_shader;
         m_line_intersection_compute_shader = nullptr;
     }
+
+    m_gl_initialized = false;
 }
 
 void LineDataVisualization::updateOpenGLBuffers() {
@@ -338,6 +371,15 @@ void LineDataVisualization::updateOpenGLBuffers() {
 }
 
 void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_width) {
+    // Lazy-init GL if needed and possible
+    if (!m_gl_initialized) {
+        initializeOpenGLResources();
+        if (!m_gl_initialized) {
+            // Cannot render without GL resources (no context or insufficient GL version)
+            return;
+        }
+    }
+
     if (!m_visible || m_vertex_data.empty() || !m_line_shader_program) {
         return;
     }
@@ -609,6 +651,15 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
     auto selection_region = dynamic_cast<LineSelectionRegion const *>(selection_handler.getActiveSelectionRegion().get());
     if (!selection_region) {
         return;
+    }
+
+    // Ensure GL is ready; compute shader requires 4.3
+    if (!m_gl_initialized) {
+        initializeOpenGLResources();
+        if (!m_gl_initialized) {
+            qDebug() << "LineDataVisualization::applySelection: GL resources not initialized (no 4.3 context), skipping";
+            return;
+        }
     }
 
     qDebug() << "LineDataVisualization::applySelection: Using compute shader approach";
@@ -888,6 +939,15 @@ std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
         int widget_width, int widget_height,
         QMatrix4x4 const & mvp_matrix, float line_width) {
 
+    // Ensure GL resources and 4.3 context are available
+    if (!m_gl_initialized) {
+        initializeOpenGLResources();
+        if (!m_gl_initialized) {
+            qDebug() << "LineDataVisualization: Compute shader not available due to missing 4.3 context";
+            return {};
+        }
+    }
+
     if (!m_line_intersection_compute_shader || m_vertex_data.empty()) {
         qDebug() << "LineDataVisualization: Compute shader not available or no vertex data";
         return {};
@@ -1128,3 +1188,4 @@ void LineDataVisualization::setTimeRangeEnabled(bool enabled) {
 std::tuple<int, int, bool> LineDataVisualization::getTimeRange() const {
     return {m_time_range_start, m_time_range_end, m_time_range_enabled};
 }
+

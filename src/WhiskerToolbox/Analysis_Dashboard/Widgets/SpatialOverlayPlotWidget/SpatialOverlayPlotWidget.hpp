@@ -14,7 +14,6 @@
 class PointData;
 class QGraphicsProxyWidget;
 class SpatialOverlayOpenGLWidget;
-class TimeFrameIndex;
 class QKeyEvent;
 
 /**

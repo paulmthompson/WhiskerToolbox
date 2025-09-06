@@ -118,6 +118,8 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
 
     LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data);
     ~LineDataVisualization();
+    // Tracks whether GL resources (buffers, shaders, VAOs) were created successfully
+    bool m_gl_initialized = false;
 
     /**
      * @brief Initialize OpenGL resources for this visualization
