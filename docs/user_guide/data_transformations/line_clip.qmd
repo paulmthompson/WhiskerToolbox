@@ -41,7 +41,7 @@ with plt.xkcd():
     # --- Setup common elements ---
     # Reference Line (a vertical line)
     ref_line = np.array([[5, 2], [5, 10]])
-
+    
     # Lines to be clipped (some cross, some don't)
     lines_to_clip = [
         np.array([[2, 8], [8, 7]]),    # Crosses
@@ -53,10 +53,10 @@ with plt.xkcd():
     for ax, title, clip_side in [(ax1, 'KeepBase', 'base'), (ax2, 'KeepDistal', 'distal')]:
         ax.set_title(title)
         ax.plot(ref_line[:, 0], ref_line[:, 1], 'r--', lw=2, label='Reference Line')
-
+        
         for line in lines_to_clip:
             intersection = get_intersection(line[0], line[1], ref_line[0], ref_line[1])
-
+            
             # Plot the original full line faintly
             ax.plot(line[:, 0], line[:, 1], 'gray', linestyle=':', alpha=0.7)
 
@@ -80,13 +80,15 @@ with plt.xkcd():
         ax.set_xlabel('X Coordinate')
         ax.set_ylabel('Y Coordinate')
         ax.grid(True)
-        ax.legend()
+        ax.legend(['Reference Line', 'Clipped Segment', 'Intersection Point', 'Kept Segment'],
+                  loc='upper right', fontsize=10)
         ax.set_xlim(0, 12)
         ax.set_ylim(0, 12)
         ax.set_aspect('equal', adjustable='box')
 
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
+
 ```
 :::
 
