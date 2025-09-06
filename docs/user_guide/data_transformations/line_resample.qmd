@@ -14,6 +14,8 @@ Line resampling is a common operation in data processing, used to either reduce 
 -   **Fixed Spacing**: This algorithm creates a new line with points that are a fixed distance apart. This is useful for standardizing the number of points in a line, or for preparing a line for further analysis that requires a uniform distribution of points.
 -   **Douglas-Peucker**: This algorithm simplifies a line by removing points that are close to the line segment. This is useful for reducing the complexity of a line while preserving its overall shape.
 
+![](images/clipboard-2524368921.png)
+
 ### Neuroscience Use Cases
 
 In neuroscience, line resampling can be used in a variety of applications:
@@ -36,7 +38,7 @@ This transform has the following parameters:
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation. This example resamples a line to have points that are 15 pixels apart.
 
-```json
+``` json
 [
     {
         "transformations": {

@@ -18,17 +18,17 @@ The below table has all of the transformations currently available in the Data T
 | Fill Mask Holes | Yes | Yes | Yes | No | No |  |
 | Calculate Mask Principal Axis | Yes | Yes | Yes | No | No |  |
 | Whisker Tracing | No | N/A | No | No | No |  |
-| Clip Line by Reference Line | Yes | Yes | Yes | No | No |  |
+| Clip Line by Reference Line | Yes | Yes | Yes | Yes | No |  |
 | Line Alignment to Bright Features | Yes | Yes | Yes | No | Yes | 10 images in 2ms |
-| Calculate Line to Point Distance | Yes | Yes | Yes | No | No |  |
-| Resample Line | Yes | Yes | Yes | No | No |  |
+| Calculate Line to Point Distance | Yes | Yes | Yes | Yes | No |  |
+| Resample Line | Yes | Yes | Yes | Yes | No |  |
 | Extract Line Subsegment | Yes | Yes | Yes | No | No |  |
-| Calculate Line Angle | Yes | Yes | Yes | No | No |  |
-| Calculate Line Curvature | Yes | Yes | Yes | No | No |  |
-| Extract Point from Line | Yes | Yes | Yes | No | No |  |
+| Calculate Line Angle | Yes | Yes | Yes | Yes | No |  |
+| Calculate Line Curvature | Yes | Yes | Yes | Yes | No |  |
+| Extract Point from Line | Yes | Yes | Yes | Yes | No |  |
 | Filter | Yes | No | No | No | No |  |
 | Hilbert Phase | Yes | Yes | Yes | Yes | No |  |
-| Threshold Event Detection | Yes | Yes | Yes | No | No |  |
-| Threshold Interval Detection | Yes | Yes | Yes | No | No |  |
+| Threshold Event Detection | Yes | Yes | Yes | Yes | No |  |
+| Threshold Interval Detection | Yes | Yes | Yes | Yes | No |  |
 | Scale and Normalize | Yes | Yes | Yes | No | No |  |
-| Group Intervals | Yes | Yes | Yes | No | No |  |
+| Group Intervals | Yes | Yes | Yes | Yes | No |  |

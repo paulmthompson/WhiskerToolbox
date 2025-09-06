@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Calculate Line to Point Distance – Neuralyzer</title>
+<title>Line Resample – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -190,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/calculate_line_to_point_distance.html">Calculate Line to Point Distance</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/line_resample.html">Line Resample</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -406,13 +406,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/line_resample.html" class="sidebar-item-text sidebar-link">
+  <a href="../../user_guide/data_transformations/line_resample.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Line Resample</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/calculate_line_to_point_distance.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../user_guide/data_transformations/calculate_line_to_point_distance.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Calculate Line to Point Distance</span></a>
   </div>
 </li>
@@ -516,9 +516,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/calculate_line_to_point_distance.html">Calculate Line to Point Distance</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/line_resample.html">Line Resample</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Calculate Line to Point Distance</h1>
+<h1 class="title">Line Resample</h1>
 </div>
 
 
@@ -537,56 +537,67 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>This transform calculates the minimum distance from a set of points to a line for each moment in time, which is useful for quantifying the spatial relationship between different tracked objects.</p>
+<p>This transform resamples a line to either simplify its geometry or to ensure it has points that are evenly spaced.</p>
 <section id="detailed-description" class="level3">
 <h3 class="anchored" data-anchor-id="detailed-description">Detailed Description</h3>
-<p>This operation computes the shortest Euclidean distance between a line (composed of connected segments) and one or more points at each corresponding timestamp. If multiple points are present at a single timestamp, the transform identifies the minimum distance among all points to the line. The calculation finds the closest point on any segment of the line to each of the provided points and returns the smallest distance found.</p>
-<p>If the line and points are associated with different spatial scales (i.e., different image sizes), the points will be automatically scaled to the line’s coordinate system before the distance is computed. The output is an analog time series where the value at each time point is the calculated minimum distance.</p>
-<p><img src="images/clipboard-3209141553.png" class="img-fluid"></p>
+<p>Line resampling is a common operation in data processing, used to either reduce the number of points in a line (simplification) or to create a new line with a specific number of points or spacing. This transform provides two different algorithms for resampling:</p>
+<ul>
+<li><strong>Fixed Spacing</strong>: This algorithm creates a new line with points that are a fixed distance apart. This is useful for standardizing the number of points in a line, or for preparing a line for further analysis that requires a uniform distribution of points.</li>
+<li><strong>Douglas-Peucker</strong>: This algorithm simplifies a line by removing points that are close to the line segment. This is useful for reducing the complexity of a line while preserving its overall shape.</li>
+</ul>
+<p><img src="images/clipboard-2524368921.png" class="img-fluid"></p>
 </section>
 <section id="neuroscience-use-cases" class="level3">
 <h3 class="anchored" data-anchor-id="neuroscience-use-cases">Neuroscience Use Cases</h3>
-<p>This transformation is valuable for analyzing the interaction between different elements in behavioral or physiological experiments:</p>
+<p>In neuroscience, line resampling can be used in a variety of applications:</p>
 <ul>
-<li><strong>Whisker Tracking:</strong> In studies of rodent behavior, one might track the position of a whisker (as a line) and the location of an object (as a point). This transform can precisely measure the distance from the whisker to the object at each frame of a video, helping to identify moments of contact or near-contact.</li>
-<li><strong>Limb and Body Coordination:</strong> When tracking the movement of an animal’s limb (represented as a line) relative to a target or another body part (represented as a point), this transform can quantify their spatial relationship over time. This is useful for studies of motor control and coordination.</li>
-<li><strong>Neural Prosthetics and Brain-Computer Interfaces:</strong> In experiments where an animal controls a cursor or robotic arm, this transform could be used to measure the distance from the effector (the line) to a target (the point), providing a continuous measure of performance.</li>
+<li><strong>Whisker Tracking</strong>: When tracking the movement of a whisker, the output is often a line with a variable number of points. Resampling the line to a fixed number of points can be useful for standardizing the data for further analysis, such as calculating the curvature or angle of the whisker over time.</li>
+<li><strong>Dendrite Tracing</strong>: When tracing the path of a dendrite from a neuron, the resulting line can be very complex. The Douglas-Peucker algorithm can be used to simplify the line, making it easier to visualize and analyze the overall shape of the dendrite.</li>
+<li><strong>Animal Tracking</strong>: When tracking the path of an animal in an open field, the resulting line can be very long and detailed. Resampling the line can help to smooth out the path and reduce the amount of data that needs to be processed.</li>
 </ul>
 </section>
 </section>
 <section id="parameters" class="level2">
 <h2 class="anchored" data-anchor-id="parameters">Parameters</h2>
-<p>This transform has the following parameter:</p>
+<p>This transform has the following parameters:</p>
 <ul>
-<li><code>point_data</code>: The key of the PointData object in the DataManager. This object contains the set of points from which the minimum distance to the line will be calculated at each timestamp.</li>
+<li><code>algorithm</code>: The resampling algorithm to use. This can be one of the following:
+<ul>
+<li><code>FixedSpacing</code>: Resamples the line to have points that are a fixed distance apart.</li>
+<li><code>DouglasPeucker</code>: Simplifies the line using the Douglas-Peucker algorithm.</li>
+</ul></li>
+<li><code>target_spacing</code>: The desired distance between points in the resampled line. This parameter is only used when the <code>algorithm</code> is set to <code>FixedSpacing</code>.</li>
+<li><code>epsilon</code>: The tolerance for the Douglas-Peucker algorithm. This parameter is only used when the <code>algorithm</code> is set to <code>DouglasPeucker</code>. A larger value of epsilon will result in a more simplified line.</li>
 </ul>
 </section>
 <section id="example-configuration" class="level2">
 <h2 class="anchored" data-anchor-id="example-configuration">Example Configuration</h2>
-<p>Here is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the distance between a line stored with the key <code>test_line</code> and a set of points stored with the key <code>test_points</code>.</p>
+<p>Here is a complete example of a JSON configuration file that could be used to run this transformation. This example resamples a line to have points that are 15 pixels apart.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"transformations"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"Line to Point Distance Pipeline"</span><span class="fu">,</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"Test line to point minimum distance calculation"</span><span class="fu">,</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"version"</span><span class="fu">:</span> <span class="st">"1.0"</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"steps"</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            <span class="fu">{</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"step_id"</span><span class="fu">:</span> <span class="st">"1"</span><span class="fu">,</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"transform_name"</span><span class="fu">:</span> <span class="st">"Calculate Line to Point Distance"</span><span class="fu">,</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"phase"</span><span class="fu">:</span> <span class="st">"analysis"</span><span class="fu">,</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"input_key"</span><span class="fu">:</span> <span class="st">"test_line"</span><span class="fu">,</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"output_key"</span><span class="fu">:</span> <span class="st">"line_point_distances"</span><span class="fu">,</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"point_data"</span><span class="fu">:</span> <span class="st">"test_points"</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>                <span class="fu">}</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"transformations"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"Line Resample Pipeline"</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"Test line resampling on line data"</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"version"</span><span class="fu">:</span> <span class="st">"1.0"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            <span class="fu">},</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"steps"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"step_id"</span><span class="fu">:</span> <span class="st">"1"</span><span class="fu">,</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"transform_name"</span><span class="fu">:</span> <span class="st">"Resample Line"</span><span class="fu">,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"phase"</span><span class="fu">:</span> <span class="st">"analysis"</span><span class="fu">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"input_key"</span><span class="fu">:</span> <span class="st">"test_lines"</span><span class="fu">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"output_key"</span><span class="fu">:</span> <span class="st">"resampled_lines"</span><span class="fu">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">"algorithm"</span><span class="fu">:</span> <span class="st">"FixedSpacing"</span><span class="fu">,</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">"target_spacing"</span><span class="fu">:</span> <span class="fl">15.0</span><span class="fu">,</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">"epsilon"</span><span class="fu">:</span> <span class="fl">2.0</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">}</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>                <span class="fu">}</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            <span class="ot">]</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>

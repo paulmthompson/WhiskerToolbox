@@ -16,6 +16,8 @@ This operation pinpoints and extracts the coordinates of a single point along a 
 
 The output is a `PointData` object containing the extracted point for each time step.
 
+![](images/clipboard-1131244340.png)
+
 ::: {.content-hidden when-format="html"}
 ```{{python}}
 #| echo: false
@@ -93,7 +95,7 @@ This transform has the following parameters:
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation. This example extracts the point at the 75% position along a line stored with the key `whisker_1`.
 
-```json
+``` json
 [
 {
     "transformations": {
