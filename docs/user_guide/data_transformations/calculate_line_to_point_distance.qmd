@@ -28,7 +28,7 @@ with plt.xkcd():
 
     # A set of points, some close, some far
     points_x = [1, 3, 5, 8, 9]
-    points_y = [6, 1, 4, 7, 2]
+    points_y = [6, 1, 3, 7, 2]
 
     # --- Find the minimum distance ---
     min_dist_sq = float('inf')
