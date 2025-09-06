@@ -13,6 +13,8 @@ This operation computes the shortest Euclidean distance between a line (composed
 
 If the line and points are associated with different spatial scales (i.e., different image sizes), the points will be automatically scaled to the line's coordinate system before the distance is computed. The output is an analog time series where the value at each time point is the calculated minimum distance.
 
+![](images/clipboard-3209141553.png)
+
 ::: {.content-hidden when-format="html"}
 ```{{python}}
 #| echo: false
@@ -96,7 +98,7 @@ This transform has the following parameter:
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the distance between a line stored with the key `test_line` and a set of points stored with the key `test_points`.
 
-```json
+``` json
 [
 {
     "transformations": {

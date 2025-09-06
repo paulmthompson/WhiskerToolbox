@@ -43,91 +43,135 @@
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/line_clip.html",
-    "href": "user_guide/data_transformations/line_clip.html",
-    "title": "Line Clip by Reference Line",
+    "objectID": "user_guide/data_transformations/line_curvature.html",
+    "href": "user_guide/data_transformations/line_curvature.html",
+    "title": "Line Curvature",
     "section": "",
-    "text": "This transform clips a set of lines based on where they intersect with a single, user-defined reference line.\n\n\nThis transformation is used to shorten or trim lines at the point where they cross a specified reference line. For each line in the input data, the algorithm finds the first point of intersection with the reference line. Based on the clip_side parameter, it then keeps either the segment of the line from its start to the intersection point (KeepBase) or the segment from the intersection point to its end (KeepDistal).\nIf a line does not intersect the reference line, it remains unchanged in the output. This is useful for standardizing line data, for example, by trimming all lines to a common boundary.\n\n\n\n\n\nStandardizing Whisker Tracking Data: In neuroscience experiments involving whisker tracking, it’s often necessary to analyze the whisker’s movement relative to a fixed point, like the edge of a pole or object. This transform can clip all tracked whisker lines at the boundary of that object, ensuring that only the relevant segment of the whisker is considered for analysis.\nAnalyzing Neurite Outgrowth: When studying neurite or axon growth in microscopy images, researchers might want to measure growth only up to a certain landmark or boundary. This transform can be used to clip the traced neurites at that boundary.\nPath Analysis in Behavioral Studies: In studies of animal behavior, if an animal’s path is tracked, this transform could be used to clip the path at the entrance to a specific zone or maze arm, isolating the behavior within or outside that area.",
+    "text": "This transform calculates the curvature of a 2D line at a specified point. This is useful for analyzing the shape and tortuosity of lines, such as animal trajectories or neuronal processes.\n\n\nThe Line Curvature transform measures how much a line bends at a given point. It does this by fitting a parametric polynomial to the line’s (x, y) coordinates and then calculating the curvature of the fitted polynomial at a user-specified position along the line’s length.\nThe transform takes a LineData object (representing one or more lines over time) as input and produces an AnalogTimeSeries as output, where each value represents the calculated curvature at the corresponding time point.\nThis method allows for a smooth and robust estimation of curvature even when the underlying line data is noisy or unevenly sampled.\n\n\n\n\nIn neuroscience, analyzing the geometry of paths and structures is crucial for understanding behavior and neural architecture:\n\nAnimal Trajectory Analysis: The curvature of an animal’s path (e.g., a rat in a maze) can reveal changes in exploratory strategy, searching behavior, or the effects of neurological manipulations. High curvature might indicate turning or searching, while low curvature suggests straight-line travel.\nNeuronal Arborization: When analyzing the structure of neurons from microscope images, the curvature of dendrites or axons can be quantified to characterize their branching patterns and complexity. This is important for studying neuronal development, plasticity, and disease.\nAnalysis of Saccadic Eye Movements: The trajectory of saccadic eye movements is not perfectly straight. Analyzing the curvature of these paths can provide insights into the underlying motor control mechanisms.",
     "crumbs": [
       "Data Transformations",
-      "Line Clip by Reference Line"
+      "Line Curvature"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/line_clip.html#overview",
-    "href": "user_guide/data_transformations/line_clip.html#overview",
-    "title": "Line Clip by Reference Line",
+    "objectID": "user_guide/data_transformations/line_curvature.html#overview",
+    "href": "user_guide/data_transformations/line_curvature.html#overview",
+    "title": "Line Curvature",
     "section": "",
-    "text": "This transform clips a set of lines based on where they intersect with a single, user-defined reference line.\n\n\nThis transformation is used to shorten or trim lines at the point where they cross a specified reference line. For each line in the input data, the algorithm finds the first point of intersection with the reference line. Based on the clip_side parameter, it then keeps either the segment of the line from its start to the intersection point (KeepBase) or the segment from the intersection point to its end (KeepDistal).\nIf a line does not intersect the reference line, it remains unchanged in the output. This is useful for standardizing line data, for example, by trimming all lines to a common boundary.\n\n\n\n\n\nStandardizing Whisker Tracking Data: In neuroscience experiments involving whisker tracking, it’s often necessary to analyze the whisker’s movement relative to a fixed point, like the edge of a pole or object. This transform can clip all tracked whisker lines at the boundary of that object, ensuring that only the relevant segment of the whisker is considered for analysis.\nAnalyzing Neurite Outgrowth: When studying neurite or axon growth in microscopy images, researchers might want to measure growth only up to a certain landmark or boundary. This transform can be used to clip the traced neurites at that boundary.\nPath Analysis in Behavioral Studies: In studies of animal behavior, if an animal’s path is tracked, this transform could be used to clip the path at the entrance to a specific zone or maze arm, isolating the behavior within or outside that area.",
+    "text": "This transform calculates the curvature of a 2D line at a specified point. This is useful for analyzing the shape and tortuosity of lines, such as animal trajectories or neuronal processes.\n\n\nThe Line Curvature transform measures how much a line bends at a given point. It does this by fitting a parametric polynomial to the line’s (x, y) coordinates and then calculating the curvature of the fitted polynomial at a user-specified position along the line’s length.\nThe transform takes a LineData object (representing one or more lines over time) as input and produces an AnalogTimeSeries as output, where each value represents the calculated curvature at the corresponding time point.\nThis method allows for a smooth and robust estimation of curvature even when the underlying line data is noisy or unevenly sampled.\n\n\n\n\nIn neuroscience, analyzing the geometry of paths and structures is crucial for understanding behavior and neural architecture:\n\nAnimal Trajectory Analysis: The curvature of an animal’s path (e.g., a rat in a maze) can reveal changes in exploratory strategy, searching behavior, or the effects of neurological manipulations. High curvature might indicate turning or searching, while low curvature suggests straight-line travel.\nNeuronal Arborization: When analyzing the structure of neurons from microscope images, the curvature of dendrites or axons can be quantified to characterize their branching patterns and complexity. This is important for studying neuronal development, plasticity, and disease.\nAnalysis of Saccadic Eye Movements: The trajectory of saccadic eye movements is not perfectly straight. Analyzing the curvature of these paths can provide insights into the underlying motor control mechanisms.",
     "crumbs": [
       "Data Transformations",
-      "Line Clip by Reference Line"
+      "Line Curvature"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/line_clip.html#parameters",
-    "href": "user_guide/data_transformations/line_clip.html#parameters",
-    "title": "Line Clip by Reference Line",
+    "objectID": "user_guide/data_transformations/line_curvature.html#parameters",
+    "href": "user_guide/data_transformations/line_curvature.html#parameters",
+    "title": "Line Curvature",
     "section": "Parameters",
-    "text": "Parameters\nThis transform has the following parameters:\n\nreference_line_data_name: The key identifying the LineData object in the data manager that will be used as the reference for clipping.\nreference_frame: The specific time frame within the reference line data to use for clipping. All lines in the input data will be clipped against this single frame of the reference line.\nclip_side: Determines which part of the line to keep after clipping.\n\nKeepBase: Keeps the portion of the line from its starting point to the intersection point.\nKeepDistal: Keeps the portion of the line from the intersection point to its end point.",
+    "text": "Parameters\nThis transform has the following parameters:\n\nposition: A fractional value between 0.0 and 1.0 indicating the point along the line’s total length at which to calculate the curvature. 0.0 is the start of the line, 0.5 is the midpoint, and 1.0 is the end.\nmethod: The algorithm to use for calculating curvature. Currently, only one option is available:\n\nPolynomialFit: Fits a parametric polynomial to the line data and calculates the analytical curvature.\n\npolynomial_order: The order of the polynomial to fit to the line data. A higher order can capture more complex curves but may be more sensitive to noise. A minimum of 2 is required for curvature calculation.\nfitting_window_percentage: The percentage (from 0.0 to 1.0) of the total line length to use for the polynomial fit, centered on the position parameter. A smaller window focuses the curvature calculation on the local shape, while a larger window provides a more global measure.",
     "crumbs": [
       "Data Transformations",
-      "Line Clip by Reference Line"
+      "Line Curvature"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/line_clip.html#example-configuration",
-    "href": "user_guide/data_transformations/line_clip.html#example-configuration",
-    "title": "Line Clip by Reference Line",
+    "objectID": "user_guide/data_transformations/line_curvature.html#example-configuration",
+    "href": "user_guide/data_transformations/line_curvature.html#example-configuration",
+    "title": "Line Curvature",
     "section": "Example Configuration",
-    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example clips a set of lines against a reference line, keeping the base segment of each line.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Line Clip Pipeline\",\n            \"description\": \"Test line clipping on line data\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Clip Line by Reference Line\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_line\",\n                \"output_key\": \"clipped_lines\",\n                \"parameters\": {\n                    \"reference_line_data_name\": \"reference_line\",\n                    \"reference_frame\": 0,\n                    \"clip_side\": \"KeepBase\"\n                }\n            }\n        ]\n    }\n}\n]",
+    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the curvature at the midpoint (0.5) of a line, using a 3rd-order polynomial fitted to 10% of the line’s data.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Line Curvature Pipeline\",\n            \"description\": \"Test line curvature calculation on a curved line\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Calculate Line Curvature\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"my_line_data\",\n                \"output_key\": \"calculated_curvature\",\n                \"parameters\": {\n                    \"position\": 0.5,\n                    \"method\": \"PolynomialFit\",\n                    \"polynomial_order\": 3,\n                    \"fitting_window_percentage\": 0.1\n                }\n            }\n        ]\n    }\n}\n]",
     "crumbs": [
       "Data Transformations",
-      "Line Clip by Reference Line"
+      "Line Curvature"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/digital_interval_group.html",
-    "href": "user_guide/data_transformations/digital_interval_group.html",
-    "title": "Digital Interval Group",
+    "objectID": "user_guide/data_transformations/line_angle.html",
+    "href": "user_guide/data_transformations/line_angle.html",
+    "title": "Line Angle",
     "section": "",
-    "text": "This transform groups nearby intervals in a digital interval series based on a specified maximum spacing, which is useful for consolidating fragmented temporal events.\n\n\nThis transform merges digital intervals that are close to each other. If the gap between the end of one interval and the start of the next is less than or equal to the max_spacing value, the two intervals are combined into a single, larger interval. This process is repeated until no more intervals can be grouped.\nThis is particularly useful for cleaning up data where a single continuous event might be recorded as multiple, closely-spaced but separate intervals due to noise or transient interruptions in signal detection.\n\n\n\n\nIn neuroscience, this transform can be applied to refine event data:\n\nBout Analysis: When analyzing behaviors that occur in bouts (e.g., sniffing, grooming, vocalizations), this transform can merge closely spaced, individual instances into a single, continuous behavioral bout. For example, a series of short sniffs could be grouped into one “sniffing bout”.",
+    "text": "This transform calculates the angle of a line at a specific position along its length for each point in time.\n\n\nThe Line Angle transform provides a way to quantify the orientation of a line in a 2D space. This can be particularly useful for analyzing the movement or orientation of objects that are tracked as lines. The angle is measured relative to a customizable reference vector, which defaults to the positive x-axis (0 degrees).\nThere are two methods for calculating the angle:\n\nDirect Points: This method approximates the tangent at a given position by calculating the angle of the vector between the point at that position and the point immediately preceding it. This is a simple and fast method suitable for getting a local orientation.\nPolynomial Fit: This method fits a polynomial of a given order to the line’s points (parameterized by their cumulative distance). The angle is then calculated from the derivative of the polynomial at the specified position. This method can provide a more accurate estimate of the tangent angle at a specific point along a curved line.\n\n\n\n\n\nIn neuroscience, this transform can be used to analyze a variety of data:\n\nWhisker Tracking: The angle of a tracked whisker relative to the animal’s head can be calculated to study sensory input and motor control.\nLimb Tracking: The angle of a limb segment (e.g., the forearm) can be calculated to analyze reaching movements or other motor behaviors.\nTongue Tracking: The angle of the tongue during licking or other oral movements can be quantified.",
     "crumbs": [
       "Data Transformations",
-      "Digital Interval Group"
+      "Line Angle"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/digital_interval_group.html#overview",
-    "href": "user_guide/data_transformations/digital_interval_group.html#overview",
-    "title": "Digital Interval Group",
+    "objectID": "user_guide/data_transformations/line_angle.html#overview",
+    "href": "user_guide/data_transformations/line_angle.html#overview",
+    "title": "Line Angle",
     "section": "",
-    "text": "This transform groups nearby intervals in a digital interval series based on a specified maximum spacing, which is useful for consolidating fragmented temporal events.\n\n\nThis transform merges digital intervals that are close to each other. If the gap between the end of one interval and the start of the next is less than or equal to the max_spacing value, the two intervals are combined into a single, larger interval. This process is repeated until no more intervals can be grouped.\nThis is particularly useful for cleaning up data where a single continuous event might be recorded as multiple, closely-spaced but separate intervals due to noise or transient interruptions in signal detection.\n\n\n\n\nIn neuroscience, this transform can be applied to refine event data:\n\nBout Analysis: When analyzing behaviors that occur in bouts (e.g., sniffing, grooming, vocalizations), this transform can merge closely spaced, individual instances into a single, continuous behavioral bout. For example, a series of short sniffs could be grouped into one “sniffing bout”.",
+    "text": "This transform calculates the angle of a line at a specific position along its length for each point in time.\n\n\nThe Line Angle transform provides a way to quantify the orientation of a line in a 2D space. This can be particularly useful for analyzing the movement or orientation of objects that are tracked as lines. The angle is measured relative to a customizable reference vector, which defaults to the positive x-axis (0 degrees).\nThere are two methods for calculating the angle:\n\nDirect Points: This method approximates the tangent at a given position by calculating the angle of the vector between the point at that position and the point immediately preceding it. This is a simple and fast method suitable for getting a local orientation.\nPolynomial Fit: This method fits a polynomial of a given order to the line’s points (parameterized by their cumulative distance). The angle is then calculated from the derivative of the polynomial at the specified position. This method can provide a more accurate estimate of the tangent angle at a specific point along a curved line.\n\n\n\n\n\nIn neuroscience, this transform can be used to analyze a variety of data:\n\nWhisker Tracking: The angle of a tracked whisker relative to the animal’s head can be calculated to study sensory input and motor control.\nLimb Tracking: The angle of a limb segment (e.g., the forearm) can be calculated to analyze reaching movements or other motor behaviors.\nTongue Tracking: The angle of the tongue during licking or other oral movements can be quantified.",
     "crumbs": [
       "Data Transformations",
-      "Digital Interval Group"
+      "Line Angle"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/digital_interval_group.html#parameters",
-    "href": "user_guide/data_transformations/digital_interval_group.html#parameters",
-    "title": "Digital Interval Group",
+    "objectID": "user_guide/data_transformations/line_angle.html#parameters",
+    "href": "user_guide/data_transformations/line_angle.html#parameters",
+    "title": "Line Angle",
     "section": "Parameters",
-    "text": "Parameters\nThis transform has the following parameter:\n\nmax_spacing: The maximum allowed gap between two consecutive intervals for them to be merged. The time unit should be consistent with the data’s time representation (e.g., seconds or frames). If the gap is greater than this value, the intervals remain separate.",
+    "text": "Parameters\nThis transform has the following parameters:\n\nposition: A value between 0.0 and 1.0 that specifies the point along the line at which to calculate the angle. For example, 0.5 would be the midpoint of the line.\nmethod: The calculation method to use.\n\nDirect Points: (Default) Calculates the angle based on the vector from the start of the line to the point at position.\nPolynomial Fit: Fits a polynomial to the line and calculates the angle from the derivative.\n\npolynomial_order: The order of the polynomial to fit to the line when using the Polynomial Fit method. A higher order can capture more complex curves but requires more points and can be prone to overfitting. A typical value is 2 or 3.\nreference_x: The x-component of the reference vector. Defaults to 1.0.\nreference_y: The y-component of the reference vector. Defaults to 0.0. The default vector (1.0, 0.0) corresponds to the positive x-axis, meaning angles are measured with 0 degrees pointing to the right.",
     "crumbs": [
       "Data Transformations",
-      "Digital Interval Group"
+      "Line Angle"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/digital_interval_group.html#example-configuration",
-    "href": "user_guide/data_transformations/digital_interval_group.html#example-configuration",
-    "title": "Digital Interval Group",
+    "objectID": "user_guide/data_transformations/line_angle.html#example-configuration",
+    "href": "user_guide/data_transformations/line_angle.html#example-configuration",
+    "title": "Line Angle",
     "section": "Example Configuration",
-    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example groups intervals that are separated by 3.0 time units or less.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Interval Grouping Pipeline\",\n            \"description\": \"Test interval grouping on digital interval series\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Group Intervals\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_intervals\",\n                \"output_key\": \"grouped_intervals\",\n                \"parameters\": {\n                    \"max_spacing\": 3.0\n                }\n            }\n        ]\n    }\n}\n]",
+    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the angle at the midpoint of a line using the “Direct Points” method.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Line Angle Pipeline\",\n            \"description\": \"Test line angle calculation on line data\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Calculate Line Angle\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_line\",\n                \"output_key\": \"line_angles\",\n                \"parameters\": {\n                    \"position\": 0.5,\n                    \"method\": \"Direct Points\",\n                    \"polynomial_order\": 3,\n                    \"reference_x\": 1.0,\n                    \"reference_y\": 0.0\n                }\n            }\n        ]\n    }\n}\n]",
     "crumbs": [
       "Data Transformations",
-      "Digital Interval Group"
+      "Line Angle"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/calculate_line_to_point_distance.html",
+    "href": "user_guide/data_transformations/calculate_line_to_point_distance.html",
+    "title": "Calculate Line to Point Distance",
+    "section": "",
+    "text": "This transform calculates the minimum distance from a set of points to a line for each moment in time, which is useful for quantifying the spatial relationship between different tracked objects.\n\n\nThis operation computes the shortest Euclidean distance between a line (composed of connected segments) and one or more points at each corresponding timestamp. If multiple points are present at a single timestamp, the transform identifies the minimum distance among all points to the line. The calculation finds the closest point on any segment of the line to each of the provided points and returns the smallest distance found.\nIf the line and points are associated with different spatial scales (i.e., different image sizes), the points will be automatically scaled to the line’s coordinate system before the distance is computed. The output is an analog time series where the value at each time point is the calculated minimum distance.\n\n\n\n\nThis transformation is valuable for analyzing the interaction between different elements in behavioral or physiological experiments:\n\nWhisker Tracking: In studies of rodent behavior, one might track the position of a whisker (as a line) and the location of an object (as a point). This transform can precisely measure the distance from the whisker to the object at each frame of a video, helping to identify moments of contact or near-contact.\nLimb and Body Coordination: When tracking the movement of an animal’s limb (represented as a line) relative to a target or another body part (represented as a point), this transform can quantify their spatial relationship over time. This is useful for studies of motor control and coordination.\nNeural Prosthetics and Brain-Computer Interfaces: In experiments where an animal controls a cursor or robotic arm, this transform could be used to measure the distance from the effector (the line) to a target (the point), providing a continuous measure of performance.",
+    "crumbs": [
+      "Data Transformations",
+      "Calculate Line to Point Distance"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/calculate_line_to_point_distance.html#overview",
+    "href": "user_guide/data_transformations/calculate_line_to_point_distance.html#overview",
+    "title": "Calculate Line to Point Distance",
+    "section": "",
+    "text": "This transform calculates the minimum distance from a set of points to a line for each moment in time, which is useful for quantifying the spatial relationship between different tracked objects.\n\n\nThis operation computes the shortest Euclidean distance between a line (composed of connected segments) and one or more points at each corresponding timestamp. If multiple points are present at a single timestamp, the transform identifies the minimum distance among all points to the line. The calculation finds the closest point on any segment of the line to each of the provided points and returns the smallest distance found.\nIf the line and points are associated with different spatial scales (i.e., different image sizes), the points will be automatically scaled to the line’s coordinate system before the distance is computed. The output is an analog time series where the value at each time point is the calculated minimum distance.\n\n\n\n\nThis transformation is valuable for analyzing the interaction between different elements in behavioral or physiological experiments:\n\nWhisker Tracking: In studies of rodent behavior, one might track the position of a whisker (as a line) and the location of an object (as a point). This transform can precisely measure the distance from the whisker to the object at each frame of a video, helping to identify moments of contact or near-contact.\nLimb and Body Coordination: When tracking the movement of an animal’s limb (represented as a line) relative to a target or another body part (represented as a point), this transform can quantify their spatial relationship over time. This is useful for studies of motor control and coordination.\nNeural Prosthetics and Brain-Computer Interfaces: In experiments where an animal controls a cursor or robotic arm, this transform could be used to measure the distance from the effector (the line) to a target (the point), providing a continuous measure of performance.",
+    "crumbs": [
+      "Data Transformations",
+      "Calculate Line to Point Distance"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/calculate_line_to_point_distance.html#parameters",
+    "href": "user_guide/data_transformations/calculate_line_to_point_distance.html#parameters",
+    "title": "Calculate Line to Point Distance",
+    "section": "Parameters",
+    "text": "Parameters\nThis transform has the following parameter:\n\npoint_data: The key of the PointData object in the DataManager. This object contains the set of points from which the minimum distance to the line will be calculated at each timestamp.",
+    "crumbs": [
+      "Data Transformations",
+      "Calculate Line to Point Distance"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/calculate_line_to_point_distance.html#example-configuration",
+    "href": "user_guide/data_transformations/calculate_line_to_point_distance.html#example-configuration",
+    "title": "Calculate Line to Point Distance",
+    "section": "Example Configuration",
+    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the distance between a line stored with the key test_line and a set of points stored with the key test_points.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Line to Point Distance Pipeline\",\n            \"description\": \"Test line to point minimum distance calculation\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Calculate Line to Point Distance\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_line\",\n                \"output_key\": \"line_point_distances\",\n                \"parameters\": {\n                    \"point_data\": \"test_points\"\n                }\n            }\n        ]\n    }\n}\n]",
+    "crumbs": [
+      "Data Transformations",
+      "Calculate Line to Point Distance"
     ]
   },
   {
@@ -970,47 +1014,91 @@
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/line_angle.html",
-    "href": "user_guide/data_transformations/line_angle.html",
-    "title": "Line Angle",
+    "objectID": "user_guide/data_transformations/digital_interval_group.html",
+    "href": "user_guide/data_transformations/digital_interval_group.html",
+    "title": "Digital Interval Group",
     "section": "",
-    "text": "This transform calculates the angle of a line at a specific position along its length for each point in time.\n\n\nThe Line Angle transform provides a way to quantify the orientation of a line in a 2D space. This can be particularly useful for analyzing the movement or orientation of objects that are tracked as lines. The angle is measured relative to a customizable reference vector, which defaults to the positive x-axis (0 degrees).\nThere are two methods for calculating the angle:\n\nDirect Points: This method approximates the tangent at a given position by calculating the angle of the vector between the point at that position and the point immediately preceding it. This is a simple and fast method suitable for getting a local orientation.\nPolynomial Fit: This method fits a polynomial of a given order to the line’s points (parameterized by their cumulative distance). The angle is then calculated from the derivative of the polynomial at the specified position. This method can provide a more accurate estimate of the tangent angle at a specific point along a curved line.\n\n\n\n\n\nIn neuroscience, this transform can be used to analyze a variety of data:\n\nWhisker Tracking: The angle of a tracked whisker relative to the animal’s head can be calculated to study sensory input and motor control.\nLimb Tracking: The angle of a limb segment (e.g., the forearm) can be calculated to analyze reaching movements or other motor behaviors.\nTongue Tracking: The angle of the tongue during licking or other oral movements can be quantified.",
+    "text": "This transform groups nearby intervals in a digital interval series based on a specified maximum spacing, which is useful for consolidating fragmented temporal events.\n\n\nThis transform merges digital intervals that are close to each other. If the gap between the end of one interval and the start of the next is less than or equal to the max_spacing value, the two intervals are combined into a single, larger interval. This process is repeated until no more intervals can be grouped.\nThis is particularly useful for cleaning up data where a single continuous event might be recorded as multiple, closely-spaced but separate intervals due to noise or transient interruptions in signal detection.\n\n\n\n\nIn neuroscience, this transform can be applied to refine event data:\n\nBout Analysis: When analyzing behaviors that occur in bouts (e.g., sniffing, grooming, vocalizations), this transform can merge closely spaced, individual instances into a single, continuous behavioral bout. For example, a series of short sniffs could be grouped into one “sniffing bout”.",
     "crumbs": [
       "Data Transformations",
-      "Line Angle"
+      "Digital Interval Group"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/line_angle.html#overview",
-    "href": "user_guide/data_transformations/line_angle.html#overview",
-    "title": "Line Angle",
+    "objectID": "user_guide/data_transformations/digital_interval_group.html#overview",
+    "href": "user_guide/data_transformations/digital_interval_group.html#overview",
+    "title": "Digital Interval Group",
     "section": "",
-    "text": "This transform calculates the angle of a line at a specific position along its length for each point in time.\n\n\nThe Line Angle transform provides a way to quantify the orientation of a line in a 2D space. This can be particularly useful for analyzing the movement or orientation of objects that are tracked as lines. The angle is measured relative to a customizable reference vector, which defaults to the positive x-axis (0 degrees).\nThere are two methods for calculating the angle:\n\nDirect Points: This method approximates the tangent at a given position by calculating the angle of the vector between the point at that position and the point immediately preceding it. This is a simple and fast method suitable for getting a local orientation.\nPolynomial Fit: This method fits a polynomial of a given order to the line’s points (parameterized by their cumulative distance). The angle is then calculated from the derivative of the polynomial at the specified position. This method can provide a more accurate estimate of the tangent angle at a specific point along a curved line.\n\n\n\n\n\nIn neuroscience, this transform can be used to analyze a variety of data:\n\nWhisker Tracking: The angle of a tracked whisker relative to the animal’s head can be calculated to study sensory input and motor control.\nLimb Tracking: The angle of a limb segment (e.g., the forearm) can be calculated to analyze reaching movements or other motor behaviors.\nTongue Tracking: The angle of the tongue during licking or other oral movements can be quantified.",
+    "text": "This transform groups nearby intervals in a digital interval series based on a specified maximum spacing, which is useful for consolidating fragmented temporal events.\n\n\nThis transform merges digital intervals that are close to each other. If the gap between the end of one interval and the start of the next is less than or equal to the max_spacing value, the two intervals are combined into a single, larger interval. This process is repeated until no more intervals can be grouped.\nThis is particularly useful for cleaning up data where a single continuous event might be recorded as multiple, closely-spaced but separate intervals due to noise or transient interruptions in signal detection.\n\n\n\n\nIn neuroscience, this transform can be applied to refine event data:\n\nBout Analysis: When analyzing behaviors that occur in bouts (e.g., sniffing, grooming, vocalizations), this transform can merge closely spaced, individual instances into a single, continuous behavioral bout. For example, a series of short sniffs could be grouped into one “sniffing bout”.",
     "crumbs": [
       "Data Transformations",
-      "Line Angle"
+      "Digital Interval Group"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/line_angle.html#parameters",
-    "href": "user_guide/data_transformations/line_angle.html#parameters",
-    "title": "Line Angle",
+    "objectID": "user_guide/data_transformations/digital_interval_group.html#parameters",
+    "href": "user_guide/data_transformations/digital_interval_group.html#parameters",
+    "title": "Digital Interval Group",
     "section": "Parameters",
-    "text": "Parameters\nThis transform has the following parameters:\n\nposition: A value between 0.0 and 1.0 that specifies the point along the line at which to calculate the angle. For example, 0.5 would be the midpoint of the line.\nmethod: The calculation method to use.\n\nDirect Points: (Default) Calculates the angle based on the vector from the start of the line to the point at position.\nPolynomial Fit: Fits a polynomial to the line and calculates the angle from the derivative.\n\npolynomial_order: The order of the polynomial to fit to the line when using the Polynomial Fit method. A higher order can capture more complex curves but requires more points and can be prone to overfitting. A typical value is 2 or 3.\nreference_x: The x-component of the reference vector. Defaults to 1.0.\nreference_y: The y-component of the reference vector. Defaults to 0.0. The default vector (1.0, 0.0) corresponds to the positive x-axis, meaning angles are measured with 0 degrees pointing to the right.",
+    "text": "Parameters\nThis transform has the following parameter:\n\nmax_spacing: The maximum allowed gap between two consecutive intervals for them to be merged. The time unit should be consistent with the data’s time representation (e.g., seconds or frames). If the gap is greater than this value, the intervals remain separate.",
     "crumbs": [
       "Data Transformations",
-      "Line Angle"
+      "Digital Interval Group"
     ]
   },
   {
-    "objectID": "user_guide/data_transformations/line_angle.html#example-configuration",
-    "href": "user_guide/data_transformations/line_angle.html#example-configuration",
-    "title": "Line Angle",
+    "objectID": "user_guide/data_transformations/digital_interval_group.html#example-configuration",
+    "href": "user_guide/data_transformations/digital_interval_group.html#example-configuration",
+    "title": "Digital Interval Group",
     "section": "Example Configuration",
-    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the angle at the midpoint of a line using the “Direct Points” method.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Line Angle Pipeline\",\n            \"description\": \"Test line angle calculation on line data\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Calculate Line Angle\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_line\",\n                \"output_key\": \"line_angles\",\n                \"parameters\": {\n                    \"position\": 0.5,\n                    \"method\": \"Direct Points\",\n                    \"polynomial_order\": 3,\n                    \"reference_x\": 1.0,\n                    \"reference_y\": 0.0\n                }\n            }\n        ]\n    }\n}\n]",
+    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example groups intervals that are separated by 3.0 time units or less.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Interval Grouping Pipeline\",\n            \"description\": \"Test interval grouping on digital interval series\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Group Intervals\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_intervals\",\n                \"output_key\": \"grouped_intervals\",\n                \"parameters\": {\n                    \"max_spacing\": 3.0\n                }\n            }\n        ]\n    }\n}\n]",
     "crumbs": [
       "Data Transformations",
-      "Line Angle"
+      "Digital Interval Group"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/line_clip.html",
+    "href": "user_guide/data_transformations/line_clip.html",
+    "title": "Line Clip by Reference Line",
+    "section": "",
+    "text": "This transform clips a set of lines based on where they intersect with a single, user-defined reference line.\n\n\nThis transformation is used to shorten or trim lines at the point where they cross a specified reference line. For each line in the input data, the algorithm finds the first point of intersection with the reference line. Based on the clip_side parameter, it then keeps either the segment of the line from its start to the intersection point (KeepBase) or the segment from the intersection point to its end (KeepDistal).\nIf a line does not intersect the reference line, it remains unchanged in the output. This is useful for standardizing line data, for example, by trimming all lines to a common boundary.\n\n\n\n\n\nStandardizing Whisker Tracking Data: In neuroscience experiments involving whisker tracking, it’s often necessary to analyze the whisker’s movement relative to a fixed point, like the edge of a pole or object. This transform can clip all tracked whisker lines at the boundary of that object, ensuring that only the relevant segment of the whisker is considered for analysis.\nAnalyzing Neurite Outgrowth: When studying neurite or axon growth in microscopy images, researchers might want to measure growth only up to a certain landmark or boundary. This transform can be used to clip the traced neurites at that boundary.\nPath Analysis in Behavioral Studies: In studies of animal behavior, if an animal’s path is tracked, this transform could be used to clip the path at the entrance to a specific zone or maze arm, isolating the behavior within or outside that area.",
+    "crumbs": [
+      "Data Transformations",
+      "Line Clip by Reference Line"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/line_clip.html#overview",
+    "href": "user_guide/data_transformations/line_clip.html#overview",
+    "title": "Line Clip by Reference Line",
+    "section": "",
+    "text": "This transform clips a set of lines based on where they intersect with a single, user-defined reference line.\n\n\nThis transformation is used to shorten or trim lines at the point where they cross a specified reference line. For each line in the input data, the algorithm finds the first point of intersection with the reference line. Based on the clip_side parameter, it then keeps either the segment of the line from its start to the intersection point (KeepBase) or the segment from the intersection point to its end (KeepDistal).\nIf a line does not intersect the reference line, it remains unchanged in the output. This is useful for standardizing line data, for example, by trimming all lines to a common boundary.\n\n\n\n\n\nStandardizing Whisker Tracking Data: In neuroscience experiments involving whisker tracking, it’s often necessary to analyze the whisker’s movement relative to a fixed point, like the edge of a pole or object. This transform can clip all tracked whisker lines at the boundary of that object, ensuring that only the relevant segment of the whisker is considered for analysis.\nAnalyzing Neurite Outgrowth: When studying neurite or axon growth in microscopy images, researchers might want to measure growth only up to a certain landmark or boundary. This transform can be used to clip the traced neurites at that boundary.\nPath Analysis in Behavioral Studies: In studies of animal behavior, if an animal’s path is tracked, this transform could be used to clip the path at the entrance to a specific zone or maze arm, isolating the behavior within or outside that area.",
+    "crumbs": [
+      "Data Transformations",
+      "Line Clip by Reference Line"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/line_clip.html#parameters",
+    "href": "user_guide/data_transformations/line_clip.html#parameters",
+    "title": "Line Clip by Reference Line",
+    "section": "Parameters",
+    "text": "Parameters\nThis transform has the following parameters:\n\nreference_line_data_name: The key identifying the LineData object in the data manager that will be used as the reference for clipping.\nreference_frame: The specific time frame within the reference line data to use for clipping. All lines in the input data will be clipped against this single frame of the reference line.\nclip_side: Determines which part of the line to keep after clipping.\n\nKeepBase: Keeps the portion of the line from its starting point to the intersection point.\nKeepDistal: Keeps the portion of the line from the intersection point to its end point.",
+    "crumbs": [
+      "Data Transformations",
+      "Line Clip by Reference Line"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/line_clip.html#example-configuration",
+    "href": "user_guide/data_transformations/line_clip.html#example-configuration",
+    "title": "Line Clip by Reference Line",
+    "section": "Example Configuration",
+    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example clips a set of lines against a reference line, keeping the base segment of each line.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Line Clip Pipeline\",\n            \"description\": \"Test line clipping on line data\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Clip Line by Reference Line\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_line\",\n                \"output_key\": \"clipped_lines\",\n                \"parameters\": {\n                    \"reference_line_data_name\": \"reference_line\",\n                    \"reference_frame\": 0,\n                    \"clip_side\": \"KeepBase\"\n                }\n            }\n        ]\n    }\n}\n]",
+    "crumbs": [
+      "Data Transformations",
+      "Line Clip by Reference Line"
     ]
   },
   {

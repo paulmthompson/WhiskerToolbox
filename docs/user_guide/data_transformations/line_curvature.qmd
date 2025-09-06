@@ -15,6 +15,8 @@ The transform takes a `LineData` object (representing one or more lines over tim
 
 This method allows for a smooth and robust estimation of curvature even when the underlying line data is noisy or unevenly sampled.
 
+![](images/clipboard-2433331239.png)
+
 ::: {.content-hidden when-format="html"}
 ```{{python}}
 #| echo: false
