@@ -27,16 +27,16 @@ def get_line_points_for_tangent(line, position):
     position = np.clip(position, 0, 1)
     # Calculate the index, ensuring it's within the valid range
     end_point_index = int(position * (len(line) - 1))
-
+    
     # Ensure index is at least 1 to have a preceding point
     if end_point_index == 0:
         end_point_index = 1
-
+        
     start_point_index = end_point_index - 1
-
+    
     start_point = line[start_point_index]
     end_point = line[end_point_index]
-
+    
     return start_point, end_point
 
 
@@ -55,11 +55,11 @@ def get_tangent_vector(line, position, order):
     # Tangent vector at position
     vx = np.polyval(pdx, position)
     vy = np.polyval(pdy, position)
-
+    
     # Point at position
     point_x = np.polyval(px, position)
     point_y = np.polyval(py, position)
-
+    
     return (point_x, point_y), (vx, vy)
 
 with plt.xkcd():
@@ -67,21 +67,24 @@ with plt.xkcd():
     gs = fig.add_gridspec(2, 2)
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1])
-    ax3 = fig.add_subplot(gs[1, :])
+    ax3 = fig.add_subplot(gs[1, 0])
     fig.suptitle('Visualizing the Line Angle Transform', fontsize=16)
 
 
     # --- Plot 1: Direct Points Method ---
     line1 = np.array([[0.5, 1], [1, 1.5], [2, 1.2], [3, 2], [4, 2.2]])
     position1 = 0.75
-
+    
     # Corrected logic for direct points tangent
     start_point1, end_point1 = get_line_points_for_tangent(line1, position1)
 
     ax1.plot(line1[:, 0], line1[:, 1], 'bo-', label='Tracked Line')
     ax1.plot(start_point1[0], start_point1[1], 'go', markersize=10, label='Preceding Point')
     ax1.plot(end_point1[0], end_point1[1], 'ro', markersize=10, label=f'Point at pos={position1}')
-    ax1.arrow(start_point1[0], start_point1[1], end_point1[0] - start_point1[0], end_point1[1] - start_point1[1],
+    ax1.arrow(start_point1[0], 
+              start_point1[1] + 0.1, # slight offset for visibility
+              end_point1[0] - start_point1[0], 
+              end_point1[1] - start_point1[1],
               head_width=0.1, head_length=0.2, fc='red', ec='red', label='Tangent Vector')
     ax1.set_title('"Direct Points" Method (Tangent Approx.)')
     ax1.set_xlabel('X Coordinate')
@@ -95,7 +98,7 @@ with plt.xkcd():
     position2 = 0.5
     order2 = 3
     point2, (vx, vy) = get_tangent_vector(line2, position2, order2)
-
+    
     # Create smooth curve for plotting the fit
     t_smooth = np.linspace(0, 1, 100)
     x_smooth = np.polyval(np.polyfit(np.linspace(0, 1, len(line2)), line2[:, 0], order2), t_smooth)
@@ -111,31 +114,31 @@ with plt.xkcd():
     ax2.legend()
     ax2.grid(True)
     ax2.axis('equal')
-
+    
     # --- Plot 3: Reference Vector ---
     # Using the tangent from the direct method for this example
     line3 = np.array([[1, 0.5], [2, 1], [3, 0.8], [4, 1.2], [5, 1.5]])
     position3 = 0.6
     start_point3, end_point3 = get_line_points_for_tangent(line3, position3)
     vec_x, vec_y = end_point3[0] - start_point3[0], end_point3[1] - start_point3[1]
-
+    
     ref_x, ref_y = 1, 1 # 45 degree reference
-
+    
     # Plot angle vector and reference vector from a common point for clarity
     common_point = np.array([0.5, 0.5])
     ax3.arrow(common_point[0], common_point[1], vec_x, vec_y,
               head_width=0.1, head_length=0.2, fc='red', ec='red', label='Calculated Vector')
     ax3.arrow(common_point[0], common_point[1], ref_x, ref_y,
               head_width=0.1, head_length=0.2, fc='cyan', ec='cyan', label='Reference Vector (1,1)')
-
+              
     angle_rad = np.arctan2(vec_y, vec_x)
     ref_angle_rad = np.arctan2(ref_y, ref_x)
     final_angle_rad = angle_rad - ref_angle_rad
-
+    
     from matplotlib.patches import Arc
     angle_deg = np.rad2deg(ref_angle_rad)
     final_angle_deg = np.rad2deg(final_angle_rad)
-
+    
     # Ensure final angle is in [-pi, pi] for correct arc drawing
     if final_angle_deg > 180: final_angle_deg -= 360
     if final_angle_deg < -180: final_angle_deg += 360
@@ -143,7 +146,7 @@ with plt.xkcd():
     arc = Arc(common_point, 1.5, 1.5, angle=angle_deg, theta1=0, theta2=final_angle_deg,
               color='red', linewidth=2, linestyle='--', label=f"Final Angle: {final_angle_deg:.1f}°")
     ax3.add_patch(arc)
-    ax3.text(0.5, 2.0, "The final angle is the difference between the\nCalculated Vector and the Reference Vector", ha='center')
+    ax3.text(3.5, 2.0, "The final angle is the difference between the\nCalculated Vector and the Reference Vector", ha='center')
 
 
     ax3.set_title('Effect of a Non-Default Reference Vector')
@@ -151,13 +154,14 @@ with plt.xkcd():
     ax3.set_ylabel('Y Coordinate')
     ax3.legend(loc='lower right')
     ax3.grid(.0)
-    ax3.axis('equal')
+   # ax3.axis('equal')
     ax3.set_xlim(-0.5, 5)
-    ax3.set_ylim(0, 3)
+    ax3.set_ylim(-3, 3)
 
-
+    
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     plt.show()
+
 
 ```
 :::
