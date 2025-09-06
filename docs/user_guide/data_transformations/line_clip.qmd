@@ -13,6 +13,8 @@ This transformation is used to shorten or trim lines at the point where they cro
 
 If a line does not intersect the reference line, it remains unchanged in the output. This is useful for standardizing line data, for example, by trimming all lines to a common boundary.
 
+![](images/clipboard-2648525334.png)
+
 ::: {.content-hidden when-format="html"}
 ```{{python}}
 #| echo: false
@@ -112,7 +114,7 @@ This transform has the following parameters:
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation. This example clips a set of lines against a reference line, keeping the base segment of each line.
 
-```json
+``` json
 [
 {
     "transformations": {
