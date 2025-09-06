@@ -100,6 +100,7 @@ website:
             - user_guide/data_transformations/analog_hilbert_phase.qmd
             - user_guide/data_transformations/line_angle.qmd
             - user_guide/data_transformations/line_clip.qmd
+            - user_guide/data_transformations/line_curvature.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd
