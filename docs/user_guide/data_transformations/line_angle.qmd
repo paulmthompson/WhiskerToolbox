@@ -1,0 +1,221 @@
+---
+title: "Line Angle"
+format: html
+---
+
+## Overview
+
+This transform calculates the angle of a line at a specific position along its length for each point in time.
+
+### Detailed Description
+
+The Line Angle transform provides a way to quantify the orientation of a line in a 2D space. This can be particularly useful for analyzing the movement or orientation of objects that are tracked as lines. The angle is measured relative to a customizable reference vector, which defaults to the positive x-axis (0 degrees).
+
+There are two methods for calculating the angle:
+
+*   **Direct Points:** This method approximates the tangent at a given `position` by calculating the angle of the vector between the point at that position and the point immediately preceding it. This is a simple and fast method suitable for getting a local orientation.
+*   **Polynomial Fit:** This method fits a polynomial of a given order to the line's points (parameterized by their cumulative distance). The angle is then calculated from the derivative of the polynomial at the specified `position`. This method can provide a more accurate estimate of the tangent angle at a specific point along a curved line.
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+
+def get_line_points_for_tangent(line, position):
+    # Ensure position is within [0, 1]
+    position = np.clip(position, 0, 1)
+    # Calculate the index, ensuring it's within the valid range
+    end_point_index = int(position * (len(line) - 1))
+    
+    # Ensure index is at least 1 to have a preceding point
+    if end_point_index == 0:
+        end_point_index = 1
+        
+    start_point_index = end_point_index - 1
+    
+    start_point = line[start_point_index]
+    end_point = line[end_point_index]
+    
+    return start_point, end_point
+
+
+def get_tangent_vector(line, position, order):
+    t = np.linspace(0, 1, len(line))
+    x, y = line[:, 0], line[:, 1]
+
+    # Fit polynomials
+    px = np.polyfit(t, x, order)
+    py = np.polyfit(t, y, order)
+
+    # Derivatives
+    pdx = np.polyder(px)
+    pdy = np.polyder(py)
+
+    # Tangent vector at position
+    vx = np.polyval(pdx, position)
+    vy = np.polyval(pdy, position)
+    
+    # Point at position
+    point_x = np.polyval(px, position)
+    point_y = np.polyval(py, position)
+    
+    return (point_x, point_y), (vx, vy)
+
+with plt.xkcd():
+    fig = plt.figure(figsize=(12, 10))
+    gs = fig.add_gridspec(2, 2)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[0, 1])
+    ax3 = fig.add_subplot(gs[1, 0])
+    fig.suptitle('Visualizing the Line Angle Transform', fontsize=16)
+
+
+    # --- Plot 1: Direct Points Method ---
+    line1 = np.array([[0.5, 1], [1, 1.5], [2, 1.2], [3, 2], [4, 2.2]])
+    position1 = 0.75
+    
+    # Corrected logic for direct points tangent
+    start_point1, end_point1 = get_line_points_for_tangent(line1, position1)
+
+    ax1.plot(line1[:, 0], line1[:, 1], 'bo-', label='Tracked Line')
+    ax1.plot(start_point1[0], start_point1[1], 'go', markersize=10, label='Preceding Point')
+    ax1.plot(end_point1[0], end_point1[1], 'ro', markersize=10, label=f'Point at pos={position1}')
+    ax1.arrow(start_point1[0], 
+              start_point1[1] + 0.1, # slight offset for visibility
+              end_point1[0] - start_point1[0], 
+              end_point1[1] - start_point1[1],
+              head_width=0.1, head_length=0.2, fc='red', ec='red', label='Tangent Vector')
+    ax1.set_title('"Direct Points" Method (Tangent Approx.)')
+    ax1.set_xlabel('X Coordinate')
+    ax1.set_ylabel('Y Coordinate')
+    ax1.legend()
+    ax1.grid(True)
+    ax1.axis('equal')
+
+    # --- Plot 2: Polynomial Fit Method ---
+    line2 = np.array([[0.5, 3], [1, 4.5], [2, 4.2], [3, 5], [4, 6]])
+    position2 = 0.5
+    order2 = 3
+    point2, (vx, vy) = get_tangent_vector(line2, position2, order2)
+    
+    # Create smooth curve for plotting the fit
+    t_smooth = np.linspace(0, 1, 100)
+    x_smooth = np.polyval(np.polyfit(np.linspace(0, 1, len(line2)), line2[:, 0], order2), t_smooth)
+    y_smooth = np.polyval(np.polyfit(np.linspace(0, 1, len(line2)), line2[:, 1], order2), t_smooth)
+
+    ax2.plot(line2[:, 0], line2[:, 1], 'bo', label='Original Points')
+    ax2.plot(x_smooth, y_smooth, 'b--', alpha=0.5, label=f'Poly Fit (Order {order2})')
+    ax2.plot(point2[0], point2[1], 'ro', markersize=10, label=f'Point at pos={position2}')
+    ax2.arrow(point2[0], point2[1], vx, vy,
+              head_width=0.1, head_length=0.2, fc='purple', ec='purple', label=f'Tangent Vector')
+    ax2.set_title('"Polynomial Fit" Method')
+    ax2.set_xlabel('X Coordinate')
+    ax2.legend()
+    ax2.grid(True)
+    ax2.axis('equal')
+    
+    # --- Plot 3: Reference Vector ---
+    # Using the tangent from the direct method for this example
+    line3 = np.array([[1, 0.5], [2, 1], [3, 0.8], [4, 1.2], [5, 1.5]])
+    position3 = 0.6
+    start_point3, end_point3 = get_line_points_for_tangent(line3, position3)
+    vec_x, vec_y = end_point3[0] - start_point3[0], end_point3[1] - start_point3[1]
+    
+    ref_x, ref_y = 1, 1 # 45 degree reference
+    
+    # Plot angle vector and reference vector from a common point for clarity
+    common_point = np.array([0.5, 0.5])
+    ax3.arrow(common_point[0], common_point[1], vec_x, vec_y,
+              head_width=0.1, head_length=0.2, fc='red', ec='red', label='Calculated Vector')
+    ax3.arrow(common_point[0], common_point[1], ref_x, ref_y,
+              head_width=0.1, head_length=0.2, fc='cyan', ec='cyan', label='Reference Vector (1,1)')
+              
+    angle_rad = np.arctan2(vec_y, vec_x)
+    ref_angle_rad = np.arctan2(ref_y, ref_x)
+    final_angle_rad = angle_rad - ref_angle_rad
+    
+    from matplotlib.patches import Arc
+    angle_deg = np.rad2deg(ref_angle_rad)
+    final_angle_deg = np.rad2deg(final_angle_rad)
+    
+    # Ensure final angle is in [-pi, pi] for correct arc drawing
+    if final_angle_deg > 180: final_angle_deg -= 360
+    if final_angle_deg < -180: final_angle_deg += 360
+
+    arc = Arc(common_point, 1.5, 1.5, angle=angle_deg, theta1=0, theta2=final_angle_deg,
+              color='red', linewidth=2, linestyle='--', label=f"Final Angle: {final_angle_deg:.1f}°")
+    ax3.add_patch(arc)
+    ax3.text(3.5, 2.0, "The final angle is the difference between the\nCalculated Vector and the Reference Vector", ha='center')
+
+
+    ax3.set_title('Effect of a Non-Default Reference Vector')
+    ax3.set_xlabel('X Coordinate')
+    ax3.set_ylabel('Y Coordinate')
+    ax3.legend(loc='lower right')
+    ax3.grid(.0)
+   # ax3.axis('equal')
+    ax3.set_xlim(-0.5, 5)
+    ax3.set_ylim(-3, 3)
+
+    
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.show()
+
+
+```
+:::
+
+### Neuroscience Use Cases
+
+In neuroscience, this transform can be used to analyze a variety of data:
+
+*   **Whisker Tracking:**  The angle of a tracked whisker relative to the animal's head can be calculated to study sensory input and motor control.
+*   **Limb Tracking:** The angle of a limb segment (e.g., the forearm) can be calculated to analyze reaching movements or other motor behaviors.
+*   **Tongue Tracking:** The angle of the tongue during licking or other oral movements can be quantified.
+
+## Parameters
+
+This transform has the following parameters:
+
+*   `position`: A value between 0.0 and 1.0 that specifies the point along the line at which to calculate the angle. For example, `0.5` would be the midpoint of the line.
+*   `method`: The calculation method to use.
+    *   `Direct Points`: (Default) Calculates the angle based on the vector from the start of the line to the point at `position`.
+    *   `Polynomial Fit`: Fits a polynomial to the line and calculates the angle from the derivative.
+*   `polynomial_order`: The order of the polynomial to fit to the line when using the `Polynomial Fit` method. A higher order can capture more complex curves but requires more points and can be prone to overfitting. A typical value is 2 or 3.
+*   `reference_x`: The x-component of the reference vector. Defaults to `1.0`.
+*   `reference_y`: The y-component of the reference vector. Defaults to `0.0`. The default vector `(1.0, 0.0)` corresponds to the positive x-axis, meaning angles are measured with 0 degrees pointing to the right.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the angle at the midpoint of a line using the "Direct Points" method.
+
+```json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Line Angle Pipeline",
+            "description": "Test line angle calculation on line data",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Calculate Line Angle",
+                "phase": "analysis",
+                "input_key": "test_line",
+                "output_key": "line_angles",
+                "parameters": {
+                    "position": 0.5,
+                    "method": "Direct Points",
+                    "polynomial_order": 3,
+                    "reference_x": 1.0,
+                    "reference_y": 0.0
+                }
+            }
+        ]
+    }
+}
+]
+```
