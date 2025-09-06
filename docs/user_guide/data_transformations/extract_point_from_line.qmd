@@ -1,0 +1,122 @@
+---
+title: "Extract Point from Line"
+format: html
+---
+
+## Overview
+
+This transform extracts a specific point from a line at a given fractional position. This is useful for isolating a single point of interest along a tracked object, such as the tip, base, or midpoint of a whisker or limb.
+
+### Detailed Description
+
+This operation pinpoints and extracts the coordinates of a single point along a line for each time step. The position of the point is determined by a fractional value from 0.0 (the start of the line) to 1.0 (the end of the line). Two different methods are available for extracting the point:
+
+-   **Direct Method**: This method calculates the cumulative length of the line's segments and finds the point that lies at the specified fractional distance along this length. If `use_interpolation` is enabled, it will linearly interpolate between two adjacent vertices of the line to find the exact position. If disabled, it will select the nearest vertex.
+-   **Parametric Method**: This method fits a polynomial to the line's x and y coordinates separately as a function of the parametric distance along the line. It then evaluates the polynomial at the specified fractional position to determine the point's coordinates. This can be useful for smoothing out irregularities in the line.
+
+The output is a `PointData` object containing the extracted point for each time step.
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Generate sample data ---
+    # A curved line
+    line_x = np.linspace(0, 10, 20)
+    line_y = 2 * np.sin(line_x / 2) + 3
+
+    # --- Extract a point at a fractional position (e.g., 0.75) ---
+    position = 0.75
+
+    # Direct method calculation (with interpolation)
+    lengths = np.sqrt(np.diff(line_x)**2 + np.diff(line_y)**2)
+    cumulative_length = np.insert(np.cumsum(lengths), 0, 0)
+    total_length = cumulative_length[-1]
+    target_length = position * total_length
+
+    # Find the segment where the point lies
+    for i in range(len(cumulative_length) - 1):
+        if cumulative_length[i] <= target_length <= cumulative_length[i+1]:
+            break
+
+    # Interpolate to find the exact point
+    segment_length = lengths[i]
+    fraction_along_segment = (target_length - cumulative_length[i]) / segment_length
+    extracted_x = line_x[i] + fraction_along_segment * (line_x[i+1] - line_x[i])
+    extracted_y = line_y[i] + fraction_along_segment * (line_y[i+1] - line_y[i])
+
+
+    # --- Create the plot ---
+    fig, ax = plt.subplots(figsize=(10, 6))
+    fig.suptitle('Extracting a Point from a Line at a Fractional Position', fontsize=16)
+
+    # Plot the line
+    ax.plot(line_x, line_y, 'o-', label='Tracked Line')
+
+    # Highlight the extracted point
+    ax.plot(extracted_x, extracted_y, 'ro', markersize=10, label=f'Extracted Point at {position*100}%')
+
+    ax.set_title('A point is extracted from the line based on fractional distance')
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    ax.legend()
+    ax.grid(True)
+    ax.set_aspect('equal', adjustable='box')
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+### Neuroscience Use Cases
+
+This transformation is particularly useful for detailed analysis of movement and morphology:
+
+-   **Whisker Analysis**: Researchers can extract the tip (position 1.0), base (position 0.0), or any other consistent point along a tracked whisker. This allows for precise analysis of whisker contact, bending, or movement relative to other objects or whiskers.
+-   **Limb Tracking**: In studies of locomotion or reaching, this transform can isolate specific points on a limb, such as the endpoint (e.g., a hand or paw) or a joint (e.g., an elbow), to analyze trajectories and kinematics.
+-   **Morphological Measurement**: For organisms that change shape, like larvae or worms, this transform can be used to track specific points on the body midline to quantify bending or undulation.
+
+## Parameters
+
+This transform has the following parameters:
+
+-   `position` (float): The fractional distance along the line where the point should be extracted. Must be between 0.0 (start) and 1.0 (end).
+-   `method` (string): The method to use for point extraction. Can be either `"Direct"` or `"Parametric"`.
+-   `polynomial_order` (integer, optional): The order of the polynomial to fit to the line if using the `Parametric` method. Defaults to 3.
+-   `use_interpolation` (boolean, optional): Whether to use linear interpolation to find the exact point when using the `Direct` method. If `false`, the nearest vertex on the line is returned. Defaults to `true`.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example extracts the point at the 75% position along a line stored with the key `whisker_1`.
+
+```json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Whisker Tip Extraction Pipeline",
+            "description": "Extracts the tip of a whisker from line data.",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Extract Point from Line",
+                "phase": "analysis",
+                "input_key": "whisker_1",
+                "output_key": "whisker_1_tip",
+                "parameters": {
+                    "position": 0.75,
+                    "method": "Direct",
+                    "use_interpolation": true
+                }
+            }
+        ]
+    }
+}
+]
+```
