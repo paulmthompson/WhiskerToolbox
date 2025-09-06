@@ -95,6 +95,9 @@ protected:
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* event) override;
 
+    // Request an OpenGL 4.3 Core context for compute shaders used by LineDataVisualization
+    std::pair<int, int> getRequiredOpenGLVersion() const override { return {4, 3}; }
+
 private slots:
     void onSelectionChanged(size_t total_selected);
 

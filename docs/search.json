@@ -43,6 +43,50 @@
     ]
   },
   {
+    "objectID": "user_guide/data_transformations/digital_interval_group.html",
+    "href": "user_guide/data_transformations/digital_interval_group.html",
+    "title": "Digital Interval Group",
+    "section": "",
+    "text": "This transform groups nearby intervals in a digital interval series based on a specified maximum spacing, which is useful for consolidating fragmented temporal events.\n\n\nThis transform merges digital intervals that are close to each other. If the gap between the end of one interval and the start of the next is less than or equal to the max_spacing value, the two intervals are combined into a single, larger interval. This process is repeated until no more intervals can be grouped.\nThis is particularly useful for cleaning up data where a single continuous event might be recorded as multiple, closely-spaced but separate intervals due to noise or transient interruptions in signal detection.\n\n\n\n\nIn neuroscience, this transform can be applied to refine event data:\n\nBout Analysis: When analyzing behaviors that occur in bouts (e.g., sniffing, grooming, vocalizations), this transform can merge closely spaced, individual instances into a single, continuous behavioral bout. For example, a series of short sniffs could be grouped into one “sniffing bout”.",
+    "crumbs": [
+      "Data Transformations",
+      "Digital Interval Group"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/digital_interval_group.html#overview",
+    "href": "user_guide/data_transformations/digital_interval_group.html#overview",
+    "title": "Digital Interval Group",
+    "section": "",
+    "text": "This transform groups nearby intervals in a digital interval series based on a specified maximum spacing, which is useful for consolidating fragmented temporal events.\n\n\nThis transform merges digital intervals that are close to each other. If the gap between the end of one interval and the start of the next is less than or equal to the max_spacing value, the two intervals are combined into a single, larger interval. This process is repeated until no more intervals can be grouped.\nThis is particularly useful for cleaning up data where a single continuous event might be recorded as multiple, closely-spaced but separate intervals due to noise or transient interruptions in signal detection.\n\n\n\n\nIn neuroscience, this transform can be applied to refine event data:\n\nBout Analysis: When analyzing behaviors that occur in bouts (e.g., sniffing, grooming, vocalizations), this transform can merge closely spaced, individual instances into a single, continuous behavioral bout. For example, a series of short sniffs could be grouped into one “sniffing bout”.",
+    "crumbs": [
+      "Data Transformations",
+      "Digital Interval Group"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/digital_interval_group.html#parameters",
+    "href": "user_guide/data_transformations/digital_interval_group.html#parameters",
+    "title": "Digital Interval Group",
+    "section": "Parameters",
+    "text": "Parameters\nThis transform has the following parameter:\n\nmax_spacing: The maximum allowed gap between two consecutive intervals for them to be merged. The time unit should be consistent with the data’s time representation (e.g., seconds or frames). If the gap is greater than this value, the intervals remain separate.",
+    "crumbs": [
+      "Data Transformations",
+      "Digital Interval Group"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/digital_interval_group.html#example-configuration",
+    "href": "user_guide/data_transformations/digital_interval_group.html#example-configuration",
+    "title": "Digital Interval Group",
+    "section": "Example Configuration",
+    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example groups intervals that are separated by 3.0 time units or less.\n[\n{\n    \"transformations\": {\n        \"metadata\": {\n            \"name\": \"Interval Grouping Pipeline\",\n            \"description\": \"Test interval grouping on digital interval series\",\n            \"version\": \"1.0\"\n        },\n        \"steps\": [\n            {\n                \"step_id\": \"1\",\n                \"transform_name\": \"Group Intervals\",\n                \"phase\": \"analysis\",\n                \"input_key\": \"test_intervals\",\n                \"output_key\": \"grouped_intervals\",\n                \"parameters\": {\n                    \"max_spacing\": 3.0\n                }\n            }\n        ]\n    }\n}\n]",
+    "crumbs": [
+      "Data Transformations",
+      "Digital Interval Group"
+    ]
+  },
+  {
     "objectID": "user_guide/data_transformations/analog_hilbert_phase.html",
     "href": "user_guide/data_transformations/analog_hilbert_phase.html",
     "title": "Analog Hilbert Phase",
@@ -733,7 +777,7 @@
     "href": "developer/transforms.html",
     "title": "transforms",
     "section": "",
-    "text": "Transform Catalog\nThe below table has all of the transformations currently available in the Data Transform widget. Each transform should have a test.cpp file (Column 2). The test.cpp file should include tests to make sure it can be populated by a JSON template (e.g. it can be run by loading data with a JSON file). Some transforms will “just work” because they are parameterless, but transforms with parameters will need to have them also described with a JSON link and put in the transform parameter factory. Documentation for users should be provided to describe the algorithm and its uses. Finally, a benchmark.cpp file should be created and placed in the same directory.\n\n\n\n\n\n\n\n\n\n\n\n\nTransform Name\nHas .test.cpp?\nJSON-based Test?\nParameters in ParameterFactory?\nUser Docs Exist?\nHas benchmark.cpp?\nBenchmark Results\n\n\n\n\nCalculate Mask Centroid\nYes\nYes\nYes\nNo\nNo\n\n\n\nConvert Mask to Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nSkeletonize Mask\nYes\nYes\nYes\nNo\nNo\n\n\n\nRemove Small Connected Components\nYes\nYes\nYes\nNo\nNo\n\n\n\nApply Median Filter\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Area\nYes\nYes\nYes\nNo\nNo\n\n\n\nFill Mask Holes\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Mask Principal Axis\nYes\nYes\nYes\nNo\nNo\n\n\n\nWhisker Tracing\nNo\nN/A\nNo\nNo\nNo\n\n\n\nClip Line by Reference Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nLine Alignment to Bright Features\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line to Point Distance\nYes\nYes\nYes\nNo\nNo\n\n\n\nResample Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nExtract Line Subsegment\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line Angle\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line Curvature\nYes\nYes\nYes\nNo\nNo\n\n\n\nExtract Point from Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nFilter\nYes\nNo\nNo\nNo\nNo\n\n\n\nHilbert Phase\nYes\nYes\nYes\nYes\nNo\n\n\n\nThreshold Event Detection\nYes\nYes\nYes\nNo\nNo\n\n\n\nThreshold Interval Detection\nYes\nYes\nYes\nNo\nNo\n\n\n\nScale and Normalize\nYes\nYes\nYes\nNo\nNo\n\n\n\nGroup Intervals\nYes\nYes\nYes\nNo\nNo",
+    "text": "Transform Catalog\nThe below table has all of the transformations currently available in the Data Transform widget. Each transform should have a test.cpp file (Column 2). The test.cpp file should include tests to make sure it can be populated by a JSON template (e.g. it can be run by loading data with a JSON file). Some transforms will “just work” because they are parameterless, but transforms with parameters will need to have them also described with a JSON link and put in the transform parameter factory. Documentation for users should be provided to describe the algorithm and its uses. Finally, a benchmark.cpp file should be created and placed in the same directory.\n\n\n\n\n\n\n\n\n\n\n\n\nTransform Name\nHas .test.cpp?\nJSON-based Test?\nParameters in ParameterFactory?\nUser Docs Exist?\nHas benchmark.cpp?\nBenchmark Results\n\n\n\n\nCalculate Mask Centroid\nYes\nYes\nYes\nNo\nNo\n\n\n\nConvert Mask to Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nSkeletonize Mask\nYes\nYes\nYes\nNo\nNo\n\n\n\nRemove Small Connected Components\nYes\nYes\nYes\nNo\nNo\n\n\n\nApply Median Filter\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Area\nYes\nYes\nYes\nNo\nNo\n\n\n\nFill Mask Holes\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Mask Principal Axis\nYes\nYes\nYes\nNo\nNo\n\n\n\nWhisker Tracing\nNo\nN/A\nNo\nNo\nNo\n\n\n\nClip Line by Reference Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nLine Alignment to Bright Features\nYes\nYes\nYes\nNo\nYes\n10 images in 2ms\n\n\nCalculate Line to Point Distance\nYes\nYes\nYes\nNo\nNo\n\n\n\nResample Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nExtract Line Subsegment\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line Angle\nYes\nYes\nYes\nNo\nNo\n\n\n\nCalculate Line Curvature\nYes\nYes\nYes\nNo\nNo\n\n\n\nExtract Point from Line\nYes\nYes\nYes\nNo\nNo\n\n\n\nFilter\nYes\nNo\nNo\nNo\nNo\n\n\n\nHilbert Phase\nYes\nYes\nYes\nYes\nNo\n\n\n\nThreshold Event Detection\nYes\nYes\nYes\nNo\nNo\n\n\n\nThreshold Interval Detection\nYes\nYes\nYes\nNo\nNo\n\n\n\nScale and Normalize\nYes\nYes\nYes\nNo\nNo\n\n\n\nGroup Intervals\nYes\nYes\nYes\nNo\nNo",
     "crumbs": [
       "transforms"
     ]
@@ -836,6 +880,50 @@
     "title": "Analog Filter",
     "section": "Minimal Example",
     "text": "Minimal Example\nThis example applies a 4th order lowpass Butterworth filter at 100 Hz.\n{\n  \"transform\": \"Analog Filter\",\n  \"input\": \"my_analog_series\",\n  \"output\": \"filtered_series\",\n  \"params\": {\n    \"filter_type\": \"lowpass\",\n    \"cutoff_frequency\": 100,\n    \"order\": 4\n  }\n}"
+  },
+  {
+    "objectID": "user_guide/data_transformations/analog_interval_threshold.html",
+    "href": "user_guide/data_transformations/analog_interval_threshold.html",
+    "title": "Analog Interval Threshold",
+    "section": "",
+    "text": "This transform detects continuous time intervals during which an analog signal’s value meets a specified threshold condition (e.g., staying above a value).\n\n\nThis transformation is used to identify continuous periods, or “intervals,” where a signal’s amplitude meets certain criteria. Unlike event detection, which marks a single point in time, interval detection finds the start and end times of periods that satisfy the condition.\nThe user can define a threshold and specify whether the signal must be above (Positive), below (Negative), or have its absolute value exceed (Absolute) that threshold.\nAdditionally, two timing parameters help refine the detection: - A lockout_time prevents the detection of new intervals for a set duration after the start of a previous interval. - A min_duration ensures that only intervals lasting longer than a specified duration are included in the final output.\nThis transform is useful for isolating epochs of interest in a continuous signal for further analysis. It takes an analog time series as input and produces a digital interval series as output.\n\n\n\n\nThis transform is particularly useful for identifying specific “states” or “epochs” in neural or behavioral data.\n\nIdentifying Periods of Movement: From accelerometer or video tracking data, one can find intervals of high activity that correspond to an animal moving, versus periods of rest.\nAnalyzing Muscle Activation: In electromyography (EMG), this can be used to determine the duration of muscle contractions by finding intervals where the rectified signal remains above a certain level of activity.",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Interval Threshold"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/analog_interval_threshold.html#overview",
+    "href": "user_guide/data_transformations/analog_interval_threshold.html#overview",
+    "title": "Analog Interval Threshold",
+    "section": "",
+    "text": "This transform detects continuous time intervals during which an analog signal’s value meets a specified threshold condition (e.g., staying above a value).\n\n\nThis transformation is used to identify continuous periods, or “intervals,” where a signal’s amplitude meets certain criteria. Unlike event detection, which marks a single point in time, interval detection finds the start and end times of periods that satisfy the condition.\nThe user can define a threshold and specify whether the signal must be above (Positive), below (Negative), or have its absolute value exceed (Absolute) that threshold.\nAdditionally, two timing parameters help refine the detection: - A lockout_time prevents the detection of new intervals for a set duration after the start of a previous interval. - A min_duration ensures that only intervals lasting longer than a specified duration are included in the final output.\nThis transform is useful for isolating epochs of interest in a continuous signal for further analysis. It takes an analog time series as input and produces a digital interval series as output.\n\n\n\n\nThis transform is particularly useful for identifying specific “states” or “epochs” in neural or behavioral data.\n\nIdentifying Periods of Movement: From accelerometer or video tracking data, one can find intervals of high activity that correspond to an animal moving, versus periods of rest.\nAnalyzing Muscle Activation: In electromyography (EMG), this can be used to determine the duration of muscle contractions by finding intervals where the rectified signal remains above a certain level of activity.",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Interval Threshold"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/analog_interval_threshold.html#parameters",
+    "href": "user_guide/data_transformations/analog_interval_threshold.html#parameters",
+    "title": "Analog Interval Threshold",
+    "section": "Parameters",
+    "text": "Parameters\nThis transform has the following parameters:\n\nthreshold_value: The amplitude value the signal must be above/below for the duration of the interval.\ndirection: Specifies the condition the signal must meet. Valid options are: \"Positive\", \"Negative\", or \"Absolute\".\nlockout_time: A duration (in the same time units as the data) after the start of a detected interval, during which no new intervals can begin. This is useful for isolating the onset of distinct episodes of activity.\nmin_duration: The minimum required length of an interval. Any detected period that is shorter than this value will be discarded.\nmissing_data_mode: Defines how to handle non-consecutive time points in the signal.\n\nTreat as Zero: Missing time points are treated as if the signal’s value is zero. This can terminate an interval if zero does not meet the threshold condition.\nIgnore: The algorithm proceeds to the next available data point, effectively ignoring the time gap.",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Interval Threshold"
+    ]
+  },
+  {
+    "objectID": "user_guide/data_transformations/analog_interval_threshold.html#example-configuration",
+    "href": "user_guide/data_transformations/analog_interval_threshold.html#example-configuration",
+    "title": "Analog Interval Threshold",
+    "section": "Example Configuration",
+    "text": "Example Configuration\nHere is a complete example of a JSON configuration file that could be used to run this transformation. This example finds all intervals where a signal named “LFP_channel_1” remains above 1.5 for at least 50 milliseconds.\n[\n  {\n    \"transformations\": {\n      \"metadata\": {\n        \"name\": \"Interval Threshold Detection Pipeline\",\n        \"description\": \"Detects intervals of high activity in an LFP signal.\",\n        \"version\": \"1.0\"\n      },\n      \"steps\": [\n        {\n          \"step_id\": \"1\",\n          \"transform_name\": \"Threshold Interval Detection\",\n          \"phase\": \"analysis\",\n          \"input_key\": \"LFP_channel_1\",\n          \"output_key\": \"detected_activity_intervals\",\n          \"parameters\": {\n            \"threshold_value\": 1.5,\n            \"direction\": \"Positive\",\n            \"lockout_time\": 0.0,\n            \"min_duration\": 0.050,\n            \"missing_data_mode\": \"Treat as Zero\"\n          }\n        }\n      ]\n    }\n  }\n]",
+    "crumbs": [
+      "Data Transformations",
+      "Analog Interval Threshold"
+    ]
   },
   {
     "objectID": "user_guide/data_transformations/overview.html",
