@@ -6,7 +6,7 @@
 #include "DataManager/utils/TableView/TableRegistry.hpp"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
-#include "DataManager/DataManager.hpp"
+// removed duplicate include
 
 #include <QDebug>
 #include <algorithm>
@@ -26,7 +26,7 @@ void PaginatedTableModel::setSourceTable(std::unique_ptr<IRowSelector> row_selec
     
     _source_row_selector = std::move(row_selector);
     _column_infos = std::move(column_infos);
-    _data_manager = data_manager;
+    _data_manager = std::move(data_manager);
     _complete_table_view.reset();
     
     // Calculate total rows and extract column names
@@ -148,9 +148,9 @@ std::pair<std::shared_ptr<TableView>, size_t> PaginatedTableModel::getMiniTableF
     }
     
     // Calculate which page this row belongs to
-    size_t page_number = row_index / _page_size;
-    size_t page_start_row = page_number * _page_size;
-    size_t local_row = row_index - page_start_row;
+    size_t const page_number = row_index / _page_size;
+    size_t const page_start_row = page_number * _page_size;
+    size_t const local_row = row_index - page_start_row;
     
     // Check cache first
     auto cache_it = _page_cache.find(page_number);
@@ -159,12 +159,14 @@ std::pair<std::shared_ptr<TableView>, size_t> PaginatedTableModel::getMiniTableF
     }
     
     // Create mini table for this page
-    size_t actual_page_size = std::min(_page_size, _total_rows - page_start_row);
+    size_t const actual_page_size = std::min(_page_size, _total_rows - page_start_row);
     auto mini_table = createMiniTable(page_start_row, actual_page_size);
     
     if (mini_table) {
         // Cache the mini table
         _page_cache[page_number] = mini_table;
+        // Diagnostics: track number of pages materialized
+        ++_materialized_page_count;
         cleanupCache();
     }
     
@@ -203,7 +205,7 @@ std::shared_ptr<TableView> PaginatedTableModel::createMiniTable(size_t page_star
                 std::vector<size_t> const & source_indices = indexSelector->getIndices();
                 std::vector<size_t> filtered;
                 filtered.reserve(window_indices.size());
-                for (size_t k : window_indices) {
+                for (size_t const k : window_indices) {
                     if (k < source_indices.size()) {
                         filtered.push_back(source_indices[k]);
                     }
@@ -215,7 +217,7 @@ std::shared_ptr<TableView> PaginatedTableModel::createMiniTable(size_t page_star
                 auto const & timestamps = timestampSelector->getTimestamps();
                 std::vector<TimeFrameIndex> filtered;
                 filtered.reserve(window_indices.size());
-                for (size_t k : window_indices) {
+                for (size_t const k : window_indices) {
                     if (k < timestamps.size()) {
                         filtered.push_back(timestamps[k]);
                     }
@@ -227,7 +229,7 @@ std::shared_ptr<TableView> PaginatedTableModel::createMiniTable(size_t page_star
                 auto const & intervals = intervalSelector->getIntervals();
                 std::vector<TimeFrameInterval> filtered;
                 filtered.reserve(window_indices.size());
-                for (size_t k : window_indices) {
+                for (size_t const k : window_indices) {
                     if (k < intervals.size()) {
                         filtered.push_back(intervals[k]);
                     }
@@ -277,7 +279,7 @@ QString PaginatedTableModel::formatValue(std::shared_ptr<TableView> const & mini
                                        std::string const & column_name, 
                                        size_t local_row) {
     if (!mini_table || local_row >= mini_table->getRowCount()) {
-        return QString("N/A");
+        return {"N/A"};
     }
     
     try {
@@ -286,10 +288,10 @@ QString PaginatedTableModel::formatValue(std::shared_ptr<TableView> const & mini
             using ElemT = typename VecT::value_type;
 
             if (local_row >= vec.size()) {
-                if constexpr (std::is_same_v<ElemT, double>) return QString("NaN");
-                if constexpr (std::is_same_v<ElemT, int>) return QString("NaN");
-                if constexpr (std::is_same_v<ElemT, bool>) return QString("false");
-                return QString("N/A");
+                if constexpr (std::is_same_v<ElemT, double>) return {"NaN"};
+                if constexpr (std::is_same_v<ElemT, int>) return {"NaN"};
+                if constexpr (std::is_same_v<ElemT, bool>) return {"false"};
+                return {"N/A"};
             }
 
             if constexpr (std::is_same_v<ElemT, double>) {
@@ -297,19 +299,19 @@ QString PaginatedTableModel::formatValue(std::shared_ptr<TableView> const & mini
             } else if constexpr (std::is_same_v<ElemT, int>) {
                 return QString::number(vec[local_row]);
             } else if constexpr (std::is_same_v<ElemT, bool>) {
-                return vec[local_row] ? QString("true") : QString("false");
-            } else if constexpr (std::is_same_v<ElemT, std::vector<double>>) {
-                return joinVector(vec[local_row]);
-            } else if constexpr (std::is_same_v<ElemT, std::vector<int>>) {
-                return joinVector(vec[local_row]);
-            } else if constexpr (std::is_same_v<ElemT, std::vector<float>>) {
+                return vec[local_row] ? QStringLiteral("true") : QStringLiteral("false");
+            } else if constexpr (
+                std::is_same_v<ElemT, std::vector<double>> ||
+                std::is_same_v<ElemT, std::vector<int>> ||
+                std::is_same_v<ElemT, std::vector<float>>
+            ) {
                 return joinVector(vec[local_row]);
             } else {
-                return QString("?");
+                return {"?"};
             }
         });
     } catch (...) {
-        return QString("Error");
+        return {"Error"};
     }
 }
 

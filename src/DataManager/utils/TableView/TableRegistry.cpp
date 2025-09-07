@@ -320,6 +320,22 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
                 data_source_variant = line_source;
                 valid_source = true;
             }
+        } else {
+            // Fallback: try to infer source kind when no prefix is provided
+            // Prefer events -> intervals -> analog -> lines
+            if (auto ev = _data_manager_extension->getEventSource(column_source)) {
+                data_source_variant = ev;
+                valid_source = true;
+            } else if (auto iv = _data_manager_extension->getIntervalSource(column_source)) {
+                data_source_variant = iv;
+                valid_source = true;
+            } else if (auto an = _data_manager_extension->getAnalogSource(column_source)) {
+                data_source_variant = an;
+                valid_source = true;
+            } else if (auto ln = _data_manager_extension->getLineSource(column_source)) {
+                data_source_variant = ln;
+                valid_source = true;
+            }
         }
 
         if (!valid_source) {

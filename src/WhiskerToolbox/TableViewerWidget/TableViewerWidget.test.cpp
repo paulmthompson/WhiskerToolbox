@@ -547,3 +547,93 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Widget Lifec
         REQUIRE(model->rowCount() == 4);  // All rows should be visible
     }
 }
+
+TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination with large table", "[TableViewerWidget][Pagination]") {
+    // Build a large pagination-backed configuration: 2500 rows and 1000 columns
+    
+    std::cout << "CTEST_FULL_OUTPUT" << std::endl;
+
+    const int num_rows = 2500;
+    const int num_columns = 10;
+
+    auto dme = getDataManagerExtension();
+    REQUIRE(dme != nullptr);
+
+    // Create many intervals (rows) using existing behavior_time timeframe (0..100)
+    auto behavior_time_frame = getDataManager().getTime(TimeKey("behavior_time"));
+    std::vector<TimeFrameInterval> row_intervals;
+    row_intervals.reserve(num_rows);
+    for (size_t i = 0; i < num_rows; ++i) {
+        auto start = TimeFrameIndex(static_cast<int>(i % 100));
+        auto end = TimeFrameIndex(static_cast<int>((i % 100) + 1));
+        row_intervals.emplace_back(start, end);
+    }
+
+    auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
+
+    // Create column infos alternating presence and count from event source "Neuron1Spikes"
+    std::vector<ColumnInfo> column_infos;
+    column_infos.reserve(num_columns);
+    for (int i = 0; i < num_columns; ++i) {
+        if (i % 2 == 0) {
+            ColumnInfo info("Col_" + std::to_string(i), "Presence", "Neuron1Spikes", "Event Presence");
+            info.outputType = typeid(bool);
+            info.outputTypeName = "bool";
+            column_infos.push_back(std::move(info));
+        } else {
+            ColumnInfo info("Col_" + std::to_string(i), "Count", "Neuron1Spikes", "Event Count");
+            info.outputType = typeid(int);
+            info.outputTypeName = "int";
+            column_infos.push_back(std::move(info));
+        }
+    }
+
+    // Use the widget's pagination-backed API
+    TableViewerWidget widget;
+    widget.setPageSize(64);
+    auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager*){});
+    widget.setTableConfiguration(std::move(row_selector), std::move(column_infos), data_manager, "Large Pagination Table");
+
+    REQUIRE(widget.hasTable());
+
+    auto * table_view_widget = widget.findChild<QTableView*>();
+    REQUIRE(table_view_widget != nullptr);
+    auto * base_model = table_view_widget->model();
+    REQUIRE(base_model != nullptr);
+
+    // Confirm dimensions
+    REQUIRE(base_model->rowCount() == num_rows);
+    REQUIRE(base_model->columnCount() == num_columns);
+
+    // Access underlying model to track materialized pages
+    auto * model = dynamic_cast<PaginatedTableModel *>(base_model);
+    REQUIRE(model != nullptr);
+
+    auto accessRow = [&](int row) {
+        for (int col = 0; col < std::min(5, base_model->columnCount()); ++col) {
+            auto idx = base_model->index(row, col);
+            REQUIRE(idx.isValid());
+            auto val = base_model->data(idx, Qt::DisplayRole);
+            REQUIRE(val.isValid());
+        }
+    };
+
+    size_t initial_pages = model->getMaterializedPageCount();
+
+    // Trigger access across multiple page boundaries
+    accessRow(0);    // page 0
+    accessRow(63);   // still page 0
+    accessRow(64);   // page 1
+    accessRow(127);  // page 1
+    accessRow(128);  // page 2
+    accessRow(512);  // deeper page
+    accessRow(1024); // deeper page
+    accessRow(2048); // deeper page
+
+    size_t pages_after = model->getMaterializedPageCount();
+    REQUIRE(pages_after >= initial_pages + 4);
+
+    // Also simulate scrolling the view and then accessing data at the new top
+    table_view_widget->scrollTo(base_model->index(1500, 0), QAbstractItemView::PositionAtTop);
+    accessRow(1500);
+}

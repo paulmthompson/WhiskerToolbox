@@ -10,6 +10,7 @@
 #include <QStringList>
 
 #include <memory>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -62,6 +63,14 @@ public:
     [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override;
     [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
+    /**
+     * @brief Get the count of mini pages materialized during model lifetime
+     * @return Number of pages created and cached at least once
+     * @pre None
+     * @post No side-effects
+     */
+    [[nodiscard]] size_t getMaterializedPageCount() const { return _materialized_page_count; }
+
 private:
     // Source configuration for pagination
     std::unique_ptr<IRowSelector> _source_row_selector;
@@ -79,6 +88,8 @@ private:
     // Cache for mini tables
     mutable std::map<size_t, std::shared_ptr<TableView>> _page_cache;
     static constexpr size_t MAX_CACHED_PAGES = 10;
+    // Testing/diagnostics: count pages created
+    mutable size_t _materialized_page_count = 0;
     
     /**
      * @brief Get or create a mini table for the page containing the given row
