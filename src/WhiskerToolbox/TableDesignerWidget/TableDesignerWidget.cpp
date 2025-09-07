@@ -55,25 +55,23 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     _parameter_layout->setContentsMargins(0, 0, 0, 0);
     _parameter_layout->setSpacing(4);
     
-    // Initialize table viewer widget and debounce timer
+    // Initialize table viewer widget for preview
     _table_viewer = new TableViewerWidget(this);
     
-    // Replace the preview table with the table viewer widget
-    if (ui->preview_group && ui->preview_layout) {
-        // Clear existing layout
-        QLayoutItem *item;
-        while ((item = ui->preview_layout->takeAt(0)) != nullptr) {
-            delete item->widget();
-            delete item;
-        }
-        // Add the table viewer widget
-        ui->preview_layout->addWidget(_table_viewer);
-    }
+    // Add the table viewer widget to the preview layout
+    ui->preview_layout->addWidget(_table_viewer);
     
     _preview_debounce_timer = new QTimer(this);
     _preview_debounce_timer->setSingleShot(true);
     _preview_debounce_timer->setInterval(150);
     connect(_preview_debounce_timer, &QTimer::timeout, this, &TableDesignerWidget::rebuildPreviewNow);
+
+    // Connect table viewer signals for better integration
+    connect(_table_viewer, &TableViewerWidget::rowScrolled, this, [this](size_t row_index) {
+        // Optional: Could emit a signal or update status when user scrolls preview
+        // For now, just ensure the table viewer is working as expected
+        Q_UNUSED(row_index)
+    });
 
     connectSignals();
     refreshTableCombo();
@@ -87,7 +85,7 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
         });
     }
 
-    qDebug() << "TableDesignerWidget initialized (legacy path - to be removed)";
+    qDebug() << "TableDesignerWidget initialized with TableViewerWidget for efficient pagination";
 }
 
 TableDesignerWidget::~TableDesignerWidget() {
@@ -1794,112 +1792,8 @@ bool TableDesignerWidget::isIntervalItselfSelected() const {
     return false;// Default to not selected
 }
 
-size_t TableDesignerWidget::computeTotalRowCountForRowSource(QString const & row_source) const {
-    if (!_data_manager) return 0;
-    if (row_source.startsWith("TimeFrame: ")) {
-        auto name = row_source.mid(11).toStdString();
-        auto tf = _data_manager->getTime(TimeKey(name));
-        return tf ? static_cast<size_t>(tf->getTotalFrameCount()) : 0;
-    }
-    if (row_source.startsWith("Events: ")) {
-        auto name = row_source.mid(8).toStdString();
-        auto es = _data_manager->getData<DigitalEventSeries>(name);
-        return es ? es->getEventSeries().size() : 0;
-    }
-    if (row_source.startsWith("Intervals: ")) {
-        auto name = row_source.mid(11).toStdString();
-        auto is = _data_manager->getData<DigitalIntervalSeries>(name);
-        return is ? is->getDigitalIntervalSeries().size() : 0;
-    }
-    return 0;
-}
-
-std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelectorForWindow(QString const & row_source, size_t start, size_t size) const {
-    if (!_data_manager) return nullptr;
-    auto endExclusive = start + size;
-
-    if (row_source.startsWith("TimeFrame: ")) {
-        auto name = row_source.mid(11).toStdString();
-        auto tf = _data_manager->getTime(TimeKey(name));
-        if (!tf) return nullptr;
-        size_t total = static_cast<size_t>(tf->getTotalFrameCount());
-        start = std::min(start, total);
-        endExclusive = std::min(endExclusive, total);
-        std::vector<TimeFrameIndex> indices;
-        indices.reserve(endExclusive - start);
-        for (size_t i = start; i < endExclusive; ++i) indices.emplace_back(static_cast<int64_t>(i));
-        return std::make_unique<TimestampSelector>(std::move(indices), tf);
-    }
-
-    if (row_source.startsWith("Events: ")) {
-        auto name = row_source.mid(8).toStdString();
-        auto es = _data_manager->getData<DigitalEventSeries>(name);
-        if (!es) return nullptr;
-        auto tfKey = _data_manager->getTimeKey(name);
-        auto tf = _data_manager->getTime(tfKey);
-        if (!tf) return nullptr;
-        auto const & events = es->getEventSeries();
-        size_t total = events.size();
-        start = std::min(start, total);
-        endExclusive = std::min(endExclusive, total);
-        std::vector<TimeFrameIndex> indices;
-        indices.reserve(endExclusive - start);
-        for (size_t i = start; i < endExclusive; ++i) indices.emplace_back(static_cast<int64_t>(events[i]));
-        return std::make_unique<TimestampSelector>(std::move(indices), tf);
-    }
-
-    if (row_source.startsWith("Intervals: ")) {
-        auto name = row_source.mid(11).toStdString();
-        auto is = _data_manager->getData<DigitalIntervalSeries>(name);
-        if (!is) return nullptr;
-        auto tfKey = _data_manager->getTimeKey(name);
-        auto tf = _data_manager->getTime(tfKey);
-        if (!tf) return nullptr;
-        auto const & intervals = is->getDigitalIntervalSeries();
-        size_t total = intervals.size();
-        start = std::min(start, total);
-        endExclusive = std::min(endExclusive, total);
-
-        int capture = getCaptureRange();
-        bool begin = isIntervalBeginningSelected();
-        bool useSelf = isIntervalItselfSelected();
-
-        std::vector<TimeFrameInterval> out;
-        out.reserve(endExclusive - start);
-        for (size_t i = start; i < endExclusive; ++i) {
-            auto const & iv = intervals[i];
-            if (useSelf) {
-                out.emplace_back(TimeFrameIndex(iv.start), TimeFrameIndex(iv.end));
-            } else {
-                int64_t ref = begin ? iv.start : iv.end;
-                int64_t s = std::max<int64_t>(0, ref - capture);
-                int64_t e = std::min<int64_t>(tf->getTotalFrameCount() - 1, ref + capture);
-                out.emplace_back(TimeFrameIndex(s), TimeFrameIndex(e));
-            }
-        }
-        return std::make_unique<IntervalSelector>(std::move(out), tf);
-    }
-
-    return nullptr;
-}
-
-void TableDesignerWidget::updatePreviewSliderRange() {
-    if (!ui->preview_slider) return;
-    QString row_source = ui->row_data_source_combo ? ui->row_data_source_combo->currentText() : QString();
-    _total_preview_rows = computeTotalRowCountForRowSource(row_source);
-    int window = ui->preview_window_size_spinbox ? ui->preview_window_size_spinbox->value() : 8;
-    long long maxStart = 0;
-    if (_total_preview_rows > static_cast<size_t>(window)) maxStart = static_cast<long long>(_total_preview_rows - window);
-    ui->preview_slider->blockSignals(true);
-    ui->preview_slider->setMinimum(0);
-    ui->preview_slider->setMaximum(static_cast<int>(std::min<long long>(std::numeric_limits<int>::max(), maxStart)));
-    ui->preview_slider->blockSignals(false);
-}
-
 void TableDesignerWidget::triggerPreviewDebounced() {
-    if (!ui->preview_auto_refresh_checkbox || ui->preview_auto_refresh_checkbox->isChecked()) {
-        if (_preview_debounce_timer) _preview_debounce_timer->start();
-    }
+    if (_preview_debounce_timer) _preview_debounce_timer->start();
 }
 
 void TableDesignerWidget::rebuildPreviewNow() {
