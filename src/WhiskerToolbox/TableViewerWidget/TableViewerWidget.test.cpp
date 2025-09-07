@@ -438,6 +438,81 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination w
     expectValueAt(2048);
 }
 
+TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Resize increases visible rows (lazy fill)", "[TableViewerWidget][Pagination][Resize]") {
+    // Build small analog table similar to previous test
+    const int num_rows = 1000;
+    const int page_size = 64;
+
+    auto time_frame = std::make_shared<TimeFrame>([&]{
+        std::vector<int> t(num_rows);
+        std::iota(t.begin(), t.end(), 0);
+        return t;
+    }());
+    getDataManager().setTime(TimeKey("time_resize"), time_frame, true);
+
+    std::vector<float> values(static_cast<size_t>(num_rows));
+    std::iota(values.begin(), values.end(), 0.0f);
+    std::vector<TimeFrameIndex> indices;
+    indices.reserve(static_cast<size_t>(num_rows));
+    for (int i = 0; i < num_rows; ++i) indices.push_back(TimeFrameIndex(i));
+    auto ats = std::make_shared<AnalogTimeSeries>(values, indices);
+    getDataManager().setData<AnalogTimeSeries>("IotaResize", ats, TimeKey("time_resize"));
+
+    std::vector<TimeFrameIndex> row_timestamps(indices.begin(), indices.end());
+    auto row_selector = std::make_unique<TimestampSelector>(std::move(row_timestamps), time_frame);
+
+    std::vector<ColumnInfo> column_infos;
+    ColumnInfo info("Val", "Analog at t", "analog:IotaResize", "Timestamp Value");
+    info.outputType = typeid(double);
+    info.outputTypeName = "double";
+    column_infos.push_back(std::move(info));
+
+    TableViewerWidget widget;
+    widget.setPageSize(static_cast<size_t>(page_size));
+    auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager*){});
+    widget.setTableConfiguration(std::move(row_selector), std::move(column_infos), data_manager, "Resize Test");
+
+    auto * table_view = widget.findChild<QTableView*>();
+    REQUIRE(table_view != nullptr);
+    auto * model = table_view->model();
+    REQUIRE(model != nullptr);
+
+    // Initial small size to limit visible rows
+    widget.resize(400, 200);
+    widget.show();
+    QApplication::processEvents();
+
+    // Determine top/visible region
+    QModelIndex top_idx = table_view->indexAt(table_view->rect().topLeft());
+    int top_row = top_idx.isValid() ? top_idx.row() : 0;
+    // Sample a bottom-ish row within current viewport (heuristic)
+    int sample_row_before = std::min(top_row + 20, num_rows - 1);
+    auto before_idx = model->index(sample_row_before, 0);
+    QVariant before_val = model->data(before_idx, Qt::DisplayRole);
+    REQUIRE(before_val.isValid());
+
+    // Resize larger: more rows exposed
+    widget.resize(400, 800);
+    QApplication::processEvents();
+
+    // New region likely exposes more rows; check one that should newly appear
+    QModelIndex new_top_idx = table_view->indexAt(table_view->rect().topLeft());
+    int new_top_row = new_top_idx.isValid() ? new_top_idx.row() : 0;
+    int sample_row_after = std::min(new_top_row + 60, num_rows - 1);
+    auto after_idx = model->index(sample_row_after, 0);
+    auto after_val = model->data(after_idx, Qt::DisplayRole);
+
+    // Accept either expected formatted value or temporarily empty while mini-page materializes
+    QString expected = QString::number(static_cast<double>(sample_row_after), 'f', 3);
+    REQUIRE((!after_val.isValid() || after_val.toString().isEmpty() || after_val.toString() == expected));
+
+    // After processing events again, value should materialize
+    QApplication::processEvents();
+    after_val = model->data(after_idx, Qt::DisplayRole);
+    REQUIRE(after_val.isValid());
+    REQUIRE(after_val.toString() == expected);
+}
+
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Table Registry Integration", "[TableViewerWidget][Registry]") {
     
     SECTION("Verify table registry provides correct table access") {
