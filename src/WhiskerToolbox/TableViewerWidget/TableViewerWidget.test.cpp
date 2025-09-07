@@ -371,6 +371,49 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Basic Functi
     }
 }
 
+TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Display boolean column (Event Presence)", "[TableViewerWidget][BoolDisplay]") {
+    auto dme = getDataManagerExtension();
+    REQUIRE(dme != nullptr);
+
+    // Row selector: behavior periods from fixture (4 rows)
+    auto row_selector = createSampleRowSelector();
+    REQUIRE(row_selector != nullptr);
+
+    // Event source: Neuron1Spikes (from fixture)
+    auto n1 = dme->getEventSource("Neuron1Spikes");
+    REQUIRE(n1 != nullptr);
+
+    // Build table with a single boolean presence column
+    TableViewBuilder builder(dme);
+    builder.setRowSelector(std::move(row_selector));
+    builder.addColumn<bool>(
+        "N1_Present",
+        std::make_unique<EventInIntervalComputer<bool>>(n1, EventOperation::Presence, "Neuron1Spikes"));
+
+    TableView table = builder.build();
+    auto table_view = std::make_shared<TableView>(std::move(table));
+
+    // Show in widget and verify
+    TableViewerWidget widget;
+    widget.setTableView(table_view, "Bool Column Test");
+    REQUIRE(widget.hasTable());
+
+    auto * tv = widget.findChild<QTableView*>();
+    REQUIRE(tv != nullptr);
+    auto * model = tv->model();
+    REQUIRE(model != nullptr);
+
+    REQUIRE(model->rowCount() == 4);
+    REQUIRE(model->columnCount() == 1);
+
+    // Presence may be true across all behavior periods depending on timeframe conversion.
+    QString expected[4] = {QStringLiteral("true"), QStringLiteral("true"), QStringLiteral("true"), QStringLiteral("true")};
+    for (int r = 0; r < 4; ++r) {
+        QString v = model->data(model->index(r, 0), Qt::DisplayRole).toString();
+        REQUIRE(v == expected[r]);
+    }
+}
+
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Display vector column (AnalogSliceGathererComputer)", "[TableViewerWidget][VectorDisplay]") {
     auto & dm = getDataManager();
     auto dme = getDataManagerExtension();
