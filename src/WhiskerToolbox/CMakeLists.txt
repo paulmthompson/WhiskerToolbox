@@ -34,6 +34,7 @@ add_subdirectory(DataViewer_Widget)
 add_subdirectory(Media_Widget)
 add_subdirectory(MediaWidgetManager)
 add_subdirectory(TableViewerWidget)
+add_subdirectory(TableDesignerWidget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -50,12 +51,6 @@ set(PROJECT_SOURCES
         Main_Window/mainwindow.ui
         Main_Window/video_loader.hpp
         Main_Window/video_loader.cpp
-
-        TableDesignerWidget/TableDesignerWidget.hpp
-        TableDesignerWidget/TableDesignerWidget.cpp
-        TableDesignerWidget/TableDesignerWidget.ui
-        TableDesignerWidget/PreviewTableModel.hpp
-        TableDesignerWidget/PreviewTableModel.cpp
 
         DataManager_Widget/DataManager_Widget.hpp
         DataManager_Widget/DataManager_Widget.cpp
@@ -318,6 +313,7 @@ target_link_libraries(WhiskerToolbox PRIVATE DataViewer_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Media_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE MediaWidgetManager)
 target_link_libraries(WhiskerToolbox PRIVATE TableViewerWidget)
+target_link_libraries(WhiskerToolbox PRIVATE TableDesignerWidget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)
