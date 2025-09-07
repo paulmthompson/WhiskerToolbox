@@ -21,6 +21,7 @@
 #include "DataManager/TimeFrame/interval_data.hpp"
 #include "DataManager/utils/TableView/core/ExecutionPlan.h"
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
+#include "DataManager/utils/TableView/computers/AnalogSliceGathererComputer.h"
 
 // Analog data
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -368,6 +369,59 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Basic Functi
         REQUIRE(expected_columns == 5);  // 5 columns we defined
         REQUIRE(expected_rows == 4);     // 4 behavior periods
     }
+}
+
+TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Display vector column (AnalogSliceGathererComputer)", "[TableViewerWidget][VectorDisplay]") {
+    auto & dm = getDataManager();
+    auto dme = getDataManagerExtension();
+
+    // Timeframe 0..9
+    std::vector<int> time_vals(10);
+    std::iota(time_vals.begin(), time_vals.end(), 0);
+    auto tf = std::make_shared<TimeFrame>(time_vals);
+    dm.setTime(TimeKey("vec_time"), tf, true);
+
+    // Analog 0..9 at each index
+    std::vector<float> vals(10);
+    std::iota(vals.begin(), vals.end(), 0.0f);
+    std::vector<TimeFrameIndex> tix; tix.reserve(10);
+    for (int i = 0; i < 10; ++i) tix.emplace_back(i);
+    auto ats = std::make_shared<AnalogTimeSeries>(vals, tix);
+    dm.setData<AnalogTimeSeries>("VecAnalog", ats, TimeKey("vec_time"));
+
+    // Two intervals: [2,4] and [6,8]
+    std::vector<TimeFrameInterval> intervals;
+    intervals.emplace_back(TimeFrameIndex(2), TimeFrameIndex(4));
+    intervals.emplace_back(TimeFrameIndex(6), TimeFrameIndex(8));
+    auto row_selector = std::make_unique<IntervalSelector>(intervals, tf);
+
+    // Build table with AnalogSliceGathererComputer<double>
+    TableViewBuilder builder(dme);
+    builder.setRowSelector(std::move(row_selector));
+    auto analog_src = dme->getAnalogSource("VecAnalog");
+    REQUIRE(analog_src != nullptr);
+    builder.addColumn<std::vector<double>>("Slices", std::make_unique<AnalogSliceGathererComputer<std::vector<double>>>(analog_src, "VecAnalog"));
+    TableView table = builder.build();
+    auto table_view = std::make_shared<TableView>(std::move(table));
+
+    // Show in widget
+    TableViewerWidget widget;
+    widget.setTableView(table_view, "Vector Column Test");
+    REQUIRE(widget.hasTable());
+
+    auto * tv = widget.findChild<QTableView*>();
+    REQUIRE(tv != nullptr);
+    auto * model = tv->model();
+    REQUIRE(model != nullptr);
+
+    REQUIRE(model->rowCount() == 2);
+    REQUIRE(model->columnCount() == 1);
+
+    // Verify formatted display strings (comma-separated, 3 decimals)
+    auto row0 = model->data(model->index(0, 0), Qt::DisplayRole).toString();
+    auto row1 = model->data(model->index(1, 0), Qt::DisplayRole).toString();
+    REQUIRE(row0 == QString("2.000,3.000,4.000"));
+    REQUIRE(row1 == QString("6.000,7.000,8.000"));
 }
 
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination with analog timestamps", "[TableViewerWidget][Pagination][Analog]") {
