@@ -22,6 +22,9 @@
 #include "DataManager/utils/TableView/core/ExecutionPlan.h"
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
 
+// Analog data
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+
 // Qt includes for widget testing
 #include <QApplication>
 #include <QTableView>
@@ -365,6 +368,74 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Basic Functi
         REQUIRE(expected_columns == 5);  // 5 columns we defined
         REQUIRE(expected_rows == 4);     // 4 behavior periods
     }
+}
+
+TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination with analog timestamps", "[TableViewerWidget][Pagination][Analog]") {
+    std::cout << "CTEST_FULL_OUTPUT" << std::endl;
+
+    // Parameters
+    const int num_rows = 2500;      // triggers pagination
+    const int page_size = 64;       // small to force multiple pages
+
+    // Create a monotonic analog signal: value(t) = t for t in [0, num_rows)
+    auto time_frame = std::make_shared<TimeFrame>([&]{
+        std::vector<int> t(num_rows);
+        std::iota(t.begin(), t.end(), 0);
+        return t;
+    }());
+    getDataManager().setTime(TimeKey("time"), time_frame, true);
+
+    std::vector<float> values(static_cast<size_t>(num_rows));
+    std::iota(values.begin(), values.end(), 0.0f);
+    std::vector<TimeFrameIndex> indices;
+    for (int i = 0; i < num_rows; ++i) indices.push_back(TimeFrameIndex(i));
+    auto ats = std::make_shared<AnalogTimeSeries>(values, indices);
+    getDataManager().setData<AnalogTimeSeries>("Iota", ats, TimeKey("time"));
+
+    // Build Timestamp row selector 0..num_rows-1 in the same timeframe
+    std::vector<TimeFrameIndex> row_timestamps(indices.begin(), indices.end());
+    auto row_selector = std::make_unique<TimestampSelector>(std::move(row_timestamps), time_frame);
+
+    // One column sampling analog at timestamps
+    std::vector<ColumnInfo> column_infos;
+    ColumnInfo info("IotaValue", "Analog sample at timestamp", "analog:Iota", "Timestamp Value");
+    info.outputType = typeid(double);
+    info.outputTypeName = "double";
+    column_infos.push_back(std::move(info));
+
+    // Wire into widget using pagination-backed API
+    TableViewerWidget widget;
+    widget.setPageSize(static_cast<size_t>(page_size));
+    auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager*){});
+    widget.setTableConfiguration(std::move(row_selector), std::move(column_infos), data_manager, "Analog Pagination");
+
+    REQUIRE(widget.hasTable());
+
+    auto * table_view_widget = widget.findChild<QTableView*>();
+    REQUIRE(table_view_widget != nullptr);
+    auto * model = table_view_widget->model();
+    REQUIRE(model != nullptr);
+
+    REQUIRE(model->rowCount() == num_rows);
+    REQUIRE(model->columnCount() == 1);
+
+    auto expectValueAt = [&](int row) {
+        auto idx = model->index(row, 0);
+        REQUIRE(idx.isValid());
+        auto v = model->data(idx, Qt::DisplayRole).toString();
+        // "Timestamp Value" returns double formatted to 3 decimals by model
+        QString expected = QString::number(static_cast<double>(row), 'f', 3);
+        REQUIRE(v == expected);
+    };
+
+    // Probe around page boundaries
+    expectValueAt(0);
+    expectValueAt(page_size - 1);
+    expectValueAt(page_size);
+    expectValueAt(page_size * 2);
+    expectValueAt(250);
+    expectValueAt(1024);
+    expectValueAt(2048);
 }
 
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Table Registry Integration", "[TableViewerWidget][Registry]") {
