@@ -83,10 +83,10 @@ Line2D clip_line_at_intersection(
         // No intersection found, return original line
         return line;
     }
-    
-    Point2D<float> intersection_point = intersection_result->first;
-    size_t segment_index = intersection_result->second;
-    
+
+    Point2D<float> const intersection_point = intersection_result->first;
+    size_t const segment_index = intersection_result->second;
+
     Line2D clipped_line;
     
     if (clip_side == ClipSide::KeepBase) {

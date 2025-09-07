@@ -3,6 +3,7 @@
 
 #include "DataManager/utils/TableView/TableInfo.hpp"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
+#include "TableViewerWidget/TableViewerWidget.hpp"
 
 #include <QStringList>
 #include <QWidget>
@@ -19,7 +20,7 @@ class ComputerRegistry;
 class IRowSelector;
 class TableViewBuilder;
 class IParameterDescriptor;
-class PreviewTableModel;
+class TableViewerWidget;
 class QTimer;
 
 namespace Ui {
@@ -160,7 +161,7 @@ private:
     std::map<std::string, QWidget*> _parameter_controls;
 
     // Preview support
-    PreviewTableModel * _preview_model = nullptr;
+    TableViewerWidget * _table_viewer = nullptr;
     QTimer * _preview_debounce_timer = nullptr;
     size_t _total_preview_rows = 0;
 

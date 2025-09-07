@@ -33,6 +33,7 @@ add_subdirectory(IO_Widgets)
 add_subdirectory(DataViewer_Widget)
 add_subdirectory(Media_Widget)
 add_subdirectory(MediaWidgetManager)
+add_subdirectory(TableViewerWidget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -316,6 +317,7 @@ target_link_libraries(WhiskerToolbox PRIVATE IO_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataViewer_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Media_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE MediaWidgetManager)
+target_link_libraries(WhiskerToolbox PRIVATE TableViewerWidget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

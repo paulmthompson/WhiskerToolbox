@@ -1,5 +1,6 @@
 #include "TableDesignerWidget.hpp"
 #include "ui_TableDesignerWidget.h"
+#include "TableViewerWidget/TableViewerWidget.hpp"
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
@@ -33,8 +34,6 @@
 #include <QTimer>
 #include <QtConcurrent>
 
-#include "PreviewTableModel.hpp"
-
 #include <algorithm>
 #include <limits>
 #include <typeindex>
@@ -56,11 +55,21 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     _parameter_layout->setContentsMargins(0, 0, 0, 0);
     _parameter_layout->setSpacing(4);
     
-    // Initialize preview model and debounce timer
-    _preview_model = new PreviewTableModel(this);
-    if (ui->preview_table) {
-        ui->preview_table->setModel(_preview_model);
+    // Initialize table viewer widget and debounce timer
+    _table_viewer = new TableViewerWidget(this);
+    
+    // Replace the preview table with the table viewer widget
+    if (ui->preview_group && ui->preview_layout) {
+        // Clear existing layout
+        QLayoutItem *item;
+        while ((item = ui->preview_layout->takeAt(0)) != nullptr) {
+            delete item->widget();
+            delete item;
+        }
+        // Add the table viewer widget
+        ui->preview_layout->addWidget(_table_viewer);
     }
+    
     _preview_debounce_timer = new QTimer(this);
     _preview_debounce_timer->setSingleShot(true);
     _preview_debounce_timer->setInterval(150);
@@ -154,26 +163,6 @@ void TableDesignerWidget::connectSignals() {
     if (ui->export_csv_btn) {
         connect(ui->export_csv_btn, &QPushButton::clicked,
                 this, &TableDesignerWidget::onExportCsv);
-    }
-
-    // Preview controls
-    if (ui->preview_slider) {
-        connect(ui->preview_slider, &QSlider::valueChanged, this, [this](int) { triggerPreviewDebounced(); });
-    }
-    if (ui->preview_window_size_spinbox) {
-        connect(ui->preview_window_size_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int) {
-            updatePreviewSliderRange();
-            triggerPreviewDebounced();
-        });
-    }
-    if (ui->preview_auto_refresh_checkbox) {
-        connect(ui->preview_auto_refresh_checkbox, &QCheckBox::toggled, this, [this](bool checked) {
-            if (ui->preview_refresh_btn) ui->preview_refresh_btn->setEnabled(!checked);
-            if (checked) triggerPreviewDebounced();
-        });
-    }
-    if (ui->preview_refresh_btn) {
-        connect(ui->preview_refresh_btn, &QPushButton::clicked, this, &TableDesignerWidget::rebuildPreviewNow);
     }
 
     // Subscribe to DataManager table observer
@@ -295,7 +284,6 @@ void TableDesignerWidget::onRowDataSourceChanged() {
     refreshColumnComputerCombo();
 
     qDebug() << "Row data source changed to:" << selected;
-    updatePreviewSliderRange();
     triggerPreviewDebounced();
 }
 
@@ -531,7 +519,7 @@ void TableDesignerWidget::onBuildTable() {
         // Add all columns
         bool all_columns_valid = true;
         for (auto const & column_info: table_info.columns) {
-            if (!addColumnToBuilder(builder, column_info)) {
+            if (!reg->addColumnToBuilder(builder, column_info)) {
                 updateBuildStatus(QString("Failed to create column: %1").arg(QString::fromStdString(column_info.name)), true);
                 all_columns_valid = false;
                 break;
@@ -1085,7 +1073,6 @@ void TableDesignerWidget::loadTableInfo(QString const & table_id) {
     }
 
     updateBuildStatus(QString("Loaded table: %1").arg(QString::fromStdString(info.name)));
-    updatePreviewSliderRange();
     triggerPreviewDebounced();
 }
 
@@ -1122,7 +1109,7 @@ void TableDesignerWidget::clearUI() {
     ui->build_table_btn->setEnabled(false);
 
     updateBuildStatus("No table selected");
-    if (_preview_model) _preview_model->clearPreview();
+    if (_table_viewer) _table_viewer->clearTable();
 }
 
 void TableDesignerWidget::updateBuildStatus(QString const & message, bool is_error) {
@@ -1916,53 +1903,52 @@ void TableDesignerWidget::triggerPreviewDebounced() {
 }
 
 void TableDesignerWidget::rebuildPreviewNow() {
-    if (!_data_manager || !_preview_model) return;
-    if (_current_table_id.isEmpty()) { _preview_model->clearPreview(); return; }
+    if (!_data_manager || !_table_viewer) return;
+    if (_current_table_id.isEmpty()) { 
+        _table_viewer->clearTable(); 
+        return; 
+    }
 
     QString row_source = ui->row_data_source_combo ? ui->row_data_source_combo->currentText() : QString();
-    if (row_source.isEmpty()) { _preview_model->clearPreview(); return; }
-    if (ui->column_list->count() == 0) { _preview_model->clearPreview(); return; }
-
-    int start = ui->preview_slider ? ui->preview_slider->value() : 0;
-    int window = ui->preview_window_size_spinbox ? ui->preview_window_size_spinbox->value() : 8;
+    if (row_source.isEmpty()) { 
+        _table_viewer->clearTable(); 
+        return; 
+    }
+    if (ui->column_list->count() == 0) { 
+        _table_viewer->clearTable(); 
+        return; 
+    }
 
     auto * reg = _data_manager->getTableRegistry();
-    if (!reg) { _preview_model->clearPreview(); return; }
+    if (!reg) { 
+        _table_viewer->clearTable(); 
+        return; 
+    }
     auto table_info = reg->getTableInfo(_current_table_id.toStdString());
-    if (table_info.columns.empty()) { _preview_model->clearPreview(); return; }
+    if (table_info.columns.empty()) { 
+        _table_viewer->clearTable(); 
+        return; 
+    }
     auto data_manager_extension = reg->getDataManagerExtension();
-    if (!data_manager_extension) { _preview_model->clearPreview(); return; }
+    if (!data_manager_extension) { 
+        _table_viewer->clearTable(); 
+        return; 
+    }
 
-    auto future = QtConcurrent::run([this, row_source, start, window, table_info = std::move(table_info), data_manager_extension]() -> std::shared_ptr<TableView> {
-        try {
-            auto selector = createRowSelectorForWindow(row_source, static_cast<size_t>(start), static_cast<size_t>(window));
-            if (!selector) return nullptr;
-            TableViewBuilder builder(data_manager_extension);
-            builder.setRowSelector(std::move(selector));
-            for (auto const & col : table_info.columns) {
-                if (!addColumnToBuilder(builder, col)) {
-                    return nullptr;
-                }
-            }
-            auto view = std::make_shared<TableView>(builder.build());
-            view->materializeAll();
-            return view;
-        } catch (...) {
-            return nullptr;
-        }
-    });
+    // Create row selector for the entire dataset
+    auto selector = createRowSelector(row_source);
+    if (!selector) {
+        _table_viewer->clearTable();
+        return;
+    }
 
-    auto * watcher = new QFutureWatcher<std::shared_ptr<TableView>>(this);
-    connect(watcher, &QFutureWatcher<std::shared_ptr<TableView>>::finished, this, [this, watcher]() {
-        auto result = watcher->result();
-        watcher->deleteLater();
-        if (result) {
-            _preview_model->setPreview(std::move(result));
-        } else {
-            _preview_model->clearPreview();
-        }
-    });
-    watcher->setFuture(future);
+    // Set up the table viewer with pagination
+    _table_viewer->setTableConfiguration(
+        std::move(selector),
+        table_info.columns,
+        _data_manager,
+        QString("Preview: %1").arg(_current_table_id)
+    );
 }
 void TableDesignerWidget::setupParameterUI(QString const & computerName) {
     clearParameterUI();
