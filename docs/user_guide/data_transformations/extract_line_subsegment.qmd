@@ -1,0 +1,194 @@
+---
+title: "Extract Line Subsegment"
+format: html
+---
+
+## Overview
+
+This transform extracts a portion of a line (a subsegment) based on specified start and end points.
+
+### Detailed Description
+
+This transformation allows for the precise extraction of a subsegment from a series of lines, such as those representing the movement of a tracked object over time. You can define the start and end of the subsegment as a fraction of the total line length. For example, you can extract the middle 50% of a line.
+
+This is particularly useful for focusing analysis on a specific part of a trajectory or shape. For instance, in neuroscience, you might use this to analyze the movement of an animal's limb, focusing only on the part of the movement where the limb is closest to a target.
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import splev, splprep
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Generate sample data for a curved line ---
+    t = np.linspace(0, 1, 100)
+    x = t * 10
+    y = 3 * np.sin(t * np.pi)
+
+    # Add some noise to the data to see the difference between the methods
+    noise = np.random.normal(0, 0.1, y.shape)
+    y += noise
+
+    original_line = np.vstack((x, y))
+
+    # --- Parameters for subsegment extraction ---
+    start_pos = 0.25
+    end_pos = 0.75
+    output_points_parametric = 50
+
+    # --- Helper function to get point at a certain distance ---
+    def get_point_at_distance(line, distance):
+        lengths = np.sqrt(np.sum(np.diff(line, axis=1)**2, axis=0))
+        cumulative_lengths = np.insert(np.cumsum(lengths), 0, 0)
+
+        # Find the segment where the distance falls
+        idx = np.where(cumulative_lengths <= distance)[0][-1]
+
+        # If the distance is exactly at a point
+        if cumulative_lengths[idx] == distance:
+            return line[:, idx]
+
+        # Interpolate within the segment
+        segment_start_node = line[:, idx]
+        segment_end_node = line[:, idx+1]
+
+        segment_length = lengths[idx]
+
+        # Check for zero length segment to avoid division by zero
+        if segment_length == 0:
+            return segment_start_node
+
+        interp_fraction = (distance - cumulative_lengths[idx]) / segment_length
+
+        return segment_start_node + (segment_end_node - segment_start_node) * interp_fraction
+
+    # --- Direct Method ---
+    total_length = np.sum(np.sqrt(np.sum(np.diff(original_line, axis=1)**2, axis=0)))
+    start_dist = start_pos * total_length
+    end_dist = end_pos * total_length
+
+    cumulative_lengths = np.insert(np.cumsum(np.sqrt(np.sum(np.diff(original_line, axis=1)**2, axis=0))), 0, 0)
+
+    # Get original points that are within the range
+    direct_indices = np.where((cumulative_lengths >= start_dist) & (cumulative_lengths <= end_dist))[0]
+
+    # Start with the interpolated start point
+    direct_subsegment_points = [get_point_at_distance(original_line, start_dist)]
+
+    # Add the original points in between
+    for idx in direct_indices:
+        # Avoid duplicating the start point if it's an exact match
+        if not np.allclose(direct_subsegment_points[-1], original_line[:, idx]):
+            direct_subsegment_points.append(original_line[:, idx])
+
+    # Add the interpolated end point
+    end_point = get_point_at_distance(original_line, end_dist)
+    # Avoid duplicating the end point if it's an exact match
+    if not np.allclose(direct_subsegment_points[-1], end_point):
+        direct_subsegment_points.append(end_point)
+
+    direct_subsegment = np.array(direct_subsegment_points).T
+
+
+    # --- Parametric Method ---
+    # Fit a B-spline to the original line
+    tck, u = splprep([original_line[0,:], original_line[1,:]], s=0, per=False)
+
+    # Define the parametric range for the subsegment
+    u_sub = np.linspace(start_pos, end_pos, output_points_parametric)
+
+    # Evaluate the spline over the subsegment range
+    parametric_subsegment = np.array(splev(u_sub, tck))
+
+
+    # --- Create the plot ---
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), sharex=True, sharey=True)
+    fig.suptitle('Extracting a Line Subsegment (from 25% to 75%)', fontsize=16)
+
+    # Plot 1: Direct Method
+    ax1.plot(original_line[0,:], original_line[1,:], 'k--', label='Original Line', alpha=0.5)
+    ax1.plot(direct_subsegment[0,:], direct_subsegment[1,:], 'bo-', label='Direct Subsegment')
+    ax1.plot(direct_subsegment[0,0], direct_subsegment[1,0], 'go', markersize=10, label='Start Point')
+    ax1.plot(direct_subsegment[0,-1], direct_subsegment[1,-1], 'ro', markersize=10, label='End Point')
+    ax1.set_title('Direct Method (Preserves Original Points)')
+    ax1.set_ylabel('Y Position')
+    ax1.legend()
+    ax1.grid(True)
+    ax1.set_aspect('equal', adjustable='box')
+
+
+    # Plot 2: Parametric Method
+    ax2.plot(original_line[0,:], original_line[1,:], 'k--', label='Original Line', alpha=0.5)
+    ax2.plot(parametric_subsegment[0,:], parametric_subsegment[1,:], 'bo-', label=f'Parametric Subsegment ({output_points_parametric} points)')
+    ax2.plot(parametric_subsegment[0,0], parametric_subsegment[1,0], 'go', markersize=10, label='Start Point')
+    ax2.plot(parametric_t_subsegment[0,-1], parametric_subsegment[1,-1], 'ro', markersize=10, label='End Point')
+    ax2.set_title('Parametric Method (Smooth, Resampled)')
+    ax2.set_xlabel('X Position')
+    ax2.set_ylabel('Y Position')
+    ax2.legend()
+    ax2.grid(True)
+    ax2.set_aspect('equal', adjustable='box')
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+The extraction can be done in two ways:
+
+*   **Direct:** This method pulls the original points from the line that fall within the specified subsegment. This is fast and preserves the original data points.
+*   **Parametric:** This method fits a polynomial to the line and then generates a new, smooth subsegment with a specified number of points. This is useful for standardizing the length and spacing of the subsegment for further analysis, such as comparing shapes across different trials.
+
+### Neuroscience Use Cases
+
+-   **Whisker Tracking:** When analyzing whisker movements, you might want to extract only the portion of the whisker closest to an object it's exploring.
+-   **Limb Tracking:** In studies of motor control, you could extract the segment of a limb's trajectory during a specific phase of a reach-to-grasp movement.
+-   **Neural Arborization:** When analyzing the structure of neurons, this transform could be used to isolate specific dendritic or axonal segments for morphological analysis.
+
+## Parameters
+
+This transform has the following parameters:
+
+-   `start_position`: The starting point of the subsegment, as a fraction of the total line length (from 0.0 to 1.0).
+-   `end_position`: The ending point of the subsegment, as a fraction of the total line length (from 0.0 to 1.0).
+-   `method`: The extraction method to use. This can be:
+    -   `Direct`: Directly extracts the original points within the subsegment range.
+    -   `Parametric`: Uses polynomial interpolation to create a new, smooth subsegment.
+-   `polynomial_order`: (Parametric method only) The order of the polynomial to fit to the line. A higher order can capture more complex curves but may also be more sensitive to noise.
+-   `output_points`: (Parametric method only) The number of points to generate in the output subsegment.
+-   `preserve_original_spacing`: (Direct method only) If true, the subsegment will consist of the original points from the line that fall within the specified range. If false, the subsegment will be resampled to have evenly spaced points.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example extracts the subsegment from 20% to 80% of the line's length using the `Direct` method.
+
+```json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Line Subsegment Extraction Pipeline",
+            "description": "Test line subsegment extraction",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Extract Line Subsegment",
+                "phase": "analysis",
+                "input_key": "test_line",
+                "output_key": "extracted_subsegments",
+                "parameters": {
+                    "start_position": 0.2,
+                    "end_position": 0.8,
+                    "method": "Direct",
+                    "preserve_original_spacing": true
+                }
+            }
+        ]
+    }
+}
+]
+```
