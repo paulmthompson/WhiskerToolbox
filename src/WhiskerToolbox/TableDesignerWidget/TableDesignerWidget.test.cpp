@@ -529,6 +529,103 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Preview 
     REQUIRE(model->columnCount() == 2);
 }
 
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Observes DataManager and updates tree on add/remove", "[TableDesignerWidget][Observer]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+
+    auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+    REQUIRE(tree != nullptr);
+
+    // Initially, no "Events: NewSpikes" source
+    bool found_new = false;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        if (tree->topLevelItem(i)->text(0).contains("Events: NewSpikes")) { found_new = true; break; }
+    }
+    REQUIRE(!found_new);
+
+    // Enable a computer under existing Neuron1Spikes to test state preservation
+    QTreeWidgetItem * n1_item = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        auto * item = tree->topLevelItem(i);
+        if (item->text(0).contains("Events: Neuron1Spikes")) { n1_item = item; break; }
+    }
+    REQUIRE(n1_item != nullptr);
+    QTreeWidgetItem * presence = nullptr;
+    for (int j = 0; j < n1_item->childCount(); ++j) {
+        auto * c = n1_item->child(j);
+        if (c->text(0).contains("Event Presence")) { presence = c; break; }
+    }
+    REQUIRE(presence != nullptr);
+    presence->setCheckState(1, Qt::Checked);
+
+    // Add a new event key to DataManager and ensure tree updates
+    auto & dm = getDataManager();
+    std::vector<float> spikes = {1.0f, 2.0f, 3.0f};
+    auto series = std::make_shared<DigitalEventSeries>(spikes);
+    dm.setData<DigitalEventSeries>("NewSpikes", series, TimeKey("spike_time"));
+
+    // Process events to allow observer callback to run
+    QApplication::processEvents();
+
+    // Tree should now include the new source
+    // Refresh pointer (not strictly necessary but clearer)
+    tree = widget.findChild<QTreeWidget*>("computers_tree");
+    REQUIRE(tree != nullptr);
+    bool found_after = false;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        if (tree->topLevelItem(i)->text(0).contains("Events: NewSpikes")) { found_after = true; break; }
+    }
+    REQUIRE(found_after);
+
+    // State for previously enabled computer should be preserved
+    // Re-find Neuron1Spikes item
+    n1_item = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        auto * item = tree->topLevelItem(i);
+        if (item->text(0).contains("Events: Neuron1Spikes")) { n1_item = item; break; }
+    }
+    REQUIRE(n1_item != nullptr);
+    bool still_checked = false;
+    for (int j = 0; j < n1_item->childCount(); ++j) {
+        auto * c = n1_item->child(j);
+        if (c->text(0).contains("Event Presence")) { still_checked = (c->checkState(1) == Qt::Checked); break; }
+    }
+    REQUIRE(still_checked);
+
+    // Enable a computer under the new source to test removal cleanup
+    QTreeWidgetItem * new_item = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        auto * item = tree->topLevelItem(i);
+        if (item->text(0).contains("Events: NewSpikes")) { new_item = item; break; }
+    }
+    REQUIRE(new_item != nullptr);
+    int new_checked_before = 0;
+    for (int j = 0; j < new_item->childCount(); ++j) {
+        auto * c = new_item->child(j);
+        if (c->text(0).contains("Event Presence") || c->text(0).contains("Event Count")) {
+            c->setCheckState(1, Qt::Checked);
+            ++new_checked_before;
+            break; // enable one
+        }
+    }
+    REQUIRE(new_checked_before >= 1);
+
+    // Now remove the new data source and ensure its entry disappears
+    REQUIRE(dm.deleteData("NewSpikes"));
+    QApplication::processEvents();
+
+    bool removed = true;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        if (tree->topLevelItem(i)->text(0).contains("Events: NewSpikes")) { removed = false; break; }
+    }
+    REQUIRE(removed);
+
+    // Also verify enabled columns no longer include NewSpikes
+    auto enabled_columns = widget.getEnabledColumnInfos();
+    for (auto const & info : enabled_columns) {
+        REQUIRE(std::string(info.dataSourceName).find("NewSpikes") == std::string::npos);
+    }
+}
+
 /*
 TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Data source compatibility", "[TableDesignerWidget][Compatibility]") {
     

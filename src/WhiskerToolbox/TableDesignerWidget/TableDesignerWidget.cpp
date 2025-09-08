@@ -1212,6 +1212,21 @@ void TableDesignerWidget::refreshComputersTree() {
 
     _updating_computers_tree = true;
 
+    // Preserve previous checkbox states and custom column names
+    std::map<std::string, std::pair<Qt::CheckState, QString>> previous_states;
+    if (ui->computers_tree && ui->computers_tree->topLevelItemCount() > 0) {
+        for (int i = 0; i < ui->computers_tree->topLevelItemCount(); ++i) {
+            auto * data_source_item_old = ui->computers_tree->topLevelItem(i);
+            for (int j = 0; j < data_source_item_old->childCount(); ++j) {
+                auto * computer_item_old = data_source_item_old->child(j);
+                QString ds = computer_item_old->data(0, Qt::UserRole).toString();
+                QString cn = computer_item_old->data(1, Qt::UserRole).toString();
+                std::string key = (ds + "||" + cn).toStdString();
+                previous_states[key] = {computer_item_old->checkState(1), computer_item_old->text(2)};
+            }
+        }
+    }
+
     ui->computers_tree->clear();
     ui->computers_tree->setHeaderLabels({"Data Source / Computer", "Enabled", "Column Name"});
 
@@ -1265,6 +1280,16 @@ void TableDesignerWidget::refreshComputersTree() {
             // Store data source and computer name for later use
             computer_item->setData(0, Qt::UserRole, data_source);
             computer_item->setData(1, Qt::UserRole, QString::fromStdString(computer_info.name));
+
+            // Restore previous state if present
+            std::string prev_key = (data_source + "||" + QString::fromStdString(computer_info.name)).toStdString();
+            auto it_prev = previous_states.find(prev_key);
+            if (it_prev != previous_states.end()) {
+                computer_item->setCheckState(1, it_prev->second.first);
+                if (!it_prev->second.second.isEmpty()) {
+                    computer_item->setText(2, it_prev->second.second);
+                }
+            }
         }
     }
 
@@ -1274,6 +1299,9 @@ void TableDesignerWidget::refreshComputersTree() {
     ui->computers_tree->resizeColumnToContents(2);
 
     _updating_computers_tree = false;
+
+    // Update preview after refresh
+    triggerPreviewDebounced();
 }
 
 void TableDesignerWidget::onComputersTreeItemChanged() {
