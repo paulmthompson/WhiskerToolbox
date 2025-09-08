@@ -13,6 +13,8 @@ This transformation allows for the precise extraction of a subsegment from a ser
 
 This is particularly useful for focusing analysis on a specific part of a trajectory or shape. For instance, in neuroscience, you might use this to analyze the movement of an animal's limb, focusing only on the part of the movement where the limb is closest to a target.
 
+![](images/clipboard-1005583877.png)
+
 ::: {.content-hidden when-format="html"}
 ```{{python}}
 #| echo: false
@@ -139,8 +141,8 @@ with plt.xkcd():
 
 The extraction can be done in two ways:
 
-*   **Direct:** This method pulls the original points from the line that fall within the specified subsegment. This is fast and preserves the original data points.
-*   **Parametric:** This method fits a polynomial to the line and then generates a new, smooth subsegment with a specified number of points. This is useful for standardizing the length and spacing of the subsegment for further analysis, such as comparing shapes across different trials.
+-   **Direct:** This method pulls the original points from the line that fall within the specified subsegment. This is fast and preserves the original data points.
+-   **Parametric:** This method fits a polynomial to the line and then generates a new, smooth subsegment with a specified number of points. This is useful for standardizing the length and spacing of the subsegment for further analysis, such as comparing shapes across different trials.
 
 ### Neuroscience Use Cases
 
@@ -165,7 +167,7 @@ This transform has the following parameters:
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation. This example extracts the subsegment from 20% to 80% of the line's length using the `Direct` method.
 
-```json
+``` json
 [
 {
     "transformations": {

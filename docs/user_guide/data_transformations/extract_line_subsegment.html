@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Analog Event Threshold – Neuralyzer</title>
+<title>Extract Line Subsegment – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -190,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/analog_event_threshold.html">Analog Event Threshold</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/extract_line_subsegment.html">Extract Line Subsegment</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -364,7 +364,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/analog_event_threshold.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../user_guide/data_transformations/analog_event_threshold.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Analog Event Threshold</span></a>
   </div>
 </li>
@@ -412,7 +412,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/extract_line_subsegment.html" class="sidebar-item-text sidebar-link">
+  <a href="../../user_guide/data_transformations/extract_line_subsegment.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Extract Line Subsegment</span></a>
   </div>
 </li>
@@ -522,9 +522,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/analog_event_threshold.html">Analog Event Threshold</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/extract_line_subsegment.html">Extract Line Subsegment</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Analog Event Threshold</h1>
+<h1 class="title">Extract Line Subsegment</h1>
 </div>
 
 
@@ -543,22 +543,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>This transform detects moments in time (events) when an analog signal crosses a specified value, which is useful for identifying significant occurrences in the data.</p>
+<p>This transform extracts a portion of a line (a subsegment) based on specified start and end points.</p>
 <section id="detailed-description" class="level3">
 <h3 class="anchored" data-anchor-id="detailed-description">Detailed Description</h3>
-<p>Thresholding is a fundamental method for event detection in time-series data. This operation identifies every point in time where the signal’s amplitude crosses a defined threshold in a specific direction (either rising above it, falling below it, or crossing it in either direction).</p>
-<p>A “lockout” period can also be set. After an event is detected, the algorithm will ignore any further threshold crossings for the duration of this period, which helps prevent a single, noisy event from being counted multiple times.</p>
-<p>This transform takes an analog time series as input and produces a digital event series as output, where each event corresponds to a single point in time when a threshold crossing was detected.<br>
-<br>
-<img src="images/clipboard-2639982734.png" class="img-fluid"></p>
+<p>This transformation allows for the precise extraction of a subsegment from a series of lines, such as those representing the movement of a tracked object over time. You can define the start and end of the subsegment as a fraction of the total line length. For example, you can extract the middle 50% of a line.</p>
+<p>This is particularly useful for focusing analysis on a specific part of a trajectory or shape. For instance, in neuroscience, you might use this to analyze the movement of an animal’s limb, focusing only on the part of the movement where the limb is closest to a target.</p>
+<p><img src="images/clipboard-1005583877.png" class="img-fluid"></p>
+<p>The extraction can be done in two ways:</p>
+<ul>
+<li><strong>Direct:</strong> This method pulls the original points from the line that fall within the specified subsegment. This is fast and preserves the original data points.</li>
+<li><strong>Parametric:</strong> This method fits a polynomial to the line and then generates a new, smooth subsegment with a specified number of points. This is useful for standardizing the length and spacing of the subsegment for further analysis, such as comparing shapes across different trials.</li>
+</ul>
 </section>
 <section id="neuroscience-use-cases" class="level3">
 <h3 class="anchored" data-anchor-id="neuroscience-use-cases">Neuroscience Use Cases</h3>
-<p>In neuroscience, thresholding is a common technique for identifying meaningful events in continuous data streams:</p>
 <ul>
-<li><strong>Spike Detection:</strong> In extracellular recordings, thresholding can be used to identify action potentials (spikes) that stand out from the background noise. A lockout time is critical here to avoid detecting the same spike multiple times as it repolarizes.</li>
-<li><strong>Behavioral Event Marking:</strong> For data from sensors like accelerometers or force transducers, thresholding can mark the onset of specific behaviors, such as a mouse starting to run on a wheel or a bird pecking a key.</li>
-<li><strong>Calcium Imaging Analysis:</strong> In calcium imaging data, which reflects neural activity, thresholding can be used to detect significant calcium transients that indicate a neuron or a group of neurons are firing.</li>
+<li><strong>Whisker Tracking:</strong> When analyzing whisker movements, you might want to extract only the portion of the whisker closest to an object it’s exploring.</li>
+<li><strong>Limb Tracking:</strong> In studies of motor control, you could extract the segment of a limb’s trajectory during a specific phase of a reach-to-grasp movement.</li>
+<li><strong>Neural Arborization:</strong> When analyzing the structure of neurons, this transform could be used to isolate specific dendritic or axonal segments for morphological analysis.</li>
 </ul>
 </section>
 </section>
@@ -566,44 +568,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="parameters">Parameters</h2>
 <p>This transform has the following parameters:</p>
 <ul>
-<li><code>threshold_value</code>: The amplitude value the signal must cross to be considered an event.</li>
-<li><code>direction</code>: Specifies the direction of the crossing required to trigger an event. This can be:
+<li><code>start_position</code>: The starting point of the subsegment, as a fraction of the total line length (from 0.0 to 1.0).</li>
+<li><code>end_position</code>: The ending point of the subsegment, as a fraction of the total line length (from 0.0 to 1.0).</li>
+<li><code>method</code>: The extraction method to use. This can be:
 <ul>
-<li><code>Positive (Rising)</code>: An event is detected when the signal crosses the threshold from a lower to a higher value.</li>
-<li><code>Negative (Falling)</code>: An event is detected when the signal crosses the threshold from a higher to a lower value.</li>
-<li><code>Absolute</code>: An event is detected whenever the absolute value of the signal crosses the threshold value (useful for detecting deviations from baseline in either direction).</li>
+<li><code>Direct</code>: Directly extracts the original points within the subsegment range.</li>
+<li><code>Parametric</code>: Uses polynomial interpolation to create a new, smooth subsegment.</li>
 </ul></li>
-<li><code>lockout_time</code>: A duration (in the same time units as the data, e.g., seconds) after each detected event during which no new events will be registered. This is useful for preventing multiple detections of a single, noisy event.</li>
+<li><code>polynomial_order</code>: (Parametric method only) The order of the polynomial to fit to the line. A higher order can capture more complex curves but may also be more sensitive to noise.</li>
+<li><code>output_points</code>: (Parametric method only) The number of points to generate in the output subsegment.</li>
+<li><code>preserve_original_spacing</code>: (Direct method only) If true, the subsegment will consist of the original points from the line that fall within the specified range. If false, the subsegment will be resampled to have evenly spaced points.</li>
 </ul>
 </section>
 <section id="example-configuration" class="level2">
 <h2 class="anchored" data-anchor-id="example-configuration">Example Configuration</h2>
-<p>Here is a complete example of a JSON configuration file that could be used to run this transformation. This example detects events where the signal rises above an amplitude of <code>1.0</code>, with no lockout period.</p>
+<p>Here is a complete example of a JSON configuration file that could be used to run this transformation. This example extracts the subsegment from 20% to 80% of the line’s length using the <code>Direct</code> method.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"transformations"</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"Threshold Detection Pipeline"</span><span class="fu">,</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"Test threshold event detection on analog signal"</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"Line Subsegment Extraction Pipeline"</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"Test line subsegment extraction"</span><span class="fu">,</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            <span class="dt">"version"</span><span class="fu">:</span> <span class="st">"1.0"</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"steps"</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            <span class="fu">{</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"step_id"</span><span class="fu">:</span> <span class="st">"1"</span><span class="fu">,</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"transform_name"</span><span class="fu">:</span> <span class="st">"Analog Event Threshold"</span><span class="fu">,</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"transform_name"</span><span class="fu">:</span> <span class="st">"Extract Line Subsegment"</span><span class="fu">,</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"phase"</span><span class="fu">:</span> <span class="st">"analysis"</span><span class="fu">,</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"input_key"</span><span class="fu">:</span> <span class="st">"test_signal"</span><span class="fu">,</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"output_key"</span><span class="fu">:</span> <span class="st">"detected_events"</span><span class="fu">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"input_key"</span><span class="fu">:</span> <span class="st">"test_line"</span><span class="fu">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"output_key"</span><span class="fu">:</span> <span class="st">"extracted_subsegments"</span><span class="fu">,</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>                <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"threshold_value"</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"direction"</span><span class="fu">:</span> <span class="st">"Positive"</span><span class="fu">,</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"lockout_time"</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">0</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                <span class="fu">}</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"start_position"</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">2</span><span class="fu">,</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"end_position"</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">8</span><span class="fu">,</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"method"</span><span class="fu">:</span> <span class="st">"Direct"</span><span class="fu">,</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">"preserve_original_spacing"</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>                <span class="fu">}</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>
