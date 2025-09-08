@@ -21,9 +21,7 @@ TableViewerWidget::TableViewerWidget(QWidget * parent)
     ui->table_view->horizontalHeader()->setSectionsMovable(true);
     ui->table_view->verticalHeader()->setDefaultSectionSize(25);
     
-    // Set default page size to 1000 (matches the combo box default)
-    ui->page_size_combo->setCurrentText("1000");
-    _model->setPageSize(1000);
+    _model->setPageSize(50);
     
     connectSignals();
 
@@ -58,18 +56,13 @@ void TableViewerWidget::setTableView(std::shared_ptr<TableView> table_view, QStr
         ui->table_name_label->setText(QString("Table: %1").arg(_table_name));
         ui->row_count_label->setText(QString("Rows: %1").arg(_total_rows));
         ui->column_count_label->setText(QString("Columns: %1").arg(table_view->getColumnCount()));
-        ui->goto_row_spinbox->setMaximum(static_cast<int>(std::max<size_t>(1, _total_rows)));
-        ui->goto_row_spinbox->setValue(1);
-        
-        // Enable navigation controls
-        ui->navigation_group->setEnabled(true);
+        // Navigation hidden; skip controls
         // Initialize current column order from table view
         _currentColumnOrder.clear();
         for (auto const & name : table_view->getColumnNames()) {
             _currentColumnOrder.push_back(QString::fromStdString(name));
         }
-        
-        updateRowInfo();
+
     } else {
         clearTable();
     }
@@ -90,11 +83,7 @@ void TableViewerWidget::setTableConfiguration(std::unique_ptr<IRowSelector> row_
         ui->table_name_label->setText(QString("Table: %1").arg(_table_name));
         ui->row_count_label->setText(QString("Rows: %1").arg(_total_rows));
         ui->column_count_label->setText(QString("Columns: %1").arg(column_infos.size()));
-        ui->goto_row_spinbox->setMaximum(static_cast<int>(std::max<size_t>(1, _total_rows)));
-        ui->goto_row_spinbox->setValue(1);
-        
-        // Enable navigation controls
-        ui->navigation_group->setEnabled(true);
+        // Navigation hidden; skip controls
         // Initialize or reapply column order
         if (!desiredOrder.isEmpty()) {
             // Reorder visual columns to match previous order
@@ -122,8 +111,7 @@ void TableViewerWidget::setTableConfiguration(std::unique_ptr<IRowSelector> row_
                 _currentColumnOrder.push_back(_model->headerData(c, Qt::Horizontal, Qt::DisplayRole).toString());
             }
         }
-        
-        updateRowInfo();
+
     } else {
         clearTable();
     }
@@ -138,28 +126,12 @@ void TableViewerWidget::clearTable() {
     ui->table_name_label->setText("Table: (None)");
     ui->row_count_label->setText("Rows: 0");
     ui->column_count_label->setText("Columns: 0");
-    ui->goto_row_spinbox->setMaximum(1);
-    ui->goto_row_spinbox->setValue(1);
-    
-    // Disable navigation controls
-    ui->navigation_group->setEnabled(false);
-    
-    updateRowInfo();
+
 }
 
 void TableViewerWidget::setPageSize(size_t page_size) {
     _model->setPageSize(page_size);
     
-    // Update combo box if it doesn't match
-    QString page_size_str = QString::number(page_size);
-    int index = ui->page_size_combo->findText(page_size_str);
-    if (index >= 0) {
-        ui->page_size_combo->setCurrentIndex(index);
-    } else {
-        // Add custom page size to combo box
-        ui->page_size_combo->addItem(page_size_str);
-        ui->page_size_combo->setCurrentText(page_size_str);
-    }
 }
 
 QString TableViewerWidget::getTableName() const {
@@ -170,32 +142,8 @@ bool TableViewerWidget::hasTable() const {
     return _total_rows > 0;
 }
 
-void TableViewerWidget::onGoToRow() {
-    if (_total_rows == 0) return;
-    
-    int target_row = ui->goto_row_spinbox->value() - 1; // Convert to 0-based
-    target_row = std::max(0, std::min(target_row, static_cast<int>(_total_rows - 1)));
-    
-    // Scroll to the target row
-    QModelIndex target_index = _model->index(target_row, 0);
-    ui->table_view->scrollTo(target_index, QAbstractItemView::PositionAtTop);
-    ui->table_view->selectRow(target_row);
-    
-    updateRowInfo();
-    emit rowScrolled(static_cast<size_t>(target_row));
-}
-
-void TableViewerWidget::onPageSizeChanged() {
-    bool ok;
-    size_t new_page_size = ui->page_size_combo->currentText().toUInt(&ok);
-    if (ok && new_page_size > 0) {
-        _model->setPageSize(new_page_size);
-    }
-}
-
 void TableViewerWidget::onTableScrolled() {
-    updateRowInfo();
-    
+
     // Emit signal with current visible row
     QModelIndex top_left = ui->table_view->indexAt(ui->table_view->rect().topLeft());
     if (top_left.isValid()) {
@@ -203,29 +151,7 @@ void TableViewerWidget::onTableScrolled() {
     }
 }
 
-void TableViewerWidget::updateRowInfo() {
-    if (_total_rows == 0) {
-        ui->current_row_label->setText("Current: No data");
-        return;
-    }
-    
-    // Get the currently visible top row
-    QModelIndex top_left = ui->table_view->indexAt(ui->table_view->rect().topLeft());
-    if (top_left.isValid()) {
-        int current_row = top_left.row() + 1; // Convert to 1-based
-        ui->current_row_label->setText(QString("Current: Row %1 of %2").arg(current_row).arg(_total_rows));
-    } else {
-        ui->current_row_label->setText(QString("Current: Row 1 of %1").arg(_total_rows));
-    }
-}
-
 void TableViewerWidget::connectSignals() {
-    // Navigation controls
-    connect(ui->goto_row_button, &QPushButton::clicked, this, &TableViewerWidget::onGoToRow);
-    connect(ui->goto_row_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), 
-            this, &TableViewerWidget::onGoToRow);
-    connect(ui->page_size_combo, &QComboBox::currentTextChanged, 
-            this, &TableViewerWidget::onPageSizeChanged);
     
     // Table scroll events
     connect(ui->table_view->verticalScrollBar(), &QScrollBar::valueChanged,
@@ -233,5 +159,3 @@ void TableViewerWidget::connectSignals() {
     connect(ui->table_view->horizontalScrollBar(), &QScrollBar::valueChanged,
             this, &TableViewerWidget::onTableScrolled);
 }
-
-#include "TableViewerWidget.moc"

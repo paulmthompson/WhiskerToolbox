@@ -89,15 +89,6 @@ signals:
     void columnsReordered(QStringList const & newOrder);
 
 private slots:
-    /**
-     * @brief Handle navigation to a specific row
-     */
-    void onGoToRow();
-
-    /**
-     * @brief Handle page size changes
-     */
-    void onPageSizeChanged();
 
     /**
      * @brief Handle scroll events to update row info
@@ -111,10 +102,6 @@ private:
     size_t _total_rows = 0;
     QStringList _currentColumnOrder;
 
-    /**
-     * @brief Update the status bar with current row information
-     */
-    void updateRowInfo();
 
     /**
      * @brief Connect all signals and slots
