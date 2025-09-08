@@ -1,0 +1,170 @@
+---
+title: "Line Curvature"
+format: html
+---
+
+## Overview
+
+This transform calculates the curvature of a 2D line at a specified point. This is useful for analyzing the shape and tortuosity of lines, such as animal trajectories or neuronal processes.
+
+### Detailed Description
+
+The Line Curvature transform measures how much a line bends at a given point. It does this by fitting a parametric polynomial to the line's (x, y) coordinates and then calculating the curvature of the fitted polynomial at a user-specified position along the line's length.
+
+The transform takes a `LineData` object (representing one or more lines over time) as input and produces an `AnalogTimeSeries` as output, where each value represents the calculated curvature at the corresponding time point.
+
+This method allows for a smooth and robust estimation of curvature even when the underlying line data is noisy or unevenly sampled.
+
+![](images/clipboard-2433331239.png)
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+# Placeholder for python script to generate xkcd style plot
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Generate sample data ---
+    # Create a sample curved line
+    s = np.linspace(0, 1, 100)
+    x = s
+    y = s**3 - s
+
+    # --- Parameters for visualization ---
+    position_to_eval = 0.5
+    poly_order = 3
+    fit_window_percentage = 0.4 # 40% of the line
+
+    # --- Simulate the fitting process ---
+    # Find the index corresponding to the evaluation position
+    eval_idx = np.argmin(np.abs(s - position_to_eval))
+
+    # Define the window for the polynomial fit
+    window_half_size = int(len(s) * fit_window_percentage / 2)
+    fit_start_idx = max(0, eval_idx - window_half_size)
+    fit_end_idx = min(len(s), eval_idx + window_half_size)
+
+    s_fit = s[fit_start_idx:fit_end_idx]
+    x_fit = x[fit_start_idx:fit_end_idx]
+    y_fit = y[fit_start_idx:fit_end_idx]
+
+    # Fit polynomials to the windowed data
+    x_coeffs = np.polyfit(s_fit, x_fit, poly_order)
+    y_coeffs = np.polyfit(s_fit, y_fit, poly_order)
+
+    x_poly = np.poly1d(x_coeffs)
+    y_poly = np.poly1d(y_coeffs)
+
+    s_poly_dense = np.linspace(s_fit[0], s_fit[-1], 200)
+    x_poly_vals = x_poly(s_poly_dense)
+    y_poly_vals = y_poly(s_poly_dense)
+
+    # --- Calculate curvature (analytical for the fitted polynomial) ---
+    # 1st derivatives
+    x_prime_poly = np.polyder(x_poly, 1)
+    y_prime_poly = np.polyder(y_poly, 1)
+    # 2nd derivatives
+    x_double_prime_poly = np.polyder(x_poly, 2)
+    y_double_prime_poly = np.polyder(y_poly, 2)
+
+    # Evaluate derivatives at the specified position
+    s_eval = position_to_eval
+    x_p = x_prime_poly(s_eval)
+    y_p = y_prime_poly(s_eval)
+    x_dp = x_double_prime_poly(s_eval)
+    y_dp = y_double_prime_poly(s_eval)
+
+    curvature = (x_p * y_dp - y_p * x_dp) / (x_p**2 + y_p**2)**1.5
+    radius_of_curvature = 1 / curvature
+    center_x = x_poly(s_eval) - radius_of_curvature * y_p / np.sqrt(x_p**2 + y_p**2)
+    center_y = y_poly(s_eval) + radius_of_curvature * x_p / np.sqrt(x_p**2 + y_p**2)
+
+    # --- Create the plot ---
+    fig, ax = plt.subplots(figsize=(10, 8))
+    fig.suptitle('How Line Curvature is Calculated', fontsize=16)
+
+    # Plot original line
+    ax.plot(x, y, 'k-', label='Original Line', linewidth=2)
+
+    # Highlight the fitting window
+    ax.plot(x_fit, y_fit, 'b-', label=f'Fitting Window ({fit_window_percentage*100:.0f}%)', linewidth=4, alpha=0.6)
+
+    # Plot the fitted polynomial
+    ax.plot(x_poly_vals, y_poly_vals, 'r--', label=f'Fitted Polynomial (Order {poly_order})')
+
+    # Mark the evaluation point
+    eval_point_x = x_poly(s_eval)
+    eval_point_y = y_poly(s_eval)
+    ax.plot(eval_point_x, eval_point_y, 'go', markersize=10, label=f'Evaluation Point (Pos: {position_to_eval})')
+
+    # Draw the osculating circle (circle of curvature)
+    circle = plt.Circle((center_x, center_y), abs(radius_of_curvature), color='purple', fill=False, linestyle='-.', linewidth=2, label='Circle of Curvature')
+    ax.add_artist(circle)
+    ax.plot(center_x, center_y, 'p', color='purple', markersize=8)
+
+
+    ax.set_title(f'Curvature at this point is {curvature:.2f}')
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    ax.legend()
+    ax.grid(True)
+    ax.axis('equal')
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+
+```
+:::
+
+### Neuroscience Use Cases
+
+In neuroscience, analyzing the geometry of paths and structures is crucial for understanding behavior and neural architecture:
+
+-   **Animal Trajectory Analysis:** The curvature of an animal's path (e.g., a rat in a maze) can reveal changes in exploratory strategy, searching behavior, or the effects of neurological manipulations. High curvature might indicate turning or searching, while low curvature suggests straight-line travel.
+-   **Neuronal Arborization:** When analyzing the structure of neurons from microscope images, the curvature of dendrites or axons can be quantified to characterize their branching patterns and complexity. This is important for studying neuronal development, plasticity, and disease.
+-   **Analysis of Saccadic Eye Movements:** The trajectory of saccadic eye movements is not perfectly straight. Analyzing the curvature of these paths can provide insights into the underlying motor control mechanisms.
+
+## Parameters
+
+This transform has the following parameters:
+
+-   `position`: A fractional value between `0.0` and `1.0` indicating the point along the line's total length at which to calculate the curvature. `0.0` is the start of the line, `0.5` is the midpoint, and `1.0` is the end.
+-   `method`: The algorithm to use for calculating curvature. Currently, only one option is available:
+    -   `PolynomialFit`: Fits a parametric polynomial to the line data and calculates the analytical curvature.
+-   `polynomial_order`: The order of the polynomial to fit to the line data. A higher order can capture more complex curves but may be more sensitive to noise. A minimum of 2 is required for curvature calculation.
+-   `fitting_window_percentage`: The percentage (from `0.0` to `1.0`) of the total line length to use for the polynomial fit, centered on the `position` parameter. A smaller window focuses the curvature calculation on the local shape, while a larger window provides a more global measure.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the curvature at the midpoint (`0.5`) of a line, using a 3rd-order polynomial fitted to 10% of the line's data.
+
+``` json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Line Curvature Pipeline",
+            "description": "Test line curvature calculation on a curved line",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Calculate Line Curvature",
+                "phase": "analysis",
+                "input_key": "my_line_data",
+                "output_key": "calculated_curvature",
+                "parameters": {
+                    "position": 0.5,
+                    "method": "PolynomialFit",
+                    "polynomial_order": 3,
+                    "fitting_window_percentage": 0.1
+                }
+            }
+        ]
+    }
+}
+]
+```
