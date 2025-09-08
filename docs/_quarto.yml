@@ -106,6 +106,7 @@ website:
             - user_guide/data_transformations/calculate_line_to_point_distance.qmd
             - user_guide/data_transformations/extract_point_from_line.qmd
             - user_guide/data_transformations/mask_area.qmd
+            - user_guide/data_transformations/mask_centroid.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd
