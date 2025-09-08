@@ -20,6 +20,7 @@
 #include "TableInfoWidget.hpp"
 #include "Collapsible_Widget/Section.hpp"
 #include "TableViewerWidget/TableViewerWidget.hpp"
+#include "TableTransformWidget.hpp"
 
 
 #include <QCheckBox>
@@ -94,6 +95,17 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     refreshRowDataSourceCombo();
     refreshComputersTree();
 
+    // Insert Transform section
+    _table_transform_widget = new TableTransformWidget(this);
+    _table_transform_section = new Section(this, "Transforms");
+    _table_transform_section->setContentLayout(*new QVBoxLayout());
+    _table_transform_section->layout()->addWidget(_table_transform_widget);
+    _table_transform_section->autoSetContentLayout();
+    // Place before build_group (after preview)
+    ui->main_layout->insertWidget( ui->main_layout->indexOf(ui->preview_group) + 1, _table_transform_section );
+    connect(_table_transform_widget, &TableTransformWidget::applyTransformClicked,
+            this, &TableDesignerWidget::onApplyTransform);
+
     // Add observer to automatically refresh dropdowns when DataManager changes
     if (_data_manager) {
         _data_manager->addObserver([this]() {
@@ -152,10 +164,7 @@ void TableDesignerWidget::connectSignals() {
     // Build signals
     connect(ui->build_table_btn, &QPushButton::clicked,
             this, &TableDesignerWidget::onBuildTable);
-    if (ui->apply_transform_btn) {
-        connect(ui->apply_transform_btn, &QPushButton::clicked,
-                this, &TableDesignerWidget::onApplyTransform);
-    }
+    // Transform apply handled via TableTransformWidget
     if (ui->export_csv_btn) {
         connect(ui->export_csv_btn, &QPushButton::clicked,
                 this, &TableDesignerWidget::onExportCsv);
@@ -496,7 +505,7 @@ void TableDesignerWidget::onApplyTransform() {
     }
 
     // Currently only PCA option is exposed
-    QString transform = ui->transform_type_combo ? ui->transform_type_combo->currentText() : QString();
+    QString transform = _table_transform_widget ? _table_transform_widget->getTransformType() : QString();
     if (transform != "PCA") {
         updateBuildStatus("Unsupported transform", true);
         return;
@@ -504,13 +513,11 @@ void TableDesignerWidget::onApplyTransform() {
 
     // Configure PCA
     PCAConfig cfg;
-    cfg.center = ui->transform_center_checkbox && ui->transform_center_checkbox->isChecked();
-    cfg.standardize = ui->transform_standardize_checkbox && ui->transform_standardize_checkbox->isChecked();
-    if (ui->transform_include_edit) {
-        for (auto const & s: parseCommaSeparatedList(ui->transform_include_edit->text())) cfg.include.push_back(s);
-    }
-    if (ui->transform_exclude_edit) {
-        for (auto const & s: parseCommaSeparatedList(ui->transform_exclude_edit->text())) cfg.exclude.push_back(s);
+    cfg.center = _table_transform_widget && _table_transform_widget->isCenterEnabled();
+    cfg.standardize = _table_transform_widget && _table_transform_widget->isStandardizeEnabled();
+    if (_table_transform_widget) {
+        for (auto const & s: _table_transform_widget->getIncludeColumns()) cfg.include.push_back(s);
+        for (auto const & s: _table_transform_widget->getExcludeColumns()) cfg.exclude.push_back(s);
     }
 
     try {
@@ -518,8 +525,7 @@ void TableDesignerWidget::onApplyTransform() {
         TableView derived = pca.apply(*base_view);
 
         // Determine output id/name
-        QString out_name = ui->transform_output_name_edit ? ui->transform_output_name_edit->text().trimmed()
-                                                          : QString();
+        QString out_name = _table_transform_widget ? _table_transform_widget->getOutputName().trimmed() : QString();
         if (out_name.isEmpty()) {
             QString base = _table_info_widget ? _table_info_widget->getName() : QString();
             out_name = base.isEmpty() ? QString("(PCA)") : QString("%1 (PCA)").arg(base);

@@ -26,6 +26,7 @@ class QTimer;
 class QTreeWidgetItem;
 class TableInfoWidget;
 class Section;
+class TableTransformWidget;
 
 namespace Ui {
 class TableDesignerWidget;
@@ -154,6 +155,8 @@ private:
 
     TableInfoWidget * _table_info_widget = nullptr;
     Section * _table_info_section = nullptr;
+    TableTransformWidget * _table_transform_widget = nullptr;
+    Section * _table_transform_section = nullptr;
     
     // Preview support
     TableViewerWidget * _table_viewer = nullptr;
