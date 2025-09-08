@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TableInfoWidget</class>
+ <widget class="QWidget" name="TableInfoWidget">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="name_row">
+     <item>
+      <widget class="QLabel" name="name_label">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="table_name_edit"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="description_label">
+     <property name="text">
+      <string>Description:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextEdit" name="table_description_edit"/>
+   </item>
+   <item>
+    <widget class="QPushButton" name="save_info_btn">
+     <property name="text">
+      <string>Save Info</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+ </ui>
+
+

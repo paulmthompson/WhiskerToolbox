@@ -338,4 +338,3 @@ template QString PaginatedTableModel::joinVector<double>(std::vector<double> con
 template QString PaginatedTableModel::joinVector<int>(std::vector<int> const &);
 template QString PaginatedTableModel::joinVector<float>(std::vector<float> const &);
 
-#include "PaginatedTableModel.moc"
