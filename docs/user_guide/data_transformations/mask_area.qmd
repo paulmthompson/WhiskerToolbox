@@ -15,6 +15,8 @@ The result is an analog time series where the value at each point in time repres
 
 This transform takes a mask series as input and produces an analog time series as output.
 
+![](images/clipboard-2203343381.png)
+
 ::: {.content-hidden when-format="html"}
 ```{{python}}
 #| echo: false
@@ -114,7 +116,7 @@ This transform does not have any parameters that need to be configured. It direc
 
 Here is a complete example of a JSON configuration file that could be used to load mask data and run this transformation.
 
-```json
+``` json
 [
   {
     "transformations": {
