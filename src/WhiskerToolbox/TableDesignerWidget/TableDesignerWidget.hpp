@@ -27,6 +27,7 @@ class QTreeWidgetItem;
 class TableInfoWidget;
 class Section;
 class TableTransformWidget;
+class TableExportWidget;
 
 namespace Ui {
 class TableDesignerWidget;
@@ -157,6 +158,8 @@ private:
     Section * _table_info_section = nullptr;
     TableTransformWidget * _table_transform_widget = nullptr;
     Section * _table_transform_section = nullptr;
+    TableExportWidget * _table_export_widget = nullptr;
+    Section * _table_export_section = nullptr;
     
     // Preview support
     TableViewerWidget * _table_viewer = nullptr;

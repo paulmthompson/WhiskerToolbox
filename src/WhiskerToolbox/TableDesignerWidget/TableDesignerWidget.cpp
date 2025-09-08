@@ -21,6 +21,7 @@
 #include "Collapsible_Widget/Section.hpp"
 #include "TableViewerWidget/TableViewerWidget.hpp"
 #include "TableTransformWidget.hpp"
+#include "TableExportWidget.hpp"
 
 
 #include <QCheckBox>
@@ -101,10 +102,20 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     _table_transform_section->setContentLayout(*new QVBoxLayout());
     _table_transform_section->layout()->addWidget(_table_transform_widget);
     _table_transform_section->autoSetContentLayout();
-    // Place before build_group (after preview)
-    ui->main_layout->insertWidget( ui->main_layout->indexOf(ui->preview_group) + 1, _table_transform_section );
+    // Place after build_group (after preview)
+    ui->main_layout->insertWidget( ui->main_layout->indexOf(ui->build_group) + 1, _table_transform_section );
     connect(_table_transform_widget, &TableTransformWidget::applyTransformClicked,
             this, &TableDesignerWidget::onApplyTransform);
+
+    // Insert Export section
+    _table_export_widget = new TableExportWidget(this);
+    _table_export_section = new Section(this, "Export");
+    _table_export_section->setContentLayout(*new QVBoxLayout());
+    _table_export_section->layout()->addWidget(_table_export_widget);
+    _table_export_section->autoSetContentLayout();
+    ui->main_layout->insertWidget( ui->main_layout->indexOf(ui->build_group) + 2, _table_export_section );
+    connect(_table_export_widget, &TableExportWidget::exportClicked,
+            this, &TableDesignerWidget::onExportCsv);
 
     // Add observer to automatically refresh dropdowns when DataManager changes
     if (_data_manager) {
@@ -165,10 +176,7 @@ void TableDesignerWidget::connectSignals() {
     connect(ui->build_table_btn, &QPushButton::clicked,
             this, &TableDesignerWidget::onBuildTable);
     // Transform apply handled via TableTransformWidget
-    if (ui->export_csv_btn) {
-        connect(ui->export_csv_btn, &QPushButton::clicked,
-                this, &TableDesignerWidget::onExportCsv);
-    }
+    // Export handled via TableExportWidget
 
     // Subscribe to DataManager table observer
     if (_data_manager) {
@@ -576,11 +584,11 @@ void TableDesignerWidget::onExportCsv() {
     if (filename.isEmpty()) return;
     if (!filename.endsWith(".csv", Qt::CaseInsensitive)) filename += ".csv";
 
-    // CSV options
-    QString delimiter = ui->export_delimiter_combo ? ui->export_delimiter_combo->currentText() : "Comma";
-    QString lineEnding = ui->export_line_ending_combo ? ui->export_line_ending_combo->currentText() : "LF (\\n)";
-    int precision = ui->export_precision_spinbox ? ui->export_precision_spinbox->value() : 3;
-    bool includeHeader = ui->export_header_checkbox && ui->export_header_checkbox->isChecked();
+    // CSV options from export widget
+    QString delimiter = _table_export_widget ? _table_export_widget->getDelimiterText() : "Comma";
+    QString lineEnding = _table_export_widget ? _table_export_widget->getLineEndingText() : "LF (\\n)";
+    int precision = _table_export_widget ? _table_export_widget->getPrecision() : 3;
+    bool includeHeader = _table_export_widget && _table_export_widget->isHeaderIncluded();
 
     std::string delim = ",";
     if (delimiter == "Space") delim = " ";
