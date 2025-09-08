@@ -75,15 +75,8 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     _table_info_section->setContentLayout(*new QVBoxLayout());
     _table_info_section->layout()->addWidget(_table_info_widget);
     _table_info_section->autoSetContentLayout();
-    // Replace existing Table Information contents in UI with the Section
-    if (ui->table_info_layout) {
-        QLayoutItem * child;
-        while ((child = ui->table_info_layout->takeAt(0)) != nullptr) {
-            if (child->widget()) child->widget()->setParent(nullptr);
-            delete child;
-        }
-        ui->table_info_layout->addWidget(_table_info_section);
-    }
+    ui->main_layout->insertWidget(1, _table_info_section);
+
     // Hook save from table info widget
     connect(_table_info_widget, &TableInfoWidget::saveClicked, this, &TableDesignerWidget::onSaveTableInfo);
 

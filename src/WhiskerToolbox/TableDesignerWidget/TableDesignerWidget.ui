@@ -63,16 +63,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="table_info_group">
-     <property name="title">
-      <string>Table Information</string>
-     </property>
-     <layout class="QVBoxLayout" name="table_info_layout">
-      <!-- TableInfoWidget wrapped in a Section is injected programmatically -->
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QGroupBox" name="row_source_group">
      <property name="title">
       <string>Row Data Source</string>
@@ -195,19 +185,16 @@
      <layout class="QVBoxLayout" name="column_design_layout">
       <item>
        <widget class="QLabel" name="computers_info_label">
-        <property name="text">
-         <string>Select computers by checking the boxes. Expand data sources to see available operations.</string>
-        </property>
         <property name="styleSheet">
          <string>QLabel { color: gray; font-style: italic; }</string>
+        </property>
+        <property name="text">
+         <string>Select computers by checking the boxes. Expand data sources to see available operations.</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QTreeWidget" name="computers_tree">
-        <property name="headerHidden">
-         <bool>false</bool>
-        </property>
         <property name="alternatingRowColors">
          <bool>true</bool>
         </property>
@@ -216,6 +203,9 @@
         </property>
         <property name="rootIsDecorated">
          <bool>true</bool>
+        </property>
+        <property name="headerHidden">
+         <bool>false</bool>
         </property>
         <column>
          <property name="text">
@@ -242,9 +232,7 @@
      <property name="title">
       <string>Preview</string>
      </property>
-     <layout class="QVBoxLayout" name="preview_layout">
-      <!-- TableViewerWidget will be added here programmatically -->
-     </layout>
+     <layout class="QVBoxLayout" name="preview_layout"/>
     </widget>
    </item>
    <item>
