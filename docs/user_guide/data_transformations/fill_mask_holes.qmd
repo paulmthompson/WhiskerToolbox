@@ -1,0 +1,101 @@
+---
+title: "Fill Mask Holes"
+format: html
+---
+
+## Overview
+
+This transform fills any enclosed holes within binary mask regions, which is useful for creating solid,contiguous masks from outlines or noisy data.
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import binary_fill_holes
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Create a sample image with a hole ---
+    grid_size = 20
+    image = np.zeros((grid_size, grid_size), dtype=bool)
+    center, radius_outer, radius_inner = grid_size // 2, 8, 4
+
+    y, x = np.ogrid[:grid_size, :grid_size]
+
+    dist_from_center = np.sqrt((x - center)**2 + (y - center)**2)
+
+    mask_outer = dist_from_center <= radius_outer
+    mask_inner = dist_from_center < radius_inner
+
+    # Create a donut shape (a ring with a hole)
+    image[mask_outer] = True
+    image[mask_inner] = False
+
+    # --- Fill the hole ---
+    image_filled = binary_fill_holes(image)
+
+    # --- Create the plots ---
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    fig.suptitle('How "Fill Mask Holes" Works', fontsize=16)
+
+    # Plot 1: Before Transformation (Mask with a hole)
+    ax1.imshow(image, cmap='gray_r', origin='lower', interpolation='none')
+    ax1.set_title('Before: Mask with a Hole')
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+
+    # Plot 2: After Transformation (Hole is filled)
+    ax2.imshow(image_filled, cmap='gray_r', origin='lower', interpolation='none')
+    ax2.set_title('After: Hole is Filled')
+    ax2.set_xticks([])
+    ax2.set_yticks([])
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+### Detailed Description
+
+In image analysis, particularly with masks derived from object detection or segmentation, it's common to have "holes" – background areas completely surrounded by foreground. This transform identifies and fills these holes.
+
+The process works by identifying all background regions that are not connected to the edges of the image. Any such isolated background region is considered a hole and is filled in, effectively becoming part of the foreground mask. This is useful for cleaning up masks to ensure that objects are represented as solid shapes, which is often a prerequisite for accurate area, centroid, or morphological analysis.
+
+### Neuroscience Use Cases
+
+-   **Cell Body Segmentation:** When segmenting neurons from imaging data, the detected outline of a cell might not be perfectly filled. This transform can be used to fill the interior of the cell body, ensuring it's a solid mask for subsequent analysis like measuring cell size or fluorescence intensity.
+-   **Receptive Field Mapping:** In studies mapping receptive fields, a mask might be generated that outlines the field but contains small gaps or holes. Filling these holes can create a more accurate and solid representation of the receptive field.
+-   **Lesion Analysis:** When analyzing images of tissue lesions, this transform can help create solid masks of the lesion areas, even if the initial segmentation is imperfect, allowing for more accurate measurement of lesion volume or area.
+
+## Parameters
+
+This transform has no parameters. It will automatically fill all enclosed holes in the provided masks.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation.
+
+```json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Mask Hole Filling Pipeline",
+            "description": "Test mask hole filling on hollow rectangle",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Fill Mask Holes",
+                "phase": "analysis",
+                "input_key": "test_mask",
+                "output_key": "filled_mask",
+                "parameters": {}
+            }
+        ]
+    }
+}
+]
+```
