@@ -108,6 +108,7 @@ website:
             - user_guide/data_transformations/mask_area.qmd
             - user_guide/data_transformations/mask_centroid.qmd
             - user_guide/data_transformations/remove_small_connected_components.qmd
+            - user_guide/data_transformations/fill_mask_holes.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd
