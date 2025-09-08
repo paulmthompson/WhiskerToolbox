@@ -8,6 +8,9 @@ add_library(TableDesignerWidget STATIC
     TableDesignerWidget.ui
     PreviewTableModel.hpp
     PreviewTableModel.cpp
+    TableInfoWidget.hpp
+    TableInfoWidget.cpp
+    TableInfoWidget.ui
 )
 
 # Link Qt6 and other dependencies
@@ -18,6 +21,7 @@ target_link_libraries(TableDesignerWidget
         Qt6::Concurrent
         DataManager
         TableViewerWidget
+        Collapsible_Widget
 )
 
 # Include directories

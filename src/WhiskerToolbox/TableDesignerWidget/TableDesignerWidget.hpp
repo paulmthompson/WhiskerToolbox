@@ -24,6 +24,8 @@ class IParameterDescriptor;
 class TableViewerWidget;
 class QTimer;
 class QTreeWidgetItem;
+class TableInfoWidget;
+class Section;
 
 namespace Ui {
 class TableDesignerWidget;
@@ -150,6 +152,9 @@ private:
     QVBoxLayout * _parameter_layout = nullptr;
     std::map<std::string, QWidget*> _parameter_controls;
 
+    TableInfoWidget * _table_info_widget = nullptr;
+    Section * _table_info_section = nullptr;
+    
     // Preview support
     TableViewerWidget * _table_viewer = nullptr;
     QTimer * _preview_debounce_timer = nullptr;

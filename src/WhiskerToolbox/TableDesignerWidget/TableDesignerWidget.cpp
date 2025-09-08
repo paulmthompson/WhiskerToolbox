@@ -1,5 +1,4 @@
 #include "TableDesignerWidget.hpp"
-#include "TableViewerWidget/TableViewerWidget.hpp"
 #include "ui_TableDesignerWidget.h"
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -18,6 +17,10 @@
 #include "DataManager/utils/TableView/interfaces/IColumnComputer.h"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 #include "DataManager/utils/TableView/transforms/PCATransform.hpp"
+#include "TableInfoWidget.hpp"
+#include "Collapsible_Widget/Section.hpp"
+#include "TableViewerWidget/TableViewerWidget.hpp"
+
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -53,8 +56,6 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
 
     ui->setupUi(this);
     
-    // Note: Parameter UI functionality removed in tree-based redesign
-    // Individual computer parameters are not currently configurable in the tree interface
     _parameter_widget = nullptr;
     _parameter_layout = nullptr;
     
@@ -68,6 +69,23 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     _preview_debounce_timer->setSingleShot(true);
     _preview_debounce_timer->setInterval(150);
     connect(_preview_debounce_timer, &QTimer::timeout, this, &TableDesignerWidget::rebuildPreviewNow);
+
+    _table_info_widget = new TableInfoWidget(this);
+    _table_info_section = new Section(this, "Table Information");
+    _table_info_section->setContentLayout(*new QVBoxLayout());
+    _table_info_section->layout()->addWidget(_table_info_widget);
+    _table_info_section->autoSetContentLayout();
+    // Replace existing Table Information contents in UI with the Section
+    if (ui->table_info_layout) {
+        QLayoutItem * child;
+        while ((child = ui->table_info_layout->takeAt(0)) != nullptr) {
+            if (child->widget()) child->widget()->setParent(nullptr);
+            delete child;
+        }
+        ui->table_info_layout->addWidget(_table_info_section);
+    }
+    // Hook save from table info widget
+    connect(_table_info_widget, &TableInfoWidget::saveClicked, this, &TableDesignerWidget::onSaveTableInfo);
 
     // Connect table viewer signals for better integration
     connect(_table_viewer, &TableViewerWidget::rowScrolled, this, [this](size_t row_index) {
@@ -118,9 +136,7 @@ void TableDesignerWidget::connectSignals() {
     connect(ui->delete_table_btn, &QPushButton::clicked,
             this, &TableDesignerWidget::onDeleteTable);
 
-    // Table info signals
-    connect(ui->save_info_btn, &QPushButton::clicked,
-            this, &TableDesignerWidget::onSaveTableInfo);
+    // Table info signals are connected via TableInfoWidget
 
     // Row source signals
     connect(ui->row_data_source_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -192,10 +208,12 @@ void TableDesignerWidget::onTableSelectionChanged() {
 
     // Enable/disable controls
     ui->delete_table_btn->setEnabled(true);
-    ui->save_info_btn->setEnabled(true);
+    // Table info section is controlled separately
     ui->build_table_btn->setEnabled(true);
     if (auto gb = this->findChild<QGroupBox*>("row_source_group")) gb->setEnabled(true);
     if (auto gb = this->findChild<QGroupBox*>("column_design_group")) gb->setEnabled(true);
+    // Enable save info within TableInfoWidget
+    if (_table_info_section) _table_info_section->setEnabled(true);
 
     updateBuildStatus("Table selected: " + table_id);
 
@@ -509,7 +527,10 @@ void TableDesignerWidget::onApplyTransform() {
         // Determine output id/name
         QString out_name = ui->transform_output_name_edit ? ui->transform_output_name_edit->text().trimmed()
                                                           : QString();
-        if (out_name.isEmpty()) out_name = QString("%1 (PCA)").arg(ui->table_name_edit->text().trimmed());
+        if (out_name.isEmpty()) {
+            QString base = _table_info_widget ? _table_info_widget->getName() : QString();
+            out_name = base.isEmpty() ? QString("(PCA)") : QString("%1 (PCA)").arg(base);
+        }
 
         std::string out_id = reg->generateUniqueTableId((_current_table_id + "_pca").toStdString());
         if (!reg->createTable(out_id, out_name.toStdString())) {
@@ -616,8 +637,8 @@ void TableDesignerWidget::onSaveTableInfo() {
         return;
     }
 
-    QString name = ui->table_name_edit->text().trimmed();
-    QString description = ui->table_description_edit->toPlainText().trimmed();
+    QString name = _table_info_widget ? _table_info_widget->getName() : QString();
+    QString description = _table_info_widget ? _table_info_widget->getDescription() : QString();
 
     if (name.isEmpty()) {
         QMessageBox::warning(this, "Error", "Table name cannot be empty");
@@ -714,8 +735,10 @@ void TableDesignerWidget::loadTableInfo(QString const & table_id) {
     }
 
     // Load table information
-    ui->table_name_edit->setText(QString::fromStdString(info.name));
-    ui->table_description_edit->setPlainText(QString::fromStdString(info.description));
+    if (_table_info_widget) {
+        _table_info_widget->setName(QString::fromStdString(info.name));
+        _table_info_widget->setDescription(QString::fromStdString(info.description));
+    }
 
     // Load row source if available
     if (!info.rowSourceName.empty()) {
@@ -749,8 +772,10 @@ void TableDesignerWidget::clearUI() {
     _current_table_id.clear();
 
     // Clear table info
-    ui->table_name_edit->clear();
-    ui->table_description_edit->clear();
+    if (_table_info_widget) {
+        _table_info_widget->setName("");
+        _table_info_widget->setDescription("");
+    }
 
     // Clear row source
     ui->row_data_source_combo->setCurrentIndex(-1);
@@ -775,10 +800,11 @@ void TableDesignerWidget::clearUI() {
 
     // Disable controls
     ui->delete_table_btn->setEnabled(false);
-    ui->save_info_btn->setEnabled(false);
+    // Table info section is controlled separately
     ui->build_table_btn->setEnabled(false);
     if (auto gb = this->findChild<QGroupBox*>("row_source_group")) gb->setEnabled(false);
     if (auto gb = this->findChild<QGroupBox*>("column_design_group")) gb->setEnabled(false);
+    if (_table_info_section) _table_info_section->setEnabled(false);
 
     updateBuildStatus("No table selected");
     if (_table_viewer) _table_viewer->clearTable();
