@@ -21,6 +21,7 @@
 #include <QTreeWidgetItem>
 #include <QComboBox>
 #include <QTableView>
+#include <QHeaderView>
 
 #include <memory>
 #include <vector>
@@ -624,6 +625,63 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Observes
     for (auto const & info : enabled_columns) {
         REQUIRE(std::string(info.dataSourceName).find("NewSpikes") == std::string::npos);
     }
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Drag-reorder columns updates visual order", "[TableDesignerWidget][Reorder]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+
+    // Create a table and select it
+    auto & registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("Reorder");
+    REQUIRE(registry.createTable(table_id, "Reorder Table"));
+    auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) { table_combo->setCurrentIndex(i); break; }
+    }
+
+    // Select intervals as rows and enable two computers under Neuron1Spikes
+    auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+    REQUIRE(row_combo != nullptr);
+    for (int i = 0; i < row_combo->count(); ++i) {
+        if (row_combo->itemText(i).contains("Intervals: BehaviorPeriods")) { row_combo->setCurrentIndex(i); break; }
+    }
+    auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+    REQUIRE(tree != nullptr);
+    QTreeWidgetItem * n1 = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        if (tree->topLevelItem(i)->text(0).contains("Events: Neuron1Spikes")) { n1 = tree->topLevelItem(i); break; }
+    }
+    REQUIRE(n1 != nullptr);
+    QTreeWidgetItem * presence = nullptr; QTreeWidgetItem * count = nullptr;
+    for (int j = 0; j < n1->childCount(); ++j) {
+        auto * c = n1->child(j);
+        if (c->text(0).contains("Event Presence")) presence = c;
+        if (c->text(0).contains("Event Count")) count = c;
+    }
+    REQUIRE(presence != nullptr);
+    REQUIRE(count != nullptr);
+    presence->setCheckState(1, Qt::Checked);
+    count->setCheckState(1, Qt::Checked);
+
+    // Get the embedded preview table and reorder columns visually
+    auto * tv = widget.findChild<QTableView*>();
+    REQUIRE(tv != nullptr);
+    auto * header = tv->horizontalHeader();
+    REQUIRE(header != nullptr);
+
+    // Expect initial order [Presence, Count] (order determined by tree population)
+    int col0 = header->logicalIndex(0);
+    int col1 = header->logicalIndex(1);
+    REQUIRE(col0 != col1);
+
+    // Move second column to the first position
+    header->moveSection(1, 0);
+    QApplication::processEvents();
+
+    // Verify visual order changed
+    REQUIRE(header->visualIndex(col1) == 0);
+    REQUIRE(header->visualIndex(col0) == 1);
 }
 
 /*

@@ -32,6 +32,7 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
+#include <QTableView>
 
 #include <QFutureWatcher>
 #include <QTimer>
@@ -1199,12 +1200,49 @@ void TableDesignerWidget::rebuildPreviewNow() {
         return;
     }
 
+    // Apply any saved column order for this table id
+    auto desiredOrder = _table_column_order.value(_current_table_id);
+    if (!desiredOrder.isEmpty()) {
+        std::vector<ColumnInfo> reordered;
+        reordered.reserve(column_infos.size());
+        for (auto const & name : desiredOrder) {
+            auto it = std::find_if(column_infos.begin(), column_infos.end(), [&](ColumnInfo const & ci){ return QString::fromStdString(ci.name) == name; });
+            if (it != column_infos.end()) {
+                reordered.push_back(*it);
+            }
+        }
+        for (auto const & ci : column_infos) {
+            if (std::find_if(reordered.begin(), reordered.end(), [&](ColumnInfo const & x){ return x.name == ci.name; }) == reordered.end()) {
+                reordered.push_back(ci);
+            }
+        }
+        column_infos = std::move(reordered);
+    }
+
     // Set up the table viewer with pagination
     _table_viewer->setTableConfiguration(
             std::move(selector),
             std::move(column_infos),
             _data_manager,
             QString("Preview: %1").arg(_current_table_id));
+
+    // Capture the current visual order from the viewer
+    QStringList currentOrder;
+    if (_table_viewer) {
+        auto * tv = _table_viewer->findChild<QTableView*>();
+        if (tv && tv->model()) {
+            auto * header = tv->horizontalHeader();
+            int cols = tv->model()->columnCount();
+            for (int v = 0; header && v < cols; ++v) {
+                int logical = header->logicalIndex(v);
+                auto name = tv->model()->headerData(logical, Qt::Horizontal, Qt::DisplayRole).toString();
+                currentOrder.push_back(name);
+            }
+        }
+    }
+    if (!currentOrder.isEmpty()) {
+        _table_column_order[_current_table_id] = currentOrder;
+    }
 }
 
 void TableDesignerWidget::refreshComputersTree() {

@@ -83,6 +83,11 @@ signals:
      */
     void rowScrolled(size_t row_index);
 
+    /**
+     * @brief Emitted when columns are reordered via the header
+     */
+    void columnsReordered(QStringList const & newOrder);
+
 private slots:
     /**
      * @brief Handle navigation to a specific row
@@ -104,6 +109,7 @@ private:
     PaginatedTableModel * _model;
     QString _table_name;
     size_t _total_rows = 0;
+    QStringList _currentColumnOrder;
 
     /**
      * @brief Update the status bar with current row information
@@ -114,6 +120,17 @@ private:
      * @brief Connect all signals and slots
      */
     void connectSignals();
+
+public:
+    /**
+     * @brief Get current visual column order (left-to-right column names)
+     */
+    QStringList getCurrentColumnOrder() const { return _currentColumnOrder; }
+
+    /**
+     * @brief Apply a desired column order by column names
+     */
+    void applyColumnOrder(QStringList const & desiredOrder);
 };
 
 #endif // TABLEVIEWERWIDGET_HPP

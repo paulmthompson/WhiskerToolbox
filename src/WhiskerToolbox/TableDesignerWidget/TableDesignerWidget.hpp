@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <map>
+#include <QMap>
 
 class DataManager;
 class ComputerRegistry;
@@ -142,6 +143,7 @@ private:
     QString _current_table_id;
     bool _loading_column_configuration = false; // Flag to prevent infinite loops
     bool _updating_computers_tree = false; // Flag to prevent recursive updates during tree refresh
+    QMap<QString, QStringList> _table_column_order; // Persist preview column order per table id
     
     // Parameter UI management
     QWidget * _parameter_widget = nullptr;
@@ -223,6 +225,7 @@ private:
     bool isIntervalItselfSelected() const;
     void triggerPreviewDebounced();
     void rebuildPreviewNow();
+    std::vector<ColumnInfo> reorderColumnsBySavedOrder(std::vector<ColumnInfo> column_infos) const;
     std::vector<std::string> parseCommaSeparatedList(QString const & text) const;
     QString promptSaveCsvFilename() const;
     bool addColumnToBuilder(TableViewBuilder & builder, ColumnInfo const & column_info);

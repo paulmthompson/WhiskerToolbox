@@ -18,6 +18,7 @@ TableViewerWidget::TableViewerWidget(QWidget * parent)
     // Set up the table view
     ui->table_view->setModel(_model);
     ui->table_view->horizontalHeader()->setStretchLastSection(true);
+    ui->table_view->horizontalHeader()->setSectionsMovable(true);
     ui->table_view->verticalHeader()->setDefaultSectionSize(25);
     
     // Set default page size to 1000 (matches the combo box default)
@@ -25,6 +26,21 @@ TableViewerWidget::TableViewerWidget(QWidget * parent)
     _model->setPageSize(1000);
     
     connectSignals();
+
+    // Track column order when user reorders columns
+    connect(ui->table_view->horizontalHeader(), &QHeaderView::sectionMoved, this,
+            [this](int /*logicalIndex*/, int /*oldVisualIndex*/, int /*newVisualIndex*/) {
+                // Reconstruct current order by visual indices
+                QStringList order;
+                int cols = _model ? _model->columnCount(QModelIndex()) : 0;
+                for (int v = 0; v < cols; ++v) {
+                    int logical = ui->table_view->horizontalHeader()->logicalIndex(v);
+                    QVariant name = _model->headerData(logical, Qt::Horizontal, Qt::DisplayRole);
+                    order.push_back(name.toString());
+                }
+                _currentColumnOrder = order;
+                emit columnsReordered(order);
+            });
 }
 
 TableViewerWidget::~TableViewerWidget() {
@@ -47,6 +63,11 @@ void TableViewerWidget::setTableView(std::shared_ptr<TableView> table_view, QStr
         
         // Enable navigation controls
         ui->navigation_group->setEnabled(true);
+        // Initialize current column order from table view
+        _currentColumnOrder.clear();
+        for (auto const & name : table_view->getColumnNames()) {
+            _currentColumnOrder.push_back(QString::fromStdString(name));
+        }
         
         updateRowInfo();
     } else {
@@ -62,6 +83,7 @@ void TableViewerWidget::setTableConfiguration(std::unique_ptr<IRowSelector> row_
     
     if (row_selector && data_manager) {
         _total_rows = row_selector->getRowCount();
+        QStringList desiredOrder = _currentColumnOrder;
         _model->setSourceTable(std::move(row_selector), std::move(column_infos), data_manager);
         
         // Update UI
@@ -73,6 +95,33 @@ void TableViewerWidget::setTableConfiguration(std::unique_ptr<IRowSelector> row_
         
         // Enable navigation controls
         ui->navigation_group->setEnabled(true);
+        // Initialize or reapply column order
+        if (!desiredOrder.isEmpty()) {
+            // Reorder visual columns to match previous order
+            int cols = _model->columnCount(QModelIndex());
+            std::map<QString, int> nameToIndex;
+            for (int c = 0; c < cols; ++c) {
+                nameToIndex[_model->headerData(c, Qt::Horizontal, Qt::DisplayRole).toString()] = c;
+            }
+            int visualPos = 0;
+            for (auto const & name : desiredOrder) {
+                auto it = nameToIndex.find(name);
+                if (it == nameToIndex.end()) continue;
+                int logical = it->second;
+                int currentVisual = ui->table_view->horizontalHeader()->visualIndex(logical);
+                if (currentVisual != visualPos) {
+                    ui->table_view->horizontalHeader()->moveSection(currentVisual, visualPos);
+                }
+                ++visualPos;
+            }
+            _currentColumnOrder = desiredOrder;
+        } else {
+            _currentColumnOrder.clear();
+            int cols = _model->columnCount(QModelIndex());
+            for (int c = 0; c < cols; ++c) {
+                _currentColumnOrder.push_back(_model->headerData(c, Qt::Horizontal, Qt::DisplayRole).toString());
+            }
+        }
         
         updateRowInfo();
     } else {
