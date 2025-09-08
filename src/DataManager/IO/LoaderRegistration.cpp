@@ -20,19 +20,19 @@
 #include <memory>
 
 void registerAllLoaders() {
-    std::cout << "LoaderRegistration: Registering all loaders..." << std::endl;
+   // std::cout << "LoaderRegistration: Registering all loaders..." << std::endl;
     
     registerInternalLoaders();
     registerExternalLoaders();
     
-    std::cout << "LoaderRegistration: All loaders registered." << std::endl;
+   // std::cout << "LoaderRegistration: All loaders registered." << std::endl;
 }
 
 void registerInternalLoaders() {
     LoaderRegistry& registry = LoaderRegistry::getInstance();
     
     // Register CSV loader (always available)
-    std::cout << "LoaderRegistration: Registering CSV loader..." << std::endl;
+   // std::cout << "LoaderRegistration: Registering CSV loader..." << std::endl;
     registry.registerLoader(std::make_unique<CSVLoader>());
 }
 
@@ -42,7 +42,7 @@ void registerExternalLoaders() {
     
 #ifdef ENABLE_CAPNPROTO
     // Register CapnProto loader if available
-    std::cout << "LoaderRegistration: Registering CapnProto loader..." << std::endl;
+    //std::cout << "LoaderRegistration: Registering CapnProto loader..." << std::endl;
     registry.registerLoader(std::make_unique<CapnProtoFormatLoader>());
 #else
     std::cout << "LoaderRegistration: CapnProto loader not available (ENABLE_CAPNPROTO not defined)" << std::endl;
@@ -50,7 +50,7 @@ void registerExternalLoaders() {
 
 #ifdef ENABLE_HDF5
     // Register HDF5 loader if available
-    std::cout << "LoaderRegistration: Registering HDF5 loader..." << std::endl;
+    //std::cout << "LoaderRegistration: Registering HDF5 loader..." << std::endl;
     registry.registerLoader(std::make_unique<HDF5FormatLoader>());
 #else
     std::cout << "LoaderRegistration: HDF5 loader not available (ENABLE_HDF5 not defined)" << std::endl;
@@ -58,7 +58,7 @@ void registerExternalLoaders() {
 
 #ifdef ENABLE_OPENCV
     // Register OpenCV loader if available
-    std::cout << "LoaderRegistration: Registering OpenCV loader..." << std::endl;
+   // std::cout << "LoaderRegistration: Registering OpenCV loader..." << std::endl;
     registry.registerLoader(std::make_unique<OpenCVFormatLoader>());
 #else
     std::cout << "LoaderRegistration: OpenCV loader not available (ENABLE_OPENCV not defined)" << std::endl;

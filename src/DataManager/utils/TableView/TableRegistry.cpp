@@ -12,11 +12,11 @@ TableRegistry::TableRegistry(DataManager & data_manager)
     : _data_manager(data_manager),
       _data_manager_extension(std::make_shared<DataManagerExtension>(data_manager)),
       _computer_registry(std::make_unique<ComputerRegistry>()) {
-    std::cout << "TableRegistry initialized" << std::endl;
+   // std::cout << "TableRegistry initialized" << std::endl;
 }
 
 TableRegistry::~TableRegistry() {
-    std::cout << "TableRegistry destroyed" << std::endl;
+   // std::cout << "TableRegistry destroyed" << std::endl;
 }
 
 bool TableRegistry::createTable(std::string const & table_id, std::string const & table_name, std::string const & table_description) {

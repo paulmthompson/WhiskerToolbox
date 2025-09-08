@@ -194,6 +194,8 @@ void TableDesignerWidget::onTableSelectionChanged() {
     ui->delete_table_btn->setEnabled(true);
     ui->save_info_btn->setEnabled(true);
     ui->build_table_btn->setEnabled(true);
+    if (auto gb = this->findChild<QGroupBox*>("row_source_group")) gb->setEnabled(true);
+    if (auto gb = this->findChild<QGroupBox*>("column_design_group")) gb->setEnabled(true);
 
     updateBuildStatus("Table selected: " + table_id);
 
@@ -775,6 +777,8 @@ void TableDesignerWidget::clearUI() {
     ui->delete_table_btn->setEnabled(false);
     ui->save_info_btn->setEnabled(false);
     ui->build_table_btn->setEnabled(false);
+    if (auto gb = this->findChild<QGroupBox*>("row_source_group")) gb->setEnabled(false);
+    if (auto gb = this->findChild<QGroupBox*>("column_design_group")) gb->setEnabled(false);
 
     updateBuildStatus("No table selected");
     if (_table_viewer) _table_viewer->clearTable();
