@@ -13,11 +13,13 @@ This transformation processes mask data, which represents regions of interest, a
 
 The calculation is purely geometric; it finds the average of the x and y coordinates of all the points within the mask. This means that for some non-convex (hollow or U-shaped) masks, the centroid can fall outside the mask itself, as shown in the examples below.
 
+![](images/clipboard-3745231988.png)
+
 ### Neuroscience Use Cases
 
-- **Tracking Cell Bodies:** If a mask outlines a neuron's soma, its centroid provides a consistent point for tracking the cell's position over time, even if the cell's shape changes slightly.
-- **Analyzing Animal Behavior:** When tracking an animal in a video, a mask might be generated around the animal's body. The centroid of this mask can serve as a simplified representation of the animal's location for trajectory analysis.
-- **Quantifying Limb Position:** For masks drawn around an animal's limbs, the centroid can be used to approximate the position of the limb for kinematic studies.
+-   **Tracking Cell Bodies:** If a mask outlines a neuron's soma, its centroid provides a consistent point for tracking the cell's position over time, even if the cell's shape changes slightly.
+-   **Analyzing Animal Behavior:** When tracking an animal in a video, a mask might be generated around the animal's body. The centroid of this mask can serve as a simplified representation of the animal's location for trajectory analysis.
+-   **Quantifying Limb Position:** For masks drawn around an animal's limbs, the centroid can be used to approximate the position of the limb for kinematic studies.
 
 ::: {.content-hidden when-format="html"}
 ```{{python}}
@@ -92,7 +94,7 @@ This transform does not have any configurable parameters. It calculates the stan
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation.
 
-```json
+``` json
 [
 {
     "transformations": {
