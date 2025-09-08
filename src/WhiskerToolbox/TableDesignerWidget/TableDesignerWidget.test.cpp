@@ -1,0 +1,579 @@
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+
+#include "TableDesignerWidget.hpp"
+
+// DataManager and related includes
+#include "DataManager.hpp"
+#include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
+#include "DataManager/utils/TableView/TableRegistry.hpp"
+#include "DataManager/utils/TableView/ComputerRegistry.hpp"
+#include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
+#include "DataManager/utils/TableView/computers/AnalogSliceGathererComputer.h"
+#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/TimeFrame/TimeFrame.hpp"
+
+// Qt includes for widget testing
+#include <QApplication>
+#include <QTreeWidget>
+#include <QTreeWidgetItem>
+#include <QComboBox>
+#include <QTableView>
+
+#include <memory>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+
+/**
+ * @brief Test fixture for TableDesignerWidget that creates test data and computers
+ * 
+ * This fixture provides:
+ * - DataManager with TimeFrames and test data
+ * - TableRegistry with registered computers
+ * - Methods to verify tree widget functionality
+ */
+class TableDesignerWidgetTestFixture {
+protected:
+    TableDesignerWidgetTestFixture() {
+        // Initialize Qt application if not already done
+        if (!QApplication::instance()) {
+            int argc = 0;
+            char** argv = nullptr;
+            app = std::make_unique<QApplication>(argc, argv);
+        }
+        
+        // Initialize the DataManager
+        m_data_manager = std::make_unique<DataManager>();
+        
+        // Populate with test data
+        populateWithTestData();
+        
+        // Register computers in the registry
+        registerTestComputers();
+    }
+
+    ~TableDesignerWidgetTestFixture() = default;
+
+    /**
+     * @brief Get the DataManager instance
+     */
+    DataManager & getDataManager() { return *m_data_manager; }
+    std::shared_ptr<DataManager> getDataManagerPtr() { 
+        return std::shared_ptr<DataManager>(m_data_manager.get(), [](DataManager*){}); 
+    }
+
+    /**
+     * @brief Get the TableRegistry from DataManager
+     */
+    TableRegistry & getTableRegistry() { return *m_data_manager->getTableRegistry(); }
+
+private:
+    std::unique_ptr<DataManager> m_data_manager;
+    std::unique_ptr<QApplication> app;
+
+    /**
+     * @brief Populate the DataManager with test data
+     */
+    void populateWithTestData() {
+        createTimeFrames();
+        createBehaviorIntervals();
+        createSpikeEvents();
+        createAnalogData();
+    }
+
+    /**
+     * @brief Create TimeFrame objects for different data streams
+     */
+    void createTimeFrames() {
+        // Create "behavior_time" timeframe: 0 to 100 (101 points)
+        std::vector<int> behavior_time_values(101);
+        std::iota(behavior_time_values.begin(), behavior_time_values.end(), 0);
+        auto behavior_time_frame = std::make_shared<TimeFrame>(behavior_time_values);
+        m_data_manager->setTime(TimeKey("behavior_time"), behavior_time_frame, true);
+
+        // Create "spike_time" timeframe: 0, 2, 4, 6, ..., 100 (51 points)
+        std::vector<int> spike_time_values;
+        spike_time_values.reserve(51);
+        for (int i = 0; i <= 50; ++i) {
+            spike_time_values.push_back(i * 2);
+        }
+        auto spike_time_frame = std::make_shared<TimeFrame>(spike_time_values);
+        m_data_manager->setTime(TimeKey("spike_time"), spike_time_frame, true);
+
+        // Create "analog_time" timeframe: 0 to 200 (201 points, higher resolution)
+        std::vector<int> analog_time_values(201);
+        std::iota(analog_time_values.begin(), analog_time_values.end(), 0);
+        auto analog_time_frame = std::make_shared<TimeFrame>(analog_time_values);
+        m_data_manager->setTime(TimeKey("analog_time"), analog_time_frame, true);
+    }
+
+    /**
+     * @brief Create behavior intervals (row intervals for testing)
+     */
+    void createBehaviorIntervals() {
+        auto behavior_intervals = std::make_shared<DigitalIntervalSeries>();
+        
+        // Create 4 behavior periods for testing
+        behavior_intervals->addEvent(TimeFrameIndex(10), TimeFrameIndex(25));  // Exploration 1
+        behavior_intervals->addEvent(TimeFrameIndex(30), TimeFrameIndex(40));  // Rest
+        behavior_intervals->addEvent(TimeFrameIndex(50), TimeFrameIndex(70));  // Exploration 2
+        behavior_intervals->addEvent(TimeFrameIndex(80), TimeFrameIndex(95));  // Social
+
+        m_data_manager->setData<DigitalIntervalSeries>("BehaviorPeriods", behavior_intervals, TimeKey("behavior_time"));
+    }
+
+    /**
+     * @brief Create spike event data
+     */
+    void createSpikeEvents() {
+        // Create spike train for Neuron1
+        std::vector<float> neuron1_spikes = {
+            1.0f, 6.0f, 7.0f, 11.0f, 16.0f, 26.0f, 27.0f, 34.0f, 41.0f, 45.0f
+        };
+        auto neuron1_series = std::make_shared<DigitalEventSeries>(neuron1_spikes);
+        m_data_manager->setData<DigitalEventSeries>("Neuron1Spikes", neuron1_series, TimeKey("spike_time"));
+        
+        // Create spike train for Neuron2
+        std::vector<float> neuron2_spikes = {
+            0.0f, 1.0f, 2.0f, 5.0f, 6.0f, 8.0f, 9.0f, 15.0f, 16.0f, 18.0f,
+            25.0f, 26.0f, 28.0f, 29.0f, 33.0f, 34.0f, 40.0f, 41.0f, 42.0f, 45.0f, 46.0f
+        };
+        auto neuron2_series = std::make_shared<DigitalEventSeries>(neuron2_spikes);
+        m_data_manager->setData<DigitalEventSeries>("Neuron2Spikes", neuron2_series, TimeKey("spike_time"));
+    }
+
+    /**
+     * @brief Create analog data for testing
+     */
+    void createAnalogData() {
+        // Create LFP signal (sine wave)
+        std::vector<float> lfp_values;
+        std::vector<TimeFrameIndex> lfp_indices;
+        lfp_values.reserve(201);
+        lfp_indices.reserve(201);
+        
+        for (int i = 0; i < 201; ++i) {
+            float value = std::sin(2.0f * M_PI * i / 50.0f); // 4 cycles over 200 points
+            lfp_values.push_back(value);
+            lfp_indices.emplace_back(i);
+        }
+        
+        auto lfp_series = std::make_shared<AnalogTimeSeries>(lfp_values, lfp_indices);
+        m_data_manager->setData<AnalogTimeSeries>("LFP", lfp_series, TimeKey("analog_time"));
+
+        // Create EMG signal (random noise)
+        std::vector<float> emg_values;
+        std::vector<TimeFrameIndex> emg_indices;
+        emg_values.reserve(201);
+        emg_indices.reserve(201);
+        
+        std::srand(12345); // Deterministic random for testing
+        for (int i = 0; i < 201; ++i) {
+            float value = static_cast<float>(std::rand()) / RAND_MAX - 0.5f; // [-0.5, 0.5]
+            emg_values.push_back(value);
+            emg_indices.emplace_back(i);
+        }
+        
+        auto emg_series = std::make_shared<AnalogTimeSeries>(emg_values, emg_indices);
+        m_data_manager->setData<AnalogTimeSeries>("EMG", emg_series, TimeKey("analog_time"));
+    }
+
+    /**
+     * @brief Register test computers in the computer registry
+     */
+    void registerTestComputers() {
+        auto& registry = getTableRegistry();
+        auto& computer_registry = registry.getComputerRegistry();
+    }
+};
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Basic tree functionality", "[TableDesignerWidget][Tree]") {
+    
+    SECTION("Create widget and verify tree is populated") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Get the computers tree
+        auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // Verify tree has been populated with data sources
+        REQUIRE(tree->topLevelItemCount() > 0);
+        
+        // Check for expected data source categories
+        QStringList found_sources;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto* item = tree->topLevelItem(i);
+            found_sources << item->text(0);
+        }
+        
+        // Should have event sources
+        bool has_neuron1_events = false;
+        bool has_neuron2_events = false;
+        bool has_behavior_intervals = false;
+        bool has_analog_sources = false;
+        
+        for (const QString& source : found_sources) {
+            if (source.contains("Neuron1Spikes")) has_neuron1_events = true;
+            if (source.contains("Neuron2Spikes")) has_neuron2_events = true;
+            if (source.contains("BehaviorPeriods")) has_behavior_intervals = true;
+            if (source.contains("LFP") || source.contains("EMG")) has_analog_sources = true;
+        }
+        
+        REQUIRE(has_neuron1_events);
+        REQUIRE(has_neuron2_events);
+        REQUIRE(has_behavior_intervals);
+        REQUIRE(has_analog_sources);
+    }
+    
+    SECTION("Verify tree structure - data sources have computer children") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // Find an event source and verify it has event computers
+        QTreeWidgetItem* event_source_item = nullptr;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto* item = tree->topLevelItem(i);
+            if (item->text(0).contains("Events: Neuron1Spikes")) {
+                event_source_item = item;
+                break;
+            }
+        }
+        
+        REQUIRE(event_source_item != nullptr);
+        REQUIRE(event_source_item->childCount() > 0);
+        
+        // Check that children are computers with checkboxes
+        bool has_presence_computer = false;
+        bool has_count_computer = false;
+        
+        for (int j = 0; j < event_source_item->childCount(); ++j) {
+            auto* computer_item = event_source_item->child(j);
+            
+            // Verify computer items have checkboxes in column 1
+            REQUIRE((computer_item->flags() & Qt::ItemIsUserCheckable) != 0);
+            REQUIRE(computer_item->checkState(1) == Qt::Unchecked); // Initially unchecked
+            
+            // Check for expected computers
+            QString computer_name = computer_item->text(0);
+            if (computer_name.contains("Event Presence")) has_presence_computer = true;
+            if (computer_name.contains("Event Count")) has_count_computer = true;
+            
+            // Verify column name is editable and has default value
+            REQUIRE((computer_item->flags() & Qt::ItemIsEditable) != 0);
+            REQUIRE(!computer_item->text(2).isEmpty()); // Should have default column name
+        }
+        
+        REQUIRE(has_presence_computer);
+        REQUIRE(has_count_computer);
+    }
+    
+    SECTION("Verify analog sources have analog computers") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // Find an analog source
+        QTreeWidgetItem* analog_source_item = nullptr;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto* item = tree->topLevelItem(i);
+            if (item->text(0).contains("analog:LFP")) {
+                analog_source_item = item;
+                break;
+            }
+        }
+        
+        REQUIRE(analog_source_item != nullptr);
+        REQUIRE(analog_source_item->childCount() > 0);
+        
+        // Check for analog computers
+        bool has_slice_gatherer = false;
+        bool has_mean_computer = false;
+        
+        for (int j = 0; j < analog_source_item->childCount(); ++j) {
+            auto* computer_item = analog_source_item->child(j);
+            QString computer_name = computer_item->text(0);
+            
+            if (computer_name.contains("Analog Slice Gatherer")) has_slice_gatherer = true;
+            if (computer_name.contains("Analog Mean")) has_mean_computer = true;
+        }
+        
+        // Should have at least some analog computers
+        REQUIRE((has_slice_gatherer || has_mean_computer));
+    }
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Computer enabling and column generation", "[TableDesignerWidget][Computers]") {
+    
+    SECTION("Enable computers and verify column info generation") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // Find and enable some computers
+        QTreeWidgetItem* presence_computer = nullptr;
+        QTreeWidgetItem* count_computer = nullptr;
+        
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto* data_source_item = tree->topLevelItem(i);
+            if (!data_source_item->text(0).contains("Events: Neuron1Spikes")) continue;
+            
+            for (int j = 0; j < data_source_item->childCount(); ++j) {
+                auto* computer_item = data_source_item->child(j);
+                QString computer_name = computer_item->text(0);
+                
+                if (computer_name.contains("Event Presence")) {
+                    presence_computer = computer_item;
+                }
+                if (computer_name.contains("Event Count")) {
+                    count_computer = computer_item;
+                }
+            }
+        }
+        
+        REQUIRE(presence_computer != nullptr);
+        REQUIRE(count_computer != nullptr);
+        
+        // Enable the computers
+        presence_computer->setCheckState(1, Qt::Checked);
+        count_computer->setCheckState(1, Qt::Checked);
+        
+        // Get enabled column infos
+        auto column_infos = widget.getEnabledColumnInfos();
+        
+        REQUIRE(column_infos.size() == 2);
+        
+        // Verify column infos have correct properties
+        bool has_presence_column = false;
+        bool has_count_column = false;
+        
+        for (const auto& info : column_infos) {
+            if (info.computerName.find("Event Presence") != std::string::npos) {
+                has_presence_column = true;
+                REQUIRE(info.outputTypeName == "bool");
+                REQUIRE(!info.isVectorType);
+            }
+            if (info.computerName.find("Event Count") != std::string::npos) {
+                has_count_column = true;
+                REQUIRE(info.outputTypeName == "int");
+                REQUIRE(!info.isVectorType);
+            }
+        }
+        
+        REQUIRE(has_presence_column);
+        REQUIRE(has_count_column);
+    }
+    
+    SECTION("Custom column names are preserved") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // Find a computer item
+        QTreeWidgetItem* computer_item = nullptr;
+        for (int i = 0; i < tree->topLevelItemCount() && !computer_item; ++i) {
+            auto* data_source_item = tree->topLevelItem(i);
+            if (data_source_item->childCount() > 0) {
+                computer_item = data_source_item->child(0);
+            }
+        }
+        
+        REQUIRE(computer_item != nullptr);
+        
+        // Set custom column name
+        QString custom_name = "MyCustomColumnName";
+        computer_item->setText(2, custom_name);
+        computer_item->setCheckState(1, Qt::Checked);
+        
+        // Get enabled column infos
+        auto column_infos = widget.getEnabledColumnInfos();
+        
+        REQUIRE(column_infos.size() == 1);
+        REQUIRE(QString::fromStdString(column_infos[0].name) == custom_name);
+    }
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Table creation workflow", "[TableDesignerWidget][Workflow]") {
+    
+    SECTION("Complete workflow - create table, enable computers, build table") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Create a new table first
+        auto& registry = getTableRegistry();
+        auto table_id = registry.generateUniqueTableId("TestTable");
+        REQUIRE(registry.createTable(table_id, "Test Table for Workflow"));
+        
+        // Set the table in the widget (simulate user selection)
+        auto* table_combo = widget.findChild<QComboBox*>("table_combo");
+        REQUIRE(table_combo != nullptr);
+        
+        // Find the table in the combo and select it
+        for (int i = 0; i < table_combo->count(); ++i) {
+            if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) {
+                table_combo->setCurrentIndex(i);
+                break;
+            }
+        }
+        
+        // Set row data source (simulate user selection)
+        auto* row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        
+        // Find and select an interval source for rows
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).contains("Intervals: BehaviorPeriods")) {
+                row_combo->setCurrentIndex(i);
+                break;
+            }
+        }
+        
+        // Enable some computers in the tree
+        auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        int enabled_computers = 0;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto* data_source_item = tree->topLevelItem(i);
+            
+            for (int j = 0; j < data_source_item->childCount() && enabled_computers < 3; ++j) {
+                auto* computer_item = data_source_item->child(j);
+                computer_item->setCheckState(1, Qt::Checked);
+                enabled_computers++;
+            }
+        }
+        
+        REQUIRE(enabled_computers > 0);
+        
+        // Verify column infos are generated
+        auto column_infos = widget.getEnabledColumnInfos();
+        REQUIRE(column_infos.size() == enabled_computers);
+        
+        // Build the table
+        bool build_success = widget.buildTableFromTree();
+        
+        // Verify the table was built and stored
+        auto built_table = registry.getBuiltTable(table_id);
+        REQUIRE(built_table != nullptr);
+        REQUIRE(built_table->getColumnCount() == column_infos.size());
+    }
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Preview updates when columns enabled", "[TableDesignerWidget][Preview]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+
+    // Create a new table and select it
+    auto & registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("PreviewTable");
+    REQUIRE(registry.createTable(table_id, "Preview Table"));
+
+    auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) {
+            table_combo->setCurrentIndex(i);
+            break;
+        }
+    }
+
+    // Select intervals row source
+    auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+    REQUIRE(row_combo != nullptr);
+    int interval_index = -1;
+    for (int i = 0; i < row_combo->count(); ++i) {
+        if (row_combo->itemText(i).contains("Intervals: BehaviorPeriods")) { interval_index = i; break; }
+    }
+    REQUIRE(interval_index >= 0);
+    row_combo->setCurrentIndex(interval_index);
+
+    // Enable two event computers under Neuron1Spikes
+    auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+    REQUIRE(tree != nullptr);
+
+    QTreeWidgetItem * event_source_item = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        auto * item = tree->topLevelItem(i);
+        if (item->text(0).contains("Events: Neuron1Spikes")) { event_source_item = item; break; }
+    }
+    REQUIRE(event_source_item != nullptr);
+    REQUIRE(event_source_item->childCount() > 0);
+
+    QTreeWidgetItem * presence_computer = nullptr;
+    QTreeWidgetItem * count_computer = nullptr;
+    for (int j = 0; j < event_source_item->childCount(); ++j) {
+        auto * computer_item = event_source_item->child(j);
+        auto name = computer_item->text(0);
+        if (name.contains("Event Presence")) presence_computer = computer_item;
+        if (name.contains("Event Count")) count_computer = computer_item;
+    }
+    REQUIRE(presence_computer != nullptr);
+    REQUIRE(count_computer != nullptr);
+
+    presence_computer->setCheckState(1, Qt::Checked);
+    count_computer->setCheckState(1, Qt::Checked);
+
+    // Find the embedded TableView and its model
+    auto * table_view_widget = widget.findChild<QTableView*>();
+    REQUIRE(table_view_widget != nullptr);
+    auto * model = table_view_widget->model();
+    REQUIRE(model != nullptr);
+
+    // Expect 4 behavior intervals as rows, and 2 enabled columns
+    REQUIRE(model->rowCount() == 4);
+    REQUIRE(model->columnCount() == 2);
+}
+
+/*
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Data source compatibility", "[TableDesignerWidget][Compatibility]") {
+    
+    SECTION("Event sources should have event computers") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Test computer compatibility
+        REQUIRE(widget.isComputerCompatibleWithDataSource("Event Presence", "Events: Neuron1Spikes"));
+        REQUIRE(widget.isComputerCompatibleWithDataSource("Event Count", "Events: Neuron1Spikes"));
+        REQUIRE(widget.isComputerCompatibleWithDataSource("Event Gather", "Events: Neuron1Spikes"));
+        
+        // Event computers should not be compatible with analog sources
+        REQUIRE(!widget.isComputerCompatibleWithDataSource("Event Presence", "analog:LFP"));
+        REQUIRE(!widget.isComputerCompatibleWithDataSource("Event Count", "analog:LFP"));
+    }
+    
+    SECTION("Analog sources should have analog computers") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Test analog computer compatibility
+        REQUIRE(widget.isComputerCompatibleWithDataSource("Analog Slice Gatherer", "analog:LFP"));
+        REQUIRE(widget.isComputerCompatibleWithDataSource("Analog Mean", "analog:LFP"));
+        REQUIRE(widget.isComputerCompatibleWithDataSource("Analog Max", "analog:EMG"));
+        
+        // Analog computers should not be compatible with event sources
+        REQUIRE(!widget.isComputerCompatibleWithDataSource("Analog Mean", "Events: Neuron1Spikes"));
+        REQUIRE(!widget.isComputerCompatibleWithDataSource("Analog Slice Gatherer", "Events: Neuron1Spikes"));
+    }
+    
+    SECTION("Default column name generation") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Test default name generation
+        QString name1 = widget.generateDefaultColumnName("Events: Neuron1Spikes", "Event Presence");
+        QString name2 = widget.generateDefaultColumnName("analog:LFP", "Analog Mean");
+        QString name3 = widget.generateDefaultColumnName("Intervals: BehaviorPeriods", "Event Count");
+        
+        REQUIRE(name1 == "Neuron1Spikes_Event Presence");
+        REQUIRE(name2 == "LFP_Analog Mean");
+        REQUIRE(name3 == "BehaviorPeriods_Event Count");
+        
+        // Names should be unique for different combinations
+        REQUIRE(name1 != name2);
+        REQUIRE(name2 != name3);
+        REQUIRE(name1 != name3);
+    }
+}
+*/
