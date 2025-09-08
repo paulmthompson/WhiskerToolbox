@@ -11,6 +11,9 @@ add_library(TableDesignerWidget STATIC
     TableInfoWidget.hpp
     TableInfoWidget.cpp
     TableInfoWidget.ui
+    TableTransformWidget.hpp
+    TableTransformWidget.cpp
+    TableTransformWidget.ui
 )
 
 # Link Qt6 and other dependencies
