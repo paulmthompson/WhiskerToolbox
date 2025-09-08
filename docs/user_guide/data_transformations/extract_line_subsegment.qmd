@@ -29,9 +29,10 @@ with plt.xkcd():
 
     # Add some noise to the data to see the difference between the methods
     noise = np.random.normal(0, 0.1, y.shape)
-    y += noise
+    y_noise = y + noise
 
     original_line = np.vstack((x, y))
+    noisy_line = np.vstack((x, y_noise))
 
     # --- Parameters for subsegment extraction ---
     start_pos = 0.25
@@ -42,63 +43,63 @@ with plt.xkcd():
     def get_point_at_distance(line, distance):
         lengths = np.sqrt(np.sum(np.diff(line, axis=1)**2, axis=0))
         cumulative_lengths = np.insert(np.cumsum(lengths), 0, 0)
-
+        
         # Find the segment where the distance falls
         idx = np.where(cumulative_lengths <= distance)[0][-1]
-
+        
         # If the distance is exactly at a point
         if cumulative_lengths[idx] == distance:
             return line[:, idx]
-
+        
         # Interpolate within the segment
         segment_start_node = line[:, idx]
         segment_end_node = line[:, idx+1]
-
+        
         segment_length = lengths[idx]
-
+        
         # Check for zero length segment to avoid division by zero
         if segment_length == 0:
             return segment_start_node
 
         interp_fraction = (distance - cumulative_lengths[idx]) / segment_length
-
+        
         return segment_start_node + (segment_end_node - segment_start_node) * interp_fraction
 
     # --- Direct Method ---
-    total_length = np.sum(np.sqrt(np.sum(np.diff(original_line, axis=1)**2, axis=0)))
+    total_length = np.sum(np.sqrt(np.sum(np.diff(noisy_line, axis=1)**2, axis=0)))
     start_dist = start_pos * total_length
     end_dist = end_pos * total_length
 
-    cumulative_lengths = np.insert(np.cumsum(np.sqrt(np.sum(np.diff(original_line, axis=1)**2, axis=0))), 0, 0)
+    cumulative_lengths = np.insert(np.cumsum(np.sqrt(np.sum(np.diff(noisy_line, axis=1)**2, axis=0))), 0, 0)
 
     # Get original points that are within the range
     direct_indices = np.where((cumulative_lengths >= start_dist) & (cumulative_lengths <= end_dist))[0]
-
+    
     # Start with the interpolated start point
-    direct_subsegment_points = [get_point_at_distance(original_line, start_dist)]
+    direct_subsegment_points = [get_point_at_distance(noisy_line, start_dist)]
 
     # Add the original points in between
     for idx in direct_indices:
         # Avoid duplicating the start point if it's an exact match
-        if not np.allclose(direct_subsegment_points[-1], original_line[:, idx]):
-            direct_subsegment_points.append(original_line[:, idx])
+        if not np.allclose(direct_subsegment_points[-1], noisy_line[:, idx]):
+            direct_subsegment_points.append(noisy_line[:, idx])
 
     # Add the interpolated end point
-    end_point = get_point_at_distance(original_line, end_dist)
+    end_point = get_point_at_distance(noisy_line, end_dist)
     # Avoid duplicating the end point if it's an exact match
     if not np.allclose(direct_subsegment_points[-1], end_point):
         direct_subsegment_points.append(end_point)
-
+    
     direct_subsegment = np.array(direct_subsegment_points).T
 
 
     # --- Parametric Method ---
     # Fit a B-spline to the original line
     tck, u = splprep([original_line[0,:], original_line[1,:]], s=0, per=False)
-
+    
     # Define the parametric range for the subsegment
     u_sub = np.linspace(start_pos, end_pos, output_points_parametric)
-
+    
     # Evaluate the spline over the subsegment range
     parametric_subsegment = np.array(splev(u_sub, tck))
 
@@ -108,7 +109,7 @@ with plt.xkcd():
     fig.suptitle('Extracting a Line Subsegment (from 25% to 75%)', fontsize=16)
 
     # Plot 1: Direct Method
-    ax1.plot(original_line[0,:], original_line[1,:], 'k--', label='Original Line', alpha=0.5)
+    ax1.plot(noisy_line[0,:], noisy_line[1,:], 'k--', label='Original Line', alpha=0.5)
     ax1.plot(direct_subsegment[0,:], direct_subsegment[1,:], 'bo-', label='Direct Subsegment')
     ax1.plot(direct_subsegment[0,0], direct_subsegment[1,0], 'go', markersize=10, label='Start Point')
     ax1.plot(direct_subsegment[0,-1], direct_subsegment[1,-1], 'ro', markersize=10, label='End Point')
@@ -120,10 +121,10 @@ with plt.xkcd():
 
 
     # Plot 2: Parametric Method
-    ax2.plot(original_line[0,:], original_line[1,:], 'k--', label='Original Line', alpha=0.5)
+    ax2.plot(noisy_line[0,:], noisy_line[1,:], 'k--', label='Original Line', alpha=0.5)
     ax2.plot(parametric_subsegment[0,:], parametric_subsegment[1,:], 'bo-', label=f'Parametric Subsegment ({output_points_parametric} points)')
     ax2.plot(parametric_subsegment[0,0], parametric_subsegment[1,0], 'go', markersize=10, label='Start Point')
-    ax2.plot(parametric_t_subsegment[0,-1], parametric_subsegment[1,-1], 'ro', markersize=10, label='End Point')
+    ax2.plot(parametric_subsegment[0,-1], parametric_subsegment[1,-1], 'ro', markersize=10, label='End Point')
     ax2.set_title('Parametric Method (Smooth, Resampled)')
     ax2.set_xlabel('X Position')
     ax2.set_ylabel('Y Position')
