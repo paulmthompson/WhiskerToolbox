@@ -62,6 +62,8 @@ In image analysis, particularly with masks derived from object detection or segm
 
 The process works by identifying all background regions that are not connected to the edges of the image. Any such isolated background region is considered a hole and is filled in, effectively becoming part of the foreground mask. This is useful for cleaning up masks to ensure that objects are represented as solid shapes, which is often a prerequisite for accurate area, centroid, or morphological analysis.
 
+![](images/clipboard-2303778371.png)
+
 ### Neuroscience Use Cases
 
 -   **Cell Body Segmentation:** When segmenting neurons from imaging data, the detected outline of a cell might not be perfectly filled. This transform can be used to fill the interior of the cell body, ensuring it's a solid mask for subsequent analysis like measuring cell size or fluorescence intensity.
@@ -76,7 +78,7 @@ This transform has no parameters. It will automatically fill all enclosed holes 
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation.
 
-```json
+``` json
 [
 {
     "transformations": {

@@ -15,7 +15,7 @@ The below table has all of the transformations currently available in the Data T
 | Remove Small Connected Components | Yes | Yes | Yes | Yes | No |  |
 | Apply Median Filter | Yes | Yes | Yes | No | No |  |
 | Calculate Area | Yes | Yes | Yes | Yes | No |  |
-| Fill Mask Holes | Yes | Yes | Yes | No | No |  |
+| Fill Mask Holes | Yes | Yes | Yes | Yes | No |  |
 | Calculate Mask Principal Axis | Yes | Yes | Yes | No | No |  |
 | Whisker Tracing | No | N/A | No | No | No |  |
 | Clip Line by Reference Line | Yes | Yes | Yes | Yes | No |  |
