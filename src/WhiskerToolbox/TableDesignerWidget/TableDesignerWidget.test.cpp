@@ -27,6 +27,7 @@
 #include <QTemporaryFile>
 #include <QDir>
 #include "TableJSONWidget.hpp"
+#include <QMessageBox>
 
 #include <memory>
 #include <vector>
@@ -555,6 +556,215 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - JSON wid
         if (c->text(0).contains("Event Presence")) { presence_enabled = (c->checkState(1) == Qt::Checked); break; }
     }
     REQUIRE(presence_enabled);
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Invalid JSON shows error with line/column", "[TableDesignerWidget][JSON][Error]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+
+    // Select a valid table to enable UI elements
+    auto & registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("InvalidJson");
+    REQUIRE(registry.createTable(table_id, "Invalid JSON Test"));
+    auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) { table_combo->setCurrentIndex(i); break; }
+    }
+
+    // Provide invalid JSON with a known error position (missing comma)
+    QString bad_json = R"({
+  "tables": [
+    {
+      "table_id": "t1",
+      "name": "Bad",
+      "row_selector": { "type": "interval", "source": "BehaviorPeriods" }
+      "columns": []
+    }
+  ]
+})";
+
+    // Put into editor
+    auto * json_text = widget.findChild<QTextEdit*>("json_text_edit");
+    REQUIRE(json_text != nullptr);
+    json_text->setPlainText(bad_json);
+
+    // Click Update Table to trigger parsing
+    auto * apply_btn = widget.findChild<QPushButton*>("apply_json_btn");
+    REQUIRE(apply_btn != nullptr);
+
+    // Intercept message boxes by tracking active widgets before/after
+    QList<QWidget*> before = QApplication::topLevelWidgets();
+    apply_btn->click();
+    QApplication::processEvents();
+    QList<QWidget*> after = QApplication::topLevelWidgets();
+
+    // Find a newly created QMessageBox with expected title/text
+    QMessageBox * found = nullptr;
+    for (QWidget * w : after) {
+        if (!before.contains(w)) {
+            auto * box = qobject_cast<QMessageBox*>(w);
+            if (box && box->windowTitle() == "Invalid JSON") {
+                found = box;
+                break;
+            }
+        }
+    }
+    REQUIRE(found != nullptr);
+    QString text = found->text();
+    REQUIRE(text.contains("JSON format is invalid"));
+    REQUIRE(text.contains("line"));
+    REQUIRE(text.contains("column"));
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Valid JSON with missing keys reports errors", "[TableDesignerWidget][JSON][Error]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+    auto & registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("BadKeys");
+    REQUIRE(registry.createTable(table_id, "Bad Keys"));
+    auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) { table_combo->setCurrentIndex(i); break; }
+    }
+    // Missing row_selector entirely
+    QString json1 = R"({ "tables": [ { "columns": [ { "name": "c1", "data_source": "Neuron1Spikes", "computer": "Event Presence" } ] } ] })";
+    auto * json_text = widget.findChild<QTextEdit*>("json_text_edit");
+    REQUIRE(json_text != nullptr);
+    json_text->setPlainText(json1);
+    auto * apply_btn = widget.findChild<QPushButton*>("apply_json_btn");
+    REQUIRE(apply_btn != nullptr);
+    QList<QWidget*> before = QApplication::topLevelWidgets();
+    apply_btn->click();
+    QApplication::processEvents();
+    QList<QWidget*> after = QApplication::topLevelWidgets();
+    bool saw_error = false;
+    for (QWidget * w : after) {
+        if (!before.contains(w)) {
+            if (auto * box = qobject_cast<QMessageBox*>(w)) {
+                if (box->windowTitle() == "Invalid Table JSON" && box->text().contains("Missing required key: row_selector")) {
+                    saw_error = true; break;
+                }
+            }
+        }
+    }
+    REQUIRE(saw_error);
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Unknown computer reports error", "[TableDesignerWidget][JSON][Error]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+    auto & registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("BadComputer");
+    REQUIRE(registry.createTable(table_id, "Bad Computer"));
+    auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) { table_combo->setCurrentIndex(i); break; }
+    }
+    QString json = R"({
+      "tables": [
+        {
+          "row_selector": { "type": "interval", "source": "BehaviorPeriods" },
+          "columns": [ { "name": "c1", "data_source": "Neuron1Spikes", "computer": "Does Not Exist" } ]
+        }
+      ]
+    })";
+    auto * json_text = widget.findChild<QTextEdit*>("json_text_edit");
+    REQUIRE(json_text != nullptr);
+    json_text->setPlainText(json);
+    auto * apply_btn = widget.findChild<QPushButton*>("apply_json_btn");
+    REQUIRE(apply_btn != nullptr);
+    QList<QWidget*> before = QApplication::topLevelWidgets();
+    apply_btn->click();
+    QApplication::processEvents();
+    QList<QWidget*> after = QApplication::topLevelWidgets();
+    bool saw_error = false;
+    for (QWidget * w : after) {
+        if (!before.contains(w)) {
+            if (auto * box = qobject_cast<QMessageBox*>(w)) {
+                if (box->windowTitle() == "Invalid Table JSON" && box->text().contains("requested computer does not exist", Qt::CaseInsensitive)) { saw_error = true; break; }
+            }
+        }
+    }
+    REQUIRE(saw_error);
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Computer incompatible with data type reports error", "[TableDesignerWidget][JSON][Error]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+    auto & registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("BadCompat");
+    REQUIRE(registry.createTable(table_id, "Bad Compat"));
+    auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) { table_combo->setCurrentIndex(i); break; }
+    }
+    // Use an analog-only computer on an Events source
+    QString json = R"({
+      "tables": [
+        {
+          "row_selector": { "type": "interval", "source": "BehaviorPeriods" },
+          "columns": [ { "name": "c1", "data_source": "Neuron1Spikes", "computer": "Analog Mean" } ]
+        }
+      ]
+    })";
+    auto * json_text = widget.findChild<QTextEdit*>("json_text_edit");
+    REQUIRE(json_text != nullptr);
+    json_text->setPlainText(json);
+    auto * apply_btn = widget.findChild<QPushButton*>("apply_json_btn");
+    REQUIRE(apply_btn != nullptr);
+    QList<QWidget*> before = QApplication::topLevelWidgets();
+    apply_btn->click();
+    QApplication::processEvents();
+    QList<QWidget*> after = QApplication::topLevelWidgets();
+    bool saw_error = false;
+    for (QWidget * w : after) {
+        if (!before.contains(w)) {
+            if (auto * box = qobject_cast<QMessageBox*>(w)) {
+                if (box->windowTitle() == "Invalid Table JSON" && box->text().contains("not valid for data source type", Qt::CaseInsensitive)) { saw_error = true; break; }
+            }
+        }
+    }
+    REQUIRE(saw_error);
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Data key not in DataManager reports error", "[TableDesignerWidget][JSON][Error]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+    auto & registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("BadDataKey");
+    REQUIRE(registry.createTable(table_id, "Bad Data Key"));
+    auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) { table_combo->setCurrentIndex(i); break; }
+    }
+    QString json = R"({
+      "tables": [
+        {
+          "row_selector": { "type": "interval", "source": "DoesNotExistIntervals" },
+          "columns": [ { "name": "c1", "data_source": "DoesNotExistEvents", "computer": "Event Presence" } ]
+        }
+      ]
+    })";
+    auto * json_text = widget.findChild<QTextEdit*>("json_text_edit");
+    REQUIRE(json_text != nullptr);
+    json_text->setPlainText(json);
+    auto * apply_btn = widget.findChild<QPushButton*>("apply_json_btn");
+    REQUIRE(apply_btn != nullptr);
+    QList<QWidget*> before = QApplication::topLevelWidgets();
+    apply_btn->click();
+    QApplication::processEvents();
+    QList<QWidget*> after = QApplication::topLevelWidgets();
+    bool saw_error = false;
+    for (QWidget * w : after) {
+        if (!before.contains(w)) {
+            if (auto * box = qobject_cast<QMessageBox*>(w)) {
+                if (box->windowTitle() == "Invalid Table JSON" && (box->text().contains("not found in DataManager", Qt::CaseInsensitive) || box->text().contains("Row selector data key not found", Qt::CaseInsensitive))) {
+                    saw_error = true; break;
+                }
+            }
+        }
+    }
+    REQUIRE(saw_error);
 }
 
 

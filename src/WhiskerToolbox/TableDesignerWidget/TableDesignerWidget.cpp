@@ -1440,32 +1440,71 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
     // Very light-weight parser using Qt to extract essential fields.
     // Assumes a schema similar to tests under computers *.test.cpp.
     QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(jsonText.toUtf8(), &err);
-    if (err.error != QJsonParseError::NoError || !doc.isObject()) return;
+    QByteArray bytes = jsonText.toUtf8();
+    QJsonDocument doc = QJsonDocument::fromJson(bytes, &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
+        // Compute line/column from byte offset if possible
+        int64_t offset = static_cast<int64_t>(err.offset);
+        int line = 1;
+        int col = 1;
+        for (int64_t i = 0; i < offset && i < bytes.size(); ++i) {
+            if (bytes[i] == '\n') { ++line; col = 1; }
+            else { ++col; }
+        }
+        QString detail = err.error != QJsonParseError::NoError
+                ? QString("%1 (line %2, column %3)").arg(err.errorString()).arg(line).arg(col)
+                : QString("JSON root must be an object");
+        auto * box = new QMessageBox(this);
+        box->setIcon(QMessageBox::Critical);
+        box->setWindowTitle("Invalid JSON");
+        box->setText(QString("JSON format is invalid: %1").arg(detail));
+        box->setAttribute(Qt::WA_DeleteOnClose);
+        box->show();
+        return;
+    }
     auto obj = doc.object();
-    if (!obj.contains("tables") || !obj["tables"].isArray()) return;
+    if (!obj.contains("tables") || !obj["tables"].isArray()) {
+        auto * box = new QMessageBox(this);
+        box->setIcon(QMessageBox::Critical);
+        box->setWindowTitle("Invalid JSON");
+        box->setText("Missing required key: tables (array)");
+        box->setAttribute(Qt::WA_DeleteOnClose);
+        box->show();
+        return;
+    }
     auto tables = obj["tables"].toArray();
     if (tables.isEmpty() || !tables[0].isObject()) return;
     auto table = tables[0].toObject();
 
     // Row selector
+    QStringList errors;
+    QString rs_type;
+    QString rs_source;
     if (table.contains("row_selector") && table["row_selector"].isObject()) {
         auto rs = table["row_selector"].toObject();
-        QString type = rs.value("type").toString();
-        QString source = rs.value("source").toString();
-        if (!type.isEmpty()) {
-            QString entry;
-            if (type == "interval") entry = QString("Intervals: %1").arg(source);
-            else if (type == "timestamp") {
-                // prefer TimeFrame first, fallback to Events
-                // Try TimeFrame
-                entry = QString("TimeFrame: %1").arg(source);
-                int idx = ui->row_data_source_combo->findText(entry);
-                if (idx < 0) entry = QString("Events: %1").arg(source);
+        rs_type = rs.value("type").toString();
+        rs_source = rs.value("source").toString();
+        if (rs_type.isEmpty() || rs_source.isEmpty()) {
+            errors << "Missing required keys in row_selector: 'type' and/or 'source'";
+        } else {
+            // Validate existence
+            bool source_ok = false;
+            if (rs_type == "interval") {
+                source_ok = (_data_manager && _data_manager->getData<DigitalIntervalSeries>(rs_source.toStdString()) != nullptr);
+            } else if (rs_type == "timestamp") {
+                source_ok = (_data_manager && (
+                    _data_manager->getTime(TimeKey(rs_source.toStdString())) != nullptr ||
+                    _data_manager->getData<DigitalEventSeries>(rs_source.toStdString()) != nullptr
+                ));
+            } else {
+                errors << QString("Unsupported row_selector type: %1").arg(rs_type);
             }
-            int idx = ui->row_data_source_combo->findText(entry);
-            if (idx >= 0) ui->row_data_source_combo->setCurrentIndex(idx);
+            if (!source_ok) {
+                errors << QString("Row selector data key not found in DataManager: %1").arg(rs_source);
+            }
         }
+    } else {
+        errors << "Missing required key: row_selector (object)";
     }
 
     // Columns: enable matching computers and set column names
@@ -1478,6 +1517,48 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
             QString data_source = cobj.value("data_source").toString();
             QString computer = cobj.value("computer").toString();
             QString name = cobj.value("name").toString();
+            if (data_source.isEmpty() || computer.isEmpty() || name.isEmpty()) {
+                errors << "Missing required keys in column: 'name', 'data_source', and 'computer'";
+                continue;
+            }
+            // Validate data source existence
+            bool has_ds = (_data_manager && (
+                _data_manager->getData<DigitalEventSeries>(data_source.toStdString()) != nullptr ||
+                _data_manager->getData<DigitalIntervalSeries>(data_source.toStdString()) != nullptr ||
+                _data_manager->getData<AnalogTimeSeries>(data_source.toStdString()) != nullptr
+            ));
+            if (!has_ds) {
+                errors << QString("Data key not found in DataManager: %1").arg(data_source);
+            }
+            // Validate computer exists
+            bool computer_exists = false;
+            if (_data_manager) {
+                if (auto * reg = _data_manager->getTableRegistry()) {
+                    auto & cr = reg->getComputerRegistry();
+                    computer_exists = cr.findComputerInfo(computer.toStdString());
+                }
+            }
+            if (!computer_exists) {
+                errors << QString("Requested computer does not exist: %1").arg(computer);
+            }
+            // Validate compatibility (heuristic)
+            bool type_event = false, type_interval = false, type_analog = false;
+            for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+                auto * ds_item = tree->topLevelItem(i);
+                QString ds_text = ds_item->text(0);
+                if (ds_text.contains(data_source)) {
+                    if (ds_text.startsWith("Events: ")) type_event = true;
+                    else if (ds_text.startsWith("Intervals: ")) type_interval = true;
+                    else if (ds_text.startsWith("analog:")) type_analog = true;
+                }
+            }
+            QString ds_repr;
+            if (type_event) ds_repr = QString("Events: %1").arg(data_source);
+            else if (type_interval) ds_repr = QString("Intervals: %1").arg(data_source);
+            else if (type_analog) ds_repr = QString("analog:%1").arg(data_source);
+            if (!ds_repr.isEmpty() && !isComputerCompatibleWithDataSource(computer.toStdString(), ds_repr)) {
+                errors << QString("Computer '%1' is not valid for data source type requested (%2)").arg(computer, ds_repr);
+            }
 
             // Find matching tree item
             for (int i = 0; i < tree->topLevelItemCount(); ++i) {
@@ -1492,6 +1573,15 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
                     }
                 }
             }
+        }
+        if (!errors.isEmpty()) {
+            auto * box = new QMessageBox(this);
+            box->setIcon(QMessageBox::Critical);
+            box->setWindowTitle("Invalid Table JSON");
+            box->setText(errors.join("\n"));
+            box->setAttribute(Qt::WA_DeleteOnClose);
+            box->show();
+            return;
         }
         triggerPreviewDebounced();
     }
