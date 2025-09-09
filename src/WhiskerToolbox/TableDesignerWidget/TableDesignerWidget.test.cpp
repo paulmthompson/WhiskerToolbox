@@ -22,6 +22,11 @@
 #include <QComboBox>
 #include <QTableView>
 #include <QHeaderView>
+#include <QTextEdit>
+#include <QPushButton>
+#include <QTemporaryFile>
+#include <QDir>
+#include "TableJSONWidget.hpp"
 
 #include <memory>
 #include <vector>
@@ -400,6 +405,158 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Computer
         REQUIRE(QString::fromStdString(column_infos[0].name) == custom_name);
     }
 }
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - JSON widget updates after enabling computer", "[TableDesignerWidget][JSON]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+
+    // Create a table and select it
+    auto & registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("JsonTable");
+    REQUIRE(registry.createTable(table_id, "JSON Table"));
+    auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) { table_combo->setCurrentIndex(i); break; }
+    }
+
+    // Select intervals row source
+    auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+    REQUIRE(row_combo != nullptr);
+    int interval_index = -1;
+    for (int i = 0; i < row_combo->count(); ++i) {
+        if (row_combo->itemText(i).contains("Intervals: BehaviorPeriods")) { interval_index = i; break; }
+    }
+    REQUIRE(interval_index >= 0);
+    row_combo->setCurrentIndex(interval_index);
+
+    // Enable one event computer under Neuron1Spikes
+    auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+    REQUIRE(tree != nullptr);
+    QTreeWidgetItem * event_source_item = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        auto * item = tree->topLevelItem(i);
+        if (item->text(0).contains("Events: Neuron1Spikes")) { event_source_item = item; break; }
+    }
+    REQUIRE(event_source_item != nullptr);
+    QTreeWidgetItem * presence = nullptr;
+    for (int j = 0; j < event_source_item->childCount(); ++j) {
+        auto * c = event_source_item->child(j);
+        if (c->text(0).contains("Event Presence")) { presence = c; break; }
+    }
+    REQUIRE(presence != nullptr);
+    presence->setCheckState(1, Qt::Checked);
+
+    // Build table which should populate JSON widget from current state
+    REQUIRE(widget.buildTableFromTree());
+
+    // Find JSON widget's editor by object name from ui
+    auto * json_text = widget.findChild<QTextEdit*>("json_text_edit");
+    REQUIRE(json_text != nullptr);
+    auto text = json_text->toPlainText();
+    REQUIRE(text.contains("\"columns\""));
+    REQUIRE(text.contains("Neuron1Spikes"));
+    REQUIRE(text.contains("Event Presence"));
+
+    // Create a new empty table and populate it from the JSON text editor
+    auto table_id2 = registry.generateUniqueTableId("JsonTable2");
+    REQUIRE(registry.createTable(table_id2, "JSON Table 2"));
+
+    // Select the new table
+    table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id2)) { table_combo->setCurrentIndex(i); break; }
+    }
+
+    // Ensure row/computers cleared for new table
+    auto * row_combo2 = widget.findChild<QComboBox*>("row_data_source_combo");
+    REQUIRE(row_combo2 != nullptr);
+    auto * tree2 = widget.findChild<QTreeWidget*>("computers_tree");
+    REQUIRE(tree2 != nullptr);
+
+    // Apply previously captured JSON to new table
+    json_text->setPlainText(text);
+    auto * apply_btn = widget.findChild<QPushButton*>("apply_json_btn");
+    REQUIRE(apply_btn != nullptr);
+    apply_btn->click();
+
+    // Verify row selector got populated
+    REQUIRE(row_combo2->currentText().contains("Intervals: BehaviorPeriods"));
+
+    // Verify the expected computer is enabled under the data source
+    QTreeWidgetItem * n1_item = nullptr;
+    for (int i = 0; i < tree2->topLevelItemCount(); ++i) {
+        auto * item = tree2->topLevelItem(i);
+        if (item->text(0).contains("Events: Neuron1Spikes")) { n1_item = item; break; }
+    }
+    REQUIRE(n1_item != nullptr);
+    bool presence_enabled = false;
+    for (int j = 0; j < n1_item->childCount(); ++j) {
+        auto * c = n1_item->child(j);
+        if (c->text(0).contains("Event Presence")) {
+            presence_enabled = (c->checkState(1) == Qt::Checked);
+            break;
+        }
+    }
+    REQUIRE(presence_enabled);
+
+    // Verify enabled columns reflect JSON
+    auto column_infos2 = widget.getEnabledColumnInfos();
+    REQUIRE(column_infos2.size() >= 1);
+    bool found_presence = false;
+    for (auto const & ci : column_infos2) {
+        if (ci.computerName.find("Event Presence") != std::string::npos && ci.dataSourceName.find("Neuron1Spikes") != std::string::npos) {
+            found_presence = true;
+            break;
+        }
+    }
+    REQUIRE(found_presence);
+
+    // Building from populated UI should succeed
+    REQUIRE(widget.buildTableFromTree());
+
+    // Now, save the JSON to a temporary file and load it using the widget's Load JSON button
+    QTemporaryFile tmpFile(QDir::temp().filePath("table_json_XXXXXX.json"));
+    REQUIRE(tmpFile.open());
+    QByteArray jsonBytes = text.toUtf8();
+    REQUIRE(tmpFile.write(jsonBytes) == jsonBytes.size());
+    tmpFile.flush();
+
+    // Create a third table and select it
+    auto table_id3 = registry.generateUniqueTableId("JsonTable3");
+    REQUIRE(registry.createTable(table_id3, "JSON Table 3"));
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id3)) { table_combo->setCurrentIndex(i); break; }
+    }
+
+    // Find the JSON widget's load button and force path
+    auto * json_widget_load_btn = widget.findChild<QPushButton*>("load_json_btn");
+    REQUIRE(json_widget_load_btn != nullptr);
+    auto * json_widget = widget.findChild<TableJSONWidget*>();
+    REQUIRE(json_widget != nullptr);
+    json_widget->setForcedLoadPathForTests(tmpFile.fileName());
+
+    // Click Load JSON to read from the temporary file
+    json_widget_load_btn->click();
+
+    // After loading, click Update Table to apply
+    apply_btn->click();
+
+    // Verify that the selection and computer enabling have been applied again
+    REQUIRE(row_combo2->currentText().contains("Intervals: BehaviorPeriods"));
+    n1_item = nullptr;
+    for (int i = 0; i < tree2->topLevelItemCount(); ++i) {
+        auto * item = tree2->topLevelItem(i);
+        if (item->text(0).contains("Events: Neuron1Spikes")) { n1_item = item; break; }
+    }
+    REQUIRE(n1_item != nullptr);
+    presence_enabled = false;
+    for (int j = 0; j < n1_item->childCount(); ++j) {
+        auto * c = n1_item->child(j);
+        if (c->text(0).contains("Event Presence")) { presence_enabled = (c->checkState(1) == Qt::Checked); break; }
+    }
+    REQUIRE(presence_enabled);
+}
+
 
 TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Table creation workflow", "[TableDesignerWidget][Workflow]") {
     

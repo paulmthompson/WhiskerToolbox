@@ -22,6 +22,7 @@
 #include "TableViewerWidget/TableViewerWidget.hpp"
 #include "TableTransformWidget.hpp"
 #include "TableExportWidget.hpp"
+#include "TableJSONWidget.hpp"
 
 
 #include <QCheckBox>
@@ -42,6 +43,10 @@
 #include <QFutureWatcher>
 #include <QTimer>
 #include <QtConcurrent>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonParseError>
 
 #include <algorithm>
 #include <fstream>
@@ -116,6 +121,17 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     ui->main_layout->insertWidget( ui->main_layout->indexOf(ui->build_group) + 2, _table_export_section );
     connect(_table_export_widget, &TableExportWidget::exportClicked,
             this, &TableDesignerWidget::onExportCsv);
+
+    // Insert JSON section
+    _table_json_widget = new TableJSONWidget(this);
+    _table_json_section = new Section(this, "Table JSON Template");
+    _table_json_section->setContentLayout(*new QVBoxLayout());
+    _table_json_section->layout()->addWidget(_table_json_widget);
+    _table_json_section->autoSetContentLayout();
+    ui->main_layout->insertWidget( ui->main_layout->indexOf(ui->build_group) + 3, _table_json_section );
+    connect(_table_json_widget, &TableJSONWidget::updateRequested, this, [this](QString const & jsonText){
+        applyJsonTemplateToUI(jsonText);
+    });
 
     // Add observer to automatically refresh dropdowns when DataManager changes
     if (_data_manager) {
@@ -394,6 +410,8 @@ void TableDesignerWidget::onBuildTable() {
             if (reg->storeBuiltTable(_current_table_id.toStdString(), std::move(table_view))) {
                 updateBuildStatus(QString("Table built successfully with %1 columns!").arg(column_infos.size()));
                 qDebug() << "Successfully built table:" << _current_table_id << "with" << column_infos.size() << "columns";
+                // Populate JSON widget with the current configuration
+                setJsonTemplateFromCurrentState();
             } else {
                 updateBuildStatus("Failed to store built table", true);
             }
@@ -477,6 +495,8 @@ bool TableDesignerWidget::buildTableFromTree() {
             if (reg->storeBuiltTable(_current_table_id.toStdString(), std::move(table_view))) {
                 updateBuildStatus(QString("Table built successfully with %1 columns!").arg(column_infos.size()));
                 qDebug() << "Successfully built table:" << _current_table_id << "with" << column_infos.size() << "columns";
+                // Populate JSON widget with the current configuration as well
+                setJsonTemplateFromCurrentState();
                 return true;
             } else {
                 updateBuildStatus("Failed to store built table", true);
@@ -1377,6 +1397,104 @@ void TableDesignerWidget::refreshComputersTree() {
 
     // Update preview after refresh
     triggerPreviewDebounced();
+}
+
+void TableDesignerWidget::setJsonTemplateFromCurrentState() {
+    if (!_table_json_widget) return;
+    // Build a minimal JSON template representing current UI state
+    QString row_source = ui->row_data_source_combo ? ui->row_data_source_combo->currentText() : QString();
+    auto columns = getEnabledColumnInfos();
+    if (row_source.isEmpty() && columns.empty()) { _table_json_widget->setJsonText("{}"); return; }
+
+    QString row_type;
+    QString row_source_name;
+    if (row_source.startsWith("TimeFrame: ")) { row_type = "timestamp"; row_source_name = row_source.mid(11); }
+    else if (row_source.startsWith("Events: ")) { row_type = "timestamp"; row_source_name = row_source.mid(8); }
+    else if (row_source.startsWith("Intervals: ")) { row_type = "interval"; row_source_name = row_source.mid(11); }
+
+    QStringList column_entries;
+    for (auto const & c : columns) {
+        QString entry = QString(
+            "{\n  \"name\": \"%1\",\n  \"description\": \"%2\",\n  \"data_source\": \"%3\",\n  \"computer\": \"%4\"%5\n}"
+        ).arg(QString::fromStdString(c.name))
+         .arg(QString::fromStdString(c.description))
+         .arg(QString::fromStdString(c.dataSourceName))
+         .arg(QString::fromStdString(c.computerName))
+         .arg(c.parameters.empty() ? QString() : QString(",\n  \"parameters\": {}"));
+        column_entries << entry;
+    }
+
+    QString table_name = _table_info_widget ? _table_info_widget->getName() : _current_table_id;
+    QString json = QString(
+        "{\n  \"tables\": [\n    {\n      \"table_id\": \"%1\",\n      \"name\": \"%2\",\n      \"row_selector\": { \"type\": \"%3\", \"source\": \"%4\" },\n      \"columns\": [\n%5\n      ]\n    }\n  ]\n}"
+    ).arg(_current_table_id)
+     .arg(table_name)
+     .arg(row_type)
+     .arg(row_source_name)
+     .arg(column_entries.join(",\n"));
+
+    _table_json_widget->setJsonText(json);
+}
+
+void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
+    // Very light-weight parser using Qt to extract essential fields.
+    // Assumes a schema similar to tests under computers *.test.cpp.
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(jsonText.toUtf8(), &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) return;
+    auto obj = doc.object();
+    if (!obj.contains("tables") || !obj["tables"].isArray()) return;
+    auto tables = obj["tables"].toArray();
+    if (tables.isEmpty() || !tables[0].isObject()) return;
+    auto table = tables[0].toObject();
+
+    // Row selector
+    if (table.contains("row_selector") && table["row_selector"].isObject()) {
+        auto rs = table["row_selector"].toObject();
+        QString type = rs.value("type").toString();
+        QString source = rs.value("source").toString();
+        if (!type.isEmpty()) {
+            QString entry;
+            if (type == "interval") entry = QString("Intervals: %1").arg(source);
+            else if (type == "timestamp") {
+                // prefer TimeFrame first, fallback to Events
+                // Try TimeFrame
+                entry = QString("TimeFrame: %1").arg(source);
+                int idx = ui->row_data_source_combo->findText(entry);
+                if (idx < 0) entry = QString("Events: %1").arg(source);
+            }
+            int idx = ui->row_data_source_combo->findText(entry);
+            if (idx >= 0) ui->row_data_source_combo->setCurrentIndex(idx);
+        }
+    }
+
+    // Columns: enable matching computers and set column names
+    if (table.contains("columns") && table["columns"].isArray()) {
+        auto cols = table["columns"].toArray();
+        auto * tree = ui->computers_tree;
+        for (auto const & cval : cols) {
+            if (!cval.isObject()) continue;
+            auto cobj = cval.toObject();
+            QString data_source = cobj.value("data_source").toString();
+            QString computer = cobj.value("computer").toString();
+            QString name = cobj.value("name").toString();
+
+            // Find matching tree item
+            for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+                auto * ds_item = tree->topLevelItem(i);
+                QString ds_text = ds_item->text(0);
+                if (!(ds_text.contains(data_source) || ds_text.endsWith(data_source))) continue;
+                for (int j = 0; j < ds_item->childCount(); ++j) {
+                    auto * comp_item = ds_item->child(j);
+                    if (comp_item->text(0) == computer) {
+                        comp_item->setCheckState(1, Qt::Checked);
+                        if (!name.isEmpty()) comp_item->setText(2, name);
+                    }
+                }
+            }
+        }
+        triggerPreviewDebounced();
+    }
 }
 
 void TableDesignerWidget::onComputersTreeItemChanged() {
