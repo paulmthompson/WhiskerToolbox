@@ -637,14 +637,31 @@ void TableDesignerWidget::onExportCsv() {
         for (size_t r = 0; r < rows; ++r) {
             for (size_t c = 0; c < names.size(); ++c) {
                 if (c > 0) file << delim;
+                bool wrote = false;
+                // Try known scalar types in order
                 try {
                     auto const & vals = view->getColumnValues<double>(names[c].c_str());
-                    if (r < vals.size()) file << vals[r];
-                    else
-                        file << "NaN";
-                } catch (...) {
-                    file << "NaN";
+                    if (r < vals.size()) { file << vals[r]; wrote = true; }
+                } catch (...) {}
+                if (!wrote) {
+                    try {
+                        auto const & vals = view->getColumnValues<int>(names[c].c_str());
+                        if (r < vals.size()) { file << vals[r]; wrote = true; }
+                    } catch (...) {}
                 }
+                if (!wrote) {
+                    try {
+                        auto const & vals = view->getColumnValues<int64_t>(names[c].c_str());
+                        if (r < vals.size()) { file << vals[r]; wrote = true; }
+                    } catch (...) {}
+                }
+                if (!wrote) {
+                    try {
+                        auto const & vals = view->getColumnValues<bool>(names[c].c_str());
+                        if (r < vals.size()) { file << (vals[r] ? 1 : 0); wrote = true; }
+                    } catch (...) {}
+                }
+                if (!wrote) file << "NaN";
             }
             file << eol;
         }
@@ -1414,11 +1431,17 @@ void TableDesignerWidget::setJsonTemplateFromCurrentState() {
 
     QStringList column_entries;
     for (auto const & c : columns) {
+        // Strip any internal prefixes for JSON to keep schema user-friendly
+        QString ds = QString::fromStdString(c.dataSourceName);
+        if (ds.startsWith("events:")) ds = ds.mid(7);
+        else if (ds.startsWith("intervals:")) ds = ds.mid(10);
+        else if (ds.startsWith("analog:")) ds = ds.mid(7);
+
         QString entry = QString(
             "{\n  \"name\": \"%1\",\n  \"description\": \"%2\",\n  \"data_source\": \"%3\",\n  \"computer\": \"%4\"%5\n}"
         ).arg(QString::fromStdString(c.name))
          .arg(QString::fromStdString(c.description))
-         .arg(QString::fromStdString(c.dataSourceName))
+         .arg(ds)
          .arg(QString::fromStdString(c.computerName))
          .arg(c.parameters.empty() ? QString() : QString(",\n  \"parameters\": {}"));
         column_entries << entry;
@@ -1515,6 +1538,8 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
                 int idx = ui->row_data_source_combo->findText(entry);
                 if (idx >= 0) {
                     ui->row_data_source_combo->setCurrentIndex(idx);
+                    // Ensure computers tree reflects this row selector before enabling columns
+                    refreshComputersTree();
                 } else {
                     errors << QString("Row selector entry not available in UI: %1").arg(entry);
                 }
@@ -1528,6 +1553,8 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
     if (table.contains("columns") && table["columns"].isArray()) {
         auto cols = table["columns"].toArray();
         auto * tree = ui->computers_tree;
+        // Avoid recursive preview rebuilds while we toggle many items
+        bool prevBlocked = tree->blockSignals(true);
         for (auto const & cval : cols) {
             if (!cval.isObject()) continue;
             auto cobj = cval.toObject();
@@ -1577,20 +1604,37 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
                 errors << QString("Computer '%1' is not valid for data source type requested (%2)").arg(computer, ds_repr);
             }
 
-            // Find matching tree item
+            // Find matching tree item with strict preference
+            QString exact_events = QString("Events: %1").arg(data_source);
+            QString exact_intervals = QString("Intervals: %1").arg(data_source);
+            QString exact_analog = QString("analog:%1").arg(data_source);
+            QTreeWidgetItem * matched_ds = nullptr;
             for (int i = 0; i < tree->topLevelItemCount(); ++i) {
                 auto * ds_item = tree->topLevelItem(i);
-                QString ds_text = ds_item->text(0);
-                if (!(ds_text.contains(data_source) || ds_text.endsWith(data_source))) continue;
-                for (int j = 0; j < ds_item->childCount(); ++j) {
-                    auto * comp_item = ds_item->child(j);
-                    if (comp_item->text(0) == computer) {
+                QString t = ds_item->text(0);
+                if (t == exact_events || t == exact_intervals || t == exact_analog) { matched_ds = ds_item; break; }
+            }
+            if (!matched_ds) {
+                for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+                    auto * ds_item = tree->topLevelItem(i);
+                    QString t = ds_item->text(0);
+                    if (t.contains(data_source) || t.endsWith(data_source)) { matched_ds = ds_item; break; }
+                }
+            }
+            if (matched_ds) {
+                for (int j = 0; j < matched_ds->childCount(); ++j) {
+                    auto * comp_item = matched_ds->child(j);
+                    QString comp_text = comp_item->text(0).trimmed();
+                    if (comp_text == computer || comp_text.contains(computer)) {
                         comp_item->setCheckState(1, Qt::Checked);
                         if (!name.isEmpty()) comp_item->setText(2, name);
                     }
                 }
+            } else {
+                errors << QString("Data source not found in tree: %1").arg(data_source);
             }
         }
+        tree->blockSignals(prevBlocked);
         if (!errors.isEmpty()) {
             auto * box = new QMessageBox(this);
             box->setIcon(QMessageBox::Critical);
@@ -1647,12 +1691,13 @@ std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
                 // Create ColumnInfo (use raw key without UI prefixes)
                 QString source_key = data_source;
                 if (source_key.startsWith("Events: ")) {
-                    source_key = source_key.mid(8);
+                    source_key = QString("events:%1").arg(source_key.mid(8));
                 } else if (source_key.startsWith("Intervals: ")) {
-                    source_key = source_key.mid(11);
+                    source_key = QString("intervals:%1").arg(source_key.mid(11));
                 } else if (source_key.startsWith("analog:")) {
-                    source_key = source_key.mid(7);
+                    source_key = source_key; // already prefixed
                 } else if (source_key.startsWith("TimeFrame: ")) {
+                    // TimeFrame used only for row selector; columns require concrete sources
                     source_key = source_key.mid(11);
                 }
 

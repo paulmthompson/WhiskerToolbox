@@ -413,6 +413,12 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
                     builder.addColumn<int>(column_info.name, std::move(computer));
                     success = true;
                 }
+            } else if (return_type == typeid(int64_t)) {
+                auto computer = registry.createTypedComputer<int64_t>(column_info.computerName, data_source_variant, column_info.parameters);
+                if (computer) {
+                    builder.addColumn<int64_t>(column_info.name, std::move(computer));
+                    success = true;
+                }
             } else if (return_type == typeid(bool)) {
                 auto computer = registry.createTypedComputer<bool>(column_info.computerName, data_source_variant, column_info.parameters);
                 if (computer) {

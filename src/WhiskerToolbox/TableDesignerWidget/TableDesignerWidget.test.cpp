@@ -2,7 +2,7 @@
 #include <catch2/catch_approx.hpp>
 
 #include "TableDesignerWidget.hpp"
-
+#include "TableJSONWidget.hpp"
 // DataManager and related includes
 #include "DataManager.hpp"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
@@ -26,8 +26,8 @@
 #include <QPushButton>
 #include <QTemporaryFile>
 #include <QDir>
-#include "TableJSONWidget.hpp"
 #include <QMessageBox>
+#include <QRadioButton>
 
 #include <memory>
 #include <vector>
@@ -767,6 +767,98 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Data key
     REQUIRE(saw_error);
 }
 
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - IntervalOverlap AssignID preview builds and values", "[TableDesignerWidget][Preview][IntervalOverlap]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+
+    // Prepare a longer timeframe 0..300
+    auto & dm = getDataManager();
+    {
+        std::vector<int> long_time_values(301);
+        std::iota(long_time_values.begin(), long_time_values.end(), 0);
+        auto long_time = std::make_shared<TimeFrame>(long_time_values);
+        dm.setTime(TimeKey("long_time"), long_time, true);
+    }
+
+    // Row intervals: [10,20], [50,100], [200,300]
+    auto row_series = std::make_shared<DigitalIntervalSeries>();
+    row_series->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
+    row_series->addEvent(TimeFrameIndex(50), TimeFrameIndex(100));
+    row_series->addEvent(TimeFrameIndex(200), TimeFrameIndex(300));
+    dm.setData<DigitalIntervalSeries>("RowIntervals", row_series, TimeKey("long_time"));
+
+    // Column intervals: [0,100], [200,300]
+    auto col_series = std::make_shared<DigitalIntervalSeries>();
+    col_series->addEvent(TimeFrameIndex(0), TimeFrameIndex(100));
+    col_series->addEvent(TimeFrameIndex(200), TimeFrameIndex(300));
+    dm.setData<DigitalIntervalSeries>("ColumnIntervals", col_series, TimeKey("long_time"));
+
+    QApplication::processEvents();
+
+    // Create table and select it
+    auto & registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("OverlapTest");
+    REQUIRE(registry.createTable(table_id, "Overlap Preview Test"));
+    auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) { table_combo->setCurrentIndex(i); break; }
+    }
+
+    // Select row selector: Intervals: RowIntervals
+    auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+    REQUIRE(row_combo != nullptr);
+    int row_idx = -1;
+    for (int i = 0; i < row_combo->count(); ++i) {
+        if (row_combo->itemText(i).contains("Intervals: RowIntervals")) { row_idx = i; break; }
+    }
+    REQUIRE(row_idx >= 0);
+    row_combo->setCurrentIndex(row_idx);
+
+    // Use the intervals themselves (no capture range expansion)
+    auto * interval_itself = widget.findChild<QRadioButton*>("interval_itself_radio");
+    REQUIRE(interval_itself != nullptr);
+    interval_itself->setChecked(true);
+
+    // Enable Interval Overlap Assign ID under Intervals: ColumnIntervals
+    auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+    REQUIRE(tree != nullptr);
+    QTreeWidgetItem * col_item = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        auto * item = tree->topLevelItem(i);
+        if (item->text(0).contains("Intervals: ColumnIntervals")) { col_item = item; break; }
+    }
+    REQUIRE(col_item != nullptr);
+    QTreeWidgetItem * assign_id = nullptr;
+    for (int j = 0; j < col_item->childCount(); ++j) {
+        auto * c = col_item->child(j);
+        if (c->text(0) == "Interval Overlap Assign ID") { assign_id = c; break; }
+    }
+    REQUIRE(assign_id != nullptr);
+    assign_id->setCheckState(1, Qt::Checked);
+
+    // Find preview table
+    auto * table_view_widget = widget.findChild<QTableView*>();
+    REQUIRE(table_view_widget != nullptr);
+    QApplication::processEvents();
+    auto * model = table_view_widget->model();
+    REQUIRE(model != nullptr);
+
+    // Expect 3 rows, 1 column
+    REQUIRE(model->rowCount() == 3);
+    REQUIRE(model->columnCount() >= 1);
+
+    // Values should be 0, 0, 1 for AssignID mapping
+    QVariant v0 = model->index(0, 0).data(Qt::DisplayRole);
+    QVariant v1 = model->index(1, 0).data(Qt::DisplayRole);
+    QVariant v2 = model->index(2, 0).data(Qt::DisplayRole);
+    std::cout << "v0: " << v0.toString().toStdString() << std::endl;
+    std::cout << "v1: " << v1.toString().toStdString() << std::endl;
+    std::cout << "v2: " << v2.toString().toStdString() << std::endl;
+    REQUIRE(v0.isValid()); REQUIRE(v1.isValid()); REQUIRE(v2.isValid());
+    REQUIRE(v0.toLongLong() == 0);
+    REQUIRE(v1.toLongLong() == 0);
+    REQUIRE(v2.toLongLong() == 1);
+}
 
 TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Table creation workflow", "[TableDesignerWidget][Workflow]") {
     

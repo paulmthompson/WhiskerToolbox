@@ -290,6 +290,7 @@ QString PaginatedTableModel::formatValue(std::shared_ptr<TableView> const & mini
             if (local_row >= vec.size()) {
                 if constexpr (std::is_same_v<ElemT, double>) return {"NaN"};
                 if constexpr (std::is_same_v<ElemT, int>) return {"NaN"};
+                if constexpr (std::is_same_v<ElemT, long long>) return {"NaN"};
                 if constexpr (std::is_same_v<ElemT, bool>) return {"false"};
                 return {"N/A"};
             }
@@ -298,6 +299,8 @@ QString PaginatedTableModel::formatValue(std::shared_ptr<TableView> const & mini
                 return QString::number(vec[local_row], 'f', 3);
             } else if constexpr (std::is_same_v<ElemT, int>) {
                 return QString::number(vec[local_row]);
+            } else if constexpr (std::is_same_v<ElemT, int64_t>) {
+                return QString::number(static_cast<int64_t>(vec[local_row]));
             } else if constexpr (std::is_same_v<ElemT, bool>) {
                 return vec[local_row] ? QStringLiteral("true") : QStringLiteral("false");
             } else if constexpr (
