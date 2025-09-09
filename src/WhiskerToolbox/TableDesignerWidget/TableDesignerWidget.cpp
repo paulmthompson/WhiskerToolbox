@@ -1501,6 +1501,23 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
             }
             if (!source_ok) {
                 errors << QString("Row selector data key not found in DataManager: %1").arg(rs_source);
+            } else {
+                // Apply selection to UI
+                QString entry;
+                if (rs_type == "interval") {
+                    entry = QString("Intervals: %1").arg(rs_source);
+                } else if (rs_type == "timestamp") {
+                    // Prefer TimeFrame, fallback to Events
+                    entry = QString("TimeFrame: %1").arg(rs_source);
+                    int idx_tf = ui->row_data_source_combo->findText(entry);
+                    if (idx_tf < 0) entry = QString("Events: %1").arg(rs_source);
+                }
+                int idx = ui->row_data_source_combo->findText(entry);
+                if (idx >= 0) {
+                    ui->row_data_source_combo->setCurrentIndex(idx);
+                } else {
+                    errors << QString("Row selector entry not available in UI: %1").arg(entry);
+                }
             }
         }
     } else {
