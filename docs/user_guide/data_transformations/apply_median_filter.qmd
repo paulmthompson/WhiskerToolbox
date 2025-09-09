@@ -15,6 +15,8 @@ This process is highly effective at removing isolated pixels of one color surrou
 
 The figure below illustrates how the median filter removes isolated black and white pixels from a binary mask. Notice how a larger window size results in more aggressive smoothing.
 
+![](images/clipboard-1109389348.png)
+
 ::: {.content-hidden when-format="html"}
 ```{{python}}
 #| echo: false
@@ -94,15 +96,15 @@ In neuroscience, image processing is often a critical step in data analysis. The
 
 This transform has the following parameter:
 
-| Name          | Description                                                                                                                                                              |
-|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Name | Description |
+|-------------|-----------------------------------------------------------|
 | `window_size` | The size of the square kernel used for filtering. The value must be a positive, odd integer (e.g., 3, 5, 7). A larger window size results in more aggressive smoothing but may also remove fine details from the mask. |
 
 ## Example Configuration
 
 Here is a complete example of a JSON configuration file that could be used to load data and process it with a transformation pipeline that includes the "Apply Median Filter" step.
 
-```json
+``` json
 [
 {
     "transformations": {

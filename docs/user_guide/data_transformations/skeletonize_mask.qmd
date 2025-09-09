@@ -9,9 +9,11 @@ This transform reduces a binary mask to a single-pixel-wide representation, pres
 
 ### Detailed Description
 
-This [Data Transform Operation] uses an algorithm to find the "skeleton" of a mask. The skeleton is a thinned version of the original shape that is equidistant from its boundaries. This process is useful for simplifying complex shapes into a more straightforward representation, like converting a blob into a line or a set of lines. This operation is parameter-free.
+This \[Data Transform Operation\] uses an algorithm to find the "skeleton" of a mask. The skeleton is a thinned version of the original shape that is equidistant from its boundaries. This process is useful for simplifying complex shapes into a more straightforward representation, like converting a blob into a line or a set of lines. This operation is parameter-free.
 
 The skeletonization process is applied to each time frame of the mask data independently.
+
+![](images/clipboard-1487941114.png)
 
 ::: {.content-hidden when-format="html"}
 ```{{python}}
@@ -106,7 +108,7 @@ This transform does not have any parameters. The underlying skeletonization algo
 
 Here is a complete example of a JSON configuration file that could be used to load mask data and then apply the skeletonization transform.
 
-```json
+``` json
 [
 {
     "transformations": {

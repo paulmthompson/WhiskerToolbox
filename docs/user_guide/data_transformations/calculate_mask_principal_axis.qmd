@@ -9,9 +9,11 @@ This transform calculates the principal axis of a mask, which is a line that rep
 
 ### Detailed Description
 
-This [Data Transform Operation] is used to determine the orientation of objects within a mask. It analyzes the distribution of pixels in a mask to find its principal axes. The major axis represents the longest dimension of the shape, indicating its primary orientation, while the minor axis is perpendicular to the major axis and represents the shortest dimension.
+This \[Data Transform Operation\] is used to determine the orientation of objects within a mask. It analyzes the distribution of pixels in a mask to find its principal axes. The major axis represents the longest dimension of the shape, indicating its primary orientation, while the minor axis is perpendicular to the major axis and represents the shortest dimension.
 
 This is useful for quantifying the orientation of elongated objects. The output is a line segment that passes through the centroid of the mask and aligns with either the major or minor axis of pixel variance.
+
+![](images/clipboard-136135901.png)
 
 ::: {.content-hidden when-format="html"}
 ```{{python}}
@@ -88,7 +90,7 @@ This transform has the following parameter:
 
 Here is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the major principal axis for a mask.
 
-```json
+``` json
 [
 {
     "transformations": {

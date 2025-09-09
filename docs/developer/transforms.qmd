@@ -11,12 +11,12 @@ The below table has all of the transformations currently available in the Data T
 |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
 | Calculate Mask Centroid | Yes | Yes | Yes | Yes |  |  |
 | Convert Mask to Line | Yes | Yes | Yes | No | No |  |
-| Skeletonize Mask | Yes | Yes | Yes | No | No |  |
+| Skeletonize Mask | Yes | Yes | Yes | Yes | No |  |
 | Remove Small Connected Components | Yes | Yes | Yes | Yes | No |  |
-| Apply Median Filter | Yes | Yes | Yes | No | No |  |
+| Apply Median Filter | Yes | Yes | Yes | Yes | No |  |
 | Calculate Area | Yes | Yes | Yes | Yes | No |  |
 | Fill Mask Holes | Yes | Yes | Yes | Yes | No |  |
-| Calculate Mask Principal Axis | Yes | Yes | Yes | No | No |  |
+| Calculate Mask Principal Axis | Yes | Yes | Yes | Yes | No |  |
 | Whisker Tracing | No | N/A | No | No | No |  |
 | Clip Line by Reference Line | Yes | Yes | Yes | Yes | No |  |
 | Line Alignment to Bright Features | Yes | Yes | Yes | No | Yes | 10 images in 2ms |
