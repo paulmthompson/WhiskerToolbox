@@ -1,0 +1,129 @@
+---
+title: "Apply Median Filter"
+format: html
+---
+
+## Overview
+
+This transform applies a median filter to a binary mask, which is effective at removing "salt-and-pepper" noise and smoothing object boundaries.
+
+### Detailed Description
+
+The median filter is a non-linear digital filtering technique used to remove noise from an image or signal. For each pixel in the mask, the filter considers a square neighborhood of a specified size around it, finds the median of all the pixel values in that neighborhood, and replaces the central pixel with that median value.
+
+This process is highly effective at removing isolated pixels of one color surrounded by pixels of another color (i.e., "salt-and-pepper" noise). It is also good at preserving sharp edges in the image while smoothing out noise, making it preferable to a standard blurring (mean) filter in many cases.
+
+The figure below illustrates how the median filter removes isolated black and white pixels from a binary mask. Notice how a larger window size results in more aggressive smoothing.
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import median_filter
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Generate sample data ---
+    size = 50
+    x, y = np.mgrid[:size, :size]
+
+    # Create a base shape (a rectangle) to make border effects clearer
+    base_shape = np.zeros((size, size), dtype=bool)
+    base_shape[10:40, 15:35] = True
+
+    # Add an irregular border element (a thin protrusion)
+    base_shape[20:25, 35:40] = True
+
+    # Start with the base shape
+    noisy_image = base_shape.copy().astype(float)
+
+    # Add single-pixel salt-and-pepper noise
+    noise_level = 0.05
+    salt = np.random.rand(*noisy_image.shape) < noise_level
+    pepper = np.random.rand(*noisy_image.shape) < noise_level
+    noisy_image[salt & ~base_shape] = 1  # Add salt outside the shape
+    noisy_image[pepper & base_shape] = 0 # Add pepper inside the shape
+
+    # Add a larger noise cluster (2x2 pixels)
+    noisy_image[5:7, 5:7] = 1
+    # Add another noise cluster (3x3)
+    noisy_image[40:43, 40:43] = 1
+
+
+    # --- Apply median filters ---
+    filtered_3x3 = median_filter(noisy_image, size=3)
+    filtered_7x7 = median_filter(noisy_image, size=7)
+
+    # --- Create the plots ---
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5), facecolor="white")
+    fig.suptitle('Effect of Window Size on Median Filter', fontsize=16)
+
+    # Plot 1: Original Noisy Image
+    ax1.imshow(noisy_image, cmap='gray', interpolation='nearest')
+    ax1.set_title('Original Mask with Noise')
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+
+    # Plot 2: Filtered with 3x3 window
+    ax2.imshow(filtered_3x3, cmap='gray', interpolation='nearest')
+    ax2.set_title('Filtered (window_size = 3)')
+    ax2.set_xticks([])
+    ax2.set_yticks([])
+
+    # Plot 3: Filtered with 7x7 window
+    ax3.imshow(filtered_7x7, cmap='gray', interpolation='nearest')
+    ax3.set_title('Filtered (window_size = 7)')
+    ax3.set_xticks([])
+    ax3.set_yticks([])
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+### Neuroscience Use Cases
+
+In neuroscience, image processing is often a critical step in data analysis. The median filter is a valuable tool for pre-processing image-based data.
+
+-   **Calcium Imaging Analysis:** When segmenting active neurons from calcium imaging videos, the resulting binary masks can be noisy. A median filter can clean up these masks before further analysis, such as calculating cell centroids or areas, leading to more accurate results.
+-   **Morphological Reconstruction:** After tracing neurons from microscopy images, digital reconstructions can have small artifacts. Applying a median filter to a 2D projection (mask) of the reconstruction can help remove these artifacts before measuring morphological properties.
+-   **Whisker Tracking:** In behavioral neuroscience, tracking the position of an animal's whiskers often produces binary images of the whisker. A median filter can smooth the whisker's shape and remove spurious pixels from the background, improving the accuracy of tracking algorithms.
+
+## Parameters
+
+This transform has the following parameter:
+
+| Name          | Description                                                                                                                                                              |
+|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `window_size` | The size of the square kernel used for filtering. The value must be a positive, odd integer (e.g., 3, 5, 7). A larger window size results in more aggressive smoothing but may also remove fine details from the mask. |
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to load data and process it with a transformation pipeline that includes the "Apply Median Filter" step.
+
+```json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Median Filter Pipeline",
+            "description": "Test median filtering on mask data",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Apply Median Filter",
+                "phase": "analysis",
+                "input_key": "test_mask",
+                "output_key": "filtered_mask",
+                "parameters": {
+                    "window_size": 3
+                }
+            }
+        ]
+    }
+}
+]
+```
