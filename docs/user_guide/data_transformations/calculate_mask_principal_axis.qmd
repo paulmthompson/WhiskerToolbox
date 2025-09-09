@@ -1,0 +1,115 @@
+---
+title: "Calculate Mask Principal Axis"
+format: html
+---
+
+## Overview
+
+This transform calculates the principal axis of a mask, which is a line that represents the primary orientation of the shape defined by the mask's pixels.
+
+### Detailed Description
+
+This [Data Transform Operation] is used to determine the orientation of objects within a mask. It analyzes the distribution of pixels in a mask to find its principal axes. The major axis represents the longest dimension of the shape, indicating its primary orientation, while the minor axis is perpendicular to the major axis and represents the shortest dimension.
+
+This is useful for quantifying the orientation of elongated objects. The output is a line segment that passes through the centroid of the mask and aligns with either the major or minor axis of pixel variance.
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # Define an ellipse
+    center = (0, 0)
+    width = 4
+    height = 2
+    angle = 30
+
+    # Create the ellipse patch
+    ellipse = Ellipse(xy=center, width=width, height=height, angle=angle,
+                      facecolor='lightblue', edgecolor='black', label='Mask Shape')
+    ax.add_patch(ellipse)
+
+    # Convert angle to radians for calculations
+    angle_rad = np.deg2rad(angle)
+
+    # Calculate major and minor axis endpoints
+    # Major axis
+    dx_major = (width / 2) * np.cos(angle_rad)
+    dy_major = (width / 2) * np.sin(angle_rad)
+    major_axis_x = [-dx_major, dx_major]
+    major_axis_y = [-dy_major, dy_major]
+
+    # Minor axis
+    dx_minor = (height / 2) * np.cos(angle_rad + np.pi/2)
+    dy_minor = (height / 2) * np.sin(angle_rad + np.pi/2)
+    minor_axis_x = [-dx_minor, dx_minor]
+    minor_axis_y = [-dy_minor, dy_minor]
+
+    # Plot the axes
+    ax.plot(major_axis_x, major_axis_y, 'r-', lw=2, label='Major Axis')
+    ax.plot(minor_axis_x, minor_axis_y, 'g-', lw=2, label='Minor Axis')
+
+    # Set plot limits and labels
+    ax.set_xlim(-3, 3)
+    ax.set_ylim(-3, 3)
+    ax.set_aspect('equal', adjustable='box')
+    ax.set_title('Principal Axes of a Mask')
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    ax.legend()
+    ax.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+```
+:::
+
+### Neuroscience Use Cases
+
+-   **Cellular Morphology:** In microscopy images, this can be used to quantify the orientation of cells, such as neurons or glia, which can be important for understanding tissue organization and cell migration.
+-   **Behavioral Analysis:** When tracking the posture of an animal, the principal axis of a body part's mask (like a limb or tail) can provide a quantitative measure of its angle and movement over time.
+-   **Object Interaction:** It can be used to determine how an animal is oriented relative to an object in its environment, for example, by calculating the principal axis of the animal's body mask.
+
+## Parameters
+
+This transform has the following parameter:
+
+-   `axis_type`: Specifies which principal axis to calculate. This can be:
+    -   `Major`: The axis of greatest variance (the "longest" direction of the shape).
+    -   `Minor`: The axis of least variance (the "shortest" direction of the shape), perpendicular to the major axis.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example calculates the major principal axis for a mask.
+
+```json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Mask Principal Axis Pipeline",
+            "description": "Test mask principal axis calculation on mask data",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Calculate Mask Principal Axis",
+                "phase": "analysis",
+                "input_key": "test_mask",
+                "output_key": "principal_axes",
+                "parameters": {
+                    "axis_type": "Major"
+                }
+            }
+        ]
+    }
+}
+]
+```
