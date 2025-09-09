@@ -185,6 +185,12 @@ jobs:
           name: cpack-artifact
           path: ${{ env.ARTIFACT_PATH }}
 
+      - name: Check logs for libffi
+        if: failure()
+        run:
+          cat /Users/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg/buildtrees/libffi/build-arm64-osx-dbg-out.log |
+          cat /Users/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg/buildtrees/libffi/build-arm64-osx-dbg-err.log
+
       - name: Save vcpkg cache
         if: always()
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
