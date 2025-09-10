@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Media Viewer Overview – Neuralyzer</title>
+<title>Media Processing – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -68,6 +68,35 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
@@ -156,7 +185,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer Overview</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/process.html">Media Processing</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -232,13 +261,13 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/media_viewer/overview.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../user_guide/media_viewer/overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Media Viewer Overview</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/media_viewer/process.html" class="sidebar-item-text sidebar-link">
+  <a href="../../user_guide/media_viewer/process.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Media Processing</span></a>
   </div>
 </li>
@@ -372,104 +401,8 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/analog_interval_threshold.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Analog Interval Threshold</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/digital_interval_group.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Digital Interval Group</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
   <a href="../../user_guide/data_transformations/analog_hilbert_phase.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Analog Hilbert Phase</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/line_angle.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Line Angle</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/line_clip.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Line Clip by Reference Line</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/line_curvature.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Line Curvature</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/line_resample.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Line Resample</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/extract_line_subsegment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Extract Line Subsegment</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/calculate_line_to_point_distance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Calculate Line to Point Distance</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/extract_point_from_line.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Extract Point from Line</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/mask_area.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Calculate Mask Area</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/mask_centroid.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Calculate Mask Centroid</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/calculate_mask_principal_axis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Calculate Mask Principal Axis</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/remove_small_connected_components.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Remove Small Connected Components</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/skeletonize_mask.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Skeletonize Mask</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/fill_mask_holes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Fill Mask Holes</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/apply_median_filter.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Apply Median Filter</span></a>
   </div>
 </li>
       </ul>
@@ -553,19 +486,24 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#main-components" id="toc-main-components" class="nav-link active" data-scroll-target="#main-components">Main Components</a></li>
-  <li><a href="#supported-data-types" id="toc-supported-data-types" class="nav-link" data-scroll-target="#supported-data-types">Supported Data Types</a></li>
-  <li><a href="#feature-table" id="toc-feature-table" class="nav-link" data-scroll-target="#feature-table">Feature Table</a></li>
-  <li><a href="#subwidgets" id="toc-subwidgets" class="nav-link" data-scroll-target="#subwidgets">Subwidgets</a></li>
+  <li><a href="#linear-transform" id="toc-linear-transform" class="nav-link active" data-scroll-target="#linear-transform">Linear Transform</a></li>
+  <li><a href="#gamma-correction" id="toc-gamma-correction" class="nav-link" data-scroll-target="#gamma-correction">Gamma Correction</a></li>
+  <li><a href="#image-sharpening" id="toc-image-sharpening" class="nav-link" data-scroll-target="#image-sharpening">Image Sharpening</a></li>
+  <li><a href="#clahe-contrast-limited-adaptive-histogram-equalization" id="toc-clahe-contrast-limited-adaptive-histogram-equalization" class="nav-link" data-scroll-target="#clahe-contrast-limited-adaptive-histogram-equalization">CLAHE (Contrast-Limited Adaptive Histogram Equalization)</a></li>
+  <li><a href="#bilateral-filter" id="toc-bilateral-filter" class="nav-link" data-scroll-target="#bilateral-filter">Bilateral Filter</a></li>
+  <li><a href="#median-filter" id="toc-median-filter" class="nav-link" data-scroll-target="#median-filter">Median Filter</a></li>
+  <li><a href="#magic-eraser" id="toc-magic-eraser" class="nav-link" data-scroll-target="#magic-eraser">Magic Eraser</a></li>
+  <li><a href="#colormap" id="toc-colormap" class="nav-link" data-scroll-target="#colormap">Colormap</a></li>
+  <li><a href="#summary-table" id="toc-summary-table" class="nav-link" data-scroll-target="#summary-table">Summary Table</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer Overview</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/process.html">Media Processing</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Media Viewer Overview</h1>
+<h1 class="title">Media Processing</h1>
 </div>
 
 
@@ -582,132 +520,181 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>The <strong>Media Viewer Widget</strong> provides a unified display for neuroscience videos or images.<br>
-It is the central place where behavioral, microscopic, and event data can be inspected visually, and in addition, you can also process video or images as well as manipulate or modify extracted features such as mask or keypoint data.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Additions or changes to feature data will be saved in the data manager, which can be later exported. This is useful for the preparation of training datasets, or for the refinement of predicted data.</p>
-</div>
-</div>
-<p>In essence, the widget is designed to:</p>
-<ul>
-<li><p>Display multiple data types together in a single media window.</p></li>
-<li><p>Provide specialized panels (“subwidgets”) for the processing of each data type.</p></li>
-<li><p>Allow users to toggle visibility of features.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>If you need to view multiple videos at the same time, or if you want to view masks independently of media, you can open an additional Media Viewer Widget from the <strong>Modules</strong> tab (link will be added later).</p>
-</div>
-</div></li>
-</ul>
+<p>The <strong>Media Processing Widget</strong> provides a collection of tools to adjust, enhance, and transform media data (images or video) within the viewer.<br>
+Each processing option can be enabled by checking the <strong>Active</strong> box, and its effect will be applied directly in the media viewer.</p>
+<p>This guide introduces each option, its background, and how to use each effectively.</p>
 <hr>
-<section id="main-components" class="level2">
-<h2 class="anchored" data-anchor-id="main-components">Main Components</h2>
+<p>When media is selected in the feature table within the media widget, you will be presented with the following actions:</p>
+<section id="linear-transform" class="level2">
+<h2 class="anchored" data-anchor-id="linear-transform">Linear Transform</h2>
+<p>A linear transform modifies pixel intensity values by applying a simple linear function:</p>
+<p><span class="math display">\[
+I_{out}(x, y) = \alpha \cdot I_{in}(x, y) + \beta
+\]</span></p>
 <ul>
-<li><p><strong>Media Window</strong><br>
-This is the main display area. All visual data and overlays will appear here.</p></li>
-<li><p><strong>Feature Table</strong><br>
-A table showing all available data streams. Each entry lists its name, type, and visibility.<br>
-Visibility can be toggled on or off.</p></li>
-<li><p><strong>Subwidgets</strong><br>
-Specialized panels for interacting with particular types of data. Only the relevant panel is active at a time, when selected.</p></li>
+<li><strong>Alpha (Contrast):</strong> Controls contrast. Values &gt;1 increase contrast, values between 0 and 1 decrease contrast.<br>
+</li>
+<li><strong>Beta (Brightness):</strong> Adjusts brightness by shifting all pixel values up or down.<br>
+</li>
+<li><strong>Minimum / Maximum:</strong> Sets intensity clipping or scaling boundaries. Pixels outside this range are clamped. This is often used for rescaling pixel intensities into a normalized display range.</li>
 </ul>
+<p><strong>Use case:</strong> Brightening dark images, increasing contrast, or standardizing pixel intensity ranges.</p>
 <hr>
 </section>
-<section id="supported-data-types" class="level2">
-<h2 class="anchored" data-anchor-id="supported-data-types">Supported Data Types</h2>
-<p>The widget supports multiple kinds of data. Each type has its own controls and visualization style.</p>
+<section id="gamma-correction" class="level2">
+<h2 class="anchored" data-anchor-id="gamma-correction">Gamma Correction</h2>
+<p>Gamma correction is a nonlinear intensity adjustment:</p>
+<p><span class="math display">\[
+I_{out}(x, y) = I_{in}(x, y)^\gamma
+\]</span></p>
+<ul>
+<li><strong>Gamma:</strong> The power-law exponent.
+<ul>
+<li><strong>γ &lt; 1:</strong> Brightens images (boosts darker regions).<br>
+</li>
+<li><strong>γ &gt; 1:</strong> Darkens images (suppresses bright regions).</li>
+</ul></li>
+</ul>
+<p>This compensates for human visual perception, which is more sensitive to relative changes in darker tones.</p>
+<p><strong>Use case:</strong> Making hidden details in dark or bright regions more visible.</p>
+<hr>
+</section>
+<section id="image-sharpening" class="level2">
+<h2 class="anchored" data-anchor-id="image-sharpening">Image Sharpening</h2>
+<p>Sharpening highlights edges by enhancing high-frequency details. This method uses an <strong>unsharp mask</strong>:</p>
+<p><span class="math display">\[
+I_{out} = I_{in} + \lambda \cdot (I_{in} - G_\sigma(I_{in}))
+\]</span></p>
+<p>Where <span class="math inline">\(G_\sigma\)</span> is a Gaussian blur applied with standard deviation σ.</p>
+<ul>
+<li><strong>Sigma:</strong> Controls the blur radius used before sharpening. Small values sharpen fine details; larger values enhance broader structures.</li>
+</ul>
+<p><strong>Use case:</strong> Highlighting boundaries, edges, and fine structures in images.</p>
+<hr>
+</section>
+<section id="clahe-contrast-limited-adaptive-histogram-equalization" class="level2">
+<h2 class="anchored" data-anchor-id="clahe-contrast-limited-adaptive-histogram-equalization">CLAHE (Contrast-Limited Adaptive Histogram Equalization)</h2>
+<p>CLAHE improves local contrast by redistributing pixel intensities based on local histograms. Unlike global histogram equalization, CLAHE works in small <strong>tiles</strong> (grid regions).</p>
+<ul>
+<li><strong>Clip Limit:</strong> Prevents noise amplification by limiting the contrast enhancement.<br>
+</li>
+<li><strong>Grid Size:</strong> Defines the size of the local regions used for histogram equalization.</li>
+</ul>
+<p><strong>Use case:</strong> Bringing out local details in images with varying illumination, e.g., microscopy or medical images.</p>
+<hr>
+</section>
+<section id="bilateral-filter" class="level2">
+<h2 class="anchored" data-anchor-id="bilateral-filter">Bilateral Filter</h2>
+<p>The bilateral filter smooths images while preserving edges. It considers both spatial proximity and intensity similarity:</p>
+<p><span class="math display">\[
+I_{out}(x, y) = \frac{1}{W} \sum_{i,j} G_s(||p-q||, d) \cdot G_r(|I(p)-I(q)|, \sigma_r) \cdot I(q)
+\]</span></p>
+<ul>
+<li><strong>Diameter:</strong> Size of the filter kernel (neighborhood).<br>
+</li>
+<li><strong>Color Sigma (σr):</strong> How much intensity differences are preserved; large values allow smoothing across intensity changes, small values preserve edges.<br>
+</li>
+<li><strong>Space Sigma (σs):</strong> How far pixels influence each other in space.</li>
+</ul>
+<p><strong>Use case:</strong> Noise reduction while keeping edges sharp (useful for video or structural microscopy data).</p>
+<hr>
+</section>
+<section id="median-filter" class="level2">
+<h2 class="anchored" data-anchor-id="median-filter">Median Filter</h2>
+<p>The median filter replaces each pixel with the <strong>median</strong> value of its neighborhood.</p>
+<ul>
+<li><strong>Kernel Size:</strong> Defines the neighborhood size. Larger kernels smooth more but may lose detail.</li>
+</ul>
+<p><strong>Use case:</strong> Removing salt-and-pepper noise or impulse noise.</p>
+<hr>
+</section>
+<section id="magic-eraser" class="level2">
+<h2 class="anchored" data-anchor-id="magic-eraser">Magic Eraser</h2>
+<p>The magic eraser provides an <strong>interactive editing tool</strong> for masking unwanted regions.</p>
+<ul>
+<li><strong>Brush Size:</strong> Size of the drawing tool when marking regions.<br>
+</li>
+<li><strong>Median Filter Size:</strong> Strength of smoothing applied to the mask.<br>
+</li>
+<li><strong>Start Drawing Button:</strong> Enables drawing mode inside the media viewer.<br>
+</li>
+<li><strong>Clear Mask Button:</strong> Resets the mask.</li>
+</ul>
+<p><strong>Use case:</strong> Manually erasing artifacts, covering distracting elements, or excluding regions from processing.</p>
+<hr>
+</section>
+<section id="colormap" class="level2">
+<h2 class="anchored" data-anchor-id="colormap">Colormap</h2>
+<p>A colormap maps grayscale intensity values to colors using a lookup table (LUT). This improves visibility and interpretation of data.</p>
+<ul>
+<li><strong>Lookup Table (LUT):</strong> Defines the mapping (e.g., Jet, Hot, Cool). Each intensity is assigned a unique color.<br>
+</li>
+<li><strong>Alpha (Blend):</strong> Controls transparency of the colormap overlay (0 = fully transparent, 1 = fully opaque).<br>
+</li>
+<li><strong>Normalize Checkbox:</strong> Rescales intensity values into a normalized range before applying the colormap, ensuring full use of the LUT range.</li>
+</ul>
+<p><strong>Use case:</strong> Enhancing interpretability of microscopy, behavior, or heatmap-like data.</p>
+<hr>
+</section>
+<section id="summary-table" class="level1">
+<h1>Summary Table</h1>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Data Type</th>
-<th>Description</th>
+<th>Processing Option</th>
+<th>Key Parameters</th>
+<th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong>Keypoints (Points)</strong></td>
-<td>Individual locations, e.g.&nbsp;positions of body parts.</td>
+<td>Linear Transform</td>
+<td>Alpha, Beta, Min, Max</td>
+<td>Contrast &amp; brightness adjustment</td>
 </tr>
 <tr class="even">
-<td><strong>Lines</strong></td>
-<td>Linear features, e.g.&nbsp;traces of movement or signals.</td>
+<td>Gamma Correction</td>
+<td>Gamma</td>
+<td>Nonlinear intensity adjustment</td>
 </tr>
 <tr class="odd">
-<td><strong>Masks</strong></td>
-<td>Regions of interest in an image or video frame.</td>
+<td>Sharpening</td>
+<td>Sigma</td>
+<td>Enhance edges and details</td>
 </tr>
 <tr class="even">
-<td><strong>Digital Intervals</strong></td>
-<td>Time periods when a signal or event is active.</td>
+<td>CLAHE</td>
+<td>Clip Limit, Grid Size</td>
+<td>Local contrast enhancement</td>
 </tr>
 <tr class="odd">
-<td><strong>Tensors</strong></td>
-<td>Multi-dimensional data, often from machine learning.</td>
+<td>Bilateral Filter</td>
+<td>Diameter, Color Sigma, Space Sigma</td>
+<td>Edge-preserving smoothing</td>
 </tr>
 <tr class="even">
-<td><strong>Media (Video/Images)</strong></td>
-<td>Raw recordings or still frames.</td>
+<td>Median Filter</td>
+<td>Kernel Size</td>
+<td>Noise removal</td>
 </tr>
 <tr class="odd">
-<td><strong>Text Overlays</strong></td>
-<td>Labels, annotations, or other text displayed on media.</td>
+<td>Magic Eraser</td>
+<td>Brush Size, Median Filter Size</td>
+<td>Manual region masking</td>
+</tr>
+<tr class="even">
+<td>Colormap</td>
+<td>LUT, Alpha, Normalize</td>
+<td>Visual interpretation</td>
 </tr>
 </tbody>
 </table>
 <hr>
-</section>
-<section id="feature-table" class="level2">
-<h2 class="anchored" data-anchor-id="feature-table">Feature Table</h2>
-<p>The feature table lists all available data sources.</p>
-<ul>
-<li><strong>Feature</strong> — the name of the data stream.<br>
-</li>
-<li><strong>Type</strong> — the category of the data (e.g.&nbsp;Mask, Point, Line).<br>
-</li>
-<li><strong>Enabled</strong> — whether the data is visible in the media window.</li>
-</ul>
-<p>Enabling a feature makes it visible in the media window; disabling it hides it.</p>
-<hr>
-</section>
-<section id="subwidgets" class="level2">
-<h2 class="anchored" data-anchor-id="subwidgets">Subwidgets</h2>
-<p>Each data type provides its own subwidget.</p>
-<ul>
-<li><strong>Point Widget</strong> — shows and manages keypoints.<br>
-</li>
-<li><strong>Line Widget</strong> — displays traces or line data.<br>
-</li>
-<li><strong>Mask Widget</strong> — handles binary masks or segmented regions.<br>
-</li>
-<li><strong>Interval Widget</strong> — manages time-based event data.<br>
-</li>
-<li><strong>Tensor Widget</strong> — provides tools for visualizing complex arrays.<br>
-</li>
-<li><strong>Text Widget</strong> — adds and edits text overlays.<br>
-</li>
-<li><strong>Processing Widget</strong> — applies filters or transformations to media.</li>
-</ul>
 
 
 </section>

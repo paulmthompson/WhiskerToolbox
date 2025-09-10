@@ -1,0 +1,140 @@
+---
+title: "Media Processing"
+format: html
+---
+
+The **Media Processing Widget** provides a collection of tools to adjust, enhance, and transform media data (images or video) within the viewer.\
+Each processing option can be enabled by checking the **Active** box, and its effect will be applied directly in the media viewer.
+
+This guide introduces each option, its background, and how to use each effectively.
+
+------------------------------------------------------------------------
+
+When media is selected in the feature table within the media widget, you will be presented with the following actions:
+
+## Linear Transform
+
+A linear transform modifies pixel intensity values by applying a simple linear function:
+
+$$
+I_{out}(x, y) = \alpha \cdot I_{in}(x, y) + \beta
+$$
+
+-   **Alpha (Contrast):** Controls contrast. Values \>1 increase contrast, values between 0 and 1 decrease contrast.\
+-   **Beta (Brightness):** Adjusts brightness by shifting all pixel values up or down.\
+-   **Minimum / Maximum:** Sets intensity clipping or scaling boundaries. Pixels outside this range are clamped. This is often used for rescaling pixel intensities into a normalized display range.
+
+**Use case:** Brightening dark images, increasing contrast, or standardizing pixel intensity ranges.
+
+------------------------------------------------------------------------
+
+## Gamma Correction
+
+Gamma correction is a nonlinear intensity adjustment:
+
+$$
+I_{out}(x, y) = I_{in}(x, y)^\gamma
+$$
+
+-   **Gamma:** The power-law exponent.
+    -   **γ \< 1:** Brightens images (boosts darker regions).\
+    -   **γ \> 1:** Darkens images (suppresses bright regions).
+
+This compensates for human visual perception, which is more sensitive to relative changes in darker tones.
+
+**Use case:** Making hidden details in dark or bright regions more visible.
+
+------------------------------------------------------------------------
+
+## Image Sharpening
+
+Sharpening highlights edges by enhancing high-frequency details. This method uses an **unsharp mask**:
+
+$$
+I_{out} = I_{in} + \lambda \cdot (I_{in} - G_\sigma(I_{in}))
+$$
+
+Where $G_\sigma$ is a Gaussian blur applied with standard deviation σ.
+
+-   **Sigma:** Controls the blur radius used before sharpening. Small values sharpen fine details; larger values enhance broader structures.
+
+**Use case:** Highlighting boundaries, edges, and fine structures in images.
+
+------------------------------------------------------------------------
+
+## CLAHE (Contrast-Limited Adaptive Histogram Equalization)
+
+CLAHE improves local contrast by redistributing pixel intensities based on local histograms. Unlike global histogram equalization, CLAHE works in small **tiles** (grid regions).
+
+-   **Clip Limit:** Prevents noise amplification by limiting the contrast enhancement.\
+-   **Grid Size:** Defines the size of the local regions used for histogram equalization.
+
+**Use case:** Bringing out local details in images with varying illumination, e.g., microscopy or medical images.
+
+------------------------------------------------------------------------
+
+## Bilateral Filter
+
+The bilateral filter smooths images while preserving edges. It considers both spatial proximity and intensity similarity:
+
+$$
+I_{filtered}(x) = \frac{1}{W_p} \sum_{x_i \epsilon \Omega} I(X_i) \cdot f_r(||I(x_i)-I(x)||) \cdot g_s(||x_i - x||)
+$$
+
+-   **Diameter:** Size of the filter kernel (neighborhood).\
+-   **Color Sigma (σr):** How much intensity differences are preserved; large values allow smoothing across intensity changes, small values preserve edges.\
+-   **Space Sigma (σs):** How far pixels influence each other in space.
+
+**Use case:** Noise reduction while keeping edges sharp (useful for video or structural microscopy data).
+
+------------------------------------------------------------------------
+
+## Median Filter
+
+The median filter replaces each pixel with the **median** value of its neighborhood.
+
+-   **Kernel Size:** Defines the neighborhood size. Larger kernels smooth more but may lose detail.
+
+**Use case:** Removing salt-and-pepper noise or impulse noise.
+
+------------------------------------------------------------------------
+
+## Magic Eraser
+
+The magic eraser provides an **interactive editing tool** for masking unwanted regions.
+
+-   **Brush Size:** Size of the drawing tool when marking regions.\
+-   **Median Filter Size:** Strength of smoothing applied to the mask.\
+-   **Start Drawing Button:** Enables drawing mode inside the media viewer.\
+-   **Clear Mask Button:** Resets the mask.
+
+**Use case:** Manually erasing artifacts, covering distracting elements, or excluding regions from processing.
+
+------------------------------------------------------------------------
+
+## Colormap
+
+A colormap maps grayscale intensity values to colors using a lookup table (LUT). This improves visibility and interpretation of data.
+
+-   **Lookup Table (LUT):** Defines the mapping (e.g., Jet, Hot, Cool). Each intensity is assigned a unique color.\
+-   **Alpha (Blend):** Controls transparency of the colormap overlay (0 = fully transparent, 1 = fully opaque).\
+-   **Normalize Checkbox:** Rescales intensity values into a normalized range before applying the colormap, ensuring full use of the LUT range.
+
+**Use case:** Enhancing interpretability of microscopy, behavior, or heatmap-like data.
+
+------------------------------------------------------------------------
+
+# Summary Table
+
+| Processing Option | Key Parameters | Purpose |
+|------------------------|------------------------|------------------------|
+| Linear Transform | Alpha, Beta, Min, Max | Contrast & brightness adjustment |
+| Gamma Correction | Gamma | Nonlinear intensity adjustment |
+| Sharpening | Sigma | Enhance edges and details |
+| CLAHE | Clip Limit, Grid Size | Local contrast enhancement |
+| Bilateral Filter | Diameter, Color Sigma, Space Sigma | Edge-preserving smoothing |
+| Median Filter | Kernel Size | Noise removal |
+| Magic Eraser | Brush Size, Median Filter Size | Manual region masking |
+| Colormap | LUT, Alpha, Normalize | Visual interpretation |
+
+------------------------------------------------------------------------

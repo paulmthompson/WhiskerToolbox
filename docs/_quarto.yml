@@ -74,6 +74,15 @@ website:
             - user_guide/data_loading/Video_Loading.qmd
             - user_guide/data_loading/Line_Loading.qmd
             - user_guide/data_loading/Tensor_Loading.qmd
+        - section: "Media Viewer"
+          contents:
+            - user_guide/media_viewer/overview.qmd
+            - user_guide/media_viewer/process.qmd
+            - user_guide/media_viewer/points.qmd
+            - user_guide/media_viewer/masks.qmd
+            - user_guide/media_viewer/intervals.qmd
+            - user_guide/media_viewer/lines.qmd
+            - user_guide/media_viewer/tensors.qmd
         - section: "Image Processing"
           href: user_guide/image_processing/index.qmd
           contents:
@@ -85,9 +94,6 @@ website:
         - section: "Data Viewer"
           contents:
             - user_guide/data_viewer/overview.qmd
-        - section: "Media Viewer"
-          contents:
-            - user_guide/media_viewer/overview.qmd
         - section: "Data Manager"
           contents:
             - user_guide/data_manager/overview.qmd
