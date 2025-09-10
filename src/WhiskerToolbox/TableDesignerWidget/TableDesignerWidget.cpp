@@ -1470,8 +1470,11 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
         int64_t offset = static_cast<int64_t>(err.offset);
         int line = 1;
         int col = 1;
-        for (int64_t i = 0; i < offset && i < bytes.size(); ++i) {
-            if (bytes[i] == '\n') { ++line; col = 1; }
+        // Avoid operator[] ambiguity on some compilers by using qsizetype and at()
+        qsizetype len = std::min<qsizetype>(bytes.size(), static_cast<qsizetype>(offset));
+        for (qsizetype i = 0; i < len; ++i) {
+            char ch = bytes.at(i);
+            if (ch == '\n') { ++line; col = 1; }
             else { ++col; }
         }
         QString detail = err.error != QJsonParseError::NoError

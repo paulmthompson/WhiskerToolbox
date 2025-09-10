@@ -41,7 +41,7 @@ class GroupManager;
  * @tparam RowIndicatorType The type used for row indicators (e.g., int, TimeFrameIndex)
  */
 template<typename CoordType, typename RowIndicatorType>
-class GenericPointVisualization : protected QOpenGLFunctions_4_1_Core {
+struct GenericPointVisualization : protected QOpenGLFunctions_4_1_Core {
 public:
     std::unique_ptr<QuadTree<RowIndicatorType>> m_spatial_index;
     std::vector<float> m_vertex_data;// Format: x, y, group_id per vertex (3 floats per point)
