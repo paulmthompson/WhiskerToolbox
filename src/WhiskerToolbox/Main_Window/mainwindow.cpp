@@ -43,6 +43,7 @@
 #include <QListWidget>
 #include <QTableWidget>
 #include <QTreeWidget>
+#include <QShortcut>
 
 #include <QElapsedTimer>
 #include <QTimer>
@@ -136,6 +137,30 @@ void MainWindow::_createActions() {
     connect(ui->actionAnalysis_Dashboard, &QAction::triggered, this, &MainWindow::openAnalysisDashboard);
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
+
+    // Zoom actions (custom handling)
+    if (ui->actionZoom_In && ui->media_widget) {
+        ui->actionZoom_In->setShortcuts({}); // clear
+        ui->actionZoom_In->setShortcut(QKeySequence());
+        // Explicit shortcuts below; set text AFTER clearing to force display
+        ui->actionZoom_In->setText("Zoom In\tCtrl+");
+        connect(ui->actionZoom_In, &QAction::triggered, this, [this]() { ui->media_widget->zoomIn(); });
+        auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus), this); // Ctrl++ (numpad or main with shift)
+        s1->setContext(Qt::ApplicationShortcut);
+        connect(s1, &QShortcut::activated, this, [this]() { ui->media_widget->zoomIn(); });
+        auto * s2 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Equal), this); // Ctrl+= (produces '+')
+        s2->setContext(Qt::ApplicationShortcut);
+        connect(s2, &QShortcut::activated, this, [this]() { ui->media_widget->zoomIn(); });
+    }
+    if (ui->actionZoom_Out && ui->media_widget) {
+        ui->actionZoom_Out->setShortcuts({});
+        ui->actionZoom_Out->setShortcut(QKeySequence());
+        ui->actionZoom_Out->setText("Zoom Out\tCtrl-");
+        connect(ui->actionZoom_Out, &QAction::triggered, this, [this]() { ui->media_widget->zoomOut(); });
+        auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Minus), this);
+        s1->setContext(Qt::ApplicationShortcut);
+        connect(s1, &QShortcut::activated, this, [this]() { ui->media_widget->zoomOut(); });
+    }
 }
 
 /*
@@ -649,8 +674,8 @@ void MainWindow::openDataTransforms() {
 
         dt_widget->setObjectName(key);
 
-        // Set explicit minimum size constraints
-        dt_widget->setMinimumSize(250, 400);
+        // Set explicit minimum size constraints - increased for better visibility
+        dt_widget->setMinimumSize(350, 700);
         dt_widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 
         // Create dock widget with appropriate settings

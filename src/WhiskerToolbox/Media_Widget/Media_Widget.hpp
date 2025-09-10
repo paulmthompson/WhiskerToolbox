@@ -38,8 +38,14 @@ public:
     // Method to handle time changes and propagate them
     void LoadFrame(int frame_id);
 
+    // Zoom API used by MainWindow actions
+    void zoomIn();
+    void zoomOut();
+    void resetZoom();
+
 protected:
     void resizeEvent(QResizeEvent * event) override;
+    bool eventFilter(QObject * watched, QEvent * event) override; // intercept wheel events for zoom
 
 private:
     Ui::Media_Widget * ui;
@@ -53,6 +59,15 @@ private:
     
     // Processing widget for colormap options
     MediaProcessing_Widget * _processing_widget = nullptr;
+
+    // Zoom state
+    double _current_zoom {1.0};
+    bool _user_zoom_active {false};
+    double _zoom_step {1.15}; // multiplicative step per wheel/action
+    double _min_zoom {0.1};
+    double _max_zoom {20.0};
+
+    void _applyZoom(double factor, bool anchor_under_mouse);
 
     void _createOptions();
     void _createMediaWindow();

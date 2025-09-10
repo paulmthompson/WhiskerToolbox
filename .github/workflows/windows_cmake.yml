@@ -48,7 +48,7 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: '10b7a178346f3f0abef60cecd5130e295afd8da4' #2024.10.21
+          vcpkgGitCommitId: 'b02e341c927f16d991edbd915d8ea43eac52096c' #2025.03.19 needed for libffi fix
 
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows' && matrix.compiler == 'msvc'

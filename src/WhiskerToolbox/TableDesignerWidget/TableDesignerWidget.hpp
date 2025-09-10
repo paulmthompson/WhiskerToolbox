@@ -28,6 +28,7 @@ class TableInfoWidget;
 class Section;
 class TableTransformWidget;
 class TableExportWidget;
+class TableJSONWidget;
 
 namespace Ui {
 class TableDesignerWidget;
@@ -160,6 +161,8 @@ private:
     Section * _table_transform_section = nullptr;
     TableExportWidget * _table_export_widget = nullptr;
     Section * _table_export_section = nullptr;
+    TableJSONWidget * _table_json_widget = nullptr;
+    Section * _table_json_section = nullptr;
     
     // Preview support
     TableViewerWidget * _table_viewer = nullptr;
@@ -240,6 +243,9 @@ private:
     std::vector<std::string> parseCommaSeparatedList(QString const & text) const;
     QString promptSaveCsvFilename() const;
     bool addColumnToBuilder(TableViewBuilder & builder, ColumnInfo const & column_info);
+    void setJsonTemplateFromCurrentState();
+    void applyJsonTemplateToUI(QString const & jsonText);
+    friend class TableDesignerWidgetJSONTestAccessor; // test helper
    
 };
 

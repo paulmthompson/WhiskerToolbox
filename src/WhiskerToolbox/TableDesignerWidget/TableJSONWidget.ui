@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TableJSONWidget</class>
+ <widget class="QWidget" name="TableJSONWidget">
+  <layout class="QVBoxLayout" name="main_layout">
+   <item>
+    <layout class="QHBoxLayout" name="buttons_row">
+     <item>
+      <widget class="QPushButton" name="load_json_btn">
+       <property name="text">
+        <string>Load JSON...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="save_json_btn">
+       <property name="text">
+        <string>Save JSON...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="apply_json_btn">
+       <property name="text">
+        <string>Update Table</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTextEdit" name="json_text_edit">
+     <property name="placeholderText">
+      <string>{
+  &quot;tables&quot;: [
+    {
+      &quot;table_id&quot;: &quot;example&quot;,
+      &quot;name&quot;: &quot;Example Table&quot;,
+      &quot;row_selector&quot;: { &quot;type&quot;: &quot;interval&quot;, &quot;source&quot;: &quot;BehaviorPeriods&quot; },
+      &quot;columns&quot;: []
+    }
+  ]
+}
+</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
+
+

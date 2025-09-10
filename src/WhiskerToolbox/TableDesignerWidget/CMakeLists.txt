@@ -17,6 +17,9 @@ add_library(TableDesignerWidget STATIC
     TableExportWidget.hpp
     TableExportWidget.cpp
     TableExportWidget.ui
+    TableJSONWidget.hpp
+    TableJSONWidget.cpp
+    TableJSONWidget.ui
 )
 
 # Link Qt6 and other dependencies

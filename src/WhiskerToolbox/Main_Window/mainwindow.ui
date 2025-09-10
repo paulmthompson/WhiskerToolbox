@@ -86,6 +86,8 @@
      <string>Image</string>
     </property>
     <addaction name="actionTake_Snapshot"/>
+    <addaction name="actionZoom_In"/>
+    <addaction name="actionZoom_Out"/>
    </widget>
    <widget class="QMenu" name="menuModules">
     <property name="title">
@@ -113,6 +115,16 @@
   <action name="actionTake_Snapshot">
    <property name="text">
     <string>Take Snapshot</string>
+   </property>
+  </action>
+  <action name="actionZoom_In">
+   <property name="text">
+    <string>Zoom In</string>
+   </property>
+  </action>
+  <action name="actionZoom_Out">
+   <property name="text">
+    <string>Zoom Out</string>
    </property>
   </action>
   <action name="actionWhisker_Tracking">
