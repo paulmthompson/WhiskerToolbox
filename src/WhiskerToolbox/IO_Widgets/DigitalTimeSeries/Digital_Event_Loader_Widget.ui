@@ -92,7 +92,7 @@
   <customwidget>
    <class>CSVDigitalEventLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.hpp</header>
+   <header>DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

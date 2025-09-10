@@ -3,7 +3,9 @@
 #include "ui_ColorPicker_Widget.h"
 
 #include "../DataManager/utils/color.hpp"
+
 #include <QColorDialog>
+
 #include <iostream>
 
 ColorPicker_Widget::ColorPicker_Widget(QWidget* parent)

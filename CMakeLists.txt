@@ -19,6 +19,8 @@ option(ENABLE_OPENCV "Enable OpenCV support for image mask loading/saving" ON)
 
 option(ENABLE_UI "Enable UI" ON)
 
+option(ENABLE_BENCHMARK "Enable benchmark support" OFF)
+
 # Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")
 if(ENABLE_CAPNPROTO)

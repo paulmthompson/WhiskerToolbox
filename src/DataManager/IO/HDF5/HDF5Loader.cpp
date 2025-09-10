@@ -109,11 +109,11 @@ LoadResult HDF5Loader::loadMaskData(
         }
         
         // Extract image size from config if available
-        if (config.contains("image_width")) {
-            raw_data.image_width = config["image_width"].get<uint32_t>();
+        if (config.contains("width")) {
+            raw_data.image_width = config["width"].get<uint32_t>();
         }
-        if (config.contains("image_height")) {
-            raw_data.image_height = config["image_height"].get<uint32_t>();
+        if (config.contains("height")) {
+            raw_data.image_height = config["height"].get<uint32_t>();
         }
         
         // Create MaskData using factory

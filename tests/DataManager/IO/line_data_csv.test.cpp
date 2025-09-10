@@ -108,7 +108,9 @@ protected:
     "delimiter": ",",
     "coordinate_delimiter": ",",
     "has_header": true,
-    "header_identifier": "Frame"
+    "header_identifier": "Frame",
+    "image_height": 600,
+    "image_width": 800
 }
 ])";
     }
@@ -171,8 +173,8 @@ protected:
         }
         
         // Check image size
-        //REQUIRE(original_line_data->getImageSize().width == loaded_data.getImageSize().width);
-        //REQUIRE(original_line_data->getImageSize().height == loaded_data.getImageSize().height);
+        REQUIRE(original_line_data->getImageSize().width == loaded_data.getImageSize().width);
+        REQUIRE(original_line_data->getImageSize().height == loaded_data.getImageSize().height);
     }
 
 protected:
@@ -182,7 +184,7 @@ protected:
     std::shared_ptr<LineData> original_line_data;
 };
 
-TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV save and load through direct functions", "[LineData][CSV][IO]") {
+TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save and load through direct functions", "[LineData][CSV][IO]") {
     
     SECTION("Save LineData to CSV format") {
         bool save_success = saveCSVLineData();
@@ -207,12 +209,13 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV save and load thro
         auto loaded_line_data = std::make_shared<LineData>(line_map);
         REQUIRE(loaded_line_data != nullptr);
         
-        // Verify the loaded data matches the original
+        // We set the size outside of the loader function
+        loaded_line_data->setImageSize(ImageSize(800, 600));
         verifyLineDataEquality(*loaded_line_data);
     }
 }
 
-TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV load through DataManager JSON config", "[LineData][CSV][IO][DataManager]") {
+TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV load through DataManager JSON config", "[LineData][CSV][IO][DataManager]") {
     
     SECTION("Load CSV LineData through DataManager") {
         // First save the data
@@ -284,7 +287,7 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV load through DataM
     }
 }
 
-TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV save/load through LoaderRegistry", "[LineData][CSV][IO][LoaderRegistry]") {
+TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save/load through LoaderRegistry", "[LineData][CSV][IO][LoaderRegistry]") {
     
     SECTION("Save LineData through LoaderRegistry") {
         // Create DataManager (which triggers loader registration)
@@ -340,7 +343,9 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - LineData - CSV save/load through 
         config["coordinate_delimiter"] = ",";
         config["has_header"] = true;
         config["header_identifier"] = "Frame";
-        
+        config["image_height"] = 600;
+        config["image_width"] = 800;
+
         ConcreteDataFactory factory;
         auto load_result = registry.tryLoad("csv", 
                                           IODataType::Line, 

@@ -49,24 +49,31 @@ add_executable(test_data_manager
 
         ${DATAMANAGER_TEST_SOURCES_TEMP}
 
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_filter.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_hilbert_phase.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/AnalogFilter/analog_filter.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.test.cpp
+        
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.test.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Alignment/line_alignment.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Angle/line_angle.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Clip/line_clip.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Curvature/line_curvature.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Point_Extraction/line_point_extraction.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Resample/line_resample.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Subsegment/line_subsegment.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/DigitalIntervalSeries/digital_interval_group.test.cpp
-
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_angle.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_min_point_dist.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/line_alignment.test.cpp
-
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_area.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_centroid.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_connected_component.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_hole_filling.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_median_filter.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/mask_principal_axis.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Area/mask_area.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Centroid/mask_centroid.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Connected_Component/mask_connected_component.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Hole_Filling/mask_hole_filling.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Median_Filter/mask_median_filter.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Principal_Axis/mask_principal_axis.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Skeletonize/mask_skeletonize.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_To_Line/mask_to_line.test.cpp
 
         # IO tests
         IO/line_data_csv.test.cpp
@@ -95,6 +102,10 @@ if(ENABLE_OPENCV)
     target_sources(test_data_manager PRIVATE IO/mask_data_image.test.cpp)
     target_link_libraries(test_data_manager PRIVATE DataManagerOpenCV)
     target_compile_definitions(test_data_manager PUBLIC ENABLE_OPENCV)
+endif()
+
+if(ENABLE_BENCHMARK)
+    target_sources(test_data_manager PRIVATE ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Alignment/line_alignment.benchmark.cpp)
 endif()
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)

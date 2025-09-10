@@ -11,6 +11,7 @@
 #include <QContextMenuEvent>
 #include <QDebug>
 #include <QMenu>
+#include <QSurfaceFormat>
 
 #include <algorithm>
 #include <limits>
@@ -23,6 +24,13 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     : BasePlotOpenGLWidget(parent),
       _data_bounds_valid(false),
       _data_bounds({0.0f, 0.0f, 0.0f, 0.0f}) {
+
+    // Ensure we request a 4.3 Core context for compute shaders on Windows
+    QSurfaceFormat fmt = format();
+    fmt.setVersion(4, 3);
+    fmt.setProfile(QSurfaceFormat::CoreProfile);
+    fmt.setSamples(getRequiredSamples());
+    setFormat(fmt);
 
     initializeContextMenu();
 

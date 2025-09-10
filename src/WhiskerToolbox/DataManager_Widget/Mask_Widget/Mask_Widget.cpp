@@ -384,7 +384,7 @@ void Mask_Widget::selectPoint(float const x, float const y) {
         return;
     }
 
-    auto processed_frame_data = media->getProcessedData(current_time);
+    auto processed_frame_data = media->getProcessedData8(current_time);
     if (processed_frame_data.empty()) {
         std::cerr << "Mask_Widget: Processed frame data is empty." << std::endl;
         return;

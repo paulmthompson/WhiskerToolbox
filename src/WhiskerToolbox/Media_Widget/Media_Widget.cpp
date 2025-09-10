@@ -28,7 +28,7 @@
 #include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
 #include "Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
 #include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
-#include "Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.hpp"
+#include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 #include "Media_Window/Media_Window.hpp"
 
 
@@ -103,7 +103,7 @@ Media_Widget::~Media_Widget() {
 
 void Media_Widget::updateMedia() {
 
-    ui->graphicsView->setScene(_scene);
+    ui->graphicsView->setScene(_scene.get());
     ui->graphicsView->show();
 
     _updateCanvasSize();
@@ -112,17 +112,24 @@ void Media_Widget::updateMedia() {
 void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = std::move(data_manager);
 
+    // Create the Media_Window now that we have a DataManager
+    _createMediaWindow();
+    _createOptions();
+
     ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
     ui->feature_table_widget->setTypeFilter({DM_DataType::Line, DM_DataType::Mask, DM_DataType::Points, DM_DataType::DigitalInterval, DM_DataType::Tensor, DM_DataType::Video, DM_DataType::Images});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
 
-    ui->stackedWidget->addWidget(new MediaPoint_Widget(_data_manager, _scene));
-    ui->stackedWidget->addWidget(new MediaLine_Widget(_data_manager, _scene));
-    ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene));
-    ui->stackedWidget->addWidget(new MediaInterval_Widget(_data_manager, _scene));
-    ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene));
-    ui->stackedWidget->addWidget(new MediaProcessing_Widget(_data_manager, _scene));
+    ui->stackedWidget->addWidget(new MediaPoint_Widget(_data_manager, _scene.get()));
+    ui->stackedWidget->addWidget(new MediaLine_Widget(_data_manager, _scene.get()));
+    ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene.get()));
+    ui->stackedWidget->addWidget(new MediaInterval_Widget(_data_manager, _scene.get()));
+    ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene.get()));
+    
+    // Create and store reference to MediaProcessing_Widget
+    _processing_widget = new MediaProcessing_Widget(_data_manager, _scene.get());
+    ui->stackedWidget->addWidget(_processing_widget);
 
     // Connect text widget to scene if both are available
     _connectTextWidgetToScene();
@@ -153,61 +160,71 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 }
 
 void Media_Widget::_createOptions() {
+
+    //Setup Media Data
+    auto media_keys = _data_manager->getKeys<MediaData>();
+    for (auto media_key: media_keys) {
+        auto opts = _scene.get()->getMediaConfig(media_key);
+        if (opts.has_value()) continue;
+
+        _scene.get()->addMediaDataToScene(media_key);
+    }
+
     // Setup line data
     auto line_keys = _data_manager->getKeys<LineData>();
     for (auto line_key: line_keys) {
-        auto opts = _scene->getLineConfig(line_key);
+        auto opts = _scene.get()->getLineConfig(line_key);
         if (opts.has_value()) continue;
 
-        _scene->addLineDataToScene(line_key);
+        _scene.get()->addLineDataToScene(line_key);
     }
 
     // Setup mask data
     auto mask_keys = _data_manager->getKeys<MaskData>();
     for (auto mask_key: mask_keys) {
-        auto opts = _scene->getMaskConfig(mask_key);
+        auto opts = _scene.get()->getMaskConfig(mask_key);
         if (opts.has_value()) continue;
 
-        _scene->addMaskDataToScene(mask_key);
+        _scene.get()->addMaskDataToScene(mask_key);
     }
 
     // Setup point data
     auto point_keys = _data_manager->getKeys<PointData>();
     for (auto point_key: point_keys) {
-        auto opts = _scene->getPointConfig(point_key);
+        auto opts = _scene.get()->getPointConfig(point_key);
         if (opts.has_value()) continue;
 
-        _scene->addPointDataToScene(point_key);
+        _scene.get()->addPointDataToScene(point_key);
     }
 
     // Setup digital interval data
     auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
     for (auto interval_key: interval_keys) {
-        auto opts = _scene->getIntervalConfig(interval_key);
+        auto opts = _scene.get()->getIntervalConfig(interval_key);
         if (opts.has_value()) continue;
 
-        _scene->addDigitalIntervalSeries(interval_key);
+        _scene.get()->addDigitalIntervalSeries(interval_key);
     }
 
     // Setup tensor data
     auto tensor_keys = _data_manager->getKeys<TensorData>();
     for (auto tensor_key: tensor_keys) {
-        auto opts = _scene->getTensorConfig(tensor_key);
+        auto opts = _scene.get()->getTensorConfig(tensor_key);
         if (opts.has_value()) continue;
 
-        _scene->addTensorDataToScene(tensor_key);
+        _scene.get()->addTensorDataToScene(tensor_key);
     }
 }
 
 void Media_Widget::_connectTextWidgetToScene() {
     if (_scene && _text_widget) {
-        _scene->setTextWidget(_text_widget);
+        _scene.get()->setTextWidget(_text_widget);
 
         // Connect text widget signals to update canvas when overlays change
-        connect(_text_widget, &MediaText_Widget::textOverlayAdded, _scene, &Media_Window::UpdateCanvas);
-        connect(_text_widget, &MediaText_Widget::textOverlayRemoved, _scene, &Media_Window::UpdateCanvas);
-        connect(_text_widget, &MediaText_Widget::textOverlayUpdated, _scene, &Media_Window::UpdateCanvas);
-        connect(_text_widget, &MediaText_Widget::textOverlaysCleared, _scene, &Media_Window::UpdateCanvas);
+        connect(_text_widget, &MediaText_Widget::textOverlayAdded, _scene.get(), &Media_Window::UpdateCanvas);
+        connect(_text_widget, &MediaText_Widget::textOverlayRemoved, _scene.get(), &Media_Window::UpdateCanvas);
+        connect(_text_widget, &MediaText_Widget::textOverlayUpdated, _scene.get(), &Media_Window::UpdateCanvas);
+        connect(_text_widget, &MediaText_Widget::textOverlaysCleared, _scene.get(), &Media_Window::UpdateCanvas);
     }
 }
 
@@ -259,12 +276,19 @@ void Media_Widget::_featureSelected(QString const & feature) {
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
+        
+        // Do NOT set as active media key or update canvas - only show controls for configuration
+        // The media will only be displayed when it's enabled via the checkbox
+        
     } else if (type == DM_DataType::Images) {
         int const stacked_widget_index = 6;
 
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
+        
+        // Do NOT set as active media key or update canvas - only show controls for configuration
+        // The media will only be displayed when it's enabled via the checkbox
     } else {
         ui->stackedWidget->setCurrentIndex(0);
         std::cout << "Unsupported feature type" << std::endl;
@@ -291,7 +315,7 @@ void Media_Widget::_updateCanvasSize() {
 
         _scene->setCanvasSize(
                 ImageSize{width, height});
-        _scene->UpdateCanvas();
+        _scene.get()->UpdateCanvas();
 
         // Ensure the view fits the scene properly
         ui->graphicsView->setSceneRect(0, 0, width, height);
@@ -321,7 +345,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     auto const type = _data_manager->getType(feature_key);
 
     if (type == DM_DataType::Line) {
-        auto opts = _scene->getLineConfig(feature_key);
+        auto opts = _scene.get()->getLineConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -331,7 +355,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         }
         opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::Mask) {
-        auto opts = _scene->getMaskConfig(feature_key);
+        auto opts = _scene.get()->getMaskConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -341,7 +365,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         }
         opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::Points) {
-        auto opts = _scene->getPointConfig(feature_key);
+        auto opts = _scene.get()->getPointConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -351,7 +375,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         }
         opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::DigitalInterval) {
-        auto opts = _scene->getIntervalConfig(feature_key);
+        auto opts = _scene.get()->getIntervalConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -361,7 +385,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         }
         opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::Tensor) {
-        auto opts = _scene->getTensorConfig(feature_key);
+        auto opts = _scene.get()->getTensorConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -369,13 +393,45 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        opts.value()->is_visible = enabled;
+
+        if (enabled) {
+            std::cout << "Enabling tensor data in scene" << std::endl;
+            opts.value()->is_visible = true;
+        } else {
+            std::cout << "Disabling tensor data from scene" << std::endl;
+            opts.value()->is_visible = false;
+        }
+    } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
+        auto opts = _scene.get()->getMediaConfig(feature_key);
+        if (!opts.has_value()) {
+            std::cerr << "Table feature key "
+                      << feature_key
+                      << " not found in Media_Window Display Options"
+                      << std::endl;
+            return;
+        }
+        if (enabled) {
+            std::cout << "Enabling media data in scene" << std::endl;
+            opts.value()->is_visible = true;
+
+            // This ensures new media is loaded from disk
+            // Before the update
+            auto current_time = _data_manager->getCurrentTime();
+            LoadFrame(current_time);
+
+        } else {
+            std::cout << "Disabling media data from scene" << std::endl;
+            opts.value()->is_visible = false;
+        }
     }
-    _scene->UpdateCanvas();
+    else {
+        std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
+    }
+    _scene.get()->UpdateCanvas();
 
     if (enabled) {
         _callback_ids[feature_key].push_back(_data_manager->addCallbackToData(feature_key, [this]() {
-            _scene->UpdateCanvas();
+            _scene.get()->UpdateCanvas();
         }));
     } else {
         for (auto callback_id: _callback_ids[feature_key]) {
@@ -389,39 +445,39 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
     auto const type = _data_manager->getType(feature);
 
     if (type == DM_DataType::Line) {
-        auto opts = _scene->getLineConfig(feature);
+        auto opts = _scene.get()->getLineConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     } else if (type == DM_DataType::Mask) {
-        auto opts = _scene->getMaskConfig(feature);
+        auto opts = _scene.get()->getMaskConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     } else if (type == DM_DataType::Points) {
-        auto opts = _scene->getPointConfig(feature);
+        auto opts = _scene.get()->getPointConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     } else if (type == DM_DataType::DigitalInterval) {
-        auto opts = _scene->getIntervalConfig(feature);
+        auto opts = _scene.get()->getIntervalConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     } else if (type == DM_DataType::Tensor) {
-        auto opts = _scene->getTensorConfig(feature);
+        auto opts = _scene.get()->getTensorConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     }
 
     // Update the canvas with the new color
-    _scene->UpdateCanvas();
+    _scene.get()->UpdateCanvas();
 }
 
 void Media_Widget::LoadFrame(int frame_id) {
     if (_scene) {
-        _scene->LoadFrame(frame_id);
+        _scene.get()->LoadFrame(frame_id);
     }
     int currentIndex = ui->stackedWidget->currentIndex();
     if (currentIndex > 0) {
@@ -472,4 +528,15 @@ bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
         return true;
     }
     return QWidget::eventFilter(watched, event);
+}
+
+void Media_Widget::_createMediaWindow() {
+    if (_data_manager) {
+        _scene = std::make_unique<Media_Window>(_data_manager, this);
+        
+        // Set parent widget reference for accessing enabled media keys
+        _scene->setParentWidget(this);
+        
+        _connectTextWidgetToScene();
+    }
 }

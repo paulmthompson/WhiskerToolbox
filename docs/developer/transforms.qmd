@@ -1,0 +1,34 @@
+---
+title: "transforms"
+format: html
+---
+
+# Transform Catalog
+
+The below table has all of the transformations currently available in the Data Transform widget. Each transform should have a test.cpp file (Column 2). The test.cpp file should include tests to make sure it can be populated by a JSON template (e.g. it can be run by loading data with a JSON file). Some transforms will "just work" because they are parameterless, but transforms with parameters will need to have them also described with a JSON link and put in the transform parameter factory. Documentation for users should be provided to describe the algorithm and its uses. Finally, a benchmark.cpp file should be created and placed in the same directory.
+
+| Transform Name | Has .test.cpp? | JSON-based Test? | Parameters in ParameterFactory? | User Docs Exist? | Has benchmark.cpp? | Benchmark Results |
+|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+| Calculate Mask Centroid | Yes | Yes | Yes | Yes |  |  |
+| Convert Mask to Line | Yes | Yes | Yes | No | No |  |
+| Skeletonize Mask | Yes | Yes | Yes | No | No |  |
+| Remove Small Connected Components | Yes | Yes | Yes | Yes | No |  |
+| Apply Median Filter | Yes | Yes | Yes | No | No |  |
+| Calculate Area | Yes | Yes | Yes | Yes | No |  |
+| Fill Mask Holes | Yes | Yes | Yes | Yes | No |  |
+| Calculate Mask Principal Axis | Yes | Yes | Yes | No | No |  |
+| Whisker Tracing | No | N/A | No | No | No |  |
+| Clip Line by Reference Line | Yes | Yes | Yes | Yes | No |  |
+| Line Alignment to Bright Features | Yes | Yes | Yes | No | Yes | 10 images in 2ms |
+| Calculate Line to Point Distance | Yes | Yes | Yes | Yes | No |  |
+| Resample Line | Yes | Yes | Yes | Yes | No |  |
+| Extract Line Subsegment | Yes | Yes | Yes | Yes | No |  |
+| Calculate Line Angle | Yes | Yes | Yes | Yes | No |  |
+| Calculate Line Curvature | Yes | Yes | Yes | Yes | No |  |
+| Extract Point from Line | Yes | Yes | Yes | Yes | No |  |
+| Filter | Yes | No | No | No | No |  |
+| Hilbert Phase | Yes | Yes | Yes | Yes | No |  |
+| Threshold Event Detection | Yes | Yes | Yes | Yes | No |  |
+| Threshold Interval Detection | Yes | Yes | Yes | Yes | No |  |
+| Scale and Normalize | Yes | Yes | Yes | No | No |  |
+| Group Intervals | Yes | Yes | Yes | Yes | No |  |

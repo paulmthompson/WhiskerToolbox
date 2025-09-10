@@ -47,7 +47,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         if: runner.os == 'macOS'
         with:
-          vcpkgGitCommitId: '10b7a178346f3f0abef60cecd5130e295afd8da4' #2024.10.21
+          vcpkgGitCommitId: 'b02e341c927f16d991edbd915d8ea43eac52096c' #2025.03.19 needed for libffi
 
       - name: Set up Homebrew
         id: set-up-homebrew
@@ -184,6 +184,12 @@ jobs:
         with:
           name: cpack-artifact
           path: ${{ env.ARTIFACT_PATH }}
+
+      - name: Check logs for libffi
+        if: failure()
+        run:
+          cat /Users/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg/buildtrees/libffi/build-arm64-osx-dbg-out.log |
+          cat /Users/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg/buildtrees/libffi/build-arm64-osx-dbg-err.log
 
       - name: Save vcpkg cache
         if: always()

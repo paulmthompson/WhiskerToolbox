@@ -2,7 +2,6 @@
 #define MASKSKELETONIZE_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Masks/mask_skeletonize.hpp"
 
 namespace Ui { class MaskSkeletonize_Widget; }
 

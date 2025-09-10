@@ -1,0 +1,131 @@
+---
+title: "Skeletonize Mask"
+format: html
+---
+
+## Overview
+
+This transform reduces a binary mask to a single-pixel-wide representation, preserving the essential structure of the shape.
+
+### Detailed Description
+
+This [Data Transform Operation] uses an algorithm to find the "skeleton" of a mask. The skeleton is a thinned version of the original shape that is equidistant from its boundaries. This process is useful for simplifying complex shapes into a more straightforward representation, like converting a blob into a line or a set of lines. This operation is parameter-free.
+
+The skeletonization process is applied to each time frame of the mask data independently.
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage.morphology import skeletonize
+from skimage.draw import rectangle, ellipse
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Create the plots ---
+    fig, axes = plt.subplots(3, 2, figsize=(10, 15))
+    fig.suptitle('How Skeletonization Works on Different Shapes', fontsize=16)
+
+    # --- Shape 1: C-shaped structure ---
+    image1 = np.zeros((100, 100))
+    rr, cc = rectangle(start=(10, 10), extent=(80, 20), shape=image1.shape)
+    image1[rr, cc] = 1
+    rr, cc = rectangle(start=(10, 70), extent=(80, 20), shape=image1.shape)
+    image1[rr, cc] = 1
+    rr, cc = rectangle(start=(10, 10), extent=(20, 80), shape=image1.shape)
+    image1[rr, cc] = 1
+    skeleton1 = skeletonize(image1)
+
+    axes[0, 0].imshow(image1, cmap=plt.cm.gray_r, interpolation='nearest')
+    axes[0, 0].set_title('Original C-Shape')
+    axes[0, 0].set_xticks([])
+    axes[0, 0].set_yticks([])
+
+    axes[0, 1].imshow(skeleton1, cmap=plt.cm.gray_r, interpolation='nearest')
+    axes[0, 1].set_title('Skeletonized C-Shape')
+    axes[0, 1].set_xticks([])
+    axes[0, 1].set_yticks([])
+
+    # --- Shape 2: Oblong shape ---
+    image2 = np.zeros((100, 100))
+    rr, cc = ellipse(50, 50, 40, 20, shape=image2.shape)
+    image2[rr, cc] = 1
+    skeleton2 = skeletonize(image2)
+
+    axes[1, 0].imshow(image2, cmap=plt.cm.gray_r, interpolation='nearest')
+    axes[1, 0].set_title('Original Oblong Shape')
+    axes[1, 0].set_xticks([])
+    axes[1, 0].set_yticks([])
+
+    axes[1, 1].imshow(skeleton2, cmap=plt.cm.gray_r, interpolation='nearest')
+    axes[1, 1].set_title('Skeletonized Oblong Shape')
+    axes[1, 1].set_xticks([])
+    axes[1, 1].set_yticks([])
+
+    # --- Shape 3: Branching structure ---
+    image3 = np.zeros((100, 100))
+    # main branch
+    rr, cc = rectangle(start=(20, 48), extent=(60, 4), shape=image3.shape)
+    image3[rr, cc] = 1
+    # first sub-branch
+    rr, cc = rectangle(start=(40, 20), extent=(4, 30), shape=image3.shape)
+    image3[rr, cc] = 1
+    # second sub-branch
+    rr, cc = rectangle(start=(60, 50), extent=(4, 30), shape=image3.shape)
+    image3[rr, cc] = 1
+    skeleton3 = skeletonize(image3)
+
+    axes[2, 0].imshow(image3, cmap=plt.cm.gray_r, interpolation='nearest')
+    axes[2, 0].set_title('Original Branching Structure')
+    axes[2, 0].set_xticks([])
+    axes[2, 0].set_yticks([])
+
+    axes[2, 1].imshow(skeleton3, cmap=plt.cm.gray_r, interpolation='nearest')
+    axes[2, 1].set_title('Skeletonized Branching Structure')
+    axes[2, 1].set_xticks([])
+    axes[2, 1].set_yticks([])
+
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+### Neuroscience Use Cases
+
+-   **Dendritic and Axonal Tracing:** In microscopy images of neurons, skeletonization can simplify the complex structures of dendrites and axons into simple lines. This allows for easier analysis of branching patterns, length measurements, and tracing of neural pathways.
+-   **Vessel Analysis:** When analyzing blood vessels in the brain (angiography), skeletonization can reduce the vessels to their centerlines, which simplifies the measurement of vessel length, tortuosity, and branching angles.
+-   **Animal Tracking:** When tracking the shape of an animal's body or tail from video, skeletonization can provide a simplified representation that is easier to analyze for postural changes or movements over time.
+
+## Parameters
+
+This transform does not have any parameters. The underlying skeletonization algorithm is applied with default settings.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to load mask data and then apply the skeletonization transform.
+
+```json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Mask Skeletonization Pipeline",
+            "description": "Test mask skeletonization on rectangular mask",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Skeletonize Mask",
+                "phase": "analysis",
+                "input_key": "test_mask",
+                "output_key": "skeletonized_mask",
+                "parameters": {}
+            }
+        ]
+    }
+}
+]
+```

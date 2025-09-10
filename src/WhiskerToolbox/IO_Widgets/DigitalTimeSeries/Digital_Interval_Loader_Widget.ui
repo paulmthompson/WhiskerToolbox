@@ -98,13 +98,13 @@
   <customwidget>
    <class>CSVDigitalIntervalLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp</header>
+   <header>DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BinaryDigitalIntervalLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp</header>
+   <header>DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -13,8 +13,8 @@
 #include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
-#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "Feature_Tree_Model.hpp"
+#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "OpenGLWidget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -23,12 +23,18 @@
 #include "DigitalEvent/EventViewer_Widget.hpp"
 #include "DigitalInterval/IntervalViewer_Widget.hpp"
 
+#include <QMetaObject>
+#include <QPointer>
 #include <QTableWidget>
 #include <QWheelEvent>
+#include <QMenu>
+#include <QFileDialog>
+#include <QFile>
 
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <sstream>
 
 DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
                                      TimeScrollBar * time_scrollbar,
@@ -52,6 +58,15 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     _feature_tree_model = std::make_unique<Feature_Tree_Model>(this);
     _feature_tree_model->setDataManager(_data_manager);
 
+    // Set up observer to automatically clean up data when it's deleted from DataManager
+    // Queue the cleanup to the Qt event loop to avoid running during mid-update mutations
+    _data_manager->addObserver([this]() {
+        QPointer<DataViewer_Widget> self = this;
+        QMetaObject::invokeMethod(self, [self]() {
+            if (!self) return;
+            self->cleanupDeletedData(); }, Qt::QueuedConnection);
+    });
+
     // Configure Feature_Tree_Widget
     ui->feature_tree_widget->setTypeFilters({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
     ui->feature_tree_widget->setDataManager(_data_manager);
@@ -60,12 +75,36 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::featureSelected, this, [this](std::string const & feature) {
         _handleFeatureSelected(QString::fromStdString(feature));
     });
-    
+
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeature, this, [this](std::string const & feature) {
         std::cout << "Adding single feature: " << feature << std::endl;
         _addFeatureToModel(QString::fromStdString(feature), true);
     });
-    
+
+    // Install context menu handling on the embedded tree widget
+    ui->feature_tree_widget->treeWidget()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->feature_tree_widget->treeWidget(), &QTreeWidget::customContextMenuRequested, this, [this](QPoint const & pos) {
+        auto * tw = ui->feature_tree_widget->treeWidget();
+        QTreeWidgetItem * item = tw->itemAt(pos);
+        if (!item) return;
+        std::string const key = item->text(0).toStdString();
+        // Group items have type column text "Group" and are under Analog data type parent
+        QString const type_text = item->text(1);
+        if (type_text == "Group") {
+            // Determine if parent is Analog data type or children are analog keys
+            bool isAnalogGroup = false;
+            if (auto * parent = item->parent()) {
+                if (parent->text(0) == QString::fromStdString(convert_data_type_to_string(DM_DataType::Analog))) {
+                    isAnalogGroup = true;
+                }
+            }
+            if (isAnalogGroup) {
+                QPoint const global_pos = tw->viewport()->mapToGlobal(pos);
+                _showGroupContextMenu(key, global_pos);
+            }
+        }
+    });
+
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeature, this, [this](std::string const & feature) {
         std::cout << "Removing single feature: " << feature << std::endl;
         _addFeatureToModel(QString::fromStdString(feature), false);
@@ -74,51 +113,56 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeatures, this, [this](std::vector<std::string> const & features) {
         std::cout << "Adding " << features.size() << " features as group" << std::endl;
 
+        // Mark batch add to suppress per-series auto-arrange
+        _is_batch_add = true;
         // Process all features in the group without triggering individual canvas updates
         for (auto const & key: features) {
             _plotSelectedFeatureWithoutUpdate(key);
         }
+        _is_batch_add = false;
 
-        // Auto-arrange and auto-fill when toggling a group to optimize space usage
+        // Auto-arrange and auto-fill once after batch
         if (!features.empty()) {
             std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
-            autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+            autoArrangeVerticalSpacing();// includes auto-fill functionality
         }
 
         // Trigger a single canvas update at the end
         if (!features.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+            ui->openGLWidget->updateCanvas();
         }
     });
 
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeatures, this, [this](std::vector<std::string> const & features) {
         std::cout << "Removing " << features.size() << " features as group" << std::endl;
 
+        _is_batch_add = true;
         // Process all features in the group without triggering individual canvas updates
         for (auto const & key: features) {
             _removeSelectedFeatureWithoutUpdate(key);
         }
+        _is_batch_add = false;
 
-        // Auto-arrange and auto-fill when toggling a group to optimize space usage
+        // Auto-arrange and auto-fill once after batch
         if (!features.empty()) {
             std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
-            autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+            autoArrangeVerticalSpacing();// includes auto-fill functionality
         }
 
         // Trigger a single canvas update at the end
         if (!features.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+            ui->openGLWidget->updateCanvas();
         }
     });
 
     // Connect color change signals from the model
     connect(_feature_tree_model.get(), &Feature_Tree_Model::featureColorChanged, this, &DataViewer_Widget::_handleColorChanged);
-    
+
     // Connect color change signals from the tree widget to the model
     connect(ui->feature_tree_widget, &Feature_Tree_Widget::colorChangeFeatures, this, [this](std::vector<std::string> const & features, std::string const & hex_color) {
-        for (auto const & feature : features) {
+        for (auto const & feature: features) {
             _feature_tree_model->setFeatureColor(feature, hex_color);
         }
     });
@@ -204,7 +248,6 @@ void DataViewer_Widget::openWidget() {
     ui->feature_tree_widget->refreshTree();
 
     this->show();
-
     _updateLabels();
 }
 
@@ -351,13 +394,17 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
     }
 
     // Auto-arrange and auto-fill canvas to make optimal use of space
-    std::cout << "Auto-arranging and filling canvas after adding series" << std::endl;
-    autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+    if (!_is_batch_add) {
+        std::cout << "Auto-arranging and filling canvas after adding series" << std::endl;
+        autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+    }
 
     std::cout << "Series addition and auto-arrangement completed" << std::endl;
     // Trigger canvas update to show the new series
-    std::cout << "Triggering canvas update" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    if (!_is_batch_add) {
+        std::cout << "Triggering canvas update" << std::endl;
+        ui->openGLWidget->updateCanvas();
+    }
     std::cout << "Canvas update completed" << std::endl;
 }
 
@@ -409,7 +456,7 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
     std::cout << "Series removal and auto-arrangement completed" << std::endl;
     // Trigger canvas update to reflect the removal
     std::cout << "Triggering canvas update after removal" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
@@ -513,7 +560,7 @@ void DataViewer_Widget::_updateGlobalScale(double scale) {
         }
 
         // Trigger canvas update
-        ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+        ui->openGLWidget->updateCanvas();
     }
 }
 
@@ -589,7 +636,7 @@ void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std
     }
 
     // Trigger a redraw
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
 
     std::cout << "Color changed for " << feature_key << " to " << hex_color << std::endl;
 }
@@ -680,7 +727,7 @@ void DataViewer_Widget::_handleVerticalSpacingChanged(double spacing) {
         }
 
         // Trigger canvas update
-        ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+        ui->openGLWidget->updateCanvas();
     }
 }
 
@@ -718,6 +765,8 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
 
+        // Register with plotting manager for later allocation (single call)
+        _plotting_manager->addAnalogSeries(key, series, time_frame, color);
         ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
 
     } else if (data_type == DM_DataType::DigitalEvent) {
@@ -733,7 +782,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
             return;
         }
-
+        _plotting_manager->addDigitalEventSeries(key, series, time_frame, color);
         ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
 
     } else if (data_type == DM_DataType::DigitalInterval) {
@@ -749,7 +798,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
             return;
         }
-
+        _plotting_manager->addDigitalIntervalSeries(key, series, time_frame, color);
         ui->openGLWidget->addDigitalIntervalSeries(key, series, time_frame, color);
 
     } else {
@@ -999,7 +1048,7 @@ void DataViewer_Widget::autoArrangeVerticalSpacing() {
     _updateViewBounds();
 
     // Trigger canvas update to show new positions
-    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
+    ui->openGLWidget->updateCanvas();
 
     auto total_keys = analog_keys.size() + event_keys.size() + interval_keys.size();
     std::cout << "DataViewer_Widget: Auto-arrange completed for " << total_keys << " series" << std::endl;
@@ -1063,8 +1112,11 @@ void DataViewer_Widget::_applyPlottingManagerAllocation(std::string const & seri
     if (data_type == DM_DataType::Analog) {
         auto config = ui->openGLWidget->getAnalogConfig(series_key);
         if (config.has_value()) {
-            // Basic allocation - will be properly implemented when OpenGL widget is updated
-            std::cout << "  Applied basic allocation to analog '" << series_key << "'" << std::endl;
+            float yc, yh;
+            if (_plotting_manager->getAnalogSeriesAllocationForKey(series_key, yc, yh)) {
+                config.value()->allocated_y_center = yc;
+                config.value()->allocated_height = yh;
+            }
         }
 
     } else if (data_type == DM_DataType::DigitalEvent) {
@@ -1081,6 +1133,84 @@ void DataViewer_Widget::_applyPlottingManagerAllocation(std::string const & seri
             std::cout << "  Applied basic allocation to interval '" << series_key << "'" << std::endl;
         }
     }
+}
+
+// ===== Context menu and configuration handling =====
+void DataViewer_Widget::_showGroupContextMenu(std::string const & group_name, QPoint const & global_pos) {
+    QMenu menu;
+    QMenu * loadMenu = menu.addMenu("Load configuration");
+    QAction * loadSpikeSorter = loadMenu->addAction("spikesorter configuration");
+    QAction * clearConfig = menu.addAction("Clear configuration");
+
+    connect(loadSpikeSorter, &QAction::triggered, this, [this, group_name]() {
+        _loadSpikeSorterConfigurationForGroup(QString::fromStdString(group_name));
+    });
+    connect(clearConfig, &QAction::triggered, this, [this, group_name]() {
+        _clearConfigurationForGroup(QString::fromStdString(group_name));
+    });
+
+    menu.exec(global_pos);
+}
+
+void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & group_name) {
+    // For now, use a test constant string or file dialog; here we open a file dialog
+    QString path = QFileDialog::getOpenFileName(this, QString("Load spikesorter configuration for %1").arg(group_name), QString(), "Text Files (*.txt *.cfg *.conf);;All Files (*)");
+    if (path.isEmpty()) return;
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+    QByteArray data = file.readAll();
+    auto positions = _parseSpikeSorterConfig(data.toStdString());
+    if (positions.empty()) return;
+    _plotting_manager->loadAnalogSpikeSorterConfiguration(group_name.toStdString(), positions);
+
+    // Re-apply allocation to visible analog keys and update
+    auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
+    for (auto const & key : analog_keys) {
+        _applyPlottingManagerAllocation(key);
+    }
+    ui->openGLWidget->updateCanvas();
+}
+
+void DataViewer_Widget::_clearConfigurationForGroup(QString const & group_name) {
+    _plotting_manager->clearAnalogGroupConfiguration(group_name.toStdString());
+    auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
+    for (auto const & key : analog_keys) {
+        _applyPlottingManagerAllocation(key);
+    }
+    ui->openGLWidget->updateCanvas();
+}
+
+std::vector<PlottingManager::AnalogGroupChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {
+    std::vector<PlottingManager::AnalogGroupChannelPosition> out;
+    std::istringstream ss(text);
+    std::string line;
+    bool first = true;
+    while (std::getline(ss, line)) {
+        if (line.empty()) continue;
+        if (first) { first = false; continue; } // skip header row (electrode name)
+        std::istringstream ls(line);
+        int row = 0; int ch = 0; float x = 0.0f; float y = 0.0f;
+        if (!(ls >> row >> ch >> x >> y)) continue;
+        // SpikeSorter is 1-based; convert to 0-based for our program
+        if (ch > 0) ch -= 1;
+        PlottingManager::AnalogGroupChannelPosition p; p.channel_id = ch; p.x = x; p.y = y;
+        out.push_back(p);
+    }
+    return out;
+}
+
+void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text) {
+    auto positions = _parseSpikeSorterConfig(text.toStdString());
+    if (positions.empty()) {
+        std::cout << "No positions found in spike sorter configuration" << std::endl;
+        return;
+    }
+    _plotting_manager->loadAnalogSpikeSorterConfiguration(group_name.toStdString(), positions);
+    auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
+    for (auto const & key : analog_keys) {
+        _applyPlottingManagerAllocation(key);
+    }
+    ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::_autoFillCanvas() {
@@ -1224,4 +1354,66 @@ void DataViewer_Widget::_autoFillCanvas() {
     }
 
     std::cout << "Auto-fill canvas completed" << std::endl;
+}
+
+void DataViewer_Widget::cleanupDeletedData() {
+    if (!_data_manager) {
+        return;
+    }
+
+    // Collect keys that no longer exist in DataManager
+    std::vector<std::string> keys_to_cleanup;
+
+    if (_plotting_manager) {
+        auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
+        for (auto const & key: analog_keys) {
+            if (!_data_manager->getData<AnalogTimeSeries>(key)) {
+                keys_to_cleanup.push_back(key);
+            }
+        }
+        auto event_keys = _plotting_manager->getVisibleDigitalEventSeriesKeys();
+        for (auto const & key: event_keys) {
+            if (!_data_manager->getData<DigitalEventSeries>(key)) {
+                keys_to_cleanup.push_back(key);
+            }
+        }
+        auto interval_keys = _plotting_manager->getVisibleDigitalIntervalSeriesKeys();
+        for (auto const & key: interval_keys) {
+            if (!_data_manager->getData<DigitalIntervalSeries>(key)) {
+                keys_to_cleanup.push_back(key);
+            }
+        }
+    }
+
+    if (keys_to_cleanup.empty()) {
+        return;
+    }
+
+    // De-duplicate keys in case the same key appears in multiple lists
+    std::sort(keys_to_cleanup.begin(), keys_to_cleanup.end());
+    keys_to_cleanup.erase(std::unique(keys_to_cleanup.begin(), keys_to_cleanup.end()), keys_to_cleanup.end());
+
+    // Post cleanup to OpenGLWidget's thread safely
+    QPointer<OpenGLWidget> glw = ui ? ui->openGLWidget : nullptr;
+    if (glw) {
+        QMetaObject::invokeMethod(glw, [glw, keys = keys_to_cleanup]() {
+            if (!glw) return;
+            for (auto const & key : keys) {
+                glw->removeAnalogTimeSeries(key);
+                glw->removeDigitalEventSeries(key);
+                glw->removeDigitalIntervalSeries(key);
+            } }, Qt::QueuedConnection);
+    }
+
+    // Remove from PlottingManager defensively (all types) on our thread
+    if (_plotting_manager) {
+        for (auto const & key: keys_to_cleanup) {
+            (void) _plotting_manager->removeAnalogSeries(key);
+            (void) _plotting_manager->removeDigitalEventSeries(key);
+            (void) _plotting_manager->removeDigitalIntervalSeries(key);
+        }
+    }
+
+    // Re-arrange remaining data
+    autoArrangeVerticalSpacing();
 }

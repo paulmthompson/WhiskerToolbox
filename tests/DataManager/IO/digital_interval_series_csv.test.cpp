@@ -109,7 +109,7 @@ protected:
     std::shared_ptr<DigitalIntervalSeries> original_interval_data;
 };
 
-TEST_CASE_METHOD(DigitalIntervalSeriesCSVTestFixture, "DM - DigitalIntervalSeries - CSV save and load through direct functions", "[DigitalIntervalSeries][CSV][IO]") {
+TEST_CASE_METHOD(DigitalIntervalSeriesCSVTestFixture, "DM - IO - DigitalIntervalSeries - CSV save and load through direct functions", "[DigitalIntervalSeries][CSV][IO]") {
     
     SECTION("Save DigitalIntervalSeries to CSV format") {
         bool save_success = saveCSVIntervalData();
@@ -211,7 +211,7 @@ TEST_CASE_METHOD(DigitalIntervalSeriesCSVTestFixture, "DM - DigitalIntervalSerie
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalSeriesCSVTestFixture, "DM - DigitalIntervalSeries - CSV load through DataManager JSON config", "[DigitalIntervalSeries][CSV][IO][DataManager]") {
+TEST_CASE_METHOD(DigitalIntervalSeriesCSVTestFixture, "DM - IO - DigitalIntervalSeries - CSV load through DataManager JSON config", "[DigitalIntervalSeries][CSV][IO][DataManager]") {
     
     SECTION("Load CSV DigitalIntervalSeries through DataManager") {
         // First save the data

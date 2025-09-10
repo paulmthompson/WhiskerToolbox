@@ -4,6 +4,7 @@
 #include "TableObserverBridge.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/ComputerRegistry.hpp"
+#include "utils/TableView/core/TableViewBuilder.h"
 
 #include <iostream>
 
@@ -11,11 +12,11 @@ TableRegistry::TableRegistry(DataManager & data_manager)
     : _data_manager(data_manager),
       _data_manager_extension(std::make_shared<DataManagerExtension>(data_manager)),
       _computer_registry(std::make_unique<ComputerRegistry>()) {
-    std::cout << "TableRegistry initialized" << std::endl;
+   // std::cout << "TableRegistry initialized" << std::endl;
 }
 
 TableRegistry::~TableRegistry() {
-    std::cout << "TableRegistry destroyed" << std::endl;
+   // std::cout << "TableRegistry destroyed" << std::endl;
 }
 
 bool TableRegistry::createTable(std::string const & table_id, std::string const & table_name, std::string const & table_description) {
@@ -262,6 +263,203 @@ std::vector<std::string> TableRegistry::getAvailableOutputTypes() const {
         result.push_back(name);
     }
     return result;
+}
+
+bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo const & column_info) const {
+    if (column_info.dataSourceName.empty() || column_info.computerName.empty()) {
+        std::cout << "Column " << column_info.name << " missing data source or computer configuration" << std::endl;
+        return false;
+    }
+
+    try {
+        // Create DataSourceVariant from column data source
+        DataSourceVariant data_source_variant;
+        bool valid_source = false;
+
+        std::string column_source = column_info.dataSourceName;
+
+        if (column_source.starts_with("analog:")) {
+            std::string source_name = column_source.substr(7);// Remove "analog:" prefix
+            auto analog_source = _data_manager_extension->getAnalogSource(source_name);
+            if (analog_source) {
+                data_source_variant = analog_source;
+                valid_source = true;
+            }
+        } else if (column_source.starts_with("events:")) {
+            std::string source_name = column_source.substr(7);// Remove "events:" prefix
+            auto event_source = _data_manager_extension->getEventSource(source_name);
+            if (event_source) {
+                data_source_variant = event_source;
+                valid_source = true;
+            }
+        } else if (column_source.starts_with("intervals:")) {
+            std::string source_name = column_source.substr(10);// Remove "intervals:" prefix
+            auto interval_source = _data_manager_extension->getIntervalSource(source_name);
+            if (interval_source) {
+                data_source_variant = interval_source;
+                valid_source = true;
+            }
+        } else if (column_source.starts_with("points_x:")) {
+            std::string source_name = column_source.substr(9);// Remove "points_x:" prefix
+            auto analog_source = _data_manager_extension->getAnalogSource(source_name + ".x");
+            if (analog_source) {
+                data_source_variant = analog_source;
+                valid_source = true;
+            }
+        } else if (column_source.starts_with("points_y:")) {
+            std::string source_name = column_source.substr(9);// Remove "points_y:" prefix
+            auto analog_source = _data_manager_extension->getAnalogSource(source_name + ".y");
+            if (analog_source) {
+                data_source_variant = analog_source;
+                valid_source = true;
+            }
+        } else if (column_source.starts_with("lines:")) {
+            std::string source_name = column_source.substr(6);// Remove "lines:" prefix
+            auto line_source = _data_manager_extension->getLineSource(source_name);
+            if (line_source) {
+                data_source_variant = line_source;
+                valid_source = true;
+            }
+        } else {
+            // Fallback: try to infer source kind when no prefix is provided
+            // Prefer events -> intervals -> analog -> lines
+            if (auto ev = _data_manager_extension->getEventSource(column_source)) {
+                data_source_variant = ev;
+                valid_source = true;
+            } else if (auto iv = _data_manager_extension->getIntervalSource(column_source)) {
+                data_source_variant = iv;
+                valid_source = true;
+            } else if (auto an = _data_manager_extension->getAnalogSource(column_source)) {
+                data_source_variant = an;
+                valid_source = true;
+            } else if (auto ln = _data_manager_extension->getLineSource(column_source)) {
+                data_source_variant = ln;
+                valid_source = true;
+            }
+        }
+
+        if (!valid_source) {
+            std::cout << "Failed to create data source for column: " << column_info.name << std::endl;
+            return false;
+        }
+
+        // Create the computer from the registry
+        auto const & registry = *_computer_registry;
+        
+        // Get type information for the computer
+        auto computer_info_ptr = registry.findComputerInfo(column_info.computerName);
+        if (!computer_info_ptr) {
+            std::cout << "Computer info not found for " << column_info.computerName << std::endl;
+            return false;
+        }
+        
+        auto computer_base = registry.createComputer(column_info.computerName, data_source_variant, column_info.parameters);
+        if (!computer_base) {
+            std::cout << "Failed to create computer " << column_info.computerName << " for column: " << column_info.name << std::endl;
+            // Continue; the computer may be multi-output and use a different factory
+        }
+
+        // Use the actual return type from the computer info instead of hardcoding double
+        std::type_index return_type = computer_info_ptr->outputType;
+        std::cout << "Computer " << column_info.computerName << " returns type: " << computer_info_ptr->outputTypeName << std::endl;
+        
+        // Handle different return types using runtime type dispatch
+        bool success = false;
+        
+        if (computer_info_ptr->isMultiOutput) {
+            // Multi-output: expand into multiple columns using builder.addColumns
+            if (return_type == typeid(double)) {
+                auto multi = registry.createTypedMultiComputer<double>(
+                    column_info.computerName, data_source_variant, column_info.parameters);
+                if (!multi) {
+                    std::cout << "Failed to create typed MULTI computer for " << column_info.computerName << std::endl;
+                    return false;
+                }
+                builder.addColumns<double>(column_info.name, std::move(multi));
+                success = true;
+            } else if (return_type == typeid(int)) {
+                auto multi = registry.createTypedMultiComputer<int>(
+                    column_info.computerName, data_source_variant, column_info.parameters);
+                if (!multi) {
+                    std::cout << "Failed to create typed MULTI computer<int> for " << column_info.computerName << std::endl;
+                    return false;
+                }
+                builder.addColumns<int>(column_info.name, std::move(multi));
+                success = true;
+            } else if (return_type == typeid(bool)) {
+                auto multi = registry.createTypedMultiComputer<bool>(
+                    column_info.computerName, data_source_variant, column_info.parameters);
+                if (!multi) {
+                    std::cout << "Failed to create typed MULTI computer<bool> for " << column_info.computerName << std::endl;
+                    return false;
+                }
+                builder.addColumns<bool>(column_info.name, std::move(multi));
+                success = true;
+            } else {
+                std::cout << "Unsupported multi-output element type for " << column_info.computerName << std::endl;
+                return false;
+            }
+        } else {
+            // Single output computers
+            if (return_type == typeid(double)) {
+                auto computer = registry.createTypedComputer<double>(column_info.computerName, data_source_variant, column_info.parameters);
+                if (computer) {
+                    builder.addColumn<double>(column_info.name, std::move(computer));
+                    success = true;
+                }
+            } else if (return_type == typeid(int)) {
+                auto computer = registry.createTypedComputer<int>(column_info.computerName, data_source_variant, column_info.parameters);
+                if (computer) {
+                    builder.addColumn<int>(column_info.name, std::move(computer));
+                    success = true;
+                }
+            } else if (return_type == typeid(int64_t)) {
+                auto computer = registry.createTypedComputer<int64_t>(column_info.computerName, data_source_variant, column_info.parameters);
+                if (computer) {
+                    builder.addColumn<int64_t>(column_info.name, std::move(computer));
+                    success = true;
+                }
+            } else if (return_type == typeid(bool)) {
+                auto computer = registry.createTypedComputer<bool>(column_info.computerName, data_source_variant, column_info.parameters);
+                if (computer) {
+                    builder.addColumn<bool>(column_info.name, std::move(computer));
+                    success = true;
+                }
+            } else if (return_type == typeid(std::vector<double>)) {
+                auto computer = registry.createTypedComputer<std::vector<double>>(column_info.computerName, data_source_variant, column_info.parameters);
+                if (computer) {
+                    builder.addColumn<std::vector<double>>(column_info.name, std::move(computer));
+                    success = true;
+                }
+            } else if (return_type == typeid(std::vector<int>)) {
+                auto computer = registry.createTypedComputer<std::vector<int>>(column_info.computerName, data_source_variant, column_info.parameters);
+                if (computer) {
+                    builder.addColumn<std::vector<int>>(column_info.name, std::move(computer));
+                    success = true;
+                }
+            } else if (return_type == typeid(std::vector<float>)) {
+                auto computer = registry.createTypedComputer<std::vector<float>>(column_info.computerName, data_source_variant, column_info.parameters);
+                if (computer) {
+                    builder.addColumn<std::vector<float>>(column_info.name, std::move(computer));
+                    success = true;
+                }
+            } else {
+                std::cout << "Unsupported output type for " << column_info.computerName << ": " << computer_info_ptr->outputTypeName << std::endl;
+                return false;
+            }
+        }
+
+        if (!success) {
+            std::cout << "Failed to add column " << column_info.name << " with computer " << column_info.computerName << std::endl;
+            return false;
+        }
+        
+        return true;
+        
+    } catch (std::exception const & e) {
+        std::cout << "Exception adding column " << column_info.name << ": " << e.what() << std::endl;
+        return false;
+    }
 }
 
 void TableRegistry::notify(TableEventType type, std::string const & table_id) const {

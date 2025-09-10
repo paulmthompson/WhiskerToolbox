@@ -5,7 +5,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
+#include "Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>
 #include <QComboBox>

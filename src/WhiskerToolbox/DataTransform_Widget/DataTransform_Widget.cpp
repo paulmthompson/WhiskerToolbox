@@ -166,7 +166,7 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         return widget;
     };
 
-    _parameterWidgetFactories["Convert Mask to Line"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+    _parameterWidgetFactories["Convert Mask To Line"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new MaskToLine_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;

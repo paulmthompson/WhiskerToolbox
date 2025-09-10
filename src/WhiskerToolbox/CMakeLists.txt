@@ -19,6 +19,8 @@ find_package(glm CONFIG REQUIRED)
 
 qt_standard_project_setup()
 
+add_subdirectory(Collapsible_Widget)
+add_subdirectory(ColorPicker_Widget)
 add_subdirectory(MediaExport)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
@@ -27,6 +29,12 @@ add_subdirectory(TimeScrollBar)
 add_subdirectory(Analysis_Dashboard)    
 add_subdirectory(Feature_Table_Widget)
 add_subdirectory(Feature_Tree_Widget)
+add_subdirectory(IO_Widgets)
+add_subdirectory(DataViewer_Widget)
+add_subdirectory(Media_Widget)
+add_subdirectory(MediaWidgetManager)
+add_subdirectory(TableViewerWidget)
+add_subdirectory(TableDesignerWidget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -34,27 +42,15 @@ set(PROJECT_SOURCES
         my_stylesheet.qss
         color_scheme.hpp
 
-
-
         BatchProcessing_Widget/BatchProcessing_Widget.hpp
         BatchProcessing_Widget/BatchProcessing_Widget.cpp
         BatchProcessing_Widget/BatchProcessing_Widget.ui
-
-        ColorPicker_Widget/ColorPicker_Widget.hpp
-        ColorPicker_Widget/ColorPicker_Widget.cpp
-        ColorPicker_Widget/ColorPicker_Widget.ui
 
         Main_Window/mainwindow.cpp
         Main_Window/mainwindow.hpp
         Main_Window/mainwindow.ui
         Main_Window/video_loader.hpp
         Main_Window/video_loader.cpp
-
-        TableDesignerWidget/TableDesignerWidget.hpp
-        TableDesignerWidget/TableDesignerWidget.cpp
-        TableDesignerWidget/TableDesignerWidget.ui
-        TableDesignerWidget/PreviewTableModel.hpp
-        TableDesignerWidget/PreviewTableModel.cpp
 
         DataManager_Widget/DataManager_Widget.hpp
         DataManager_Widget/DataManager_Widget.cpp
@@ -192,122 +188,6 @@ set(PROJECT_SOURCES
         Whisker_Widget/janelia_config.hpp
         Whisker_Widget/janelia_config.cpp
 
-        Media_Window/Media_Window.hpp
-        Media_Window/Media_Window.cpp
-
-        Media_Widget/Media_Widget.hpp
-        Media_Widget/Media_Widget.cpp
-        Media_Widget/Media_Widget.ui
-        Media_Widget/DisplayOptions/DisplayOptions.hpp
-        Media_Widget/DisplayOptions/CoordinateTypes.hpp
-
-        Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.cpp
-        Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp
-        Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/GammaWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/GammaWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/GammaWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/SharpenWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/SharpenWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/SharpenWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.ui
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.cpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.hpp
-        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.ui
-
-        Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp
-        Media_Widget/MediaMask_Widget/MediaMask_Widget.cpp
-        Media_Widget/MediaMask_Widget/MediaMask_Widget.ui
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.cpp
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.hpp
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.ui
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.cpp
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.hpp
-        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.ui
-        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.cpp
-        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.hpp
-        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.ui
-
-        Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp
-        Media_Widget/MediaPoint_Widget/MediaPoint_Widget.cpp
-        Media_Widget/MediaPoint_Widget/MediaPoint_Widget.ui
-
-        Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp
-        Media_Widget/MediaTensor_Widget/MediaTensor_Widget.cpp
-        Media_Widget/MediaTensor_Widget/MediaTensor_Widget.ui
-
-        Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp
-        Media_Widget/MediaLine_Widget/MediaLine_Widget.cpp
-        Media_Widget/MediaLine_Widget/MediaLine_Widget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineNoneSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineNoneSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineNoneSelectionWidget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineAddSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineAddSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineAddSelectionWidget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.ui
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.cpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp
-        Media_Widget/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.ui
-
-        Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp
-        Media_Widget/MediaInterval_Widget/MediaInterval_Widget.cpp
-        Media_Widget/MediaInterval_Widget/MediaInterval_Widget.ui
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.hpp
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.cpp
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.ui
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.hpp
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.cpp
-        Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.ui
-
-        Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.hpp
-        Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.cpp
-        Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.ui
-
-        Media_Widget/MouseBrush_Widget/MouseBrush_Widget.hpp
-        Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
-        Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui
-
-
-
-        DataViewer_Widget/DataViewer_Widget.cpp
-        DataViewer_Widget/DataViewer_Widget.hpp
-        DataViewer_Widget/DataViewer_Widget.ui
-        DataViewer_Widget/DataViewer_Tree_Widget/DataViewer_Tree_Widget.cpp
-        DataViewer_Widget/DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp
-        DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.cpp
-        DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.hpp
-        DataViewer_Widget/OpenGLWidget.cpp
-        DataViewer_Widget/OpenGLWidget.hpp
-        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.cpp
-        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.hpp
-        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.ui
-        DataViewer_Widget/DigitalEvent/EventViewer_Widget.cpp
-        DataViewer_Widget/DigitalEvent/EventViewer_Widget.hpp
-        DataViewer_Widget/DigitalEvent/EventViewer_Widget.ui
-        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.cpp
-        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.hpp
-        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.ui
-        DataViewer_Widget/Feature_Tree_Model.hpp
-        DataViewer_Widget/Feature_Tree_Model.cpp
-
-
         ML_Widget/ML_Widget.hpp
         ML_Widget/ML_Widget.cpp
         ML_Widget/ML_Widget.ui
@@ -358,98 +238,12 @@ set(PROJECT_SOURCES
         Grabcut_Widget/GrabCutTool.hpp
         Grabcut_Widget/Grabcut_Widget.ui
 
-        Collapsible_Widget/Section.cpp
-        Collapsible_Widget/Section.hpp
-
         Magic_Eraser_Widget/magic_eraser.hpp
         Magic_Eraser_Widget/magic_eraser.cpp
 
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.hpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.cpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.ui
-
-        IO_Widgets/Scaling_Widget/Scaling_Widget.cpp
-        IO_Widgets/Scaling_Widget/Scaling_Widget.hpp
-        IO_Widgets/Scaling_Widget/Scaling_Widget.ui
-
-        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.cpp
-        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.hpp
-        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.ui
-
-        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.ui
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.ui
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.ui
-
-        IO_Widgets/Points/Point_Loader_Widget.hpp
-        IO_Widgets/Points/Point_Loader_Widget.cpp
-        IO_Widgets/Points/Point_Loader_Widget.ui
-        IO_Widgets/Points/CSV/CSVPointLoader_Widget.cpp
-        IO_Widgets/Points/CSV/CSVPointLoader_Widget.hpp
-        IO_Widgets/Points/CSV/CSVPointLoader_Widget.ui
-        IO_Widgets/Points/CSV/CSVPointSaver_Widget.cpp
-        IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp
-        IO_Widgets/Points/CSV/CSVPointSaver_Widget.ui
-
-        IO_Widgets/Masks/Mask_Loader_Widget.hpp
-        IO_Widgets/Masks/Mask_Loader_Widget.cpp
-        IO_Widgets/Masks/Mask_Loader_Widget.ui
-        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.cpp
-        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.hpp
-        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.ui
-        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.cpp
-        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp
-        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.ui
-        IO_Widgets/Masks/Image/ImageMaskLoader_Widget.cpp
-        IO_Widgets/Masks/Image/ImageMaskLoader_Widget.hpp
-        IO_Widgets/Masks/Image/ImageMaskLoader_Widget.ui
-        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.cpp
-        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp
-        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.ui
-
-        IO_Widgets/Lines/Line_Loader_Widget.hpp
-        IO_Widgets/Lines/Line_Loader_Widget.cpp
-        IO_Widgets/Lines/Line_Loader_Widget.ui
-        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp
-        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.cpp
-        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.ui
-        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.hpp
-        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.cpp
-        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.ui
-        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.cpp
-        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp
-        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.ui
-        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.hpp
-        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.cpp
-        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.ui
-
-        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.ui
-
-        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.ui
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.ui
-
-        IO_Widgets/Tensors/Tensor_Loader_Widget.hpp
-        IO_Widgets/Tensors/Tensor_Loader_Widget.cpp
-        IO_Widgets/Tensors/Tensor_Loader_Widget.ui
-
-
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
@@ -474,30 +268,6 @@ set(PROJECT_SOURCES
         Test_Widget/Test_Widget.ui
 )
 
-# Conditionally add CapnProto-dependent Binary widget sources
-if(ENABLE_CAPNPROTO)
-    list(APPEND PROJECT_SOURCES
-        # Line Binary Widgets
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.cpp
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp
-        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.ui
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.cpp
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.hpp
-        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.ui
-        
-        # AnalogTimeSeries Binary Widgets
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.cpp
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp
-        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.ui
-        
-        # DigitalTimeSeries Binary Widgets
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.cpp
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp
-        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.ui
-    )
-endif()
-
-
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
 )
@@ -521,10 +291,8 @@ target_include_directories(WhiskerToolbox PRIVATE
   #      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" 
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/TableDesignerWidget>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Grabcut_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../MediaExport>"
@@ -535,9 +303,17 @@ target_include_directories(WhiskerToolbox PRIVATE
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
-target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer DataManagerIO)
+target_link_libraries(WhiskerToolbox PRIVATE DataManager DataManagerIO)
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
+target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE IO_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE DataViewer_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE Media_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE MediaWidgetManager)
+target_link_libraries(WhiskerToolbox PRIVATE TableViewerWidget)
+target_link_libraries(WhiskerToolbox PRIVATE TableDesignerWidget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)
@@ -563,8 +339,6 @@ target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_h
 target_link_libraries(WhiskerToolbox PRIVATE armadillo)
 target_link_libraries(WhiskerToolbox PRIVATE LAPACK::LAPACK)
 target_link_libraries(WhiskerToolbox PRIVATE OpenBLAS::OpenBLAS)
-
-#target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6::JKQTPlotter6)
 
 target_link_libraries(WhiskerToolbox PRIVATE qt6advanceddocking)
 

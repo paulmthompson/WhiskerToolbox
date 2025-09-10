@@ -5,8 +5,8 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
-#include "Media_Window/Media_Window.hpp"
-#include "DataManager/transforms/Lines/line_angle.hpp"
+#include "Media_Widget/Media_Window/Media_Window.hpp"
+#include "DataManager/transforms/Lines/Line_Angle/line_angle.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "DataManager/utils/polynomial/polynomial_fit.hpp"
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
@@ -352,7 +352,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
     
     if (lines.empty()) {
         // If no lines exist, create a new one with the single point
-        _data_manager->getData<LineData>(_active_key)->addAtTime(current_time, {{x_media, y_media}});
+        _data_manager->getData<LineData>(_active_key)->addAtTime(current_time, Line2D{Point2D{x_media, y_media}});
         // After adding a new line, it's line index 0
         _current_line_index = 0;
         ui->line_select_slider->setValue(0);

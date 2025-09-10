@@ -63,6 +63,15 @@ public:
     ComputerInfo const * getComputerInfo(std::string const & computer_name) const;
     std::vector<std::string> getAvailableOutputTypes() const;
 
+    // Column building utilities
+    /**
+     * @brief Add a column to a TableViewBuilder from a ColumnInfo specification
+     * @param builder The TableViewBuilder to add the column to
+     * @param column_info The column specification including data source, computer, and parameters
+     * @return True if the column was successfully added, false otherwise
+     */
+    bool addColumnToBuilder(class TableViewBuilder & builder, ColumnInfo const & column_info) const;
+
 private:
     DataManager & _data_manager;
     std::shared_ptr<DataManagerExtension> _data_manager_extension;

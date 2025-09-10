@@ -101,19 +101,19 @@
   <customwidget>
    <class>Scaling_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Scaling_Widget/Scaling_Widget.hpp</header>
+   <header>Scaling_Widget/Scaling_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>HDF5MaskLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.hpp</header>
+   <header>Masks/HDF5/HDF5MaskLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ImageMaskLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Masks/Image/ImageMaskLoader_Widget.hpp</header>
+   <header>Masks/Image/ImageMaskLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -3,6 +3,7 @@
 
 #include "DataManager/utils/TableView/TableInfo.hpp"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
+#include "TableViewerWidget/TableViewerWidget.hpp"
 
 #include <QStringList>
 #include <QWidget>
@@ -13,14 +14,21 @@
 
 #include <memory>
 #include <map>
+#include <QMap>
 
 class DataManager;
 class ComputerRegistry;
 class IRowSelector;
 class TableViewBuilder;
 class IParameterDescriptor;
-class PreviewTableModel;
+class TableViewerWidget;
 class QTimer;
+class QTreeWidgetItem;
+class TableInfoWidget;
+class Section;
+class TableTransformWidget;
+class TableExportWidget;
+class TableJSONWidget;
 
 namespace Ui {
 class TableDesignerWidget;
@@ -60,6 +68,19 @@ signals:
      */
     void tableDeleted(QString const & table_id);
 
+public:
+    /**
+     * @brief Get enabled column infos from the computers tree (for testing)
+     * @return Vector of ColumnInfo for enabled computers
+     */
+    std::vector<ColumnInfo> getEnabledColumnInfos() const;
+
+    /**
+     * @brief Build table from enabled computers in the tree
+     * @return True if build was successful
+     */
+    bool buildTableFromTree();
+
 private slots:
     /**
      * @brief Handle changes to the table selection
@@ -92,39 +113,14 @@ private slots:
     void onIntervalSettingChanged();
 
     /**
-     * @brief Handle adding a new column
+     * @brief Handle changes to the computer tree (checkbox state changes)
      */
-    void onAddColumn();
+    void onComputersTreeItemChanged();
 
     /**
-     * @brief Handle removing a column
+     * @brief Handle changes to column names in the tree
      */
-    void onRemoveColumn();
-
-    /**
-     * @brief Handle changes to the column data source selection
-     */
-    void onColumnDataSourceChanged();
-
-    /**
-     * @brief Handle changes to the column computer selection
-     */
-    void onColumnComputerChanged();
-
-    /**
-     * @brief Handle changes to the column list selection
-     */
-    void onColumnSelectionChanged();
-
-    /**
-     * @brief Handle changes to the column name text
-     */
-    void onColumnNameChanged();
-
-    /**
-     * @brief Handle changes to the column description text
-     */
-    void onColumnDescriptionChanged();
+    void onComputersTreeItemEdited(QTreeWidgetItem * item, int column);
 
     /**
      * @brief Handle building the table
@@ -151,18 +147,26 @@ private:
 
     QString _current_table_id;
     bool _loading_column_configuration = false; // Flag to prevent infinite loops
-    bool _refreshing_computer_combo = false; // Flag to prevent recursive refreshes
-    bool _updating_column_configuration = false; // Flag to prevent reload during column updates
+    bool _updating_computers_tree = false; // Flag to prevent recursive updates during tree refresh
+    QMap<QString, QStringList> _table_column_order; // Persist preview column order per table id
     
     // Parameter UI management
     QWidget * _parameter_widget = nullptr;
     QVBoxLayout * _parameter_layout = nullptr;
     std::map<std::string, QWidget*> _parameter_controls;
 
+    TableInfoWidget * _table_info_widget = nullptr;
+    Section * _table_info_section = nullptr;
+    TableTransformWidget * _table_transform_widget = nullptr;
+    Section * _table_transform_section = nullptr;
+    TableExportWidget * _table_export_widget = nullptr;
+    Section * _table_export_section = nullptr;
+    TableJSONWidget * _table_json_widget = nullptr;
+    Section * _table_json_section = nullptr;
+    
     // Preview support
-    PreviewTableModel * _preview_model = nullptr;
+    TableViewerWidget * _table_viewer = nullptr;
     QTimer * _preview_debounce_timer = nullptr;
-    size_t _total_preview_rows = 0;
 
     /**
      * @brief Connect all signals and slots
@@ -180,98 +184,25 @@ private:
     void refreshRowDataSourceCombo();
 
     /**
-     * @brief Refresh the column data source combo box
+     * @brief Refresh the computers tree with available data sources and computers
      */
-    void refreshColumnDataSourceCombo();
-
-    /**
-     * @brief Refresh the column computer combo box based on current selections
-     */
-    void refreshColumnComputerCombo();
+    void refreshComputersTree();
     
     /**
-     * @brief Update the UserRole indices for all column list items
-     * Call this after adding, removing, or moving columns to keep indices in sync
+     * @brief Get available data sources from the data manager
+     * @return List of data source names
      */
-    void updateColumnIndices();
+    QStringList getAvailableDataSources() const;
 
     /**
-     * @brief Load table information into the UI
-     * @param table_id The table ID to load
+     * @brief Create a DataSourceVariant and determine RowSelectorType from a data source string
+     * @param data_source_string The data source string (e.g., "Events: myEvents")
+     * @param data_manager_extension The data manager extension to use for lookups
+     * @return Pair of optional DataSourceVariant and RowSelectorType
      */
-    void loadTableInfo(QString const & table_id);
-
-    /**
-     * @brief Clear the UI when no table is selected
-     */
-    void clearUI();
-
-    /**
-     * @brief Update the build status label
-     * @param message The status message to display
-     * @param is_error Whether this is an error message
-     */
-    void updateBuildStatus(QString const & message, bool is_error = false);
-
-    /**
-     * @brief Update the row info label without triggering signals
-     * @param selected_source The selected row data source
-     */
-    void updateRowInfoLabel(QString const & selected_source);
-
-    /**
-     * @brief Update the visibility of interval settings based on selected data type
-     */
-    void updateIntervalSettingsVisibility();
-
-    /**
-     * @brief Get the capture range value in samples
-     * @return Capture range value
-     */
-    int getCaptureRange() const;
-
-    /**
-     * @brief Set the capture range value in samples
-     * @param value Capture range value
-     */
-    void setCaptureRange(int value);
-
-    /**
-     * @brief Check if interval beginning is selected
-     * @return True if beginning is selected, false if end is selected
-     */
-    bool isIntervalBeginningSelected() const;
-
-    /**
-     * @brief Check if interval itself is selected
-     * @return True if interval itself is selected, false otherwise
-     */
-    bool isIntervalItselfSelected() const;
-
-    // Preview helpers
-    void triggerPreviewDebounced();
-    void rebuildPreviewNow();
-    void updatePreviewSliderRange();
-    [[nodiscard]] size_t computeTotalRowCountForRowSource(QString const & row_source) const;
-    [[nodiscard]] std::unique_ptr<IRowSelector> createRowSelectorForWindow(QString const & row_source,
-                                                                           size_t start,
-                                                                           size_t size) const;
-
-    /**
-     * @brief Load column configuration from table manager into UI
-     * @param column_index The index of the column to load
-     */
-    void loadColumnConfiguration(int column_index);
-
-    /**
-     * @brief Save current column configuration from UI to table manager
-     */
-    void saveCurrentColumnConfiguration();
-
-    /**
-     * @brief Clear the column configuration UI
-     */
-    void clearColumnConfiguration();
+    std::pair<std::optional<DataSourceVariant>, RowSelectorType> 
+    createDataSourceVariant(const QString& data_source_string, 
+                           std::shared_ptr<DataManagerExtension> data_manager_extension) const;
 
     /**
      * @brief Create a row selector based on the selected row source
@@ -281,76 +212,41 @@ private:
     std::unique_ptr<IRowSelector> createRowSelector(QString const & row_source);
 
     /**
-     * @brief Add a typed column to the table view builder
-     * @tparam T The return type of the computer
-     * @param builder Reference to the TableViewBuilder
-     * @param column_info The column configuration
-     * @param data_source_variant The data source for the column
-     * @param registry Reference to the ComputerRegistry
-     * @return True if the column was added successfully, false otherwise
+     * @brief Check if a computer is compatible with a data source
+     * @param computer_name The computer name
+     * @param data_source The data source string
+     * @return True if compatible
      */
-    template<typename T>
-    bool addTypedColumnToBuilder(TableViewBuilder & builder, 
-                                ColumnInfo const & column_info,
-                                DataSourceVariant const & data_source_variant,
-                                ComputerRegistry const & registry);
+    bool isComputerCompatibleWithDataSource(const std::string& computer_name, const QString& data_source) const;
 
     /**
-     * @brief Add a column to the table view builder
-     * @param builder Reference to the TableViewBuilder
-     * @param column_info The column configuration
-     * @return True if the column was added successfully, false otherwise
+     * @brief Generate a default column name for a data source and computer combination
+     * @param data_source The data source string
+     * @param computer_name The computer name
+     * @return Generated column name
      */
-    bool addColumnToBuilder(TableViewBuilder & builder, ColumnInfo const & column_info);
+    QString generateDefaultColumnName(const QString& data_source, const QString& computer_name) const;
 
-    /**
-     * @brief Get available data sources from the data manager
-     * @return List of data source names
-     */
-    QStringList getAvailableDataSources() const;
-
-    /**
-     * @brief Get available table columns that can be used as data sources
-     * @return List of table column references
-     */
-    QStringList getAvailableTableColumns() const;
-
-    /**
-     * @brief Setup parameter UI for the selected computer
-     * @param computerName The name of the selected computer
-     */
-    void setupParameterUI(QString const & computerName);
-
-    /**
-     * @brief Clear all parameter UI controls
-     */
-    void clearParameterUI();
-
-    /**
-     * @brief Create parameter control widget based on descriptor
-     * @param descriptor The parameter descriptor
-     * @return Widget for the parameter, or nullptr if unsupported type
-     */
-    QWidget* createParameterControl(IParameterDescriptor const * descriptor);
-
-    /**
-     * @brief Get current parameter values from UI controls
-     * @return Map of parameter name to string value
-     */
-    std::map<std::string, std::string> getCurrentParameterValues() const;
-
-    /**
-     * @brief Set parameter values in UI controls
-     * @param parameters Map of parameter name to string value
-     */
-    void setParameterValues(std::map<std::string, std::string> const & parameters);
-
-    // Helpers for transforms
+    // Helper methods for the new tree-based approach
+    void loadTableInfo(QString const & table_id);
+    void clearUI();
+    void updateBuildStatus(QString const & message, bool is_error = false);
+    void updateRowInfoLabel(QString const & selected_source);
+    void updateIntervalSettingsVisibility();
+    int getCaptureRange() const;
+    void setCaptureRange(int value);
+    bool isIntervalBeginningSelected() const;
+    bool isIntervalItselfSelected() const;
+    void triggerPreviewDebounced();
+    void rebuildPreviewNow();
+    std::vector<ColumnInfo> reorderColumnsBySavedOrder(std::vector<ColumnInfo> column_infos) const;
     std::vector<std::string> parseCommaSeparatedList(QString const & text) const;
-
-    // CSV helpers
     QString promptSaveCsvFilename() const;
-    QString currentTableIdOrEmpty() const { return _current_table_id; }
+    bool addColumnToBuilder(TableViewBuilder & builder, ColumnInfo const & column_info);
+    void setJsonTemplateFromCurrentState();
+    void applyJsonTemplateToUI(QString const & jsonText);
+    friend class TableDesignerWidgetJSONTestAccessor; // test helper
+   
 };
 
 #endif// TABLEDESIGNERWIDGET_HPP

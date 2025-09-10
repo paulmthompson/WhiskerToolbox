@@ -1,7 +1,6 @@
 #ifndef GROUPINTERVALS_WIDGET_HPP
 #define GROUPINTERVALS_WIDGET_HPP
 
-#include "DataManager/transforms/data_transforms.hpp"
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
 
 namespace Ui {

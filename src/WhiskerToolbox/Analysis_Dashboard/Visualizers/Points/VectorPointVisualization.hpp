@@ -15,7 +15,7 @@
  * @tparam RowIndicatorType The type used for row indicators (e.g., int, size_t)
  */
 template<typename CoordType, typename RowIndicatorType>
-class VectorPointVisualization : public GenericPointVisualization<CoordType, RowIndicatorType> {
+struct VectorPointVisualization : public GenericPointVisualization<CoordType, RowIndicatorType> {
 public:
     /**
      * @brief Constructor for vector-based point visualization

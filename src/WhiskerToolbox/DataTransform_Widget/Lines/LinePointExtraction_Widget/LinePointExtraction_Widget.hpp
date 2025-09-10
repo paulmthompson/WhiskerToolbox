@@ -2,7 +2,6 @@
 #define LINEPOINTEXTRACTION_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Lines/line_point_extraction.hpp"
 
 namespace Ui { class LinePointExtraction_Widget; }
 

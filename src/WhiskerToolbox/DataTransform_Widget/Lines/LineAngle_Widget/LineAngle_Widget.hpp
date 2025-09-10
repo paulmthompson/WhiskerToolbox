@@ -2,7 +2,6 @@
 #define LINEANGLE_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Lines/line_angle.hpp"
 
 namespace Ui { class LineAngle_Widget; }
 

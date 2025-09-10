@@ -188,8 +188,8 @@ protected:
         }
         
         // Check image size
-      //  REQUIRE(original_mask_data->getImageSize().width == loaded_data.getImageSize().width);
-      //  REQUIRE(original_mask_data->getImageSize().height == loaded_data.getImageSize().height);
+        REQUIRE(original_mask_data->getImageSize().width == loaded_data.getImageSize().width);
+        REQUIRE(original_mask_data->getImageSize().height == loaded_data.getImageSize().height);
     }
 
 protected:
@@ -197,7 +197,7 @@ protected:
     std::shared_ptr<MaskData> original_mask_data;
 };
 
-TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - MaskData - MaskData image save and load through direct functions", "[MaskData][Image][IO]") {
+TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - IO - MaskData - MaskData image save and load through direct functions", "[MaskData][Image][IO]") {
     
     SECTION("Save MaskData to image format") {
         bool save_success = saveImageMaskData();
@@ -233,7 +233,7 @@ TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - MaskData - MaskData image save 
     }
 }
 
-TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - MaskData - MaskData image load through DataManager JSON config", "[MaskData][Image][IO][DataManager]") {
+TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - IO - MaskData - MaskData image load through DataManager JSON config", "[MaskData][Image][IO][DataManager]") {
     
     SECTION("Load image MaskData through DataManager") {
         // First save the data
@@ -306,7 +306,7 @@ TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - MaskData - MaskData image load 
     }
 }
 
-TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - MaskData - Image loader registration and format support", "[MaskData][Image][IO]") {
+TEST_CASE_METHOD(MaskDataImageTestFixture, "DM - IO - MaskData - Image loader registration and format support", "[MaskData][Image][IO]") {
     
     SECTION("Verify image loader is registered and supports mask format") {
         // Create DataManager (which triggers loader registration)

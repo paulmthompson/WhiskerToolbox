@@ -1,0 +1,141 @@
+---
+title: "Calculate Mask Area"
+format: html
+---
+
+## Overview
+
+This transform calculates the total area of all detected masks at each point in time, providing a measure of the overall size of masked regions.
+
+### Detailed Description
+
+This transformation processes a series of masks and, for each timestamp, calculates the total area covered by all masks at that specific time. The area is determined by summing the number of pixels (or voxels) that constitute each mask.
+
+The result is an analog time series where the value at each point in time represents the total mask area for that moment. This is particularly useful for quantifying how the size of a region of interest (ROI) changes over time. Since this operation simply counts pixels within existing masks, it does not require any configuration parameters.
+
+This transform takes a mask series as input and produces an analog time series as output.
+
+![](images/clipboard-2203343381.png)
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Create a 100x100 grid ---
+    grid_size = 100
+    x, y = np.meshgrid(np.arange(grid_size), np.arange(grid_size))
+
+    # --- Define a custom colormap: white for background, red for shape ---
+    from matplotlib.colors import ListedColormap
+    cmap_red = ListedColormap(['white', 'red'])
+
+    # --- Define a circular mask (Example 1) ---
+    center1_x, center1_y = 50, 50
+    radius1 = 30
+    solid_mask = (x - center1_x)**2 + (y - center1_y)**2 < radius1**2
+
+    # --- Define a donut-shaped mask (Example 2) ---
+    center2_x, center2_y = 50, 50
+    radius2_outer = 40
+    radius2_inner = 20
+    outer_circle = (x - center2_x)**2 + (y - center2_y)**2 < radius2_outer**2
+    inner_hole = (x - center2_x)**2 + (y - center2_y)**2 < radius2_inner**2
+    donut_mask = outer_circle & ~inner_hole
+
+    # --- Define multiple non-connected masks (Example 3) ---
+    center3a_x, center3a_y = 30, 35
+    radius3a = 15
+    mask3a = (x - center3a_x)**2 + (y - center3a_y)**2 < radius3a**2
+
+    center3b_x, center3b_y = 70, 65
+    radius3b = 20
+    mask3b = (x - center3b_x)**2 + (y - center3b_y)**2 < radius3b**2
+
+    multi_mask = mask3a | mask3b
+
+    # --- Create the plot with three subplots ---
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(24, 8))
+    fig.suptitle('How "Calculate Mask Area" Works', fontsize=24)
+
+    # --- Subplot 1: Solid Circle ---
+    ax1.imshow(solid_mask, cmap=cmap_red, interpolation='none')
+    ax1.contour(solid_mask, levels=[0.5], colors='black', linewidths=2)
+    ax1.text(center1_x, center1_y, 'Area = Sum of all\npixels in the shape',
+             ha='center', va='center', fontsize=14, family='sans-serif')
+    ax1.set_title('Example 1: A Solid Shape')
+    ax1.set_xlabel('X-coordinate')
+    ax1.set_ylabel('Y-coordinate')
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+
+    # --- Subplot 2: Donut Shape ---
+    ax2.imshow(donut_mask, cmap=cmap_red, interpolation='none')
+    ax2.contour(donut_mask, levels=[0.5], colors='black', linewidths=2)
+    ax2.text(center2_x, center2_y, 'The area of the\nhole is NOT counted',
+             ha='center', va='center', fontsize=14, family='sans-serif', bbox=dict(facecolor='white', alpha=0.8, boxstyle='round,pad=0.5'))
+    ax2.set_title('Example 2: A Shape with a Hole')
+    ax2.set_xlabel('X-coordinate')
+    ax2.set_ylabel('') # No y-label
+    ax2.set_xticks([])
+    ax2.set_yticks([])
+
+    # --- Subplot 3: Multiple Shapes ---
+    ax3.imshow(multi_mask, cmap=cmap_red, interpolation='none')
+    ax3.contour(multi_mask, levels=[0.5], colors='black', linewidths=2)
+    ax3.text(50, 50, 'Total Area = \nArea of Shape 1\n+ Area of Shape 2',
+             ha='center', va='center', fontsize=14, family='sans-serif')
+    ax3.set_title('Example 3: Multiple Shapes')
+    ax3.set_xlabel('X-coordinate')
+    ax3.set_ylabel('') # No y-label
+    ax3.set_xticks([])
+    ax3.set_yticks([])
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+### Neuroscience Use Cases
+
+In neuroscience research, quantifying the area of specific regions is a common requirement for analyzing imaging data:
+
+-   **Cell Swelling or Shrinking:** When studying cellular dynamics, this transform can measure changes in the cross-sectional area of a cell over time, which might occur in response to a stimulus or pathological condition.
+-   **Pupilometry:** In vision and cognitive neuroscience, tracking the area of the pupil provides insights into arousal, attention, and cognitive load. This transform can be applied to masks of the pupil from eye-tracking videos.
+-   **Lesion Sizing:** In studies of brain injury or disease, this can be used to quantify the size of a lesion or a plaque from histological or in-vivo imaging data, tracking its progression over time.
+-   **Calcium Imaging ROI Activity:** For analyzing calcium imaging data, this transform can measure the area of a region of interest (ROI) that shows significant activity (e.g., above a certain brightness threshold), indicating the spatial extent of neural firing.
+
+## Parameters
+
+This transform does not have any parameters that need to be configured. It directly calculates the area from the input mask data.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to load mask data and run this transformation.
+
+``` json
+[
+  {
+    "transformations": {
+      "metadata": {
+        "name": "Mask Area Calculation Pipeline",
+        "description": "Test mask area calculation on mask data",
+        "version": "1.0"
+      },
+      "steps": [
+        {
+          "step_id": "1",
+          "transform_name": "Calculate Area",
+          "phase": "analysis",
+          "input_key": "test_mask_data",
+          "output_key": "calculated_areas",
+          "parameters": {}
+        }
+      ]
+    }
+  }
+]
+```

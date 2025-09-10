@@ -98,13 +98,13 @@
   <customwidget>
    <class>CSVAnalogLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.hpp</header>
+   <header>AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BinaryAnalogLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp</header>
+   <header>AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

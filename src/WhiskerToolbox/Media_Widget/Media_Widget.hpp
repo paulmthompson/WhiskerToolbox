@@ -3,10 +3,13 @@
 
 #include <QWidget>
 
+#include <memory>
+#include <set>
+
 class DataManager;
-class MainWindow;
 class Media_Window;
 class MediaText_Widget;
+class MediaProcessing_Widget;
 class Section;
 
 namespace Ui {
@@ -21,11 +24,13 @@ public:
     ~Media_Widget() override;
 
     void setDataManager(std::shared_ptr<DataManager> data_manager);
-    void setScene(Media_Window * scene) {
-        _scene = scene;
-        _connectTextWidgetToScene();
-    };
-
+    
+    /**
+     * @brief Get the Media_Window owned by this widget
+     * @return Pointer to the Media_Window
+     */
+    Media_Window* getMediaWindow() const { return _scene.get(); }
+    
     void updateMedia();
 
     void setFeatureColor(std::string const & feature, std::string const & hex_color);
@@ -45,12 +50,15 @@ protected:
 private:
     Ui::Media_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
-    Media_Window * _scene = nullptr;
+    std::unique_ptr<Media_Window> _scene;
     std::map<std::string, std::vector<int>> _callback_ids;
 
     // Text overlay widgets
     Section * _text_section = nullptr;
     MediaText_Widget * _text_widget = nullptr;
+    
+    // Processing widget for colormap options
+    MediaProcessing_Widget * _processing_widget = nullptr;
 
     // Zoom state
     double _current_zoom {1.0};
@@ -62,7 +70,9 @@ private:
     void _applyZoom(double factor, bool anchor_under_mouse);
 
     void _createOptions();
+    void _createMediaWindow();
     void _connectTextWidgetToScene();
+    
 
 private slots:
     void _updateCanvasSize();

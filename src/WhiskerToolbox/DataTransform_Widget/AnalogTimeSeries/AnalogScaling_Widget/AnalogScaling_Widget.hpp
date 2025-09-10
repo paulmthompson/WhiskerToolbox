@@ -2,7 +2,7 @@
 #define ANALOGSCALING_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/AnalogTimeSeries/analog_scaling.hpp"
+#include "DataManager/transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp" // Analog Statistics
 
 class DataManager;
 namespace Ui { class AnalogScaling_Widget; }

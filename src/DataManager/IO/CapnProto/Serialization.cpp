@@ -58,14 +58,6 @@ std::shared_ptr<LineData> deserializeLineData(
     capnp::FlatArrayMessageReader message(messageData, options);
     LineDataProto::Reader lineDataProto = message.getRoot<LineDataProto>();
 
-    auto lineData = std::make_shared<LineData>();
-
-    uint32_t const width = lineDataProto.getImageWidth();
-    uint32_t const height = lineDataProto.getImageHeight();
-    if (width > 0 && height > 0) {
-        lineData->setImageSize(ImageSize{static_cast<int>(width), static_cast<int>(height)});
-    }
-
     std::map<TimeFrameIndex, std::vector<Line2D>> dataMap;
     for (auto timeLine: lineDataProto.getTimeLines()) {
         TimeFrameIndex const time = TimeFrameIndex(timeLine.getTime());
@@ -84,7 +76,15 @@ std::shared_ptr<LineData> deserializeLineData(
         dataMap[time] = lines;
     }
 
-    return std::make_shared<LineData>(dataMap);
+    auto lineData = std::make_shared<LineData>(dataMap);
+
+    uint32_t const width = lineDataProto.getImageWidth();
+    uint32_t const height = lineDataProto.getImageHeight();
+    if (width > 0 && height > 0) {
+        lineData->setImageSize(ImageSize{static_cast<int>(width), static_cast<int>(height)});
+    }
+
+    return lineData;
 }
 
 } // namespace IO::CapnProto

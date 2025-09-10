@@ -2,7 +2,7 @@
 #include "ui_LineClip_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/transforms/Lines/line_clip.hpp"
+#include "DataManager/transforms/Lines/Line_Clip/line_clip.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 
 LineClip_Widget::LineClip_Widget(QWidget *parent) :

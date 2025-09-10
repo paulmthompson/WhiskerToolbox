@@ -3,8 +3,8 @@
 
 #include "DataManagerTypes.hpp"
 
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <filesystem>
 #include <functional>   // std::function
@@ -14,6 +14,8 @@
 #include <unordered_map>// std::unordered_map
 #include <variant>      // std::variant
 #include <vector>       // std::vector
+
+#include "nlohmann/json_fwd.hpp"
 
 // Forward declarations for identity
 class EntityRegistry;
@@ -139,7 +141,7 @@ public:
     */
     void reset();
 
-   
+
     int64_t getCurrentTime() { return _current_time; };
     void setCurrentTime(int64_t time) { _current_time = time; }
 
@@ -271,6 +273,22 @@ public:
         _notifyObservers();
     }
 
+    /**
+     * @brief Delete data associated with the specified key
+     * 
+     * Removes the data object and its associated time frame mapping from the DataManager.
+     * All observers are notified of the change, allowing dependent widgets to clean up.
+     * 
+     * @param key The key of the data to delete
+     * @return bool True if the data was successfully deleted, false if the key doesn't exist
+     * 
+     * @note This method will:
+     *       - Remove the data from the internal storage
+     *       - Remove the time frame mapping for this data
+     *       - Notify all observers of the change
+     *       - The shared_ptr will be automatically cleaned up when no other references exist
+     */
+    bool deleteData(std::string const & key);
 
     [[nodiscard]] DM_DataType getType(std::string const & key) const;
 
@@ -310,12 +328,43 @@ private:
 
     // ======= Identity / Entity registry =======
     std::unique_ptr<EntityRegistry> _entity_registry;
-
 };
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::filesystem::path const & base_path);
 
 std::string convert_data_type_to_string(DM_DataType type);
+
+
+extern template std::shared_ptr<AnalogTimeSeries> DataManager::getData<AnalogTimeSeries>(std::string const & key);
+extern template void DataManager::setData<AnalogTimeSeries>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<AnalogTimeSeries>(std::string const & key, std::shared_ptr<AnalogTimeSeries> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<DigitalEventSeries> DataManager::getData<DigitalEventSeries>(std::string const & key);
+extern template void DataManager::setData<DigitalEventSeries>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<DigitalEventSeries>(std::string const & key, std::shared_ptr<DigitalEventSeries> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<DigitalIntervalSeries> DataManager::getData<DigitalIntervalSeries>(std::string const & key);
+extern template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, std::shared_ptr<DigitalIntervalSeries> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<LineData> DataManager::getData<LineData>(std::string const & key);
+extern template void DataManager::setData<LineData>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<LineData>(std::string const & key, std::shared_ptr<LineData> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<MaskData> DataManager::getData<MaskData>(std::string const & key);
+extern template void DataManager::setData<MaskData>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<MaskData>(std::string const & key, std::shared_ptr<MaskData> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<MediaData> DataManager::getData<MediaData>(std::string const & key);
+
+extern template std::shared_ptr<PointData> DataManager::getData<PointData>(std::string const & key);
+extern template void DataManager::setData<PointData>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<PointData>(std::string const & key, std::shared_ptr<PointData> data, TimeKey const & time_key);
+
+extern template std::shared_ptr<TensorData> DataManager::getData<TensorData>(std::string const & key);
+extern template void DataManager::setData<TensorData>(std::string const & key, TimeKey const & time_key);
+extern template void DataManager::setData<TensorData>(std::string const & key, std::shared_ptr<TensorData> data, TimeKey const & time_key);
 
 
 #endif// DATAMANAGER_HPP

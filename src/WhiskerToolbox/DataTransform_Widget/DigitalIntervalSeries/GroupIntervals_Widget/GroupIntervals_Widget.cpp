@@ -2,7 +2,7 @@
 
 #include "ui_GroupIntervals_Widget.h"
 
-#include "DataManager/transforms/DigitalIntervalSeries/digital_interval_group.hpp"
+#include "DataManager/transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 
 #include <iostream>
 

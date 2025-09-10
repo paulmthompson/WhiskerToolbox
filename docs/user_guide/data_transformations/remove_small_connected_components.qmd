@@ -1,0 +1,131 @@
+---
+title: "Remove Small Connected Components"
+format: html
+---
+
+## Overview
+
+This transform removes small, isolated groups of pixels (connected components) from a binary mask, which is useful for cleaning up noise or irrelevant objects.
+
+### Detailed Description
+
+In image analysis, particularly with binary masks, it's common to have small, spurious regions of interest that are not relevant to the main analysis. This transform uses a connected components algorithm to identify all distinct, contiguous regions of pixels in the mask. It then filters out any region whose total number of pixels is below a specified `threshold`.
+
+This process helps to isolate and preserve only the most significant structures in the mask, making subsequent analysis, such as object tracking or morphological measurement, more robust. The connectivity analysis considers pixels to be connected if they touch at their edges or corners (8-connectivity).
+
+This transform takes a mask as input and produces a new, cleaned-up mask as output.
+
+![](images/clipboard-3918123841.png)
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import label
+
+# Use xkcd style for the plot
+with plt.xkcd():
+    # --- Generate a sample binary mask ---
+    # Create a grid
+    grid = np.zeros((25, 50))
+
+    # Add a large component
+    grid[5:15, 5:15] = 1
+
+    # Add some small noise components
+    grid[3:5, 20:22] = 1   # 4 pixels
+    grid[18:21, 18:21] = 1 # 9 pixels
+    grid[10, 30] = 1       # 1 pixel
+    grid[12, 32] = 1       # 1 pixel
+    grid[22, 40:45] = 1    # 5 pixels
+    grid[2, 40:48] = 1     # 8 pixels
+
+    # --- Function to apply the transform ---
+    def remove_small_components(data, threshold):
+        labeled_array, num_features = label(data, structure=np.ones((3,3)))
+        sizes = np.bincount(labeled_array.ravel())
+
+        # Create a mask to remove small components
+        mask = np.zeros_like(labeled_array, dtype=bool)
+        for i, size in enumerate(sizes):
+            if i > 0 and size >= threshold: # i=0 is background
+                mask[labeled_array == i] = True
+
+        return data * mask
+
+    # --- Apply filtering with different thresholds ---
+    filtered_low_thresh = remove_small_components(grid, 5)
+    filtered_high_thresh = remove_small_components(grid, 10)
+
+    # --- Create the plots ---
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 9))
+    fig.suptitle('Effect of Threshold on Removing Small Components', fontsize=16)
+
+    # Plot 1: Original Mask
+    ax1.imshow(grid, cmap='gray_r', interpolation='none')
+    ax1.set_title('Original Mask with Noise')
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+
+    # Plot 2: Filtered with Low Threshold
+    ax2.imshow(filtered_low_thresh, cmap='gray_r', interpolation='none')
+    ax2.set_title('After Filtering (Threshold = 5)')
+    ax2.set_ylabel('Components with < 5 pixels removed')
+    ax2.set_xticks([])
+    ax2.set_yticks([])
+
+    # Plot 3: Filtered with High Threshold
+    ax3.imshow(filtered_high_thresh, cmap='gray_r', interpolation='none')
+    ax3.set_title('After Filtering (Threshold = 10)')
+    ax3.set_xlabel('Pixel Coordinates')
+    ax3.set_ylabel('Components with < 10 pixels removed')
+    ax3.set_xticks([])
+    ax3.set_yticks([])
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+### Neuroscience Use Cases
+
+-   **Calcium Imaging Cleanup:** In two-photon or wide-field calcium imaging, masks representing active neurons or regions of interest (ROIs) can be noisy. This transform can remove small, spurious signals that are unlikely to be true neuronal activity, ensuring that only significant ROIs are kept for analysis.
+-   **Behavioral Tracking:** When tracking an animal's position or posture using video, the resulting binary masks can contain noise from lighting changes or background artifacts. Removing small connected components can clean up the mask of the animal, leading to more accurate tracking of its centroid or body shape.
+-   **Histology and Morphology:** When analyzing images of tissue slices, automated segmentation can produce small, artifactual regions. This transform can be used to filter out these artifacts, leaving only the larger, more relevant structures like cell bodies or labeled tracts.
+
+## Parameters
+
+This transform has a single parameter:
+
+-   `threshold`: An integer value that specifies the minimum number of pixels a connected component must have to be preserved. Any component with a pixel count smaller than this value will be removed from the mask.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example loads a mask, removes all connected components with fewer than 3 pixels, and saves the result.
+
+``` json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Mask Connected Component Pipeline",
+            "description": "Test connected component analysis on mask data",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Remove Small Connected Components",
+                "phase": "analysis",
+                "input_key": "test_mask",
+                "output_key": "filtered_mask",
+                "parameters": {
+                    "threshold": 3
+                }
+            }
+        ]
+    }
+}
+]
+```

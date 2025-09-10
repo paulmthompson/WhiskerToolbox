@@ -10,7 +10,7 @@ void LoaderRegistry::registerLoader(std::unique_ptr<IFormatLoader> loader) {
         return;
     }
     
-    std::cout << "LoaderRegistry: Registered loader '" << loader->getLoaderName() << "'" << std::endl;
+    //std::cout << "LoaderRegistry: Registered loader '" << loader->getLoaderName() << "'" << std::endl;
     m_loaders.push_back(std::move(loader));
 }
 

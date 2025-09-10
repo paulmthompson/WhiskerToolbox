@@ -3,12 +3,12 @@
 #include "ui_LineAlignment_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/transforms/Lines/Line_Alignment/line_alignment.hpp"
 #include "Media/Media_Data.hpp"
 
-LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
-      TransformParameter_Widget(parent),
-      ui(new Ui::LineAlignment_Widget)
-{
+LineAlignment_Widget::LineAlignment_Widget(QWidget * parent)
+    : TransformParameter_Widget(parent),
+      ui(new Ui::LineAlignment_Widget) {
     ui->setupUi(this);
 
     // Setup approach combo box
@@ -27,7 +27,7 @@ LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
     ui->perpendicularRangeSpinBox->setValue(50);
     ui->useProcessedDataCheckBox->setChecked(true);
     ui->approachComboBox->setCurrentIndex(0);
-    
+
     // Connect signals and slots
     connect(ui->widthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &LineAlignment_Widget::_widthValueChanged);
@@ -39,6 +39,8 @@ LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
             this, &LineAlignment_Widget::_approachChanged);
     connect(ui->outputModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LineAlignment_Widget::_outputModeChanged);
+    connect(ui->mediaDataKeyComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &LineAlignment_Widget::_mediaDataKeyChanged);
 }
 
 LineAlignment_Widget::~LineAlignment_Widget() {
@@ -47,32 +49,113 @@ LineAlignment_Widget::~LineAlignment_Widget() {
 
 std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() const {
     auto params = std::make_unique<LineAlignmentParameters>();
-    
-    // Auto-find the first available media data instead of requiring user selection
-    if (_data_manager) {
-        auto all_keys = _data_manager->getKeys<MediaData>();
-        for (const auto& key : all_keys) {
-            auto data_variant = _data_manager->getDataVariant(key);
+
+    // Use the selected media data key from the combo box
+    if (_data_manager && !_selected_media_key.empty()) {
+        try {
+            auto data_variant = _data_manager->getDataVariant(_selected_media_key);
             if (data_variant.has_value() &&
                 std::holds_alternative<std::shared_ptr<MediaData>>(*data_variant)) {
                 params->media_data = std::get<std::shared_ptr<MediaData>>(*data_variant);
-                break; // Use the first media data found
+            } else {
+                // If the selected key doesn't contain MediaData, return nullptr to indicate failure
+                return nullptr;
             }
+        } catch (...) {
+            // If any exception occurs, return nullptr to indicate failure
+            return nullptr;
         }
+    } else {
+        // No media data key selected, return nullptr to indicate failure
+        return nullptr;
     }
-    
+
     // Set other parameters from UI
     params->width = ui->widthSpinBox->value();
     params->perpendicular_range = ui->perpendicularRangeSpinBox->value();
     params->use_processed_data = ui->useProcessedDataCheckBox->isChecked();
     params->approach = static_cast<FWHMApproach>(ui->approachComboBox->currentData().toInt());
     params->output_mode = static_cast<LineAlignmentOutputMode>(ui->outputModeComboBox->currentData().toInt());
-    
+
     return params;
 }
 
 void LineAlignment_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = data_manager;
+
+    if (_data_manager) {
+        // Add observer to refresh media data keys when data manager changes
+        _data_manager->addObserver([this]() {
+            _refreshMediaDataKeys();
+        });
+
+        // Initial population of media data keys
+        _refreshMediaDataKeys();
+    }
+}
+
+void LineAlignment_Widget::_refreshMediaDataKeys() {
+    if (!_data_manager) {
+        return;
+    }
+
+    // Get current media data keys
+    auto media_keys = _data_manager->getKeys<MediaData>();
+
+    // Update the combo box
+    _updateMediaDataKeyComboBox();
+
+    // Enable/disable the combo box based on available keys
+    bool has_keys = !media_keys.empty();
+    ui->mediaDataKeyComboBox->setEnabled(has_keys);
+
+    if (has_keys) {
+        // Select the first key by default if none is currently selected
+        if (_selected_media_key.empty() ||
+            std::find(media_keys.begin(), media_keys.end(), _selected_media_key) == media_keys.end()) {
+            _selected_media_key = media_keys[0];
+            // Find the index of the selected key in the combo box
+            int index = ui->mediaDataKeyComboBox->findText(QString::fromStdString(_selected_media_key));
+            if (index >= 0) {
+                ui->mediaDataKeyComboBox->setCurrentIndex(index);
+            }
+        }
+    } else {
+        // No keys available, clear selection
+        _selected_media_key.clear();
+        ui->mediaDataKeyComboBox->clear();
+    }
+}
+
+void LineAlignment_Widget::_updateMediaDataKeyComboBox() {
+    if (!_data_manager) {
+        return;
+    }
+
+    // Store current selection
+    QString current_text = ui->mediaDataKeyComboBox->currentText();
+
+    // Clear and repopulate the combo box
+    ui->mediaDataKeyComboBox->clear();
+
+    auto media_keys = _data_manager->getKeys<MediaData>();
+    for (auto const & key: media_keys) {
+        ui->mediaDataKeyComboBox->addItem(QString::fromStdString(key));
+    }
+
+    // Restore selection if it still exists
+    if (!current_text.isEmpty()) {
+        int index = ui->mediaDataKeyComboBox->findText(current_text);
+        if (index >= 0) {
+            ui->mediaDataKeyComboBox->setCurrentIndex(index);
+        }
+    }
+}
+
+void LineAlignment_Widget::_mediaDataKeyChanged(int index) {
+    if (index >= 0 && _data_manager) {
+        _selected_media_key = ui->mediaDataKeyComboBox->itemText(index).toStdString();
+    }
 }
 
 void LineAlignment_Widget::_widthValueChanged(int value) {

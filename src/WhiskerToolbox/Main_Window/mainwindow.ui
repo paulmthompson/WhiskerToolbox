@@ -100,6 +100,7 @@
     <addaction name="actionTongue_Tracking"/>
     <addaction name="actionMachine_Learning"/>
     <addaction name="actionData_Viewer"/>
+    <addaction name="actionNew_Media_Widget"/>
     <addaction name="actionData_Transforms"/>
     <addaction name="actionTerminal_Output"/>
     <addaction name="actionAnalysis_Dashboard"/>
@@ -189,6 +190,11 @@
   <action name="actionData_Viewer">
    <property name="text">
     <string>Data Viewer</string>
+   </property>
+  </action>
+  <action name="actionNew_Media_Widget">
+   <property name="text">
+    <string>New Media Widget</string>
    </property>
   </action>
   <action name="actionBatch_Processing">

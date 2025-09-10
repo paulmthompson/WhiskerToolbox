@@ -2,6 +2,8 @@
 
 #include "ui_LineAngle_Widget.h"
 
+#include "DataManager/transforms/Lines/Line_Angle/line_angle.hpp"
+
 LineAngle_Widget::LineAngle_Widget(QWidget *parent) :
       TransformParameter_Widget(parent),
       ui(new Ui::LineAngle_Widget)

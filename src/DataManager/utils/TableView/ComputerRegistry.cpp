@@ -37,7 +37,7 @@ ComputerParameterInfo::ComputerParameterInfo(std::string name_, std::string desc
 ComputerParameterInfo::~ComputerParameterInfo() = default;
 
 ComputerRegistry::ComputerRegistry() {
-    std::cout << "Initializing Computer Registry..." << std::endl;
+    //std::cout << "Initializing Computer Registry..." << std::endl;
     
     registerBuiltInComputers();
     registerBuiltInAdapters();
@@ -45,9 +45,11 @@ ComputerRegistry::ComputerRegistry() {
     computeComputerMappings();
     computeAdapterMappings();
     
+    /*
     std::cout << "Computer Registry Initialized with " 
               << all_computers_.size() << " computers and " 
               << all_adapters_.size() << " adapters." << std::endl;
+    */
 }
 
 std::vector<ComputerInfo> ComputerRegistry::getAvailableComputers(
@@ -245,10 +247,11 @@ void ComputerRegistry::registerComputer(ComputerInfo info, ComputerFactory facto
         return;
     }
     
+    /*
     std::cout << "Registering computer: " << name 
               << " (Row selector: " << static_cast<int>(info.requiredRowSelector)
               << ", Source type: " << info.requiredSourceType.name() << ")" << std::endl;
-    
+    */
     all_computers_.push_back(std::move(info));
     ComputerInfo const* infoPtr = &all_computers_.back();
     
@@ -264,10 +267,11 @@ void ComputerRegistry::registerAdapter(AdapterInfo info, AdapterFactory factory)
         return;
     }
     
+    /*
     std::cout << "Registering adapter: " << name 
               << " (Input type: " << info.inputType.name()
               << ", Output type: " << info.outputType.name() << ")" << std::endl;
-    
+    */
     all_adapters_.push_back(std::move(info));
     AdapterInfo const* infoPtr = &all_adapters_.back();
     
@@ -284,10 +288,11 @@ void ComputerRegistry::registerMultiComputer(ComputerInfo info, MultiComputerFac
 
     info.isMultiOutput = true;
 
+    /*
     std::cout << "Registering multi-output computer: " << name
               << " (Row selector: " << static_cast<int>(info.requiredRowSelector)
               << ", Source type: " << info.requiredSourceType.name() << ")" << std::endl;
-
+    */
     all_computers_.push_back(std::move(info));
     ComputerInfo const* infoPtr = &all_computers_.back();
 
@@ -296,7 +301,7 @@ void ComputerRegistry::registerMultiComputer(ComputerInfo info, MultiComputerFac
 }
 
 void ComputerRegistry::computeComputerMappings() {
-    std::cout << "Computing computer mappings..." << std::endl;
+    //std::cout << "Computing computer mappings..." << std::endl;
     selector_source_to_computers_.clear();
     
     for (auto const& info : all_computers_) {
@@ -304,18 +309,18 @@ void ComputerRegistry::computeComputerMappings() {
         selector_source_to_computers_[key].push_back(&info);
     }
     
-    std::cout << "Finished computing computer mappings." << std::endl;
+    //std::cout << "Finished computing computer mappings." << std::endl;
 }
 
 void ComputerRegistry::computeAdapterMappings() {
-    std::cout << "Computing adapter mappings..." << std::endl;
+    //std::cout << "Computing adapter mappings..." << std::endl;
     input_type_to_adapters_.clear();
     
     for (auto const& info : all_adapters_) {
         input_type_to_adapters_[info.inputType].push_back(&info);
     }
     
-    std::cout << "Finished computing adapter mappings." << std::endl;
+    //std::cout << "Finished computing adapter mappings." << std::endl;
 }
 
 std::type_index ComputerRegistry::getSourceTypeIndex(DataSourceVariant const& source) const {
@@ -325,7 +330,7 @@ std::type_index ComputerRegistry::getSourceTypeIndex(DataSourceVariant const& so
 }
 
 void ComputerRegistry::registerBuiltInComputers() {
-    std::cout << "Registering built-in computers..." << std::endl;
+    //std::cout << "Registering built-in computers..." << std::endl;
     
     // IntervalReductionComputer - Mean
     {
@@ -901,11 +906,11 @@ void ComputerRegistry::registerBuiltInComputers() {
         registerComputer(std::move(info), std::move(factory));
     }
     
-    std::cout << "Finished registering built-in computers." << std::endl;
+    //std::cout << "Finished registering built-in computers." << std::endl;
 }
 
 void ComputerRegistry::registerBuiltInAdapters() {
-    std::cout << "Registering built-in adapters..." << std::endl;
+    //std::cout << "Registering built-in adapters..." << std::endl;
     
     // PointComponentAdapter - X Component
     {
@@ -980,5 +985,5 @@ void ComputerRegistry::registerBuiltInAdapters() {
         registerAdapter(std::move(info), std::move(factory));
     }
 
-    std::cout << "Finished registering built-in adapters." << std::endl;
+    //std::cout << "Finished registering built-in adapters." << std::endl;
 }

@@ -12,7 +12,7 @@
 #include <string>
 
 class DataManager;
-class Media_Window;
+class MediaWidgetManager;
 
 
 namespace Ui {
@@ -64,7 +64,7 @@ protected:
 private:
     Ui::MainWindow * ui;
 
-    Media_Window * _scene;
+    std::unique_ptr<MediaWidgetManager> _media_manager;
 
     ads::CDockManager * _m_DockManager;
 
@@ -73,6 +73,9 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
     std::map<std::string, std::unique_ptr<QWidget>> _widgets;
+    
+    // Counter for generating unique media widget IDs
+    int _media_widget_counter = 1; // Start at 1 since "main" is the initial one
 
     void _createActions();
     void _buildInitialLayout();
@@ -90,6 +93,7 @@ private slots:
     void openTongueTracking();
     void openMLWidget();
     void openDataViewer();
+    void openNewMediaWidget();
     void openBatchProcessingWidget();
     void openPointLoaderWidget();
     void openMaskLoaderWidget();

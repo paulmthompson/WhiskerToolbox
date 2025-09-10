@@ -1,6 +1,7 @@
 #ifndef LINE_DATA_LOADER_HPP
 #define LINE_DATA_LOADER_HPP
 
+#include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -109,6 +110,7 @@ struct CSVMultiFileLineSaverOptions {
  *
  * @var CSVMultiFileLineLoaderOptions::file_pattern
  * File pattern to match (e.g., "*.csv" for all CSV files).
+ *
  */
 struct CSVMultiFileLineLoaderOptions {
     std::string parent_dir = ".";
@@ -142,6 +144,7 @@ struct CSVMultiFileLineLoaderOptions {
  *
  * @var CSVSingleFileLineLoaderOptions::header_identifier
  * The text in the first column that identifies the header row.
+ * 
  */
 struct CSVSingleFileLineLoaderOptions {
     std::string filepath;

@@ -3,7 +3,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "Media_Window/Media_Window.hpp"
+#include "Media_Widget/Media_Window/Media_Window.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
 #include <iostream>

@@ -138,6 +138,33 @@ p, li { white-space: pre-wrap; }
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="media_source_groupbox">
+     <property name="title">
+      <string>Media Source</string>
+     </property>
+     <layout class="QVBoxLayout" name="media_source_layout">
+      <item>
+       <layout class="QHBoxLayout" name="media_widget_layout">
+        <item>
+         <widget class="QLabel" name="media_widget_label">
+          <property name="text">
+           <string>Media Widget:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="media_widget_combobox">
+          <property name="toolTip">
+           <string>Select which media widget's content to export</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="sequences_groupbox">
      <property name="title">
       <string>Video Sequences</string>

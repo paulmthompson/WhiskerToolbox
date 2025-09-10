@@ -2,6 +2,7 @@
 #define DISPLAY_OPTIONS_HPP
 
 #include "../../DataManager/utils/color.hpp"
+#include "ImageProcessing/ProcessingOptions.hpp"
 
 #include <string>
 #include <vector>
@@ -52,6 +53,17 @@ struct BaseDisplayOptions {
     bool is_visible{DefaultDisplayValues::VISIBLE};
 
     virtual ~BaseDisplayOptions() = default;
+};
+
+struct MediaDisplayOptions : public BaseDisplayOptions {
+    ContrastOptions contrast_options;
+    GammaOptions gamma_options;
+    SharpenOptions sharpen_options;
+    ClaheOptions clahe_options;
+    BilateralOptions bilateral_options;
+    MedianOptions median_options;
+    MagicEraserOptions magic_eraser_options;
+    ColormapOptions colormap_options;
 };
 
 struct PointDisplayOptions : public BaseDisplayOptions {

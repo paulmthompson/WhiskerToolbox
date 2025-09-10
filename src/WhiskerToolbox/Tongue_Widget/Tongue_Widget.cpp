@@ -60,7 +60,7 @@ void Tongue_Widget::keyPressEvent(QKeyEvent *event) {
 void Tongue_Widget::_startGrabCut(){
     auto media = _data_manager->getData<MediaData>("media");
     auto const current_time = _data_manager->getCurrentTime();
-    auto media_data = media->getProcessedData(current_time);
+    auto media_data = media->getProcessedData8(current_time);
 
 
     bool const is_gray = media->getFormat() == MediaData::DisplayFormat::Gray;

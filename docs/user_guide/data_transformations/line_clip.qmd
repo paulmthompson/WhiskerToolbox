@@ -1,0 +1,143 @@
+---
+title: "Line Clip by Reference Line"
+format: html
+---
+
+## Overview
+
+This transform clips a set of lines based on where they intersect with a single, user-defined reference line.
+
+### Detailed Description
+
+This transformation is used to shorten or trim lines at the point where they cross a specified reference line. For each line in the input data, the algorithm finds the first point of intersection with the reference line. Based on the `clip_side` parameter, it then keeps either the segment of the line from its start to the intersection point (`KeepBase`) or the segment from the intersection point to its end (`KeepDistal`).
+
+If a line does not intersect the reference line, it remains unchanged in the output. This is useful for standardizing line data, for example, by trimming all lines to a common boundary.
+
+![](images/clipboard-2648525334.png)
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define a function to find the intersection of two line segments
+def get_intersection(p1, p2, p3, p4):
+    s1_x = p2[0] - p1[0]
+    s1_y = p2[1] - p1[1]
+    s2_x = p4[0] - p3[0]
+    s2_y = p4[1] - p3[1]
+
+    s = (-s1_y * (p1[0] - p3[0]) + s1_x * (p1[1] - p3[1])) / (-s2_x * s1_y + s1_x * s2_y)
+    t = ( s2_x * (p1[1] - p3[1]) - s2_y * (p1[0] - p3[0])) / (-s2_x * s1_y + s1_x * s2_y)
+
+    if s >= 0 and s <= 1 and t >= 0 and t <= 1:
+        # Intersection detected
+        return p1[0] + (t * s1_x), p1[1] + (t * s1_y)
+    return None
+
+with plt.xkcd():
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6), sharey=True)
+    fig.suptitle('Line Clipping by a Reference Line', fontsize=18)
+
+    # --- Setup common elements ---
+    # Reference Line (a vertical line)
+    ref_line = np.array([[5, 2], [5, 10]])
+    
+    # Lines to be clipped (some cross, some don't)
+    lines_to_clip = [
+        np.array([[2, 8], [8, 7]]),    # Crosses
+        np.array([[2, 4], [8, 5]]),    # Crosses
+        np.array([[3, 9.5], [6, 9.5]]), # Crosses
+        np.array([[6, 3], [9, 3]]),    # Doesn't cross
+    ]
+
+    for ax, title, clip_side in [(ax1, 'KeepBase', 'base'), (ax2, 'KeepDistal', 'distal')]:
+        ax.set_title(title)
+        ax.plot(ref_line[:, 0], ref_line[:, 1], 'r--', lw=2, label='Reference Line')
+        
+        for line in lines_to_clip:
+            intersection = get_intersection(line[0], line[1], ref_line[0], ref_line[1])
+            
+            # Plot the original full line faintly
+            ax.plot(line[:, 0], line[:, 1], 'gray', linestyle=':', alpha=0.7)
+
+            if intersection:
+                # Plot the intersection point
+                ax.plot(intersection[0], intersection[1], 'ro', markersize=8)
+
+                if clip_side == 'base':
+                    # Keep the part from the start to the intersection
+                    clipped_segment = np.array([line[0], intersection])
+                    ax.plot(clipped_segment[:, 0], clipped_segment[:, 1], 'b-', lw=3, label='Kept Segment' if 'Kept' not in ax.get_legend_handles_labels()[1] else "")
+                else: # 'distal'
+                    # Keep the part from the intersection to the end
+                    clipped_segment = np.array([intersection, line[1]])
+                    ax.plot(clipped_segment[:, 0], clipped_segment[:, 1], 'b-', lw=3, label='Kept Segment' if 'Kept' not in ax.get_legend_handles_labels()[1] else "")
+            else:
+                # If no intersection, the whole line is "kept"
+                ax.plot(line[:, 0], line[:, 1], 'b-', lw=3, label='Kept Segment' if 'Kept' not in ax.get_legend_handles_labels()[1] else "")
+
+
+        ax.set_xlabel('X Coordinate')
+        ax.set_ylabel('Y Coordinate')
+        ax.grid(True)
+        ax.legend(['Reference Line', 'Clipped Segment', 'Intersection Point', 'Kept Segment'],
+                  loc='upper right', fontsize=10)
+        ax.set_xlim(0, 12)
+        ax.set_ylim(0, 12)
+        ax.set_aspect('equal', adjustable='box')
+
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.show()
+
+```
+:::
+
+### Neuroscience Use Cases
+
+-   **Standardizing Whisker Tracking Data:** In neuroscience experiments involving whisker tracking, it's often necessary to analyze the whisker's movement relative to a fixed point, like the edge of a pole or object. This transform can clip all tracked whisker lines at the boundary of that object, ensuring that only the relevant segment of the whisker is considered for analysis.
+-   **Analyzing Neurite Outgrowth:** When studying neurite or axon growth in microscopy images, researchers might want to measure growth only up to a certain landmark or boundary. This transform can be used to clip the traced neurites at that boundary.
+-   **Path Analysis in Behavioral Studies:** In studies of animal behavior, if an animal's path is tracked, this transform could be used to clip the path at the entrance to a specific zone or maze arm, isolating the behavior within or outside that area.
+
+## Parameters
+
+This transform has the following parameters:
+
+-   `reference_line_data_name`: The key identifying the `LineData` object in the data manager that will be used as the reference for clipping.
+-   `reference_frame`: The specific time frame within the reference line data to use for clipping. All lines in the input data will be clipped against this single frame of the reference line.
+-   `clip_side`: Determines which part of the line to keep after clipping.
+    -   `KeepBase`: Keeps the portion of the line from its starting point to the intersection point.
+    -   `KeepDistal`: Keeps the portion of the line from the intersection point to its end point.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example clips a set of lines against a reference line, keeping the base segment of each line.
+
+``` json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Line Clip Pipeline",
+            "description": "Test line clipping on line data",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Clip Line by Reference Line",
+                "phase": "analysis",
+                "input_key": "test_line",
+                "output_key": "clipped_lines",
+                "parameters": {
+                    "reference_line_data_name": "reference_line",
+                    "reference_frame": 0,
+                    "clip_side": "KeepBase"
+                }
+            }
+        ]
+    }
+}
+]
+```

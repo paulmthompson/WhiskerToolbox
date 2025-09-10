@@ -47,13 +47,27 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
+       <widget class="QLabel" name="mediaDataKeyLabel">
+        <property name="text">
+         <string>Media Data Key:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="mediaDataKeyComboBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
        <widget class="QLabel" name="widthLabel">
         <property name="text">
          <string>Width: 20 pixels</string>
         </property>
        </widget>
       </item>
-             <item row="0" column="1">
+             <item row="1" column="1">
         <widget class="QSpinBox" name="widthSpinBox">
          <property name="minimum">
           <number>1</number>
@@ -69,14 +83,14 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item row="2" column="0">
         <widget class="QLabel" name="perpendicularRangeLabel">
          <property name="text">
           <string>Perpendicular Range: 50 pixels</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <widget class="QSpinBox" name="perpendicularRangeSpinBox">
          <property name="minimum">
           <number>10</number>
@@ -92,14 +106,14 @@
          </property>
         </widget>
        </item>
-             <item row="2" column="0">
+             <item row="3" column="0">
         <widget class="QLabel" name="dataTypeLabel">
          <property name="text">
           <string>Data Type:</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="3" column="1">
         <widget class="QCheckBox" name="useProcessedDataCheckBox">
          <property name="text">
           <string>Use processed data</string>
@@ -109,24 +123,24 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="approachLabel">
          <property name="text">
           <string>FWHM Approach:</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="4" column="1">
         <widget class="QComboBox" name="approachComboBox"/>
        </item>
-               <item row="5" column="0">
+               <item row="6" column="0">
          <widget class="QLabel" name="outputModeLabel">
           <property name="text">
            <string>Output Mode:</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
+        <item row="6" column="1">
          <widget class="QComboBox" name="outputModeComboBox"/>
         </item>
      </layout>
