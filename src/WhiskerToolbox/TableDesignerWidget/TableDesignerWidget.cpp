@@ -39,6 +39,8 @@
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
 #include <QTableView>
+#include <QHeaderView>
+#include <QScrollArea>
 
 #include <QFutureWatcher>
 #include <QTimer>
@@ -68,8 +70,8 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     
     // Initialize table viewer widget for preview
     _table_viewer = new TableViewerWidget(this);
-    
-    // Add the table viewer widget to the preview layout
+    _table_viewer->setMinimumHeight(200);  // Make the preview taller
+    _table_viewer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     ui->preview_layout->addWidget(_table_viewer);
     
     _preview_debounce_timer = new QTimer(this);
@@ -187,6 +189,8 @@ void TableDesignerWidget::connectSignals() {
             this, &TableDesignerWidget::onComputersTreeItemChanged);
     connect(ui->computers_tree, &QTreeWidget::itemChanged,
             this, &TableDesignerWidget::onComputersTreeItemEdited);
+    connect(ui->computers_tree, &QTreeWidget::itemExpanded, this, &TableDesignerWidget::updateComputersTreeSize);
+    connect(ui->computers_tree, &QTreeWidget::itemCollapsed, this, &TableDesignerWidget::updateComputersTreeSize);
 
     // Build signals
     connect(ui->build_table_btn, &QPushButton::clicked,
@@ -841,6 +845,7 @@ void TableDesignerWidget::clearUI() {
     if (ui->computers_tree) {
         ui->computers_tree->clear();
     }
+    updateComputersTreeSize();
 
     // Disable controls
     ui->delete_table_btn->setEnabled(false);
@@ -1319,6 +1324,39 @@ void TableDesignerWidget::rebuildPreviewNow() {
     }
 }
 
+void TableDesignerWidget::updateComputersTreeSize() {
+    int height = calculateComputersTreeHeight();
+    ui->computers_tree_scroll_area->setMinimumHeight(height);
+    ui->computers_tree_scroll_area->setMaximumHeight(height);
+}
+
+int TableDesignerWidget::calculateComputersTreeHeight() const {
+    int height = 0;
+    if (ui->computers_tree->header()) {
+        height += ui->computers_tree->header()->height();
+    }
+    int count = 0;
+    for (int i = 0; i < ui->computers_tree->topLevelItemCount(); ++i) {
+        QTreeWidgetItem * item = ui->computers_tree->topLevelItem(i);
+        if (!item->isHidden()) {
+            count++; // Count top-level item
+            if (item->isExpanded()) {
+                count += item->childCount(); // Count children if expanded
+            }
+        }
+    }
+
+    if (count > 0 && ui->computers_tree->topLevelItemCount() > 0) {
+        // Get the height of a single row
+        int rowHeight = ui->computers_tree->visualItemRect(ui->computers_tree->topLevelItem(0)).height();
+        if (rowHeight > 0) {
+            height += count * rowHeight;
+        }
+    }
+    // Add a small buffer for borders/margins
+    return height + 4;
+}
+
 void TableDesignerWidget::refreshComputersTree() {
     if (!_data_manager) return;
 
@@ -1341,6 +1379,7 @@ void TableDesignerWidget::refreshComputersTree() {
 
     ui->computers_tree->clear();
     ui->computers_tree->setHeaderLabels({"Data Source / Computer", "Enabled", "Column Name"});
+    ui->computers_tree->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     auto * registry = _data_manager->getTableRegistry();
     if (!registry) {
@@ -1412,6 +1451,10 @@ void TableDesignerWidget::refreshComputersTree() {
 
     _updating_computers_tree = false;
 
+    // Use a single shot timer to update the size after the event loop has processed
+    // the tree updates. This ensures the initial size is calculated correctly
+    // based on the collapsed state.
+    QTimer::singleShot(0, this, &TableDesignerWidget::updateComputersTreeSize);
     // Update preview after refresh
     triggerPreviewDebounced();
 }

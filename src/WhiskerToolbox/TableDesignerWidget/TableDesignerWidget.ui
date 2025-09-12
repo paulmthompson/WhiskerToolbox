@@ -194,34 +194,65 @@
        </widget>
       </item>
       <item>
-       <widget class="QTreeWidget" name="computers_tree">
-        <property name="alternatingRowColors">
+       <widget class="QScrollArea" name="computers_tree_scroll_area">
+        <property name="widgetResizable">
          <bool>true</bool>
         </property>
-        <property name="selectionMode">
-         <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
-        </property>
-        <property name="rootIsDecorated">
-         <bool>true</bool>
-        </property>
-        <property name="headerHidden">
-         <bool>false</bool>
-        </property>
-        <column>
-         <property name="text">
-          <string>Data Source / Computer</string>
+        <widget class="QWidget" name="scrollAreaWidgetContents">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>562</width>
+           <height>755</height>
+          </rect>
          </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Enabled</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Column Name</string>
-         </property>
-        </column>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QTreeWidget" name="computers_tree">
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+            </property>
+            <property name="rootIsDecorated">
+             <bool>true</bool>
+            </property>
+            <property name="headerHidden">
+             <bool>false</bool>
+            </property>
+            <column>
+             <property name="text">
+              <string>Data Source / Computer</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Enabled</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Column Name</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
      </layout>
@@ -229,6 +260,12 @@
    </item>
    <item>
     <widget class="QGroupBox" name="preview_group">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>275</height>
+      </size>
+     </property>
      <property name="title">
       <string>Preview</string>
      </property>
@@ -263,21 +300,6 @@
       </item>
      </layout>
     </widget>
-   </item>
-   <!-- Transform group removed; replaced by TableTransformWidget within a Collapsible Section -->
-   
-   <item>
-    <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
    </item>
   </layout>
  </widget>
