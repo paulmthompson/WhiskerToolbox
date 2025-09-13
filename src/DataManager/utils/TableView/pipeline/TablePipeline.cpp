@@ -219,7 +219,7 @@ TableBuildResult TablePipeline::buildTable(TableConfiguration const & config,
         TableView table_view = builder.build();
 
         // Store the built table in TableManager
-        if (!table_registry_->storeBuiltTable(config.table_id, std::move(table_view))) {
+        if (!table_registry_->storeBuiltTable(config.table_id, std::make_unique<TableView>(std::move(table_view)))) {
             result.error_message = "Failed to store built table in TableManager";
             return result;
         }
@@ -331,7 +331,7 @@ bool TablePipeline::applyTransforms(TableConfiguration const & config) {
                 } else {
                     table_registry_->updateTableInfo(out_id, out_name, out_desc);
                 }
-                if (!table_registry_->storeBuiltTable(out_id, std::move(derived))) {
+                if (!table_registry_->storeBuiltTable(out_id, std::make_unique<TableView>(std::move(derived)))) {
                     std::cerr << "TablePipeline: Failed to store transformed table: " << out_id << "\n";
                     all_ok = false;
                 }

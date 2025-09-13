@@ -25,6 +25,9 @@
 
 // Analog data
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+// Line data sampling (multi-output)
+#include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/utils/TableView/computers/LineSamplingMultiComputer.h"
 
 // Qt includes for widget testing
 #include <QApplication>
@@ -879,4 +882,80 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination w
     // Also simulate scrolling the view and then accessing data at the new top
     table_view_widget->scrollTo(base_model->index(1500, 0), QAbstractItemView::PositionAtTop);
     accessRow(1500);
+}
+
+TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - LineSampling with entity expansion", "[TableViewerWidget][LineSampling][EntityExpansion]") {
+    // Build LineData with multiple entities per timestamp and verify TableViewerWidget reflects expansion
+    auto & dm = getDataManager();
+    auto dme = getDataManagerExtension();
+
+    // Timeframe with three timestamps 0,1,2
+    std::vector<int> tvals = {0, 1, 2};
+    auto tf = std::make_shared<TimeFrame>(tvals);
+    dm.setTime(TimeKey("line_time"), tf, true);
+
+    // Create LineData: t=0 -> 1 line, t=1 -> 2 lines, t=2 -> 3 lines
+    auto lines = std::make_shared<LineData>();
+    lines->setTimeFrame(tf);
+    // Helper lambdas to add simple lines
+    auto add_h = [&](int t, float x0, float x1, float y) {
+        std::vector<float> xs = {x0, x1};
+        std::vector<float> ys = {y, y};
+        lines->addAtTime(TimeFrameIndex(t), xs, ys, false);
+    };
+    auto add_v = [&](int t, float x, float y0, float y1) {
+        std::vector<float> xs = {x, x};
+        std::vector<float> ys = {y0, y1};
+        lines->addAtTime(TimeFrameIndex(t), xs, ys, false);
+    };
+    // t=0: 1 line
+    add_h(0, 0.0f, 10.0f, 0.0f);
+    // t=1: 2 lines
+    add_h(1, 0.0f, 10.0f, 1.0f);
+    add_v(1, 5.0f, 0.0f, 10.0f);
+    // t=2: 3 lines
+    add_h(2, 0.0f, 10.0f, 2.0f);
+    add_v(2, 2.0f, 0.0f, 10.0f);
+    add_v(2, 8.0f, 0.0f, 10.0f);
+
+    dm.setData<LineData>("LineMulti", lines, TimeKey("line_time"));
+
+    // Row selector: timestamps [0,1,2]
+    std::vector<TimeFrameIndex> ts = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2)};
+    auto row_selector = std::make_unique<TimestampSelector>(ts, tf);
+
+    // Build a table with LineSamplingMultiComputer (segments=2 -> 3 positions -> 6 columns)
+    TableViewBuilder builder(dme);
+    builder.setRowSelector(std::move(row_selector));
+    auto line_src = dme->getLineSource("LineMulti");
+    REQUIRE(line_src != nullptr);
+    int const segments = 2;
+    auto multi = std::make_unique<LineSamplingMultiComputer>(line_src, std::string{"LineMulti"}, tf, segments);
+    builder.addColumns<double>("Line", std::move(multi));
+
+    TableView table = builder.build();
+    auto table_view = std::make_shared<TableView>(std::move(table));
+
+    // Show in TableViewerWidget
+    TableViewerWidget widget;
+    widget.setTableView(table_view, "Line Entity Expansion");
+    REQUIRE(widget.hasTable());
+
+    auto * tv = widget.findChild<QTableView*>();
+    REQUIRE(tv != nullptr);
+    auto * model = tv->model();
+    REQUIRE(model != nullptr);
+
+    // Expect 6 columns (x,y at positions 0.0, 0.5, 1.0)
+    REQUIRE(model->columnCount() == 2 * (segments + 1));
+    // Column count should exceed number of timestamps in the selector (3)
+    REQUIRE(model->columnCount() > static_cast<int>(ts.size()));
+
+    // Rows should reflect entity expansion: 1 + 2 + 3 = 6 > selector size (3)
+    REQUIRE(model->rowCount() == 6);
+    REQUIRE(model->rowCount() > static_cast<int>(ts.size()));
+
+    // Also verify model mirrors underlying table dimensions
+    REQUIRE(model->columnCount() == static_cast<int>(table_view->getColumnCount()));
+    REQUIRE(model->rowCount() == static_cast<int>(table_view->getRowCount()));
 }

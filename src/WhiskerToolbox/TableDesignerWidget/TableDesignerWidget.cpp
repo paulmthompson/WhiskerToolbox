@@ -407,7 +407,7 @@ void TableDesignerWidget::onBuildTable() {
                                  table_info.name, table_info.description);
 
             // Store the built table
-            if (reg->storeBuiltTable(_current_table_id.toStdString(), std::move(table_view))) {
+            if (reg->storeBuiltTable(_current_table_id.toStdString(), std::make_unique<TableView>(std::move(table_view)))) {
                 updateBuildStatus(QString("Table built successfully with %1 columns!").arg(column_infos.size()));
                 qDebug() << "Successfully built table:" << _current_table_id << "with" << column_infos.size() << "columns";
                 // Populate JSON widget with the current configuration
@@ -492,7 +492,7 @@ bool TableDesignerWidget::buildTableFromTree() {
                                  table_info.description);
 
             // Store the built table
-            if (reg->storeBuiltTable(_current_table_id.toStdString(), std::move(table_view))) {
+            if (reg->storeBuiltTable(_current_table_id.toStdString(), std::make_unique<TableView>(std::move(table_view)))) {
                 updateBuildStatus(QString("Table built successfully with %1 columns!").arg(column_infos.size()));
                 qDebug() << "Successfully built table:" << _current_table_id << "with" << column_infos.size() << "columns";
                 // Populate JSON widget with the current configuration as well
@@ -563,7 +563,7 @@ void TableDesignerWidget::onApplyTransform() {
         if (!reg->createTable(out_id, out_name.toStdString())) {
             reg->updateTableInfo(out_id, out_name.toStdString(), "");
         }
-        if (reg->storeBuiltTable(out_id, std::move(derived))) {
+        if (reg->storeBuiltTable(out_id, std::make_unique<TableView>(std::move(derived)))) {
             updateBuildStatus(QString("Created transformed table: %1").arg(out_name));
             refreshTableCombo();
         } else {

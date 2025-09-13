@@ -2,20 +2,18 @@
 #define TABLE_REGISTRY_HPP
 
 #include "TableEvents.hpp"
-#include "utils/TableView/core/TableView.h"
-
-
 #include "utils/TableView/TableInfo.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
 #include <tuple>
 #include <vector>
 
 class ComputerRegistry;
 class DataManager;
 class DataManagerExtension;
+class TableView;
 struct ComputerInfo;
 
 /**
@@ -50,7 +48,7 @@ public:
     ColumnInfo getTableColumn(std::string const & table_id, size_t column_index) const;
 
     // Built views
-    bool storeBuiltTable(std::string const & table_id, TableView table_view);
+    bool storeBuiltTable(std::string const & table_id, std::unique_ptr<TableView> table_view);
     std::shared_ptr<TableView> getBuiltTable(std::string const & table_id) const;
 
     // Utilities
@@ -84,5 +82,4 @@ private:
     void notify(TableEventType type, std::string const & table_id) const;
 };
 
-#endif // TABLE_REGISTRY_HPP
-
+#endif// TABLE_REGISTRY_HPP

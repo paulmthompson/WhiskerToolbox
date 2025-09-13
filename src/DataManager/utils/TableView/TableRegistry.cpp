@@ -2,8 +2,9 @@
 
 #include "DataManager.hpp"
 #include "TableObserverBridge.hpp"
-#include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/ComputerRegistry.hpp"
+#include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/core/TableView.h"
 #include "utils/TableView/core/TableViewBuilder.h"
 
 #include <iostream>
@@ -12,11 +13,11 @@ TableRegistry::TableRegistry(DataManager & data_manager)
     : _data_manager(data_manager),
       _data_manager_extension(std::make_shared<DataManagerExtension>(data_manager)),
       _computer_registry(std::make_unique<ComputerRegistry>()) {
-   // std::cout << "TableRegistry initialized" << std::endl;
+    // std::cout << "TableRegistry initialized" << std::endl;
 }
 
 TableRegistry::~TableRegistry() {
-   // std::cout << "TableRegistry destroyed" << std::endl;
+    // std::cout << "TableRegistry destroyed" << std::endl;
 }
 
 bool TableRegistry::createTable(std::string const & table_id, std::string const & table_name, std::string const & table_description) {
@@ -80,7 +81,7 @@ bool TableRegistry::setTableView(std::string const & table_id, std::shared_ptr<T
     if (auto view = _table_views[table_id]) {
         auto column_names = view->getColumnNames();
         std::vector<std::string> qt_column_names;
-        for (auto const & name : column_names) {
+        for (auto const & name: column_names) {
             qt_column_names.push_back(name);
         }
         _table_info[table_id].columnNames = qt_column_names;
@@ -118,7 +119,7 @@ bool TableRegistry::addTableColumn(std::string const & table_id, ColumnInfo cons
     auto & table = _table_info[table_id];
     table.columns.push_back(column_info);
     table.columnNames.clear();
-    for (auto const & column : table.columns) {
+    for (auto const & column: table.columns) {
         table.columnNames.push_back(column.name);
     }
     std::cout << "Added column " << column_info.name << " to table " << table_id << std::endl;
@@ -136,7 +137,7 @@ bool TableRegistry::updateTableColumn(std::string const & table_id, size_t colum
     }
     table.columns[column_index] = column_info;
     table.columnNames.clear();
-    for (auto const & column : table.columns) {
+    for (auto const & column: table.columns) {
         table.columnNames.push_back(column.name);
     }
     std::cout << "Updated column index " << column_index << " in table " << table_id << std::endl;
@@ -155,7 +156,7 @@ bool TableRegistry::removeTableColumn(std::string const & table_id, size_t colum
     std::string removed = table.columns[column_index].name;
     table.columns.erase(table.columns.begin() + static_cast<long int>(column_index));
     table.columnNames.clear();
-    for (auto const & column : table.columns) {
+    for (auto const & column: table.columns) {
         table.columnNames.push_back(column.name);
     }
     std::cout << "Removed column " << removed << " from table " << table_id << std::endl;
@@ -174,15 +175,18 @@ ColumnInfo TableRegistry::getTableColumn(std::string const & table_id, size_t co
     return table.columns[column_index];
 }
 
-bool TableRegistry::storeBuiltTable(std::string const & table_id, TableView table_view) {
+bool TableRegistry::storeBuiltTable(std::string const & table_id, std::unique_ptr<TableView> table_view) {
     if (!hasTable(table_id)) {
         return false;
     }
-    _table_views[table_id] = std::make_shared<TableView>(std::move(table_view));
+    if (!table_view) {
+        return false;
+    }
+    _table_views[table_id] = std::shared_ptr<TableView>(table_view.release());
     if (auto view = _table_views[table_id]) {
         auto column_names = view->getColumnNames();
         std::vector<std::string> qt_column_names;
-        for (auto const & name : column_names) {
+        for (auto const & name: column_names) {
             qt_column_names.push_back(name);
         }
         _table_info[table_id].columnNames = qt_column_names;
@@ -204,7 +208,7 @@ std::string TableRegistry::generateUniqueTableId(std::string const & base_name) 
     std::string candidate;
     while (true) {
         candidate = base_name + "_" + std::to_string(_next_table_counter);
-        const_cast<TableRegistry*>(this)->_next_table_counter++;
+        const_cast<TableRegistry *>(this)->_next_table_counter++;
         if (!hasTable(candidate)) {
             break;
         }
@@ -214,7 +218,7 @@ std::string TableRegistry::generateUniqueTableId(std::string const & base_name) 
 
 bool TableRegistry::addTableColumnWithTypeInfo(std::string const & table_id, ColumnInfo & column_info) {
     if (!hasTable(table_id)) {
-        std::cout << "Table does not exist: " << table_id<< std::endl;
+        std::cout << "Table does not exist: " << table_id << std::endl;
         return false;
     }
     auto computer_info = _computer_registry->findComputerInfo(column_info.computerName);
@@ -233,7 +237,7 @@ bool TableRegistry::addTableColumnWithTypeInfo(std::string const & table_id, Col
 std::vector<std::string> TableRegistry::getAvailableComputersForDataSource(std::string const & /*row_selector_type*/, std::string const & /*data_source_name*/) const {
     std::vector<std::string> computers;
     auto all_computer_names = _computer_registry->getAllComputerNames();
-    for (auto const & name : all_computer_names) {
+    for (auto const & name: all_computer_names) {
         computers.push_back(name);
     }
     return computers;
@@ -245,10 +249,9 @@ std::tuple<std::string, bool, std::string> TableRegistry::getComputerTypeInfo(st
         return std::make_tuple(std::string("unknown"), false, std::string("unknown"));
     }
     return std::make_tuple(
-        computer_info->outputTypeName,
-        computer_info->isVectorType,
-        computer_info->elementTypeName
-    );
+            computer_info->outputTypeName,
+            computer_info->isVectorType,
+            computer_info->elementTypeName);
 }
 
 ComputerInfo const * TableRegistry::getComputerInfo(std::string const & computer_name) const {
@@ -258,8 +261,8 @@ ComputerInfo const * TableRegistry::getComputerInfo(std::string const & computer
 std::vector<std::string> TableRegistry::getAvailableOutputTypes() const {
     auto type_names = _computer_registry->getOutputTypeNames();
     std::vector<std::string> result;
-    for (auto const & [type_index, name] : type_names) {
-        (void)type_index;
+    for (auto const & [type_index, name]: type_names) {
+        (void) type_index;
         result.push_back(name);
     }
     return result;
@@ -345,14 +348,14 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
 
         // Create the computer from the registry
         auto const & registry = *_computer_registry;
-        
+
         // Get type information for the computer
         auto computer_info_ptr = registry.findComputerInfo(column_info.computerName);
         if (!computer_info_ptr) {
             std::cout << "Computer info not found for " << column_info.computerName << std::endl;
             return false;
         }
-        
+
         auto computer_base = registry.createComputer(column_info.computerName, data_source_variant, column_info.parameters);
         if (!computer_base) {
             std::cout << "Failed to create computer " << column_info.computerName << " for column: " << column_info.name << std::endl;
@@ -362,15 +365,15 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
         // Use the actual return type from the computer info instead of hardcoding double
         std::type_index return_type = computer_info_ptr->outputType;
         std::cout << "Computer " << column_info.computerName << " returns type: " << computer_info_ptr->outputTypeName << std::endl;
-        
+
         // Handle different return types using runtime type dispatch
         bool success = false;
-        
+
         if (computer_info_ptr->isMultiOutput) {
             // Multi-output: expand into multiple columns using builder.addColumns
             if (return_type == typeid(double)) {
                 auto multi = registry.createTypedMultiComputer<double>(
-                    column_info.computerName, data_source_variant, column_info.parameters);
+                        column_info.computerName, data_source_variant, column_info.parameters);
                 if (!multi) {
                     std::cout << "Failed to create typed MULTI computer for " << column_info.computerName << std::endl;
                     return false;
@@ -379,7 +382,7 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
                 success = true;
             } else if (return_type == typeid(int)) {
                 auto multi = registry.createTypedMultiComputer<int>(
-                    column_info.computerName, data_source_variant, column_info.parameters);
+                        column_info.computerName, data_source_variant, column_info.parameters);
                 if (!multi) {
                     std::cout << "Failed to create typed MULTI computer<int> for " << column_info.computerName << std::endl;
                     return false;
@@ -388,7 +391,7 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
                 success = true;
             } else if (return_type == typeid(bool)) {
                 auto multi = registry.createTypedMultiComputer<bool>(
-                    column_info.computerName, data_source_variant, column_info.parameters);
+                        column_info.computerName, data_source_variant, column_info.parameters);
                 if (!multi) {
                     std::cout << "Failed to create typed MULTI computer<bool> for " << column_info.computerName << std::endl;
                     return false;
@@ -453,9 +456,9 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
             std::cout << "Failed to add column " << column_info.name << " with computer " << column_info.computerName << std::endl;
             return false;
         }
-        
+
         return true;
-        
+
     } catch (std::exception const & e) {
         std::cout << "Exception adding column " << column_info.name << ": " << e.what() << std::endl;
         return false;
@@ -466,5 +469,3 @@ void TableRegistry::notify(TableEventType type, std::string const & table_id) co
     TableEvent ev{type, table_id};
     DataManager__NotifyTableObservers(_data_manager, ev);
 }
-
-
