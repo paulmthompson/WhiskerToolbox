@@ -110,6 +110,7 @@ website:
             - user_guide/data_transformations/calculate_mask_principal_axis.qmd
             - user_guide/data_transformations/remove_small_connected_components.qmd
             - user_guide/data_transformations/skeletonize_mask.qmd
+            - user_guide/data_transformations/convert_mask_to_line.qmd
             - user_guide/data_transformations/fill_mask_holes.qmd
             - user_guide/data_transformations/apply_median_filter.qmd
         - section: "Machine Learning"

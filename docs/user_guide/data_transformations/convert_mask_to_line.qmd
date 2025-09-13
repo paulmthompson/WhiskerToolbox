@@ -1,0 +1,205 @@
+---
+title: "Convert Mask To Line"
+format: html
+---
+
+## Overview
+
+This transform converts a binary mask, representing a region of interest, into a one-dimensional line, which is useful for analyzing the shape and trajectory of elongated objects.
+
+### Detailed Description
+
+This [Data Transform Operation] is primarily intended for **lines without branching**. It takes a set of 2D points that define a mask and converts them into an ordered sequence of points representing a line. This is useful for analyzing the shape and trajectory of elongated objects that are initially identified as a region. The transformation can use two main methods to achieve this:
+
+1.  **Skeletonization:** This method thins the mask to a one-pixel-wide skeleton and then traces the path of the skeleton to form a line. This is generally robust for complex shapes and is particularly beneficial for **masks with a thickness greater than a pixel**.
+2.  **Nearest to Reference:** This method starts from a point in the mask that is closest to a user-defined reference point and then iteratively finds the next closest point to build the line. This method is faster but may be less accurate for very complex or branching shapes.
+
+After the initial line is created, the transformation can optionally perform several post-processing steps:
+
+*   **Outlier Removal:** It can fit a polynomial to the line and remove points that are too far from the fitted curve. This helps to clean up noisy data.
+*   **Smoothing:** It can smooth the final line byfitting a parametric polynomial to the points and then resampling along the fitted curve. This results in a smoother line with evenly spaced points.
+*   **Resampling:** The final line is resampled to have a specific resolution (distance between points).
+
+::: {.content-hidden when-format="html"}
+```{{python}}
+#| echo: false
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage.morphology import skeletonize
+from scipy.spatial.distance import cdist
+from scipy.interpolate import splprep, splev
+
+with plt.xkcd():
+    # 1. Create a long, thin, "line-like" mask with some noise
+    t = np.linspace(0, np.pi, 100) # Use a half-circle
+    x = 30 + 25 * np.cos(t)
+    y = 50 + 20 * np.sin(t) + np.random.normal(0, 0.5, 100) # Add some noise
+
+    # Create a mask from the line
+    mask = np.zeros((100, 100), dtype=bool)
+    for i in range(len(x)):
+        mask[int(y[i]), int(x[i])] = 1
+
+    # Add thickness to the mask
+    for i in range(len(x)):
+        mask[int(y[i])-1:int(y[i])+2, int(x[i])-1:int(x[i])+2] = 1
+
+    # Add an outlier
+    mask[20, 80] = 1
+
+    mask_points = np.argwhere(mask)
+
+    # 2. Get jagged line by connecting points directly
+    start_point_jagged = mask_points[np.argmin(mask_points[:, 1])]
+    ordered_jagged_points = [start_point_jagged]
+    remaining_jagged_points = list(map(tuple, mask_points))
+    remaining_jagged_points.remove(tuple(start_point_jagged))
+
+    current_point_jagged = start_point_jagged
+    while remaining_jagged_points:
+        distances = cdist([current_point_jagged], remaining_jagged_points)
+        closest_index = np.argmin(distances)
+        if distances[0, closest_index] > 5: # prevent jumping to outlier
+            break
+        closest_point_jagged = remaining_jagged_points.pop(closest_index)
+        ordered_jagged_points.append(closest_point_jagged)
+        current_point_jagged = closest_point_jagged
+    ordered_jagged_points = np.array(ordered_jagged_points)
+
+
+    # 3. Get skeletonized line
+    skeleton = skeletonize(mask)
+    skeleton_points = np.argwhere(skeleton)
+    start_point_skel = skeleton_points[np.argmin(skeleton_points[:, 1])]
+    ordered_skeleton_points = [start_point_skel]
+    remaining_skeleton_points = list(map(tuple, skeleton_points))
+    if tuple(start_point_skel) in remaining_skeleton_points:
+        remaining_skeleton_points.remove(tuple(start_point_skel))
+
+    current_point_skel = start_point_skel
+    while remaining_skeleton_points:
+        distances = cdist([current_point_skel], remaining_skeleton_points)
+        closest_index = np.argmin(distances)
+        if distances[0, closest_index] > 5: # prevent jumping to outlier
+            break
+        closest_point_skel = remaining_skeleton_points.pop(closest_index)
+        ordered_skeleton_points.append(closest_point_skel)
+        current_point_skel = closest_point_skel
+    ordered_skeleton_points = np.array(ordered_skeleton_points)
+
+    # 4. Remove outlier
+    # A simple outlier removal for illustration: remove points far from the median
+    median_y = np.median(mask_points[:, 0])
+    inliers = mask_points[np.abs(mask_points[:, 0] - median_y) < 20]
+
+    start_point_no_outlier = inliers[np.argmin(inliers[:, 1])]
+    ordered_no_outlier_points = [start_point_no_outlier]
+    remaining_no_outlier_points = list(map(tuple, inliers))
+    remaining_no_outlier_points.remove(tuple(start_point_no_outlier))
+
+    current_point_no_outlier = start_point_no_outlier
+    while remaining_no_outlier_points:
+        distances = cdist([current_point_no_outlier], remaining_no_outlier_points)
+        closest_index = np.argmin(distances)
+        if distances[0, closest_index] > 5:
+            break
+        closest_point_no_outlier = remaining_no_outlier_points.pop(closest_index)
+        ordered_no_outlier_points.append(closest_point_no_outlier)
+        current_point_no_outlier = closest_point_no_outlier
+    ordered_no_outlier_points = np.array(ordered_no_outlier_points)
+
+
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 12))
+    fig.suptitle('Illustrating "Convert Mask To Line" Parameters', fontsize=16)
+
+    # Plot 1: Original Mask
+    ax1.imshow(mask, cmap='gray_r', origin='lower')
+    ax1.set_title('Original Mask with Outlier')
+    ax1.axis('off')
+
+    # Plot 2: Jagged Line
+    ax2.imshow(mask, cmap='gray_r', origin='lower', alpha=0.2)
+    ax2.plot(ordered_jagged_points[:, 1], ordered_jagged_points[:, 0], 'r-', label='Jagged Line')
+    ax2.set_title('Jagged Line from Direct Connection')
+    ax2.legend()
+    ax2.axis('off')
+
+    # Plot 3: Skeletonized and Smoothed Line
+    ax3.imshow(mask, cmap='gray_r', origin='lower', alpha=0.2)
+    ax3.plot(ordered_skeleton_points[:, 1], ordered_skeleton_points[:, 0], 'g-', label='Skeletonized Line')
+    ax3.set_title('Smoother Line with Skeletonization')
+    ax3.legend()
+    ax3.axis('off')
+
+    # Plot 4: Outlier Removal
+    ax4.imshow(mask, cmap='gray_r', origin='lower', alpha=0.2)
+    ax4.plot(ordered_no_outlier_points[:, 1], ordered_no_outlier_points[:, 0], 'b-', label='Line after Outlier Removal')
+    ax4.set_title('Line After Outlier Removal')
+    ax4.legend()
+    ax4.axis('off')
+
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+```
+:::
+
+### Neuroscience Use Cases
+
+In neuroscience, this transformation is critical for quantifying the features of elongated structures:
+
+-   **Whisker Tracking:** In rodent studies, high-speed videos are often used to track the movement of whiskers. This transformation can be used to convert the mask of a whisker in each frame into a line, which can then be used to analyze whisker position, angle, and curvature over time.
+-   **Dendrite/Axon Tracing:** In microscopy images of neurons, this transformation can be used to trace the path of dendrites or axons that have been segmented as masks. This allows for the analysis of neuronal morphology.
+-   **Animal Trajectory Analysis:** When tracking the movement of an animal (e.g., a worm or a larva), this transformation can be used to represent the animal's body as a line, which can then be used to analyze its posture and movement.
+
+## Parameters
+
+-   `method`: The method to use for converting the mask to a line.
+    -   `Skeletonize`: Thins the mask to a one-pixel-wide skeleton before tracing the line. This is robust for complex shapes.
+    -   `NearestToReference`: Starts from a point in the mask closest to a reference point and iteratively builds the line. This is faster but may be less accurate for complex shapes.
+-   `reference_x`: The x-coordinate of the reference point to use when the `method` is `NearestToReference`.
+-   `reference_y`: The y-coordinate of the reference point to use when the `method` is `NearestToReference`.
+-   `polynomial_order`: The order of the polynomial to use for outlier removal and smoothing. A higher order can fit more complex curves but may also overfit noise.
+-   `error_threshold`: The maximum distance a point can be from the fitted polynomial to be considered an inlier during outlier removal. This is only used when `remove_outliers` is true.
+-   `remove_outliers`: A boolean value that determines whether to perform outlier removal.
+-   `input_point_subsample_factor`: The factor by which to subsample the input mask points before processing. A value of 1 means all points are used. Increasing this value can speed up processing at the cost of some precision.
+-   `should_smooth_line`: A boolean value that determines whether to smooth the final line using a polynomial fit.
+-   `output_resolution`: The approximate distance (in pixels) between points in the final, resampled line.
+
+## Example Configuration
+
+Here is a complete example of a JSON configuration file that could be used to run this transformation. This example uses the `Skeletonize` method to convert a mask into a line.
+
+```json
+[
+{
+    "transformations": {
+        "metadata": {
+            "name": "Mask to Line Pipeline",
+            "description": "Test mask to line conversion",
+            "version": "1.0"
+        },
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "Convert Mask To Line",
+                "phase": "analysis",
+                "input_key": "test_mask",
+                "output_key": "converted_line",
+                "parameters": {
+                    "method": "Skeletonize",
+                    "reference_x": 0.0,
+                    "reference_y": 0.0,
+                    "polynomial_order": 3,
+                    "error_threshold": 5.0,
+                    "remove_outliers": true,
+                    "input_point_subsample_factor": 1,
+                    "should_smooth_line": false,
+                    "output_resolution": 5.0
+                }
+            }
+        ]
+    }
+}
+]
+```
