@@ -18,6 +18,8 @@ class WhiskerTracker;
 class Line2D;
 }// namespace whisker
 
+class MaskData;
+
 /**
  * @brief Parameters for whisker tracing operation
  */
@@ -27,6 +29,8 @@ struct WhiskerTracingParameters : public TransformParametersBase {
     float whisker_length_threshold = 50.0f;// Minimum whisker length threshold
     int batch_size = 10;                   // Number of frames to process in parallel
     bool use_parallel_processing = true;   // Whether to use OpenMP parallel processing
+    bool use_mask_data = false;            // Whether to use mask data for seed selection
+    std::shared_ptr<MaskData> mask_data;   // Optional mask data for seed selection
 };
 
 /**
@@ -102,12 +106,16 @@ private:
      * @param image_data The image data
      * @param image_size The image dimensions
      * @param clip_length The number of points to clip from whisker tips
+     * @param mask_data Optional mask data for seed selection
+     * @param time_index Time index for mask data
      * @return Vector of traced whisker lines
      */
     std::vector<Line2D> trace_single_image(whisker::WhiskerTracker & whisker_tracker,
                                            std::vector<uint8_t> const & image_data,
                                            ImageSize const & image_size,
-                                           int clip_length);
+                                           int clip_length,
+                                           MaskData const * mask_data = nullptr,
+                                           int time_index = 0);
 
     /**
      * @brief Traces whiskers in multiple images in parallel
@@ -115,13 +123,28 @@ private:
      * @param images Vector of image data
      * @param image_size The image dimensions
      * @param clip_length The number of points to clip from whisker tips
+     * @param mask_data Optional mask data for seed selection
+     * @param time_indices Vector of time indices for mask data
      * @return Vector of vectors of traced whisker lines (one vector per image)
      */
     std::vector<std::vector<Line2D>> trace_multiple_images(
             whisker::WhiskerTracker & whisker_tracker,
             std::vector<std::vector<uint8_t>> const & images,
             ImageSize const & image_size,
-            int clip_length);
+            int clip_length,
+            MaskData const * mask_data = nullptr,
+            std::vector<int> const & time_indices = {});
+
+    /**
+     * @brief Converts mask data to binary mask format for whisker tracker
+     * @param mask_data The mask data object
+     * @param time_index The time index to get mask for
+     * @param image_size The image dimensions
+     * @return Binary mask as vector of uint8_t (255 for true pixels, 0 for false)
+     */
+    static std::vector<uint8_t> convert_mask_to_binary(MaskData const * mask_data,
+                                                       int time_index,
+                                                       ImageSize const & image_size);
 };
 
 #endif// WHISKER_TRACING_HPP

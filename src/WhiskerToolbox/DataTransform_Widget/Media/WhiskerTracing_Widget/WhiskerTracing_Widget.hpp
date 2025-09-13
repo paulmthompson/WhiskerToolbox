@@ -65,6 +65,18 @@ private slots:
      */
     void _onUseParallelProcessingChanged(bool checked);
 
+    /**
+     * @brief Slot called when use mask data checkbox changes
+     * @param checked Whether to use mask data
+     */
+    void _onUseMaskDataChanged(bool checked);
+
+    /**
+     * @brief Slot called when mask data combobox selection changes
+     * @param index Selected index
+     */
+    void _onMaskDataChanged(int index);
+
 private:
     Ui::WhiskerTracing_Widget * ui;
 };

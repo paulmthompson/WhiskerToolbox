@@ -1,11 +1,19 @@
 #include "whisker_tracing.hpp"
 
+#include "Masks/Mask_Data.hpp"
 #include "whiskertracker.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <vector>
+
+namespace {
+constexpr uint8_t MASK_TRUE_VALUE = 255;
+constexpr int PROGRESS_COMPLETE = 100;
+constexpr double PROGRESS_SCALE = 100.0;
+}// namespace
 
 // Convert whisker::Line2D to Line2D
 Line2D WhiskerTracingOperation::convert_to_Line2D(whisker::Line2D const & whisker_line) {
@@ -16,6 +24,38 @@ Line2D WhiskerTracingOperation::convert_to_Line2D(whisker::Line2D const & whiske
     }
 
     return line;
+}
+
+// Convert mask data to binary mask format for whisker tracker
+std::vector<uint8_t> WhiskerTracingOperation::convert_mask_to_binary(MaskData const * mask_data,
+                                                                     int time_index,
+                                                                     ImageSize const & image_size) {
+    std::vector<uint8_t> binary_mask(static_cast<size_t>(image_size.width * image_size.height), 0);
+
+    if (!mask_data) {
+        return binary_mask;// Return empty mask if no mask data
+    }
+
+    // Get mask at the specified time
+    auto const & masks_at_time = mask_data->getAtTime(TimeFrameIndex(time_index));
+    if (masks_at_time.empty()) {
+        return binary_mask;// Return empty mask if no mask at this time
+    }
+
+    // Convert mask points to binary image
+    // Combine all masks at this time point
+    for (auto const & mask: masks_at_time) {
+        for (auto const & point: mask) {
+            if (point.x < image_size.width && point.y < image_size.height) {
+                auto index = static_cast<size_t>(point.y) * static_cast<size_t>(image_size.width) + static_cast<size_t>(point.x);
+                if (index < binary_mask.size()) {
+                    binary_mask[index] = MASK_TRUE_VALUE;// Set to 255 for true pixels
+                }
+            }
+        }
+    }
+
+    return binary_mask;
 }
 
 // Clip whisker line by removing points from the end
@@ -32,16 +72,33 @@ std::vector<Line2D> WhiskerTracingOperation::trace_single_image(
         whisker::WhiskerTracker & whisker_tracker,
         std::vector<uint8_t> const & image_data,
         ImageSize const & image_size,
-        int clip_length) {
-    auto whiskers = whisker_tracker.trace(image_data, image_size.height, image_size.width);
+        int clip_length,
+        MaskData const * mask_data,
+        int time_index) {
 
     std::vector<Line2D> whisker_lines;
-    whisker_lines.reserve(whiskers.size());
 
-    for (auto const & whisker: whiskers) {
-        Line2D line = convert_to_Line2D(whisker);
-        clip_whisker(line, clip_length);
-        whisker_lines.push_back(std::move(line));
+    if (mask_data) {
+        // Use mask-based tracing
+        auto binary_mask = convert_mask_to_binary(mask_data, time_index, image_size);
+        auto whiskers = whisker_tracker.trace_with_mask(image_data, binary_mask, image_size.height, image_size.width);
+
+        whisker_lines.reserve(whiskers.size());
+        for (auto const & whisker: whiskers) {
+            Line2D line = convert_to_Line2D(whisker);
+            clip_whisker(line, clip_length);
+            whisker_lines.push_back(std::move(line));
+        }
+    } else {
+        // Use standard tracing
+        auto whiskers = whisker_tracker.trace(image_data, image_size.height, image_size.width);
+
+        whisker_lines.reserve(whiskers.size());
+        for (auto const & whisker: whiskers) {
+            Line2D line = convert_to_Line2D(whisker);
+            clip_whisker(line, clip_length);
+            whisker_lines.push_back(std::move(line));
+        }
     }
 
     return whisker_lines;
@@ -52,26 +109,54 @@ std::vector<std::vector<Line2D>> WhiskerTracingOperation::trace_multiple_images(
         whisker::WhiskerTracker & whisker_tracker,
         std::vector<std::vector<uint8_t>> const & images,
         ImageSize const & image_size,
-        int clip_length) {
-
-
-    // Use the parallel tracing method if available
-    auto whiskers_batch = whisker_tracker.trace_multiple_images(images, image_size.height, image_size.width);
+        int clip_length,
+        MaskData const * mask_data,
+        std::vector<int> const & time_indices) {
 
     std::vector<std::vector<Line2D>> result;
-    result.reserve(whiskers_batch.size());
+    result.reserve(images.size());
 
-    for (auto const & whiskers: whiskers_batch) {
-        std::vector<Line2D> whisker_lines;
-        whisker_lines.reserve(whiskers.size());
+    if (mask_data && !time_indices.empty()) {
+        // Use mask-based parallel tracing
+        std::vector<std::vector<uint8_t>> masks;
+        masks.reserve(images.size());
 
-        for (auto const & whisker: whiskers) {
-            Line2D line = convert_to_Line2D(whisker);
-            clip_whisker(line, clip_length);
-            whisker_lines.push_back(std::move(line));
+        for (size_t i = 0; i < images.size(); ++i) {
+            int const time_idx = (i < time_indices.size()) ? time_indices[i] : 0;
+            auto binary_mask = convert_mask_to_binary(mask_data, time_idx, image_size);
+            masks.push_back(std::move(binary_mask));
         }
 
-        result.push_back(std::move(whisker_lines));
+        auto whiskers_batch = whisker_tracker.trace_multiple_images_with_masks(images, masks, image_size.height, image_size.width);
+
+        for (auto const & whiskers: whiskers_batch) {
+            std::vector<Line2D> whisker_lines;
+            whisker_lines.reserve(whiskers.size());
+
+            for (auto const & whisker: whiskers) {
+                Line2D line = convert_to_Line2D(whisker);
+                clip_whisker(line, clip_length);
+                whisker_lines.push_back(std::move(line));
+            }
+
+            result.push_back(std::move(whisker_lines));
+        }
+    } else {
+        // Use standard parallel tracing
+        auto whiskers_batch = whisker_tracker.trace_multiple_images(images, image_size.height, image_size.width);
+
+        for (auto const & whiskers: whiskers_batch) {
+            std::vector<Line2D> whisker_lines;
+            whisker_lines.reserve(whiskers.size());
+
+            for (auto const & whisker: whiskers) {
+                Line2D line = convert_to_Line2D(whisker);
+                clip_whisker(line, clip_length);
+                whisker_lines.push_back(std::move(line));
+            }
+
+            result.push_back(std::move(whisker_lines));
+        }
     }
 
     return result;
@@ -109,7 +194,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
     auto const * ptr_ptr = std::get_if<std::shared_ptr<MediaData>>(&dataVariant);
     if (!ptr_ptr || !(*ptr_ptr)) {
         std::cerr << "WhiskerTracingOperation::execute: Incompatible variant type or null data." << std::endl;
-        if (progressCallback) progressCallback(100);
+        if (progressCallback) progressCallback(PROGRESS_COMPLETE);
         return {};
     }
 
@@ -120,7 +205,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
 
     if (!typed_params) {
         std::cerr << "WhiskerTracingOperation::execute: Invalid parameters." << std::endl;
-        if (progressCallback) progressCallback(100);
+        if (progressCallback) progressCallback(PROGRESS_COMPLETE);
         return {};
     }
 
@@ -139,7 +224,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
     auto total_frame_count = media_data->getTotalFrameCount();
     if (total_frame_count <= 0) {
         std::cerr << "WhiskerTracingOperation::execute: No data available in media." << std::endl;
-        if (progressCallback) progressCallback(100);
+        if (progressCallback) progressCallback(PROGRESS_COMPLETE);
         return {};
     }
 
@@ -172,7 +257,10 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
 
             if (!batch_images.empty()) {
                 // Trace whiskers in parallel for this batch
-                auto batch_results = trace_multiple_images(*whisker_tracker, batch_images, media_data->getImageSize(), typed_params->clip_length);
+                auto batch_results = trace_multiple_images(*whisker_tracker, batch_images, media_data->getImageSize(),
+                                                           typed_params->clip_length,
+                                                           typed_params->use_mask_data ? typed_params->mask_data.get() : nullptr,
+                                                           batch_times);
 
                 // Add results to LineData
                 for (size_t j = 0; j < batch_results.size(); ++j) {
@@ -186,7 +274,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
             }
 
             if (progressCallback) {
-                int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
+                int const current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * PROGRESS_SCALE));
                 progressCallback(current_progress);
             }
         }
@@ -202,7 +290,10 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
             }
 
             if (!image_data.empty()) {
-                auto whisker_lines = trace_single_image(*whisker_tracker, image_data, media_data->getImageSize(), typed_params->clip_length);
+                auto whisker_lines = trace_single_image(*whisker_tracker, image_data, media_data->getImageSize(),
+                                                        typed_params->clip_length,
+                                                        typed_params->use_mask_data ? typed_params->mask_data.get() : nullptr,
+                                                        static_cast<int>(time));
 
                 for (auto const & line: whisker_lines) {
                     traced_whiskers->addAtTime(TimeFrameIndex(static_cast<int64_t>(time)), line, false);
@@ -211,13 +302,13 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
 
             processed_time_points++;
             if (progressCallback) {
-                int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
+                int const current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * PROGRESS_SCALE));
                 progressCallback(current_progress);
             }
         }
     }
 
-    if (progressCallback) progressCallback(100);
+    if (progressCallback) progressCallback(PROGRESS_COMPLETE);
 
     std::cout << "WhiskerTracingOperation executed successfully. Traced "
               << traced_whiskers->GetAllLinesAsRange().size() << " whiskers across "

@@ -19,7 +19,7 @@ endif()
 FetchContent_Declare(
   Whisker-Analysis
   GIT_REPOSITORY https://github.com/paulmthompson/Whisker-Analysis.git
-  GIT_TAG 364fe0c411f7fca785da9b809f22571693eeb839
+  GIT_TAG 151f95c3670d64567d5a2ab6b8886939bd38c773
   CMAKE_ARGS -DBUILD_WHISKERTRACKER=OFF -BUILD_TESTING=OFF
 
 )

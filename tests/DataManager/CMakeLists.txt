@@ -134,6 +134,9 @@ else()
     catch_discover_tests(test_data_manager)
 endif()
 
+#[[
+Copy Test Files
+]]#
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data/Media)

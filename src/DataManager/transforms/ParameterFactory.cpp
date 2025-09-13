@@ -18,6 +18,7 @@
 #include "Masks/Mask_Median_Filter/mask_median_filter.hpp"
 #include "Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
 #include "Masks/Mask_To_Line/mask_to_line.hpp"
+#include "Media/whisker_tracing.hpp"
 
 #include <iostream>
 
@@ -391,4 +392,31 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<MaskToLineParameters, float>(
             "Convert Mask To Line", "output_resolution", &MaskToLineParameters::output_resolution);
+
+    // ====================================================
+    // ============== Media Series ==================
+    // ====================================================
+
+    // ==================== Whisker Tracing ===============
+
+    registerBasicParameter<WhiskerTracingParameters, bool>(
+            "Whisker Tracing", "use_processed_data", &WhiskerTracingParameters::use_processed_data);
+
+    registerBasicParameter<WhiskerTracingParameters, int>(
+            "Whisker Tracing", "clip_length", &WhiskerTracingParameters::clip_length);
+
+    registerBasicParameter<WhiskerTracingParameters, float>(
+            "Whisker Tracing", "whisker_length_threshold", &WhiskerTracingParameters::whisker_length_threshold);
+
+    registerBasicParameter<WhiskerTracingParameters, int>(
+            "Whisker Tracing", "batch_size", &WhiskerTracingParameters::batch_size);
+
+    registerBasicParameter<WhiskerTracingParameters, bool>(
+            "Whisker Tracing", "use_parallel_processing", &WhiskerTracingParameters::use_parallel_processing);
+
+    registerBasicParameter<WhiskerTracingParameters, bool>(
+            "Whisker Tracing", "use_mask_data", &WhiskerTracingParameters::use_mask_data);
+
+    registerDataParameter<WhiskerTracingParameters, MaskData>(
+            "Whisker Tracing", "mask_data", &WhiskerTracingParameters::mask_data);
 }
