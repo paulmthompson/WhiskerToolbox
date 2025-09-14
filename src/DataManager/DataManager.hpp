@@ -19,6 +19,7 @@
 
 // Forward declarations for identity
 class EntityRegistry;
+class EntityGroupManager;
 
 class TableRegistry;
 struct TableEvent;
@@ -305,6 +306,11 @@ public:
      */
     [[nodiscard]] EntityRegistry * getEntityRegistry() const { return _entity_registry.get(); }
 
+    /**
+     * @brief Access the session-scoped EntityGroupManager.
+     */
+    [[nodiscard]] EntityGroupManager * getEntityGroupManager() const { return _entity_group_manager.get(); }
+
 private:
     std::unordered_map<TimeKey, std::shared_ptr<TimeFrame>> _times;
 
@@ -328,6 +334,7 @@ private:
 
     // ======= Identity / Entity registry =======
     std::unique_ptr<EntityRegistry> _entity_registry;
+    std::unique_ptr<EntityGroupManager> _entity_group_manager;
 };
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);

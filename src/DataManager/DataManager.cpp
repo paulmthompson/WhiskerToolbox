@@ -41,6 +41,7 @@
 #include "utils/string_manip.hpp"
 
 #include "Entity/EntityRegistry.hpp"
+#include "Entity/EntityGroupManager.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -135,6 +136,9 @@ DataManager::DataManager() {
     // Initialize EntityRegistry
     _entity_registry = std::make_unique<EntityRegistry>();
 
+    // Initialize EntityGroupManager
+    _entity_group_manager = std::make_unique<EntityGroupManager>();
+
     // Register all available loaders
     static bool loaders_registered = false;
     if (!loaders_registered) {
@@ -176,6 +180,11 @@ void DataManager::reset() {
     // Reset entity registry for a new session context
     if (_entity_registry) {
         _entity_registry->clear();
+    }
+
+    // Reset entity group manager for a new session context
+    if (_entity_group_manager) {
+        _entity_group_manager->clear();
     }
 }
 

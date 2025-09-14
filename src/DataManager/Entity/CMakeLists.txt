@@ -5,6 +5,8 @@ add_library(Entity SHARED
     EntityTypes.hpp
     EntityRegistry.hpp
     EntityRegistry.cpp
+    EntityGroupManager.hpp
+    EntityGroupManager.cpp
 )
 
 # Set up include directories

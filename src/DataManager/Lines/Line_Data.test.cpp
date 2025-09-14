@@ -331,4 +331,71 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             REQUIRE(count == 3); // Should include converted times 2, 3, 4
         }
     }
+}
+
+TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
+    // Note: These tests require EntityRegistry integration which would normally
+    // be set up through DataManager. For now, we test the API structure.
+    
+    LineData line_data;
+    
+    std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
+    std::vector<float> y1 = {1.0f, 2.0f, 3.0f};
+    
+    std::vector<float> x2 = {4.0f, 5.0f, 6.0f};
+    std::vector<float> y2 = {4.0f, 5.0f, 6.0f};
+    
+    // Add some test data
+    line_data.addAtTime(TimeFrameIndex(10), x1, y1);
+    line_data.addAtTime(TimeFrameIndex(10), x2, y2); // Two lines at same time
+    line_data.addAtTime(TimeFrameIndex(20), x1, y1); // Same line at different time
+    
+    SECTION("Entity lookup without registry returns nullopt") {
+        // Without EntityRegistry setup, these should return empty/nullopt
+        EntityId fake_entity = 12345;
+        
+        auto line_result = line_data.getLineByEntityId(fake_entity);
+        REQUIRE_FALSE(line_result.has_value());
+        
+        auto time_result = line_data.getTimeAndIndexByEntityId(fake_entity);
+        REQUIRE_FALSE(time_result.has_value());
+        
+        std::vector<EntityId> fake_entities = {fake_entity, 67890};
+        auto lines_result = line_data.getLinesByEntityIds(fake_entities);
+        REQUIRE(lines_result.empty());
+        
+        auto time_info_result = line_data.getTimeInfoByEntityIds(fake_entities);
+        REQUIRE(time_info_result.empty());
+    }
+    
+    SECTION("Entity ID retrieval methods work") {
+        // These should work regardless of registry setup
+        auto entity_ids_at_time = line_data.getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_at_time.size() == 2); // Two lines at time 10
+        
+        auto all_entity_ids = line_data.getAllEntityIds();
+        REQUIRE(all_entity_ids.size() == 3); // Total of 3 lines across all times
+        
+        // Check that empty time returns empty vector
+        auto empty_time_ids = line_data.getEntityIdsAtTime(TimeFrameIndex(99));
+        REQUIRE(empty_time_ids.empty());
+    }
+    
+    SECTION("API structure validates correctly") {
+        // Test that the methods exist and have correct return types
+        EntityId test_entity = 1;
+        std::vector<EntityId> test_entities = {1, 2, 3};
+        
+        // These calls should compile and return appropriate empty/nullopt values
+        auto single_line = line_data.getLineByEntityId(test_entity);
+        auto time_and_index = line_data.getTimeAndIndexByEntityId(test_entity);
+        auto multiple_lines = line_data.getLinesByEntityIds(test_entities);
+        auto time_infos = line_data.getTimeInfoByEntityIds(test_entities);
+        
+        // Verify return types are as expected (they should be empty/nullopt without registry)
+        REQUIRE_FALSE(single_line.has_value());
+        REQUIRE_FALSE(time_and_index.has_value());
+        REQUIRE(multiple_lines.empty());
+        REQUIRE(time_infos.empty());
+    }
 } 

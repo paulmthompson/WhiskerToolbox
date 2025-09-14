@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <map>
+#include <optional>
 #include <ranges>
 #include <vector>
 
@@ -181,6 +182,52 @@ public:
      * @brief Get flattened EntityIds for all lines across all times.
      */
     [[nodiscard]] std::vector<EntityId> getAllEntityIds() const;
+
+    // ========== Entity Lookup Methods ==========
+
+    /**
+     * @brief Find the line data associated with a specific EntityId.
+     * 
+     * This method provides reverse lookup from EntityId to the actual line data,
+     * supporting group-based visualization workflows.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing the line data if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<Line2D> getLineByEntityId(EntityId entity_id) const;
+
+    /**
+     * @brief Find the time frame and local index for a specific EntityId.
+     * 
+     * Returns the time frame and local line index (within that time frame)
+     * associated with the given EntityId.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing {time, local_index} if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<std::pair<TimeFrameIndex, int>> getTimeAndIndexByEntityId(EntityId entity_id) const;
+
+    /**
+     * @brief Get all lines that match the given EntityIds.
+     * 
+     * This method is optimized for batch lookup of multiple EntityIds,
+     * useful for group-based operations.
+     * 
+     * @param entity_ids Vector of EntityIds to look up
+     * @return Vector of pairs containing {EntityId, Line2D} for found entities
+     */
+    [[nodiscard]] std::vector<std::pair<EntityId, Line2D>> getLinesByEntityIds(std::vector<EntityId> const & entity_ids) const;
+
+    /**
+     * @brief Get time frame information for multiple EntityIds.
+     * 
+     * Returns time frame and local index information for multiple EntityIds,
+     * useful for understanding the temporal distribution of entity groups.
+     * 
+     * @param entity_ids Vector of EntityIds to look up
+     * @return Vector of tuples containing {EntityId, TimeFrameIndex, local_index} for found entities
+     */
+    [[nodiscard]] std::vector<std::tuple<EntityId, TimeFrameIndex, int>> getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
      /**
     * @brief Get all lines with their associated times as a range
