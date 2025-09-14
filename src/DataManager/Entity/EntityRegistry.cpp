@@ -31,7 +31,7 @@ std::optional<EntityDescriptor> EntityRegistry::get(EntityId id) const {
 void EntityRegistry::clear() {
     m_tuple_to_id.clear();
     m_id_to_descriptor.clear();
-    m_next_id = 0;
+    m_next_id = 1;  // Reset to 1, not 0, since 0 is sentinel value
 }
 
 

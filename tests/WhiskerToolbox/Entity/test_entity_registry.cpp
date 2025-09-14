@@ -11,8 +11,8 @@ TEST_CASE("EntityRegistry - Basic ID generation", "[entityregistry][basic]") {
     EntityId id2 = registry.ensureId("data2", EntityKind::LineEntity, time_index, 1);
     
     REQUIRE(id1 != id2);
-    REQUIRE(id1 == 0); // First ID should be 0
-    REQUIRE(id2 == 1); // Second ID should be 1
+    REQUIRE(id1 == 1); // First ID should be 1 (0 is reserved as sentinel value)
+    REQUIRE(id2 == 2); // Second ID should be 2
 }
 
 TEST_CASE("EntityRegistry - Deterministic ID generation", "[entityregistry][deterministic]") {
@@ -95,9 +95,9 @@ TEST_CASE("EntityRegistry - Clear functionality", "[entityregistry][clear]") {
     REQUIRE_FALSE(registry.get(id1).has_value());
     REQUIRE_FALSE(registry.get(id2).has_value());
     
-    // Verify new IDs start from 0 again
+    // Verify new IDs start from 1 again (0 is reserved as sentinel value)
     EntityId new_id = registry.ensureId("new_data", EntityKind::PointEntity, time_index, 0);
-    REQUIRE(new_id == 0);
+    REQUIRE(new_id == 1);
 }
 
 TEST_CASE("EntityRegistry - Multiple entities with different time indices", "[entityregistry][multiple]") {
