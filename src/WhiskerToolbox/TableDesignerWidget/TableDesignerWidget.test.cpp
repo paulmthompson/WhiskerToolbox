@@ -10,6 +10,7 @@
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
 #include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
 #include "DataManager/utils/TableView/computers/AnalogSliceGathererComputer.h"
+#include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"

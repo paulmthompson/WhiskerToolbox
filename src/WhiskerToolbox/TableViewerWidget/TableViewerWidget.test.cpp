@@ -1,27 +1,27 @@
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 
-#include "TableViewerWidget.hpp"
 #include "PaginatedTableModel.hpp"
+#include "TableViewerWidget.hpp"
 
 // DataManager and TableView related includes
 #include "DataManager.hpp"
-#include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
-#include "DataManager/utils/TableView/core/TableView.h"
-#include "DataManager/utils/TableView/core/TableViewBuilder.h"
-#include "DataManager/utils/TableView/interfaces/IRowSelector.h"
-#include "DataManager/utils/TableView/interfaces/IIntervalSource.h"
-#include "DataManager/utils/TableView/interfaces/IEventSource.h"
-#include "DataManager/utils/TableView/TableRegistry.hpp"
-#include "DataManager/utils/TableView/TableInfo.hpp"
-#include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/TimeFrame/TimeFrame.hpp"
 #include "DataManager/TimeFrame/interval_data.hpp"
-#include "DataManager/utils/TableView/core/ExecutionPlan.h"
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
+#include "DataManager/utils/TableView/TableInfo.hpp"
+#include "DataManager/utils/TableView/TableRegistry.hpp"
+#include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
 #include "DataManager/utils/TableView/computers/AnalogSliceGathererComputer.h"
+#include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
+#include "DataManager/utils/TableView/core/ExecutionPlan.h"
+#include "DataManager/utils/TableView/core/TableView.h"
+#include "DataManager/utils/TableView/core/TableViewBuilder.h"
+#include "DataManager/utils/TableView/interfaces/IEventSource.h"
+#include "DataManager/utils/TableView/interfaces/IIntervalSource.h"
+#include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 
 // Analog data
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -30,14 +30,14 @@
 #include "DataManager/utils/TableView/computers/LineSamplingMultiComputer.h"
 
 // Qt includes for widget testing
+#include <QAbstractItemModel>
 #include <QApplication>
 #include <QTableView>
-#include <QAbstractItemModel>
 
-#include <memory>
-#include <vector>
 #include <algorithm>
+#include <memory>
 #include <numeric>
+#include <vector>
 
 /**
  * @brief Test fixture for TableViewerWidget that creates test data similar to EventInIntervalComputer tests
@@ -54,13 +54,13 @@ protected:
         // Initialize Qt application if not already done
         if (!QApplication::instance()) {
             int argc = 0;
-            char** argv = nullptr;
+            char ** argv = nullptr;
             app = std::make_unique<QApplication>(argc, argv);
         }
-        
+
         // Initialize the DataManager
         m_data_manager = std::make_unique<DataManager>();
-        
+
         // Populate with test data
         populateWithTestData();
     }
@@ -82,11 +82,11 @@ protected:
     /**
      * @brief Get DataManagerExtension for building tables
      */
-    std::shared_ptr<DataManagerExtension> getDataManagerExtension() { 
+    std::shared_ptr<DataManagerExtension> getDataManagerExtension() {
         if (!m_data_manager_extension) {
             m_data_manager_extension = std::make_shared<DataManagerExtension>(*m_data_manager);
         }
-        return m_data_manager_extension; 
+        return m_data_manager_extension;
     }
 
     /**
@@ -95,53 +95,53 @@ protected:
      */
     std::shared_ptr<TableView> createSampleTableView() {
         auto dme = getDataManagerExtension();
-        
+
         // Get test data sources
         auto neuron1_source = dme->getEventSource("Neuron1Spikes");
         auto neuron2_source = dme->getEventSource("Neuron2Spikes");
         auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        
+
         if (!neuron1_source || !neuron2_source || !behavior_source) {
             return nullptr;
         }
-        
+
         // Create row selector from behavior intervals
         auto behavior_time_frame = m_data_manager->getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
-        
+                TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+
         std::vector<TimeFrameInterval> row_intervals;
-        for (const auto& interval : behavior_intervals) {
+        for (auto const & interval: behavior_intervals) {
             row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
         }
-        
+
         auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
-        
+
         // Build TableView with multiple columns
         TableViewBuilder builder(dme);
         builder.setRowSelector(std::move(row_selector));
-        
+
         // Add different column types for testing
-        builder.addColumn<bool>("Neuron1_Present", 
-            std::make_unique<EventInIntervalComputer<bool>>(neuron1_source, 
-                EventOperation::Presence, "Neuron1Spikes"));
-        
-        builder.addColumn<int>("Neuron1_Count", 
-            std::make_unique<EventInIntervalComputer<int>>(neuron1_source, 
-                EventOperation::Count, "Neuron1Spikes"));
-        
-        builder.addColumn<bool>("Neuron2_Present", 
-            std::make_unique<EventInIntervalComputer<bool>>(neuron2_source, 
-                EventOperation::Presence, "Neuron2Spikes"));
-        
-        builder.addColumn<int>("Neuron2_Count", 
-            std::make_unique<EventInIntervalComputer<int>>(neuron2_source, 
-                EventOperation::Count, "Neuron2Spikes"));
-        
-        builder.addColumn<std::vector<float>>("Neuron1_Times", 
-            std::make_unique<EventInIntervalComputer<std::vector<float>>>(neuron1_source, 
-                EventOperation::Gather, "Neuron1Spikes"));
-        
+        builder.addColumn<bool>("Neuron1_Present",
+                                std::make_unique<EventInIntervalComputer<bool>>(neuron1_source,
+                                                                                EventOperation::Presence, "Neuron1Spikes"));
+
+        builder.addColumn<int>("Neuron1_Count",
+                               std::make_unique<EventInIntervalComputer<int>>(neuron1_source,
+                                                                              EventOperation::Count, "Neuron1Spikes"));
+
+        builder.addColumn<bool>("Neuron2_Present",
+                                std::make_unique<EventInIntervalComputer<bool>>(neuron2_source,
+                                                                                EventOperation::Presence, "Neuron2Spikes"));
+
+        builder.addColumn<int>("Neuron2_Count",
+                               std::make_unique<EventInIntervalComputer<int>>(neuron2_source,
+                                                                              EventOperation::Count, "Neuron2Spikes"));
+
+        builder.addColumn<std::vector<float>>("Neuron1_Times",
+                                              std::make_unique<EventInIntervalComputer<std::vector<float>>>(neuron1_source,
+                                                                                                            EventOperation::Gather, "Neuron1Spikes"));
+
         // Build and return the table
         TableView table = builder.build();
         return std::make_shared<TableView>(std::move(table));
@@ -152,41 +152,41 @@ protected:
      */
     std::vector<ColumnInfo> createSampleColumnInfos() {
         std::vector<ColumnInfo> column_infos;
-        
+
         // Create column info for each test column
-        ColumnInfo neuron1_present("Neuron1_Present", "Presence of Neuron1 spikes", 
-                                  "Neuron1Spikes", "Event Presence");
+        ColumnInfo neuron1_present("Neuron1_Present", "Presence of Neuron1 spikes",
+                                   "Neuron1Spikes", "Event Presence");
         neuron1_present.outputType = typeid(bool);
         neuron1_present.outputTypeName = "bool";
         column_infos.push_back(std::move(neuron1_present));
-        
-        ColumnInfo neuron1_count("Neuron1_Count", "Count of Neuron1 spikes", 
-                                "Neuron1Spikes", "Event Count");
+
+        ColumnInfo neuron1_count("Neuron1_Count", "Count of Neuron1 spikes",
+                                 "Neuron1Spikes", "Event Count");
         neuron1_count.outputType = typeid(int);
         neuron1_count.outputTypeName = "int";
         column_infos.push_back(std::move(neuron1_count));
-        
-        ColumnInfo neuron2_present("Neuron2_Present", "Presence of Neuron2 spikes", 
-                                  "Neuron2Spikes", "Event Presence");
+
+        ColumnInfo neuron2_present("Neuron2_Present", "Presence of Neuron2 spikes",
+                                   "Neuron2Spikes", "Event Presence");
         neuron2_present.outputType = typeid(bool);
         neuron2_present.outputTypeName = "bool";
         column_infos.push_back(std::move(neuron2_present));
-        
-        ColumnInfo neuron2_count("Neuron2_Count", "Count of Neuron2 spikes", 
-                                "Neuron2Spikes", "Event Count");
+
+        ColumnInfo neuron2_count("Neuron2_Count", "Count of Neuron2 spikes",
+                                 "Neuron2Spikes", "Event Count");
         neuron2_count.outputType = typeid(int);
         neuron2_count.outputTypeName = "int";
         column_infos.push_back(std::move(neuron2_count));
-        
-        ColumnInfo neuron1_times("Neuron1_Times", "Spike times for Neuron1", 
-                                "Neuron1Spikes", "Event Gather");
+
+        ColumnInfo neuron1_times("Neuron1_Times", "Spike times for Neuron1",
+                                 "Neuron1Spikes", "Event Gather");
         neuron1_times.outputType = typeid(std::vector<float>);
         neuron1_times.outputTypeName = "std::vector<float>";
         neuron1_times.isVectorType = true;
         neuron1_times.elementType = typeid(float);
         neuron1_times.elementTypeName = "float";
         column_infos.push_back(std::move(neuron1_times));
-        
+
         return column_infos;
     }
 
@@ -196,20 +196,20 @@ protected:
     std::unique_ptr<IRowSelector> createSampleRowSelector() {
         auto dme = getDataManagerExtension();
         auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        
+
         if (!behavior_source) {
             return nullptr;
         }
-        
+
         auto behavior_time_frame = m_data_manager->getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
-        
+                TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+
         std::vector<TimeFrameInterval> row_intervals;
-        for (const auto& interval : behavior_intervals) {
+        for (auto const & interval: behavior_intervals) {
             row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
         }
-        
+
         return std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
     }
 
@@ -252,12 +252,12 @@ private:
      */
     void createBehaviorIntervals() {
         auto behavior_intervals = std::make_shared<DigitalIntervalSeries>();
-        
+
         // Create 4 behavior periods for testing
-        behavior_intervals->addEvent(TimeFrameIndex(10), TimeFrameIndex(25));  // Exploration 1
-        behavior_intervals->addEvent(TimeFrameIndex(30), TimeFrameIndex(40));  // Rest
-        behavior_intervals->addEvent(TimeFrameIndex(50), TimeFrameIndex(70));  // Exploration 2
-        behavior_intervals->addEvent(TimeFrameIndex(80), TimeFrameIndex(95));  // Social
+        behavior_intervals->addEvent(TimeFrameIndex(10), TimeFrameIndex(25));// Exploration 1
+        behavior_intervals->addEvent(TimeFrameIndex(30), TimeFrameIndex(40));// Rest
+        behavior_intervals->addEvent(TimeFrameIndex(50), TimeFrameIndex(70));// Exploration 2
+        behavior_intervals->addEvent(TimeFrameIndex(80), TimeFrameIndex(95));// Social
 
         m_data_manager->setData<DigitalIntervalSeries>("BehaviorPeriods", behavior_intervals, TimeKey("behavior_time"));
     }
@@ -268,109 +268,107 @@ private:
     void createSpikeEvents() {
         // Create spike train for Neuron1
         std::vector<float> neuron1_spikes = {
-            1.0f, 6.0f, 7.0f, 11.0f, 16.0f, 26.0f, 27.0f, 34.0f, 41.0f, 45.0f
-        };
+                1.0f, 6.0f, 7.0f, 11.0f, 16.0f, 26.0f, 27.0f, 34.0f, 41.0f, 45.0f};
         auto neuron1_series = std::make_shared<DigitalEventSeries>(neuron1_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron1Spikes", neuron1_series, TimeKey("spike_time"));
-        
+
         // Create spike train for Neuron2
         std::vector<float> neuron2_spikes = {
-            0.0f, 1.0f, 2.0f, 5.0f, 6.0f, 8.0f, 9.0f, 15.0f, 16.0f, 18.0f,
-            25.0f, 26.0f, 28.0f, 29.0f, 33.0f, 34.0f, 40.0f, 41.0f, 42.0f, 45.0f, 46.0f
-        };
+                0.0f, 1.0f, 2.0f, 5.0f, 6.0f, 8.0f, 9.0f, 15.0f, 16.0f, 18.0f,
+                25.0f, 26.0f, 28.0f, 29.0f, 33.0f, 34.0f, 40.0f, 41.0f, 42.0f, 45.0f, 46.0f};
         auto neuron2_series = std::make_shared<DigitalEventSeries>(neuron2_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron2Spikes", neuron2_series, TimeKey("spike_time"));
     }
 };
 
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Basic Functionality", "[TableViewerWidget]") {
-    
+
     SECTION("Create widget and verify initial state") {
         TableViewerWidget widget;
-        
+
         // Verify initial state
         REQUIRE(!widget.hasTable());
         REQUIRE(widget.getTableName().isEmpty());
-        
+
         // Widget should be properly constructed
         REQUIRE(widget.isWidgetType());
     }
-    
+
     SECTION("Set table view and verify row/column counts") {
         TableViewerWidget widget;
-        
+
         // Create a sample table
         auto table_view = createSampleTableView();
         REQUIRE(table_view != nullptr);
-        
+
         // Get original table dimensions
         size_t original_row_count = table_view->getRowCount();
         size_t original_column_count = table_view->getColumnCount();
-        
+
         // Set the table in the widget
         widget.setTableView(table_view, "Test Table");
-        
+
         // Verify widget state
         REQUIRE(widget.hasTable());
         REQUIRE(widget.getTableName() == "Test Table");
-        
+
         // Access the internal model to verify dimensions
         // Note: We need to access the QTableView to get the model
-        auto* table_view_widget = widget.findChild<QTableView*>();
+        auto * table_view_widget = widget.findChild<QTableView *>();
         REQUIRE(table_view_widget != nullptr);
-        
-        auto* model = table_view_widget->model();
+
+        auto * model = table_view_widget->model();
         REQUIRE(model != nullptr);
-        
+
         // Verify the model has the correct dimensions
         REQUIRE(static_cast<size_t>(model->columnCount()) == original_column_count);
         REQUIRE(static_cast<size_t>(model->rowCount()) == original_row_count);
-        
+
         // Verify expected dimensions based on our test data
-        REQUIRE(original_row_count == 4);     // 4 behavior periods
-        REQUIRE(original_column_count == 5);  // 5 columns we added
+        REQUIRE(original_row_count == 4);   // 4 behavior periods
+        REQUIRE(original_column_count == 5);// 5 columns we added
     }
-    
+
     SECTION("Set table configuration and verify row/column counts") {
         TableViewerWidget widget;
-        
+
         // Create configuration components
         auto row_selector = createSampleRowSelector();
         auto column_infos = createSampleColumnInfos();
-        auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager*){});
-        
+        auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager *) {});
+
         REQUIRE(row_selector != nullptr);
         REQUIRE(!column_infos.empty());
-        
+
         // Get expected dimensions before setting
         size_t expected_columns = column_infos.size();
-        
+
         // Calculate expected rows by counting intervals in the row selector
         // For our test data, we should have 4 behavior periods
         size_t expected_rows = 4;
-        
+
         // Set the table configuration
-        widget.setTableConfiguration(std::move(row_selector), std::move(column_infos), 
-                                   data_manager, "Configuration Test");
-        
+        widget.setTableConfiguration(std::move(row_selector), std::move(column_infos),
+                                     data_manager, "Configuration Test");
+
         // Verify widget state
         REQUIRE(widget.hasTable());
         REQUIRE(widget.getTableName() == "Configuration Test");
-        
+
         // Access the internal model to verify dimensions
-        auto* table_view_widget = widget.findChild<QTableView*>();
+        auto * table_view_widget = widget.findChild<QTableView *>();
         REQUIRE(table_view_widget != nullptr);
-        
-        auto* model = table_view_widget->model();
+
+        auto * model = table_view_widget->model();
         REQUIRE(model != nullptr);
-        
+
         // Verify the model has the correct dimensions
         REQUIRE(static_cast<size_t>(model->columnCount()) == expected_columns);
         REQUIRE(static_cast<size_t>(model->rowCount()) == expected_rows);
-        
+
         // Verify expected dimensions
-        REQUIRE(expected_columns == 5);  // 5 columns we defined
-        REQUIRE(expected_rows == 4);     // 4 behavior periods
+        REQUIRE(expected_columns == 5);// 5 columns we defined
+        REQUIRE(expected_rows == 4);   // 4 behavior periods
     }
 }
 
@@ -390,8 +388,8 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Display bool
     TableViewBuilder builder(dme);
     builder.setRowSelector(std::move(row_selector));
     builder.addColumn<bool>(
-        "N1_Present",
-        std::make_unique<EventInIntervalComputer<bool>>(n1, EventOperation::Presence, "Neuron1Spikes"));
+            "N1_Present",
+            std::make_unique<EventInIntervalComputer<bool>>(n1, EventOperation::Presence, "Neuron1Spikes"));
 
     TableView table = builder.build();
     auto table_view = std::make_shared<TableView>(std::move(table));
@@ -401,7 +399,7 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Display bool
     widget.setTableView(table_view, "Bool Column Test");
     REQUIRE(widget.hasTable());
 
-    auto * tv = widget.findChild<QTableView*>();
+    auto * tv = widget.findChild<QTableView *>();
     REQUIRE(tv != nullptr);
     auto * model = tv->model();
     REQUIRE(model != nullptr);
@@ -430,7 +428,8 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Display vect
     // Analog 0..9 at each index
     std::vector<float> vals(10);
     std::iota(vals.begin(), vals.end(), 0.0f);
-    std::vector<TimeFrameIndex> tix; tix.reserve(10);
+    std::vector<TimeFrameIndex> tix;
+    tix.reserve(10);
     for (int i = 0; i < 10; ++i) tix.emplace_back(i);
     auto ats = std::make_shared<AnalogTimeSeries>(vals, tix);
     dm.setData<AnalogTimeSeries>("VecAnalog", ats, TimeKey("vec_time"));
@@ -455,7 +454,7 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Display vect
     widget.setTableView(table_view, "Vector Column Test");
     REQUIRE(widget.hasTable());
 
-    auto * tv = widget.findChild<QTableView*>();
+    auto * tv = widget.findChild<QTableView *>();
     REQUIRE(tv != nullptr);
     auto * model = tv->model();
     REQUIRE(model != nullptr);
@@ -474,11 +473,11 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination w
     std::cout << "CTEST_FULL_OUTPUT" << std::endl;
 
     // Parameters
-    const int num_rows = 2500;      // triggers pagination
-    const int page_size = 64;       // small to force multiple pages
+    int const num_rows = 2500;// triggers pagination
+    int const page_size = 64; // small to force multiple pages
 
     // Create a monotonic analog signal: value(t) = t for t in [0, num_rows)
-    auto time_frame = std::make_shared<TimeFrame>([&]{
+    auto time_frame = std::make_shared<TimeFrame>([&] {
         std::vector<int> t(num_rows);
         std::iota(t.begin(), t.end(), 0);
         return t;
@@ -506,12 +505,12 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination w
     // Wire into widget using pagination-backed API
     TableViewerWidget widget;
     widget.setPageSize(static_cast<size_t>(page_size));
-    auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager*){});
+    auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager *) {});
     widget.setTableConfiguration(std::move(row_selector), std::move(column_infos), data_manager, "Analog Pagination");
 
     REQUIRE(widget.hasTable());
 
-    auto * table_view_widget = widget.findChild<QTableView*>();
+    auto * table_view_widget = widget.findChild<QTableView *>();
     REQUIRE(table_view_widget != nullptr);
     auto * model = table_view_widget->model();
     REQUIRE(model != nullptr);
@@ -540,10 +539,10 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination w
 
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Resize increases visible rows (lazy fill)", "[TableViewerWidget][Pagination][Resize]") {
     // Build small analog table similar to previous test
-    const int num_rows = 1000;
-    const int page_size = 64;
+    int const num_rows = 1000;
+    int const page_size = 64;
 
-    auto time_frame = std::make_shared<TimeFrame>([&]{
+    auto time_frame = std::make_shared<TimeFrame>([&] {
         std::vector<int> t(num_rows);
         std::iota(t.begin(), t.end(), 0);
         return t;
@@ -569,10 +568,10 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Resize incre
 
     TableViewerWidget widget;
     widget.setPageSize(static_cast<size_t>(page_size));
-    auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager*){});
+    auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager *) {});
     widget.setTableConfiguration(std::move(row_selector), std::move(column_infos), data_manager, "Resize Test");
 
-    auto * table_view = widget.findChild<QTableView*>();
+    auto * table_view = widget.findChild<QTableView *>();
     REQUIRE(table_view != nullptr);
     auto * model = table_view->model();
     REQUIRE(model != nullptr);
@@ -614,74 +613,74 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Resize incre
 }
 
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Table Registry Integration", "[TableViewerWidget][Registry]") {
-    
+
     SECTION("Verify table registry provides correct table access") {
-        auto& registry = getTableRegistry();
-        auto& dm = getDataManager();
-        
+        auto & registry = getTableRegistry();
+        auto & dm = getDataManager();
+
         // Create a table using the registry's computers
         auto dme = getDataManagerExtension();
-        
+
         // Build a table using registry components
         auto row_selector = createSampleRowSelector();
         REQUIRE(row_selector != nullptr);
-        
+
         TableViewBuilder builder(dme);
         builder.setRowSelector(std::move(row_selector));
-        
+
         // Get neuron sources
         auto neuron1_source = dme->getEventSource("Neuron1Spikes");
         auto neuron2_source = dme->getEventSource("Neuron2Spikes");
         REQUIRE(neuron1_source != nullptr);
         REQUIRE(neuron2_source != nullptr);
-        
+
         // Use registry to create computers
-        auto& computer_registry = registry.getComputerRegistry();
-        
+        auto & computer_registry = registry.getComputerRegistry();
+
         std::map<std::string, std::string> empty_params;
-        
+
         auto presence_computer1 = computer_registry.createTypedComputer<bool>(
-            "Event Presence", neuron1_source, empty_params);
+                "Event Presence", neuron1_source, empty_params);
         auto count_computer1 = computer_registry.createTypedComputer<int>(
-            "Event Count", neuron1_source, empty_params);
+                "Event Count", neuron1_source, empty_params);
         auto presence_computer2 = computer_registry.createTypedComputer<bool>(
-            "Event Presence", neuron2_source, empty_params);
+                "Event Presence", neuron2_source, empty_params);
         auto count_computer2 = computer_registry.createTypedComputer<int>(
-            "Event Count", neuron2_source, empty_params);
-        
+                "Event Count", neuron2_source, empty_params);
+
         REQUIRE(presence_computer1 != nullptr);
         REQUIRE(count_computer1 != nullptr);
         REQUIRE(presence_computer2 != nullptr);
         REQUIRE(count_computer2 != nullptr);
-        
+
         // Add columns using registry-created computers
         builder.addColumn("Registry_N1_Present", std::move(presence_computer1));
         builder.addColumn("Registry_N1_Count", std::move(count_computer1));
         builder.addColumn("Registry_N2_Present", std::move(presence_computer2));
         builder.addColumn("Registry_N2_Count", std::move(count_computer2));
-        
+
         // Build the table
         TableView registry_table = builder.build();
         auto table_view = std::make_shared<TableView>(std::move(registry_table));
-        
+
         // Test with TableViewerWidget
         TableViewerWidget widget;
         widget.setTableView(table_view, "Registry Table");
-        
+
         // Verify dimensions
         REQUIRE(widget.hasTable());
         REQUIRE(widget.getTableName() == "Registry Table");
-        
-        auto* table_view_widget = widget.findChild<QTableView*>();
+
+        auto * table_view_widget = widget.findChild<QTableView *>();
         REQUIRE(table_view_widget != nullptr);
-        
-        auto* model = table_view_widget->model();
+
+        auto * model = table_view_widget->model();
         REQUIRE(model != nullptr);
-        
+
         // Verify correct number of columns and rows
-        REQUIRE(model->columnCount() == 4);  // 4 registry-created columns
-        REQUIRE(model->rowCount() == 4);     // 4 behavior periods
-        
+        REQUIRE(model->columnCount() == 4);// 4 registry-created columns
+        REQUIRE(model->rowCount() == 4);   // 4 behavior periods
+
         // Verify these match the original table
         REQUIRE(static_cast<size_t>(model->columnCount()) == table_view->getColumnCount());
         REQUIRE(static_cast<size_t>(model->rowCount()) == table_view->getRowCount());
@@ -689,35 +688,35 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Table Regist
 }
 
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Data Consistency", "[TableViewerWidget][Data]") {
-    
+
     SECTION("Verify table data matches source table") {
         TableViewerWidget widget;
-        
+
         // Create a sample table
         auto table_view = createSampleTableView();
         REQUIRE(table_view != nullptr);
-        
+
         // Get some reference data from the original table
         auto original_columns = table_view->getColumnNames();
         auto original_neuron1_present = table_view->getColumnValues<bool>("Neuron1_Present");
         auto original_neuron1_count = table_view->getColumnValues<int>("Neuron1_Count");
-        
+
         // Set the table in the widget
         widget.setTableView(table_view, "Data Test");
-        
+
         // Access the model to verify data consistency
-        auto* table_view_widget = widget.findChild<QTableView*>();
+        auto * table_view_widget = widget.findChild<QTableView *>();
         REQUIRE(table_view_widget != nullptr);
-        
-        auto* model = table_view_widget->model();
+
+        auto * model = table_view_widget->model();
         REQUIRE(model != nullptr);
-        
+
         // Verify column headers match
         for (int col = 0; col < model->columnCount(); ++col) {
             QString header = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
             REQUIRE(!header.isEmpty());
         }
-        
+
         // Verify we can access data without errors
         for (int row = 0; row < model->rowCount(); ++row) {
             for (int col = 0; col < model->columnCount(); ++col) {
@@ -726,7 +725,7 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Data Consist
                 REQUIRE(data.isValid());
             }
         }
-        
+
         // Verify dimensions match expectations
         REQUIRE(model->rowCount() == static_cast<int>(original_neuron1_present.size()));
         REQUIRE(model->rowCount() == static_cast<int>(original_neuron1_count.size()));
@@ -735,72 +734,72 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Data Consist
 }
 
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Widget Lifecycle", "[TableViewerWidget][Lifecycle]") {
-    
+
     SECTION("Clear table and verify state reset") {
         TableViewerWidget widget;
-        
+
         // Set a table
         auto table_view = createSampleTableView();
         widget.setTableView(table_view, "Test Table");
-        
+
         // Verify table is set
         REQUIRE(widget.hasTable());
         REQUIRE(widget.getTableName() == "Test Table");
-        
+
         // Clear the table
         widget.clearTable();
-        
+
         // Verify state is reset
         REQUIRE(!widget.hasTable());
         REQUIRE(widget.getTableName().isEmpty());
-        
+
         // Model should still exist but be empty or reset
-        auto* table_view_widget = widget.findChild<QTableView*>();
+        auto * table_view_widget = widget.findChild<QTableView *>();
         REQUIRE(table_view_widget != nullptr);
-        
-        auto* model = table_view_widget->model();
+
+        auto * model = table_view_widget->model();
         // Model might be null or have 0 rows/columns after clearing
         if (model != nullptr) {
             // If model exists, it should have no data
             REQUIRE((model->rowCount() == 0 || model->columnCount() == 0));
         }
     }
-    
+
     SECTION("Set page size and verify it's applied") {
         TableViewerWidget widget;
-        
+
         // Set page size before setting table
         widget.setPageSize(100);
-        
+
         // Create configuration components
         auto row_selector = createSampleRowSelector();
         auto column_infos = createSampleColumnInfos();
-        auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager*){});
-        
+        auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager *) {});
+
         // Set table configuration
-        widget.setTableConfiguration(std::move(row_selector), std::move(column_infos), 
-                                   data_manager, "Page Size Test");
-        
+        widget.setTableConfiguration(std::move(row_selector), std::move(column_infos),
+                                     data_manager, "Page Size Test");
+
         // Verify table is set and working
         REQUIRE(widget.hasTable());
-        
+
         // With our small test dataset (4 rows), page size shouldn't affect visibility
-        auto* table_view_widget = widget.findChild<QTableView*>();
+        auto * table_view_widget = widget.findChild<QTableView *>();
         REQUIRE(table_view_widget != nullptr);
-        
-        auto* model = table_view_widget->model();
+
+        auto * model = table_view_widget->model();
         REQUIRE(model != nullptr);
-        REQUIRE(model->rowCount() == 4);  // All rows should be visible
+        REQUIRE(model->rowCount() == 4);// All rows should be visible
     }
 }
 
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination with large table", "[TableViewerWidget][Pagination]") {
     // Build a large pagination-backed configuration: 2500 rows and 1000 columns
-    
+
     std::cout << "CTEST_FULL_OUTPUT" << std::endl;
 
-    const int num_rows = 2500;
-    const int num_columns = 10;
+    int const num_rows = 2500;
+    int const num_columns = 10;
 
     auto dme = getDataManagerExtension();
     REQUIRE(dme != nullptr);
@@ -837,12 +836,12 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination w
     // Use the widget's pagination-backed API
     TableViewerWidget widget;
     widget.setPageSize(64);
-    auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager*){});
+    auto data_manager = std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager *) {});
     widget.setTableConfiguration(std::move(row_selector), std::move(column_infos), data_manager, "Large Pagination Table");
 
     REQUIRE(widget.hasTable());
 
-    auto * table_view_widget = widget.findChild<QTableView*>();
+    auto * table_view_widget = widget.findChild<QTableView *>();
     REQUIRE(table_view_widget != nullptr);
     auto * base_model = table_view_widget->model();
     REQUIRE(base_model != nullptr);
@@ -867,14 +866,14 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Pagination w
     size_t initial_pages = model->getMaterializedPageCount();
 
     // Trigger access across multiple page boundaries
-    accessRow(0);    // page 0
-    accessRow(63);   // still page 0
-    accessRow(64);   // page 1
-    accessRow(127);  // page 1
-    accessRow(128);  // page 2
-    accessRow(512);  // deeper page
-    accessRow(1024); // deeper page
-    accessRow(2048); // deeper page
+    accessRow(0);   // page 0
+    accessRow(63);  // still page 0
+    accessRow(64);  // page 1
+    accessRow(127); // page 1
+    accessRow(128); // page 2
+    accessRow(512); // deeper page
+    accessRow(1024);// deeper page
+    accessRow(2048);// deeper page
 
     size_t pages_after = model->getMaterializedPageCount();
     REQUIRE(pages_after >= initial_pages + 4);
@@ -941,7 +940,7 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - LineSampling
     widget.setTableView(table_view, "Line Entity Expansion");
     REQUIRE(widget.hasTable());
 
-    auto * tv = widget.findChild<QTableView*>();
+    auto * tv = widget.findChild<QTableView *>();
     REQUIRE(tv != nullptr);
     auto * model = tv->model();
     REQUIRE(model != nullptr);

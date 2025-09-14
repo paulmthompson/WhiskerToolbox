@@ -3,9 +3,9 @@
 
 #include "utils/TableView/columns/ColumnTypeInfo.hpp"
 
-#include <typeindex>
 #include <map>
 #include <string>
+#include <typeindex>
 #include <vector>
 
 struct ColumnInfo {
@@ -63,5 +63,4 @@ struct TableInfo {
           description(std::move(table_description)) {}
 };
 
-#endif // DATAMANAGER_TABLE_INFO_HPP
-
+#endif// DATAMANAGER_TABLE_INFO_HPP

@@ -1,7 +1,6 @@
 #ifndef TABLEVIEWERWIDGET_HPP
 #define TABLEVIEWERWIDGET_HPP
 
-#include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/utils/TableView/TableInfo.hpp"
 
 #include <QWidget>
@@ -13,6 +12,7 @@
 class PaginatedTableModel;
 class IRowSelector;
 class DataManager;
+class TableView;
 
 namespace Ui {
 class TableViewerWidget;

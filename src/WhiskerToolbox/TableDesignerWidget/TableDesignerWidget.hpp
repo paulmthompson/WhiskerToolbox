@@ -17,6 +17,7 @@
 #include <QMap>
 
 class DataManager;
+class DataManagerExtension;
 class ComputerRegistry;
 class IRowSelector;
 class TableViewBuilder;

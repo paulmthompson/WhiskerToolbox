@@ -2,6 +2,7 @@
 #include "ui_TableViewerWidget.h"
 
 #include "PaginatedTableModel.hpp"
+#include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 
 #include <QScrollBar>
