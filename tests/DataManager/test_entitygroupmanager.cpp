@@ -1,5 +1,6 @@
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
@@ -717,5 +718,156 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         }
         
         INFO("Successfully simulated dynamic group membership changes during navigation");
+    }
+}
+
+TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture, 
+                 "EntityGroupManager Integration - PointData Entity Lookup", 
+                 "[integration][entity][group][datamanager][pointdata]") {
+    
+    SECTION("PointData entity lookup and group membership checking") {
+        // Create and populate PointData with test data
+        auto point_data = std::make_shared<PointData>();
+        
+        // Create test points at different time frames
+        std::vector<Point2D<float>> points_t10 = {
+            {10.0f, 15.0f},
+            {20.0f, 25.0f},
+            {30.0f, 35.0f}
+        };
+        
+        std::vector<Point2D<float>> points_t20 = {
+            {40.0f, 45.0f},
+            {50.0f, 55.0f},
+            {60.0f, 65.0f},
+            {70.0f, 75.0f}
+        };
+        
+        std::vector<Point2D<float>> points_t30 = {
+            {80.0f, 85.0f},
+            {90.0f, 95.0f}
+        };
+        
+        // Add points to PointData
+        for (auto const & point : points_t10) {
+            point_data->addAtTime(TimeFrameIndex(10), point);
+        }
+        for (auto const & point : points_t20) {
+            point_data->addAtTime(TimeFrameIndex(20), point);
+        }
+        for (auto const & point : points_t30) {
+            point_data->addAtTime(TimeFrameIndex(30), point);
+        }
+        
+        // Set image size
+        point_data->setImageSize({800, 600});
+        
+        // Set up identity context BEFORE adding to DataManager
+        point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
+        point_data->rebuildAllEntityIds();
+        
+        // Add to DataManager
+        data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
+        
+        // Verify EntityIds were generated
+        auto all_entity_ids = point_data->getAllEntityIds();
+        REQUIRE(all_entity_ids.size() == 9); // 3 + 4 + 2 = 9 total points
+        
+        // Verify all EntityIds are non-zero
+        for (EntityId id : all_entity_ids) {
+            REQUIRE(id != 0);
+        }
+        
+        // Test entity lookup methods
+        auto entities_t10 = point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto entities_t20 = point_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        auto entities_t30 = point_data->getEntityIdsAtTime(TimeFrameIndex(30));
+        
+        REQUIRE(entities_t10.size() == 3);
+        REQUIRE(entities_t20.size() == 4);
+        REQUIRE(entities_t30.size() == 2);
+        
+        // Test reverse lookup - get point by EntityId
+        EntityId first_entity = entities_t10[0];
+        auto point_lookup = point_data->getPointByEntityId(first_entity);
+        REQUIRE(point_lookup.has_value());
+        REQUIRE(point_lookup->x == Catch::Approx(10.0f));
+        REQUIRE(point_lookup->y == Catch::Approx(15.0f));
+        
+        // Test time and index lookup
+        auto time_info = point_data->getTimeAndIndexByEntityId(first_entity);
+        REQUIRE(time_info.has_value());
+        REQUIRE(time_info->first == TimeFrameIndex(10));
+        REQUIRE(time_info->second == 0); // First point at this time
+        
+        // Create groups in EntityGroupManager
+        auto* group_manager = data_manager->getEntityGroupManager();
+        GroupId highlighted_group = group_manager->createGroup("highlighted_points");
+        GroupId selected_group = group_manager->createGroup("selected_points");
+        
+        // Add some entities to groups
+        group_manager->addEntityToGroup(highlighted_group, entities_t10[1]); // Second point at t10
+        group_manager->addEntityToGroup(highlighted_group, entities_t20[0]); // First point at t20
+        group_manager->addEntityToGroup(selected_group, entities_t20[2]);    // Third point at t20
+        
+        // Simulate MediaWindow behavior: get points at specific time and check group membership
+        TimeFrameIndex current_time(20);
+        auto points_at_time = point_data->getAtTime(current_time);
+        auto entities_at_time = point_data->getEntityIdsAtTime(current_time);
+        
+        REQUIRE(points_at_time.size() == entities_at_time.size());
+        REQUIRE(points_at_time.size() == 4);
+        
+        INFO("Simulating MediaWindow point rendering with group awareness:");
+        
+        for (size_t i = 0; i < points_at_time.size(); ++i) {
+            Point2D<float> const & point = points_at_time[i];
+            EntityId entity_id = entities_at_time[i];
+            
+            // Check group membership
+            bool is_highlighted = group_manager->isEntityInGroup(highlighted_group, entity_id);
+            bool is_selected = group_manager->isEntityInGroup(selected_group, entity_id);
+            
+            // Verify the relationship between entity and point data
+            auto looked_up_point = point_data->getPointByEntityId(entity_id);
+            REQUIRE(looked_up_point.has_value());
+            REQUIRE(looked_up_point->x == Catch::Approx(point.x));
+            REQUIRE(looked_up_point->y == Catch::Approx(point.y));
+            
+            // Log rendering decision
+            if (is_selected) {
+                INFO("Point (" << point.x << ", " << point.y << ") EntityId:" << entity_id 
+                     << " is SELECTED (special selection rendering)");
+                REQUIRE(i == 2); // Should be the third point (index 2)
+            } else if (is_highlighted) {
+                INFO("Point (" << point.x << ", " << point.y << ") EntityId:" << entity_id 
+                     << " is HIGHLIGHTED (special highlight rendering)");
+                REQUIRE(i == 0); // Should be the first point (index 0)
+            } else {
+                INFO("Point (" << point.x << ", " << point.y << ") EntityId:" << entity_id 
+                     << " is NORMAL (default rendering)");
+                REQUIRE_FALSE(is_selected);
+                REQUIRE_FALSE(is_highlighted);
+            }
+        }
+        
+        // Test batch operations
+        std::vector<EntityId> batch_entities = {entities_t10[0], entities_t20[1], entities_t30[0]};
+        auto batch_points = point_data->getPointsByEntityIds(batch_entities);
+        auto batch_time_info = point_data->getTimeInfoByEntityIds(batch_entities);
+        
+        REQUIRE(batch_points.size() == 3);
+        REQUIRE(batch_time_info.size() == 3);
+        
+        // Verify batch results
+        REQUIRE(batch_points[0].first == entities_t10[0]);
+        REQUIRE(batch_points[0].second.x == Catch::Approx(10.0f));
+        REQUIRE(batch_points[0].second.y == Catch::Approx(15.0f));
+        
+        REQUIRE(std::get<0>(batch_time_info[0]) == entities_t10[0]);
+        REQUIRE(std::get<1>(batch_time_info[0]) == TimeFrameIndex(10));
+        REQUIRE(std::get<2>(batch_time_info[0]) == 0);
+        
+        INFO("Successfully tested PointData entity lookup and group membership integration");
     }
 }

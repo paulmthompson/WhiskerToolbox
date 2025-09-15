@@ -377,6 +377,51 @@ public:
      */
     [[nodiscard]] std::vector<EntityId> getAllEntityIds() const;
 
+    // ========== Entity Lookup Methods ==========
+
+    /**
+     * @brief Find the point data associated with a specific EntityId.
+     * 
+     * This method provides reverse lookup from EntityId to the actual point data,
+     * supporting group-based visualization workflows.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing the point data if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<Point2D<float>> getPointByEntityId(EntityId entity_id) const;
+
+    /**
+     * @brief Find the time frame and local index for a specific EntityId.
+     * 
+     * Returns the time frame and local point index (within that time frame)
+     * associated with the given EntityId.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing {time, local_index} if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<std::pair<TimeFrameIndex, int>> getTimeAndIndexByEntityId(EntityId entity_id) const;
+
+    /**
+     * @brief Get all points that match the given EntityIds.
+     * 
+     * This method is optimized for batch lookup of multiple EntityIds,
+     * useful for group-based operations.
+     * 
+     * @param entity_ids Vector of EntityIds to look up
+     * @return Vector of pairs containing {EntityId, Point2D<float>} for found entities
+     */
+    [[nodiscard]] std::vector<std::pair<EntityId, Point2D<float>>> getPointsByEntityIds(std::vector<EntityId> const & entity_ids) const;
+
+    /**
+     * @brief Get time frame information for multiple EntityIds.
+     * 
+     * Returns time frame and local index information for a batch of EntityIds.
+     * 
+     * @param entity_ids Vector of EntityIds to look up
+     * @return Vector of tuples containing {EntityId, time, local_index} for found entities
+     */
+    [[nodiscard]] std::vector<std::tuple<EntityId, TimeFrameIndex, int>> getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
+
 protected:
 private:
     std::map<TimeFrameIndex, std::vector<Point2D<float>>> _data;
