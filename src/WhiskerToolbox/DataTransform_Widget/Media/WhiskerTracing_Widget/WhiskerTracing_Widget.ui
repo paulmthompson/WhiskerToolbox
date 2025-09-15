@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>300</width>
-    <height>250</height>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -80,20 +80,26 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>Batch Size:</string>
+         <string>Processing Batch Size:</string>
+        </property>
+        <property name="toolTip">
+         <string>Number of frames to process together in parallel. Smaller values (20-100) provide smoother processing, larger values (500-1000) may be faster but use more memory.</string>
         </property>
        </widget>
       </item>
       <item row="3" column="1">
        <widget class="QSpinBox" name="batch_size_spinbox">
         <property name="minimum">
-         <number>1</number>
+         <number>20</number>
         </property>
         <property name="maximum">
-         <number>100</number>
+         <number>2000</number>
         </property>
         <property name="value">
-         <number>10</number>
+         <number>100</number>
+        </property>
+        <property name="toolTip">
+         <string>Number of frames to process together in parallel. Smaller values (20-100) provide smoother processing, larger values (500-1000) may be faster but use more memory.</string>
         </property>
        </widget>
       </item>
@@ -101,6 +107,9 @@
        <widget class="QLabel" name="label_5">
         <property name="text">
          <string>Use Parallel Processing:</string>
+        </property>
+        <property name="toolTip">
+         <string>Enable producer-consumer parallel processing for better performance. Uses separate threads for loading frames and processing them.</string>
         </property>
        </widget>
       </item>
@@ -111,6 +120,9 @@
         </property>
         <property name="checked">
          <bool>true</bool>
+        </property>
+        <property name="toolTip">
+         <string>Enable producer-consumer parallel processing for better performance. Uses separate threads for loading frames and processing them.</string>
         </property>
        </widget>
       </item>

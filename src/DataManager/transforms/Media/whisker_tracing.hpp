@@ -11,6 +11,11 @@
 #include <string>
 #include <typeindex>
 #include <vector>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
+#include <atomic>
 
 // Forward declaration
 namespace whisker {
@@ -31,18 +36,79 @@ std::vector<uint8_t> convert_mask_to_binary(MaskData const * mask_data,
                                             ImageSize const & image_size);
 
 /**
+ * @brief Thread-safe frame data structure for producer-consumer pattern
+ */
+struct FrameData {
+    std::vector<uint8_t> image_data;
+    int time_index;
+    bool is_end_marker = false; // Special marker to signal end of data
+    
+    FrameData() = default;
+    FrameData(std::vector<uint8_t> img, int time_idx) 
+        : image_data(std::move(img)), time_index(time_idx) {}
+};
+
+/**
+ * @brief Thread-safe queue for producer-consumer pattern
+ */
+class FrameQueue {
+public:
+    FrameQueue(size_t max_size = 10) : max_size_(max_size) {}
+    
+    void push(FrameData frame) {
+        std::unique_lock<std::mutex> lock(mutex_);
+        not_full_.wait(lock, [this] { return queue_.size() < max_size_; });
+        queue_.push(std::move(frame));
+        not_empty_.notify_one();
+    }
+    
+    bool pop(FrameData& frame, std::chrono::milliseconds timeout = std::chrono::milliseconds(100)) {
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (not_empty_.wait_for(lock, timeout, [this] { return !queue_.empty(); })) {
+            frame = std::move(queue_.front());
+            queue_.pop();
+            not_full_.notify_one();
+            return true;
+        }
+        return false;
+    }
+    
+    void push_end_marker() {
+        FrameData end_frame;
+        end_frame.is_end_marker = true;
+        push(std::move(end_frame));
+    }
+    
+    size_t size() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return queue_.size();
+    }
+    
+private:
+    std::queue<FrameData> queue_;
+    std::mutex mutex_;
+    std::condition_variable not_empty_;
+    std::condition_variable not_full_;
+    size_t max_size_;
+};
+
+/**
  * @brief Parameters for whisker tracing operation
  */
 struct WhiskerTracingParameters : public TransformParametersBase {
     bool use_processed_data = true;        // Whether to use processed or raw data
     int clip_length = 0;                   // Number of points to clip from whisker tips
     float whisker_length_threshold = 50.0f;// Minimum whisker length threshold
-    int batch_size = 10;                   // Number of frames to process in parallel
+    int batch_size = 100;                    // Number of frames to process in parallel
     bool use_parallel_processing = true;   // Whether to use OpenMP parallel processing
     bool use_mask_data = false;            // Whether to use mask data for seed selection
     std::shared_ptr<MaskData> mask_data;   // Optional mask data for seed selection
     /** Optional: Pre-initialized tracker to reuse (useful for tests to avoid long init). */
     std::shared_ptr<whisker::WhiskerTracker> tracker;
+    /** Producer-consumer queue size (number of frames to buffer) */
+    size_t queue_size = 20;
+    /** Number of threads to reserve for producer (OpenMP gets max_threads - producer_threads) */
+    int producer_threads = 2;
 };
 
 /**
@@ -146,6 +212,40 @@ private:
             int clip_length,
             MaskData const * mask_data = nullptr,
             std::vector<int> const & time_indices = {});
+
+    /**
+     * @brief Producer thread function that loads frames from media_data
+     * @param media_data The media data source
+     * @param frame_queue The queue to push frames to
+     * @param params The tracing parameters
+     * @param total_frames Total number of frames to process
+     * @param progress_atomic Atomic counter for progress tracking
+     */
+    void producer_thread(std::shared_ptr<MediaData> media_data,
+                        FrameQueue& frame_queue,
+                        WhiskerTracingParameters const* params,
+                        int total_frames,
+                        std::atomic<int>& progress_atomic);
+
+    /**
+     * @brief Consumer function that processes frames from the queue
+     * @param frame_queue The queue to pop frames from
+     * @param tracker The whisker tracker
+     * @param image_size The image dimensions
+     * @param params The tracing parameters
+     * @param traced_whiskers The output LineData
+     * @param progress_atomic Atomic counter for progress tracking
+     * @param total_frames Total number of frames to process
+     * @param progressCallback Progress callback function
+     */
+    void consumer_processing(FrameQueue& frame_queue,
+                            whisker::WhiskerTracker& tracker,
+                            ImageSize const& image_size,
+                            WhiskerTracingParameters const* params,
+                            std::shared_ptr<LineData> traced_whiskers,
+                            std::atomic<int>& progress_atomic,
+                            int total_frames,
+                            ProgressCallback progressCallback);
 
 };
 

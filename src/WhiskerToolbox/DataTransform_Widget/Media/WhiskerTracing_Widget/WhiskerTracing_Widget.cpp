@@ -29,7 +29,7 @@ WhiskerTracing_Widget::WhiskerTracing_Widget(QWidget * parent)
     ui->use_processed_data_checkbox->setChecked(true);
     ui->clip_length_spinbox->setValue(0);
     ui->whisker_length_threshold_spinbox->setValue(50.0);
-    ui->batch_size_spinbox->setValue(10);
+    ui->batch_size_spinbox->setValue(100);
     ui->use_parallel_processing_checkbox->setChecked(true);
     ui->use_mask_data_checkbox->setChecked(false);
     ui->mask_data_combobox->setEnabled(false);
