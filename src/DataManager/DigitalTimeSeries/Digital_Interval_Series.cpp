@@ -147,6 +147,74 @@ void DigitalIntervalSeries::rebuildAllEntityIds() {
     }
 }
 
+// ========== Entity Lookup Methods ==========
+
+std::optional<Interval> DigitalIntervalSeries::getIntervalByEntityId(EntityId entity_id) const {
+    if (!_identity_registry) {
+        return std::nullopt;
+    }
+    
+    auto descriptor = _identity_registry->get(entity_id);
+    if (!descriptor || descriptor->kind != EntityKind::IntervalEntity || descriptor->data_key != _identity_data_key) {
+        return std::nullopt;
+    }
+    
+    int local_index = descriptor->local_index;
+    
+    if (local_index < 0 || static_cast<size_t>(local_index) >= _data.size()) {
+        return std::nullopt;
+    }
+    
+    return _data[static_cast<size_t>(local_index)];
+}
+
+std::optional<int> DigitalIntervalSeries::getIndexByEntityId(EntityId entity_id) const {
+    if (!_identity_registry) {
+        return std::nullopt;
+    }
+    
+    auto descriptor = _identity_registry->get(entity_id);
+    if (!descriptor || descriptor->kind != EntityKind::IntervalEntity || descriptor->data_key != _identity_data_key) {
+        return std::nullopt;
+    }
+    
+    int local_index = descriptor->local_index;
+    
+    if (local_index < 0 || static_cast<size_t>(local_index) >= _data.size()) {
+        return std::nullopt;
+    }
+    
+    return local_index;
+}
+
+std::vector<std::pair<EntityId, Interval>> DigitalIntervalSeries::getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const {
+    std::vector<std::pair<EntityId, Interval>> result;
+    result.reserve(entity_ids.size());
+    
+    for (EntityId entity_id : entity_ids) {
+        auto interval = getIntervalByEntityId(entity_id);
+        if (interval) {
+            result.emplace_back(entity_id, *interval);
+        }
+    }
+    
+    return result;
+}
+
+std::vector<std::pair<EntityId, int>> DigitalIntervalSeries::getIndexInfoByEntityIds(std::vector<EntityId> const & entity_ids) const {
+    std::vector<std::pair<EntityId, int>> result;
+    result.reserve(entity_ids.size());
+    
+    for (EntityId entity_id : entity_ids) {
+        auto index = getIndexByEntityId(entity_id);
+        if (index) {
+            result.emplace_back(entity_id, *index);
+        }
+    }
+    
+    return result;
+}
+
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time) {
     auto const & events = digital_series->getDigitalIntervalSeries();
 

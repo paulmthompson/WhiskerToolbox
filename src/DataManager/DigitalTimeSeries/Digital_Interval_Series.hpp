@@ -194,6 +194,51 @@ public:
     void rebuildAllEntityIds();
     [[nodiscard]] std::vector<EntityId> const & getEntityIds() const { return _entity_ids; }
 
+    // ========== Entity Lookup Methods ==========
+
+    /**
+     * @brief Find the interval data associated with a specific EntityId.
+     * 
+     * This method provides reverse lookup from EntityId to the actual interval data,
+     * supporting group-based visualization workflows.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing the interval data if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<Interval> getIntervalByEntityId(EntityId entity_id) const;
+
+    /**
+     * @brief Find the index for a specific EntityId.
+     * 
+     * Returns the index in the interval vector associated with the given EntityId.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing the index if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<int> getIndexByEntityId(EntityId entity_id) const;
+
+    /**
+     * @brief Get all intervals that match the given EntityIds.
+     * 
+     * This method is optimized for batch lookup of multiple EntityIds,
+     * useful for group-based operations.
+     * 
+     * @param entity_ids Vector of EntityIds to look up
+     * @return Vector of pairs containing {EntityId, Interval} for found entities
+     */
+    [[nodiscard]] std::vector<std::pair<EntityId, Interval>> getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const;
+
+    /**
+     * @brief Get index information for multiple EntityIds.
+     * 
+     * Returns both the EntityId and its corresponding index in the data vector
+     * for batch operations.
+     * 
+     * @param entity_ids Vector of EntityIds to look up
+     * @return Vector of tuples containing {EntityId, index} for found entities
+     */
+    [[nodiscard]] std::vector<std::pair<EntityId, int>> getIndexInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
+
 private:
     std::vector<Interval> _data{};
     std::shared_ptr<TimeFrame> _time_frame {nullptr};

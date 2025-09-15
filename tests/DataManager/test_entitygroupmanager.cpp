@@ -1,6 +1,7 @@
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
@@ -869,5 +870,153 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         REQUIRE(std::get<2>(batch_time_info[0]) == 0);
         
         INFO("Successfully tested PointData entity lookup and group membership integration");
+    }
+}
+
+TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup", 
+          "[integration][entity][group][datamanager][digitalintervalseries]") {
+    
+    SECTION("DigitalIntervalSeries entity lookup and group membership") {
+        DataManager data_manager;
+        
+        // Create and populate DigitalIntervalSeries with test intervals
+        auto interval_data = std::make_shared<DigitalIntervalSeries>();
+        
+        // Add test intervals at different times
+        interval_data->addEvent(Interval{100, 200});   // Index 0: 100ms duration from t=100 to t=200
+        interval_data->addEvent(Interval{300, 350});   // Index 1: 50ms duration from t=300 to t=350
+        interval_data->addEvent(Interval{500, 800});   // Index 2: 300ms duration from t=500 to t=800
+        interval_data->addEvent(Interval{1000, 1100}); // Index 3: 100ms duration from t=1000 to t=1100
+        interval_data->addEvent(Interval{1200, 1300}); // Index 4: 100ms duration from t=1200 to t=1300
+        
+        // Set up identity context before adding to DataManager
+        interval_data->setIdentityContext("test_intervals", data_manager.getEntityRegistry());
+        interval_data->rebuildAllEntityIds();
+        
+        // Add to DataManager
+        data_manager.setData<DigitalIntervalSeries>("test_intervals", interval_data, TimeKey("time"));
+        
+        // Verify EntityIds were generated correctly
+        auto all_entity_ids = interval_data->getEntityIds();
+        REQUIRE(all_entity_ids.size() == 5);
+        
+        for (EntityId entity_id : all_entity_ids) {
+            REQUIRE(entity_id != 0);  // All should be valid, non-zero EntityIds
+        }
+        
+        // Test entity lookup functionality
+        EntityId first_entity = all_entity_ids[0];
+        EntityId third_entity = all_entity_ids[2];
+        EntityId last_entity = all_entity_ids[4];
+        
+        // Test getIntervalByEntityId
+        auto first_interval = interval_data->getIntervalByEntityId(first_entity);
+        auto third_interval = interval_data->getIntervalByEntityId(third_entity);
+        auto last_interval = interval_data->getIntervalByEntityId(last_entity);
+        
+        REQUIRE(first_interval.has_value());
+        REQUIRE(third_interval.has_value());
+        REQUIRE(last_interval.has_value());
+        
+        REQUIRE(first_interval->start == 100);
+        REQUIRE(first_interval->end == 200);
+        REQUIRE(third_interval->start == 500);
+        REQUIRE(third_interval->end == 800);
+        REQUIRE(last_interval->start == 1200);
+        REQUIRE(last_interval->end == 1300);
+        
+        // Test getIndexByEntityId
+        auto first_index = interval_data->getIndexByEntityId(first_entity);
+        auto third_index = interval_data->getIndexByEntityId(third_entity);
+        auto last_index = interval_data->getIndexByEntityId(last_entity);
+        
+        REQUIRE(first_index.has_value());
+        REQUIRE(third_index.has_value());
+        REQUIRE(last_index.has_value());
+        
+        REQUIRE(*first_index == 0);
+        REQUIRE(*third_index == 2);
+        REQUIRE(*last_index == 4);
+        
+        // Create groups using EntityGroupManager
+        auto* group_manager = data_manager.getEntityGroupManager();
+        
+        GroupId short_intervals = group_manager->createGroup("Short Duration Intervals");
+        GroupId long_intervals = group_manager->createGroup("Long Duration Intervals");
+        
+        // Classify intervals by duration (short: <= 100ms, long: > 100ms)
+        std::vector<EntityId> short_entities;
+        std::vector<EntityId> long_entities;
+        
+        for (size_t i = 0; i < all_entity_ids.size(); ++i) {
+            auto interval = interval_data->getIntervalByEntityId(all_entity_ids[i]);
+            REQUIRE(interval.has_value());
+            
+            int64_t duration = interval->end - interval->start;
+            if (duration <= 100) {
+                short_entities.push_back(all_entity_ids[i]);
+            } else {
+                long_entities.push_back(all_entity_ids[i]);
+            }
+        }
+        
+        REQUIRE(short_entities.size() == 4);  // Intervals 0, 1, 3, 4 have <= 100ms duration  
+        REQUIRE(long_entities.size() == 1);   // Interval 2 has > 100ms duration
+        
+        // Add entities to groups
+        group_manager->addEntitiesToGroup(short_intervals, short_entities);
+        group_manager->addEntitiesToGroup(long_intervals, long_entities);
+        
+        // Test group membership checking
+        for (EntityId entity_id : short_entities) {
+            auto groups = group_manager->getGroupsContainingEntity(entity_id);
+            REQUIRE(groups.size() == 1);
+            REQUIRE(groups[0] == short_intervals);
+            
+            // Verify we can lookup the interval data using the entity
+            auto interval = interval_data->getIntervalByEntityId(entity_id);
+            REQUIRE(interval.has_value());
+            
+            int64_t duration = interval->end - interval->start;
+            REQUIRE(duration <= 100);
+        }
+        
+        for (EntityId entity_id : long_entities) {
+            auto groups = group_manager->getGroupsContainingEntity(entity_id);
+            REQUIRE(groups.size() == 1);
+            REQUIRE(groups[0] == long_intervals);
+            
+            // Verify we can lookup the interval data using the entity
+            auto interval = interval_data->getIntervalByEntityId(entity_id);
+            REQUIRE(interval.has_value());
+            
+            int64_t duration = interval->end - interval->start;
+            REQUIRE(duration > 100);
+        }
+        
+        // Test batch operations
+        std::vector<EntityId> batch_entities = {all_entity_ids[0], all_entity_ids[2], all_entity_ids[4]};
+        auto batch_intervals = interval_data->getIntervalsByEntityIds(batch_entities);
+        auto batch_index_info = interval_data->getIndexInfoByEntityIds(batch_entities);
+        
+        REQUIRE(batch_intervals.size() == 3);
+        REQUIRE(batch_index_info.size() == 3);
+        
+        // Verify batch results
+        REQUIRE(batch_intervals[0].first == all_entity_ids[0]);
+        REQUIRE(batch_intervals[0].second.start == 100);
+        REQUIRE(batch_intervals[0].second.end == 200);
+        
+        REQUIRE(batch_index_info[0].first == all_entity_ids[0]);
+        REQUIRE(batch_index_info[0].second == 0);
+        
+        REQUIRE(batch_intervals[1].first == all_entity_ids[2]);
+        REQUIRE(batch_intervals[1].second.start == 500);
+        REQUIRE(batch_intervals[1].second.end == 800);
+        
+        REQUIRE(batch_index_info[1].first == all_entity_ids[2]);
+        REQUIRE(batch_index_info[1].second == 2);
+        
+        INFO("Successfully tested DigitalIntervalSeries entity lookup and group membership integration");
     }
 }
