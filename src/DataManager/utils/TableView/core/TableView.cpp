@@ -27,7 +27,8 @@ TableView::TableView(TableView && other) noexcept
       m_dataManager(std::move(other.m_dataManager)),
       m_columns(std::move(other.m_columns)),
       m_colNameToIndex(std::move(other.m_colNameToIndex)),
-      m_planCache(std::move(other.m_planCache)) {}
+      m_planCache(std::move(other.m_planCache)),
+      m_direct_entity_ids(std::move(other.m_direct_entity_ids)) {}
 
 TableView & TableView::operator=(TableView && other) {
     if (this != &other) {
@@ -36,6 +37,7 @@ TableView & TableView::operator=(TableView && other) {
         m_columns = std::move(other.m_columns);
         m_colNameToIndex = std::move(other.m_colNameToIndex);
         m_planCache = std::move(other.m_planCache);
+        m_direct_entity_ids = std::move(other.m_direct_entity_ids);
     }
     return *this;
 }
@@ -431,6 +433,16 @@ RowDescriptor TableView::getRowDescriptor(size_t row_index) const {
 }
 
 std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
+    // First check if we have direct EntityIds (for transformed tables)
+    if (!m_direct_entity_ids.empty()) {
+        if (row_index < m_direct_entity_ids.size()) {
+            EntityId id = m_direct_entity_ids[row_index];
+            return id != 0 ? std::vector<EntityId>{id} : std::vector<EntityId>{};
+        }
+        return {};
+    }
+    
+    // Fallback to execution plan-based EntityIds (for original tables)
     // Prefer entity-expanded plans if present
     for (auto const & [name, plan] : m_planCache) {
         (void)name;
@@ -465,6 +477,52 @@ std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
         }
     }
     return {};
+}
+
+bool TableView::hasEntityColumn() const {
+    // Check if we have direct EntityIds first
+    if (!m_direct_entity_ids.empty()) {
+        return true;
+    }
+    
+    // Fallback to execution plan-based check
+    size_t row_count = getRowCount();
+    if (row_count == 0) {
+        return false;
+    }
+    
+    // Check the first row to see if EntityIds are available
+    auto entity_ids = getRowEntityIds(0);
+    return !entity_ids.empty();
+}
+
+std::vector<EntityId> TableView::getEntityIds() const {
+    // If we have direct EntityIds, return them
+    if (!m_direct_entity_ids.empty()) {
+        return m_direct_entity_ids;
+    }
+    
+    // Fallback to execution plan-based EntityIds
+    std::vector<EntityId> all_entity_ids;
+    size_t row_count = getRowCount();
+    all_entity_ids.reserve(row_count);
+    
+    for (size_t i = 0; i < row_count; ++i) {
+        auto row_entity_ids = getRowEntityIds(i);
+        if (!row_entity_ids.empty()) {
+            // Use the first (primary) EntityId for this row
+            all_entity_ids.push_back(row_entity_ids[0]);
+        } else {
+            // No EntityId available for this row
+            all_entity_ids.push_back(0);
+        }
+    }
+    
+    return all_entity_ids;
+}
+
+void TableView::setDirectEntityIds(std::vector<EntityId> entity_ids) {
+    m_direct_entity_ids = std::move(entity_ids);
 }
 
 std::unique_ptr<IRowSelector> TableView::cloneRowSelectorFiltered(std::vector<size_t> const & keep_indices) const {

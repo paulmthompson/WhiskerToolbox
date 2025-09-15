@@ -1,14 +1,14 @@
 #include "PCATransform.hpp"
 
 #include "utils/TableView/columns/Column.h"
-#include "utils/TableView/interfaces/MultiComputerOutputView.hpp"
-#include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/core/TableViewBuilder.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/interfaces/MultiComputerOutputView.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 
 using std::size_t;
 
@@ -23,7 +23,7 @@ static bool isNumericType(std::type_index ti) {
 void PCAMultiColumnComputer::fitIfNeeded() const {
     if (m_cache.has_value()) return;
 
-    arma::mat X = m_X; // copy local to allow centering/standardizing
+    arma::mat X = m_X;// copy local to allow centering/standardizing
 
     // Center / standardize
     arma::rowvec mean, stddev;
@@ -32,10 +32,10 @@ void PCAMultiColumnComputer::fitIfNeeded() const {
         X.each_row() -= mean;
     }
     if (m_standardize) {
-        stddev = arma::stddev(X, 0, 0); // normalize by N-1 (default unbiased=0)
+        stddev = arma::stddev(X, 0, 0);// normalize by N-1 (default unbiased=0)
         for (arma::uword j = 0; j < X.n_cols; ++j) {
             double s = stddev(j);
-            if (s > 0) X.col(j) /= s; // avoid divide by zero; constant columns become zeros
+            if (s > 0) X.col(j) /= s;// avoid divide by zero; constant columns become zeros
         }
     }
 
@@ -50,7 +50,8 @@ void PCAMultiColumnComputer::fitIfNeeded() const {
     }
 
     // PCA via SVD: X = U S V^T; columns of V are PCs; scores = X * V
-    arma::mat U, V; arma::vec s;
+    arma::mat U, V;
+    arma::vec s;
     bool ok = arma::svd_econ(U, s, V, X, "both");
     if (!ok) {
         throw std::runtime_error("PCAMultiColumnComputer: SVD failed");
@@ -68,6 +69,11 @@ void PCAMultiColumnComputer::fitIfNeeded() const {
 
     // Scores = X * V (rows x comps)
     arma::mat scores = X * V;
+
+    // Debug: Print scores matrix dimensions
+    std::cerr << "DEBUG PCA fit: scores matrix dimensions: " << scores.n_rows << " x " << scores.n_cols << std::endl;
+    std::cerr << "DEBUG PCA fit: V matrix dimensions: " << V.n_rows << " x " << V.n_cols << std::endl;
+    std::cerr << "DEBUG PCA fit: s vector size: " << s.n_elem << std::endl;
 
     // Names with variance explained
     std::vector<std::string> names;
@@ -94,6 +100,8 @@ auto PCAMultiColumnComputer::computeBatch(ExecutionPlan const & /*plan*/) const 
     if (!m_cache.has_value()) return outputs;
 
     arma::mat const & S = m_cache->scores;
+    std::cerr << "DEBUG PCA computeBatch: scores matrix dimensions: " << S.n_rows << " x " << S.n_cols << std::endl;
+
     outputs.resize(S.n_cols);
     for (arma::uword j = 0; j < S.n_cols; ++j) {
         outputs[j].resize(S.n_rows);
@@ -101,6 +109,8 @@ auto PCAMultiColumnComputer::computeBatch(ExecutionPlan const & /*plan*/) const 
             outputs[j][i] = S(i, j);
         }
     }
+
+    std::cerr << "DEBUG PCA computeBatch: returning " << outputs.size() << " columns with " << (outputs.empty() ? 0 : outputs[0].size()) << " rows each" << std::endl;
     return outputs;
 }
 
@@ -124,7 +134,7 @@ auto PCATransform::selectNumericColumns(TableView const & source) const -> std::
     std::set<std::string> includeSet(m_config.include.begin(), m_config.include.end());
     std::set<std::string> excludeSet(m_config.exclude.begin(), m_config.exclude.end());
 
-    for (auto const & n : names) {
+    for (auto const & n: names) {
         if (!m_config.include.empty() && includeSet.find(n) == includeSet.end()) continue;
         if (!m_config.exclude.empty() && excludeSet.find(n) != excludeSet.end()) continue;
         auto ti = source.getColumnTypeIndex(n);
@@ -135,7 +145,7 @@ auto PCATransform::selectNumericColumns(TableView const & source) const -> std::
 
     if (!m_config.include.empty()) {
         // Validate all included are numeric
-        for (auto const & n : m_config.include) {
+        for (auto const & n: m_config.include) {
             if (excludeSet.count(n)) continue;
             if (!source.hasColumn(n)) {
                 throw std::runtime_error("PCATransform: Included column does not exist: " + n);
@@ -159,45 +169,99 @@ auto PCATransform::apply(TableView const & source) -> TableView {
     // Extract matrix and kept rows first (drop NaN/Inf rows per config)
     auto [X, kept] = extractMatrixAndKeptRows(source, features, true);
 
+    // Debug: Print kept vector information
+    std::cerr << "DEBUG PCA: Original rows: " << source.getRowCount() << std::endl;
+    std::cerr << "DEBUG PCA: Kept rows count: " << kept.size() << std::endl;
+    std::cerr << "DEBUG PCA: Kept indices: ";
+    for (size_t idx: kept) {
+        std::cerr << idx << " ";
+    }
+    std::cerr << std::endl;
+    std::cerr << "DEBUG PCA: X matrix dimensions: " << X.n_rows << " x " << X.n_cols << std::endl;
+
     // Prepare PCA multi-computer with X (kept rows)
     auto pcaComputer = std::make_unique<PCAMultiColumnComputer>(std::move(X), m_config.center, m_config.standardize);
 
     TableViewBuilder builder(source.getDataManagerExtension());
-    builder.setRowSelector(source.cloneRowSelectorFiltered(kept));
+    // PCA outputs are derived (no expansion-capable sources). Build rows as a simple
+    // index space matching the kept rows to ensure 1:1 alignment with preserved EntityIds.
+    {
+        std::vector<size_t> indices;
+        indices.resize(kept.size());
+        for (size_t i = 0; i < indices.size(); ++i) {
+            indices[i] = i;
+        }
+        builder.setRowSelector(std::make_unique<IndexSelector>(std::move(indices)));
+    }
 
     // Add PCA components as columns via multi-output view; base name empty because names include variance
     builder.addColumns<double>("", std::move(pcaComputer));
 
-    return builder.build();
+    // Build the table first
+    auto transformed_table = builder.build();
+
+    std::cerr << "DEBUG PCA: Transformed table rows after build: " << transformed_table.getRowCount() << std::endl;
+
+    // Preserve EntityIds for the kept rows
+    if (source.hasEntityColumn()) {
+        auto source_entity_ids = source.getEntityIds();
+        std::cerr << "DEBUG PCA: Source EntityIds count: " << source_entity_ids.size() << std::endl;
+
+        std::vector<EntityId> kept_entity_ids;
+        kept_entity_ids.reserve(kept.size());
+
+        for (size_t original_row_index: kept) {
+            if (original_row_index < source_entity_ids.size()) {
+                EntityId entity_id = source_entity_ids[original_row_index];
+                kept_entity_ids.push_back(entity_id);
+                std::cerr << "DEBUG PCA: Keeping EntityId " << entity_id << " from row " << original_row_index << std::endl;
+            } else {
+                kept_entity_ids.push_back(0);// Fallback for invalid indices
+                std::cerr << "DEBUG PCA: Invalid row index " << original_row_index << ", using EntityId 0" << std::endl;
+            }
+        }
+
+        std::cerr << "DEBUG PCA: Setting " << kept_entity_ids.size() << " EntityIds on transformed table" << std::endl;
+        transformed_table.setDirectEntityIds(std::move(kept_entity_ids));
+
+        // Verify the setting worked
+        auto check_entity_ids = transformed_table.getEntityIds();
+        std::cerr << "DEBUG PCA: Transformed table now has " << check_entity_ids.size() << " EntityIds" << std::endl;
+    }
+
+    return transformed_table;
 }
 
 auto PCATransform::extractMatrixAndKeptRows(TableView const & source,
                                             std::vector<std::string> const & featureColumns,
                                             bool dropNaNInf)
-    -> std::pair<arma::mat, std::vector<size_t>> {
+        -> std::pair<arma::mat, std::vector<size_t>> {
     size_t const nrows = source.getRowCount();
     std::vector<std::vector<double>> cols;
     cols.reserve(featureColumns.size());
     // Need non-const access to source for materialization
     auto & nonConstSource = const_cast<TableView &>(source);
-    for (auto const & name : featureColumns) {
+    for (auto const & name: featureColumns) {
         auto const ti = source.getColumnTypeIndex(name);
         if (ti == std::type_index(typeid(double))) {
             cols.push_back(nonConstSource.getColumnValues<double>(name));
         } else if (ti == std::type_index(typeid(float))) {
             auto const & v = nonConstSource.getColumnValues<float>(name);
-            std::vector<double> d; d.reserve(v.size());
-            for (float x : v) d.push_back(static_cast<double>(x));
+            std::vector<double> d;
+            d.reserve(v.size());
+            for (float x: v) d.push_back(static_cast<double>(x));
             cols.emplace_back(std::move(d));
         } else if (ti == std::type_index(typeid(int))) {
             auto const & v = nonConstSource.getColumnValues<int>(name);
-            std::vector<double> d; d.reserve(v.size());
-            for (int x : v) d.push_back(static_cast<double>(x));
+            std::vector<double> d;
+            d.reserve(v.size());
+            for (int x: v) d.push_back(static_cast<double>(x));
             cols.emplace_back(std::move(d));
         } else if (ti == std::type_index(typeid(int64_t))) {
             auto const & v = nonConstSource.getColumnValues<int64_t>(name);
-            std::vector<double> d; d.reserve(v.size());
-            for (int64_t x : v) d.push_back(static_cast<double>(x));
+            std::vector<double> d;
+            d.reserve(v.size());
+            for (int64_t x: v) d.push_back(static_cast<double>(x));
             cols.emplace_back(std::move(d));
         } else {
             throw std::runtime_error("PCATransform: Non-numeric column encountered: " + name);
@@ -212,9 +276,12 @@ auto PCATransform::extractMatrixAndKeptRows(TableView const & source,
     for (size_t r = 0; r < nrows; ++r) {
         bool ok = true;
         if (dropNaNInf) {
-            for (auto const & c : cols) {
+            for (auto const & c: cols) {
                 double v = c[r];
-                if (!std::isfinite(v)) { ok = false; break; }
+                if (!std::isfinite(v)) {
+                    ok = false;
+                    break;
+                }
             }
         }
         if (ok) kept.push_back(r);
@@ -228,5 +295,3 @@ auto PCATransform::extractMatrixAndKeptRows(TableView const & source,
     }
     return {std::move(X), std::move(kept)};
 }
-
-

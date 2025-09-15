@@ -149,6 +149,34 @@ public:
     [[nodiscard]] auto getRowEntityIds(size_t row_index) const -> std::vector<EntityId>;
 
     /**
+     * @brief Check if this table has EntityID information available.
+     * @return True if EntityIDs are available for rows, false otherwise.
+     */
+    [[nodiscard]] bool hasEntityColumn() const;
+
+    /**
+     * @brief Get all EntityIds for all rows in the table.
+     * 
+     * For tables where each row corresponds to a single entity, this returns
+     * a vector with one EntityId per row. For tables where rows can have multiple
+     * contributing entities, this returns the primary EntityId for each row.
+     * 
+     * @return Vector of EntityIds, one per row. Empty vector if no EntityIDs available.
+     */
+    [[nodiscard]] auto getEntityIds() const -> std::vector<EntityId>;
+
+    /**
+     * @brief Set EntityIds directly for transformed tables.
+     * 
+     * This method allows transforms to preserve EntityId information
+     * when creating new tables that don't have execution plans linking
+     * back to original data sources.
+     * 
+     * @param entity_ids Vector of EntityIds, one per row
+     */
+    void setDirectEntityIds(std::vector<EntityId> entity_ids);
+
+    /**
      * @brief Create a new row selector of the same concrete type, filtered to a subset of rows.
      *
      * @param keep_indices Indices of rows to keep (relative to this table's current rows), in ascending order.
@@ -224,6 +252,9 @@ private:
 
     // Caches ExecutionPlans, keyed by data source name
     std::map<std::string, ExecutionPlan> m_planCache;
+    
+    // Direct EntityId storage for transformed tables
+    std::vector<EntityId> m_direct_entity_ids;
 };
 
 // Template method implementation for getColumnValues
