@@ -13,6 +13,9 @@
 #include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/computers/LineSamplingMultiComputer.h"
 #include "utils/TableView/core/TableView.h"
+
+#include <algorithm>
+#include <set>
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/interfaces/ILineSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
@@ -568,5 +571,151 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         }
         
         INFO("Successfully verified round-trip: LineData -> TableView -> EntityGroupManager -> LineData");
+    }
+}
+
+TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture, 
+                 "EntityGroupManager Integration - MediaWindow-like Entity Group Checking", 
+                 "[integration][entity][group][mediawindow][linedata]") {
+    
+    SECTION("Check if entities at specific time are in groups (MediaWindow use case)") {
+        // Simulate MediaWindow behavior: get line data at specific time and check group membership
+        auto* group_manager = data_manager->getEntityGroupManager();
+        
+        // Create test groups with some entities
+        GroupId selected_group = group_manager->createGroup("Selected Lines");
+        GroupId highlighted_group = group_manager->createGroup("Highlighted Lines");
+        
+        // Get all entity IDs from line data (simulating what MediaWindow would do)
+        auto all_entity_ids = line_data->getAllEntityIds();
+        REQUIRE(all_entity_ids.size() >= 5);
+        
+        // Add some entities to groups (simulating user selection/highlighting)
+        // Add first 2 entities to selected group
+        std::vector<EntityId> selected_entities = {all_entity_ids[0], all_entity_ids[1]};
+        group_manager->addEntitiesToGroup(selected_group, selected_entities);
+        
+        // Add last entity to highlighted group
+        std::vector<EntityId> highlighted_entities = {all_entity_ids.back()};
+        group_manager->addEntitiesToGroup(highlighted_group, highlighted_entities);
+        
+        // Simulate MediaWindow getAtTime behavior for each time frame
+        std::vector<TimeFrameIndex> test_times = {TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
+        
+        for (auto time : test_times) {
+            INFO("Testing time frame: " << time.getValue());
+            
+            // Get line data at this time (what MediaWindow does)
+            auto lines_at_time = line_data->getAtTime(time);
+            auto entity_ids_at_time = line_data->getEntityIdsAtTime(time);
+            
+            REQUIRE(lines_at_time.size() == entity_ids_at_time.size());
+            
+            // For each line at this time, check group membership (what MediaWindow would do for rendering)
+            for (size_t i = 0; i < lines_at_time.size(); ++i) {
+                EntityId entity_id = entity_ids_at_time[i];
+                Line2D const& line = lines_at_time[i];
+                
+                INFO("Checking entity " << entity_id << " at time " << time.getValue() << ", line index " << i);
+                
+                // Check if this entity is in the selected group
+                bool is_selected = group_manager->isEntityInGroup(selected_group, entity_id);
+                
+                // Check if this entity is in the highlighted group  
+                bool is_highlighted = group_manager->isEntityInGroup(highlighted_group, entity_id);
+                
+                // Get all groups containing this entity (useful for complex highlighting logic)
+                auto groups_containing_entity = group_manager->getGroupsContainingEntity(entity_id);
+                
+                if (is_selected) {
+                    INFO("Entity " << entity_id << " is SELECTED (should render differently)");
+                    REQUIRE(std::find(groups_containing_entity.begin(), groups_containing_entity.end(), selected_group) 
+                           != groups_containing_entity.end());
+                }
+                
+                if (is_highlighted) {
+                    INFO("Entity " << entity_id << " is HIGHLIGHTED (should render differently)");
+                    REQUIRE(std::find(groups_containing_entity.begin(), groups_containing_entity.end(), highlighted_group) 
+                           != groups_containing_entity.end());
+                }
+                
+                if (!is_selected && !is_highlighted) {
+                    INFO("Entity " << entity_id << " is NORMAL (default rendering)");
+                    REQUIRE(groups_containing_entity.empty());
+                }
+                
+                // Verify line data is accessible for rendering
+                REQUIRE(line.size() >= 2); // Should have at least 2 points
+            }
+        }
+        
+        // Test bulk group membership checking (useful for performance in MediaWindow)
+        auto entities_at_t10 = line_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto entities_at_t20 = line_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        
+        // Check which entities from time 10 are in selected group
+        auto selected_entities_t10 = group_manager->getEntitiesInGroup(selected_group);
+        std::vector<EntityId> selected_at_t10;
+        std::set_intersection(entities_at_t10.begin(), entities_at_t10.end(),
+                             selected_entities_t10.begin(), selected_entities_t10.end(),
+                             std::back_inserter(selected_at_t10));
+        
+        INFO("At time 10: " << selected_at_t10.size() << " entities are selected");
+        
+        // Verify that we have expected selections
+        if (entities_at_t10.size() >= 2) {
+            REQUIRE(selected_at_t10.size() >= 1); // Should have at least one selected entity at t10
+        }
+        
+        INFO("Successfully simulated MediaWindow group membership checking workflow");
+    }
+    
+    SECTION("Dynamic group membership changes during MediaWindow navigation") {
+        auto* group_manager = data_manager->getEntityGroupManager();
+        
+        // Create a dynamic selection group
+        GroupId dynamic_selection = group_manager->createGroup("Dynamic Selection");
+        
+        // Simulate user selecting different entities as they navigate through time
+        TimeFrameIndex current_time(10);
+        auto entities_t10 = line_data->getEntityIdsAtTime(current_time);
+        
+        if (!entities_t10.empty()) {
+            // Select first entity at time 10
+            group_manager->addEntityToGroup(dynamic_selection, entities_t10[0]);
+            
+            // Verify selection
+            auto lines_t10 = line_data->getAtTime(current_time);
+            for (size_t i = 0; i < entities_t10.size(); ++i) {
+                bool should_be_selected = (i == 0);
+                bool is_selected = group_manager->isEntityInGroup(dynamic_selection, entities_t10[i]);
+                REQUIRE(is_selected == should_be_selected);
+            }
+        }
+        
+        // Navigate to time 20 and change selection
+        current_time = TimeFrameIndex(20);
+        auto entities_t20 = line_data->getEntityIdsAtTime(current_time);
+        
+        if (!entities_t20.empty()) {
+            // Clear previous selection and select different entity
+            group_manager->clearGroup(dynamic_selection);
+            group_manager->addEntityToGroup(dynamic_selection, entities_t20.back());
+            
+            // Verify old selection is cleared
+            if (!entities_t10.empty()) {
+                REQUIRE_FALSE(group_manager->isEntityInGroup(dynamic_selection, entities_t10[0]));
+            }
+            
+            // Verify new selection
+            auto lines_t20 = line_data->getAtTime(current_time);
+            for (size_t i = 0; i < entities_t20.size(); ++i) {
+                bool should_be_selected = (i == entities_t20.size() - 1); // Last entity
+                bool is_selected = group_manager->isEntityInGroup(dynamic_selection, entities_t20[i]);
+                REQUIRE(is_selected == should_be_selected);
+            }
+        }
+        
+        INFO("Successfully simulated dynamic group membership changes during navigation");
     }
 }
