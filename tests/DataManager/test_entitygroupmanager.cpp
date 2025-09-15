@@ -8,7 +8,18 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
+// TableView and LineSamplingMultiComputer includes
+#include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/adapters/LineDataAdapter.h"
+#include "utils/TableView/computers/LineSamplingMultiComputer.h"
+#include "utils/TableView/core/TableView.h"
+#include "utils/TableView/core/TableViewBuilder.h"
+#include "utils/TableView/interfaces/ILineSource.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/TableRegistry.hpp"
+
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <memory>
 #include <vector>
@@ -373,5 +384,189 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         REQUIRE(group_manager->getGroupCount() == 0);
         REQUIRE(group_manager->getTotalEntityCount() == 0);
         REQUIRE_FALSE(group_manager->hasGroup(test_group));
+    }
+}
+
+TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture, 
+                 "EntityGroupManager Integration - TableView Round-trip", 
+                 "[integration][entity][group][tableview][linesampling]") {
+    
+    SECTION("Create TableView from LineData, group entities, query back to LineData") {
+        // Get required components
+        auto* group_manager = data_manager->getEntityGroupManager();
+        REQUIRE(group_manager != nullptr);
+        
+        // Create TimeFrame for the table
+        std::vector<int> timeValues = {10, 20, 30};
+        auto table_timeframe = std::make_shared<TimeFrame>(timeValues);
+        
+        // Create DataManagerExtension for TableView integration
+        auto dme = std::make_shared<DataManagerExtension>(*data_manager);
+        
+        // Create LineDataAdapter from our test data
+        auto line_adapter = std::make_shared<LineDataAdapter>(line_data, table_timeframe, "test_lines");
+        
+        // Create LineSamplingMultiComputer with 2 segments (3 sample points: 0.0, 0.5, 1.0)
+        auto multi_computer = std::make_unique<LineSamplingMultiComputer>(
+            std::static_pointer_cast<ILineSource>(line_adapter),
+            "test_lines",
+            table_timeframe,
+            2  // 2 segments = 3 sample points
+        );
+        
+        // Create row selector for our time frames
+        std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
+        auto row_selector = std::make_unique<TimestampSelector>(timestamps, table_timeframe);
+        
+        // Build TableView using TableViewBuilder
+        TableViewBuilder builder(dme);
+        builder.setRowSelector(std::move(row_selector));
+        builder.addColumns<double>("Line", std::move(multi_computer));
+        
+        auto table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 5);  // t10:2 + t20:2 + t30:1 = 5 rows (entity expansion)
+        REQUIRE(table.getColumnCount() == 6);  // 3 sample points * 2 coordinates = 6 columns
+        
+        // Verify column names
+        REQUIRE(table.hasColumn("Line.x@0.000"));
+        REQUIRE(table.hasColumn("Line.y@0.000"));
+        REQUIRE(table.hasColumn("Line.x@0.500"));
+        REQUIRE(table.hasColumn("Line.y@0.500"));
+        REQUIRE(table.hasColumn("Line.x@1.000"));
+        REQUIRE(table.hasColumn("Line.y@1.000"));
+        
+        // Add table to TableRegistry
+        auto* table_registry = data_manager->getTableRegistry();
+        std::string table_key = "line_sampling_test_table";
+        
+        // First create table entry in registry
+        bool created = table_registry->createTable(table_key, "Line Sampling Test Table", "Test table for EntityGroupManager integration");
+        REQUIRE(created);
+        
+        // Then store the built table
+        bool stored = table_registry->storeBuiltTable(table_key, std::make_unique<TableView>(std::move(table)));
+        REQUIRE(stored);
+        
+        // Get the table back from registry
+        auto stored_table = table_registry->getBuiltTable(table_key);
+        REQUIRE(stored_table != nullptr);
+        
+        // Get sample data from specific rows
+        auto x_start = stored_table->getColumnValues<double>("Line.x@0.000");
+        auto y_start = stored_table->getColumnValues<double>("Line.y@0.000");
+        auto x_mid = stored_table->getColumnValues<double>("Line.x@0.500");
+        auto y_mid = stored_table->getColumnValues<double>("Line.y@0.500");
+        auto x_end = stored_table->getColumnValues<double>("Line.x@1.000");
+        auto y_end = stored_table->getColumnValues<double>("Line.y@1.000");
+        
+        REQUIRE(x_start.size() == 5);
+        REQUIRE(y_start.size() == 5);
+        REQUIRE(x_mid.size() == 5);
+        REQUIRE(y_mid.size() == 5);
+        REQUIRE(x_end.size() == 5);
+        REQUIRE(y_end.size() == 5);
+        
+        // Now we need to get EntityIDs for specific table rows
+        // This requires TableView to expose EntityIDs - let's check if this functionality exists
+        
+        // Try to get EntityIDs from the table (this might not be implemented yet)
+        // We'll select rows 1, 2, and 4 for our group
+        std::vector<size_t> selected_row_indices = {1, 2, 4};
+        std::vector<EntityId> entity_ids_from_table;
+        
+        // This is the functionality that might be missing - getting EntityIDs from TableView rows
+        // For now, let's try to get them through the LineData directly using time/index information
+        
+        // Get EntityIDs from LineData that correspond to our table rows
+        // Row 0: t=10, entity 0 -> EntityIDs at TimeFrameIndex(10)[0]
+        // Row 1: t=10, entity 1 -> EntityIDs at TimeFrameIndex(10)[1]  
+        // Row 2: t=20, entity 0 -> EntityIDs at TimeFrameIndex(20)[0]
+        // Row 3: t=20, entity 1 -> EntityIDs at TimeFrameIndex(20)[1]
+        // Row 4: t=30, entity 0 -> EntityIDs at TimeFrameIndex(30)[0]
+        
+        auto ids_t10 = line_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto ids_t20 = line_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        auto ids_t30 = line_data->getEntityIdsAtTime(TimeFrameIndex(30));
+        
+        REQUIRE(ids_t10.size() == 2);
+        REQUIRE(ids_t20.size() == 2);
+        REQUIRE(ids_t30.size() == 1);
+        
+        // Select EntityIDs for rows 1, 2, 4 (0-indexed)
+        // Row 1 = t10[1], Row 2 = t20[0], Row 4 = t30[0]
+        std::vector<EntityId> selected_entity_ids = {
+            ids_t10[1],  // Row 1
+            ids_t20[0],  // Row 2  
+            ids_t30[0]   // Row 4
+        };
+        
+        // Verify all EntityIDs are valid
+        for (EntityId id : selected_entity_ids) {
+            REQUIRE(id != 0);
+            INFO("Selected EntityID: " << id);
+        }
+        
+        // Create a group in EntityGroupManager with these EntityIDs
+        GroupId test_group = group_manager->createGroup("TableView Selection", "Entities from selected table rows");
+        size_t added = group_manager->addEntitiesToGroup(test_group, selected_entity_ids);
+        REQUIRE(added == selected_entity_ids.size());
+        
+        // Verify the group was created correctly
+        REQUIRE(group_manager->hasGroup(test_group));
+        REQUIRE(group_manager->getGroupSize(test_group) == selected_entity_ids.size());
+        
+        auto group_entities = group_manager->getEntitiesInGroup(test_group);
+        REQUIRE(group_entities.size() == selected_entity_ids.size());
+        
+        // Now query LineData using the grouped EntityIDs to get the original line data
+        auto lines_from_group = line_data->getLinesByEntityIds(group_entities);
+        REQUIRE(lines_from_group.size() == selected_entity_ids.size());
+        
+        // Verify that the lines we get back match the data in the corresponding table rows
+        // We'll compare the start and end points from LineSamplingMultiComputer with actual line data
+        
+        for (size_t i = 0; i < lines_from_group.size(); ++i) {
+            EntityId entity_id = lines_from_group[i].first;
+            Line2D const& original_line = lines_from_group[i].second;
+            
+            // Find which row this EntityID corresponds to
+            size_t table_row_index = 0;
+            if (entity_id == ids_t10[1]) {
+                table_row_index = 1;  // Row 1: t=10, entity 1
+            } else if (entity_id == ids_t20[0]) {
+                table_row_index = 2;  // Row 2: t=20, entity 0
+            } else if (entity_id == ids_t30[0]) {
+                table_row_index = 4;  // Row 4: t=30, entity 0
+            } else {
+                FAIL("Unexpected EntityID in group: " << entity_id);
+            }
+            
+            // Get the sampled points from the table for this row
+            float table_x_start = static_cast<float>(x_start[table_row_index]);
+            float table_y_start = static_cast<float>(y_start[table_row_index]);
+            float table_x_end = static_cast<float>(x_end[table_row_index]);
+            float table_y_end = static_cast<float>(y_end[table_row_index]);
+            
+            // Get actual start and end points from the original line
+            REQUIRE(original_line.size() >= 2);
+            Point2D<float> actual_start = original_line.front();
+            Point2D<float> actual_end = original_line.back();
+            
+            // Verify that the table data matches the original line data
+            INFO("Checking EntityID " << entity_id << " at table row " << table_row_index);
+            INFO("Table start: (" << table_x_start << ", " << table_y_start << ")");
+            INFO("Actual start: (" << actual_start.x << ", " << actual_start.y << ")");
+            INFO("Table end: (" << table_x_end << ", " << table_y_end << ")");
+            INFO("Actual end: (" << actual_end.x << ", " << actual_end.y << ")");
+            
+            REQUIRE(table_x_start == Catch::Approx(actual_start.x).epsilon(0.001f));
+            REQUIRE(table_y_start == Catch::Approx(actual_start.y).epsilon(0.001f));
+            REQUIRE(table_x_end == Catch::Approx(actual_end.x).epsilon(0.001f));
+            REQUIRE(table_y_end == Catch::Approx(actual_end.y).epsilon(0.001f));
+        }
+        
+        INFO("Successfully verified round-trip: LineData -> TableView -> EntityGroupManager -> LineData");
     }
 }
