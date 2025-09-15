@@ -9,9 +9,9 @@
 #include "Entity/EntityTypes.hpp"
 
 #include <map>
+#include <optional>
 #include <ranges>
 #include <vector>
-
 
 
 class EntityRegistry;

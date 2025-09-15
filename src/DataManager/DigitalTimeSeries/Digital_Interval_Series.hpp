@@ -8,10 +8,10 @@
 
 #include <cstdint>
 #include <iostream>
+#include <optional>
 #include <ranges>
 #include <utility>
 #include <vector>
-
 
 
 class EntityRegistry;
