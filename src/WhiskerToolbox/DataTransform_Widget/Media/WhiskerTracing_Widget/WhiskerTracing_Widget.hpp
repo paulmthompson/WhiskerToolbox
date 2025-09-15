@@ -5,6 +5,9 @@
 
 #include <QWidget>
 #include <memory>
+#include <string>
+
+class DataManager;
 
 namespace Ui {
 class WhiskerTracing_Widget;
@@ -33,6 +36,8 @@ public:
      * @return Unique pointer to the parameters
      */
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getParameters() const override;
+
+    void setDataManager(std::shared_ptr<DataManager> data_manager);
 
 private slots:
     /**
@@ -79,6 +84,12 @@ private slots:
 
 private:
     Ui::WhiskerTracing_Widget * ui;
+
+    std::shared_ptr<DataManager> _data_manager;
+    std::string _selected_mask_key;
+
+    void _refreshMaskKeys();
+    void _updateMaskComboBox();
 };
 
 #endif// WHISKER_TRACING_WIDGET_HPP

@@ -3,11 +3,13 @@
 #include "ui_WhiskerTracing_Widget.h"
 
 #include "DataManager/transforms/Media/whisker_tracing.hpp"
+#include "DataManager/DataManager.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QSpinBox>
+#include <QPushButton>
 
 WhiskerTracing_Widget::WhiskerTracing_Widget(QWidget * parent)
     : TransformParameter_Widget(parent),
@@ -47,11 +49,16 @@ std::unique_ptr<TransformParametersBase> WhiskerTracing_Widget::getParameters() 
     params->use_parallel_processing = ui->use_parallel_processing_checkbox->isChecked();
     params->use_mask_data = ui->use_mask_data_checkbox->isChecked();
 
-    // Get mask data from combobox selection
-    if (params->use_mask_data && ui->mask_data_combobox->currentIndex() >= 0) {
-        QString mask_key = ui->mask_data_combobox->currentText();
-        // Note: The actual mask data will be resolved by the ParameterFactory
-        // This is just a placeholder - the real resolution happens in the factory
+    // Resolve MaskData pointer based on the current selection captured by slot handlers
+    if (params->use_mask_data && _data_manager && !_selected_mask_key.empty()) {
+        try {
+            auto mask_ptr = _data_manager->getData<MaskData>(_selected_mask_key);
+            if (mask_ptr) {
+                params->mask_data = mask_ptr;
+            }
+        } catch (...) {
+            // leave mask_data empty on failure
+        }
     }
 
     return params;
@@ -84,10 +91,68 @@ void WhiskerTracing_Widget::_onUseParallelProcessingChanged(bool checked) {
 
 void WhiskerTracing_Widget::_onUseMaskDataChanged(bool checked) {
     ui->mask_data_combobox->setEnabled(checked);
+    if (checked) {
+        _refreshMaskKeys();
+        bool const has_masks = _data_manager && !_data_manager->getKeys<MaskData>().empty();
+        // If no masks are present, disable transform button via parent DataTransform widget
+        if (auto parent_widget = parentWidget()) {
+            auto do_btn = parent_widget->findChild<QPushButton*>("do_transform_button");
+            if (do_btn) do_btn->setEnabled(has_masks);
+        }
+    } else {
+        if (auto parent_widget = parentWidget()) {
+            auto do_btn = parent_widget->findChild<QPushButton*>("do_transform_button");
+            if (do_btn) do_btn->setEnabled(true);
+        }
+    }
     // Parameters are updated when getParameters() is called
 }
 
 void WhiskerTracing_Widget::_onMaskDataChanged(int index) {
-    static_cast<void>(index);
+    if (index >= 0) {
+        _selected_mask_key = ui->mask_data_combobox->itemText(index).toStdString();
+    }
     // Parameters are updated when getParameters() is called
+}
+
+void WhiskerTracing_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    _data_manager = std::move(data_manager);
+    if (_data_manager) {
+        // Observe data manager changes to refresh mask keys
+        _data_manager->addObserver([this]() {
+            _refreshMaskKeys();
+        });
+        _refreshMaskKeys();
+    }
+}
+
+void WhiskerTracing_Widget::_refreshMaskKeys() {
+    if (!_data_manager) {
+        ui->mask_data_combobox->clear();
+        ui->mask_data_combobox->setEnabled(false);
+        return;
+    }
+    _updateMaskComboBox();
+    bool const has_masks = !_data_manager->getKeys<MaskData>().empty();
+    ui->mask_data_combobox->setEnabled(ui->use_mask_data_checkbox->isChecked() && has_masks);
+}
+
+void WhiskerTracing_Widget::_updateMaskComboBox() {
+    if (!_data_manager) return;
+
+    QString current_text = ui->mask_data_combobox->currentText();
+    ui->mask_data_combobox->clear();
+
+    auto mask_keys = _data_manager->getKeys<MaskData>();
+    for (auto const & key: mask_keys) {
+        ui->mask_data_combobox->addItem(QString::fromStdString(key));
+    }
+
+    if (!current_text.isEmpty()) {
+        int idx = ui->mask_data_combobox->findText(current_text);
+        if (idx >= 0) ui->mask_data_combobox->setCurrentIndex(idx);
+    } else if (!mask_keys.empty()) {
+        ui->mask_data_combobox->setCurrentIndex(0);
+        _selected_mask_key = mask_keys[0];
+    }
 }

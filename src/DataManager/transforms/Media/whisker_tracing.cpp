@@ -27,7 +27,7 @@ Line2D WhiskerTracingOperation::convert_to_Line2D(whisker::Line2D const & whiske
 }
 
 // Convert mask data to binary mask format for whisker tracker
-std::vector<uint8_t> WhiskerTracingOperation::convert_mask_to_binary(MaskData const * mask_data,
+std::vector<uint8_t> convert_mask_to_binary(MaskData const * mask_data,
                                                                      int time_index,
                                                                      ImageSize const & image_size) {
     std::vector<uint8_t> binary_mask(static_cast<size_t>(image_size.width * image_size.height), 0);
@@ -42,15 +42,69 @@ std::vector<uint8_t> WhiskerTracingOperation::convert_mask_to_binary(MaskData co
         return binary_mask;// Return empty mask if no mask at this time
     }
 
-    // Convert mask points to binary image
-    // Combine all masks at this time point
+    // Source mask image size (may differ from target media image size)
+    auto const src_size = mask_data->getImageSize();
+
+    // Fast path: identical sizes, just map points directly
+    if (src_size.width == image_size.width && src_size.height == image_size.height) {
+        for (auto const & mask: masks_at_time) {
+            for (auto const & point: mask) {
+                if (point.x < image_size.width && point.y < image_size.height) {
+                    auto const index = static_cast<size_t>(point.y) * static_cast<size_t>(image_size.width)
+                                     + static_cast<size_t>(point.x);
+                    if (index < binary_mask.size()) {
+                        binary_mask[index] = MASK_TRUE_VALUE;// Set to 255 for true pixels
+                    }
+                }
+            }
+        }
+        return binary_mask;
+    }
+
+    // Build a source binary mask for nearest-neighbor scaling when sizes differ
+    std::vector<uint8_t> src_binary(static_cast<size_t>(src_size.width * src_size.height), 0);
     for (auto const & mask: masks_at_time) {
         for (auto const & point: mask) {
-            if (point.x < image_size.width && point.y < image_size.height) {
-                auto index = static_cast<size_t>(point.y) * static_cast<size_t>(image_size.width) + static_cast<size_t>(point.x);
-                if (index < binary_mask.size()) {
-                    binary_mask[index] = MASK_TRUE_VALUE;// Set to 255 for true pixels
+            if (point.x < src_size.width && point.y < src_size.height) {
+                auto const src_index = static_cast<size_t>(point.y) * static_cast<size_t>(src_size.width)
+                                     + static_cast<size_t>(point.x);
+                if (src_index < src_binary.size()) {
+                    src_binary[src_index] = MASK_TRUE_VALUE;
                 }
+            }
+        }
+    }
+
+    // Nearest-neighbor scale from src_binary (src_size) to binary_mask (image_size)
+    auto const src_w = std::max(1, src_size.width);
+    auto const src_h = std::max(1, src_size.height);
+    auto const dst_w = std::max(1, image_size.width);
+    auto const dst_h = std::max(1, image_size.height);
+
+    // Precompute ratios; use (N-1) mapping to preserve endpoints
+    auto const rx = (dst_w > 1 && src_w > 1)
+                            ? (static_cast<double>(src_w - 1) / static_cast<double>(dst_w - 1))
+                            : 0.0;
+    auto const ry = (dst_h > 1 && src_h > 1)
+                            ? (static_cast<double>(src_h - 1) / static_cast<double>(dst_h - 1))
+                            : 0.0;
+
+    for (int y = 0; y < dst_h; ++y) {
+        int const ys = (dst_h > 1 && src_h > 1)
+                               ? static_cast<int>(std::round(static_cast<double>(y) * ry))
+                               : 0;
+        for (int x = 0; x < dst_w; ++x) {
+            int const xs = (dst_w > 1 && src_w > 1)
+                                   ? static_cast<int>(std::round(static_cast<double>(x) * rx))
+                                   : 0;
+
+            auto const src_index = static_cast<size_t>(ys) * static_cast<size_t>(src_w)
+                                 + static_cast<size_t>(xs);
+            auto const dst_index = static_cast<size_t>(y) * static_cast<size_t>(dst_w)
+                                 + static_cast<size_t>(x);
+
+            if (src_index < src_binary.size() && dst_index < binary_mask.size()) {
+                binary_mask[dst_index] = src_binary[src_index] ? MASK_TRUE_VALUE : 0;
             }
         }
     }
@@ -209,10 +263,15 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
         return {};
     }
 
-    auto whisker_tracker = std::make_unique<whisker::WhiskerTracker>();
-    std::cout << "Whisker Tracker Initialized" << std::endl;
-
-    whisker_tracker->setWhiskerLengthThreshold(typed_params->whisker_length_threshold);
+    // Allow caller (tests) to pass an already-initialized tracker to avoid heavy setup
+    std::shared_ptr<whisker::WhiskerTracker> tracker_ptr = typed_params->tracker;
+    if (!tracker_ptr) {
+        tracker_ptr = std::make_shared<whisker::WhiskerTracker>();
+        std::cout << "Whisker Tracker Initialized" << std::endl;
+    }
+    tracker_ptr->setWhiskerLengthThreshold(typed_params->whisker_length_threshold);
+    // Disable whisker pad exclusion by using a large radius by default
+    tracker_ptr->setWhiskerPadRadius(1000.0f);
 
     if (progressCallback) progressCallback(0);
 
@@ -257,7 +316,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
 
             if (!batch_images.empty()) {
                 // Trace whiskers in parallel for this batch
-                auto batch_results = trace_multiple_images(*whisker_tracker, batch_images, media_data->getImageSize(),
+                auto batch_results = trace_multiple_images(*tracker_ptr, batch_images, media_data->getImageSize(),
                                                            typed_params->clip_length,
                                                            typed_params->use_mask_data ? typed_params->mask_data.get() : nullptr,
                                                            batch_times);
@@ -290,7 +349,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
             }
 
             if (!image_data.empty()) {
-                auto whisker_lines = trace_single_image(*whisker_tracker, image_data, media_data->getImageSize(),
+                auto whisker_lines = trace_single_image(*tracker_ptr, image_data, media_data->getImageSize(),
                                                         typed_params->clip_length,
                                                         typed_params->use_mask_data ? typed_params->mask_data.get() : nullptr,
                                                         static_cast<int>(time));

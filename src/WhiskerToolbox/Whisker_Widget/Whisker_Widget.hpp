@@ -84,6 +84,10 @@ private:
     std::string _current_whisker_pad_key; // Current selected PointData key for whisker pad
     Point2D<float> _current_whisker_pad_point{0.0f, 0.0f}; // Current whisker pad position
 
+    // Mask mode state
+    bool _use_mask_mode{false};
+    std::string _selected_mask_key;
+
     /*
      * DL Model for whisker tracing
      */
@@ -101,6 +105,9 @@ private:
     void _updateWhiskerPadFromSelection();
     void _updateWhiskerPadLabel();
     void _createNewWhiskerPad();
+
+    // Mask helpers
+    void _populateMaskCombo();
 
 private slots:
     void _traceButton();

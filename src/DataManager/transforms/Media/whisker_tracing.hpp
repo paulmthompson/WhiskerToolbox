@@ -21,6 +21,16 @@ class Line2D;
 class MaskData;
 
 /**
+ * @brief Converts mask data to a binary mask image sized to the media frame.
+ *
+ * @pre mask_data may be nullptr; in that case an all-zero mask is returned.
+ * @post Returned vector has size image_size.width * image_size.height and uses 255 for true pixels, 0 otherwise.
+ */
+std::vector<uint8_t> convert_mask_to_binary(MaskData const * mask_data,
+                                            int time_index,
+                                            ImageSize const & image_size);
+
+/**
  * @brief Parameters for whisker tracing operation
  */
 struct WhiskerTracingParameters : public TransformParametersBase {
@@ -31,6 +41,8 @@ struct WhiskerTracingParameters : public TransformParametersBase {
     bool use_parallel_processing = true;   // Whether to use OpenMP parallel processing
     bool use_mask_data = false;            // Whether to use mask data for seed selection
     std::shared_ptr<MaskData> mask_data;   // Optional mask data for seed selection
+    /** Optional: Pre-initialized tracker to reuse (useful for tests to avoid long init). */
+    std::shared_ptr<whisker::WhiskerTracker> tracker;
 };
 
 /**
@@ -135,16 +147,6 @@ private:
             MaskData const * mask_data = nullptr,
             std::vector<int> const & time_indices = {});
 
-    /**
-     * @brief Converts mask data to binary mask format for whisker tracker
-     * @param mask_data The mask data object
-     * @param time_index The time index to get mask for
-     * @param image_size The image dimensions
-     * @return Binary mask as vector of uint8_t (255 for true pixels, 0 for false)
-     */
-    static std::vector<uint8_t> convert_mask_to_binary(MaskData const * mask_data,
-                                                       int time_index,
-                                                       ImageSize const & image_size);
 };
 
 #endif// WHISKER_TRACING_HPP

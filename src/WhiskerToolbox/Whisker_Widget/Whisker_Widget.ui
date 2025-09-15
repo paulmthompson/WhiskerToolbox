@@ -39,6 +39,27 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_mask_mode">
+        <item>
+         <widget class="QCheckBox" name="use_mask_checkbox">
+          <property name="text">
+           <string>Use Mask Data</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="mask_key_combo">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>Select MaskData key</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_22">
         <item>
          <widget class="QLabel" name="label_4">

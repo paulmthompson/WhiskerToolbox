@@ -202,8 +202,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         return new AnalogFilter_Widget(parent);
     };
 
-    _parameterWidgetFactories["Whisker Tracing"] = [](QWidget * parent) -> TransformParameter_Widget * {
-        return new WhiskerTracing_Widget(parent);
+    _parameterWidgetFactories["Whisker Tracing"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new WhiskerTracing_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
     };
 }
 

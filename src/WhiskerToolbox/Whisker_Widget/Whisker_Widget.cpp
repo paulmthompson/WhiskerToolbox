@@ -11,6 +11,7 @@
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"
 #include "whiskertracker.hpp"
+#include "DataManager/transforms/Media/whisker_tracing.hpp"
 
 #include "qevent.h"
 #include <QElapsedTimer>
@@ -94,6 +95,19 @@ Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
         _linking_tolerance = static_cast<float>(val);
     });
 
+    // Mask UI wiring
+    connect(ui->use_mask_checkbox, &QCheckBox::toggled, this, [this](bool checked) {
+        _use_mask_mode = checked;
+        ui->mask_key_combo->setEnabled(checked);
+        _populateMaskCombo();
+        // Disable Trace button if mask mode is enabled but no masks exist
+        bool const has_masks = !_data_manager->getKeys<MaskData>().empty();
+        ui->trace_button->setEnabled(!checked || has_masks);
+    });
+    connect(ui->mask_key_combo, &QComboBox::currentTextChanged, this, [this](QString const & txt) {
+        _selected_mask_key = txt.toStdString();
+    });
+
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -109,12 +123,32 @@ void Whisker_Widget::openWidget() {
 
     _data_manager->addObserver([this](){
         _populateWhiskerPadCombo();
+        _populateMaskCombo();
     });
 
     _createNewWhiskerPad();
 
     _wt->setWhiskerPadRadius(1000.0f);
     this->show();
+}
+void Whisker_Widget::_populateMaskCombo() {
+    ui->mask_key_combo->blockSignals(true);
+    ui->mask_key_combo->clear();
+
+    auto mask_keys = _data_manager->getKeys<MaskData>();
+    for (auto const & key : mask_keys) {
+        ui->mask_key_combo->addItem(QString::fromStdString(key));
+    }
+
+    if (!mask_keys.empty()) {
+        if (_selected_mask_key.empty() || std::find(mask_keys.begin(), mask_keys.end(), _selected_mask_key) == mask_keys.end()) {
+            _selected_mask_key = mask_keys[0];
+        }
+        int idx = ui->mask_key_combo->findText(QString::fromStdString(_selected_mask_key));
+        if (idx >= 0) ui->mask_key_combo->setCurrentIndex(idx);
+    }
+
+    ui->mask_key_combo->blockSignals(false);
 }
 
 void Whisker_Widget::closeEvent(QCloseEvent * event) {
@@ -143,8 +177,30 @@ void Whisker_Widget::_traceButton() {
     auto const current_time = _data_manager->getCurrentTime();
 
     if (ui->num_frames_to_trace->value() <= 1) {
-        _traceWhiskers(media->getProcessedData8(current_time), media->getImageSize());
-        //_traceWhiskers(media->getRawData(current_time), media->getImageSize());
+        auto image = media->getProcessedData8(current_time);
+        if (_use_mask_mode) {
+            auto mask_ptr = _data_manager->getData<MaskData>(_selected_mask_key);
+            std::vector<uint8_t> binary_mask;
+            if (mask_ptr) {
+                binary_mask = convert_mask_to_binary(mask_ptr.get(), current_time, media->getImageSize());
+            }
+            auto whiskers = _wt->trace_with_mask(image, binary_mask, media->getHeight(), media->getWidth());
+
+            std::vector<Line2D> whisker_lines(whiskers.size());
+            std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
+            std::for_each(whisker_lines.begin(), whisker_lines.end(), [this](Line2D & line) { clip_whisker(line, _clip_length); });
+
+            std::string const whisker_group_name = "whisker";
+            add_whiskers_to_data_manager(
+                    _data_manager.get(),
+                    whisker_lines,
+                    whisker_group_name,
+                    _num_whisker_to_track,
+                    TimeFrameIndex(current_time),
+                    _linking_tolerance);
+        } else {
+            _traceWhiskers(image, media->getImageSize());
+        }
     } else {
 
         auto height = media->getHeight();
@@ -156,7 +212,17 @@ void Whisker_Widget::_traceButton() {
 
             auto image = media->getProcessedData8(num_to_trace + current_time);
 
-            auto whiskers = _wt->trace(image, height, width);
+            std::vector<whisker::Line2D> whiskers;
+            if (_use_mask_mode) {
+                auto mask_ptr = _data_manager->getData<MaskData>(_selected_mask_key);
+                std::vector<uint8_t> binary_mask;
+                if (mask_ptr) {
+                    binary_mask = convert_mask_to_binary(mask_ptr.get(), static_cast<int>(num_to_trace + current_time), media->getImageSize());
+                }
+                whiskers = _wt->trace_with_mask(image, binary_mask, height, width);
+            } else {
+                whiskers = _wt->trace(image, height, width);
+            }
 
             std::vector<Line2D> whisker_lines(whiskers.size());
             std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);

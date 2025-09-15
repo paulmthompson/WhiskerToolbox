@@ -71,6 +71,8 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Resample/line_resample.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Subsegment/line_subsegment.test.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Media/whisker_tracing.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Area/mask_area.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Centroid/mask_centroid.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Connected_Component/mask_connected_component.test.cpp
@@ -115,6 +117,7 @@ endif()
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
+target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)
 
 target_include_directories(test_data_manager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
