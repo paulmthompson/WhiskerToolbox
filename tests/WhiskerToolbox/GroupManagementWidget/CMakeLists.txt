@@ -16,6 +16,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_group_management_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/GroupManagementWidget/GroupManager.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/GroupManagementWidget/GroupManagementWidget.test.cpp
 )
 
 target_link_libraries(test_group_management_widget PRIVATE 

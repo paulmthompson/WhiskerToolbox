@@ -283,16 +283,22 @@ public:
             for (auto const * p : m_selected_points) {
                 out.insert(p->data);
             }
-        } else if (m_entity_ids.size() == m_total_point_count) {
-            // Fallback: use m_entity_ids mapping if available
+        } else if (m_entity_ids.size() == m_total_point_count && m_spatial_index) {
+            // Build a pointer->index map once to avoid O(S*N) behavior
+            std::vector<QuadTreePoint<RowIndicatorType> const *> all_points;
+            all_points.reserve(m_total_point_count);
+            m_spatial_index->queryPointers(m_spatial_index->getBounds(), all_points);
+
+            std::unordered_map<QuadTreePoint<RowIndicatorType> const *, size_t> pointer_to_index;
+            pointer_to_index.reserve(all_points.size());
+            for (size_t i = 0; i < all_points.size(); ++i) {
+                pointer_to_index.emplace(all_points[i], i);
+            }
+
             for (auto const * p : m_selected_points) {
-                // Find index of this point in spatial index and map to entity ID
-                auto all_points = std::vector<QuadTreePoint<RowIndicatorType> const *>();
-                m_spatial_index->queryPointers(m_spatial_index->getBounds(), all_points);
-                
-                auto it = std::find(all_points.begin(), all_points.end(), p);
-                if (it != all_points.end()) {
-                    size_t index = std::distance(all_points.begin(), it);
+                auto it_idx = pointer_to_index.find(p);
+                if (it_idx != pointer_to_index.end()) {
+                    size_t const index = it_idx->second;
                     if (index < m_entity_ids.size()) {
                         out.insert(m_entity_ids[index]);
                     }

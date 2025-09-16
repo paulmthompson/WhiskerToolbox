@@ -9,7 +9,7 @@
 PointDataVisualization::PointDataVisualization(QString const & data_key,
                                                std::shared_ptr<PointData> const & point_data,
                                                GroupManager * group_manager)
-    : GenericPointVisualization<float, int64_t>(data_key, group_manager),
+    : GenericPointVisualization<float, EntityId>(data_key, group_manager),
       m_point_data(point_data) {
     
     // Populate data from PointData
@@ -26,12 +26,12 @@ void PointDataVisualization::populateData() {
     BoundingBox bounds = calculateBoundsForPointData(m_point_data.get());
 
     // Update the spatial index with proper bounds
-    m_spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
+    m_spatial_index = std::make_unique<QuadTree<EntityId>>(bounds);
     m_vertex_data.reserve(m_point_data->GetAllPointsAsRange().size() * 3);// Reserve space for x, y, group_id
 
     // Collect EntityIds for each point to enable proper grouping
     std::vector<EntityId> entity_ids;
-    entity_ids.reserve(m_point_data->GetAllPointsAsRange().size());
+    // Pre-reserve approximate; we will push for each point below
 
     for (auto const & time_points_pair: m_point_data->GetAllPointsAsRange()) {
         // Get EntityIds for this time frame
@@ -40,21 +40,22 @@ void PointDataVisualization::populateData() {
         for (size_t i = 0; i < time_points_pair.points.size(); ++i) {
             auto const & point = time_points_pair.points[i];
             
-            // Store original coordinates in QuadTree (preserve data structure)
-            m_spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
+            // Map i to entity id for this time
+            EntityId eid = 0;
+            if (i < frame_entity_ids.size()) {
+                eid = frame_entity_ids[i];
+            }
+
+            // Store original coordinates in QuadTree with EntityId as data
+            m_spatial_index->insert(point.x, point.y, eid);
 
             // Store coordinates and group_id in vertex data for OpenGL rendering
             m_vertex_data.push_back(point.x);
             m_vertex_data.push_back(point.y);
             m_vertex_data.push_back(0.0f);// group_id = 0 (ungrouped) initially
             
-            // Store the corresponding EntityId
-            if (i < frame_entity_ids.size()) {
-                entity_ids.push_back(frame_entity_ids[i]);
-            } else {
-                // Fallback if EntityIds are not available
-                entity_ids.push_back(EntityId(0));
-            }
+            // Store the corresponding EntityId (or 0 if unavailable)
+            entity_ids.push_back(eid);
         }
     }
 
