@@ -6,6 +6,7 @@
 
 #include <QFileSystemWatcher>
 #include <QObject>
+#include <QOpenGLContext>
 
 #include <filesystem>
 #include <map>
@@ -26,13 +27,14 @@ public:
                      std::string const & geometryPath = "",
                      ShaderSourceType sourceType = ShaderSourceType::FileSystem);
 
-    // Retrieve a pointer to a loaded program.
+    // Retrieve a pointer to a loaded program for the current OpenGL context.
     ShaderProgram * getProgram(std::string const & name);
 
     ShaderManager(ShaderManager const &) = delete;
     void operator=(ShaderManager const &) = delete;
 
     void cleanup();
+    void cleanupCurrentContext();
 
 signals:
     void shaderReloaded(std::string const & name);
@@ -44,9 +46,10 @@ private:
     ShaderManager();
 
     QFileSystemWatcher m_fileWatcher;
-    std::map<std::string, std::unique_ptr<ShaderProgram>> m_programs;
-    std::map<std::string, std::string> m_pathToProgramName;
-    std::map<std::string, ShaderSourceType> m_programSourceType;
+    // Programs keyed per OpenGL context to avoid cross-context invalidation
+    std::map<QOpenGLContext *, std::map<std::string, std::unique_ptr<ShaderProgram>>> m_programs_by_context;
+    std::map<std::string, std::string> m_pathToProgramName;            // file path -> program name
+    std::map<std::string, ShaderSourceType> m_programSourceType;       // program name -> source type (assumed consistent)
 };
 
 #endif// SHADERMANAGER_HPP

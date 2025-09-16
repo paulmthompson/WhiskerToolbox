@@ -4,6 +4,7 @@
 
 #include <QDebug>
 #include <QFileInfo>
+#include <QOpenGLContext>
 
 #include <iostream>
 
@@ -21,12 +22,25 @@ bool ShaderManager::loadProgram(std::string const & name,
                                 std::string const & fragmentPath,
                                 std::string const & geometryPath,
                                 ShaderSourceType sourceType) {
+    QOpenGLContext * ctx = QOpenGLContext::currentContext();
+    if (!ctx) {
+        std::cerr << "[ShaderManager] No current OpenGL context when loading program: " << name << std::endl;
+        return false;
+    }
+
+    auto & program_map = m_programs_by_context[ctx];
+    auto it_existing = program_map.find(name);
+    if (it_existing != program_map.end()) {
+        // Already loaded for this context
+        return true;
+    }
+
     auto program = std::make_unique<ShaderProgram>(vertexPath, fragmentPath, geometryPath, sourceType);
     if (!program->reload()) {
         std::cerr << "[ShaderManager] Failed to compile shader program: " << name << std::endl;
         return false;
     }
-    m_programs[name] = std::move(program);
+    program_map[name] = std::move(program);
     m_programSourceType[name] = sourceType;
 
     // Only watch files for hot-reloading if using filesystem
@@ -45,8 +59,17 @@ bool ShaderManager::loadProgram(std::string const & name,
 }
 
 ShaderProgram * ShaderManager::getProgram(std::string const & name) {
-    auto it = m_programs.find(name);
-    if (it != m_programs.end()) {
+    QOpenGLContext * ctx = QOpenGLContext::currentContext();
+    if (!ctx) {
+        return nullptr;
+    }
+    auto ctx_it = m_programs_by_context.find(ctx);
+    if (ctx_it == m_programs_by_context.end()) {
+        return nullptr;
+    }
+    auto & program_map = ctx_it->second;
+    auto it = program_map.find(name);
+    if (it != program_map.end()) {
         return it->second.get();
     }
     return nullptr;
@@ -57,14 +80,18 @@ void ShaderManager::onFileChanged(QString const & path) {
     auto it = m_pathToProgramName.find(pathStr);
     if (it != m_pathToProgramName.end()) {
         std::string const & programName = it->second;
-        auto progIt = m_programs.find(programName);
-        if (progIt != m_programs.end()) {
-            std::cout << "[ShaderManager] Detected change in shader file: " << pathStr << ". Reloading program: " << programName << std::endl;
-            if (progIt->second->reload()) {
-                std::cout << "[ShaderManager] Successfully reloaded shader program: " << programName << std::endl;
-                emit shaderReloaded(programName);
-            } else {
-                std::cerr << "[ShaderManager] Failed to reload shader program: " << programName << ". Keeping previous version active." << std::endl;
+        // Reload the program in all contexts that have it
+        for (auto & [ctx, program_map] : m_programs_by_context) {
+            (void)ctx;
+            auto progIt = program_map.find(programName);
+            if (progIt != program_map.end()) {
+                std::cout << "[ShaderManager] Detected change in shader file: " << pathStr << ". Reloading program: " << programName << std::endl;
+                if (progIt->second->reload()) {
+                    std::cout << "[ShaderManager] Successfully reloaded shader program: " << programName << std::endl;
+                    emit shaderReloaded(programName);
+                } else {
+                    std::cerr << "[ShaderManager] Failed to reload shader program: " << programName << ". Keeping previous version active." << std::endl;
+                }
             }
         }
     }
@@ -75,13 +102,32 @@ void ShaderManager::onFileChanged(QString const & path) {
 }
 
 void ShaderManager::cleanup() {
-    // Clear all shader programs
-    for (auto& [name, program] : m_programs) {
+    // Clear all shader programs for all contexts
+    for (auto & [ctx, program_map] : m_programs_by_context) {
+        (void)ctx;
+        for (auto & [name, program] : program_map) {
+            if (program) {
+                delete program.release();
+            }
+        }
+        program_map.clear();
+    }
+    m_programs_by_context.clear();
+    m_fileWatcher.removePaths(m_fileWatcher.files());
+    m_fileWatcher.removePaths(m_fileWatcher.directories());
+}
+
+void ShaderManager::cleanupCurrentContext() {
+    QOpenGLContext * ctx = QOpenGLContext::currentContext();
+    if (!ctx) return;
+    auto it = m_programs_by_context.find(ctx);
+    if (it == m_programs_by_context.end()) return;
+    auto & program_map = it->second;
+    for (auto & [name, program] : program_map) {
         if (program) {
             delete program.release();
         }
     }
-    m_programs.clear();
-    m_fileWatcher.removePaths(m_fileWatcher.files());
-    m_fileWatcher.removePaths(m_fileWatcher.directories());
+    program_map.clear();
+    m_programs_by_context.erase(it);
 }
