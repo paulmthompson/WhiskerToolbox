@@ -104,3 +104,39 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
     REQUIRE(members_item != nullptr);
     REQUIRE(members_item->text().toInt() == 2);
 }
+
+TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Members column updates on add/remove", "[groupmanagementwidget][members][signals]") {
+    EntityGroupManager egm;
+    GroupManager gm(&egm);
+    GroupManagementWidget widget(&gm);
+    auto * table = findGroupsTable(widget);
+
+    int g = gm.createGroup(QString("G"));
+    GroupId gid = static_cast<GroupId>(g);
+    QCoreApplication::processEvents();
+    REQUIRE(table->rowCount() == 1);
+
+    int row = findRowForGroupId(table, g);
+    REQUIRE(row >= 0);
+    QTableWidgetItem * members_item = table->item(row, 2);
+    REQUIRE(members_item != nullptr);
+    REQUIRE(members_item->text().toInt() == 0);
+
+    // Add two entities and expect UI to refresh via groupModified
+    std::unordered_set<EntityId> ids = {11, 22};
+    REQUIRE(gm.assignEntitiesToGroup(g, ids));
+    QCoreApplication::processEvents();
+    row = findRowForGroupId(table, g);
+    REQUIRE(row >= 0);
+    members_item = table->item(row, 2);
+    REQUIRE(members_item->text().toInt() == 2);
+
+    // Remove one entity and expect decrement
+    std::unordered_set<EntityId> rem = {11};
+    REQUIRE(gm.removeEntitiesFromGroup(g, rem));
+    QCoreApplication::processEvents();
+    row = findRowForGroupId(table, g);
+    REQUIRE(row >= 0);
+    members_item = table->item(row, 2);
+    REQUIRE(members_item->text().toInt() == 1);
+}
