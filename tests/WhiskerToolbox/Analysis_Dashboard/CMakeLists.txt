@@ -20,6 +20,7 @@ add_executable(AnalysisDashboardTests
     PointDataVisualization.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard/Analysis_Dashboard.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.test.cpp
     ../fixtures/test_signal_probe_simple.cpp
     ../fixtures/signal_probe.cpp
     ../fixtures/simple_test_emitter.hpp

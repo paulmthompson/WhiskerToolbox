@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <QMap>
+#include <QPointer>
 #include <QSet>
 
 class GroupManager;
@@ -131,7 +132,7 @@ private slots:
 
 private:
     GroupManager* group_manager_;
-    QMap<QString, AbstractPlotWidget*> registered_plots_;
+    QMap<QString, QPointer<AbstractPlotWidget>> registered_plots_;
     QSet<int> currently_selected_groups_;
     QSet<int> currently_highlighted_groups_;
 

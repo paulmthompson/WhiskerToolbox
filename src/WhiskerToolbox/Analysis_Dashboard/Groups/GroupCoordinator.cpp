@@ -29,7 +29,7 @@ void GroupCoordinator::registerPlot(const QString& plot_id, AbstractPlotWidget* 
         return;
     }
 
-    registered_plots_[plot_id] = plot_widget;
+    registered_plots_[plot_id] = QPointer<AbstractPlotWidget>(plot_widget);
     connectToPlot(plot_widget);
     
     qDebug() << "GroupCoordinator::registerPlot: Registered plot" << plot_id 
@@ -45,7 +45,11 @@ void GroupCoordinator::unregisterPlot(const QString& plot_id)
     }
 
     AbstractPlotWidget* plot_widget = it.value();
-    disconnectFromPlot(plot_widget);
+    if (plot_widget) {
+        disconnectFromPlot(plot_widget);
+    } else {
+        qDebug() << "GroupCoordinator::unregisterPlot: plot widget already deleted for" << plot_id;
+    }
     registered_plots_.erase(it);
 
     qDebug() << "GroupCoordinator::unregisterPlot: Unregistered plot" << plot_id

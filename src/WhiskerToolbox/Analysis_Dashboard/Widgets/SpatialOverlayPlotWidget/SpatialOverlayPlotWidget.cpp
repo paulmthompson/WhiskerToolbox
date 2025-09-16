@@ -16,6 +16,7 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QPen>
+#include <QTimer>
 
 #include <cmath>
 
@@ -34,17 +35,11 @@ QString SpatialOverlayPlotWidget::getPlotType() const {
     return "Spatial Overlay Plot";
 }
 
-void SpatialOverlayPlotWidget::setPointDataKeys(QStringList const & point_data_keys) {
+void SpatialOverlayPlotWidget::setDataKeys(QStringList const & point_data_keys,
+                                           QStringList const & mask_data_keys,
+                                           QStringList const & line_data_keys) {
     _point_data_keys = point_data_keys;
-    updateVisualization();
-}
-
-void SpatialOverlayPlotWidget::setMaskDataKeys(QStringList const & mask_data_keys) {
     _mask_data_keys = mask_data_keys;
-    updateVisualization();
-}
-
-void SpatialOverlayPlotWidget::setLineDataKeys(QStringList const & line_data_keys) {
     _line_data_keys = line_data_keys;
     updateVisualization();
 }
@@ -135,24 +130,48 @@ void SpatialOverlayPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
 
 void SpatialOverlayPlotWidget::updateVisualization() {
 
+    if (_is_updating_visualization) {
+        return;
+    }
+
     if (!_parameters.data_manager || !_opengl_widget) {
         return;
     }
+
+    _is_updating_visualization = true;
 
     loadPointData();
     loadMaskData();
     loadLineData();
 
-    // Request render update through signal
-    update();
-    emit renderUpdateRequested(getPlotId());
+    // Schedule a single coalesced render update for this tick
+    scheduleRenderUpdate();
+    _is_updating_visualization = false;
 }
 
-void SpatialOverlayPlotWidget::handleFrameJumpRequest(int64_t time_frame_index, QString const & data_key) {
-    qDebug() << "SpatialOverlayPlotWidget: Frame jump requested to frame:"
-             << time_frame_index << "for data key:"
-             << data_key;
-    emit frameJumpRequested(time_frame_index, data_key.toStdString());
+void SpatialOverlayPlotWidget::scheduleRenderUpdate() {
+    if (_render_update_pending) {
+        return;
+    }
+    _render_update_pending = true;
+    // Use single-shot 0ms to coalesce multiple sources into one emission
+    QTimer::singleShot(0, this, [this]() {
+        _render_update_pending = false;
+        update();
+        emit renderUpdateRequested(getPlotId());
+    });
+}
+
+void SpatialOverlayPlotWidget::handleFrameJumpRequest(EntityId entity_id, QString const & data_key) {
+
+    //Get point data from entityID
+    auto point_data = _parameters.data_manager->getData<PointData>(data_key.toStdString());
+    if (point_data) {
+        auto point = point_data->getTimeAndIndexByEntityId(entity_id);
+        if (point) {
+            emit frameJumpRequested(point->first.getValue(), data_key.toStdString());
+        }
+    }
 }
 
 void SpatialOverlayPlotWidget::loadPointData() {
@@ -164,9 +183,8 @@ void SpatialOverlayPlotWidget::loadPointData() {
             point_data_map[key] = point_data;
         }
     }
-    if (!point_data_map.empty()) {
-        _opengl_widget->setPointData(point_data_map);
-    }
+    // Always forward, even if empty, so the GL widget can clear its visualizations
+    _opengl_widget->setPointData(point_data_map);
 }
 
 void SpatialOverlayPlotWidget::loadMaskData() {
@@ -178,9 +196,8 @@ void SpatialOverlayPlotWidget::loadMaskData() {
             mask_data_map[key] = mask_data;
         }
     }
-    if (!mask_data_map.empty()) {
-        _opengl_widget->setMaskData(mask_data_map);
-    }
+    // Always forward, even if empty, so the GL widget can clear its visualizations
+    _opengl_widget->setMaskData(mask_data_map);
 }
 
 void SpatialOverlayPlotWidget::loadLineData() {
@@ -192,9 +209,8 @@ void SpatialOverlayPlotWidget::loadLineData() {
             line_data_map[key] = line_data;
         }
     }
-    if (!line_data_map.empty()) {
-        _opengl_widget->setLineData(line_data_map);
-    }
+    // Always forward, even if empty, so the GL widget can clear its visualizations
+    _opengl_widget->setLineData(line_data_map);
 }
 
 void SpatialOverlayPlotWidget::setupOpenGLWidget() {
@@ -228,14 +244,13 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     connect(_opengl_widget, &BasePlotOpenGLWidget::viewBoundsChanged,
             this, [this](BoundingBox const& bounds) {
                 Q_UNUSED(bounds)
-                update();
-                emit renderUpdateRequested(getPlotId());
+                // Coalesce render updates across sources
+                scheduleRenderUpdate();
             });
 
     connect(_opengl_widget, &BasePlotOpenGLWidget::highlightStateChanged,
             this, [this]() {
-                update();
-                emit renderUpdateRequested(getPlotId());
+                scheduleRenderUpdate();
             });
 
     connect(_opengl_widget, &BasePlotOpenGLWidget::mouseWorldMoved,
@@ -247,8 +262,7 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     // Connect property change signals to trigger updates
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::pointSizeChanged,
             this, [this](float) {
-                update();
-                emit renderUpdateRequested(getPlotId());
+                scheduleRenderUpdate();
                 emit renderingPropertiesChanged();
             });
 

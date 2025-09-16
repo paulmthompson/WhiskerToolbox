@@ -3,6 +3,7 @@
 
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 #include "Selection/SelectionModes.hpp"
+#include "DataManager/Entity/EntityTypes.hpp"
 
 
 #include <QGraphicsSceneMouseEvent>
@@ -32,10 +33,14 @@ public:
     QString getPlotType() const override;
 
     /**
-     * @brief Set which PointData keys to display
+     * @brief Set all data keys in a single call to avoid multiple updates
      * @param point_data_keys List of PointData keys to visualize
+     * @param mask_data_keys List of MaskData keys to visualize
+     * @param line_data_keys List of LineData keys to visualize
      */
-    void setPointDataKeys(QStringList const & point_data_keys);
+    void setDataKeys(QStringList const & point_data_keys,
+                     QStringList const & mask_data_keys,
+                     QStringList const & line_data_keys);
 
     /**
      * @brief Get currently displayed PointData keys
@@ -43,21 +48,9 @@ public:
     QStringList getPointDataKeys() const { return _point_data_keys; }
 
     /**
-     * @brief Set which MaskData keys to display
-     * @param mask_data_keys List of MaskData keys to visualize
-     */
-    void setMaskDataKeys(QStringList const & mask_data_keys);
-
-    /**
      * @brief Get currently displayed MaskData keys
      */
     QStringList getMaskDataKeys() const { return _mask_data_keys; }
-
-    /**
-     * @brief Set which LineData keys to display
-     * @param line_data_keys List of LineData keys to visualize
-     */
-    void setLineDataKeys(QStringList const & line_data_keys);
 
     /**
      * @brief Get currently displayed LineData keys
@@ -121,7 +114,7 @@ private slots:
      * @brief Handle frame jump request from OpenGL widget
      * @param time_frame_index The time frame index to jump to
      */
-    void handleFrameJumpRequest(int64_t time_frame_index, QString const & data_key);
+    void handleFrameJumpRequest(EntityId entity_id, QString const & data_key);
 
 private:
     SpatialOverlayOpenGLWidget * _opengl_widget;
@@ -129,6 +122,8 @@ private:
     QStringList _point_data_keys;
     QStringList _mask_data_keys;
     QStringList _line_data_keys;
+    // Reentrancy guard to avoid duplicate updates when data-setting triggers callbacks
+    bool _is_updating_visualization {false};
     /**
      * @brief Load point data from DataManager
      */
@@ -148,6 +143,10 @@ private:
      * @brief Setup the OpenGL widget and proxy
      */
     void setupOpenGLWidget();
+    
+    // Internal helpers to coalesce duplicate updates
+    void scheduleRenderUpdate();
+    bool _render_update_pending {false};
 };
 
 #endif// SPATIALOVERLAYPLOTWIDGET_HPP

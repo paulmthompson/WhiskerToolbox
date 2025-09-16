@@ -3,6 +3,7 @@
 #include "Widgets/Common/BasePlotOpenGLWidget.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "Selection/SelectionHandlers.hpp"
+#include "DataManager/Entity/EntityTypes.hpp"
 
 #include <QString>
 
@@ -68,10 +69,11 @@ public:
     QPoint worldToScreen(float world_x, float world_y) const;
 
 signals:
-    void frameJumpRequested(int64_t time_frame_index, QString const& data_key);
+    void frameJumpRequested(EntityId entity_id, QString const& data_key);
     void lineWidthChanged(float line_width);
     void pointSizeChanged(float point_size);
     void tooltipsEnabledChanged(bool enabled);
+
 
 protected:
     // BasePlotOpenGLWidget interface implementation

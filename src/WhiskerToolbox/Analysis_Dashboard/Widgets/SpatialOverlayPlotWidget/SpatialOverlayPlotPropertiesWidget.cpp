@@ -313,15 +313,9 @@ void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {
         }
     }
 
-    if (!point_data_keys.empty()) {
-        _spatial_plot_widget->setPointDataKeys(point_data_keys);
-    }
-    if (!mask_data_keys.empty()) {
-        _spatial_plot_widget->setMaskDataKeys(mask_data_keys);
-    }
-    if (!line_data_keys.empty()) {
-        _spatial_plot_widget->setLineDataKeys(line_data_keys);
-    }
+    // Always update, even with empty lists, to allow clearing datasets properly
+    // Use single aggregated setter to avoid multiple updateVisualization() calls
+    _spatial_plot_widget->setDataKeys(point_data_keys, mask_data_keys, line_data_keys);
 
     // Update visualization settings
     // Note: We'll need to add public interfaces to SpatialOverlayPlotWidget for these

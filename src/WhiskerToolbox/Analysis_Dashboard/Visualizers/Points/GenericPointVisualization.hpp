@@ -607,7 +607,7 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_renderPoints(QOpen
         return;
     }
 
-    qDebug() << "GenericPointVisualization::_renderPoints: Rendering" << m_total_point_count << "points";
+    //qDebug() << "GenericPointVisualization::_renderPoints: Rendering" << m_total_point_count << "points";
 
     m_vertex_array_object.bind();
     m_vertex_buffer.bind();

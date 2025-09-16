@@ -135,7 +135,13 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     std::vector<Point2D<float>> frame_points = {Point2D<float>{150.0f, 150.0f}, Point2D<float>{180.0f, 200.0f}};
     point_data->overwritePointsAtTime(TimeFrameIndex(5), frame_points);
 
+    auto data_manager = std::make_shared<DataManager>();
+    data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
+    point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
+    point_data->rebuildAllEntityIds();
+
     std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
+
     widget.setPointData(map);
     processEvents();
 
@@ -151,10 +157,18 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     processEvents();
 
     REQUIRE(jump_spy.count() >= 1);
-    QVariantList args = jump_spy.takeFirst();
+    QVariantList args = jump_spy.takeFirst(); // EntityId, data_key
     REQUIRE(args.size() == 2);
 
-    auto frame_index = args.at(0).toLongLong();
+    std::cout << "EntityId: " << args.at(0).toLongLong() << std::endl;
+
+    //Get EntityId from data_manager
+    auto time_and_index = point_data->getTimeAndIndexByEntityId(args.at(0).toLongLong());
+    REQUIRE(time_and_index.has_value());
+    auto frame_index = time_and_index->first.getValue();
+    auto index = time_and_index->second;
+
+    //auto frame_index = args.at(0).toLongLong();
     auto key = args.at(1).toString();
 
     REQUIRE(frame_index == 5);
@@ -537,4 +551,3 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(Docking) -
     clickCtrlAtGl(200.f, 150.f);
     REQUIRE(gl->getTotalSelectedPoints() >= 2);
 }
-
