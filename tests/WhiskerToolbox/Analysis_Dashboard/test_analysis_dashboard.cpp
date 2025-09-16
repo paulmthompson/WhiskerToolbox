@@ -346,14 +346,12 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Null Data Manager", "[Anal
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
-    // Create dashboard with null data manager
+    // Create dashboard with null data manager should throw an exception
     ads::CDockManager dock_manager;
-    Analysis_Dashboard dashboard(nullptr, time_scrollbar, &dock_manager);
-    REQUIRE(&dashboard != nullptr);
-    
-    // Dashboard should still be created successfully
-    dashboard.show();
-    REQUIRE(dashboard.isVisible());
+    REQUIRE_THROWS_AS(
+        Analysis_Dashboard(nullptr, time_scrollbar, &dock_manager),
+        std::runtime_error
+    );
     
     // Clean up
     delete time_scrollbar;

@@ -273,13 +273,34 @@ public:
     void refreshGroupRenderData();
 
     /**
-     * @brief Get selected EntityIds if RowIndicatorType is EntityId; otherwise returns empty set.
+     * @brief Get selected EntityIds if available; fallback to using m_entity_ids mapping
      */
     std::unordered_set<EntityId> getSelectedEntityIds() const {
         std::unordered_set<EntityId> out;
+        
         if constexpr (std::is_same_v<RowIndicatorType, EntityId>) {
-            for (auto const * p : m_selected_points) out.insert(p->data);
+            // Direct case: RowIndicatorType is EntityId
+            for (auto const * p : m_selected_points) {
+                out.insert(p->data);
+            }
+        } else if (m_entity_ids.size() == m_total_point_count) {
+            // Fallback: use m_entity_ids mapping if available
+            for (auto const * p : m_selected_points) {
+                // Find index of this point in spatial index and map to entity ID
+                auto all_points = std::vector<QuadTreePoint<RowIndicatorType> const *>();
+                m_spatial_index->queryPointers(m_spatial_index->getBounds(), all_points);
+                
+                auto it = std::find(all_points.begin(), all_points.end(), p);
+                if (it != all_points.end()) {
+                    size_t index = std::distance(all_points.begin(), it);
+                    if (index < m_entity_ids.size()) {
+                        out.insert(m_entity_ids[index]);
+                    }
+                }
+            }
         }
+        // If neither case applies, return empty set
+        
         return out;
     }
 
@@ -866,8 +887,17 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_updateVisibleVerte
         m_vertex_data.push_back(point_ptr->x);
         m_vertex_data.push_back(point_ptr->y);
 
-        // Get group ID for this point
-        int group_id = (m_group_manager ? m_group_manager->getPointGroup(point_ptr->data) : -1);
+        // Get group ID for this point - use EntityId-based method if RowIndicatorType is EntityId
+        int group_id = -1;
+        if (m_group_manager) {
+            if constexpr (std::is_same_v<RowIndicatorType, EntityId>) {
+                group_id = m_group_manager->getEntityGroup(point_ptr->data);
+            } else {
+                // For non-EntityId types, we can't directly get group membership
+                // This would need to be handled differently based on your specific use case
+                group_id = -1;
+            }
+        }
         m_vertex_data.push_back(static_cast<float>(group_id == -1 ? 0 : group_id));
     }
 
@@ -979,8 +1009,13 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_updateGroupVertexD
             float y = m_vertex_data[i + 1];
             auto const * point_ptr = m_spatial_index->findNearest(x, y, 0.0001f);
             int group_id = -1;
-            if (point_ptr) {
-                group_id = m_group_manager->getPointGroup(point_ptr->data);
+            if (point_ptr && m_group_manager) {
+                if constexpr (std::is_same_v<RowIndicatorType, EntityId>) {
+                    group_id = m_group_manager->getEntityGroup(point_ptr->data);
+                } else {
+                    // For non-EntityId types, we can't directly get group membership
+                    group_id = -1;
+                }
             }
             float shader_group_id = 0.0f;
             if (group_id != -1) {

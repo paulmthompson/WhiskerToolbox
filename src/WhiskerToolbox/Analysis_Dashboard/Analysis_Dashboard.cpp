@@ -2,6 +2,7 @@
 #include "Analysis_Dashboard.hpp"
 #include "ui_Analysis_Dashboard.h"
 
+#include <stdexcept>
 
 #include "DataManager/DataManager.hpp"
 #include "PlotOrganizers/AbstractPlotOrganizer.hpp"
@@ -27,20 +28,35 @@
 #include <QTimer>
 #include <QSizePolicy>
 
+
 Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager,
                                        TimeScrollBar * time_scrollbar,
                                        ads::CDockManager * dock_manager,
                                        QWidget * parent)
     : QMainWindow(parent),
       ui(new Ui::Analysis_Dashboard),
-      _data_manager(std::move(data_manager)),
-      _group_manager(std::make_unique<GroupManager>(this)),
+      _data_manager(nullptr),
+      _group_manager(nullptr),
       _group_coordinator(nullptr),
       _time_scrollbar(time_scrollbar),
       _dock_manager(dock_manager),
       _toolbox_panel(nullptr),
       _properties_panel(nullptr),
       _plot_organizer(nullptr) {
+
+    // Check that data_manager and its EntityGroupManager are valid before moving
+    if (!data_manager) {
+        throw std::runtime_error("Analysis_Dashboard: DataManager is null");
+    }
+    
+    auto* entity_group_manager = data_manager->getEntityGroupManager();
+    if (!entity_group_manager) {
+        throw std::runtime_error("Analysis_Dashboard: EntityGroupManager is null");
+    }
+    
+    // Now safely move the data_manager and create the GroupManager
+    _data_manager = std::move(data_manager);
+    _group_manager = std::make_unique<GroupManager>(entity_group_manager, this);
 
     ui->setupUi(this);
 

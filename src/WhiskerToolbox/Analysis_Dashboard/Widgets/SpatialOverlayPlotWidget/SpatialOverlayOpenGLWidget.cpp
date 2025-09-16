@@ -541,16 +541,16 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
         return;
     }
 
-    // Collect all selected point IDs
-    std::unordered_set<int64_t> selected_point_ids;
+    // Collect all selected entity IDs instead of point IDs
+    std::unordered_set<EntityId> selected_entity_ids;
     for (auto const & [key, viz]: _point_data_visualizations) {
         if (viz) {
-            auto point_ids = viz->getSelectedPointIds();
-            selected_point_ids.insert(point_ids.begin(), point_ids.end());
+            auto entity_ids = viz->getSelectedEntityIds();
+            selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
         }
     }
 
-    if (selected_point_ids.empty()) {
+    if (selected_entity_ids.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to new group";
         return;
     }
@@ -559,8 +559,8 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
     QString group_name = QString("Group %1").arg(_group_manager->getGroups().size() + 1);
     int group_id = _group_manager->createGroup(group_name);
 
-    // Assign selected points to the new group
-    _group_manager->assignPointsToGroup(group_id, selected_point_ids);
+    // Assign selected entities to the new group
+    _group_manager->assignEntitiesToGroup(group_id, selected_entity_ids);
 
     // Refresh group colors in all point visualizations
     for (auto const & [key, viz]: _point_data_visualizations) {
@@ -572,8 +572,8 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
     // Clear selection after assignment
     clearSelection();
 
-    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size()
-             << "points to new group" << group_id;
+    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_entity_ids.size()
+             << "entities to new group" << group_id;
 
     // Update the context menu to reflect the new group
     updateDynamicGroupActions();
@@ -588,22 +588,22 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
         return;
     }
 
-    // Collect all selected point IDs
-    std::unordered_set<int64_t> selected_point_ids;
+    // Collect all selected entity IDs instead of point IDs
+    std::unordered_set<EntityId> selected_entity_ids;
     for (auto const & [key, viz]: _point_data_visualizations) {
         if (viz) {
-            auto point_ids = viz->getSelectedPointIds();
-            selected_point_ids.insert(point_ids.begin(), point_ids.end());
+            auto entity_ids = viz->getSelectedEntityIds();
+            selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
         }
     }
 
-    if (selected_point_ids.empty()) {
+    if (selected_entity_ids.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to group";
         return;
     }
 
-    // Assign selected points to the specified group
-    _group_manager->assignPointsToGroup(group_id, selected_point_ids);
+    // Assign selected entities to the specified group
+    _group_manager->assignEntitiesToGroup(group_id, selected_entity_ids);
 
     // Refresh group colors in all point visualizations
     for (auto const & [key, viz]: _point_data_visualizations) {
@@ -615,8 +615,8 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
     // Clear selection after assignment
     clearSelection();
 
-    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size()
-             << "points to group" << group_id;
+    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_entity_ids.size()
+             << "entities to group" << group_id;
 
     // Request update to show color changes
     requestThrottledUpdate();
@@ -628,22 +628,22 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
         return;
     }
 
-    // Collect all selected point IDs
-    std::unordered_set<int64_t> selected_point_ids;
+    // Collect all selected entity IDs instead of point IDs
+    std::unordered_set<EntityId> selected_entity_ids;
     for (auto const & [key, viz]: _point_data_visualizations) {
         if (viz) {
-            auto point_ids = viz->getSelectedPointIds();
-            selected_point_ids.insert(point_ids.begin(), point_ids.end());
+            auto entity_ids = viz->getSelectedEntityIds();
+            selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
         }
     }
 
-    if (selected_point_ids.empty()) {
+    if (selected_entity_ids.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: No selected points to ungroup";
         return;
     }
 
-    // Remove selected points from their groups
-    _group_manager->ungroupPoints(selected_point_ids);
+    // Remove selected entities from their groups
+    _group_manager->ungroupEntities(selected_entity_ids);
 
     // Refresh group colors in all point visualizations
     for (auto const & [key, viz]: _point_data_visualizations) {
@@ -655,7 +655,7 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
     // Clear selection after ungrouping
     clearSelection();
 
-    qDebug() << "SpatialOverlayOpenGLWidget: Ungrouped" << selected_point_ids.size() << "points";
+    qDebug() << "SpatialOverlayOpenGLWidget: Ungrouped" << selected_entity_ids.size() << "entities";
 
     // Update the context menu to reflect group changes
     updateDynamicGroupActions();

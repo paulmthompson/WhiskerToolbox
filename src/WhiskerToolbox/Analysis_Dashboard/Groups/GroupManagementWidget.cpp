@@ -80,21 +80,21 @@ void GroupManagementWidget::refreshTable() {
 }
 
 void GroupManagementWidget::addGroupRow(int group_id, int row) {
-    GroupManager::Group const * group = m_group_manager->getGroup(group_id);
-    if (!group) {
+    auto group = m_group_manager->getGroup(group_id);
+    if (!group.has_value()) {
         return;
     }
 
     m_ui->groupsTable->insertRow(row);
 
     // Name column
-    QTableWidgetItem * name_item = new QTableWidgetItem(group->name);
+    QTableWidgetItem * name_item = new QTableWidgetItem(group.value().name);
     name_item->setData(Qt::UserRole, group_id);// Store group ID in the item
     m_ui->groupsTable->setItem(row, 0, name_item);
 
     // Color column
     QPushButton * color_button = createColorButton(group_id);
-    updateColorButton(color_button, group->color);
+    updateColorButton(color_button, group.value().color);
     m_ui->groupsTable->setCellWidget(row, 1, color_button);
 
     // Members column
@@ -160,20 +160,20 @@ void GroupManagementWidget::onGroupModified(int group_id) {
     if (!m_updating_table) {
         int row = findRowForGroupId(group_id);
         if (row >= 0) {
-            GroupManager::Group const * group = m_group_manager->getGroup(group_id);
-            if (group) {
+            auto group = m_group_manager->getGroup(group_id);
+            if (group.has_value()) {
                 // Update name
                 QTableWidgetItem * name_item = m_ui->groupsTable->item(row, 0);
                 if (name_item) {
                     m_updating_table = true;
-                    name_item->setText(group->name);
+                    name_item->setText(group.value().name);
                     m_updating_table = false;
                 }
 
                 // Update color button
                 QPushButton * color_button = qobject_cast<QPushButton *>(m_ui->groupsTable->cellWidget(row, 1));
                 if (color_button) {
-                    updateColorButton(color_button, group->color);
+                    updateColorButton(color_button, group.value().color);
                 }
 
                 // Update member count
@@ -214,9 +214,9 @@ void GroupManagementWidget::onItemChanged(QTableWidgetItem * item) {
     if (new_name.isEmpty()) {
         // Don't allow empty names, revert to original
         m_updating_table = true;
-        GroupManager::Group const * group = m_group_manager->getGroup(group_id);
-        if (group) {
-            item->setText(group->name);
+        auto group = m_group_manager->getGroup(group_id);
+        if (group.has_value()) {
+            item->setText(group.value().name);
         }
         m_updating_table = false;
         return;
@@ -233,13 +233,13 @@ void GroupManagementWidget::onColorButtonClicked() {
     }
 
     int group_id = button->property("group_id").toInt();
-    GroupManager::Group const * group = m_group_manager->getGroup(group_id);
-    if (!group) {
+    auto group = m_group_manager->getGroup(group_id);
+    if (!group.has_value()) {
         return;
     }
 
-    QColor new_color = QColorDialog::getColor(group->color, this, "Select Group Color");
-    if (new_color.isValid() && new_color != group->color) {
+    QColor new_color = QColorDialog::getColor(group.value().color, this, "Select Group Color");
+    if (new_color.isValid() && new_color != group.value().color) {
         m_group_manager->setGroupColor(group_id, new_color);
     }
 }

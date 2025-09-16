@@ -7,9 +7,12 @@
 #include <QString>
 
 #include <cstdint>
+#include <optional>
 #include <unordered_set>
 
 #include "DataManager/Entity/EntityTypes.hpp"
+
+class EntityGroupManager;
 
 /**
  * @brief Manages groups for data visualization with colors and point assignments
@@ -25,16 +28,15 @@ public:
         int id;
         QString name;
         QColor color;
-        std::unordered_set<int64_t> point_ids;// Time stamp IDs of points in this group
-        std::unordered_set<EntityId> entity_ids; // EntityId membership
 
+        Group() : id(0), name(""), color(QColor()) {}
         Group(int group_id, QString const & group_name, QColor const & group_color)
             : id(group_id),
               name(group_name),
               color(group_color) {}
     };
 
-    explicit GroupManager(QObject * parent = nullptr);
+    explicit GroupManager(EntityGroupManager* entity_group_manager, QObject * parent = nullptr);
     ~GroupManager() = default;
 
     /**
@@ -63,14 +65,14 @@ public:
      * @brief Get all groups
      * @return Map of group ID to Group object
      */
-    QMap<int, Group> const & getGroups() const { return m_groups; }
+    QMap<int, Group> getGroups() const;
 
     /**
      * @brief Get a specific group by ID
      * @param group_id The group ID
-     * @return Pointer to the group, or nullptr if not found
+     * @return Optional Group object if found
      */
-    Group const * getGroup(int group_id) const;
+    std::optional<Group> getGroup(int group_id) const;
 
     /**
      * @brief Update group name
@@ -88,44 +90,7 @@ public:
      */
     bool setGroupColor(int group_id, QColor const & color);
 
-    /**
-     * @brief Assign points to a group
-     * @param group_id The target group ID
-     * @param point_ids Set of time stamp IDs to assign
-     * @return True if successful, false if group doesn't exist
-     */
-    bool assignPointsToGroup(int group_id, std::unordered_set<int64_t> const & point_ids);
-
-    /**
-     * @brief Remove points from a group
-     * @param group_id The group ID
-     * @param point_ids Set of time stamp IDs to remove
-     * @return True if successful, false if group doesn't exist
-     */
-    bool removePointsFromGroup(int group_id, std::unordered_set<int64_t> const & point_ids);
-
-    /**
-     * @brief Remove points from all groups (ungroup them)
-     * @param point_ids Set of time stamp IDs to ungroup
-     */
-    void ungroupPoints(std::unordered_set<int64_t> const & point_ids);
-
-    /**
-     * @brief Get which group a point belongs to
-     * @param point_id The time stamp ID of the point
-     * @return Group ID if found, -1 if ungrouped
-     */
-    int getPointGroup(int64_t point_id) const;
-
-    /**
-     * @brief Get the color for a point based on its group assignment
-     * @param point_id The time stamp ID of the point
-     * @param default_color The color to use if the point is ungrouped
-     * @return The color to use for rendering this point
-     */
-    QColor getPointColor(int64_t point_id, QColor const & default_color) const;
-
-    // ===== New EntityId-based API (non-breaking, additive) =====
+    // ===== EntityId-based API =====
     /**
      * @brief Assign entities (EntityId) to a group
      */
@@ -152,16 +117,9 @@ public:
     QColor getEntityColor(EntityId id, QColor const & default_color) const;
 
     /**
-     * @brief Get all point IDs assigned to a specific group
+     * @brief Get the number of entities assigned to a specific group
      * @param group_id The group ID
-     * @return Set of time stamp IDs in the group, empty if group doesn't exist
-     */
-    std::unordered_set<int64_t> getGroupPoints(int group_id) const;
-
-    /**
-     * @brief Get the number of points assigned to a specific group
-     * @param group_id The group ID
-     * @return Number of points in the group, 0 if group doesn't exist
+     * @return Number of entities in the group, 0 if group doesn't exist
      */
     int getGroupMemberCount(int group_id) const;
 
@@ -196,9 +154,8 @@ signals:
     void pointAssignmentsChanged(std::unordered_set<int> const & affected_groups);
 
 private:
-    QMap<int, Group> m_groups;
-    QMap<int64_t, int> m_point_to_group;// Fast lookup for point -> group mapping
-    QMap<qulonglong, int> m_entity_to_group; // Fast lookup for entity -> group mapping
+    EntityGroupManager* m_entity_group_manager;
+    QMap<int, QColor> m_group_colors; // Maps EntityGroupManager GroupId to QColor
     int m_next_group_id;
 
     static QVector<QColor> const DEFAULT_COLORS;

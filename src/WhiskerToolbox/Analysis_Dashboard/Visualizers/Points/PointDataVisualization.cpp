@@ -29,8 +29,17 @@ void PointDataVisualization::populateData() {
     m_spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
     m_vertex_data.reserve(m_point_data->GetAllPointsAsRange().size() * 3);// Reserve space for x, y, group_id
 
+    // Collect EntityIds for each point to enable proper grouping
+    std::vector<EntityId> entity_ids;
+    entity_ids.reserve(m_point_data->GetAllPointsAsRange().size());
+
     for (auto const & time_points_pair: m_point_data->GetAllPointsAsRange()) {
-        for (auto const & point: time_points_pair.points) {
+        // Get EntityIds for this time frame
+        auto const & frame_entity_ids = m_point_data->getEntityIdsAtTime(time_points_pair.time);
+        
+        for (size_t i = 0; i < time_points_pair.points.size(); ++i) {
+            auto const & point = time_points_pair.points[i];
+            
             // Store original coordinates in QuadTree (preserve data structure)
             m_spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
 
@@ -38,6 +47,14 @@ void PointDataVisualization::populateData() {
             m_vertex_data.push_back(point.x);
             m_vertex_data.push_back(point.y);
             m_vertex_data.push_back(0.0f);// group_id = 0 (ungrouped) initially
+            
+            // Store the corresponding EntityId
+            if (i < frame_entity_ids.size()) {
+                entity_ids.push_back(frame_entity_ids[i]);
+            } else {
+                // Fallback if EntityIds are not available
+                entity_ids.push_back(EntityId(0));
+            }
         }
     }
 
@@ -45,6 +62,10 @@ void PointDataVisualization::populateData() {
     m_total_point_count = m_vertex_data.size() / 3;// 3 components per point now
     m_hidden_point_count = 0;
     m_visible_vertex_count = m_vertex_data.size();
+    
+    // Set up EntityIds for grouping support
+    qDebug() << "PointDataVisualization: Setting up" << entity_ids.size() << "EntityIds for grouping";
+    setPerPointEntityIds(std::move(entity_ids));
 
     // Update the OpenGL vertex buffer with the populated data
     if (m_vertex_buffer.isCreated()) {
