@@ -11,7 +11,7 @@
 #include "Groups/GroupCoordinator.hpp"
 #include "PlotContainer.hpp"
 #include "PlotFactory.hpp"
-#include "Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "Plots/AbstractPlotWidget.hpp"
 #include "Properties/AbstractPlotPropertiesWidget.hpp"
 #include "Properties/PropertiesPanel.hpp"

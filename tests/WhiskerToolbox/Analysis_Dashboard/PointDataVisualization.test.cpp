@@ -2,7 +2,7 @@
 
 #include "Visualizers/Points/PointDataVisualization.hpp"
 #include "Visualizers/Points/VectorPointVisualization.hpp"
-#include "Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "DataManager/Points/utils/Point_Data_utils.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 

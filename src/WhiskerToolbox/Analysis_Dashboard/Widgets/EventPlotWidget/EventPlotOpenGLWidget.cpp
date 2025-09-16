@@ -1,7 +1,7 @@
 #include "EventPlotOpenGLWidget.hpp"
 #include "EventPointVisualization.hpp"
 #include "ShaderManager/ShaderManager.hpp"
-#include "Analysis_Dashboard/Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 
 #include <QDebug>
 #include <QMouseEvent>

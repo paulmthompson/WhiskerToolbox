@@ -47,13 +47,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     PlotOrganizers/PlotDockWidgetContent.cpp
 
     # Groups
-    Groups/GroupManager.hpp
-    Groups/GroupManager.cpp
     Groups/GroupCoordinator.cpp
     Groups/GroupCoordinator.hpp
-    Groups/GroupManagementWidget.hpp
-    Groups/GroupManagementWidget.cpp
-    Groups/GroupManagementWidget.ui
 
     Selection/LineSelectionHandler.hpp
     Selection/LineSelectionHandler.cpp
@@ -154,6 +149,7 @@ target_link_libraries(Analysis_Dashboard PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(Analysis_Dashboard PRIVATE ShaderManager)
 target_link_libraries(Analysis_Dashboard PRIVATE Feature_Table_Widget)
 target_link_libraries(Analysis_Dashboard PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(Analysis_Dashboard PRIVATE GroupManagementWidget)
 
 # Include directories
 target_include_directories(Analysis_Dashboard PUBLIC

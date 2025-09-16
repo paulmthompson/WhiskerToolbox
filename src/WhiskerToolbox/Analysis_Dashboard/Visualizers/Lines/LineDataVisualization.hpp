@@ -8,7 +8,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Entity/EntityTypes.hpp"
 #include "LineIdentifier.hpp"
-#include "Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 
 #include <QGenericMatrix>
 #include <QMatrix4x4>

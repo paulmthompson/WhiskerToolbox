@@ -2,7 +2,7 @@
 #include "PlotInteractionController.hpp"
 #include "TooltipManager.hpp"
 #include "widget_utilities.hpp"
-#include "Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "GenericViewAdapter.hpp"
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"

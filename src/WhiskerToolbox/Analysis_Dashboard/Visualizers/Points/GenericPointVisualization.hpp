@@ -5,7 +5,7 @@
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
 
-#include "Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "ShaderManager/ShaderManager.hpp"
 #include "DataManager/Entity/EntityTypes.hpp"

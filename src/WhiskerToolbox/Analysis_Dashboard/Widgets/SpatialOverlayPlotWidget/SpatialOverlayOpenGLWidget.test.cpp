@@ -20,7 +20,7 @@
 #include <QMenu>
 #include <QTimer>
 
-#include "Analysis_Dashboard/Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp"
 #include "Analysis_Dashboard/PlotOrganizers/GraphicsScenePlotOrganizer.hpp"

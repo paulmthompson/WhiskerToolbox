@@ -1,6 +1,6 @@
 #include "ToolboxPanel.hpp"
-#include "../Groups/GroupManagementWidget.hpp"
-#include "../Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManagementWidget.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "DataManager/DataManager.hpp"
 #include "ui_ToolboxPanel.h"
 

@@ -1,6 +1,6 @@
 #include "EventPointVisualization.hpp"
 
-#include "Analysis_Dashboard/Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 
 #include <QDebug>
 #include <limits>

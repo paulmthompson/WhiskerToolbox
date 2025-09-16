@@ -1,5 +1,5 @@
 #include "GroupCoordinator.hpp"
-#include "Groups/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "Plots/AbstractPlotWidget.hpp"
 
 #include <QDebug>
