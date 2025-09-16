@@ -144,6 +144,7 @@ void GroupCoordinator::connectToGroupManager()
     connect(group_manager_, &GroupManager::groupModified,
             this, &GroupCoordinator::onGroupPropertiesChanged);
 
+            /*
     connect(group_manager_, &GroupManager::pointAssignmentsChanged,
             this, [this](const std::unordered_set<int>& affected_groups) {
                 // When point assignments change, notify all plots about the affected groups
@@ -152,7 +153,7 @@ void GroupCoordinator::connectToGroupManager()
                 }
                 qDebug() << "GroupCoordinator: Point assignments changed for" << affected_groups.size() << "groups";
             });
-    
+    */
     qDebug() << "GroupCoordinator::connectToGroupManager: Connected to GroupManager signals";
 }
 

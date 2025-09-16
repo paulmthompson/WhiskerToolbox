@@ -1,6 +1,7 @@
 
 add_subdirectory(TimeFrame)
 add_subdirectory(Entity)
+add_subdirectory(GroupManagementWidget)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
 add_subdirectory(Analysis_Dashboard)

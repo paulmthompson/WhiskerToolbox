@@ -25,8 +25,8 @@ GroupManagementWidget::GroupManagementWidget(GroupManager * group_manager, QWidg
             this, &GroupManagementWidget::onGroupRemoved);
     connect(m_group_manager, &GroupManager::groupModified,
             this, &GroupManagementWidget::onGroupModified);
-    connect(m_group_manager, &GroupManager::pointAssignmentsChanged,
-            this, &GroupManagementWidget::onPointAssignmentsChanged);
+    //connect(m_group_manager, &GroupManager::pointAssignmentsChanged,
+    //        this, &GroupManagementWidget::onPointAssignmentsChanged);
 
     // Connect table signals
     connect(m_ui->groupsTable, &QTableWidget::itemChanged,

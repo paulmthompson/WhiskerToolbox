@@ -151,7 +151,7 @@ signals:
      * @brief Emitted when point assignments change
      * @param affected_groups Set of group IDs that were affected
      */
-    void pointAssignmentsChanged(std::unordered_set<int> const & affected_groups);
+    //void pointAssignmentsChanged(std::unordered_set<int> const & affected_groups);
 
 private:
     EntityGroupManager* m_entity_group_manager;

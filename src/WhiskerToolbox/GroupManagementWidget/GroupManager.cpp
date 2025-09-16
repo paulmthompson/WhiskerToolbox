@@ -148,8 +148,8 @@ bool GroupManager::assignEntitiesToGroup(int group_id, std::unordered_set<Entity
     qDebug() << "GroupManager: Assigned" << added_count << "entities to group" << group_id;
     
     // For now, emit the old signal for compatibility
-    std::unordered_set<int> affected_groups = {group_id};
-    emit pointAssignmentsChanged(affected_groups);
+    //std::unordered_set<int> affected_groups = {group_id};
+    //emit pointAssignmentsChanged(affected_groups);
     
     return added_count > 0;
 }
@@ -170,8 +170,8 @@ bool GroupManager::removeEntitiesFromGroup(int group_id, std::unordered_set<Enti
 
     if (removed_count > 0) {
         qDebug() << "GroupManager: Removed" << removed_count << "entities from group" << group_id;
-        std::unordered_set<int> affected_groups = {group_id};
-        emit pointAssignmentsChanged(affected_groups);
+        //std::unordered_set<int> affected_groups = {group_id};
+        //emit pointAssignmentsChanged(affected_groups);
     }
 
     return removed_count > 0;
@@ -195,7 +195,7 @@ void GroupManager::ungroupEntities(std::unordered_set<EntityId> const & entity_i
 
     if (!affected_groups.empty()) {
         qDebug() << "GroupManager: Ungrouped" << entity_ids.size() << "entities from" << affected_groups.size() << "groups";
-        emit pointAssignmentsChanged(affected_groups);
+        //emit pointAssignmentsChanged(affected_groups);
     }
 }
 
