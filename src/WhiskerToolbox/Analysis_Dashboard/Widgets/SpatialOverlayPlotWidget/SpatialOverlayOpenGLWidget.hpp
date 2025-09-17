@@ -18,15 +18,7 @@ struct MaskDataVisualization;
 struct LineDataVisualization;
 class GroupManager;
 
-/**
- * Refactored SpatialOverlayOpenGLWidget using composition-based design
- * Inherits common functionality from BasePlotOpenGLWidget
- * 
- * This replaces the original "god class" by breaking down responsibilities:
- * - Data visualization handled by individual PointDataVisualization, MaskDataVisualization, LineDataVisualization
- * - Tooltips handled by TooltipManager (from base)
- * - Interaction handled by PlotInteractionController (from base)
- */
+
 class SpatialOverlayOpenGLWidget : public BasePlotOpenGLWidget {
     Q_OBJECT
 

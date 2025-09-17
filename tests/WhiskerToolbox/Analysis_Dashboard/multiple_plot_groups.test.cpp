@@ -21,6 +21,7 @@
 #include "Analysis_Dashboard/PlotOrganizers/PlotDockWidgetContent.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
+#include "Analysis_Dashboard/Groups/GroupCoordinator.hpp"
 #include "DockManager.h"
 
 #include "DataManager/DataManager.hpp"
@@ -127,6 +128,12 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Multiple SpatialOver
     plot1->setGroupManager(gm);
     plot2->setGroupManager(gm);
 
+    // NEW: Use GroupCoordinator mediator and register both plots so group changes propagate consistently
+    GroupCoordinator coordinator(gm);
+    REQUIRE(ids.size() >= 2);
+    coordinator.registerPlot(ids[0], plot1);
+    coordinator.registerPlot(ids[1], plot2);
+
     // Provide the same dataset to both GL widgets
     std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
     gl1->setPointData(map);
@@ -167,7 +174,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Multiple SpatialOver
 
     // Expect the other plot to schedule a render update due to GroupManager::groupModified
     // SpatialOverlayOpenGLWidget currently does not explicitly connect to groupModified; this test documents expected behavior.
-    // Allow some time for signal propagation
+    // Allow some time for mediator propagation
     QTest::qWait(50);
 
     // The expected strong behavior: at least one render update requested by plot2 in response to group assignment
