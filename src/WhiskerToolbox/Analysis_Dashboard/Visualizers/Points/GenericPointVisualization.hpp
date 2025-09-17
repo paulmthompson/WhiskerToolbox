@@ -1,14 +1,13 @@
 #ifndef GENERICPOINTVISUALIZATION_HPP
 #define GENERICPOINTVISUALIZATION_HPP
 
-#include "Selection/SelectionHandlers.hpp"
+#include "DataManager/Entity/EntityTypes.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
-
-#include "GroupManagementWidget/GroupManager.hpp"
-#include "SpatialIndex/QuadTree.hpp"
+#include "Selection/SelectionHandlers.hpp"
 #include "ShaderManager/ShaderManager.hpp"
-#include "DataManager/Entity/EntityTypes.hpp"
+#include "SpatialIndex/QuadTree.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -44,8 +43,8 @@ template<typename CoordType, typename RowIndicatorType>
 struct GenericPointVisualization : protected QOpenGLFunctions_4_1_Core {
 public:
     std::unique_ptr<QuadTree<RowIndicatorType>> m_spatial_index;
-    std::vector<float> m_vertex_data;// Format: x, y, group_id per vertex (3 floats per point)
-    std::vector<EntityId> m_entity_ids; // 1:1 with points when available
+    std::vector<float> m_vertex_data;  // Format: x, y, group_id per vertex (3 floats per point)
+    std::vector<EntityId> m_entity_ids;// 1:1 with points when available
     QOpenGLBuffer m_vertex_buffer;
     QOpenGLVertexArrayObject m_vertex_array_object;
     QString m_key;
@@ -91,7 +90,7 @@ public:
      * @param group_manager Optional group manager for color coding
      */
     GenericPointVisualization(QString const & data_key, GroupManager * group_manager = nullptr);
-    
+
     /**
      * @brief Constructor with deferred OpenGL initialization option
      * @param data_key The key identifier for this visualization
@@ -99,7 +98,7 @@ public:
      * @param defer_opengl_init If true, skip OpenGL initialization in constructor
      */
     GenericPointVisualization(QString const & data_key, GroupManager * group_manager, bool defer_opengl_init);
-    
+
     /**
      * @brief Virtual destructor
      */
@@ -277,10 +276,10 @@ public:
      */
     std::unordered_set<EntityId> getSelectedEntityIds() const {
         std::unordered_set<EntityId> out;
-        
+
         if constexpr (std::is_same_v<RowIndicatorType, EntityId>) {
             // Direct case: RowIndicatorType is EntityId
-            for (auto const * p : m_selected_points) {
+            for (auto const * p: m_selected_points) {
                 out.insert(p->data);
             }
         } else if (m_entity_ids.size() == m_total_point_count && m_spatial_index) {
@@ -295,7 +294,7 @@ public:
                 pointer_to_index.emplace(all_points[i], i);
             }
 
-            for (auto const * p : m_selected_points) {
+            for (auto const * p: m_selected_points) {
                 auto it_idx = pointer_to_index.find(p);
                 if (it_idx != pointer_to_index.end()) {
                     size_t const index = it_idx->second;
@@ -306,7 +305,7 @@ public:
             }
         }
         // If neither case applies, return empty set
-        
+
         return out;
     }
 
@@ -353,7 +352,7 @@ private:
 // Template implementation
 template<typename CoordType, typename RowIndicatorType>
 GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualization(
-    QString const & data_key, GroupManager * group_manager)
+        QString const & data_key, GroupManager * group_manager)
     : m_key(data_key),
       m_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       m_selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
@@ -361,17 +360,17 @@ GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualizatio
       m_color(1.0f, 0.0f, 0.0f, 1.0f),
       m_group_manager(group_manager),
       m_group_data_needs_update(false) {
-    
+
     // Initialize bounds - will be set by derived class in populateData()
     BoundingBox initial_bounds(0.0f, 0.0f, 1.0f, 1.0f);
     m_spatial_index = std::make_unique<QuadTree<RowIndicatorType>>(initial_bounds);
-    
+
     initializeOpenGLResources();
 }
 
 template<typename CoordType, typename RowIndicatorType>
 GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualization(
-    QString const & data_key, GroupManager * group_manager, bool defer_opengl_init)
+        QString const & data_key, GroupManager * group_manager, bool defer_opengl_init)
     : m_key(data_key),
       m_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       m_selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
@@ -379,11 +378,11 @@ GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualizatio
       m_color(1.0f, 0.0f, 0.0f, 1.0f),
       m_group_manager(group_manager),
       m_group_data_needs_update(false) {
-    
+
     // Initialize bounds - will be set by derived class in populateData()
     BoundingBox initial_bounds(0.0f, 0.0f, 1.0f, 1.0f);
     m_spatial_index = std::make_unique<QuadTree<RowIndicatorType>>(initial_bounds);
-    
+
     // Only initialize OpenGL resources if not deferred
     if (!defer_opengl_init) {
         initializeOpenGLResources();
@@ -398,7 +397,7 @@ GenericPointVisualization<CoordType, RowIndicatorType>::~GenericPointVisualizati
 template<typename CoordType, typename RowIndicatorType>
 void GenericPointVisualization<CoordType, RowIndicatorType>::initializeOpenGLResources() {
     qDebug() << "GenericPointVisualization::initializeOpenGLResources: Starting initialization for" << m_key;
-    
+
     if (!initializeOpenGLFunctions()) {
         qDebug() << "GenericPointVisualization::initializeOpenGLResources: Failed to initialize OpenGL functions";
         return;
@@ -424,7 +423,7 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::initializeOpenGLRes
     m_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     m_vertex_buffer.allocate(m_vertex_data.data(), static_cast<int>(m_vertex_data.size() * sizeof(float)));
 
-    qDebug() << "GenericPointVisualization::initializeOpenGLResources: Vertex buffer created with" 
+    qDebug() << "GenericPointVisualization::initializeOpenGLResources: Vertex buffer created with"
              << m_vertex_data.size() << "components";
 
     // Position attribute (x, y)
@@ -602,7 +601,7 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::render(QMatrix4x4 c
 template<typename CoordType, typename RowIndicatorType>
 void GenericPointVisualization<CoordType, RowIndicatorType>::_renderPoints(QOpenGLShaderProgram * shader_program, float point_size) {
     if (!m_visible || m_vertex_data.empty()) {
-        qDebug() << "GenericPointVisualization::_renderPoints: Skipping render - visible:" << m_visible 
+        qDebug() << "GenericPointVisualization::_renderPoints: Skipping render - visible:" << m_visible
                  << "vertex_data_empty:" << m_vertex_data.empty() << "total_points:" << m_total_point_count;
         return;
     }
@@ -1042,4 +1041,4 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_updateGroupVertexD
     m_group_data_needs_update = false;
 }
 
-#endif// GENERICPOINTVISUALIZATION_HPP 
+#endif// GENERICPOINTVISUALIZATION_HPP

@@ -9,9 +9,9 @@
 #include "Selection/PolygonSelectionHandler.hpp"
 
 #include <QDebug>
+#include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLShaderProgram>
-#include <QOpenGLContext>
 #include <QSurfaceFormat>
 
 #include <algorithm>
@@ -910,7 +910,7 @@ void LineDataVisualization::_updateGroupVertexData() {
         std::unordered_map<int, int> group_id_to_slot;
         int next_slot = 1;
 
-        for (auto const eid : m_entity_id_per_vertex) {
+        for (auto const eid: m_entity_id_per_vertex) {
             int gid = m_group_manager->getEntityGroup(eid);
             if (gid == -1) {
                 palette_indices.push_back(0.0f);
@@ -1188,4 +1188,3 @@ void LineDataVisualization::setTimeRangeEnabled(bool enabled) {
 std::tuple<int, int, bool> LineDataVisualization::getTimeRange() const {
     return {m_time_range_start, m_time_range_end, m_time_range_enabled};
 }
-

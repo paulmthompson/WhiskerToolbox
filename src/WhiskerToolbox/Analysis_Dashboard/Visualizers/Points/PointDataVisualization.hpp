@@ -2,8 +2,6 @@
 #define POINTDATAVISUALIZATION_HPP
 
 #include "GenericPointVisualization.hpp"
-#include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/Points/utils/Point_Data_utils.hpp"
 
 #include <memory>
 

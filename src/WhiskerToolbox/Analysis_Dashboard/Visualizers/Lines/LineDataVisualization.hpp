@@ -1,14 +1,14 @@
 #ifndef LINEDATAVISUALIZATION_HPP
 #define LINEDATAVISUALIZATION_HPP
 
-#include "Visualizers/RenderingContext.hpp"
+#include "CoreGeometry/boundingbox.hpp"
+#include "DataManager/Entity/EntityTypes.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
+#include "LineIdentifier.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
-#include "CoreGeometry/boundingbox.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Entity/EntityTypes.hpp"
-#include "LineIdentifier.hpp"
-#include "GroupManagementWidget/GroupManager.hpp"
+#include "Visualizers/RenderingContext.hpp"
 
 #include <QGenericMatrix>
 #include <QMatrix4x4>
@@ -55,7 +55,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     // OpenGL resources
     QOpenGLBuffer m_vertex_buffer;
     QOpenGLBuffer m_line_id_buffer;
-    QOpenGLBuffer m_group_id_buffer;            // Per-vertex palette index (float)
+    QOpenGLBuffer m_group_id_buffer;// Per-vertex palette index (float)
     QOpenGLVertexArrayObject m_vertex_array_object;
 
     // Framebuffers
@@ -153,7 +153,10 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     void render(QMatrix4x4 const & mvp_matrix, float line_width);
 
     // Group management API
-    void setGroupManager(GroupManager * group_manager) { m_group_manager = group_manager; m_group_data_needs_update = true; }
+    void setGroupManager(GroupManager * group_manager) {
+        m_group_manager = group_manager;
+        m_group_data_needs_update = true;
+    }
     void refreshGroupRenderData() { m_group_data_needs_update = true; }
 
     /**
