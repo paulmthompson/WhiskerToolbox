@@ -996,8 +996,9 @@ void DataViewer_Widget::_calculateOptimalEventSpacing(std::vector<std::string> c
     float const max_spacing = 1.0f;
     float const final_spacing = std::clamp(normalized_spacing, min_spacing, max_spacing);
 
-    // Calculate optimal event height (should be smaller than spacing to avoid overlap)
-    float const optimal_event_height = final_spacing * 0.6f;// 60% of spacing for visible separation
+    // Calculate optimal event height (keep events clearly within their lane)
+    // Use a conservative fraction of spacing so multiple stacked series remain visually distinct
+    float const optimal_event_height = std::min(final_spacing * 0.3f, 0.2f);
     float const min_height = 0.01f;
     float const max_height = 0.5f;
     float const final_height = std::clamp(optimal_event_height, min_height, max_height);
@@ -1265,9 +1266,9 @@ void DataViewer_Widget::_autoFillCanvas() {
 
     // Calculate and apply optimal event heights for digital event series
     if (visible_event_count > 0) {
-        // Calculate optimal event height to fill most of the allocated space
-        // Use 80% of the spacing to leave some visual separation between events
-        float const optimal_event_height = final_spacing * 0.8f;
+        // Calculate event height conservatively to avoid near full-lane rendering
+        // Use 30% of the spacing and cap at 0.2 to keep consistent scale across zooms
+        float const optimal_event_height = std::min(final_spacing * 0.3f, 0.2f);
 
         std::cout << "Calculated optimal event height: " << optimal_event_height << " normalized units" << std::endl;
 

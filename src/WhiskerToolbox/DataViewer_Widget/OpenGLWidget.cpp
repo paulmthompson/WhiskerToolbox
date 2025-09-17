@@ -32,7 +32,6 @@
 #include <ranges>
 
 
-
 // This was a helpful resource for making a dashed line:
 //https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
 
@@ -298,7 +297,7 @@ void OpenGLWidget::initializeGL() {
             m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/dashed_line.frag" : "src/WhiskerToolbox/shaders/dashed_line.frag",
             "",
             m_shaderSourceType);
-    
+
     // Get uniform locations for axes shader
     auto axesProgram = ShaderManager::instance().getProgram("axes");
     if (axesProgram) {
@@ -311,7 +310,7 @@ void OpenGLWidget::initializeGL() {
             m_alphaLoc = nativeProgram->uniformLocation("u_alpha");
         }
     }
-    
+
     // Get uniform locations for dashed line shader
     auto dashedProgram = ShaderManager::instance().getProgram("dashed_line");
     if (dashedProgram) {
@@ -323,7 +322,7 @@ void OpenGLWidget::initializeGL() {
             m_dashedGapSizeLoc = nativeProgram->uniformLocation("u_gapSize");
         }
     }
-    
+
     // Connect reload signal to redraw
     connect(&ShaderManager::instance(), &ShaderManager::shaderReloaded, this, [this](std::string const &) { update(); });
     m_vao.create();
@@ -392,7 +391,18 @@ void OpenGLWidget::drawDigitalEventSeries() {
     // Calculate center coordinate for stacked mode (similar to analog series)
     //float const center_coord = -0.5f * 0.1f * (static_cast<float>(visible_event_count - 1));// Use default spacing for center calculation
 
-    int visible_series_index = 0;
+    int visible_series_index = 0;// counts all visible event series (for iteration)
+    int stacked_series_index = 0;// index among stacked-mode event series only
+    int const total_analog_visible = static_cast<int>(_plotting_manager->getVisibleAnalogSeriesKeys().size());
+    // Count stacked-mode events (exclude FullCanvas from stackable count)
+    int stacked_event_count = 0;
+    for (auto const & [key, event_data]: _digital_event_series) {
+        if (event_data.display_options->is_visible &&
+            event_data.display_options->display_mode == EventDisplayMode::Stacked) {
+            stacked_event_count++;
+        }
+    }
+    int const total_stackable_series = total_analog_visible + stacked_event_count;
 
     for (auto const & [key, event_data]: _digital_event_series) {
         auto const & series = event_data.series;
@@ -410,8 +420,7 @@ void OpenGLWidget::drawDigitalEventSeries() {
         auto visible_events = series->getEventsInRange(TimeFrameIndex(start_time),
                                                        TimeFrameIndex(end_time),
                                                        _master_time_frame.get(),
-                                                       time_frame.get()
-                                                       );
+                                                       time_frame.get());
 
         // === MVP MATRIX SETUP ===
 
@@ -421,14 +430,26 @@ void OpenGLWidget::drawDigitalEventSeries() {
             continue;
         }
 
-        // Calculate coordinate allocation from PlottingManager
-        // For now, we'll use the visible series index to allocate coordinates
-        float allocated_y_center, allocated_height;
-        _plotting_manager->calculateGlobalStackedAllocation(-1, visible_series_index, visible_event_count, allocated_y_center, allocated_height);
+        // Determine plotting mode and allocate accordingly
+        display_options->plotting_mode = (display_options->display_mode == EventDisplayMode::Stacked)
+                                                 ? EventPlottingMode::Stacked
+                                                 : EventPlottingMode::FullCanvas;
+
+        float allocated_y_center = 0.0f;
+        float allocated_height = 0.0f;
+        if (display_options->plotting_mode == EventPlottingMode::Stacked) {
+            // Use global stacked allocation across analog + stacked events
+            _plotting_manager->calculateGlobalStackedAllocation(-1, stacked_series_index, total_stackable_series,
+                                                                allocated_y_center, allocated_height);
+            stacked_series_index++;
+        } else {
+            // Full canvas allocation
+            allocated_y_center = (_plotting_manager->viewport_y_min + _plotting_manager->viewport_y_max) * 0.5f;
+            allocated_height = _plotting_manager->viewport_y_max - _plotting_manager->viewport_y_min;
+        }
 
         display_options->allocated_y_center = allocated_y_center;
         display_options->allocated_height = allocated_height;
-        display_options->plotting_mode = (display_options->display_mode == EventDisplayMode::Stacked) ? EventPlottingMode::Stacked : EventPlottingMode::FullCanvas;
 
         // Apply PlottingManager pan offset
         _plotting_manager->setPanOffset(_verticalPanOffset);
@@ -460,15 +481,16 @@ void OpenGLWidget::drawDigitalEventSeries() {
                 xCanvasPos = event_time;// This should work if both time frames use the same time units
             }
 
+            // Provide local [-1, 1] vertical endpoints; Model handles placement/scale
             std::array<GLfloat, 8> vertices = {
-                    xCanvasPos, min_y, 0.0f, 1.0f,
-                    xCanvasPos, max_y, 0.0f, 1.0f};
+                    xCanvasPos, -1.0f, 0.0f, 1.0f,
+                    xCanvasPos,  1.0f, 0.0f, 1.0f};
 
             glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
 
             GLint const first = 0;  // Starting index of enabled array
-            GLsizei const count = 2;// number of indexes to render
+            GLsizei const count = 2;// number of vertices to render
             glDrawArrays(GL_LINES, first, count);
         }
 
@@ -514,8 +536,7 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
                 TimeFrameIndex(static_cast<int64_t>(start_time)),
                 TimeFrameIndex(static_cast<int64_t>(end_time)),
                 _master_time_frame.get(),
-                time_frame.get()
-                );
+                time_frame.get());
 
         hexToRGB(display_options->hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
@@ -701,9 +722,37 @@ void OpenGLWidget::drawAnalogSeries() {
             continue;
         }
 
-        float allocated_y_center, allocated_height;
-        if (!_plotting_manager->getAnalogSeriesAllocationForKey(key, allocated_y_center, allocated_height)) {
-            _plotting_manager->calculateAnalogSeriesAllocation(i, allocated_y_center, allocated_height);
+        // Compute global stacked allocation so analog shares space with stacked events
+        float allocated_y_center = 0.0f;
+        float allocated_height = 0.0f;
+
+        // Determine analog index among visible analogs using current analog-only allocation
+        int const analog_visible_count = static_cast<int>(_plotting_manager->getVisibleAnalogSeriesKeys().size());
+        int analog_index = i;
+        float tmp_center = 0.0f;
+        float tmp_height = 0.0f;
+        if (_plotting_manager->getAnalogSeriesAllocationForKey(key, tmp_center, tmp_height) && tmp_height > 0.0f) {
+            float const idxf = (tmp_center - _plotting_manager->viewport_y_min) / tmp_height - 0.5f;
+            analog_index = std::clamp(static_cast<int>(std::round(idxf)), 0, std::max(0, analog_visible_count - 1));
+        }
+
+        // Count stacked-mode events (exclude FullCanvas)
+        int stacked_event_count = 0;
+        for (auto const & [ekey, edata]: _digital_event_series) {
+            if (edata.display_options->is_visible && edata.display_options->display_mode == EventDisplayMode::Stacked) {
+                stacked_event_count++;
+            }
+        }
+        int const total_stackable_series = analog_visible_count + stacked_event_count;
+
+        if (total_stackable_series > 0) {
+            _plotting_manager->calculateGlobalStackedAllocation(analog_index, -1, total_stackable_series,
+                                                                allocated_y_center, allocated_height);
+        } else {
+            // Fallback to analog-only allocation
+            if (!_plotting_manager->getAnalogSeriesAllocationForKey(key, allocated_y_center, allocated_height)) {
+                _plotting_manager->calculateAnalogSeriesAllocation(i, allocated_y_center, allocated_height);
+            }
         }
 
         display_options->allocated_y_center = allocated_y_center;
@@ -758,8 +807,8 @@ void OpenGLWidget::drawAnalogSeries() {
 
                 m_vertices.push_back(xCanvasPos);
                 m_vertices.push_back(yCanvasPos);
-                m_vertices.push_back(0.0f);  // z coordinate
-                m_vertices.push_back(1.0f);  // w coordinate
+                m_vertices.push_back(0.0f);// z coordinate
+                m_vertices.push_back(1.0f);// w coordinate
 
                 ++(*time_begin);
             }
@@ -828,8 +877,8 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & 
         // Add current point to segment (4D coordinates: x, y, 0, 1)
         segment_vertices.push_back(xCanvasPos);
         segment_vertices.push_back(yCanvasPos);
-        segment_vertices.push_back(0.0f);  // z coordinate
-        segment_vertices.push_back(1.0f);  // w coordinate
+        segment_vertices.push_back(0.0f);// z coordinate
+        segment_vertices.push_back(1.0f);// w coordinate
 
         prev_index = (**time_begin).getValue();
         ++(*time_begin);
@@ -864,8 +913,8 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::vector<float> const & data,
 
         m_vertices.push_back(xCanvasPos);
         m_vertices.push_back(yCanvasPos);
-        m_vertices.push_back(0.0f);  // z coordinate
-        m_vertices.push_back(1.0f);  // w coordinate
+        m_vertices.push_back(0.0f);// z coordinate
+        m_vertices.push_back(1.0f);// w coordinate
 
         ++(*time_begin);
     }

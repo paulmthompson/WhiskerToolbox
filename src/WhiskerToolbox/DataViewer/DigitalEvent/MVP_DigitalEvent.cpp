@@ -12,27 +12,21 @@ glm::mat4 new_getEventModelMat(NewDigitalEventSeriesDisplayOptions const & displ
     glm::mat4 Model(1.0f);
 
     if (display_options.plotting_mode == EventPlottingMode::FullCanvas) {
-        // Full Canvas Mode: Events extend from top to bottom of entire plot (like digital intervals)
-        // Events are rendered as lines spanning the full viewport height
-        // Scale to full viewport height with margin factor
-        float const height_scale = (plotting_manager.viewport_y_max - plotting_manager.viewport_y_min) *
-                                   display_options.margin_factor;
-
-        // Center events in the middle of the viewport
+        // Full Canvas Mode: extend full viewport height, centered (ignore allocated_* from stacked path)
+        float const height_scale = (plotting_manager.viewport_y_max - plotting_manager.viewport_y_min) * display_options.margin_factor;
         float const center_y = (plotting_manager.viewport_y_max + plotting_manager.viewport_y_min) * 0.5f;
-
-        // Apply scaling for full canvas height
-        Model[1][1] = height_scale * 0.5f;// Half scale because we'll map [-1,1] to full height
-
-        // Apply translation to center
+        Model[1][1] = height_scale * 0.5f;// map [-1,1] -> full height with margin
         Model[3][1] = center_y;
 
     } else if (display_options.plotting_mode == EventPlottingMode::Stacked) {
         // Stacked Mode: Events are positioned within allocated space (like analog series)
         // Events extend within their allocated height portion
 
-        // Scale to allocated height with margin factor
-        float const height_scale = display_options.allocated_height * display_options.margin_factor;
+        // Prefer explicit event height if provided, but never exceed allocated lane
+        float const desired_height = (display_options.event_height > 0.0f)
+                                     ? display_options.event_height
+                                     : display_options.allocated_height;
+        float const height_scale = std::min(desired_height, display_options.allocated_height) * display_options.margin_factor;
 
         // Apply scaling for allocated height
         Model[1][1] = height_scale * 0.5f;// Half scale because we'll map [-1,1] to allocated height
@@ -42,7 +36,8 @@ glm::mat4 new_getEventModelMat(NewDigitalEventSeriesDisplayOptions const & displ
     }
 
     // Apply global scaling factors
-    Model[1][1] *= display_options.global_vertical_scale * plotting_manager.global_vertical_scale;
+    //Model[1][1] *= display_options.global_vertical_scale * plotting_manager.global_vertical_scale;
+    Model[1][1] *= display_options.global_vertical_scale;
 
     return Model;
 }
@@ -90,9 +85,9 @@ glm::mat4 new_getEventProjectionMat(int start_data_index,
     float safe_data_end = data_end;
     float safe_y_min = y_min;
     float safe_y_max = y_max;
-    
+
     // Check for and fix invalid or extreme values that could cause NaN/Infinity
-    
+
     // 1. Ensure all values are finite
     if (!std::isfinite(safe_data_start)) {
         std::cout << "Warning: Invalid event data_start=" << safe_data_start << ", using fallback" << std::endl;
@@ -110,42 +105,42 @@ glm::mat4 new_getEventProjectionMat(int start_data_index,
         std::cout << "Warning: Invalid event y_max=" << safe_y_max << ", using fallback" << std::endl;
         safe_y_max = 1.0f;
     }
-    
+
     // 2. Ensure data range is valid (start < end with minimum separation)
-    constexpr float min_range = 1e-6f;  // Minimum range to prevent division by zero
+    constexpr float min_range = 1e-6f;// Minimum range to prevent division by zero
     if (safe_data_end <= safe_data_start) {
-        std::cout << "Warning: Invalid event data range [" << safe_data_start << ", " << safe_data_end 
+        std::cout << "Warning: Invalid event data range [" << safe_data_start << ", " << safe_data_end
                   << "], fixing to valid range" << std::endl;
         float center = (safe_data_start + safe_data_end) * 0.5f;
         safe_data_start = center - min_range * 0.5f;
         safe_data_end = center + min_range * 0.5f;
     } else if ((safe_data_end - safe_data_start) < min_range) {
-        std::cout << "Warning: Event data range too small [" << safe_data_start << ", " << safe_data_end 
+        std::cout << "Warning: Event data range too small [" << safe_data_start << ", " << safe_data_end
                   << "], expanding to minimum safe range" << std::endl;
         float center = (safe_data_start + safe_data_end) * 0.5f;
         safe_data_start = center - min_range * 0.5f;
         safe_data_end = center + min_range * 0.5f;
     }
-    
+
     // 3. Ensure Y range is valid
     if (safe_y_max <= safe_y_min) {
-        std::cout << "Warning: Invalid event Y range [" << safe_y_min << ", " << safe_y_max 
+        std::cout << "Warning: Invalid event Y range [" << safe_y_min << ", " << safe_y_max
                   << "], fixing to valid range" << std::endl;
         float center = (safe_y_min + safe_y_max) * 0.5f;
         safe_y_min = center - min_range * 0.5f;
         safe_y_max = center + min_range * 0.5f;
     } else if ((safe_y_max - safe_y_min) < min_range) {
-        std::cout << "Warning: Event Y range too small [" << safe_y_min << ", " << safe_y_max 
+        std::cout << "Warning: Event Y range too small [" << safe_y_min << ", " << safe_y_max
                   << "], expanding to minimum safe range" << std::endl;
         float center = (safe_y_min + safe_y_max) * 0.5f;
         safe_y_min = center - min_range * 0.5f;
         safe_y_max = center + min_range * 0.5f;
     }
-    
+
     // 4. Clamp extreme values to prevent numerical issues
-    constexpr float max_abs_value = 1e8f;  // Large but safe limit
+    constexpr float max_abs_value = 1e8f;// Large but safe limit
     if (std::abs(safe_data_start) > max_abs_value || std::abs(safe_data_end) > max_abs_value) {
-        std::cout << "Warning: Extremely large event data range [" << safe_data_start << ", " << safe_data_end 
+        std::cout << "Warning: Extremely large event data range [" << safe_data_start << ", " << safe_data_end
                   << "], clamping to safe range" << std::endl;
         float range = safe_data_end - safe_data_start;
         if (range > 2 * max_abs_value) {
@@ -162,14 +157,14 @@ glm::mat4 new_getEventProjectionMat(int start_data_index,
     // Create orthographic projection matrix with validated parameters
     // This maps world coordinates to normalized device coordinates [-1, 1]
     auto Projection = glm::ortho(safe_data_start, safe_data_end, safe_y_min, safe_y_max);
-    
+
     // Final validation: check that the resulting matrix is valid
     for (int i = 0; i < 4; ++i) {
         for (int j = 0; j < 4; ++j) {
             if (!std::isfinite(Projection[i][j])) {
-                std::cout << "Error: Event projection matrix contains invalid value at [" << i << "][" << j 
+                std::cout << "Error: Event projection matrix contains invalid value at [" << i << "][" << j
                           << "]=" << Projection[i][j] << ", using identity matrix" << std::endl;
-                return glm::mat4(1.0f);  // Return identity matrix as safe fallback
+                return glm::mat4(1.0f);// Return identity matrix as safe fallback
             }
         }
     }

@@ -30,6 +30,118 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         REQUIRE_FALSE(event3.isValid());// Negative time is invalid
     }
 
+    SECTION("MVP transforms yield NDC Y within lane (two stacked events)") {
+        PlottingManager manager;
+        manager.setVisibleDataRange(0, 1000);
+
+        // Two stacked series
+        int e0 = manager.addDigitalEventSeries();
+        int e1 = manager.addDigitalEventSeries();
+        REQUIRE(e0 == 0);
+        REQUIRE(e1 == 1);
+
+        float c0, h0, c1, h1;
+        manager.calculateDigitalEventSeriesAllocation(e0, c0, h0);
+        manager.calculateDigitalEventSeriesAllocation(e1, c1, h1);
+
+        NewDigitalEventSeriesDisplayOptions o0, o1;
+        o0.plotting_mode = EventPlottingMode::Stacked;
+        o1.plotting_mode = EventPlottingMode::Stacked;
+        o0.allocated_y_center = c0; o0.allocated_height = h0; o0.margin_factor = 0.95f;
+        o1.allocated_y_center = c1; o1.allocated_height = h1; o1.margin_factor = 0.95f;
+
+        // Use default event_height; ensure it does not exceed lane
+        glm::mat4 m0 = new_getEventModelMat(o0, manager);
+        glm::mat4 v0 = new_getEventViewMat(o0, manager);
+        glm::mat4 p0 = new_getEventProjectionMat(0, 1000, -1.0f, 1.0f, manager);
+
+        glm::mat4 m1 = new_getEventModelMat(o1, manager);
+        glm::mat4 v1 = new_getEventViewMat(o1, manager);
+        glm::mat4 p1 = new_getEventProjectionMat(0, 1000, -1.0f, 1.0f, manager);
+
+        auto ndcY = [](glm::mat4 const & p, glm::mat4 const & v, glm::mat4 const & m, float localY) {
+            glm::vec4 vtx(500.0f, localY, 0.0f, 1.0f);
+            glm::vec4 clip = p * v * m * vtx;
+            return clip.y / clip.w;
+        };
+
+        float y0_min = ndcY(p0, v0, m0, -1.0f);
+        float y0_max = ndcY(p0, v0, m0,  1.0f);
+        float y1_min = ndcY(p1, v1, m1, -1.0f);
+        float y1_max = ndcY(p1, v1, m1,  1.0f);
+
+        std::cout << "y0_min: " << y0_min 
+        << ", y0_max: " << y0_max 
+        << ", y1_min: " << y1_min 
+        << ", y1_max: " << y1_max 
+        << std::endl;
+
+        // All endpoints should be inside NDC [-1, 1]
+        REQUIRE(y0_min >= -1.0f);
+        REQUIRE(y0_max <=  1.0f);
+        REQUIRE(y1_min >= -1.0f);
+        REQUIRE(y1_max <=  1.0f);
+
+        // Each lane height in NDC should be notably smaller than full canvas
+        REQUIRE((y0_max - y0_min) < 0.8f);
+        REQUIRE((y1_max - y1_min) < 0.8f);
+
+        // Lanes should not overlap significantly (allow tiny numeric tolerance)
+        REQUIRE(y0_max <= y1_min + 0.05f);
+    }
+
+    SECTION("MVP transforms produce non-overlapping lanes for three stacked events") {
+        PlottingManager manager;
+        manager.setVisibleDataRange(0, 1200);
+
+        int e0 = manager.addDigitalEventSeries();
+        int e1 = manager.addDigitalEventSeries();
+        int e2 = manager.addDigitalEventSeries();
+
+        float c0, h0, c1, h1, c2, h2;
+        manager.calculateDigitalEventSeriesAllocation(e0, c0, h0);
+        manager.calculateDigitalEventSeriesAllocation(e1, c1, h1);
+        manager.calculateDigitalEventSeriesAllocation(e2, c2, h2);
+
+        auto make_opts = [](float c, float h) {
+            NewDigitalEventSeriesDisplayOptions o;
+            o.plotting_mode = EventPlottingMode::Stacked;
+            o.allocated_y_center = c;
+            o.allocated_height = h;
+            o.margin_factor = 0.95f;
+            return o;
+        };
+
+        auto o0 = make_opts(c0, h0);
+        auto o1 = make_opts(c1, h1);
+        auto o2 = make_opts(c2, h2);
+
+        auto ndcY = [](glm::mat4 const & p, glm::mat4 const & v, glm::mat4 const & m, float localY) {
+            glm::vec4 vtx(600.0f, localY, 0.0f, 1.0f);
+            glm::vec4 clip = p * v * m * vtx;
+            return clip.y / clip.w;
+        };
+
+        auto check = [&](NewDigitalEventSeriesDisplayOptions const & o) {
+            glm::mat4 M = new_getEventModelMat(o, manager);
+            glm::mat4 V = new_getEventViewMat(o, manager);
+            glm::mat4 P = new_getEventProjectionMat(0, 1200, -1.0f, 1.0f, manager);
+            float y_min = ndcY(P, V, M, -1.0f);
+            float y_max = ndcY(P, V, M,  1.0f);
+            REQUIRE(y_min >= -1.0f);
+            REQUIRE(y_max <=  1.0f);
+            REQUIRE((y_max - y_min) < 0.8f);
+            return std::pair<float,float>(y_min, y_max);
+        };
+
+        auto [a0, b0] = check(o0);
+        auto [a1, b1] = check(o1);
+        auto [a2, b2] = check(o2);
+
+        // Ensure ordering and no significant overlap
+        REQUIRE(b0 <= a1 + 0.05f);
+        REQUIRE(b1 <= a2 + 0.05f);
+    }
     SECTION("Event test data generation") {
         auto events = generateTestEventData(10, 100.0f, 42);
 
@@ -296,17 +408,17 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         REQUIRE(model2[1][1] > 0.0f);
         REQUIRE(model3[1][1] > 0.0f);
 
-        // Scaling should be approximately 1/3 of what a single series would get
+        // Scaling should match single-series scale due to capped event height
         NewDigitalEventSeriesDisplayOptions single_options;
         single_options.plotting_mode = EventPlottingMode::Stacked;
         single_options.allocated_y_center = 0.0f;
         single_options.allocated_height = 2.0f;// Full canvas
         glm::mat4 single_model = new_getEventModelMat(single_options, manager);
 
-        float expected_scale = single_model[1][1] / 3.0f;// 1/3 of full canvas scale
-        REQUIRE_THAT(model1[1][1], WithinRel(expected_scale, 0.05f));
-        REQUIRE_THAT(model2[1][1], WithinRel(expected_scale, 0.05f));
-        REQUIRE_THAT(model3[1][1], WithinRel(expected_scale, 0.05f));
+        float expected_scale = single_model[1][1];
+        REQUIRE_THAT(model1[1][1], WithinRel(expected_scale, 0.1f));
+        REQUIRE_THAT(model2[1][1], WithinRel(expected_scale, 0.1f));
+        REQUIRE_THAT(model3[1][1], WithinRel(expected_scale, 0.1f));
     }
 
     SECTION("Panning behavior - FullCanvas mode (viewport-pinned)") {

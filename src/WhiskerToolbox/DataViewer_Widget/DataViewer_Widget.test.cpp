@@ -961,3 +961,266 @@ TEST_CASE_METHOD(DataViewerWidgetMultiEventTestFixture, "DataViewer_Widget - Ena
         }
     }
 }
+
+// -----------------------------------------------------------------------------
+// Mixed stacking test: analog + digital events share vertical space uniformly
+// -----------------------------------------------------------------------------
+class DataViewerWidgetMixedStackingTestFixture {
+protected:
+    DataViewerWidgetMixedStackingTestFixture() {
+        if (!QApplication::instance()) {
+            static int argc = 1;
+            static char * argv[] = {const_cast<char *>("test")};
+            m_app = std::make_unique<QApplication>(argc, argv);
+        }
+
+        m_data_manager = std::make_shared<DataManager>();
+        m_time_scrollbar = std::make_unique<TimeScrollBar>();
+        m_time_scrollbar->setDataManager(m_data_manager);
+
+        // Master time frame
+        std::vector<int> t(4000);
+        std::iota(std::begin(t), std::end(t), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        m_time_key = TimeKey("time");
+        m_data_manager->removeTime(TimeKey("time"));
+        m_data_manager->setTime(TimeKey("time"), tf);
+
+        // 3 analog series
+        for (int i = 0; i < 3; ++i) {
+            constexpr int kNumSamples = 1000;
+            std::vector<float> values(kNumSamples, 0.0f);
+            for (int j = 0; j < kNumSamples; ++j) {
+                values[static_cast<size_t>(j)] = std::sin(static_cast<float>(j) * 0.01f) * (1.0f + 0.1f * static_cast<float>(i));
+            }
+            auto series = std::make_shared<AnalogTimeSeries>(values, values.size());
+            std::string key = std::string("analog_") + std::to_string(i + 1);
+            m_analog_keys.push_back(key);
+            m_data_manager->setData<AnalogTimeSeries>(key, series, m_time_key);
+        }
+
+        // 2 event series
+        for (int i = 0; i < 2; ++i) {
+            auto series = std::make_shared<DigitalEventSeries>();
+            series->addEvent(1000);
+            series->addEvent(2000);
+            series->addEvent(3000);
+            std::string key = std::string("event_") + std::to_string(i + 1);
+            m_event_keys.push_back(key);
+            m_data_manager->setData<DigitalEventSeries>(key, series, m_time_key);
+        }
+
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, m_time_scrollbar.get(), nullptr);
+    }
+
+    ~DataViewerWidgetMixedStackingTestFixture() = default;
+
+    DataViewer_Widget & getWidget() { return *m_widget; }
+    std::vector<std::string> const & getAnalogKeys() const { return m_analog_keys; }
+    std::vector<std::string> const & getEventKeys() const { return m_event_keys; }
+
+private:
+    std::unique_ptr<QApplication> m_app;
+    std::shared_ptr<DataManager> m_data_manager;
+    std::unique_ptr<TimeScrollBar> m_time_scrollbar;
+    std::unique_ptr<DataViewer_Widget> m_widget;
+    TimeKey m_time_key{"time"};
+    std::vector<std::string> m_analog_keys;
+    std::vector<std::string> m_event_keys;
+};
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - Mixed stacking for analog + digital events", "[DataViewer_Widget][Mixed][Stacking]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() == 3);
+    REQUIRE(ev.size() == 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable analog first
+    for (auto const & k: analog) {
+        bool const invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(k)),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+        QApplication::processEvents();
+    }
+
+    // Then enable events
+    for (auto const & k: ev) {
+        bool const invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(k)),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+        QApplication::processEvents();
+    }
+
+    // Collect centers and heights across all 5 stackable series
+    struct Item {
+        float center;
+        float height;
+        bool is_event;
+        std::string key;
+    };
+    std::vector<Item> items;
+    items.reserve(5);
+
+    for (auto const & k: analog) {
+        auto c = widget.getAnalogConfig(k);
+        REQUIRE(c.has_value());
+        REQUIRE(c.value()->is_visible);
+        items.push_back(Item{static_cast<float>(c.value()->allocated_y_center), static_cast<float>(c.value()->allocated_height), false, k});
+    }
+    for (auto const & k: ev) {
+        auto c = widget.getDigitalEventConfig(k);
+        REQUIRE(c.has_value());
+        REQUIRE(c.value()->is_visible);
+        items.push_back(Item{static_cast<float>(c.value()->allocated_y_center), static_cast<float>(c.value()->allocated_height), true, k});
+    }
+
+    REQUIRE(items.size() == 5);
+    std::sort(items.begin(), items.end(), [](Item const & a, Item const & b) { return a.center < b.center; });
+
+    // Expect 5 evenly spaced centers across [-1,1]
+    size_t const N = items.size();
+    float const tol_center = 0.22f;
+    for (size_t i = 0; i < N; ++i) {
+        float const expected = -1.0f + 2.0f * (static_cast<float>(i + 1) / static_cast<float>(N + 1));
+        REQUIRE(std::abs(items[i].center - expected) <= tol_center);
+    }
+
+    // Heights should be consistent across analog and events when stacked together
+    float const expected_height = 2.0f / static_cast<float>(N);
+    float min_h = std::numeric_limits<float>::max();
+    float max_h = 0.0f;
+    for (auto const & it: items) {
+        min_h = std::min(min_h, it.height);
+        max_h = std::max(max_h, it.height);
+        REQUIRE(it.height >= expected_height * 0.4f);
+        REQUIRE(it.height <= expected_height * 1.2f);
+    }
+    if (min_h > 0.0f) {
+        REQUIRE((max_h / min_h) <= 1.4f);
+    }
+
+    // Additional safety: effective model height for events must be within lane
+    for (auto const & k: ev) {
+        auto cfg = widget.getDigitalEventConfig(k);
+        REQUIRE(cfg.has_value());
+        float const lane = expected_height;
+        float const eff_model_height = std::min(cfg.value()->event_height, cfg.value()->allocated_height) * cfg.value()->margin_factor * cfg.value()->global_vertical_scale;
+        REQUIRE(eff_model_height <= lane * 1.1f);
+        REQUIRE(eff_model_height < 1.8f);// definitely not full canvas
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Mode regression test: ensure FullCanvas event uses full height and Stacked stays in lane
+// -----------------------------------------------------------------------------
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - Digital event plotting modes", "[DataViewer_Widget][DigitalEvent][Modes]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const ev = getEventKeys();
+    REQUIRE(analog.size() == 3);
+    REQUIRE(ev.size() == 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable one analog to ensure mixed context
+    {
+        bool const invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(analog[0])),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+        QApplication::processEvents();
+    }
+
+    // Enable two events
+    for (auto const & k: ev) {
+        bool const invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(k)),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+        QApplication::processEvents();
+    }
+
+    // Force first event to FullCanvas via its display options
+    {
+        auto cfg0 = widget.getDigitalEventConfig(ev[0]);
+        REQUIRE(cfg0.has_value());
+        cfg0.value()->display_mode = EventDisplayMode::FullCanvas;
+    }
+    // Force a redraw so allocation reflects new mode
+    {
+        auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
+        REQUIRE(glw != nullptr);
+        glw->updateCanvas();
+        QApplication::processEvents();
+    }
+
+    // Read configs
+    auto cfg_full = widget.getDigitalEventConfig(ev[0]);
+    auto cfg_stacked = widget.getDigitalEventConfig(ev[1]);
+    REQUIRE(cfg_full.has_value());
+    REQUIRE(cfg_stacked.has_value());
+
+    // FullCanvas should be centered and nearly full height
+    REQUIRE(std::abs(cfg_full.value()->allocated_y_center - 0.0f) <= 0.25f);
+    REQUIRE(cfg_full.value()->allocated_height >= 1.6f);
+    REQUIRE(cfg_full.value()->allocated_height <= 2.2f);
+
+    // Stacked should be a lane with significantly smaller height
+    REQUIRE(cfg_stacked.value()->allocated_height < cfg_full.value()->allocated_height);
+}
+
+// -----------------------------------------------------------------------------
+// Regression: two stacked digital events should not render near full canvas height
+// -----------------------------------------------------------------------------
+TEST_CASE_METHOD(DataViewerWidgetMultiEventTestFixture, "DataViewer_Widget - Two stacked digital events height bounded", "[DataViewer_Widget][DigitalEvent][Height]") {
+    auto & widget = getWidget();
+    auto const keys = getEventKeys();
+    REQUIRE(keys.size() >= 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable two events in stacked mode (default)
+    for (size_t i = 0; i < 2; ++i) {
+        bool const invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(keys[i])),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+        QApplication::processEvents();
+    }
+
+    size_t const N = 2;
+    float const lane = 2.0f / static_cast<float>(N);
+
+    for (size_t i = 0; i < 2; ++i) {
+        auto cfg = widget.getDigitalEventConfig(keys[i]);
+        REQUIRE(cfg.has_value());
+        // Effective model height derived from configuration (assumes unit global vertical scale)
+        float const eff_model_height = std::min(cfg.value()->event_height, cfg.value()->allocated_height) * cfg.value()->margin_factor * cfg.value()->global_vertical_scale;
+        // Should be substantially smaller than lane height (default event height 0.05 << lane=1.0)
+        REQUIRE(eff_model_height <= lane * 0.5f);
+        REQUIRE(eff_model_height > 0.0f);
+    }
+}
