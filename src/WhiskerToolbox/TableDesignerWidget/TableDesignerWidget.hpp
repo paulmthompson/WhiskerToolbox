@@ -142,6 +142,9 @@ private slots:
     void onTableManagerTableRemoved(QString const & table_id);
     void onTableManagerTableInfoUpdated(QString const & table_id);
 
+private slots:
+    void updateComputersTreeSize();
+
 private:
     Ui::TableDesignerWidget * ui;
     std::shared_ptr<DataManager> _data_manager;
@@ -240,6 +243,7 @@ private:
     bool isIntervalItselfSelected() const;
     void triggerPreviewDebounced();
     void rebuildPreviewNow();
+    int calculateComputersTreeHeight() const;
     std::vector<ColumnInfo> reorderColumnsBySavedOrder(std::vector<ColumnInfo> column_infos) const;
     std::vector<std::string> parseCommaSeparatedList(QString const & text) const;
     QString promptSaveCsvFilename() const;
@@ -251,5 +255,4 @@ private:
 };
 
 #endif// TABLEDESIGNERWIDGET_HPP
-
 
