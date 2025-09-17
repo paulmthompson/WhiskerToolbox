@@ -142,6 +142,12 @@ public slots:
      */
     virtual void onGroupRemoved(int group_id) {}
 
+    /**
+     * @brief Handle group property changes (name, color, membership)
+     * @param group_id The modified group ID
+     */
+    virtual void onGroupPropertiesChanged(int group_id) {}
+
 protected:
     /**
      * @brief Handle mouse press events for selection

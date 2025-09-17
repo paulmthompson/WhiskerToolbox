@@ -103,6 +103,7 @@ protected:
     void resizeEvent(QGraphicsSceneResizeEvent * event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
     void keyPressEvent(QKeyEvent * event) override;
+    void onGroupPropertiesChanged(int group_id) override;
 
 private slots:
     /**

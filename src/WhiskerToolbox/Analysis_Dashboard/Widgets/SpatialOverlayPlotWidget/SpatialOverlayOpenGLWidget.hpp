@@ -52,7 +52,7 @@ public:
     size_t getTotalSelectedLines() const;
     
     // Selection management
-    void clearSelection();
+    void clearSelection() override;
     void setSelectionMode(SelectionMode mode) override;
     void setGroupManager(GroupManager * group_manager);
 
@@ -61,7 +61,7 @@ public:
     void showAllItemsCurrentDataset();
     void showAllItemsAllDatasets();
     
-    // Group management
+    // Group management (user actions)
     void assignSelectedPointsToNewGroup();
     void assignSelectedPointsToGroup(int group_id);
     void ungroupSelectedPoints();
@@ -69,6 +69,9 @@ public:
     // Coordinate conversion (public interface)
     QVector2D screenToWorld(int screen_x, int screen_y) const;
     QPoint worldToScreen(float world_x, float world_y) const;
+
+    // Refresh group-based rendering data (invoked by plot upon coordinator events)
+    void refreshGroupRenderDataAll();
 
 signals:
     void frameJumpRequested(EntityId entity_id, QString const& data_key);
@@ -104,7 +107,6 @@ protected:
 
 private slots:
     void onSelectionChanged(size_t total_selected);
-    void onGroupModified(int group_id);
 
 private:
     // Data visualizations - using existing visualization structs
@@ -134,10 +136,6 @@ private:
     QAction* _action_show_all_current = nullptr;
     QAction* _action_show_all_datasets = nullptr;
     QList<QAction*> _dynamic_group_actions;
-
-    // Track connection to avoid duplicate slot invocations
-    QMetaObject::Connection _group_modified_connection;
-    GroupManager* _connected_group_manager = nullptr;
 
     void initializeVisualizations();
     void updateVisualizationData();

@@ -204,6 +204,9 @@ void GroupCoordinator::connectToPlot(AbstractPlotWidget* plot_widget)
 
     connect(this, &GroupCoordinator::groupRemoved,
             plot_widget, &AbstractPlotWidget::onGroupRemoved);
+
+    connect(this, &GroupCoordinator::groupPropertiesChanged,
+            plot_widget, &AbstractPlotWidget::onGroupPropertiesChanged);
     
     qDebug() << "GroupCoordinator::connectToPlot: Connected to plot signals";
 }

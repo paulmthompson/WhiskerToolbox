@@ -59,26 +59,7 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
 }
 
 void SpatialOverlayOpenGLWidget::setGroupManager(GroupManager * group_manager) {
-    // Disconnect from previous manager if any to avoid duplicate slot invocations
-    // If we were connected to a previous manager, disconnect fully
-    if (_connected_group_manager) {
-        QObject::disconnect(_connected_group_manager, nullptr, this, nullptr);
-        _connected_group_manager = nullptr;
-    }
     BasePlotOpenGLWidget::setGroupManager(group_manager);
-
-    // Propagate to existing visualizations and connect signals to refresh visuals on changes
-    if (_group_manager) {
-        // Prevent duplicate connections if setGroupManager is called multiple times
-        if (_group_modified_connection) {
-            disconnect(_group_modified_connection);
-        }
-        _group_modified_connection = connect(_group_manager, &GroupManager::groupModified,
-                                             this, &SpatialOverlayOpenGLWidget::onGroupModified,
-                                             Qt::UniqueConnection);
-        _connected_group_manager = _group_manager;
-    }
-
     // Update visualization instances with new manager
     for (auto & kv : _point_data_visualizations) {
         if (kv.second) {
@@ -87,20 +68,32 @@ void SpatialOverlayOpenGLWidget::setGroupManager(GroupManager * group_manager) {
     }
 }
 
-void SpatialOverlayOpenGLWidget::onGroupModified(int group_id) {
-    // Refresh all point visualizations (colors may change due to membership or palette)
+void SpatialOverlayOpenGLWidget::initializeVisualizations() {
+    // Visualizations are created when data is set
+    // This method can be used for any common initialization
+    qDebug() << "SpatialOverlayOpenGLWidget: Initialized visualizations";
+}
+
+void SpatialOverlayOpenGLWidget::refreshGroupRenderDataAll() {
+    // Ensure GL context is current before touching GPU buffers
+    bool made_current = false;
+    if (_opengl_resources_initialized && context() && context()->isValid()) {
+        makeCurrent();
+        made_current = true;
+    }
+
     for (auto & kv : _point_data_visualizations) {
         if (kv.second) {
             kv.second->refreshGroupRenderData();
         }
     }
-    requestThrottledUpdate();
-}
 
-void SpatialOverlayOpenGLWidget::initializeVisualizations() {
-    // Visualizations are created when data is set
-    // This method can be used for any common initialization
-    qDebug() << "SpatialOverlayOpenGLWidget: Initialized visualizations";
+    if (made_current) {
+        doneCurrent();
+    }
+
+    updateDynamicGroupActions();
+    requestThrottledUpdate();
 }
 
 // ========== Data ==========
@@ -598,27 +591,12 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
     QString group_name = QString("Group %1").arg(_group_manager->getGroups().size() + 1);
     int group_id = _group_manager->createGroup(group_name);
 
-    // Assign selected entities to the new group
-    _group_manager->assignEntitiesToGroup(group_id, selected_entity_ids);
-
-    // Refresh group colors in all point visualizations
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (viz) {
-            viz->refreshGroupRenderData();
-        }
-    }
-
-    // Clear selection after assignment
     clearSelection();
+
+    _group_manager->assignEntitiesToGroup(group_id, selected_entity_ids);
 
     qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_entity_ids.size()
              << "entities to new group" << group_id;
-
-    // Update the context menu to reflect the new group
-    updateDynamicGroupActions();
-
-    // Request update to show color changes
-    requestThrottledUpdate();
 }
 
 void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
@@ -641,24 +619,13 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
         return;
     }
 
-    // Assign selected entities to the specified group
-    _group_manager->assignEntitiesToGroup(group_id, selected_entity_ids);
-
-    // Refresh group colors in all point visualizations
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (viz) {
-            viz->refreshGroupRenderData();
-        }
-    }
-
-    // Clear selection after assignment
     clearSelection();
+
+    _group_manager->assignEntitiesToGroup(group_id, selected_entity_ids);
 
     qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_entity_ids.size()
              << "entities to group" << group_id;
 
-    // Request update to show color changes
-    requestThrottledUpdate();
 }
 
 void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
@@ -681,26 +648,11 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
         return;
     }
 
-    // Remove selected entities from their groups
-    _group_manager->ungroupEntities(selected_entity_ids);
-
-    // Refresh group colors in all point visualizations
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (viz) {
-            viz->refreshGroupRenderData();
-        }
-    }
-
-    // Clear selection after ungrouping
     clearSelection();
 
+    _group_manager->ungroupEntities(selected_entity_ids);
+
     qDebug() << "SpatialOverlayOpenGLWidget: Ungrouped" << selected_entity_ids.size() << "entities";
-
-    // Update the context menu to reflect group changes
-    updateDynamicGroupActions();
-
-    // Request update to show color changes
-    requestThrottledUpdate();
 }
 
 //========== Context Menu ==========
