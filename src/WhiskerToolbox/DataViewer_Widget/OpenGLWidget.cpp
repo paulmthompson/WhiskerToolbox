@@ -409,8 +409,9 @@ void OpenGLWidget::drawDigitalEventSeries() {
 
         auto visible_events = series->getEventsInRange(TimeFrameIndex(start_time),
                                                        TimeFrameIndex(end_time),
-                                                       time_frame.get(),
-                                                       _master_time_frame.get());
+                                                       _master_time_frame.get(),
+                                                       time_frame.get()
+                                                       );
 
         // === MVP MATRIX SETUP ===
 
@@ -459,9 +460,9 @@ void OpenGLWidget::drawDigitalEventSeries() {
                 xCanvasPos = event_time;// This should work if both time frames use the same time units
             }
 
-            std::array<GLfloat, 4> vertices = {
-                    xCanvasPos, min_y,
-                    xCanvasPos, max_y};
+            std::array<GLfloat, 8> vertices = {
+                    xCanvasPos, min_y, 0.0f, 1.0f,
+                    xCanvasPos, max_y, 0.0f, 1.0f};
 
             glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));

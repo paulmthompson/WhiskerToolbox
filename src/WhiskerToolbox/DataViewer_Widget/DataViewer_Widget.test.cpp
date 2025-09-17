@@ -5,6 +5,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
+#include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -14,10 +15,10 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <QApplication>
-#include <QTimer>
-#include <QWidget>
 #include <QMetaObject>
+#include <QTimer>
 #include <QTreeWidget>
+#include <QWidget>
 
 #include "OpenGLWidget.hpp"
 #include <algorithm>
@@ -615,7 +616,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
     QApplication::processEvents();
 
     // Verify that all five analog series became visible
-    for (auto const & key : keys) {
+    for (auto const & key: keys) {
         auto cfg = widget.getAnalogConfig(key);
         REQUIRE(cfg.has_value());
         REQUIRE(cfg.value() != nullptr);
@@ -682,11 +683,11 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
     std::vector<std::pair<std::string, float>> centers_after = key_center;
 
     INFO("Centers before:");
-    for (auto const & kv : centers_before) {
+    for (auto const & kv: centers_before) {
         INFO(kv.first << " -> " << kv.second);
     }
     INFO("Centers after:");
-    for (auto const & kv : centers_after) {
+    for (auto const & kv: centers_after) {
         INFO(kv.first << " -> " << kv.second);
     }
 
@@ -703,7 +704,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
     }
     REQUIRE(any_changed);
     // Sort by center descending to get top-to-bottom order
-    std::sort(key_center.begin(), key_center.end(), [](auto const & a, auto const & b){ return a.second > b.second; });
+    std::sort(key_center.begin(), key_center.end(), [](auto const & a, auto const & b) { return a.second > b.second; });
 
     // Expected order by y: 400 (ch 3)-> key 4, then 300 (ch 0)-> key 1, then 200 (ch 2)-> key 3, then 100 (ch 1)-> key 2
     REQUIRE(key_center.size() == 4);
@@ -831,4 +832,132 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Pr
     if (c1.has_value()) REQUIRE_FALSE(c1.value()->is_visible);
     c3 = widget.getAnalogConfig(keys[3]);
     if (c3.has_value()) REQUIRE_FALSE(c3.value()->is_visible);
+}
+
+// -----------------------------------------------------------------------------
+// New tests: enabling multiple digital event series one by one via the widget API
+// -----------------------------------------------------------------------------
+class DataViewerWidgetMultiEventTestFixture {
+protected:
+    DataViewerWidgetMultiEventTestFixture() {
+        if (!QApplication::instance()) {
+            static int argc = 1;
+            static char * argv[] = {const_cast<char *>("test")};
+            m_app = std::make_unique<QApplication>(argc, argv);
+        }
+
+        m_data_manager = std::make_shared<DataManager>();
+        m_time_scrollbar = std::make_unique<TimeScrollBar>();
+        m_time_scrollbar->setDataManager(m_data_manager);
+
+        // Create a default time frame and register under key "time"
+        std::vector<int> t(4000);
+        std::iota(std::begin(t), std::end(t), 0);
+        auto new_timeframe = std::make_shared<TimeFrame>(t);
+        m_time_key = TimeKey("time");
+        m_data_manager->removeTime(TimeKey("time"));
+        m_data_manager->setTime(TimeKey("time"), new_timeframe);
+
+        // Populate with 5 digital event series
+        populateEventSeries(5);
+
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, m_time_scrollbar.get(), nullptr);
+    }
+
+    ~DataViewerWidgetMultiEventTestFixture() = default;
+
+    DataViewer_Widget & getWidget() { return *m_widget; }
+    DataManager & getDataManager() { return *m_data_manager; }
+    std::vector<std::string> const & getEventKeys() const { return m_event_keys; }
+
+private:
+    void populateEventSeries(int count) {
+        m_event_keys.clear();
+        m_event_keys.reserve(static_cast<size_t>(count));
+
+        for (int i = 0; i < count; ++i) {
+            auto series = std::make_shared<DigitalEventSeries>();
+            // Add a few events within the visible range
+            series->addEvent(1000);
+            series->addEvent(2000);
+            series->addEvent(3000);
+
+            std::string key = std::string("event_") + std::to_string(i + 1);
+            m_data_manager->setData<DigitalEventSeries>(key, series, m_time_key);
+            m_event_keys.push_back(std::move(key));
+        }
+    }
+
+    std::unique_ptr<QApplication> m_app;
+    std::shared_ptr<DataManager> m_data_manager;
+    std::unique_ptr<TimeScrollBar> m_time_scrollbar;
+    std::unique_ptr<DataViewer_Widget> m_widget;
+    TimeKey m_time_key{"time"};
+    std::vector<std::string> m_event_keys;
+};
+
+TEST_CASE_METHOD(DataViewerWidgetMultiEventTestFixture, "DataViewer_Widget - Enable Digital Event Series One By One", "[DataViewer_Widget][DigitalEvent]") {
+    auto & widget = getWidget();
+    auto const keys = getEventKeys();
+    REQUIRE(keys.size() == 5);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    for (size_t i = 0; i < keys.size(); ++i) {
+        auto const & key = keys[i];
+
+        bool invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(key)),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+
+        QApplication::processEvents();
+
+        auto cfg = widget.getDigitalEventConfig(key);
+        REQUIRE(cfg.has_value());
+        REQUIRE(cfg.value() != nullptr);
+        REQUIRE(cfg.value()->is_visible);
+
+        std::vector<float> centers;
+        std::vector<float> heights;
+        centers.reserve(i + 1);
+        heights.reserve(i + 1);
+
+        for (size_t j = 0; j <= i; ++j) {
+            auto c = widget.getDigitalEventConfig(keys[j]);
+            REQUIRE(c.has_value());
+            REQUIRE(c.value() != nullptr);
+            centers.push_back(static_cast<float>(c.value()->allocated_y_center));
+            heights.push_back(static_cast<float>(c.value()->allocated_height));
+        }
+
+        std::sort(centers.begin(), centers.end());
+
+        size_t const enabled_count = i + 1;
+        float const tol_center = 0.22f;
+        for (size_t k = 0; k < enabled_count; ++k) {
+            // Expected evenly spaced centers across [-1, 1] at fractions k/(N+1)
+            float const expected = -1.0f + 2.0f * (static_cast<float>(k + 1) / static_cast<float>(enabled_count + 1));
+            REQUIRE(std::abs(centers[k] - expected) <= tol_center);
+        }
+
+        float const expected_height = 2.0f / static_cast<float>(enabled_count);
+        float const min_h = *std::min_element(heights.begin(), heights.end());
+        float const max_h = *std::max_element(heights.begin(), heights.end());
+
+        for (auto const h: heights) {
+            // Heights should be within their allocated lane (allow tolerance)
+            REQUIRE(h > 0.0f);
+            REQUIRE(h >= expected_height * 0.4f);
+            REQUIRE(h <= expected_height * 1.2f);
+        }
+
+        if (min_h > 0.0f) {
+            REQUIRE((max_h / min_h) <= 1.4f);
+        }
+    }
 }
