@@ -16,6 +16,7 @@ class LineData;
 struct PointDataVisualization;
 struct MaskDataVisualization;
 struct LineDataVisualization;
+class GroupManager;
 
 /**
  * Refactored SpatialOverlayOpenGLWidget using composition-based design
@@ -53,6 +54,7 @@ public:
     // Selection management
     void clearSelection();
     void setSelectionMode(SelectionMode mode) override;
+    void setGroupManager(GroupManager * group_manager);
 
     // Visibility management
     void hideSelectedItems();
@@ -102,6 +104,7 @@ protected:
 
 private slots:
     void onSelectionChanged(size_t total_selected);
+    void onGroupModified(int group_id);
 
 private:
     // Data visualizations - using existing visualization structs
@@ -131,6 +134,10 @@ private:
     QAction* _action_show_all_current = nullptr;
     QAction* _action_show_all_datasets = nullptr;
     QList<QAction*> _dynamic_group_actions;
+
+    // Track connection to avoid duplicate slot invocations
+    QMetaObject::Connection _group_modified_connection;
+    GroupManager* _connected_group_manager = nullptr;
 
     void initializeVisualizations();
     void updateVisualizationData();

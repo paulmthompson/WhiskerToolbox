@@ -8,7 +8,7 @@ if (WIN32)
     return()
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Test)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -25,6 +25,7 @@ target_link_libraries(test_group_management_widget PRIVATE
     DataManager 
     Qt6::Widgets
     Qt6::Core
+    Qt6::Test
 )
 
 target_include_directories(test_group_management_widget PRIVATE

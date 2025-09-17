@@ -83,6 +83,11 @@ bool GroupManager::setGroupName(int group_id, QString const & name) {
     if (!descriptor.has_value()) {
         return false;
     }
+
+    // Avoid redundant updates/signals if the name is unchanged
+    if (QString::fromStdString(descriptor->name) == name) {
+        return true;
+    }
     
     // Update group in EntityGroupManager
     if (!m_entity_group_manager->updateGroup(entity_group_id, name.toStdString(), descriptor->description)) {

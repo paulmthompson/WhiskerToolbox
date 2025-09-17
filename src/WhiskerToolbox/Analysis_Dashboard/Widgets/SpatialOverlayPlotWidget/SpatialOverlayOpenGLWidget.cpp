@@ -58,6 +58,45 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
     initializeVisualizations();
 }
 
+void SpatialOverlayOpenGLWidget::setGroupManager(GroupManager * group_manager) {
+    // Disconnect from previous manager if any to avoid duplicate slot invocations
+    // If we were connected to a previous manager, disconnect fully
+    if (_connected_group_manager) {
+        QObject::disconnect(_connected_group_manager, nullptr, this, nullptr);
+        _connected_group_manager = nullptr;
+    }
+    BasePlotOpenGLWidget::setGroupManager(group_manager);
+
+    // Propagate to existing visualizations and connect signals to refresh visuals on changes
+    if (_group_manager) {
+        // Prevent duplicate connections if setGroupManager is called multiple times
+        if (_group_modified_connection) {
+            disconnect(_group_modified_connection);
+        }
+        _group_modified_connection = connect(_group_manager, &GroupManager::groupModified,
+                                             this, &SpatialOverlayOpenGLWidget::onGroupModified,
+                                             Qt::UniqueConnection);
+        _connected_group_manager = _group_manager;
+    }
+
+    // Update visualization instances with new manager
+    for (auto & kv : _point_data_visualizations) {
+        if (kv.second) {
+            kv.second->setGroupManager(group_manager);
+        }
+    }
+}
+
+void SpatialOverlayOpenGLWidget::onGroupModified(int group_id) {
+    // Refresh all point visualizations (colors may change due to membership or palette)
+    for (auto & kv : _point_data_visualizations) {
+        if (kv.second) {
+            kv.second->refreshGroupRenderData();
+        }
+    }
+    requestThrottledUpdate();
+}
+
 void SpatialOverlayOpenGLWidget::initializeVisualizations() {
     // Visualizations are created when data is set
     // This method can be used for any common initialization

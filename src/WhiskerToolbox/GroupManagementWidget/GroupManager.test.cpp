@@ -5,6 +5,7 @@
 
 #include <unordered_set>
 #include <vector>
+#include <QSignalSpy>
 
 TEST_CASE("GroupManager - Group CRUD", "[groupmanager][groups][crud]") {
     EntityGroupManager egm;
@@ -114,5 +115,42 @@ TEST_CASE("GroupManager - Assign and Remove Entities", "[groupmanager][entities]
         REQUIRE_FALSE(egm.isEntityInGroup(gid, 7));
         REQUIRE_FALSE(egm.isEntityInGroup(gid2, 7));
         REQUIRE(egm.isEntityInGroup(gid, 8));
+    }
+}
+
+TEST_CASE("GroupManager - Signals emit once per logical change", "[groupmanager][signals]") {
+    EntityGroupManager egm;
+    GroupManager gm(&egm);
+
+    int g = gm.createGroup(QString("G1"));
+    REQUIRE(g >= 0);
+
+    SECTION("setGroupName unchanged does not emit groupModified; change emits once") {
+        QSignalSpy modSpy(&gm, &GroupManager::groupModified);
+        REQUIRE(gm.setGroupName(g, QString("G1"))); // unchanged
+        REQUIRE(modSpy.count() == 0);
+        REQUIRE(gm.setGroupName(g, QString("G2"))); // changed
+        REQUIRE(modSpy.count() == 1);
+    }
+
+    SECTION("assignEntitiesToGroup emits once on first add, none on re-add") {
+        QSignalSpy modSpy(&gm, &GroupManager::groupModified);
+        std::unordered_set<EntityId> ids = {101, 102};
+        REQUIRE(gm.assignEntitiesToGroup(g, ids) == true);
+        REQUIRE(modSpy.count() == 1);
+        // Re-assign same entities -> no change
+        REQUIRE(gm.assignEntitiesToGroup(g, ids) == false);
+        REQUIRE(modSpy.count() == 1);
+    }
+
+    SECTION("removeEntitiesFromGroup emits once when removing present members only") {
+        std::unordered_set<EntityId> ids = {201, 202, 203};
+        REQUIRE(gm.assignEntitiesToGroup(g, ids));
+        QSignalSpy modSpy(&gm, &GroupManager::groupModified);
+        REQUIRE(gm.removeEntitiesFromGroup(g, std::unordered_set<EntityId>{202}) == true);
+        REQUIRE(modSpy.count() == 1);
+        // Removing non-members -> no emission
+        REQUIRE(gm.removeEntitiesFromGroup(g, std::unordered_set<EntityId>{999, 1000}) == false);
+        REQUIRE(modSpy.count() == 1);
     }
 }
