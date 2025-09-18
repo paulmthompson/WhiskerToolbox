@@ -1,19 +1,19 @@
 #ifndef ANALOG_TIME_SERIES_STATISTICS_HPP
 #define ANALOG_TIME_SERIES_STATISTICS_HPP
 
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
-
-class AnalogTimeSeries;
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <limits>
 #include <span>
 #include <vector>
+
+class AnalogTimeSeries;
 
 // ========== Mean ==========
 
@@ -31,17 +31,17 @@ float calculate_mean_impl(Iterator begin, Iterator end) {
     if (begin == end) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    
+
     auto const distance = std::distance(begin, end);
     if (distance <= 0) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    
+
     float sum = 0.0f;
     for (auto it = begin; it != end; ++it) {
         sum += *it;
     }
-    
+
     return sum / static_cast<float>(distance);
 }
 
@@ -63,7 +63,7 @@ float calculate_mean_impl(std::vector<float> const & data, size_t start, size_t 
  * @param data_span Span of float data
  * @return float The mean value
  */
-float calculate_mean(std::span<const float> data_span);
+float calculate_mean(std::span<float const> data_span);
 
 /**
  * @brief Calculate the mean value of an AnalogTimeSeries
@@ -113,25 +113,25 @@ float calculate_std_dev_impl(Iterator begin, Iterator end) {
     if (begin == end) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    
+
     auto const distance = std::distance(begin, end);
     if (distance <= 0) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    
+
     // Calculate mean first
     float const mean = calculate_mean_impl(begin, end);
     if (std::isnan(mean)) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    
+
     // Calculate variance
     float sum = 0.0f;
     for (auto it = begin; it != end; ++it) {
         float const diff = *it - mean;
         sum += diff * diff;
     }
-    
+
     return std::sqrt(sum / static_cast<float>(distance));
 }
 
@@ -153,7 +153,7 @@ float calculate_std_dev_impl(std::vector<float> const & data, size_t start, size
  * @param data_span Span of float data
  * @return float The standard deviation
  */
-float calculate_std_dev(std::span<const float> data_span);
+float calculate_std_dev(std::span<float const> data_span);
 
 /**
  * @brief Calculate the standard deviation of an AnalogTimeSeries
@@ -233,7 +233,7 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
  * @return float The approximate standard deviation in the specified time range
  */
 float calculate_std_dev_approximate_in_time_range(AnalogTimeSeries const & series,
-                                                  TimeFrameIndex start_time, 
+                                                  TimeFrameIndex start_time,
                                                   TimeFrameIndex end_time,
                                                   float sample_percentage = 0.1f,
                                                   size_t min_sample_threshold = 1000);
@@ -254,12 +254,12 @@ float calculate_min_impl(Iterator begin, Iterator end) {
     if (begin == end) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    
+
     auto const distance = std::distance(begin, end);
     if (distance <= 0) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    
+
     return *std::min_element(begin, end);
 }
 
@@ -281,7 +281,7 @@ float calculate_min_impl(std::vector<float> const & data, size_t start, size_t e
  * @param data_span Span of float data
  * @return float The minimum value
  */
-float calculate_min(std::span<const float> data_span);
+float calculate_min(std::span<float const> data_span);
 
 /**
  * @brief Calculate the minimum value in an AnalogTimeSeries
@@ -331,12 +331,12 @@ float calculate_max_impl(Iterator begin, Iterator end) {
     if (begin == end) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    
+
     auto const distance = std::distance(begin, end);
     if (distance <= 0) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    
+
     return *std::max_element(begin, end);
 }
 
@@ -358,7 +358,7 @@ float calculate_max_impl(std::vector<float> const & data, size_t start, size_t e
  * @param data_span Span of float data
  * @return float The maximum value
  */
-float calculate_max(std::span<const float> data_span);
+float calculate_max(std::span<float const> data_span);
 
 /**
  * @brief Calculate the maximum value in an AnalogTimeSeries
@@ -393,6 +393,4 @@ float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end)
 float calculate_max_in_time_range(AnalogTimeSeries const & series, TimeFrameIndex start_time, TimeFrameIndex end_time);
 
 
-
-
-#endif // ANALOG_TIME_SERIES_STATISTICS_HPP
+#endif// ANALOG_TIME_SERIES_STATISTICS_HPP

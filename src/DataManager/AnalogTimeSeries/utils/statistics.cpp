@@ -16,7 +16,7 @@ float calculate_mean_impl(std::vector<float> const & data, size_t start, size_t 
     return calculate_mean_impl(data.begin() + static_cast<std::ptrdiff_t>(start), data.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
-float calculate_mean(std::span<const float> data_span) {
+float calculate_mean(std::span<float const> data_span) {
     return calculate_mean_impl(data_span.begin(), data_span.end());
 }
 
@@ -48,7 +48,7 @@ float calculate_std_dev_impl(std::vector<float> const & data, size_t start, size
     return calculate_std_dev_impl(data.begin() + static_cast<std::ptrdiff_t>(start), data.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
-float calculate_std_dev(std::span<const float> data_span) {
+float calculate_std_dev(std::span<float const> data_span) {
     return calculate_std_dev_impl(data_span.begin(), data_span.end());
 }
 
@@ -79,7 +79,7 @@ float calculate_std_dev_approximate(AnalogTimeSeries const & series,
     }
 
     size_t const data_size = data.size();
-    size_t const target_sample_size = static_cast<size_t>(static_cast<float>(data_size) * sample_percentage / 100.0f);
+    auto const target_sample_size = static_cast<size_t>(static_cast<float>(data_size) * sample_percentage / 100.0f);
 
     // Fall back to exact calculation if sample would be too small
     if (target_sample_size < min_sample_threshold) {
@@ -171,7 +171,7 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
 }
 
 float calculate_std_dev_approximate_in_time_range(AnalogTimeSeries const & series,
-                                                  TimeFrameIndex start_time, 
+                                                  TimeFrameIndex start_time,
                                                   TimeFrameIndex end_time,
                                                   float sample_percentage,
                                                   size_t min_sample_threshold) {
@@ -222,7 +222,7 @@ float calculate_min_impl(std::vector<float> const & data, size_t start, size_t e
     return calculate_min_impl(data.begin() + static_cast<std::ptrdiff_t>(start), data.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
-float calculate_min(std::span<const float> data_span) {
+float calculate_min(std::span<float const> data_span) {
     return calculate_min_impl(data_span.begin(), data_span.end());
 }
 
@@ -253,7 +253,7 @@ float calculate_max_impl(std::vector<float> const & data, size_t start, size_t e
     return calculate_max_impl(data.begin() + static_cast<std::ptrdiff_t>(start), data.begin() + static_cast<std::ptrdiff_t>(end));
 }
 
-float calculate_max(std::span<const float> data_span) {
+float calculate_max(std::span<float const> data_span) {
     return calculate_max_impl(data_span.begin(), data_span.end());
 }
 
@@ -274,6 +274,3 @@ float calculate_max_in_time_range(AnalogTimeSeries const & series, TimeFrameInde
     auto data_span = series.getDataInTimeFrameIndexRange(start_time, end_time);
     return calculate_max(data_span);
 }
-
-
-
