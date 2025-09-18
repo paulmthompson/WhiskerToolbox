@@ -3,6 +3,7 @@
 
 #include "Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
+#include "Analysis_Dashboard/Selection/SelectionModes.hpp"
 
 #include <QStringList>
 
@@ -149,7 +150,7 @@ private:
      * @brief Get currently selected data source keys
      * @return List of selected data source keys
      */
-    QStringList getSelectedDataSources() const;
+    [[nodiscard]] QStringList getSelectedDataSources() const;
 
     /**
      * @brief Set which data sources are selected
@@ -176,6 +177,17 @@ private:
      * @brief Update the time range filter based on current spinbox values
      */
     void updateTimeRangeFilter();
+
+    /**
+     * @brief Determine which selection modes are available based on enabled data types
+     * @return List of available selection modes
+     */
+    [[nodiscard]] QList<SelectionMode> getAvailableSelectionModes() const;
+
+    /**
+     * @brief Update the selection mode combo box with only available modes
+     */
+    void updateSelectionModeComboBox();
 };
 
 #endif// SPATIALOVERLAYPLOTPROPERTIESWIDGET_HPP

@@ -109,6 +109,9 @@ void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot
 
         // Initialize selection instructions
         updateSelectionInstructions();
+
+        // Initialize selection mode combo box with available modes
+        updateSelectionModeComboBox();
     }
 }
 
@@ -195,12 +198,14 @@ void SpatialOverlayPlotPropertiesWidget::onFeatureAdded(QString const & feature)
         _selected_features.append(feature);
     }
     updatePlotWidget();
+    updateSelectionModeComboBox();
 }
 
 void SpatialOverlayPlotPropertiesWidget::onFeatureRemoved(QString const & feature) {
     qDebug() << "SpatialOverlayPlotPropertiesWidget: onFeatureRemoved called for feature:" << feature;
     _selected_features.removeAll(feature);
     updatePlotWidget();
+    updateSelectionModeComboBox();
 }
 
 void SpatialOverlayPlotPropertiesWidget::onPointSizeChanged(double value) {
@@ -217,7 +222,6 @@ void SpatialOverlayPlotPropertiesWidget::onLineWidthChanged(double value) {
         _spatial_plot_widget->getOpenGLWidget()->setLineWidth(static_cast<float>(value));
     }
 }
-
 
 
 void SpatialOverlayPlotPropertiesWidget::onResetViewClicked() {
@@ -243,7 +247,6 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
 
     connect(ui->line_width_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onLineWidthChanged);
-
 
 
     connect(ui->reset_view_button, &QPushButton::clicked,
@@ -493,7 +496,7 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Updated selection status - Dataset:" << activeDataset
              << "Selected:" << pointCount << "points," << maskCount << "masks," << lineCount << "lines";
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Set label text to:" << selectionText;
-    
+
     _updating_selection_status = false;
 }
 
@@ -570,4 +573,112 @@ void SpatialOverlayPlotPropertiesWidget::updateTimeRangeFilter() {
         qDebug() << "Applying time range filter to OpenGL widget";
         openglWidget->applyTimeRangeFilter(_start_frame, _end_frame);
     }
+}
+
+QList<SelectionMode> SpatialOverlayPlotPropertiesWidget::getAvailableSelectionModes() const {
+    QList<SelectionMode> availableModes;
+
+    // Always include None as the default option
+    availableModes.append(SelectionMode::None);
+
+    if (!_spatial_plot_widget) {
+        return availableModes;
+    }
+
+    // Get currently enabled data types
+    QStringList pointKeys = _spatial_plot_widget->getPointDataKeys();
+    QStringList maskKeys = _spatial_plot_widget->getMaskDataKeys();
+    QStringList lineKeys = _spatial_plot_widget->getLineDataKeys();
+
+    bool hasPoints = !pointKeys.isEmpty();
+    bool hasMasks = !maskKeys.isEmpty();
+    bool hasLines = !lineKeys.isEmpty();
+
+    // Points allow for point selection and polygon selection
+    if (hasPoints) {
+        availableModes.append(SelectionMode::PointSelection);
+        availableModes.append(SelectionMode::PolygonSelection);
+    }
+
+    // Masks allow for point selection
+    if (hasMasks) {
+        if (!availableModes.contains(SelectionMode::PointSelection)) {
+            availableModes.append(SelectionMode::PointSelection);
+        }
+    }
+
+    // Lines allow for line selection
+    if (hasLines) {
+        availableModes.append(SelectionMode::LineIntersection);
+    }
+
+    return availableModes;
+}
+
+void SpatialOverlayPlotPropertiesWidget::updateSelectionModeComboBox() {
+    if (!ui->selection_mode_combo) {
+        return;
+    }
+
+    // Get currently available selection modes
+    QList<SelectionMode> availableModes = getAvailableSelectionModes();
+
+    // Store current selection
+    SelectionMode currentMode = SelectionMode::None;
+    int currentIndex = ui->selection_mode_combo->currentIndex();
+    if (currentIndex >= 0 && currentIndex < ui->selection_mode_combo->count()) {
+        currentMode = static_cast<SelectionMode>(ui->selection_mode_combo->itemData(currentIndex).toInt());
+    }
+
+    // Block signals to prevent triggering change events during update
+    ui->selection_mode_combo->blockSignals(true);
+
+    // Clear existing items
+    ui->selection_mode_combo->clear();
+
+    // Add available modes
+    for (SelectionMode mode: availableModes) {
+        QString text;
+        int dataValue = static_cast<int>(mode);
+
+        switch (mode) {
+            case SelectionMode::None:
+                text = "None";
+                break;
+            case SelectionMode::PointSelection:
+                text = "Point & Mask Selection (Ctrl+Click)";
+                break;
+            case SelectionMode::PolygonSelection:
+                text = "Polygon Selection";
+                break;
+            case SelectionMode::LineIntersection:
+                text = "Line Intersection Selection";
+                break;
+        }
+
+        ui->selection_mode_combo->addItem(text, dataValue);
+    }
+
+    // Restore previous selection if it's still available, otherwise default to None
+    int newIndex = 0;// Default to None
+    for (int i = 0; i < ui->selection_mode_combo->count(); ++i) {
+        if (static_cast<SelectionMode>(ui->selection_mode_combo->itemData(i).toInt()) == currentMode) {
+            newIndex = i;
+            break;
+        }
+    }
+
+    ui->selection_mode_combo->setCurrentIndex(newIndex);
+
+    // Re-enable signals
+    ui->selection_mode_combo->blockSignals(false);
+
+    // Update clear selection button state
+    SelectionMode selectedMode = static_cast<SelectionMode>(ui->selection_mode_combo->itemData(newIndex).toInt());
+    ui->clear_selection_button->setEnabled(selectedMode != SelectionMode::None);
+
+    // Update instructions
+    updateSelectionInstructions();
+
+    qDebug() << "Updated selection mode combo box with" << availableModes.size() << "available modes";
 }
