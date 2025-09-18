@@ -1,8 +1,8 @@
 #ifndef SHADERMANAGER_HPP
 #define SHADERMANAGER_HPP
 
-#include "ShaderSourceType.hpp"
 #include "ShaderProgram.hpp"
+#include "ShaderSourceType.hpp"
 
 #include <QFileSystemWatcher>
 #include <QObject>
@@ -16,7 +16,6 @@
 class ShaderManager : public QObject {
     Q_OBJECT
 public:
-
     static ShaderManager & instance();
 
     // Load a program from source files/resources and assign it a friendly name.
@@ -48,8 +47,8 @@ private:
     QFileSystemWatcher m_fileWatcher;
     // Programs keyed per OpenGL context to avoid cross-context invalidation
     std::map<QOpenGLContext *, std::map<std::string, std::unique_ptr<ShaderProgram>>> m_programs_by_context;
-    std::map<std::string, std::string> m_pathToProgramName;            // file path -> program name
-    std::map<std::string, ShaderSourceType> m_programSourceType;       // program name -> source type (assumed consistent)
+    std::map<std::string, std::string> m_pathToProgramName;     // file path -> program name
+    std::map<std::string, ShaderSourceType> m_programSourceType;// program name -> source type (assumed consistent)
 };
 
 #endif// SHADERMANAGER_HPP

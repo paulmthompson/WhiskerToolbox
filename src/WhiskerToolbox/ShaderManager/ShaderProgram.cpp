@@ -28,7 +28,7 @@ bool ShaderProgram::reload() {
     // Save old program in case reload fails
     auto oldProgram = std::move(m_program);
     m_program = std::make_unique<QOpenGLShaderProgram>();
-    bool success = compileAndLink();
+    bool const success = compileAndLink();
     if (!success) {
         m_program = std::move(oldProgram);
         return false;

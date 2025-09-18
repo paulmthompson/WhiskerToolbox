@@ -76,13 +76,13 @@ ShaderProgram * ShaderManager::getProgram(std::string const & name) {
 }
 
 void ShaderManager::onFileChanged(QString const & path) {
-    std::string pathStr = path.toStdString();
+    std::string const pathStr = path.toStdString();
     auto it = m_pathToProgramName.find(pathStr);
     if (it != m_pathToProgramName.end()) {
         std::string const & programName = it->second;
         // Reload the program in all contexts that have it
-        for (auto & [ctx, program_map] : m_programs_by_context) {
-            (void)ctx;
+        for (auto & [ctx, program_map]: m_programs_by_context) {
+            (void) ctx;
             auto progIt = program_map.find(programName);
             if (progIt != program_map.end()) {
                 std::cout << "[ShaderManager] Detected change in shader file: " << pathStr << ". Reloading program: " << programName << std::endl;
@@ -103,9 +103,9 @@ void ShaderManager::onFileChanged(QString const & path) {
 
 void ShaderManager::cleanup() {
     // Clear all shader programs for all contexts
-    for (auto & [ctx, program_map] : m_programs_by_context) {
-        (void)ctx;
-        for (auto & [name, program] : program_map) {
+    for (auto & [ctx, program_map]: m_programs_by_context) {
+        (void) ctx;
+        for (auto & [name, program]: program_map) {
             if (program) {
                 delete program.release();
             }
@@ -123,7 +123,7 @@ void ShaderManager::cleanupCurrentContext() {
     auto it = m_programs_by_context.find(ctx);
     if (it == m_programs_by_context.end()) return;
     auto & program_map = it->second;
-    for (auto & [name, program] : program_map) {
+    for (auto & [name, program]: program_map) {
         if (program) {
             delete program.release();
         }

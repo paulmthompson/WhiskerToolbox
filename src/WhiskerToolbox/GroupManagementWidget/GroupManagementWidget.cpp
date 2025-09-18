@@ -140,7 +140,7 @@ void GroupManagementWidget::removeSelectedGroup() {
 
 void GroupManagementWidget::onGroupCreated(int group_id) {
     if (!m_updating_table) {
-        int row = m_ui->groupsTable->rowCount();
+        int const row = m_ui->groupsTable->rowCount();
         addGroupRow(group_id, row);
     }
 }
@@ -206,8 +206,8 @@ void GroupManagementWidget::onItemChanged(QTableWidgetItem * item) {
         return;// Only handle name column changes
     }
 
-    int group_id = item->data(Qt::UserRole).toInt();
-    QString new_name = item->text().trimmed();
+    int const group_id = item->data(Qt::UserRole).toInt();
+    QString const new_name = item->text().trimmed();
 
     if (new_name.isEmpty()) {
         // Don't allow empty names, revert to original
@@ -225,25 +225,25 @@ void GroupManagementWidget::onItemChanged(QTableWidgetItem * item) {
 }
 
 void GroupManagementWidget::onColorButtonClicked() {
-    QPushButton * button = qobject_cast<QPushButton *>(sender());
+    auto * button = qobject_cast<QPushButton *>(sender());
     if (!button) {
         return;
     }
 
-    int group_id = button->property("group_id").toInt();
+    int const group_id = button->property("group_id").toInt();
     auto group = m_group_manager->getGroup(group_id);
     if (!group.has_value()) {
         return;
     }
 
-    QColor new_color = QColorDialog::getColor(group.value().color, this, "Select Group Color");
+    QColor const new_color = QColorDialog::getColor(group.value().color, this, "Select Group Color");
     if (new_color.isValid() && new_color != group.value().color) {
         m_group_manager->setGroupColor(group_id, new_color);
     }
 }
 
 void GroupManagementWidget::onSelectionChanged() {
-    bool has_selection = m_ui->groupsTable->currentRow() >= 0;
+    bool const has_selection = m_ui->groupsTable->currentRow() >= 0;
     m_ui->removeButton->setEnabled(has_selection);
 }
 
