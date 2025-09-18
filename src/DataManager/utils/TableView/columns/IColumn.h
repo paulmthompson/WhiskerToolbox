@@ -1,6 +1,8 @@
 #ifndef ICOLUMN_H
 #define ICOLUMN_H
 
+#include "Entity/EntityTypes.hpp"
+
 #include <string>
 #include <typeinfo>
 #include <vector>
@@ -69,6 +71,41 @@ public:
      * @brief Clears the cached data, forcing recomputation on next access.
      */
     virtual void clearCache() = 0;
+
+    /**
+     * @brief Checks if this column can provide EntityID information.
+     * @return True if EntityIDs are available, false otherwise.
+     */
+    [[nodiscard]] virtual bool hasEntityIds() const = 0;
+
+    /**
+     * @brief Gets EntityIDs for each row in this column.
+     * 
+     * This method returns EntityIDs that correspond to the data sources
+     * used to compute this column's values. Each EntityID corresponds
+     * to a row in the table.
+     * 
+     * For columns where each cell comes from a single entity, this returns
+     * one EntityID per row. For columns computed from multiple entities
+     * (e.g., aggregations), this returns the primary or representative EntityID.
+     * 
+     * @param table Pointer to the TableView that owns this column.
+     * @return Vector of EntityIDs, one per row. Empty if not available.
+     */
+    [[nodiscard]] virtual std::vector<EntityId> getEntityIds(TableView * table) const = 0;
+
+    /**
+     * @brief Gets all contributing EntityIDs for a specific row in this column.
+     * 
+     * For simple columns, this will return the same as getEntityIds()[row_index].
+     * For complex columns that aggregate data from multiple entities, this may
+     * return multiple EntityIDs that contributed to the computation of that cell.
+     * 
+     * @param table Pointer to the TableView that owns this column.
+     * @param row_index The row index to get EntityIDs for.
+     * @return Vector of EntityIDs that contributed to this cell. Empty if not available.
+     */
+    [[nodiscard]] virtual std::vector<EntityId> getRowEntityIds(TableView * table, size_t row_index) const = 0;
 
 protected:
     // Protected constructor to prevent direct instantiation

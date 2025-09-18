@@ -47,6 +47,31 @@ bool Column<T>::isMaterialized() const {
     return std::holds_alternative<std::vector<T>>(m_cache);
 }
 
+template<SupportedColumnType T>
+bool Column<T>::hasEntityIds() const {
+    return m_computer->hasEntityIds();
+}
+
+template<SupportedColumnType T>
+std::vector<EntityId> Column<T>::getEntityIds(TableView * table) const {
+    if (!hasEntityIds()) {
+        return {};
+    }
+    
+    ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
+    return m_computer->computeEntityIds(plan);
+}
+
+template<SupportedColumnType T>
+std::vector<EntityId> Column<T>::getRowEntityIds(TableView * table, size_t row_index) const {
+    if (!hasEntityIds()) {
+        return {};
+    }
+    
+    ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
+    return m_computer->computeRowEntityIds(plan, row_index);
+}
+
 // Explicit instantiation for commonly used types
 template class Column<double>;
 template class Column<float>;
