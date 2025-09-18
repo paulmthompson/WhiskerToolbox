@@ -13,7 +13,7 @@ void PointSelectionHandler::clearNotificationCallback() {
 }
 
 void PointSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
-    if (event->button() == Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::ControlModifier)) {
         _world_pos = world_pos;
         _modifiers = event->modifiers();
 

@@ -241,11 +241,11 @@ void PolygonSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
 }
 
 void PolygonSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
-    if (event->button() == Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::ControlModifier)) {
         if (!isPolygonSelecting()) {
-            startPolygonSelection(world_pos.x(), world_pos.y());
+            startPolygonSelection(static_cast<int>(world_pos.x()), static_cast<int>(world_pos.y()));
         } else {
-            addPolygonVertex(world_pos.x(), world_pos.y());
+            addPolygonVertex(static_cast<int>(world_pos.x()), static_cast<int>(world_pos.y()));
         }
     }
 }

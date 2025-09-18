@@ -33,30 +33,30 @@ class LineSelectionRegion : public SelectionRegion {
 public:
     explicit LineSelectionRegion(Point2D<float> const & start_point, Point2D<float> const & end_point);
 
-    bool containsPoint(Point2D<float> point) const override;
+    [[nodiscard]] bool containsPoint(Point2D<float> point) const override;
     void getBoundingBox(float & min_x, float & min_y, float & max_x, float & max_y) const override;
 
     /**
      * @brief Get the start point of the line
      */
-    Point2D<float> const & getStartPoint() const { return _start_point; }
+    [[nodiscard]] Point2D<float> const & getStartPoint() const { return _start_point; }
 
     /**
      * @brief Get the end point of the line
      */
-    Point2D<float> const & getEndPoint() const { return _end_point; }
+    [[nodiscard]] Point2D<float> const & getEndPoint() const { return _end_point; }
 
     /**
      * @brief Get the start point of the line in screen coordinates
      */
-    Point2D<float> const & getStartPointScreen() const { return _start_point_screen; }
+    [[nodiscard]] Point2D<float> const & getStartPointScreen() const { return _start_point_screen; }
 
     /**
      * @brief Get the end point of the line in screen coordinates
      */
-    Point2D<float> const & getEndPointScreen() const { return _end_point_screen; }
+    [[nodiscard]] Point2D<float> const & getEndPointScreen() const { return _end_point_screen; }
 
-    LineSelectionBehavior getBehavior() const { return _behavior; }
+    [[nodiscard]] LineSelectionBehavior getBehavior() const { return _behavior; }
     void setBehavior(LineSelectionBehavior behavior) { _behavior = behavior; }
 
     /**
@@ -114,7 +114,7 @@ public:
      * @brief Get the current active selection region (if any)
      * @return Pointer to selection region, or nullptr if none active
      */
-    std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
+    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
 
     void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos);
 

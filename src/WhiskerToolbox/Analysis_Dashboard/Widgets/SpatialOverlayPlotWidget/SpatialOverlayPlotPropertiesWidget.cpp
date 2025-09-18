@@ -409,7 +409,7 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
         case SelectionMode::PointSelection:
             instructions = "🖱️ Point & Mask Selection Mode\n"
                            "• Ctrl + Left Click: add to selection (no toggle)\n"
-                           "• Shift + Left Click: remove from selection\n"
+                           "• Ctrl + Shift + Left Click: remove from selection\n"
                            "  - Points: removes the clicked point if selected\n"
                            "  - Masks: removes all intersecting masks between current selection and clicked area\n"
                            "• Selected points appear in black; selected masks have enhanced visibility\n"
@@ -419,7 +419,7 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
 
         case SelectionMode::PolygonSelection:
             instructions = "📐 Polygon Selection Mode\n"
-                           "• Left Click to add vertices to polygon\n"
+                           "• Ctrl + Left Click to add vertices to polygon\n"
                            "• Right Click to complete polygon and select enclosed points\n"
                            "• Press Escape to cancel current polygon\n"
                            "• Red dots show vertices, blue lines show edges";
@@ -427,7 +427,7 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
 
         case SelectionMode::LineIntersection:
             instructions = "📏 Line Intersection Selection Mode\n"
-                           "• Click and hold to start drawing a line\n"
+                           "• Ctrl + Click and hold to start drawing a line\n"
                            "• Drag to extend the line from start point\n"
                            "• Release to find all lines that intersect with your drawn line\n"
                            "• Only works with Line data - no effect on Points or Masks\n"
