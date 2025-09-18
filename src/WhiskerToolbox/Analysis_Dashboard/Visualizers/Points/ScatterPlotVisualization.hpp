@@ -15,7 +15,7 @@ class GroupManager;
  * functionality for scatter plots, including tooltip generation
  * and data management for X vs Y plotting.
  */
-struct ScatterPlotVisualization : public GenericPointVisualization<float, size_t> {
+struct ScatterPlotVisualization : public GenericPointVisualization<size_t> {
 public:
     /**
      * @brief Constructor for scatter plot visualization

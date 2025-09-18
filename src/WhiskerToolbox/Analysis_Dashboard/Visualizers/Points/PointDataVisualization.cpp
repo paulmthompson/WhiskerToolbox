@@ -9,7 +9,7 @@
 PointDataVisualization::PointDataVisualization(QString const & data_key,
                                                std::shared_ptr<PointData> const & point_data,
                                                GroupManager * group_manager)
-    : GenericPointVisualization<float, EntityId>(data_key, group_manager),
+    : GenericPointVisualization<EntityId>(data_key, group_manager),
       m_point_data(point_data) {
 
     populateData();

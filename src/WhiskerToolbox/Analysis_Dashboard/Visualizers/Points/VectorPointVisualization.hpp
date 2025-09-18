@@ -14,8 +14,8 @@
  * @tparam CoordType The coordinate type (float or double)
  * @tparam RowIndicatorType The type used for row indicators (e.g., int, size_t)
  */
-template<typename CoordType, typename RowIndicatorType>
-struct VectorPointVisualization : public GenericPointVisualization<CoordType, RowIndicatorType> {
+template<typename RowIndicatorType>
+struct VectorPointVisualization : public GenericPointVisualization<RowIndicatorType> {
 public:
     /**
      * @brief Constructor for vector-based point visualization
@@ -26,8 +26,8 @@ public:
      * @param group_manager Optional group manager for color coding
      */
     VectorPointVisualization(QString const & data_key,
-                             std::vector<CoordType> const & x_coords,
-                             std::vector<CoordType> const & y_coords,
+                             std::vector<float> const & x_coords,
+                             std::vector<float> const & y_coords,
                              std::vector<RowIndicatorType> const & row_indicators = {},
                              GroupManager * group_manager = nullptr);
 
@@ -51,21 +51,21 @@ protected:
     BoundingBox getDataBounds() const override;
 
 private:
-    std::vector<CoordType> m_x_coords;
-    std::vector<CoordType> m_y_coords;
+    std::vector<float> m_x_coords;
+    std::vector<float> m_y_coords;
     std::vector<RowIndicatorType> m_row_indicators;
     bool m_use_provided_indicators;
 };
 
 // Template implementation
-template<typename CoordType, typename RowIndicatorType>
-VectorPointVisualization<CoordType, RowIndicatorType>::VectorPointVisualization(
+template<typename RowIndicatorType>
+VectorPointVisualization<RowIndicatorType>::VectorPointVisualization(
     QString const & data_key,
-    std::vector<CoordType> const & x_coords,
-    std::vector<CoordType> const & y_coords,
+    std::vector<float> const & x_coords,
+    std::vector<float> const & y_coords,
     std::vector<RowIndicatorType> const & row_indicators,
     GroupManager * group_manager)
-    : GenericPointVisualization<CoordType, RowIndicatorType>(data_key, group_manager),
+    : GenericPointVisualization<RowIndicatorType>(data_key, group_manager),
       m_x_coords(x_coords),
       m_y_coords(y_coords),
       m_row_indicators(row_indicators),
@@ -86,8 +86,8 @@ VectorPointVisualization<CoordType, RowIndicatorType>::VectorPointVisualization(
     populateData();
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void VectorPointVisualization<CoordType, RowIndicatorType>::populateData() {
+template<typename RowIndicatorType>
+void VectorPointVisualization<RowIndicatorType>::populateData() {
     if (m_x_coords.empty()) {
         qDebug() << "VectorPointVisualization: No coordinate data provided";
         return;
@@ -101,8 +101,8 @@ void VectorPointVisualization<CoordType, RowIndicatorType>::populateData() {
     this->m_vertex_data.reserve(m_x_coords.size() * 3);// Reserve space for x, y, group_id
 
     for (size_t i = 0; i < m_x_coords.size(); ++i) {
-        CoordType x = m_x_coords[i];
-        CoordType y = m_y_coords[i];
+        float x = m_x_coords[i];
+        float y = m_y_coords[i];
         
         // Determine row indicator
         RowIndicatorType row_indicator;
@@ -138,17 +138,17 @@ void VectorPointVisualization<CoordType, RowIndicatorType>::populateData() {
     qDebug() << "VectorPointVisualization: Populated data with" << this->m_total_point_count << "points";
 }
 
-template<typename CoordType, typename RowIndicatorType>
-BoundingBox VectorPointVisualization<CoordType, RowIndicatorType>::getDataBounds() const {
+template<typename RowIndicatorType>
+BoundingBox VectorPointVisualization<RowIndicatorType>::getDataBounds() const {
     if (m_x_coords.empty()) {
         return BoundingBox(0.0f, 0.0f, 1.0f, 1.0f);
     }
 
     // Find min/max coordinates
-    CoordType min_x = m_x_coords[0];
-    CoordType max_x = m_x_coords[0];
-    CoordType min_y = m_y_coords[0];
-    CoordType max_y = m_y_coords[0];
+    float min_x = m_x_coords[0];
+    float max_x = m_x_coords[0];
+    float min_y = m_y_coords[0];
+    float max_y = m_y_coords[0];
 
     for (size_t i = 1; i < m_x_coords.size(); ++i) {
         min_x = std::min(min_x, m_x_coords[i]);

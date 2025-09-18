@@ -10,7 +10,7 @@ ScatterPlotVisualization::ScatterPlotVisualization(
     std::vector<float> const & y_coords,
     GroupManager * group_manager,
     bool defer_opengl_init)
-    : GenericPointVisualization<float, size_t>(data_key, group_manager, defer_opengl_init),
+    : GenericPointVisualization<size_t>(data_key, group_manager, defer_opengl_init),
       m_x_label("X"),
       m_y_label("Y"),
       m_x_data(x_coords),

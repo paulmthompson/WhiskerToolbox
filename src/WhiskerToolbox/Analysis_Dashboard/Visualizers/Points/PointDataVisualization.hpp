@@ -13,7 +13,7 @@ class PointData;
  * This class inherits from GenericPointVisualization and provides
  * the specific implementation for working with PointData objects.
  */
-struct PointDataVisualization : public GenericPointVisualization<float, EntityId> {
+struct PointDataVisualization : public GenericPointVisualization<EntityId> {
 public:
     /**
      * @brief Constructor for PointData visualization

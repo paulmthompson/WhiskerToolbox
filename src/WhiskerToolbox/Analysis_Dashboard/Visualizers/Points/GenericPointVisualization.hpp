@@ -36,10 +36,11 @@ class GroupManager;
  * This class provides a generic implementation for visualizing points with
  * any coordinate type (float/double) and any row indicator type.
  * 
- * @tparam CoordType The coordinate type (float or double)
- * @tparam RowIndicatorType The type used for row indicators (e.g., int, TimeFrameIndex)
+ * @tparam RowIndicatorType The type used for row indicators. This probably will only be
+ * EntityId, but is templated for backwards compatibility with the old system. I think each TimeFrameIndex
+ * will eventually have its own entity ID.
  */
-template<typename CoordType, typename RowIndicatorType>
+template<typename RowIndicatorType>
 struct GenericPointVisualization : protected QOpenGLFunctions_4_1_Core {
 public:
     std::unique_ptr<QuadTree<RowIndicatorType>> m_spatial_index;
@@ -174,7 +175,8 @@ public:
     void setPerPointEntityIds(std::vector<EntityId> entity_ids) {
         if (entity_ids.size() != m_total_point_count) return;
         m_entity_ids = std::move(entity_ids);
-        m_group_data_needs_update = true;
+        //m_group_data_needs_update = true;
+        _updateGroupVertexData();
     }
 
     //========== Selection Handlers ==========
@@ -350,8 +352,8 @@ private:
 };
 
 // Template implementation
-template<typename CoordType, typename RowIndicatorType>
-GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualization(
+template<typename RowIndicatorType>
+GenericPointVisualization<RowIndicatorType>::GenericPointVisualization(
         QString const & data_key, GroupManager * group_manager)
     : m_key(data_key),
       m_vertex_buffer(QOpenGLBuffer::VertexBuffer),
@@ -368,8 +370,8 @@ GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualizatio
     initializeOpenGLResources();
 }
 
-template<typename CoordType, typename RowIndicatorType>
-GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualization(
+template<typename RowIndicatorType>
+GenericPointVisualization<RowIndicatorType>::GenericPointVisualization(
         QString const & data_key, GroupManager * group_manager, bool defer_opengl_init)
     : m_key(data_key),
       m_vertex_buffer(QOpenGLBuffer::VertexBuffer),
@@ -389,13 +391,13 @@ GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualizatio
     }
 }
 
-template<typename CoordType, typename RowIndicatorType>
-GenericPointVisualization<CoordType, RowIndicatorType>::~GenericPointVisualization() {
+template<typename RowIndicatorType>
+GenericPointVisualization<RowIndicatorType>::~GenericPointVisualization() {
     cleanupOpenGLResources();
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::initializeOpenGLResources() {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::initializeOpenGLResources() {
     qDebug() << "GenericPointVisualization::initializeOpenGLResources: Starting initialization for" << m_key;
 
     if (!initializeOpenGLFunctions()) {
@@ -471,8 +473,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::initializeOpenGLRes
     m_highlight_vertex_buffer.release();
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::cleanupOpenGLResources() {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::cleanupOpenGLResources() {
     if (m_vertex_buffer.isCreated()) {
         m_vertex_buffer.destroy();
     }
@@ -493,8 +495,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::cleanupOpenGLResour
     }
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::updateSelectionVertexBuffer() {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::updateSelectionVertexBuffer() {
     m_selection_vertex_data.clear();
 
     if (m_selected_points.empty()) {
@@ -528,16 +530,16 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::updateSelectionVert
     m_selection_vertex_array_object.release();
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::clearSelection() {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::clearSelection() {
     if (!m_selected_points.empty()) {
         m_selected_points.clear();
         updateSelectionVertexBuffer();
     }
 }
 
-template<typename CoordType, typename RowIndicatorType>
-bool GenericPointVisualization<CoordType, RowIndicatorType>::togglePointSelection(QuadTreePoint<RowIndicatorType> const * point_ptr) {
+template<typename RowIndicatorType>
+bool GenericPointVisualization<RowIndicatorType>::togglePointSelection(QuadTreePoint<RowIndicatorType> const * point_ptr) {
     auto it = m_selected_points.find(point_ptr);
 
     if (it != m_selected_points.end()) {
@@ -550,8 +552,8 @@ bool GenericPointVisualization<CoordType, RowIndicatorType>::togglePointSelectio
     }
 }
 
-template<typename CoordType, typename RowIndicatorType>
-bool GenericPointVisualization<CoordType, RowIndicatorType>::removePointFromSelection(QuadTreePoint<RowIndicatorType> const * point_ptr) {
+template<typename RowIndicatorType>
+bool GenericPointVisualization<RowIndicatorType>::removePointFromSelection(QuadTreePoint<RowIndicatorType> const * point_ptr) {
     auto it = m_selected_points.find(point_ptr);
 
     if (it != m_selected_points.end()) {
@@ -564,8 +566,8 @@ bool GenericPointVisualization<CoordType, RowIndicatorType>::removePointFromSele
     return false;// Point wasn't selected
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::render(QMatrix4x4 const & mvp_matrix, float point_size) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::render(QMatrix4x4 const & mvp_matrix, float point_size) {
     auto pointProgram = ShaderManager::instance().getProgram("point");
     if (!pointProgram || !pointProgram->getNativeProgram()->bind()) {
         qDebug() << "GenericPointVisualization: Failed to bind point shader program";
@@ -598,8 +600,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::render(QMatrix4x4 c
     pointProgram->getNativeProgram()->release();
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::_renderPoints(QOpenGLShaderProgram * shader_program, float point_size) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::_renderPoints(QOpenGLShaderProgram * shader_program, float point_size) {
     if (!m_visible || m_vertex_data.empty()) {
         qDebug() << "GenericPointVisualization::_renderPoints: Skipping render - visible:" << m_visible
                  << "vertex_data_empty:" << m_vertex_data.empty() << "total_points:" << m_total_point_count;
@@ -648,8 +650,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_renderPoints(QOpen
     m_vertex_array_object.release();
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::_renderSelectedPoints(QOpenGLShaderProgram * shader_program, float point_size) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::_renderSelectedPoints(QOpenGLShaderProgram * shader_program, float point_size) {
     if (m_selected_points.empty()) return;
 
     m_selection_vertex_array_object.bind();
@@ -666,8 +668,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_renderSelectedPoin
     m_selection_vertex_array_object.release();
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::_renderHoverPoint(QOpenGLShaderProgram * shader_program, float point_size) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::_renderHoverPoint(QOpenGLShaderProgram * shader_program, float point_size) {
     if (!m_current_hover_point) return;
 
     m_highlight_vertex_array_object.bind();
@@ -692,8 +694,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_renderHoverPoint(Q
     m_highlight_vertex_array_object.release();
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::applySelection(SelectionVariant & selection_handler) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::applySelection(SelectionVariant & selection_handler) {
     if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
     } else if (std::holds_alternative<std::unique_ptr<PointSelectionHandler>>(selection_handler)) {
@@ -703,8 +705,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::applySelection(Sele
     }
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::applySelection(PolygonSelectionHandler const & selection_handler) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::applySelection(PolygonSelectionHandler const & selection_handler) {
     if (!m_selected_points.empty()) {
         clearSelection();
     }
@@ -742,8 +744,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::applySelection(Poly
     }
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::applySelection(PointSelectionHandler const & selection_handler) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::applySelection(PointSelectionHandler const & selection_handler) {
     float tolerance = selection_handler.getWorldTolerance();
     QVector2D world_pos = selection_handler.getWorldPos();
     Qt::KeyboardModifiers modifiers = selection_handler.getModifiers();
@@ -759,8 +761,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::applySelection(Poin
     }
 }
 
-template<typename CoordType, typename RowIndicatorType>
-QString GenericPointVisualization<CoordType, RowIndicatorType>::getTooltipText() const {
+template<typename RowIndicatorType>
+QString GenericPointVisualization<RowIndicatorType>::getTooltipText() const {
     if (!m_current_hover_point) {
         return QString();
     }
@@ -772,8 +774,8 @@ QString GenericPointVisualization<CoordType, RowIndicatorType>::getTooltipText()
             .arg(m_current_hover_point->y, 0, 'f', 2);
 }
 
-template<typename CoordType, typename RowIndicatorType>
-bool GenericPointVisualization<CoordType, RowIndicatorType>::handleHover(QVector2D const & world_pos, float tolerance) {
+template<typename RowIndicatorType>
+bool GenericPointVisualization<RowIndicatorType>::handleHover(QVector2D const & world_pos, float tolerance) {
     auto const * nearest_point = m_spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
 
     // Check if the nearest point is hidden
@@ -786,13 +788,13 @@ bool GenericPointVisualization<CoordType, RowIndicatorType>::handleHover(QVector
     return hover_changed;
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::clearHover() {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::clearHover() {
     m_current_hover_point = nullptr;
 }
 
-template<typename CoordType, typename RowIndicatorType>
-std::optional<RowIndicatorType> GenericPointVisualization<CoordType, RowIndicatorType>::handleDoubleClick(QVector2D const & world_pos, float tolerance) {
+template<typename RowIndicatorType>
+std::optional<RowIndicatorType> GenericPointVisualization<RowIndicatorType>::handleDoubleClick(QVector2D const & world_pos, float tolerance) {
     auto const * nearest_point = m_spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
 
     // Check if the nearest point is hidden
@@ -808,8 +810,8 @@ std::optional<RowIndicatorType> GenericPointVisualization<CoordType, RowIndicato
 
 //========== Visibility Management ==========
 
-template<typename CoordType, typename RowIndicatorType>
-size_t GenericPointVisualization<CoordType, RowIndicatorType>::hideSelectedPoints() {
+template<typename RowIndicatorType>
+size_t GenericPointVisualization<RowIndicatorType>::hideSelectedPoints() {
     if (m_selected_points.empty()) {
         qDebug() << "GenericPointVisualization: No points selected for hiding";
         return 0;
@@ -841,8 +843,8 @@ size_t GenericPointVisualization<CoordType, RowIndicatorType>::hideSelectedPoint
     return hidden_count;
 }
 
-template<typename CoordType, typename RowIndicatorType>
-size_t GenericPointVisualization<CoordType, RowIndicatorType>::showAllPoints() {
+template<typename RowIndicatorType>
+size_t GenericPointVisualization<RowIndicatorType>::showAllPoints() {
     size_t shown_count = m_hidden_points.size();
 
     m_hidden_points.clear();
@@ -856,13 +858,13 @@ size_t GenericPointVisualization<CoordType, RowIndicatorType>::showAllPoints() {
     return shown_count;
 }
 
-template<typename CoordType, typename RowIndicatorType>
-std::pair<size_t, size_t> GenericPointVisualization<CoordType, RowIndicatorType>::getVisibilityStats() const {
+template<typename RowIndicatorType>
+std::pair<size_t, size_t> GenericPointVisualization<RowIndicatorType>::getVisibilityStats() const {
     return {m_total_point_count, m_hidden_point_count};
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::_updateVisibleVertexBuffer() {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::_updateVisibleVertexBuffer() {
     if (!m_spatial_index) {
         return;
     }
@@ -917,8 +919,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::_updateVisibleVerte
              << "total points (" << m_hidden_point_count << "hidden)";
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::setDataRangeEnabled(bool enabled) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::setDataRangeEnabled(bool enabled) {
     qDebug() << "GenericPointVisualization::setDataRangeEnabled(" << enabled << ")";
 
     if (m_data_range_enabled != enabled) {
@@ -931,8 +933,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::setDataRangeEnabled
     }
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::setDataRange(RowIndicatorType start_value, RowIndicatorType end_value) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::setDataRange(RowIndicatorType start_value, RowIndicatorType end_value) {
     qDebug() << "GenericPointVisualization::setDataRange(" << start_value << "," << end_value << ")";
 
     m_data_range_start = start_value;
@@ -946,8 +948,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::setDataRange(RowInd
 
 //========== Group Management ==========
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::setGroupManager(GroupManager * group_manager) {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::setGroupManager(GroupManager * group_manager) {
     m_group_manager = group_manager;
 
     if (m_group_manager) {
@@ -956,8 +958,8 @@ void GenericPointVisualization<CoordType, RowIndicatorType>::setGroupManager(Gro
     }
 }
 
-template<typename CoordType, typename RowIndicatorType>
-std::unordered_set<RowIndicatorType> GenericPointVisualization<CoordType, RowIndicatorType>::getSelectedPointIds() const {
+template<typename RowIndicatorType>
+std::unordered_set<RowIndicatorType> GenericPointVisualization<RowIndicatorType>::getSelectedPointIds() const {
     std::unordered_set<RowIndicatorType> point_ids;
 
     for (auto const * point_ptr: m_selected_points) {
@@ -967,20 +969,20 @@ std::unordered_set<RowIndicatorType> GenericPointVisualization<CoordType, RowInd
     return point_ids;
 }
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::refreshGroupRenderData() {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::refreshGroupRenderData() {
     if (!m_group_manager) {
         return;
     }
 
-    m_group_data_needs_update = true;
+    //m_group_data_needs_update = true;
     _updateGroupVertexData();
 }
 
 //========== Private Methods ==========
 
-template<typename CoordType, typename RowIndicatorType>
-void GenericPointVisualization<CoordType, RowIndicatorType>::_updateGroupVertexData() {
+template<typename RowIndicatorType>
+void GenericPointVisualization<RowIndicatorType>::_updateGroupVertexData() {
     if (!m_group_manager) {
         return;
     }

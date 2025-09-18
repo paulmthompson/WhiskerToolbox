@@ -16,7 +16,7 @@ class GroupManager;
  * 
  * Note: This class defers OpenGL initialization to avoid context issues.
  */
-class EventPointVisualization : public GenericPointVisualization<float, size_t> {
+class EventPointVisualization : public GenericPointVisualization<size_t> {
 public:
     /**
      * @brief Constructor for event-based point visualization

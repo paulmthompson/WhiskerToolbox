@@ -157,7 +157,7 @@ TEST_CASE_METHOD(PointVisualizationTestFixture, "VectorPointVisualization - Basi
     auto [x_coords, y_coords, row_indicators] = createTestVectorData();
     
     // Create VectorPointVisualization
-    VectorPointVisualization<float, int64_t> visualization("test_vector_data", x_coords, y_coords, row_indicators);
+    VectorPointVisualization<int64_t> visualization("test_vector_data", x_coords, y_coords, row_indicators);
     REQUIRE(&visualization != nullptr);
     
 }
@@ -167,7 +167,7 @@ TEST_CASE_METHOD(PointVisualizationTestFixture, "VectorPointVisualization - Data
     auto [x_coords, y_coords, row_indicators] = createTestVectorData();
     
     // Create VectorPointVisualization
-    VectorPointVisualization<float, int64_t> visualization("test_vector_data", x_coords, y_coords, row_indicators);
+    VectorPointVisualization<int64_t> visualization("test_vector_data", x_coords, y_coords, row_indicators);
     
     SECTION("Vertex data population") {
         // Verify that vertex data was populated
@@ -185,7 +185,7 @@ TEST_CASE_METHOD(PointVisualizationTestFixture, "VectorPointVisualization - Vali
         std::vector<float> y_coords = {1.0f, 2.0f}; // Different size
         
         // Should handle mismatched sizes gracefully
-        VectorPointVisualization<float, int64_t> visualization("test_data", x_coords, y_coords);
+        VectorPointVisualization<int64_t> visualization("test_data", x_coords, y_coords);
         REQUIRE(&visualization != nullptr);
     }
     
@@ -195,7 +195,7 @@ TEST_CASE_METHOD(PointVisualizationTestFixture, "VectorPointVisualization - Vali
         std::vector<int64_t> row_indicators = {1, 2}; // Different size
         
         // Should handle mismatched indicator sizes gracefully
-        VectorPointVisualization<float, int64_t> visualization("test_data", x_coords, y_coords, row_indicators);
+        VectorPointVisualization<int64_t> visualization("test_data", x_coords, y_coords, row_indicators);
         REQUIRE(&visualization != nullptr);
     }
 }
@@ -208,7 +208,7 @@ TEST_CASE_METHOD(PointVisualizationTestFixture, "Point Visualization - Integrati
         PointDataVisualization point_viz("point_data", point_data);
         
         auto [x_coords, y_coords, row_indicators] = createTestVectorData();
-        VectorPointVisualization<float, int64_t> vector_viz("vector_data", x_coords, y_coords, row_indicators);
+        VectorPointVisualization<int64_t> vector_viz("vector_data", x_coords, y_coords, row_indicators);
         
         QMatrix4x4 mvp_matrix;
         mvp_matrix.setToIdentity();

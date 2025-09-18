@@ -9,7 +9,7 @@ EventPointVisualization::EventPointVisualization(QString const & data_key,
                                                  std::vector<std::vector<float>> const & event_data,
                                                  GroupManager * group_manager,
                                                  bool defer_opengl_init)
-    : GenericPointVisualization<float, size_t>(data_key, group_manager, defer_opengl_init),
+    : GenericPointVisualization<size_t>(data_key, group_manager, defer_opengl_init),
       m_event_data(event_data) {
     
     // Populate data from event vectors
