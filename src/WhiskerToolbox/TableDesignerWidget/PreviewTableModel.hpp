@@ -1,16 +1,15 @@
 #ifndef PREVIEWTABLEMODEL_HPP
 #define PREVIEWTABLEMODEL_HPP
 
-#include "DataManager/utils/TableView/core/TableView.h"
 #include <QAbstractTableModel>
-#include <QVariant>
 #include <QStringList>
+#include <QVariant>
 
 #include <optional>
 #include <string>
 #include <vector>
 
-// QAbstractTableModel included above
+class TableView;
 
 /**
  * @brief Read-only table model that renders a small-window TableView preview.
@@ -53,6 +52,4 @@ private:
     static QString joinVector(std::vector<T> const & values);
 };
 
-#endif // PREVIEWTABLEMODEL_HPP
-
-
+#endif// PREVIEWTABLEMODEL_HPP

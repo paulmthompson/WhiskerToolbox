@@ -1,6 +1,7 @@
 #include "TableDesignerWidget.hpp"
 #include "ui_TableDesignerWidget.h"
 
+#include "Collapsible_Widget/Section.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -17,12 +18,11 @@
 #include "DataManager/utils/TableView/interfaces/IColumnComputer.h"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 #include "DataManager/utils/TableView/transforms/PCATransform.hpp"
-#include "TableInfoWidget.hpp"
-#include "Collapsible_Widget/Section.hpp"
-#include "TableViewerWidget/TableViewerWidget.hpp"
-#include "TableTransformWidget.hpp"
 #include "TableExportWidget.hpp"
+#include "TableInfoWidget.hpp"
 #include "TableJSONWidget.hpp"
+#include "TableTransformWidget.hpp"
+#include "TableViewerWidget/TableViewerWidget.hpp"
 
 
 #include <QCheckBox>
@@ -35,18 +35,18 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QTableView>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
-#include <QTableView>
 
 #include <QFutureWatcher>
-#include <QTimer>
-#include <QtConcurrent>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QJsonArray>
 #include <QJsonParseError>
+#include <QTimer>
+#include <QtConcurrent>
 
 #include <algorithm>
 #include <fstream>
@@ -62,16 +62,16 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
       _data_manager(std::move(data_manager)) {
 
     ui->setupUi(this);
-    
+
     _parameter_widget = nullptr;
     _parameter_layout = nullptr;
-    
+
     // Initialize table viewer widget for preview
     _table_viewer = new TableViewerWidget(this);
-    
+
     // Add the table viewer widget to the preview layout
     ui->preview_layout->addWidget(_table_viewer);
-    
+
     _preview_debounce_timer = new QTimer(this);
     _preview_debounce_timer->setSingleShot(true);
     _preview_debounce_timer->setInterval(150);
@@ -108,7 +108,7 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     _table_transform_section->layout()->addWidget(_table_transform_widget);
     _table_transform_section->autoSetContentLayout();
     // Place after build_group (after preview)
-    ui->main_layout->insertWidget( ui->main_layout->indexOf(ui->build_group) + 1, _table_transform_section );
+    ui->main_layout->insertWidget(ui->main_layout->indexOf(ui->build_group) + 1, _table_transform_section);
     connect(_table_transform_widget, &TableTransformWidget::applyTransformClicked,
             this, &TableDesignerWidget::onApplyTransform);
 
@@ -118,7 +118,7 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     _table_export_section->setContentLayout(*new QVBoxLayout());
     _table_export_section->layout()->addWidget(_table_export_widget);
     _table_export_section->autoSetContentLayout();
-    ui->main_layout->insertWidget( ui->main_layout->indexOf(ui->build_group) + 2, _table_export_section );
+    ui->main_layout->insertWidget(ui->main_layout->indexOf(ui->build_group) + 2, _table_export_section);
     connect(_table_export_widget, &TableExportWidget::exportClicked,
             this, &TableDesignerWidget::onExportCsv);
 
@@ -128,8 +128,8 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     _table_json_section->setContentLayout(*new QVBoxLayout());
     _table_json_section->layout()->addWidget(_table_json_widget);
     _table_json_section->autoSetContentLayout();
-    ui->main_layout->insertWidget( ui->main_layout->indexOf(ui->build_group) + 3, _table_json_section );
-    connect(_table_json_widget, &TableJSONWidget::updateRequested, this, [this](QString const & jsonText){
+    ui->main_layout->insertWidget(ui->main_layout->indexOf(ui->build_group) + 3, _table_json_section);
+    connect(_table_json_widget, &TableJSONWidget::updateRequested, this, [this](QString const & jsonText) {
         applyJsonTemplateToUI(jsonText);
     });
 
@@ -236,8 +236,8 @@ void TableDesignerWidget::onTableSelectionChanged() {
     ui->delete_table_btn->setEnabled(true);
     // Table info section is controlled separately
     ui->build_table_btn->setEnabled(true);
-    if (auto gb = this->findChild<QGroupBox*>("row_source_group")) gb->setEnabled(true);
-    if (auto gb = this->findChild<QGroupBox*>("column_design_group")) gb->setEnabled(true);
+    if (auto gb = this->findChild<QGroupBox *>("row_source_group")) gb->setEnabled(true);
+    if (auto gb = this->findChild<QGroupBox *>("column_design_group")) gb->setEnabled(true);
     // Enable save info within TableInfoWidget
     if (_table_info_section) _table_info_section->setEnabled(true);
 
@@ -641,24 +641,36 @@ void TableDesignerWidget::onExportCsv() {
                 // Try known scalar types in order
                 try {
                     auto const & vals = view->getColumnValues<double>(names[c].c_str());
-                    if (r < vals.size()) { file << vals[r]; wrote = true; }
+                    if (r < vals.size()) {
+                        file << vals[r];
+                        wrote = true;
+                    }
                 } catch (...) {}
                 if (!wrote) {
                     try {
                         auto const & vals = view->getColumnValues<int>(names[c].c_str());
-                        if (r < vals.size()) { file << vals[r]; wrote = true; }
+                        if (r < vals.size()) {
+                            file << vals[r];
+                            wrote = true;
+                        }
                     } catch (...) {}
                 }
                 if (!wrote) {
                     try {
                         auto const & vals = view->getColumnValues<int64_t>(names[c].c_str());
-                        if (r < vals.size()) { file << vals[r]; wrote = true; }
+                        if (r < vals.size()) {
+                            file << vals[r];
+                            wrote = true;
+                        }
                     } catch (...) {}
                 }
                 if (!wrote) {
                     try {
                         auto const & vals = view->getColumnValues<bool>(names[c].c_str());
-                        if (r < vals.size()) { file << (vals[r] ? 1 : 0); wrote = true; }
+                        if (r < vals.size()) {
+                            file << (vals[r] ? 1 : 0);
+                            wrote = true;
+                        }
                     } catch (...) {}
                 }
                 if (!wrote) file << "NaN";
@@ -846,8 +858,8 @@ void TableDesignerWidget::clearUI() {
     ui->delete_table_btn->setEnabled(false);
     // Table info section is controlled separately
     ui->build_table_btn->setEnabled(false);
-    if (auto gb = this->findChild<QGroupBox*>("row_source_group")) gb->setEnabled(false);
-    if (auto gb = this->findChild<QGroupBox*>("column_design_group")) gb->setEnabled(false);
+    if (auto gb = this->findChild<QGroupBox *>("row_source_group")) gb->setEnabled(false);
+    if (auto gb = this->findChild<QGroupBox *>("column_design_group")) gb->setEnabled(false);
     if (_table_info_section) _table_info_section->setEnabled(false);
 
     updateBuildStatus("No table selected");
@@ -1279,14 +1291,14 @@ void TableDesignerWidget::rebuildPreviewNow() {
     if (!desiredOrder.isEmpty()) {
         std::vector<ColumnInfo> reordered;
         reordered.reserve(column_infos.size());
-        for (auto const & name : desiredOrder) {
-            auto it = std::find_if(column_infos.begin(), column_infos.end(), [&](ColumnInfo const & ci){ return QString::fromStdString(ci.name) == name; });
+        for (auto const & name: desiredOrder) {
+            auto it = std::find_if(column_infos.begin(), column_infos.end(), [&](ColumnInfo const & ci) { return QString::fromStdString(ci.name) == name; });
             if (it != column_infos.end()) {
                 reordered.push_back(*it);
             }
         }
-        for (auto const & ci : column_infos) {
-            if (std::find_if(reordered.begin(), reordered.end(), [&](ColumnInfo const & x){ return x.name == ci.name; }) == reordered.end()) {
+        for (auto const & ci: column_infos) {
+            if (std::find_if(reordered.begin(), reordered.end(), [&](ColumnInfo const & x) { return x.name == ci.name; }) == reordered.end()) {
                 reordered.push_back(ci);
             }
         }
@@ -1303,7 +1315,7 @@ void TableDesignerWidget::rebuildPreviewNow() {
     // Capture the current visual order from the viewer
     QStringList currentOrder;
     if (_table_viewer) {
-        auto * tv = _table_viewer->findChild<QTableView*>();
+        auto * tv = _table_viewer->findChild<QTableView *>();
         if (tv && tv->model()) {
             auto * header = tv->horizontalHeader();
             int cols = tv->model()->columnCount();
@@ -1421,40 +1433,52 @@ void TableDesignerWidget::setJsonTemplateFromCurrentState() {
     // Build a minimal JSON template representing current UI state
     QString row_source = ui->row_data_source_combo ? ui->row_data_source_combo->currentText() : QString();
     auto columns = getEnabledColumnInfos();
-    if (row_source.isEmpty() && columns.empty()) { _table_json_widget->setJsonText("{}"); return; }
+    if (row_source.isEmpty() && columns.empty()) {
+        _table_json_widget->setJsonText("{}");
+        return;
+    }
 
     QString row_type;
     QString row_source_name;
-    if (row_source.startsWith("TimeFrame: ")) { row_type = "timestamp"; row_source_name = row_source.mid(11); }
-    else if (row_source.startsWith("Events: ")) { row_type = "timestamp"; row_source_name = row_source.mid(8); }
-    else if (row_source.startsWith("Intervals: ")) { row_type = "interval"; row_source_name = row_source.mid(11); }
+    if (row_source.startsWith("TimeFrame: ")) {
+        row_type = "timestamp";
+        row_source_name = row_source.mid(11);
+    } else if (row_source.startsWith("Events: ")) {
+        row_type = "timestamp";
+        row_source_name = row_source.mid(8);
+    } else if (row_source.startsWith("Intervals: ")) {
+        row_type = "interval";
+        row_source_name = row_source.mid(11);
+    }
 
     QStringList column_entries;
-    for (auto const & c : columns) {
+    for (auto const & c: columns) {
         // Strip any internal prefixes for JSON to keep schema user-friendly
         QString ds = QString::fromStdString(c.dataSourceName);
         if (ds.startsWith("events:")) ds = ds.mid(7);
-        else if (ds.startsWith("intervals:")) ds = ds.mid(10);
-        else if (ds.startsWith("analog:")) ds = ds.mid(7);
+        else if (ds.startsWith("intervals:"))
+            ds = ds.mid(10);
+        else if (ds.startsWith("analog:"))
+            ds = ds.mid(7);
 
         QString entry = QString(
-            "{\n  \"name\": \"%1\",\n  \"description\": \"%2\",\n  \"data_source\": \"%3\",\n  \"computer\": \"%4\"%5\n}"
-        ).arg(QString::fromStdString(c.name))
-         .arg(QString::fromStdString(c.description))
-         .arg(ds)
-         .arg(QString::fromStdString(c.computerName))
-         .arg(c.parameters.empty() ? QString() : QString(",\n  \"parameters\": {}"));
+                                "{\n  \"name\": \"%1\",\n  \"description\": \"%2\",\n  \"data_source\": \"%3\",\n  \"computer\": \"%4\"%5\n}")
+                                .arg(QString::fromStdString(c.name))
+                                .arg(QString::fromStdString(c.description))
+                                .arg(ds)
+                                .arg(QString::fromStdString(c.computerName))
+                                .arg(c.parameters.empty() ? QString() : QString(",\n  \"parameters\": {}"));
         column_entries << entry;
     }
 
     QString table_name = _table_info_widget ? _table_info_widget->getName() : _current_table_id;
     QString json = QString(
-        "{\n  \"tables\": [\n    {\n      \"table_id\": \"%1\",\n      \"name\": \"%2\",\n      \"row_selector\": { \"type\": \"%3\", \"source\": \"%4\" },\n      \"columns\": [\n%5\n      ]\n    }\n  ]\n}"
-    ).arg(_current_table_id)
-     .arg(table_name)
-     .arg(row_type)
-     .arg(row_source_name)
-     .arg(column_entries.join(",\n"));
+                           "{\n  \"tables\": [\n    {\n      \"table_id\": \"%1\",\n      \"name\": \"%2\",\n      \"row_selector\": { \"type\": \"%3\", \"source\": \"%4\" },\n      \"columns\": [\n%5\n      ]\n    }\n  ]\n}")
+                           .arg(_current_table_id)
+                           .arg(table_name)
+                           .arg(row_type)
+                           .arg(row_source_name)
+                           .arg(column_entries.join(",\n"));
 
     _table_json_widget->setJsonText(json);
 }
@@ -1474,12 +1498,16 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
         qsizetype len = std::min<qsizetype>(bytes.size(), static_cast<qsizetype>(offset));
         for (qsizetype i = 0; i < len; ++i) {
             char ch = bytes.at(i);
-            if (ch == '\n') { ++line; col = 1; }
-            else { ++col; }
+            if (ch == '\n') {
+                ++line;
+                col = 1;
+            } else {
+                ++col;
+            }
         }
         QString detail = err.error != QJsonParseError::NoError
-                ? QString("%1 (line %2, column %3)").arg(err.errorString()).arg(line).arg(col)
-                : QString("JSON root must be an object");
+                                 ? QString("%1 (line %2, column %3)").arg(err.errorString()).arg(line).arg(col)
+                                 : QString("JSON root must be an object");
         auto * box = new QMessageBox(this);
         box->setIcon(QMessageBox::Critical);
         box->setWindowTitle("Invalid JSON");
@@ -1518,10 +1546,8 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
             if (rs_type == "interval") {
                 source_ok = (_data_manager && _data_manager->getData<DigitalIntervalSeries>(rs_source.toStdString()) != nullptr);
             } else if (rs_type == "timestamp") {
-                source_ok = (_data_manager && (
-                    _data_manager->getTime(TimeKey(rs_source.toStdString())) != nullptr ||
-                    _data_manager->getData<DigitalEventSeries>(rs_source.toStdString()) != nullptr
-                ));
+                source_ok = (_data_manager && (_data_manager->getTime(TimeKey(rs_source.toStdString())) != nullptr ||
+                                               _data_manager->getData<DigitalEventSeries>(rs_source.toStdString()) != nullptr));
             } else {
                 errors << QString("Unsupported row_selector type: %1").arg(rs_type);
             }
@@ -1558,7 +1584,7 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
         auto * tree = ui->computers_tree;
         // Avoid recursive preview rebuilds while we toggle many items
         bool prevBlocked = tree->blockSignals(true);
-        for (auto const & cval : cols) {
+        for (auto const & cval: cols) {
             if (!cval.isObject()) continue;
             auto cobj = cval.toObject();
             QString data_source = cobj.value("data_source").toString();
@@ -1569,11 +1595,9 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
                 continue;
             }
             // Validate data source existence
-            bool has_ds = (_data_manager && (
-                _data_manager->getData<DigitalEventSeries>(data_source.toStdString()) != nullptr ||
-                _data_manager->getData<DigitalIntervalSeries>(data_source.toStdString()) != nullptr ||
-                _data_manager->getData<AnalogTimeSeries>(data_source.toStdString()) != nullptr
-            ));
+            bool has_ds = (_data_manager && (_data_manager->getData<DigitalEventSeries>(data_source.toStdString()) != nullptr ||
+                                             _data_manager->getData<DigitalIntervalSeries>(data_source.toStdString()) != nullptr ||
+                                             _data_manager->getData<AnalogTimeSeries>(data_source.toStdString()) != nullptr));
             if (!has_ds) {
                 errors << QString("Data key not found in DataManager: %1").arg(data_source);
             }
@@ -1595,14 +1619,18 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
                 QString ds_text = ds_item->text(0);
                 if (ds_text.contains(data_source)) {
                     if (ds_text.startsWith("Events: ")) type_event = true;
-                    else if (ds_text.startsWith("Intervals: ")) type_interval = true;
-                    else if (ds_text.startsWith("analog:")) type_analog = true;
+                    else if (ds_text.startsWith("Intervals: "))
+                        type_interval = true;
+                    else if (ds_text.startsWith("analog:"))
+                        type_analog = true;
                 }
             }
             QString ds_repr;
             if (type_event) ds_repr = QString("Events: %1").arg(data_source);
-            else if (type_interval) ds_repr = QString("Intervals: %1").arg(data_source);
-            else if (type_analog) ds_repr = QString("analog:%1").arg(data_source);
+            else if (type_interval)
+                ds_repr = QString("Intervals: %1").arg(data_source);
+            else if (type_analog)
+                ds_repr = QString("analog:%1").arg(data_source);
             if (!ds_repr.isEmpty() && !isComputerCompatibleWithDataSource(computer.toStdString(), ds_repr)) {
                 errors << QString("Computer '%1' is not valid for data source type requested (%2)").arg(computer, ds_repr);
             }
@@ -1615,13 +1643,19 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
             for (int i = 0; i < tree->topLevelItemCount(); ++i) {
                 auto * ds_item = tree->topLevelItem(i);
                 QString t = ds_item->text(0);
-                if (t == exact_events || t == exact_intervals || t == exact_analog) { matched_ds = ds_item; break; }
+                if (t == exact_events || t == exact_intervals || t == exact_analog) {
+                    matched_ds = ds_item;
+                    break;
+                }
             }
             if (!matched_ds) {
                 for (int i = 0; i < tree->topLevelItemCount(); ++i) {
                     auto * ds_item = tree->topLevelItem(i);
                     QString t = ds_item->text(0);
-                    if (t.contains(data_source) || t.endsWith(data_source)) { matched_ds = ds_item; break; }
+                    if (t.contains(data_source) || t.endsWith(data_source)) {
+                        matched_ds = ds_item;
+                        break;
+                    }
                 }
             }
             if (matched_ds) {
@@ -1698,7 +1732,7 @@ std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
                 } else if (source_key.startsWith("Intervals: ")) {
                     source_key = QString("intervals:%1").arg(source_key.mid(11));
                 } else if (source_key.startsWith("analog:")) {
-                    source_key = source_key; // already prefixed
+                    source_key = source_key;// already prefixed
                 } else if (source_key.startsWith("TimeFrame: ")) {
                     // TimeFrame used only for row selector; columns require concrete sources
                     source_key = source_key.mid(11);
@@ -1780,4 +1814,3 @@ QString TableDesignerWidget::generateDefaultColumnName(QString const & data_sour
     // Create a concise name
     return QString("%1_%2").arg(source_name, computer_name);
 }
-
