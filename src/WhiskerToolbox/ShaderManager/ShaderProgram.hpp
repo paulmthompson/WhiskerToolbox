@@ -33,12 +33,12 @@ public:
     void setUniform(std::string const & name, glm::mat4 const & matrix);
 
     // Getters for file/resource paths
-    std::string const & getVertexPath() const { return m_vertexPath; }
-    std::string const & getFragmentPath() const { return m_fragmentPath; }
-    std::string const & getGeometryPath() const { return m_geometryPath; }
+    [[nodiscard]] std::string const & getVertexPath() const { return m_vertexPath; }
+    [[nodiscard]] std::string const & getFragmentPath() const { return m_fragmentPath; }
+    [[nodiscard]] std::string const & getGeometryPath() const { return m_geometryPath; }
 
-    QOpenGLShaderProgram * getNativeProgram() const { return m_program.get(); }
-    GLuint getProgramId() const { return m_program ? m_program->programId() : 0; }
+    [[nodiscard]] QOpenGLShaderProgram * getNativeProgram() const { return m_program.get(); }
+    [[nodiscard]] GLuint getProgramId() const { return m_program ? m_program->programId() : 0; }
 
 private:
     bool compileAndLink();

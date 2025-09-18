@@ -1,10 +1,12 @@
 #ifndef TABLEEXPORTWIDGET_HPP
 #define TABLEEXPORTWIDGET_HPP
 
-#include <QWidget>
 #include <QString>
+#include <QWidget>
 
-namespace Ui { class TableExportWidget; }
+namespace Ui {
+class TableExportWidget;
+}
 
 /**
  * @brief Widget to configure and trigger CSV export for a TableView.
@@ -54,6 +56,4 @@ private:
     Ui::TableExportWidget * ui;
 };
 
-#endif // TABLEEXPORTWIDGET_HPP
-
-
+#endif// TABLEEXPORTWIDGET_HPP

@@ -25,8 +25,6 @@ GroupManagementWidget::GroupManagementWidget(GroupManager * group_manager, QWidg
             this, &GroupManagementWidget::onGroupRemoved);
     connect(m_group_manager, &GroupManager::groupModified,
             this, &GroupManagementWidget::onGroupModified);
-    //connect(m_group_manager, &GroupManager::pointAssignmentsChanged,
-    //        this, &GroupManagementWidget::onPointAssignmentsChanged);
 
     // Connect table signals
     connect(m_ui->groupsTable, &QTableWidget::itemChanged,
@@ -88,7 +86,7 @@ void GroupManagementWidget::addGroupRow(int group_id, int row) {
     m_ui->groupsTable->insertRow(row);
 
     // Name column
-    QTableWidgetItem * name_item = new QTableWidgetItem(group.value().name);
+    auto * name_item = new QTableWidgetItem(group.value().name);
     name_item->setData(Qt::UserRole, group_id);// Store group ID in the item
     m_ui->groupsTable->setItem(row, 0, name_item);
 
@@ -98,15 +96,15 @@ void GroupManagementWidget::addGroupRow(int group_id, int row) {
     m_ui->groupsTable->setCellWidget(row, 1, color_button);
 
     // Members column
-    int member_count = m_group_manager->getGroupMemberCount(group_id);
-    QTableWidgetItem * members_item = new QTableWidgetItem(QString::number(member_count));
+    int const member_count = m_group_manager->getGroupMemberCount(group_id);
+    auto * members_item = new QTableWidgetItem(QString::number(member_count));
     members_item->setFlags(members_item->flags() & ~Qt::ItemIsEditable);// Make read-only
     members_item->setTextAlignment(Qt::AlignCenter);
     m_ui->groupsTable->setItem(row, 2, members_item);
 }
 
 QPushButton * GroupManagementWidget::createColorButton(int group_id) {
-    QPushButton * button = new QPushButton();
+    auto * button = new QPushButton();
     button->setMaximumSize(30, 20);
     button->setMinimumSize(30, 20);
     button->setProperty("group_id", group_id);
@@ -118,23 +116,23 @@ QPushButton * GroupManagementWidget::createColorButton(int group_id) {
 }
 
 void GroupManagementWidget::updateColorButton(QPushButton * button, QColor const & color) {
-    QString style = QString("QPushButton { background-color: %1; border: 1px solid #666; }")
+    QString const style = QString("QPushButton { background-color: %1; border: 1px solid #666; }")
                             .arg(color.name());
     button->setStyleSheet(style);
 }
 
 void GroupManagementWidget::createNewGroup() {
-    QString name = QString("Group %1").arg(m_group_manager->getGroups().size() + 1);
+    QString const name = QString("Group %1").arg(m_group_manager->getGroups().size() + 1);
     m_group_manager->createGroup(name);
 }
 
 void GroupManagementWidget::removeSelectedGroup() {
-    int current_row = m_ui->groupsTable->currentRow();
+    int const current_row = m_ui->groupsTable->currentRow();
     if (current_row < 0) {
         return;
     }
 
-    int group_id = getGroupIdForRow(current_row);
+    int const group_id = getGroupIdForRow(current_row);
     if (group_id != -1) {
         m_group_manager->removeGroup(group_id);
     }
@@ -142,14 +140,14 @@ void GroupManagementWidget::removeSelectedGroup() {
 
 void GroupManagementWidget::onGroupCreated(int group_id) {
     if (!m_updating_table) {
-        int row = m_ui->groupsTable->rowCount();
+        int const row = m_ui->groupsTable->rowCount();
         addGroupRow(group_id, row);
     }
 }
 
 void GroupManagementWidget::onGroupRemoved(int group_id) {
     if (!m_updating_table) {
-        int row = findRowForGroupId(group_id);
+        int const row = findRowForGroupId(group_id);
         if (row >= 0) {
             m_ui->groupsTable->removeRow(row);
         }
@@ -158,7 +156,7 @@ void GroupManagementWidget::onGroupRemoved(int group_id) {
 
 void GroupManagementWidget::onGroupModified(int group_id) {
     if (!m_updating_table) {
-        int row = findRowForGroupId(group_id);
+        int const row = findRowForGroupId(group_id);
         if (row >= 0) {
             auto group = m_group_manager->getGroup(group_id);
             if (group.has_value()) {
@@ -171,7 +169,7 @@ void GroupManagementWidget::onGroupModified(int group_id) {
                 }
 
                 // Update color button
-                QPushButton * color_button = qobject_cast<QPushButton *>(m_ui->groupsTable->cellWidget(row, 1));
+                auto * color_button = qobject_cast<QPushButton *>(m_ui->groupsTable->cellWidget(row, 1));
                 if (color_button) {
                     updateColorButton(color_button, group.value().color);
                 }
@@ -179,7 +177,7 @@ void GroupManagementWidget::onGroupModified(int group_id) {
                 // Update member count
                 QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 2);
                 if (members_item) {
-                    int member_count = m_group_manager->getGroupMemberCount(group_id);
+                    int const member_count = m_group_manager->getGroupMemberCount(group_id);
                     members_item->setText(QString::number(member_count));
                 }
             }
@@ -190,12 +188,12 @@ void GroupManagementWidget::onGroupModified(int group_id) {
 void GroupManagementWidget::onPointAssignmentsChanged(std::unordered_set<int> const & affected_groups) {
     if (!m_updating_table) {
         // Update member counts for all affected groups
-        for (int group_id: affected_groups) {
-            int row = findRowForGroupId(group_id);
+        for (int const group_id: affected_groups) {
+            int const row = findRowForGroupId(group_id);
             if (row >= 0) {
                 QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 2);
                 if (members_item) {
-                    int member_count = m_group_manager->getGroupMemberCount(group_id);
+                    int const member_count = m_group_manager->getGroupMemberCount(group_id);
                     members_item->setText(QString::number(member_count));
                 }
             }
@@ -208,8 +206,8 @@ void GroupManagementWidget::onItemChanged(QTableWidgetItem * item) {
         return;// Only handle name column changes
     }
 
-    int group_id = item->data(Qt::UserRole).toInt();
-    QString new_name = item->text().trimmed();
+    int const group_id = item->data(Qt::UserRole).toInt();
+    QString const new_name = item->text().trimmed();
 
     if (new_name.isEmpty()) {
         // Don't allow empty names, revert to original
@@ -227,25 +225,25 @@ void GroupManagementWidget::onItemChanged(QTableWidgetItem * item) {
 }
 
 void GroupManagementWidget::onColorButtonClicked() {
-    QPushButton * button = qobject_cast<QPushButton *>(sender());
+    auto * button = qobject_cast<QPushButton *>(sender());
     if (!button) {
         return;
     }
 
-    int group_id = button->property("group_id").toInt();
+    int const group_id = button->property("group_id").toInt();
     auto group = m_group_manager->getGroup(group_id);
     if (!group.has_value()) {
         return;
     }
 
-    QColor new_color = QColorDialog::getColor(group.value().color, this, "Select Group Color");
+    QColor const new_color = QColorDialog::getColor(group.value().color, this, "Select Group Color");
     if (new_color.isValid() && new_color != group.value().color) {
         m_group_manager->setGroupColor(group_id, new_color);
     }
 }
 
 void GroupManagementWidget::onSelectionChanged() {
-    bool has_selection = m_ui->groupsTable->currentRow() >= 0;
+    bool const has_selection = m_ui->groupsTable->currentRow() >= 0;
     m_ui->removeButton->setEnabled(has_selection);
 }
 

@@ -4,9 +4,9 @@
 
 #include "DataManagerTypes.hpp"
 
+#include <QPoint>
 #include <QTreeWidget>
 #include <QWidget>
-#include <QPoint>
 
 #include <functional>
 #include <memory>
@@ -68,7 +68,7 @@ private slots:
 
 public:
     // Expose underlying tree widget for context menu handling by parent widgets
-    QTreeWidget * treeWidget() const;
+    [[nodiscard]] QTreeWidget * treeWidget() const;
 
 private:
     struct TreeFeature {

@@ -1,5 +1,7 @@
 #include "PreviewTableModel.hpp"
 
+#include "DataManager/utils/TableView/core/TableView.h"
+
 #include <QtCore/QVariant>
 
 #include <iomanip>

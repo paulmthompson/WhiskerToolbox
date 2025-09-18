@@ -3,7 +3,6 @@
 
 #include "DataManager/utils/TableView/TableInfo.hpp"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
-#include "TableViewerWidget/TableViewerWidget.hpp"
 
 #include <QStringList>
 #include <QWidget>

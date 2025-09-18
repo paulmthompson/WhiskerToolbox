@@ -4,7 +4,8 @@
 #include <QPushButton>
 
 TableExportWidget::TableExportWidget(QWidget * parent)
-    : QWidget(parent), ui(new Ui::TableExportWidget) {
+    : QWidget(parent),
+      ui(new Ui::TableExportWidget) {
     ui->setupUi(this);
     connect(ui->export_csv_btn, &QPushButton::clicked, this, &TableExportWidget::exportClicked);
 }
@@ -26,5 +27,3 @@ int TableExportWidget::getPrecision() const {
 bool TableExportWidget::isHeaderIncluded() const {
     return ui->export_header_checkbox && ui->export_header_checkbox->isChecked();
 }
-
-

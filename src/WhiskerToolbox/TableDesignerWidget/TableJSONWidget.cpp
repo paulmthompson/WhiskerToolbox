@@ -1,13 +1,14 @@
 #include "TableJSONWidget.hpp"
 #include "ui_TableJSONWidget.h"
 
-#include <QFileDialog>
 #include <QFile>
-#include <QTextStream>
+#include <QFileDialog>
 #include <QMessageBox>
+#include <QTextStream>
 
 TableJSONWidget::TableJSONWidget(QWidget * parent)
-    : QWidget(parent), ui(new Ui::TableJSONWidget) {
+    : QWidget(parent),
+      ui(new Ui::TableJSONWidget) {
     ui->setupUi(this);
     connect(ui->load_json_btn, &QPushButton::clicked, this, &TableJSONWidget::onLoadJsonClicked);
     connect(ui->apply_json_btn, &QPushButton::clicked, this, &TableJSONWidget::onUpdateTableClicked);
@@ -62,5 +63,3 @@ void TableJSONWidget::onSaveJsonClicked() {
     out << getJsonText();
     file.close();
 }
-
-

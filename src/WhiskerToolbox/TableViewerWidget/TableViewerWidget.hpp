@@ -3,8 +3,8 @@
 
 #include "DataManager/utils/TableView/TableInfo.hpp"
 
-#include <QWidget>
 #include <QStringList>
+#include <QWidget>
 
 #include <memory>
 #include <vector>
@@ -51,9 +51,9 @@ public:
      * @param table_name Display name for the table (optional)
      */
     void setTableConfiguration(std::unique_ptr<IRowSelector> row_selector,
-                              std::vector<ColumnInfo> column_infos,
-                              std::shared_ptr<DataManager> data_manager,
-                              QString const & table_name = "");
+                               std::vector<ColumnInfo> column_infos,
+                               std::shared_ptr<DataManager> data_manager,
+                               QString const & table_name = "");
 
     /**
      * @brief Clear the current table display
@@ -120,4 +120,4 @@ public:
     void applyColumnOrder(QStringList const & desiredOrder);
 };
 
-#endif // TABLEVIEWERWIDGET_HPP
+#endif// TABLEVIEWERWIDGET_HPP
