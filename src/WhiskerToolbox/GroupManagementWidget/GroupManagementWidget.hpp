@@ -122,14 +122,14 @@ private:
      * @param row The table row
      * @return The group ID, or -1 if invalid
      */
-    int getGroupIdForRow(int row) const;
+    [[nodiscard]] int getGroupIdForRow(int row) const;
 
     /**
      * @brief Find the table row for a group ID
      * @param group_id The group ID
      * @return The row index, or -1 if not found
      */
-    int findRowForGroupId(int group_id) const;
+    [[nodiscard]] int findRowForGroupId(int group_id) const;
 };
 
 #endif// GROUPMANAGEMENTWIDGET_HPP

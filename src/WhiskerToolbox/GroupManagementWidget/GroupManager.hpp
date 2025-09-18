@@ -1,6 +1,8 @@
 #ifndef GROUPMANAGER_HPP
 #define GROUPMANAGER_HPP
 
+#include "DataManager/Entity/EntityTypes.hpp"
+
 #include <QColor>
 #include <QMap>
 #include <QObject>
@@ -9,8 +11,6 @@
 #include <cstdint>
 #include <optional>
 #include <unordered_set>
-
-#include "DataManager/Entity/EntityTypes.hpp"
 
 class EntityGroupManager;
 
@@ -29,14 +29,17 @@ public:
         QString name;
         QColor color;
 
-        Group() : id(0), name(""), color(QColor()) {}
+        Group()
+            : id(0),
+              name(""),
+              color(QColor()) {}
         Group(int group_id, QString const & group_name, QColor const & group_color)
             : id(group_id),
               name(group_name),
               color(group_color) {}
     };
 
-    explicit GroupManager(EntityGroupManager* entity_group_manager, QObject * parent = nullptr);
+    explicit GroupManager(EntityGroupManager * entity_group_manager, QObject * parent = nullptr);
     ~GroupManager() = default;
 
     /**
@@ -65,14 +68,14 @@ public:
      * @brief Get all groups
      * @return Map of group ID to Group object
      */
-    QMap<int, Group> getGroups() const;
+    [[nodiscard]] QMap<int, Group> getGroups() const;
 
     /**
      * @brief Get a specific group by ID
      * @param group_id The group ID
      * @return Optional Group object if found
      */
-    std::optional<Group> getGroup(int group_id) const;
+    [[nodiscard]] std::optional<Group> getGroup(int group_id) const;
 
     /**
      * @brief Update group name
@@ -109,19 +112,19 @@ public:
     /**
      * @brief Get which group an entity belongs to
      */
-    int getEntityGroup(EntityId id) const;
+    [[nodiscard]] int getEntityGroup(EntityId id) const;
 
     /**
      * @brief Get the color for an entity based on its group assignment
      */
-    QColor getEntityColor(EntityId id, QColor const & default_color) const;
+    [[nodiscard]] QColor getEntityColor(EntityId id, QColor const & default_color) const;
 
     /**
      * @brief Get the number of entities assigned to a specific group
      * @param group_id The group ID
      * @return Number of entities in the group, 0 if group doesn't exist
      */
-    int getGroupMemberCount(int group_id) const;
+    [[nodiscard]] int getGroupMemberCount(int group_id) const;
 
     /**
      * @brief Clear all groups and assignments
@@ -147,15 +150,9 @@ signals:
      */
     void groupModified(int group_id);
 
-    /**
-     * @brief Emitted when point assignments change
-     * @param affected_groups Set of group IDs that were affected
-     */
-    //void pointAssignmentsChanged(std::unordered_set<int> const & affected_groups);
-
 private:
-    EntityGroupManager* m_entity_group_manager;
-    QMap<int, QColor> m_group_colors; // Maps EntityGroupManager GroupId to QColor
+    EntityGroupManager * m_entity_group_manager;
+    QMap<int, QColor> m_group_colors;// Maps EntityGroupManager GroupId to QColor
     int m_next_group_id;
 
     static QVector<QColor> const DEFAULT_COLORS;
@@ -164,7 +161,7 @@ private:
      * @brief Get the next color from the default palette
      * @return A color from the predefined palette
      */
-    QColor getNextDefaultColor() const;
+    [[nodiscard]] QColor getNextDefaultColor() const;
 };
 
 #endif// GROUPMANAGER_HPP
