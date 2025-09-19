@@ -1,9 +1,9 @@
 #ifndef IMULTI_COLUMN_COMPUTER_H
 #define IMULTI_COLUMN_COMPUTER_H
 
-#include "utils/TableView/core/ExecutionPlan.h"
-#include "utils/TableView/columns/IColumn.h"
 #include "Entity/EntityTypes.hpp"
+#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/core/ExecutionPlan.h"
 
 #include <cstddef>
 #include <string>
@@ -16,7 +16,7 @@
  * typically representing closely related measures that should be computed in a
  * single pass for performance.
  */
-template <typename T>
+template<typename T>
 class IMultiColumnComputer {
 public:
     virtual ~IMultiColumnComputer() = default;
@@ -34,23 +34,23 @@ public:
      *         column vector of values of type T with size equal to the number
      *         of rows dictated by the plan.
      */
-    [[nodiscard]] virtual auto computeBatch(ExecutionPlan const & plan) const -> std::vector<std::vector<T>> = 0;
+    [[nodiscard]] virtual std::vector<std::vector<T>> computeBatch(ExecutionPlan const & plan) const = 0;
 
     /**
      * @brief Names for each output (suffixes to be appended to a base name).
      * @return Vector of suffix strings; size determines the number of outputs.
      */
-    [[nodiscard]] virtual auto getOutputNames() const -> std::vector<std::string> = 0;
+    [[nodiscard]] virtual std::vector<std::string> getOutputNames() const = 0;
 
     /**
      * @brief Declares dependencies on other columns.
      */
-    [[nodiscard]] virtual auto getDependencies() const -> std::vector<std::string> { return {}; }
+    [[nodiscard]] virtual std::vector<std::string> getDependencies() const { return {}; }
 
     /**
      * @brief Declares the required data source name for this computation.
      */
-    [[nodiscard]] virtual auto getSourceDependency() const -> std::string = 0;
+    [[nodiscard]] virtual std::string getSourceDependency() const = 0;
 
     /**
      * @brief Checks if this computer can provide EntityID information.
@@ -58,8 +58,8 @@ public:
      */
     [[nodiscard]] virtual bool hasEntityIds() const { return false; }
 
-    [[nodiscard]] virtual EntityIdStructure getEntityIdStructure() const { 
-        return EntityIdStructure::None; 
+    [[nodiscard]] virtual EntityIdStructure getEntityIdStructure() const {
+        return EntityIdStructure::None;
     }
 
     /**
@@ -77,8 +77,8 @@ public:
      * @return Vector of EntityIDs, one per row. Empty if not available.
      */
     [[nodiscard]] virtual ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const {
-        (void)plan; 
-        return {}; 
+        (void) plan;
+        return {};
     }
 
     /**
@@ -95,16 +95,16 @@ public:
         if (structure == EntityIdStructure::None) {
             return {};
         }
-        
+
         auto column_entities = computeColumnEntityIds(plan);
-        
+
         switch (structure) {
             case EntityIdStructure::Simple: {
-                auto& entities = std::get<std::vector<EntityId>>(column_entities);
+                auto & entities = std::get<std::vector<EntityId>>(column_entities);
                 return (row_index < entities.size()) ? std::vector<EntityId>{entities[row_index]} : std::vector<EntityId>{};
             }
             case EntityIdStructure::Complex: {
-                auto& entity_matrix = std::get<std::vector<std::vector<EntityId>>>(column_entities);
+                auto & entity_matrix = std::get<std::vector<std::vector<EntityId>>>(column_entities);
                 return (row_index < entity_matrix.size()) ? entity_matrix[row_index] : std::vector<EntityId>{};
             }
             case EntityIdStructure::Shared:
@@ -115,12 +115,10 @@ public:
                 return {};
         }
     }
-    
+
 
 protected:
     IMultiColumnComputer() = default;
 };
 
-#endif // IMULTI_COLUMN_COMPUTER_H
-
-
+#endif// IMULTI_COLUMN_COMPUTER_H

@@ -200,34 +200,8 @@ auto PCATransform::apply(TableView const & source) -> TableView {
     // Build the table first
     auto transformed_table = builder.build();
 
-    std::cerr << "DEBUG PCA: Transformed table rows after build: " << transformed_table.getRowCount() << std::endl;
-
-    // Preserve EntityIds for the kept rows
-    if (source.hasEntityColumn()) {
-        auto source_entity_ids = source.getEntityIds();
-        std::cerr << "DEBUG PCA: Source EntityIds count: " << source_entity_ids.size() << std::endl;
-
-        std::vector<EntityId> kept_entity_ids;
-        kept_entity_ids.reserve(kept.size());
-
-        for (size_t original_row_index: kept) {
-            if (original_row_index < source_entity_ids.size()) {
-                EntityId entity_id = source_entity_ids[original_row_index];
-                kept_entity_ids.push_back(entity_id);
-                std::cerr << "DEBUG PCA: Keeping EntityId " << entity_id << " from row " << original_row_index << std::endl;
-            } else {
-                kept_entity_ids.push_back(0);// Fallback for invalid indices
-                std::cerr << "DEBUG PCA: Invalid row index " << original_row_index << ", using EntityId 0" << std::endl;
-            }
-        }
-
-        std::cerr << "DEBUG PCA: Setting " << kept_entity_ids.size() << " EntityIds on transformed table" << std::endl;
-        transformed_table.setDirectEntityIds(std::move(kept_entity_ids));
-
-        // Verify the setting worked
-        auto check_entity_ids = transformed_table.getEntityIds();
-        std::cerr << "DEBUG PCA: Transformed table now has " << check_entity_ids.size() << " EntityIds" << std::endl;
-    }
+    auto entity_ids = source.getEntityIds();
+    transformed_table.setDirectEntityIds(std::move(entity_ids));
 
     return transformed_table;
 }

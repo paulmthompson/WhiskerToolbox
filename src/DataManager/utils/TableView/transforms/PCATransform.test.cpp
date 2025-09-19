@@ -59,7 +59,6 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
     REQUIRE(base_table.hasEntityColumn());
     auto base_ids = base_table.getEntityIds();
     REQUIRE(base_ids.size() == 5);
-    for (auto id: base_ids) REQUIRE(id != 0);
 
     // Configure PCA to include all numeric columns, center only
     PCAConfig cfg;
@@ -75,5 +74,9 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
     REQUIRE(transformed.hasEntityColumn());
     auto transformed_ids = transformed.getEntityIds();
     REQUIRE(transformed_ids.size() == transformed.getRowCount());
-    for (auto id: transformed_ids) REQUIRE(id != 0);
+
+    // The EntityIds should match the original table's first 5 rows
+    for (size_t i = 0; i < transformed_ids.size(); ++i) {
+        REQUIRE(transformed_ids[i] == base_ids[i]);
+    }
 }

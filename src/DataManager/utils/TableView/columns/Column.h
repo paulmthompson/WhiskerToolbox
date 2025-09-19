@@ -2,8 +2,8 @@
 #define COLUMN_H
 
 #include "ColumnTypeInfo.hpp"
-#include "IColumn.h"
 #include "Entity/EntityTypes.hpp"
+#include "IColumn.h"
 
 #include <memory>
 #include <string>
@@ -38,7 +38,7 @@ public:
      * @param table Pointer to the TableView that owns this column.
      * @return Reference to the column's data vector.
      */
-    [[nodiscard]] auto getValues(TableView * table) -> std::vector<T> const &;
+    [[nodiscard]] std::vector<T> const & getValues(TableView * table);
 
     /**
      * @brief Triggers computation of the column data without exposing the type.
@@ -54,7 +54,7 @@ public:
      * @brief Gets the name of this column.
      * @return The column name.
      */
-    [[nodiscard]] auto getName() const -> std::string const & override {
+    [[nodiscard]] std::string getName() const override {
         return m_name;
     }
 
@@ -62,7 +62,7 @@ public:
      * @brief Gets the type information for this column.
      * @return The std::type_info for the column's data type.
      */
-    [[nodiscard]] auto getType() const -> std::type_info const & override {
+    [[nodiscard]] std::type_info const & getType() const override {
         return typeid(T);
     }
 
@@ -70,7 +70,7 @@ public:
      * @brief Gets the source dependency for this column.
      * @return The name of the required data source.
      */
-    [[nodiscard]]  std::string getSourceDependency() const override;
+    [[nodiscard]] std::string getSourceDependency() const override;
 
     /**
      * @brief Gets the column dependencies for this column.

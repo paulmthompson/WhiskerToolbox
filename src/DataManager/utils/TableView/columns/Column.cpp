@@ -1,15 +1,15 @@
 #include "Column.h"
 
-#include "utils/TableView/interfaces/IColumnComputer.h"
 #include "utils/TableView/core/TableView.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
 
 template<SupportedColumnType T>
 Column<T>::Column(std::string name, std::unique_ptr<IColumnComputer<T>> computer)
     : m_name(std::move(name)),
-      m_computer(std::move(computer)) {};
+      m_computer(std::move(computer)){};
 
 template<SupportedColumnType T>
-auto Column<T>::getValues(TableView * table) -> std::vector<T> const & {
+std::vector<T> const & Column<T>::getValues(TableView * table) {
     if (!isMaterialized()) {
         materialize(table);
     }
@@ -68,7 +68,7 @@ ColumnEntityIds Column<T>::getColumnEntityIds(TableView * table) const {
     if (!hasEntityIds()) {
         return {};
     }
-    
+
     ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
     return m_computer->computeColumnEntityIds(plan);
 }

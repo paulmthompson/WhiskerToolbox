@@ -1,9 +1,9 @@
 #ifndef ICOLUMN_COMPUTER_H
 #define ICOLUMN_COMPUTER_H
 
-#include "utils/TableView/core/ExecutionPlan.h"
-#include "utils/TableView/columns/IColumn.h"
 #include "Entity/EntityTypes.hpp"
+#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/core/ExecutionPlan.h"
 
 #include <memory>
 #include <string>
@@ -40,7 +40,7 @@ public:
      * @param plan The execution plan containing cached access patterns.
      * @return Vector of computed values for the entire column.
      */
-    [[nodiscard]] virtual auto compute(ExecutionPlan const & plan) const -> std::vector<T> = 0;
+    [[nodiscard]] virtual std::vector<T> compute(ExecutionPlan const & plan) const = 0;
 
     /**
      * @brief Declares dependencies on other columns.
@@ -50,7 +50,7 @@ public:
      * 
      * @return Vector of column names this computer depends on.
      */
-    [[nodiscard]] virtual auto getDependencies() const -> std::vector<std::string> {
+    [[nodiscard]] virtual std::vector<std::string> getDependencies() const {
         return {};
     }
 
@@ -62,7 +62,7 @@ public:
      * 
      * @return The name of the required data source.
      */
-    [[nodiscard]] virtual auto getSourceDependency() const -> std::string = 0;
+    [[nodiscard]] virtual std::string getSourceDependency() const = 0;
 
     /**
      * @brief Gets the EntityID structure type for this computer.
@@ -72,8 +72,8 @@ public:
      * 
      * @return The EntityID structure type for this computer.
      */
-    [[nodiscard]] virtual EntityIdStructure getEntityIdStructure() const { 
-        return EntityIdStructure::None; 
+    [[nodiscard]] virtual EntityIdStructure getEntityIdStructure() const {
+        return EntityIdStructure::None;
     }
 
     /**
@@ -90,9 +90,9 @@ public:
      * @param plan The execution plan used for computation.
      * @return ColumnEntityIds variant containing the EntityIDs for this column.
      */
-    [[nodiscard]] virtual ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const { 
-        (void)plan; 
-        return std::monostate{}; 
+    [[nodiscard]] virtual ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const {
+        (void) plan;
+        return std::monostate{};
     }
 
     /**
@@ -109,16 +109,16 @@ public:
         if (structure == EntityIdStructure::None) {
             return {};
         }
-        
+
         auto column_entities = computeColumnEntityIds(plan);
-        
+
         switch (structure) {
             case EntityIdStructure::Simple: {
-                auto& entities = std::get<std::vector<EntityId>>(column_entities);
+                auto & entities = std::get<std::vector<EntityId>>(column_entities);
                 return (row_index < entities.size()) ? std::vector<EntityId>{entities[row_index]} : std::vector<EntityId>{};
             }
             case EntityIdStructure::Complex: {
-                auto& entity_matrix = std::get<std::vector<std::vector<EntityId>>>(column_entities);
+                auto & entity_matrix = std::get<std::vector<std::vector<EntityId>>>(column_entities);
                 return (row_index < entity_matrix.size()) ? entity_matrix[row_index] : std::vector<EntityId>{};
             }
             case EntityIdStructure::Shared:
@@ -134,8 +134,8 @@ public:
      * @brief Checks if this computer can provide EntityID information.
      * @return True if EntityIDs are available, false otherwise.
      */
-    [[nodiscard]] virtual bool hasEntityIds() const { 
-        return getEntityIdStructure() != EntityIdStructure::None; 
+    [[nodiscard]] virtual bool hasEntityIds() const {
+        return getEntityIdStructure() != EntityIdStructure::None;
     }
 
 protected:

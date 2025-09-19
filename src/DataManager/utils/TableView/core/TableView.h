@@ -163,7 +163,7 @@ public:
      * 
      * @return Vector of EntityIds, one per row. Empty vector if no EntityIDs available.
      */
-    [[nodiscard]] auto getEntityIds() const -> std::vector<EntityId>;
+    [[nodiscard]] auto getEntityIds() const -> std::vector<std::vector<EntityId>>;
 
     /**
      * @brief Set EntityIds directly for transformed tables.
@@ -174,7 +174,7 @@ public:
      * 
      * @param entity_ids Vector of EntityIds, one per row
      */
-    void setDirectEntityIds(std::vector<EntityId> entity_ids);
+    void setDirectEntityIds(std::vector<std::vector<EntityId>> entity_ids);
 
     /**
      * @brief Check if a specific column has EntityID information available.
@@ -289,7 +289,7 @@ private:
     std::map<std::string, ExecutionPlan> m_planCache;
     
     // Direct EntityId storage for transformed tables
-    std::vector<EntityId> m_direct_entity_ids;
+    std::vector<std::vector<EntityId>> m_direct_entity_ids;
 };
 
 // Template method implementation for getColumnValues

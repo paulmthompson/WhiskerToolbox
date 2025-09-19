@@ -11,7 +11,9 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 #include "utils/TableView/adapters/LineDataAdapter.h"
+#include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
 #include "utils/TableView/computers/LineSamplingMultiComputer.h"
+#include "utils/TableView/computers/IntervalOverlapComputer.h"
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/interfaces/ILineSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
@@ -40,6 +42,14 @@ protected:
     EntityGroupManagerIntegrationFixture() {
         // Initialize DataManager
         data_manager = std::make_unique<DataManager>();
+
+        // Create a TimeFrame
+        auto timeValues = std::vector<int>();
+        for (int i = 0; i < 100; ++i) {
+            timeValues.push_back(i);
+        }
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        data_manager->setTime(TimeKey("test_time"), timeFrame);
 
         // Create and populate LineData with test data
         setupLineData();
@@ -86,7 +96,7 @@ protected:
         line_data->setImageSize({800, 600});
 
         // Add to DataManager
-        data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+        data_manager->setData<LineData>("test_lines", line_data, TimeKey("test_time"));
 
         // Debug: Check if EntityRegistry is available
         auto * entity_registry = data_manager->getEntityRegistry();
@@ -569,7 +579,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         point_data->rebuildAllEntityIds();
 
         // Add to DataManager
-        data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
+        data_manager->setData<PointData>("test_points", point_data, TimeKey("test_time"));
 
         // Verify EntityIds were generated
         auto all_entity_ids = point_data->getAllEntityIds();
@@ -695,7 +705,7 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
         interval_data->rebuildAllEntityIds();
 
         // Add to DataManager
-        data_manager.setData<DigitalIntervalSeries>("test_intervals", interval_data, TimeKey("time"));
+        data_manager.setData<DigitalIntervalSeries>("test_intervals", interval_data, TimeKey("test_time"));
 
         // Verify EntityIds were generated correctly
         auto all_entity_ids = interval_data->getEntityIds();
@@ -826,8 +836,13 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
                  "EntityGroupManager Integration - PCA Transform Entity Preservation",
                  "[integration][entity][group][datamanager][pca][transform]") {
 
+    std::cout << "CTEST_FULL_OUTPUT" << std::endl; // To show output in CTest logs
+
     SECTION("EntityIDs are preserved through PCA transformation") {
-        // Create a table with multiple line features (this gives us numerical columns for PCA)
+        // This test verifies that the new EntityID API correctly retrieves EntityIDs
+        // from column computers rather than row selectors, and that these are properly
+        // preserved through PCA transformation
+        
         auto * table_registry = data_manager->getTableRegistry();
         std::string table_key = "pca_test_table";
 
@@ -838,16 +853,8 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         auto data_manager_extension = table_registry->getDataManagerExtension();
         REQUIRE(data_manager_extension != nullptr);
 
-        // Create a TimeFrame
-        auto timeValues = std::vector<int>();
-        // Fill with iota to 100
-        for (int i = 0; i < 100; ++i) {
-            timeValues.push_back(i);// 0, 1, 2, ..., 99
-        }
-        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        data_manager->setTime(TimeKey("test_time"), timeFrame);
-
-        // Create row selector with timestamps
+        auto timeFrame = data_manager->getTime(TimeKey("test_time"));
+        // Create row selector with timestamps 
         std::vector<TimeFrameIndex> timestamps = {
                 TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
         auto row_selector = std::make_unique<TimestampSelector>(timestamps, timeFrame);
@@ -855,7 +862,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         // Create LineDataAdapter
         auto line_adapter = std::make_shared<LineDataAdapter>(line_data, timeFrame, "test_lines");
 
-        // Create multiple computers to get multiple numerical columns for PCA
+        // Create LineSamplingMultiComputer - this will provide EntityIDs from LineData
         int segments = 3;// This creates 8 columns: x@0.000, y@0.000, x@0.333, y@0.333, x@0.667, y@0.667, x@1.000, y@1.000
         auto line_computer = std::make_unique<LineSamplingMultiComputer>(
                 std::static_pointer_cast<ILineSource>(line_adapter),
@@ -875,28 +882,39 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         REQUIRE(column_names.size() == 8);         // 4 sample points * 2 coordinates = 8 columns
         REQUIRE(original_table.getRowCount() == 5);// 2 + 2 + 1 = 5 entities across 3 timestamps
 
+        // Verify that EntityIDs are available from the original table
+        // This tests the new API where EntityIDs come from column computers
+        auto original_entity_ids_variant = original_table.getColumnEntityIds(column_names[0]);
+        auto original_entity_ids = std::get<std::vector<EntityId>>(original_entity_ids_variant);
+        
+        REQUIRE(original_entity_ids.size() == 5);
+
+        // Verify EntityIds are valid (non-zero) and come from LineData
+        std::set<EntityId> expected_entity_ids;
+        for (EntityId id : line_data->getAllEntityIds()) {
+            expected_entity_ids.insert(id);
+        }
+        
+        for (EntityId id : original_entity_ids) {
+            REQUIRE(id != 0);
+            REQUIRE(expected_entity_ids.count(id) > 0); // Should be from LineData
+        }
+
+        // Test per-row EntityID access
+        for (size_t row = 0; row < original_table.getRowCount(); ++row) {
+            auto row_entity_ids = original_table.getRowEntityIds(row);
+            REQUIRE_FALSE(row_entity_ids.empty());
+            // For LineSamplingMultiComputer, each row should have one EntityID (the line being sampled)
+            REQUIRE(row_entity_ids.size() == 1);
+            REQUIRE(row_entity_ids[0] == original_entity_ids[row]);
+        }
+
         // Store original table in registry
         REQUIRE(table_registry->storeBuiltTable(table_key, std::make_unique<TableView>(std::move(original_table))));
 
         // Get the stored table for PCA transformation
         auto stored_original = table_registry->getBuiltTable(table_key);
         REQUIRE(stored_original != nullptr);
-
-        // Capture EntityIds from the original table before transformation
-        std::vector<EntityId> original_entity_ids;
-        if (stored_original->hasEntityColumn()) {
-            auto entity_column = stored_original->getEntityIds();
-            original_entity_ids = entity_column;
-            REQUIRE(original_entity_ids.size() == 5);// Should match row count (5 entities)
-
-            // Verify EntityIds are valid (non-zero)
-            for (EntityId id: original_entity_ids) {
-                REQUIRE(id != 0);
-            }
-        } else {
-            // This would indicate a problem with entity column creation
-            FAIL("Original table should have EntityId column");
-        }
 
         // Configure PCA transformation
         PCAConfig pca_config;
@@ -911,77 +929,38 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         PCATransform pca_transform(pca_config);
         TableView transformed_table = pca_transform.apply(*stored_original);
 
-        // Debug: Check if original table has EntityId column
-        INFO("Original table hasEntityColumn: " << stored_original->hasEntityColumn());
-        if (stored_original->hasEntityColumn()) {
-            auto orig_ids = stored_original->getEntityIds();
-            INFO("Original EntityIds size: " << orig_ids.size());
-            for (size_t i = 0; i < std::min(size_t(3), orig_ids.size()); ++i) {
-                INFO("Original EntityId[" << i << "]: " << orig_ids[i]);
+        // Verify EntityIDs are preserved through transformation
+        auto transformed_entity_ids = transformed_table.getEntityIds();
+
+        // PCA may filter out rows with NaN/Inf values, so count might be different
+        size_t transformed_row_count = transformed_table.getRowCount();
+        REQUIRE(transformed_entity_ids.size() == transformed_row_count);
+        REQUIRE(transformed_row_count <= original_entity_ids.size());
+
+
+        // Test that we can still trace back to original LineData using preserved EntityIds
+        auto group_manager = data_manager->getEntityGroupManager();
+        GroupId pca_group = group_manager->createGroup("PCA Results");
+        
+        //Flatten transformed_entity_ids to unique
+        std::set<EntityId> unique_transformed_ids;
+        for (auto row_entity_ids : transformed_entity_ids) {
+            for (auto id : row_entity_ids) {
+                unique_transformed_ids.insert(id);
             }
         }
+        std::vector<EntityId> unique_transformed_ids_vec(unique_transformed_ids.begin(), unique_transformed_ids.end());
 
-        // Debug: Check if transformed table has EntityId column
-        INFO("Transformed table hasEntityColumn: " << transformed_table.hasEntityColumn());
+        // Add all transformed EntityIDs to a group to test traceability
+        group_manager->addEntitiesToGroup(pca_group, unique_transformed_ids_vec);
 
-        // PCA may filter out rows with NaN/Inf values, so row count might be different
-        size_t transformed_row_count = transformed_table.getRowCount();
-        size_t original_row_count = stored_original->getRowCount();
+        // Verify we can trace back to original LineData using these EntityIds
+        for (EntityId entity_id : unique_transformed_ids_vec) {
+            auto original_line = line_data->getLineByEntityId(entity_id);
+            REQUIRE(original_line.has_value());
 
-        INFO("Original table rows: " << original_row_count);
-        INFO("Transformed table rows: " << transformed_row_count);
-
-        // Transformed table should have same or fewer rows (due to NaN/Inf filtering)
-        REQUIRE(transformed_row_count <= original_row_count);
-
-        // Check if EntityIds are preserved in transformed table
-        // Note: Current PCA implementation may not preserve EntityId column
-        // since it creates a new table with only computed columns
-        INFO("Original table hasEntityColumn: " << stored_original->hasEntityColumn());
-        INFO("Transformed table hasEntityColumn: " << transformed_table.hasEntityColumn());
-
-        if (transformed_table.hasEntityColumn()) {
-            // If EntityIds are preserved, verify they're correct
-            auto transformed_entity_ids = transformed_table.getEntityIds();
-            REQUIRE(transformed_entity_ids.size() == transformed_row_count);
-
-            // The transformed EntityIds should be a subset of the original EntityIds
-            std::set<EntityId> original_id_set(original_entity_ids.begin(), original_entity_ids.end());
-
-            for (EntityId transformed_id: transformed_entity_ids) {
-                REQUIRE(original_id_set.count(transformed_id) > 0);
-                REQUIRE(transformed_id != 0);
-            }
-
-            INFO("Successfully preserved " << transformed_entity_ids.size() << " EntityIDs through PCA transformation");
-
-            // Test group operations with preserved EntityIds
-            auto group_manager = data_manager->getEntityGroupManager();
-            GroupId pca_group = group_manager->createGroup("PCA Selected");
-
-            if (transformed_entity_ids.size() >= 1) {
-                group_manager->addEntityToGroup(pca_group, transformed_entity_ids[0]);
-            }
-            if (transformed_entity_ids.size() >= 2) {
-                group_manager->addEntityToGroup(pca_group, transformed_entity_ids.back());
-            }
-
-            // Verify we can trace back to original LineData using these EntityIds
-            for (EntityId entity_id: transformed_entity_ids) {
-                auto original_line = line_data->getLineByEntityId(entity_id);
-                REQUIRE(original_line.has_value());
-
-                auto time_and_index = line_data->getTimeAndIndexByEntityId(entity_id);
-                REQUIRE(time_and_index.has_value());
-            }
-        } else {
-            // EntityIds not preserved - this is a known limitation of current PCA implementation
-            INFO("PCA transformation did not preserve EntityId column - this is a current limitation");
-            INFO("The transformation created a table with only computed PCA columns");
-
-            // We can still verify that the transformation worked correctly
-            // and that the row filtering was applied properly
-            WARN("EntityId preservation through PCA transformation not yet implemented");
+            auto time_and_index = line_data->getTimeAndIndexByEntityId(entity_id);
+            REQUIRE(time_and_index.has_value());
         }
 
         // Verify transformed table has PCA columns
@@ -993,12 +972,193 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
                 break;
             }
         }
-        REQUIRE(has_pc_columns);// Should have principal component columns
+        REQUIRE(has_pc_columns);
 
-        INFO("PCA transformation test completed");
-        INFO("Original table: " << column_names.size() << " columns, " << original_row_count << " rows");
+        INFO("Successfully preserved " << transformed_entity_ids.size() << " EntityIDs through PCA transformation");
+        INFO("Original table: " << column_names.size() << " columns, " << original_entity_ids.size() << " rows");
         INFO("Transformed table: " << transformed_column_names.size() << " columns, " << transformed_row_count << " rows");
-        INFO("Rows may be filtered during PCA if they contain NaN/Inf values");
-        INFO("EntityId preservation through transformations needs future implementation");
+    }
+
+    SECTION("Mixed computers - EntityID union handling in PCA") {
+        // This test verifies that PCA correctly handles tables where different columns 
+        // have different EntityIDs for the same row, and that the result properly
+        // computes the union of EntityIDs from all contributing data sources
+        
+        auto * table_registry = data_manager->getTableRegistry();
+        std::string table_key = "mixed_computer_pca_test";
+
+        REQUIRE(table_registry->createTable(table_key, "Mixed Computer PCA Test"));
+        auto data_manager_extension = table_registry->getDataManagerExtension();
+        REQUIRE(data_manager_extension != nullptr);
+
+        // Create intervals for IntervalOverlapComputer
+        // Add behavior intervals to the existing DataManager from the fixture
+        auto behavior_intervals = std::make_shared<DigitalIntervalSeries>();
+        
+        behavior_intervals->setIdentityContext("behavior_intervals", data_manager->getEntityRegistry());
+
+        // Create overlapping intervals that will intersect with our line data timestamps
+        behavior_intervals->addEvent(Interval{5, 15});   // Overlaps with timestamp 10
+        behavior_intervals->addEvent(Interval{18, 25});  // Overlaps with timestamp 20  
+        behavior_intervals->addEvent(Interval{28, 35});  // Overlaps with timestamp 30
+        behavior_intervals->addEvent(Interval{40, 50});  // No overlap with our timestamps
+        
+        // Set up identity context for intervals
+        behavior_intervals->rebuildAllEntityIds();
+        
+        // Use the existing time key from the fixture and get the existing timeFrame
+        // The fixture already has a "test_time" TimeKey set up
+        auto existing_time_keys = data_manager->getTimeFrameKeys();
+        REQUIRE_FALSE(existing_time_keys.empty());
+        TimeKey time_key = TimeKey("test_time"); // Use the default time key from fixture
+        
+        data_manager->setData<DigitalIntervalSeries>("behavior_intervals", behavior_intervals, time_key);
+
+        // Get the existing TimeFrame instead of creating a new one
+        auto timeFrame = data_manager->getTime(time_key);
+        REQUIRE(timeFrame != nullptr);
+
+        // Create row selector - using intervals from our behavior data
+        auto interval_boundaries = behavior_intervals->getDigitalIntervalSeries();
+        std::vector<TimeFrameInterval> row_intervals;
+        for (auto const& interval : interval_boundaries) {
+            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        auto row_selector = std::make_unique<IntervalSelector>(row_intervals, timeFrame);
+
+        // Create adapters
+        auto line_adapter = std::make_shared<LineDataAdapter>(line_data, timeFrame, "test_lines");
+        auto interval_adapter = std::make_shared<DigitalIntervalDataAdapter>(behavior_intervals, timeFrame, "behavior_intervals");
+
+        // Create LineSamplingMultiComputer (gets EntityIDs from LineData)
+        int segments = 2; // Creates 6 columns: x@0.000, y@0.000, x@0.500, y@0.500, x@1.000, y@1.000
+        auto line_computer = std::make_unique<LineSamplingMultiComputer>(
+                std::static_pointer_cast<ILineSource>(line_adapter),
+                "test_lines",
+                timeFrame,
+                segments);
+
+        // Create IntervalOverlapComputer (gets EntityIDs from DigitalIntervalSeries)
+        auto overlap_computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+                std::static_pointer_cast<IIntervalSource>(interval_adapter),
+                IntervalOverlapOperation::CountOverlaps,
+                "behavior_intervals");
+
+        // Build table with mixed computers
+        TableViewBuilder builder(data_manager_extension);
+        builder.setRowSelector(std::move(row_selector));
+        builder.addColumns<double>("LineFeatures", std::move(line_computer));
+        builder.addColumn<int64_t>("IntervalOverlaps", std::move(overlap_computer));
+
+        auto mixed_table = builder.build();
+
+        // Verify table structure
+        auto column_names = mixed_table.getColumnNames();
+        REQUIRE(column_names.size() == 7); // 6 line columns + 1 overlap column
+        
+        // Debug: Check what EntityIDs our source data actually has
+        auto line_entity_ids = line_data->getAllEntityIds();
+        auto interval_entity_ids = behavior_intervals->getEntityIds();
+        
+        INFO("Source LineData has " << line_entity_ids.size() << " EntityIDs:");
+        for (size_t i = 0; i < std::min(size_t(3), line_entity_ids.size()); ++i) {
+            INFO("  LineData EntityID[" << i << "] = " << line_entity_ids[i]);
+        }
+        
+        INFO("Source DigitalIntervalSeries has " << interval_entity_ids.size() << " EntityIDs:");
+        for (size_t i = 0; i < std::min(size_t(3), interval_entity_ids.size()); ++i) {
+            INFO("  Interval EntityID[" << i << "] = " << interval_entity_ids[i]);
+        }
+        
+        auto all_entity_ids = mixed_table.getEntityIds();
+        INFO("Mixed table has " << all_entity_ids.size() << " total EntityIDs via getEntityIds()");
+        int total_entity_id_count = 0;
+        for (auto const & row_ids : all_entity_ids) {
+            total_entity_id_count += row_ids.size();
+        }
+        REQUIRE(total_entity_id_count == line_entity_ids.size() + interval_entity_ids.size());
+
+        // Store table for PCA transformation
+        REQUIRE(table_registry->storeBuiltTable(table_key, std::make_unique<TableView>(std::move(mixed_table))));
+        auto stored_mixed = table_registry->getBuiltTable(table_key);
+        REQUIRE(stored_mixed != nullptr);
+
+        // Configure PCA to include only numerical columns (exclude non-numerical if any)
+        PCAConfig pca_config;
+        pca_config.center = true;
+        pca_config.standardize = true;
+        
+        // Add numerical columns (line features are doubles, overlap counts are int64_t)
+        for (auto const & col_name : column_names) {
+            // Include all columns for this test - they should all be numerical
+            pca_config.include.push_back(col_name);
+        }
+
+        // Apply PCA transformation
+        PCATransform pca_transform(pca_config);
+        TableView transformed_table = pca_transform.apply(*stored_mixed);
+
+        // Verify EntityIDs are preserved and correctly represent the union
+        auto transformed_entity_ids = transformed_table.getEntityIds();
+        REQUIRE_FALSE(transformed_entity_ids.empty());
+        
+        std::set<EntityId> expected_source_ids;
+        expected_source_ids.insert(line_entity_ids.begin(), line_entity_ids.end());
+        expected_source_ids.insert(interval_entity_ids.begin(), interval_entity_ids.end());
+
+        // Test group operations with mixed EntityIDs
+        auto group_manager = data_manager->getEntityGroupManager();
+        GroupId mixed_pca_group = group_manager->createGroup("Mixed PCA Results");
+        
+        // Flatten transformed_entity_ids to unique
+        std::set<EntityId> unique_transformed_ids;
+        for (auto row_entity_ids : transformed_entity_ids) {
+            for (auto id : row_entity_ids) {
+                unique_transformed_ids.insert(id);
+            }
+        }
+        std::vector<EntityId> unique_transformed_ids_vec(unique_transformed_ids.begin(), unique_transformed_ids.end());
+        group_manager->addEntitiesToGroup(mixed_pca_group, unique_transformed_ids_vec);
+
+        // Verify we can trace back to original data sources
+        auto retrieved_group_entities = group_manager->getEntitiesInGroup(mixed_pca_group);
+        REQUIRE(retrieved_group_entities.size() == unique_transformed_ids_vec.size());
+
+        // Test traceability to both data sources
+        size_t line_traceable = 0;
+        size_t interval_traceable = 0;
+
+        for (EntityId entity_id : unique_transformed_ids_vec) {
+            // Try to trace back to LineData
+            auto line_lookup = line_data->getLineByEntityId(entity_id);
+            if (line_lookup.has_value()) {
+                line_traceable++;
+            }
+            
+            // Try to trace back to DigitalIntervalSeries
+            auto interval_lookup = behavior_intervals->getIntervalByEntityId(entity_id);
+            if (interval_lookup.has_value()) {
+                interval_traceable++;
+            }
+        }
+
+        // We should be able to trace back to at least one source for each EntityID
+        REQUIRE(line_traceable + interval_traceable >= transformed_entity_ids.size());
+        
+        // Verify PCA columns exist
+        auto transformed_column_names = transformed_table.getColumnNames();
+        bool has_pc_columns = false;
+        for (auto const & name : transformed_column_names) {
+            if (name.find("PC") == 0) {
+                has_pc_columns = true;
+                break;
+            }
+        }
+        REQUIRE(has_pc_columns);
+
+        INFO("Mixed computer PCA test completed successfully");
+        INFO("Transformed table: " << transformed_column_names.size() << " columns, " << transformed_entity_ids.size() << " rows");
+        INFO("Line EntityIDs traceable: " << line_traceable);
+        INFO("Interval EntityIDs traceable: " << interval_traceable);
     }
 }

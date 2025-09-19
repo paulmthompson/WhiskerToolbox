@@ -9,7 +9,6 @@
 #include <variant>
 #include <vector>
 
-// Forward declaration
 class TableView;
 
 /**
@@ -59,13 +58,13 @@ public:
      * @brief Gets the name of this column.
      * @return The column name.
      */
-    [[nodiscard]] virtual auto getName() const -> std::string const & = 0;
+    [[nodiscard]] virtual std::string getName() const = 0;
 
     /**
      * @brief Gets the type information for this column.
      * @return The std::type_info for the column's data type.
      */
-    [[nodiscard]] virtual auto getType() const -> std::type_info const & = 0;
+    [[nodiscard]] virtual std::type_info const & getType() const = 0;
 
     /**
      * @brief Triggers computation of the column data without exposing the type.
@@ -81,7 +80,7 @@ public:
      * @brief Gets the source dependency for this column.
      * @return The name of the required data source.
      */
-    [[nodiscard]] virtual auto getSourceDependency() const -> std::string = 0;
+    [[nodiscard]] virtual std::string getSourceDependency() const = 0;
 
     /**
      * @brief Gets the column dependencies for this column.
@@ -93,7 +92,7 @@ public:
      * @brief Checks if the column data has been materialized.
      * @return True if data is cached, false otherwise.
      */
-    [[nodiscard]] virtual auto isMaterialized() const -> bool = 0;
+    [[nodiscard]] virtual bool isMaterialized() const = 0;
 
     /**
      * @brief Clears the cached data, forcing recomputation on next access.
