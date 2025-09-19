@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 /**
@@ -34,7 +35,7 @@ public:
      *         column vector of values of type T with size equal to the number
      *         of rows dictated by the plan.
      */
-    [[nodiscard]] virtual std::vector<std::vector<T>> computeBatch(ExecutionPlan const & plan) const = 0;
+    [[nodiscard]] virtual std::pair<std::vector<std::vector<T>>, ColumnEntityIds> computeBatch(ExecutionPlan const & plan) const = 0;
 
     /**
      * @brief Names for each output (suffixes to be appended to a base name).
@@ -52,11 +53,6 @@ public:
      */
     [[nodiscard]] virtual std::string getSourceDependency() const = 0;
 
-    /**
-     * @brief Checks if this computer can provide EntityID information.
-     * @return True if EntityIDs are available, false otherwise.
-     */
-    [[nodiscard]] virtual bool hasEntityIds() const { return false; }
 
     [[nodiscard]] virtual EntityIdStructure getEntityIdStructure() const {
         return EntityIdStructure::None;
@@ -115,7 +111,6 @@ public:
                 return {};
         }
     }
-
 
 protected:
     IMultiColumnComputer() = default;

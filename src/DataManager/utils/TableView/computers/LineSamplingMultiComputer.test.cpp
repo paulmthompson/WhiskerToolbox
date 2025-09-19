@@ -394,7 +394,7 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer expansion with coexisting analog 
     public:
         explicit SimpleTimestampValueComputer(std::shared_ptr<IAnalogSource> src)
             : src_(std::move(src)) {}
-        [[nodiscard]] auto compute(ExecutionPlan const & plan) const -> std::vector<double> override {
+        [[nodiscard]] std::pair<std::vector<double>, ColumnEntityIds> compute(ExecutionPlan const & plan) const override {
             std::vector<TimeFrameIndex> idx;
             if (plan.hasIndices()) {
                 idx = plan.getIndices();
@@ -405,7 +405,7 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer expansion with coexisting analog 
             std::vector<double> out(idx.size(), 0.0);
             // naive: use AnalogDataAdapter semantics: value == index*10
             for (size_t i = 0; i < idx.size(); ++i) out[i] = static_cast<double>(idx[i].getValue() * 10);
-            return out;
+            return {out, std::monostate{}};
         }
         [[nodiscard]] auto getSourceDependency() const -> std::string override { return src_ ? src_->getName() : std::string{"AnalogA"}; }
 

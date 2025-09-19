@@ -291,7 +291,7 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Basic Functionality", "[Timesta
         TimestampInIntervalComputer computer(intervalSource, "TestIntervals");
         
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 5);
@@ -322,7 +322,7 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Basic Functionality", "[Timesta
         ExecutionPlan plan(timestamps, timeFrame);
         TimestampInIntervalComputer computer(intervalSource, "EdgeIntervals");
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         REQUIRE(results.size() == 5);
         REQUIRE(results[0] == false);  // Timestamp 1: before interval
@@ -350,7 +350,7 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Basic Functionality", "[Timesta
         ExecutionPlan plan(timestamps, timeFrame);
         TimestampInIntervalComputer computer(intervalSource, "EmptyIntervals");
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         REQUIRE(results.size() == 3);
         REQUIRE(results[0] == false);  // No intervals to be inside
@@ -382,7 +382,7 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Basic Functionality", "[Timesta
         ExecutionPlan plan(timestamps, timeFrame);
         TimestampInIntervalComputer computer(intervalSource, "OverlapIntervals");
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         REQUIRE(results.size() == 5);
         REQUIRE(results[0] == false);  // Timestamp 0: not in any interval
@@ -689,8 +689,8 @@ TEST_CASE_METHOD(TimestampTableRegistryTestFixture, "DM - TV - TimestampInInterv
         
         ExecutionPlan plan(test_timestamps, behavior_time_frame);
         
-        auto registry_result = registry_computer->compute(plan);
-        auto direct_result = direct_computer->compute(plan);
+        auto [registry_result, registryEntity_ids] = registry_computer->compute(plan);
+        auto [direct_result, directEntity_ids] = direct_computer->compute(plan);
         
         REQUIRE(registry_result.size() == 3);
         REQUIRE(direct_result.size() == 3);

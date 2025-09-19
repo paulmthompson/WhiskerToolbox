@@ -331,7 +331,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
                                                    "TestIntervals");
 
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
 
         // Verify results
         REQUIRE(results.size() == 4);
@@ -367,7 +367,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
                                                    "TestIntervals");
 
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
 
         // Verify results
         REQUIRE(results.size() == 4);
@@ -403,7 +403,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
                                                    "TestIntervals");
 
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
 
         // Verify results
         REQUIRE(results.size() == 4);
@@ -434,7 +434,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
         IntervalPropertyComputer<int64_t> startComputer(intervalSource,
                                                         IntervalProperty::Start,
                                                         "SingleInterval");
-        auto startResults = startComputer.compute(plan);
+        auto [startResults, entity_ids] = startComputer.compute(plan);
         REQUIRE(startResults.size() == 1);
         REQUIRE(startResults[0] == 2);
 
@@ -442,7 +442,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
         IntervalPropertyComputer<int64_t> endComputer(intervalSource,
                                                       IntervalProperty::End,
                                                       "SingleInterval");
-        auto endResults = endComputer.compute(plan);
+        auto [endResults, endEntity_ids] = endComputer.compute(plan);
         REQUIRE(endResults.size() == 1);
         REQUIRE(endResults[0] == 4);
 
@@ -450,7 +450,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
         IntervalPropertyComputer<int64_t> durationComputer(intervalSource,
                                                            IntervalProperty::Duration,
                                                            "SingleInterval");
-        auto durationResults = durationComputer.compute(plan);
+        auto [durationResults, durationEntity_ids] = durationComputer.compute(plan);
         REQUIRE(durationResults.size() == 1);
         REQUIRE(durationResults[0] == 2);
     }
@@ -477,7 +477,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
         IntervalPropertyComputer<int64_t> durationComputer(intervalSource,
                                                            IntervalProperty::Duration,
                                                            "ZeroDuration");
-        auto durationResults = durationComputer.compute(plan);
+        auto [durationResults, entity_ids] = durationComputer.compute(plan);
 
         REQUIRE(durationResults.size() == 2);
         REQUIRE(durationResults[0] == 0);// Zero duration
@@ -534,7 +534,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Template Types", "[IntervalPropert
         IntervalPropertyComputer<int64_t> intComputer(intervalSource,
                                                       IntervalProperty::Duration,
                                                       "TestIntervals");
-        auto intResults = intComputer.compute(plan);
+        auto [intResults, entity_ids] = intComputer.compute(plan);
         REQUIRE(intResults.size() == 1);
         REQUIRE(intResults[0] == 3);
 
@@ -542,7 +542,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Template Types", "[IntervalPropert
         IntervalPropertyComputer<float> floatComputer(intervalSource,
                                                       IntervalProperty::Duration,
                                                       "TestIntervals");
-        auto floatResults = floatComputer.compute(plan);
+        auto [floatResults, floatEntity_ids] = floatComputer.compute(plan);
         REQUIRE(floatResults.size() == 1);
         REQUIRE(floatResults[0] == Catch::Approx(3.0f));
 
@@ -550,7 +550,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Template Types", "[IntervalPropert
         IntervalPropertyComputer<double> doubleComputer(intervalSource,
                                                         IntervalProperty::Duration,
                                                         "TestIntervals");
-        auto doubleResults = doubleComputer.compute(plan);
+        auto [doubleResults, doubleEntity_ids] = doubleComputer.compute(plan);
         REQUIRE(doubleResults.size() == 1);
         REQUIRE(doubleResults[0] == Catch::Approx(3.0));
     }
@@ -1004,8 +1004,8 @@ TEST_CASE_METHOD(IntervalPropertyTableRegistryTestFixture, "DM - TV - IntervalPr
 
         ExecutionPlan plan(test_intervals, behavior_time_frame);
 
-        auto registry_result = registry_computer->compute(plan);
-        auto direct_result = direct_computer->compute(plan);
+        auto [registry_result, registry_entity_ids] = registry_computer->compute(plan);
+        auto [direct_result, direct_entity_ids] = direct_computer->compute(plan);
 
         REQUIRE(registry_result.size() == 1);
         REQUIRE(direct_result.size() == 1);

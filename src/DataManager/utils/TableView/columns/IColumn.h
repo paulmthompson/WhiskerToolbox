@@ -119,10 +119,9 @@ public:
      * - std::vector<std::vector<EntityId>>: Multiple EntityIDs per row (complex)
      * - std::vector<SharedEntityIdCollection>: Shared EntityID collections
      * 
-     * @param table Pointer to the TableView that owns this column.
      * @return ColumnEntityIds variant containing the EntityIDs for this column.
      */
-    [[nodiscard]] virtual ColumnEntityIds getColumnEntityIds(TableView * table) const = 0;
+    [[nodiscard]] virtual ColumnEntityIds getColumnEntityIds() const = 0;
 
     /**
      * @brief Convenience method to get EntityIDs for a specific row.
@@ -132,11 +131,10 @@ public:
      * it dereferences the shared pointer. For simple structures, it returns
      * a single-element vector.
      * 
-     * @param table Pointer to the TableView that owns this column.
      * @param row_index The row index to get EntityIDs for.
      * @return Vector of EntityIDs for the specified row. Empty if not available.
      */
-    [[nodiscard]] virtual std::vector<EntityId> getCellEntityIds(TableView * table, size_t row_index) const = 0;
+    [[nodiscard]] virtual std::vector<EntityId> getCellEntityIds(size_t row_index) const = 0;
 
     /**
      * @brief Checks if this column provides EntityID information.

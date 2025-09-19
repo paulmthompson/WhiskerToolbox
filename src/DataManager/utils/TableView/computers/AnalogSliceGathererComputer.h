@@ -60,7 +60,7 @@ public:
      * @param plan The execution plan containing interval boundaries.
      * @return Vector of vectors, where each inner vector contains the data slice for one interval.
      */
-    [[nodiscard]] auto compute(ExecutionPlan const & plan) const -> std::vector<T> override {
+    [[nodiscard]] std::pair<std::vector<T>, ColumnEntityIds> compute(ExecutionPlan const & plan) const override {
         if (!plan.hasIntervals()) {
             throw std::invalid_argument("ExecutionPlan must contain intervals for AnalogSliceGathererComputer");
         }
@@ -86,7 +86,7 @@ public:
             // This constructs the vector for the cell
             results.emplace_back(sliceView.begin(), sliceView.end());
         }
-        return results;
+        return std::make_pair(results, std::monostate{});
     }
 
     [[nodiscard]] auto getSourceDependency() const -> std::string override {

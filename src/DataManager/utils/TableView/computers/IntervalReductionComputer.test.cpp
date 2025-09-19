@@ -274,7 +274,7 @@ TEST_CASE("DM - TV - IntervalReductionComputer Basic Functionality", "[IntervalR
         IntervalReductionComputer computer(analogSource, ReductionType::Mean);
         
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 3);
@@ -298,7 +298,7 @@ TEST_CASE("DM - TV - IntervalReductionComputer Basic Functionality", "[IntervalR
         ExecutionPlan plan(intervals, timeFrame);
         IntervalReductionComputer computer(analogSource, ReductionType::Max);
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         REQUIRE(results.size() == 2);
         REQUIRE(results[0] == Catch::Approx(5.0).epsilon(0.001));
@@ -320,7 +320,7 @@ TEST_CASE("DM - TV - IntervalReductionComputer Basic Functionality", "[IntervalR
         ExecutionPlan plan(intervals, timeFrame);
         IntervalReductionComputer computer(analogSource, ReductionType::Min);
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         REQUIRE(results.size() == 2);
         REQUIRE(results[0] == Catch::Approx(1.0).epsilon(0.001));
@@ -342,7 +342,7 @@ TEST_CASE("DM - TV - IntervalReductionComputer Basic Functionality", "[IntervalR
         ExecutionPlan plan(intervals, timeFrame);
         IntervalReductionComputer computer(analogSource, ReductionType::Sum);
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         REQUIRE(results.size() == 2);
         REQUIRE(results[0] == Catch::Approx(6.0).epsilon(0.001));
@@ -364,7 +364,7 @@ TEST_CASE("DM - TV - IntervalReductionComputer Basic Functionality", "[IntervalR
         ExecutionPlan plan(intervals, timeFrame);
         IntervalReductionComputer computer(analogSource, ReductionType::Count);
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         REQUIRE(results.size() == 2);
         REQUIRE(results[0] == Catch::Approx(3.0).epsilon(0.001));
@@ -386,7 +386,7 @@ TEST_CASE("DM - TV - IntervalReductionComputer Basic Functionality", "[IntervalR
         ExecutionPlan plan(intervals, timeFrame);
         IntervalReductionComputer computer(analogSource, ReductionType::StdDev);
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         REQUIRE(results.size() == 1);
         REQUIRE(results[0] == Catch::Approx(2.0).epsilon(0.001));
@@ -409,7 +409,7 @@ TEST_CASE("DM - TV - IntervalReductionComputer Basic Functionality", "[IntervalR
         ExecutionPlan plan(intervals, timeFrame);
         IntervalReductionComputer computer(analogSource, ReductionType::Mean);
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         REQUIRE(results.size() == 1);
         std::cout << "Empty interval result: " << results[0] << std::endl;
@@ -435,8 +435,8 @@ TEST_CASE("DM - TV - IntervalReductionComputer Basic Functionality", "[IntervalR
         IntervalReductionComputer meanComputer(analogSource, ReductionType::Mean);
         IntervalReductionComputer stdDevComputer(analogSource, ReductionType::StdDev);
         
-        auto meanResults = meanComputer.compute(plan);
-        auto stdDevResults = stdDevComputer.compute(plan);
+        auto [meanResults, meanEntity_ids] = meanComputer.compute(plan);
+        auto [stdDevResults, stdDevEntity_ids] = stdDevComputer.compute(plan);
         
         REQUIRE(meanResults.size() == 1);
         REQUIRE(stdDevResults.size() == 1);
@@ -744,8 +744,8 @@ TEST_CASE_METHOD(IntervalReductionTableRegistryTestFixture, "DM - TV - IntervalR
         
         ExecutionPlan plan(test_intervals, signal_time_frame);
         
-        auto registry_result = registry_computer->compute(plan);
-        auto direct_result = direct_computer->compute(plan);
+        auto [registry_result, registry_entity_ids] = registry_computer->compute(plan);
+        auto [direct_result, direct_entity_ids] = direct_computer->compute(plan);
         
         REQUIRE(registry_result.size() == 1);
         REQUIRE(direct_result.size() == 1);

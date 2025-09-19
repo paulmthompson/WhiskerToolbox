@@ -57,7 +57,7 @@ public:
                              std::string sourceName);
 
     // IColumnComputer interface implementation
-    [[nodiscard]] auto compute(const ExecutionPlan& plan) const -> std::vector<double> override;
+    [[nodiscard]] std::pair<std::vector<double>, ColumnEntityIds> compute(const ExecutionPlan& plan) const override;
     [[nodiscard]] auto getSourceDependency() const -> std::string override;
 
 private:

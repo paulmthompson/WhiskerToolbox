@@ -65,13 +65,14 @@ auto EventInIntervalComputer<T>::findEventsInInterval(std::span<TimeFrameIndex c
  * @throws std::runtime_error if operation type doesn't match EventOperation::Presence
  */
 template<>
-auto EventInIntervalComputer<bool>::compute(ExecutionPlan const & plan) const -> std::vector<bool> {
+std::pair<std::vector<bool>, ColumnEntityIds> EventInIntervalComputer<bool>::compute(ExecutionPlan const & plan) const {
     if (m_operation != EventOperation::Presence) {
         throw std::runtime_error("EventInIntervalComputer<bool> can only be used with EventOperation::Presence");
     }
 
     auto intervals = plan.getIntervals();
     auto destinationTimeFrame = plan.getTimeFrame();
+    std::vector<std::vector<EntityId>> entity_ids;
 
     std::vector<bool> results;
     results.reserve(intervals.size());
@@ -83,7 +84,7 @@ auto EventInIntervalComputer<bool>::compute(ExecutionPlan const & plan) const ->
         results.push_back(!events.empty());
     }
 
-    return results;
+    return {results, entity_ids};
 }
 
 /**
@@ -109,13 +110,14 @@ auto EventInIntervalComputer<bool>::compute(ExecutionPlan const & plan) const ->
  * @throws std::runtime_error if operation type doesn't match EventOperation::Count
  */
 template<>
-auto EventInIntervalComputer<int>::compute(ExecutionPlan const & plan) const -> std::vector<int> {
+std::pair<std::vector<int>, ColumnEntityIds> EventInIntervalComputer<int>::compute(ExecutionPlan const & plan) const {
     if (m_operation != EventOperation::Count) {
         throw std::runtime_error("EventInIntervalComputer<int> can only be used with EventOperation::Count");
     }
 
     auto intervals = plan.getIntervals();
     auto destinationTimeFrame = plan.getTimeFrame();
+    std::vector<std::vector<EntityId>> entity_ids;
 
     std::vector<int> results;
     results.reserve(intervals.size());
@@ -127,7 +129,7 @@ auto EventInIntervalComputer<int>::compute(ExecutionPlan const & plan) const -> 
         results.push_back(static_cast<int>(events.size()));
     }
 
-    return results;
+    return {results, entity_ids};
 }
 
 /**
@@ -160,7 +162,7 @@ auto EventInIntervalComputer<int>::compute(ExecutionPlan const & plan) const -> 
  * @throws std::runtime_error if source and destination time frames are incompatible
  */
 template<>
-auto EventInIntervalComputer<std::vector<float>>::compute(ExecutionPlan const & plan) const -> std::vector<std::vector<float>> {
+std::pair<std::vector<std::vector<float>>, ColumnEntityIds> EventInIntervalComputer<std::vector<float>>::compute(ExecutionPlan const & plan) const {
     if (m_operation != EventOperation::Gather && m_operation != EventOperation::Gather_Center) {
         throw std::runtime_error("EventInIntervalComputer<std::vector<TimeFrameIndex>> can only be used with EventOperation::Gather");
     }
@@ -171,6 +173,7 @@ auto EventInIntervalComputer<std::vector<float>>::compute(ExecutionPlan const & 
 
     std::vector<std::vector<float>> results;
     results.reserve(intervals.size());
+    std::vector<std::vector<EntityId>> entity_ids;
 
     for (auto const & interval: intervals) {
 
@@ -188,53 +191,5 @@ auto EventInIntervalComputer<std::vector<float>>::compute(ExecutionPlan const & 
         results.push_back(std::move(events));
     }
 
-    return results;
+    return {results, entity_ids};
 }
-
-/**
- * @brief Computes all EntityIDs for the column.
- * 
- * For Gather and Gather_Center operations, this returns a vector of vectors where each
- * inner vector contains the EntityIDs of all events that fall within the corresponding interval.
- * For other operations, returns std::monostate (no EntityIDs).
- * 
- * @param plan The execution plan containing interval boundaries and destination time frame.
- * @return ColumnEntityIds variant containing the EntityIDs for this column.
- */
-template<typename T>
-ColumnEntityIds EventInIntervalComputer<T>::computeColumnEntityIds(ExecutionPlan const & plan) const {
-    // Only provide EntityIDs for Gather and Gather_Center operations
-    if (m_operation != EventOperation::Gather && m_operation != EventOperation::Gather_Center) {
-        return std::monostate{};
-    }
-
-    auto const & intervals = plan.getIntervals();
-    auto destinationTimeFrame = plan.getTimeFrame();
-
-    std::vector<std::vector<EntityId>> results;
-    results.reserve(intervals.size());
-
-    // For each interval, collect EntityIDs of events that fall within it
-    for (auto const & interval : intervals) {
-        auto events_with_indices = m_source->getDataInRangeWithIndices(interval.start, interval.end, destinationTimeFrame.get());
-        
-        std::vector<EntityId> interval_entity_ids;
-        interval_entity_ids.reserve(events_with_indices.size());
-
-        // Extract EntityIDs using the source indices
-        for (auto const & [event_value, source_index] : events_with_indices) {
-            (void)event_value; // Suppress unused variable warning
-            if (auto entityId = m_source->getEntityIdAt(source_index); entityId != 0) {
-                interval_entity_ids.push_back(entityId);
-            }
-        }
-
-        results.push_back(std::move(interval_entity_ids));
-    }
-
-    return results;
-}
-
-template ColumnEntityIds EventInIntervalComputer<bool>::computeColumnEntityIds(ExecutionPlan const & plan) const;
-template ColumnEntityIds EventInIntervalComputer<int>::computeColumnEntityIds(ExecutionPlan const & plan) const;
-template ColumnEntityIds EventInIntervalComputer<std::vector<float>>::computeColumnEntityIds(ExecutionPlan const & plan) const;

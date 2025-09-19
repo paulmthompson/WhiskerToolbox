@@ -138,7 +138,7 @@ public:
      * @throws std::runtime_error if the operation type doesn't match the template parameter T
      * @throws std::runtime_error if the source time frame is incompatible with the destination time frame
      */
-    [[nodiscard]] std::vector<T> compute(ExecutionPlan const & plan) const override;
+    [[nodiscard]] std::pair<std::vector<T>, ColumnEntityIds> compute(ExecutionPlan const & plan) const override;
 
     /**
      * @brief Returns the name of the data source this computer depends on.
@@ -155,35 +155,14 @@ public:
     /**
      * @brief Gets the EntityID structure type for this computer.
      * 
-     * For EventInIntervalComputer, the EntityID structure depends on the operation:
-     * - Presence and Count operations have no EntityIDs (EntityIdStructure::None)
-     * - Gather and Gather_Center operations provide multiple EntityIDs per row (EntityIdStructure::Complex)
+     * For each of these, we could return the spikes that could be present
+     * in the interval.
      * 
      * @return The EntityID structure type for this computer.
      */
     [[nodiscard]] EntityIdStructure getEntityIdStructure() const override {
-        switch (m_operation) {
-            case EventOperation::Presence:
-            case EventOperation::Count:
-                return EntityIdStructure::None;
-            case EventOperation::Gather:
-            case EventOperation::Gather_Center:
-                return EntityIdStructure::Complex; // Multiple EntityIDs per row (all events in interval)
-            default:
-                return EntityIdStructure::None;
-        }
+        return EntityIdStructure::Complex;
     }
-
-    /**
-     * @brief Computes all EntityIDs for the column.
-     * 
-     * For Gather and Gather_Center operations, this returns a vector of vectors where each
-     * inner vector contains the EntityIDs of all events that fall within the corresponding interval.
-     * 
-     * @param plan The execution plan containing interval boundaries and destination time frame.
-     * @return ColumnEntityIds variant containing the EntityIDs for this column.
-     */
-    [[nodiscard]] ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const override;
 
 private:
     std::shared_ptr<IEventSource> m_source;
@@ -219,12 +198,12 @@ private:
 
 // Template specializations for different operation types
 template<>
-[[nodiscard]] std::vector<bool> EventInIntervalComputer<bool>::compute(ExecutionPlan const & plan) const;
+[[nodiscard]] std::pair<std::vector<bool>, ColumnEntityIds> EventInIntervalComputer<bool>::compute(ExecutionPlan const & plan) const;
 
 template<>
-[[nodiscard]] std::vector<int> EventInIntervalComputer<int>::compute(ExecutionPlan const & plan) const;
+[[nodiscard]] std::pair<std::vector<int>, ColumnEntityIds> EventInIntervalComputer<int>::compute(ExecutionPlan const & plan) const;
 
 template<>
-[[nodiscard]] std::vector<std::vector<float>> EventInIntervalComputer<std::vector<float>>::compute(ExecutionPlan const & plan) const;
+[[nodiscard]] std::pair<std::vector<std::vector<float>>, ColumnEntityIds> EventInIntervalComputer<std::vector<float>>::compute(ExecutionPlan const & plan) const;
 
 #endif// EVENT_IN_INTERVAL_COMPUTER_H

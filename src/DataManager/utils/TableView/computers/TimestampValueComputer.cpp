@@ -23,7 +23,7 @@ TimestampValueComputer::TimestampValueComputer(std::shared_ptr<IAnalogSource> so
     }
 }
 
-std::vector<double> TimestampValueComputer::compute(const ExecutionPlan& plan) const {
+std::pair<std::vector<double>, ColumnEntityIds> TimestampValueComputer::compute(const ExecutionPlan& plan) const {
     if (!plan.hasIndices()) {
         throw std::runtime_error("TimestampValueComputer requires an ExecutionPlan with indices");
     }
@@ -36,6 +36,7 @@ std::vector<double> TimestampValueComputer::compute(const ExecutionPlan& plan) c
     auto const & indices = plan.getIndices();
     std::vector<double> results;
     results.reserve(indices.size());
+    std::vector<std::vector<EntityId>> entity_ids;
 
     for (auto const & index : indices) {
         // Get a single value at the specified timestamp
@@ -51,7 +52,7 @@ std::vector<double> TimestampValueComputer::compute(const ExecutionPlan& plan) c
         }
     }
 
-    return results;
+    return {results, entity_ids};
 }
 
 std::string TimestampValueComputer::getSourceDependency() const {

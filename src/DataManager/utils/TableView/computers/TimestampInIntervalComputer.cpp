@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-auto TimestampInIntervalComputer::compute(ExecutionPlan const & plan) const -> std::vector<bool> {
+std::pair<std::vector<bool>, ColumnEntityIds> TimestampInIntervalComputer::compute(ExecutionPlan const & plan) const {
     if (!m_source) {
         throw std::runtime_error("TimestampInIntervalComputer: interval source is null");
     }
@@ -41,7 +41,7 @@ auto TimestampInIntervalComputer::compute(ExecutionPlan const & plan) const -> s
         result[i] = inside;
     }
 
-    return result;
+    return {result, std::monostate{}};
 }
 
 

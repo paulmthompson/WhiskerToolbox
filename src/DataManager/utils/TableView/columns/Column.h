@@ -99,20 +99,17 @@ public:
 
     /**
      * @brief Gets all EntityIDs for this column using the high-level variant approach.
-     * @param table Pointer to the TableView that owns this column.
      * @return ColumnEntityIds variant containing the EntityIDs for this column.
      */
-    [[nodiscard]] ColumnEntityIds getColumnEntityIds(TableView * table) const override;
+    [[nodiscard]] ColumnEntityIds getColumnEntityIds() const override;
 
     /**
      * @brief Gets EntityIDs for a specific row in this column.
-     * @param table Pointer to the TableView that owns this column.
      * @param row_index The row index to get EntityIDs for.
      * @return Vector of EntityIDs for the specified row. Empty if not available.
      */
-    [[nodiscard]] std::vector<EntityId> getCellEntityIds(TableView * table, size_t row_index) const override;
+    [[nodiscard]] std::vector<EntityId> getCellEntityIds(size_t row_index) const override;
 
-    [[nodiscard]] bool hasEntityIds() const override;
 
 private:
     friend class TableViewBuilder;
@@ -127,6 +124,7 @@ private:
     std::string m_name;
     std::unique_ptr<IColumnComputer<T>> m_computer;
     std::variant<std::monostate, std::vector<T>> m_cache;
+    ColumnEntityIds m_entityIds;
 };
 
 

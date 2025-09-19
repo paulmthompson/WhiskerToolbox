@@ -33,7 +33,7 @@ IntervalReductionComputer::IntervalReductionComputer(std::shared_ptr<IAnalogSour
     }
 }
 
-std::vector<double> IntervalReductionComputer::compute(const ExecutionPlan& plan) const {
+std::pair<std::vector<double>, ColumnEntityIds> IntervalReductionComputer::compute(const ExecutionPlan& plan) const {
     if (!plan.hasIntervals()) {
         throw std::invalid_argument("ExecutionPlan must contain intervals for IntervalReductionComputer");
     }
@@ -60,7 +60,7 @@ std::vector<double> IntervalReductionComputer::compute(const ExecutionPlan& plan
         results.emplace_back(result);
     }
 
-    return results;
+    return {results, std::monostate{}};
 
 }
 

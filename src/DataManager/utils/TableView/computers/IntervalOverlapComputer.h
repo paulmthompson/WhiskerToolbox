@@ -88,7 +88,7 @@ public:
      * @param plan The execution plan containing row interval boundaries.
      * @return Vector of computed results for each row interval.
      */
-    [[nodiscard]] auto compute(ExecutionPlan const & plan) const -> std::vector<T> override {
+    [[nodiscard]] std::pair<std::vector<T>, ColumnEntityIds> compute(ExecutionPlan const & plan) const override {
         if (!plan.hasIntervals()) {
             throw std::runtime_error("IntervalOverlapComputer requires an ExecutionPlan with intervals");
         }
@@ -99,6 +99,8 @@ public:
 
         std::vector<T> results;
         results.reserve(rowIntervals.size());
+        std::vector<std::vector<EntityId>> entity_ids;
+        //entity_ids.reserve(rowIntervals.size());
         if (m_operation == IntervalOverlapOperation::AssignID ||
             m_operation == IntervalOverlapOperation::AssignID_Start ||
             m_operation == IntervalOverlapOperation::AssignID_End) {
@@ -109,6 +111,7 @@ public:
                         destinationTimeFrame.get());
                     if (columnIntervals.empty()) {
                         results.push_back(static_cast<T>(-1));
+                        //entity_ids.push_back(0);
                         continue;
                     }
                     // Need to convert to their time coordinates
@@ -123,15 +126,19 @@ public:
                             // Convert into row time frame
                             auto source_start_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_start));
                             results.push_back(static_cast<T>(source_start_index.getValue()));
+                            //entity_ids.push_back(m_source->getEntityIdAt(columnIntervals.size() - 1));
                         } else if (m_operation == IntervalOverlapOperation::AssignID_End) {
                             // Convert into row time frame
                             auto source_end_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_end));
                             results.push_back(static_cast<T>(source_end_index.getValue()));
+                            //entity_ids.push_back(m_source->getEntityIdAt(columnIntervals.size() - 1));
                         } else {
                             results.push_back(static_cast<T>(columnIntervals.size() - 1));
+                            //entity_ids.push_back(m_source->getEntityIdAt(columnIntervals.size() - 1));
                         }
                     } else {
                         results.push_back(static_cast<T>(-1));
+                        //entity_ids.push_back(0);
                     }
                 }
         } else if (m_operation == IntervalOverlapOperation::CountOverlaps) {
@@ -141,11 +148,17 @@ public:
                     rowInterval.end, 
                     destinationTimeFrame.get());
 
-                results.push_back(static_cast<T>(countOverlappingIntervals(rowInterval, columnIntervals, sourceTimeFrame.get(), destinationTimeFrame.get())));
+                results.push_back(static_cast<T>(countOverlappingIntervals(rowInterval, 
+                    columnIntervals, 
+                    sourceTimeFrame.get(), 
+                    destinationTimeFrame.get())));
+                for (auto const & columnInterval: columnIntervals) {
+                    //entity_ids.push_back(m_source->getEntityIdAt(columnInterval.start));
+                }
             }
         }
 
-        return results;
+        return {results, entity_ids};
     }
 
     [[nodiscard]] auto getSourceDependency() const -> std::string override {
@@ -162,95 +175,6 @@ public:
                 return EntityIdStructure::Complex; // Multiple EntityIDs per row (all overlapping intervals)
             default:
                 return EntityIdStructure::None;
-        }
-    }
-
-    [[nodiscard]] ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const override {
-        if (!plan.hasIntervals()) {
-            throw std::runtime_error("IntervalOverlapComputer requires an ExecutionPlan with intervals");
-        }
-
-        auto rowIntervals = plan.getIntervals();
-        auto destinationTimeFrame = plan.getTimeFrame();
-        auto sourceTimeFrame = m_source->getTimeFrame();
-
-        switch (m_operation) {
-            case IntervalOverlapOperation::AssignID:
-            case IntervalOverlapOperation::AssignID_Start:
-            case IntervalOverlapOperation::AssignID_End: {
-                // Simple structure: one EntityID per row
-                std::vector<EntityId> result;
-                result.reserve(rowIntervals.size());
-                
-                for (auto const & rowInterval : rowIntervals) {
-                    auto columnIntervals = m_source->getIntervalsInRange(
-                        TimeFrameIndex(0), 
-                        rowInterval.end, 
-                        destinationTimeFrame.get());
-                    
-                    if (columnIntervals.empty()) {
-                        result.push_back(0); // No overlapping interval
-                        continue;
-                    }
-                    
-                    // Check if the last interval overlaps
-                    auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervals.back().start));
-                    auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervals.back().end));
-                    auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
-                    auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
-
-                    if (source_start <= destination_end && destination_start <= source_end) {
-                        // Get EntityID of the overlapping interval
-                        size_t interval_index = columnIntervals.size() - 1;
-                        EntityId entityId = m_source->getEntityIdAt(interval_index);
-                        result.push_back(entityId);
-                    } else {
-                        result.push_back(0); // No overlap
-                    }
-                }
-                
-                return result;
-            }
-            
-            case IntervalOverlapOperation::CountOverlaps: {
-                // Complex structure: multiple EntityIDs per row
-                std::vector<std::vector<EntityId>> result;
-                result.reserve(rowIntervals.size());
-                
-                for (auto const & rowInterval : rowIntervals) {
-                    auto columnIntervals = m_source->getIntervalsInRange(
-                        rowInterval.start, 
-                        rowInterval.end, 
-                        destinationTimeFrame.get());
-                    
-                    std::vector<EntityId> row_entities;
-                    
-                    // Find all overlapping intervals and collect their EntityIDs
-                    for (size_t i = 0; i < columnIntervals.size(); ++i) {
-                        auto const & columnInterval = columnIntervals[i];
-                        
-                        // Check for overlap
-                        auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnInterval.start));
-                        auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnInterval.end));
-                        auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
-                        auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
-                        
-                        if (source_start <= destination_end && destination_start <= source_end) {
-                            EntityId entityId = m_source->getEntityIdAt(i);
-                            if (entityId != 0) {
-                                row_entities.push_back(entityId);
-                            }
-                        }
-                    }
-                    
-                    result.push_back(std::move(row_entities));
-                }
-                
-                return result;
-            }
-            
-            default:
-                return std::monostate{};
         }
     }
 

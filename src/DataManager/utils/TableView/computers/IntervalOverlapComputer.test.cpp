@@ -294,7 +294,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                                                   "TestIntervals");
         
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 4);
@@ -339,7 +339,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                                                   "TestIntervals");
         
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 4);
@@ -374,7 +374,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                                                        IntervalOverlapOperation::AssignID,
                                                        "EmptyIntervals");
         
-        auto assignResults = assignComputer.compute(plan);
+        auto [assignResults, assignEntity_ids] = assignComputer.compute(plan);
         
         REQUIRE(assignResults.size() == 2);
         REQUIRE(assignResults[0] == -1);  // No intervals to assign
@@ -385,7 +385,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                                                       IntervalOverlapOperation::CountOverlaps,
                                                       "EmptyIntervals");
         
-        auto countResults = countComputer.compute(plan);
+        auto [countResults, countEntity_ids] = countComputer.compute(plan);
         
         REQUIRE(countResults.size() == 2);
         REQUIRE(countResults[0] == 0);  // No overlaps
@@ -420,7 +420,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                                                        IntervalOverlapOperation::AssignID,
                                                        "SingleInterval");
         
-        auto assignResults = assignComputer.compute(plan);
+        auto [assignResults, assignEntity_ids] = assignComputer.compute(plan);
         
         REQUIRE(assignResults.size() == 4);
         REQUIRE(assignResults[0] == -1);  // No overlap
@@ -455,7 +455,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                                                        IntervalOverlapOperation::AssignID,
                                                        "IdenticalIntervals");
         
-        auto assignResults = assignComputer.compute(plan);
+        auto [assignResults, assignEntity_ids] = assignComputer.compute(plan);
         
         REQUIRE(assignResults.size() == 1);
         REQUIRE(assignResults[0] == 1);  // Should return the last matching interval (index 1)
@@ -512,7 +512,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Template Types", "[IntervalOverlapC
                                                     IntervalOverlapOperation::AssignID,
                                                     "TestIntervals");
         
-        auto intResults = intComputer.compute(plan);
+        auto [intResults, intEntity_ids] = intComputer.compute(plan);
         REQUIRE(intResults.size() == 1);
         REQUIRE(intResults[0] == 0);
         
@@ -521,7 +521,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Template Types", "[IntervalOverlapC
                                                     IntervalOverlapOperation::CountOverlaps,
                                                     "TestIntervals");
         
-        auto sizeResults = sizeComputer.compute(plan);
+        auto [sizeResults, sizeEntity_ids] = sizeComputer.compute(plan);
         REQUIRE(sizeResults.size() == 1);
         REQUIRE(sizeResults[0] >= 0);
     }
@@ -583,7 +583,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Complex Scenarios", "[IntervalOverl
                                                        IntervalOverlapOperation::AssignID,
                                                        "ComplexIntervals");
         
-        auto assignResults = assignComputer.compute(plan);
+        auto [assignResults, assignEntity_ids] = assignComputer.compute(plan);
         
         REQUIRE(assignResults.size() == 3);
         // Results depend on the specific overlap logic implementation
@@ -594,7 +594,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Complex Scenarios", "[IntervalOverl
                                                       IntervalOverlapOperation::CountOverlaps,
                                                       "ComplexIntervals");
         
-        auto countResults = countComputer.compute(plan);
+        auto [countResults, countEntity_ids] = countComputer.compute(plan);
         
         REQUIRE(countResults.size() == 3);
         // All results should be non-negative
@@ -606,7 +606,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Complex Scenarios", "[IntervalOverl
                                                       IntervalOverlapOperation::CountOverlaps,
                                                       "ComplexIntervals");
 
-        auto countResults_size_t = countComputer_size_t.compute(plan);
+        auto [countResults_size_t, countEntity_ids_size_t] = countComputer_size_t.compute(plan);
 
         REQUIRE(countResults_size_t.size() == 3);
         // All results should be non-negative
@@ -922,8 +922,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         
         ExecutionPlan plan(test_intervals, behavior_time_frame);
         
-        auto registry_result = registry_computer->compute(plan);
-        auto direct_result = direct_computer->compute(plan);
+        auto [registry_result, registryEntity_ids] = registry_computer->compute(plan);
+        auto [direct_result, directEntity_ids] = direct_computer->compute(plan);
         
         REQUIRE(registry_result.size() == 1);
         REQUIRE(direct_result.size() == 1);

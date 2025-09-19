@@ -54,7 +54,7 @@ public:
      * @param plan The execution plan containing interval boundaries.
      * @return Vector of computed results for each interval.
      */
-    [[nodiscard]] auto compute(const ExecutionPlan& plan) const -> std::vector<T> override {
+    [[nodiscard]] std::pair<std::vector<T>, ColumnEntityIds> compute(const ExecutionPlan& plan) const override {
         if (!plan.hasIntervals()) {
             throw std::runtime_error("IntervalPropertyComputer requires an ExecutionPlan with intervals");
         }
@@ -64,6 +64,8 @@ public:
         
         std::vector<T> results;
         results.reserve(intervals.size());
+        std::vector<EntityId> entity_ids;
+        entity_ids.reserve(intervals.size());
         
         for (const auto& interval : intervals) {
             switch (m_property) {
@@ -81,7 +83,7 @@ public:
             }
         }
         
-        return results;
+        return {results, entity_ids};
     }
 
     [[nodiscard]] auto getSourceDependency() const -> std::string override {
@@ -94,38 +96,6 @@ public:
      */
     [[nodiscard]] EntityIdStructure getEntityIdStructure() const override {
         return EntityIdStructure::Simple;
-    }
-
-    /**
-     * @brief Checks if this computer can provide EntityID information.
-     * @return True since intervals have EntityIDs.
-     */
-    [[nodiscard]] bool hasEntityIds() const override {
-        return true;
-    }
-
-    /**
-     * @brief Computes all EntityIDs for the column using Simple structure.
-     * @param plan The execution plan containing interval boundaries.
-     * @return ColumnEntityIds variant containing std::vector<EntityId>.
-     */
-    [[nodiscard]] ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const override {
-        if (!plan.hasIntervals()) {
-            return std::monostate{};
-        }
-        
-        auto intervals = plan.getIntervals();
-        std::vector<EntityId> entity_ids;
-        entity_ids.reserve(intervals.size());
-        
-        // Extract EntityIDs from the interval source
-        // The intervals in the ExecutionPlan correspond to the source intervals by index
-        for (size_t i = 0; i < intervals.size(); ++i) {
-            EntityId entity_id = m_source->getEntityIdAt(i);
-            entity_ids.push_back(entity_id);
-        }
-        
-        return entity_ids;
     }
 
 private:

@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -40,7 +41,7 @@ public:
      * @param plan The execution plan containing cached access patterns.
      * @return Vector of computed values for the entire column.
      */
-    [[nodiscard]] virtual std::vector<T> compute(ExecutionPlan const & plan) const = 0;
+    [[nodiscard]] virtual std::pair<std::vector<T>, ColumnEntityIds> compute(ExecutionPlan const & plan) const = 0;
 
     /**
      * @brief Declares dependencies on other columns.

@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
+
 /**
  * @brief Adapter that exposes one output of an IMultiColumnComputer<T> as a normal IColumnComputer<T>.
  */
@@ -17,7 +18,7 @@ class MultiComputerOutputView : public IColumnComputer<T> {
 public:
     struct SharedBatchCache {
         mutable std::mutex mutex;
-        mutable std::unordered_map<ExecutionPlan const *, std::vector<std::vector<T>>> cache;
+        mutable std::unordered_map<ExecutionPlan const *, std::pair<std::vector<std::vector<T>>, ColumnEntityIds>> cache;
     };
 
     explicit MultiComputerOutputView(std::shared_ptr<IMultiColumnComputer<T>> multiComputer,
@@ -27,21 +28,21 @@ public:
           m_sharedCache(std::move(sharedCache)),
           m_outputIndex(outputIndex) {}
 
-    [[nodiscard]] auto compute(ExecutionPlan const & plan) const -> std::vector<T> override {
+    [[nodiscard]] std::pair<std::vector<T>, ColumnEntityIds> compute(ExecutionPlan const & plan) const override {
         // Fast path: return cached batch slice if available
         {
             std::lock_guard<std::mutex> lock(m_sharedCache->mutex);
             auto it = m_sharedCache->cache.find(&plan);
             if (it != m_sharedCache->cache.end()) {
-                auto const & batch = it->second;
+                auto const & [batch, entity_ids] = it->second;
                 if (m_outputIndex < batch.size()) {
-                    return batch[m_outputIndex];
+                    return {batch[m_outputIndex], entity_ids};
                 }
             }
         }
 
         // Compute batch and populate cache
-        auto batch = m_multiComputer->computeBatch(plan);
+        auto [batch, entity_ids] = m_multiComputer->computeBatch(plan);
         std::vector<T> result;
         if (m_outputIndex < batch.size()) {
             result = batch[m_outputIndex];
@@ -49,9 +50,9 @@ public:
         {
             std::lock_guard<std::mutex> lock(m_sharedCache->mutex);
             // Insert computed batch; move to avoid copies
-            m_sharedCache->cache[&plan] = std::move(batch);
+            m_sharedCache->cache[&plan] = std::move(std::make_pair(std::move(batch), std::move(entity_ids)));
         }
-        return result;
+        return {result, entity_ids};
     }
 
     [[nodiscard]] auto getDependencies() const -> std::vector<std::string> override {
@@ -62,13 +63,6 @@ public:
         return m_multiComputer->getSourceDependency();
     }
 
-    [[nodiscard]] bool hasEntityIds() const override {
-        return m_multiComputer->hasEntityIds();
-    }
-
-    [[nodiscard]] ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const override {
-        return m_multiComputer->computeColumnEntityIds(plan);
-    }
 
     
 private:

@@ -36,7 +36,7 @@ public:
      * @pre plan.getTimeFrame() is not null
      * @post result.size() equals number of timestamps implied by plan
      */
-    [[nodiscard]] auto compute(ExecutionPlan const & plan) const -> std::vector<bool> override;
+    [[nodiscard]] std::pair<std::vector<bool>, ColumnEntityIds> compute(ExecutionPlan const & plan) const override;
 
     [[nodiscard]] auto getSourceDependency() const -> std::string override { return m_sourceName; }
 

@@ -94,10 +94,10 @@ void PCAMultiColumnComputer::fitIfNeeded() const {
     m_cache = std::move(cache);
 }
 
-auto PCAMultiColumnComputer::computeBatch(ExecutionPlan const & /*plan*/) const -> std::vector<std::vector<double>> {
+std::pair<std::vector<std::vector<double>>, ColumnEntityIds> PCAMultiColumnComputer::computeBatch(ExecutionPlan const & /*plan*/) const {
     fitIfNeeded();
     std::vector<std::vector<double>> outputs;
-    if (!m_cache.has_value()) return outputs;
+    if (!m_cache.has_value()) return {outputs, std::monostate{}};
 
     arma::mat const & S = m_cache->scores;
     std::cerr << "DEBUG PCA computeBatch: scores matrix dimensions: " << S.n_rows << " x " << S.n_cols << std::endl;
@@ -111,7 +111,7 @@ auto PCAMultiColumnComputer::computeBatch(ExecutionPlan const & /*plan*/) const 
     }
 
     std::cerr << "DEBUG PCA computeBatch: returning " << outputs.size() << " columns with " << (outputs.empty() ? 0 : outputs[0].size()) << " rows each" << std::endl;
-    return outputs;
+    return {outputs, std::monostate{}};
 }
 
 auto PCAMultiColumnComputer::getOutputNames() const -> std::vector<std::string> {

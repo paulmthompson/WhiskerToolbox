@@ -446,7 +446,7 @@ std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
     for (auto const & column : m_columns) {
         if (column->hasEntityIds()) {
             // Use the column's getCellEntityIds method
-            auto cell_entities = column->getCellEntityIds(const_cast<TableView*>(this), row_index);
+            auto cell_entities = column->getCellEntityIds(row_index);
             for (EntityId entity_id : cell_entities) {
                 if (entity_id != 0) {
                     entity_set.insert(entity_id);
@@ -580,8 +580,7 @@ ColumnEntityIds TableView::getColumnEntityIds(std::string const & columnName) co
         return {};
     }
     
-    // Need to cast away const to pass this to column method
-    return m_columns[columnIndex]->getColumnEntityIds(const_cast<TableView*>(this));
+    return m_columns[columnIndex]->getColumnEntityIds();
 }
 
 std::vector<EntityId> TableView::getCellEntityIds(std::string const & columnName, size_t rowIndex) const {
@@ -595,6 +594,5 @@ std::vector<EntityId> TableView::getCellEntityIds(std::string const & columnName
         return {};
     }
     
-    // Need to cast away const to pass this to column method
-    return m_columns[columnIndex]->getCellEntityIds(const_cast<TableView*>(this), rowIndex);
+    return m_columns[columnIndex]->getCellEntityIds(rowIndex);
 }

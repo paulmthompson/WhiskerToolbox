@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-std::vector<std::vector<double>> AnalogTimestampOffsetsMultiComputer::computeBatch(ExecutionPlan const & plan) const {
+std::pair<std::vector<std::vector<double>>, ColumnEntityIds> AnalogTimestampOffsetsMultiComputer::computeBatch(ExecutionPlan const & plan) const {
     // Determine base indices from plan: prefer entity-expanded rows, then timestamp indices, else intervals' starts
     std::vector<TimeFrameIndex> baseIndices;
     if (!plan.getRows().empty()) {
@@ -55,7 +55,7 @@ std::vector<std::vector<double>> AnalogTimestampOffsetsMultiComputer::computeBat
         }
     }
 
-    return outputs;
+    return {outputs, ColumnEntityIds()};
 }
 
 std::vector<std::string> AnalogTimestampOffsetsMultiComputer::getOutputNames() const {

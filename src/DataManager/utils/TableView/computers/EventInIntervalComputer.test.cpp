@@ -339,7 +339,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
                                               "TestEvents");
         
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 7);
@@ -381,7 +381,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
                                              "TestEvents");
         
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 6);
@@ -420,7 +420,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
                                                             "TestEvents");
         
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 4);
@@ -471,7 +471,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
                                                       EventOperation::Presence,
                                                       "EmptyEvents");
         
-        auto presenceResults = presenceComputer.compute(plan);
+        auto [presenceResults, presenceEntity_ids] = presenceComputer.compute(plan);
         
         REQUIRE(presenceResults.size() == 2);
         REQUIRE(presenceResults[0] == false);
@@ -482,7 +482,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
                                                   EventOperation::Count,
                                                   "EmptyEvents");
         
-        auto countResults = countComputer.compute(plan);
+        auto [countResults, countEntity_ids] = countComputer.compute(plan);
         
         REQUIRE(countResults.size() == 2);
         REQUIRE(countResults[0] == 0);
@@ -493,7 +493,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
                                                                   EventOperation::Gather,
                                                                   "EmptyEvents");
         
-        auto gatherResults = gatherComputer.compute(plan);
+        auto [gatherResults, gatherEntity_ids] = gatherComputer.compute(plan);
         
         REQUIRE(gatherResults.size() == 2);
         REQUIRE(gatherResults[0].size() == 0);
@@ -525,7 +525,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
                                                       EventOperation::Presence,
                                                       "SingleEvent");
         
-        auto presenceResults = presenceComputer.compute(plan);
+        auto [presenceResults, presenceEntity_ids] = presenceComputer.compute(plan);
         
         REQUIRE(presenceResults.size() == 3);
         REQUIRE(presenceResults[0] == false);  // Before event
@@ -537,7 +537,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
                                                   EventOperation::Count,
                                                   "SingleEvent");
         
-        auto countResults = countComputer.compute(plan);
+        auto [countResults, countEntity_ids] = countComputer.compute(plan);
         
         REQUIRE(countResults.size() == 3);
         REQUIRE(countResults[0] == 0);  // Before event
@@ -570,7 +570,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
                                                       EventOperation::Presence,
                                                       "TestEvents");
         
-        auto presenceResults = presenceComputer.compute(plan);
+        auto [presenceResults, presenceEntity_ids] = presenceComputer.compute(plan);
         
         REQUIRE(presenceResults.size() == 3);
         REQUIRE(presenceResults[0] == true);   // At event time 1
@@ -962,8 +962,8 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         
         ExecutionPlan plan(test_intervals, behavior_time_frame);
         
-        auto registry_result = registry_computer->compute(plan);
-        auto direct_result = direct_computer->compute(plan);
+        auto [registry_result, registry_entity_ids] = registry_computer->compute(plan);
+        auto [direct_result, direct_entity_ids] = direct_computer->compute(plan);
         
         REQUIRE(registry_result.size() == 1);
         REQUIRE(direct_result.size() == 1);
@@ -1246,7 +1246,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
                                                   EventOperation::Count,
                                                   "ManyEvents");
         
-        auto countResults = countComputer.compute(plan);
+        auto [countResults, countEntity_ids] = countComputer.compute(plan);
         
         REQUIRE(countResults.size() == intervals.size());
         
@@ -1260,7 +1260,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
                                                       EventOperation::Presence,
                                                       "ManyEvents");
         
-        auto presenceResults = presenceComputer.compute(plan);
+        auto [presenceResults, presenceEntity_ids] = presenceComputer.compute(plan);
         
         REQUIRE(presenceResults.size() == intervals.size());
         
@@ -1302,7 +1302,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
                                                   EventOperation::Count,
                                                   "BoundaryEvents");
         
-        auto countResults = countComputer.compute(plan);
+        auto [countResults, entity_ids] = countComputer.compute(plan);
         
         REQUIRE(countResults.size() == 5);
         
@@ -1347,7 +1347,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
                                                   EventOperation::Count,
                                                   "DifferentTimeFrameEvents");
         
-        auto countResults = countComputer.compute(plan);
+        auto [countResults, countEntity_ids] = countComputer.compute(plan);
         
         REQUIRE(countResults.size() == 5);
         REQUIRE(countResults[0] == 2);  // Interval 0-10: events at 2, 6
@@ -1361,7 +1361,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
                                                       EventOperation::Presence,
                                                       "DifferentTimeFrameEvents");
         
-        auto presenceResults = presenceComputer.compute(plan);
+        auto [presenceResults, presenceEntity_ids] = presenceComputer.compute(plan);
         
         REQUIRE(presenceResults.size() == 5);
         REQUIRE(presenceResults[0] == true);   // Interval 0-10: has events
@@ -1375,7 +1375,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
                                                                   EventOperation::Gather,
                                                                   "DifferentTimeFrameEvents");
         
-        auto gatherResults = gatherComputer.compute(plan);
+        auto [gatherResults, gatherEntity_ids] = gatherComputer.compute(plan);
         
         REQUIRE(gatherResults.size() == 5);
         
@@ -1435,7 +1435,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
                                                   EventOperation::Count,
                                                   "NonAlignedEvents");
         
-        auto countResults = countComputer.compute(plan);
+        auto [countResults, countEntity_ids] = countComputer.compute(plan);
         
         REQUIRE(countResults.size() == 4);
         REQUIRE(countResults[0] == 2);  // Interval 0-5: events at 1.5, 4.2
@@ -1448,7 +1448,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
                                                       EventOperation::Presence,
                                                       "NonAlignedEvents");
         
-        auto presenceResults = presenceComputer.compute(plan);
+        auto [presenceResults, presenceEntity_ids] = presenceComputer.compute(plan);
         
         REQUIRE(presenceResults.size() == 4);
         REQUIRE(presenceResults[0] == true);   // Interval 0-5: has events

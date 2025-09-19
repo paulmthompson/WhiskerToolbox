@@ -302,7 +302,7 @@ TEST_CASE("DM - TV - AnalogSliceGathererComputer Basic Functionality", "[AnalogS
         AnalogSliceGathererComputer<std::vector<double>> computer(analogSource);
         
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 3);
@@ -349,7 +349,7 @@ TEST_CASE("DM - TV - AnalogSliceGathererComputer Basic Functionality", "[AnalogS
         AnalogSliceGathererComputer<std::vector<float>> computer(analogSource);
         
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 2);
@@ -385,7 +385,7 @@ TEST_CASE("DM - TV - AnalogSliceGathererComputer Basic Functionality", "[AnalogS
         
         AnalogSliceGathererComputer<std::vector<double>> computer(analogSource);
         
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         
         // Verify results
         REQUIRE(results.size() == 3);
@@ -442,7 +442,7 @@ TEST_CASE("DM - TV - AnalogSliceGathererComputer Template Types", "[AnalogSliceG
         
         // Test with double
         AnalogSliceGathererComputer<std::vector<double>> doubleComputer(analogSource);
-        auto doubleResults = doubleComputer.compute(plan);
+        auto [doubleResults, doubleEntity_ids] = doubleComputer.compute(plan);
         
         REQUIRE(doubleResults.size() == 1);
         REQUIRE(doubleResults[0].size() == 3);
@@ -452,7 +452,7 @@ TEST_CASE("DM - TV - AnalogSliceGathererComputer Template Types", "[AnalogSliceG
         
         // Test with float
         AnalogSliceGathererComputer<std::vector<float>> floatComputer(analogSource);
-        auto floatResults = floatComputer.compute(plan);
+        auto [floatResults, floatEntity_ids] = floatComputer.compute(plan);
         
         REQUIRE(floatResults.size() == 1);
         REQUIRE(floatResults[0].size() == 3);
@@ -727,8 +727,8 @@ TEST_CASE_METHOD(AnalogSliceTableRegistryTestFixture, "DM - TV - AnalogSliceGath
         
         ExecutionPlan plan(test_intervals, behavior_time_frame);
         
-        auto registry_result = registry_computer->compute(plan);
-        auto direct_result = direct_computer->compute(plan);
+        auto [registry_result, registryEntity_ids] = registry_computer->compute(plan);
+        auto [direct_result, directEntity_ids] = direct_computer->compute(plan);
         
         REQUIRE(registry_result.size() == 1);
         REQUIRE(direct_result.size() == 1);

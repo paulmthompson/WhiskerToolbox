@@ -25,10 +25,11 @@ void Column<T>::materialize(TableView * table) {
     ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
 
     // Compute the column values using the computer
-    auto computed = m_computer->compute(plan);
+    auto [computed, entity_ids] = m_computer->compute(plan);
 
     // Store the computed values in the cache
     m_cache = std::move(computed);
+    m_entityIds = std::move(entity_ids);
 }
 
 template<SupportedColumnType T>
@@ -48,29 +49,26 @@ bool Column<T>::isMaterialized() const {
 }
 
 template<SupportedColumnType T>
-bool Column<T>::hasEntityIds() const {
-    return m_computer->hasEntityIds();
-}
-
-template<SupportedColumnType T>
 EntityIdStructure Column<T>::getEntityIdStructure() const {
     return m_computer->getEntityIdStructure();
 }
 
 template<SupportedColumnType T>
-std::vector<EntityId> Column<T>::getCellEntityIds(TableView * table, size_t row_index) const {
-    ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
-    return m_computer->computeCellEntityIds(plan, row_index);
+std::vector<EntityId> Column<T>::getCellEntityIds(size_t row_index) const {
+    if (getEntityIdStructure() == EntityIdStructure::None) {
+        return {};
+    } else if (getEntityIdStructure() == EntityIdStructure::Simple) {
+        return {std::get<std::vector<EntityId>>(m_entityIds).at(row_index)};
+    } else if (getEntityIdStructure() == EntityIdStructure::Complex) {
+        return std::get<std::vector<std::vector<EntityId>>>(m_entityIds).at(row_index);
+    } else {
+        return {};
+    }
 }
 
 template<SupportedColumnType T>
-ColumnEntityIds Column<T>::getColumnEntityIds(TableView * table) const {
-    if (!hasEntityIds()) {
-        return {};
-    }
-
-    ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
-    return m_computer->computeColumnEntityIds(plan);
+ColumnEntityIds Column<T>::getColumnEntityIds() const {
+    return m_entityIds;
 }
 
 // Explicit instantiation for commonly used types

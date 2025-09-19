@@ -113,6 +113,7 @@ auto TableViewBuilder::addColumn(std::string const & name, std::unique_ptr<IColu
     return *this;
 }
 
+
 template<typename T>
 auto TableViewBuilder::addColumns(std::string const & baseName, std::unique_ptr<IMultiColumnComputer<T>> computer) -> TableViewBuilder & {
     if (!computer) {
@@ -137,5 +138,6 @@ auto TableViewBuilder::addColumns(std::string const & baseName, std::unique_ptr<
 
     return *this;
 }
+
 
 #endif// TABLE_VIEW_BUILDER_H

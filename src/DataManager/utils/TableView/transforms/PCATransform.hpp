@@ -34,7 +34,7 @@ public:
         , m_center(center)
         , m_standardize(standardize) {}
 
-    [[nodiscard]] auto computeBatch(ExecutionPlan const & plan) const -> std::vector<std::vector<double>> override;
+    [[nodiscard]] std::pair<std::vector<std::vector<double>>, ColumnEntityIds> computeBatch(ExecutionPlan const & plan) const override;
     [[nodiscard]] auto getOutputNames() const -> std::vector<std::string> override;
     [[nodiscard]] auto getDependencies() const -> std::vector<std::string> override { return {}; }
     [[nodiscard]] auto getSourceDependency() const -> std::string override { return "__derived__"; }

@@ -291,7 +291,7 @@ TEST_CASE("DM - TV - TimestampValueComputer Basic Functionality", "[TimestampVal
         TimestampValueComputer computer(analogSource);
 
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
 
         // Verify results
         REQUIRE(results.size() == 4);
@@ -319,7 +319,7 @@ TEST_CASE("DM - TV - TimestampValueComputer Basic Functionality", "[TimestampVal
         TimestampValueComputer computer(analogSource);
 
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
 
         // Verify results
         REQUIRE(results.size() == 1);
@@ -344,7 +344,7 @@ TEST_CASE("DM - TV - TimestampValueComputer Basic Functionality", "[TimestampVal
         TimestampValueComputer computer(analogSource);
 
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
 
         // Verify results - should return NaN for missing data
         REQUIRE(results.size() == 2);
@@ -373,7 +373,7 @@ TEST_CASE("DM - TV - TimestampValueComputer Basic Functionality", "[TimestampVal
         TimestampValueComputer computer(analogSource);
 
         // Compute the results
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
 
         // Verify results
         REQUIRE(results.size() == 2);
@@ -399,7 +399,7 @@ TEST_CASE("DM - TV - TimestampValueComputer Basic Functionality", "[TimestampVal
         std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(1)};
         ExecutionPlan plan(timestamps, timeFrame);
 
-        auto results = computer.compute(plan);
+        auto [results, entity_ids] = computer.compute(plan);
         REQUIRE(results.size() == 1);
         REQUIRE(results[0] == Catch::Approx(2.0));
     }
@@ -675,8 +675,8 @@ TEST_CASE_METHOD(TimestampValueTableRegistryTestFixture, "DM - TV - TimestampVal
 
         ExecutionPlan plan(test_timestamps, signal_time_frame);
 
-        auto registry_result = registry_computer->compute(plan);
-        auto direct_result = direct_computer->compute(plan);
+        auto [registry_result, registry_entity_ids] = registry_computer->compute(plan);
+        auto [direct_result, direct_entity_ids] = direct_computer->compute(plan);
 
         REQUIRE(registry_result.size() == 2);
         REQUIRE(direct_result.size() == 2);

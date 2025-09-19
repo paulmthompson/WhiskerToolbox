@@ -41,7 +41,7 @@ public:
      * @param plan Execution plan (Timestamp or entity-expanded rows supported).
      * @return Vector of columns; size equals number of offsets.
      */
-    [[nodiscard]] std::vector<std::vector<double>> computeBatch(ExecutionPlan const & plan) const override;
+    [[nodiscard]] std::pair<std::vector<std::vector<double>>, ColumnEntityIds> computeBatch(ExecutionPlan const & plan) const override;
 
     /**
      * @brief Suffix names for each offset output.

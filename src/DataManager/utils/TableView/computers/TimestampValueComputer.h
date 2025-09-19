@@ -57,13 +57,17 @@ public:
      * @throws std::runtime_error if the execution plan doesn't contain indices
      * @throws std::runtime_error if the time frame is null
      */
-    [[nodiscard]] auto compute(const ExecutionPlan& plan) const -> std::vector<double> override;
+    [[nodiscard]] std::pair<std::vector<double>, ColumnEntityIds> compute(const ExecutionPlan& plan) const override;
 
     /**
      * @brief Returns the source dependency name.
      * @return The name of the analog source this computer depends on.
      */
     [[nodiscard]] auto getSourceDependency() const -> std::string override;
+
+    [[nodiscard]] EntityIdStructure getEntityIdStructure() const override {
+        return EntityIdStructure::Simple;
+    }
 
 private:
     std::shared_ptr<IAnalogSource> m_source;
