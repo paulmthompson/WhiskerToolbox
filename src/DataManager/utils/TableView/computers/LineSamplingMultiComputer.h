@@ -3,6 +3,7 @@
 
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
 #include "utils/TableView/interfaces/ILineSource.h"
+#include "utils/TableView/interfaces/IEntityProvider.h"
 #include "CoreGeometry/line_geometry.hpp"
 
 #include <memory>
@@ -135,6 +136,68 @@ public:
 
     [[nodiscard]] auto getSourceDependency() const -> std::string override {
         return m_sourceName;
+    }
+
+    [[nodiscard]] bool hasEntityIds() const override {
+        return true;  // LineSamplingMultiComputer can provide EntityIDs from its line source
+    }
+
+    [[nodiscard]] ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const override {
+        // Extract the entity IDs based on the execution plan
+        std::vector<TimeFrameIndex> indices;
+        std::vector<std::optional<int>> entityIdx;
+        
+        if (!plan.getRows().empty()) {
+            auto const& rows = plan.getRows();
+            indices.reserve(rows.size());
+            entityIdx.reserve(rows.size());
+            for (auto const& r : rows) {
+                indices.push_back(r.timeIndex);
+                entityIdx.push_back(r.entityIndex);
+            }
+        } else if (plan.hasIndices()) {
+            indices = plan.getIndices();
+            entityIdx.resize(indices.size());
+        } else {
+            auto const & intervals = plan.getIntervals();
+            indices.reserve(intervals.size());
+            entityIdx.reserve(intervals.size());
+            for (auto const & interval : intervals) {
+                indices.push_back(interval.start);
+                entityIdx.emplace_back(std::nullopt);
+            }
+        }
+
+        std::vector<EntityId> result;
+        result.reserve(indices.size());
+
+        // Use the plan's timeframe (rows are expressed in this timeframe)
+        auto targetTF = plan.getTimeFrame().get();
+
+        for (size_t r = 0; r < indices.size(); ++r) {
+            TimeFrameIndex const tfIndex = indices[r];
+            
+            // Get EntityID from the line source
+            EntityId entityId = 0;  // Default to 0 (invalid)
+            
+            if (entityIdx[r].has_value()) {
+                // We have a specific entity index, get its EntityID
+                if (auto entityProvider = std::dynamic_pointer_cast<IEntityProvider>(m_lineSource)) {
+                    entityId = entityProvider->getEntityIdAt(tfIndex, *entityIdx[r]);
+                }
+            } else {
+                // No specific entity index, try to get the first entity at this timestamp
+                if (auto entityProvider = std::dynamic_pointer_cast<IEntityProvider>(m_lineSource)) {
+                    if (entityProvider->getEntityCountAt(tfIndex) > 0) {
+                        entityId = entityProvider->getEntityIdAt(tfIndex, 0);
+                    }
+                }
+            }
+            
+            result.push_back(entityId);
+        }
+
+        return result;
     }
 
 private:

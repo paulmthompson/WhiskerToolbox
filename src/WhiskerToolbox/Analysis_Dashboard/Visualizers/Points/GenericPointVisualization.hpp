@@ -34,7 +34,15 @@ class GroupManager;
  * @brief Generic visualization for point data with templated data types
  * 
  * This class provides a generic implementation for visualizing points with
- * any coordinate type (float/double) and any row indicator type.
+ * any row indicator type.
+ * 
+ * Right now there is some redundancy in how we store the actual point data. There will be the raw source,
+ * perhaps coming from a TableView object or from a PointData source. Then we will convert this data into
+ * a quadtree for efficient lookup and store the x,y and group_id per vertex. Group_id is mapped to a color
+ * in the shader.
+ * We will also keep the entity_ids for each point. For PointData, this would correspond to the entity_id
+ * for each point. If we are deriving from a TableView object, this would be the entity_id that comes
+ * from the row. 
  * 
  * @tparam RowIndicatorType The type used for row indicators. This probably will only be
  * EntityId, but is templated for backwards compatibility with the old system. I think each TimeFrameIndex
@@ -44,7 +52,7 @@ template<typename RowIndicatorType>
 struct GenericPointVisualization : protected QOpenGLFunctions_4_1_Core {
 public:
     std::unique_ptr<QuadTree<RowIndicatorType>> m_spatial_index;
-    std::vector<float> m_vertex_data;  // Format: x, y, group_id per vertex (3 floats per point)
+    std::vector<float> m_vertex_data;  // Format: x, y, group_id (color index) per vertex (3 floats per point)
     std::vector<EntityId> m_entity_ids;// 1:1 with points when available
     QOpenGLBuffer m_vertex_buffer;
     QOpenGLVertexArrayObject m_vertex_array_object;

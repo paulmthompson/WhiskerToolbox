@@ -177,6 +177,41 @@ public:
     void setDirectEntityIds(std::vector<EntityId> entity_ids);
 
     /**
+     * @brief Check if a specific column has EntityID information available.
+     * @param name The column name to check.
+     * @return True if EntityIDs are available for this column, false otherwise.
+     */
+    [[nodiscard]] bool hasColumnEntityIds(std::string const & name) const;
+
+    /**
+     * @brief Get EntityIds for a specific column.
+     * 
+     * This method returns EntityIDs that correspond to the data sources
+     * used to compute the specified column's values. Each EntityID corresponds
+     * to a row in the table.
+     * 
+     * @param name The column name.
+     * @return Vector of EntityIds, one per row. Empty if not available.
+     * @throws std::runtime_error if the column is not found.
+     */
+    [[nodiscard]] ColumnEntityIds getColumnEntityIds(std::string const & name) const;
+
+    /**
+     * @brief Get all contributing EntityIDs for a specific cell.
+     * 
+     * This method returns all EntityIDs that contributed to the computation
+     * of a specific cell in the table. For simple columns, this will return
+     * the same as getColumnEntityIds()[row_index]. For complex columns that
+     * aggregate data from multiple entities, this may return multiple EntityIDs.
+     * 
+     * @param column_name The column name.
+     * @param row_index The row index.
+     * @return Vector of EntityIDs that contributed to this cell. Empty if not available.
+     * @throws std::runtime_error if the column is not found or row_index is out of bounds.
+     */
+    [[nodiscard]] auto getCellEntityIds(std::string const & column_name, size_t row_index) const -> std::vector<EntityId>;
+
+    /**
      * @brief Create a new row selector of the same concrete type, filtered to a subset of rows.
      *
      * @param keep_indices Indices of rows to keep (relative to this table's current rows), in ascending order.

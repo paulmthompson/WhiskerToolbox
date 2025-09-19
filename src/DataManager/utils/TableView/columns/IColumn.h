@@ -1,12 +1,42 @@
 #ifndef ICOLUMN_H
 #define ICOLUMN_H
 
+#include "Entity/EntityTypes.hpp"
+
+#include <memory>
 #include <string>
 #include <typeinfo>
+#include <variant>
 #include <vector>
 
 // Forward declaration
 class TableView;
+
+/**
+ * @brief Enumeration of EntityID structures that columns can provide.
+ */
+enum class EntityIdStructure { 
+    None,     ///< No EntityIDs available
+    Simple,   ///< One EntityID per row (std::vector<EntityId>)
+    Complex,  ///< Multiple EntityIDs per row (std::vector<std::vector<EntityId>>)
+    Shared    ///< Shared references to EntityID collections (std::vector<SharedEntityIdCollection>)
+};
+
+/**
+ * @brief Type aliases for EntityID collections and sharing.
+ */
+using EntityIdCollection = std::vector<EntityId>;
+using SharedEntityIdCollection = std::shared_ptr<const EntityIdCollection>;
+
+/**
+ * @brief Variant type for different EntityID structures at the column level.
+ */
+using ColumnEntityIds = std::variant<
+    std::monostate,                              ///< None: No EntityIDs
+    std::vector<EntityId>,                       ///< Simple: One EntityID per row
+    std::vector<std::vector<EntityId>>,          ///< Complex: Multiple EntityIDs per row
+    std::vector<SharedEntityIdCollection>       ///< Shared: References to shared collections
+>;
 
 /**
  * @brief Non-templated base interface for all column types.
@@ -69,6 +99,56 @@ public:
      * @brief Clears the cached data, forcing recomputation on next access.
      */
     virtual void clearCache() = 0;
+
+    /**
+     * @brief Gets the EntityID structure type for this column.
+     * 
+     * This indicates whether the column provides no EntityIDs, simple EntityIDs
+     * (one per row), complex EntityIDs (multiple per row), or shared EntityIDs
+     * (references to shared collections).
+     * 
+     * @return The EntityID structure type for this column.
+     */
+    [[nodiscard]] virtual EntityIdStructure getEntityIdStructure() const = 0;
+
+    /**
+     * @brief Gets all EntityIDs for this column using the high-level variant approach.
+     * 
+     * The returned variant contains one of:
+     * - std::monostate: No EntityIDs available
+     * - std::vector<EntityId>: One EntityID per row (simple)
+     * - std::vector<std::vector<EntityId>>: Multiple EntityIDs per row (complex)
+     * - std::vector<SharedEntityIdCollection>: Shared EntityID collections
+     * 
+     * @param table Pointer to the TableView that owns this column.
+     * @return ColumnEntityIds variant containing the EntityIDs for this column.
+     */
+    [[nodiscard]] virtual ColumnEntityIds getColumnEntityIds(TableView * table) const = 0;
+
+    /**
+     * @brief Convenience method to get EntityIDs for a specific row.
+     * 
+     * This method works across all EntityID structures and always returns
+     * a vector of EntityIDs for the specified row. For shared structures,
+     * it dereferences the shared pointer. For simple structures, it returns
+     * a single-element vector.
+     * 
+     * @param table Pointer to the TableView that owns this column.
+     * @param row_index The row index to get EntityIDs for.
+     * @return Vector of EntityIDs for the specified row. Empty if not available.
+     */
+    [[nodiscard]] virtual std::vector<EntityId> getCellEntityIds(TableView * table, size_t row_index) const = 0;
+
+    /**
+     * @brief Checks if this column provides EntityID information.
+     * 
+     * This is a convenience method that checks if getEntityIdStructure() != None.
+     * 
+     * @return True if EntityIDs are available, false otherwise.
+     */
+    [[nodiscard]] virtual bool hasEntityIds() const {
+        return getEntityIdStructure() != EntityIdStructure::None;
+    }
 
 protected:
     // Protected constructor to prevent direct instantiation

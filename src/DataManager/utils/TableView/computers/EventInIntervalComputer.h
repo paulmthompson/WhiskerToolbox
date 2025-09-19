@@ -152,6 +152,39 @@ public:
         return m_sourceName;
     }
 
+    /**
+     * @brief Gets the EntityID structure type for this computer.
+     * 
+     * For EventInIntervalComputer, the EntityID structure depends on the operation:
+     * - Presence and Count operations have no EntityIDs (EntityIdStructure::None)
+     * - Gather and Gather_Center operations provide multiple EntityIDs per row (EntityIdStructure::Complex)
+     * 
+     * @return The EntityID structure type for this computer.
+     */
+    [[nodiscard]] EntityIdStructure getEntityIdStructure() const override {
+        switch (m_operation) {
+            case EventOperation::Presence:
+            case EventOperation::Count:
+                return EntityIdStructure::None;
+            case EventOperation::Gather:
+            case EventOperation::Gather_Center:
+                return EntityIdStructure::Complex; // Multiple EntityIDs per row (all events in interval)
+            default:
+                return EntityIdStructure::None;
+        }
+    }
+
+    /**
+     * @brief Computes all EntityIDs for the column.
+     * 
+     * For Gather and Gather_Center operations, this returns a vector of vectors where each
+     * inner vector contains the EntityIDs of all events that fall within the corresponding interval.
+     * 
+     * @param plan The execution plan containing interval boundaries and destination time frame.
+     * @return ColumnEntityIds variant containing the EntityIDs for this column.
+     */
+    [[nodiscard]] ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const override;
+
 private:
     std::shared_ptr<IEventSource> m_source;
     EventOperation m_operation;

@@ -577,3 +577,47 @@ std::unique_ptr<IRowSelector> TableView::cloneRowSelectorFiltered(std::vector<si
     for (size_t k : keep_indices) identity.push_back(k);
     return std::make_unique<IndexSelector>(std::move(identity));
 }
+
+bool TableView::hasColumnEntityIds(std::string const & columnName) const {
+    auto it = m_colNameToIndex.find(columnName);
+    if (it == m_colNameToIndex.end()) {
+        return false;
+    }
+    
+    size_t columnIndex = it->second;
+    if (columnIndex >= m_columns.size()) {
+        return false;
+    }
+    
+    return m_columns[columnIndex]->hasEntityIds();
+}
+
+ColumnEntityIds TableView::getColumnEntityIds(std::string const & columnName) const {
+    auto it = m_colNameToIndex.find(columnName);
+    if (it == m_colNameToIndex.end()) {
+        return {};
+    }
+    
+    size_t columnIndex = it->second;
+    if (columnIndex >= m_columns.size()) {
+        return {};
+    }
+    
+    // Need to cast away const to pass this to column method
+    return m_columns[columnIndex]->getColumnEntityIds(const_cast<TableView*>(this));
+}
+
+std::vector<EntityId> TableView::getCellEntityIds(std::string const & columnName, size_t rowIndex) const {
+    auto it = m_colNameToIndex.find(columnName);
+    if (it == m_colNameToIndex.end()) {
+        return {};
+    }
+    
+    size_t columnIndex = it->second;
+    if (columnIndex >= m_columns.size()) {
+        return {};
+    }
+    
+    // Need to cast away const to pass this to column method
+    return m_columns[columnIndex]->getCellEntityIds(const_cast<TableView*>(this), rowIndex);
+}

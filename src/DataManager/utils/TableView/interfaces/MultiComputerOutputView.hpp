@@ -62,6 +62,15 @@ public:
         return m_multiComputer->getSourceDependency();
     }
 
+    [[nodiscard]] bool hasEntityIds() const override {
+        return m_multiComputer->hasEntityIds();
+    }
+
+    [[nodiscard]] ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const override {
+        return m_multiComputer->computeColumnEntityIds(plan);
+    }
+
+    
 private:
     std::shared_ptr<IMultiColumnComputer<T>> m_multiComputer;
     std::shared_ptr<SharedBatchCache> m_sharedCache;

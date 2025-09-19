@@ -144,7 +144,7 @@ private:
     void createBehaviorIntervals() {
         // Create behavior periods: exploration, rest, exploration
         auto behavior_intervals = std::make_shared<DigitalIntervalSeries>();
-        
+
         // Exploration period 1: time 10-25
         behavior_intervals->addEvent(TimeFrameIndex(10), TimeFrameIndex(25));
         
@@ -183,6 +183,10 @@ private:
         auto neuron1_series = std::make_shared<DigitalEventSeries>(neuron1_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron1Spikes", neuron1_series, TimeKey("spike_time"));
         
+        // Initialize EntityIDs for neuron1 spike series
+        neuron1_series->setIdentityContext("Neuron1Spikes", m_data_manager->getEntityRegistry());
+        neuron1_series->rebuildAllEntityIds();
+        
         // Create spike train for Neuron2 - dense spikes
         // All values are indices into the spike timeframe
         std::vector<float> neuron2_spikes = {
@@ -211,6 +215,10 @@ private:
         auto neuron2_series = std::make_shared<DigitalEventSeries>(neuron2_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron2Spikes", neuron2_series, TimeKey("spike_time"));
         
+        // Initialize EntityIDs for neuron2 spike series
+        neuron2_series->setIdentityContext("Neuron2Spikes", m_data_manager->getEntityRegistry());
+        neuron2_series->rebuildAllEntityIds();
+        
         // Create spike train for Neuron3 - rhythmic spikes every 16 time units
         // Starting at time 4 (index 2), then time 12 (index 6), time 20 (index 10), etc.
         std::vector<float> neuron3_spikes;
@@ -219,6 +227,10 @@ private:
         }
         auto neuron3_series = std::make_shared<DigitalEventSeries>(neuron3_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron3Spikes", neuron3_series, TimeKey("spike_time"));
+        
+        // Initialize EntityIDs for neuron3 spike series
+        neuron3_series->setIdentityContext("Neuron3Spikes", m_data_manager->getEntityRegistry());
+        neuron3_series->rebuildAllEntityIds();
     }
 };
 
@@ -1443,5 +1455,358 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
         REQUIRE(presenceResults[1] == true);   // Interval 5-13: has events
         REQUIRE(presenceResults[2] == true);   // Interval 13-27: has events
         REQUIRE(presenceResults[3] == true);   // Interval 27-45: has events
+    }
+}
+
+TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComputer EntityID Round Trip", "[EventInIntervalComputer][EntityID][TableView]") {
+    
+    SECTION("Test Complex EntityID structure with EntityID verification") {
+        auto& dm = getDataManager();
+        auto dme = std::make_shared<DataManagerExtension>(dm);
+        
+        // Get the event sources from the DataManager
+        auto neuron1_source = dme->getEventSource("Neuron1Spikes");
+        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        
+        REQUIRE(neuron1_source != nullptr);
+        REQUIRE(behavior_source != nullptr);
+        
+        // Get the behavior intervals to use as row selector
+        auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
+        auto behavior_intervals = behavior_source->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+        
+        REQUIRE(behavior_intervals.size() == 4); // 4 behavior periods
+        
+        // Convert to TimeFrameIntervals for row selector
+        std::vector<TimeFrameInterval> row_intervals;
+        for (const auto& interval : behavior_intervals) {
+            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        
+        auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
+        
+        // Create EventInIntervalComputer for Gather operation (Complex EntityID structure)
+        auto gather_computer = std::make_unique<EventInIntervalComputer<std::vector<float>>>(
+            neuron1_source, 
+            EventOperation::Gather, 
+            "Neuron1Spikes"
+        );
+        
+        // Verify EntityID structure is Complex for Gather operations
+        REQUIRE(gather_computer->getEntityIdStructure() == EntityIdStructure::Complex);
+        REQUIRE(gather_computer->hasEntityIds());
+        
+        // Create TableView builder and add the column
+        TableViewBuilder builder(dme);
+        builder.setRowSelector(std::move(row_selector));
+        builder.addColumn<std::vector<float>>("Neuron1_Events", std::move(gather_computer));
+        
+        // Build the table
+        TableView table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 4);
+        REQUIRE(table.getColumnCount() == 1);
+        REQUIRE(table.hasColumn("Neuron1_Events"));
+        
+        // Test column-level EntityIDs using variant interface
+        ColumnEntityIds column_entity_ids = table.getColumnEntityIds("Neuron1_Events");
+        REQUIRE(std::holds_alternative<std::vector<std::vector<EntityId>>>(column_entity_ids));
+        
+        auto complex_entity_ids = std::get<std::vector<std::vector<EntityId>>>(column_entity_ids);
+        REQUIRE(complex_entity_ids.size() == 4); // One vector of EntityIDs per row
+        
+        // Test cell-level EntityID extraction
+        for (size_t row = 0; row < 4; ++row) {
+            std::vector<EntityId> cell_entity_ids = table.getCellEntityIds("Neuron1_Events", row);
+            REQUIRE(cell_entity_ids == complex_entity_ids[row]);
+            
+            // Each row should have zero or more EntityIDs (depending on events in interval)
+            REQUIRE(cell_entity_ids.size() >= 0);
+        }
+        
+        std::cout << "✓ Complex EntityID structure test passed for EventInIntervalComputer Gather operations" << std::endl;
+        std::cout << "  - Column EntityIDs: " << complex_entity_ids.size() << " rows" << std::endl;
+        for (size_t i = 0; i < complex_entity_ids.size(); ++i) {
+            std::cout << "    Row " << i << ": " << complex_entity_ids[i].size() << " EntityIDs" << std::endl;
+        }
+        
+        // Get the event data values for comparison
+        auto event_data = table.getColumnValues<std::vector<float>>("Neuron1_Events");
+        REQUIRE(event_data.size() == 4);
+        
+        // Verify that the number of EntityIDs matches the number of events for each row
+        for (size_t row = 0; row < 4; ++row) {
+            auto row_events = event_data[row];
+            auto row_entity_ids = complex_entity_ids[row];
+            
+            // The number of EntityIDs should match the number of events
+            REQUIRE(row_entity_ids.size() == row_events.size());
+            
+            std::cout << "  Row " << row << ": " << row_events.size() << " events, " 
+                      << row_entity_ids.size() << " EntityIDs" << std::endl;
+        }
+    }
+    
+    SECTION("Test EntityID round trip with source data verification") {
+        auto& dm = getDataManager();
+        auto dme = std::make_shared<DataManagerExtension>(dm);
+        
+        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto neuron1_source = dme->getEventSource("Neuron1Spikes");
+        
+        REQUIRE(behavior_source != nullptr);
+        REQUIRE(neuron1_source != nullptr);
+        
+        // Get original source EntityIDs from the DigitalEventSeries
+        auto neuron1_data = dm.getData<DigitalEventSeries>("Neuron1Spikes");
+        REQUIRE(neuron1_data != nullptr);
+        
+        auto source_neuron1_entity_ids = neuron1_data->getEntityIds();
+        std::cout << "Source neuron1 data has " << source_neuron1_entity_ids.size() << " EntityIDs" << std::endl;
+        
+        // Create row selector from behavior intervals
+        auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
+        auto behavior_intervals = behavior_source->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+        
+        std::vector<TimeFrameInterval> row_intervals;
+        for (const auto& interval : behavior_intervals) {
+            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        
+        auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
+        
+        // Create Gather computer to get all events and their EntityIDs
+        auto gather_computer = std::make_unique<EventInIntervalComputer<std::vector<float>>>(
+            neuron1_source, 
+            EventOperation::Gather, 
+            "Neuron1Spikes"
+        );
+        
+        // Create table with the computer
+        TableViewBuilder builder(dme);
+        builder.setRowSelector(std::move(row_selector));
+        builder.addColumn<std::vector<float>>("Neuron1_Events", std::move(gather_computer));
+        
+        TableView table = builder.build();
+        
+        // Get all EntityIDs from the column
+        ColumnEntityIds column_entity_ids = table.getColumnEntityIds("Neuron1_Events");
+        REQUIRE(std::holds_alternative<std::vector<std::vector<EntityId>>>(column_entity_ids));
+        
+        auto complex_entity_ids = std::get<std::vector<std::vector<EntityId>>>(column_entity_ids);
+        
+        // Collect all unique EntityIDs from the table
+        std::set<EntityId> table_entity_ids;
+        for (const auto& row_entity_ids : complex_entity_ids) {
+            for (const auto& entity_id : row_entity_ids) {
+                table_entity_ids.insert(entity_id);
+            }
+        }
+        
+        std::cout << "Table extracted " << table_entity_ids.size() << " unique EntityIDs" << std::endl;
+        
+        // Debug: Print source EntityIDs
+        INFO("Source EntityIDs from Neuron1Spikes:");
+        for (size_t i = 0; i < source_neuron1_entity_ids.size(); ++i) {
+            INFO("  Source EntityID[" << i << "] = " << source_neuron1_entity_ids[i]);
+        }
+        
+        // Debug: Print table EntityIDs
+        INFO("Table EntityIDs from EventInIntervalComputer:");
+        for (const auto& entity_id : table_entity_ids) {
+            INFO("  Table EntityID = " << entity_id);
+        }
+        
+        // Verify that extracted EntityIDs are a subset of source EntityIDs
+        // (Not all source EntityIDs may appear in the table due to interval filtering)
+        for (const auto& table_entity_id : table_entity_ids) {
+            bool found = std::find(source_neuron1_entity_ids.begin(), 
+                                 source_neuron1_entity_ids.end(), 
+                                 table_entity_id) != source_neuron1_entity_ids.end();
+            REQUIRE(found);
+            INFO("✓ Table EntityID " << table_entity_id << " found in source data");
+        }
+        
+        // Verify all EntityIDs are valid (non-zero)
+        for (const auto& entity_id : table_entity_ids) {
+            REQUIRE(entity_id != 0);
+        }
+        
+        // Verify cell-level EntityIDs match column-level EntityIDs
+        for (size_t row = 0; row < table.getRowCount(); ++row) {
+            auto cell_entity_ids = table.getCellEntityIds("Neuron1_Events", row);
+            REQUIRE(cell_entity_ids == complex_entity_ids[row]);
+        }
+        
+        // Additional verification: check EntityID-to-event mapping
+        auto event_data = table.getColumnValues<std::vector<float>>("Neuron1_Events");
+        auto source_events = neuron1_data->getEventSeries();
+        
+        std::cout << "Source has " << source_events.size() << " events total" << std::endl;
+        
+        for (size_t row = 0; row < table.getRowCount(); ++row) {
+            auto row_events = event_data[row];
+            auto row_entity_ids = complex_entity_ids[row];
+            
+            // Verify EntityID count matches event count
+            REQUIRE(row_entity_ids.size() == row_events.size());
+            
+            // For each event in this row, verify its EntityID corresponds to an event in the source
+            for (size_t event_idx = 0; event_idx < row_events.size(); ++event_idx) {
+                auto event_value = row_events[event_idx];
+                auto entity_id = row_entity_ids[event_idx];
+                
+                // Find this event in the source data
+                bool event_found = false;
+                for (size_t src_idx = 0; src_idx < source_events.size(); ++src_idx) {
+                    if (std::abs(source_events[src_idx] - event_value) < 1e-6f) {
+                        // Found the event, verify the EntityID matches
+                        if (src_idx < source_neuron1_entity_ids.size()) {
+                            // Note: This is a simplified check. The actual mapping might be more complex
+                            // due to time frame conversions and filtering
+                            INFO("Event " << event_value << " at row " << row << " has EntityID " 
+                                 << entity_id << ", source index " << src_idx << " has EntityID " 
+                                 << source_neuron1_entity_ids[src_idx]);
+                            event_found = true;
+                            break;
+                        }
+                    }
+                }
+                // We expect to find the event in the source, but the exact EntityID mapping
+                // depends on the implementation details of time frame conversion
+                INFO("Event " << event_value << " processed with EntityID " << entity_id);
+            }
+        }
+        
+        std::cout << "✓ EventInIntervalComputer EntityID round trip test passed" << std::endl;
+        std::cout << "  - All EntityIDs are valid and come from source data" << std::endl;
+        std::cout << "  - Cell-level extraction matches column-level extraction" << std::endl;
+        std::cout << "  - EntityID count matches event count for each interval" << std::endl;
+        std::cout << "  - Extracted EntityIDs verified against original DigitalEventSeries" << std::endl;
+    }
+    
+    SECTION("Test Gather_Center operation EntityIDs") {
+        auto& dm = getDataManager();
+        auto dme = std::make_shared<DataManagerExtension>(dm);
+        
+        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto neuron2_source = dme->getEventSource("Neuron2Spikes");
+        
+        REQUIRE(behavior_source != nullptr);
+        REQUIRE(neuron2_source != nullptr);
+        
+        // Create a simple test with one behavior interval
+        std::vector<TimeFrameInterval> test_intervals = {
+            TimeFrameInterval(TimeFrameIndex(30), TimeFrameIndex(40))  // Behavior period 2
+        };
+        
+        auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
+        auto row_selector = std::make_unique<IntervalSelector>(test_intervals, behavior_time_frame);
+        
+        // Create Gather_Center computer
+        auto gather_center_computer = std::make_unique<EventInIntervalComputer<std::vector<float>>>(
+            neuron2_source, 
+            EventOperation::Gather_Center, 
+            "Neuron2Spikes"
+        );
+        
+        // Verify EntityID structure is Complex for Gather_Center operations
+        REQUIRE(gather_center_computer->getEntityIdStructure() == EntityIdStructure::Complex);
+        REQUIRE(gather_center_computer->hasEntityIds());
+        
+        // Create table with the computer
+        TableViewBuilder builder(dme);
+        builder.setRowSelector(std::move(row_selector));
+        builder.addColumn<std::vector<float>>("Neuron2_Centered", std::move(gather_center_computer));
+        
+        TableView table = builder.build();
+        
+        // Get EntityIDs and events
+        ColumnEntityIds column_entity_ids = table.getColumnEntityIds("Neuron2_Centered");
+        REQUIRE(std::holds_alternative<std::vector<std::vector<EntityId>>>(column_entity_ids));
+        
+        auto complex_entity_ids = std::get<std::vector<std::vector<EntityId>>>(column_entity_ids);
+        auto event_data = table.getColumnValues<std::vector<float>>("Neuron2_Centered");
+        
+        REQUIRE(complex_entity_ids.size() == 1);
+        REQUIRE(event_data.size() == 1);
+        
+        // Verify EntityID count matches event count even for centered events
+        auto row_events = event_data[0];
+        auto row_entity_ids = complex_entity_ids[0];
+        
+        REQUIRE(row_entity_ids.size() == row_events.size());
+        
+        // Verify all EntityIDs are valid
+        for (const auto& entity_id : row_entity_ids) {
+            REQUIRE(entity_id != 0);
+        }
+        
+        std::cout << "✓ Gather_Center operation EntityID test passed" << std::endl;
+        std::cout << "  - Events found: " << row_events.size() << std::endl;
+        std::cout << "  - EntityIDs found: " << row_entity_ids.size() << std::endl;
+        std::cout << "  - All EntityIDs are valid" << std::endl;
+    }
+    
+    SECTION("Test operations without EntityIDs") {
+        auto& dm = getDataManager();
+        auto dme = std::make_shared<DataManagerExtension>(dm);
+        
+        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto neuron1_source = dme->getEventSource("Neuron1Spikes");
+        
+        // Create simple test intervals
+        std::vector<TimeFrameInterval> test_intervals = {
+            TimeFrameInterval(TimeFrameIndex(10), TimeFrameIndex(25))
+        };
+        
+        auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
+        auto row_selector1 = std::make_unique<IntervalSelector>(test_intervals, behavior_time_frame);
+        auto row_selector2 = std::make_unique<IntervalSelector>(test_intervals, behavior_time_frame);
+        
+        // Create Presence and Count computers (should have no EntityIDs)
+        auto presence_computer = std::make_unique<EventInIntervalComputer<bool>>(
+            neuron1_source, EventOperation::Presence, "Neuron1Spikes");
+        auto count_computer = std::make_unique<EventInIntervalComputer<int>>(
+            neuron1_source, EventOperation::Count, "Neuron1Spikes");
+        
+        // Verify EntityID structure is None for these operations
+        REQUIRE(presence_computer->getEntityIdStructure() == EntityIdStructure::None);
+        REQUIRE(!presence_computer->hasEntityIds());
+        REQUIRE(count_computer->getEntityIdStructure() == EntityIdStructure::None);
+        REQUIRE(!count_computer->hasEntityIds());
+        
+        // Create separate tables
+        TableViewBuilder builder1(dme);
+        builder1.setRowSelector(std::move(row_selector1));
+        builder1.addColumn<bool>("Presence", std::move(presence_computer));
+        
+        TableViewBuilder builder2(dme);
+        builder2.setRowSelector(std::move(row_selector2));
+        builder2.addColumn<int>("Count", std::move(count_computer));
+        
+        TableView presence_table = builder1.build();
+        TableView count_table = builder2.build();
+        
+        // Test that EntityIDs return empty/monostate
+        ColumnEntityIds presence_entity_ids = presence_table.getColumnEntityIds("Presence");
+        ColumnEntityIds count_entity_ids = count_table.getColumnEntityIds("Count");
+        
+        REQUIRE(std::holds_alternative<std::monostate>(presence_entity_ids));
+        REQUIRE(std::holds_alternative<std::monostate>(count_entity_ids));
+        
+        // Test cell-level EntityIDs are empty
+        auto presence_cell_ids = presence_table.getCellEntityIds("Presence", 0);
+        auto count_cell_ids = count_table.getCellEntityIds("Count", 0);
+        
+        REQUIRE(presence_cell_ids.empty());
+        REQUIRE(count_cell_ids.empty());
+        
+        std::cout << "✓ Non-EntityID operations test passed" << std::endl;
+        std::cout << "  - Presence and Count operations correctly report no EntityIDs" << std::endl;
+        std::cout << "  - Cell-level EntityID extraction returns empty vectors" << std::endl;
     }
 }

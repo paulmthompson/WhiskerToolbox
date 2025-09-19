@@ -64,6 +64,21 @@ public:
                                       TimeFrameIndex end,
                                       TimeFrame const * target_timeFrame) override;
 
+    /**
+     * @brief Gets the event data within a specific time range along with their original indices.
+     * 
+     * This method returns both the event values and their original indices in the source,
+     * enabling proper EntityId mapping.
+     * 
+     * @param start The start index of the time range.
+     * @param end The end index of the time range.
+     * @param target_timeFrame The target time frame (from the caller) for the data.
+     * @return A vector of pairs (event_value, source_index) representing the events in the specified range.
+     */
+    std::vector<std::pair<float, size_t>> getDataInRangeWithIndices(TimeFrameIndex start,
+                                                                   TimeFrameIndex end,
+                                                                   TimeFrame const * target_timeFrame) override;
+
     [[nodiscard]] EntityId getEntityIdAt(size_t index) const override;
 
 private:

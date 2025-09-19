@@ -4,7 +4,15 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
+#include "DataManagerTypes.hpp"
 #include "Lines/Line_Data.hpp"
+#include "Entity/EntityGroupManager.hpp"
+#include "Entity/EntityRegistry.hpp"
+#include "Entity/EntityTypes.hpp"
+#include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/points.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/StrongTimeTypes.hpp"
 #include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
@@ -1294,5 +1302,272 @@ TEST_CASE_METHOD(LineSamplingTableRegistryTestFixture, "DM - TV - LineSamplingMu
         } else {
             FAIL("Multi-source pipeline execution failed: " + pipeline_result.error_message);
         }
+    }
+}
+
+// =============== EntityGroupManager Integration Tests ===============
+
+/**
+ * @brief Test fixture for LineSamplingMultiComputer integration with EntityGroupManager
+ * 
+ * This fixture creates a complete test environment with:
+ * - DataManager with EntityGroupManager
+ * - LineData with known test lines at multiple time frames
+ * - TimeFrame setup for consistent temporal handling
+ */
+class LineSamplingEntityIntegrationFixture {
+public:
+    void SetUp() {
+        // Create DataManager
+        data_manager = std::make_unique<DataManager>();
+        
+        // Create TimeFrame with specific time points
+        std::vector<int> time_values = {10, 20, 30};
+        time_frame = std::make_shared<TimeFrame>(time_values);
+        
+        // Create LineData with test lines
+        line_data = std::make_shared<LineData>();
+        line_data->setTimeFrame(time_frame);
+        
+        // Set up identity context for EntityID generation
+        line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+        
+
+        setupTestLines();
+        
+        // Register LineData with DataManager for entity expansion to work
+        data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+    }
+    
+private:
+    void setupTestLines() {
+        // Time 10: Add 2 lines
+        {
+            std::vector<float> xs1 = {0.0f, 10.0f, 20.0f};
+            std::vector<float> ys1 = {0.0f, 5.0f, 10.0f};
+            line_data->addAtTime(TimeFrameIndex(10), xs1, ys1, false);
+            
+            std::vector<float> xs2 = {5.0f, 15.0f};
+            std::vector<float> ys2 = {2.0f, 8.0f};
+            line_data->addAtTime(TimeFrameIndex(10), xs2, ys2, false);
+        }
+        
+        // Time 20: Add 2 lines
+        {
+            std::vector<float> xs1 = {1.0f, 11.0f, 21.0f};
+            std::vector<float> ys1 = {1.0f, 6.0f, 11.0f};
+            line_data->addAtTime(TimeFrameIndex(20), xs1, ys1, false);
+            
+            std::vector<float> xs2 = {6.0f, 16.0f};
+            std::vector<float> ys2 = {3.0f, 9.0f};
+            line_data->addAtTime(TimeFrameIndex(20), xs2, ys2, false);
+        }
+        
+        // Time 30: Add 1 line
+        {
+            std::vector<float> xs1 = {2.0f, 12.0f, 22.0f, 32.0f};
+            std::vector<float> ys1 = {2.0f, 7.0f, 12.0f, 17.0f};
+            line_data->addAtTime(TimeFrameIndex(30), xs1, ys1, false);
+        }
+        
+        // Rebuild entity IDs to ensure they're generated
+        line_data->rebuildAllEntityIds();
+    }
+    
+public:
+    std::unique_ptr<DataManager> data_manager;
+    std::shared_ptr<LineData> line_data;
+    std::shared_ptr<TimeFrame> time_frame;
+};
+
+TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
+                 "DM - TV - LineSamplingMultiComputer EntityID Round-trip Integration",
+                 "[LineSamplingMultiComputer][EntityGroupManager][integration]") {
+    
+    SetUp();
+    
+    SECTION("TableView creation and EntityID extraction with LineSamplingMultiComputer") {
+        // Get required components
+        auto* group_manager = data_manager->getEntityGroupManager();
+        REQUIRE(group_manager != nullptr);
+        
+        // Create DataManagerExtension for TableView integration
+        auto dme = std::make_shared<DataManagerExtension>(*data_manager);
+        
+        // Create LineDataAdapter from our test data
+        auto line_adapter = std::make_shared<LineDataAdapter>(line_data, time_frame, "test_lines");
+        
+        // Create LineSamplingMultiComputer with 2 segments (3 sample points: 0.0, 0.5, 1.0)
+        auto multi_computer = std::make_unique<LineSamplingMultiComputer>(
+            std::static_pointer_cast<ILineSource>(line_adapter),
+            "test_lines",
+            time_frame,
+            2  // 2 segments = 3 sample points
+        );
+        
+        // Create row selector for our time frames
+        std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
+        auto row_selector = std::make_unique<TimestampSelector>(timestamps, time_frame);
+        
+        // Build TableView using TableViewBuilder
+        TableViewBuilder builder(dme);
+        builder.setRowSelector(std::move(row_selector));
+        builder.addColumns<double>("Line", std::move(multi_computer));
+        
+        auto table = builder.build();
+        
+        // Verify table structure matches expected entity expansion
+        REQUIRE(table.getRowCount() == 5);  // t10:2 + t20:2 + t30:1 = 5 rows (entity expansion)
+        REQUIRE(table.getColumnCount() == 6);  // 3 sample points * 2 coordinates = 6 columns
+        
+        // Verify column names are correct
+        REQUIRE(table.hasColumn("Line.x@0.000"));
+        REQUIRE(table.hasColumn("Line.y@0.000"));
+        REQUIRE(table.hasColumn("Line.x@0.500"));
+        REQUIRE(table.hasColumn("Line.y@0.500"));
+        REQUIRE(table.hasColumn("Line.x@1.000"));
+        REQUIRE(table.hasColumn("Line.y@1.000"));
+        
+        // Verify EntityID information is available for LineSamplingMultiComputer columns
+        REQUIRE(table.hasColumnEntityIds("Line.x@0.000"));
+        REQUIRE(table.hasColumnEntityIds("Line.y@0.000"));
+        REQUIRE(table.hasColumnEntityIds("Line.x@0.500"));
+        REQUIRE(table.hasColumnEntityIds("Line.y@0.500"));
+        REQUIRE(table.hasColumnEntityIds("Line.x@1.000"));
+        REQUIRE(table.hasColumnEntityIds("Line.y@1.000"));
+        
+        // Get EntityIDs from one of the columns (all LineSamplingMultiComputer columns should share the same EntityIDs)
+        auto column_entity_ids_variant = table.getColumnEntityIds("Line.x@0.000");
+        auto column_entity_ids = std::get<std::vector<EntityId>>(column_entity_ids_variant);
+        REQUIRE(column_entity_ids.size() == 5); // Should match row count
+        
+        // Verify all EntityIDs are valid (non-zero)
+        for (EntityId id : column_entity_ids) {
+            REQUIRE(id != 0);
+            INFO("Column EntityID: " << id);
+        }
+        
+        // Verify that all LineSamplingMultiComputer columns have the same EntityIDs
+        auto y_start_entity_ids_variant = table.getColumnEntityIds("Line.y@0.000");
+        auto x_mid_entity_ids_variant = table.getColumnEntityIds("Line.x@0.500");
+        auto y_mid_entity_ids_variant = table.getColumnEntityIds("Line.y@0.500");
+        auto x_end_entity_ids_variant = table.getColumnEntityIds("Line.x@1.000");
+        auto y_end_entity_ids_variant = table.getColumnEntityIds("Line.y@1.000");
+        
+        // Extract EntityIDs from variants (LineSamplingMultiComputer uses Simple structure)
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(y_start_entity_ids_variant));
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(x_mid_entity_ids_variant));
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(y_mid_entity_ids_variant));
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(x_end_entity_ids_variant));
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(y_end_entity_ids_variant));
+        
+        auto y_start_entity_ids = std::get<std::vector<EntityId>>(y_start_entity_ids_variant);
+        auto x_mid_entity_ids = std::get<std::vector<EntityId>>(x_mid_entity_ids_variant);
+        auto y_mid_entity_ids = std::get<std::vector<EntityId>>(y_mid_entity_ids_variant);
+        auto x_end_entity_ids = std::get<std::vector<EntityId>>(x_end_entity_ids_variant);
+        auto y_end_entity_ids = std::get<std::vector<EntityId>>(y_end_entity_ids_variant);
+        
+        // Compare extracted EntityID vectors
+        REQUIRE(y_start_entity_ids == column_entity_ids);
+        REQUIRE(x_mid_entity_ids == column_entity_ids);
+        REQUIRE(y_mid_entity_ids == column_entity_ids);
+        REQUIRE(x_end_entity_ids == column_entity_ids);
+        REQUIRE(y_end_entity_ids == column_entity_ids);
+        
+        // Get sample data from table columns
+        auto x_start = table.getColumnValues<double>("Line.x@0.000");
+        auto y_start = table.getColumnValues<double>("Line.y@0.000");
+        auto x_mid = table.getColumnValues<double>("Line.x@0.500");
+        auto y_mid = table.getColumnValues<double>("Line.y@0.500");
+        auto x_end = table.getColumnValues<double>("Line.x@1.000");
+        auto y_end = table.getColumnValues<double>("Line.y@1.000");
+        
+        REQUIRE(x_start.size() == 5);
+        REQUIRE(y_start.size() == 5);
+        REQUIRE(x_mid.size() == 5);
+        REQUIRE(y_mid.size() == 5);
+        REQUIRE(x_end.size() == 5);
+        REQUIRE(y_end.size() == 5);
+        
+        // Select specific rows for our group (e.g., rows 1, 2, and 4)
+        std::vector<size_t> selected_row_indices = {1, 2, 4};
+        std::vector<EntityId> selected_entity_ids;
+        
+        for (size_t row_idx : selected_row_indices) {
+            REQUIRE(row_idx < column_entity_ids.size());
+            selected_entity_ids.push_back(column_entity_ids[row_idx]);
+        }
+        
+        REQUIRE(selected_entity_ids.size() == 3);
+        
+        // Verify all selected EntityIDs are valid
+        for (EntityId id : selected_entity_ids) {
+            REQUIRE(id != 0);
+            INFO("Selected EntityID: " << id);
+        }
+        
+        // Create a group in EntityGroupManager with these EntityIDs
+        GroupId test_group = group_manager->createGroup("LineSampling Selection", "Entities from selected table rows");
+        size_t added = group_manager->addEntitiesToGroup(test_group, selected_entity_ids);
+        REQUIRE(added == selected_entity_ids.size());
+        
+        // Verify the group was created correctly
+        REQUIRE(group_manager->hasGroup(test_group));
+        REQUIRE(group_manager->getGroupSize(test_group) == selected_entity_ids.size());
+        
+        auto group_entities = group_manager->getEntitiesInGroup(test_group);
+        REQUIRE(group_entities.size() == selected_entity_ids.size());
+        
+        // Now query LineData using the grouped EntityIDs to get the original line data
+        auto lines_from_group = line_data->getLinesByEntityIds(group_entities);
+        REQUIRE(lines_from_group.size() == selected_entity_ids.size());
+        
+        // Verify that the lines we get back match the data in the corresponding table rows
+        // We'll compare the start and end points from LineSamplingMultiComputer with actual line data
+        
+        for (size_t i = 0; i < lines_from_group.size(); ++i) {
+            EntityId entity_id = lines_from_group[i].first;
+            Line2D const& original_line = lines_from_group[i].second;
+            
+            // Find which row this EntityID corresponds to in our selected rows
+            size_t table_row_index = 0;
+            bool found = false;
+            for (size_t j = 0; j < selected_row_indices.size(); ++j) {
+                if (entity_id == selected_entity_ids[j]) {
+                    table_row_index = selected_row_indices[j];
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) {
+                FAIL("Unexpected EntityID in group: " << entity_id);
+            }
+            
+            // Get the sampled points from the table for this row
+            float table_x_start = static_cast<float>(x_start[table_row_index]);
+            float table_y_start = static_cast<float>(y_start[table_row_index]);
+            float table_x_end = static_cast<float>(x_end[table_row_index]);
+            float table_y_end = static_cast<float>(y_end[table_row_index]);
+            
+            // Get actual start and end points from the original line
+            REQUIRE(original_line.size() >= 2);
+            Point2D<float> actual_start = original_line.front();
+            Point2D<float> actual_end = original_line.back();
+            
+            // Verify that the table data matches the original line data
+            INFO("Checking EntityID " << entity_id << " at table row " << table_row_index);
+            INFO("Table start: (" << table_x_start << ", " << table_y_start << ")");
+            INFO("Actual start: (" << actual_start.x << ", " << actual_start.y << ")");
+            INFO("Table end: (" << table_x_end << ", " << table_y_end << ")");
+            INFO("Actual end: (" << actual_end.x << ", " << actual_end.y << ")");
+            
+            REQUIRE(table_x_start == Catch::Approx(actual_start.x).epsilon(0.001f));
+            REQUIRE(table_y_start == Catch::Approx(actual_start.y).epsilon(0.001f));
+            REQUIRE(table_x_end == Catch::Approx(actual_end.x).epsilon(0.001f));
+            REQUIRE(table_y_end == Catch::Approx(actual_end.y).epsilon(0.001f));
+        }
+        
+        INFO("Successfully verified round-trip: LineData -> LineSamplingMultiComputer -> TableView -> EntityGroupManager -> LineData");
     }
 }

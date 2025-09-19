@@ -190,3 +190,51 @@ auto EventInIntervalComputer<std::vector<float>>::compute(ExecutionPlan const & 
 
     return results;
 }
+
+/**
+ * @brief Computes all EntityIDs for the column.
+ * 
+ * For Gather and Gather_Center operations, this returns a vector of vectors where each
+ * inner vector contains the EntityIDs of all events that fall within the corresponding interval.
+ * For other operations, returns std::monostate (no EntityIDs).
+ * 
+ * @param plan The execution plan containing interval boundaries and destination time frame.
+ * @return ColumnEntityIds variant containing the EntityIDs for this column.
+ */
+template<typename T>
+ColumnEntityIds EventInIntervalComputer<T>::computeColumnEntityIds(ExecutionPlan const & plan) const {
+    // Only provide EntityIDs for Gather and Gather_Center operations
+    if (m_operation != EventOperation::Gather && m_operation != EventOperation::Gather_Center) {
+        return std::monostate{};
+    }
+
+    auto const & intervals = plan.getIntervals();
+    auto destinationTimeFrame = plan.getTimeFrame();
+
+    std::vector<std::vector<EntityId>> results;
+    results.reserve(intervals.size());
+
+    // For each interval, collect EntityIDs of events that fall within it
+    for (auto const & interval : intervals) {
+        auto events_with_indices = m_source->getDataInRangeWithIndices(interval.start, interval.end, destinationTimeFrame.get());
+        
+        std::vector<EntityId> interval_entity_ids;
+        interval_entity_ids.reserve(events_with_indices.size());
+
+        // Extract EntityIDs using the source indices
+        for (auto const & [event_value, source_index] : events_with_indices) {
+            (void)event_value; // Suppress unused variable warning
+            if (auto entityId = m_source->getEntityIdAt(source_index); entityId != 0) {
+                interval_entity_ids.push_back(entityId);
+            }
+        }
+
+        results.push_back(std::move(interval_entity_ids));
+    }
+
+    return results;
+}
+
+template ColumnEntityIds EventInIntervalComputer<bool>::computeColumnEntityIds(ExecutionPlan const & plan) const;
+template ColumnEntityIds EventInIntervalComputer<int>::computeColumnEntityIds(ExecutionPlan const & plan) const;
+template ColumnEntityIds EventInIntervalComputer<std::vector<float>>::computeColumnEntityIds(ExecutionPlan const & plan) const;

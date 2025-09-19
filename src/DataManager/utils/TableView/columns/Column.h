@@ -3,6 +3,7 @@
 
 #include "ColumnTypeInfo.hpp"
 #include "IColumn.h"
+#include "Entity/EntityTypes.hpp"
 
 #include <memory>
 #include <string>
@@ -89,6 +90,29 @@ public:
     void clearCache() override {
         m_cache = std::monostate{};
     }
+
+    /**
+     * @brief Gets the EntityID structure type for this column.
+     * @return The EntityID structure type for this column.
+     */
+    [[nodiscard]] EntityIdStructure getEntityIdStructure() const override;
+
+    /**
+     * @brief Gets all EntityIDs for this column using the high-level variant approach.
+     * @param table Pointer to the TableView that owns this column.
+     * @return ColumnEntityIds variant containing the EntityIDs for this column.
+     */
+    [[nodiscard]] ColumnEntityIds getColumnEntityIds(TableView * table) const override;
+
+    /**
+     * @brief Gets EntityIDs for a specific row in this column.
+     * @param table Pointer to the TableView that owns this column.
+     * @param row_index The row index to get EntityIDs for.
+     * @return Vector of EntityIDs for the specified row. Empty if not available.
+     */
+    [[nodiscard]] std::vector<EntityId> getCellEntityIds(TableView * table, size_t row_index) const override;
+
+    [[nodiscard]] bool hasEntityIds() const override;
 
 private:
     friend class TableViewBuilder;

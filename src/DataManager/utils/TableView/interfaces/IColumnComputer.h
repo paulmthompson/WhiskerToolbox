@@ -2,8 +2,12 @@
 #define ICOLUMN_COMPUTER_H
 
 #include "utils/TableView/core/ExecutionPlan.h"
+#include "utils/TableView/columns/IColumn.h"
+#include "Entity/EntityTypes.hpp"
 
+#include <memory>
 #include <string>
+#include <variant>
 #include <vector>
 
 /**
@@ -59,6 +63,80 @@ public:
      * @return The name of the required data source.
      */
     [[nodiscard]] virtual auto getSourceDependency() const -> std::string = 0;
+
+    /**
+     * @brief Gets the EntityID structure type for this computer.
+     * 
+     * This indicates whether the computer provides no EntityIDs, simple EntityIDs
+     * (one per row), or complex EntityIDs (multiple per row).
+     * 
+     * @return The EntityID structure type for this computer.
+     */
+    [[nodiscard]] virtual EntityIdStructure getEntityIdStructure() const { 
+        return EntityIdStructure::None; 
+    }
+
+    /**
+     * @brief Computes all EntityIDs for the column using the high-level variant approach.
+     * 
+     * The returned variant contains one of:
+     * - std::monostate: No EntityIDs available
+     * - std::vector<EntityId>: One EntityID per row (simple)
+     * - std::vector<std::vector<EntityId>>: Multiple EntityIDs per row (complex)
+     * 
+     * Note: Shared EntityID collections are typically handled at the Column level
+     * for table transforms, not at the computer level.
+     * 
+     * @param plan The execution plan used for computation.
+     * @return ColumnEntityIds variant containing the EntityIDs for this column.
+     */
+    [[nodiscard]] virtual ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const { 
+        (void)plan; 
+        return std::monostate{}; 
+    }
+
+    /**
+     * @brief Computes EntityIDs for a specific row.
+     * 
+     * This is a convenience method that works across all EntityID structures.
+     * 
+     * @param plan The execution plan used for computation.
+     * @param row_index The row index to get EntityIDs for.
+     * @return Vector of EntityIDs for the specified row. Empty if not available.
+     */
+    [[nodiscard]] virtual std::vector<EntityId> computeCellEntityIds(ExecutionPlan const & plan, size_t row_index) const {
+        auto structure = getEntityIdStructure();
+        if (structure == EntityIdStructure::None) {
+            return {};
+        }
+        
+        auto column_entities = computeColumnEntityIds(plan);
+        
+        switch (structure) {
+            case EntityIdStructure::Simple: {
+                auto& entities = std::get<std::vector<EntityId>>(column_entities);
+                return (row_index < entities.size()) ? std::vector<EntityId>{entities[row_index]} : std::vector<EntityId>{};
+            }
+            case EntityIdStructure::Complex: {
+                auto& entity_matrix = std::get<std::vector<std::vector<EntityId>>>(column_entities);
+                return (row_index < entity_matrix.size()) ? entity_matrix[row_index] : std::vector<EntityId>{};
+            }
+            case EntityIdStructure::Shared:
+                // Shared collections not typically used at computer level
+                return {};
+            case EntityIdStructure::None:
+            default:
+                return {};
+        }
+    }
+
+    /**
+     * @brief Checks if this computer can provide EntityID information.
+     * @return True if EntityIDs are available, false otherwise.
+     */
+    [[nodiscard]] virtual bool hasEntityIds() const { 
+        return getEntityIdStructure() != EntityIdStructure::None; 
+    }
 
 protected:
     // Protected constructor to allow derived classes to construct
