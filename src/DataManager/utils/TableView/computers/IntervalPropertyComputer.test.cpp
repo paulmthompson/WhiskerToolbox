@@ -7,8 +7,6 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
-
-// Additional includes for extended testing
 #include "DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "utils/TableView/ComputerRegistry.hpp"
@@ -18,6 +16,7 @@
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/pipeline/TablePipeline.hpp"
+#include "Entity/EntityGroupManager.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -100,6 +99,7 @@ private:
     void createBehaviorIntervals() {
         // Create behavior periods with varying durations
         auto behavior_intervals = std::make_shared<DigitalIntervalSeries>();
+        behavior_intervals->setIdentityContext("BehaviorPeriods", m_data_manager->getEntityRegistry());
 
         // Short grooming bout: time 10-15 (duration = 5)
         behavior_intervals->addEvent(TimeFrameIndex(10), TimeFrameIndex(15));
@@ -116,6 +116,9 @@ private:
         // Very long sleep period: time 160-190 (duration = 30)
         behavior_intervals->addEvent(TimeFrameIndex(160), TimeFrameIndex(190));
 
+        // Rebuild entity IDs to ensure they're generated
+        behavior_intervals->rebuildAllEntityIds();
+
         m_data_manager->setData<DigitalIntervalSeries>("BehaviorPeriods", behavior_intervals, TimeKey("behavior_time"));
     }
 
@@ -125,6 +128,7 @@ private:
     void createStimulusIntervals() {
         // Create stimulus presentation periods with precise timing
         auto stimulus_intervals = std::make_shared<DigitalIntervalSeries>();
+        stimulus_intervals->setIdentityContext("StimulusIntervals", m_data_manager->getEntityRegistry());
 
         // Brief stimulus 1: time 5-8 (duration = 3)
         stimulus_intervals->addEvent(TimeFrameIndex(5), TimeFrameIndex(8));
@@ -138,6 +142,9 @@ private:
         // Short stimulus 4: time 140-142 (duration = 2)
         stimulus_intervals->addEvent(TimeFrameIndex(140), TimeFrameIndex(142));
 
+        // Rebuild entity IDs to ensure they're generated
+        stimulus_intervals->rebuildAllEntityIds();
+
         m_data_manager->setData<DigitalIntervalSeries>("StimulusIntervals", stimulus_intervals, TimeKey("neural_time"));
     }
 
@@ -147,6 +154,7 @@ private:
     void createNeuralEvents() {
         // Create neural activity bursts with precise timing
         auto neural_intervals = std::make_shared<DigitalIntervalSeries>();
+        neural_intervals->setIdentityContext("NeuralEvents", m_data_manager->getEntityRegistry());
 
         // Microsecond-level precision events
         // Event 1: time 12-13 (duration = 1)
@@ -160,6 +168,9 @@ private:
 
         // Event 4: time 156-161 (duration = 5)
         neural_intervals->addEvent(TimeFrameIndex(156), TimeFrameIndex(161));
+
+        // Rebuild entity IDs to ensure they're generated
+        neural_intervals->rebuildAllEntityIds();
 
         m_data_manager->setData<DigitalIntervalSeries>("NeuralEvents", neural_intervals, TimeKey("high_res_time"));
     }
@@ -719,6 +730,146 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
             std::cout << "Neural event " << i << ": Start=" << starts[i]
                       << ", Duration=" << durations[i] << std::endl;
         }
+    }
+}
+
+TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyComputer EntityID Round-trip Integration", "[IntervalPropertyComputer][EntityID][integration]") {
+
+    SECTION("TableView creation and EntityID extraction with IntervalPropertyComputer") {
+        auto & dm = getDataManager();
+        
+        // Create DataManagerExtension for TableView integration
+        auto dme = std::make_shared<DataManagerExtension>(dm);
+        
+        // Get behavior intervals from our test fixture
+        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        REQUIRE(behavior_source != nullptr);
+        
+        // Create row selector for behavior intervals
+        auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
+        auto behavior_intervals = behavior_source->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(200), behavior_time_frame.get());
+        
+        REQUIRE(behavior_intervals.size() == 5); // 5 behavior periods from fixture
+        
+        // Convert to TimeFrameIntervals for row selector
+        std::vector<TimeFrameInterval> row_intervals;
+        for (auto const & interval : behavior_intervals) {
+            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        
+        auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
+        
+        // Build TableView using TableViewBuilder
+        TableViewBuilder builder(dme);
+        builder.setRowSelector(std::move(row_selector));
+        
+        // Add IntervalPropertyComputer columns
+        builder.addColumn<double>("IntervalStart", 
+            std::make_unique<IntervalPropertyComputer<double>>(behavior_source, 
+                                                               IntervalProperty::Start, "BehaviorPeriods"));
+        builder.addColumn<double>("IntervalDuration", 
+            std::make_unique<IntervalPropertyComputer<double>>(behavior_source, 
+                                                               IntervalProperty::Duration, "BehaviorPeriods"));
+        
+        auto table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 5); // 5 behavior periods
+        REQUIRE(table.getColumnCount() == 2);
+        REQUIRE(table.hasColumn("IntervalStart"));
+        REQUIRE(table.hasColumn("IntervalDuration"));
+        
+        // Verify EntityID information is available for IntervalPropertyComputer columns
+        REQUIRE(table.hasColumnEntityIds("IntervalStart"));
+        REQUIRE(table.hasColumnEntityIds("IntervalDuration"));
+        
+        // Get EntityIDs from the columns (all IntervalPropertyComputer columns should share the same EntityIDs)
+        auto start_entity_ids_variant = table.getColumnEntityIds("IntervalStart");
+        auto duration_entity_ids_variant = table.getColumnEntityIds("IntervalDuration");
+        
+        // IntervalPropertyComputer uses Simple EntityID structure, so extract std::vector<EntityId>
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(start_entity_ids_variant));
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(duration_entity_ids_variant));
+        
+        auto start_entity_ids = std::get<std::vector<EntityId>>(start_entity_ids_variant);
+        auto duration_entity_ids = std::get<std::vector<EntityId>>(duration_entity_ids_variant);
+        
+        REQUIRE(start_entity_ids.size() == 5); // Should match row count
+        REQUIRE(duration_entity_ids.size() == 5);
+        
+        // Verify all EntityIDs are valid (non-zero)
+        for (EntityId id : start_entity_ids) {
+            REQUIRE(id != 0);
+            INFO("Start Column EntityID: " << id);
+        }
+        
+        // Verify that both columns have the same EntityIDs (they come from the same intervals)
+        REQUIRE(duration_entity_ids == start_entity_ids);
+        
+        // Get sample data from table columns
+        auto start_values = table.getColumnValues<double>("IntervalStart");
+        auto duration_values = table.getColumnValues<double>("IntervalDuration");
+        
+        REQUIRE(start_values.size() == 5);
+        REQUIRE(duration_values.size() == 5);
+        
+        // Verify data consistency and entity relationships
+        for (size_t i = 0; i < 5; ++i) {
+            // Verify basic properties
+            REQUIRE(start_values[i] >= 0);
+            REQUIRE(duration_values[i] > 0);
+            
+            INFO("Row " << i << ": Start=" << start_values[i] 
+                 << ", Duration=" << duration_values[i] 
+                 << ", EntityID=" << start_entity_ids[i]);
+        }
+        
+        // Test EntityID round-trip: Compare TableView EntityIDs with original source EntityIDs
+        INFO("Testing EntityID round-trip from source data to TableView");
+        
+        // Get the original DigitalIntervalSeries data that was used to create the intervals
+        auto behavior_data = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
+        REQUIRE(behavior_data != nullptr);
+        
+        // Get the EntityIDs directly from the source data
+        auto source_entity_ids = behavior_data->getEntityIds();
+        REQUIRE(source_entity_ids.size() == 5); // Should match the number of intervals
+        
+        // Debug: Print source EntityIDs to see if they're valid
+        INFO("Source EntityIDs from DigitalIntervalSeries:");
+        for (size_t i = 0; i < source_entity_ids.size(); ++i) {
+            INFO("  Source EntityID[" << i << "] = " << source_entity_ids[i]);
+            REQUIRE(source_entity_ids[i] != 0); // Verify source EntityIDs are valid
+        }
+        
+        // Verify that TableView EntityIDs match the source EntityIDs
+        REQUIRE(start_entity_ids.size() == source_entity_ids.size());
+        for (size_t i = 0; i < source_entity_ids.size(); ++i) {
+            REQUIRE(start_entity_ids[i] == source_entity_ids[i]);
+            INFO("EntityID " << i << ": Source=" << source_entity_ids[i] 
+                 << ", TableView=" << start_entity_ids[i] << " ✓");
+        }
+        
+        INFO("✓ EntityID round-trip successful: " << start_entity_ids.size() << " EntityIDs match source data");
+        
+        // Test individual row EntityID extraction
+        for (size_t row_idx = 0; row_idx < 5; ++row_idx) {
+            // Get EntityIDs for a specific row
+            auto row_start_ids = table.getCellEntityIds("IntervalStart", row_idx);
+            auto row_duration_ids = table.getCellEntityIds("IntervalDuration", row_idx);
+            
+            REQUIRE(row_start_ids.size() == 1); // Should have exactly one EntityID per interval
+            REQUIRE(row_duration_ids.size() == 1);
+            
+            // Verify they match the overall EntityID list
+            REQUIRE(row_start_ids[0] == start_entity_ids[row_idx]);
+            REQUIRE(row_duration_ids[0] == start_entity_ids[row_idx]);
+            
+            INFO("Row " << row_idx << " individual EntityID check: " << row_start_ids[0]);
+        }
+        
+        INFO("✓ All IntervalPropertyComputer EntityID extraction tests passed");
     }
 }
 

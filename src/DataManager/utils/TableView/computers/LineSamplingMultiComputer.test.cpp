@@ -1437,7 +1437,8 @@ TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
         REQUIRE(table.hasColumnEntityIds("Line.y@1.000"));
         
         // Get EntityIDs from one of the columns (all LineSamplingMultiComputer columns should share the same EntityIDs)
-        auto column_entity_ids = table.getColumnEntityIds("Line.x@0.000");
+        auto column_entity_ids_variant = table.getColumnEntityIds("Line.x@0.000");
+        auto column_entity_ids = std::get<std::vector<EntityId>>(column_entity_ids_variant);
         REQUIRE(column_entity_ids.size() == 5); // Should match row count
         
         // Verify all EntityIDs are valid (non-zero)
@@ -1447,12 +1448,26 @@ TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
         }
         
         // Verify that all LineSamplingMultiComputer columns have the same EntityIDs
-        auto y_start_entity_ids = table.getColumnEntityIds("Line.y@0.000");
-        auto x_mid_entity_ids = table.getColumnEntityIds("Line.x@0.500");
-        auto y_mid_entity_ids = table.getColumnEntityIds("Line.y@0.500");
-        auto x_end_entity_ids = table.getColumnEntityIds("Line.x@1.000");
-        auto y_end_entity_ids = table.getColumnEntityIds("Line.y@1.000");
+        auto y_start_entity_ids_variant = table.getColumnEntityIds("Line.y@0.000");
+        auto x_mid_entity_ids_variant = table.getColumnEntityIds("Line.x@0.500");
+        auto y_mid_entity_ids_variant = table.getColumnEntityIds("Line.y@0.500");
+        auto x_end_entity_ids_variant = table.getColumnEntityIds("Line.x@1.000");
+        auto y_end_entity_ids_variant = table.getColumnEntityIds("Line.y@1.000");
         
+        // Extract EntityIDs from variants (LineSamplingMultiComputer uses Simple structure)
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(y_start_entity_ids_variant));
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(x_mid_entity_ids_variant));
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(y_mid_entity_ids_variant));
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(x_end_entity_ids_variant));
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(y_end_entity_ids_variant));
+        
+        auto y_start_entity_ids = std::get<std::vector<EntityId>>(y_start_entity_ids_variant);
+        auto x_mid_entity_ids = std::get<std::vector<EntityId>>(x_mid_entity_ids_variant);
+        auto y_mid_entity_ids = std::get<std::vector<EntityId>>(y_mid_entity_ids_variant);
+        auto x_end_entity_ids = std::get<std::vector<EntityId>>(x_end_entity_ids_variant);
+        auto y_end_entity_ids = std::get<std::vector<EntityId>>(y_end_entity_ids_variant);
+        
+        // Compare extracted EntityID vectors
         REQUIRE(y_start_entity_ids == column_entity_ids);
         REQUIRE(x_mid_entity_ids == column_entity_ids);
         REQUIRE(y_mid_entity_ids == column_entity_ids);

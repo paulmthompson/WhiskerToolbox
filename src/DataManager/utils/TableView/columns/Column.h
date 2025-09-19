@@ -92,25 +92,27 @@ public:
     }
 
     /**
-     * @brief Checks if this column can provide EntityID information.
-     * @return True if EntityIDs are available, false otherwise.
+     * @brief Gets the EntityID structure type for this column.
+     * @return The EntityID structure type for this column.
      */
-    [[nodiscard]] bool hasEntityIds() const override;
+    [[nodiscard]] EntityIdStructure getEntityIdStructure() const override;
 
     /**
-     * @brief Gets EntityIDs for each row in this column.
+     * @brief Gets all EntityIDs for this column using the high-level variant approach.
      * @param table Pointer to the TableView that owns this column.
-     * @return Vector of EntityIDs, one per row. Empty if not available.
+     * @return ColumnEntityIds variant containing the EntityIDs for this column.
      */
-    [[nodiscard]] std::vector<EntityId> getEntityIds(TableView * table) const override;
+    [[nodiscard]] ColumnEntityIds getColumnEntityIds(TableView * table) const override;
 
     /**
-     * @brief Gets all contributing EntityIDs for a specific row in this column.
+     * @brief Gets EntityIDs for a specific row in this column.
      * @param table Pointer to the TableView that owns this column.
      * @param row_index The row index to get EntityIDs for.
-     * @return Vector of EntityIDs that contributed to this cell. Empty if not available.
+     * @return Vector of EntityIDs for the specified row. Empty if not available.
      */
-    [[nodiscard]] std::vector<EntityId> getRowEntityIds(TableView * table, size_t row_index) const override;
+    [[nodiscard]] std::vector<EntityId> getCellEntityIds(TableView * table, size_t row_index) const override;
+
+    [[nodiscard]] bool hasEntityIds() const override;
 
 private:
     friend class TableViewBuilder;

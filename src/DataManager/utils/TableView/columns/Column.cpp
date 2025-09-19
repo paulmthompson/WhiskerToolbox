@@ -53,23 +53,24 @@ bool Column<T>::hasEntityIds() const {
 }
 
 template<SupportedColumnType T>
-std::vector<EntityId> Column<T>::getEntityIds(TableView * table) const {
-    if (!hasEntityIds()) {
-        return {};
-    }
-    
-    ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
-    return m_computer->computeEntityIds(plan);
+EntityIdStructure Column<T>::getEntityIdStructure() const {
+    return m_computer->getEntityIdStructure();
 }
 
 template<SupportedColumnType T>
-std::vector<EntityId> Column<T>::getRowEntityIds(TableView * table, size_t row_index) const {
+std::vector<EntityId> Column<T>::getCellEntityIds(TableView * table, size_t row_index) const {
+    ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
+    return m_computer->computeCellEntityIds(plan, row_index);
+}
+
+template<SupportedColumnType T>
+ColumnEntityIds Column<T>::getColumnEntityIds(TableView * table) const {
     if (!hasEntityIds()) {
         return {};
     }
     
     ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
-    return m_computer->computeRowEntityIds(plan, row_index);
+    return m_computer->computeColumnEntityIds(plan);
 }
 
 // Explicit instantiation for commonly used types

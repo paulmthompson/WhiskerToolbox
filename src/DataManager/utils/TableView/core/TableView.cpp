@@ -592,7 +592,7 @@ bool TableView::hasColumnEntityIds(std::string const & columnName) const {
     return m_columns[columnIndex]->hasEntityIds();
 }
 
-std::vector<EntityId> TableView::getColumnEntityIds(std::string const & columnName) const {
+ColumnEntityIds TableView::getColumnEntityIds(std::string const & columnName) const {
     auto it = m_colNameToIndex.find(columnName);
     if (it == m_colNameToIndex.end()) {
         return {};
@@ -604,7 +604,7 @@ std::vector<EntityId> TableView::getColumnEntityIds(std::string const & columnNa
     }
     
     // Need to cast away const to pass this to column method
-    return m_columns[columnIndex]->getEntityIds(const_cast<TableView*>(this));
+    return m_columns[columnIndex]->getColumnEntityIds(const_cast<TableView*>(this));
 }
 
 std::vector<EntityId> TableView::getCellEntityIds(std::string const & columnName, size_t rowIndex) const {
@@ -619,5 +619,5 @@ std::vector<EntityId> TableView::getCellEntityIds(std::string const & columnName
     }
     
     // Need to cast away const to pass this to column method
-    return m_columns[columnIndex]->getRowEntityIds(const_cast<TableView*>(this), rowIndex);
+    return m_columns[columnIndex]->getCellEntityIds(const_cast<TableView*>(this), rowIndex);
 }

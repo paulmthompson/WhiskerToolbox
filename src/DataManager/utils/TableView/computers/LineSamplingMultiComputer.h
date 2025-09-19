@@ -142,7 +142,7 @@ public:
         return true;  // LineSamplingMultiComputer can provide EntityIDs from its line source
     }
 
-    [[nodiscard]] std::vector<EntityId> computeEntityIds(ExecutionPlan const & plan) const override {
+    [[nodiscard]] ColumnEntityIds computeColumnEntityIds(ExecutionPlan const & plan) const override {
         // Extract the entity IDs based on the execution plan
         std::vector<TimeFrameIndex> indices;
         std::vector<std::optional<int>> entityIdx;

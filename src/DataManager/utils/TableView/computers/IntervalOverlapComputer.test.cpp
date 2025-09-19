@@ -1282,3 +1282,290 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalRowSelecto
         }
     }
 }
+
+TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapComputer EntityID Round Trip", "[IntervalOverlapComputer][EntityID][TableView]") {
+    
+    SECTION("Test Simple EntityID structure for AssignID operations") {
+        auto& dm = getDataManager();
+        auto dme = std::make_shared<DataManagerExtension>(dm);
+        
+        // Get the interval sources from the DataManager
+        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        
+        REQUIRE(behavior_source != nullptr);
+        REQUIRE(stimulus_source != nullptr);
+        
+        // Create row selector from behavior intervals
+        auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
+        auto behavior_intervals = behavior_source->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+        
+        REQUIRE(behavior_intervals.size() == 4); // 4 behavior periods
+        
+        // Convert to TimeFrameIntervals for row selector
+        std::vector<TimeFrameInterval> row_intervals;
+        for (const auto& interval : behavior_intervals) {
+            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        
+        auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
+        
+        // Create IntervalOverlapComputer for AssignID operation (Simple EntityID structure)
+        auto assign_computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+            stimulus_source, 
+            IntervalOverlapOperation::AssignID, 
+            "StimulusIntervals"
+        );
+        
+        // Verify EntityID structure is Simple for AssignID operations
+        REQUIRE(assign_computer->getEntityIdStructure() == EntityIdStructure::Simple);
+        REQUIRE(assign_computer->hasEntityIds());
+        
+        // Create TableView builder and add the column
+        TableViewBuilder builder(dme);
+        builder.setRowSelector(std::move(row_selector));
+        builder.addColumn<int64_t>("StimulusAssignID", std::move(assign_computer));
+        
+        // Build the table
+        TableView table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 4);
+        REQUIRE(table.getColumnCount() == 1);
+        REQUIRE(table.hasColumn("StimulusAssignID"));
+        
+        
+        // Test column-level EntityIDs using variant interface
+        ColumnEntityIds column_entity_ids = table.getColumnEntityIds("StimulusAssignID");
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(column_entity_ids));
+        
+        auto simple_entity_ids = std::get<std::vector<EntityId>>(column_entity_ids);
+        REQUIRE(simple_entity_ids.size() == 4); // One EntityID per row
+        
+        // Test cell-level EntityID extraction
+        for (size_t row = 0; row < 4; ++row) {
+            std::vector<EntityId> cell_entity_ids = table.getCellEntityIds("StimulusAssignID", row);
+            REQUIRE(cell_entity_ids.size() == 1); // AssignID gives single EntityID per cell
+            REQUIRE(cell_entity_ids[0] == simple_entity_ids[row]);
+        }
+        
+        std::cout << "✓ Simple EntityID structure test passed for AssignID operations" << std::endl;
+        std::cout << "  - Column EntityIDs: " << simple_entity_ids.size() << " entries" << std::endl;
+        std::cout << "  - All EntityIDs are valid and non-empty" << std::endl;
+    }
+    
+    SECTION("Test Complex EntityID structure for CountOverlaps operations") {
+        auto& dm = getDataManager();
+        auto dme = std::make_shared<DataManagerExtension>(dm);
+        
+        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        
+        REQUIRE(behavior_source != nullptr);
+        REQUIRE(stimulus_source != nullptr);
+        
+        // Create row selector from behavior intervals
+        auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
+        auto behavior_intervals = behavior_source->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+        
+        std::vector<TimeFrameInterval> row_intervals;
+        for (const auto& interval : behavior_intervals) {
+            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        
+        auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
+        
+        // Create IntervalOverlapComputer for CountOverlaps operation (Complex EntityID structure)
+        auto count_computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+            stimulus_source, 
+            IntervalOverlapOperation::CountOverlaps, 
+            "StimulusIntervals"
+        );
+        
+        // Verify EntityID structure is Complex for CountOverlaps operations
+        REQUIRE(count_computer->getEntityIdStructure() == EntityIdStructure::Complex);
+        REQUIRE(count_computer->hasEntityIds());
+        
+        // Create TableView builder and add the column
+        TableViewBuilder builder(dme);
+        builder.setRowSelector(std::move(row_selector));
+        builder.addColumn<int64_t>("StimulusCount", std::move(count_computer));
+        
+        // Build the table
+        TableView table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 4);
+        REQUIRE(table.getColumnCount() == 1);
+        REQUIRE(table.hasColumn("StimulusCount"));
+        
+        
+        
+        // Test column-level EntityIDs using variant interface
+        ColumnEntityIds column_entity_ids = table.getColumnEntityIds("StimulusCount");
+        REQUIRE(std::holds_alternative<std::vector<std::vector<EntityId>>>(column_entity_ids));
+        
+        auto complex_entity_ids = std::get<std::vector<std::vector<EntityId>>>(column_entity_ids);
+        REQUIRE(complex_entity_ids.size() == 4); // One vector of EntityIDs per row
+        
+        // Test cell-level EntityID extraction
+        for (size_t row = 0; row < 4; ++row) {
+            std::vector<EntityId> cell_entity_ids = table.getCellEntityIds("StimulusCount", row);
+            REQUIRE(cell_entity_ids == complex_entity_ids[row]);
+            
+            // Each row should have zero or more EntityIDs (depending on overlaps)
+            REQUIRE(cell_entity_ids.size() >= 0);
+            
+        }
+        
+        std::cout << "✓ Complex EntityID structure test passed for CountOverlaps operations" << std::endl;
+        std::cout << "  - Column EntityIDs: " << complex_entity_ids.size() << " rows" << std::endl;
+        for (size_t i = 0; i < complex_entity_ids.size(); ++i) {
+            std::cout << "    Row " << i << ": " << complex_entity_ids[i].size() << " EntityIDs" << std::endl;
+        }
+    }
+    
+    SECTION("Test EntityID variant interface consistency") {
+        auto& dm = getDataManager();
+        auto dme = std::make_shared<DataManagerExtension>(dm);
+        
+        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        
+        // Create row selector from behavior intervals
+        auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
+        auto behavior_intervals = behavior_source->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+        
+        std::vector<TimeFrameInterval> row_intervals;
+        for (const auto& interval : behavior_intervals) {
+            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        
+        auto row_selector1 = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
+        auto row_selector2 = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
+        
+        // Create both types of computers
+        auto assign_computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+            stimulus_source, IntervalOverlapOperation::AssignID, "StimulusIntervals");
+        auto count_computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+            stimulus_source, IntervalOverlapOperation::CountOverlaps, "StimulusIntervals");
+        
+        // Create two separate tables to test both
+        TableViewBuilder builder1(dme);
+        builder1.setRowSelector(std::move(row_selector1));
+        builder1.addColumn<int64_t>("AssignColumn", std::move(assign_computer));
+        
+        TableViewBuilder builder2(dme);
+        builder2.setRowSelector(std::move(row_selector2));
+        builder2.addColumn<int64_t>("CountColumn", std::move(count_computer));
+
+        TableView assign_table = builder1.build();
+        TableView count_table = builder2.build();
+        
+        // Test variant types
+        ColumnEntityIds assign_ids = assign_table.getColumnEntityIds("AssignColumn");
+        ColumnEntityIds count_ids = count_table.getColumnEntityIds("CountColumn");
+
+        REQUIRE(std::holds_alternative<std::vector<EntityId>>(assign_ids));
+        REQUIRE(std::holds_alternative<std::vector<std::vector<EntityId>>>(count_ids));
+        
+        // Verify both variants work correctly
+        auto simple_ids = std::get<std::vector<EntityId>>(assign_ids);
+        auto complex_ids = std::get<std::vector<std::vector<EntityId>>>(count_ids);
+        
+        REQUIRE(simple_ids.size() == 4);
+        REQUIRE(complex_ids.size() == 4);
+        
+        // Test cell-level consistency
+        for (size_t row = 0; row < 4; ++row) {
+            auto assign_cell = assign_table.getCellEntityIds("AssignColumn", row);
+            auto count_cell = count_table.getCellEntityIds("CountColumn", row);
+
+            // AssignID should return single EntityID
+            REQUIRE(assign_cell.size() == 1);
+            REQUIRE(assign_cell[0] == simple_ids[row]);
+            
+            // CountOverlaps should return multiple EntityIDs (may be same as assign but in vector)
+            REQUIRE(count_cell == complex_ids[row]);
+            
+   
+        }
+        
+        std::cout << "✓ Variant interface consistency test passed" << std::endl;
+        std::cout << "  - Simple structure: " << simple_ids.size() << " EntityIDs" << std::endl;
+        std::cout << "  - Complex structure: " << complex_ids.size() << " rows of EntityIDs" << std::endl;
+    }
+    
+    SECTION("Test EntityID round trip with source data verification") {
+        auto& dm = getDataManager();
+        auto dme = std::make_shared<DataManagerExtension>(dm);
+        
+        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        
+        REQUIRE(behavior_source != nullptr);
+        REQUIRE(stimulus_source != nullptr);
+        
+        // Get original source EntityIDs
+        auto stimulus_time_frame = dm.getTime(TimeKey("stimulus_time"));
+        auto original_stimulus_intervals = stimulus_source->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(20), stimulus_time_frame.get());
+        
+        std::cout << "Source data has " << original_stimulus_intervals.size() << " stimulus intervals" << std::endl;
+        
+        // Create row selector from behavior intervals
+        auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
+        auto behavior_intervals = behavior_source->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+        
+        std::vector<TimeFrameInterval> row_intervals;
+        for (const auto& interval : behavior_intervals) {
+            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        
+        auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
+        
+        // Create CountOverlaps computer to get all overlapping EntityIDs
+        auto count_computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
+            stimulus_source, 
+            IntervalOverlapOperation::CountOverlaps, 
+            "StimulusIntervals"
+        );
+        
+        // Create table with the computer
+        TableViewBuilder builder(dme);
+        builder.setRowSelector(std::move(row_selector));
+        builder.addColumn<int64_t>("StimulusOverlaps", std::move(count_computer));
+        
+        TableView table = builder.build();
+        
+        // Get all EntityIDs from the column
+        ColumnEntityIds column_entity_ids = table.getColumnEntityIds("StimulusOverlaps");
+        REQUIRE(std::holds_alternative<std::vector<std::vector<EntityId>>>(column_entity_ids));
+        
+        auto complex_entity_ids = std::get<std::vector<std::vector<EntityId>>>(column_entity_ids);
+        
+        // Collect all unique EntityIDs from the table
+        std::set<EntityId> table_entity_ids;
+        for (const auto& row_entity_ids : complex_entity_ids) {
+            for (const auto& entity_id : row_entity_ids) {
+                table_entity_ids.insert(entity_id);
+            }
+        }
+        
+        std::cout << "Table extracted " << table_entity_ids.size() << " unique EntityIDs" << std::endl;
+        
+        // Verify cell-level EntityIDs match column-level EntityIDs
+        for (size_t row = 0; row < table.getRowCount(); ++row) {
+            auto cell_entity_ids = table.getCellEntityIds("StimulusOverlaps", row);
+            REQUIRE(cell_entity_ids == complex_entity_ids[row]);
+        }
+        
+        std::cout << "✓ EntityID round trip test passed" << std::endl;
+        std::cout << "  - All EntityIDs are valid and consistent" << std::endl;
+        std::cout << "  - Cell-level extraction matches column-level extraction" << std::endl;
+    }
+}

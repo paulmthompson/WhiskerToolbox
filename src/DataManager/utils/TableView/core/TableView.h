@@ -194,7 +194,7 @@ public:
      * @return Vector of EntityIds, one per row. Empty if not available.
      * @throws std::runtime_error if the column is not found.
      */
-    [[nodiscard]] auto getColumnEntityIds(std::string const & name) const -> std::vector<EntityId>;
+    [[nodiscard]] ColumnEntityIds getColumnEntityIds(std::string const & name) const;
 
     /**
      * @brief Get all contributing EntityIDs for a specific cell.
