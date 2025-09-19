@@ -23,6 +23,7 @@
 #include <vector>
 #include <cstdint>
 #include <numeric>
+#include <algorithm>
 #include <nlohmann/json.hpp>
 
 /**
@@ -1558,6 +1559,40 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         
         std::cout << "Table extracted " << table_entity_ids.size() << " unique EntityIDs" << std::endl;
         
+        // Get original EntityIDs directly from the source data for verification
+        auto stimulus_data = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
+        REQUIRE(stimulus_data != nullptr);
+        
+        auto source_stimulus_entity_ids = stimulus_data->getEntityIds();
+        std::cout << "Source stimulus data has " << source_stimulus_entity_ids.size() << " EntityIDs" << std::endl;
+        
+        // Debug: Print source EntityIDs
+        INFO("Source EntityIDs from StimulusIntervals:");
+        for (size_t i = 0; i < source_stimulus_entity_ids.size(); ++i) {
+            INFO("  Source EntityID[" << i << "] = " << source_stimulus_entity_ids[i]);
+        }
+        
+        // Debug: Print table EntityIDs
+        INFO("Table EntityIDs from IntervalOverlapComputer:");
+        for (const auto& entity_id : table_entity_ids) {
+            INFO("  Table EntityID = " << entity_id);
+        }
+        
+        // Verify that extracted EntityIDs are a subset of source EntityIDs
+        // (Not all source EntityIDs may appear in the table due to overlap filtering)
+        for (const auto& table_entity_id : table_entity_ids) {
+            bool found = std::find(source_stimulus_entity_ids.begin(), 
+                                 source_stimulus_entity_ids.end(), 
+                                 table_entity_id) != source_stimulus_entity_ids.end();
+            REQUIRE(found);
+            INFO("✓ Table EntityID " << table_entity_id << " found in source data");
+        }
+        
+        // Verify all EntityIDs are valid (non-zero)
+        for (const auto& entity_id : table_entity_ids) {
+            REQUIRE(entity_id != 0);
+        }
+        
         // Verify cell-level EntityIDs match column-level EntityIDs
         for (size_t row = 0; row < table.getRowCount(); ++row) {
             auto cell_entity_ids = table.getCellEntityIds("StimulusOverlaps", row);
@@ -1565,7 +1600,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         }
         
         std::cout << "✓ EntityID round trip test passed" << std::endl;
-        std::cout << "  - All EntityIDs are valid and consistent" << std::endl;
+        std::cout << "  - All EntityIDs are valid and come from source data" << std::endl;
         std::cout << "  - Cell-level extraction matches column-level extraction" << std::endl;
+        std::cout << "  - Extracted EntityIDs verified against original source data" << std::endl;
     }
 }
