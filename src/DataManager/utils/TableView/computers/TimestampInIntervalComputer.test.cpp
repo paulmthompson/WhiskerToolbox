@@ -257,6 +257,13 @@ public:
         return result;
     }
 
+    auto getIntervalsWithIdsInRange(TimeFrameIndex start, TimeFrameIndex end, 
+                                    TimeFrame const * target_timeFrame) -> std::vector<IntervalWithId> override {
+        std::vector<IntervalWithId> result;
+        
+        return result;
+    }
+
 private:
     std::string m_name;
     std::shared_ptr<TimeFrame> m_timeFrame;

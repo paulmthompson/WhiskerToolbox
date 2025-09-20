@@ -49,6 +49,12 @@ std::vector<Interval> DigitalIntervalDataAdapter::getIntervalsInRange(TimeFrameI
     return result;
 }
 
+std::vector<IntervalWithId> DigitalIntervalDataAdapter::getIntervalsWithIdsInRange(TimeFrameIndex start,
+                                                                                   TimeFrameIndex end,
+                                                                                   TimeFrame const * target_timeFrame) {
+    return m_digitalIntervalSeries->getIntervalsWithIdsInRange(start, end, target_timeFrame, m_timeFrame.get());
+}
+
 EntityId DigitalIntervalDataAdapter::getEntityIdAt(size_t index) const {
     auto const & ids = m_digitalIntervalSeries->getEntityIds();
     return (index < ids.size()) ? ids[index] : 0;

@@ -4,6 +4,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "DigitalTimeSeries/IntervalWithId.hpp"
 
 #include <memory>
 #include <string>
@@ -63,6 +64,10 @@ public:
     virtual std::vector<Interval> getIntervalsInRange(TimeFrameIndex start,
                                                       TimeFrameIndex end,
                                                       TimeFrame const * target_timeFrame) = 0;
+
+    virtual std::vector<IntervalWithId> getIntervalsWithIdsInRange(TimeFrameIndex start,
+                                                                   TimeFrameIndex end,
+                                                                   TimeFrame const * target_timeFrame) = 0;
 
     /**
      * @brief Optional: get the EntityId for the k-th interval in the source ordering.

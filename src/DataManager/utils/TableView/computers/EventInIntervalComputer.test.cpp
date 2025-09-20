@@ -72,6 +72,13 @@ public:
         return result;
     }
 
+    auto getDataInRangeWithEntityIds(TimeFrameIndex start, TimeFrameIndex end, 
+                                    TimeFrame const * target_timeFrame) -> std::vector<EventWithId> override {
+        std::vector<EventWithId> result;
+        
+        return result;
+    }
+
 private:
     std::string m_name;
     std::shared_ptr<TimeFrame> m_timeFrame;

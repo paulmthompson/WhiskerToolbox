@@ -2,7 +2,8 @@
 #include "Entity/EntityRegistry.hpp"
 
 #include <algorithm>
-#include <utility>  
+#include <ranges>
+#include <utility>
 #include <vector>
 
 // ========== Constructors ==========
@@ -69,7 +70,7 @@ void DigitalIntervalSeries::setEventAtTime(TimeFrameIndex time, bool const event
 }
 
 bool DigitalIntervalSeries::removeInterval(Interval const & interval) {
-    auto it = std::find(_data.begin(), _data.end(), interval);
+    auto it = std::ranges::find(_data, interval);
     if (it != _data.end()) {
         _data.erase(it);
         notifyObservers();
@@ -80,20 +81,20 @@ bool DigitalIntervalSeries::removeInterval(Interval const & interval) {
 
 size_t DigitalIntervalSeries::removeIntervals(std::vector<Interval> const & intervals) {
     size_t removed_count = 0;
-    
-    for (auto const & interval : intervals) {
-        auto it = std::find(_data.begin(), _data.end(), interval);
+
+    for (auto const & interval: intervals) {
+        auto it = std::ranges::find(_data, interval);
         if (it != _data.end()) {
             _data.erase(it);
             removed_count++;
         }
     }
-    
+
     if (removed_count > 0) {
-        _sortData();  // Re-sort after removals
+        _sortData();// Re-sort after removals
         notifyObservers();
     }
-    
+
     return removed_count;
 }
 
@@ -142,8 +143,7 @@ void DigitalIntervalSeries::rebuildAllEntityIds() {
     for (size_t i = 0; i < _data.size(); ++i) {
         // Use start as the discrete time index representative, and i as stable local index
         _entity_ids.push_back(
-            _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, TimeFrameIndex{_data[i].start}, static_cast<int>(i))
-        );
+                _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, TimeFrameIndex{_data[i].start}, static_cast<int>(i)));
     }
 }
 
@@ -153,18 +153,18 @@ std::optional<Interval> DigitalIntervalSeries::getIntervalByEntityId(EntityId en
     if (!_identity_registry) {
         return std::nullopt;
     }
-    
+
     auto descriptor = _identity_registry->get(entity_id);
     if (!descriptor || descriptor->kind != EntityKind::IntervalEntity || descriptor->data_key != _identity_data_key) {
         return std::nullopt;
     }
-    
-    int local_index = descriptor->local_index;
-    
+
+    int const local_index = descriptor->local_index;
+
     if (local_index < 0 || static_cast<size_t>(local_index) >= _data.size()) {
         return std::nullopt;
     }
-    
+
     return _data[static_cast<size_t>(local_index)];
 }
 
@@ -172,47 +172,119 @@ std::optional<int> DigitalIntervalSeries::getIndexByEntityId(EntityId entity_id)
     if (!_identity_registry) {
         return std::nullopt;
     }
-    
+
     auto descriptor = _identity_registry->get(entity_id);
     if (!descriptor || descriptor->kind != EntityKind::IntervalEntity || descriptor->data_key != _identity_data_key) {
         return std::nullopt;
     }
-    
-    int local_index = descriptor->local_index;
-    
+
+    int const local_index = descriptor->local_index;
+
     if (local_index < 0 || static_cast<size_t>(local_index) >= _data.size()) {
         return std::nullopt;
     }
-    
+
     return local_index;
 }
 
 std::vector<std::pair<EntityId, Interval>> DigitalIntervalSeries::getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const {
     std::vector<std::pair<EntityId, Interval>> result;
     result.reserve(entity_ids.size());
-    
-    for (EntityId entity_id : entity_ids) {
+
+    for (EntityId const entity_id: entity_ids) {
         auto interval = getIntervalByEntityId(entity_id);
         if (interval) {
             result.emplace_back(entity_id, *interval);
         }
     }
-    
+
     return result;
 }
 
 std::vector<std::pair<EntityId, int>> DigitalIntervalSeries::getIndexInfoByEntityIds(std::vector<EntityId> const & entity_ids) const {
     std::vector<std::pair<EntityId, int>> result;
     result.reserve(entity_ids.size());
-    
-    for (EntityId entity_id : entity_ids) {
+
+    for (EntityId const entity_id: entity_ids) {
         auto index = getIndexByEntityId(entity_id);
         if (index) {
             result.emplace_back(entity_id, *index);
         }
     }
-    
+
     return result;
+}
+
+// ========== Intervals with EntityIDs ==========
+
+std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(int64_t start_time, int64_t stop_time) const {
+    std::vector<IntervalWithId> result;
+    result.reserve(_data.size());// Reserve space for potential worst case
+
+    for (size_t i = 0; i < _data.size(); ++i) {
+        Interval const & interval = _data[i];
+        // Check if interval overlaps with the range (using overlapping logic)
+        if (interval.start <= stop_time && interval.end >= start_time) {
+            EntityId const entity_id = (i < _entity_ids.size()) ? _entity_ids[i] : 0;
+            result.emplace_back(interval, entity_id);
+        }
+    }
+    return result;
+}
+
+std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
+    auto [start_time_value, stop_time_value] = _getTimeRangeFromIndices(start_time, stop_time);
+    return getIntervalsWithIdsInRange(start_time_value, stop_time_value);
+}
+
+std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(TimeFrameIndex start_index,
+                                                                              TimeFrameIndex stop_index,
+                                                                              TimeFrame const * source_time_frame,
+                                                                              TimeFrame const * interval_time_frame) const {
+    if (source_time_frame == interval_time_frame) {
+        return getIntervalsWithIdsInRange(start_index, stop_index);
+    }
+
+    // If either timeframe is null, fall back to original behavior
+    if (!source_time_frame || !interval_time_frame) {
+        return getIntervalsWithIdsInRange(start_index, stop_index);
+    }
+
+    auto [target_start_index, target_stop_index] = _convertTimeFrameRange(start_index, stop_index, source_time_frame, interval_time_frame);
+    return getIntervalsWithIdsInRange(target_start_index, target_stop_index);
+}
+
+// ========== Helper Functions for Time Frame Conversion ==========
+
+std::pair<TimeFrameIndex, TimeFrameIndex> DigitalIntervalSeries::_convertTimeFrameRange(
+        TimeFrameIndex const start_index,
+        TimeFrameIndex const stop_index,
+        TimeFrame const * const source_time_frame,
+        TimeFrame const * const target_time_frame) {
+
+    // Get the time values from the source timeframe
+    auto start_time_value = source_time_frame->getTimeAtIndex(start_index);
+    auto stop_time_value = source_time_frame->getTimeAtIndex(stop_index);
+
+    // Convert to indices in the target timeframe
+    auto target_start_index = target_time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
+    auto target_stop_index = target_time_frame->getIndexAtTime(static_cast<float>(stop_time_value));
+
+    return {target_start_index, target_stop_index};
+}
+
+std::pair<int64_t, int64_t> DigitalIntervalSeries::_getTimeRangeFromIndices(
+        TimeFrameIndex start_index,
+        TimeFrameIndex stop_index) const {
+
+    if (_time_frame) {
+        auto start_time_value = _time_frame->getTimeAtIndex(start_index);
+        auto stop_time_value = _time_frame->getTimeAtIndex(stop_index);
+        return {static_cast<int64_t>(start_time_value), static_cast<int64_t>(stop_time_value)};
+    } else {
+        // Fallback to using indices as time values if no timeframe
+        return {start_index.getValue(), stop_index.getValue()};
+    }
 }
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time) {
@@ -237,4 +309,3 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFra
     }
     return closest_index;
 }
-

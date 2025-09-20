@@ -2,6 +2,7 @@
 #define DIGITAL_EVENT_DATA_ADAPTER_H
 
 #include "utils/TableView/interfaces/IEventSource.h"
+#include "DigitalTimeSeries/EventWithId.hpp"
 
 #include <memory>
 #include <vector>
@@ -75,9 +76,9 @@ public:
      * @param target_timeFrame The target time frame (from the caller) for the data.
      * @return A vector of pairs (event_value, source_index) representing the events in the specified range.
      */
-    std::vector<std::pair<float, size_t>> getDataInRangeWithIndices(TimeFrameIndex start,
-                                                                   TimeFrameIndex end,
-                                                                   TimeFrame const * target_timeFrame) override;
+    std::vector<EventWithId> getDataInRangeWithEntityIds(TimeFrameIndex start,
+                                                         TimeFrameIndex end,
+                                                         TimeFrame const * target_timeFrame) override;
 
     [[nodiscard]] EntityId getEntityIdAt(size_t index) const override;
 

@@ -67,6 +67,7 @@ public:
                                       TimeFrameIndex end,
                                       TimeFrame const * target_timeFrame) override;
 
+
 private:
     /**
      * @brief Materializes the analog data if not already done.

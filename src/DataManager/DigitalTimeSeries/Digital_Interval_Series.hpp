@@ -1,10 +1,11 @@
 #ifndef DIGITAL_INTERVAL_SERIES_HPP
 #define DIGITAL_INTERVAL_SERIES_HPP
 
-#include "Observer/Observer_Data.hpp"
-#include "TimeFrame/interval_data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "Observer/Observer_Data.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/interval_data.hpp"
+#include "DigitalTimeSeries/IntervalWithId.hpp"
 
 #include <cstdint>
 #include <iostream>
@@ -19,6 +20,7 @@ template<typename T>
 inline constexpr bool always_false_v = false;
 
 
+
 /**
  * @brief Digital IntervalSeries class
  *
@@ -31,7 +33,6 @@ inline constexpr bool always_false_v = false;
  */
 class DigitalIntervalSeries : public ObserverData {
 public:
-
     // ========== Constructors ==========
     /**
      * @brief Default constructor
@@ -119,8 +120,6 @@ public:
     [[nodiscard]] size_t size() const { return _data.size(); };
 
 
-
-    
     // Defines how to handle intervals that overlap with range boundaries
     enum class RangeMode {
         CONTAINED,  // Only intervals fully contained within range
@@ -154,28 +153,20 @@ public:
             TimeFrameIndex start_time,
             TimeFrameIndex stop_time,
             TimeFrame const * source_timeframe,
-            TimeFrame const * interval_timeframe
-        ) const {
-             if (source_timeframe == interval_timeframe) {
-                 return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
-            }
-
-            // If either timeframe is null, fall back to original behavior
-            if (!source_timeframe || !interval_timeframe) {
-                return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
-            }
-
-            // Convert the time index from source timeframe to target timeframe
-            // 1. Get the time value from the source timeframe
-            auto start_time_value = source_timeframe->getTimeAtIndex(start_time);
-            auto stop_time_value = source_timeframe->getTimeAtIndex(stop_time);
-
-            // 2. Convert that time value to an index in the target timeframe
-            auto target_start_index = interval_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
-            auto target_stop_index = interval_timeframe->getIndexAtTime(static_cast<float>(stop_time_value));
-
-            return getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
+            TimeFrame const * interval_timeframe) const {
+        if (source_timeframe == interval_timeframe) {
+            return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
         }
+
+        // If either timeframe is null, fall back to original behavior
+        if (!source_timeframe || !interval_timeframe) {
+            return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
+        }
+
+        // Use helper function for time frame conversion
+        auto [target_start_index, target_stop_index] = _convertTimeFrameRange(start_time, stop_time, source_timeframe, interval_timeframe);
+        return getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
+    }
 
     // ========== Time Frame ==========
 
@@ -239,10 +230,44 @@ public:
      */
     [[nodiscard]] std::vector<std::pair<EntityId, int>> getIndexInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
+    // ========== Intervals with EntityIDs ==========
+
+    /**
+     * @brief Get intervals in range with their EntityIDs
+     * 
+     * @param start_time Start time for the range
+     * @param stop_time Stop time for the range
+     * @return std::vector<IntervalWithId> Vector of intervals with their EntityIDs
+     */
+    [[nodiscard]] std::vector<IntervalWithId> getIntervalsWithIdsInRange(int64_t start_time, int64_t stop_time) const;
+
+    /**
+     * @brief Get intervals in range with their EntityIDs using TimeFrameIndex
+     * 
+     * @param start_time Start time index for the range
+     * @param stop_time Stop time index for the range
+     * @return std::vector<IntervalWithId> Vector of intervals with their EntityIDs
+     */
+    [[nodiscard]] std::vector<IntervalWithId> getIntervalsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const;
+
+    /**
+     * @brief Get intervals in range with their EntityIDs using time frame conversion
+     * 
+     * @param start_index Start time index in source timeframe
+     * @param stop_index Stop time index in source timeframe
+     * @param source_time_frame Source timeframe for the indices
+     * @param interval_time_frame Target timeframe for the intervals
+     * @return std::vector<IntervalWithId> Vector of intervals with their EntityIDs
+     */
+    [[nodiscard]] std::vector<IntervalWithId> getIntervalsWithIdsInRange(TimeFrameIndex start_index,
+                                                                         TimeFrameIndex stop_index,
+                                                                         TimeFrame const * source_time_frame,
+                                                                         TimeFrame const * interval_time_frame) const;
+
 private:
     std::vector<Interval> _data{};
-    std::shared_ptr<TimeFrame> _time_frame {nullptr};
-    
+    std::shared_ptr<TimeFrame> _time_frame{nullptr};
+
     void _addEvent(Interval new_interval);
     void _setEventAtTime(TimeFrameIndex time, bool event);
     void _removeEventAtTime(TimeFrameIndex time);
@@ -286,8 +311,36 @@ private:
     }
     // Identity
     std::string _identity_data_key;
-    EntityRegistry * _identity_registry {nullptr};
+    EntityRegistry * _identity_registry{nullptr};
     std::vector<EntityId> _entity_ids;
+
+    // ========== Helper Functions for Time Frame Conversion ==========
+
+    /**
+     * @brief Convert time range from source timeframe to target timeframe
+     * 
+     * @param start_index Start index in source timeframe
+     * @param stop_index Stop index in source timeframe
+     * @param source_time_frame Source timeframe
+     * @param target_time_frame Target timeframe
+     * @return std::pair<TimeFrameIndex, TimeFrameIndex> Converted start and stop indices
+     */
+    [[nodiscard]] static std::pair<TimeFrameIndex, TimeFrameIndex> _convertTimeFrameRange(
+            TimeFrameIndex const start_index,
+            TimeFrameIndex const stop_index,
+            TimeFrame const * const source_time_frame,
+            TimeFrame const * const target_time_frame);
+
+    /**
+     * @brief Get time values from TimeFrameIndex range
+     * 
+     * @param start_index Start time index
+     * @param stop_index Stop time index
+     * @return std::pair<int64_t, int64_t> Start and stop time values
+     */
+    [[nodiscard]] std::pair<int64_t, int64_t> _getTimeRangeFromIndices(
+            TimeFrameIndex start_index,
+            TimeFrameIndex stop_index) const;
 };
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time);

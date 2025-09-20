@@ -70,6 +70,10 @@ public:
                                               TimeFrameIndex end,
                                               TimeFrame const * target_timeFrame) override;
 
+    std::vector<IntervalWithId> getIntervalsWithIdsInRange(TimeFrameIndex start,
+                                                           TimeFrameIndex end,
+                                                           TimeFrame const * target_timeFrame) override;
+
     [[nodiscard]] EntityId getEntityIdAt(size_t index) const override;
 
 private:
