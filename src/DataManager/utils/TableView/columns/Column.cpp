@@ -3,6 +3,8 @@
 #include "utils/TableView/core/TableView.h"
 #include "utils/TableView/interfaces/IColumnComputer.h"
 
+#include <iostream>
+
 template<SupportedColumnType T>
 Column<T>::Column(std::string name, std::unique_ptr<IColumnComputer<T>> computer)
     : m_name(std::move(name)),
@@ -68,6 +70,9 @@ std::vector<EntityId> Column<T>::getCellEntityIds(size_t row_index) const {
 
 template<SupportedColumnType T>
 ColumnEntityIds Column<T>::getColumnEntityIds() const {
+    if (!isMaterialized()) {
+        std::cout << "Column " << m_name << " is not materialized" << std::endl;
+    }
     return m_entityIds;
 }
 

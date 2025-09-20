@@ -79,9 +79,14 @@ std::pair<std::vector<bool>, ColumnEntityIds> EventInIntervalComputer<bool>::com
 
     for (auto const & interval: intervals) {
 
-        auto events = m_source->getDataInRange(interval.start, interval.end, destinationTimeFrame.get());
+        entity_ids.push_back(std::vector<EntityId>());
 
-        results.push_back(!events.empty());
+        auto events_with_ids = m_source->getDataInRangeWithEntityIds(interval.start, interval.end, destinationTimeFrame.get());
+
+        results.push_back(!events_with_ids.empty());
+        for (auto const & event_with_id: events_with_ids) {
+            entity_ids.back().push_back(event_with_id.entity_id);
+        }
     }
 
     return {results, entity_ids};
@@ -124,9 +129,14 @@ std::pair<std::vector<int>, ColumnEntityIds> EventInIntervalComputer<int>::compu
 
     for (auto const & interval: intervals) {
 
-        auto events = m_source->getDataInRange(interval.start, interval.end, destinationTimeFrame.get());
+        auto events_with_ids = m_source->getDataInRangeWithEntityIds(interval.start, interval.end, destinationTimeFrame.get());
 
-        results.push_back(static_cast<int>(events.size()));
+        results.push_back(static_cast<int>(events_with_ids.size()));
+        entity_ids.push_back(std::vector<EntityId>());
+        
+        for (auto const & event_with_id: events_with_ids) {
+            entity_ids.back().push_back(event_with_id.entity_id);
+        }
     }
 
     return {results, entity_ids};
@@ -177,18 +187,25 @@ std::pair<std::vector<std::vector<float>>, ColumnEntityIds> EventInIntervalCompu
 
     for (auto const & interval: intervals) {
 
-        auto events = m_source->getDataInRange(interval.start, interval.end, destinationTimeFrame.get());
+        results.push_back(std::vector<float>());
+        entity_ids.push_back(std::vector<EntityId>());
+
+        auto events_with_ids = m_source->getDataInRangeWithEntityIds(interval.start, interval.end, destinationTimeFrame.get());
+
+        for (auto const & event_with_id: events_with_ids) {            
+            results.back().push_back(event_with_id.event_time);
+            entity_ids.back().push_back(event_with_id.entity_id);
+        }
 
         if (m_operation == EventOperation::Gather_Center) {
             auto center = (interval.start + interval.end).getValue() / 2;
             auto center_time_value = destinationTimeFrame->getTimeAtIndex(TimeFrameIndex(center));
             auto source_time_index = sourceTimeFrame->getIndexAtTime(static_cast<float>(center_time_value));
-            for (auto & event: events) {
+
+            for (auto & event: results.back()) {
                 event = event - static_cast<float>(source_time_index.getValue());
             }
         }
-
-        results.push_back(std::move(events));
     }
 
     return {results, entity_ids};

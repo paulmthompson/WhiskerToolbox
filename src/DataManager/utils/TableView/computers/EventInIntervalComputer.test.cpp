@@ -1511,6 +1511,8 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         
         // Build the table
         TableView table = builder.build();
+
+        table.materializeAll();
         
         // Verify table structure
         REQUIRE(table.getRowCount() == 4);
@@ -1598,7 +1600,11 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         builder.addColumn<std::vector<float>>("Neuron1_Events", std::move(gather_computer));
         
         TableView table = builder.build();
-        
+
+        //table.materializeAll(); // This doesn''t currently work. need to get values
+
+        auto event_data_from_table = table.getColumnValues<std::vector<float>>("Neuron1_Events");
+
         // Get all EntityIDs from the column
         ColumnEntityIds column_entity_ids = table.getColumnEntityIds("Neuron1_Events");
         REQUIRE(std::holds_alternative<std::vector<std::vector<EntityId>>>(column_entity_ids));
@@ -1730,6 +1736,8 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         builder.addColumn<std::vector<float>>("Neuron2_Centered", std::move(gather_center_computer));
         
         TableView table = builder.build();
+
+        table.materializeAll();
         
         // Get EntityIDs and events
         ColumnEntityIds column_entity_ids = table.getColumnEntityIds("Neuron2_Centered");
@@ -1780,11 +1788,11 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         auto count_computer = std::make_unique<EventInIntervalComputer<int>>(
             neuron1_source, EventOperation::Count, "Neuron1Spikes");
         
-        // Verify EntityID structure is None for these operations
-        REQUIRE(presence_computer->getEntityIdStructure() == EntityIdStructure::None);
-        REQUIRE(!presence_computer->hasEntityIds());
-        REQUIRE(count_computer->getEntityIdStructure() == EntityIdStructure::None);
-        REQUIRE(!count_computer->hasEntityIds());
+        // Verify EntityID structure is Complex for these operations
+        REQUIRE(presence_computer->getEntityIdStructure() == EntityIdStructure::Complex);
+        REQUIRE(presence_computer->hasEntityIds());
+        REQUIRE(count_computer->getEntityIdStructure() == EntityIdStructure::Complex);
+        REQUIRE(count_computer->hasEntityIds());
         
         // Create separate tables
         TableViewBuilder builder1(dme);
@@ -1797,20 +1805,23 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         
         TableView presence_table = builder1.build();
         TableView count_table = builder2.build();
+
+        auto presence_table_values = presence_table.getColumnValues<bool>("Presence");
+        auto count_table_values = count_table.getColumnValues<int>("Count");
         
         // Test that EntityIDs return empty/monostate
         ColumnEntityIds presence_entity_ids = presence_table.getColumnEntityIds("Presence");
         ColumnEntityIds count_entity_ids = count_table.getColumnEntityIds("Count");
         
-        REQUIRE(std::holds_alternative<std::monostate>(presence_entity_ids));
-        REQUIRE(std::holds_alternative<std::monostate>(count_entity_ids));
+        REQUIRE(std::holds_alternative<std::vector<std::vector<EntityId>>>(presence_entity_ids));
+        REQUIRE(std::holds_alternative<std::vector<std::vector<EntityId>>>(count_entity_ids));
         
         // Test cell-level EntityIDs are empty
         auto presence_cell_ids = presence_table.getCellEntityIds("Presence", 0);
         auto count_cell_ids = count_table.getCellEntityIds("Count", 0);
         
-        REQUIRE(presence_cell_ids.empty());
-        REQUIRE(count_cell_ids.empty());
+        REQUIRE(!presence_cell_ids.empty());
+        REQUIRE(!count_cell_ids.empty());
         
         std::cout << "✓ Non-EntityID operations test passed" << std::endl;
         std::cout << "  - Presence and Count operations correctly report no EntityIDs" << std::endl;
