@@ -1337,6 +1337,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         
         // Build the table
         TableView table = builder.build();
+
+        auto assign_id_data_from_table = table.getColumnValues<int64_t>("StimulusAssignID");
         
         // Verify table structure
         REQUIRE(table.getRowCount() == 4);
@@ -1403,6 +1405,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         
         // Build the table
         TableView table = builder.build();
+
+        auto count_data_from_table = table.getColumnValues<int64_t>("StimulusCount");
         
         // Verify table structure
         REQUIRE(table.getRowCount() == 4);
@@ -1472,6 +1476,9 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
 
         TableView assign_table = builder1.build();
         TableView count_table = builder2.build();
+
+        auto assign_data_from_table = assign_table.getColumnValues<int64_t>("AssignColumn");
+        auto count_data_from_table = count_table.getColumnValues<int64_t>("CountColumn");
         
         // Test variant types
         ColumnEntityIds assign_ids = assign_table.getColumnEntityIds("AssignColumn");
@@ -1549,6 +1556,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         builder.addColumn<int64_t>("StimulusOverlaps", std::move(count_computer));
         
         TableView table = builder.build();
+
+        auto count_data_from_table = table.getColumnValues<int64_t>("StimulusOverlaps");
         
         // Get all EntityIDs from the column
         ColumnEntityIds column_entity_ids = table.getColumnEntityIds("StimulusOverlaps");

@@ -162,6 +162,7 @@ public:
 private:
     std::vector<TimeFrameInterval> m_intervals;
     std::shared_ptr<TimeFrame> m_timeFrame;
+    
 };
 
 #endif // IROW_SELECTOR_H

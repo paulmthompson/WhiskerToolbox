@@ -68,15 +68,22 @@ public:
         entity_ids.reserve(intervals.size());
         
         for (const auto& interval : intervals) {
+
+            auto intervals_with_ids = m_source->getIntervalsWithIdsInRange(interval.start, 
+                interval.end, destinationTimeFrame.get());
+
+            auto this_interval = intervals_with_ids.back();
+            entity_ids.push_back(this_interval.entity_id);
+
             switch (m_property) {
                 case IntervalProperty::Start:
-                    results.push_back(static_cast<T>(interval.start.getValue()));
+                    results.push_back(static_cast<T>(this_interval.interval.start));
                     break;
                 case IntervalProperty::End:
-                    results.push_back(static_cast<T>(interval.end.getValue()));
+                    results.push_back(static_cast<T>(this_interval.interval.end));
                     break;
                 case IntervalProperty::Duration:
-                    results.push_back(static_cast<T>(interval.end.getValue() - interval.start.getValue()));
+                    results.push_back(static_cast<T>(this_interval.interval.end - this_interval.interval.start));
                     break;
                 default:
                     throw std::runtime_error("Unknown IntervalProperty");

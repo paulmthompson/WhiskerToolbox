@@ -11,6 +11,23 @@ bool intervalsOverlap(const TimeFrameInterval& a, const TimeFrameInterval& b) {
     return a.start.getValue() <= b.end.getValue() && b.start.getValue() <= a.end.getValue();
 }
 
+bool intervalsOverlapInAbsoluteTime(const TimeFrameInterval& rowInterval,
+                                   const Interval& columnInterval,
+                                   const TimeFrame* sourceTimeFrame,
+                                   const TimeFrame* destinationTimeFrame) {
+    // Convert row interval to absolute time coordinates
+    auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
+    auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
+    
+    // Convert column interval to absolute time coordinates
+    auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnInterval.start));
+    auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnInterval.end));
+    
+    // Check overlap using absolute time coordinates
+    // Two intervals overlap if: source_start <= destination_end && destination_start <= source_end
+    return source_start <= destination_end && destination_start <= source_end;
+}
+
 int64_t findContainingInterval(const TimeFrameInterval& rowInterval,
                               const std::vector<Interval>& columnIntervals) {
     for (size_t i = 0; i < columnIntervals.size(); ++i) {
@@ -31,23 +48,30 @@ int64_t countOverlappingIntervals(const TimeFrameInterval& rowInterval,
                                  const TimeFrame* destinationTimeFrame) {
     int64_t count = 0;
     
-    // Convert row interval to absolute time coordinates
-    auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
-    auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
-    
     for (const auto& colInterval : columnIntervals) {
-        // Convert column interval to absolute time coordinates
-        auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.start));
-        auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.end));
-        
-        // Check overlap using absolute time coordinates
-        // Two intervals overlap if: source_start <= destination_end && destination_start <= source_end
-        if (source_start <= destination_end && destination_start <= source_end) {
+        if (intervalsOverlapInAbsoluteTime(rowInterval, colInterval, sourceTimeFrame, destinationTimeFrame)) {
             ++count;
         }
     }
     
     return count;
+}
+
+std::pair<int64_t, std::vector<EntityId>> countOverlappingIntervalsWithIds(const TimeFrameInterval& rowInterval,
+                                                                           const std::vector<IntervalWithId>& columnIntervalsWithIds,
+                                                                           const TimeFrame* sourceTimeFrame,
+                                                                           const TimeFrame* destinationTimeFrame) {
+    int64_t count = 0;
+    std::vector<EntityId> overlappingEntityIds;
+    
+    for (const auto& colIntervalWithId : columnIntervalsWithIds) {
+        if (intervalsOverlapInAbsoluteTime(rowInterval, colIntervalWithId.interval, sourceTimeFrame, destinationTimeFrame)) {
+            ++count;
+            overlappingEntityIds.push_back(colIntervalWithId.entity_id);
+        }
+    }
+    
+    return {count, overlappingEntityIds};
 }
 
 // Template specialization for size_t

@@ -780,6 +780,9 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
                                                                IntervalProperty::Duration, "BehaviorPeriods"));
         
         auto table = builder.build();
+
+        auto start_data_from_table = table.getColumnValues<double>("IntervalStart");
+        auto duration_data_from_table = table.getColumnValues<double>("IntervalDuration");
         
         // Verify table structure
         REQUIRE(table.getRowCount() == 5); // 5 behavior periods
