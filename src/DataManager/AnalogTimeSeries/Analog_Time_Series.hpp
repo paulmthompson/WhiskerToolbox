@@ -10,10 +10,10 @@
 #include <map>
 #include <optional>
 #include <ranges>
-#include <stdexcept>
-#include <vector>
-#include <variant>
 #include <span>
+#include <stdexcept>
+#include <variant>
+#include <vector>
 
 /**
  * @brief The AnalogTimeSeries class
@@ -24,13 +24,12 @@
  */
 class AnalogTimeSeries : public ObserverData {
 public:
-
     // ========== Constructors ==========
     /**
      * @brief Default constructor
      * 
      * This constructor creates an empty AnalogTimeSeries with no data
-     */ 
+     */
     AnalogTimeSeries();
 
     /**
@@ -85,7 +84,7 @@ public:
      * @param time_indices Vector of TimeFrameIndex values where data should be overwritten
      */
     void overwriteAtTimeIndexes(std::vector<float> & analog_data, std::vector<TimeFrameIndex> & time_indices);
-    
+
     /**
      * @brief Overwrite data at specific DataArrayIndex positions
      * 
@@ -129,7 +128,7 @@ public:
      */
     [[nodiscard]] std::vector<float> const & getAnalogTimeSeries() const { return _data; };
 
-     /**
+    /**
      * @brief Get a span (view) of data values within a TimeFrameIndex range
      * 
      * This function returns a std::span over the data array for all points where 
@@ -148,7 +147,7 @@ public:
      * @note The span is valid as long as the AnalogTimeSeries object exists and is not modified
      * @see findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic
      */
-    [[nodiscard]] std::span<const float> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+    [[nodiscard]] std::span<float const> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
 
     /**
      * @brief Get a span (view) of data values within a TimeFrameIndex range, with timeframe conversion
@@ -171,13 +170,13 @@ public:
      * @note The span is valid as long as the AnalogTimeSeries object exists and is not modified
      * @see findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic
      */
-    [[nodiscard]] std::span<const float> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, 
+    [[nodiscard]] std::span<float const> getDataInTimeFrameIndexRange(TimeFrameIndex start_time,
                                                                       TimeFrameIndex end_time,
                                                                       TimeFrame const * source_timeFrame,
                                                                       TimeFrame const * analog_timeFrame) const;
 
 
-        /**
+    /**
      * @brief Find the DataArrayIndex that corresponds to a given TimeFrameIndex
      * 
      * This function searches for the DataArrayIndex position that corresponds to the given TimeFrameIndex.
@@ -220,9 +219,11 @@ public:
     struct TimeValuePoint {
         TimeFrameIndex time_frame_index{TimeFrameIndex(0)};
         float value{0.0f};
-        
+
         TimeValuePoint() = default;
-        TimeValuePoint(TimeFrameIndex time_idx, float val) : time_frame_index(time_idx), value(val) {}
+        TimeValuePoint(TimeFrameIndex time_idx, float val)
+            : time_frame_index(time_idx),
+              value(val) {}
     };
 
     /**
@@ -233,23 +234,23 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using value_type = TimeValuePoint;
         using difference_type = std::ptrdiff_t;
-        using pointer = const TimeValuePoint*;
-        using reference = const TimeValuePoint&;
+        using pointer = TimeValuePoint const *;
+        using reference = TimeValuePoint const &;
 
-        TimeValueRangeIterator(AnalogTimeSeries const* series, DataArrayIndex start_index, DataArrayIndex end_index, bool is_end = false);
+        TimeValueRangeIterator(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index, bool is_end = false);
 
         reference operator*() const;
         pointer operator->() const;
-        TimeValueRangeIterator& operator++();
+        TimeValueRangeIterator & operator++();
         TimeValueRangeIterator operator++(int);
-        bool operator==(TimeValueRangeIterator const& other) const;
-        bool operator!=(TimeValueRangeIterator const& other) const;
+        bool operator==(TimeValueRangeIterator const & other) const;
+        bool operator!=(TimeValueRangeIterator const & other) const;
 
     private:
-        AnalogTimeSeries const* _series;
+        AnalogTimeSeries const * _series;
         DataArrayIndex _current_index;
         DataArrayIndex _end_index;
-        mutable TimeValuePoint _current_point; // mutable for lazy evaluation in operator*
+        mutable TimeValuePoint _current_point;// mutable for lazy evaluation in operator*
         bool _is_end;
 
         void _updateCurrentPoint() const;
@@ -260,15 +261,15 @@ public:
      */
     class TimeValueRangeView {
     public:
-        TimeValueRangeView(AnalogTimeSeries const* series, DataArrayIndex start_index, DataArrayIndex end_index);
+        TimeValueRangeView(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index);
 
-        TimeValueRangeIterator begin() const;
-        TimeValueRangeIterator end() const;
-        size_t size() const;
-        bool empty() const;
+        [[nodiscard]] TimeValueRangeIterator begin() const;
+        [[nodiscard]] TimeValueRangeIterator end() const;
+        [[nodiscard]] size_t size() const;
+        [[nodiscard]] bool empty() const;
 
     private:
-        AnalogTimeSeries const* _series;
+        AnalogTimeSeries const * _series;
         DataArrayIndex _start_index;
         DataArrayIndex _end_index;
     };
@@ -281,15 +282,15 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using value_type = TimeFrameIndex;
         using difference_type = std::ptrdiff_t;
-        using pointer = const TimeFrameIndex*;
-        using reference = const TimeFrameIndex&;
+        using pointer = TimeFrameIndex const *;
+        using reference = TimeFrameIndex const &;
 
         virtual ~TimeIndexIterator() = default;
         virtual reference operator*() const = 0;
-        virtual TimeIndexIterator& operator++() = 0;
-        virtual bool operator==(TimeIndexIterator const& other) const = 0;
-        virtual bool operator!=(TimeIndexIterator const& other) const = 0;
-        virtual std::unique_ptr<TimeIndexIterator> clone() const = 0;
+        virtual TimeIndexIterator & operator++() = 0;
+        virtual bool operator==(TimeIndexIterator const & other) const = 0;
+        virtual bool operator!=(TimeIndexIterator const & other) const = 0;
+        [[nodiscard]] virtual std::unique_ptr<TimeIndexIterator> clone() const = 0;
     };
 
     /**
@@ -297,15 +298,15 @@ public:
      */
     class TimeIndexRange {
     public:
-        TimeIndexRange(AnalogTimeSeries const* series, DataArrayIndex start_index, DataArrayIndex end_index);
+        TimeIndexRange(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index);
 
-        std::unique_ptr<TimeIndexIterator> begin() const;
-        std::unique_ptr<TimeIndexIterator> end() const;
-        size_t size() const;
-        bool empty() const;
+        [[nodiscard]] std::unique_ptr<TimeIndexIterator> begin() const;
+        [[nodiscard]] std::unique_ptr<TimeIndexIterator> end() const;
+        [[nodiscard]] size_t size() const;
+        [[nodiscard]] bool empty() const;
 
     private:
-        AnalogTimeSeries const* _series;
+        AnalogTimeSeries const * _series;
         DataArrayIndex _start_index;
         DataArrayIndex _end_index;
     };
@@ -314,10 +315,10 @@ public:
      * @brief Paired span and time iterator for zero-copy time-value access
      */
     struct TimeValueSpanPair {
-        std::span<const float> values;
+        std::span<float const> values;
         TimeIndexRange time_indices;
 
-        TimeValueSpanPair(std::span<const float> data_span, AnalogTimeSeries const* series, DataArrayIndex start_index, DataArrayIndex end_index);
+        TimeValueSpanPair(std::span<float const> data_span, AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index);
     };
 
     /**
@@ -362,10 +363,11 @@ public:
     [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
         return std::visit([i](auto const & time_storage) -> TimeFrameIndex {
             return time_storage.getTimeFrameIndexAtDataArrayIndex(i);
-        }, _time_storage);
+        },
+                          _time_storage);
     }
 
-      /**
+    /**
      * @brief Get the time indices as a vector
      * 
      * Returns a vector containing the time indices corresponding to each analog data sample.
@@ -396,11 +398,12 @@ public:
                 // Return copy for sparse storage
                 return time_storage.time_frame_indices;
             }
-        }, _time_storage);
+        },
+                          _time_storage);
     }
 
     // ========== Time Storage Optimization ==========
-    
+
     /**
      * @brief Dense time representation for regularly sampled data
      * 
@@ -412,20 +415,21 @@ public:
     struct DenseTimeRange {
         TimeFrameIndex start_time_frame_index;
         size_t count;
-        
-        DenseTimeRange(TimeFrameIndex start, size_t num_samples) 
-            : start_time_frame_index(start), count(num_samples) {}
-            
+
+        DenseTimeRange(TimeFrameIndex start, size_t num_samples)
+            : start_time_frame_index(start),
+              count(num_samples) {}
+
         [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
             if (i.getValue() >= count) {
                 throw std::out_of_range("DataArrayIndex out of range for DenseTimeRange");
             }
             return TimeFrameIndex(start_time_frame_index.getValue() + static_cast<int64_t>(i.getValue()));
         }
-        
+
         [[nodiscard]] size_t size() const { return count; }
     };
-    
+
     /**
      * @brief Sparse time representation for irregularly sampled data
      * 
@@ -435,10 +439,10 @@ public:
      */
     struct SparseTimeIndices {
         std::vector<TimeFrameIndex> time_frame_indices;
-        
-        explicit SparseTimeIndices(std::vector<TimeFrameIndex> time_indices) 
+
+        explicit SparseTimeIndices(std::vector<TimeFrameIndex> time_indices)
             : time_frame_indices(std::move(time_indices)) {}
-            
+
         [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
             if (i.getValue() >= time_frame_indices.size()) {
                 throw std::out_of_range("DataArrayIndex out of range for SparseTimeIndices");
@@ -448,7 +452,7 @@ public:
 
         [[nodiscard]] size_t size() const { return time_frame_indices.size(); }
     };
-    
+
     using TimeStorage = std::variant<DenseTimeRange, SparseTimeIndices>;
 
     /**
@@ -458,7 +462,7 @@ public:
     *
     * @return const TimeStorage& (std::variant<DenseTimeRange, SparseTimeIndices>)
     */
-    const TimeStorage& getTimeStorage() const noexcept { return _time_storage; }
+    [[nodiscard]] TimeStorage const & getTimeStorage() const noexcept { return _time_storage; }
 
     // ========== Time Frame ==========
     /**
@@ -472,7 +476,7 @@ protected:
 private:
     std::vector<float> _data;
     TimeStorage _time_storage;
-    std::shared_ptr<TimeFrame> _time_frame {nullptr};
+    std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
     void setData(std::vector<float> analog_vector);
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);

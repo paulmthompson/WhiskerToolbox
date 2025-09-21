@@ -33,7 +33,7 @@ public:
     /**
      * @brief Get the polygon vertices in world coordinates
      */
-    std::vector<Point2D<float>> const & getVertices() const { return _polygon.getVertices(); }
+    [[nodiscard]] std::vector<Point2D<float>> const & getVertices() const { return _polygon.getVertices(); }
 
 private:
     Polygon _polygon;
@@ -75,7 +75,7 @@ public:
      * @brief Get the current active selection region (if any)
      * @return Pointer to selection region, or nullptr if none active
      */
-    std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
+    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
 
 
     void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos);
@@ -131,13 +131,13 @@ private:
      * @brief Check if currently in polygon selection mode
      * @return True if actively selecting a polygon
      */
-    bool isPolygonSelecting() const { return _is_polygon_selecting; }
+    [[nodiscard]] bool isPolygonSelecting() const { return _is_polygon_selecting; }
 
     /**
      * @brief Get the number of vertices in the current polygon
      * @return Number of vertices
      */
-    size_t getVertexCount() const { return _polygon_vertices.size(); }
+    [[nodiscard]] size_t getVertexCount() const { return _polygon_vertices.size(); }
 
     /**
      * @brief Start polygon selection at given world coordinates

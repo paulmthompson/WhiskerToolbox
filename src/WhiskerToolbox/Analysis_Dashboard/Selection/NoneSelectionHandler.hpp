@@ -59,7 +59,7 @@ public:
      * @brief Get the current active selection region (always nullptr)
      * @return nullptr
      */
-    std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const {
+    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const {
         static std::unique_ptr<SelectionRegion> null_region = nullptr;
         return null_region;
     }

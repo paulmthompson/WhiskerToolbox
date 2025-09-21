@@ -196,19 +196,18 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
 }
 
 void LineSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
-    if (event->button() == Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::ControlModifier)) {
         if (!_is_drawing_line) {
             Qt::KeyboardModifiers modifiers = QGuiApplication::keyboardModifiers();
-            if (modifiers.testFlag(Qt::ControlModifier)) {
-                _current_behavior = LineSelectionBehavior::Append;
-            } else if (modifiers.testFlag(Qt::ShiftModifier)) {
+            if (modifiers.testFlag(Qt::ShiftModifier)) {
                 _current_behavior = LineSelectionBehavior::Remove;
             } else {
                 _current_behavior = LineSelectionBehavior::Replace;
             }
             startLineSelection(world_pos.x(), world_pos.y());
             // Store screen coordinates for picking
-            _line_start_point_screen = Point2D<float>(event->pos().x(), event->pos().y());
+            _line_start_point_screen = Point2D<float>(static_cast<float>(event->pos().x()),
+                                                      static_cast<float>(event->pos().y()));
             _line_end_point_screen = _line_start_point_screen;
         }
     }
@@ -219,7 +218,7 @@ void LineSelectionHandler::mouseMoveEvent(QMouseEvent * event, QVector2D const &
         qDebug() << "LineSelectionHandler: Updating line end point to" << world_pos.x() << "," << world_pos.y();
         updateLineEndPoint(world_pos.x(), world_pos.y());
         // Update screen coordinates for picking
-        _line_end_point_screen = Point2D<float>(event->pos().x(), event->pos().y());
+        _line_end_point_screen = Point2D<float>(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
     }
 }
 
@@ -279,7 +278,7 @@ bool LineSelectionRegion::containsPoint(Point2D<float> point) const {
     // For line selection, we'll use a simple distance-based approach
     // A point is "contained" if it's within a certain distance of the line
 
-    float const tolerance = 5.0f;// 5 pixel tolerance
+    auto const tolerance = 5.0;// 5 pixel tolerance
 
     // Calculate distance from point to line segment
     float dx = _end_point.x - _start_point.x;
@@ -287,9 +286,9 @@ bool LineSelectionRegion::containsPoint(Point2D<float> point) const {
 
     if (dx == 0.0f && dy == 0.0f) {
         // Line is actually a point, check distance to that point
-        float distance = std::sqrt(std::pow(point.x - _start_point.x, 2) +
-                                   std::pow(point.y - _start_point.y, 2));
-        return distance <= tolerance;
+        auto distance2 = std::pow(point.x - _start_point.x, 2) +
+                         std::pow(point.y - _start_point.y, 2);
+        return distance2 <= (tolerance * tolerance);
     }
 
     // Calculate the closest point on the line segment to the given point
@@ -303,10 +302,10 @@ bool LineSelectionRegion::containsPoint(Point2D<float> point) const {
     float closest_y = _start_point.y + t * dy;
 
     // Calculate distance from point to closest point on line
-    float distance = std::sqrt(std::pow(point.x - closest_x, 2) +
-                               std::pow(point.y - closest_y, 2));
+    auto distance2 = std::pow(point.x - closest_x, 2) +
+                     std::pow(point.y - closest_y, 2);
 
-    return distance <= tolerance;
+    return distance2 <= (tolerance * tolerance);
 }
 
 void LineSelectionRegion::getBoundingBox(float & min_x, float & min_y, float & max_x, float & max_y) const {

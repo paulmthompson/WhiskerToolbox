@@ -27,7 +27,7 @@ public:
     void render(QMatrix4x4 const & mvp_matrix) {}
     void deactivate() {}
 
-    std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const {
+    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const {
         static std::unique_ptr<SelectionRegion> null_region = nullptr;
         return null_region;
     }
@@ -37,11 +37,11 @@ public:
     void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {}
     void keyPressEvent(QKeyEvent * event) {}
 
-    QVector2D getWorldPos() const { return _world_pos; }
-    Qt::KeyboardModifiers getModifiers() const { return _modifiers; }
+    [[nodiscard]] QVector2D getWorldPos() const { return _world_pos; }
+    [[nodiscard]] Qt::KeyboardModifiers getModifiers() const { return _modifiers; }
 
     // TODO: This tolerance should be updated when the zoom level changes
-    float getWorldTolerance() const { return _world_tolerance; }
+    [[nodiscard]] float getWorldTolerance() const { return _world_tolerance; }
 
 
 private:
