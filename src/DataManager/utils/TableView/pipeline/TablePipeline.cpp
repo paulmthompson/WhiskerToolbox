@@ -360,46 +360,46 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
         if (row_selector_json.contains("source")) {
             // Source-based interval specification - get intervals from DigitalIntervalSeries
             std::string source_key = row_selector_json["source"];
-            
+
             // Get the interval source from the DataManagerExtension
             auto interval_source = data_manager_extension_->getIntervalSource(source_key);
             if (!interval_source) {
                 std::cerr << "TablePipeline: Cannot resolve interval source: " << source_key << std::endl;
                 return nullptr;
             }
-            
+
             // Get the source's timeframe
             auto source_timeframe = interval_source->getTimeFrame();
             if (!source_timeframe) {
                 std::cerr << "TablePipeline: Interval source has no timeframe: " << source_key << std::endl;
                 return nullptr;
             }
-            
+
             // Get all intervals from the source
             auto intervals = interval_source->getIntervalsInRange(
-                TimeFrameIndex(0), 
-                TimeFrameIndex(source_timeframe->getTotalFrameCount() - 1), 
-                source_timeframe.get());
-            
+                    TimeFrameIndex(0),
+                    TimeFrameIndex(source_timeframe->getTotalFrameCount() - 1),
+                    source_timeframe.get());
+
             if (intervals.empty()) {
                 std::cerr << "TablePipeline: No intervals found in source: " << source_key << std::endl;
                 return nullptr;
             }
-            
+
             // Convert Interval objects to TimeFrameInterval objects
             std::vector<TimeFrameInterval> time_frame_intervals;
             time_frame_intervals.reserve(intervals.size());
-            for (const auto& interval : intervals) {
+            for (auto const & interval: intervals) {
                 time_frame_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
             }
-            
+
             return std::make_unique<IntervalSelector>(std::move(time_frame_intervals), source_timeframe);
-            
+
         } else if (row_selector_json.contains("intervals") && row_selector_json["intervals"].is_array()) {
             // Direct interval specification
             std::vector<TimeFrameInterval> intervals;
             std::shared_ptr<TimeFrame> timeFrame;
-            
+
             // Check if timeframe is specified
             if (row_selector_json.contains("timeframe")) {
                 std::string timeframe_key = row_selector_json["timeframe"];
@@ -416,15 +416,15 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
                     return nullptr;
                 }
             }
-            
+
             // Parse interval specifications
-            for (auto const& interval_json : row_selector_json["intervals"]) {
+            for (auto const & interval_json: row_selector_json["intervals"]) {
                 if (interval_json.is_array() && interval_json.size() == 2) {
                     int64_t start = interval_json[0].get<int64_t>();
                     int64_t end = interval_json[1].get<int64_t>();
                     intervals.emplace_back(TimeFrameIndex(start), TimeFrameIndex(end));
-                } else if (interval_json.is_object() && 
-                          interval_json.contains("start") && interval_json.contains("end")) {
+                } else if (interval_json.is_object() &&
+                           interval_json.contains("start") && interval_json.contains("end")) {
                     int64_t start = interval_json["start"].get<int64_t>();
                     int64_t end = interval_json["end"].get<int64_t>();
                     intervals.emplace_back(TimeFrameIndex(start), TimeFrameIndex(end));
@@ -433,14 +433,14 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
                     return nullptr;
                 }
             }
-            
+
             if (intervals.empty()) {
                 std::cerr << "TablePipeline: No valid intervals found in intervals array" << std::endl;
                 return nullptr;
             }
-            
+
             return std::make_unique<IntervalSelector>(std::move(intervals), timeFrame);
-            
+
         } else {
             std::cerr << "TablePipeline: Interval row selector must have 'source' field or 'intervals' array" << std::endl;
             return nullptr;
@@ -461,8 +461,22 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
                 }
             }
 
-            // Use default timeframe for explicit timestamps
-            timeFrame = data_manager_->getTime();
+            // Check if timeframe is specified
+            if (row_selector_json.contains("timeframe")) {
+                std::string timeframe_key = row_selector_json["timeframe"];
+                timeFrame = data_manager_->getTime(TimeKey(timeframe_key));
+                if (!timeFrame) {
+                    std::cerr << "TablePipeline: Cannot resolve timeframe: " << timeframe_key << std::endl;
+                    return nullptr;
+                }
+            } else {
+                // Use default timeframe
+                timeFrame = data_manager_->getTime();
+                if (!timeFrame) {
+                    std::cerr << "TablePipeline: No default timeframe available" << std::endl;
+                    return nullptr;
+                }
+            }
 
         } else if (row_selector_json.contains("source")) {
             // Source-based timestamp specification
@@ -670,14 +684,14 @@ std::string TablePipeline::validateTableConfiguration(TableConfiguration const &
 // Helper template function to try adding a column with a specific type
 template<typename T>
 bool tryAddColumnWithType(TableViewBuilder & builder,
-                         std::string const & column_name,
-                         std::unique_ptr<IComputerBase> & computer) {
+                          std::string const & column_name,
+                          std::unique_ptr<IComputerBase> & computer) {
     // First try multi-output computer
     auto multi_wrapper = dynamic_cast<MultiComputerWrapper<T> *>(computer.get());
     if (multi_wrapper) {
         auto multi_computer = multi_wrapper->releaseComputer();
         builder.addColumns<T>(column_name, std::move(multi_computer));
-        computer.reset(); // Mark as consumed
+        computer.reset();// Mark as consumed
         return true;
     }
 
@@ -686,7 +700,7 @@ bool tryAddColumnWithType(TableViewBuilder & builder,
     if (single_wrapper) {
         auto typed_computer = single_wrapper->releaseComputer();
         builder.addColumn(column_name, std::move(typed_computer));
-        computer.reset(); // Mark as consumed
+        computer.reset();// Mark as consumed
         return true;
     }
 
@@ -701,14 +715,14 @@ bool TablePipeline::addColumnToBuilder(TableViewBuilder & builder,
 
     // Try each supported type in order
     // Start with the most common types for better performance
-    
+
     // Scalar types
     if (tryAddColumnWithType<double>(builder, column_name, computer)) return true;
     if (tryAddColumnWithType<float>(builder, column_name, computer)) return true;
     if (tryAddColumnWithType<int64_t>(builder, column_name, computer)) return true;
     if (tryAddColumnWithType<int>(builder, column_name, computer)) return true;
     if (tryAddColumnWithType<bool>(builder, column_name, computer)) return true;
-    
+
     // Vector types
     if (tryAddColumnWithType<std::vector<double>>(builder, column_name, computer)) return true;
     if (tryAddColumnWithType<std::vector<float>>(builder, column_name, computer)) return true;

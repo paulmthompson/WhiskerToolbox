@@ -154,6 +154,13 @@ std::vector<EntityId> const & LineData::getEntityIdsAtTime(TimeFrameIndex const 
     return it->second;
 }
 
+std::vector<EntityId> const & LineData::getEntityIdsAtTime(TimeFrameIndex const time,
+                                                           TimeFrame const * source_timeframe,
+                                                           TimeFrame const * line_timeframe) const {
+    static const std::vector<EntityId> empty = std::vector<EntityId>();
+    return get_at_time(time, _entity_ids_by_time, empty, source_timeframe, line_timeframe);
+}
+
 std::vector<EntityId> LineData::getAllEntityIds() const {
     std::vector<EntityId> out;
     for (auto const & [t, ids] : _entity_ids_by_time) {

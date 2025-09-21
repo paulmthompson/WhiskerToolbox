@@ -34,12 +34,12 @@ auto LineDataAdapter::size() const -> size_t {
 
 auto LineDataAdapter::getLines() -> std::vector<Line2D> {
     std::vector<Line2D> allLines;
-    
+
     // Collect all lines from all time frames
     for (auto const & [time, lines]: m_lineData->GetAllLinesAsRange()) {
         allLines.insert(allLines.end(), lines.begin(), lines.end());
     }
-    
+
     return allLines;
 }
 
@@ -66,7 +66,7 @@ auto LineDataAdapter::getLinesInRange(TimeFrameIndex start,
     }
 
     return result;
-} 
+}
 
 bool LineDataAdapter::hasMultiSamples() const {
     // Check if any timestamp has more than one line
@@ -79,12 +79,12 @@ bool LineDataAdapter::hasMultiSamples() const {
 }
 
 auto LineDataAdapter::getEntityCountAt(TimeFrameIndex t) const -> size_t {
-    auto const& lines_ref = m_lineData->getAtTime(t, m_timeFrame.get(), m_timeFrame.get());
+    auto const & lines_ref = m_lineData->getAtTime(t, m_timeFrame.get(), m_timeFrame.get());
     return lines_ref.size();
 }
 
-auto LineDataAdapter::getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* {
-    auto const& lines_ref = m_lineData->getAtTime(t, m_timeFrame.get(), m_timeFrame.get());
+auto LineDataAdapter::getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const * {
+    auto const & lines_ref = m_lineData->getAtTime(t, m_timeFrame.get(), m_timeFrame.get());
     if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= lines_ref.size()) {
         return nullptr;
     }
@@ -95,4 +95,9 @@ EntityId LineDataAdapter::getEntityIdAt(TimeFrameIndex t, int entityIndex) const
     auto const & ids = m_lineData->getEntityIdsAtTime(t);
     if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= ids.size()) return 0;
     return ids[static_cast<size_t>(entityIndex)];
+}
+
+std::vector<EntityId> LineDataAdapter::getEntityIdsAtTime(TimeFrameIndex t,
+                                                          TimeFrame const * target_timeframe) const {
+    return m_lineData->getEntityIdsAtTime(t, target_timeframe, m_timeFrame.get());
 }

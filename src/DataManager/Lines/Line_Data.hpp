@@ -2,12 +2,12 @@
 #define LINE_DATA_HPP
 
 #include "CoreGeometry/ImageSize.hpp"
-#include "Observer/Observer_Data.hpp"
+#include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
+#include "Entity/EntityTypes.hpp"
+#include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
-#include "CoreGeometry/lines.hpp"
-#include "Entity/EntityTypes.hpp"
 
 #include <cstddef>
 #include <map>
@@ -26,7 +26,6 @@ class EntityRegistry;
  */
 class LineData : public ObserverData {
 public:
-
     // ========== Constructors ==========
     /**
      * @brief Default constructor
@@ -133,7 +132,7 @@ public:
 
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
-    
+
     // ========== Getters ==========
 
     /**
@@ -169,7 +168,7 @@ public:
      * @param line_timeframe The timeframe that this line data uses
      * @return A vector of lines at the converted time
      */
-    [[nodiscard]] std::vector<Line2D> const & getAtTime(TimeFrameIndex time, 
+    [[nodiscard]] std::vector<Line2D> const & getAtTime(TimeFrameIndex time,
                                                         TimeFrame const * source_timeframe,
                                                         TimeFrame const * line_timeframe) const;
 
@@ -177,6 +176,10 @@ public:
      * @brief Get EntityIds aligned with lines at a specific time.
      */
     [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
+
+    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time,
+                                                                   TimeFrame const * source_timeframe,
+                                                                   TimeFrame const * line_timeframe) const;
 
     /**
      * @brief Get flattened EntityIds for all lines across all times.
@@ -229,7 +232,7 @@ public:
      */
     [[nodiscard]] std::vector<std::tuple<EntityId, TimeFrameIndex, int>> getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
-     /**
+    /**
     * @brief Get all lines with their associated times as a range
     *
     * @return A view of time-lines pairs for all times
@@ -259,13 +262,12 @@ public:
             std::vector<Line2D> const & lines;
         };
 
-        return _data 
-            | std::views::filter([interval](auto const & pair) {
-                return pair.first >= interval.start && pair.first <= interval.end;
-              })
-            | std::views::transform([](auto const & pair) {
-                return TimeLinesPair{pair.first, pair.second};
-              });
+        return _data | std::views::filter([interval](auto const & pair) {
+                   return pair.first >= interval.start && pair.first <= interval.end;
+               }) |
+               std::views::transform([](auto const & pair) {
+                   return TimeLinesPair{pair.first, pair.second};
+               });
     }
 
     /**
@@ -321,7 +323,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of lines actually copied
      */
-    std::size_t copyTo(LineData& target, TimeFrameInterval const & interval, bool notify = true) const;
+    std::size_t copyTo(LineData & target, TimeFrameInterval const & interval, bool notify = true) const;
 
     /**
      * @brief Copy lines from this LineData to another LineData for specific times
@@ -334,7 +336,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of lines actually copied
      */
-    std::size_t copyTo(LineData& target, std::vector<TimeFrameIndex> const & times, bool notify = true) const;
+    std::size_t copyTo(LineData & target, std::vector<TimeFrameIndex> const & times, bool notify = true) const;
 
     /**
      * @brief Move lines from this LineData to another LineData for a time interval
@@ -348,7 +350,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of lines actually moved
      */
-    std::size_t moveTo(LineData& target, TimeFrameInterval const & interval, bool notify = true);
+    std::size_t moveTo(LineData & target, TimeFrameInterval const & interval, bool notify = true);
 
     /**
      * @brief Move lines from this LineData to another LineData for specific times
@@ -362,7 +364,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of lines actually moved
      */
-    std::size_t moveTo(LineData& target, std::vector<TimeFrameIndex> const & times, bool notify = true);
+    std::size_t moveTo(LineData & target, std::vector<TimeFrameIndex> const & times, bool notify = true);
 
     // ========== Time Frame ==========
     /**
@@ -387,11 +389,11 @@ private:
     std::map<TimeFrameIndex, std::vector<Line2D>> _data;
     std::vector<Line2D> _empty{};
     ImageSize _image_size;
-    std::shared_ptr<TimeFrame> _time_frame {nullptr};
+    std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
     // Identity management
     std::string _identity_data_key;
-    EntityRegistry * _identity_registry {nullptr};
+    EntityRegistry * _identity_registry{nullptr};
     std::map<TimeFrameIndex, std::vector<EntityId>> _entity_ids_by_time;
 };
 

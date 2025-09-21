@@ -78,12 +78,16 @@ public:
         // Use the plan's timeframe (rows are expressed in this timeframe)
         auto targetTF = plan.getTimeFrame().get();
 
+        std::vector<EntityId> entityIds;
+
         for (size_t r = 0; r < rowCount; ++r) {
             TimeFrameIndex const tfIndex = indices[r];
+            auto const this_time_entityIds = m_lineSource->getEntityIdsAtTime(tfIndex, targetTF);
             // Prefer direct entity access if entity index is present
             Line2D const* linePtr = nullptr;
             if (entityIdx[r].has_value()) {
                 linePtr = m_lineSource->getLineAt(tfIndex, *entityIdx[r]);
+                entityIds.push_back(this_time_entityIds[*entityIdx[r]]);
             }
             Line2D lineFallback;
             if (!linePtr) {
@@ -93,10 +97,12 @@ public:
                         results[static_cast<size_t>(2 * p)][r] = 0.0;
                         results[static_cast<size_t>(2 * p + 1)][r] = 0.0;
                     }
+                    entityIds.push_back(0);
                     continue;
                 }
                 lineFallback = lines.front();
                 linePtr = &lineFallback;
+                entityIds.push_back(this_time_entityIds[0]);
             }
 
             Line2D const & line = *linePtr;
@@ -112,7 +118,7 @@ public:
             }
         }
 
-        return {results, std::monostate{}};
+        return {results, entityIds};
     }
 
     [[nodiscard]] auto getOutputNames() const -> std::vector<std::string> override {
@@ -136,6 +142,10 @@ public:
 
     [[nodiscard]] auto getSourceDependency() const -> std::string override {
         return m_sourceName;
+    }
+
+    [[nodiscard]] auto getEntityIdStructure() const -> EntityIdStructure override {
+        return EntityIdStructure::Simple;
     }
 
 private:

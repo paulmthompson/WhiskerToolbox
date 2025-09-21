@@ -50,7 +50,7 @@ public:
         {
             std::lock_guard<std::mutex> lock(m_sharedCache->mutex);
             // Insert computed batch; move to avoid copies
-            m_sharedCache->cache[&plan] = std::move(std::make_pair(std::move(batch), std::move(entity_ids)));
+            m_sharedCache->cache[&plan] = std::move(std::make_pair(std::move(batch), entity_ids));
         }
         return {result, entity_ids};
     }

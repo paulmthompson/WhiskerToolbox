@@ -1,8 +1,8 @@
 #ifndef ILINE_SOURCE_H
 #define ILINE_SOURCE_H
 
-#include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/interfaces/IEntityProvider.h"
 
 #include <memory>
@@ -19,12 +19,12 @@
 class ILineSource : public IEntityProvider {
 public:
     virtual ~ILineSource() = default;
-    
+
     // Make this class non-copyable and non-movable since it's a pure interface
-    ILineSource(const ILineSource&) = delete;
-    ILineSource& operator=(const ILineSource&) = delete;
-    ILineSource(ILineSource&&) = delete;
-    ILineSource& operator=(ILineSource&&) = delete;
+    ILineSource(ILineSource const &) = delete;
+    ILineSource & operator=(ILineSource const &) = delete;
+    ILineSource(ILineSource &&) = delete;
+    ILineSource & operator=(ILineSource &&) = delete;
 
     /**
      * @brief Gets the name of this data source.
@@ -65,8 +65,11 @@ public:
      * @return A vector of Line2D representing the lines in the specified range.
      */
     virtual std::vector<Line2D> getLinesInRange(TimeFrameIndex start,
-                                                 TimeFrameIndex end,
-                                                 TimeFrame const * target_timeFrame) = 0;
+                                                TimeFrameIndex end,
+                                                TimeFrame const * target_timeFrame) = 0;
+
+    virtual std::vector<EntityId> getEntityIdsAtTime(TimeFrameIndex t,
+                                                     TimeFrame const * target_timeframe) const = 0;
 
     /**
      * @brief Checks if this source has multiple samples (lines) at any timestamp.
@@ -81,11 +84,12 @@ public:
 
     // IEntityProvider
     [[nodiscard]] auto getEntityCountAt(TimeFrameIndex t) const -> size_t override = 0;
-    [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* override = 0;
+    [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const * override = 0;
+
 
 protected:
     // Protected constructor to prevent direct instantiation
     ILineSource() = default;
 };
 
-#endif // ILINE_SOURCE_H 
+#endif// ILINE_SOURCE_H

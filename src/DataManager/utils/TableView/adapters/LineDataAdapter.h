@@ -23,8 +23,8 @@ public:
      * @param name The name of this data source.
      */
     LineDataAdapter(std::shared_ptr<LineData> lineData,
-                     std::shared_ptr<TimeFrame> timeFrame,
-                     std::string name);
+                    std::shared_ptr<TimeFrame> timeFrame,
+                    std::string name);
 
     // ILineSource interface implementation
 
@@ -67,8 +67,8 @@ public:
      * @return A vector of Line2D representing the lines in the specified range.
      */
     std::vector<Line2D> getLinesInRange(TimeFrameIndex start,
-                                         TimeFrameIndex end,
-                                         TimeFrame const * target_timeFrame) override;
+                                        TimeFrameIndex end,
+                                        TimeFrame const * target_timeFrame) override;
 
     /**
      * @brief Checks if this source has multiple samples (lines) at any timestamp.
@@ -79,10 +79,13 @@ public:
 
     // IEntityProvider implementation
     [[nodiscard]] auto getEntityCountAt(TimeFrameIndex t) const -> size_t override;
-    [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const* override;
+    [[nodiscard]] auto getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const * override;
 
     // IEntityProvider addition: expose EntityId if present
     [[nodiscard]] EntityId getEntityIdAt(TimeFrameIndex t, int entityIndex) const override;
+
+    [[nodiscard]] std::vector<EntityId> getEntityIdsAtTime(TimeFrameIndex t,
+                                                           TimeFrame const * target_timeframe) const override;
 
 private:
     std::shared_ptr<LineData> m_lineData;
@@ -90,4 +93,4 @@ private:
     std::string m_name;
 };
 
-#endif// LINE_DATA_ADAPTER_H 
+#endif// LINE_DATA_ADAPTER_H
