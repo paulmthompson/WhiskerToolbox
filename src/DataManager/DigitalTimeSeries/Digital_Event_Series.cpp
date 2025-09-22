@@ -72,22 +72,17 @@ void DigitalEventSeries::rebuildAllEntityIds() {
 
 // ========== Events with EntityIDs ==========
 
-std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(float start_time, float stop_time) const {
+std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
     std::vector<EventWithId> result;
     //result.reserve(_data.size());// Reserve space for potential worst case
 
     for (size_t i = 0; i < _data.size(); ++i) {
-        if (_data[i] >= start_time && _data[i] <= stop_time) {
+        if (_data[i] >= static_cast<float>(start_time.getValue()) && _data[i] <= static_cast<float>(stop_time.getValue())) {
             EntityId const entity_id = (i < _entity_ids.size()) ? _entity_ids[i] : 0;
             result.emplace_back(_data[i], entity_id);
         }
     }
     return result;
-}
-
-std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
-    auto [start_time_value, stop_time_value] = _getTimeRangeFromIndices(start_time, stop_time);
-    return getEventsWithIdsInRange(start_time_value, stop_time_value);
 }
 
 std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIndex start_index,
@@ -126,16 +121,3 @@ std::pair<TimeFrameIndex, TimeFrameIndex> DigitalEventSeries::_convertTimeFrameR
     return {target_start_index, target_stop_index};
 }
 
-std::pair<float, float> DigitalEventSeries::_getTimeRangeFromIndices(
-        TimeFrameIndex start_index,
-        TimeFrameIndex stop_index) const {
-
-    if (_time_frame) {
-        auto start_time_value = _time_frame->getTimeAtIndex(start_index);
-        auto stop_time_value = _time_frame->getTimeAtIndex(stop_index);
-        return {static_cast<float>(start_time_value), static_cast<float>(stop_time_value)};
-    } else {
-        // Fallback to using indices as time values if no timeframe
-        return {static_cast<float>(start_index.getValue()), static_cast<float>(stop_index.getValue())};
-    }
-}

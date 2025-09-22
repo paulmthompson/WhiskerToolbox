@@ -1,10 +1,10 @@
 #ifndef BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
 #define BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
 
+#include "DigitalTimeSeries/EventWithId.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "DigitalTimeSeries/EventWithId.hpp"
 
 #include <ranges>
 #include <utility>
@@ -105,22 +105,14 @@ public:
     // ========== Events with EntityIDs ==========
 
     /**
-     * @brief Get events in range with their EntityIDs
-     * 
-     * @param start_time Start time for the range
-     * @param stop_time Stop time for the range
-     * @return std::vector<EventWithId> Vector of events with their EntityIDs
-     */
-    [[nodiscard]] std::vector<EventWithId> getEventsWithIdsInRange(float start_time, float stop_time) const;
-
-    /**
      * @brief Get events in range with their EntityIDs using TimeFrameIndex
      * 
      * @param start_time Start time index for the range
      * @param stop_time Stop time index for the range
      * @return std::vector<EventWithId> Vector of events with their EntityIDs
      */
-    [[nodiscard]] std::vector<EventWithId> getEventsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const;
+    [[nodiscard]] std::vector<EventWithId> getEventsWithIdsInRange(TimeFrameIndex start_time,
+                                                                   TimeFrameIndex stop_time) const;
 
     /**
      * @brief Get events in range with their EntityIDs using time frame conversion
@@ -182,16 +174,6 @@ private:
             TimeFrame const * const source_time_frame,
             TimeFrame const * const target_time_frame);
 
-    /**
-     * @brief Get time values from TimeFrameIndex range
-     * 
-     * @param start_index Start time index
-     * @param stop_index Stop time index
-     * @return std::pair<float, float> Start and stop time values
-     */
-    [[nodiscard]] std::pair<float, float> _getTimeRangeFromIndices(
-            TimeFrameIndex start_index,
-            TimeFrameIndex stop_index) const;
 };
 
 #endif//BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP

@@ -2,21 +2,21 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include "TimeFrame/interval_data.hpp"
-#include "IntervalPropertyComputer.h"
-#include "TimeFrame/TimeFrame.hpp"
-#include "utils/TableView/core/ExecutionPlan.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
 #include "DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Entity/EntityGroupManager.hpp"
+#include "IntervalPropertyComputer.h"
+#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/core/TableView.h"
 #include "utils/TableView/core/TableViewBuilder.h"
+#include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/pipeline/TablePipeline.hpp"
-#include "Entity/EntityGroupManager.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -297,10 +297,25 @@ public:
         return result;
     }
 
-    auto getIntervalsWithIdsInRange(TimeFrameIndex start, TimeFrameIndex end, 
+    auto getIntervalsWithIdsInRange(TimeFrameIndex start, TimeFrameIndex end,
                                     TimeFrame const * target_timeFrame) -> std::vector<IntervalWithId> override {
         std::vector<IntervalWithId> result;
-        
+
+        // Convert TimeFrameIndex to time values for comparison
+        auto startTime = target_timeFrame->getTimeAtIndex(start);
+        auto endTime = target_timeFrame->getTimeAtIndex(end);
+
+        for (auto const & interval: m_intervals) {
+            // Convert interval indices to time values using our timeframe
+            auto intervalStartTime = m_timeFrame->getTimeAtIndex(TimeFrameIndex(interval.start));
+            auto intervalEndTime = m_timeFrame->getTimeAtIndex(TimeFrameIndex(interval.end));
+
+            // Check if intervals overlap in time
+            if (intervalStartTime <= endTime && startTime <= intervalEndTime) {
+                result.push_back(IntervalWithId(interval, 0));
+            }
+        }
+
         return result;
     }
 
@@ -312,22 +327,28 @@ private:
 
 TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPropertyComputer]") {
 
-    SECTION("Start property extraction") {
+    SECTION("Start property extraction with matching intervals") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create column intervals (dummy - not used for property extraction)
-        std::vector<Interval> columnIntervals = {{0, 1}, {3, 5}, {7, 9}};
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestIntervals", timeFrame, columnIntervals);
+        // Create source intervals (non-overlapping, properly ordered)
+        std::vector<Interval> sourceIntervals = {
+            {0, 2},   // Start = 0
+            {4, 6},   // Start = 4  
+            {8, 10},  // Start = 8
+            {12, 14}  // Start = 12
+        };
 
-        // Create row intervals
+        auto intervalSource = std::make_shared<MockIntervalSource>(
+            "TestIntervals", timeFrame, sourceIntervals);
+
+        // Create row intervals that match the source intervals exactly
         std::vector<TimeFrameInterval> rowIntervals = {
-                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3)),// Start = 1
-                TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(5)),// Start = 2
-                TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)),// Start = 6
-                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1)) // Start = 0
+                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)), // Start = 0
+                TimeFrameInterval(TimeFrameIndex(4), TimeFrameIndex(6)), // Start = 4
+                TimeFrameInterval(TimeFrameIndex(8), TimeFrameIndex(10)), // Start = 8
+                TimeFrameInterval(TimeFrameIndex(12), TimeFrameIndex(14)) // Start = 12
         };
 
         ExecutionPlan plan(rowIntervals, timeFrame);
@@ -342,28 +363,33 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
 
         // Verify results
         REQUIRE(results.size() == 4);
-        REQUIRE(results[0] == 1);// First interval start
-        REQUIRE(results[1] == 2);// Second interval start
-        REQUIRE(results[2] == 6);// Third interval start
-        REQUIRE(results[3] == 0);// Fourth interval start
+        REQUIRE(results[0] == 0);// First interval start
+        REQUIRE(results[1] == 4);// Second interval start
+        REQUIRE(results[2] == 8);// Third interval start
+        REQUIRE(results[3] == 12);// Fourth interval start
     }
 
-    SECTION("End property extraction") {
+    SECTION("End property extraction with matching intervals") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create column intervals (dummy)
-        std::vector<Interval> columnIntervals = {{0, 1}};
+        // Create source intervals (non-overlapping, properly ordered)
+        std::vector<Interval> sourceIntervals = {
+            {0, 2},   // End = 2
+            {4, 6},   // End = 6
+            {8, 10},  // End = 10
+            {12, 14}  // End = 14
+        };
         auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestIntervals", timeFrame, columnIntervals);
+                "TestIntervals", timeFrame, sourceIntervals);
 
-        // Create row intervals
+        // Create row intervals that match the source intervals exactly
         std::vector<TimeFrameInterval> rowIntervals = {
-                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3)),   // End = 3
-                TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(5)),   // End = 5
-                TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)),   // End = 8
-                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1))    // End = 1
+                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)), // End = 2
+                TimeFrameInterval(TimeFrameIndex(4), TimeFrameIndex(6)), // End = 6
+                TimeFrameInterval(TimeFrameIndex(8), TimeFrameIndex(10)), // End = 10
+                TimeFrameInterval(TimeFrameIndex(12), TimeFrameIndex(14)) // End = 14
         };
 
         ExecutionPlan plan(rowIntervals, timeFrame);
@@ -378,28 +404,33 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
 
         // Verify results
         REQUIRE(results.size() == 4);
-        REQUIRE(results[0] == 3);// First interval end
-        REQUIRE(results[1] == 5);// Second interval end
-        REQUIRE(results[2] == 8);// Third interval end
-        REQUIRE(results[3] == 1);// Fourth interval end
+        REQUIRE(results[0] == 2);// First interval end
+        REQUIRE(results[1] == 6);// Second interval end
+        REQUIRE(results[2] == 10);// Third interval end
+        REQUIRE(results[3] == 14);// Fourth interval end
     }
 
-    SECTION("Duration property extraction") {
+    SECTION("Duration property extraction with matching intervals") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create column intervals (dummy)
-        std::vector<Interval> columnIntervals = {{0, 1}};
+        // Create source intervals (non-overlapping, properly ordered)
+        std::vector<Interval> sourceIntervals = {
+            {0, 2},   // Duration = 2-0 = 2
+            {4, 7},   // Duration = 7-4 = 3
+            {8, 10},  // Duration = 10-8 = 2
+            {12, 15}  // Duration = 15-12 = 3
+        };
         auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestIntervals", timeFrame, columnIntervals);
+                "TestIntervals", timeFrame, sourceIntervals);
 
-        // Create row intervals with different durations
+        // Create row intervals that match the source intervals exactly
         std::vector<TimeFrameInterval> rowIntervals = {
-                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3)),// Duration = 3-1 = 2
-                TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(5)),// Duration = 5-2 = 3
-                TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)),// Duration = 8-6 = 2
-                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(6)) // Duration = 6-0 = 6
+                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)), // Duration = 2-0 = 2
+                TimeFrameInterval(TimeFrameIndex(4), TimeFrameIndex(7)), // Duration = 7-4 = 3
+                TimeFrameInterval(TimeFrameIndex(8), TimeFrameIndex(10)), // Duration = 10-8 = 2
+                TimeFrameInterval(TimeFrameIndex(12), TimeFrameIndex(15)) // Duration = 15-12 = 3
         };
 
         ExecutionPlan plan(rowIntervals, timeFrame);
@@ -414,10 +445,10 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
 
         // Verify results
         REQUIRE(results.size() == 4);
-        REQUIRE(results[0] == 2);// Duration = 3-1
-        REQUIRE(results[1] == 3);// Duration = 5-2
-        REQUIRE(results[2] == 2);// Duration = 8-6
-        REQUIRE(results[3] == 6);// Duration = 6-0
+        REQUIRE(results[0] == 2);// Duration = 2-0
+        REQUIRE(results[1] == 3);// Duration = 7-4
+        REQUIRE(results[2] == 2);// Duration = 10-8
+        REQUIRE(results[3] == 3);// Duration = 15-12
     }
 
     SECTION("Single interval scenarios") {
@@ -425,12 +456,12 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create column intervals (dummy)
-        std::vector<Interval> columnIntervals = {{1, 3}};
+        // Create source intervals that match the row intervals
+        std::vector<Interval> sourceIntervals = {{2, 4}}; // Start=2, End=4, Duration=2
         auto intervalSource = std::make_shared<MockIntervalSource>(
-                "SingleInterval", timeFrame, columnIntervals);
+                "SingleInterval", timeFrame, sourceIntervals);
 
-        // Create single row interval
+        // Create single row interval that matches the source interval
         std::vector<TimeFrameInterval> rowIntervals = {
                 TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(4))// Start=2, End=4, Duration=2
         };
@@ -462,17 +493,20 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Basic Functionality", "[IntervalPr
         REQUIRE(durationResults[0] == 2);
     }
 
-    SECTION("Zero-duration intervals") {
+    SECTION("Zero-duration intervals with matching source") {
         // Create time frame
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create column intervals (dummy)
-        std::vector<Interval> columnIntervals = {{0, 0}};
+        // Create source intervals with zero-duration intervals
+        std::vector<Interval> sourceIntervals = {
+            {1, 1},  // Duration = 0
+            {3, 3}   // Duration = 0
+        };
         auto intervalSource = std::make_shared<MockIntervalSource>(
-                "ZeroDuration", timeFrame, columnIntervals);
+                "ZeroDuration", timeFrame, sourceIntervals);
 
-        // Create zero-duration row intervals
+        // Create row intervals that match the source intervals exactly
         std::vector<TimeFrameInterval> rowIntervals = {
                 TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(1)),// Duration = 0
                 TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(3)) // Duration = 0
@@ -499,10 +533,10 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Error Handling", "[IntervalPropert
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create column intervals (dummy)
-        std::vector<Interval> columnIntervals = {{1, 3}};
+        // Create source intervals
+        std::vector<Interval> sourceIntervals = {{1, 3}};
         auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestIntervals", timeFrame, columnIntervals);
+                "TestIntervals", timeFrame, sourceIntervals);
 
         // Create execution plan with indices instead of intervals
         std::vector<TimeFrameIndex> indices = {TimeFrameIndex(0), TimeFrameIndex(1)};
@@ -516,6 +550,74 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Error Handling", "[IntervalPropert
         // Should throw an exception
         REQUIRE_THROWS_AS(computer.compute(plan), std::runtime_error);
     }
+
+    SECTION("Row intervals not matching source intervals throws exception") {
+        // Create time frame
+        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+
+        // Create source intervals
+        std::vector<Interval> sourceIntervals = {
+            {1, 3},
+            {5, 7}
+        };
+        auto intervalSource = std::make_shared<MockIntervalSource>(
+                "TestIntervals", timeFrame, sourceIntervals);
+
+        // Create row intervals that don't match source intervals
+        std::vector<TimeFrameInterval> rowIntervals = {
+                TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(4)), // Not in source
+                TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8))  // Not in source
+        };
+
+        ExecutionPlan plan(rowIntervals, timeFrame);
+
+        // Create the computer
+        IntervalPropertyComputer<int64_t> computer(intervalSource,
+                                                   IntervalProperty::Start,
+                                                   "TestIntervals");
+
+        // Should throw an exception
+        REQUIRE_THROWS_AS(computer.compute(plan), std::runtime_error);
+    }
+
+    SECTION("Partial subset of source intervals is valid") {
+        // Create time frame
+        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+
+        // Create source intervals (5 intervals)
+        std::vector<Interval> sourceIntervals = {
+            {1, 2},  // Interval 1
+            {3, 4},  // Interval 2
+            {5, 6},  // Interval 3
+            {7, 8},  // Interval 4
+            {9, 10}  // Interval 5
+        };
+        auto intervalSource = std::make_shared<MockIntervalSource>(
+                "TestIntervals", timeFrame, sourceIntervals);
+
+        // Create row intervals that are a subset of source intervals (intervals 2 and 4)
+        std::vector<TimeFrameInterval> rowIntervals = {
+                TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(4)), // Matches source interval 2
+                TimeFrameInterval(TimeFrameIndex(7), TimeFrameIndex(8))  // Matches source interval 4
+        };
+
+        ExecutionPlan plan(rowIntervals, timeFrame);
+
+        // Create the computer
+        IntervalPropertyComputer<int64_t> computer(intervalSource,
+                                                   IntervalProperty::Start,
+                                                   "TestIntervals");
+
+        // Should work without throwing
+        auto [results, entity_ids] = computer.compute(plan);
+
+        // Verify results
+        REQUIRE(results.size() == 2);
+        REQUIRE(results[0] == 3); // Start of interval 2
+        REQUIRE(results[1] == 7); // Start of interval 4
+    }
 }
 
 TEST_CASE("DM - TV - IntervalPropertyComputer Template Types", "[IntervalPropertyComputer][Templates]") {
@@ -525,12 +627,12 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Template Types", "[IntervalPropert
         std::vector<int> timeValues = {0, 5, 10, 15, 20, 25};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create column intervals (dummy)
-        std::vector<Interval> columnIntervals = {{1, 3}};
+        // Create source intervals
+        std::vector<Interval> sourceIntervals = {{1, 4}}; // Duration = 3
         auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestIntervals", timeFrame, columnIntervals);
+                "TestIntervals", timeFrame, sourceIntervals);
 
-        // Create row intervals
+        // Create row intervals that match the source intervals exactly
         std::vector<TimeFrameInterval> rowIntervals = {
                 TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(4))// Start=1, End=4, Duration=3
         };
@@ -570,9 +672,9 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Dependency Tracking", "[IntervalPr
         std::vector<int> timeValues = {0, 1, 2};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        std::vector<Interval> columnIntervals = {{0, 1}};
+        std::vector<Interval> sourceIntervals = {{0, 1}};
         auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestSource", timeFrame, columnIntervals);
+                "TestSource", timeFrame, sourceIntervals);
 
         // Create computer
         IntervalPropertyComputer<int64_t> computer(intervalSource,
@@ -744,141 +846,141 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
 
     SECTION("TableView creation and EntityID extraction with IntervalPropertyComputer") {
         auto & dm = getDataManager();
-        
+
         // Create DataManagerExtension for TableView integration
         auto dme = std::make_shared<DataManagerExtension>(dm);
-        
+
         // Get behavior intervals from our test fixture
         auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
         REQUIRE(behavior_source != nullptr);
-        
+
         // Create row selector for behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-            TimeFrameIndex(0), TimeFrameIndex(200), behavior_time_frame.get());
-        
-        REQUIRE(behavior_intervals.size() == 5); // 5 behavior periods from fixture
-        
+                TimeFrameIndex(0), TimeFrameIndex(200), behavior_time_frame.get());
+
+        REQUIRE(behavior_intervals.size() == 5);// 5 behavior periods from fixture
+
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
-        for (auto const & interval : behavior_intervals) {
+        for (auto const & interval: behavior_intervals) {
             row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
         }
-        
+
         auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
-        
+
         // Build TableView using TableViewBuilder
         TableViewBuilder builder(dme);
         builder.setRowSelector(std::move(row_selector));
-        
+
         // Add IntervalPropertyComputer columns
-        builder.addColumn<double>("IntervalStart", 
-            std::make_unique<IntervalPropertyComputer<double>>(behavior_source, 
-                                                               IntervalProperty::Start, "BehaviorPeriods"));
-        builder.addColumn<double>("IntervalDuration", 
-            std::make_unique<IntervalPropertyComputer<double>>(behavior_source, 
-                                                               IntervalProperty::Duration, "BehaviorPeriods"));
-        
+        builder.addColumn<double>("IntervalStart",
+                                  std::make_unique<IntervalPropertyComputer<double>>(behavior_source,
+                                                                                     IntervalProperty::Start, "BehaviorPeriods"));
+        builder.addColumn<double>("IntervalDuration",
+                                  std::make_unique<IntervalPropertyComputer<double>>(behavior_source,
+                                                                                     IntervalProperty::Duration, "BehaviorPeriods"));
+
         auto table = builder.build();
 
         auto start_data_from_table = table.getColumnValues<double>("IntervalStart");
         auto duration_data_from_table = table.getColumnValues<double>("IntervalDuration");
-        
+
         // Verify table structure
-        REQUIRE(table.getRowCount() == 5); // 5 behavior periods
+        REQUIRE(table.getRowCount() == 5);// 5 behavior periods
         REQUIRE(table.getColumnCount() == 2);
         REQUIRE(table.hasColumn("IntervalStart"));
         REQUIRE(table.hasColumn("IntervalDuration"));
-        
+
         // Verify EntityID information is available for IntervalPropertyComputer columns
         REQUIRE(table.hasColumnEntityIds("IntervalStart"));
         REQUIRE(table.hasColumnEntityIds("IntervalDuration"));
-        
+
         // Get EntityIDs from the columns (all IntervalPropertyComputer columns should share the same EntityIDs)
         auto start_entity_ids_variant = table.getColumnEntityIds("IntervalStart");
         auto duration_entity_ids_variant = table.getColumnEntityIds("IntervalDuration");
-        
+
         // IntervalPropertyComputer uses Simple EntityID structure, so extract std::vector<EntityId>
         REQUIRE(std::holds_alternative<std::vector<EntityId>>(start_entity_ids_variant));
         REQUIRE(std::holds_alternative<std::vector<EntityId>>(duration_entity_ids_variant));
-        
+
         auto start_entity_ids = std::get<std::vector<EntityId>>(start_entity_ids_variant);
         auto duration_entity_ids = std::get<std::vector<EntityId>>(duration_entity_ids_variant);
-        
-        REQUIRE(start_entity_ids.size() == 5); // Should match row count
+
+        REQUIRE(start_entity_ids.size() == 5);// Should match row count
         REQUIRE(duration_entity_ids.size() == 5);
-        
+
         // Verify all EntityIDs are valid (non-zero)
-        for (EntityId id : start_entity_ids) {
+        for (EntityId id: start_entity_ids) {
             REQUIRE(id != 0);
             INFO("Start Column EntityID: " << id);
         }
-        
+
         // Verify that both columns have the same EntityIDs (they come from the same intervals)
         REQUIRE(duration_entity_ids == start_entity_ids);
-        
+
         // Get sample data from table columns
         auto start_values = table.getColumnValues<double>("IntervalStart");
         auto duration_values = table.getColumnValues<double>("IntervalDuration");
-        
+
         REQUIRE(start_values.size() == 5);
         REQUIRE(duration_values.size() == 5);
-        
+
         // Verify data consistency and entity relationships
         for (size_t i = 0; i < 5; ++i) {
             // Verify basic properties
             REQUIRE(start_values[i] >= 0);
             REQUIRE(duration_values[i] > 0);
-            
-            INFO("Row " << i << ": Start=" << start_values[i] 
-                 << ", Duration=" << duration_values[i] 
-                 << ", EntityID=" << start_entity_ids[i]);
+
+            INFO("Row " << i << ": Start=" << start_values[i]
+                        << ", Duration=" << duration_values[i]
+                        << ", EntityID=" << start_entity_ids[i]);
         }
-        
+
         // Test EntityID round-trip: Compare TableView EntityIDs with original source EntityIDs
         INFO("Testing EntityID round-trip from source data to TableView");
-        
+
         // Get the original DigitalIntervalSeries data that was used to create the intervals
         auto behavior_data = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
         REQUIRE(behavior_data != nullptr);
-        
+
         // Get the EntityIDs directly from the source data
         auto source_entity_ids = behavior_data->getEntityIds();
-        REQUIRE(source_entity_ids.size() == 5); // Should match the number of intervals
-        
+        REQUIRE(source_entity_ids.size() == 5);// Should match the number of intervals
+
         // Debug: Print source EntityIDs to see if they're valid
         INFO("Source EntityIDs from DigitalIntervalSeries:");
         for (size_t i = 0; i < source_entity_ids.size(); ++i) {
             INFO("  Source EntityID[" << i << "] = " << source_entity_ids[i]);
-            REQUIRE(source_entity_ids[i] != 0); // Verify source EntityIDs are valid
+            REQUIRE(source_entity_ids[i] != 0);// Verify source EntityIDs are valid
         }
-        
+
         // Verify that TableView EntityIDs match the source EntityIDs
         REQUIRE(start_entity_ids.size() == source_entity_ids.size());
         for (size_t i = 0; i < source_entity_ids.size(); ++i) {
             REQUIRE(start_entity_ids[i] == source_entity_ids[i]);
-            INFO("EntityID " << i << ": Source=" << source_entity_ids[i] 
-                 << ", TableView=" << start_entity_ids[i] << " ✓");
+            INFO("EntityID " << i << ": Source=" << source_entity_ids[i]
+                             << ", TableView=" << start_entity_ids[i] << " ✓");
         }
-        
+
         INFO("✓ EntityID round-trip successful: " << start_entity_ids.size() << " EntityIDs match source data");
-        
+
         // Test individual row EntityID extraction
         for (size_t row_idx = 0; row_idx < 5; ++row_idx) {
             // Get EntityIDs for a specific row
             auto row_start_ids = table.getCellEntityIds("IntervalStart", row_idx);
             auto row_duration_ids = table.getCellEntityIds("IntervalDuration", row_idx);
-            
-            REQUIRE(row_start_ids.size() == 1); // Should have exactly one EntityID per interval
+
+            REQUIRE(row_start_ids.size() == 1);// Should have exactly one EntityID per interval
             REQUIRE(row_duration_ids.size() == 1);
-            
+
             // Verify they match the overall EntityID list
             REQUIRE(row_start_ids[0] == start_entity_ids[row_idx]);
             REQUIRE(row_duration_ids[0] == start_entity_ids[row_idx]);
-            
+
             INFO("Row " << row_idx << " individual EntityID check: " << row_start_ids[0]);
         }
-        
+
         INFO("✓ All IntervalPropertyComputer EntityID extraction tests passed");
     }
 }

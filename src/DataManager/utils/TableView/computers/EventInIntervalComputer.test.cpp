@@ -76,6 +76,18 @@ public:
                                     TimeFrame const * target_timeFrame) -> std::vector<EventWithId> override {
         std::vector<EventWithId> result;
         
+        // Convert TimeFrameIndex to time values for comparison
+        auto startTime = target_timeFrame->getTimeAtIndex(start);
+        auto endTime = target_timeFrame->getTimeAtIndex(end);
+        
+        for (const auto& event : m_events) {
+            // Convert event to time value using our timeframe
+            // For simplicity, assume events are already time values
+            if (event >= startTime && event <= endTime) {
+                result.push_back(EventWithId(event, 0));
+            }
+        }
+        
         return result;
     }
 

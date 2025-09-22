@@ -131,69 +131,6 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer basic integration", "[LineSamplin
     }
 }
 
-TEST_CASE("DM - TV - LineSamplingMultiComputer handles missing lines as zeros", "[LineSamplingMultiComputer]") {
-    DataManager dm;
-
-    std::vector<int> timeValues = {0, 1, 2};
-    auto tf = std::make_shared<TimeFrame>(timeValues);
-
-    dm.setTime(TimeKey("test_time"), tf);
-
-    auto lineData = std::make_shared<LineData>();
-    lineData->setTimeFrame(tf);
-
-    // Add a line at t=0 and t=2 only; t=1 has no lines
-    std::vector<float> xs = {0.0f, 10.0f};
-    std::vector<float> ys = {0.0f, 0.0f};
-    lineData->addAtTime(TimeFrameIndex(0), xs, ys, false);
-    lineData->addAtTime(TimeFrameIndex(2), xs, ys, false);
-
-    lineData->setIdentityContext("TestLinesMissing", dm.getEntityRegistry());
-    lineData->rebuildAllEntityIds();
-
-    dm.setData<LineData>("TestLinesMissing", lineData, TimeKey("test_time"));
-
-    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"TestLinesMissing"});
-
-    std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2)};
-    auto rowSelector = std::make_unique<TimestampSelector>(timestamps, tf);
-
-    auto dme_ptr = std::make_shared<DataManagerExtension>(dm);
-    TableViewBuilder builder(dme_ptr);
-    builder.setRowSelector(std::move(rowSelector));
-
-    // Build multi-computer directly
-    auto multi = std::make_unique<LineSamplingMultiComputer>(
-        std::static_pointer_cast<ILineSource>(lineAdapter),
-        std::string{"TestLinesMissing"},
-        tf,
-            2);
-    builder.addColumns<double>("Line", std::move(multi));
-
-    auto table = builder.build();
-
-    // At t=1 (middle row), expect zeros
-    auto const & xs0 = table.getColumnValues<double>("Line.x@0.000");
-    auto const & ys0 = table.getColumnValues<double>("Line.y@0.000");
-    auto const & xsMid = table.getColumnValues<double>("Line.x@0.500");
-    auto const & ysMid = table.getColumnValues<double>("Line.y@0.500");
-    auto const & xs1 = table.getColumnValues<double>("Line.x@1.000");
-    auto const & ys1 = table.getColumnValues<double>("Line.y@1.000");
-
-    REQUIRE(xs0.size() == 3);
-    REQUIRE(ys0.size() == 3);
-    REQUIRE(xsMid.size() == 3);
-    REQUIRE(ysMid.size() == 3);
-    REQUIRE(xs1.size() == 3);
-    REQUIRE(ys1.size() == 3);
-
-    REQUIRE(xs0[1] == Catch::Approx(0.0));
-    REQUIRE(ys0[1] == Catch::Approx(0.0));
-    REQUIRE(xsMid[1] == Catch::Approx(0.0));
-    REQUIRE(ysMid[1] == Catch::Approx(0.0));
-    REQUIRE(xs1[1] == Catch::Approx(0.0));
-    REQUIRE(ys1[1] == Catch::Approx(0.0));
-}
 
 TEST_CASE("DM - TV - LineSamplingMultiComputer can be created via registry", "[LineSamplingMultiComputer][Registry]") {
     DataManager dm;

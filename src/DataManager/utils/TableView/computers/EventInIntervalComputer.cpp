@@ -81,7 +81,9 @@ std::pair<std::vector<bool>, ColumnEntityIds> EventInIntervalComputer<bool>::com
 
         entity_ids.push_back(std::vector<EntityId>());
 
-        auto events_with_ids = m_source->getDataInRangeWithEntityIds(interval.start, interval.end, destinationTimeFrame.get());
+        auto events_with_ids = m_source->getDataInRangeWithEntityIds(interval.start,
+                                                                     interval.end,
+                                                                     destinationTimeFrame.get());
 
         results.push_back(!events_with_ids.empty());
         for (auto const & event_with_id: events_with_ids) {
@@ -133,7 +135,7 @@ std::pair<std::vector<int>, ColumnEntityIds> EventInIntervalComputer<int>::compu
 
         results.push_back(static_cast<int>(events_with_ids.size()));
         entity_ids.push_back(std::vector<EntityId>());
-        
+
         for (auto const & event_with_id: events_with_ids) {
             entity_ids.back().push_back(event_with_id.entity_id);
         }
@@ -192,7 +194,7 @@ std::pair<std::vector<std::vector<float>>, ColumnEntityIds> EventInIntervalCompu
 
         auto events_with_ids = m_source->getDataInRangeWithEntityIds(interval.start, interval.end, destinationTimeFrame.get());
 
-        for (auto const & event_with_id: events_with_ids) {            
+        for (auto const & event_with_id: events_with_ids) {
             results.back().push_back(event_with_id.event_time);
             entity_ids.back().push_back(event_with_id.entity_id);
         }

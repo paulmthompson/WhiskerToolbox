@@ -233,15 +233,6 @@ public:
     // ========== Intervals with EntityIDs ==========
 
     /**
-     * @brief Get intervals in range with their EntityIDs
-     * 
-     * @param start_time Start time for the range
-     * @param stop_time Stop time for the range
-     * @return std::vector<IntervalWithId> Vector of intervals with their EntityIDs
-     */
-    [[nodiscard]] std::vector<IntervalWithId> getIntervalsWithIdsInRange(int64_t start_time, int64_t stop_time) const;
-
-    /**
      * @brief Get intervals in range with their EntityIDs using TimeFrameIndex
      * 
      * @param start_time Start time index for the range

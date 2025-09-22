@@ -62,6 +62,9 @@ public:
         auto intervals = plan.getIntervals();
         auto destinationTimeFrame = plan.getTimeFrame();
         
+        // Validate that row intervals are a subset of source intervals
+        _validateRowIntervalsAreSubset(intervals, destinationTimeFrame.get());
+        
         std::vector<T> results;
         results.reserve(intervals.size());
         std::vector<EntityId> entity_ids;
@@ -109,6 +112,15 @@ private:
     std::shared_ptr<IIntervalSource> m_source;
     IntervalProperty m_property;
     std::string m_sourceName;
+
+    /**
+     * @brief Validates that row intervals are a subset of source intervals.
+     * @param rowIntervals The intervals from the row selector.
+     * @param destinationTimeFrame The destination timeframe for comparison.
+     * @throws std::runtime_error if row intervals are not a subset of source intervals.
+     */
+    void _validateRowIntervalsAreSubset(const std::vector<TimeFrameInterval>& rowIntervals, 
+                                       const TimeFrame* destinationTimeFrame) const;
 };
 
 

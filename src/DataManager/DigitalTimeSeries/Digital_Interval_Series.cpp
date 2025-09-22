@@ -217,24 +217,20 @@ std::vector<std::pair<EntityId, int>> DigitalIntervalSeries::getIndexInfoByEntit
 
 // ========== Intervals with EntityIDs ==========
 
-std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(int64_t start_time, int64_t stop_time) const {
+std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
+    
     std::vector<IntervalWithId> result;
-    result.reserve(_data.size());// Reserve space for potential worst case
+   // result.reserve(_data.size());// Reserve space for potential worst case
 
     for (size_t i = 0; i < _data.size(); ++i) {
         Interval const & interval = _data[i];
         // Check if interval overlaps with the range (using overlapping logic)
-        if (interval.start <= stop_time && interval.end >= start_time) {
+        if (interval.start <= stop_time.getValue() && interval.end >= start_time.getValue()) {
             EntityId const entity_id = (i < _entity_ids.size()) ? _entity_ids[i] : 0;
             result.emplace_back(interval, entity_id);
         }
     }
     return result;
-}
-
-std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
-    auto [start_time_value, stop_time_value] = _getTimeRangeFromIndices(start_time, stop_time);
-    return getIntervalsWithIdsInRange(start_time_value, stop_time_value);
 }
 
 std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(TimeFrameIndex start_index,
