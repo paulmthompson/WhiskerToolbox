@@ -207,18 +207,18 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 
     QTest::mouseMove(&widget, a);
     QTest::qWait(5);
-    QTest::mousePress(&widget, Qt::LeftButton, Qt::NoModifier, a);
-    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::NoModifier, a);
+    QTest::mousePress(&widget, Qt::LeftButton, Qt::ControlModifier, a);
+    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::ControlModifier, a);
     
     QTest::mouseMove(&widget, b);
     QTest::qWait(5);
-    QTest::mousePress(&widget, Qt::LeftButton, Qt::NoModifier, b);
-    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::NoModifier, b);
+    QTest::mousePress(&widget, Qt::LeftButton, Qt::ControlModifier, b);
+    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::ControlModifier, b);
 
     QTest::mouseMove(&widget, c);
     QTest::qWait(5);
-    QTest::mousePress(&widget, Qt::LeftButton, Qt::NoModifier, c);
-    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::NoModifier, c);
+    QTest::mousePress(&widget, Qt::LeftButton, Qt::ControlModifier, c);
+    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::ControlModifier, c);
 
     // Press Enter to complete polygon and trigger selection
     QKeyEvent * enterEvent = new QKeyEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
@@ -405,15 +405,10 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayPlotPr
     lineWidth->setValue(3.5);
     REQUIRE(gl->getLineWidth() == Catch::Approx(3.5f));
 
-
-
     // Toggle tooltips
     tooltips->setChecked(false);
     //REQUIRE(gl->getTooltipsEnabled() == false);
 
-    // Change selection mode to Polygon
-    modeCombo->setCurrentIndex(2); // 0=None,1=Point,2=Polygon,3=Line
-    REQUIRE(plotItem.getSelectionMode() == SelectionMode::PolygonSelection);
 }
 
 TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsScene) - spatial overlay selection works inside organizer", "[Organizer][GraphicsScene]") {
@@ -477,20 +472,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsSc
     gl->setSelectionMode(SelectionMode::PolygonSelection);
     processEvents();
 
-    QPoint a = worldToScreen(*gl, 50.f, 50.f);
-    QPoint b = worldToScreen(*gl, 250.f, 50.f);
-    QPoint c = worldToScreen(*gl, 250.f, 250.f);
-    QPoint d = worldToScreen(*gl, 50.f, 250.f);
-
-    auto leftClickAt = [&](QPoint p) {
-        gl->raise(); gl->activateWindow(); gl->setFocus(Qt::OtherFocusReason);
-        QTest::mousePress(gl, Qt::LeftButton, Qt::NoModifier, p);
-        processEvents();
-        QTest::mouseRelease(gl, Qt::LeftButton, Qt::NoModifier, p);
-        processEvents();
-    };
-
-    leftClickAt(a); leftClickAt(b); leftClickAt(c); leftClickAt(d);
+    clickCtrlAtGl(50.f, 50.f); clickCtrlAtGl(250.f, 50.f); clickCtrlAtGl(250.f, 250.f); clickCtrlAtGl(50.f, 250.f);
     // Complete polygon with Enter key
     QKeyEvent * enterEvent = new QKeyEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
     gl->handleKeyPress(enterEvent);

@@ -59,7 +59,7 @@ public:
      * @param plan The execution plan (unused for dependency-based computers).
      * @return Vector of standardized double values.
      */
-    std::vector<double> compute(const ExecutionPlan& plan) const override;
+    [[nodiscard]] std::pair<std::vector<double>, ColumnEntityIds> compute(const ExecutionPlan& plan) const override;
 
     /**
      * @brief Computes standardized values from source data.
@@ -95,7 +95,7 @@ std::string StandardizeComputer<T>::getSourceDependency() const {
 }
 
 template<typename T>
-std::vector<double> StandardizeComputer<T>::compute(const ExecutionPlan& plan) const {
+std::pair<std::vector<double>, ColumnEntityIds> StandardizeComputer<T>::compute(const ExecutionPlan& plan) const {
     // This method is a placeholder for the current interface
     // The actual computation will be done via computeFromData when the
     // TableView system is extended to handle column dependencies
