@@ -77,9 +77,9 @@ private slots:
     void _deleteSelectedLine();
 
     void _onExportTypeChanged(int index);
-    void _handleSaveCSVRequested(QString format, nlohmann::json config);
-    void _handleSaveMultiFileCSVRequested(QString format, nlohmann::json config);
-    void _handleSaveBinaryRequested(QString format, nlohmann::json config);
+    void _handleSaveCSVRequested(QString const & format, nlohmann::json const & config);
+    void _handleSaveMultiFileCSVRequested(QString const & format, nlohmann::json const & config);
+    void _handleSaveBinaryRequested(QString const & format, nlohmann::json const & config);
     void _onExportMediaFramesCheckboxToggled(bool checked);
 
 private:

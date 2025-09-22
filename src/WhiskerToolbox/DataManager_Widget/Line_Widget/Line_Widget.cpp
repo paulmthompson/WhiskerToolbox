@@ -13,6 +13,8 @@
 #include "IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp"
 #include "IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
+// Media export functions
+#include "MediaExport/media_export.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -103,7 +105,7 @@ void Line_Widget::_handleCellDoubleClicked(QModelIndex const & index) {
     if (!index.isValid()) {
         return;
     }
-    LineTableRow rowData = _line_table_model->getRowData(index.row());
+    LineTableRow const rowData = _line_table_model->getRowData(index.row());
     if (rowData.frame != -1) {
         emit frameSelected(rowData.frame);
     }
@@ -114,7 +116,7 @@ void Line_Widget::_onDataChanged() {
 }
 
 void Line_Widget::_showContextMenu(QPoint const & position) {
-    QModelIndex index = ui->tableView->indexAt(position);
+    QModelIndex const index = ui->tableView->indexAt(position);
     if (!index.isValid()) {
         return;
     }
@@ -142,19 +144,19 @@ void Line_Widget::_showContextMenu(QPoint const & position) {
 }
 
 std::vector<TimeFrameIndex> Line_Widget::_getSelectedFrames() {
-    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    QModelIndexList const selectedIndexes = ui->tableView->selectionModel()->selectedRows();
     std::set<int> unique_frames;
 
     for (auto const & index: selectedIndexes) {
         if (index.isValid()) {
-            LineTableRow row_data = _line_table_model->getRowData(index.row());
+            LineTableRow const row_data = _line_table_model->getRowData(index.row());
             if (row_data.frame != -1) {
                 unique_frames.insert(row_data.frame);
             }
         }
     }
 
-    return std::vector<TimeFrameIndex>(unique_frames.begin(), unique_frames.end());
+    return {unique_frames.begin(), unique_frames.end()};
 }
 
 void Line_Widget::_moveLineToTarget(std::string const & target_key) {
@@ -180,7 +182,7 @@ void Line_Widget::_moveLineToTarget(std::string const & target_key) {
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the new moveTo method with the vector of selected times
-    std::size_t total_lines_moved = source_line_data->moveTo(*target_line_data, selected_frames, true);
+    std::size_t const total_lines_moved = source_line_data->moveTo(*target_line_data, selected_frames, true);
 
     if (total_lines_moved > 0) {
         // Update the table view to reflect changes
@@ -216,7 +218,7 @@ void Line_Widget::_copyLineToTarget(std::string const & target_key) {
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the new copyTo method with the vector of selected times
-    std::size_t total_lines_copied = source_line_data->copyTo(*target_line_data, selected_frames, true);
+    std::size_t const total_lines_copied = source_line_data->copyTo(*target_line_data, selected_frames, true);
 
     if (total_lines_copied > 0) {
         std::cout << "Line_Widget: Successfully copied " << total_lines_copied
@@ -232,8 +234,8 @@ void Line_Widget::_deleteSelectedLine() {
         std::cout << "Line_Widget: No line selected to delete." << std::endl;
         return;
     }
-    int selected_row = selectedIndexes.first().row();
-    LineTableRow row_data = _line_table_model->getRowData(selected_row);
+    int const selected_row = selectedIndexes.first().row();
+    LineTableRow const row_data = _line_table_model->getRowData(selected_row);
 
     if (row_data.frame == -1) {
         std::cout << "Line_Widget: Selected row data for deletion is invalid." << std::endl;
@@ -262,7 +264,7 @@ void Line_Widget::_deleteSelectedLine() {
 }
 
 void Line_Widget::_onExportTypeChanged(int index) {
-    QString current_text = ui->export_type_combo->itemText(index);
+    QString const current_text = ui->export_type_combo->itemText(index);
     if (current_text == "CSV") {
         ui->stacked_saver_options->setCurrentWidget(ui->csv_line_saver_widget);
     } else if (current_text == "Binary") {
@@ -272,15 +274,15 @@ void Line_Widget::_onExportTypeChanged(int index) {
     }
 }
 
-void Line_Widget::_handleSaveCSVRequested(QString format, nlohmann::json config) {
+void Line_Widget::_handleSaveCSVRequested(QString const & format, nlohmann::json const & config) {
     _initiateSaveProcess(format, config);
 }
 
-void Line_Widget::_handleSaveMultiFileCSVRequested(QString format, nlohmann::json config) {
+void Line_Widget::_handleSaveMultiFileCSVRequested(QString const & format, nlohmann::json const & config) {
     _initiateSaveProcess(format, config);
 }
 
-void Line_Widget::_handleSaveBinaryRequested(QString format, nlohmann::json config) {
+void Line_Widget::_handleSaveBinaryRequested(QString const & format, nlohmann::json const & config) {
     _initiateSaveProcess(format, config);
 }
 
@@ -314,7 +316,7 @@ void Line_Widget::_initiateSaveProcess(QString const& format, LineSaverConfig co
     }
     // If parent_dir is absolute, use it as-is
 
-    bool save_successful = _performRegistrySave(format, updated_config);
+    bool const save_successful = _performRegistrySave(format, updated_config);
 
     if (!save_successful) {
         return;
@@ -331,8 +333,38 @@ void Line_Widget::_initiateSaveProcess(QString const& format, LineSaverConfig co
         if (frame_ids_to_export.empty()) {
             QMessageBox::information(this, "No Frames", "No lines found in data, so no media frames to export.");
         } else {
-            // TODO: Update export_media_frames to work with JSON config
-            QMessageBox::information(this, "Media Export", "Media frame export with JSON config not yet implemented.");
+            auto media_ptr = _data_manager->getData<MediaData>("media");
+            if (!media_ptr) {
+                QMessageBox::warning(this, "Media Not Available", "Could not access media for exporting frames.");
+                return;
+            }
+
+            MediaExportOptions options = ui->media_export_options_widget->getOptions();
+            // Use the same parent directory used for line saving
+            std::string const base_output_dir = updated_config.value("parent_dir", _data_manager->getOutputPath().string());
+            options.image_save_dir = base_output_dir;
+
+            try {
+                std::filesystem::create_directories(options.image_save_dir);
+            } catch (std::exception const & e) {
+                QMessageBox::critical(this, "Export Error", QString("Failed to create output directory: %1\n%2")
+                                                               .arg(QString::fromStdString(options.image_save_dir))
+                                                               .arg(QString::fromStdString(e.what())));
+                return;
+            }
+
+            int frames_exported = 0;
+            for (size_t const frame_id: frame_ids_to_export) {
+                save_image(media_ptr.get(), static_cast<int>(frame_id), options);
+                frames_exported++;
+            }
+
+            QMessageBox::information(this,
+                                     "Media Export",
+                                     QString("Exported %1 media frames to: %2/%3")
+                                         .arg(frames_exported)
+                                         .arg(QString::fromStdString(options.image_save_dir))
+                                         .arg(QString::fromStdString(options.image_folder)));
         }
     }
 }
@@ -346,7 +378,7 @@ bool Line_Widget::_performRegistrySave(QString const& format, LineSaverConfig co
 
     // Check if format is supported through registry
     LoaderRegistry& registry = LoaderRegistry::getInstance();
-    std::string format_str = format.toStdString();
+    std::string const format_str = format.toStdString();
     
     if (!registry.isFormatSupported(format_str, IODataType::Line)) {
         QMessageBox::warning(this, "Format Not Supported", 
@@ -362,26 +394,26 @@ bool Line_Widget::_performRegistrySave(QString const& format, LineSaverConfig co
 
     try {
         // Construct filepath for the registry (though CSVLoader doesn't use it directly)
-        std::string save_type = config.value("save_type", "single");
-        std::string filepath = "";
+        std::string const save_type = config.value("save_type", "single");
+        std::string filepath;
         
         if (save_type == "single") {
-            std::string parent_dir = config.value("parent_dir", ".");
-            std::string filename = config.value("filename", "line_data.csv");
+            std::string const parent_dir = config.value("parent_dir", ".");
+            std::string const filename = config.value("filename", "line_data.csv");
             filepath = parent_dir + "/" + filename;
         } else if (save_type == "multi") {
             filepath = config.value("parent_dir", ".");
         }
         
         // Use registry to save through the new save interface
-        LoadResult result = registry.trySave(format_str, 
+        LoadResult const result = registry.trySave(format_str, 
                                            IODataType::Line, 
                                            filepath,
                                            config, 
                                            line_data_ptr.get());
         
         if (result.success) {
-            std::string save_location = config.value("parent_dir", ".");
+            std::string const save_location = config.value("parent_dir", ".");
             QMessageBox::information(this, "Save Successful", 
                 QString("Line data saved successfully to: %1").arg(QString::fromStdString(save_location)));
             std::cout << "Line data saved successfully using " << format_str << " format" << std::endl;
