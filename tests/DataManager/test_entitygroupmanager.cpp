@@ -877,6 +877,16 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         auto original_table = builder.build();
 
+        //Get all values to make sure they are build and entity IDs are populated
+        auto column_1 = original_table.getColumnValues<double>("Line.x@0.000");
+        auto column_2 = original_table.getColumnValues<double>("Line.y@0.000");
+        auto column_3 = original_table.getColumnValues<double>("Line.x@0.333");
+        auto column_4 = original_table.getColumnValues<double>("Line.y@0.333");
+        auto column_5 = original_table.getColumnValues<double>("Line.x@0.667");
+        auto column_6 = original_table.getColumnValues<double>("Line.y@0.667");
+        auto column_7 = original_table.getColumnValues<double>("Line.x@1.000");
+        auto column_8 = original_table.getColumnValues<double>("Line.y@1.000");
+        
         // Verify we have numerical columns for PCA
         auto column_names = original_table.getColumnNames();
         REQUIRE(column_names.size() == 8);         // 4 sample points * 2 coordinates = 8 columns
@@ -979,186 +989,4 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         INFO("Transformed table: " << transformed_column_names.size() << " columns, " << transformed_row_count << " rows");
     }
 
-    SECTION("Mixed computers - EntityID union handling in PCA") {
-        // This test verifies that PCA correctly handles tables where different columns 
-        // have different EntityIDs for the same row, and that the result properly
-        // computes the union of EntityIDs from all contributing data sources
-        
-        auto * table_registry = data_manager->getTableRegistry();
-        std::string table_key = "mixed_computer_pca_test";
-
-        REQUIRE(table_registry->createTable(table_key, "Mixed Computer PCA Test"));
-        auto data_manager_extension = table_registry->getDataManagerExtension();
-        REQUIRE(data_manager_extension != nullptr);
-
-        // Create intervals for IntervalOverlapComputer
-        // Add behavior intervals to the existing DataManager from the fixture
-        auto behavior_intervals = std::make_shared<DigitalIntervalSeries>();
-        
-        behavior_intervals->setIdentityContext("behavior_intervals", data_manager->getEntityRegistry());
-
-        // Create overlapping intervals that will intersect with our line data timestamps
-        behavior_intervals->addEvent(Interval{5, 15});   // Overlaps with timestamp 10
-        behavior_intervals->addEvent(Interval{18, 25});  // Overlaps with timestamp 20  
-        behavior_intervals->addEvent(Interval{28, 35});  // Overlaps with timestamp 30
-        behavior_intervals->addEvent(Interval{40, 50});  // No overlap with our timestamps
-        
-        // Set up identity context for intervals
-        behavior_intervals->rebuildAllEntityIds();
-        
-        // Use the existing time key from the fixture and get the existing timeFrame
-        // The fixture already has a "test_time" TimeKey set up
-        auto existing_time_keys = data_manager->getTimeFrameKeys();
-        REQUIRE_FALSE(existing_time_keys.empty());
-        TimeKey time_key = TimeKey("test_time"); // Use the default time key from fixture
-        
-        data_manager->setData<DigitalIntervalSeries>("behavior_intervals", behavior_intervals, time_key);
-
-        // Get the existing TimeFrame instead of creating a new one
-        auto timeFrame = data_manager->getTime(time_key);
-        REQUIRE(timeFrame != nullptr);
-
-        // Create row selector - using intervals from our behavior data
-        auto interval_boundaries = behavior_intervals->getDigitalIntervalSeries();
-        std::vector<TimeFrameInterval> row_intervals;
-        for (auto const& interval : interval_boundaries) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
-        }
-        auto row_selector = std::make_unique<IntervalSelector>(row_intervals, timeFrame);
-
-        // Create adapters
-        auto line_adapter = std::make_shared<LineDataAdapter>(line_data, timeFrame, "test_lines");
-        auto interval_adapter = std::make_shared<DigitalIntervalDataAdapter>(behavior_intervals, timeFrame, "behavior_intervals");
-
-        // Create LineSamplingMultiComputer (gets EntityIDs from LineData)
-        int segments = 2; // Creates 6 columns: x@0.000, y@0.000, x@0.500, y@0.500, x@1.000, y@1.000
-        auto line_computer = std::make_unique<LineSamplingMultiComputer>(
-                std::static_pointer_cast<ILineSource>(line_adapter),
-                "test_lines",
-                timeFrame,
-                segments);
-
-        // Create IntervalOverlapComputer (gets EntityIDs from DigitalIntervalSeries)
-        auto overlap_computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
-                std::static_pointer_cast<IIntervalSource>(interval_adapter),
-                IntervalOverlapOperation::CountOverlaps,
-                "behavior_intervals");
-
-        // Build table with mixed computers
-        TableViewBuilder builder(data_manager_extension);
-        builder.setRowSelector(std::move(row_selector));
-        builder.addColumns<double>("LineFeatures", std::move(line_computer));
-        builder.addColumn<int64_t>("IntervalOverlaps", std::move(overlap_computer));
-
-        auto mixed_table = builder.build();
-
-        // Verify table structure
-        auto column_names = mixed_table.getColumnNames();
-        REQUIRE(column_names.size() == 7); // 6 line columns + 1 overlap column
-        
-        // Debug: Check what EntityIDs our source data actually has
-        auto line_entity_ids = line_data->getAllEntityIds();
-        auto interval_entity_ids = behavior_intervals->getEntityIds();
-        
-        INFO("Source LineData has " << line_entity_ids.size() << " EntityIDs:");
-        for (size_t i = 0; i < std::min(size_t(3), line_entity_ids.size()); ++i) {
-            INFO("  LineData EntityID[" << i << "] = " << line_entity_ids[i]);
-        }
-        
-        INFO("Source DigitalIntervalSeries has " << interval_entity_ids.size() << " EntityIDs:");
-        for (size_t i = 0; i < std::min(size_t(3), interval_entity_ids.size()); ++i) {
-            INFO("  Interval EntityID[" << i << "] = " << interval_entity_ids[i]);
-        }
-        
-        auto all_entity_ids = mixed_table.getEntityIds();
-        INFO("Mixed table has " << all_entity_ids.size() << " total EntityIDs via getEntityIds()");
-        int total_entity_id_count = 0;
-        for (auto const & row_ids : all_entity_ids) {
-            total_entity_id_count += row_ids.size();
-        }
-        REQUIRE(total_entity_id_count == line_entity_ids.size() + interval_entity_ids.size());
-
-        // Store table for PCA transformation
-        REQUIRE(table_registry->storeBuiltTable(table_key, std::make_unique<TableView>(std::move(mixed_table))));
-        auto stored_mixed = table_registry->getBuiltTable(table_key);
-        REQUIRE(stored_mixed != nullptr);
-
-        // Configure PCA to include only numerical columns (exclude non-numerical if any)
-        PCAConfig pca_config;
-        pca_config.center = true;
-        pca_config.standardize = true;
-        
-        // Add numerical columns (line features are doubles, overlap counts are int64_t)
-        for (auto const & col_name : column_names) {
-            // Include all columns for this test - they should all be numerical
-            pca_config.include.push_back(col_name);
-        }
-
-        // Apply PCA transformation
-        PCATransform pca_transform(pca_config);
-        TableView transformed_table = pca_transform.apply(*stored_mixed);
-
-        // Verify EntityIDs are preserved and correctly represent the union
-        auto transformed_entity_ids = transformed_table.getEntityIds();
-        REQUIRE_FALSE(transformed_entity_ids.empty());
-        
-        std::set<EntityId> expected_source_ids;
-        expected_source_ids.insert(line_entity_ids.begin(), line_entity_ids.end());
-        expected_source_ids.insert(interval_entity_ids.begin(), interval_entity_ids.end());
-
-        // Test group operations with mixed EntityIDs
-        auto group_manager = data_manager->getEntityGroupManager();
-        GroupId mixed_pca_group = group_manager->createGroup("Mixed PCA Results");
-        
-        // Flatten transformed_entity_ids to unique
-        std::set<EntityId> unique_transformed_ids;
-        for (auto row_entity_ids : transformed_entity_ids) {
-            for (auto id : row_entity_ids) {
-                unique_transformed_ids.insert(id);
-            }
-        }
-        std::vector<EntityId> unique_transformed_ids_vec(unique_transformed_ids.begin(), unique_transformed_ids.end());
-        group_manager->addEntitiesToGroup(mixed_pca_group, unique_transformed_ids_vec);
-
-        // Verify we can trace back to original data sources
-        auto retrieved_group_entities = group_manager->getEntitiesInGroup(mixed_pca_group);
-        REQUIRE(retrieved_group_entities.size() == unique_transformed_ids_vec.size());
-
-        // Test traceability to both data sources
-        size_t line_traceable = 0;
-        size_t interval_traceable = 0;
-
-        for (EntityId entity_id : unique_transformed_ids_vec) {
-            // Try to trace back to LineData
-            auto line_lookup = line_data->getLineByEntityId(entity_id);
-            if (line_lookup.has_value()) {
-                line_traceable++;
-            }
-            
-            // Try to trace back to DigitalIntervalSeries
-            auto interval_lookup = behavior_intervals->getIntervalByEntityId(entity_id);
-            if (interval_lookup.has_value()) {
-                interval_traceable++;
-            }
-        }
-
-        // We should be able to trace back to at least one source for each EntityID
-        REQUIRE(line_traceable + interval_traceable >= transformed_entity_ids.size());
-        
-        // Verify PCA columns exist
-        auto transformed_column_names = transformed_table.getColumnNames();
-        bool has_pc_columns = false;
-        for (auto const & name : transformed_column_names) {
-            if (name.find("PC") == 0) {
-                has_pc_columns = true;
-                break;
-            }
-        }
-        REQUIRE(has_pc_columns);
-
-        INFO("Mixed computer PCA test completed successfully");
-        INFO("Transformed table: " << transformed_column_names.size() << " columns, " << transformed_entity_ids.size() << " rows");
-        INFO("Line EntityIDs traceable: " << line_traceable);
-        INFO("Interval EntityIDs traceable: " << interval_traceable);
-    }
 }

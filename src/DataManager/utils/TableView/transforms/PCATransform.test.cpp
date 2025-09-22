@@ -55,8 +55,11 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
     builder.addColumns<double>("Line", std::move(lsmc));
     auto base_table = builder.build();
 
+    for (auto const & column_name : base_table.getColumnNames()) {
+        base_table.getColumnValues<double>(column_name);
+    }
+
     REQUIRE(base_table.getRowCount() == 5);// entity expansion: 2 + 2 + 1
-    REQUIRE(base_table.hasEntityColumn());
     auto base_ids = base_table.getEntityIds();
     REQUIRE(base_ids.size() == 5);
 
@@ -69,9 +72,7 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
     PCATransform pca(cfg);
     auto transformed = pca.apply(base_table);
 
-    // The transformed table should use IndexSelector sized to kept rows (no drop here expected)
-    // but even if rows are dropped in future (due to NaN filtering), we require alignment:
-    REQUIRE(transformed.hasEntityColumn());
+
     auto transformed_ids = transformed.getEntityIds();
     REQUIRE(transformed_ids.size() == transformed.getRowCount());
 

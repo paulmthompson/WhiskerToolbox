@@ -444,7 +444,7 @@ std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
     // Final fallback: collect EntityIDs from all columns (for mixed/derived sources)
     std::set<EntityId> entity_set;
     for (auto const & column : m_columns) {
-        if (column->hasEntityIds()) {
+        //if (column->hasEntityIds()) {
             // Use the column's getCellEntityIds method
             auto cell_entities = column->getCellEntityIds(row_index);
             for (EntityId entity_id : cell_entities) {
@@ -452,7 +452,7 @@ std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
                     entity_set.insert(entity_id);
                 }
             }
-        }
+        //}
     }
     
     // Return the unified set of EntityIDs for this row

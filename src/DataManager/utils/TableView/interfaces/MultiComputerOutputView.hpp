@@ -63,6 +63,10 @@ public:
         return m_multiComputer->getSourceDependency();
     }
 
+    [[nodiscard]] auto getEntityIdStructure() const -> EntityIdStructure override {
+        return m_multiComputer->getEntityIdStructure();
+    }
+
 
     
 private:
