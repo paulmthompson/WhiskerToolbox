@@ -2,14 +2,14 @@
 #include "ui_Mask_Widget.h"
 
 #include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
+#include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/IO/LoaderRegistry.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Masks/utils/mask_utils.hpp"
 #include "DataManager/Media/Media_Data.hpp"
-#include "CoreGeometry/points.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
-#include "DataManager/IO/LoaderRegistry.hpp"
-#include "DataManager/ConcreteDataFactory.hpp"
 #include "MaskTableModel.hpp"
 
 #include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
@@ -17,6 +17,8 @@
 #include "IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp"
 #include "IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
+// Media export functions
+#include "MediaExport/media_export.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -35,11 +37,11 @@
 Mask_Widget::Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Mask_Widget),
-      _data_manager{std::move(data_manager)} {
+      _data_manager{std::move(data_manager)},
+      _mask_table_model{std::make_unique<MaskTableModel>()} {
     ui->setupUi(this);
 
-    _mask_table_model = new MaskTableModel(this);
-    ui->tableView->setModel(_mask_table_model);
+    ui->tableView->setModel(_mask_table_model.get());
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -109,7 +111,7 @@ void Mask_Widget::_onDataChanged() {
 
 void Mask_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (!index.isValid()) return;
-    int frame = _mask_table_model->getFrameForRow(index.row());
+    int const frame = _mask_table_model->getFrameForRow(index.row());
     if (frame != -1) {
         emit frameSelected(frame);
     }
@@ -117,13 +119,13 @@ void Mask_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
 
 std::vector<TimeFrameIndex> Mask_Widget::_getSelectedFrames() {
     std::vector<TimeFrameIndex> selected_frames;
-    QModelIndexList selected_rows = ui->tableView->selectionModel()->selectedRows();
+    QModelIndexList const selected_rows = ui->tableView->selectionModel()->selectedRows();
 
     for (QModelIndex const & index: selected_rows) {
         if (index.isValid()) {
-            int frame = _mask_table_model->getFrameForRow(index.row());
+            int const frame = _mask_table_model->getFrameForRow(index.row());
             if (frame != -1) {
-                selected_frames.push_back(TimeFrameIndex(frame));
+                selected_frames.emplace_back(frame);
             }
         }
     }
@@ -132,7 +134,7 @@ std::vector<TimeFrameIndex> Mask_Widget::_getSelectedFrames() {
 }
 
 void Mask_Widget::_showContextMenu(QPoint const & position) {
-    QModelIndex index = ui->tableView->indexAt(position);
+    QModelIndex const index = ui->tableView->indexAt(position);
     if (!index.isValid()) {
         return;
     }
@@ -182,9 +184,9 @@ void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Check if image sizes differ and we need to resize masks
-    ImageSize source_size = source_mask_data->getImageSize();
-    ImageSize target_size = target_mask_data->getImageSize();
-    bool need_resize = (source_size.width != target_size.width || source_size.height != target_size.height);
+    ImageSize const source_size = source_mask_data->getImageSize();
+    ImageSize const target_size = target_mask_data->getImageSize();
+    bool const need_resize = (source_size.width != target_size.width || source_size.height != target_size.height);
 
     if (need_resize && (source_size.width <= 0 || source_size.height <= 0 ||
                         target_size.width <= 0 || target_size.height <= 0)) {
@@ -213,7 +215,7 @@ void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
                     }
                 }
                 // Clear the frame from source after copying all masks
-                source_mask_data->clearAtTime(frame, false);
+                (void)source_mask_data->clearAtTime(frame, false);
             }
         }
 
@@ -265,9 +267,9 @@ void Mask_Widget::_copyMasksToTarget(std::string const & target_key) {
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Check if image sizes differ and we need to resize masks
-    ImageSize source_size = source_mask_data->getImageSize();
-    ImageSize target_size = target_mask_data->getImageSize();
-    bool need_resize = (source_size.width != target_size.width || source_size.height != target_size.height);
+    ImageSize const source_size = source_mask_data->getImageSize();
+    ImageSize const target_size = target_mask_data->getImageSize();
+    bool const need_resize = (source_size.width != target_size.width || source_size.height != target_size.height);
 
     if (need_resize && (source_size.width <= 0 || source_size.height <= 0 ||
                         target_size.width <= 0 || target_size.height <= 0)) {
@@ -335,16 +337,16 @@ void Mask_Widget::_deleteSelectedMasks() {
     std::cout << "Mask_Widget: Deleting masks from " << selected_frames.size()
               << " frames in '" << _active_key << "'..." << std::endl;
 
-    int frames_with_masks = 0;
-    int total_masks_deleted = 0;
+    std::size_t frames_with_masks = 0;
+    std::size_t total_masks_deleted = 0;
 
     // Count masks before deletion and batch operations to minimize observer notifications
     for (auto frame: selected_frames) {
         auto masks_at_frame = mask_data_ptr->getAtTime(frame);
         if (!masks_at_frame.empty()) {
             frames_with_masks++;
-            total_masks_deleted += static_cast<int>(masks_at_frame.size());
-            mask_data_ptr->clearAtTime(frame, false);
+            total_masks_deleted += masks_at_frame.size();
+            (void)mask_data_ptr->clearAtTime(frame, false);
         }
     }
 
@@ -358,7 +360,8 @@ void Mask_Widget::_deleteSelectedMasks() {
         std::cout << "Mask_Widget: Successfully deleted " << total_masks_deleted
                   << " masks from " << frames_with_masks << " frames." << std::endl;
         if (frames_with_masks < selected_frames.size()) {
-            std::cout << "Mask_Widget: Note: " << (selected_frames.size() - frames_with_masks)
+            std::size_t const frames_without_masks = selected_frames.size() - frames_with_masks;
+            std::cout << "Mask_Widget: Note: " << frames_without_masks
                       << " selected frames contained no masks to delete." << std::endl;
         }
     } else {
@@ -399,8 +402,8 @@ void Mask_Widget::selectPoint(float const x, float const y) {
     std::vector<Point2D<uint32_t>> mask;
     for (size_t i = 0; i < mask_image.size(); i++) {
         if (mask_image[i] > 0) {
-            mask.push_back(Point2D<uint32_t>{static_cast<uint32_t>(i % image_size.width),
-                                             static_cast<uint32_t>(i / image_size.width)});
+            mask.emplace_back(static_cast<uint32_t>(i % image_size.width),
+                              static_cast<uint32_t>(i / image_size.width));
         }
     }
     if (_active_key.empty()) {
@@ -431,7 +434,7 @@ void Mask_Widget::_loadSamModel() {
 }
 
 void Mask_Widget::_onExportTypeChanged(int index) {
-    QString current_text = ui->export_type_combo->itemText(index);
+    QString const current_text = ui->export_type_combo->itemText(index);
     if (current_text == "HDF5") {
         ui->stacked_saver_options->setCurrentWidget(ui->hdf5_mask_saver_widget);
     } else if (current_text == "Image") {
@@ -447,7 +450,7 @@ void Mask_Widget::_onExportMediaFramesCheckboxToggled(bool checked) {
     ui->media_export_options_widget->setVisible(checked);
 }
 
-void Mask_Widget::_initiateSaveProcess(QString const& format, MaskSaverConfig const& config) {
+void Mask_Widget::_initiateSaveProcess(QString const & format, MaskSaverConfig const & config) {
     if (_active_key.empty()) {
         QMessageBox::warning(this, "No Data Selected", "Please select a MaskData item to save.");
         return;
@@ -461,10 +464,10 @@ void Mask_Widget::_initiateSaveProcess(QString const& format, MaskSaverConfig co
 
     // Update config with full path
     MaskSaverConfig updated_config = config;
-    std::string parent_dir = config.value("parent_dir", ".");
+    std::string const parent_dir = config.value("parent_dir", ".");
     updated_config["parent_dir"] = _data_manager->getOutputPath().string() + "/" + parent_dir;
 
-    bool save_successful = _performRegistrySave(format, updated_config);
+    bool const save_successful = _performRegistrySave(format, updated_config);
 
     if (!save_successful) {
         return;
@@ -481,13 +484,41 @@ void Mask_Widget::_initiateSaveProcess(QString const& format, MaskSaverConfig co
         if (frame_ids_to_export.empty()) {
             QMessageBox::information(this, "No Frames", "No masks found in data, so no media frames to export.");
         } else {
-            // TODO: Update export_media_frames to work with JSON config
-            QMessageBox::information(this, "Media Export", "Media frame export with JSON config not yet implemented.");
+            auto media_ptr = _data_manager->getData<MediaData>("media");
+            if (!media_ptr) {
+                QMessageBox::warning(this, "Media Not Available", "Could not access media for exporting frames.");
+                return;
+            }
+
+            MediaExportOptions options = ui->media_export_options_widget->getOptions();
+            // Use the same parent directory used for mask saving
+            std::string const base_output_dir = updated_config.value("parent_dir", _data_manager->getOutputPath().string());
+            options.image_save_dir = base_output_dir;
+
+            try {
+                std::filesystem::create_directories(options.image_save_dir);
+            } catch (std::exception const & e) {
+                QMessageBox::critical(this, "Export Error", QString("Failed to create output directory: %1\n%2").arg(QString::fromStdString(options.image_save_dir)).arg(QString::fromStdString(e.what())));
+                return;
+            }
+
+            int frames_exported = 0;
+            for (size_t const frame_id: frame_ids_to_export) {
+                save_image(media_ptr.get(), static_cast<int>(frame_id), options);
+                frames_exported++;
+            }
+
+            QMessageBox::information(this,
+                                     "Media Export",
+                                     QString("Exported %1 media frames to: %2/%3")
+                                             .arg(frames_exported)
+                                             .arg(QString::fromStdString(options.image_save_dir))
+                                             .arg(QString::fromStdString(options.image_folder)));
         }
     }
 }
 
-bool Mask_Widget::_performRegistrySave(QString const& format, MaskSaverConfig const& config) {
+bool Mask_Widget::_performRegistrySave(QString const & format, MaskSaverConfig const & config) {
     auto mask_data_ptr = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data_ptr) {
         QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve MaskData for saving. Key: " + QString::fromStdString(_active_key));
@@ -495,42 +526,43 @@ bool Mask_Widget::_performRegistrySave(QString const& format, MaskSaverConfig co
     }
 
     // Check if format is supported through registry
-    LoaderRegistry& registry = LoaderRegistry::getInstance();
+    LoaderRegistry & registry = LoaderRegistry::getInstance();
     std::string format_str = format.toStdString();
-    
+
     if (!registry.isFormatSupported(format_str, IODataType::Mask)) {
-        QMessageBox::warning(this, "Format Not Supported", 
-            QString("Format '%1' saving is not available. This may require additional plugins to be enabled.\n\n"
-                   "To enable format support:\n"
-                   "1. Ensure required libraries are available in your build environment\n"
-                   "2. Build with appropriate -DENABLE_* flags\n"
-                   "3. Restart the application").arg(format));
-        
+        QMessageBox::warning(this, "Format Not Supported",
+                             QString("Format '%1' saving is not available. This may require additional plugins to be enabled.\n\n"
+                                     "To enable format support:\n"
+                                     "1. Ensure required libraries are available in your build environment\n"
+                                     "2. Build with appropriate -DENABLE_* flags\n"
+                                     "3. Restart the application")
+                                     .arg(format));
+
         std::cout << "Format '" << format_str << "' saving not available - plugin not registered" << std::endl;
         return false;
     }
 
     try {
         // Use registry to save through the new save interface
-        LoadResult result = registry.trySave(format_str, 
-                                           IODataType::Mask, 
-                                           "", // filepath not used for directory-based saving 
-                                           config, 
-                                           mask_data_ptr.get());
-        
+        LoadResult result = registry.trySave(format_str,
+                                             IODataType::Mask,
+                                             "",// filepath not used for directory-based saving
+                                             config,
+                                             mask_data_ptr.get());
+
         if (result.success) {
             std::string save_location = config.value("parent_dir", ".");
-            QMessageBox::information(this, "Save Successful", 
-                QString("Mask data saved successfully to: %1").arg(QString::fromStdString(save_location)));
+            QMessageBox::information(this, "Save Successful",
+                                     QString("Mask data saved successfully to: %1").arg(QString::fromStdString(save_location)));
             std::cout << "Mask data saved successfully using " << format_str << " format" << std::endl;
             return true;
         } else {
-            QMessageBox::critical(this, "Save Error", 
-                QString("Failed to save mask data: %1").arg(QString::fromStdString(result.error_message)));
+            QMessageBox::critical(this, "Save Error",
+                                  QString("Failed to save mask data: %1").arg(QString::fromStdString(result.error_message)));
             std::cerr << "Failed to save mask data: " << result.error_message << std::endl;
             return false;
         }
-        
+
     } catch (std::exception const & e) {
         QMessageBox::critical(this, "Save Error", "Failed to save mask data: " + QString::fromStdString(e.what()));
         std::cerr << "Failed to save mask data: " << e.what() << std::endl;

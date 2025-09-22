@@ -98,6 +98,22 @@ Media_Widget::Media_Widget(QWidget * parent)
 }
 
 Media_Widget::~Media_Widget() {
+    // Proactively hide stacked pages while _scene is still alive so any hideEvent
+    // handlers that interact with _scene do so safely before _scene is destroyed.
+    if (ui && ui->stackedWidget) {
+        for (int i = 0; i < ui->stackedWidget->count(); ++i) {
+            QWidget * w = ui->stackedWidget->widget(i);
+            if (w && w->isVisible()) {
+                w->hide();
+            }
+        }
+    }
+
+    // Ensure hover circle is cleared before scene destruction
+    if (_scene) {
+        _scene->setShowHoverCircle(false);
+    }
+
     delete ui;
 }
 

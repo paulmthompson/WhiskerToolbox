@@ -6,7 +6,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "transforms/Lines/Line_Alignment/mock_media_data.hpp"
+#include "../mocks/mock_media_data.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
