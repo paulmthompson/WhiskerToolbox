@@ -5,9 +5,11 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <regex>
 #include <string>
 #include <utility>
+#include <variant>
 
 class AnalogDataAdapter;
 class DataManager;
@@ -31,6 +33,14 @@ class PointDataAdapter;
  */
 class DataManagerExtension {
 public:
+    // Variant handle for strongly-typed source adapters resolved from a name
+    using SourceHandle = std::variant<
+            std::shared_ptr<IAnalogSource>,
+            std::shared_ptr<IEventSource>,
+            std::shared_ptr<IIntervalSource>,
+            std::shared_ptr<ILineSource>,
+            std::shared_ptr<IPointSource>>;
+
     /**
      * @brief Constructs a DataManagerExtension.
      * @param dataManager Reference to the underlying DataManager instance.
@@ -101,6 +111,14 @@ public:
      * @return Shared pointer to IPointSource, or nullptr if not found.
      */
     auto getPointSource(std::string const & name) -> std::shared_ptr<IPointSource>;
+
+    /**
+     * @brief Resolve a source name to a concrete adapter variant.
+     *
+     * Tries known source kinds (analog, interval, event, line, point) and returns
+     * the first matching adapter wrapped in a variant. Returns std::nullopt if not found.
+     */
+    auto resolveSource(std::string const & name) -> std::optional<SourceHandle>;
 
 private:
     /**

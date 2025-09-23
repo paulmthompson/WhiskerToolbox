@@ -2,13 +2,220 @@
 
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/interfaces/IAnalogSource.h"
+#include "utils/TableView/interfaces/IEventSource.h"
+#include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/ILineSource.h"
+#include "utils/TableView/interfaces/IPointSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 
 
 #include <algorithm>
+#include <optional>
 #include <set>
 #include <stdexcept>
+#include <variant>
+
+namespace {
+
+// Utility to create an overloaded set for std::visit
+template<class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+
+// Visitor over IRowSelector without exposing dynamic_casts at call sites
+template<typename FInterval, typename FTimestamp, typename FIndex>
+ExecutionPlan visitSelector(IRowSelector const & selector,
+                            FInterval && onInterval,
+                            FTimestamp && onTimestamp,
+                            FIndex && onIndex) {
+    if (auto s = dynamic_cast<IntervalSelector const *>(&selector)) {
+        return onInterval(*s);
+    }
+    if (auto s = dynamic_cast<TimestampSelector const *>(&selector)) {
+        return onTimestamp(*s);
+    }
+    if (auto s = dynamic_cast<IndexSelector const *>(&selector)) {
+        return onIndex(*s);
+    }
+    throw std::runtime_error("Unknown IRowSelector concrete type");
+}
+
+// Analog source -> plan
+ExecutionPlan makePlanFromAnalog(std::shared_ptr<IAnalogSource> const & /*analog*/,
+                                 IRowSelector const & selector) {
+    return visitSelector(
+        selector,
+        // Interval
+        [&](IntervalSelector const & intervalSelector) {
+            return ExecutionPlan(intervalSelector.getIntervals(), intervalSelector.getTimeFrame());
+        },
+        // Timestamp
+        [&](TimestampSelector const & timestampSelector) {
+            return ExecutionPlan(timestampSelector.getTimestamps(), timestampSelector.getTimeFrame());
+        },
+        // Index
+        [&](IndexSelector const & indexSelector) {
+            std::vector<TimeFrameIndex> timeFrameIndices;
+            auto const & indices = indexSelector.getIndices();
+            timeFrameIndices.reserve(indices.size());
+            for (size_t index : indices) {
+                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+            }
+            std::cout << "WARNING: IndexSelector is not supported for analog data" << std::endl;
+            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+        }
+    );
+}
+
+// Interval source -> plan
+ExecutionPlan makePlanFromInterval(std::shared_ptr<IIntervalSource> const & /*interval*/,
+                                   IRowSelector const & selector) {
+    return visitSelector(
+        selector,
+        [&](IntervalSelector const & intervalSelector) {
+            return ExecutionPlan(intervalSelector.getIntervals(), intervalSelector.getTimeFrame());
+        },
+        [&](TimestampSelector const & timestampSelector) {
+            return ExecutionPlan(timestampSelector.getTimestamps(), timestampSelector.getTimeFrame());
+        },
+        [&](IndexSelector const & indexSelector) {
+            std::vector<TimeFrameIndex> timeFrameIndices;
+            auto const & indices = indexSelector.getIndices();
+            timeFrameIndices.reserve(indices.size());
+            for (size_t index : indices) {
+                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+            }
+            std::cout << "WARNING: IndexSelector is not supported for interval data" << std::endl;
+            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+        }
+    );
+}
+
+// Event source -> plan
+ExecutionPlan makePlanFromEvent(std::shared_ptr<IEventSource> const & /*event*/,
+                                IRowSelector const & selector) {
+    return visitSelector(
+        selector,
+        [&](IntervalSelector const & intervalSelector) {
+            return ExecutionPlan(intervalSelector.getIntervals(), intervalSelector.getTimeFrame());
+        },
+        [&](TimestampSelector const & timestampSelector) {
+            return ExecutionPlan(timestampSelector.getTimestamps(), timestampSelector.getTimeFrame());
+        },
+        [&](IndexSelector const & indexSelector) {
+            std::vector<TimeFrameIndex> timeFrameIndices;
+            auto const & indices = indexSelector.getIndices();
+            timeFrameIndices.reserve(indices.size());
+            for (size_t index : indices) {
+                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+            }
+            std::cout << "WARNING: IndexSelector is not supported for event data" << std::endl;
+            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+        }
+    );
+}
+
+// Line source -> plan (needs columns and dm for entity expansion decision + ids)
+ExecutionPlan makePlanFromLine(std::shared_ptr<ILineSource> const & lineSource,
+                               IRowSelector const & selector,
+                               std::vector<std::shared_ptr<IColumn>> const & columns,
+                               DataManagerExtension & dm) {
+    return visitSelector(
+        selector,
+        // IntervalSelector: legacy (no expansion)
+        [&](IntervalSelector const & intervalSelector) {
+            return ExecutionPlan(intervalSelector.getIntervals(), intervalSelector.getTimeFrame());
+        },
+        // TimestampSelector: entity expansion
+        [&](TimestampSelector const & timestampSelector) {
+            auto const & timestamps = timestampSelector.getTimestamps();
+            auto timeFrame = timestampSelector.getTimeFrame();
+
+            ExecutionPlan plan(std::vector<TimeFrameIndex>{}, timeFrame);
+
+            // Determine if table contains any non-line columns; if so include singleton rows
+            bool anyNonLineColumn = false;
+            for (auto const & col : columns) {
+                try {
+                    auto const & dep = col->getSourceDependency();
+                    if (!dm.getLineSource(dep)) {
+                        anyNonLineColumn = true;
+                        break;
+                    }
+                } catch (...) {
+                }
+            }
+
+            std::vector<RowId> rows;
+            rows.reserve(timestamps.size());
+            std::map<TimeFrameIndex, std::pair<size_t, size_t>> spans;
+
+            size_t cursor = 0;
+            for (auto const & t : timestamps) {
+                auto const count = lineSource->getEntityCountAt(t);
+                if (count == 0) {
+                    if (anyNonLineColumn) {
+                        spans.emplace(t, std::make_pair(cursor, static_cast<size_t>(1)));
+                        rows.push_back(RowId{t, std::nullopt});
+                        ++cursor;
+                    }
+                } else {
+                    spans.emplace(t, std::make_pair(cursor, static_cast<size_t>(count)));
+                    for (size_t i = 0; i < count; ++i) {
+                        rows.push_back(RowId{t, static_cast<int>(i)});
+                        ++cursor;
+                    }
+                }
+            }
+
+            plan.setRows(std::move(rows));
+            plan.setTimeToRowSpan(std::move(spans));
+            plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
+            plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
+            return plan;
+        },
+        // IndexSelector: unsupported
+        [&](IndexSelector const & indexSelector) {
+            std::vector<TimeFrameIndex> timeFrameIndices;
+            auto const & indices = indexSelector.getIndices();
+            timeFrameIndices.reserve(indices.size());
+            for (size_t index : indices) {
+                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+            }
+            std::cout << "WARNING: IndexSelector is not supported for line data" << std::endl;
+            auto plan = ExecutionPlan(std::move(timeFrameIndices), nullptr);
+            plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
+            plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
+            return plan;
+        }
+    );
+}
+
+// Point source -> plan (treat similar to event/interval/timestamp)
+ExecutionPlan makePlanFromPoint(std::shared_ptr<IPointSource> const & /*point*/,
+                                IRowSelector const & selector) {
+    return visitSelector(
+        selector,
+        [&](IntervalSelector const & intervalSelector) {
+            return ExecutionPlan(intervalSelector.getIntervals(), intervalSelector.getTimeFrame());
+        },
+        [&](TimestampSelector const & timestampSelector) {
+            return ExecutionPlan(timestampSelector.getTimestamps(), timestampSelector.getTimeFrame());
+        },
+        [&](IndexSelector const & indexSelector) {
+            std::vector<TimeFrameIndex> timeFrameIndices;
+            auto const & indices = indexSelector.getIndices();
+            timeFrameIndices.reserve(indices.size());
+            for (size_t index : indices) {
+                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+            }
+            std::cout << "WARNING: IndexSelector is not supported for point data" << std::endl;
+            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+        }
+    );
+}
+
+} // namespace
 
 TableView::TableView(std::unique_ptr<IRowSelector> rowSelector,
                      std::shared_ptr<DataManagerExtension> dataManager)
@@ -223,206 +430,60 @@ void TableView::materializeColumn(std::string const & columnName, std::set<std::
 }
 
 ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
-    // Try to get the data source to understand its structure
-    // First try as analog source
-
-    
-
-    auto analogSource = m_dataManager->getAnalogSource(sourceName);
-    if (analogSource) {
-        // Generate plan based on row selector type for analog data
-        if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
-            auto const & intervals = intervalSelector->getIntervals();
-            auto timeFrame = intervalSelector->getTimeFrame();
-            return ExecutionPlan(intervals, timeFrame);
-        }
-
-        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
-            auto const & indices = timestampSelector->getTimestamps();
-            auto timeFrame = timestampSelector->getTimeFrame();
-            return ExecutionPlan(indices, timeFrame);
-        }
-
-        if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
-            auto const & indices = indexSelector->getIndices();
-            std::vector<TimeFrameIndex> timeFrameIndices;
-            timeFrameIndices.reserve(indices.size());
-
-            for (size_t index: indices) {
-                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
-            }
-
-            std::cout << "WARNING: IndexSelector is not supported for analog data" << std::endl;
-            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
-        }
-    }
-
-    // Try as interval source
-    auto intervalSource = m_dataManager->getIntervalSource(sourceName);
-    if (intervalSource) {
-        // Generate plan based on row selector type for interval data
-        if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
-            auto const & intervals = intervalSelector->getIntervals();
-            auto timeFrame = intervalSelector->getTimeFrame();
-            return ExecutionPlan(intervals, timeFrame);
-        }
-
-        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
-            auto const & indices = timestampSelector->getTimestamps();
-            auto timeFrame = timestampSelector->getTimeFrame();
-            return ExecutionPlan(indices, timeFrame);
-        }
-
-        if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
-            auto const & indices = indexSelector->getIndices();
-            std::vector<TimeFrameIndex> timeFrameIndices;
-            timeFrameIndices.reserve(indices.size());
-
-            for (size_t index: indices) {
-                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
-            }
-
-            std::cout << "WARNING: IndexSelector is not supported for interval data" << std::endl;
-            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
-        }
-    }
-
-    // Try as event source
-    auto eventSource = m_dataManager->getEventSource(sourceName);
-    if (eventSource) {
-        // Generate plan based on row selector type for event data
-        if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
-            auto const & intervals = intervalSelector->getIntervals();
-            auto timeFrame = intervalSelector->getTimeFrame();
-            return ExecutionPlan(intervals, timeFrame);
-        }
-
-        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
-            auto const & indices = timestampSelector->getTimestamps();
-            auto timeFrame = timestampSelector->getTimeFrame();
-            return ExecutionPlan(indices, timeFrame);
-        }
-
-        if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
-            auto const & indices = indexSelector->getIndices();
-            std::vector<TimeFrameIndex> timeFrameIndices;
-            timeFrameIndices.reserve(indices.size());
-
-            for (size_t index: indices) {
-                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
-            }
-
-            std::cout << "WARNING: IndexSelector is not supported for event data" << std::endl;
-
-            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
-        }
-    }
-
-    // Try as line source
-    auto lineSource = m_dataManager->getLineSource(sourceName);
-    if (lineSource) {
-        // Default-on entity expansion for TimestampSelector
-        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
-            auto const & timestamps = timestampSelector->getTimestamps();
-            auto timeFrame = timestampSelector->getTimeFrame();
-
-            ExecutionPlan plan(std::vector<TimeFrameIndex>{}, timeFrame);
-            // Build expanded rows: one row per line at that timestamp; drop timestamps with zero lines
-            std::vector<RowId> rows;
-            rows.reserve(timestamps.size());
-            std::map<TimeFrameIndex, std::pair<size_t,size_t>> spans;
-
-            // Determine if table contains any non-line columns; if so, we include singleton rows
-            bool anyNonLineColumn = false;
-            for (auto const & col : m_columns) {
-                try {
-                    auto const & dep = col->getSourceDependency();
-                    if (!m_dataManager->getLineSource(dep)) {
-                        anyNonLineColumn = true;
-                        break;
-                    }
-                } catch (...) {
-                    // Ignore
+    // Resolve to a concrete source adapter once, then dispatch with std::visit
+    auto resolved = m_dataManager->resolveSource(sourceName);
+    if (resolved) {
+        return std::visit(
+            Overloaded{
+                [&](std::shared_ptr<IAnalogSource> const & a) {
+                    return makePlanFromAnalog(a, *m_rowSelector);
+                },
+                [&](std::shared_ptr<IEventSource> const & e) {
+                    return makePlanFromEvent(e, *m_rowSelector);
+                },
+                [&](std::shared_ptr<IIntervalSource> const & i) {
+                    return makePlanFromInterval(i, *m_rowSelector);
+                },
+                [&](std::shared_ptr<ILineSource> const & l) {
+                    return makePlanFromLine(l, *m_rowSelector, m_columns, *m_dataManager);
+                },
+                [&](std::shared_ptr<IPointSource> const & p) {
+                    return makePlanFromPoint(p, *m_rowSelector);
                 }
-            }
+            },
+            *resolved
+        );
+    }
 
-            size_t cursor = 0;
-            for (auto const & t : timestamps) {
-                auto const count = lineSource->getEntityCountAt(t);
-                if (count == 0) {
-                    if (anyNonLineColumn) {
-                        spans.emplace(t, std::make_pair(cursor, static_cast<size_t>(1)));
-                        rows.push_back(RowId{t, std::nullopt});
-                        ++cursor;
-                    }
-                } else {
-                    spans.emplace(t, std::make_pair(cursor, static_cast<size_t>(count)));
-                    for (size_t i = 0; i < count; ++i) {
-                        rows.push_back(RowId{t, static_cast<int>(i)});
-                        ++cursor;
-                    }
-                }
-            }
-
-            plan.setRows(std::move(rows));
-            plan.setTimeToRowSpan(std::move(spans));
-            plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
-            plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
-            return plan;
-        }
-
-        // IntervalSelector: keep legacy behavior (no expansion) for now
-        if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
-            auto const & intervals = intervalSelector->getIntervals();
-            auto timeFrame = intervalSelector->getTimeFrame();
+    // Fallback: generate plan solely from the selector if source is unknown
+    return visitSelector(
+        *m_rowSelector,
+        [&](IntervalSelector const & intervalSelector) {
+            auto const & intervals = intervalSelector.getIntervals();
+            auto timeFrame = intervalSelector.getTimeFrame();
+            std::cout << "WARNING: Data source '" << sourceName
+                      << "' not found. Generating plan from IntervalSelector only." << std::endl;
             return ExecutionPlan(intervals, timeFrame);
-        }
-
-        if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
-            auto const & indices = indexSelector->getIndices();
+        },
+        [&](TimestampSelector const & timestampSelector) {
+            auto const & indices = timestampSelector.getTimestamps();
+            auto timeFrame = timestampSelector.getTimeFrame();
+            std::cout << "WARNING: Data source '" << sourceName
+                      << "' not found. Generating plan from TimestampSelector only." << std::endl;
+            return ExecutionPlan(indices, timeFrame);
+        },
+        [&](IndexSelector const & indexSelector) {
+            auto const & indices = indexSelector.getIndices();
             std::vector<TimeFrameIndex> timeFrameIndices;
             timeFrameIndices.reserve(indices.size());
-            for (size_t index: indices) {
+            for (size_t index : indices) {
                 timeFrameIndices.emplace_back(static_cast<int64_t>(index));
             }
-            std::cout << "WARNING: IndexSelector is not supported for line data" << std::endl;
-            auto plan = ExecutionPlan(std::move(timeFrameIndices), nullptr);
-            plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
-            plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
-            return plan;
+            std::cout << "WARNING: Data source '" << sourceName
+                      << "' not found. Generating plan from IndexSelector only." << std::endl;
+            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
         }
-    }
-
-    // Generic fallback: generate plan solely based on row selector when the source is unknown
-    if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
-        auto const & intervals = intervalSelector->getIntervals();
-        auto timeFrame = intervalSelector->getTimeFrame();
-        std::cout << "WARNING: Data source '" << sourceName
-                  << "' not found. Generating plan from IntervalSelector only." << std::endl;
-        return ExecutionPlan(intervals, timeFrame);
-    }
-
-    if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
-        auto const & indices = timestampSelector->getTimestamps();
-        auto timeFrame = timestampSelector->getTimeFrame();
-        std::cout << "WARNING: Data source '" << sourceName
-                  << "' not found. Generating plan from TimestampSelector only." << std::endl;
-        return ExecutionPlan(indices, timeFrame);
-    }
-
-    if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
-        auto const & indices = indexSelector->getIndices();
-        std::vector<TimeFrameIndex> timeFrameIndices;
-        timeFrameIndices.reserve(indices.size());
-        for (size_t index: indices) {
-            timeFrameIndices.emplace_back(static_cast<int64_t>(index));
-        }
-        std::cout << "WARNING: Data source '" << sourceName
-                  << "' not found. Generating plan from IndexSelector only." << std::endl;
-        return ExecutionPlan(std::move(timeFrameIndices), nullptr);
-    }
-
-    throw std::runtime_error("Data source '" + sourceName + "' not found as analog, interval, event, or line source");
+    );
 }
 
 RowDescriptor TableView::getRowDescriptor(size_t row_index) const {

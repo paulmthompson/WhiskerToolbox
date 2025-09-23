@@ -255,3 +255,23 @@ std::shared_ptr<IPointSource> DataManagerExtension::getPointSource(std::string c
     }
     return pointSource;
 }
+
+std::optional<DataManagerExtension::SourceHandle> DataManagerExtension::resolveSource(std::string const & name) {
+    // Try cached adapters in the typical order of usage
+    if (auto a = getAnalogSource(name)) {
+        return a;
+    }
+    if (auto i = getIntervalSource(name)) {
+        return i;
+    }
+    if (auto e = getEventSource(name)) {
+        return e;
+    }
+    if (auto l = getLineSource(name)) {
+        return l;
+    }
+    if (auto p = getPointSource(name)) {
+        return p;
+    }
+    return std::nullopt;
+}
