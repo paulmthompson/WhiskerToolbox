@@ -4,7 +4,6 @@
 #include "CoreGeometry/points.hpp"
 
 
-
 /**
  * @brief Encapsulates view transformation state for plot widgets
  * 
@@ -15,18 +14,18 @@ struct ViewState {
     // Zoom levels (per-axis)
     float zoom_level_x = 1.0f;
     float zoom_level_y = 1.0f;
-    
+
     // Pan offsets (normalized to data bounds)
     float pan_offset_x = 0.0f;
     float pan_offset_y = 0.0f;
-    
+
     // View parameters
     float padding_factor = 1.1f;
-    
+
     // Data bounds
     BoundingBox data_bounds{0.0f, 0.0f, 0.0f, 0.0f};
     bool data_bounds_valid = false;
-    
+
     // Widget dimensions
     int widget_width = 1;
     int widget_height = 1;
@@ -39,47 +38,47 @@ struct ViewState {
  * functionality that can be shared between different view adapters.
  */
 namespace ViewUtils {
-    
-    /**
+
+/**
      * @brief Calculate orthographic projection bounds for current view
      * @param state Current view state
      */
-    BoundingBox calculateProjectionBounds(const ViewState& state);
-    
-    /**
+BoundingBox calculateProjectionBounds(ViewState const & state);
+
+/**
      * @brief Apply box zoom to specified world rectangle
      * @param state View state to modify
      * @param bounds Bounding box to apply zoom to
      */
-    void applyBoxZoom(ViewState& state, BoundingBox const& bounds);
-    
-    /**
+void applyBoxZoom(ViewState & state, BoundingBox const & bounds);
+
+/**
      * @brief Reset view to fit all data
      * @param state View state to reset
      */
-    void resetView(ViewState& state);
-    
-    /**
+void resetView(ViewState & state);
+
+/**
      * @brief Convert screen coordinates to world coordinates
      * @param state Current view state
      * @param screen_x Screen X coordinate
      * @param screen_y Screen Y coordinate
      * @return World coordinates
      */
-    Point2D<float> screenToWorld(const ViewState& state, 
-                                int screen_x, int screen_y);
-    
-    /**
+Point2D<float> screenToWorld(ViewState const & state,
+                             int screen_x, int screen_y);
+
+/**
      * @brief Convert world coordinates to screen coordinates
      * @param state Current view state
      * @param world_x World X coordinate
      * @param world_y World Y coordinate
      * @return Screen coordinates
      */
-    Point2D<uint32_t> worldToScreen(const ViewState& state, 
-                              float world_x, float world_y);
-    
-    /**
+Point2D<uint32_t> worldToScreen(ViewState const & state,
+                                float world_x, float world_y);
+
+/**
      * @brief Compute camera world view extents
      * @param state Current view state
      * @param center_x Output: camera center X
@@ -87,7 +86,7 @@ namespace ViewUtils {
      * @param world_width Output: visible world width
      * @param world_height Output: visible world height
      */
-    void computeCameraWorldView(const ViewState& state,
-                               float& center_x, float& center_y,
-                               float& world_width, float& world_height);
-}
+void computeCameraWorldView(ViewState const & state,
+                            float & center_x, float & center_y,
+                            float & world_width, float & world_height);
+}// namespace ViewUtils

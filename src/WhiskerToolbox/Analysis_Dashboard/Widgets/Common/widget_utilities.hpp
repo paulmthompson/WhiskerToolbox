@@ -1,10 +1,12 @@
 #ifndef ANALYSIS_DASHBOARD_WIDGET_UTILITIES_HPP
 #define ANALYSIS_DASHBOARD_WIDGET_UTILITIES_HPP
 
-#include <QSurfaceFormat>
-#include <QOpenGLWidget>
-#include <algorithm>
 #include "CoreGeometry/boundingbox.hpp"
+
+#include <QOpenGLWidget>
+#include <QSurfaceFormat>
+
+#include <algorithm>
 
 inline bool try_create_opengl_context_with_version(QOpenGLWidget * widget, int major, int minor) {
     QSurfaceFormat format;

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BASEPLOTOPENGLWIDGET_HPP
+#define BASEPLOTOPENGLWIDGET_HPP
 
 #include "CoreGeometry/boundingbox.hpp"
 #include "Selection/SelectionHandlers.hpp"
@@ -42,29 +43,29 @@ public:
     void setTooltipsEnabled(bool enabled);
 
     // View control
-    virtual QVector2D screenToWorld(QPoint const & screen_pos) const;
-    virtual QPoint worldToScreen(float world_x, float world_y) const;
+    [[nodiscard]] virtual QVector2D screenToWorld(QPoint const & screen_pos) const;
+    [[nodiscard]] virtual QPoint worldToScreen(float world_x, float world_y) const;
     void resetView();
 
     // ViewState access for adapters
     ViewState & getViewState() { return _view_state; }
-    ViewState const & getViewState() const { return _view_state; }
+    [[nodiscard]] ViewState const & getViewState() const { return _view_state; }
 
     // Selection management
     virtual void setSelectionMode(SelectionMode mode);
     void createSelectionHandler(SelectionMode mode);
-    SelectionMode getSelectionMode() const { return _selection_mode; }
+    [[nodiscard]] SelectionMode getSelectionMode() const { return _selection_mode; }
     virtual void clearSelection() = 0;
 
     // Public event handlers for external access (e.g., event filters)
     virtual void handleKeyPress(QKeyEvent * event);
 
-    float getPointSize() const { return _point_size; }
-    float getLineWidth() const { return _line_width; }
-    bool getTooltipsEnabled() const { return _tooltips_enabled; }
+    [[nodiscard]] float getPointSize() const { return _point_size; }
+    [[nodiscard]] float getLineWidth() const { return _line_width; }
+    [[nodiscard]] bool getTooltipsEnabled() const { return _tooltips_enabled; }
 
 signals:
-    void viewBoundsChanged(BoundingBox const& bounds);
+    void viewBoundsChanged(BoundingBox const & bounds);
     void mouseWorldMoved(float world_x, float world_y);
     void selectionModeChanged(SelectionMode mode);
     void selectionChanged(size_t total_selected, QString dataset_name, int point_index);
@@ -72,7 +73,7 @@ signals:
 
 protected:
     // Template method pattern - defines the rendering algorithm
-    void paintGL() final override;
+    void paintGL() override;
     void initializeGL() override;
     void resizeGL(int w, int h) override;
 
@@ -87,25 +88,25 @@ protected:
     // Hooks for subclasses to implement
     virtual void renderData() = 0;
     virtual void calculateDataBounds() = 0;
-    virtual BoundingBox getDataBounds() const = 0;
+    [[nodiscard]] virtual BoundingBox getDataBounds() const = 0;
 
     // Optional hooks
     virtual void renderBackground();
     virtual void renderOverlays();
     virtual void renderUI();
-    virtual std::optional<QString> generateTooltipContent(QPoint const & screen_pos) const;
+    [[nodiscard]] virtual std::optional<QString> generateTooltipContent(QPoint const & screen_pos) const;
 
     // OpenGL context configuration (override in subclasses if needed)
-    virtual std::pair<int, int> getRequiredOpenGLVersion() const { return {4, 1}; }
-    virtual int getRequiredSamples() const { return 4; }
+    [[nodiscard]] virtual std::pair<int, int> getRequiredOpenGLVersion() const { return {4, 1}; }
+    [[nodiscard]] virtual int getRequiredSamples() const { return 4; }
 
     // Helper methods
-    RenderingContext createRenderingContext() const;
+    [[nodiscard]] RenderingContext createRenderingContext() const;
     void updateViewMatrices();
     void requestThrottledUpdate();
 
     // OpenGL context validation
-    bool validateOpenGLContext() const;
+    [[nodiscard]] bool validateOpenGLContext() const;
 
 protected:
     // Common state
@@ -143,3 +144,5 @@ private:
     void computeCameraWorldView(float & center_x, float & center_y,
                                 float & world_width, float & world_height) const;
 };
+
+#endif// BASEPLOTOPENGLWIDGET_HPP
