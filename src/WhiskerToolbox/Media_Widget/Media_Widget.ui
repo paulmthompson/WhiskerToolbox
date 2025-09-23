@@ -64,8 +64,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>180</width>
-         <height>524</height>
+         <width>192</width>
+         <height>541</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -99,19 +99,6 @@
         <property name="bottomMargin">
          <number>1</number>
         </property>
-        <item>
-         <widget class="QPushButton" name="pushButton">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Zoom</string>
-          </property>
-         </widget>
-        </item>
         <item>
          <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
           <property name="sizePolicy">

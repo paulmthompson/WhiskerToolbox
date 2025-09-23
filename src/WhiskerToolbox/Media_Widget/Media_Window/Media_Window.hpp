@@ -1,10 +1,10 @@
 #ifndef MEDIA_WINDOW_HPP
 #define MEDIA_WINDOW_HPP
 
-#include "CoreGeometry/ImageSize.hpp"
-#include "CoreGeometry/masks.hpp"
 #include "../Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 #include "../Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "CoreGeometry/ImageSize.hpp"
+#include "CoreGeometry/masks.hpp"
 
 #include <QGraphicsEllipseItem>
 #include <QGraphicsItem>
@@ -77,7 +77,7 @@ public:
     void setTextWidget(MediaText_Widget * text_widget);
 
     // Parent widget access for enabled media keys
-    void setParentWidget(QWidget* parent_widget) {
+    void setParentWidget(QWidget * parent_widget) {
         _parent_widget = parent_widget;
     }
 
@@ -111,8 +111,7 @@ public:
     void setShowHoverCircle(bool show);
     void setHoverCircleRadius(int radius);
 
-    [[nodiscard]] std::optional<MediaDisplayOptions *> getMediaConfig(std::string const & media_key) const
-    {
+    [[nodiscard]] std::optional<MediaDisplayOptions *> getMediaConfig(std::string const & media_key) const {
         if (_media_configs.find(media_key) == _media_configs.end()) {
             return std::nullopt;
         }
@@ -185,7 +184,7 @@ protected:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
-    QWidget* _parent_widget = nullptr;
+    QWidget * _parent_widget = nullptr;
 
     QGraphicsPixmapItem * _canvasPixmap = nullptr;
     QImage _canvasImage;
@@ -227,7 +226,7 @@ private:
     // Text overlay support
     MediaText_Widget * _text_widget = nullptr;
 
-    QImage::Format _getQImageFormat(const std::string & media_key);
+    QImage::Format _getQImageFormat(std::string const & media_key);
     QImage _combineMultipleMedia();
 
     void _plotMediaData();
@@ -261,8 +260,8 @@ private:
     void _addRemoveData();
 
     // Helper for timeframe conversion
-    bool _needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe, 
-                                   const std::shared_ptr<TimeFrame>& interval_timeframe);
+    bool _needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe,
+                                   std::shared_ptr<TimeFrame> const & interval_timeframe);
 
 public slots:
     void LoadFrame(int frame_id);
