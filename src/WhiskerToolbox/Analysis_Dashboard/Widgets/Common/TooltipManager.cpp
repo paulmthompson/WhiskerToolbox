@@ -1,17 +1,16 @@
 #include "TooltipManager.hpp"
 
-#include <QToolTip>
 #include <QApplication>
+#include <QToolTip>
 #include <QWidget>
 
-TooltipManager::TooltipManager(QObject* parent) 
-    : QObject(parent)
-    , _show_timer(new QTimer(this))
-    , _refresh_timer(new QTimer(this))
-{
+TooltipManager::TooltipManager(QObject * parent)
+    : QObject(parent),
+      _show_timer(new QTimer(this)),
+      _refresh_timer(new QTimer(this)) {
     _show_timer->setSingleShot(true);
     _refresh_timer->setSingleShot(false);
-    
+
     connect(_show_timer, &QTimer::timeout, this, &TooltipManager::handleShowTooltip);
     connect(_refresh_timer, &QTimer::timeout, this, &TooltipManager::handleRefreshTooltip);
 }
@@ -32,16 +31,16 @@ void TooltipManager::setTiming(int show_delay_ms, int refresh_interval_ms) {
     _refresh_interval_ms = refresh_interval_ms;
 }
 
-void TooltipManager::handleMouseMove(QPoint const& screen_pos) {
+void TooltipManager::handleMouseMove(QPoint const & screen_pos) {
     if (!_enabled || _suppressed || !_content_provider) {
         return;
     }
-    
+
     _current_mouse_pos = screen_pos;
-    
+
     // Restart the show timer
     _show_timer->start(_show_delay_ms);
-    
+
     // If tooltip is already visible, keep refreshing it
     if (_refresh_timer->isActive()) {
         // Don't restart refresh timer - let it continue
@@ -68,11 +67,11 @@ void TooltipManager::handleShowTooltip() {
     if (!_enabled || _suppressed || !_content_provider) {
         return;
     }
-    
+
     auto tooltip_text = _content_provider(_current_mouse_pos);
     if (tooltip_text.has_value() && !tooltip_text->isEmpty()) {
         QToolTip::showText(_current_mouse_pos, *tooltip_text);
-        
+
         // Start refresh timer to keep tooltip updated
         _refresh_timer->start(_refresh_interval_ms);
     }
@@ -83,7 +82,7 @@ void TooltipManager::handleRefreshTooltip() {
         hideTooltip();
         return;
     }
-    
+
     auto tooltip_text = _content_provider(_current_mouse_pos);
     if (tooltip_text.has_value() && !tooltip_text->isEmpty()) {
         // Update tooltip text at current position

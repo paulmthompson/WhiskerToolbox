@@ -22,7 +22,7 @@ PlotInteractionController::~PlotInteractionController() {
 bool PlotInteractionController::handleWheel(QWheelEvent * event) {
     float zx, zy;
     _adapter->getPerAxisZoom(zx, zy);
-    float zf = 1.0f + (event->angleDelta().y() / 1200.0f);
+    float zf = 1.0f + (static_cast<float>(event->angleDelta().y()) / 1200.0f);
     zf = std::clamp(zf, 0.1f, 10.0f);
     auto mods = event->modifiers();
     if (mods.testFlag(Qt::ControlModifier) && !mods.testFlag(Qt::ShiftModifier)) {

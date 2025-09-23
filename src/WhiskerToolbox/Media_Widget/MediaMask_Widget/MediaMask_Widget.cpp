@@ -13,6 +13,7 @@
 
 #include <QLabel>
 #include <QVBoxLayout>
+
 #include <cmath>
 #include <iostream>
 #include <set>
@@ -85,7 +86,7 @@ void MediaMask_Widget::hideEvent(QHideEvent * event) {
     disconnect(_scene, &Media_Window::mouseMoveCanvas, this, &MediaMask_Widget::_mouseMoveInVideo);
     disconnect(_scene, &Media_Window::leftRelease, this, &MediaMask_Widget::_mouseReleased);
     disconnect(_scene, &Media_Window::rightRelease, this, &MediaMask_Widget::_mouseReleased);
-    
+
     // Clean up hover circle when switching away from mask widget
     _scene->setShowHoverCircle(false);
 }
@@ -253,7 +254,7 @@ void MediaMask_Widget::_toggleShowOutline(bool checked) {
 
 void MediaMask_Widget::_toggleUseAsTransparency(bool checked) {
     std::cout << "Transparency checkbox toggled: " << (checked ? "enabled" : "disabled") << std::endl;
-    
+
     if (!_active_key.empty()) {
         auto mask_opts = _scene->getMaskConfig(_active_key);
         if (mask_opts.has_value()) {
@@ -644,21 +645,21 @@ void MediaMask_Widget::_onAllowEmptyMaskChanged(bool allow) {
     }
 }
 
-void MediaMask_Widget::resizeEvent(QResizeEvent* event) {
+void MediaMask_Widget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
 
     // Ensure the color picker and stacked widget components resize properly
-    int availableWidth = width() - 20; // Account for margins
+    int availableWidth = width() - 20;// Account for margins
 
     // Update color picker width to use available space
-    ui->color_picker->setFixedWidth(qMin(availableWidth, 400)); // Cap at reasonable maximum
+    ui->color_picker->setFixedWidth(qMin(availableWidth, 400));// Cap at reasonable maximum
 
     // Update stacked widget width
     ui->mode_stacked_widget->setFixedWidth(availableWidth);
 
     // Update all widgets in the stacked widget
     for (int i = 0; i < ui->mode_stacked_widget->count(); ++i) {
-        QWidget* widget = ui->mode_stacked_widget->widget(i);
+        QWidget * widget = ui->mode_stacked_widget->widget(i);
         if (widget) {
             widget->setFixedWidth(availableWidth);
         }

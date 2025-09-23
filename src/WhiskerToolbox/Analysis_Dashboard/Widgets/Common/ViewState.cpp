@@ -6,7 +6,7 @@ namespace ViewUtils {
 
 BoundingBox calculateProjectionBounds(ViewState const & state) {
     if (!state.data_bounds_valid || state.widget_width <= 0 || state.widget_height <= 0) {
-        return BoundingBox(0.0f, 0.0f, 0.0f, 0.0f);
+        return {0.0f, 0.0f, 0.0f, 0.0f};
     }
 
     float data_width = state.data_bounds.width();
@@ -15,11 +15,11 @@ BoundingBox calculateProjectionBounds(ViewState const & state) {
     float center_y = state.data_bounds.center_y();
 
     if (data_width <= 0 || data_height <= 0) {
-        return BoundingBox(0.0f, 0.0f, 0.0f, 0.0f);
+        return {0.0f, 0.0f, 0.0f, 0.0f};
     }
 
     // Apply zoom and pan transformations
-    float aspect = static_cast<float>(state.widget_width) / std::max(1, state.widget_height);
+    float aspect = static_cast<float>(state.widget_width) / static_cast<float>(std::max(1, state.widget_height));
     float half_w, half_h;
 
     if (aspect > 1.0f) {
@@ -38,7 +38,7 @@ BoundingBox calculateProjectionBounds(ViewState const & state) {
     float bottom = center_y - half_h + pan_world_y;
     float top = center_y + half_h + pan_world_y;
 
-    return BoundingBox(left, bottom, right, top);
+    return {left, bottom, right, top};
 }
 
 void applyBoxZoom(ViewState & state, BoundingBox const & bounds) {
@@ -52,7 +52,7 @@ void applyBoxZoom(ViewState & state, BoundingBox const & bounds) {
     float center_y = state.data_bounds.center_y();
     float target_width = std::max(1e-6f, bounds.max_x - bounds.min_x);
     float target_height = std::max(1e-6f, bounds.max_y - bounds.min_y);
-    float aspect_ratio = static_cast<float>(state.widget_width) / std::max(1, state.widget_height);
+    float aspect_ratio = static_cast<float>(state.widget_width) / static_cast<float>(std::max(1, state.widget_height));
     float padding = state.padding_factor;
 
     float zfx, zfy;
@@ -90,8 +90,8 @@ Point2D<float> screenToWorld(ViewState const & state,
     }
 
     // Convert screen to NDC
-    float x_ndc = (2.0f * screen_x) / std::max(1, state.widget_width) - 1.0f;
-    float y_ndc = 1.0f - (2.0f * screen_y) / std::max(1, state.widget_height);
+    float x_ndc = static_cast<float>(2 * screen_x) / static_cast<float>(std::max(1, state.widget_width)) - 1.0f;
+    float y_ndc = 1.0f - static_cast<float>(2 * screen_y) / static_cast<float>(std::max(1, state.widget_height));
 
     // Get current projection bounds
     BoundingBox bounds = calculateProjectionBounds(state);
@@ -117,8 +117,8 @@ Point2D<uint32_t> worldToScreen(ViewState const & state,
     float y_ndc = 2.0f * (world_y - bounds.min_y) / (bounds.height()) - 1.0f;
 
     // Convert NDC to screen coordinates
-    uint32_t screen_x = static_cast<uint32_t>((x_ndc + 1.0f) * 0.5f * state.widget_width);
-    uint32_t screen_y = static_cast<uint32_t>((1.0f - y_ndc) * 0.5f * state.widget_height);
+    auto screen_x = static_cast<uint32_t>((x_ndc + 1.0f) * 0.5f * static_cast<float>(state.widget_width));
+    auto screen_y = static_cast<uint32_t>((1.0f - y_ndc) * 0.5f * static_cast<float>(state.widget_height));
 
     return {screen_x, screen_y};
 }
@@ -137,7 +137,7 @@ void computeCameraWorldView(ViewState const & state,
     float data_center_y = state.data_bounds.center_y();
 
     // Calculate visible world extents based on zoom
-    float aspect = static_cast<float>(state.widget_width) / std::max(1, state.widget_height);
+    float aspect = static_cast<float>(state.widget_width) / static_cast<float>(std::max(1, state.widget_height));
 
     if (aspect > 1.0f) {
         world_width = (data_width * state.padding_factor * aspect) / state.zoom_level_x;

@@ -34,7 +34,7 @@ public:
      * @brief Check if tooltips are enabled
      * @return True if tooltips are enabled
      */
-    bool isEnabled() const { return _enabled; }
+    [[nodiscard]] bool isEnabled() const { return _enabled; }
 
     /**
      * @brief Set the function that provides tooltip content

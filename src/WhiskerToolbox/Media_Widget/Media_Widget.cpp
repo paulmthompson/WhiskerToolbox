@@ -1,27 +1,13 @@
 #include "Media_Widget.hpp"
-
 #include "ui_Media_Widget.h"
-#include <QTimer>
-#include <QApplication>
-#include <QResizeEvent>
-#include <QGraphicsView>
-#include <QWheelEvent>
-#include <algorithm>
 
+#include "Collapsible_Widget/Section.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-
-//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
-#undef slots
-#include "DataManager/Tensors/Tensor_Data.hpp"
-#define slots Q_SLOTS
-
-
-#include "Collapsible_Widget/Section.hpp"
 #include "Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp"
 #include "Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp"
 #include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
@@ -31,16 +17,23 @@
 #include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 #include "Media_Window/Media_Window.hpp"
 
+//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
+#undef slots
+#include "DataManager/Tensors/Tensor_Data.hpp"
+#define slots Q_SLOTS
+
+#include <QApplication>
+#include <QGraphicsView>
+#include <QResizeEvent>
+#include <QTimer>
+#include <QWheelEvent>
+
+#include <algorithm>
 
 Media_Widget::Media_Widget(QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Media_Widget) {
     ui->setupUi(this);
-
-    // Hide legacy zoom button (now replaced by menu/shortcuts + wheel zoom)
-    if (ui->pushButton) {
-        ui->pushButton->hide();
-    }
 
     // Configure splitter behavior
     ui->splitter->setStretchFactor(0, 0);// Left panel (scroll area) doesn't stretch
@@ -142,7 +135,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene.get()));
     ui->stackedWidget->addWidget(new MediaInterval_Widget(_data_manager, _scene.get()));
     ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene.get()));
-    
+
     // Create and store reference to MediaProcessing_Widget
     _processing_widget = new MediaProcessing_Widget(_data_manager, _scene.get());
     ui->stackedWidget->addWidget(_processing_widget);
@@ -154,13 +147,13 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     QTimer::singleShot(100, this, [this]() {
         int scrollAreaWidth = ui->scrollArea->width();
         for (int i = 0; i < ui->stackedWidget->count(); ++i) {
-            QWidget* widget = ui->stackedWidget->widget(i);
+            QWidget * widget = ui->stackedWidget->widget(i);
             if (widget) {
                 widget->setFixedWidth(scrollAreaWidth - 10);
                 widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
                 // If this is a MediaProcessing_Widget, make sure it fills its container
-                auto processingWidget = qobject_cast<MediaProcessing_Widget*>(widget);
+                auto processingWidget = qobject_cast<MediaProcessing_Widget *>(widget);
                 if (processingWidget) {
                     processingWidget->setMinimumWidth(scrollAreaWidth - 10);
                     processingWidget->adjustSize();
@@ -179,62 +172,62 @@ void Media_Widget::_createOptions() {
 
     //Setup Media Data
     auto media_keys = _data_manager->getKeys<MediaData>();
-    for (auto media_key: media_keys) {
-        auto opts = _scene.get()->getMediaConfig(media_key);
+    for (auto const & media_key: media_keys) {
+        auto opts = _scene->getMediaConfig(media_key);
         if (opts.has_value()) continue;
 
-        _scene.get()->addMediaDataToScene(media_key);
+        _scene->addMediaDataToScene(media_key);
     }
 
     // Setup line data
     auto line_keys = _data_manager->getKeys<LineData>();
-    for (auto line_key: line_keys) {
-        auto opts = _scene.get()->getLineConfig(line_key);
+    for (auto const & line_key: line_keys) {
+        auto opts = _scene->getLineConfig(line_key);
         if (opts.has_value()) continue;
 
-        _scene.get()->addLineDataToScene(line_key);
+        _scene->addLineDataToScene(line_key);
     }
 
     // Setup mask data
     auto mask_keys = _data_manager->getKeys<MaskData>();
-    for (auto mask_key: mask_keys) {
-        auto opts = _scene.get()->getMaskConfig(mask_key);
+    for (auto const & mask_key: mask_keys) {
+        auto opts = _scene->getMaskConfig(mask_key);
         if (opts.has_value()) continue;
 
-        _scene.get()->addMaskDataToScene(mask_key);
+        _scene->addMaskDataToScene(mask_key);
     }
 
     // Setup point data
     auto point_keys = _data_manager->getKeys<PointData>();
-    for (auto point_key: point_keys) {
-        auto opts = _scene.get()->getPointConfig(point_key);
+    for (auto const & point_key: point_keys) {
+        auto opts = _scene->getPointConfig(point_key);
         if (opts.has_value()) continue;
 
-        _scene.get()->addPointDataToScene(point_key);
+        _scene->addPointDataToScene(point_key);
     }
 
     // Setup digital interval data
     auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
-    for (auto interval_key: interval_keys) {
-        auto opts = _scene.get()->getIntervalConfig(interval_key);
+    for (auto const & interval_key: interval_keys) {
+        auto opts = _scene->getIntervalConfig(interval_key);
         if (opts.has_value()) continue;
 
-        _scene.get()->addDigitalIntervalSeries(interval_key);
+        _scene->addDigitalIntervalSeries(interval_key);
     }
 
     // Setup tensor data
     auto tensor_keys = _data_manager->getKeys<TensorData>();
-    for (auto tensor_key: tensor_keys) {
-        auto opts = _scene.get()->getTensorConfig(tensor_key);
+    for (auto const & tensor_key: tensor_keys) {
+        auto opts = _scene->getTensorConfig(tensor_key);
         if (opts.has_value()) continue;
 
-        _scene.get()->addTensorDataToScene(tensor_key);
+        _scene->addTensorDataToScene(tensor_key);
     }
 }
 
 void Media_Widget::_connectTextWidgetToScene() {
     if (_scene && _text_widget) {
-        _scene.get()->setTextWidget(_text_widget);
+        _scene->setTextWidget(_text_widget);
 
         // Connect text widget signals to update canvas when overlays change
         connect(_text_widget, &MediaText_Widget::textOverlayAdded, _scene.get(), &Media_Window::UpdateCanvas);
@@ -292,17 +285,17 @@ void Media_Widget::_featureSelected(QString const & feature) {
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
-        
+
         // Do NOT set as active media key or update canvas - only show controls for configuration
         // The media will only be displayed when it's enabled via the checkbox
-        
+
     } else if (type == DM_DataType::Images) {
         int const stacked_widget_index = 6;
 
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
-        
+
         // Do NOT set as active media key or update canvas - only show controls for configuration
         // The media will only be displayed when it's enabled via the checkbox
     } else {
@@ -317,7 +310,7 @@ void Media_Widget::resizeEvent(QResizeEvent * event) {
     if (_user_zoom_active) {
         if (_scene) {
             auto size = ui->graphicsView->size();
-            _scene->setSceneRect(0,0,size.width(), size.height());
+            _scene->setSceneRect(0, 0, size.width(), size.height());
         }
     } else {
         _updateCanvasSize();
@@ -331,7 +324,7 @@ void Media_Widget::_updateCanvasSize() {
 
         _scene->setCanvasSize(
                 ImageSize{width, height});
-        _scene.get()->UpdateCanvas();
+        _scene->UpdateCanvas();
 
         // Ensure the view fits the scene properly
         ui->graphicsView->setSceneRect(0, 0, width, height);
@@ -346,7 +339,7 @@ void Media_Widget::_updateCanvasSize() {
         ui->feature_table_widget->setFixedWidth(featureTableWidth);
         ui->stackedWidget->setFixedWidth(featureTableWidth);
         for (int i = 0; i < ui->stackedWidget->count(); ++i) {
-            QWidget* widget = ui->stackedWidget->widget(i);
+            QWidget * widget = ui->stackedWidget->widget(i);
             if (widget) {
                 widget->setFixedWidth(featureTableWidth);
             }
@@ -361,7 +354,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     auto const type = _data_manager->getType(feature_key);
 
     if (type == DM_DataType::Line) {
-        auto opts = _scene.get()->getLineConfig(feature_key);
+        auto opts = _scene->getLineConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -371,7 +364,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         }
         opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::Mask) {
-        auto opts = _scene.get()->getMaskConfig(feature_key);
+        auto opts = _scene->getMaskConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -381,7 +374,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         }
         opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::Points) {
-        auto opts = _scene.get()->getPointConfig(feature_key);
+        auto opts = _scene->getPointConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -391,7 +384,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         }
         opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::DigitalInterval) {
-        auto opts = _scene.get()->getIntervalConfig(feature_key);
+        auto opts = _scene->getIntervalConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -401,7 +394,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         }
         opts.value()->is_visible = enabled;
     } else if (type == DM_DataType::Tensor) {
-        auto opts = _scene.get()->getTensorConfig(feature_key);
+        auto opts = _scene->getTensorConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -418,7 +411,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
-        auto opts = _scene.get()->getMediaConfig(feature_key);
+        auto opts = _scene->getMediaConfig(feature_key);
         if (!opts.has_value()) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -439,15 +432,14 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             std::cout << "Disabling media data from scene" << std::endl;
             opts.value()->is_visible = false;
         }
-    }
-    else {
+    } else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }
-    _scene.get()->UpdateCanvas();
+    _scene->UpdateCanvas();
 
     if (enabled) {
         _callback_ids[feature_key].push_back(_data_manager->addCallbackToData(feature_key, [this]() {
-            _scene.get()->UpdateCanvas();
+            _scene->UpdateCanvas();
         }));
     } else {
         for (auto callback_id: _callback_ids[feature_key]) {
@@ -461,39 +453,38 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
     auto const type = _data_manager->getType(feature);
 
     if (type == DM_DataType::Line) {
-        auto opts = _scene.get()->getLineConfig(feature);
+        auto opts = _scene->getLineConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     } else if (type == DM_DataType::Mask) {
-        auto opts = _scene.get()->getMaskConfig(feature);
+        auto opts = _scene->getMaskConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     } else if (type == DM_DataType::Points) {
-        auto opts = _scene.get()->getPointConfig(feature);
+        auto opts = _scene->getPointConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     } else if (type == DM_DataType::DigitalInterval) {
-        auto opts = _scene.get()->getIntervalConfig(feature);
+        auto opts = _scene->getIntervalConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     } else if (type == DM_DataType::Tensor) {
-        auto opts = _scene.get()->getTensorConfig(feature);
+        auto opts = _scene->getTensorConfig(feature);
         if (opts.has_value()) {
             opts.value()->hex_color = hex_color;
         }
     }
 
-    // Update the canvas with the new color
-    _scene.get()->UpdateCanvas();
+    _scene->UpdateCanvas();
 }
 
 void Media_Widget::LoadFrame(int frame_id) {
     if (_scene) {
-        _scene.get()->LoadFrame(frame_id);
+        _scene->LoadFrame(frame_id);
     }
     int currentIndex = ui->stackedWidget->currentIndex();
     if (currentIndex > 0) {
@@ -519,7 +510,7 @@ void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
     if (!ui->graphicsView) return;
     double new_zoom = _current_zoom * factor;
     new_zoom = std::clamp(new_zoom, _min_zoom, _max_zoom);
-    factor = new_zoom / _current_zoom; // Adjust factor if clamped
+    factor = new_zoom / _current_zoom;// Adjust factor if clamped
     if (qFuzzyCompare(factor, 1.0)) return;
     if (anchor_under_mouse) {
         ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
@@ -533,7 +524,7 @@ void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
 
 bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
     if (watched == ui->graphicsView->viewport() && event->type() == QEvent::Wheel) {
-        auto * wheelEvent = static_cast<QWheelEvent *>(event);
+        auto * wheelEvent = dynamic_cast<QWheelEvent *>(event);
         double angle = wheelEvent->angleDelta().y();
         if (angle > 0) {
             _applyZoom(_zoom_step, true);
@@ -549,10 +540,10 @@ bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
 void Media_Widget::_createMediaWindow() {
     if (_data_manager) {
         _scene = std::make_unique<Media_Window>(_data_manager, this);
-        
+
         // Set parent widget reference for accessing enabled media keys
         _scene->setParentWidget(this);
-        
+
         _connectTextWidgetToScene();
     }
 }

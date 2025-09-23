@@ -21,7 +21,6 @@
 #include <unordered_map>
 #include <vector>
 
-// Forward declarations
 class EventPointVisualization;
 class GroupManager;
 class EventPlotViewAdapter; // adapter (friend)
