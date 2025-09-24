@@ -184,14 +184,47 @@
      </property>
      <layout class="QVBoxLayout" name="column_design_layout">
       <item>
-       <widget class="QLabel" name="computers_info_label">
-        <property name="styleSheet">
-         <string>QLabel { color: gray; font-style: italic; }</string>
-        </property>
-        <property name="text">
-         <string>Select computers by checking the boxes. Expand data sources to see available operations.</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="computers_controls_layout">
+        <item>
+         <widget class="QLabel" name="computers_info_label">
+          <property name="styleSheet">
+           <string>QLabel { color: gray; font-style: italic; }</string>
+          </property>
+          <property name="text">
+           <string>Select computers by checking the boxes. Expand data sources to see available operations.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_computers">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="group_mode_toggle_btn">
+          <property name="text">
+           <string>Group Mode</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="toolTip">
+           <string>Toggle between group mode (apply to similar data) and individual mode (apply to specific items)</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="QTreeWidget" name="computers_tree">
@@ -220,6 +253,11 @@
         <column>
          <property name="text">
           <string>Column Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Parameters</string>
          </property>
         </column>
        </widget>
