@@ -37,8 +37,8 @@
 namespace {
 
 static QPoint worldToScreen(SpatialOverlayOpenGLWidget & widget, float world_x, float world_y) {
-    QVector2D top_left = widget.screenToWorld(0, 0);
-    QVector2D bottom_right = widget.screenToWorld(widget.width(), widget.height());
+    QVector2D top_left = widget.screenToWorld(QPoint(0, 0));
+    QVector2D bottom_right = widget.screenToWorld(QPoint(widget.width(), widget.height()));
     float left = top_left.x();
     float top = top_left.y();
     float right = bottom_right.x();
@@ -55,8 +55,8 @@ static bool waitForValidProjection(SpatialOverlayOpenGLWidget & widget, int time
     const int step = 10;
     int waited = 0;
     while (waited <= timeout_ms) {
-        QVector2D tl = widget.screenToWorld(0, 0);
-        QVector2D br = widget.screenToWorld(widget.width(), widget.height());
+        QVector2D tl = widget.screenToWorld(QPoint(0, 0));
+        QVector2D br = widget.screenToWorld(QPoint(widget.width(), widget.height()));
         if (tl.x() != br.x() && tl.y() != br.y()) {
             return true;
         }

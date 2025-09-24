@@ -12,7 +12,6 @@
 #include <QVector3D>
 
 
-class PointData;
 class QGraphicsProxyWidget;
 class SpatialOverlayOpenGLWidget;
 class QKeyEvent;

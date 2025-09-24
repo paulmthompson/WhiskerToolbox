@@ -33,7 +33,6 @@ public:
 
     // Rendering properties
     void setLineWidth(float line_width);
-    float getLineWidth() const { return _line_width; }
 
     // Time filtering
     void applyTimeRangeFilter(int start_frame, int end_frame);

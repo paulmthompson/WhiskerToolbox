@@ -43,16 +43,54 @@ public:
      * @param group_manager The group manager instance
      */
     void setGroupManager(GroupManager * group_manager);
-    void setPointSize(float point_size);
     void setTooltipsEnabled(bool enabled);
 
-    // View control
+    /**
+     * @brief Convert screen coordinates to world coordinates
+     * 
+     * This will use the current view state to convert the screen coordinates to world coordinates.
+     * View state includes the zoom level, pan offset, and data bounds.
+     * 
+     * @param screen_pos The screen position
+     * @return The world position
+     */
     [[nodiscard]] QVector2D screenToWorld(QPoint const & screen_pos) const;
+
+    /**
+     * @brief Convert world coordinates to screen coordinates
+     * 
+     * This will use the current view state to convert the world coordinates to screen coordinates.
+     * View state includes the zoom level, pan offset, and data bounds.
+     * 
+     * @param world_x The world x coordinate
+     * @param world_y The world y coordinate
+     * @return The screen position
+     */
     [[nodiscard]] QPoint worldToScreen(float world_x, float world_y) const;
+
+    /**
+     * @brief Reset the view to the default state
+     * 
+     * This will reset the view to the default state, which is the original state of the widget.
+     */
     void resetView();
 
-    // ViewState access for adapters
+    /**
+     * @brief Get the view state
+     * 
+     * This will return the current view state.
+     * 
+     * @return The view state
+     */
     ViewState & getViewState() { return _view_state; }
+
+    /**
+     * @brief Get the view state
+     * 
+     * This will return the current view state.
+     * 
+     * @return The view state
+     */
     [[nodiscard]] ViewState const & getViewState() const { return _view_state; }
 
     // Selection management
@@ -62,8 +100,9 @@ public:
     virtual void clearSelection() = 0;
 
     // Public event handlers for external access (e.g., event filters)
-    virtual void handleKeyPress(QKeyEvent * event);
+    void handleKeyPress(QKeyEvent * event);
 
+    void setPointSize(float point_size);
     [[nodiscard]] float getPointSize() const { return _point_size; }
     [[nodiscard]] float getLineWidth() const { return _line_width; }
     [[nodiscard]] bool getTooltipsEnabled() const { return _tooltips_enabled; }
@@ -76,7 +115,7 @@ signals:
     void highlightStateChanged();
 
 protected:
-    // Template method pattern - defines the rendering algorithm
+
     void paintGL() override;
     void initializeGL() override;
     void resizeGL(int w, int h) override;
@@ -88,11 +127,32 @@ protected:
     void wheelEvent(QWheelEvent * event) override;
     void leaveEvent(QEvent * event) override;
 
+    [[nodiscard]] RenderingContext createRenderingContext() const;
+    void updateViewMatrices();
+    void requestThrottledUpdate();
+    
+    [[nodiscard]] bool validateOpenGLContext() const;
 
-    // Hooks for subclasses to implement
+
+    /**
+     * @brief Render the data
+     * 
+     * This is a pure virtual function that must be implemented by subclasses.
+     * It is called to render the data.
+     */
     virtual void renderData() = 0;
     virtual void calculateDataBounds() = 0;
     [[nodiscard]] virtual BoundingBox getDataBounds() const = 0;
+
+    /**
+     * @brief Set the group manager
+     * 
+     * This is a pure virtual function that must be implemented by subclasses.
+     * It is called to set the group manager. Usually this will require
+     * passing the group manager to the visualization objects present in the widget
+     * 
+     */
+    virtual void doSetGroupManager(GroupManager * group_manager) = 0;
 
     // Optional hooks
     virtual void renderBackground();
@@ -103,16 +163,6 @@ protected:
     // OpenGL context configuration (override in subclasses if needed)
     [[nodiscard]] virtual std::pair<int, int> getRequiredOpenGLVersion() const { return {4, 1}; }
     [[nodiscard]] virtual int getRequiredSamples() const { return 4; }
-
-    // Helper methods
-    [[nodiscard]] RenderingContext createRenderingContext() const;
-    void updateViewMatrices();
-    void requestThrottledUpdate();
-
-    // OpenGL context validation
-    [[nodiscard]] bool validateOpenGLContext() const;
-
-    virtual void doSetGroupManager(GroupManager * group_manager) = 0;
 
 protected:
     // Common state
