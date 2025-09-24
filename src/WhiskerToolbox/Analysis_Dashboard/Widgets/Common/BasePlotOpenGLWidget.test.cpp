@@ -1,10 +1,12 @@
-#include "../fixtures/qt_test_fixtures.hpp"
 #include "Analysis_Dashboard/Widgets/Common/BasePlotOpenGLWidget.hpp"
+#include "../fixtures/qt_test_fixtures.hpp"
 #include "CoreGeometry/points.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <QPoint>
+#include <QRegularExpression>
+#include <QTextStream>
 #include <QVector2D>
 
 #include <algorithm>
@@ -22,12 +24,8 @@ public:
      */
     TestPlotWidget()
         : BasePlotOpenGLWidget(nullptr),
-          _points({Point2D<float>{1.0f, 2.0f}, 
-                   Point2D<float>{7.0f, 8.0f}, 
-                   Point2D<float>{4.0f, 5.0f}}),
-        _bounding_box{1.0f, 2.0f, 7.0f, 8.0f}
-    {
-        
+          _points({Point2D<float>{1.0f, 2.0f}, Point2D<float>{7.0f, 8.0f}, Point2D<float>{4.0f, 5.0f}}),
+          _bounding_box{1.0f, 2.0f, 7.0f, 8.0f} {
         auto & view_state = getViewState();
         view_state.padding_factor = 1.0f;
         calculateDataBounds();
@@ -39,27 +37,44 @@ public:
      */
     [[nodiscard]] BoundingBox getExpectedBounds() const { return _bounding_box; }
 
+    [[nodiscard]] std::optional<QString> generateTooltipContent(QPoint const & screen_pos) const override {
+        if (!_tooltips_enabled) {
+            return std::nullopt;
+        }
+
+        QPoint local_pos = rect().contains(screen_pos) ? screen_pos : mapFromGlobal(screen_pos);
+        if (!rect().contains(local_pos)) {
+            return std::nullopt;
+        }
+
+        auto world = screenToWorld(local_pos);
+        QString text;
+        QTextStream stream(&text);
+        stream.setRealNumberNotation(QTextStream::FixedNotation);
+        stream.setRealNumberPrecision(3);
+        stream << "Position: (" << world.x() << ", " << world.y() << ")";
+        return text;
+    }
+
 protected:
     void renderData() override {}
 
     void calculateDataBounds() override {
         if (_points.empty()) {
             _bounding_box = BoundingBox{0.0f, 0.0f, 0.0f, 0.0f};
-            //_data_bounds_valid = false;
             return;
         }
 
         auto [min_x_it, max_x_it] = std::minmax_element(_points.begin(), _points.end(),
-                                                         [](Point2D<float> const & lhs, Point2D<float> const & rhs) {
-                                                             return lhs.x < rhs.x;
-                                                         });
+                                                        [](Point2D<float> const & lhs, Point2D<float> const & rhs) {
+                                                            return lhs.x < rhs.x;
+                                                        });
         auto [min_y_it, max_y_it] = std::minmax_element(_points.begin(), _points.end(),
-                                                         [](Point2D<float> const & lhs, Point2D<float> const & rhs) {
-                                                             return lhs.y < rhs.y;
-                                                         });
+                                                        [](Point2D<float> const & lhs, Point2D<float> const & rhs) {
+                                                            return lhs.y < rhs.y;
+                                                        });
 
         _bounding_box = BoundingBox{min_x_it->x, min_y_it->y, max_x_it->x, max_y_it->y};
-        //_data_bounds_valid = true;
     }
 
     [[nodiscard]] BoundingBox getDataBounds() const override { return _bounding_box; }
@@ -72,7 +87,7 @@ private:
     BoundingBox _bounding_box;
 };
 
-} // namespace
+}// namespace
 
 TEST_CASE_METHOD(QtWidgetTestFixture,
                  "Analysis Dashboard - BasePlotOpenGLWidget - screenToWorld maps widget corners",

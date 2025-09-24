@@ -60,7 +60,7 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
 
 void SpatialOverlayOpenGLWidget::doSetGroupManager(GroupManager * group_manager) {
     // Update visualization instances with new manager
-    for (auto & kv : _point_data_visualizations) {
+    for (auto & kv: _point_data_visualizations) {
         if (kv.second) {
             kv.second->setGroupManager(group_manager);
         }
@@ -81,7 +81,7 @@ void SpatialOverlayOpenGLWidget::refreshGroupRenderDataAll() {
         made_current = true;
     }
 
-    for (auto & kv : _point_data_visualizations) {
+    for (auto & kv: _point_data_visualizations) {
         if (kv.second) {
             kv.second->refreshGroupRenderData();
         }
@@ -410,8 +410,14 @@ std::optional<QString> SpatialOverlayOpenGLWidget::generateTooltipContent(QPoint
         return std::nullopt;
     }
 
+    // Convert potential global position to widget coordinates
+    QPoint local_pos = rect().contains(screen_pos) ? screen_pos : mapFromGlobal(screen_pos);
+    if (!rect().contains(local_pos)) {
+        return std::nullopt;
+    }
+
     // Convert screen position to world coordinates
-    auto world_pos = screenToWorld(screen_pos);
+    auto world_pos = screenToWorld(local_pos);
     float world_x = world_pos.x();
     float world_y = world_pos.y();
 
@@ -433,7 +439,6 @@ std::optional<QString> SpatialOverlayOpenGLWidget::generateTooltipContent(QPoint
 
     return tooltip;
 }
-
 
 
 void SpatialOverlayOpenGLWidget::updateVisualizationData() {
@@ -491,7 +496,7 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     }
 }
 
-void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
+void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     // Call base class implementation
     BasePlotOpenGLWidget::mouseDoubleClickEvent(event);
 
@@ -616,7 +621,6 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
 
     qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_entity_ids.size()
              << "entities to group" << group_id;
-
 }
 
 void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
