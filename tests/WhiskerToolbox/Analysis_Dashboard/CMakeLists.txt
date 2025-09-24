@@ -22,6 +22,7 @@ add_executable(AnalysisDashboardTests
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Analysis_Dashboard/multiple_plot_groups.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard/Widgets/Common/BasePlotOpenGLWidget.test.cpp
     GroupCoordinator.test.cpp
     ../fixtures/test_signal_probe_simple.cpp
     ../fixtures/signal_probe.cpp
