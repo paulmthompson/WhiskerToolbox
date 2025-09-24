@@ -52,6 +52,7 @@ protected:
     void renderData() override;
     void calculateDataBounds() override;
     BoundingBox getDataBounds() const override;
+    void doSetGroupManager(GroupManager * group_manager) override;
 
     // OpenGL lifecycle
     void initializeGL() override;

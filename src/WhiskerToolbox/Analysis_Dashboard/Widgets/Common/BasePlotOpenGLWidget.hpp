@@ -37,14 +37,18 @@ public:
     explicit BasePlotOpenGLWidget(QWidget * parent = nullptr);
     virtual ~BasePlotOpenGLWidget();
 
-    // Common interface
+    /**
+     * @brief Set the group manager 
+     * 
+     * @param group_manager The group manager instance
+     */
     void setGroupManager(GroupManager * group_manager);
     void setPointSize(float point_size);
     void setTooltipsEnabled(bool enabled);
 
     // View control
-    [[nodiscard]] virtual QVector2D screenToWorld(QPoint const & screen_pos) const;
-    [[nodiscard]] virtual QPoint worldToScreen(float world_x, float world_y) const;
+    [[nodiscard]] QVector2D screenToWorld(QPoint const & screen_pos) const;
+    [[nodiscard]] QPoint worldToScreen(float world_x, float world_y) const;
     void resetView();
 
     // ViewState access for adapters
@@ -108,6 +112,8 @@ protected:
     // OpenGL context validation
     [[nodiscard]] bool validateOpenGLContext() const;
 
+    virtual void doSetGroupManager(GroupManager * group_manager) = 0;
+
 protected:
     // Common state
     GroupManager * _group_manager = nullptr;
@@ -122,7 +128,8 @@ protected:
     std::function<void()> _selection_callback;
 
     // View state (encapsulates zoom, pan, bounds, etc.)
-    ViewState _view_state;
+    // Widget dimensions are mutable as they're not part of logical state
+    mutable ViewState _view_state;
 
     // View and projection matrices
     QMatrix4x4 _model_matrix;

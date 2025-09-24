@@ -46,7 +46,6 @@ public:
     // Selection management
     void clearSelection() override;
     void setSelectionMode(SelectionMode mode) override;
-    void setGroupManager(GroupManager * group_manager);
 
     // Visibility management
     void hideSelectedItems();
@@ -57,10 +56,6 @@ public:
     void assignSelectedPointsToNewGroup();
     void assignSelectedPointsToGroup(int group_id);
     void ungroupSelectedPoints();
-
-    // Coordinate conversion (public interface)
-    QVector2D screenToWorld(int screen_x, int screen_y) const;
-    QPoint worldToScreen(float world_x, float world_y) const;
 
     // Refresh group-based rendering data (invoked by plot upon coordinator events)
     void refreshGroupRenderDataAll();
@@ -135,6 +130,9 @@ private:
     void updateContextMenuState();
     void updateDynamicGroupActions();
     void makeSelection();
+    
+    // Template method hooks - required implementations
+    void doSetGroupManager(GroupManager * group_manager) override;
 
     friend class GenericViewAdapter;
 };

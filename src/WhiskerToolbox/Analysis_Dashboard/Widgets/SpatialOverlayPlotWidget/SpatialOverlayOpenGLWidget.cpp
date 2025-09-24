@@ -58,8 +58,7 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
     initializeVisualizations();
 }
 
-void SpatialOverlayOpenGLWidget::setGroupManager(GroupManager * group_manager) {
-    BasePlotOpenGLWidget::setGroupManager(group_manager);
+void SpatialOverlayOpenGLWidget::doSetGroupManager(GroupManager * group_manager) {
     // Update visualization instances with new manager
     for (auto & kv : _point_data_visualizations) {
         if (kv.second) {
@@ -300,14 +299,6 @@ void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
     requestThrottledUpdate();
 }
 
-QVector2D SpatialOverlayOpenGLWidget::screenToWorld(int screen_x, int screen_y) const {
-    return BasePlotOpenGLWidget::screenToWorld(QPoint(screen_x, screen_y));
-}
-
-QPoint SpatialOverlayOpenGLWidget::worldToScreen(float world_x, float world_y) const {
-    return BasePlotOpenGLWidget::worldToScreen(world_x, world_y);
-}
-
 void SpatialOverlayOpenGLWidget::renderData() {
     auto context = createRenderingContext();
     auto mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
@@ -420,7 +411,7 @@ std::optional<QString> SpatialOverlayOpenGLWidget::generateTooltipContent(QPoint
     }
 
     // Convert screen position to world coordinates
-    auto world_pos = screenToWorld(screen_pos.x(), screen_pos.y());
+    auto world_pos = screenToWorld(screen_pos);
     float world_x = world_pos.x();
     float world_y = world_pos.y();
 
@@ -475,7 +466,7 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
 void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     // Convert to world coordinates for selection handlers
-    auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
+    auto world_pos = screenToWorld(event->pos());
 
     // Call base class implementation first (handles interaction controller and tooltips)
     BasePlotOpenGLWidget::mouseMoveEvent(event);
@@ -508,7 +499,7 @@ void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
         event->accept();
 
-        QVector2D world_pos = screenToWorld(event->pos().x(), event->pos().y());
+        QVector2D world_pos = screenToWorld(event->pos());
 
         for (auto const & [key, viz]: _point_data_visualizations) {
             if (!viz) continue;

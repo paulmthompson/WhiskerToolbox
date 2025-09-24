@@ -150,6 +150,12 @@ void ScatterPlotOpenGLWidget::renderUI() {
     // renders its UI elements, but focused just on axes
 }
 
+void ScatterPlotOpenGLWidget::doSetGroupManager(GroupManager * group_manager) {
+    if (_visualization) {
+        _visualization->setGroupManager(group_manager);
+    }
+}
+
 size_t ScatterPlotOpenGLWidget::getDataPointCount() const {
     return _x_data.size();
 }

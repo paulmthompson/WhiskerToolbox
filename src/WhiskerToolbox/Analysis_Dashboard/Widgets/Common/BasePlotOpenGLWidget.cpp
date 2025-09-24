@@ -71,6 +71,9 @@ void BasePlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
     _group_manager = group_manager;
 
     qDebug() << "BasePlotOpenGLWidget: Set group manager";
+    
+    // Enforce derived class implementation
+    doSetGroupManager(group_manager);
 }
 
 void BasePlotOpenGLWidget::setPointSize(float point_size) {
@@ -90,8 +93,8 @@ void BasePlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
 
 QVector2D BasePlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
     // Update view state dimensions for accurate conversion
-    const_cast<ViewState &>(_view_state).widget_width = width();
-    const_cast<ViewState &>(_view_state).widget_height = height();
+    _view_state.widget_width = width();
+    _view_state.widget_height = height();
 
     auto world_point = ViewUtils::screenToWorld(_view_state, screen_pos.x(), screen_pos.y());
     return {world_point.x, world_point.y};
@@ -99,8 +102,8 @@ QVector2D BasePlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
 
 QPoint BasePlotOpenGLWidget::worldToScreen(float world_x, float world_y) const {
     // Update view state dimensions for accurate conversion
-    const_cast<ViewState &>(_view_state).widget_width = width();
-    const_cast<ViewState &>(_view_state).widget_height = height();
+    _view_state.widget_width = width();
+    _view_state.widget_height = height();
 
     auto screen_point = ViewUtils::worldToScreen(_view_state, world_x, world_y);
     return QPoint{static_cast<int>(screen_point.x), static_cast<int>(screen_point.y)};
