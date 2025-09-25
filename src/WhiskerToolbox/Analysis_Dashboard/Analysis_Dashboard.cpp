@@ -114,8 +114,8 @@ void Analysis_Dashboard::setupLayout() {
     properties_layout->setContentsMargins(0, 0, 0, 0);
     properties_layout->addWidget(_properties_panel);
 
-    // Set properties panel to expand both horizontally and vertically
-    _properties_panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    // Set properties panel to use preferred width but expand vertically  
+    _properties_panel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 
     // Set stretch factors - toolbox gets minimal space (0), properties gets most space (1)
     if (auto * main_layout = qobject_cast<QVBoxLayout *>(ui->centralwidget->layout())) {

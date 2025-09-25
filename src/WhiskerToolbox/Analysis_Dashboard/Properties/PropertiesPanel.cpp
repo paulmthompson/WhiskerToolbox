@@ -49,7 +49,7 @@ void PropertiesPanel::initializePropertiesPanel() {
 
     // Add the stacked widget directly to the panel's layout (no internal scroll area)
     if (auto * layout = ui->verticalLayout) {
-        _stacked_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        _stacked_widget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
         layout->addWidget(_stacked_widget);
     }
 
