@@ -299,6 +299,27 @@ void SpatialOverlayPlotWidget::setGroupManager(GroupManager * group_manager) {
     }
 }
 
+void SpatialOverlayPlotWidget::onGroupCreated(int group_id, QString const & name, QColor const & color) {
+    Q_UNUSED(name)
+    Q_UNUSED(color)
+    if (_opengl_widget) {
+        // Ask GL to refresh its per-point group render data based on current GroupManager state
+        _opengl_widget->refreshGroupRenderDataAll();
+    }
+    // Coalesce scene-level updates as well
+    scheduleRenderUpdate();
+}
+
+void SpatialOverlayPlotWidget::onGroupRemoved(int group_id) {
+    Q_UNUSED(group_id)
+    if (_opengl_widget) {
+        // Ask GL to refresh its per-point group render data based on current GroupManager state
+        _opengl_widget->refreshGroupRenderDataAll();
+    }
+    // Coalesce scene-level updates as well
+    scheduleRenderUpdate();
+}
+
 void SpatialOverlayPlotWidget::onGroupPropertiesChanged(int group_id) {
     Q_UNUSED(group_id)
     if (_opengl_widget) {
