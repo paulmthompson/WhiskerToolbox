@@ -14,7 +14,7 @@
    <string>Analysis Dashboard</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-    <layout class="QHBoxLayout" name="main_layout">
+    <layout class="QVBoxLayout" name="main_layout">
     <property name="leftMargin">
      <number>5</number>
     </property>
@@ -31,7 +31,7 @@
       <widget class="QWidget" name="toolbox_container" native="true">
        <property name="minimumSize">
         <size>
-         <width>200</width>
+         <width>0</width>
          <height>0</height>
         </size>
        </property>
@@ -41,8 +41,14 @@
       <widget class="QWidget" name="properties_container" native="true">
        <property name="minimumSize">
         <size>
-         <width>200</width>
-         <height>0</height>
+         <width>250</width>
+         <height>200</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>350</width>
+         <height>16777215</height>
         </size>
        </property>
       </widget>

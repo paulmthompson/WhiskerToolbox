@@ -11,22 +11,18 @@ class ToolboxPanel;
 
 class QListWidget;
 class QListWidgetItem;
-class GroupManager;
-class GroupManagementWidget;
-class DataManager;
 
 /**
  * @brief Toolbox panel containing available plot types for adding to the dashboard
  * 
  * This widget provides a list of available plot types that users can select
- * and add to the main dashboard graphics view to create new plots. It also contains
- * the groups management interface and table designer widget.
+ * and add to the main dashboard graphics view to create new plots.
  */
 class ToolboxPanel : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ToolboxPanel(GroupManager * group_manager, std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
+    explicit ToolboxPanel(QWidget * parent = nullptr);
     ~ToolboxPanel() override;
 
 
@@ -51,7 +47,6 @@ private slots:
 
 private:
     Ui::ToolboxPanel * ui;
-    GroupManagementWidget * _group_widget;
     // TableDesignerWidget removed from dashboard toolbox
     void * _table_designer_widget;// legacy placeholder, not used
 
@@ -67,6 +62,11 @@ private:
      * @param icon_path Path to the icon for this plot type (optional)
      */
     void addPlotType(QString const & plot_type, QString const & display_name, QString const & icon_path = QString());
+
+    /**
+     * @brief Resize the plot list widget to fit its contents
+     */
+    void resizeListToContents();
 };
 
 #endif// TOOLBOXPANEL_HPP

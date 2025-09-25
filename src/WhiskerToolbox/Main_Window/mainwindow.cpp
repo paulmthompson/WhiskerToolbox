@@ -82,6 +82,11 @@ MainWindow::MainWindow(QWidget * parent)
 
     // Create media widget manager
     _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, this);
+    
+    // Connect the group manager to the media widget manager
+    if (_group_manager) {
+        _media_manager->setGroupManager(_group_manager.get());
+    }
 
     _verbose = false;
 

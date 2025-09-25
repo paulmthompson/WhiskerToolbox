@@ -72,7 +72,7 @@ void Analysis_Dashboard::openWidget() {
 
 void Analysis_Dashboard::initializeDashboard() {
     // Create the main components
-    _toolbox_panel = new ToolboxPanel(_group_manager, _data_manager, this);
+    _toolbox_panel = new ToolboxPanel(this);
     _properties_panel = new PropertiesPanel(this);
     
     // Create the plot organizer using the forwarded dock manager
@@ -107,20 +107,20 @@ void Analysis_Dashboard::setupLayout() {
     toolbox_layout->setContentsMargins(0, 0, 0, 0);
     toolbox_layout->addWidget(_toolbox_panel);
 
-    // Ensure toolbox panel can expand horizontally
-    _toolbox_panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    // Set toolbox panel to expand horizontally but use minimum vertical space
+    _toolbox_panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     QVBoxLayout * properties_layout = new QVBoxLayout(properties_container);
     properties_layout->setContentsMargins(0, 0, 0, 0);
     properties_layout->addWidget(_properties_panel);
 
-    // Ensure properties panel can expand horizontally
-    _properties_panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    // Set properties panel to use preferred width but expand vertically  
+    _properties_panel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 
-    // Set equal stretch so both side panels share available width
-    if (auto * main_layout = qobject_cast<QHBoxLayout *>(ui->centralwidget->layout())) {
-        main_layout->setStretch(0, 1);
-        main_layout->setStretch(1, 1);
+    // Set stretch factors - toolbox gets minimal space (0), properties gets most space (1)
+    if (auto * main_layout = qobject_cast<QVBoxLayout *>(ui->centralwidget->layout())) {
+        main_layout->setStretch(0, 0);  // Toolbox: minimal stretch
+        main_layout->setStretch(1, 1);  // Properties: takes remaining space
     }
 }
 

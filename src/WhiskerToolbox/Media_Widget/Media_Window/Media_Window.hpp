@@ -5,6 +5,7 @@
 #include "../Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
+#include "DataManager/Entity/EntityTypes.hpp"
 
 #include <QGraphicsEllipseItem>
 #include <QGraphicsItem>
@@ -25,6 +26,7 @@ class QImage;
 class MediaMask_Widget;
 class MediaText_Widget;
 class Media_Widget;
+class GroupManager;
 
 struct TextOverlay;
 
@@ -80,6 +82,12 @@ public:
     void setParentWidget(QWidget * parent_widget) {
         _parent_widget = parent_widget;
     }
+
+    /**
+     * @brief Set the GroupManager for group-aware plotting
+     * @param group_manager Pointer to the GroupManager instance
+     */
+    void setGroupManager(GroupManager * group_manager);
 
     /**
      *
@@ -185,6 +193,7 @@ protected:
 private:
     std::shared_ptr<DataManager> _data_manager;
     QWidget * _parent_widget = nullptr;
+    GroupManager * _group_manager = nullptr;
 
     QGraphicsPixmapItem * _canvasPixmap = nullptr;
     QImage _canvasImage;
@@ -262,9 +271,21 @@ private:
     // Helper for timeframe conversion
     bool _needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe,
                                    std::shared_ptr<TimeFrame> const & interval_timeframe);
+    
+    // Group-aware color helpers
+    [[nodiscard]] QColor _getGroupAwareColor(EntityId entity_id, QColor const & default_color) const;
+    [[nodiscard]] QRgb _getGroupAwareColorRgb(EntityId entity_id, QRgb default_color) const;
 
 public slots:
     void LoadFrame(int frame_id);
+
+private slots:
+    /**
+     * @brief Handle when a group is created, modified, or removed
+     * Updates the canvas to reflect color changes
+     */
+    void onGroupChanged();
+
 signals:
     void leftClick(qreal, qreal);
     void rightClick(qreal, qreal);

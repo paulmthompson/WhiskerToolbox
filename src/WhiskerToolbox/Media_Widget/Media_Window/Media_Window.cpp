@@ -15,6 +15,7 @@
 #include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -272,6 +273,22 @@ void Media_Window::_clearTensors() {
 
 void Media_Window::setTextWidget(MediaText_Widget * text_widget) {
     _text_widget = text_widget;
+}
+
+void Media_Window::setGroupManager(GroupManager * group_manager) {
+    // Disconnect from previous group manager if any
+    if (_group_manager) {
+        disconnect(_group_manager, nullptr, this, nullptr);
+    }
+    
+    _group_manager = group_manager;
+    
+    // Connect to new group manager signals if available
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated, this, &Media_Window::onGroupChanged);
+        connect(_group_manager, &GroupManager::groupRemoved, this, &Media_Window::onGroupChanged);
+        connect(_group_manager, &GroupManager::groupModified, this, &Media_Window::onGroupChanged);
+    }
 }
 
 void Media_Window::_plotTextOverlays() {
@@ -933,6 +950,7 @@ void Media_Window::_plotLineData() {
 
         auto line_data = _data_manager->getData<LineData>(line_key);
         auto lineData = line_data->getAtTime(TimeFrameIndex(current_time), video_timeframe.get(), line_timeframe.get());
+        auto entityIds = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time), video_timeframe.get(), line_timeframe.get());
 
         // Check for line-specific image size scaling
         auto image_size = line_data->getImageSize();
@@ -951,8 +969,12 @@ void Media_Window::_plotLineData() {
             continue;
         }
 
-        for (int line_idx = 0; line_idx < static_cast<int>(lineData.size()); ++line_idx) {
+        // Ensure we have matching line data and entity IDs
+        size_t line_count = std::min(lineData.size(), entityIds.size());
+
+        for (int line_idx = 0; line_idx < static_cast<int>(line_count); ++line_idx) {
             auto const & single_line = lineData[line_idx];
+            EntityId entity_id = static_cast<size_t>(line_idx) < entityIds.size() ? entityIds[line_idx] : 0;
 
             if (single_line.empty()) {
                 continue;
@@ -960,6 +982,9 @@ void Media_Window::_plotLineData() {
 
             // Check if this line is selected
             bool const is_selected = (_line_config.get()->selected_line_index == line_idx);
+
+            // Use group-aware color if available, otherwise use default plot color
+            QColor line_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
 
             // Use segment if enabled, otherwise use full line
             Line2D line_to_plot;
@@ -1000,7 +1025,7 @@ void Media_Window::_plotLineData() {
                 linePen.setWidth(_line_config.get()->line_thickness + 2);// Thicker for selected
                 linePen.setStyle(Qt::DashLine);                          // Dashed line for selected
             } else {
-                linePen.setColor(plot_color);
+                linePen.setColor(line_color);
                 linePen.setWidth(_line_config.get()->line_thickness);
             }
 
@@ -1008,7 +1033,7 @@ void Media_Window::_plotLineData() {
             _line_paths.append(linePath);
 
             // Add dot at line base (always filled) - selected lines have red dot
-            QColor const dot_color = is_selected ? QColor(255, 0, 0) : plot_color;
+            QColor const dot_color = is_selected ? QColor(255, 0, 0) : line_color;
             auto ellipse = addEllipse(
                     static_cast<float>(line_to_plot[0].x) * xAspect - 2.5,
                     static_cast<float>(line_to_plot[0].y) * yAspect - 2.5,
@@ -1064,6 +1089,8 @@ void Media_Window::_plotLineData() {
 }
 
 void Media_Window::_plotMaskData() {
+    // Note: MaskData does not currently support EntityIds for group-aware coloring
+    // This would need to be implemented similar to PointData and LineData
     auto const current_time = _data_manager->getCurrentTime();
 
     auto video_timeframe = _data_manager->getTime(TimeKey("time"));
@@ -1318,38 +1345,48 @@ void Media_Window::_plotPointData() {
         }
 
         auto pointData = point->getAtTime(current_time, video_timeframe.get(), point_timeframe.get());
+        auto entityIds = point->getEntityIdsAtTime(current_time);
 
         // Get configurable point size
         float const point_size = static_cast<float>(_point_config.get()->point_size);
 
-        for (auto const & single_point: pointData) {
+        // Ensure we have matching point data and entity IDs
+        size_t count = std::min(pointData.size(), entityIds.size());
+        
+        for (size_t i = 0; i < count; ++i) {
+            auto const & single_point = pointData[i];
+            EntityId entity_id = entityIds[i];
+            
             float const x_pos = single_point.x * xAspect;
             float const y_pos = single_point.y * yAspect;
+
+            // Use group-aware color if available, otherwise use default plot color
+            QColor point_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
 
             // Create the appropriate marker shape based on configuration
             switch (_point_config.get()->marker_shape) {
                 case PointMarkerShape::Circle: {
-                    QPen pen(plot_color);
+                    QPen pen(point_color);
                     pen.setWidth(2);
-                    QBrush const brush(plot_color);
+                    QBrush const brush(point_color);
                     auto ellipse = addEllipse(x_pos - point_size / 2, y_pos - point_size / 2,
                                               point_size, point_size, pen, brush);
                     _points.append(ellipse);
                     break;
                 }
                 case PointMarkerShape::Square: {
-                    QPen pen(plot_color);
+                    QPen pen(point_color);
                     pen.setWidth(2);
-                    QBrush const brush(plot_color);
+                    QBrush const brush(point_color);
                     auto rect = addRect(x_pos - point_size / 2, y_pos - point_size / 2,
                                         point_size, point_size, pen, brush);
                     _points.append(rect);
                     break;
                 }
                 case PointMarkerShape::Triangle: {
-                    QPen pen(plot_color);
+                    QPen pen(point_color);
                     pen.setWidth(2);
-                    QBrush const brush(plot_color);
+                    QBrush const brush(point_color);
 
                     // Create triangle polygon
                     QPolygonF triangle;
@@ -1363,7 +1400,7 @@ void Media_Window::_plotPointData() {
                     break;
                 }
                 case PointMarkerShape::Cross: {
-                    QPen pen(plot_color);
+                    QPen pen(point_color);
                     pen.setWidth(3);
 
                     float const half_size = point_size / 2;
@@ -1377,7 +1414,7 @@ void Media_Window::_plotPointData() {
                     break;
                 }
                 case PointMarkerShape::X: {
-                    QPen pen(plot_color);
+                    QPen pen(point_color);
                     pen.setWidth(3);
 
                     float const half_size = point_size / 2;
@@ -1393,9 +1430,9 @@ void Media_Window::_plotPointData() {
                     break;
                 }
                 case PointMarkerShape::Diamond: {
-                    QPen pen(plot_color);
+                    QPen pen(point_color);
                     pen.setWidth(2);
-                    QBrush brush(plot_color);
+                    QBrush brush(point_color);
 
                     // Create diamond polygon (rotated square)
                     QPolygonF diamond;
@@ -1771,4 +1808,26 @@ void Media_Window::setPreviewMaskData(std::string const & mask_key,
         _preview_mask_data.erase(mask_key);
         _mask_preview_active = !_preview_mask_data.empty();
     }
+}
+
+void Media_Window::onGroupChanged() {
+    // Update the canvas when group assignments or properties change
+    UpdateCanvas();
+}
+
+QColor Media_Window::_getGroupAwareColor(EntityId entity_id, QColor const & default_color) const {
+    if (!_group_manager || entity_id == 0) {
+        return default_color;
+    }
+    
+    return _group_manager->getEntityColor(entity_id, default_color);
+}
+
+QRgb Media_Window::_getGroupAwareColorRgb(EntityId entity_id, QRgb default_color) const {
+    if (!_group_manager || entity_id == 0) {
+        return default_color;
+    }
+    
+    QColor group_color = _group_manager->getEntityColor(entity_id, QColor::fromRgba(default_color));
+    return group_color.rgba();
 }
