@@ -142,3 +142,92 @@ void save(PointData const * point_data, CSVPointSaverOptions const & opts)
     fout.close();
     std::cout << "Successfully saved points to " << filename << std::endl;
 }
+
+std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts) {
+    std::fstream file;
+    file.open(opts.filename, std::fstream::in);
+    
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << opts.filename << std::endl;
+        return {};
+    }
+
+    std::string ln, ele;
+
+    // Skip the "scorer" row (first row)
+    getline(file, ln);
+
+    // Read bodyparts row (second row)
+    getline(file, ln);
+    std::vector<std::string> bodyparts;
+    {
+        std::stringstream ss(ln);
+        while (getline(ss, ele, ',')) {
+            bodyparts.push_back(ele);
+        }
+    }
+
+    // Read coords row (third row)
+    getline(file, ln);
+    std::vector<std::string> dims;
+    {
+        std::stringstream ss(ln);
+        while (getline(ss, ele, ',')) {
+            dims.push_back(ele);
+        }
+    }
+
+    // Parse data rows
+    std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> data;
+    
+    while (getline(file, ln)) {
+        std::stringstream ss(ln);
+        size_t col_no = 0;
+        TimeFrameIndex frame_no(0);
+        
+        // Temporary storage for current row's points
+        std::map<std::string, Point2D<float>> temp_points;
+        std::map<std::string, float> temp_likelihoods;
+        
+        while (getline(ss, ele, ',')) {
+            if (static_cast<int>(col_no) == opts.frame_column) {
+                // For DLC CSV, frame column should already be a pure number, no extraction needed
+                frame_no = TimeFrameIndex(std::stoi(ele));
+            } else if (col_no < dims.size() && col_no < bodyparts.size()) {
+                std::string const& bodypart = bodyparts[col_no];
+                std::string const& coord_type = dims[col_no];
+                
+                if (coord_type == "x") {
+                    temp_points[bodypart].x = std::stof(ele);
+                } else if (coord_type == "y") {
+                    temp_points[bodypart].y = std::stof(ele);
+                } else if (coord_type == "likelihood") {
+                    temp_likelihoods[bodypart] = std::stof(ele);
+                }
+            }
+            ++col_no;
+        }
+        
+        // Only add points that meet the likelihood threshold
+        for (auto const& [bodypart, point] : temp_points) {
+            auto likelihood_it = temp_likelihoods.find(bodypart);
+            if (likelihood_it != temp_likelihoods.end()) {
+                if (likelihood_it->second >= opts.likelihood_threshold) {
+                    data[bodypart][frame_no] = point;
+                }
+            } else {
+                // If no likelihood found, add the point (backward compatibility)
+                data[bodypart][frame_no] = point;
+            }
+        }
+    }
+
+    file.close();
+    
+    std::cout << "Loaded DLC CSV with " << data.size() << " bodyparts" << std::endl;
+    for (auto const& [bodypart, points] : data) {
+        std::cout << "  " << bodypart << ": " << points.size() << " points" << std::endl;
+    }
+    
+    return data;
+}

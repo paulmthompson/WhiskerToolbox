@@ -66,6 +66,9 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
 
     ui->setupUi(this);
 
+    // Configure combo boxes for better scrolling with many items
+    // Combo box scrolling is now handled by the global stylesheet
+
     _parameter_widget = nullptr;
     _parameter_layout = nullptr;
 
@@ -98,6 +101,9 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     });
 
     connectSignals();
+    
+
+    
     // Initialize UI to a clean state, then populate controls
     clearUI();
     refreshTableCombo();

@@ -545,18 +545,39 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 #endif
             case DM_DataType::Points: {
 
-                auto point_data = load_into_PointData(file_path, item);
+                // Check if this is a DLC CSV format that needs special handling
+                if (item.contains("format") && item["format"] == "dlc_csv") {
+                    auto multi_point_data = load_multiple_PointData_from_dlc(file_path, item);
+                    
+                    std::string const color = item.value("color", "#0000FF");
+                    
+                    for (auto const& [bodypart, point_data] : multi_point_data) {
+                        std::string const bodypart_name = name + "_" + bodypart;
+                        
+                        // Attach identity context and generate EntityIds
+                        if (point_data) {
+                            point_data->setIdentityContext(bodypart_name, dm->getEntityRegistry());
+                            point_data->rebuildAllEntityIds();
+                        }
 
-                // Attach identity context and generate EntityIds
-                if (point_data) {
-                    point_data->setIdentityContext(name, dm->getEntityRegistry());
-                    point_data->rebuildAllEntityIds();
+                        dm->setData<PointData>(bodypart_name, point_data, TimeKey("time"));
+                        data_info_list.push_back({bodypart_name, "PointData", color});
+                    }
+                } else {
+                    // Regular point data loading
+                    auto point_data = load_into_PointData(file_path, item);
+
+                    // Attach identity context and generate EntityIds
+                    if (point_data) {
+                        point_data->setIdentityContext(name, dm->getEntityRegistry());
+                        point_data->rebuildAllEntityIds();
+                    }
+
+                    dm->setData<PointData>(name, point_data, TimeKey("time"));
+
+                    std::string const color = item.value("color", "#0000FF");
+                    data_info_list.push_back({name, "PointData", color});
                 }
-
-                dm->setData<PointData>(name, point_data, TimeKey("time"));
-
-                std::string const color = item.value("color", "#0000FF");
-                data_info_list.push_back({name, "PointData", color});
                 break;
             }
             case DM_DataType::Mask: {

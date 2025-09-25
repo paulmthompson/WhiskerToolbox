@@ -14,8 +14,8 @@ inline std::string extract_numbers_from_string(std::string const & input) {
             input,
             std::regex("[^0-9]*([0-9]+).*"),
             std::string("$1"));
-    std::cout << input << std::endl;
-    std::cout << output << std::endl;
+    //std::cout << input << std::endl;
+    //std::cout << output << std::endl;
 
     return output;
 };

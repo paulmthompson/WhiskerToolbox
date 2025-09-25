@@ -10,4 +10,6 @@ class PointData;
 
 std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nlohmann::basic_json<> const & item);
 
+std::map<std::string, std::shared_ptr<PointData>> load_multiple_PointData_from_dlc(std::string const & file_path, nlohmann::basic_json<> const & item);
+
 #endif// POINT_DATA_JSON_HPP
