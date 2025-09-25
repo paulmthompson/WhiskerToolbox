@@ -3,6 +3,7 @@
 
 #include "Analysis_Dashboard.hpp"
 #include "DataManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeScrollBar.hpp"
 #include "ShaderManager/ShaderManager.hpp"
@@ -211,6 +212,15 @@ protected:
         REQUIRE(success);
     }
     
+    // Helper method to create a GroupManager for testing
+    std::unique_ptr<GroupManager> createGroupManager(std::shared_ptr<DataManager> data_manager) {
+        auto* entity_group_manager = data_manager->getEntityGroupManager();
+        if (!entity_group_manager) {
+            return nullptr;
+        }
+        return std::make_unique<GroupManager>(entity_group_manager);
+    }
+    
     std::unique_ptr<QApplication> app;
     std::unique_ptr<QOffscreenSurface> surface;
     std::unique_ptr<QOpenGLContext> context;
@@ -222,6 +232,10 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Basic Creation", "[Analysi
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
     
+    // Create a GroupManager
+    auto group_manager = createGroupManager(data_manager);
+    REQUIRE(group_manager != nullptr);
+    
     // Create a time scroll bar (required by Analysis Dashboard constructor)
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
@@ -229,7 +243,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Basic Creation", "[Analysi
     // Create the global dock manager for tests
     ads::CDockManager dock_manager;
     // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
+    Analysis_Dashboard dashboard(data_manager, group_manager.get(), time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Test that the dashboard can be shown (this tests widget creation)
@@ -249,6 +263,10 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Data Manager Integration",
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
     
+    // Create a GroupManager
+    auto group_manager = createGroupManager(data_manager);
+    REQUIRE(group_manager != nullptr);
+    
     // Add some test data to the data manager
     std::vector<float> test_data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
     std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)};
@@ -262,7 +280,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Data Manager Integration",
     // Create the global dock manager for tests
     ads::CDockManager dock_manager;
     // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
+    Analysis_Dashboard dashboard(data_manager, group_manager.get(), time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Test that the data is accessible through the data manager directly
@@ -279,18 +297,23 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Component Access", "[Analy
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
     
+    // Create a GroupManager
+    auto group_manager = createGroupManager(data_manager);
+    REQUIRE(group_manager != nullptr);
+    
     // Create time scroll bar
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
     ads::CDockManager dock_manager;
     // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
+    Analysis_Dashboard dashboard(data_manager, group_manager.get(), time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Test that we can access the group manager
-    auto group_manager = dashboard.getGroupManager();
-    REQUIRE(group_manager != nullptr);
+    auto dashboard_group_manager = dashboard.getGroupManager();
+    REQUIRE(dashboard_group_manager != nullptr);
+    REQUIRE(dashboard_group_manager == group_manager.get());
     
     // Clean up
     delete time_scrollbar;
@@ -301,13 +324,17 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Event Processing", "[Analy
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
     
+    // Create a GroupManager
+    auto group_manager = createGroupManager(data_manager);
+    REQUIRE(group_manager != nullptr);
+    
     // Create time scroll bar
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
     ads::CDockManager dock_manager;
     // Create the analysis dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
+    Analysis_Dashboard dashboard(data_manager, group_manager.get(), time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Show the dashboard
@@ -343,13 +370,17 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Memory Management", "[Anal
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
     
+    // Create a GroupManager
+    auto group_manager = createGroupManager(data_manager);
+    REQUIRE(group_manager != nullptr);
+    
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
     // Create dashboard in a scope to test destruction
     {
         ads::CDockManager dock_manager;
-        Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
+        Analysis_Dashboard dashboard(data_manager, group_manager.get(), time_scrollbar, &dock_manager);
         REQUIRE(&dashboard != nullptr);
         
         dashboard.show();
@@ -371,7 +402,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Null Data Manager", "[Anal
     // Create dashboard with null data manager should throw an exception
     ads::CDockManager dock_manager;
     REQUIRE_THROWS_AS(
-        Analysis_Dashboard(nullptr, time_scrollbar, &dock_manager),
+        Analysis_Dashboard(nullptr, nullptr, time_scrollbar, &dock_manager),
         std::runtime_error
     );
     
@@ -384,6 +415,12 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Multiple Instances", "[Ana
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
     
+    // Create GroupManagers for both instances
+    auto group_manager1 = createGroupManager(data_manager);
+    auto group_manager2 = createGroupManager(data_manager);
+    REQUIRE(group_manager1 != nullptr);
+    REQUIRE(group_manager2 != nullptr);
+    
     auto time_scrollbar1 = new TimeScrollBar();
     auto time_scrollbar2 = new TimeScrollBar();
     REQUIRE(time_scrollbar1 != nullptr);
@@ -391,8 +428,8 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Multiple Instances", "[Ana
     
     // Create two dashboard instances
     ads::CDockManager dock_manager;
-    Analysis_Dashboard dashboard1(data_manager, time_scrollbar1, &dock_manager);
-    Analysis_Dashboard dashboard2(data_manager, time_scrollbar2, &dock_manager);
+    Analysis_Dashboard dashboard1(data_manager, group_manager1.get(), time_scrollbar1, &dock_manager);
+    Analysis_Dashboard dashboard2(data_manager, group_manager2.get(), time_scrollbar2, &dock_manager);
     
     REQUIRE(&dashboard1 != nullptr);
     REQUIRE(&dashboard2 != nullptr);
@@ -431,13 +468,17 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - ShaderManager Integration"
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
     
+    // Create a GroupManager
+    auto group_manager = createGroupManager(data_manager);
+    REQUIRE(group_manager != nullptr);
+    
     // Create time scroll bar
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
     
     // Create the analysis dashboard (this should work with ShaderManager initialized)
     ads::CDockManager dock_manager;
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
+    Analysis_Dashboard dashboard(data_manager, group_manager.get(), time_scrollbar, &dock_manager);
     REQUIRE(&dashboard != nullptr);
     
     // Test that the dashboard can be shown (this tests widget creation with OpenGL)
@@ -570,6 +611,10 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Properties panel switches 
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
 
+    // Create a GroupManager
+    auto group_manager = createGroupManager(data_manager);
+    REQUIRE(group_manager != nullptr);
+
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
 
@@ -586,7 +631,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Properties panel switches 
     ads::CDockManager dock_manager;
 
     // Create dashboard
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dock_manager);
+    Analysis_Dashboard dashboard(data_manager, group_manager.get(), time_scrollbar, &dock_manager);
     dashboard.show();
     QApplication::processEvents();
 

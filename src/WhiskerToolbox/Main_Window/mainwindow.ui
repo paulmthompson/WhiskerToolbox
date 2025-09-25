@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1191</width>
-    <height>726</height>
+    <width>1440</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -95,6 +95,7 @@
     </property>
      <addaction name="actionTable_Designer"/>
     <addaction name="actionData_Manager"/>
+    <addaction name="actionGroup_Management"/>
     <addaction name="actionBatch_Processing"/>
     <addaction name="actionWhisker_Tracking"/>
     <addaction name="actionTongue_Tracking"/>
@@ -230,6 +231,11 @@
   <action name="actionData_Manager">
    <property name="text">
     <string>Data Manager</string>
+   </property>
+  </action>
+  <action name="actionGroup_Management">
+   <property name="text">
+    <string>Group Management</string>
    </property>
   </action>
   <action name="actionLoad_Tensor">

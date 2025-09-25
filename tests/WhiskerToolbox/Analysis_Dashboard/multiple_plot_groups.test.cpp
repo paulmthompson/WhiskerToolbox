@@ -22,6 +22,7 @@
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
 #include "Analysis_Dashboard/Groups/GroupCoordinator.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "DockManager.h"
 
 #include "DataManager/DataManager.hpp"
@@ -76,6 +77,12 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Multiple SpatialOver
     // Data manager and time bar
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
+    
+    // Create GroupManager
+    auto* entity_group_manager = data_manager->getEntityGroupManager();
+    REQUIRE(entity_group_manager != nullptr);
+    auto group_manager = std::make_unique<GroupManager>(entity_group_manager);
+    
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
 
@@ -122,7 +129,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Multiple SpatialOver
     REQUIRE(gl2 != nullptr);
 
     // Attach shared GroupManager via organizer/dashboard plumbing: directly use Analysis_Dashboard for canonical wiring
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dockManager);
+    Analysis_Dashboard dashboard(data_manager, group_manager.get(), time_scrollbar, &dockManager);
     REQUIRE(dashboard.getGroupManager() != nullptr);
     GroupManager * gm = dashboard.getGroupManager();
     plot1->setGroupManager(gm);
@@ -192,6 +199,12 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Multiple SpatialOver
 TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlay - onGroupModified is emitted exactly once per plot on first assignment", "[SpatialOverlay][Groups][Signals]") {
     auto data_manager = std::make_shared<DataManager>();
     REQUIRE(data_manager != nullptr);
+    
+    // Create GroupManager
+    auto* entity_group_manager = data_manager->getEntityGroupManager();
+    REQUIRE(entity_group_manager != nullptr);
+    auto group_manager = std::make_unique<GroupManager>(entity_group_manager);
+    
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
 
@@ -230,7 +243,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlay - onG
     REQUIRE(gl1 != nullptr);
     REQUIRE(gl2 != nullptr);
 
-    Analysis_Dashboard dashboard(data_manager, time_scrollbar, &dockManager);
+    Analysis_Dashboard dashboard(data_manager, group_manager.get(), time_scrollbar, &dockManager);
     GroupManager * gm = dashboard.getGroupManager();
     REQUIRE(gm != nullptr);
 
