@@ -12,6 +12,7 @@
 #include <string>
 
 class DataManager;
+class DataManager_Widget;
 class GroupManager;
 class GroupManagementWidget;
 class MediaWidgetManager;
@@ -82,6 +83,7 @@ private:
 
     std::unique_ptr<GroupManager> _group_manager;
     GroupManagementWidget * _group_management_widget;
+    DataManager_Widget * _data_manager_widget;
 
     std::map<std::string, std::unique_ptr<QWidget>> _widgets;
     

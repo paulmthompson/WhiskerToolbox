@@ -59,7 +59,8 @@ MainWindow::MainWindow(QWidget * parent)
       ui(new Ui::MainWindow),
       _data_manager{std::make_shared<DataManager>()},
       _group_manager(nullptr),
-      _group_management_widget(nullptr)
+      _group_management_widget(nullptr),
+      _data_manager_widget(nullptr)
 
 {
     ui->setupUi(this);
@@ -75,6 +76,9 @@ MainWindow::MainWindow(QWidget * parent)
         _group_manager = std::make_unique<GroupManager>(entity_group_manager, this);
         _group_management_widget = new GroupManagementWidget(_group_manager.get(), this);
     }
+
+    // Create the DataManager_Widget 
+    _data_manager_widget = new DataManager_Widget(_data_manager, ui->time_scrollbar, this);
 
     // Create media widget manager
     _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, this);
@@ -119,22 +123,51 @@ void MainWindow::_buildInitialLayout() {
     splitter->setSizes({height * 85 / 100, height * 15 / 100});
 
     // Add the group management widget to the top right corner
-    if (_group_management_widget) {
-        auto group_dock_widget = new ads::CDockWidget(QString::fromStdString("group_management"));
-        group_dock_widget->setWidget(_group_management_widget);
+    ads::CDockWidget* group_dock_widget = nullptr;
+    if (!_group_management_widget) {
+        std::cerr << "Warning: No GroupManagementWidget available!" << std::endl;
+        return;
+    }
+    group_dock_widget = new ads::CDockWidget(QString::fromStdString("group_management"));
+    group_dock_widget->setWidget(_group_management_widget);
         
-        // Configure the dock widget to hide when closed (not delete)
-        group_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
-        group_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+    // Configure the dock widget to hide when closed (not delete)
+    group_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+    group_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
         
-        _m_DockManager->addDockWidget(ads::RightDockWidgetArea, group_dock_widget);
+    _m_DockManager->addDockWidget(ads::RightDockWidgetArea, group_dock_widget);
 
-        // adjust splitter between group management and media
-        auto * right_splitter = ads::internal::findParent<ads::CDockSplitter *>(_group_management_widget);
-        if (right_splitter) {
-            int const width = right_splitter->width();
-            right_splitter->setSizes({width * 85 / 100, width * 15 / 100});
-        }
+    auto group_splitter = ads::internal::findParent<ads::CDockSplitter *>(_group_management_widget);
+    if (group_splitter) {
+        int const width = group_splitter->width();
+        group_splitter->setSizes({width * 85 / 100, width * 15 / 100});
+    }
+
+    // Add the data manager widget underneath the group management widget
+    if (!_data_manager_widget) {
+        std::cerr << "Warning: No DataManager_Widget available!" << std::endl;
+        return;
+    }
+    auto data_manager_dock_widget = new ads::CDockWidget(QString::fromStdString("data_manager"));
+    data_manager_dock_widget->setWidget(_data_manager_widget);
+        
+    // Configure the dock widget to hide when closed (not delete)
+    data_manager_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+    data_manager_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+        
+    // Add underneath the group management widget
+    _m_DockManager->addDockWidget(ads::BottomDockWidgetArea, data_manager_dock_widget, group_dock_widget->dockAreaWidget());
+
+    // adjust splitter between group and data manager so data manager is 70% of height
+    auto * dm_splitter = ads::internal::findParent<ads::CDockSplitter *>(_data_manager_widget);
+    if (dm_splitter) {
+        int const height = dm_splitter->height();
+        dm_splitter->setSizes({height * 30 / 100, height * 70 / 100});
+    }
+
+    if (group_splitter) {
+        int const width = group_splitter->width();
+        group_splitter->setSizes({width * 80 / 100, width * 20 / 100});
     }
 
 }
@@ -624,37 +657,20 @@ void MainWindow::openTensorLoaderWidget() {
 }
 
 void MainWindow::openDataManager() {
-    std::string const key = "DataManager_widget";
-
-    if (!_widgets.contains(key)) {
-        auto dm_widget = std::make_unique<DataManager_Widget>(
-                _data_manager,
-                ui->time_scrollbar,
-                this);
-
-        dm_widget->setObjectName(key);
-
-        // Set explicit minimum size constraints
-        dm_widget->setMinimumSize(250, 400);
-        dm_widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-
-        // Create dock widget with appropriate settings
-        auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
-        dock_widget->setWidget(dm_widget.get(), ads::CDockWidget::ForceNoScrollArea);
-
-        // Change to MinimumSizeHintFromContent to match DataTransform_Widget behavior
-        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
-
-        _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
-
-        _widgets[key] = std::move(dm_widget);
+    // Find and show the existing data manager dock widget
+    auto dock_widget = findDockWidget("data_manager");
+    if (dock_widget) {
+        dock_widget->show();
+        dock_widget->raise();
+        dock_widget->setAsCurrentTab();
+    }
+    
+    // Open the widget (call any initialization methods if needed)
+    if (_data_manager_widget) {
+        _data_manager_widget->openWidget();
     }
 
-    auto ptr = dynamic_cast<DataManager_Widget *>(_widgets[key].get());
-    //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
-    ptr->openWidget();
-
-    showDockWidget(key);
+    showDockWidget("data_manager");
 }
 
 void MainWindow::openVideoExportWidget() {
