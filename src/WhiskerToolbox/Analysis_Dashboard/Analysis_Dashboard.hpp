@@ -36,11 +36,13 @@ public:
     /**
      * @brief Construct the Analysis Dashboard
      * @param data_manager Shared data manager
+     * @param group_manager Existing GroupManager instance (not owned)
      * @param time_scrollbar Global time scrollbar
      * @param dock_manager Global dock manager (plots will be added as docks)
      * @param parent Parent widget
      */
     explicit Analysis_Dashboard(std::shared_ptr<DataManager> data_manager,
+                                GroupManager * group_manager,
                                 TimeScrollBar * time_scrollbar,
                                 ads::CDockManager * dock_manager,
                                 QWidget * parent = nullptr);
@@ -55,7 +57,7 @@ public:
      * @brief Get the group manager for this dashboard
      * @return Pointer to the group manager
      */
-    GroupManager * getGroupManager() const { return _group_manager.get(); }
+    GroupManager * getGroupManager() const { return _group_manager; }
 
 
 protected:
@@ -104,7 +106,7 @@ private:
     Ui::Analysis_Dashboard * ui;
 
     std::shared_ptr<DataManager> _data_manager;
-    std::unique_ptr<GroupManager> _group_manager;
+    GroupManager * _group_manager; // Not owned - managed by MainWindow
     std::unique_ptr<GroupCoordinator> _group_coordinator;
     TimeScrollBar * _time_scrollbar;
     ads::CDockManager * _dock_manager;

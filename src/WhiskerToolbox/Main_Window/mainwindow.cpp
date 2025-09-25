@@ -9,6 +9,8 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
+#include "GroupManagementWidget/GroupManagementWidget.hpp"
 #include "TableDesignerWidget/TableDesignerWidget.hpp"
 #include "BatchProcessing_Widget/BatchProcessing_Widget.hpp"
 #include "DataManager_Widget/DataManager_Widget.hpp"
@@ -55,7 +57,9 @@
 MainWindow::MainWindow(QWidget * parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
-      _data_manager{std::make_shared<DataManager>()}
+      _data_manager{std::make_shared<DataManager>()},
+      _group_manager(nullptr),
+      _group_management_widget(nullptr)
 
 {
     ui->setupUi(this);
@@ -64,6 +68,13 @@ MainWindow::MainWindow(QWidget * parent)
 
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
+
+    // Create the GroupManager with the DataManager's EntityGroupManager
+    auto* entity_group_manager = _data_manager->getEntityGroupManager();
+    if (entity_group_manager) {
+        _group_manager = std::make_unique<GroupManager>(entity_group_manager, this);
+        _group_management_widget = new GroupManagementWidget(_group_manager.get(), this);
+    }
 
     // Create media widget manager
     _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, this);
@@ -106,6 +117,26 @@ void MainWindow::_buildInitialLayout() {
     auto * splitter = ads::internal::findParent<ads::CDockSplitter *>(dockArea);
     int const height = splitter->height();
     splitter->setSizes({height * 85 / 100, height * 15 / 100});
+
+    // Add the group management widget to the top right corner
+    if (_group_management_widget) {
+        auto group_dock_widget = new ads::CDockWidget(QString::fromStdString("group_management"));
+        group_dock_widget->setWidget(_group_management_widget);
+        
+        // Configure the dock widget to hide when closed (not delete)
+        group_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+        group_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+        
+        _m_DockManager->addDockWidget(ads::RightDockWidgetArea, group_dock_widget);
+
+        // adjust splitter between group management and media
+        auto * right_splitter = ads::internal::findParent<ads::CDockSplitter *>(_group_management_widget);
+        if (right_splitter) {
+            int const width = right_splitter->width();
+            right_splitter->setSizes({width * 85 / 100, width * 15 / 100});
+        }
+    }
+
 }
 
 void MainWindow::_createActions() {
@@ -130,6 +161,7 @@ void MainWindow::_createActions() {
     connect(ui->actionLoad_Events, &QAction::triggered, this, &MainWindow::openEventLoaderWidget);
     connect(ui->actionLoad_Tensor, &QAction::triggered, this, &MainWindow::openTensorLoaderWidget);
     connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
+    connect(ui->actionGroup_Management, &QAction::triggered, this, &MainWindow::openGroupManagement);
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
     connect(ui->actionExport_Spreadsheet, &QAction::triggered, this, &MainWindow::openSpreadsheetExportWidget);
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
@@ -724,6 +756,7 @@ void MainWindow::openAnalysisDashboard() {
     if (!_widgets.contains(key)) {
         auto analysis_dashboard_widget = std::make_unique<Analysis_Dashboard>(
                 _data_manager,
+                _group_manager.get(),
                 ui->time_scrollbar,
                 _m_DockManager,
                 this);
@@ -750,6 +783,13 @@ void MainWindow::openTableDesignerWidget() {
     }
 
     showDockWidget(key);
+}
+
+void MainWindow::openGroupManagement() {
+    // Show the group management widget if it exists
+    if (_group_management_widget) {
+        showDockWidget("group_management");
+    }
 }
 
 void MainWindow::openTestWidget() {

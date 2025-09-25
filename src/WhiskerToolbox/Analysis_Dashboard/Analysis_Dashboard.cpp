@@ -30,13 +30,14 @@
 
 
 Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager,
+                                       GroupManager * group_manager,
                                        TimeScrollBar * time_scrollbar,
                                        ads::CDockManager * dock_manager,
                                        QWidget * parent)
     : QMainWindow(parent),
       ui(new Ui::Analysis_Dashboard),
       _data_manager(nullptr),
-      _group_manager(nullptr),
+      _group_manager(group_manager),
       _group_coordinator(nullptr),
       _time_scrollbar(time_scrollbar),
       _dock_manager(dock_manager),
@@ -44,19 +45,17 @@ Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager
       _properties_panel(nullptr),
       _plot_organizer(nullptr) {
 
-    // Check that data_manager and its EntityGroupManager are valid before moving
+    // Check that data_manager and group_manager are valid
     if (!data_manager) {
         throw std::runtime_error("Analysis_Dashboard: DataManager is null");
     }
     
-    auto* entity_group_manager = data_manager->getEntityGroupManager();
-    if (!entity_group_manager) {
-        throw std::runtime_error("Analysis_Dashboard: EntityGroupManager is null");
+    if (!group_manager) {
+        throw std::runtime_error("Analysis_Dashboard: GroupManager is null");
     }
     
-    // Now safely move the data_manager and create the GroupManager
+    // Now safely move the data_manager
     _data_manager = std::move(data_manager);
-    _group_manager = std::make_unique<GroupManager>(entity_group_manager, this);
 
     ui->setupUi(this);
 
@@ -73,14 +72,14 @@ void Analysis_Dashboard::openWidget() {
 
 void Analysis_Dashboard::initializeDashboard() {
     // Create the main components
-    _toolbox_panel = new ToolboxPanel(_group_manager.get(), _data_manager, this);
+    _toolbox_panel = new ToolboxPanel(_group_manager, _data_manager, this);
     _properties_panel = new PropertiesPanel(this);
     
     // Create the plot organizer using the forwarded dock manager
     _plot_organizer = std::make_unique<DockingPlotOrganizer>(_dock_manager, this);
 
     // Create the group coordinator for cross-plot highlighting
-    _group_coordinator = std::make_unique<GroupCoordinator>(_group_manager.get(), this);
+    _group_coordinator = std::make_unique<GroupCoordinator>(_group_manager, this);
 
     // Set data manager for the properties panel
     if (_data_manager) {
@@ -221,7 +220,7 @@ bool Analysis_Dashboard::createAndAddPlot(QString const & plot_type) {
     qDebug() << "Analysis_Dashboard::createAndAddPlot: Created plot container with ID:" << plot_container->getPlotId();
     
     // Configure the plot with DataManager
-    plot_container->configureManagers(_data_manager, _group_manager.get());
+    plot_container->configureManagers(_data_manager, _group_manager);
         
     // Add the plot to the organizer
     _plot_organizer->addPlot(std::move(plot_container));

@@ -12,6 +12,8 @@
 #include <string>
 
 class DataManager;
+class GroupManager;
+class GroupManagementWidget;
 class MediaWidgetManager;
 
 
@@ -54,6 +56,12 @@ public:
      */
     ads::CDockWidget * findDockWidget(std::string const & key) const;
 
+    /**
+     * @brief Get the global group manager
+     * @return Pointer to the GroupManager
+     */
+    GroupManager * getGroupManager() const { return _group_manager.get(); }
+
     void processLoadedData(std::vector<DataInfo> const & data_info);
 
 
@@ -71,6 +79,9 @@ private:
     bool _verbose;
 
     std::shared_ptr<DataManager> _data_manager;
+
+    std::unique_ptr<GroupManager> _group_manager;
+    GroupManagementWidget * _group_management_widget;
 
     std::map<std::string, std::unique_ptr<QWidget>> _widgets;
     
@@ -102,6 +113,7 @@ private slots:
     void openEventLoaderWidget();
     void openTensorLoaderWidget();
     void openDataManager();
+    void openGroupManagement();
     void openVideoExportWidget();
     void openSpreadsheetExportWidget();
     void openDataTransforms();

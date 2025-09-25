@@ -8,6 +8,7 @@
 #include "Properties/AbstractPlotPropertiesWidget.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "DataManager/DataManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -47,13 +48,17 @@ protected:
         m_data_manager = std::make_shared<DataManager>();
         populateTestData();
         
+        // Create a GroupManager
+        auto* entity_group_manager = m_data_manager->getEntityGroupManager();
+        m_group_manager = std::make_unique<GroupManager>(entity_group_manager);
+        
         // Create a TimeScrollBar for the dashboard
         m_time_scrollbar = std::make_unique<TimeScrollBar>();
         m_time_scrollbar->setDataManager(m_data_manager);
         
         // Create a dock manager for tests and the Analysis_Dashboard
         m_dock_manager = std::make_unique<ads::CDockManager>();
-        m_dashboard = std::make_unique<Analysis_Dashboard>(m_data_manager, m_time_scrollbar.get(), m_dock_manager.get());
+        m_dashboard = std::make_unique<Analysis_Dashboard>(m_data_manager, m_group_manager.get(), m_time_scrollbar.get(), m_dock_manager.get());
         
         // Process any initial events
         if (m_app) {
@@ -93,10 +98,17 @@ protected:
      * @return Reference to the time scrollbar
      */
     TimeScrollBar& getTimeScrollBar() { return *m_time_scrollbar; }
+    
+    /**
+     * @brief Get the GroupManager instance
+     * @return Reference to the group manager
+     */
+    GroupManager& getGroupManager() { return *m_group_manager; }
 
 private:
     std::unique_ptr<QApplication> m_app;
     std::unique_ptr<Analysis_Dashboard> m_dashboard;
+    std::unique_ptr<GroupManager> m_group_manager;
     std::unique_ptr<TimeScrollBar> m_time_scrollbar;
     std::unique_ptr<ads::CDockManager> m_dock_manager;
     std::shared_ptr<DataManager> m_data_manager;
