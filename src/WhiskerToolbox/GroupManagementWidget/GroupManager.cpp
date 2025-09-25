@@ -241,3 +241,31 @@ QColor GroupManager::getNextDefaultColor() const {
     auto color_index = static_cast<int>(group_ids.size()) % DEFAULT_COLORS.size();
     return DEFAULT_COLORS[color_index];
 }
+
+// ===== Common Group Operations for Context Menus =====
+
+int GroupManager::createGroupWithEntities(std::unordered_set<EntityId> const & entity_ids) {
+    if (entity_ids.empty()) {
+        return -1;
+    }
+
+    QString group_name = QString("Group %1").arg(m_entity_group_manager->getAllGroupIds().size() + 1);
+    int group_id = createGroup(group_name);
+    
+    if (group_id != -1) {
+        assignEntitiesToGroup(group_id, entity_ids);
+    }
+    
+    return group_id;
+}
+
+std::vector<std::pair<int, QString>> GroupManager::getGroupsForContextMenu() const {
+    std::vector<std::pair<int, QString>> result;
+    
+    auto groups = getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        result.emplace_back(it.key(), it.value().name);
+    }
+    
+    return result;
+}

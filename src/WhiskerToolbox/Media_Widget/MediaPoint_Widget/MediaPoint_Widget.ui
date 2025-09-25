@@ -281,7 +281,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Description: Clicking in scene moves currently selected point to that location.</string>
+        <string>Description: Click near a point to select it (highlighted in yellow). Ctrl+click to move selected point to new location.</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
