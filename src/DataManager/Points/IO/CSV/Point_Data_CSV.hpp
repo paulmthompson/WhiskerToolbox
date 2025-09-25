@@ -47,5 +47,27 @@ void save(PointData const * point_data, CSVPointSaverOptions const & opts);
 
 std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
+/**
+ * @struct DLCPointLoaderOptions
+ * 
+ * @brief Options for loading DLC (DeepLabCut) format CSV files.
+ *          
+ * @var DLCPointLoaderOptions::filename
+ * The full filepath to the DLC CSV file.
+ * 
+ * @var DLCPointLoaderOptions::frame_column
+ * The column index for frame numbers (usually 0).
+ * 
+ * @var DLCPointLoaderOptions::likelihood_threshold
+ * Minimum likelihood score for points to be included (default 0.0).
+ */
+struct DLCPointLoaderOptions {
+    std::string filename;
+    int frame_column = 0;
+    float likelihood_threshold = 0.0f;
+};
+
+std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts);
+
 
 #endif// POINT_DATA_CSV_HPP

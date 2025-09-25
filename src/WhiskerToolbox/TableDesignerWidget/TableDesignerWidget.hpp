@@ -116,13 +116,16 @@ private slots:
      * @brief Handle changes to the computer tree (checkbox state changes)
      */
     void onComputersTreeItemChanged();
-
+    
     /**
      * @brief Handle changes to column names in the tree
      */
     void onComputersTreeItemEdited(QTreeWidgetItem * item, int column);
-
+    
     /**
+     * @brief Handle group mode toggle button
+     */
+    void onGroupModeToggled(bool enabled);    /**
      * @brief Handle building the table
      */
     void onBuildTable();
@@ -150,10 +153,15 @@ private:
     bool _updating_computers_tree = false; // Flag to prevent recursive updates during tree refresh
     QMap<QString, QStringList> _table_column_order; // Persist preview column order per table id
     
+    // Grouping functionality
+    std::string _grouping_pattern = "(.+)_\\d+$"; // Default pattern: name_number (same as Feature_Tree_Widget)
+    bool _group_mode = true; // Toggle between group and individual mode
+    
     // Parameter UI management
     QWidget * _parameter_widget = nullptr;
     QVBoxLayout * _parameter_layout = nullptr;
     std::map<std::string, QWidget*> _parameter_controls;
+    std::map<QTreeWidgetItem*, QWidget*> _computer_parameter_widgets; // Map computer items to their parameter widgets
 
     TableInfoWidget * _table_info_widget = nullptr;
     Section * _table_info_section = nullptr;
@@ -226,6 +234,29 @@ private:
      * @return Generated column name
      */
     QString generateDefaultColumnName(const QString& data_source, const QString& computer_name) const;
+    
+    /**
+     * @brief Extract group name from data source using grouping pattern
+     * @param data_source The data source string to extract group from
+     * @return The extracted group name, or the original string if no group found
+     */
+    std::string extractGroupName(const QString& data_source) const;
+    
+    /**
+     * @brief Create parameter UI widget for a computer with parameters
+     * @param computer_name The name of the computer
+     * @param parameter_descriptors The parameter descriptors from ComputerInfo
+     * @return Widget containing parameter controls, or nullptr if no parameters
+     */
+    QWidget* createParameterWidget(const QString& computer_name, 
+                                   const std::vector<std::unique_ptr<IParameterDescriptor>>& parameter_descriptors);
+    
+    /**
+     * @brief Get parameter values from a computer's parameter widget
+     * @param computer_name The name of the computer
+     * @return Map of parameter name to parameter value
+     */
+    std::map<std::string, std::string> getParameterValues(const QString& computer_name) const;
 
     // Helper methods for the new tree-based approach
     void loadTableInfo(QString const & table_id);

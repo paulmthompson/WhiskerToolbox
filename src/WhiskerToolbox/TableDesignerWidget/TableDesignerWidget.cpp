@@ -35,6 +35,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPushButton>
+#include <QSpinBox>
 #include <QTableView>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -52,6 +54,7 @@
 #include <fstream>
 #include <iomanip>
 #include <limits>
+#include <regex>
 #include <tuple>
 #include <typeindex>
 #include <vector>
@@ -62,6 +65,9 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
       _data_manager(std::move(data_manager)) {
 
     ui->setupUi(this);
+
+    // Configure combo boxes for better scrolling with many items
+    // Combo box scrolling is now handled by the global stylesheet
 
     _parameter_widget = nullptr;
     _parameter_layout = nullptr;
@@ -95,6 +101,9 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     });
 
     connectSignals();
+    
+
+    
     // Initialize UI to a clean state, then populate controls
     clearUI();
     refreshTableCombo();
@@ -187,6 +196,8 @@ void TableDesignerWidget::connectSignals() {
             this, &TableDesignerWidget::onComputersTreeItemChanged);
     connect(ui->computers_tree, &QTreeWidget::itemChanged,
             this, &TableDesignerWidget::onComputersTreeItemEdited);
+    connect(ui->group_mode_toggle_btn, &QPushButton::toggled,
+            this, &TableDesignerWidget::onGroupModeToggled);
 
     // Build signals
     connect(ui->build_table_btn, &QPushButton::clicked,
@@ -1340,19 +1351,36 @@ void TableDesignerWidget::refreshComputersTree() {
     std::map<std::string, std::pair<Qt::CheckState, QString>> previous_states;
     if (ui->computers_tree && ui->computers_tree->topLevelItemCount() > 0) {
         for (int i = 0; i < ui->computers_tree->topLevelItemCount(); ++i) {
-            auto * data_source_item_old = ui->computers_tree->topLevelItem(i);
-            for (int j = 0; j < data_source_item_old->childCount(); ++j) {
-                auto * computer_item_old = data_source_item_old->child(j);
-                QString ds = computer_item_old->data(0, Qt::UserRole).toString();
-                QString cn = computer_item_old->data(1, Qt::UserRole).toString();
-                std::string key = (ds + "||" + cn).toStdString();
-                previous_states[key] = {computer_item_old->checkState(1), computer_item_old->text(2)};
+            auto * top_level_item = ui->computers_tree->topLevelItem(i);
+            // Handle both grouped and individual modes
+            for (int j = 0; j < top_level_item->childCount(); ++j) {
+                auto * child_item = top_level_item->child(j);
+                if (child_item->childCount() > 0) {
+                    // This is a computer item under a group/data source
+                    for (int k = 0; k < child_item->childCount(); ++k) {
+                        auto * computer_item = child_item->child(k);
+                        QString ds = computer_item->data(0, Qt::UserRole).toString();
+                        QString cn = computer_item->data(1, Qt::UserRole).toString();
+                        std::string key = (ds + "||" + cn).toStdString();
+                        previous_states[key] = {computer_item->checkState(1), computer_item->text(2)};
+                    }
+                } else {
+                    // This is a computer item directly under data source (individual mode)
+                    QString ds = child_item->data(0, Qt::UserRole).toString();
+                    QString cn = child_item->data(1, Qt::UserRole).toString();
+                    std::string key = (ds + "||" + cn).toStdString();
+                    previous_states[key] = {child_item->checkState(1), child_item->text(2)};
+                }
             }
         }
     }
 
     ui->computers_tree->clear();
-    ui->computers_tree->setHeaderLabels({"Data Source / Computer", "Enabled", "Column Name"});
+    ui->computers_tree->setHeaderLabels({"Data Source / Computer", "Enabled", "Column Name", "Parameters"});
+    
+    // Clean up parameter widgets
+    _computer_parameter_widgets.clear();
+    _parameter_controls.clear();
 
     auto * registry = _data_manager->getTableRegistry();
     if (!registry) {
@@ -1371,47 +1399,174 @@ void TableDesignerWidget::refreshComputersTree() {
     // Get available data sources
     auto data_sources = getAvailableDataSources();
 
-    // Create tree structure: Data Source -> Computers
-    for (QString const & data_source: data_sources) {
-        auto * data_source_item = new QTreeWidgetItem(ui->computers_tree);
-        data_source_item->setText(0, data_source);
-        data_source_item->setFlags(Qt::ItemIsEnabled);
-        data_source_item->setExpanded(false);// Start collapsed
-
-        // Convert data source string to DataSourceVariant and determine RowSelectorType
-        auto [data_source_variant, row_selector_type] = createDataSourceVariant(data_source, data_manager_extension);
-
-        if (!data_source_variant.has_value()) {
-            qDebug() << "Failed to create data source variant for:" << data_source;
-            continue;
+    if (_group_mode) {
+        // Group similar data sources together
+        std::map<std::string, QStringList> groups;
+        
+        // First pass: group data sources by their extracted group name
+        for (QString const & data_source : data_sources) {
+            std::string group_name = extractGroupName(data_source);
+            groups[group_name].append(data_source);
         }
+        
+        // Second pass: create tree structure
+        for (auto const & [group_name, group_members] : groups) {
+            if (group_members.size() > 1) {
+                // Create group item
+                auto * group_item = new QTreeWidgetItem(ui->computers_tree);
+                group_item->setText(0, QString::fromStdString(group_name) + " (Group)");
+                group_item->setFlags(Qt::ItemIsEnabled);
+                group_item->setExpanded(false); // Start collapsed
+                
+                // Get computers available for this group (use first member to determine available computers)
+                auto [first_variant, row_selector_type] = createDataSourceVariant(group_members.first(), data_manager_extension);
+                if (!first_variant.has_value()) {
+                    continue;
+                }
+                
+                auto available_computers = computer_registry.getAvailableComputers(row_selector_type, first_variant.value());
+                
+                // Add computers as children of the group
+                for (auto const & computer_info : available_computers) {
+                    auto * computer_item = new QTreeWidgetItem(group_item);
+                    computer_item->setText(0, QString::fromStdString(computer_info.name));
+                    computer_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable);
+                    computer_item->setCheckState(1, Qt::Unchecked);
+                    
+                    // Generate default column name using group name
+                    QString default_name = QString("%1_%2").arg(QString::fromStdString(group_name), QString::fromStdString(computer_info.name));
+                    computer_item->setText(2, default_name);
+                    computer_item->setFlags(computer_item->flags() | Qt::ItemIsEditable);
+                    
+                    // Store group members and computer name for later use
+                    computer_item->setData(0, Qt::UserRole, group_members.join("||")); // Store all group members
+                    computer_item->setData(1, Qt::UserRole, QString::fromStdString(computer_info.name));
+                    computer_item->setData(2, Qt::UserRole, true); // Mark as group computer
+                    
+                    // Create parameter widget if computer has parameters
+                    if (!computer_info.parameterDescriptors.empty()) {
+                        auto* param_widget = createParameterWidget(QString::fromStdString(computer_info.name), 
+                                                                   computer_info.parameterDescriptors);
+                        if (param_widget) {
+                            ui->computers_tree->setItemWidget(computer_item, 3, param_widget);
+                            _computer_parameter_widgets[computer_item] = param_widget;
+                        }
+                    }
+                    
+                    // Restore previous state if present (use first member for key)
+                    std::string prev_key = (group_members.first() + "||" + QString::fromStdString(computer_info.name)).toStdString();
+                    auto it_prev = previous_states.find(prev_key);
+                    if (it_prev != previous_states.end()) {
+                        computer_item->setCheckState(1, it_prev->second.first);
+                        if (!it_prev->second.second.isEmpty()) {
+                            computer_item->setText(2, it_prev->second.second);
+                        }
+                    }
+                }
+            } else {
+                // Single item - create as individual data source
+                QString const & data_source = group_members.first();
+                auto * data_source_item = new QTreeWidgetItem(ui->computers_tree);
+                data_source_item->setText(0, data_source);
+                data_source_item->setFlags(Qt::ItemIsEnabled);
+                data_source_item->setExpanded(false);
+                
+                auto [data_source_variant, row_selector_type] = createDataSourceVariant(data_source, data_manager_extension);
+                if (!data_source_variant.has_value()) {
+                    continue;
+                }
+                
+                auto available_computers = computer_registry.getAvailableComputers(row_selector_type, data_source_variant.value());
+                
+                for (auto const & computer_info : available_computers) {
+                    auto * computer_item = new QTreeWidgetItem(data_source_item);
+                    computer_item->setText(0, QString::fromStdString(computer_info.name));
+                    computer_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable);
+                    computer_item->setCheckState(1, Qt::Unchecked);
+                    
+                    QString default_name = generateDefaultColumnName(data_source, QString::fromStdString(computer_info.name));
+                    computer_item->setText(2, default_name);
+                    computer_item->setFlags(computer_item->flags() | Qt::ItemIsEditable);
+                    
+                    computer_item->setData(0, Qt::UserRole, data_source);
+                    computer_item->setData(1, Qt::UserRole, QString::fromStdString(computer_info.name));
+                    computer_item->setData(2, Qt::UserRole, false); // Mark as individual computer
+                    
+                    // Create parameter widget if computer has parameters
+                    if (!computer_info.parameterDescriptors.empty()) {
+                        auto* param_widget = createParameterWidget(QString::fromStdString(computer_info.name), 
+                                                                   computer_info.parameterDescriptors);
+                        if (param_widget) {
+                            ui->computers_tree->setItemWidget(computer_item, 3, param_widget);
+                            _computer_parameter_widgets[computer_item] = param_widget;
+                        }
+                    }
+                    
+                    std::string prev_key = (data_source + "||" + QString::fromStdString(computer_info.name)).toStdString();
+                    auto it_prev = previous_states.find(prev_key);
+                    if (it_prev != previous_states.end()) {
+                        computer_item->setCheckState(1, it_prev->second.first);
+                        if (!it_prev->second.second.isEmpty()) {
+                            computer_item->setText(2, it_prev->second.second);
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        // Individual mode - create tree structure: Data Source -> Computers (original behavior)
+        for (QString const & data_source: data_sources) {
+            auto * data_source_item = new QTreeWidgetItem(ui->computers_tree);
+            data_source_item->setText(0, data_source);
+            data_source_item->setFlags(Qt::ItemIsEnabled);
+            data_source_item->setExpanded(false);// Start collapsed
 
-        // Get available computers for this specific data source and row selector combination
-        auto available_computers = computer_registry.getAvailableComputers(row_selector_type, data_source_variant.value());
+            // Convert data source string to DataSourceVariant and determine RowSelectorType
+            auto [data_source_variant, row_selector_type] = createDataSourceVariant(data_source, data_manager_extension);
 
-        // Add compatible computers as children
-        for (auto const & computer_info: available_computers) {
-            auto * computer_item = new QTreeWidgetItem(data_source_item);
-            computer_item->setText(0, QString::fromStdString(computer_info.name));
-            computer_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable);
-            computer_item->setCheckState(1, Qt::Unchecked);
+            if (!data_source_variant.has_value()) {
+                qDebug() << "Failed to create data source variant for:" << data_source;
+                continue;
+            }
 
-            // Generate default column name
-            QString default_name = generateDefaultColumnName(data_source, QString::fromStdString(computer_info.name));
-            computer_item->setText(2, default_name);
-            computer_item->setFlags(computer_item->flags() | Qt::ItemIsEditable);
+            // Get available computers for this specific data source and row selector combination
+            auto available_computers = computer_registry.getAvailableComputers(row_selector_type, data_source_variant.value());
 
-            // Store data source and computer name for later use
-            computer_item->setData(0, Qt::UserRole, data_source);
-            computer_item->setData(1, Qt::UserRole, QString::fromStdString(computer_info.name));
+            // Add compatible computers as children
+            for (auto const & computer_info: available_computers) {
+                auto * computer_item = new QTreeWidgetItem(data_source_item);
+                computer_item->setText(0, QString::fromStdString(computer_info.name));
+                computer_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable);
+                computer_item->setCheckState(1, Qt::Unchecked);
 
-            // Restore previous state if present
-            std::string prev_key = (data_source + "||" + QString::fromStdString(computer_info.name)).toStdString();
-            auto it_prev = previous_states.find(prev_key);
-            if (it_prev != previous_states.end()) {
-                computer_item->setCheckState(1, it_prev->second.first);
-                if (!it_prev->second.second.isEmpty()) {
-                    computer_item->setText(2, it_prev->second.second);
+                // Generate default column name
+                QString default_name = generateDefaultColumnName(data_source, QString::fromStdString(computer_info.name));
+                computer_item->setText(2, default_name);
+                computer_item->setFlags(computer_item->flags() | Qt::ItemIsEditable);
+
+                // Store data source and computer name for later use
+                computer_item->setData(0, Qt::UserRole, data_source);
+                computer_item->setData(1, Qt::UserRole, QString::fromStdString(computer_info.name));
+                computer_item->setData(2, Qt::UserRole, false); // Mark as individual computer
+
+                // Create parameter widget if computer has parameters
+                if (!computer_info.parameterDescriptors.empty()) {
+                    auto* param_widget = createParameterWidget(QString::fromStdString(computer_info.name), 
+                                                               computer_info.parameterDescriptors);
+                    if (param_widget) {
+                        ui->computers_tree->setItemWidget(computer_item, 3, param_widget);
+                        _computer_parameter_widgets[computer_item] = param_widget;
+                    }
+                }
+
+                // Restore previous state if present
+                std::string prev_key = (data_source + "||" + QString::fromStdString(computer_info.name)).toStdString();
+                auto it_prev = previous_states.find(prev_key);
+                if (it_prev != previous_states.end()) {
+                    computer_item->setCheckState(1, it_prev->second.first);
+                    if (!it_prev->second.second.isEmpty()) {
+                        computer_item->setText(2, it_prev->second.second);
+                    }
                 }
             }
         }
@@ -1421,6 +1576,7 @@ void TableDesignerWidget::refreshComputersTree() {
     ui->computers_tree->resizeColumnToContents(0);
     ui->computers_tree->resizeColumnToContents(1);
     ui->computers_tree->resizeColumnToContents(2);
+    ui->computers_tree->resizeColumnToContents(3);
 
     _updating_computers_tree = false;
 
@@ -1720,45 +1876,101 @@ std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
                 QString data_source = computer_item->data(0, Qt::UserRole).toString();
                 QString computer_name = computer_item->data(1, Qt::UserRole).toString();
                 QString column_name = computer_item->text(2);
+                bool is_group_computer = computer_item->data(2, Qt::UserRole).toBool();
+                
+                // Get parameter values for this computer
+                std::map<std::string, std::string> parameters = getParameterValues(computer_name);
 
-                if (column_name.isEmpty()) {
-                    column_name = generateDefaultColumnName(data_source, computer_name);
-                }
+                if (is_group_computer) {
+                    // This is a group computer - create columns for all members
+                    QStringList group_members = data_source.split("||");
+                    
+                    for (QString const & member : group_members) {
+                        // Generate individual column name (e.g., "spike_1_Mean", "spike_2_Mean")
+                        QString individual_column_name = generateDefaultColumnName(member, computer_name);
 
-                // Create ColumnInfo (use raw key without UI prefixes)
-                QString source_key = data_source;
-                if (source_key.startsWith("Events: ")) {
-                    source_key = QString("events:%1").arg(source_key.mid(8));
-                } else if (source_key.startsWith("Intervals: ")) {
-                    source_key = QString("intervals:%1").arg(source_key.mid(11));
-                } else if (source_key.startsWith("analog:")) {
-                    source_key = source_key;// already prefixed
-                } else if (source_key.startsWith("TimeFrame: ")) {
-                    // TimeFrame used only for row selector; columns require concrete sources
-                    source_key = source_key.mid(11);
-                }
+                        // Create ColumnInfo for each group member
+                        QString source_key = member;
+                        if (source_key.startsWith("Events: ")) {
+                            source_key = QString("events:%1").arg(source_key.mid(8));
+                        } else if (source_key.startsWith("Intervals: ")) {
+                            source_key = QString("intervals:%1").arg(source_key.mid(11));
+                        } else if (source_key.startsWith("analog:")) {
+                            source_key = source_key;// already prefixed
+                        } else if (source_key.startsWith("TimeFrame: ")) {
+                            // TimeFrame used only for row selector; columns require concrete sources
+                            source_key = source_key.mid(11);
+                        }
 
-                ColumnInfo info(column_name.toStdString(),
-                                QString("Column from %1 using %2").arg(data_source, computer_name).toStdString(),
-                                source_key.toStdString(),
-                                computer_name.toStdString());
+                        ColumnInfo info(individual_column_name.toStdString(),
+                                        QString("Column from %1 using %2 (group applied)").arg(member, computer_name).toStdString(),
+                                        source_key.toStdString(),
+                                        computer_name.toStdString());
 
-                // Set output type based on computer info
-                if (auto * registry = _data_manager->getTableRegistry()) {
-                    auto & computer_registry = registry->getComputerRegistry();
-                    auto computer_info = computer_registry.findComputerInfo(computer_name.toStdString());
-                    if (computer_info) {
-                        info.outputType = computer_info->outputType;
-                        info.outputTypeName = computer_info->outputTypeName;
-                        info.isVectorType = computer_info->isVectorType;
-                        if (info.isVectorType) {
-                            info.elementType = computer_info->elementType;
-                            info.elementTypeName = computer_info->elementTypeName;
+                        // Set parameters
+                        info.parameters = parameters;
+
+                        // Set output type based on computer info
+                        if (auto * registry = _data_manager->getTableRegistry()) {
+                            auto & computer_registry = registry->getComputerRegistry();
+                            auto computer_info = computer_registry.findComputerInfo(computer_name.toStdString());
+                            if (computer_info) {
+                                info.outputType = computer_info->outputType;
+                                info.outputTypeName = computer_info->outputTypeName;
+                                info.isVectorType = computer_info->isVectorType;
+                                if (info.isVectorType) {
+                                    info.elementType = computer_info->elementType;
+                                    info.elementTypeName = computer_info->elementTypeName;
+                                }
+                            }
+                        }
+
+                        column_infos.push_back(std::move(info));
+                    }
+                } else {
+                    // Individual computer - original behavior
+                    if (column_name.isEmpty()) {
+                        column_name = generateDefaultColumnName(data_source, computer_name);
+                    }
+
+                    // Create ColumnInfo (use raw key without UI prefixes)
+                    QString source_key = data_source;
+                    if (source_key.startsWith("Events: ")) {
+                        source_key = QString("events:%1").arg(source_key.mid(8));
+                    } else if (source_key.startsWith("Intervals: ")) {
+                        source_key = QString("intervals:%1").arg(source_key.mid(11));
+                    } else if (source_key.startsWith("analog:")) {
+                        source_key = source_key;// already prefixed
+                    } else if (source_key.startsWith("TimeFrame: ")) {
+                        // TimeFrame used only for row selector; columns require concrete sources
+                        source_key = source_key.mid(11);
+                    }
+
+                    ColumnInfo info(column_name.toStdString(),
+                                    QString("Column from %1 using %2").arg(data_source, computer_name).toStdString(),
+                                    source_key.toStdString(),
+                                    computer_name.toStdString());
+
+                    // Set parameters
+                    info.parameters = parameters;
+
+                    // Set output type based on computer info
+                    if (auto * registry = _data_manager->getTableRegistry()) {
+                        auto & computer_registry = registry->getComputerRegistry();
+                        auto computer_info = computer_registry.findComputerInfo(computer_name.toStdString());
+                        if (computer_info) {
+                            info.outputType = computer_info->outputType;
+                            info.outputTypeName = computer_info->outputTypeName;
+                            info.isVectorType = computer_info->isVectorType;
+                            if (info.isVectorType) {
+                                info.elementType = computer_info->elementType;
+                                info.elementTypeName = computer_info->elementTypeName;
+                            }
                         }
                     }
-                }
 
-                column_infos.push_back(std::move(info));
+                    column_infos.push_back(std::move(info));
+                }
             }
         }
     }
@@ -1813,4 +2025,152 @@ QString TableDesignerWidget::generateDefaultColumnName(QString const & data_sour
 
     // Create a concise name
     return QString("%1_%2").arg(source_name, computer_name);
+}
+
+std::string TableDesignerWidget::extractGroupName(const QString& data_source) const {
+    QString source_name = data_source;
+
+    // Extract the actual name from prefixed data sources
+    if (source_name.startsWith("Events: ")) {
+        source_name = source_name.mid(8);
+    } else if (source_name.startsWith("Intervals: ")) {
+        source_name = source_name.mid(11);
+    } else if (source_name.startsWith("analog:")) {
+        source_name = source_name.mid(7);
+    } else if (source_name.startsWith("TimeFrame: ")) {
+        source_name = source_name.mid(11);
+    }
+
+    // Use the same grouping pattern as Feature_Tree_Widget
+    std::regex const pattern{_grouping_pattern};
+    std::smatch matches{};
+    std::string key = source_name.toStdString();
+
+    if (std::regex_search(key, matches, pattern) && matches.size() > 1) {
+        return matches[1].str();
+    }
+
+    return key; // Return the key itself if no match
+}
+
+void TableDesignerWidget::onGroupModeToggled(bool enabled) {
+    _group_mode = enabled;
+    
+    // Update button text to reflect current mode
+    if (enabled) {
+        ui->group_mode_toggle_btn->setText("Group Mode");
+        ui->computers_info_label->setText("Select computers by checking the boxes. Similar data will be grouped and transformed together.");
+    } else {
+        ui->group_mode_toggle_btn->setText("Individual Mode");
+        ui->computers_info_label->setText("Select computers by checking the boxes. Each data source will be handled individually.");
+    }
+    
+    // Refresh the tree to apply the new grouping mode
+    refreshComputersTree();
+}
+
+QWidget* TableDesignerWidget::createParameterWidget(const QString& computer_name, 
+                                                     const std::vector<std::unique_ptr<IParameterDescriptor>>& parameter_descriptors) {
+    if (parameter_descriptors.empty()) {
+        return nullptr;
+    }
+    
+    auto* widget = new QWidget();
+    auto* layout = new QHBoxLayout(widget);
+    layout->setContentsMargins(2, 2, 2, 2);
+    layout->setSpacing(4);
+    
+    for (const auto& param_desc : parameter_descriptors) {
+        QString param_name = QString::fromStdString(param_desc->getName());
+        QString param_key = computer_name + "::" + param_name;
+        
+        // Add parameter label
+        auto* label = new QLabel(QString::fromStdString(param_desc->getName()) + ":");
+        label->setToolTip(QString::fromStdString(param_desc->getDescription()));
+        layout->addWidget(label);
+        
+        if (param_desc->getUIHint() == "enum") {
+            // Create combo box for enum parameters
+            auto* combo = new QComboBox();
+            combo->setObjectName(param_key); // Store parameter key for retrieval
+            
+            auto ui_props = param_desc->getUIProperties();
+            QString options_str = QString::fromStdString(ui_props["options"]);
+            QString default_value = QString::fromStdString(ui_props["default"]);
+            
+            QStringList options = options_str.split(',', Qt::SkipEmptyParts);
+            combo->addItems(options);
+            
+            // Set default value
+            int default_index = combo->findText(default_value);
+            if (default_index >= 0) {
+                combo->setCurrentIndex(default_index);
+            }
+            
+            combo->setToolTip(QString::fromStdString(param_desc->getDescription()));
+            layout->addWidget(combo);
+            
+            // Store the widget for parameter retrieval
+            _parameter_controls[param_key.toStdString()] = combo;
+            
+        } else if (param_desc->getUIHint() == "number") {
+            // Create spin box for numeric parameters
+            auto* spinbox = new QSpinBox();
+            spinbox->setObjectName(param_key);
+            
+            auto ui_props = param_desc->getUIProperties();
+            QString default_str = QString::fromStdString(ui_props["default"]);
+            QString min_str = QString::fromStdString(ui_props["min"]);
+            QString max_str = QString::fromStdString(ui_props["max"]);
+            
+            if (!min_str.isEmpty()) spinbox->setMinimum(min_str.toInt());
+            if (!max_str.isEmpty()) spinbox->setMaximum(max_str.toInt());
+            if (!default_str.isEmpty()) spinbox->setValue(default_str.toInt());
+            
+            spinbox->setToolTip(QString::fromStdString(param_desc->getDescription()));
+            layout->addWidget(spinbox);
+            
+            _parameter_controls[param_key.toStdString()] = spinbox;
+            
+        } else {
+            // Default to text input
+            auto* lineedit = new QLineEdit();
+            lineedit->setObjectName(param_key);
+            
+            auto ui_props = param_desc->getUIProperties();
+            QString default_value = QString::fromStdString(ui_props["default"]);
+            lineedit->setText(default_value);
+            
+            lineedit->setToolTip(QString::fromStdString(param_desc->getDescription()));
+            layout->addWidget(lineedit);
+            
+            _parameter_controls[param_key.toStdString()] = lineedit;
+        }
+    }
+    
+    return widget;
+}
+
+std::map<std::string, std::string> TableDesignerWidget::getParameterValues(const QString& computer_name) const {
+    std::map<std::string, std::string> parameters;
+    
+    // Look for parameter controls with this computer name prefix
+    QString prefix = computer_name + "::";
+    
+    for (const auto& [key, widget] : _parameter_controls) {
+        QString key_str = QString::fromStdString(key);
+        if (key_str.startsWith(prefix)) {
+            QString param_name = key_str.mid(prefix.length());
+            
+            if (auto* combo = qobject_cast<QComboBox*>(widget)) {
+                parameters[param_name.toStdString()] = combo->currentText().toStdString();
+            } else if (auto* spinbox = qobject_cast<QSpinBox*>(widget)) {
+                parameters[param_name.toStdString()] = QString::number(spinbox->value()).toStdString();
+            } else if (auto* lineedit = qobject_cast<QLineEdit*>(widget)) {
+                parameters[param_name.toStdString()] = lineedit->text().toStdString();
+            }
+        }
+    }
+    
+    return parameters;
 }
