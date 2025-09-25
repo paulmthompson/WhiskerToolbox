@@ -3,6 +3,7 @@
 #include "DataManager/DataManager.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Widget/Media_Window/Media_Window.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -10,6 +11,17 @@
 MediaWidgetManager::MediaWidgetManager(std::shared_ptr<DataManager> data_manager, QObject* parent)
     : QObject(parent)
     , _data_manager(std::move(data_manager)) {
+}
+
+void MediaWidgetManager::setGroupManager(GroupManager* group_manager) {
+    _group_manager = group_manager;
+    
+    // Update all existing media widgets with the group manager
+    for (const auto& [id, widget] : _media_widgets) {
+        if (widget && widget->getMediaWindow()) {
+            widget->getMediaWindow()->setGroupManager(group_manager);
+        }
+    }
 }
 
 Media_Widget* MediaWidgetManager::createMediaWidget(const std::string& id, QWidget* parent) {
@@ -22,6 +34,12 @@ Media_Widget* MediaWidgetManager::createMediaWidget(const std::string& id, QWidg
     // Create Media_Widget - it will create its own Media_Window when setDataManager is called
     auto media_widget = std::make_unique<Media_Widget>(parent);
     media_widget->setDataManager(_data_manager);
+    
+    // Set group manager if available
+    if (_group_manager && media_widget->getMediaWindow()) {
+        media_widget->getMediaWindow()->setGroupManager(_group_manager);
+    }
+    
     media_widget->updateMedia();
 
     // Get raw pointer before moving
@@ -110,6 +128,14 @@ void MediaWidgetManager::loadFrame(const std::string& widget_id, int frame_id) {
 void MediaWidgetManager::updateMediaForAll() {
     for (const auto& [id, widget] : _media_widgets) {
         widget->updateMedia();
+    }
+}
+
+void MediaWidgetManager::updateCanvasForAll() {
+    for (const auto& [id, widget] : _media_widgets) {
+        if (widget && widget->getMediaWindow()) {
+            widget->getMediaWindow()->UpdateCanvas();
+        }
     }
 }
 

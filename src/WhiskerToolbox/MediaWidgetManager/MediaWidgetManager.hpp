@@ -11,6 +11,7 @@
 
 class DataManager;
 class Media_Window;
+class GroupManager;
 
 /**
  * @brief Manager class for multiple Media_Widget instances
@@ -25,6 +26,12 @@ class MediaWidgetManager : public QObject {
 public:
     explicit MediaWidgetManager(std::shared_ptr<DataManager> data_manager, QObject* parent = nullptr);
     ~MediaWidgetManager() override = default;
+
+    /**
+     * @brief Set the GroupManager for group-aware plotting
+     * @param group_manager Pointer to the GroupManager instance
+     */
+    void setGroupManager(GroupManager* group_manager);
 
     /**
      * @brief Create a new Media_Widget with its own Media_Window
@@ -94,6 +101,11 @@ public:
      */
     void updateMediaForAll();
 
+    /**
+     * @brief Update canvas for all media widgets (useful for group changes)
+     */
+    void updateCanvasForAll();
+
 signals:
     /**
      * @brief Emitted when a media widget is created
@@ -118,6 +130,7 @@ signals:
 private:
     std::shared_ptr<DataManager> _data_manager;
     std::unordered_map<std::string, std::unique_ptr<Media_Widget>> _media_widgets;
+    GroupManager* _group_manager{nullptr};
 
     void _connectWidgetSignals(const std::string& id, Media_Widget* widget);
 };

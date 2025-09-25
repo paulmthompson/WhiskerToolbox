@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>250</width>
-    <height>600</height>
+    <width>300</width>
+    <height>150</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,12 +49,12 @@
      </property>
      <property name="iconSize">
       <size>
-       <width>24</width>
-       <height>24</height>
+       <width>20</width>
+       <height>20</height>
       </size>
      </property>
      <property name="spacing">
-      <number>2</number>
+      <number>1</number>
      </property>
     </widget>
    </item>
@@ -76,7 +76,7 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>10</height>
       </size>
      </property>
     </spacer>

@@ -1,7 +1,4 @@
 #include "ToolboxPanel.hpp"
-#include "GroupManagementWidget/GroupManagementWidget.hpp"
-#include "GroupManagementWidget/GroupManager.hpp"
-#include "DataManager/DataManager.hpp"
 #include "ui_ToolboxPanel.h"
 
 #include <QDebug>
@@ -11,19 +8,14 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-ToolboxPanel::ToolboxPanel(GroupManager * group_manager, std::shared_ptr<DataManager> data_manager, QWidget * parent)
+ToolboxPanel::ToolboxPanel(QWidget * parent)
     : QWidget(parent),
       ui(new Ui::ToolboxPanel),
-      _group_widget(nullptr),
       _table_designer_widget(nullptr) {
     ui->setupUi(this);
 
-    // Create and add the group management widget at the top
-    _group_widget = new GroupManagementWidget(group_manager, this);
-
-    // Insert widgets into the layout
-    auto * layout = ui->verticalLayout;
-    layout->insertWidget(0, _group_widget);// Insert at index 0 (top)
+    // Set size policy to minimize vertical space usage
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     // Initialize with available plot types
     initializeToolbox();
@@ -74,6 +66,9 @@ void ToolboxPanel::initializeToolbox() {
     // addPlotType("line_plot", "Line Plot", ":/icons/line_plot.png");
     // addPlotType("histogram", "Histogram", ":/icons/histogram.png");
     // addPlotType("box_plot", "Box Plot", ":/icons/box_plot.png");
+
+    // Resize the list widget to fit its contents
+    resizeListToContents();
 }
 
 void ToolboxPanel::addPlotType(QString const & plot_type, QString const & display_name, QString const & icon_path) {
@@ -94,4 +89,29 @@ void ToolboxPanel::addPlotType(QString const & plot_type, QString const & displa
     item->setToolTip(QString("Double-click or select and click 'Add' to create a new %1").arg(display_name));
 
     ui->plot_list->addItem(item);
+}
+
+void ToolboxPanel::resizeListToContents() {
+    if (!ui->plot_list) return;
+
+    int item_count = ui->plot_list->count();
+    if (item_count == 0) return;
+
+    // Calculate the height needed for all items
+    int item_height = ui->plot_list->sizeHintForRow(0);
+    if (item_height <= 0) {
+        // Fallback height if sizeHintForRow doesn't work
+        item_height = 25; // Default item height including spacing
+    }
+
+    // Add spacing between items
+    int spacing = ui->plot_list->spacing();
+    int total_height = (item_height * item_count) + (spacing * (item_count - 1));
+
+    // Add some padding for the list widget frame/scrollbar area
+    total_height += 10;
+
+    // Set the fixed height for the list widget
+    ui->plot_list->setFixedHeight(total_height);
+    ui->plot_list->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
