@@ -24,9 +24,9 @@ class PlotContainer : public QObject {
 
 public:
     explicit PlotContainer(std::unique_ptr<AbstractPlotWidget> plot_widget,
-                          std::unique_ptr<AbstractPlotPropertiesWidget> properties_widget,
-                          QObject* parent = nullptr);
-    
+                           std::unique_ptr<AbstractPlotPropertiesWidget> properties_widget,
+                           QObject * parent = nullptr);
+
     /**
      * @brief Destructor
      * @post Ensures proper destruction of owned plot and properties widgets
@@ -37,31 +37,31 @@ public:
      * @brief Get the plot widget
      * @return Pointer to the plot widget (owned by this container)
      */
-    AbstractPlotWidget* getPlotWidget() const { return plot_widget_.get(); }
+    [[nodiscard]] AbstractPlotWidget * getPlotWidget() const { return plot_widget_.get(); }
 
     /**
      * @brief Get the properties widget
      * @return Pointer to the properties widget (owned by this container)
      */
-    AbstractPlotPropertiesWidget* getPropertiesWidget() const { return properties_widget_.get(); }
+    [[nodiscard]] AbstractPlotPropertiesWidget * getPropertiesWidget() const { return properties_widget_.get(); }
 
     /**
      * @brief Get the unique plot ID
      * @return The plot's unique identifier
      */
-    QString getPlotId() const;
+    [[nodiscard]] QString getPlotId() const;
 
     /**
      * @brief Get the plot type name
      * @return Human-readable plot type
      */
-    QString getPlotType() const;
+    [[nodiscard]] QString getPlotType() const;
 
     /**
      * @brief Configure the plot and properties widgets with DataManager and GroupManager
      */
     void configureManagers(std::shared_ptr<DataManager> data_manager,
-                           GroupManager* group_manager);
+                           GroupManager * group_manager);
 
     /**
      * @brief Update properties widget from current plot state
@@ -78,26 +78,26 @@ signals:
      * @brief Emitted when this plot is selected
      * @param plot_id The unique ID of this plot
      */
-    void plotSelected(const QString& plot_id);
+    void plotSelected(QString const & plot_id);
 
     /**
      * @brief Emitted when plot properties change
      * @param plot_id The unique ID of this plot
      */
-    void propertiesChanged(const QString& plot_id);
+    void propertiesChanged(QString const & plot_id);
 
     /**
      * @brief Emitted when user requests frame jump
      * @param time_frame_index The frame to jump to
      * @param data_key The data key associated with the jump
      */
-    void frameJumpRequested(int64_t time_frame_index, const std::string& data_key);
+    void frameJumpRequested(int64_t time_frame_index, std::string const & data_key);
 
 private slots:
     /**
      * @brief Handle selection events from the plot widget
      */
-    void onPlotSelected(const QString& plot_id);
+    void onPlotSelected(QString const & plot_id);
 
     /**
      * @brief Handle property changes from the properties widget
@@ -107,7 +107,7 @@ private slots:
     /**
      * @brief Handle frame jump requests from the plot widget
      */
-    void onFrameJumpRequested(int64_t time_frame_index, const std::string& data_key);
+    void onFrameJumpRequested(int64_t time_frame_index, std::string const & data_key);
 
 private:
     std::unique_ptr<AbstractPlotWidget> plot_widget_;
@@ -119,4 +119,4 @@ private:
     void connectInternalSignals();
 };
 
-#endif // PLOTCONTAINER_HPP
+#endif// PLOTCONTAINER_HPP

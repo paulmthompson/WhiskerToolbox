@@ -23,7 +23,7 @@ public:
      * @param plot_type The type of plot to create (e.g., "scatter_plot", "spatial_overlay_plot")
      * @return Unique pointer to the created plot container, or nullptr if type is unknown
      */
-    static std::unique_ptr<PlotContainer> createPlotContainer(const QString& plot_type);
+    static std::unique_ptr<PlotContainer> createPlotContainer(QString const & plot_type);
 
 private:
     /**
@@ -31,14 +31,14 @@ private:
      * @param plot_type The type of plot to create
      * @return Unique pointer to the created plot widget, or nullptr if type is unknown
      */
-    static std::unique_ptr<AbstractPlotWidget> createPlotWidget(const QString& plot_type);
+    static std::unique_ptr<AbstractPlotWidget> createPlotWidget(QString const & plot_type);
 
     /**
      * @brief Create a properties widget for the specified plot type
      * @param plot_type The type of plot properties widget to create
      * @return Unique pointer to the created properties widget, or nullptr if type is unknown
      */
-    static std::unique_ptr<AbstractPlotPropertiesWidget> createPropertiesWidget(const QString& plot_type);
+    static std::unique_ptr<AbstractPlotPropertiesWidget> createPropertiesWidget(QString const & plot_type);
 };
 
-#endif // PLOTFACTORY_HPP
+#endif// PLOTFACTORY_HPP

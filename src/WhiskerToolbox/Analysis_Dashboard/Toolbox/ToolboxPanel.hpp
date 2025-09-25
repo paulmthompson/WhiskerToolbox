@@ -2,6 +2,7 @@
 #define TOOLBOXPANEL_HPP
 
 #include <QWidget>
+
 #include <memory>
 
 namespace Ui {
@@ -28,7 +29,6 @@ public:
     explicit ToolboxPanel(GroupManager * group_manager, std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
     ~ToolboxPanel() override;
 
-    
 
 signals:
     /**
@@ -53,7 +53,7 @@ private:
     Ui::ToolboxPanel * ui;
     GroupManagementWidget * _group_widget;
     // TableDesignerWidget removed from dashboard toolbox
-    void* _table_designer_widget; // legacy placeholder, not used
+    void * _table_designer_widget;// legacy placeholder, not used
 
     /**
      * @brief Initialize the toolbox with available plot types
