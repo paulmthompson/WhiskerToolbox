@@ -46,6 +46,9 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
 
     connect(ui->selection_mode_combo, &QComboBox::currentTextChanged, this, &MediaLine_Widget::_toggleSelectionMode);
 
+    // Initialize the selection mode to match the current combo box selection
+    _toggleSelectionMode(ui->selection_mode_combo->currentText());
+
     connect(ui->color_picker, &ColorPicker_Widget::colorChanged,
             this, &MediaLine_Widget::_setLineColor);
     connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
@@ -311,13 +314,20 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         }
         case Selection_Mode::Select: {
             std::cout << "Selection mode is Select" << std::endl;
-            int nearest_line = _findNearestLine(x_media, y_media);
-            if (nearest_line >= 0) {
-                _selectLine(nearest_line);
-                std::cout << "Selected line " << nearest_line << std::endl;
+            
+            // Use Media_Window's entity finding and selection system for group integration
+            QPointF scene_pos(x_canvas * _scene->getXAspect(), y_canvas * _scene->getYAspect());
+            std::string data_key, data_type;
+            EntityId entity_id = _scene->findEntityAtPosition(scene_pos, data_key, data_type);
+            
+            if (entity_id != 0 && data_type == "line" && data_key == _active_key) {
+                // Use the group-based selection system for consistency
+                _scene->selectEntity(entity_id, data_key, data_type);
+                std::cout << "Selected line entity " << entity_id << " in group system" << std::endl;
             } else {
-                _clearLineSelection();
-                std::cout << "No line found within threshold" << std::endl;
+                // Clear selections if no line found
+                _scene->clearAllSelections();
+                std::cout << "No line found within threshold - cleared selections" << std::endl;
             }
             break;
         }
@@ -476,10 +486,17 @@ void MediaLine_Widget::_setPolynomialOrder(int order) {
 
 void MediaLine_Widget::_toggleSelectionMode(QString text) {
     _selection_mode = _selection_modes[text];
+    std::cout << "MediaLine_Widget: Selection mode changed to: " << text.toStdString() 
+              << " (enum value: " << static_cast<int>(_selection_mode) << ")" << std::endl;
 
     // Switch to the appropriate page in the stacked widget
     int pageIndex = static_cast<int>(_selection_mode);
     ui->mode_stacked_widget->setCurrentIndex(pageIndex);
+
+    // Enable group selection ONLY when in "Select Line" mode
+    bool enable_group_selection = (_selection_mode == Selection_Mode::Select);
+    _scene->setGroupSelectionEnabled(enable_group_selection);
+    std::cout << "MediaLine_Widget: Group selection " << (enable_group_selection ? "enabled" : "disabled") << std::endl;
 
     if (_selection_mode == Selection_Mode::Erase) {
         _scene->setShowHoverCircle(true);
@@ -874,7 +891,8 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
 
 void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
     // Only handle right-clicks in Select mode and when a line is selected
-    if (_selection_mode != Selection_Mode::Select || _selected_line_index < 0 || _active_key.empty()) {
+    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
+    if (_selection_mode != Selection_Mode::Select || selected_line_index < 0 || _active_key.empty()) {
         return;
     }
 
@@ -883,7 +901,7 @@ void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
 
     // Check if the right-click is near the selected line
     int nearest_line = _findNearestLine(x_media, y_media);
-    if (nearest_line == _selected_line_index) {
+    if (nearest_line == selected_line_index) {
         // Show context menu at the click position
         QPoint global_pos = QCursor::pos();
         _showLineContextMenu(global_pos);
@@ -1047,7 +1065,8 @@ std::vector<std::string> MediaLine_Widget::_getAvailableLineDataKeys() {
 }
 
 void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
-    if (_selected_line_index < 0 || _active_key.empty()) {
+    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
+    if (selected_line_index < 0 || _active_key.empty()) {
         return;
     }
 
@@ -1062,13 +1081,13 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
     auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
     auto lines = source_line_data->getAtTime(current_time);
 
-    if (_selected_line_index >= static_cast<int>(lines.size())) {
+    if (selected_line_index >= static_cast<int>(lines.size())) {
         std::cerr << "Selected line index out of bounds" << std::endl;
         return;
     }
 
     // Get the selected line
-    Line2D selected_line = lines[_selected_line_index];
+    Line2D selected_line = lines[selected_line_index];
 
     // Add to target
     target_line_data->addAtTime(current_time, selected_line);
@@ -1076,7 +1095,7 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
     // Remove from source by rebuilding the vector without the selected line
     std::vector<Line2D> remaining_lines;
     for (int i = 0; i < static_cast<int>(lines.size()); ++i) {
-        if (i != _selected_line_index) {
+        if (i != selected_line_index) {
             remaining_lines.push_back(lines[i]);
         }
     }
@@ -1088,13 +1107,14 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
     }
 
     // Clear selection since the line was moved
-    _clearLineSelection();
+    _scene->clearAllSelections();
 
     std::cout << "Moved line from " << _active_key << " to " << target_key << std::endl;
 }
 
 void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
-    if (_selected_line_index < 0 || _active_key.empty()) {
+    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
+    if (selected_line_index < 0 || _active_key.empty()) {
         return;
     }
 
@@ -1109,13 +1129,13 @@ void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
     auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
     auto lines = source_line_data->getAtTime(current_time);
 
-    if (_selected_line_index >= static_cast<int>(lines.size())) {
+    if (selected_line_index >= static_cast<int>(lines.size())) {
         std::cerr << "Selected line index out of bounds" << std::endl;
         return;
     }
 
     // Get the selected line and copy it to target
-    Line2D selected_line = lines[_selected_line_index];
+    Line2D selected_line = lines[selected_line_index];
     target_line_data->addAtTime(current_time, selected_line);
 
     std::cout << "Copied line from " << _active_key << " to " << target_key << std::endl;
@@ -1196,4 +1216,19 @@ std::vector<TimeFrameIndex> MediaLine_Widget::_getAllFrameTimes() {
     }
 
     return frame_times;
+}
+
+int MediaLine_Widget::_getSelectedLineIndexFromGroupSystem() const {
+    // Get the selected entities from the group system
+    auto selected_entities = _scene->getSelectedEntities();
+    
+    // If no entities are selected, return -1
+    if (selected_entities.empty()) {
+        return -1;
+    }
+    
+    // For now, just return the first selected entity as the line index
+    // EntityId for lines corresponds to their index in the line data
+    EntityId first_selected = *selected_entities.begin();
+    return static_cast<int>(first_selected);
 }

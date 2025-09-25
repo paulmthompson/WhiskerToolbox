@@ -134,6 +134,9 @@ private slots:
     void _setEdgeSearchRadius(int radius);
     void _setEraserRadius(int radius);
     void _toggleShowHoverCircle(bool checked);
+    
+    // Helper method to get selected line index from group-based selection system
+    int _getSelectedLineIndexFromGroupSystem() const;
 };
 
 #endif// MEDIALINE_WIDGET_HPP

@@ -793,12 +793,13 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
             if (_debug_performance) {
                 std::cout << "  Started drawing - cleared and added first point" << std::endl;
             }
-        } else {
-            // Handle selection on left click (when not in drawing mode)
+        } else if (_group_selection_enabled) {
+            // Handle selection on left click (when not in drawing mode and group selection is enabled)
             std::string data_key, data_type;
             EntityId entity_id = _findEntityAtPosition(event->scenePos(), data_key, data_type);
             
             if (entity_id != 0) {
+                // Use group-based selection for all entity types
                 // Check if Ctrl is held for multi-selection
                 if (event->modifiers() & Qt::ControlModifier) {
                     if (_selected_entities.count(entity_id)) {
@@ -1035,9 +1036,6 @@ void Media_Window::_plotLineData() {
                 continue;
             }
 
-            // Check if this line is selected
-            bool const is_selected = (_line_config.get()->selected_line_index == line_idx);
-
             // Use group-aware color if available, otherwise use default plot color
             QColor line_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
 
@@ -1073,22 +1071,16 @@ void Media_Window::_plotLineData() {
                 }
             }
 
-            // Create pen with configurable thickness - selected lines are thicker and have different color
+            // Create pen with group-aware color and configurable thickness
             QPen linePen;
-            if (is_selected) {
-                linePen.setColor(QColor(255, 0, 0));                     // Red for selected lines
-                linePen.setWidth(_line_config.get()->line_thickness + 2);// Thicker for selected
-                linePen.setStyle(Qt::DashLine);                          // Dashed line for selected
-            } else {
-                linePen.setColor(line_color);
-                linePen.setWidth(_line_config.get()->line_thickness);
-            }
+            linePen.setColor(line_color);
+            linePen.setWidth(_line_config.get()->line_thickness);
 
             auto linePath = addPath(path, linePen);
             _line_paths.append(linePath);
 
-            // Add dot at line base (always filled) - selected lines have red dot
-            QColor const dot_color = is_selected ? QColor(255, 0, 0) : line_color;
+            // Add dot at line base (always filled) - use group-aware color
+            QColor const dot_color = line_color;
             auto ellipse = addEllipse(
                     static_cast<float>(line_to_plot[0].x) * xAspect - 2.5,
                     static_cast<float>(line_to_plot[0].y) * yAspect - 2.5,
@@ -1930,8 +1922,24 @@ std::unordered_set<EntityId> Media_Window::getSelectedEntities() const {
     return _selected_entities;
 }
 
+void Media_Window::setGroupSelectionEnabled(bool enabled) {
+    _group_selection_enabled = enabled;
+    if (!enabled) {
+        // Clear any existing selections when disabling group selection
+        clearAllSelections();
+    }
+}
+
+bool Media_Window::isGroupSelectionEnabled() const {
+    return _group_selection_enabled;
+}
+
 EntityId Media_Window::findPointAtPosition(QPointF const & scene_pos, std::string const & point_key) {
     return _findPointAtPosition(scene_pos, point_key);
+}
+
+EntityId Media_Window::findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type) {
+    return _findEntityAtPosition(scene_pos, data_key, data_type);
 }
 
 void Media_Window::selectEntity(EntityId entity_id, std::string const & data_key, std::string const & data_type) {
@@ -2134,24 +2142,29 @@ void Media_Window::_updateContextMenuActions() {
         return;
     }
 
-    // Remove existing dynamic group assignment actions
+    // Clear all dynamic actions by removing actions after the static ones
+    // The static menu structure is: Create New Group, Separator, Ungroup Selected, Separator, Clear Selection
+    // Everything after the second separator should be removed
     auto actions = _context_menu->actions();
-    bool found_separator = false;
-    for (auto it = actions.begin(); it != actions.end(); ) {
-        if ((*it)->isSeparator()) {
-            if (!found_separator) {
-                found_separator = true;
-                ++it;
-                continue;
-            } else {
-                // Remove everything after the second separator (dynamic content)
-                _context_menu->removeAction(*it);
-                delete *it;
-                it = actions.erase(it);
-                continue;
+    int separator_count = 0;
+    QList<QAction*> actions_to_remove;
+    
+    for (QAction* action : actions) {
+        if (action->isSeparator()) {
+            separator_count++;
+            if (separator_count > 2) {
+                actions_to_remove.append(action);
             }
+        } else if (separator_count >= 2) {
+            // This is a dynamic action after the second separator
+            actions_to_remove.append(action);
         }
-        ++it;
+    }
+    
+    // Remove and delete the dynamic actions
+    for (QAction* action : actions_to_remove) {
+        _context_menu->removeAction(action);
+        action->deleteLater(); // Use deleteLater() for safer cleanup
     }
 
     // Add dynamic group assignment actions

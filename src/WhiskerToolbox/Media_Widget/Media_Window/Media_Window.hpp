@@ -130,8 +130,13 @@ public:
     std::unordered_set<EntityId> getSelectedEntities() const;
     void selectEntity(EntityId entity_id, std::string const & data_key, std::string const & data_type);
     
+    // Selection mode coordination
+    void setGroupSelectionEnabled(bool enabled);
+    bool isGroupSelectionEnabled() const;
+    
     // Public methods for entity finding
     EntityId findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
+    EntityId findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);
 
     [[nodiscard]] std::optional<MediaDisplayOptions *> getMediaConfig(std::string const & media_key) const {
         if (_media_configs.find(media_key) == _media_configs.end()) {
@@ -254,6 +259,7 @@ private:
     std::unordered_set<EntityId> _selected_entities;
     std::string _selected_data_key;  // Key of the data containing selected entities
     std::string _selected_data_type; // Type of selected data ("line", "point", "mask")
+    bool _group_selection_enabled = true; // Allow group-based selection to be disabled
     QMenu * _context_menu = nullptr;
 
     QImage::Format _getQImageFormat(std::string const & media_key);
