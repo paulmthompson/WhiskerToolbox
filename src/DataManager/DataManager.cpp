@@ -549,7 +549,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 if (item.contains("format") && item["format"] == "dlc_csv") {
                     auto multi_point_data = load_multiple_PointData_from_dlc(file_path, item);
                     
-                    std::string const color = item.value("color", "#0000FF");
+                    // For DLC data, let Media_Window assign colors automatically via getColorForIndex
+                    // Don't use a single color for all bodyparts
                     
                     for (auto const& [bodypart, point_data] : multi_point_data) {
                         std::string const bodypart_name = name + "_" + bodypart;
@@ -561,7 +562,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                         }
 
                         dm->setData<PointData>(bodypart_name, point_data, TimeKey("time"));
-                        data_info_list.push_back({bodypart_name, "PointData", color});
+                        // Use empty color string to let Media_Window auto-assign colors
+                        data_info_list.push_back({bodypart_name, "PointData", ""});
                     }
                 } else {
                     // Regular point data loading

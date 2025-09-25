@@ -230,7 +230,10 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
                 (data.data_class == "PointData") ||
                 (data.data_class == "MaskData") ||
                 (data.data_class == "LineData")) {
-            _media_manager->setFeatureColorForAll(data.key, data.color);
+            // Only set color if one is specified, otherwise let Media_Window auto-assign
+            if (!data.color.empty()) {
+                _media_manager->setFeatureColorForAll(data.key, data.color);
+            }
         }
     }
     
