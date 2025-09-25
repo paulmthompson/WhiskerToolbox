@@ -7,6 +7,8 @@
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
 #include <iostream>
+#include <cmath>
+#include <QPointF>
 
 MediaPoint_Widget::MediaPoint_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent)
     : QWidget(parent),
@@ -47,7 +49,8 @@ void MediaPoint_Widget::showEvent(QShowEvent * event) {
     static_cast<void>(event);
 
     std::cout << "Show Event" << std::endl;
-    connect(_scene, &Media_Window::leftClickMedia, this, &MediaPoint_Widget::_assignPoint);
+    // Connect to the new signal that provides modifier information
+    connect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaPoint_Widget::_handlePointClickWithModifiers);
 
 }
 
@@ -56,7 +59,8 @@ void MediaPoint_Widget::hideEvent(QHideEvent * event) {
     static_cast<void>(event);
 
     std::cout << "Hide Event" << std::endl;
-    disconnect(_scene, &Media_Window::leftClickMedia, this, &MediaPoint_Widget::_assignPoint);
+    disconnect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaPoint_Widget::_handlePointClickWithModifiers);
+    _clearPointSelection(); // Clear selection when widget is hidden
 }
 
 void MediaPoint_Widget::setActiveKey(std::string const & key) {
@@ -89,33 +93,124 @@ void MediaPoint_Widget::setActiveKey(std::string const & key) {
 }
 
 
-void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
+void MediaPoint_Widget::_handlePointClickWithModifiers(qreal x_media, qreal y_media, Qt::KeyboardModifiers modifiers) {
     if (!_selection_enabled || _active_key.empty())
         return;
 
+    // Check if Ctrl is held for point movement
+    if (modifiers & Qt::ControlModifier) {
+        // Ctrl+click: move selected point if one is selected
+        if (_selected_point_id != 0) {
+            _moveSelectedPoint(x_media, y_media);
+        }
+        return;
+    }
+    
+    // Regular click: select nearby point if exists
+    EntityId nearby_point = _findNearestPoint(x_media, y_media, _selection_threshold);
+    if (nearby_point != 0) {
+        _selectPoint(nearby_point);
+    } else {
+        _clearPointSelection();
+    }
+}
+
+EntityId MediaPoint_Widget::_findNearestPoint(qreal x_media, qreal y_media, float max_distance) {
+    if (_active_key.empty())
+        return 0;
+    
+    auto point_data = _data_manager->getData<PointData>(_active_key);
+    if (!point_data)
+        return 0;
+    
     auto current_time = _data_manager->getCurrentTime();
-
+    
+    // Handle timeframe conversion if necessary
     auto video_timeframe = _data_manager->getTime(TimeKey("time"));
-
     auto point_timeframe_key = _data_manager->getTimeKey(_active_key);
-
+    
     if (!point_timeframe_key.empty()) {
         auto point_timeframe = _data_manager->getTime(point_timeframe_key);
-
         if (video_timeframe.get() != point_timeframe.get()) {
             current_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
             current_time = point_timeframe->getIndexAtTime(current_time).getValue();
         }
     }
+    
+    auto points = point_data->getAtTime(TimeFrameIndex(current_time));
+    if (points.empty())
+        return 0;
+    float min_distance = max_distance;
+    int closest_point_index = -1;
+    for (const auto& point : points) {
+        float dx = point.x - static_cast<float>(x_media);
+        float dy = point.y - static_cast<float>(y_media);
+        float distance = std::sqrt(dx * dx + dy * dy);
 
+        if (distance < min_distance) {
+            min_distance = distance;
+            closest_point_index = &point - &points[0]; // Get index of the closest point
+        }
+        
+    }
+
+    if (closest_point_index != -1) {
+        auto entity_ids = point_data->getEntityIdsAtTime(TimeFrameIndex(current_time));
+        if (closest_point_index < static_cast<int>(entity_ids.size())) {
+            return entity_ids[closest_point_index];
+        }
+    }
+    
+    return 0;
+}
+
+void MediaPoint_Widget::_selectPoint(EntityId point_id) {
+    _selected_point_id = point_id;
+    
+    // Use Media_Window's selection system for visual feedback
+    _scene->selectEntity(point_id, _active_key, "point");
+    std::cout << "Selected point with ID: " << point_id << std::endl;
+}
+
+void MediaPoint_Widget::_clearPointSelection() {
+    if (_selected_point_id != 0) {
+        _selected_point_id = 0;
+        _scene->clearAllSelections(); // Clear all selections in scene
+        _scene->UpdateCanvas(); // Refresh to remove selection highlight
+        std::cout << "Cleared point selection" << std::endl;
+    }
+}
+
+void MediaPoint_Widget::_moveSelectedPoint(qreal x_media, qreal y_media) {
+    if (_selected_point_id == 0 || _active_key.empty())
+        return;
+    
+    auto current_time = _data_manager->getCurrentTime();
+    
+    // Handle timeframe conversion if necessary
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
+    auto point_timeframe_key = _data_manager->getTimeKey(_active_key);
+    
+    if (!point_timeframe_key.empty()) {
+        auto point_timeframe = _data_manager->getTime(point_timeframe_key);
+        if (video_timeframe.get() != point_timeframe.get()) {
+            current_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
+            current_time = point_timeframe->getIndexAtTime(current_time).getValue();
+        }
+    }
+    
     auto point = _data_manager->getData<PointData>(_active_key);
     if (point) {
-
         point->overwritePointAtTime(TimeFrameIndex(current_time), 
                                     Point2D<float>(static_cast<float>(x_media), static_cast<float>(y_media)));
-
         _scene->UpdateCanvas();
+        std::cout << "Moved point to: (" << x_media << ", " << y_media << ")" << std::endl;
     }
+}
+
+void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
+    // Legacy method - now just calls the move function for compatibility
+    _moveSelectedPoint(x_media, y_media);
 }
 
 void MediaPoint_Widget::_setPointColor(const QString& hex_color) {

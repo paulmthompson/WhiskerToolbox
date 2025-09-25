@@ -131,6 +131,20 @@ public:
      */
     void clearAllGroups();
 
+    // ===== Common Group Operations for Context Menus =====
+    /**
+     * @brief Create a new group and assign the given entities to it
+     * @param entity_ids Set of EntityIds to assign to the new group
+     * @return The ID of the created group, or -1 if failed
+     */
+    int createGroupWithEntities(std::unordered_set<EntityId> const & entity_ids);
+
+    /**
+     * @brief Get a list of groups that can be used in context menus
+     * @return Vector of pairs containing {group_id, group_name}
+     */
+    std::vector<std::pair<int, QString>> getGroupsForContextMenu() const;
+
 signals:
     /**
      * @brief Emitted when a new group is created

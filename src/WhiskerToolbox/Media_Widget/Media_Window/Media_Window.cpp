@@ -22,12 +22,15 @@
 #include "DataManager/Tensors/Tensor_Data.hpp"
 #define slots Q_SLOTS
 
+#include <QAction>
 #include <QElapsedTimer>
 #include <QFont>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsSceneContextMenuEvent>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsTextItem>
 #include <QImage>
+#include <QMenu>
 #include <QPainter>
 #include <algorithm>
 
@@ -50,9 +53,17 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
 
     _canvasImage = QImage(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
     _canvasPixmap = addPixmap(QPixmap::fromImage(_canvasImage));
+
+    _createContextMenu();
 }
 
 Media_Window::~Media_Window() {
+    // Clean up context menu
+    if (_context_menu) {
+        delete _context_menu;
+        _context_menu = nullptr;
+    }
+
     // Clear all items from the scene - this automatically removes and deletes all QGraphicsItems
     clear();
 
@@ -782,6 +793,33 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
             if (_debug_performance) {
                 std::cout << "  Started drawing - cleared and added first point" << std::endl;
             }
+        } else {
+            // Handle selection on left click (when not in drawing mode)
+            std::string data_key, data_type;
+            EntityId entity_id = _findEntityAtPosition(event->scenePos(), data_key, data_type);
+            
+            if (entity_id != 0) {
+                // Check if Ctrl is held for multi-selection
+                if (event->modifiers() & Qt::ControlModifier) {
+                    if (_selected_entities.count(entity_id)) {
+                        _selected_entities.erase(entity_id);
+                    } else {
+                        _selected_entities.insert(entity_id);
+                        _selected_data_key = data_key;
+                        _selected_data_type = data_type;
+                    }
+                } else {
+                    // Single selection
+                    _selected_entities.clear();
+                    _selected_entities.insert(entity_id);
+                    _selected_data_key = data_key;
+                    _selected_data_type = data_type;
+                }
+                UpdateCanvas(); // Refresh to show selection
+            } else if (!(event->modifiers() & Qt::ControlModifier)) {
+                // Clear selection if clicking on empty area without Ctrl
+                clearAllSelections();
+            }
         }
 
         // Emit legacy signals (qreal values)
@@ -789,6 +827,12 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
         emit leftClickMedia(
                 event->scenePos().x() / getXAspect(),
                 event->scenePos().y() / getYAspect());
+        
+        // Emit media click signal with modifier information
+        emit leftClickMediaWithEvent(
+                event->scenePos().x() / getXAspect(),
+                event->scenePos().y() / getYAspect(),
+                event->modifiers());
 
         // Emit strong-typed coordinate signals
         CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
@@ -881,6 +925,17 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
     emit mouseMoveCanvas(canvas_coords);
 
     QGraphicsScene::mouseMoveEvent(event);
+}
+
+void Media_Window::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
+    // Only show context menu if we have selections and a group manager
+    if (!hasSelections() || !_group_manager) {
+        QGraphicsScene::contextMenuEvent(event);
+        return;
+    }
+
+    _updateContextMenuActions();
+    _showContextMenu(event->screenPos());
 }
 
 float Media_Window::getXAspect() const {
@@ -1362,6 +1417,20 @@ void Media_Window::_plotPointData() {
 
             // Use group-aware color if available, otherwise use default plot color
             QColor point_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
+            
+            // Check if this point is selected to add highlight
+            bool is_selected = _selected_entities.count(entity_id) > 0;
+            
+            // Add selection highlight if point is selected
+            if (is_selected) {
+                QPen highlight_pen(Qt::yellow);
+                highlight_pen.setWidth(4);
+                QBrush highlight_brush(Qt::transparent);
+                auto highlight_circle = addEllipse(x_pos - point_size, y_pos - point_size,
+                                                   point_size * 2, point_size * 2, 
+                                                   highlight_pen, highlight_brush);
+                _points.append(highlight_circle);
+            }
 
             // Create the appropriate marker shape based on configuration
             switch (_point_config.get()->marker_shape) {
@@ -1816,6 +1885,11 @@ void Media_Window::onGroupChanged() {
 }
 
 QColor Media_Window::_getGroupAwareColor(EntityId entity_id, QColor const & default_color) const {
+    // Handle selection highlighting first
+    if (_selected_entities.count(entity_id) > 0) {
+        return QColor(255, 255, 0); // Bright yellow for selected entities
+    }
+    
     if (!_group_manager || entity_id == 0) {
         return default_color;
     }
@@ -1824,10 +1898,331 @@ QColor Media_Window::_getGroupAwareColor(EntityId entity_id, QColor const & defa
 }
 
 QRgb Media_Window::_getGroupAwareColorRgb(EntityId entity_id, QRgb default_color) const {
+    // Handle selection highlighting first
+    if (_selected_entities.count(entity_id) > 0) {
+        return qRgba(255, 255, 0, 255); // Bright yellow for selected entities
+    }
+    
     if (!_group_manager || entity_id == 0) {
         return default_color;
     }
     
     QColor group_color = _group_manager->getEntityColor(entity_id, QColor::fromRgba(default_color));
     return group_color.rgba();
+}
+
+// ===== Selection and Context Menu Implementation =====
+
+void Media_Window::clearAllSelections() {
+    if (!_selected_entities.empty()) {
+        _selected_entities.clear();
+        _selected_data_key.clear();
+        _selected_data_type.clear();
+        UpdateCanvas(); // Refresh to remove selection highlights
+    }
+}
+
+bool Media_Window::hasSelections() const {
+    return !_selected_entities.empty();
+}
+
+std::unordered_set<EntityId> Media_Window::getSelectedEntities() const {
+    return _selected_entities;
+}
+
+EntityId Media_Window::findPointAtPosition(QPointF const & scene_pos, std::string const & point_key) {
+    return _findPointAtPosition(scene_pos, point_key);
+}
+
+void Media_Window::selectEntity(EntityId entity_id, std::string const & data_key, std::string const & data_type) {
+    _selected_entities.clear();
+    _selected_entities.insert(entity_id);
+    _selected_data_key = data_key;
+    _selected_data_type = data_type;
+    UpdateCanvas(); // Refresh to show selection
+}
+
+EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type) {
+    // Convert scene coordinates to media coordinates
+    float x_media = static_cast<float>(scene_pos.x() / getXAspect());
+    float y_media = static_cast<float>(scene_pos.y() / getYAspect());
+
+    // Search through lines first (as they're typically most precise)
+    for (auto const & [key, config] : _line_configs) {
+        if (config->is_visible) {
+            EntityId entity_id = _findLineAtPosition(scene_pos, key);
+            if (entity_id != 0) {
+                data_key = key;
+                data_type = "line";
+                return entity_id;
+            }
+        }
+    }
+
+    // Then search points
+    for (auto const & [key, config] : _point_configs) {
+        if (config->is_visible) {
+            EntityId entity_id = _findPointAtPosition(scene_pos, key);
+            if (entity_id != 0) {
+                data_key = key;
+                data_type = "point";
+                return entity_id;
+            }
+        }
+    }
+
+    // Finally search masks (usually less precise)
+    for (auto const & [key, config] : _mask_configs) {
+        if (config->is_visible) {
+            EntityId entity_id = _findMaskAtPosition(scene_pos, key);
+            if (entity_id != 0) {
+                data_key = key;
+                data_type = "mask";
+                return entity_id;
+            }
+        }
+    }
+
+    return 0; // No entity found
+}
+
+EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::string const & line_key) {
+    auto line_data = _data_manager->getData<LineData>(line_key);
+    if (!line_data) {
+        return 0;
+    }
+
+    auto current_time = _data_manager->getCurrentTime();
+    auto const & lines = line_data->getAtTime(TimeFrameIndex(current_time));
+    auto const & entity_ids = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time));
+
+    if (lines.size() != entity_ids.size()) {
+        return 0;
+    }
+
+    float const threshold = 10.0f; // pixels
+
+    for (size_t i = 0; i < lines.size(); ++i) {
+        auto const & line = lines[i];
+        
+        // Check distance from each line segment
+        for (size_t j = 0; j < line.size(); ++j) {
+            if (j + 1 >= line.size()) continue;
+            
+            auto const & p1 = line[j];
+            auto const & p2 = line[j + 1];
+            
+            // Convert line points to scene coordinates
+            float x1_scene = p1.x * getXAspect();
+            float y1_scene = p1.y * getYAspect();
+            float x2_scene = p2.x * getXAspect();
+            float y2_scene = p2.y * getYAspect();
+            
+            // Calculate distance from click point to line segment
+            float dist = _calculateDistanceToLineSegment(
+                scene_pos.x(), scene_pos.y(),
+                x1_scene, y1_scene, x2_scene, y2_scene
+            );
+            
+            if (dist <= threshold) {
+                return entity_ids[i];
+            }
+        }
+    }
+
+    return 0;
+}
+
+EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::string const & point_key) {
+    auto point_data = _data_manager->getData<PointData>(point_key);
+    if (!point_data) {
+        return 0;
+    }
+
+    auto current_time = _data_manager->getCurrentTime();
+    auto const & points = point_data->getAtTime(TimeFrameIndex(current_time));
+    auto const & entity_ids = point_data->getEntityIdsAtTime(TimeFrameIndex(current_time));
+
+    if (points.size() != entity_ids.size()) {
+        return 0;
+    }
+
+    float const threshold = 15.0f; // pixels
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        auto const & point = points[i];
+        
+        // Convert point to scene coordinates
+        float x_scene = point.x * getXAspect();
+        float y_scene = point.y * getYAspect();
+        
+        // Calculate distance
+        float dx = scene_pos.x() - x_scene;
+        float dy = scene_pos.y() - y_scene;
+        float distance = std::sqrt(dx * dx + dy * dy);
+        
+        if (distance <= threshold) {
+            return entity_ids[i];
+        }
+    }
+
+    return 0;
+}
+
+EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::string const & mask_key) {
+    auto mask_data = _data_manager->getData<MaskData>(mask_key);
+    if (!mask_data) {
+        return 0;
+    }
+
+    auto current_time = _data_manager->getCurrentTime();
+    auto const & masks = mask_data->getAtTime(TimeFrameIndex(current_time));
+
+    // MaskData doesn't currently support EntityIds, so we'll use position-based indices for now
+    // This is a simplified implementation that can be improved when MaskData gets EntityId support
+
+    float x_media = static_cast<float>(scene_pos.x() / getXAspect());
+    float y_media = static_cast<float>(scene_pos.y() / getYAspect());
+
+    for (size_t i = 0; i < masks.size(); ++i) {
+        auto const & mask = masks[i];
+        
+        // Check if the point is inside any of the mask's polygons
+        for (auto const & point : mask) {
+            // Simple bounding box check for now (could be improved with proper point-in-polygon)
+            if (std::abs(static_cast<float>(point.x) - x_media) < 5.0f && 
+                std::abs(static_cast<float>(point.y) - y_media) < 5.0f) {
+                // Return a synthetic EntityId based on position and mask index
+                // This is temporary until MaskData supports proper EntityIds
+                return static_cast<EntityId>(1000000 + current_time * 1000 + i);
+            }
+        }
+    }
+
+    return 0;
+}
+
+void Media_Window::_createContextMenu() {
+    _context_menu = new QMenu();
+    
+    // Create actions
+    auto * create_group_action = new QAction("Create New Group", this);
+    auto * ungroup_action = new QAction("Ungroup Selected", this);
+    auto * clear_selection_action = new QAction("Clear Selection", this);
+    
+    // Add actions to menu
+    _context_menu->addAction(create_group_action);
+    _context_menu->addSeparator();
+    _context_menu->addAction(ungroup_action);
+    _context_menu->addSeparator();
+    _context_menu->addAction(clear_selection_action);
+    
+    // Connect actions
+    connect(create_group_action, &QAction::triggered, this, &Media_Window::onCreateNewGroup);
+    connect(ungroup_action, &QAction::triggered, this, &Media_Window::onUngroupSelected);
+    connect(clear_selection_action, &QAction::triggered, this, &Media_Window::onClearSelection);
+}
+
+void Media_Window::_showContextMenu(QPoint const & global_pos) {
+    if (_context_menu) {
+        _context_menu->popup(global_pos);
+    }
+}
+
+void Media_Window::_updateContextMenuActions() {
+    if (!_context_menu || !_group_manager) {
+        return;
+    }
+
+    // Remove existing dynamic group assignment actions
+    auto actions = _context_menu->actions();
+    bool found_separator = false;
+    for (auto it = actions.begin(); it != actions.end(); ) {
+        if ((*it)->isSeparator()) {
+            if (!found_separator) {
+                found_separator = true;
+                ++it;
+                continue;
+            } else {
+                // Remove everything after the second separator (dynamic content)
+                _context_menu->removeAction(*it);
+                delete *it;
+                it = actions.erase(it);
+                continue;
+            }
+        }
+        ++it;
+    }
+
+    // Add dynamic group assignment actions
+    auto groups = _group_manager->getGroupsForContextMenu();
+    if (!groups.empty()) {
+        _context_menu->addSeparator();
+        
+        for (auto const & [group_id, group_name] : groups) {
+            auto * assign_action = new QAction(QString("Assign to %1").arg(group_name), this);
+            _context_menu->addAction(assign_action);
+            
+            connect(assign_action, &QAction::triggered, this, [this, group_id]() {
+                onAssignToGroup(group_id);
+            });
+        }
+    }
+}
+
+float Media_Window::_calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2) {
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    
+    if (dx == 0 && dy == 0) {
+        // Point to point distance
+        float dpx = px - x1;
+        float dpy = py - y1;
+        return std::sqrt(dpx * dpx + dpy * dpy);
+    }
+    
+    float t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
+    t = std::max(0.0f, std::min(1.0f, t));
+    
+    float projection_x = x1 + t * dx;
+    float projection_y = y1 + t * dy;
+    
+    float dist_x = px - projection_x;
+    float dist_y = py - projection_y;
+    
+    return std::sqrt(dist_x * dist_x + dist_y * dist_y);
+}
+
+// Context menu slot implementations
+void Media_Window::onCreateNewGroup() {
+    if (!_group_manager || _selected_entities.empty()) {
+        return;
+    }
+    
+    int group_id = _group_manager->createGroupWithEntities(_selected_entities);
+    if (group_id != -1) {
+        clearAllSelections();
+    }
+}
+
+void Media_Window::onAssignToGroup(int group_id) {
+    if (!_group_manager || _selected_entities.empty()) {
+        return;
+    }
+    
+    _group_manager->assignEntitiesToGroup(group_id, _selected_entities);
+    clearAllSelections();
+}
+
+void Media_Window::onUngroupSelected() {
+    if (!_group_manager || _selected_entities.empty()) {
+        return;
+    }
+    
+    _group_manager->ungroupEntities(_selected_entities);
+    clearAllSelections();
+}
+
+void Media_Window::onClearSelection() {
+    clearAllSelections();
 }

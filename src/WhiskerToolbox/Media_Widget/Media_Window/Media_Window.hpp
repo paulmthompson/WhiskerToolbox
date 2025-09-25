@@ -10,6 +10,7 @@
 #include <QGraphicsEllipseItem>
 #include <QGraphicsItem>
 #include <QGraphicsScene>
+#include <QMenu>
 #include <QtCore/QtGlobal>
 
 #include <memory>
@@ -17,6 +18,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class DataManager;
@@ -27,6 +29,9 @@ class MediaMask_Widget;
 class MediaText_Widget;
 class Media_Widget;
 class GroupManager;
+class LineData;
+class PointData;
+class MaskData;
 
 struct TextOverlay;
 
@@ -119,6 +124,15 @@ public:
     void setShowHoverCircle(bool show);
     void setHoverCircleRadius(int radius);
 
+    // Selection and context menu functionality
+    void clearAllSelections();
+    bool hasSelections() const;
+    std::unordered_set<EntityId> getSelectedEntities() const;
+    void selectEntity(EntityId entity_id, std::string const & data_key, std::string const & data_type);
+    
+    // Public methods for entity finding
+    EntityId findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
+
     [[nodiscard]] std::optional<MediaDisplayOptions *> getMediaConfig(std::string const & media_key) const {
         if (_media_configs.find(media_key) == _media_configs.end()) {
             return std::nullopt;
@@ -189,6 +203,7 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent * event) override;
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent * event) override;
 
 private:
     std::shared_ptr<DataManager> _data_manager;
@@ -235,6 +250,12 @@ private:
     // Text overlay support
     MediaText_Widget * _text_widget = nullptr;
 
+    // Selection and context menu support
+    std::unordered_set<EntityId> _selected_entities;
+    std::string _selected_data_key;  // Key of the data containing selected entities
+    std::string _selected_data_type; // Type of selected data ("line", "point", "mask")
+    QMenu * _context_menu = nullptr;
+
     QImage::Format _getQImageFormat(std::string const & media_key);
     QImage _combineMultipleMedia();
 
@@ -276,6 +297,16 @@ private:
     [[nodiscard]] QColor _getGroupAwareColor(EntityId entity_id, QColor const & default_color) const;
     [[nodiscard]] QRgb _getGroupAwareColorRgb(EntityId entity_id, QRgb default_color) const;
 
+    // Selection and context menu helpers
+    EntityId _findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);
+    EntityId _findLineAtPosition(QPointF const & scene_pos, std::string const & line_key);
+    EntityId _findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
+    EntityId _findMaskAtPosition(QPointF const & scene_pos, std::string const & mask_key);
+    void _createContextMenu();
+    void _showContextMenu(QPoint const & global_pos);
+    void _updateContextMenuActions();
+    float _calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2);
+
 public slots:
     void LoadFrame(int frame_id);
 
@@ -285,6 +316,12 @@ private slots:
      * Updates the canvas to reflect color changes
      */
     void onGroupChanged();
+
+    // Context menu actions
+    void onCreateNewGroup();
+    void onAssignToGroup(int group_id);
+    void onUngroupSelected();
+    void onClearSelection();
 
 signals:
     void leftClick(qreal, qreal);
@@ -304,6 +341,9 @@ signals:
     void leftClickMediaCoords(MediaCoordinates const & coords);
     void rightClickMediaCoords(MediaCoordinates const & coords);
     void mouseMoveCanvas(CanvasCoordinates const & coords);
+    
+    // Mouse event signal with full event information (for modifier detection)
+    void leftClickMediaWithEvent(qreal x_media, qreal y_media, Qt::KeyboardModifiers modifiers);
 };
 
 QRgb plot_color_with_alpha(BaseDisplayOptions const * opts);
