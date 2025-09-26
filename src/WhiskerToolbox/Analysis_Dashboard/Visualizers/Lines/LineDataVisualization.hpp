@@ -163,7 +163,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
      * @brief Get selected line EntityIds
      * @return Set of EntityIds for currently selected lines
      */
-    std::unordered_set<EntityId> getSelectedLineIds() const { return m_selected_lines; }
+    std::unordered_set<EntityId> getSelectedEntityIds() const { return m_selected_lines; }
 
     /**
      * @brief Get the line at screen position (for hover)

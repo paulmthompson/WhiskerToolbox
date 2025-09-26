@@ -600,6 +600,13 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
         }
     }
 
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        if (viz) {
+            auto entity_ids = viz->getSelectedEntityIds();
+            selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
+        }
+    }
+
     if (selected_entity_ids.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to new group";
         return;
@@ -632,6 +639,13 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
         }
     }
 
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        if (viz) {
+            auto entity_ids = viz->getSelectedEntityIds();
+            selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
+        }
+    }
+
     if (selected_entity_ids.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to group";
         return;
@@ -654,6 +668,13 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
     // Collect all selected entity IDs instead of point IDs
     std::unordered_set<EntityId> selected_entity_ids;
     for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz) {
+            auto entity_ids = viz->getSelectedEntityIds();
+            selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
+        }
+    }
+
+    for (auto const & [key, viz]: _line_data_visualizations) {
         if (viz) {
             auto entity_ids = viz->getSelectedEntityIds();
             selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());

@@ -339,16 +339,26 @@ void DataManager_Widget::_createNewData(std::string key, std::string type, std::
     }
 
     if (type == "Point") {
+
         _data_manager->setData<PointData>(key, time_key);
-    } else if (type == "Mask") {
 
         auto const image_size = _data_manager->getData<MediaData>("media")->getImageSize();
+        _data_manager->getData<PointData>(key)->setImageSize(image_size);
+
+    } else if (type == "Mask") {
 
         _data_manager->setData<MaskData>(key, time_key);
+
+        auto const image_size = _data_manager->getData<MediaData>("media")->getImageSize();
         _data_manager->getData<MaskData>(key)->setImageSize(image_size);
 
     } else if (type == "Line") {
+
         _data_manager->setData<LineData>(key, time_key);
+
+        auto const image_size = _data_manager->getData<MediaData>("media")->getImageSize();
+        _data_manager->getData<LineData>(key)->setImageSize(image_size);
+
     } else if (type == "Analog Time Series") {
         _data_manager->setData<AnalogTimeSeries>(key, time_key);
     } else if (type == "Interval") {

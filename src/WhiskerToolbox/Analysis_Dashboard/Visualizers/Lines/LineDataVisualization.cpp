@@ -1121,55 +1121,6 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
 
     qDebug() << "LineDataVisualization: Found" << result_count << "intersecting line segments";
 
-    if (result_count == 0) {
-        // Optional CPU-side validation when enabled
-        if (qEnvironmentVariableIsSet("WT_DEBUG_COMPUTE_VALIDATE")) {
-            auto cpuDistancePointToSegment = [](QVector2D const & p, QVector2D const & a, QVector2D const & b) {
-                QVector2D ab = b - a;
-                float len2 = QVector2D::dotProduct(ab, ab);
-                if (len2 == 0.0f) return (p - a).length();
-                float t = std::max(0.0f, std::min(1.0f, QVector2D::dotProduct(p - a, ab) / len2));
-                QVector2D proj = a + t * ab;
-                return (p - proj).length();
-            };
-            auto cpuSegmentsIntersect = [&](QVector2D const & a1, QVector2D const & a2, QVector2D const & b1, QVector2D const & b2, float tol) {
-                if (cpuDistancePointToSegment(a1, b1, b2) <= tol) return true;
-                if (cpuDistancePointToSegment(a2, b1, b2) <= tol) return true;
-                if (cpuDistancePointToSegment(b1, a1, a2) <= tol) return true;
-                if (cpuDistancePointToSegment(b2, a1, a2) <= tol) return true;
-                // exact intersection test
-                auto cross = [](QVector2D const & u, QVector2D const & v) { return u.x() * v.y() - u.y() * v.x(); };
-                QVector2D r = a2 - a1; QVector2D s = b2 - b1;
-                float denom = cross(r, s);
-                if (std::abs(denom) < 1e-6f) return false;
-                QVector2D diff = b1 - a1;
-                float t = cross(diff, s) / denom;
-                float u = cross(diff, r) / denom;
-                return (t >= 0.0f && t <= 1.0f && u >= 0.0f && u <= 1.0f);
-            };
-            auto toNdc = [&](float x, float y) {
-                QVector4D w(x, y, 0.0f, 1.0f);
-                QVector4D ndc4 = mvp_matrix * w;
-                return QVector2D(ndc4.x() / ndc4.w(), ndc4.y() / ndc4.w());
-            };
-            QVector2D a(query_start), b(query_end);
-            size_t cpu_hits = 0;
-            size_t inspect = std::min<size_t>(m_segments_data.size() / 5, 20000);
-            for (size_t i = 0; i < inspect; ++i) {
-                size_t base = i * 5;
-                float x1 = m_segments_data[base + 0];
-                float y1 = m_segments_data[base + 1];
-                float x2 = m_segments_data[base + 2];
-                float y2 = m_segments_data[base + 3];
-                QVector2D p = toNdc(x1, y1);
-                QVector2D q = toNdc(x2, y2);
-                if (cpuSegmentsIntersect(a, b, p, q, tolerance)) cpu_hits++;
-            }
-            qDebug() << "CPU validation: checked" << inspect << "segments, hits =" << cpu_hits;
-        }
-        return {};
-    }
-
     // Read back intersection results
     m_intersection_results_buffer.bind();
     uint32_t * results_data = static_cast<uint32_t *>(m_intersection_results_buffer.map(QOpenGLBuffer::ReadOnly));
