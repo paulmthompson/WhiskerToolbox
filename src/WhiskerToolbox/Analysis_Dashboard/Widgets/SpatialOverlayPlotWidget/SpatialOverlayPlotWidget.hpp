@@ -27,7 +27,7 @@ class SpatialOverlayPlotWidget : public AbstractPlotWidget {
 
 public:
     explicit SpatialOverlayPlotWidget(QGraphicsItem * parent = nullptr);
-    ~SpatialOverlayPlotWidget() override = default;
+    ~SpatialOverlayPlotWidget() override;
 
     QString getPlotType() const override;
 

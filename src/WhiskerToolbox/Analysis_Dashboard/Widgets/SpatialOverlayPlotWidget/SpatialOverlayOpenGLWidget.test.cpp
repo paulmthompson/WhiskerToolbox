@@ -37,23 +37,9 @@
 
 namespace {
 
+// Use the widget's actual worldToScreen method to match real application behavior
 static QPoint worldToScreen(SpatialOverlayOpenGLWidget & widget, float world_x, float world_y) {
-    // Derive projection bounds using screenToWorld at the corners
-    QVector2D top_left = widget.screenToWorld(QPoint(0, 0));
-    QVector2D bottom_right = widget.screenToWorld(QPoint(widget.width(), widget.height()));
-
-    float left = top_left.x();
-    float top = top_left.y();
-    float right = bottom_right.x();
-    float bottom = bottom_right.y();
-
-    if (left == right || top == bottom || widget.width() <= 0 || widget.height() <= 0) {
-        return QPoint(0, 0);
-    }
-
-    int screen_x = static_cast<int>(((world_x - left) / (right - left)) * widget.width());
-    int screen_y = static_cast<int>(((top - world_y) / (top - bottom)) * widget.height());
-    return QPoint(screen_x, screen_y);
+    return widget.worldToScreen(world_x, world_y);
 }
 
 static bool waitForValidProjection(SpatialOverlayOpenGLWidget & widget, int timeout_ms = 500) {
@@ -231,6 +217,9 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 }
 
 TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGLWidget - line selection with line data", "[SpatialOverlay][LineSelection]") {
+    
+    std::cout << "CTEST_FULL_OUTPUT" << std::endl;
+    
     SpatialOverlayOpenGLWidget widget;
     widget.resize(400, 300);
     widget.show();
@@ -324,6 +313,9 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 }
 
 TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGLWidget - line selection across entire view", "[SpatialOverlay][LineSelection]") {
+    
+    std::cout << "CTEST_FULL_OUTPUT" << std::endl;
+    
     SpatialOverlayOpenGLWidget widget;
     widget.resize(400, 300);
     widget.show();
@@ -370,6 +362,14 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 
     std::cout << "Line selection test (simple): drawing vertical line from (" << start.x() << "," << start.y() 
               << ") to (" << end.x() << "," << end.y() << ")" << std::endl;
+
+    // Verify round-trip coordinate transformation
+    QVector2D start_world = widget.screenToWorld(start);
+    QVector2D end_world = widget.screenToWorld(end);
+    std::cout << "Round-trip check: start screen " << start.x() << "," << start.y() 
+              << " -> world " << start_world.x() << "," << start_world.y() << std::endl;
+    std::cout << "Round-trip check: end screen " << end.x() << "," << end.y() 
+              << " -> world " << end_world.x() << "," << end_world.y() << std::endl;
 
     // Simulate line selection
     QTest::mouseMove(&widget, start);
@@ -691,4 +691,84 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(Docking) -
     clickCtrlAtGl(100.f, 100.f);
     clickCtrlAtGl(200.f, 150.f);
     REQUIRE(gl->getTotalSelectedPoints() >= 2);
+}
+
+TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayPlotWidget - line selection with graphics scene setup", "[SpatialOverlay][LineSelection][RealWorld]") {
+    
+    std::cout << "CTEST_FULL_OUTPUT" << std::endl;
+    
+    // Create the plot widget as it would be used in the real application (heap-allocated)
+    auto * plotWidget = new SpatialOverlayPlotWidget();
+    plotWidget->resize(400, 300);
+
+    // Set up a graphics scene to contain the plot widget 
+    QGraphicsScene scene;
+    scene.addItem(plotWidget);  // Scene takes ownership and will delete the widget
+    
+    // Create a graphics view to display the scene (simulates real app environment)
+    QGraphicsView view(&scene);
+    view.resize(500, 400);
+    view.show();
+    processEvents();
+
+    // Get the OpenGL widget from the plot widget
+    auto * gl = plotWidget->getOpenGLWidget();
+    REQUIRE(gl != nullptr);
+
+    // Create line data matching our test case
+    auto line_data = std::make_shared<LineData>();
+    std::vector<Point2D<float>> line_points = {
+        Point2D<float>{50.0f, 140.0f}, 
+        Point2D<float>{350.0f, 160.0f}
+    };
+    line_data->addAtTime(TimeFrameIndex(0), line_points);
+
+    // Set up the data in the real application way
+    auto data_manager = std::make_shared<DataManager>();
+    data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+    line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+    line_data->rebuildAllEntityIds();
+
+    std::unordered_map<QString, std::shared_ptr<LineData>> line_map{{QString("test_lines"), line_data}};
+    gl->setLineData(line_map);
+    processEvents();
+
+    gl->resetView();
+    processEvents();
+
+    REQUIRE(waitForValidProjection(*gl, 1000));
+
+    // Test line selection in this more realistic setup
+    gl->setSelectionMode(SelectionMode::LineIntersection);
+    processEvents();
+
+    gl->raise();
+    gl->activateWindow();
+    gl->setFocus(Qt::OtherFocusReason);
+
+    // Use real coordinate transformation and test intersection
+    QPoint start = worldToScreen(*gl, 200.0f, 50.0f);   // Top middle
+    QPoint end = worldToScreen(*gl, 200.0f, 250.0f);    // Bottom middle
+
+    std::cout << "Real world test: drawing vertical line from (" << start.x() << "," << start.y() 
+              << ") to (" << end.x() << "," << end.y() << ")" << std::endl;
+
+    // Log the OpenGL widget size in this setup
+    std::cout << "OpenGL widget size: " << gl->width() << "x" << gl->height() << std::endl;
+    std::cout << "Plot widget size: " << plotWidget->boundingRect().width() << "x" << plotWidget->boundingRect().height() << std::endl;
+
+    // Perform line selection
+    QTest::mouseMove(gl, start);
+    QTest::qWait(5);
+    QTest::mousePress(gl, Qt::LeftButton, Qt::ControlModifier, start);
+    QTest::qWait(10);
+    QTest::mouseMove(gl, end);
+    QTest::qWait(10);
+    QTest::mouseRelease(gl, Qt::LeftButton, Qt::ControlModifier, end);
+    processEvents();
+
+    size_t selected_lines = gl->getTotalSelectedLines();
+    std::cout << "Real world test: selected " << selected_lines << " lines" << std::endl;
+    
+    REQUIRE(selected_lines >= 1);
 }

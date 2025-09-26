@@ -556,6 +556,13 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
         return;
     }
 
+    // Ensure GL context is current for compute-shader based selections
+    bool made_current = false;
+    if (_opengl_resources_initialized && this->context() && this->context()->isValid()) {
+        makeCurrent();
+        made_current = true;
+    }
+
     // Apply selection to all visualization structs using their existing applySelection methods
     for (auto const & [key, viz]: _point_data_visualizations) {
         viz->applySelection(_selection_handler);
@@ -565,6 +572,10 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
     }
     for (auto const & [key, viz]: _line_data_visualizations) {
         viz->applySelection(_selection_handler, context);
+    }
+
+    if (made_current) {
+        doneCurrent();
     }
 
     // Emit selection changed signal with updated counts

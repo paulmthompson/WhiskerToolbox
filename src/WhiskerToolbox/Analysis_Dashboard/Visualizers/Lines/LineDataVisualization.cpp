@@ -1011,6 +1011,12 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
     m_line_intersection_compute_shader->setUniformValue("u_mvp_matrix", mvp_matrix);
     m_line_intersection_compute_shader->setUniformValue("u_canvas_size", m_canvas_size);
     
+    // Provide explicit sizes to shader to avoid driver-dependent SSBO length behavior
+    uint32_t total_segments = static_cast<uint32_t>(m_segments_data.size() / 5);
+    m_line_intersection_compute_shader->setUniformValue("u_total_segments", total_segments);
+    m_line_intersection_compute_shader->setUniformValue("u_visibility_count", static_cast<GLuint>(m_visibility_mask.size()));
+    m_line_intersection_compute_shader->setUniformValue("u_results_capacity", static_cast<GLuint>(100000));
+    
     qDebug() << "LineDataVisualization: Using tolerance:" << tolerance << "(line_width:" << line_width << ")";
     qDebug() << "LineDataVisualization: Canvas size:" << m_canvas_size.x() << "x" << m_canvas_size.y();
     qDebug() << "LineDataVisualization: MVP matrix:";
@@ -1040,11 +1046,28 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_visibility_mask_buffer.bufferId());
     m_visibility_mask_buffer.release();
 
-    // Dispatch compute shader
+    // Dispatch compute shader in batches to respect hardware limits
     uint32_t num_segments = static_cast<uint32_t>(m_segments_data.size() / 5);// 5 floats per segment (x1,y1,x2,y2,line_id)
-    uint32_t num_work_groups = (num_segments + 63) / 64;                      // 64 is the local_size_x in the compute shader
 
-    qDebug() << "LineDataVisualization: Dispatching compute shader with" << num_segments << "segments," << num_work_groups << "work groups";
+    // Query hardware limits
+    GLint max_work_groups_x = 65535; // Safe default per spec minimum
+    GLint queried = 0;
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_COUNT, &queried); // Not the correct query; we'll prefer glGetIntegeri_v below
+    // Prefer indexed query if available
+    GLint max_count_x = 0;
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &max_count_x);
+    if (max_count_x > 0) {
+        max_work_groups_x = max_count_x;
+    }
+
+    // local_size_x is 64 per shader
+    const uint32_t local_size_x = 64u;
+    uint64_t max_invocations_per_dispatch = static_cast<uint64_t>(max_work_groups_x) * static_cast<uint64_t>(local_size_x);
+    if (max_invocations_per_dispatch == 0) {
+        max_invocations_per_dispatch = 65535ull * local_size_x; // fallback
+    }
+
+    qDebug() << "LineDataVisualization: Dispatching compute shader with" << num_segments << "segments in batches, max workgroups x per dispatch:" << max_work_groups_x;
     qDebug() << "LineDataVisualization: segments_data size:" << m_segments_data.size() << "floats";
     
     // Debug: show first few line segments to check coordinates
@@ -1066,8 +1089,26 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
         return {};
     }
 
-    glDispatchCompute(num_work_groups, 1, 1);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    // Batched dispatch loop
+    uint64_t remaining = num_segments;
+    uint64_t offset = 0;
+    while (remaining > 0) {
+        uint64_t batch = std::min<uint64_t>(remaining, max_invocations_per_dispatch);
+        uint32_t groups_x = static_cast<uint32_t>((batch + local_size_x - 1) / local_size_x);
+
+        // Set batching uniforms
+        m_line_intersection_compute_shader->setUniformValue("u_segment_offset", static_cast<GLuint>(offset));
+        m_line_intersection_compute_shader->setUniformValue("u_segments_in_batch", static_cast<GLuint>(batch));
+
+        glDispatchCompute(groups_x, 1, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+        offset += batch;
+        remaining -= batch;
+    }
+
+    // Ensure all writes are visible before mapping
+    glFinish();
 
     m_line_intersection_compute_shader->release();
 
@@ -1081,6 +1122,51 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
     qDebug() << "LineDataVisualization: Found" << result_count << "intersecting line segments";
 
     if (result_count == 0) {
+        // Optional CPU-side validation when enabled
+        if (qEnvironmentVariableIsSet("WT_DEBUG_COMPUTE_VALIDATE")) {
+            auto cpuDistancePointToSegment = [](QVector2D const & p, QVector2D const & a, QVector2D const & b) {
+                QVector2D ab = b - a;
+                float len2 = QVector2D::dotProduct(ab, ab);
+                if (len2 == 0.0f) return (p - a).length();
+                float t = std::max(0.0f, std::min(1.0f, QVector2D::dotProduct(p - a, ab) / len2));
+                QVector2D proj = a + t * ab;
+                return (p - proj).length();
+            };
+            auto cpuSegmentsIntersect = [&](QVector2D const & a1, QVector2D const & a2, QVector2D const & b1, QVector2D const & b2, float tol) {
+                if (cpuDistancePointToSegment(a1, b1, b2) <= tol) return true;
+                if (cpuDistancePointToSegment(a2, b1, b2) <= tol) return true;
+                if (cpuDistancePointToSegment(b1, a1, a2) <= tol) return true;
+                if (cpuDistancePointToSegment(b2, a1, a2) <= tol) return true;
+                // exact intersection test
+                auto cross = [](QVector2D const & u, QVector2D const & v) { return u.x() * v.y() - u.y() * v.x(); };
+                QVector2D r = a2 - a1; QVector2D s = b2 - b1;
+                float denom = cross(r, s);
+                if (std::abs(denom) < 1e-6f) return false;
+                QVector2D diff = b1 - a1;
+                float t = cross(diff, s) / denom;
+                float u = cross(diff, r) / denom;
+                return (t >= 0.0f && t <= 1.0f && u >= 0.0f && u <= 1.0f);
+            };
+            auto toNdc = [&](float x, float y) {
+                QVector4D w(x, y, 0.0f, 1.0f);
+                QVector4D ndc4 = mvp_matrix * w;
+                return QVector2D(ndc4.x() / ndc4.w(), ndc4.y() / ndc4.w());
+            };
+            QVector2D a(query_start), b(query_end);
+            size_t cpu_hits = 0;
+            size_t inspect = std::min<size_t>(m_segments_data.size() / 5, 20000);
+            for (size_t i = 0; i < inspect; ++i) {
+                size_t base = i * 5;
+                float x1 = m_segments_data[base + 0];
+                float y1 = m_segments_data[base + 1];
+                float x2 = m_segments_data[base + 2];
+                float y2 = m_segments_data[base + 3];
+                QVector2D p = toNdc(x1, y1);
+                QVector2D q = toNdc(x2, y2);
+                if (cpuSegmentsIntersect(a, b, p, q, tolerance)) cpu_hits++;
+            }
+            qDebug() << "CPU validation: checked" << inspect << "segments, hits =" << cpu_hits;
+        }
         return {};
     }
 
