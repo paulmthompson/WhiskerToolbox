@@ -34,10 +34,12 @@ public:
      * @param row_selector The row selector defining all rows
      * @param column_infos Column definitions for the table
      * @param data_manager Data manager for building mini tables
+     * @param row_source The row source string for recreating the row selector
      */
     void setSourceTable(std::unique_ptr<IRowSelector> row_selector,
                         std::vector<ColumnInfo> column_infos,
-                        std::shared_ptr<DataManager> data_manager);
+                        std::shared_ptr<DataManager> data_manager,
+                        QString row_source = QString());
 
     /**
      * @brief Set a complete TableView (for cases where we already have one built)
@@ -83,6 +85,7 @@ private:
     size_t _total_rows = 0;
     size_t _page_size = 1000;
     QStringList _column_names;
+    QString _row_source; // Store row source for recreating row selector
 
     // Cache for mini tables
     mutable std::map<size_t, std::shared_ptr<TableView>> _page_cache;
@@ -104,6 +107,13 @@ private:
      * @return Mini table view for this page
      */
     std::shared_ptr<TableView> createMiniTable(size_t page_start_row, size_t page_size) const;
+
+    /**
+     * @brief Create a row selector from row source string
+     * @param row_source The row source string
+     * @return New row selector
+     */
+    std::unique_ptr<IRowSelector> createRowSelectorFromSource(QString const & row_source) const;
 
     /**
      * @brief Clean up old cached pages if we exceed the cache limit

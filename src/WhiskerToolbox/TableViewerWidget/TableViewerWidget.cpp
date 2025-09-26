@@ -72,13 +72,14 @@ void TableViewerWidget::setTableView(std::shared_ptr<TableView> table_view, QStr
 void TableViewerWidget::setTableConfiguration(std::unique_ptr<IRowSelector> row_selector,
                                               std::vector<ColumnInfo> column_infos,
                                               std::shared_ptr<DataManager> data_manager,
-                                              QString const & table_name) {
+                                              QString const & table_name,
+                                              QString const & row_source) {
     _table_name = table_name.isEmpty() ? "Unnamed Table" : table_name;
 
     if (row_selector && data_manager) {
         _total_rows = row_selector->getRowCount();
         QStringList desiredOrder = _currentColumnOrder;
-        _model->setSourceTable(std::move(row_selector), std::move(column_infos), data_manager);
+        _model->setSourceTable(std::move(row_selector), std::move(column_infos), data_manager, row_source);
 
         // Update UI
         ui->table_name_label->setText(QString("Table: %1").arg(_table_name));

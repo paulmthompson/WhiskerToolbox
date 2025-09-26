@@ -356,10 +356,14 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
             return false;
         }
 
-        auto computer_base = registry.createComputer(column_info.computerName, data_source_variant, column_info.parameters);
-        if (!computer_base) {
-            std::cout << "Failed to create computer " << column_info.computerName << " for column: " << column_info.name << std::endl;
-            // Continue; the computer may be multi-output and use a different factory
+        // Skip regular computer creation for multi-output computers to avoid error messages
+        std::unique_ptr<IComputerBase> computer_base = nullptr;
+        if (!computer_info_ptr->isMultiOutput) {
+            computer_base = registry.createComputer(column_info.computerName, data_source_variant, column_info.parameters);
+            if (!computer_base) {
+                std::cout << "Failed to create computer " << column_info.computerName << " for column: " << column_info.name << std::endl;
+                return false;
+            }
         }
 
         // Use the actual return type from the computer info instead of hardcoding double

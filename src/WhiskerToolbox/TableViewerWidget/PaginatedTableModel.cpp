@@ -1,6 +1,8 @@
 #include "PaginatedTableModel.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/utils/TableView/TableInfo.hpp"
 #include "DataManager/utils/TableView/TableRegistry.hpp"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
@@ -22,12 +24,14 @@ PaginatedTableModel::~PaginatedTableModel() = default;
 
 void PaginatedTableModel::setSourceTable(std::unique_ptr<IRowSelector> row_selector,
                                          std::vector<ColumnInfo> column_infos,
-                                         std::shared_ptr<DataManager> data_manager) {
+                                         std::shared_ptr<DataManager> data_manager,
+                                         QString row_source) {
     beginResetModel();
 
     _source_row_selector = std::move(row_selector);
     _column_infos = std::move(column_infos);
     _data_manager = std::move(data_manager);
+    _row_source = row_source;
     _complete_table_view.reset();
 
     // Calculate total rows and extract column names
@@ -37,15 +41,196 @@ void PaginatedTableModel::setSourceTable(std::unique_ptr<IRowSelector> row_selec
         _total_rows = 0;
     }
 
-    _column_names.clear();
-    for (auto const & col_info: _column_infos) {
-        _column_names.push_back(QString::fromStdString(col_info.name));
+    // Build the TableView to get the actual column names (especially for multi-output computers)
+    try {
+        auto * reg = _data_manager->getTableRegistry();
+        auto data_manager_extension = reg ? reg->getDataManagerExtension() : nullptr;
+        if (data_manager_extension) {
+            // Create the TableViewBuilder
+            TableViewBuilder builder(data_manager_extension);
+            
+            // Create a new row selector from the row source
+            if (!_row_source.isEmpty()) {
+                // Recreate the row selector from the row source
+                auto new_row_selector = createRowSelectorFromSource(_row_source);
+                if (new_row_selector) {
+                    builder.setRowSelector(std::move(new_row_selector));
+                }
+            }
+
+            // Add all enabled columns from the tree
+            bool all_columns_valid = true;
+            for (auto const & column_info: _column_infos) {
+                // Create a copy of column_info with cleaned name (strip "lines:" prefix)
+                ColumnInfo cleaned_column_info = column_info;
+                if (cleaned_column_info.name.starts_with("lines:")) {
+                    cleaned_column_info.name = cleaned_column_info.name.substr(6); // Remove "lines:" prefix
+                }
+                
+                if (!reg->addColumnToBuilder(builder, cleaned_column_info)) {
+                    qDebug() << "Failed to create column:" << QString::fromStdString(cleaned_column_info.name);
+                    all_columns_valid = false;
+                    break;
+                }
+            }
+
+            if (all_columns_valid) {
+                // Build the table
+                auto table_view = builder.build();
+                
+                // Use the actual column names from the built TableView
+                auto actual_column_names = table_view.getColumnNames();
+                _column_names.clear();
+                for (auto const & name: actual_column_names) {
+                    _column_names.push_back(QString::fromStdString(name));
+                }
+            } else {
+                // Fallback to using column_infos names
+                _column_names.clear();
+                for (auto const & col_info: _column_infos) {
+                    _column_names.push_back(QString::fromStdString(col_info.name));
+                }
+            }
+        } else {
+            // Fallback to using column_infos names
+            _column_names.clear();
+            for (auto const & col_info: _column_infos) {
+                _column_names.push_back(QString::fromStdString(col_info.name));
+            }
+        }
+    } catch (std::exception const & e) {
+        qDebug() << "Exception during column name resolution:" << e.what();
+        // Fallback to using column_infos names
+        _column_names.clear();
+        for (auto const & col_info: _column_infos) {
+            _column_names.push_back(QString::fromStdString(col_info.name));
+        }
     }
 
     // Clear cache
     _page_cache.clear();
 
     endResetModel();
+}
+
+std::unique_ptr<IRowSelector> PaginatedTableModel::createRowSelectorFromSource(QString const & row_source) const {
+    // Parse the row source to get type and name
+    QString source_type;
+    QString source_name;
+
+    if (row_source.startsWith("TimeFrame: ")) {
+        source_type = "TimeFrame";
+        source_name = row_source.mid(11);// Remove "TimeFrame: " prefix
+    } else if (row_source.startsWith("Events: ")) {
+        source_type = "Events";
+        source_name = row_source.mid(8);// Remove "Events: " prefix
+    } else if (row_source.startsWith("Intervals: ")) {
+        source_type = "Intervals";
+        source_name = row_source.mid(11);// Remove "Intervals: " prefix
+    } else {
+        qDebug() << "Unknown row source format:" << row_source;
+        return nullptr;
+    }
+
+    auto const source_name_str = source_name.toStdString();
+
+    try {
+        if (source_type == "TimeFrame") {
+            // Create TimestampSelector using TimeFrame
+            auto timeframe = _data_manager->getTime(TimeKey(source_name_str));
+            if (!timeframe) {
+                qDebug() << "TimeFrame not found:" << source_name;
+                return nullptr;
+            }
+
+            // Use timestamps to select all rows
+            std::vector<TimeFrameIndex> timestamps;
+            for (int64_t i = 0; i < timeframe->getTotalFrameCount(); ++i) {
+                timestamps.push_back(TimeFrameIndex(i));
+            }
+            return std::make_unique<TimestampSelector>(std::move(timestamps), timeframe);
+
+        } else if (source_type == "Events") {
+            // Create TimestampSelector using DigitalEventSeries
+            auto event_series = _data_manager->getData<DigitalEventSeries>(source_name_str);
+            if (!event_series) {
+                qDebug() << "DigitalEventSeries not found:" << source_name;
+                return nullptr;
+            }
+
+            auto events = event_series->getEventSeries();
+            auto timeframe_key = _data_manager->getTimeKey(source_name_str);
+            auto timeframe_obj = _data_manager->getTime(timeframe_key);
+            if (!timeframe_obj) {
+                qDebug() << "TimeFrame not found for events:" << timeframe_key.str();
+                return nullptr;
+            }
+
+            // Convert events to TimeFrameIndex
+            std::vector<TimeFrameIndex> timestamps;
+            for (auto const & event: events) {
+                timestamps.push_back(TimeFrameIndex(static_cast<int64_t>(event)));
+            }
+
+            return std::make_unique<TimestampSelector>(std::move(timestamps), timeframe_obj);
+
+        } else if (source_type == "Intervals") {
+            // Create IntervalSelector using DigitalIntervalSeries
+            auto interval_series = _data_manager->getData<DigitalIntervalSeries>(source_name_str);
+            if (!interval_series) {
+                qDebug() << "DigitalIntervalSeries not found:" << source_name;
+                return nullptr;
+            }
+
+            auto intervals = interval_series->getDigitalIntervalSeries();
+            auto timeframe_key = _data_manager->getTimeKey(source_name_str);
+            auto timeframe_obj = _data_manager->getTime(timeframe_key);
+            if (!timeframe_obj) {
+                qDebug() << "TimeFrame not found for intervals:" << timeframe_key.str();
+                return nullptr;
+            }
+
+            // Create intervals (using default capture range of 30000)
+            int capture_range = 30000;
+            bool use_beginning = true; // Default to beginning
+            bool use_interval_itself = false; // Default to not using interval itself
+
+            std::vector<TimeFrameInterval> tf_intervals;
+            for (auto const & interval: intervals) {
+                if (use_interval_itself) {
+                    // Use the interval as-is
+                    tf_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+                } else {
+                    // Determine the reference point (beginning or end of interval)
+                    int64_t reference_point;
+                    if (use_beginning) {
+                        reference_point = interval.start;
+                    } else {
+                        reference_point = interval.end;
+                    }
+
+                    // Create a new interval around the reference point
+                    int64_t start_point = reference_point - capture_range;
+                    int64_t end_point = reference_point + capture_range;
+
+                    // Ensure bounds are within the timeframe
+                    start_point = std::max(start_point, int64_t(0));
+                    end_point = std::min(end_point, static_cast<int64_t>(timeframe_obj->getTotalFrameCount() - 1));
+
+                    tf_intervals.emplace_back(TimeFrameIndex(start_point), TimeFrameIndex(end_point));
+                }
+            }
+
+            return std::make_unique<IntervalSelector>(std::move(tf_intervals), timeframe_obj);
+        }
+
+    } catch (std::exception const & e) {
+        qDebug() << "Exception creating row selector:" << e.what();
+        return nullptr;
+    }
+
+    qDebug() << "Unsupported row source type:" << source_type;
+    return nullptr;
 }
 
 void PaginatedTableModel::setTableView(std::shared_ptr<TableView> table_view) {

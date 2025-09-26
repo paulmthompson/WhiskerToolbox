@@ -739,6 +739,8 @@ void ComputerRegistry::registerBuiltInComputers() {
                           "Sample line x and y at equally spaced positions",
                           typeid(double),
                           "double",
+                          typeid(double),
+                          "double",
                           RowSelectorType::Timestamp,
                           typeid(std::shared_ptr<ILineSource>),
                           std::move(paramDescriptors));

@@ -946,6 +946,15 @@ QStringList TableDesignerWidget::getAvailableDataSources() const {
         qDebug() << "  Added Analog:" << source;
     }
 
+    // Add LineData keys as data sources (for computers; not row selectors)
+    auto line_keys = _data_manager->getKeys<LineData>();
+    qDebug() << "getAvailableDataSources: Line keys:" << line_keys.size();
+    for (auto const & key: line_keys) {
+        QString source = QString("lines:%1").arg(QString::fromStdString(key));
+        sources << source;
+        qDebug() << "  Added Lines:" << source;
+    }
+
     qDebug() << "getAvailableDataSources: Total sources found:" << sources.size();
 
     return sources;
@@ -983,6 +992,13 @@ TableDesignerWidget::createDataSourceVariant(QString const & data_source_string,
 
         if (auto analog_source = data_manager_extension->getAnalogSource(source_name.toStdString())) {
             result = analog_source;
+        }
+    } else if (data_source_string.startsWith("lines:")) {
+        QString source_name = data_source_string.mid(6);// Remove "lines:" prefix
+        row_selector_type = RowSelectorType::Timestamp; // LineData computers work with timestamp row selectors
+
+        if (auto line_source = data_manager_extension->getLineSource(source_name.toStdString())) {
+            result = line_source;
         }
     }
 
@@ -1321,7 +1337,8 @@ void TableDesignerWidget::rebuildPreviewNow() {
             std::move(selector),
             std::move(column_infos),
             _data_manager,
-            QString("Preview: %1").arg(_current_table_id));
+            QString("Preview: %1").arg(_current_table_id),
+            row_source);
 
     // Capture the current visual order from the viewer
     QStringList currentOrder;
@@ -1897,6 +1914,8 @@ std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
                             source_key = QString("intervals:%1").arg(source_key.mid(11));
                         } else if (source_key.startsWith("analog:")) {
                             source_key = source_key;// already prefixed
+                        } else if (source_key.startsWith("lines:")) {
+                            source_key = source_key;// already prefixed
                         } else if (source_key.startsWith("TimeFrame: ")) {
                             // TimeFrame used only for row selector; columns require concrete sources
                             source_key = source_key.mid(11);
@@ -1930,7 +1949,12 @@ std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
                 } else {
                     // Individual computer - original behavior
                     if (column_name.isEmpty()) {
-                        column_name = generateDefaultColumnName(data_source, computer_name);
+                        // Clean the data source name before generating column name
+                        QString clean_data_source = data_source;
+                        if (clean_data_source.startsWith("lines:")) {
+                            clean_data_source = clean_data_source.mid(6); // Remove "lines:" prefix
+                        }
+                        column_name = generateDefaultColumnName(clean_data_source, computer_name);
                     }
 
                     // Create ColumnInfo (use raw key without UI prefixes)
@@ -1940,6 +1964,8 @@ std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
                     } else if (source_key.startsWith("Intervals: ")) {
                         source_key = QString("intervals:%1").arg(source_key.mid(11));
                     } else if (source_key.startsWith("analog:")) {
+                        source_key = source_key;// already prefixed
+                    } else if (source_key.startsWith("lines:")) {
                         source_key = source_key;// already prefixed
                     } else if (source_key.startsWith("TimeFrame: ")) {
                         // TimeFrame used only for row selector; columns require concrete sources
@@ -2019,6 +2045,8 @@ QString TableDesignerWidget::generateDefaultColumnName(QString const & data_sour
         source_name = source_name.mid(11);
     } else if (source_name.startsWith("analog:")) {
         source_name = source_name.mid(7);
+    } else if (source_name.startsWith("lines:")) {
+        source_name = source_name.mid(6);
     } else if (source_name.startsWith("TimeFrame: ")) {
         source_name = source_name.mid(11);
     }
@@ -2037,6 +2065,8 @@ std::string TableDesignerWidget::extractGroupName(const QString& data_source) co
         source_name = source_name.mid(11);
     } else if (source_name.startsWith("analog:")) {
         source_name = source_name.mid(7);
+    } else if (source_name.startsWith("lines:")) {
+        source_name = source_name.mid(6);
     } else if (source_name.startsWith("TimeFrame: ")) {
         source_name = source_name.mid(11);
     }

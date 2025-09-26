@@ -53,7 +53,8 @@ public:
     void setTableConfiguration(std::unique_ptr<IRowSelector> row_selector,
                                std::vector<ColumnInfo> column_infos,
                                std::shared_ptr<DataManager> data_manager,
-                               QString const & table_name = "");
+                               QString const & table_name = "",
+                               QString const & row_source = QString());
 
     /**
      * @brief Clear the current table display

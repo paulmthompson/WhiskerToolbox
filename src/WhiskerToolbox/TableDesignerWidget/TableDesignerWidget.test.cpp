@@ -14,6 +14,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/TimeFrame/TimeFrame.hpp"
 
 // Qt includes for widget testing
@@ -90,6 +91,7 @@ private:
         createBehaviorIntervals();
         createSpikeEvents();
         createAnalogData();
+        createLineData();
     }
 
     /**
@@ -187,6 +189,35 @@ private:
         
         auto emg_series = std::make_shared<AnalogTimeSeries>(emg_values, emg_indices);
         m_data_manager->setData<AnalogTimeSeries>("EMG", emg_series, TimeKey("analog_time"));
+    }
+
+    /**
+     * @brief Create line data for testing
+     */
+    void createLineData() {
+        // Create line data with simple geometric shapes
+        auto line_data = std::make_shared<LineData>();
+        
+        // Create a simple line at t=0
+        std::vector<float> xs1 = {0.0f, 10.0f, 20.0f, 30.0f};
+        std::vector<float> ys1 = {0.0f, 5.0f, 10.0f, 15.0f};
+        line_data->addAtTime(TimeFrameIndex(0), xs1, ys1, false);
+        
+        // Create another line at t=10
+        std::vector<float> xs2 = {5.0f, 15.0f, 25.0f};
+        std::vector<float> ys2 = {2.0f, 8.0f, 12.0f};
+        line_data->addAtTime(TimeFrameIndex(10), xs2, ys2, false);
+        
+        // Create a third line at t=20
+        std::vector<float> xs3 = {10.0f, 20.0f, 30.0f, 40.0f};
+        std::vector<float> ys3 = {1.0f, 6.0f, 11.0f, 16.0f};
+        line_data->addAtTime(TimeFrameIndex(20), xs3, ys3, false);
+        
+        // Set identity context and rebuild entity IDs
+        line_data->setIdentityContext("TestLines", m_data_manager->getEntityRegistry());
+        line_data->rebuildAllEntityIds();
+        
+        m_data_manager->setData<LineData>("TestLines", line_data, TimeKey("behavior_time"));
     }
 
     /**
@@ -1186,9 +1217,137 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Data sou
         REQUIRE(name3 == "BehaviorPeriods_Event Count");
         
         // Names should be unique for different combinations
-        REQUIRE(name1 != name2);
-        REQUIRE(name2 != name3);
-        REQUIRE(name1 != name3);
+    REQUIRE(name1 != name2);
+    REQUIRE(name2 != name3);
+    REQUIRE(name1 != name3);
     }
 }
 */
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - LineData with timestamp row selector shows LineSamplingMultiComputer", "[TableDesignerWidget][LineData][Timestamp]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+    
+    // Get the computers tree
+    auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
+    REQUIRE(tree != nullptr);
+    
+    // Find the LineData source in the tree
+    QTreeWidgetItem* line_source_item = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        auto* item = tree->topLevelItem(i);
+        if (item->text(0).contains("lines:TestLines")) {
+            line_source_item = item;
+            break;
+        }
+    }
+    
+    REQUIRE(line_source_item != nullptr);
+    REQUIRE(line_source_item->childCount() > 0);
+    
+    // Check for LineSamplingMultiComputer (registered as "Line Sample XY")
+    bool has_line_sampling_computer = false;
+    for (int j = 0; j < line_source_item->childCount(); ++j) {
+        auto* computer_item = line_source_item->child(j);
+        QString computer_name = computer_item->text(0);
+        
+        if (computer_name.contains("Line Sample XY")) {
+            has_line_sampling_computer = true;
+            
+            // Verify it's a multi-output computer with parameters
+            REQUIRE((computer_item->flags() & Qt::ItemIsUserCheckable) != 0);
+            REQUIRE((computer_item->flags() & Qt::ItemIsEditable) != 0);
+            REQUIRE(!computer_item->text(2).isEmpty()); // Should have default column name
+            
+            // Check that it has parameter widgets (segments parameter)
+            auto* param_widget = tree->itemWidget(computer_item, 3);
+            REQUIRE(param_widget != nullptr);
+            
+            break;
+        }
+    }
+    
+    REQUIRE(has_line_sampling_computer);
+}
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - LineData computers work with timestamp row selector", "[TableDesignerWidget][LineData][Workflow]") {
+    TableDesignerWidget widget(getDataManagerPtr());
+    
+    // Create a new table and select it
+    auto& registry = getTableRegistry();
+    auto table_id = registry.generateUniqueTableId("LineDataTest");
+    REQUIRE(registry.createTable(table_id, "Line Data Test Table"));
+    
+    auto* table_combo = widget.findChild<QComboBox*>("table_combo");
+    REQUIRE(table_combo != nullptr);
+    for (int i = 0; i < table_combo->count(); ++i) {
+        if (table_combo->itemData(i).toString() == QString::fromStdString(table_id)) {
+            table_combo->setCurrentIndex(i);
+            break;
+        }
+    }
+    
+    // Select TimeFrame as row source (timestamp-based)
+    auto* row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+    REQUIRE(row_combo != nullptr);
+    int timeframe_index = -1;
+    for (int i = 0; i < row_combo->count(); ++i) {
+        if (row_combo->itemText(i).contains("TimeFrame: behavior_time")) {
+            timeframe_index = i;
+            break;
+        }
+    }
+    REQUIRE(timeframe_index >= 0);
+    row_combo->setCurrentIndex(timeframe_index);
+    
+    // Enable LineSamplingMultiComputer under TestLines
+    auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
+    REQUIRE(tree != nullptr);
+    
+    QTreeWidgetItem* line_source_item = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        auto* item = tree->topLevelItem(i);
+        if (item->text(0).contains("lines:TestLines")) {
+            line_source_item = item;
+            break;
+        }
+    }
+    REQUIRE(line_source_item != nullptr);
+    
+    QTreeWidgetItem* line_sampling_computer = nullptr;
+    for (int j = 0; j < line_source_item->childCount(); ++j) {
+        auto* computer_item = line_source_item->child(j);
+        if (computer_item->text(0).contains("Line Sample XY")) {
+            line_sampling_computer = computer_item;
+            break;
+        }
+    }
+    REQUIRE(line_sampling_computer != nullptr);
+    
+    // Enable the computer
+    line_sampling_computer->setCheckState(1, Qt::Checked);
+    
+    // Get enabled column infos
+    auto column_infos = widget.getEnabledColumnInfos();
+    REQUIRE(column_infos.size() > 0);
+    
+    // Verify that we have LineSamplingMultiComputer columns
+    bool has_line_sampling_columns = false;
+    for (const auto& info : column_infos) {
+        if (info.computerName.find("Line Sample XY") != std::string::npos) {
+            has_line_sampling_columns = true;
+            REQUIRE(info.dataSourceName.find("lines:TestLines") != std::string::npos);
+            REQUIRE(info.isVectorType); // LineSamplingMultiComputer is a multi-output computer
+            break;
+        }
+    }
+    REQUIRE(has_line_sampling_columns);
+    
+    // Build the table to verify it works end-to-end
+    bool build_success = widget.buildTableFromTree();
+    REQUIRE(build_success);
+    
+    // Verify the table was built and stored
+    auto built_table = registry.getBuiltTable(table_id);
+    REQUIRE(built_table != nullptr);
+    REQUIRE(built_table->getColumnCount() > 0);
+}
