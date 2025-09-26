@@ -1,19 +1,22 @@
 #ifndef LINECLIP_WIDGET_HPP
 #define LINECLIP_WIDGET_HPP
 
-#include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
+#include "DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.hpp"
 
 class DataManager;
 namespace Ui { class LineClip_Widget; }
 
-class LineClip_Widget : public TransformParameter_Widget {
+class LineClip_Widget : public DataManagerParameter_Widget {
     Q_OBJECT
 public:
     explicit LineClip_Widget(QWidget *parent = nullptr);
     ~LineClip_Widget() override;
 
-    void setDataManager(std::shared_ptr<DataManager> data_manager);
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getParameters() const override;
+
+protected:
+    void onDataManagerChanged() override;
+    void onDataManagerDataChanged() override;
 
 private slots:
     void _lineFeatureSelected(QString const & feature);
@@ -21,7 +24,6 @@ private slots:
 
 private:
     Ui::LineClip_Widget *ui;
-    std::shared_ptr<DataManager> _data_manager;
 };
 
-#endif // LINECLIP_WIDGET_HPP 
+#endif // LINECLIP_WIDGET_HPP

@@ -1,4 +1,3 @@
-
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
@@ -111,6 +110,8 @@ set(PROJECT_SOURCES
         DataTransform_Widget/DataTransform_Widget.cpp
         DataTransform_Widget/DataTransform_Widget.hpp
         DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp
+        DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.hpp
+        DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.cpp
 
         DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp
         DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.cpp

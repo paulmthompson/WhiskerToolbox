@@ -1,13 +1,11 @@
 #ifndef WHISKER_TRACING_WIDGET_HPP
 #define WHISKER_TRACING_WIDGET_HPP
 
-#include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
+#include "DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.hpp"
 
 #include <QWidget>
 #include <memory>
 #include <string>
-
-class DataManager;
 
 namespace Ui {
 class WhiskerTracing_Widget;
@@ -16,7 +14,7 @@ class WhiskerTracing_Widget;
 /**
  * @brief Widget for configuring whisker tracing parameters
  */
-class WhiskerTracing_Widget : public TransformParameter_Widget {
+class WhiskerTracing_Widget : public DataManagerParameter_Widget {
     Q_OBJECT
 
 public:
@@ -37,7 +35,9 @@ public:
      */
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getParameters() const override;
 
-    void setDataManager(std::shared_ptr<DataManager> data_manager);
+protected:
+    void onDataManagerChanged() override;
+    void onDataManagerDataChanged() override;
 
 private slots:
     /**
@@ -85,7 +85,6 @@ private slots:
 private:
     Ui::WhiskerTracing_Widget * ui;
 
-    std::shared_ptr<DataManager> _data_manager;
     std::string _selected_mask_key;
 
     void _refreshMaskKeys();

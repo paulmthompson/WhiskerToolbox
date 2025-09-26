@@ -1,7 +1,7 @@
 #ifndef LINEALIGNMENT_WIDGET_HPP
 #define LINEALIGNMENT_WIDGET_HPP
 
-#include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
+#include "DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.hpp"
 
 #include <memory>
 #include <string>
@@ -13,18 +13,20 @@ class LineAlignment_Widget;
 }
 
 
-class LineAlignment_Widget : public TransformParameter_Widget {
+class LineAlignment_Widget : public DataManagerParameter_Widget {
     Q_OBJECT
 public:
     explicit LineAlignment_Widget(QWidget * parent = nullptr);
     ~LineAlignment_Widget() override;
 
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getParameters() const override;
-    void setDataManager(std::shared_ptr<DataManager> data_manager);
+
+protected:
+    void onDataManagerChanged() override;
+    void onDataManagerDataChanged() override;
 
 private:
     Ui::LineAlignment_Widget * ui;
-    std::shared_ptr<DataManager> _data_manager;
     std::string _selected_media_key;
 
     void _refreshMediaDataKeys();

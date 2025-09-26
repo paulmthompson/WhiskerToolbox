@@ -6,45 +6,35 @@
 
 #include <QLocale>
 
-AnalogScaling_Widget::AnalogScaling_Widget(QWidget *parent) :
-    TransformParameter_Widget(parent),
-    ui(new Ui::AnalogScaling_Widget),
-    _data_manager(nullptr)
-{
+AnalogScaling_Widget::AnalogScaling_Widget(QWidget * parent)
+    : DataManagerParameter_Widget(parent),
+      ui(new Ui::AnalogScaling_Widget) {
     ui->setupUi(this);
-    
+
     setupMethodComboBox();
-    
+
     // Connect signals for real-time updates
     connect(ui->methodComboBox, &QComboBox::currentIndexChanged, this, &AnalogScaling_Widget::onMethodChanged);
     connect(ui->gainFactorSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &AnalogScaling_Widget::onParameterChanged);
     connect(ui->stdDevTargetSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &AnalogScaling_Widget::onParameterChanged);
     connect(ui->minTargetSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &AnalogScaling_Widget::onParameterChanged);
     connect(ui->maxTargetSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &AnalogScaling_Widget::onParameterChanged);
-    
+
     // Initialize UI state
     updateParameterVisibility();
     updateMethodDescription();
 }
 
-AnalogScaling_Widget::~AnalogScaling_Widget()
-{
+AnalogScaling_Widget::~AnalogScaling_Widget() {
     delete ui;
 }
 
-void AnalogScaling_Widget::setDataManager(std::shared_ptr<DataManager> data_manager)
-{
-    _data_manager = std::move(data_manager);
-}
-
-void AnalogScaling_Widget::setCurrentDataKey(QString const & data_key)
-{
+void AnalogScaling_Widget::setCurrentDataKey(QString const & data_key) {
     _current_data_key = data_key;
     updateStatistics();
 }
 
-void AnalogScaling_Widget::setupMethodComboBox()
-{
+void AnalogScaling_Widget::setupMethodComboBox() {
     ui->methodComboBox->clear();
     ui->methodComboBox->addItem("Fixed Gain", static_cast<int>(ScalingMethod::FixedGain));
     ui->methodComboBox->addItem("Z-Score Normalization", static_cast<int>(ScalingMethod::ZScore));
@@ -53,12 +43,11 @@ void AnalogScaling_Widget::setupMethodComboBox()
     ui->methodComboBox->addItem("Robust Scaling (IQR)", static_cast<int>(ScalingMethod::RobustScaling));
     ui->methodComboBox->addItem("Unit Variance Scaling", static_cast<int>(ScalingMethod::UnitVariance));
     ui->methodComboBox->addItem("Centering (Zero Mean)", static_cast<int>(ScalingMethod::Centering));
-    
-    ui->methodComboBox->setCurrentIndex(1); // Default to Z-Score
+
+    ui->methodComboBox->setCurrentIndex(1);// Default to Z-Score
 }
 
-void AnalogScaling_Widget::onMethodChanged(int index)
-{
+void AnalogScaling_Widget::onMethodChanged(int index) {
     static_cast<void>(index);
 
     updateParameterVisibility();
@@ -66,14 +55,21 @@ void AnalogScaling_Widget::onMethodChanged(int index)
     validateParameters();
 }
 
-void AnalogScaling_Widget::onParameterChanged()
-{
+void AnalogScaling_Widget::onParameterChanged() {
     validateParameters();
 }
 
-void AnalogScaling_Widget::updateStatistics()
-{
-    if (!_data_manager || _current_data_key.isEmpty()) {
+void AnalogScaling_Widget::onDataManagerChanged() {
+    updateStatistics();
+}
+
+void AnalogScaling_Widget::onDataManagerDataChanged() {
+    updateStatistics();
+}
+
+void AnalogScaling_Widget::updateStatistics() {
+    auto dm = dataManager();
+    if (!dm || _current_data_key.isEmpty()) {
         // Clear statistics display
         ui->meanValueLabel->setText("-");
         ui->stdDevValueLabel->setText("-");
@@ -84,23 +80,22 @@ void AnalogScaling_Widget::updateStatistics()
         ui->sampleCountValueLabel->setText("-");
         return;
     }
-    
-    auto analog_data = _data_manager->getData<AnalogTimeSeries>(_current_data_key.toStdString());
+
+    auto analog_data = dm->getData<AnalogTimeSeries>(_current_data_key.toStdString());
     if (!analog_data) {
         return;
     }
-    
+
     _current_stats = calculate_analog_statistics(analog_data.get());
     displayStatistics(_current_stats);
 }
 
-void AnalogScaling_Widget::updateParameterVisibility()
-{
+void AnalogScaling_Widget::updateParameterVisibility() {
     int methodIndex = ui->methodComboBox->currentIndex();
     if (methodIndex < 0) return;
-    
+
     ScalingMethod method = static_cast<ScalingMethod>(ui->methodComboBox->itemData(methodIndex).toInt());
-    
+
     // Hide all parameters first
     ui->gainFactorLabel->setVisible(false);
     ui->gainFactorSpinBox->setVisible(false);
@@ -110,39 +105,38 @@ void AnalogScaling_Widget::updateParameterVisibility()
     ui->minTargetSpinBox->setVisible(false);
     ui->maxTargetLabel->setVisible(false);
     ui->maxTargetSpinBox->setVisible(false);
-    
+
     // Show relevant parameters based on method
     switch (method) {
         case ScalingMethod::FixedGain:
             ui->gainFactorLabel->setVisible(true);
             ui->gainFactorSpinBox->setVisible(true);
             break;
-            
+
         case ScalingMethod::StandardDeviation:
             ui->stdDevTargetLabel->setVisible(true);
             ui->stdDevTargetSpinBox->setVisible(true);
             break;
-            
+
         case ScalingMethod::MinMax:
             ui->minTargetLabel->setVisible(true);
             ui->minTargetSpinBox->setVisible(true);
             ui->maxTargetLabel->setVisible(true);
             ui->maxTargetSpinBox->setVisible(true);
             break;
-            
+
         default:
             // No additional parameters needed
             break;
     }
 }
 
-void AnalogScaling_Widget::updateMethodDescription()
-{
+void AnalogScaling_Widget::updateMethodDescription() {
     int methodIndex = ui->methodComboBox->currentIndex();
     if (methodIndex < 0) return;
-    
+
     ScalingMethod method = static_cast<ScalingMethod>(ui->methodComboBox->itemData(methodIndex).toInt());
-    
+
     QString description;
     switch (method) {
         case ScalingMethod::FixedGain:
@@ -167,26 +161,25 @@ void AnalogScaling_Widget::updateMethodDescription()
             description = "Subtract the mean to center data around zero.";
             break;
     }
-    
+
     ui->methodDescriptionLabel->setText(description);
 }
 
-void AnalogScaling_Widget::validateParameters()
-{
+void AnalogScaling_Widget::validateParameters() {
     QString warning;
-    
+
     int methodIndex = ui->methodComboBox->currentIndex();
     if (methodIndex < 0) return;
-    
+
     ScalingMethod method = static_cast<ScalingMethod>(ui->methodComboBox->itemData(methodIndex).toInt());
-    
+
     switch (method) {
         case ScalingMethod::FixedGain:
             if (qAbs(ui->gainFactorSpinBox->value()) < 1e-10) {
                 warning = "Warning: Gain factor is very close to zero.";
             }
             break;
-            
+
         case ScalingMethod::ZScore:
         case ScalingMethod::StandardDeviation:
         case ScalingMethod::UnitVariance:
@@ -194,7 +187,7 @@ void AnalogScaling_Widget::validateParameters()
                 warning = "Warning: Data has very low standard deviation. Scaling may produce extreme values.";
             }
             break;
-            
+
         case ScalingMethod::MinMax:
             if (ui->maxTargetSpinBox->value() <= ui->minTargetSpinBox->value()) {
                 warning = "Warning: Max target must be greater than min target.";
@@ -203,22 +196,21 @@ void AnalogScaling_Widget::validateParameters()
                 warning = "Warning: Data has very small range. Scaling may not be effective.";
             }
             break;
-            
+
         case ScalingMethod::RobustScaling:
             if (_current_stats.iqr < 1e-10) {
                 warning = "Warning: Data has very small interquartile range. Scaling may produce extreme values.";
             }
             break;
-            
+
         default:
             break;
     }
-    
+
     ui->warningLabel->setText(warning);
 }
 
-void AnalogScaling_Widget::displayStatistics(AnalogStatistics const & stats)
-{
+void AnalogScaling_Widget::displayStatistics(AnalogStatistics const & stats) {
     ui->meanValueLabel->setText(formatNumber(stats.mean));
     ui->stdDevValueLabel->setText(formatNumber(stats.std_dev));
     ui->minValueLabel->setText(formatNumber(stats.min_val));
@@ -226,15 +218,14 @@ void AnalogScaling_Widget::displayStatistics(AnalogStatistics const & stats)
     ui->medianValueLabel->setText(formatNumber(stats.median));
     ui->iqrValueLabel->setText(formatNumber(stats.iqr));
     ui->sampleCountValueLabel->setText(QString::number(stats.sample_count));
-    
+
     // Trigger validation after updating statistics
     validateParameters();
 }
 
-QString AnalogScaling_Widget::formatNumber(double value, int precision) const
-{
+QString AnalogScaling_Widget::formatNumber(double value, int precision) const {
     QLocale locale;
-    
+
     // Use scientific notation for very large or very small numbers
     if (qAbs(value) >= 1e6 || (qAbs(value) < 1e-3 && value != 0.0)) {
         return QString::number(value, 'e', precision);
@@ -243,20 +234,19 @@ QString AnalogScaling_Widget::formatNumber(double value, int precision) const
     }
 }
 
-std::unique_ptr<TransformParametersBase> AnalogScaling_Widget::getParameters() const
-{
+std::unique_ptr<TransformParametersBase> AnalogScaling_Widget::getParameters() const {
     auto params = std::make_unique<AnalogScalingParams>();
-    
+
     int methodIndex = ui->methodComboBox->currentIndex();
     if (methodIndex >= 0) {
         params->method = static_cast<ScalingMethod>(ui->methodComboBox->itemData(methodIndex).toInt());
     }
-    
+
     // Set parameters based on method
     params->gain_factor = ui->gainFactorSpinBox->value();
     params->std_dev_target = ui->stdDevTargetSpinBox->value();
     params->min_target = ui->minTargetSpinBox->value();
     params->max_target = ui->maxTargetSpinBox->value();
-    
+
     return params;
-} 
+}

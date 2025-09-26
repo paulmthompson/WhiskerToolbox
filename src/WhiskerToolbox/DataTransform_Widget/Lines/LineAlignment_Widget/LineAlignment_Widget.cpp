@@ -5,9 +5,10 @@
 #include "DataManager.hpp"
 #include "DataManager/transforms/Lines/Line_Alignment/line_alignment.hpp"
 #include "Media/Media_Data.hpp"
+#include <algorithm>
 
 LineAlignment_Widget::LineAlignment_Widget(QWidget * parent)
-    : TransformParameter_Widget(parent),
+    : DataManagerParameter_Widget(parent),
       ui(new Ui::LineAlignment_Widget) {
     ui->setupUi(this);
 
@@ -51,9 +52,10 @@ std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() c
     auto params = std::make_unique<LineAlignmentParameters>();
 
     // Use the selected media data key from the combo box
-    if (_data_manager && !_selected_media_key.empty()) {
+    auto dm = dataManager();
+    if (dm && !_selected_media_key.empty()) {
         try {
-            auto data_variant = _data_manager->getDataVariant(_selected_media_key);
+            auto data_variant = dm->getDataVariant(_selected_media_key);
             if (data_variant.has_value() &&
                 std::holds_alternative<std::shared_ptr<MediaData>>(*data_variant)) {
                 params->media_data = std::get<std::shared_ptr<MediaData>>(*data_variant);
@@ -80,27 +82,22 @@ std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() c
     return params;
 }
 
-void LineAlignment_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
-    _data_manager = data_manager;
+void LineAlignment_Widget::onDataManagerChanged() {
+    _refreshMediaDataKeys();
+}
 
-    if (_data_manager) {
-        // Add observer to refresh media data keys when data manager changes
-        _data_manager->addObserver([this]() {
-            _refreshMediaDataKeys();
-        });
-
-        // Initial population of media data keys
-        _refreshMediaDataKeys();
-    }
+void LineAlignment_Widget::onDataManagerDataChanged() {
+    _refreshMediaDataKeys();
 }
 
 void LineAlignment_Widget::_refreshMediaDataKeys() {
-    if (!_data_manager) {
+    auto dm = dataManager();
+    if (!dm) {
         return;
     }
 
     // Get current media data keys
-    auto media_keys = _data_manager->getKeys<MediaData>();
+    auto media_keys = dm->getKeys<MediaData>();
 
     // Update the combo box
     _updateMediaDataKeyComboBox();
@@ -128,7 +125,8 @@ void LineAlignment_Widget::_refreshMediaDataKeys() {
 }
 
 void LineAlignment_Widget::_updateMediaDataKeyComboBox() {
-    if (!_data_manager) {
+    auto dm = dataManager();
+    if (!dm) {
         return;
     }
 
@@ -138,7 +136,7 @@ void LineAlignment_Widget::_updateMediaDataKeyComboBox() {
     // Clear and repopulate the combo box
     ui->mediaDataKeyComboBox->clear();
 
-    auto media_keys = _data_manager->getKeys<MediaData>();
+    auto media_keys = dm->getKeys<MediaData>();
     for (auto const & key: media_keys) {
         ui->mediaDataKeyComboBox->addItem(QString::fromStdString(key));
     }
@@ -153,7 +151,8 @@ void LineAlignment_Widget::_updateMediaDataKeyComboBox() {
 }
 
 void LineAlignment_Widget::_mediaDataKeyChanged(int index) {
-    if (index >= 0 && _data_manager) {
+    auto dm = dataManager();
+    if (index >= 0 && dm) {
         _selected_media_key = ui->mediaDataKeyComboBox->itemText(index).toStdString();
     }
 }
@@ -181,7 +180,7 @@ void LineAlignment_Widget::_approachChanged(int index) {
     // Update the approach parameter
     if (index >= 0) {
         FWHMApproach approach = static_cast<FWHMApproach>(ui->approachComboBox->itemData(index).toInt());
-        // You can add any additional logic here if needed
+        (void)approach; // currently unused
     }
 }
 
@@ -189,6 +188,6 @@ void LineAlignment_Widget::_outputModeChanged(int index) {
     // Update the output mode parameter
     if (index >= 0) {
         LineAlignmentOutputMode output_mode = static_cast<LineAlignmentOutputMode>(ui->outputModeComboBox->itemData(index).toInt());
-        // You can add any additional logic here if needed
+        (void)output_mode; // currently unused
     }
 }

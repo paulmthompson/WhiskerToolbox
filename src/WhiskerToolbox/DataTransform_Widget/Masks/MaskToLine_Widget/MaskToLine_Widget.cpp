@@ -4,13 +4,11 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/transforms/Masks/Mask_To_Line/mask_to_line.hpp"
 
-MaskToLine_Widget::MaskToLine_Widget(QWidget *parent) :
-    TransformParameter_Widget(parent),
-    ui(new Ui::MaskToLine_Widget),
-    _data_manager(nullptr)
-{
+MaskToLine_Widget::MaskToLine_Widget(QWidget * parent)
+    : DataManagerParameter_Widget(parent),
+      ui(new Ui::MaskToLine_Widget) {
     ui->setupUi(this);
-    
+
     // Set default values
     ui->polynomialOrderSpinBox->setValue(3);
     ui->errorThresholdSpinBox->setValue(5.0);
@@ -18,43 +16,35 @@ MaskToLine_Widget::MaskToLine_Widget(QWidget *parent) :
     ui->removeOutliersCheckBox->setChecked(true);
     ui->smoothLineCheckBox->setChecked(false);
     ui->outputResolutionSpinBox->setValue(5.0);
-    
+
     // Set up method combo box
     ui->methodComboBox->addItem("Skeletonize", static_cast<int>(LinePointSelectionMethod::Skeletonize));
     ui->methodComboBox->addItem("Nearest to Reference", static_cast<int>(LinePointSelectionMethod::NearestToReference));
     ui->methodComboBox->setCurrentIndex(0);
-    
+
     // Connect signals
     connect(ui->methodComboBox, &QComboBox::currentIndexChanged, this, &MaskToLine_Widget::onMethodChanged);
 }
 
-MaskToLine_Widget::~MaskToLine_Widget()
-{
+MaskToLine_Widget::~MaskToLine_Widget() {
     delete ui;
 }
 
-void MaskToLine_Widget::setDataManager(std::shared_ptr<DataManager> data_manager)
-{
-    _data_manager = std::move(data_manager);
-}
-
-void MaskToLine_Widget::onMethodChanged(int index)
-{
-    if (index == 0) { // Skeletonize
+void MaskToLine_Widget::onMethodChanged(int index) {
+    if (index == 0) {// Skeletonize
         ui->skeletonizeDescriptionLabel->setVisible(true);
-    } else { // Nearest to Reference
+    } else {// Nearest to Reference
         ui->skeletonizeDescriptionLabel->setVisible(false);
     }
 }
 
-std::unique_ptr<TransformParametersBase> MaskToLine_Widget::getParameters() const
-{
+std::unique_ptr<TransformParametersBase> MaskToLine_Widget::getParameters() const {
     auto params = std::make_unique<MaskToLineParameters>();
-    
+
     // Reference point parameters
     params->reference_x = static_cast<float>(ui->referenceXSpinBox->value());
     params->reference_y = static_cast<float>(ui->referenceYSpinBox->value());
-    
+
     // Method
     int methodIndex = ui->methodComboBox->currentIndex();
     if (methodIndex == 0) {
@@ -62,7 +52,7 @@ std::unique_ptr<TransformParametersBase> MaskToLine_Widget::getParameters() cons
     } else {
         params->method = LinePointSelectionMethod::NearestToReference;
     }
-    
+
     // Quality parameters
     params->polynomial_order = ui->polynomialOrderSpinBox->value();
     params->error_threshold = static_cast<float>(ui->errorThresholdSpinBox->value());
@@ -70,6 +60,6 @@ std::unique_ptr<TransformParametersBase> MaskToLine_Widget::getParameters() cons
     params->input_point_subsample_factor = ui->subsampleSpinBox->value();
     params->should_smooth_line = ui->smoothLineCheckBox->isChecked();
     params->output_resolution = static_cast<float>(ui->outputResolutionSpinBox->value());
-    
+
     return params;
-} 
+}

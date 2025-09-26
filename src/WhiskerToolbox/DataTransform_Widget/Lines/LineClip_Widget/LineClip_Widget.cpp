@@ -4,11 +4,11 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/transforms/Lines/Line_Clip/line_clip.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include <algorithm>
 
 LineClip_Widget::LineClip_Widget(QWidget *parent) :
-    TransformParameter_Widget(parent),
-    ui(new Ui::LineClip_Widget),
-    _data_manager(nullptr)
+    DataManagerParameter_Widget(parent),
+    ui(new Ui::LineClip_Widget)
 {
     ui->setupUi(this);
     
@@ -31,13 +31,17 @@ LineClip_Widget::~LineClip_Widget()
     delete ui;
 }
 
-void LineClip_Widget::setDataManager(std::shared_ptr<DataManager> data_manager)
+void LineClip_Widget::onDataManagerChanged()
 {
-    _data_manager = data_manager;
-    
-    // Configure the feature table widget to only show line data
-    ui->line_feature_table_widget->setDataManager(_data_manager);
+    auto dm = dataManager();
+    ui->line_feature_table_widget->setDataManager(dm);
     ui->line_feature_table_widget->setTypeFilter({DM_DataType::Line});
+    ui->line_feature_table_widget->populateTable();
+}
+
+void LineClip_Widget::onDataManagerDataChanged()
+{
+    // Refresh the table when DataManager contents change
     ui->line_feature_table_widget->populateTable();
 }
 
@@ -47,9 +51,10 @@ std::unique_ptr<TransformParametersBase> LineClip_Widget::getParameters() const
     
     // Get selected reference line data
     QString selectedFeature = ui->selectedLineLineEdit->text();
-    if (!selectedFeature.isEmpty() && _data_manager) {
-        auto line_data_variant = _data_manager->getDataVariant(selectedFeature.toStdString());
-        if (line_data_variant.has_value() && 
+    auto dm = dataManager();
+    if (!selectedFeature.isEmpty() && dm) {
+        auto line_data_variant = dm->getDataVariant(selectedFeature.toStdString());
+        if (line_data_variant.has_value() &&
             std::holds_alternative<std::shared_ptr<LineData>>(*line_data_variant)) {
             params->reference_line_data = std::get<std::shared_ptr<LineData>>(*line_data_variant);
         }
@@ -74,10 +79,11 @@ void LineClip_Widget::_lineFeatureSelected(QString const & feature)
     // Update the selected line data display
     ui->selectedLineLineEdit->setText(feature);
     
-    // Optionally, we could update the maximum frame number based on the selected line data
-    if (_data_manager && !feature.isEmpty()) {
-        auto line_data_variant = _data_manager->getDataVariant(feature.toStdString());
-        if (line_data_variant.has_value() && 
+    // Optionally, update the maximum frame number based on the selected line data
+    auto dm = dataManager();
+    if (dm && !feature.isEmpty()) {
+        auto line_data_variant = dm->getDataVariant(feature.toStdString());
+        if (line_data_variant.has_value() &&
             std::holds_alternative<std::shared_ptr<LineData>>(*line_data_variant)) {
             auto line_data = std::get<std::shared_ptr<LineData>>(*line_data_variant);
             auto times_with_data = line_data->getTimesWithData();
@@ -109,4 +115,4 @@ void LineClip_Widget::onClipSideChanged(int index)
                      "• If no intersection is found, the original line is preserved unchanged";
     }
     ui->previewLabel->setText(previewText);
-} 
+}

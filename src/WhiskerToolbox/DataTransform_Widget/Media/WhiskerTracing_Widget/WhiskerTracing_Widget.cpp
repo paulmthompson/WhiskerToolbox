@@ -2,17 +2,18 @@
 
 #include "ui_WhiskerTracing_Widget.h"
 
-#include "DataManager/transforms/Media/whisker_tracing.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/transforms/Media/whisker_tracing.hpp"
+#include "Masks/Mask_Data.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
-#include <QSpinBox>
 #include <QPushButton>
+#include <QSpinBox>
 
 WhiskerTracing_Widget::WhiskerTracing_Widget(QWidget * parent)
-    : TransformParameter_Widget(parent),
+    : DataManagerParameter_Widget(parent),
       ui(new Ui::WhiskerTracing_Widget) {
     ui->setupUi(this);
 
@@ -39,6 +40,14 @@ WhiskerTracing_Widget::~WhiskerTracing_Widget() {
     delete ui;
 }
 
+void WhiskerTracing_Widget::onDataManagerChanged() {
+    _refreshMaskKeys();
+}
+
+void WhiskerTracing_Widget::onDataManagerDataChanged() {
+    _refreshMaskKeys();
+}
+
 std::unique_ptr<TransformParametersBase> WhiskerTracing_Widget::getParameters() const {
     auto params = std::make_unique<WhiskerTracingParameters>();
 
@@ -50,9 +59,10 @@ std::unique_ptr<TransformParametersBase> WhiskerTracing_Widget::getParameters() 
     params->use_mask_data = ui->use_mask_data_checkbox->isChecked();
 
     // Resolve MaskData pointer based on the current selection captured by slot handlers
-    if (params->use_mask_data && _data_manager && !_selected_mask_key.empty()) {
+    auto dm = dataManager();
+    if (params->use_mask_data && dm && !_selected_mask_key.empty()) {
         try {
-            auto mask_ptr = _data_manager->getData<MaskData>(_selected_mask_key);
+            auto mask_ptr = dm->getData<MaskData>(_selected_mask_key);
             if (mask_ptr) {
                 params->mask_data = mask_ptr;
             }
@@ -93,15 +103,16 @@ void WhiskerTracing_Widget::_onUseMaskDataChanged(bool checked) {
     ui->mask_data_combobox->setEnabled(checked);
     if (checked) {
         _refreshMaskKeys();
-        bool const has_masks = _data_manager && !_data_manager->getKeys<MaskData>().empty();
+        auto dm = dataManager();
+        bool const has_masks = dm && !dm->getKeys<MaskData>().empty();
         // If no masks are present, disable transform button via parent DataTransform widget
         if (auto parent_widget = parentWidget()) {
-            auto do_btn = parent_widget->findChild<QPushButton*>("do_transform_button");
+            auto do_btn = parent_widget->findChild<QPushButton *>("do_transform_button");
             if (do_btn) do_btn->setEnabled(has_masks);
         }
     } else {
         if (auto parent_widget = parentWidget()) {
-            auto do_btn = parent_widget->findChild<QPushButton*>("do_transform_button");
+            auto do_btn = parent_widget->findChild<QPushButton *>("do_transform_button");
             if (do_btn) do_btn->setEnabled(true);
         }
     }
@@ -115,35 +126,26 @@ void WhiskerTracing_Widget::_onMaskDataChanged(int index) {
     // Parameters are updated when getParameters() is called
 }
 
-void WhiskerTracing_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
-    _data_manager = std::move(data_manager);
-    if (_data_manager) {
-        // Observe data manager changes to refresh mask keys
-        _data_manager->addObserver([this]() {
-            _refreshMaskKeys();
-        });
-        _refreshMaskKeys();
-    }
-}
-
 void WhiskerTracing_Widget::_refreshMaskKeys() {
-    if (!_data_manager) {
+    auto dm = dataManager();
+    if (!dm) {
         ui->mask_data_combobox->clear();
         ui->mask_data_combobox->setEnabled(false);
         return;
     }
     _updateMaskComboBox();
-    bool const has_masks = !_data_manager->getKeys<MaskData>().empty();
+    bool const has_masks = !dm->getKeys<MaskData>().empty();
     ui->mask_data_combobox->setEnabled(ui->use_mask_data_checkbox->isChecked() && has_masks);
 }
 
 void WhiskerTracing_Widget::_updateMaskComboBox() {
-    if (!_data_manager) return;
+    auto dm = dataManager();
+    if (!dm) return;
 
     QString current_text = ui->mask_data_combobox->currentText();
     ui->mask_data_combobox->clear();
 
-    auto mask_keys = _data_manager->getKeys<MaskData>();
+    auto mask_keys = dm->getKeys<MaskData>();
     for (auto const & key: mask_keys) {
         ui->mask_data_combobox->addItem(QString::fromStdString(key));
     }
