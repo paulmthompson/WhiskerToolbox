@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QFile>
+#include <QOpenGLContext>
 #include <QOpenGLShader>
 #include <QTextStream>
 
@@ -14,14 +15,23 @@ ShaderProgram::ShaderProgram(std::string const & vertexPath,
     : m_vertexPath(vertexPath),
       m_fragmentPath(fragmentPath),
       m_geometryPath(geometryPath),
-      m_sourceType(sourceType) {
+      m_sourceType(sourceType),
+      m_isComputeShader(false) {
+    m_program = std::make_unique<QOpenGLShaderProgram>();
+}
+
+ShaderProgram::ShaderProgram(std::string const & computePath,
+                             ShaderSourceType sourceType)
+    : m_computePath(computePath),
+      m_sourceType(sourceType),
+      m_isComputeShader(true) {
     m_program = std::make_unique<QOpenGLShaderProgram>();
 }
 
 ShaderProgram::~ShaderProgram() {
-    if (m_program) {
-        m_program->removeAllShaders();
-    }
+    // Don't explicitly call removeAllShaders() in destructor
+    // QOpenGLShaderProgram's destructor will handle OpenGL resource cleanup
+    // when the context is still valid, and skip it when the context is gone
 }
 
 bool ShaderProgram::reload() {
@@ -64,8 +74,38 @@ void ShaderProgram::setUniform(std::string const & name, glm::mat4 const & matri
 bool ShaderProgram::compileAndLink() {
     bool ok = true;
     QString errorLog;
-    // Vertex shader
-    if (!m_vertexPath.empty()) {
+    
+    // Handle compute shaders differently
+    if (m_isComputeShader) {
+        if (!m_computePath.empty()) {
+            QString src;
+            if (m_sourceType == ShaderSourceType::FileSystem) {
+                std::string source;
+                if (!loadShaderSource(m_computePath, source)) {
+                    std::cerr << "[ShaderProgram] Failed to load compute shader: " << m_computePath << std::endl;
+                    return false;
+                } else {
+                    src = QString::fromStdString(source);
+                }
+            } else {
+                std::string source;
+                if (!loadShaderSourceResource(m_computePath, source)) {
+                    std::cerr << "[ShaderProgram] Failed to load compute shader resource: " << m_computePath << std::endl;
+                    return false;
+                } else {
+                    src = QString::fromStdString(source);
+                }
+            }
+            if (!m_program->addShaderFromSourceCode(QOpenGLShader::Compute, src)) {
+                errorLog += m_program->log();
+                std::cerr << "[ShaderProgram] Compute shader compile error: " << errorLog.toStdString() << std::endl;
+                return false;
+            }
+        }
+    } else {
+        // Traditional vertex/fragment/geometry shaders
+        // Vertex shader
+        if (!m_vertexPath.empty()) {
         QString src;
         if (m_sourceType == ShaderSourceType::FileSystem) {
             std::string source;
@@ -139,6 +179,7 @@ bool ShaderProgram::compileAndLink() {
             ok = false;
         }
     }
+    }  // End of else block for traditional shaders
     if (!ok) {
         std::cerr << "[ShaderProgram] Shader compile/link error: " << errorLog.toStdString() << std::endl;
         return false;

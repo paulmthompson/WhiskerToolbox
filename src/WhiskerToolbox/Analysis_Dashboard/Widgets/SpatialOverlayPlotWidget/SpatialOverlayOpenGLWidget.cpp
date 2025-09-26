@@ -65,6 +65,11 @@ void SpatialOverlayOpenGLWidget::doSetGroupManager(GroupManager * group_manager)
             kv.second->setGroupManager(group_manager);
         }
     }
+    for (auto & kv: _line_data_visualizations) {
+        if (kv.second) {
+            kv.second->setGroupManager(group_manager);
+        }
+    }
 }
 
 void SpatialOverlayOpenGLWidget::initializeVisualizations() {
@@ -82,6 +87,11 @@ void SpatialOverlayOpenGLWidget::refreshGroupRenderDataAll() {
     }
 
     for (auto & kv: _point_data_visualizations) {
+        if (kv.second) {
+            kv.second->refreshGroupRenderData();
+        }
+    }
+    for (auto & kv: _line_data_visualizations) {
         if (kv.second) {
             kv.second->refreshGroupRenderData();
         }
@@ -161,7 +171,7 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
         makeCurrent();
         for (auto const & [key, line_data]: _line_data) {
             if (line_data) {
-                auto viz = std::make_unique<LineDataVisualization>(key, line_data);
+                auto viz = std::make_unique<LineDataVisualization>(key, line_data, _group_manager);
                 _line_data_visualizations[key] = std::move(viz);
             }
         }
@@ -169,6 +179,7 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
     }
 
     calculateDataBounds();
+    updateViewMatrices();
 
     requestThrottledUpdate();
 }
@@ -545,6 +556,13 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
         return;
     }
 
+    // Ensure GL context is current for compute-shader based selections
+    bool made_current = false;
+    if (_opengl_resources_initialized && this->context() && this->context()->isValid()) {
+        makeCurrent();
+        made_current = true;
+    }
+
     // Apply selection to all visualization structs using their existing applySelection methods
     for (auto const & [key, viz]: _point_data_visualizations) {
         viz->applySelection(_selection_handler);
@@ -554,6 +572,10 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
     }
     for (auto const & [key, viz]: _line_data_visualizations) {
         viz->applySelection(_selection_handler, context);
+    }
+
+    if (made_current) {
+        doneCurrent();
     }
 
     // Emit selection changed signal with updated counts
@@ -572,6 +594,13 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
     // Collect all selected entity IDs instead of point IDs
     std::unordered_set<EntityId> selected_entity_ids;
     for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz) {
+            auto entity_ids = viz->getSelectedEntityIds();
+            selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
+        }
+    }
+
+    for (auto const & [key, viz]: _line_data_visualizations) {
         if (viz) {
             auto entity_ids = viz->getSelectedEntityIds();
             selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
@@ -610,6 +639,13 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
         }
     }
 
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        if (viz) {
+            auto entity_ids = viz->getSelectedEntityIds();
+            selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
+        }
+    }
+
     if (selected_entity_ids.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to group";
         return;
@@ -632,6 +668,13 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
     // Collect all selected entity IDs instead of point IDs
     std::unordered_set<EntityId> selected_entity_ids;
     for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz) {
+            auto entity_ids = viz->getSelectedEntityIds();
+            selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());
+        }
+    }
+
+    for (auto const & [key, viz]: _line_data_visualizations) {
         if (viz) {
             auto entity_ids = viz->getSelectedEntityIds();
             selected_entity_ids.insert(entity_ids.begin(), entity_ids.end());

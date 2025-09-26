@@ -31,6 +31,13 @@ SpatialOverlayPlotWidget::SpatialOverlayPlotWidget(QGraphicsItem * parent)
     qDebug() << "SpatialOverlayPlotWidget: Constructor completed, OpenGL widget:" << (_opengl_widget != nullptr);
 }
 
+SpatialOverlayPlotWidget::~SpatialOverlayPlotWidget() {
+    // The _opengl_widget is owned by _proxy_widget and will be automatically deleted
+    // when _proxy_widget is destroyed as a child of this graphics item.
+    // Set our pointer to nullptr to avoid any potential issues.
+    _opengl_widget = nullptr;
+}
+
 QString SpatialOverlayPlotWidget::getPlotType() const {
     return "Spatial Overlay Plot";
 }

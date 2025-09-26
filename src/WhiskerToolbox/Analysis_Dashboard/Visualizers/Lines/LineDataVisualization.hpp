@@ -5,7 +5,6 @@
 #include "DataManager/Entity/EntityTypes.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
-#include "LineIdentifier.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "Visualizers/RenderingContext.hpp"
@@ -32,6 +31,8 @@ class LineSelectionHandler;
 class NoneSelectionHandler;
 
 
+
+
 /**
  * @brief Visualization data for a single LineData object
  */
@@ -42,8 +43,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     std::vector<float> m_vertex_data;              // All line segments as pairs of vertices
     std::vector<uint32_t> m_line_id_data;          // Line ID for each vertex
     std::vector<EntityId> m_entity_id_per_vertex;  // EntityId for each vertex (duplicates per line segment)
-    std::vector<EntityId> m_line_entity_ids;       // EntityId per logical line (aligned with m_line_identifiers)
-    std::vector<LineIdentifier> m_line_identifiers;// Mapping from line index to identifier
+    std::vector<EntityId> m_line_entity_ids;       // EntityId per logical line
 
     // Vertex range tracking for efficient hover rendering
     struct LineVertexRange {
@@ -83,21 +83,21 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     QVector2D m_canvas_size;// Canvas size for coordinate normalization
 
     // Hover state for this LineData
-    LineIdentifier m_current_hover_line;
+    EntityId m_current_hover_line = 0;
     bool m_has_hover_line = false;
     uint32_t m_cached_hover_line_index = 0;    // Cached index to avoid linear search
     GLint m_cached_hover_uniform_location = -1;// Cached uniform location to avoid repeated queries
 
     // GPU-based selection using mask buffer
-    std::unordered_set<LineIdentifier> m_selected_lines;
+    std::unordered_set<EntityId> m_selected_lines;
     QOpenGLBuffer m_selection_mask_buffer;                        // Buffer containing selection mask for each line
     std::vector<uint32_t> m_selection_mask;                       // CPU copy of selection mask
-    std::unordered_map<LineIdentifier, size_t> m_line_id_to_index;// Fast lookup from LineIdentifier to index
+    std::unordered_map<EntityId, size_t> m_entity_id_to_index;// Fast lookup from EntityId to index
 
     // Visibility system for individual lines
     QOpenGLBuffer m_visibility_mask_buffer;           // Buffer containing visibility mask for each line
     std::vector<uint32_t> m_visibility_mask;          // CPU copy of visibility mask (1 = visible, 0 = hidden)
-    std::unordered_set<LineIdentifier> m_hidden_lines;// Set of hidden line identifiers
+    std::unordered_set<EntityId> m_hidden_lines;// Set of hidden line EntityIds
 
     // Time range filtering
     int m_time_range_start = 0;
@@ -116,7 +116,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     GroupManager * m_group_manager = nullptr;
     bool m_group_data_needs_update = false;
 
-    LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data);
+    LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data, GroupManager * group_manager = nullptr);
     ~LineDataVisualization();
     // Tracks whether GL resources (buffers, shaders, VAOs) were created successfully
     bool m_gl_initialized = false;
@@ -158,45 +158,39 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
         m_group_data_needs_update = true;
     }
     void refreshGroupRenderData() { m_group_data_needs_update = true; }
+    
+    /**
+     * @brief Get selected line EntityIds
+     * @return Set of EntityIds for currently selected lines
+     */
+    std::unordered_set<EntityId> getSelectedEntityIds() const { return m_selected_lines; }
 
     /**
-     * @brief Get line identifier at screen position
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     * @param widget_width The width of the viewport/widget
-     * @param widget_height The height of the viewport/widget
-     * @return Line identifier if found, empty optional otherwise
+     * @brief Get the line at screen position (for hover)
      */
-    std::optional<LineIdentifier> getLineAtScreenPosition(
+    std::optional<EntityId> getLineAtScreenPosition(
             int screen_x, int screen_y, int widget_width, int widget_height);
 
     /**
-     * @brief Get all line identifiers intersecting a line segment on screen
-     * @param start_x Screen X coordinate of line start
-     * @param start_y Screen Y coordinate of line start
-     * @param end_x Screen X coordinate of line end
-     * @param end_y Screen Y coordinate of line end
-     * @param widget_width The width of the viewport/widget
-     * @param widget_height The height of the viewport/widget
-     * @param mvp_matrix The model-view-projection matrix for coordinate transformation
-     * @param line_width The line width for intersection tolerance
-     * @return Vector of all intersecting line identifiers
+     * @brief Get all lines intersecting with a screen-space line segment
+     * 
+     * This method uses GPU compute shaders for efficient intersection testing.
      */
-    std::vector<LineIdentifier> getAllLinesIntersectingLine(
+    std::vector<EntityId> getAllLinesIntersectingLine(
             int start_x, int start_y, int end_x, int end_y,
             int widget_width, int widget_height,
-            QMatrix4x4 const & mvp_matrix, float line_width);
-
+            QMatrix4x4 const & mvp_matrix, float line_width);    
+    
     /**
      * @brief Set hover line
-     * @param line_id The line identifier to hover, or empty for no hover
+     * @param entity_id The line EntityId to hover, or empty for no hover
      */
-    void setHoverLine(std::optional<LineIdentifier> line_id);
+    void setHoverLine(std::optional<EntityId> entity_id);
 
     /**
      * @brief Get current hover line
      */
-    std::optional<LineIdentifier> getHoverLine() const;
+    std::optional<EntityId> getHoverLine() const;
 
     /**
      * @brief Calculate bounding box for a LineData object

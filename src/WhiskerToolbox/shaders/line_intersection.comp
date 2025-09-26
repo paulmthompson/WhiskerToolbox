@@ -12,6 +12,17 @@ uniform float u_line_width;
 uniform mat4 u_mvp_matrix;
 uniform vec2 u_canvas_size;
 
+// Explicit sizes to avoid relying on .length() for SSBOs (driver-dependent)
+uniform int u_total_segments;       // total number of segments in buffer
+uniform int u_visibility_count;     // number of entries in visibility_mask
+uniform int u_results_capacity;     // capacity of intersection_results
+
+// Batching controls
+// u_segment_offset: starting segment index for this dispatch
+// u_segments_in_batch: number of segments to process in this dispatch
+uniform int u_segment_offset;
+uniform int u_segments_in_batch;
+
 // Line segments buffer: each line segment is stored as 4 floats (x1, y1, x2, y2) + 1 uint (line_id)
 layout(std430, binding = 0) readonly buffer LineSegmentsBuffer {
     float line_segments[];
@@ -90,13 +101,20 @@ void main() {
     uint index = gl_GlobalInvocationID.x;
     
     // Each line segment is stored as 5 values: x1, y1, x2, y2, line_id
-    uint total_segments = uint(line_segments.length()) / 5u;
+    uint total_segments = uint(u_total_segments);
     
-    if (index >= total_segments) {
+    // Compute the absolute segment index with batching
+    uint seg_index = uint(u_segment_offset) + index;
+    
+    // Clamp to both total segments and declared batch size
+    if (seg_index >= total_segments) {
+        return;
+    }
+    if (index >= uint(u_segments_in_batch)) {
         return;
     }
     
-    uint base_index = index * 5u;
+    uint base_index = seg_index * 5u;
     
     // Extract line segment data (in world coordinates)
     vec2 segment_start = vec2(line_segments[base_index], line_segments[base_index + 1u]);
@@ -104,7 +122,7 @@ void main() {
     uint line_id = floatBitsToUint(line_segments[base_index + 4u]);
     
     // Check if this line is visible (line_id is 1-based, visibility_mask is 0-based)
-    if (line_id > 0u && line_id <= uint(visibility_mask.length())) {
+    if (line_id > 0u && line_id <= uint(u_visibility_count)) {
         uint visibility_index = line_id - 1u;
         if (visibility_mask[visibility_index] == 0u) {
             return; // Line is hidden, skip intersection test
@@ -125,7 +143,7 @@ void main() {
         uint result_index = atomicAdd(intersection_count, 1u);
         
         // Make sure we don't exceed buffer bounds
-        if (result_index < intersection_results.length()) {
+        if (result_index < uint(u_results_capacity)) {
             intersection_results[result_index] = line_id;
         }
     }

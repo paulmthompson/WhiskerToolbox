@@ -73,6 +73,7 @@ void LineSelectionHandler::cleanupOpenGLResources() {
 void LineSelectionHandler::startLineSelection(float world_x, float world_y) {
 
     qDebug() << "LineSelectionHandler: Starting line selection at" << world_x << "," << world_y;
+    qDebug() << "LineSelectionHandler: _is_drawing_line was:" << _is_drawing_line << "setting to true";
 
     _is_drawing_line = true;
     _line_start_point_world = Point2D<float>(world_x, world_y);
@@ -136,12 +137,16 @@ void LineSelectionHandler::cancelLineSelection() {
 }
 
 void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
+    qDebug() << "LineSelectionHandler::render called, _is_drawing_line =" << _is_drawing_line;
+    
     if (!_is_drawing_line) {
         return;
     }
 
     ShaderManager & shader_manager = ShaderManager::instance();
     _line_shader_program = shader_manager.getProgram("line")->getNativeProgram();
+    
+    qDebug() << "LineSelectionHandler: Got shader program:" << (_line_shader_program ? "valid" : "null");
 
     qDebug() << "LineSelectionHandler: Rendering line overlay from"
              << _line_start_point_world.x << "," << _line_start_point_world.y
@@ -160,8 +165,8 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-    // Set line width
-    glLineWidth(2.0f);
+    // Set line width (make it thicker for visibility)
+    glLineWidth(5.0f);
 
     // === DRAW CALL: Render line ===
     _line_vertex_array_object.bind();
@@ -171,8 +176,8 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    // Set uniforms for line (black solid line)
-    _line_shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black
+    // Set uniforms for line (bright red for visibility)
+    _line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f));// Bright red
 
     // Disable blending for solid black line
     glDisable(GL_BLEND);
@@ -196,7 +201,11 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
 }
 
 void LineSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
+    qDebug() << "LineSelectionHandler::mousePressEvent called with button:" << event->button() 
+             << "modifiers:" << event->modifiers() << "world_pos:" << world_pos.x() << world_pos.y();
+             
     if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::ControlModifier)) {
+        qDebug() << "LineSelectionHandler: Ctrl+Left click detected!";
         if (!_is_drawing_line) {
             Qt::KeyboardModifiers modifiers = QGuiApplication::keyboardModifiers();
             if (modifiers.testFlag(Qt::ShiftModifier)) {

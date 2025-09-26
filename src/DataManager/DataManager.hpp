@@ -262,6 +262,14 @@ public:
     void setData(std::string const & key, TimeKey const & time_key) {
         _data[key] = std::make_shared<T>();
         setTimeKey(key, time_key);
+
+        //Rebuild the EntityIds
+        if constexpr ((std::is_same_v<T, LineData>) || 
+            (std::is_same_v<T, PointData>)) {
+            //std::is_same_v<T, MaskData>) {
+            std::get<std::shared_ptr<T>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+            std::get<std::shared_ptr<T>>(_data[key])->rebuildAllEntityIds();
+        }
         _notifyObservers();
     }
 
@@ -271,6 +279,15 @@ public:
     void setData(std::string const & key, std::shared_ptr<T> data, TimeKey const & time_key) {
         _data[key] = data;
         setTimeKey(key, time_key);
+
+        //Rebuild the EntityIds
+        if constexpr ((std::is_same_v<T, LineData>) || 
+        (std::is_same_v<T, PointData>)) {
+        //std::is_same_v<T, MaskData>) {
+            std::get<std::shared_ptr<T>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+            std::get<std::shared_ptr<T>>(_data[key])->rebuildAllEntityIds();
+        }
+
         _notifyObservers();
     }
 
