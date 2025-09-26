@@ -65,6 +65,11 @@ void SpatialOverlayOpenGLWidget::doSetGroupManager(GroupManager * group_manager)
             kv.second->setGroupManager(group_manager);
         }
     }
+    for (auto & kv: _line_data_visualizations) {
+        if (kv.second) {
+            kv.second->setGroupManager(group_manager);
+        }
+    }
 }
 
 void SpatialOverlayOpenGLWidget::initializeVisualizations() {
@@ -82,6 +87,11 @@ void SpatialOverlayOpenGLWidget::refreshGroupRenderDataAll() {
     }
 
     for (auto & kv: _point_data_visualizations) {
+        if (kv.second) {
+            kv.second->refreshGroupRenderData();
+        }
+    }
+    for (auto & kv: _line_data_visualizations) {
         if (kv.second) {
             kv.second->refreshGroupRenderData();
         }
@@ -161,7 +171,7 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
         makeCurrent();
         for (auto const & [key, line_data]: _line_data) {
             if (line_data) {
-                auto viz = std::make_unique<LineDataVisualization>(key, line_data);
+                auto viz = std::make_unique<LineDataVisualization>(key, line_data, _group_manager);
                 _line_data_visualizations[key] = std::move(viz);
             }
         }
@@ -169,6 +179,7 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
     }
 
     calculateDataBounds();
+    updateViewMatrices();
 
     requestThrottledUpdate();
 }

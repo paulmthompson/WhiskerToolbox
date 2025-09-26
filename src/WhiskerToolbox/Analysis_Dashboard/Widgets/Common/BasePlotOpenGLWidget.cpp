@@ -147,7 +147,7 @@ void BasePlotOpenGLWidget::initializeGL() {
     }
 
     // Set up OpenGL state
-    glClearColor(0.95f, 0.95f, 0.95f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // White background
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -194,6 +194,7 @@ void BasePlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
     std::visit([event, world_pos](auto & handler) {
         if (handler) {
+            qDebug() << "BasePlotOpenGLWidget: Forwarding mousePressEvent to selection handler";
             handler->mousePressEvent(event, world_pos);
         }
     },
@@ -226,6 +227,7 @@ void BasePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     },
                _selection_handler);
 
+    requestThrottledUpdate();
     QOpenGLWidget::mouseMoveEvent(event);
 }
 
@@ -296,10 +298,14 @@ void BasePlotOpenGLWidget::handleKeyPress(QKeyEvent * event) {
 }
 
 void BasePlotOpenGLWidget::setSelectionMode(SelectionMode mode) {
+    qDebug() << "BasePlotOpenGLWidget::setSelectionMode called with mode:" << static_cast<int>(mode);
+    
     if (_selection_mode != mode) {
         _selection_mode = mode;
 
         createSelectionHandler(mode);
+        
+        qDebug() << "BasePlotOpenGLWidget: Selection mode changed to:" << static_cast<int>(mode);
 
         emit selectionModeChanged(mode);
     }
@@ -314,16 +320,21 @@ void BasePlotOpenGLWidget::createSelectionHandler(SelectionMode mode) {
 
     switch (mode) {
         case SelectionMode::None:
+            qDebug() << "BasePlotOpenGLWidget: Creating NoneSelectionHandler";
             _selection_handler = std::make_unique<NoneSelectionHandler>();
             break;
         case SelectionMode::PointSelection:
+            qDebug() << "BasePlotOpenGLWidget: Creating PointSelectionHandler";
             _selection_handler = std::make_unique<PointSelectionHandler>(10.0f);// 10 pixel tolerance
             break;
         case SelectionMode::PolygonSelection:
+            qDebug() << "BasePlotOpenGLWidget: Creating PolygonSelectionHandler";
             _selection_handler = std::make_unique<PolygonSelectionHandler>();
             break;
         case SelectionMode::LineIntersection:
+            qDebug() << "BasePlotOpenGLWidget: Creating LineSelectionHandler";
             _selection_handler = std::make_unique<LineSelectionHandler>();
+            qDebug() << "BasePlotOpenGLWidget: LineSelectionHandler created successfully";
             break;
     }
 
@@ -351,7 +362,6 @@ void BasePlotOpenGLWidget::renderOverlays() {
         }
     },
                _selection_handler);
-    requestThrottledUpdate();
 }
 
 void BasePlotOpenGLWidget::renderUI() {

@@ -11,6 +11,7 @@
 #include "DataManager/Entity/EntityGroupManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
 
 #include <QComboBox>
 #include <QDoubleSpinBox>
@@ -227,6 +228,164 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 
     // Expect both points selected
     REQUIRE(widget.getTotalSelectedPoints() >= 2);
+}
+
+TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGLWidget - line selection with line data", "[SpatialOverlay][LineSelection]") {
+    SpatialOverlayOpenGLWidget widget;
+    widget.resize(400, 300);
+    widget.show();
+    processEvents();
+
+    // Create line data with several line segments across the view
+    auto line_data = std::make_shared<LineData>();
+    
+    // Create a few lines at different positions
+    // Line 1: horizontal line across the middle
+    std::vector<Point2D<float>> line1_points = {
+        Point2D<float>{50.0f, 150.0f}, 
+        Point2D<float>{150.0f, 150.0f}, 
+        Point2D<float>{250.0f, 150.0f}
+    };
+    
+    // Line 2: diagonal line
+    std::vector<Point2D<float>> line2_points = {
+        Point2D<float>{100.0f, 100.0f}, 
+        Point2D<float>{200.0f, 200.0f}
+    };
+    
+    // Line 3: vertical line  
+    std::vector<Point2D<float>> line3_points = {
+        Point2D<float>{300.0f, 50.0f}, 
+        Point2D<float>{300.0f, 150.0f}, 
+        Point2D<float>{300.0f, 250.0f}
+    };
+
+    line_data->addAtTime(TimeFrameIndex(0), line1_points);
+    line_data->addAtTime(TimeFrameIndex(0), line2_points);
+    line_data->addAtTime(TimeFrameIndex(0), line3_points);
+
+    // Create a DataManager and register the LineData to set up EntityIds properly
+    auto data_manager = std::make_shared<DataManager>();
+    data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+    
+    // Set up entity context for proper EntityId generation
+    line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+    line_data->rebuildAllEntityIds();
+
+    std::unordered_map<QString, std::shared_ptr<LineData>> line_map{{QString("test_lines"), line_data}};
+    widget.setLineData(line_map);
+    processEvents();
+
+    // Explicitly reset view to establish proper projection bounds
+    widget.resetView();
+    processEvents();
+
+    REQUIRE(waitForValidProjection(widget, 1000));  // Use longer timeout
+
+    // Enter line selection mode
+    widget.setSelectionMode(SelectionMode::LineIntersection);
+    processEvents();
+
+    widget.raise();
+    widget.activateWindow();
+    widget.setFocus(Qt::OtherFocusReason);
+
+    // Draw a selection line that should intersect with the horizontal and diagonal lines
+    // Start point: above and to the left
+    QPoint start = worldToScreen(widget, 75.0f, 100.0f);
+    // End point: below and to the right, crossing through both line1 and line2
+    QPoint end = worldToScreen(widget, 225.0f, 200.0f);
+
+    std::cout << "Line selection test: drawing line from screen (" << start.x() << "," << start.y() 
+              << ") to (" << end.x() << "," << end.y() << ")" << std::endl;
+
+    // Simulate line selection: Ctrl+click and drag
+    QTest::mouseMove(&widget, start);
+    QTest::qWait(5);
+    QTest::mousePress(&widget, Qt::LeftButton, Qt::ControlModifier, start);
+    QTest::qWait(10);
+    
+    // Move to end point while holding the button down
+    QTest::mouseMove(&widget, end);
+    QTest::qWait(10);
+    
+    // Release to complete the selection
+    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::ControlModifier, end);
+    processEvents();
+
+    // Check if any lines were selected
+    // The selection line should intersect with at least the horizontal line (line1) 
+    // and possibly the diagonal line (line2)
+    size_t selected_lines = widget.getTotalSelectedLines();
+    std::cout << "Line selection test: selected " << selected_lines << " lines" << std::endl;
+    
+    // We expect at least one line to be selected (the horizontal line should definitely be hit)
+    REQUIRE(selected_lines >= 1);
+}
+
+TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGLWidget - line selection across entire view", "[SpatialOverlay][LineSelection]") {
+    SpatialOverlayOpenGLWidget widget;
+    widget.resize(400, 300);
+    widget.show();
+    processEvents();
+
+    // Create line data with a single obvious line across the middle of the view
+    auto line_data = std::make_shared<LineData>();
+    
+    // Single slightly diagonal line that spans most of the width with some height
+    std::vector<Point2D<float>> line_points = {
+        Point2D<float>{50.0f, 140.0f}, 
+        Point2D<float>{350.0f, 160.0f}
+    };
+
+    line_data->addAtTime(TimeFrameIndex(0), line_points);
+
+    // Create a DataManager and register the LineData
+    auto data_manager = std::make_shared<DataManager>();
+    data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+    line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+    line_data->rebuildAllEntityIds();
+
+    std::unordered_map<QString, std::shared_ptr<LineData>> line_map{{QString("test_lines"), line_data}};
+    widget.setLineData(line_map);
+    processEvents();
+
+    // Explicitly reset view to establish proper projection bounds
+    widget.resetView();
+    processEvents();
+
+    REQUIRE(waitForValidProjection(widget, 1000));  // Use longer timeout
+
+    // Enter line selection mode
+    widget.setSelectionMode(SelectionMode::LineIntersection);
+    processEvents();
+
+    widget.raise();
+    widget.activateWindow();
+    widget.setFocus(Qt::OtherFocusReason);
+
+    // Draw a vertical selection line that should definitely intersect the horizontal line
+    QPoint start = worldToScreen(widget, 200.0f, 50.0f);   // Top middle
+    QPoint end = worldToScreen(widget, 200.0f, 250.0f);    // Bottom middle
+
+    std::cout << "Line selection test (simple): drawing vertical line from (" << start.x() << "," << start.y() 
+              << ") to (" << end.x() << "," << end.y() << ")" << std::endl;
+
+    // Simulate line selection
+    QTest::mouseMove(&widget, start);
+    QTest::qWait(5);
+    QTest::mousePress(&widget, Qt::LeftButton, Qt::ControlModifier, start);
+    QTest::qWait(10);
+    QTest::mouseMove(&widget, end);
+    QTest::qWait(10);
+    QTest::mouseRelease(&widget, Qt::LeftButton, Qt::ControlModifier, end);
+    processEvents();
+
+    // This should definitely select the horizontal line
+    size_t selected_lines = widget.getTotalSelectedLines();
+    std::cout << "Line selection test (simple): selected " << selected_lines << " lines" << std::endl;
+    
+    REQUIRE(selected_lines >= 1);
 }
 
 TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGLWidget - grouping via context menu assigns selected points", "[SpatialOverlay][Grouping]") {

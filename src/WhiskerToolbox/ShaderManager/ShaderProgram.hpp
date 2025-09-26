@@ -18,6 +18,10 @@ public:
                   std::string const & geometryPath = "",
                   ShaderSourceType sourceType = ShaderSourceType::FileSystem);
 
+    // Constructor for compute shaders
+    ShaderProgram(std::string const & computePath,
+                  ShaderSourceType sourceType = ShaderSourceType::FileSystem);
+
     ~ShaderProgram();
 
     // Attempts to re-compile and re-link the program from its source files/resources.
@@ -36,6 +40,7 @@ public:
     [[nodiscard]] std::string const & getVertexPath() const { return m_vertexPath; }
     [[nodiscard]] std::string const & getFragmentPath() const { return m_fragmentPath; }
     [[nodiscard]] std::string const & getGeometryPath() const { return m_geometryPath; }
+    [[nodiscard]] std::string const & getComputePath() const { return m_computePath; }
 
     [[nodiscard]] QOpenGLShaderProgram * getNativeProgram() const { return m_program.get(); }
     [[nodiscard]] GLuint getProgramId() const { return m_program ? m_program->programId() : 0; }
@@ -48,13 +53,15 @@ private:
     std::unique_ptr<QOpenGLShaderProgram> m_program;
     std::map<std::string, GLint> m_uniformLocations;
 
-    std::string m_vertexPath, m_fragmentPath, m_geometryPath;
+    std::string m_vertexPath, m_fragmentPath, m_geometryPath, m_computePath;
     ShaderSourceType m_sourceType;
+    bool m_isComputeShader = false;
 
     // For hot-reloading (filesystem only)
     std::filesystem::file_time_type m_vertexTimestamp;
     std::filesystem::file_time_type m_fragmentTimestamp;
     std::filesystem::file_time_type m_geometryTimestamp;
+    std::filesystem::file_time_type m_computeTimestamp;
 };
 
 #endif// SHADERPROGRAM_HPP

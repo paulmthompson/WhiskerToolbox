@@ -26,6 +26,12 @@ public:
                      std::string const & geometryPath = "",
                      ShaderSourceType sourceType = ShaderSourceType::FileSystem);
 
+    // Load a compute shader program and assign it a friendly name.
+    // Returns true on initial successful compilation.
+    bool loadComputeProgram(std::string const & name,
+                           std::string const & computePath,
+                           ShaderSourceType sourceType = ShaderSourceType::FileSystem);
+
     // Retrieve a pointer to a loaded program for the current OpenGL context.
     ShaderProgram * getProgram(std::string const & name);
 

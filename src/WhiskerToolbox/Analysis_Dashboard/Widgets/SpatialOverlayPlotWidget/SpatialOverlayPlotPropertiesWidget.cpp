@@ -334,15 +334,7 @@ void SpatialOverlayPlotPropertiesWidget::onSelectionModeChanged(int index) {
     }
 
     // Get the SelectionMode from the combo box data
-    SelectionMode mode = SelectionMode::None;
-
-    if (index == 1) {
-        mode = SelectionMode::PointSelection;
-    } else if (index == 2) {
-        mode = SelectionMode::PolygonSelection;
-    } else if (index == 3) {
-        mode = SelectionMode::LineIntersection;
-    }
+    SelectionMode mode = static_cast<SelectionMode>(ui->selection_mode_combo->itemData(index).toInt());
 
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Setting selection mode to:" << static_cast<int>(mode);
 
@@ -386,15 +378,7 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
         return;
     }
 
-    SelectionMode mode = SelectionMode::None;
-
-    if (current_index == 1) {
-        mode = SelectionMode::PointSelection;
-    } else if (current_index == 2) {
-        mode = SelectionMode::PolygonSelection;
-    } else if (current_index == 3) {
-        mode = SelectionMode::LineIntersection;
-    }
+    SelectionMode mode = static_cast<SelectionMode>(ui->selection_mode_combo->itemData(current_index).toInt());
 
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Current selection mode:" << static_cast<int>(mode);
 
