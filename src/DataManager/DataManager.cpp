@@ -209,8 +209,8 @@ bool DataManager::setTime(TimeKey const & key, std::shared_ptr<TimeFrame> timefr
         if (_time_frames.find(data_key) != _time_frames.end()) {
             auto time_key = _time_frames[data_key];
             if (time_key == key) {
-                std::visit([this, timeframe](auto & x) {
-                    x->setTimeFrame(timeframe);
+                std::visit([this, key](auto & x) {
+                    x->setTimeFrame(_times[key]);
                 },
                            data);
             }

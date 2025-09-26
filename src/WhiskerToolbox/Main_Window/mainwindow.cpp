@@ -342,7 +342,7 @@ void MainWindow::_updateFrameCount() {
             auto new_timeframe = std::make_shared<TimeFrame>(t);
 
             _data_manager->removeTime(TimeKey("time"));
-            _data_manager->setTime(TimeKey("time"), new_timeframe);
+            _data_manager->setTime(TimeKey("time"), new_timeframe, true);
         } else {    
             std::cout << "The time vector is not empty, so we will not create a new time vector" << std::endl;
         
