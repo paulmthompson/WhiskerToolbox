@@ -265,7 +265,9 @@ public:
 
         //Rebuild the EntityIds
         if constexpr ((std::is_same_v<T, LineData>) || 
-            (std::is_same_v<T, PointData>)) {
+            (std::is_same_v<T, PointData>) ||
+            (std::is_same_v<T, DigitalEventSeries>) ||
+            (std::is_same_v<T, DigitalIntervalSeries>)) {
             //std::is_same_v<T, MaskData>) {
             std::get<std::shared_ptr<T>>(_data[key])->setIdentityContext(key, getEntityRegistry());
             std::get<std::shared_ptr<T>>(_data[key])->rebuildAllEntityIds();
@@ -282,7 +284,9 @@ public:
 
         //Rebuild the EntityIds
         if constexpr ((std::is_same_v<T, LineData>) || 
-        (std::is_same_v<T, PointData>)) {
+        (std::is_same_v<T, PointData>) ||
+        (std::is_same_v<T, DigitalEventSeries>) ||
+        (std::is_same_v<T, DigitalIntervalSeries>)) {
         //std::is_same_v<T, MaskData>) {
             std::get<std::shared_ptr<T>>(_data[key])->setIdentityContext(key, getEntityRegistry());
             std::get<std::shared_ptr<T>>(_data[key])->rebuildAllEntityIds();
