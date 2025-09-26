@@ -239,8 +239,20 @@ void bilateral_filter(cv::Mat & mat, BilateralOptions const& options) {
 }
 
 void median_filter(cv::Mat & mat, MedianOptions const& options) {
-    if (options.kernel_size >= 3 && options.kernel_size % 2 == 1) {
-        cv::medianBlur(mat, mat, options.kernel_size);
+    // Sanitize kernel size: odd and >= 3
+    int k = options.kernel_size;
+    if (k < 3) k = 3;
+    if ((k % 2) == 0) k += 1;
+
+    // If not 8-bit single-channel grayscale, cap at 5 per OpenCV docs
+    bool is_8bit_grayscale = (mat.depth() == CV_8U) && (mat.channels() == 1);
+    if (!is_8bit_grayscale && k > 5) {
+        // Ensure resulting value is odd and <= 5
+        k = 5;
+    }
+
+    if (k >= 3 && (k % 2) == 1) {
+        cv::medianBlur(mat, mat, k);
     }
 }
 

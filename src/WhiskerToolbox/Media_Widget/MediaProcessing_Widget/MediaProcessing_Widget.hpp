@@ -73,6 +73,9 @@ private:
 
     void _updateColormapAvailability();
 
+    // Ensure Median kernel UI honors OpenCV constraints depending on image type
+    void _updateMedianKernelConstraints();
+
 private slots:
     void _onContrastOptionsChanged(ContrastOptions const & options);
     void _onGammaOptionsChanged(GammaOptions const & options);
@@ -88,3 +91,4 @@ private slots:
 };
 
 #endif// MEDIAPROCESSING_WIDGET_HPP
+

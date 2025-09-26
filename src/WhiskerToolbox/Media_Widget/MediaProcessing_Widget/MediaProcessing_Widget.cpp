@@ -81,6 +81,9 @@ void MediaProcessing_Widget::setActiveKey(std::string const & key) {
 
     std::cout << "MediaProcessing_Widget active key set to: " << key << std::endl;
 
+    // Update constraints that depend on media properties
+    _updateMedianKernelConstraints();
+
     // Load the processing chain from the selected media
     _loadProcessingChainFromMedia();
 }
@@ -655,6 +658,9 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
     }
     auto options = options_opt.value();
 
+    // Before applying options, ensure UI constraints reflect current media properties
+    _updateMedianKernelConstraints();
+
     // Check each processing step and update options accordingly
     // Note: The actual parameter values are stored in the lambda closures
     // so we can only determine if steps are active, not their exact parameters
@@ -725,4 +731,22 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
     _updateColormapAvailability();
 
     std::cout << "Processing chain loaded and UI updated" << std::endl;
+}
+
+// New helper to update median filter UI constraints based on media bit depth and format
+void MediaProcessing_Widget::_updateMedianKernelConstraints() {
+    if (!_median_widget || _active_key.empty()) {
+        return;
+    }
+
+    auto media_data = _data_manager->getData<MediaData>(_active_key);
+    if (!media_data) {
+        return;
+    }
+
+    bool is_8bit_grayscale = media_data->is8Bit() && (media_data->getFormat() == MediaData::DisplayFormat::Gray);
+    _median_widget->setKernelConstraints(is_8bit_grayscale);
+
+    std::cout << "Median kernel constraints updated - 8-bit grayscale: "
+              << (is_8bit_grayscale ? "YES" : "NO") << std::endl;
 }

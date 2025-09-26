@@ -34,6 +34,14 @@ public:
      */
     void setOptions(MedianOptions const& options);
 
+    /**
+     * @brief Configure kernel size constraints according to image type
+     * If the image is 8-bit grayscale, larger odd sizes are allowed (default max).
+     * Otherwise, kernel size must be odd and <= 5 as per OpenCV constraints.
+     * @param is_8bit_grayscale true if image is 8-bit and single channel
+     */
+    void setKernelConstraints(bool is_8bit_grayscale);
+
 signals:
     /**
      * @brief Emitted when any median filter option changes
@@ -50,6 +58,11 @@ private:
 
     void _updateOptions();
     void _blockSignalsAndSetValues(MedianOptions const& options);
+    void _enforceOddAndClamp();
+
+    // Track constraint mode to avoid redundant updates
+    bool _is_8bit_grayscale{true};
 };
 
-#endif // MEDIAN_WIDGET_HPP 
+#endif // MEDIAN_WIDGET_HPP
+
