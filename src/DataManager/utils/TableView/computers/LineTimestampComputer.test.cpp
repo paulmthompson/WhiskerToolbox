@@ -313,10 +313,10 @@ TEST_CASE("DM - TV - LineTimestampComputer expansion with coexisting analog colu
     REQUIRE(analog.size() == 4);
 
     // At t=1 (row 1), line exists; others should be zeros for line columns
-    REQUIRE(lineTimestamps[0] == 0);// t=0, no line
+    REQUIRE(lineTimestamps[0] == -1);// t=0, no line
     REQUIRE(lineTimestamps[1] == 1);// t=1, line exists
-    REQUIRE(lineTimestamps[2] == 0);// t=2, no line
-    REQUIRE(lineTimestamps[3] == 0);// t=3, no line
+    REQUIRE(lineTimestamps[2] == -1);// t=2, no line
+    REQUIRE(lineTimestamps[3] == -1);// t=3, no line
 
     REQUIRE(analog[0] == Catch::Approx(0.0));
     REQUIRE(analog[1] == Catch::Approx(10.0));

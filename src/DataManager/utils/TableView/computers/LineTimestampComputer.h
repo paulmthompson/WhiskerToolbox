@@ -66,20 +66,24 @@ public:
             TimeFrameIndex const tfIndex = indices[r];
             auto const this_time_entityIds = m_lineSource->getEntityIdsAtTime(tfIndex, targetTF);
 
-            // Prefer direct entity access if entity index is present
-            if (entityIdx[r].has_value()) {
-                entityIds.push_back(this_time_entityIds[*entityIdx[r]]);
+            // Check if lines exist at this timestamp
+            if (this_time_entityIds.empty()) {
+                // No lines at this timestamp, return -1
+                results.push_back(-1);
+                entityIds.push_back(0);
             } else {
-                // Use first entity if no specific entity index
-                if (!this_time_entityIds.empty()) {
-                    entityIds.push_back(this_time_entityIds[0]);
+                // Lines exist at this timestamp
+                // Prefer direct entity access if entity index is present
+                if (entityIdx[r].has_value()) {
+                    entityIds.push_back(this_time_entityIds[*entityIdx[r]]);
                 } else {
-                    entityIds.push_back(0);
+                    // Use first entity if no specific entity index
+                    entityIds.push_back(this_time_entityIds[0]);
                 }
-            }
 
-            // Convert TimeFrameIndex to int64_t timestamp
-            results.push_back(static_cast<int64_t>(tfIndex.getValue()));
+                // Convert TimeFrameIndex to int64_t timestamp
+                results.push_back(static_cast<int64_t>(tfIndex.getValue()));
+            }
         }
 
         return {results, entityIds};
