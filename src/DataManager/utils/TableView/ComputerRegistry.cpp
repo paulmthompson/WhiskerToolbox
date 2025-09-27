@@ -11,6 +11,7 @@
 #include "computers/IntervalPropertyComputer.h"
 #include "computers/IntervalReductionComputer.h"
 #include "computers/LineSamplingMultiComputer.h"
+#include "computers/LineTimestampComputer.h"
 #include "computers/TimestampInIntervalComputer.h"
 #include "computers/TimestampValueComputer.h"
 #include "interfaces/IEventSource.h"
@@ -778,6 +779,27 @@ void ComputerRegistry::registerBuiltInComputers() {
         };
 
         registerMultiComputer(std::move(info), std::move(factory));
+    }
+
+    // LineTimestampComputer - Extract timestamps from line data
+    {
+        ComputerInfo info("Line Timestamp",
+                          "Extract timestamps from line data",
+                          typeid(int64_t),
+                          "int64_t",
+                          RowSelectorType::Timestamp,
+                          typeid(std::shared_ptr<ILineSource>));
+
+        ComputerFactory factory = [](DataSourceVariant const & source,
+                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
+            if (auto lineSrc = std::get_if<std::shared_ptr<ILineSource>>(&source)) {
+                auto computer = std::make_unique<LineTimestampComputer>(*lineSrc, (*lineSrc)->getName(), (*lineSrc)->getTimeFrame());
+                return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
+            }
+            return nullptr;
+        };
+
+        registerComputer(std::move(info), std::move(factory));
     }
 
     // IntervalOverlapComputer - AssignID operation

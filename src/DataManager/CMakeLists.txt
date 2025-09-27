@@ -132,6 +132,7 @@ set(DATAMANAGER_SOURCES
         utils/TableView/computers/TimestampValueComputer.h
         utils/TableView/computers/TimestampValueComputer.cpp
         utils/TableView/computers/LineSamplingMultiComputer.h
+        utils/TableView/computers/LineTimestampComputer.h
         utils/TableView/computers/AnalogTimestampOffsetsMultiComputer.h
         utils/TableView/computers/AnalogTimestampOffsetsMultiComputer.cpp
         utils/TableView/computers/AnalogSliceGathererComputer.h

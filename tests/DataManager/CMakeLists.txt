@@ -43,7 +43,8 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/AnalogTimestampOffsetsMultiComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/TimestampInIntervalComputer.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/TimestampValueComputer.test.cpp
-
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/LineTimestampComputer.test.cpp
+        
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/transforms/PCATransform.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/adapters/LineDataAdapter.test.cpp
