@@ -4,16 +4,17 @@
 #include "DataManager/utils/TableView/TableInfo.hpp"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
 
-#include <QStringList>
-#include <QWidget>
-#include <QVBoxLayout>
 #include <QComboBox>
-#include <QLineEdit>
 #include <QLabel>
+#include <QLineEdit>
+#include <QStringList>
+#include <QVBoxLayout>
+#include <QWidget>
 
-#include <memory>
-#include <map>
 #include <QMap>
+#include <fstream>
+#include <map>
+#include <memory>
 
 class DataManager;
 class DataManagerExtension;
@@ -116,16 +117,16 @@ private slots:
      * @brief Handle changes to the computer tree (checkbox state changes)
      */
     void onComputersTreeItemChanged();
-    
+
     /**
      * @brief Handle changes to column names in the tree
      */
     void onComputersTreeItemEdited(QTreeWidgetItem * item, int column);
-    
+
     /**
      * @brief Handle group mode toggle button
      */
-    void onGroupModeToggled(bool enabled);    /**
+    void onGroupModeToggled(bool enabled); /**
      * @brief Handle building the table
      */
     void onBuildTable();
@@ -149,19 +150,19 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
     QString _current_table_id;
-    bool _loading_column_configuration = false; // Flag to prevent infinite loops
-    bool _updating_computers_tree = false; // Flag to prevent recursive updates during tree refresh
-    QMap<QString, QStringList> _table_column_order; // Persist preview column order per table id
-    
+    bool _loading_column_configuration = false;    // Flag to prevent infinite loops
+    bool _updating_computers_tree = false;         // Flag to prevent recursive updates during tree refresh
+    QMap<QString, QStringList> _table_column_order;// Persist preview column order per table id
+
     // Grouping functionality
-    std::string _grouping_pattern = "(.+)_\\d+$"; // Default pattern: name_number (same as Feature_Tree_Widget)
-    bool _group_mode = true; // Toggle between group and individual mode
-    
+    std::string _grouping_pattern = "(.+)_\\d+$";// Default pattern: name_number (same as Feature_Tree_Widget)
+    bool _group_mode = true;                     // Toggle between group and individual mode
+
     // Parameter UI management
     QWidget * _parameter_widget = nullptr;
     QVBoxLayout * _parameter_layout = nullptr;
-    std::map<std::string, QWidget*> _parameter_controls;
-    std::map<QTreeWidgetItem*, QWidget*> _computer_parameter_widgets; // Map computer items to their parameter widgets
+    std::map<std::string, QWidget *> _parameter_controls;
+    std::map<QTreeWidgetItem *, QWidget *> _computer_parameter_widgets;// Map computer items to their parameter widgets
 
     TableInfoWidget * _table_info_widget = nullptr;
     Section * _table_info_section = nullptr;
@@ -171,7 +172,7 @@ private:
     Section * _table_export_section = nullptr;
     TableJSONWidget * _table_json_widget = nullptr;
     Section * _table_json_section = nullptr;
-    
+
     // Preview support
     TableViewerWidget * _table_viewer = nullptr;
     QTimer * _preview_debounce_timer = nullptr;
@@ -195,7 +196,7 @@ private:
      * @brief Refresh the computers tree with available data sources and computers
      */
     void refreshComputersTree();
-    
+
     /**
      * @brief Get available data sources from the data manager
      * @return List of data source names
@@ -208,9 +209,9 @@ private:
      * @param data_manager_extension The data manager extension to use for lookups
      * @return Pair of optional DataSourceVariant and RowSelectorType
      */
-    std::pair<std::optional<DataSourceVariant>, RowSelectorType> 
-    createDataSourceVariant(const QString& data_source_string, 
-                           std::shared_ptr<DataManagerExtension> data_manager_extension) const;
+    std::pair<std::optional<DataSourceVariant>, RowSelectorType>
+    createDataSourceVariant(QString const & data_source_string,
+                            std::shared_ptr<DataManagerExtension> data_manager_extension) const;
 
     /**
      * @brief Create a row selector based on the selected row source
@@ -225,7 +226,7 @@ private:
      * @param data_source The data source string
      * @return True if compatible
      */
-    bool isComputerCompatibleWithDataSource(const std::string& computer_name, const QString& data_source) const;
+    bool isComputerCompatibleWithDataSource(std::string const & computer_name, QString const & data_source) const;
 
     /**
      * @brief Generate a default column name for a data source and computer combination
@@ -233,30 +234,30 @@ private:
      * @param computer_name The computer name
      * @return Generated column name
      */
-    QString generateDefaultColumnName(const QString& data_source, const QString& computer_name) const;
-    
+    QString generateDefaultColumnName(QString const & data_source, QString const & computer_name) const;
+
     /**
      * @brief Extract group name from data source using grouping pattern
      * @param data_source The data source string to extract group from
      * @return The extracted group name, or the original string if no group found
      */
-    std::string extractGroupName(const QString& data_source) const;
-    
+    std::string extractGroupName(QString const & data_source) const;
+
     /**
      * @brief Create parameter UI widget for a computer with parameters
      * @param computer_name The name of the computer
      * @param parameter_descriptors The parameter descriptors from ComputerInfo
      * @return Widget containing parameter controls, or nullptr if no parameters
      */
-    QWidget* createParameterWidget(const QString& computer_name, 
-                                   const std::vector<std::unique_ptr<IParameterDescriptor>>& parameter_descriptors);
-    
+    QWidget * createParameterWidget(QString const & computer_name,
+                                    std::vector<std::unique_ptr<IParameterDescriptor>> const & parameter_descriptors);
+
     /**
      * @brief Get parameter values from a computer's parameter widget
      * @param computer_name The name of the computer
      * @return Map of parameter name to parameter value
      */
-    std::map<std::string, std::string> getParameterValues(const QString& computer_name) const;
+    std::map<std::string, std::string> getParameterValues(QString const & computer_name) const;
 
     // Helper methods for the new tree-based approach
     void loadTableInfo(QString const & table_id);
@@ -274,12 +275,18 @@ private:
     std::vector<std::string> parseCommaSeparatedList(QString const & text) const;
     QString promptSaveCsvFilename() const;
     bool addColumnToBuilder(TableViewBuilder & builder, ColumnInfo const & column_info);
+
+    /**
+     * @brief Format vector data for CSV export
+     * @param file Output file stream
+     * @param values Vector of values to format
+     * @param precision Decimal precision for floating point values
+     */
+    template<typename T>
+    void formatVectorForCsv(std::ofstream & file, std::vector<T> const & values, int precision);
     void setJsonTemplateFromCurrentState();
     void applyJsonTemplateToUI(QString const & jsonText);
-    friend class TableDesignerWidgetJSONTestAccessor; // test helper
-   
+    friend class TableDesignerWidgetJSONTestAccessor;// test helper
 };
 
 #endif// TABLEDESIGNERWIDGET_HPP
-
-

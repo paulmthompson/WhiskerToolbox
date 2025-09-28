@@ -101,9 +101,8 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     });
 
     connectSignals();
-    
 
-    
+
     // Initialize UI to a clean state, then populate controls
     clearUI();
     refreshTableCombo();
@@ -648,43 +647,51 @@ void TableDesignerWidget::onExportCsv() {
         for (size_t r = 0; r < rows; ++r) {
             for (size_t c = 0; c < names.size(); ++c) {
                 if (c > 0) file << delim;
-                bool wrote = false;
-                // Try known scalar types in order
+
+                // Use efficient visitColumnData approach instead of try/catch
                 try {
-                    auto const & vals = view->getColumnValues<double>(names[c].c_str());
-                    if (r < vals.size()) {
-                        file << vals[r];
-                        wrote = true;
-                    }
-                } catch (...) {}
-                if (!wrote) {
-                    try {
-                        auto const & vals = view->getColumnValues<int>(names[c].c_str());
-                        if (r < vals.size()) {
-                            file << vals[r];
-                            wrote = true;
+                    view->visitColumnData(names[c], [&file, r, this](auto const & vec) {
+                        using VecT = std::decay_t<decltype(vec)>;
+                        using ElemT = typename VecT::value_type;
+
+                        if (r >= vec.size()) {
+                            if constexpr (std::is_same_v<ElemT, double>) file << "NaN";
+                            else if constexpr (std::is_same_v<ElemT, float>)
+                                file << "NaN";
+                            else if constexpr (std::is_same_v<ElemT, int>)
+                                file << "NaN";
+                            else if constexpr (std::is_same_v<ElemT, int64_t>)
+                                file << "NaN";
+                            else if constexpr (std::is_same_v<ElemT, bool>)
+                                file << "false";
+                            else
+                                file << "N/A";
+                            return;
                         }
-                    } catch (...) {}
-                }
-                if (!wrote) {
-                    try {
-                        auto const & vals = view->getColumnValues<int64_t>(names[c].c_str());
-                        if (r < vals.size()) {
-                            file << vals[r];
-                            wrote = true;
+
+                        if constexpr (std::is_same_v<ElemT, double>) {
+                            file << std::fixed << std::setprecision(3) << vec[r];
+                        } else if constexpr (std::is_same_v<ElemT, float>) {
+                            file << std::fixed << std::setprecision(3) << vec[r];
+                        } else if constexpr (std::is_same_v<ElemT, int>) {
+                            file << vec[r];
+                        } else if constexpr (std::is_same_v<ElemT, int64_t>) {
+                            file << static_cast<int64_t>(vec[r]);
+                        } else if constexpr (std::is_same_v<ElemT, bool>) {
+                            file << (vec[r] ? 1 : 0);
+                        } else if constexpr (
+                                std::is_same_v<ElemT, std::vector<double>> ||
+                                std::is_same_v<ElemT, std::vector<int>> ||
+                                std::is_same_v<ElemT, std::vector<float>>) {
+                            // Format vector data as comma-separated values
+                            formatVectorForCsv(file, vec[r], 3);
+                        } else {
+                            file << "?";
                         }
-                    } catch (...) {}
+                    });
+                } catch (...) {
+                    file << "Error";
                 }
-                if (!wrote) {
-                    try {
-                        auto const & vals = view->getColumnValues<bool>(names[c].c_str());
-                        if (r < vals.size()) {
-                            file << (vals[r] ? 1 : 0);
-                            wrote = true;
-                        }
-                    } catch (...) {}
-                }
-                if (!wrote) file << "NaN";
             }
             file << eol;
         }
@@ -697,6 +704,25 @@ void TableDesignerWidget::onExportCsv() {
 
 QString TableDesignerWidget::promptSaveCsvFilename() const {
     return QFileDialog::getSaveFileName(const_cast<TableDesignerWidget *>(this), "Export Table to CSV", QString(), "CSV Files (*.csv)");
+}
+
+template<typename T>
+void TableDesignerWidget::formatVectorForCsv(std::ofstream & file, std::vector<T> const & values, int precision) {
+    if (values.empty()) {
+        file << "[]";
+        return;
+    }
+
+    file << "[";
+    for (size_t i = 0; i < values.size(); ++i) {
+        if constexpr (std::is_same_v<T, double> || std::is_same_v<T, float>) {
+            file << std::fixed << std::setprecision(precision) << values[i];
+        } else {
+            file << values[i];
+        }
+        if (i + 1 < values.size()) file << ",";
+    }
+    file << "]";
 }
 
 void TableDesignerWidget::onSaveTableInfo() {
@@ -1394,7 +1420,7 @@ void TableDesignerWidget::refreshComputersTree() {
 
     ui->computers_tree->clear();
     ui->computers_tree->setHeaderLabels({"Data Source / Computer", "Enabled", "Column Name", "Parameters"});
-    
+
     // Clean up parameter widgets
     _computer_parameter_widgets.clear();
     _parameter_controls.clear();
@@ -1419,57 +1445,57 @@ void TableDesignerWidget::refreshComputersTree() {
     if (_group_mode) {
         // Group similar data sources together
         std::map<std::string, QStringList> groups;
-        
+
         // First pass: group data sources by their extracted group name
-        for (QString const & data_source : data_sources) {
+        for (QString const & data_source: data_sources) {
             std::string group_name = extractGroupName(data_source);
             groups[group_name].append(data_source);
         }
-        
+
         // Second pass: create tree structure
-        for (auto const & [group_name, group_members] : groups) {
+        for (auto const & [group_name, group_members]: groups) {
             if (group_members.size() > 1) {
                 // Create group item
                 auto * group_item = new QTreeWidgetItem(ui->computers_tree);
                 group_item->setText(0, QString::fromStdString(group_name) + " (Group)");
                 group_item->setFlags(Qt::ItemIsEnabled);
-                group_item->setExpanded(false); // Start collapsed
-                
+                group_item->setExpanded(false);// Start collapsed
+
                 // Get computers available for this group (use first member to determine available computers)
                 auto [first_variant, row_selector_type] = createDataSourceVariant(group_members.first(), data_manager_extension);
                 if (!first_variant.has_value()) {
                     continue;
                 }
-                
+
                 auto available_computers = computer_registry.getAvailableComputers(row_selector_type, first_variant.value());
-                
+
                 // Add computers as children of the group
-                for (auto const & computer_info : available_computers) {
+                for (auto const & computer_info: available_computers) {
                     auto * computer_item = new QTreeWidgetItem(group_item);
                     computer_item->setText(0, QString::fromStdString(computer_info.name));
                     computer_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable);
                     computer_item->setCheckState(1, Qt::Unchecked);
-                    
+
                     // Generate default column name using group name
                     QString default_name = QString("%1_%2").arg(QString::fromStdString(group_name), QString::fromStdString(computer_info.name));
                     computer_item->setText(2, default_name);
                     computer_item->setFlags(computer_item->flags() | Qt::ItemIsEditable);
-                    
+
                     // Store group members and computer name for later use
-                    computer_item->setData(0, Qt::UserRole, group_members.join("||")); // Store all group members
+                    computer_item->setData(0, Qt::UserRole, group_members.join("||"));// Store all group members
                     computer_item->setData(1, Qt::UserRole, QString::fromStdString(computer_info.name));
-                    computer_item->setData(2, Qt::UserRole, true); // Mark as group computer
-                    
+                    computer_item->setData(2, Qt::UserRole, true);// Mark as group computer
+
                     // Create parameter widget if computer has parameters
                     if (!computer_info.parameterDescriptors.empty()) {
-                        auto* param_widget = createParameterWidget(QString::fromStdString(computer_info.name), 
-                                                                   computer_info.parameterDescriptors);
+                        auto * param_widget = createParameterWidget(QString::fromStdString(computer_info.name),
+                                                                    computer_info.parameterDescriptors);
                         if (param_widget) {
                             ui->computers_tree->setItemWidget(computer_item, 3, param_widget);
                             _computer_parameter_widgets[computer_item] = param_widget;
                         }
                     }
-                    
+
                     // Restore previous state if present (use first member for key)
                     std::string prev_key = (group_members.first() + "||" + QString::fromStdString(computer_info.name)).toStdString();
                     auto it_prev = previous_states.find(prev_key);
@@ -1487,38 +1513,38 @@ void TableDesignerWidget::refreshComputersTree() {
                 data_source_item->setText(0, data_source);
                 data_source_item->setFlags(Qt::ItemIsEnabled);
                 data_source_item->setExpanded(false);
-                
+
                 auto [data_source_variant, row_selector_type] = createDataSourceVariant(data_source, data_manager_extension);
                 if (!data_source_variant.has_value()) {
                     continue;
                 }
-                
+
                 auto available_computers = computer_registry.getAvailableComputers(row_selector_type, data_source_variant.value());
-                
-                for (auto const & computer_info : available_computers) {
+
+                for (auto const & computer_info: available_computers) {
                     auto * computer_item = new QTreeWidgetItem(data_source_item);
                     computer_item->setText(0, QString::fromStdString(computer_info.name));
                     computer_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable);
                     computer_item->setCheckState(1, Qt::Unchecked);
-                    
+
                     QString default_name = generateDefaultColumnName(data_source, QString::fromStdString(computer_info.name));
                     computer_item->setText(2, default_name);
                     computer_item->setFlags(computer_item->flags() | Qt::ItemIsEditable);
-                    
+
                     computer_item->setData(0, Qt::UserRole, data_source);
                     computer_item->setData(1, Qt::UserRole, QString::fromStdString(computer_info.name));
-                    computer_item->setData(2, Qt::UserRole, false); // Mark as individual computer
-                    
+                    computer_item->setData(2, Qt::UserRole, false);// Mark as individual computer
+
                     // Create parameter widget if computer has parameters
                     if (!computer_info.parameterDescriptors.empty()) {
-                        auto* param_widget = createParameterWidget(QString::fromStdString(computer_info.name), 
-                                                                   computer_info.parameterDescriptors);
+                        auto * param_widget = createParameterWidget(QString::fromStdString(computer_info.name),
+                                                                    computer_info.parameterDescriptors);
                         if (param_widget) {
                             ui->computers_tree->setItemWidget(computer_item, 3, param_widget);
                             _computer_parameter_widgets[computer_item] = param_widget;
                         }
                     }
-                    
+
                     std::string prev_key = (data_source + "||" + QString::fromStdString(computer_info.name)).toStdString();
                     auto it_prev = previous_states.find(prev_key);
                     if (it_prev != previous_states.end()) {
@@ -1564,12 +1590,12 @@ void TableDesignerWidget::refreshComputersTree() {
                 // Store data source and computer name for later use
                 computer_item->setData(0, Qt::UserRole, data_source);
                 computer_item->setData(1, Qt::UserRole, QString::fromStdString(computer_info.name));
-                computer_item->setData(2, Qt::UserRole, false); // Mark as individual computer
+                computer_item->setData(2, Qt::UserRole, false);// Mark as individual computer
 
                 // Create parameter widget if computer has parameters
                 if (!computer_info.parameterDescriptors.empty()) {
-                    auto* param_widget = createParameterWidget(QString::fromStdString(computer_info.name), 
-                                                               computer_info.parameterDescriptors);
+                    auto * param_widget = createParameterWidget(QString::fromStdString(computer_info.name),
+                                                                computer_info.parameterDescriptors);
                     if (param_widget) {
                         ui->computers_tree->setItemWidget(computer_item, 3, param_widget);
                         _computer_parameter_widgets[computer_item] = param_widget;
@@ -1894,15 +1920,15 @@ std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
                 QString computer_name = computer_item->data(1, Qt::UserRole).toString();
                 QString column_name = computer_item->text(2);
                 bool is_group_computer = computer_item->data(2, Qt::UserRole).toBool();
-                
+
                 // Get parameter values for this computer
                 std::map<std::string, std::string> parameters = getParameterValues(computer_name);
 
                 if (is_group_computer) {
                     // This is a group computer - create columns for all members
                     QStringList group_members = data_source.split("||");
-                    
-                    for (QString const & member : group_members) {
+
+                    for (QString const & member: group_members) {
                         // Generate individual column name (e.g., "spike_1_Mean", "spike_2_Mean")
                         QString individual_column_name = generateDefaultColumnName(member, computer_name);
 
@@ -1952,7 +1978,7 @@ std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
                         // Clean the data source name before generating column name
                         QString clean_data_source = data_source;
                         if (clean_data_source.startsWith("lines:")) {
-                            clean_data_source = clean_data_source.mid(6); // Remove "lines:" prefix
+                            clean_data_source = clean_data_source.mid(6);// Remove "lines:" prefix
                         }
                         column_name = generateDefaultColumnName(clean_data_source, computer_name);
                     }
@@ -2055,7 +2081,7 @@ QString TableDesignerWidget::generateDefaultColumnName(QString const & data_sour
     return QString("%1_%2").arg(source_name, computer_name);
 }
 
-std::string TableDesignerWidget::extractGroupName(const QString& data_source) const {
+std::string TableDesignerWidget::extractGroupName(QString const & data_source) const {
     QString source_name = data_source;
 
     // Extract the actual name from prefixed data sources
@@ -2080,12 +2106,12 @@ std::string TableDesignerWidget::extractGroupName(const QString& data_source) co
         return matches[1].str();
     }
 
-    return key; // Return the key itself if no match
+    return key;// Return the key itself if no match
 }
 
 void TableDesignerWidget::onGroupModeToggled(bool enabled) {
     _group_mode = enabled;
-    
+
     // Update button text to reflect current mode
     if (enabled) {
         ui->group_mode_toggle_btn->setText("Group Mode");
@@ -2094,113 +2120,118 @@ void TableDesignerWidget::onGroupModeToggled(bool enabled) {
         ui->group_mode_toggle_btn->setText("Individual Mode");
         ui->computers_info_label->setText("Select computers by checking the boxes. Each data source will be handled individually.");
     }
-    
+
     // Refresh the tree to apply the new grouping mode
     refreshComputersTree();
 }
 
-QWidget* TableDesignerWidget::createParameterWidget(const QString& computer_name, 
-                                                     const std::vector<std::unique_ptr<IParameterDescriptor>>& parameter_descriptors) {
+QWidget * TableDesignerWidget::createParameterWidget(QString const & computer_name,
+                                                     std::vector<std::unique_ptr<IParameterDescriptor>> const & parameter_descriptors) {
     if (parameter_descriptors.empty()) {
         return nullptr;
     }
-    
-    auto* widget = new QWidget();
-    auto* layout = new QHBoxLayout(widget);
+
+    auto * widget = new QWidget();
+    auto * layout = new QHBoxLayout(widget);
     layout->setContentsMargins(2, 2, 2, 2);
     layout->setSpacing(4);
-    
-    for (const auto& param_desc : parameter_descriptors) {
+
+    for (auto const & param_desc: parameter_descriptors) {
         QString param_name = QString::fromStdString(param_desc->getName());
         QString param_key = computer_name + "::" + param_name;
-        
+
         // Add parameter label
-        auto* label = new QLabel(QString::fromStdString(param_desc->getName()) + ":");
+        auto * label = new QLabel(QString::fromStdString(param_desc->getName()) + ":");
         label->setToolTip(QString::fromStdString(param_desc->getDescription()));
         layout->addWidget(label);
-        
+
         if (param_desc->getUIHint() == "enum") {
             // Create combo box for enum parameters
-            auto* combo = new QComboBox();
-            combo->setObjectName(param_key); // Store parameter key for retrieval
-            
+            auto * combo = new QComboBox();
+            combo->setObjectName(param_key);// Store parameter key for retrieval
+
             auto ui_props = param_desc->getUIProperties();
             QString options_str = QString::fromStdString(ui_props["options"]);
             QString default_value = QString::fromStdString(ui_props["default"]);
-            
+
             QStringList options = options_str.split(',', Qt::SkipEmptyParts);
             combo->addItems(options);
-            
+
             // Set default value
             int default_index = combo->findText(default_value);
             if (default_index >= 0) {
                 combo->setCurrentIndex(default_index);
             }
-            
+
             combo->setToolTip(QString::fromStdString(param_desc->getDescription()));
             layout->addWidget(combo);
-            
+
             // Store the widget for parameter retrieval
             _parameter_controls[param_key.toStdString()] = combo;
-            
+
         } else if (param_desc->getUIHint() == "number") {
             // Create spin box for numeric parameters
-            auto* spinbox = new QSpinBox();
+            auto * spinbox = new QSpinBox();
             spinbox->setObjectName(param_key);
-            
+
             auto ui_props = param_desc->getUIProperties();
             QString default_str = QString::fromStdString(ui_props["default"]);
             QString min_str = QString::fromStdString(ui_props["min"]);
             QString max_str = QString::fromStdString(ui_props["max"]);
-            
+
             if (!min_str.isEmpty()) spinbox->setMinimum(min_str.toInt());
             if (!max_str.isEmpty()) spinbox->setMaximum(max_str.toInt());
             if (!default_str.isEmpty()) spinbox->setValue(default_str.toInt());
-            
+
             spinbox->setToolTip(QString::fromStdString(param_desc->getDescription()));
             layout->addWidget(spinbox);
-            
+
             _parameter_controls[param_key.toStdString()] = spinbox;
-            
+
         } else {
             // Default to text input
-            auto* lineedit = new QLineEdit();
+            auto * lineedit = new QLineEdit();
             lineedit->setObjectName(param_key);
-            
+
             auto ui_props = param_desc->getUIProperties();
             QString default_value = QString::fromStdString(ui_props["default"]);
             lineedit->setText(default_value);
-            
+
             lineedit->setToolTip(QString::fromStdString(param_desc->getDescription()));
             layout->addWidget(lineedit);
-            
+
             _parameter_controls[param_key.toStdString()] = lineedit;
         }
     }
-    
+
     return widget;
 }
 
-std::map<std::string, std::string> TableDesignerWidget::getParameterValues(const QString& computer_name) const {
+std::map<std::string, std::string> TableDesignerWidget::getParameterValues(QString const & computer_name) const {
     std::map<std::string, std::string> parameters;
-    
+
     // Look for parameter controls with this computer name prefix
     QString prefix = computer_name + "::";
-    
-    for (const auto& [key, widget] : _parameter_controls) {
+
+    for (auto const & [key, widget]: _parameter_controls) {
         QString key_str = QString::fromStdString(key);
         if (key_str.startsWith(prefix)) {
             QString param_name = key_str.mid(prefix.length());
-            
-            if (auto* combo = qobject_cast<QComboBox*>(widget)) {
+
+            if (auto * combo = qobject_cast<QComboBox *>(widget)) {
                 parameters[param_name.toStdString()] = combo->currentText().toStdString();
-            } else if (auto* spinbox = qobject_cast<QSpinBox*>(widget)) {
+            } else if (auto * spinbox = qobject_cast<QSpinBox *>(widget)) {
                 parameters[param_name.toStdString()] = QString::number(spinbox->value()).toStdString();
-            } else if (auto* lineedit = qobject_cast<QLineEdit*>(widget)) {
+            } else if (auto * lineedit = qobject_cast<QLineEdit *>(widget)) {
                 parameters[param_name.toStdString()] = lineedit->text().toStdString();
             }
         }
     }
-    
+
     return parameters;
 }
+
+// Explicit template instantiations for formatVectorForCsv
+template void TableDesignerWidget::formatVectorForCsv<double>(std::ofstream & file, std::vector<double> const & values, int precision);
+template void TableDesignerWidget::formatVectorForCsv<int>(std::ofstream & file, std::vector<int> const & values, int precision);
+template void TableDesignerWidget::formatVectorForCsv<float>(std::ofstream & file, std::vector<float> const & values, int precision);
