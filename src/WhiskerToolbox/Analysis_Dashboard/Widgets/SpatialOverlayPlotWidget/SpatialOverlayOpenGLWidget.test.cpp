@@ -430,7 +430,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
 
     // Attach a GroupManager with EntityGroupManager
     auto entity_group_manager = data_manager->getEntityGroupManager();
-    GroupManager gm(entity_group_manager, nullptr);
+    GroupManager gm(entity_group_manager, data_manager, nullptr);
     widget.setGroupManager(&gm);
 
     // Ensure context menu shows non-modally in tests

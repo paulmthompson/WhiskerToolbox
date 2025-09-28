@@ -394,6 +394,21 @@ std::optional<DataTypeVariant> DataManager::getDataVariant(std::string const & k
 void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey const & time_key) {
     _data[key] = data;
     setTimeKey(key, time_key);
+
+    if (std::holds_alternative<std::shared_ptr<LineData>>(_data[key])) {
+        std::get<std::shared_ptr<LineData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+        std::get<std::shared_ptr<LineData>>(_data[key])->rebuildAllEntityIds();
+    } else if (std::holds_alternative<std::shared_ptr<PointData>>(_data[key])) {
+        std::get<std::shared_ptr<PointData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+        std::get<std::shared_ptr<PointData>>(_data[key])->rebuildAllEntityIds();
+    } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(_data[key])) {
+        std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+        std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->rebuildAllEntityIds();
+    } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(_data[key])) {
+        std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+        std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->rebuildAllEntityIds();
+    } 
+
     _notifyObservers();
 }
 

@@ -218,7 +218,7 @@ protected:
         if (!entity_group_manager) {
             return nullptr;
         }
-        return std::make_unique<GroupManager>(entity_group_manager);
+        return std::make_unique<GroupManager>(entity_group_manager, data_manager);
     }
     
     std::unique_ptr<QApplication> app;

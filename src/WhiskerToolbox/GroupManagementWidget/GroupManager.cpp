@@ -1,6 +1,9 @@
 #include "GroupManager.hpp"
 
 #include "DataManager/Entity/EntityGroupManager.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
 
 #include <QDebug>
 
@@ -17,12 +20,14 @@ QVector<QColor> const GroupManager::DEFAULT_COLORS = {
         QColor(23, 190, 207)  // Cyan
 };
 
-GroupManager::GroupManager(EntityGroupManager * entity_group_manager, QObject * parent)
+GroupManager::GroupManager(EntityGroupManager * entity_group_manager, std::shared_ptr<DataManager> data_manager, QObject * parent)
     : QObject(parent),
       m_entity_group_manager(entity_group_manager),
+      m_data_manager(std::move(data_manager)),
       m_next_group_id(1) {
-    // Assert that we have a valid EntityGroupManager
+    // Assert that we have valid managers
     Q_ASSERT(m_entity_group_manager != nullptr);
+    Q_ASSERT(m_data_manager != nullptr);
 }
 
 int GroupManager::createGroup(QString const & name) {
@@ -269,3 +274,92 @@ std::vector<std::pair<int, QString>> GroupManager::getGroupsForContextMenu() con
     
     return result;
 }
+
+bool GroupManager::deleteGroupAndEntities(int group_id) {
+    auto entity_group_id = static_cast<GroupId>(group_id);
+
+    if (!m_entity_group_manager->hasGroup(entity_group_id)) {
+        return false;
+    }
+
+    // Get all entities in the group
+    auto entities = m_entity_group_manager->getEntitiesInGroup(entity_group_id);
+    if (entities.empty()) {
+        // No entities to delete, just remove the group
+        return removeGroup(group_id);
+    }
+
+    qDebug() << "GroupManager: Deleting group" << group_id << "with" << entities.size() << "entities";
+
+    // Remove entities from their respective data objects
+    for (EntityId const entity_id : entities) {
+        removeEntityFromDataObjects(entity_id);
+    }
+
+    // Remove the group (this will also remove all entity-group associations)
+    bool const group_removed = removeGroup(group_id);
+
+    if (group_removed) {
+        qDebug() << "GroupManager: Successfully deleted group" << group_id << "and all its entities";
+    }
+
+    return group_removed;
+}
+
+void GroupManager::removeEntityFromDataObjects(EntityId entity_id) {
+    // Get all data keys from the DataManager
+    auto const data_keys = m_data_manager->getAllKeys();
+    
+    for (std::string const & key : data_keys) {
+        auto data_variant = m_data_manager->getDataVariant(key);
+        if (!data_variant.has_value()) {
+            continue;
+        }
+
+        // Handle different data types
+        std::visit([this, &key, entity_id](auto & data_ptr) {
+            if constexpr (std::is_same_v<std::decay_t<decltype(data_ptr)>, std::shared_ptr<PointData>>) {
+                if (data_ptr) {
+                    removeEntityFromPointData(data_ptr.get(), entity_id);
+                }
+            } else if constexpr (std::is_same_v<std::decay_t<decltype(data_ptr)>, std::shared_ptr<LineData>>) {
+                if (data_ptr) {
+                    removeEntityFromLineData(data_ptr.get(), entity_id);
+                }
+            }
+            // Note: DigitalEventSeries and DigitalIntervalSeries don't have entity lookup methods
+            // so we skip them for now
+        }, data_variant.value());
+    }
+}
+
+void GroupManager::removeEntityFromPointData(PointData * point_data, EntityId entity_id) {
+    if (!point_data) return;
+
+    // Find the time and index for this entity
+    auto time_and_index = point_data->getTimeAndIndexByEntityId(entity_id);
+    if (!time_and_index.has_value()) {
+        return;
+    }
+
+    auto const [time, index] = time_and_index.value();
+    
+    // Remove the point at the specific time and index
+    point_data->clearAtTime(time, static_cast<size_t>(index), true);
+}
+
+void GroupManager::removeEntityFromLineData(LineData * line_data, EntityId entity_id) {
+    if (!line_data) return;
+
+    // Find the time and index for this entity
+    auto time_and_index = line_data->getTimeAndIndexByEntityId(entity_id);
+    if (!time_and_index.has_value()) {
+        return;
+    }
+
+    auto const [time, index] = time_and_index.value();
+    
+    // Remove the line at the specific time and index
+    line_data->clearAtTime(time, index, true);
+}
+

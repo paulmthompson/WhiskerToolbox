@@ -50,7 +50,7 @@ protected:
         
         // Create a GroupManager
         auto* entity_group_manager = m_data_manager->getEntityGroupManager();
-        m_group_manager = std::make_unique<GroupManager>(entity_group_manager);
+        m_group_manager = std::make_unique<GroupManager>(entity_group_manager, m_data_manager);
         
         // Create a TimeScrollBar for the dashboard
         m_time_scrollbar = std::make_unique<TimeScrollBar>();

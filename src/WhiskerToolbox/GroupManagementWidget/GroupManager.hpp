@@ -11,8 +11,12 @@
 #include <cstdint>
 #include <optional>
 #include <unordered_set>
+#include <memory>
 
 class EntityGroupManager;
+class DataManager;
+class PointData;
+class LineData;
 
 /**
  * @brief Manages groups for data visualization with colors and point assignments
@@ -39,7 +43,7 @@ public:
               color(group_color) {}
     };
 
-    explicit GroupManager(EntityGroupManager * entity_group_manager, QObject * parent = nullptr);
+    explicit GroupManager(EntityGroupManager * entity_group_manager, std::shared_ptr<DataManager> data_manager, QObject * parent = nullptr);
     ~GroupManager() = default;
 
     /**
@@ -63,6 +67,13 @@ public:
      * @return True if the group was removed, false if it didn't exist
      */
     bool removeGroup(int group_id);
+
+    /**
+     * @brief Delete a group and all entities in it from their respective data objects
+     * @param group_id The ID of the group to delete
+     * @return True if the group and entities were deleted, false if group didn't exist
+     */
+    bool deleteGroupAndEntities(int group_id);
 
     /**
      * @brief Get all groups
@@ -166,6 +177,7 @@ signals:
 
 private:
     EntityGroupManager * m_entity_group_manager;
+    std::shared_ptr<DataManager> m_data_manager;
     QMap<int, QColor> m_group_colors;// Maps EntityGroupManager GroupId to QColor
     int m_next_group_id;
 
@@ -176,6 +188,27 @@ private:
      * @return A color from the predefined palette
      */
     [[nodiscard]] QColor getNextDefaultColor() const;
+
+    /**
+     * @brief Remove an entity from all data objects
+     * @param entity_id The entity to remove
+     */
+    void removeEntityFromDataObjects(EntityId entity_id);
+
+    /**
+     * @brief Remove an entity from PointData
+     * @param point_data The PointData object
+     * @param entity_id The entity to remove
+     */
+    void removeEntityFromPointData(PointData * point_data, EntityId entity_id);
+
+    /**
+     * @brief Remove an entity from LineData
+     * @param line_data The LineData object
+     * @param entity_id The entity to remove
+     */
+    void removeEntityFromLineData(LineData * line_data, EntityId entity_id);
+
 };
 
 #endif// GROUPMANAGER_HPP

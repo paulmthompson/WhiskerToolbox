@@ -1,5 +1,6 @@
 #include "GroupManagementWidget.hpp"
 #include "DataManager/Entity/EntityGroupManager.hpp"
+#include "DataManager/DataManager.hpp"
 #include "GroupManager.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -47,7 +48,8 @@ int findRowForGroupId(QTableWidget * table, int group_id) {
 
 TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Rows update on group CRUD", "[groupmanagementwidget][rows]") {
     EntityGroupManager egm;
-    GroupManager gm(&egm);
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
     GroupManagementWidget widget(&gm);
 
     auto * table = findGroupsTable(widget);
@@ -66,7 +68,8 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Rows u
 
 TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member counts update after assignments (via groupModified)", "[groupmanagementwidget][members]") {
     EntityGroupManager egm;
-    GroupManager gm(&egm);
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
     GroupManagementWidget widget(&gm);
     auto * table = findGroupsTable(widget);
 
@@ -107,7 +110,8 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
 
 TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Members column updates on add/remove", "[groupmanagementwidget][members][signals]") {
     EntityGroupManager egm;
-    GroupManager gm(&egm);
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
     GroupManagementWidget widget(&gm);
     auto * table = findGroupsTable(widget);
 

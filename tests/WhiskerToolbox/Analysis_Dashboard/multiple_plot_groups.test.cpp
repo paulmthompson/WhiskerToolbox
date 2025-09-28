@@ -81,7 +81,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Multiple SpatialOver
     // Create GroupManager
     auto* entity_group_manager = data_manager->getEntityGroupManager();
     REQUIRE(entity_group_manager != nullptr);
-    auto group_manager = std::make_unique<GroupManager>(entity_group_manager);
+    auto group_manager = std::make_unique<GroupManager>(entity_group_manager, data_manager);
     
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);
@@ -203,7 +203,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlay - onG
     // Create GroupManager
     auto* entity_group_manager = data_manager->getEntityGroupManager();
     REQUIRE(entity_group_manager != nullptr);
-    auto group_manager = std::make_unique<GroupManager>(entity_group_manager);
+    auto group_manager = std::make_unique<GroupManager>(entity_group_manager, data_manager);
     
     auto time_scrollbar = new TimeScrollBar();
     REQUIRE(time_scrollbar != nullptr);

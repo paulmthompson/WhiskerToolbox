@@ -1,5 +1,6 @@
 #include "GroupManager.hpp"
 #include "DataManager/Entity/EntityGroupManager.hpp"
+#include "DataManager/DataManager.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -9,7 +10,8 @@
 
 TEST_CASE("GroupManager - Group CRUD", "[groupmanager][groups][crud]") {
     EntityGroupManager egm;
-    GroupManager gm(&egm);
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
 
     SECTION("Create groups and retrieve") {
         int g1 = gm.createGroup(QString("Alpha"));
@@ -62,7 +64,8 @@ TEST_CASE("GroupManager - Group CRUD", "[groupmanager][groups][crud]") {
 
 TEST_CASE("GroupManager - Assign and Remove Entities", "[groupmanager][entities]") {
     EntityGroupManager egm;
-    GroupManager gm(&egm);
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
 
     int g = gm.createGroup(QString("Members"));
     GroupId gid = static_cast<GroupId>(g);
@@ -120,7 +123,8 @@ TEST_CASE("GroupManager - Assign and Remove Entities", "[groupmanager][entities]
 
 TEST_CASE("GroupManager - Signals emit once per logical change", "[groupmanager][signals]") {
     EntityGroupManager egm;
-    GroupManager gm(&egm);
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
 
     int g = gm.createGroup(QString("G1"));
     REQUIRE(g >= 0);

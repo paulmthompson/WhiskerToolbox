@@ -5,6 +5,8 @@
 
 #include <unordered_set>
 
+class QContextMenuEvent;
+
 class GroupManager;
 class QTableWidgetItem;
 class QPushButton;
@@ -78,6 +80,22 @@ private slots:
      * @brief Handle selection changes in the table
      */
     void onSelectionChanged();
+
+    /**
+     * @brief Handle context menu events
+     */
+    void contextMenuEvent(QContextMenuEvent * event) override;
+
+    /**
+     * @brief Show context menu at the specified position
+     * @param pos Global position where the context menu should appear
+     */
+    void showContextMenu(QPoint const & pos);
+
+    /**
+     * @brief Delete the selected group and all its entities
+     */
+    void deleteSelectedGroupAndEntities();
 
 private:
     GroupManager * m_group_manager;

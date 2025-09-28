@@ -73,7 +73,7 @@ MainWindow::MainWindow(QWidget * parent)
     // Create the GroupManager with the DataManager's EntityGroupManager
     auto* entity_group_manager = _data_manager->getEntityGroupManager();
     if (entity_group_manager) {
-        _group_manager = std::make_unique<GroupManager>(entity_group_manager, this);
+        _group_manager = std::make_unique<GroupManager>(entity_group_manager, _data_manager, this);
         _group_management_widget = new GroupManagementWidget(_group_manager.get(), this);
     }
 

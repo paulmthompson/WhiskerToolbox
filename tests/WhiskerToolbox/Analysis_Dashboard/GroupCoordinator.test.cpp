@@ -4,6 +4,7 @@
 #include "Analysis_Dashboard/Groups/GroupCoordinator.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "DataManager/Entity/EntityGroupManager.hpp"
+#include "DataManager/DataManager.hpp"
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 
 #include "../fixtures/qt_test_fixtures.hpp"
@@ -20,7 +21,8 @@ signals:
 
 TEST_CASE_METHOD(QtWidgetTestFixture, "GroupCoordinator forwards to multiple plots", "[GroupCoordinator][Signals]") {
     EntityGroupManager egm;
-    GroupManager gm(&egm);
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
     GroupCoordinator coord(&gm);
 
     SpyPlot p1;

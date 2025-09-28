@@ -8,6 +8,10 @@
 #include <QPushButton>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#include <QContextMenuEvent>
+#include <QMenu>
+#include <QAction>
+#include <QMessageBox>
 
 GroupManagementWidget::GroupManagementWidget(GroupManager * group_manager, QWidget * parent)
     : QWidget(parent),
@@ -259,4 +263,70 @@ int GroupManagementWidget::findRowForGroupId(int group_id) const {
         }
     }
     return -1;
+}
+
+void GroupManagementWidget::contextMenuEvent(QContextMenuEvent * event) {
+    showContextMenu(event->globalPos());
+}
+
+void GroupManagementWidget::showContextMenu(QPoint const & pos) {
+    // Get the group at the current position
+    int const current_row = m_ui->groupsTable->currentRow();
+    if (current_row < 0) {
+        return;
+    }
+
+    int const group_id = getGroupIdForRow(current_row);
+    if (group_id == -1) {
+        return;
+    }
+
+    // Create context menu
+    QMenu context_menu(this);
+    
+    // Add delete group and entities action
+    QAction * delete_action = context_menu.addAction("Delete Group and All Data");
+    delete_action->setIcon(QIcon::fromTheme("edit-delete"));
+    
+    // Show the menu and handle the action
+    QAction * selected_action = context_menu.exec(pos);
+    if (selected_action == delete_action) {
+        deleteSelectedGroupAndEntities();
+    }
+}
+
+void GroupManagementWidget::deleteSelectedGroupAndEntities() {
+    int const current_row = m_ui->groupsTable->currentRow();
+    if (current_row < 0) {
+        return;
+    }
+
+    int const group_id = getGroupIdForRow(current_row);
+    if (group_id == -1) {
+        return;
+    }
+
+    // Get group info for confirmation dialog
+    auto group = m_group_manager->getGroup(group_id);
+    if (!group.has_value()) {
+        return;
+    }
+
+    int const member_count = m_group_manager->getGroupMemberCount(group_id);
+    
+    // Show confirmation dialog
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        "Delete Group and Data",
+        QString("Are you sure you want to delete group '%1' and all %2 entities in it?\n\nThis action cannot be undone.")
+            .arg(group.value().name)
+            .arg(member_count),
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No
+    );
+
+    if (reply == QMessageBox::Yes) {
+        // Delete the group and all its entities
+        m_group_manager->deleteGroupAndEntities(group_id);
+    }
 }
