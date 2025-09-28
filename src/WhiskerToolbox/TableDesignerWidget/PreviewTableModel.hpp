@@ -47,6 +47,7 @@ private:
     static QString formatScalarBool(bool value);
     static QString formatScalarInt(int value);
     static QString formatScalarDouble(double value);
+    static QString formatScalarFloat(float value);
 
     template<typename T>
     static QString joinVector(std::vector<T> const & values);

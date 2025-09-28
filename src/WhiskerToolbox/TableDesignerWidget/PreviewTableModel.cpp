@@ -62,6 +62,8 @@ QVariant PreviewTableModel::data(QModelIndex const & index, int role) const {
 
             if constexpr (std::is_same_v<ElemT, double>) {
                 return formatScalarDouble(vec[row]);
+            } else if constexpr (std::is_same_v<ElemT, float>) {
+                return formatScalarFloat(vec[row]);
             } else if constexpr (std::is_same_v<ElemT, int>) {
                 return formatScalarInt(vec[row]);
             } else if constexpr (std::is_same_v<ElemT, bool>) {
@@ -96,6 +98,13 @@ QString PreviewTableModel::formatScalarBool(bool value) { return value ? QString
 QString PreviewTableModel::formatScalarInt(int value) { return QString::number(value); }
 
 QString PreviewTableModel::formatScalarDouble(double value) {
+    // Sensible default: fixed with 3 decimals
+    QString s;
+    s.setNum(value, 'f', 3);
+    return s;
+}
+
+QString PreviewTableModel::formatScalarFloat(float value) {
     // Sensible default: fixed with 3 decimals
     QString s;
     s.setNum(value, 'f', 3);

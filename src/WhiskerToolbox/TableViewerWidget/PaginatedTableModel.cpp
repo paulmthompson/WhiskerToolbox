@@ -483,6 +483,8 @@ QString PaginatedTableModel::formatValue(std::shared_ptr<TableView> const & mini
 
             if constexpr (std::is_same_v<ElemT, double>) {
                 return QString::number(vec[local_row], 'f', 3);
+            } else if constexpr (std::is_same_v<ElemT, float>) {
+                return QString::number(vec[local_row], 'f', 3);
             } else if constexpr (std::is_same_v<ElemT, int>) {
                 return QString::number(vec[local_row]);
             } else if constexpr (std::is_same_v<ElemT, int64_t>) {

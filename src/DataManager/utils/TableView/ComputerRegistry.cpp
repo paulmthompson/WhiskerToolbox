@@ -10,6 +10,7 @@
 #include "computers/IntervalOverlapComputer.h"
 #include "computers/IntervalPropertyComputer.h"
 #include "computers/IntervalReductionComputer.h"
+#include "computers/LineLengthComputer.h"
 #include "computers/LineSamplingMultiComputer.h"
 #include "computers/LineTimestampComputer.h"
 #include "computers/TimestampInIntervalComputer.h"
@@ -795,6 +796,27 @@ void ComputerRegistry::registerBuiltInComputers() {
             if (auto lineSrc = std::get_if<std::shared_ptr<ILineSource>>(&source)) {
                 auto computer = std::make_unique<LineTimestampComputer>(*lineSrc, (*lineSrc)->getName(), (*lineSrc)->getTimeFrame());
                 return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
+            }
+            return nullptr;
+        };
+
+        registerComputer(std::move(info), std::move(factory));
+    }
+
+    // LineLengthComputer - Calculate cumulative length of line data
+    {
+        ComputerInfo info("Line Length",
+                          "Calculate the cumulative length of line data",
+                          typeid(float),
+                          "float",
+                          RowSelectorType::Timestamp,
+                          typeid(std::shared_ptr<ILineSource>));
+
+        ComputerFactory factory = [](DataSourceVariant const & source,
+                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
+            if (auto lineSrc = std::get_if<std::shared_ptr<ILineSource>>(&source)) {
+                auto computer = std::make_unique<LineLengthComputer>(*lineSrc, (*lineSrc)->getName(), (*lineSrc)->getTimeFrame());
+                return std::make_unique<ComputerWrapper<float>>(std::move(computer));
             }
             return nullptr;
         };
