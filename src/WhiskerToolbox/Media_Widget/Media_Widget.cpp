@@ -24,8 +24,12 @@
 
 #include <QApplication>
 #include <QGraphicsView>
+#include <QMouseEvent>
 #include <QResizeEvent>
+#include <QScrollBar>
+#include <QSplitter>
 #include <QTimer>
+#include <QVBoxLayout>
 #include <QWheelEvent>
 
 #include <algorithm>
@@ -523,16 +527,56 @@ void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
 }
 
 bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
-    if (watched == ui->graphicsView->viewport() && event->type() == QEvent::Wheel) {
-        auto * wheelEvent = dynamic_cast<QWheelEvent *>(event);
-        double angle = wheelEvent->angleDelta().y();
-        if (angle > 0) {
-            _applyZoom(_zoom_step, true);
-        } else if (angle < 0) {
-            _applyZoom(1.0 / _zoom_step, true);
+    if (watched == ui->graphicsView->viewport()) {
+        // Handle wheel events for zoom
+        if (event->type() == QEvent::Wheel) {
+            auto * wheelEvent = dynamic_cast<QWheelEvent *>(event);
+            double angle = wheelEvent->angleDelta().y();
+            if (angle > 0) {
+                _applyZoom(_zoom_step, true);
+            } else if (angle < 0) {
+                _applyZoom(1.0 / _zoom_step, true);
+            }
+            wheelEvent->accept();
+            return true;
         }
-        wheelEvent->accept();
-        return true;
+        
+        // Handle mouse events for shift+drag panning
+        if (event->type() == QEvent::MouseButtonPress) {
+            auto * mouseEvent = dynamic_cast<QMouseEvent *>(event);
+            if (mouseEvent->button() == Qt::LeftButton && mouseEvent->modifiers() & Qt::ShiftModifier) {
+                _is_panning = true;
+                _last_pan_point = mouseEvent->pos();
+                ui->graphicsView->viewport()->setCursor(Qt::ClosedHandCursor);
+                mouseEvent->accept();
+                return true; // Consume the event to prevent it from reaching Media_Window
+            }
+        }
+        
+        if (event->type() == QEvent::MouseMove && _is_panning) {
+            auto * mouseEvent = dynamic_cast<QMouseEvent *>(event);
+            QPoint delta = mouseEvent->pos() - _last_pan_point;
+            _last_pan_point = mouseEvent->pos();
+            
+            // Apply panning by translating the view
+            ui->graphicsView->horizontalScrollBar()->setValue(
+                ui->graphicsView->horizontalScrollBar()->value() - delta.x());
+            ui->graphicsView->verticalScrollBar()->setValue(
+                ui->graphicsView->verticalScrollBar()->value() - delta.y());
+            
+            mouseEvent->accept();
+            return true; // Consume the event
+        }
+        
+        if (event->type() == QEvent::MouseButtonRelease) {
+            auto * mouseEvent = dynamic_cast<QMouseEvent *>(event);
+            if (mouseEvent->button() == Qt::LeftButton && _is_panning) {
+                _is_panning = false;
+                ui->graphicsView->viewport()->setCursor(Qt::ArrowCursor);
+                mouseEvent->accept();
+                return true; // Consume the event
+            }
+        }
     }
     return QWidget::eventFilter(watched, event);
 }

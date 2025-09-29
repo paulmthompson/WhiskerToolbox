@@ -67,6 +67,10 @@ private:
     double _min_zoom{0.1};
     double _max_zoom{20.0};
 
+    // Canvas panning state for shift+drag
+    bool _is_panning{false};
+    QPoint _last_pan_point;
+
     void _applyZoom(double factor, bool anchor_under_mouse);
 
     void _createOptions();
