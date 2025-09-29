@@ -3,6 +3,7 @@
 #include "DataManager.hpp"
 #include "ParameterFactory.hpp"
 #include "TransformRegistry.hpp"
+#include "transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -394,6 +395,27 @@ std::unique_ptr<TransformParametersBase> TransformPipeline::createParametersFrom
     auto* operation = registry_->findOperationByName(transform_name);
     if (!operation) {
         return nullptr;
+    }
+
+    // Special handling for grouping operations that need EntityGroupManager
+    if (transform_name == "Group Lines by Proximity") {
+        auto* group_manager = data_manager_->getEntityGroupManager();
+        if (!group_manager) {
+            std::cerr << "Error: EntityGroupManager not available for grouping operation" << std::endl;
+            return nullptr;
+        }
+        
+        auto parameters = std::make_unique<LineProximityGroupingParameters>(group_manager);
+        
+        // Set parameters from JSON
+        for (auto const& [param_name, param_value] : param_json.items()) {
+            if (!setParameterValue(parameters.get(), param_name, param_value, transform_name)) {
+                std::cerr << "Warning: Failed to set parameter '" << param_name 
+                          << "' for transform '" << transform_name << "'" << std::endl;
+            }
+        }
+        
+        return std::move(parameters);
     }
     
     auto parameters = operation->getDefaultParameters();

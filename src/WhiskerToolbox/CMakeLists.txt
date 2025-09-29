@@ -176,6 +176,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.cpp
         DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp
         DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.ui
+        DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.cpp
+        DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp
+        DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.ui
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.cpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.ui

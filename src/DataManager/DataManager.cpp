@@ -392,22 +392,43 @@ std::optional<DataTypeVariant> DataManager::getDataVariant(std::string const & k
 }
 
 void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey const & time_key) {
+    // Check if we're setting the same shared_ptr to avoid unnecessary ID rebuilding
+    bool is_same_data = false;
+    if (_data.find(key) != _data.end()) {
+        auto existing_variant = _data[key];
+        // Use visitor to check if the existing data is the same shared_ptr
+        is_same_data = std::visit([&data](auto const& existing_ptr) -> bool {
+            return std::visit([&existing_ptr](auto const& new_ptr) -> bool {
+                using ExistingType = std::decay_t<decltype(*existing_ptr)>;
+                using NewType = std::decay_t<decltype(*new_ptr)>;
+                if constexpr (std::is_same_v<ExistingType, NewType>) {
+                    return existing_ptr == new_ptr;
+                } else {
+                    return false;
+                }
+            }, data);
+        }, existing_variant);
+    }
+    
     _data[key] = data;
     setTimeKey(key, time_key);
 
-    if (std::holds_alternative<std::shared_ptr<LineData>>(_data[key])) {
-        std::get<std::shared_ptr<LineData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
-        std::get<std::shared_ptr<LineData>>(_data[key])->rebuildAllEntityIds();
-    } else if (std::holds_alternative<std::shared_ptr<PointData>>(_data[key])) {
-        std::get<std::shared_ptr<PointData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
-        std::get<std::shared_ptr<PointData>>(_data[key])->rebuildAllEntityIds();
-    } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(_data[key])) {
-        std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
-        std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->rebuildAllEntityIds();
-    } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(_data[key])) {
-        std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
-        std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->rebuildAllEntityIds();
-    } 
+    // Only rebuild EntityIds if this is new data or different data
+    if (!is_same_data) {
+        if (std::holds_alternative<std::shared_ptr<LineData>>(_data[key])) {
+            std::get<std::shared_ptr<LineData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+            std::get<std::shared_ptr<LineData>>(_data[key])->rebuildAllEntityIds();
+        } else if (std::holds_alternative<std::shared_ptr<PointData>>(_data[key])) {
+            std::get<std::shared_ptr<PointData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+            std::get<std::shared_ptr<PointData>>(_data[key])->rebuildAllEntityIds();
+        } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(_data[key])) {
+            std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+            std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->rebuildAllEntityIds();
+        } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(_data[key])) {
+            std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+            std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->rebuildAllEntityIds();
+        } 
+    }
 
     _notifyObservers();
 }

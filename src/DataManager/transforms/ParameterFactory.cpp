@@ -19,6 +19,7 @@
 #include "Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
 #include "Masks/Mask_To_Line/mask_to_line.hpp"
 #include "Media/whisker_tracing.hpp"
+#include "Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
 
 #include <iostream>
 
@@ -419,4 +420,21 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerDataParameter<WhiskerTracingParameters, MaskData>(
             "Whisker Tracing", "mask_data", &WhiskerTracingParameters::mask_data);
+
+    // ====================================================
+    // ============== Grouping Operations =================
+    // ====================================================
+
+    // ==================== Line Proximity Grouping ===============
+    registerBasicParameter<LineProximityGroupingParameters, float>(
+            "Group Lines by Proximity", "distance_threshold", &LineProximityGroupingParameters::distance_threshold);
+
+    registerBasicParameter<LineProximityGroupingParameters, float>(
+            "Group Lines by Proximity", "position_along_line", &LineProximityGroupingParameters::position_along_line);
+
+    registerBasicParameter<LineProximityGroupingParameters, bool>(
+            "Group Lines by Proximity", "create_new_group_for_outliers", &LineProximityGroupingParameters::create_new_group_for_outliers);
+
+    registerBasicParameter<LineProximityGroupingParameters, std::string>(
+            "Group Lines by Proximity", "new_group_name", &LineProximityGroupingParameters::new_group_name);
 }

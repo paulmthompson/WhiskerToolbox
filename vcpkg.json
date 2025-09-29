@@ -22,6 +22,9 @@
         },
         {
             "name": "openblas"
+        },
+        {
+            "name": "eigen3"
         }
 
     ],
