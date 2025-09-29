@@ -112,6 +112,7 @@ private:
     void _addPointToDrawAllFrames(float x_media, float y_media);
     void _applyLineToAllFrames();
     std::vector<TimeFrameIndex> _getAllFrameTimes();
+    void _updateTemporaryLineFromWidget();
 
 private slots:
     void _clickedInVideo(qreal x, qreal y);

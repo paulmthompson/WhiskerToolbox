@@ -150,6 +150,8 @@ void MediaLine_Widget::_setupSelectionModePages() {
             });
     connect(_drawAllFramesSelectionWidget, &line_widget::LineDrawAllFramesSelectionWidget::applyToAllFrames,
             this, &MediaLine_Widget::_applyLineToAllFrames);
+    connect(_drawAllFramesSelectionWidget, &line_widget::LineDrawAllFramesSelectionWidget::linePointsUpdated,
+            this, &MediaLine_Widget::_updateTemporaryLineFromWidget);
 
     ui->mode_stacked_widget->setCurrentIndex(0);
 }
@@ -503,6 +505,13 @@ void MediaLine_Widget::_toggleSelectionMode(QString text) {
         _scene->setHoverCircleRadius(_eraseSelectionWidget->getEraserRadius());
     } else {
         _scene->setShowHoverCircle(false);
+    }
+
+    // Enable/disable temporary line visualization for DrawAllFrames mode
+    if (_selection_mode == Selection_Mode::DrawAllFrames) {
+        _scene->setShowTemporaryLine(true);
+    } else {
+        _scene->setShowTemporaryLine(false);
     }
 }
 
@@ -1143,8 +1152,13 @@ void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
 
 void MediaLine_Widget::_addPointToDrawAllFrames(float x_media, float y_media) {
     if (_drawAllFramesSelectionWidget && _drawAllFramesSelectionWidget->isDrawingActive()) {
+        // Store the points in default media coordinates for the temporary line
         _drawAllFramesSelectionWidget->addPoint(Point2D<float>{x_media, y_media});
-        std::cout << "Added point (" << x_media << ", " << y_media << ") to all frames line" << std::endl;
+        
+        // Update the temporary line visualization using default aspect ratios
+        auto current_points = _drawAllFramesSelectionWidget->getCurrentLinePoints();
+        _scene->updateTemporaryLine(current_points, ""); // Use default aspect ratios
+        
     }
 }
 
@@ -1173,8 +1187,37 @@ void MediaLine_Widget::_applyLineToAllFrames() {
         return;
     }
 
-    // Create the line from points
-    Line2D line_to_apply(line_points);
+    // Convert coordinates from default media to line-specific coordinates if needed
+    Line2D line_to_apply;
+    if (!_active_key.empty()) {
+        auto line_data_for_conversion = _data_manager->getData<LineData>(_active_key);
+        if (line_data_for_conversion) {
+            auto image_size = line_data_for_conversion->getImageSize();
+            
+            // If the line data has specific image dimensions, convert coordinates
+            if (image_size.width != -1 && image_size.height != -1) {
+                float default_xAspect = _scene->getXAspect();
+                float default_yAspect = _scene->getYAspect();
+                float line_xAspect = static_cast<float>(_scene->getCanvasSize().first) / image_size.width;
+                float line_yAspect = static_cast<float>(_scene->getCanvasSize().second) / image_size.height;
+                
+                // Convert each point from default media coordinates to line-specific coordinates
+                for (auto const & point : line_points) {
+                    float x_canvas = point.x * default_xAspect;
+                    float y_canvas = point.y * default_yAspect;
+                    float x_converted = x_canvas / line_xAspect;
+                    float y_converted = y_canvas / line_yAspect;
+                    line_to_apply.push_back(Point2D<float>{x_converted, y_converted});
+                }
+            } else {
+                line_to_apply = Line2D(line_points);
+            }
+        } else {
+            line_to_apply = Line2D(line_points);
+        }
+    } else {
+        line_to_apply = Line2D(line_points);
+    }
 
     // Apply the line to all frames
     int frames_processed = 0;
@@ -1188,8 +1231,10 @@ void MediaLine_Widget::_applyLineToAllFrames() {
 
     // Clear the line points after applying
     _drawAllFramesSelectionWidget->clearLinePoints();
+    
+    // Clear the temporary line visualization
+    _scene->clearTemporaryLine();
 
-    std::cout << "Applied line to " << frames_processed << " frames" << std::endl;
     _scene->UpdateCanvas();
 }
 
@@ -1231,4 +1276,11 @@ int MediaLine_Widget::_getSelectedLineIndexFromGroupSystem() const {
     // EntityId for lines corresponds to their index in the line data
     EntityId first_selected = *selected_entities.begin();
     return static_cast<int>(first_selected);
+}
+
+void MediaLine_Widget::_updateTemporaryLineFromWidget() {
+    if (_drawAllFramesSelectionWidget) {
+        auto current_points = _drawAllFramesSelectionWidget->getCurrentLinePoints();
+        _scene->updateTemporaryLine(current_points, ""); // Use default aspect ratios
+    }
 }

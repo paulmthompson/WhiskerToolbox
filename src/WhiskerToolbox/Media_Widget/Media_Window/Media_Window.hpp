@@ -124,6 +124,11 @@ public:
     void setShowHoverCircle(bool show);
     void setHoverCircleRadius(int radius);
 
+    // Temporary line visualization for drawing modes
+    void setShowTemporaryLine(bool show);
+    void updateTemporaryLine(std::vector<Point2D<float>> const & points, std::string const & line_key = "");
+    void clearTemporaryLine();
+
     // Selection and context menu functionality
     void clearAllSelections();
     bool hasSelections() const;
@@ -238,6 +243,11 @@ private:
     int _hover_circle_radius{10};
     QPointF _hover_position;
     QGraphicsEllipseItem * _hover_circle_item{nullptr};// Track hover circle item
+
+    // Temporary line visualization
+    bool _show_temporary_line{false};
+    QGraphicsPathItem * _temporary_line_item{nullptr};// Track temporary line item
+    std::vector<QGraphicsEllipseItem *> _temporary_line_points;// Track temporary line point markers
 
     std::vector<QPointF> _drawing_points;
 

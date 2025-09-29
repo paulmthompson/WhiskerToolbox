@@ -64,6 +64,9 @@ Media_Window::~Media_Window() {
         _context_menu = nullptr;
     }
 
+    // Clear temporary line items before clearing the scene
+    clearTemporaryLine();
+
     // Clear all items from the scene - this automatically removes and deletes all QGraphicsItems
     clear();
 
@@ -1822,6 +1825,101 @@ void Media_Window::_updateHoverCirclePosition() {
                       << (_hover_circle_item ? "exists" : "null") << ", show: " << _show_hover_circle << std::endl;
         }
     }
+}
+
+void Media_Window::setShowTemporaryLine(bool show) {
+    _show_temporary_line = show;
+    if (!_show_temporary_line) {
+        clearTemporaryLine();
+    }
+}
+
+void Media_Window::updateTemporaryLine(std::vector<Point2D<float>> const & points, std::string const & line_key) {
+    if (!_show_temporary_line || points.empty()) {
+        return;
+    }
+
+    // Clear existing temporary line
+    clearTemporaryLine();
+
+    // Use the same aspect ratio calculation as the target line data
+    auto xAspect = getXAspect();
+    auto yAspect = getYAspect();
+    
+    // If we have a line key, use the same image size scaling as that line data
+    if (!line_key.empty()) {
+        auto line_data = _data_manager->getData<LineData>(line_key);
+        if (line_data) {
+            auto image_size = line_data->getImageSize();
+            
+        }
+    }
+
+    if (points.size() < 2) {
+        // If only one point, just show a marker
+        // Convert media coordinates to canvas coordinates
+        float x = points[0].x * xAspect;
+        float y = points[0].y * yAspect;
+        
+        QPen pointPen(Qt::yellow);
+        pointPen.setWidth(2);
+        QBrush pointBrush(Qt::yellow);
+        
+        auto pointItem = addEllipse(x - 3, y - 3, 6, 6, pointPen, pointBrush);
+        _temporary_line_points.push_back(pointItem);
+        return;
+    }
+
+    // Create path for the line
+    QPainterPath path;
+
+
+    // Move to first point (convert media coordinates to canvas coordinates)
+    path.moveTo(QPointF(points[0].x * xAspect, points[0].y * yAspect));
+
+    // Add lines to subsequent points
+    for (size_t i = 1; i < points.size(); ++i) {
+        path.lineTo(QPointF(points[i].x * xAspect, points[i].y * yAspect));
+    }
+
+    // Create the line path item
+    QPen linePen(Qt::yellow);
+    linePen.setWidth(2);
+    linePen.setStyle(Qt::DashLine); // Dashed line to distinguish from permanent lines
+    
+    _temporary_line_item = addPath(path, linePen);
+
+    // Add point markers
+    QPen pointPen(Qt::yellow);
+    pointPen.setWidth(1);
+    QBrush pointBrush(Qt::NoBrush); // Open circles
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        // Convert media coordinates to canvas coordinates
+        float x = points[i].x * xAspect;
+        float y = points[i].y * yAspect;
+        
+        auto pointItem = addEllipse(x - 2.5, y - 2.5, 5, 5, pointPen, pointBrush);
+        _temporary_line_points.push_back(pointItem);
+    }
+}
+
+void Media_Window::clearTemporaryLine() {
+    // Remove and delete the temporary line path
+    if (_temporary_line_item) {
+        removeItem(_temporary_line_item);
+        delete _temporary_line_item;
+        _temporary_line_item = nullptr;
+    }
+
+    // Remove and delete all temporary line point markers
+    for (auto pointItem : _temporary_line_points) {
+        if (pointItem) {
+            removeItem(pointItem);
+            delete pointItem;
+        }
+    }
+    _temporary_line_points.clear();
 }
 
 void Media_Window::_addRemoveData() {

@@ -76,6 +76,7 @@ void LineDrawAllFramesSelectionWidget::_onClearLineClicked() {
     _is_drawing_active = false;
     _current_line_points.clear();
     _updateUI();
+    emit linePointsUpdated();
 }
 
 bool LineDrawAllFramesSelectionWidget::isDrawingActive() const {
@@ -90,6 +91,7 @@ void LineDrawAllFramesSelectionWidget::clearLinePoints() {
     _current_line_points.clear();
     _is_drawing_active = false;
     _updateUI();
+    emit linePointsUpdated();
 }
 
 /**
@@ -100,6 +102,7 @@ void LineDrawAllFramesSelectionWidget::addPoint(const Point2D<float>& point) {
     if (_is_drawing_active) {
         _current_line_points.push_back(point);
         _updateUI();
+        emit linePointsUpdated();
     }
 }
 

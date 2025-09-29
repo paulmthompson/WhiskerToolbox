@@ -75,6 +75,11 @@ signals:
      * @brief Signal emitted when the line should be applied to all frames
      */
     void applyToAllFrames();
+    
+    /**
+     * @brief Signal emitted when line points are updated
+     */
+    void linePointsUpdated();
 
 private slots:
     /**
