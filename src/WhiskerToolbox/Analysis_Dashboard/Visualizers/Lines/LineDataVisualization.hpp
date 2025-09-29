@@ -155,9 +155,9 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     // Group management API
     void setGroupManager(GroupManager * group_manager) {
         m_group_manager = group_manager;
-        m_group_data_needs_update = true;
+        refreshGroupRenderData();
     }
-    void refreshGroupRenderData() { m_group_data_needs_update = true; }
+    void refreshGroupRenderData() { _updateGroupVertexData(); }
     
     /**
      * @brief Get selected line EntityIds
