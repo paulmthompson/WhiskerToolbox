@@ -16,10 +16,13 @@
 // Media export functions
 #include "MediaExport/media_export.hpp"
 
+#include "CoreGeometry/ImageSize.hpp"
+
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
@@ -55,17 +58,41 @@ Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
             this, &Line_Widget::_handleSaveBinaryRequested);
     connect(ui->export_media_frames_checkbox, &QCheckBox::toggled,
             this, &Line_Widget::_onExportMediaFramesCheckboxToggled);
+    connect(ui->apply_image_size_button, &QPushButton::clicked,
+            this, &Line_Widget::_onApplyImageSizeClicked);
+    connect(ui->copy_image_size_button, &QPushButton::clicked,
+            this, &Line_Widget::_onCopyImageSizeClicked);
+
+    // Setup collapsible export section
+    ui->export_section->autoSetContentLayout();
+    ui->export_section->setTitle("Export Options");
+    ui->export_section->toggle(false); // Start collapsed
 
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
     ui->media_export_options_widget->setVisible(ui->export_media_frames_checkbox->isChecked());
+    
+    // Populate media combo box
+    _populateMediaComboBox();
+    
+    // Set up callback to refresh media combo box when data changes
+    if (_data_manager) {
+        _data_manager->addObserver([this]() {
+            _populateMediaComboBox();
+        });
+    }
 }
 
 Line_Widget::~Line_Widget() {
+    // Remove the line data callback
+    removeCallbacks();
+    
     delete ui;
 }
 
 void Line_Widget::openWidget() {
     this->show();
+    // Update image size display when widget is opened
+    _updateImageSizeDisplay();
 }
 
 void Line_Widget::setActiveKey(std::string const & key) {
@@ -81,6 +108,7 @@ void Line_Widget::setActiveKey(std::string const & key) {
     if (line_data) {
         _line_table_model->setLines(line_data.get());
         _callback_id = _data_manager->addCallbackToData(_active_key, [this]() { _onDataChanged(); });
+        _updateImageSizeDisplay();
     } else {
         _line_table_model->setLines(nullptr);
         std::cerr << "Line_Widget: Could not find LineData with key: " << _active_key << std::endl;
@@ -430,4 +458,221 @@ bool Line_Widget::_performRegistrySave(QString const& format, LineSaverConfig co
         std::cerr << "Failed to save line data: " << e.what() << std::endl;
         return false;
     }
+}
+
+void Line_Widget::_onApplyImageSizeClicked() {
+    if (_active_key.empty()) {
+        QMessageBox::warning(this, "No Data Selected", "Please select a LineData item to modify image size.");
+        return;
+    }
+
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        QMessageBox::critical(this, "Error", "Could not retrieve LineData for image size modification. Key: " + QString::fromStdString(_active_key));
+        return;
+    }
+
+    // Get current values from the line edits
+    QString width_text = ui->image_width_edit->text().trimmed();
+    QString height_text = ui->image_height_edit->text().trimmed();
+
+    if (width_text.isEmpty() || height_text.isEmpty()) {
+        QMessageBox::warning(this, "Invalid Input", "Please enter both width and height values.");
+        return;
+    }
+
+    bool width_ok, height_ok;
+    int new_width = width_text.toInt(&width_ok);
+    int new_height = height_text.toInt(&height_ok);
+
+    if (!width_ok || !height_ok) {
+        QMessageBox::warning(this, "Invalid Input", "Please enter valid integer values for width and height.");
+        return;
+    }
+
+    if (new_width <= 0 || new_height <= 0) {
+        QMessageBox::warning(this, "Invalid Input", "Width and height must be positive values.");
+        return;
+    }
+
+    // Get current image size
+    ImageSize current_size = line_data->getImageSize();
+    
+    // If no current size is set, just set the new size without scaling
+    if (current_size.width == -1 || current_size.height == -1) {
+        line_data->setImageSize({new_width, new_height});
+        _updateImageSizeDisplay();
+        QMessageBox::information(this, "Image Size Set", 
+            QString("Image size set to %1 × %2 (no scaling applied as no previous size was set).")
+                .arg(new_width).arg(new_height));
+        return;
+    }
+
+    // Ask user if they want to scale existing data
+    int ret = QMessageBox::question(this, "Scale Existing Data", 
+        QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4?\n\n"
+               "Click 'Yes' to scale all line data proportionally.\n"
+               "Click 'No' to just change the image size without scaling.\n"
+               "Click 'Cancel' to abort the operation.")
+            .arg(current_size.width).arg(current_size.height)
+            .arg(new_width).arg(new_height),
+        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+
+    if (ret == QMessageBox::Cancel) {
+        return;
+    }
+
+    if (ret == QMessageBox::Yes) {
+        // Scale the data
+        line_data->changeImageSize({new_width, new_height});
+        QMessageBox::information(this, "Image Size Changed", 
+            QString("Image size changed to %1 × %2 and all line data has been scaled proportionally.")
+                .arg(new_width).arg(new_height));
+    } else {
+        // Just set the new size without scaling
+        line_data->setImageSize({new_width, new_height});
+        QMessageBox::information(this, "Image Size Set", 
+            QString("Image size set to %1 × %2 (existing line data was not scaled).")
+                .arg(new_width).arg(new_height));
+    }
+
+    _updateImageSizeDisplay();
+}
+
+void Line_Widget::_updateImageSizeDisplay() {
+    if (_active_key.empty()) {
+        ui->image_width_edit->setText("");
+        ui->image_height_edit->setText("");
+        ui->image_size_status_label->setText("No Data Selected");
+        ui->image_size_status_label->setStyleSheet("color: #666666; font-style: italic;");
+        std::cout << "Line_Widget::_updateImageSizeDisplay: No active key" << std::endl;
+        return;
+    }
+
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        ui->image_width_edit->setText("");
+        ui->image_height_edit->setText("");
+        ui->image_size_status_label->setText("Data Not Found");
+        ui->image_size_status_label->setStyleSheet("color: #cc0000; font-style: italic;");
+        std::cout << "Line_Widget::_updateImageSizeDisplay: No line data found for key: " << _active_key << std::endl;
+        return;
+    }
+
+    ImageSize current_size = line_data->getImageSize();
+    std::cout << "Line_Widget::_updateImageSizeDisplay: Current size: " << current_size.width << " x " << current_size.height << std::endl;
+    
+    if (current_size.width == -1 || current_size.height == -1) {
+        ui->image_width_edit->setText("");
+        ui->image_height_edit->setText("");
+        ui->image_size_status_label->setText("Not Set");
+        ui->image_size_status_label->setStyleSheet("color: #666666; font-style: italic;");
+        std::cout << "Line_Widget::_updateImageSizeDisplay: No size set, clearing fields" << std::endl;
+    } else {
+        ui->image_width_edit->setText(QString::number(current_size.width));
+        ui->image_height_edit->setText(QString::number(current_size.height));
+        ui->image_size_status_label->setText(QString("%1 × %2").arg(current_size.width).arg(current_size.height));
+        ui->image_size_status_label->setStyleSheet("color: #000000; font-weight: bold;");
+        std::cout << "Line_Widget::_updateImageSizeDisplay: Set fields to " << current_size.width << " x " << current_size.height << std::endl;
+    }
+}
+
+void Line_Widget::_onCopyImageSizeClicked() {
+    if (_active_key.empty()) {
+        QMessageBox::warning(this, "No Data Selected", "Please select a LineData item to modify image size.");
+        return;
+    }
+
+    QString selected_media_key = ui->copy_from_media_combo->currentText();
+    if (selected_media_key.isEmpty()) {
+        QMessageBox::warning(this, "No Media Selected", "Please select a media source to copy image size from.");
+        return;
+    }
+
+    auto media_data = _data_manager->getData<MediaData>(selected_media_key.toStdString());
+    if (!media_data) {
+        QMessageBox::critical(this, "Error", "Could not retrieve MediaData for key: " + selected_media_key);
+        return;
+    }
+
+    ImageSize media_size = media_data->getImageSize();
+    if (media_size.width == -1 || media_size.height == -1) {
+        QMessageBox::warning(this, "No Image Size", 
+            QString("The selected media '%1' does not have an image size set.").arg(selected_media_key));
+        return;
+    }
+
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        QMessageBox::critical(this, "Error", "Could not retrieve LineData for image size modification. Key: " + QString::fromStdString(_active_key));
+        return;
+    }
+
+    // Get current image size
+    ImageSize current_size = line_data->getImageSize();
+    
+    // If no current size is set, just set the new size without scaling
+    if (current_size.width == -1 || current_size.height == -1) {
+        line_data->setImageSize(media_size);
+        _updateImageSizeDisplay();
+        QMessageBox::information(this, "Image Size Set", 
+            QString("Image size set to %1 × %2 (copied from '%3').")
+                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+        return;
+    }
+
+    // Ask user if they want to scale existing data
+    int ret = QMessageBox::question(this, "Scale Existing Data", 
+        QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4 (from '%5')?\n\n"
+               "Click 'Yes' to scale all line data proportionally.\n"
+               "Click 'No' to just change the image size without scaling.\n"
+               "Click 'Cancel' to abort the operation.")
+            .arg(current_size.width).arg(current_size.height)
+            .arg(media_size.width).arg(media_size.height).arg(selected_media_key),
+        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+
+    if (ret == QMessageBox::Cancel) {
+        return;
+    }
+
+    if (ret == QMessageBox::Yes) {
+        // Scale the data
+        line_data->changeImageSize(media_size);
+        QMessageBox::information(this, "Image Size Changed", 
+            QString("Image size changed to %1 × %2 (copied from '%3') and all line data has been scaled proportionally.")
+                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+    } else {
+        // Just set the new size without scaling
+        line_data->setImageSize(media_size);
+        QMessageBox::information(this, "Image Size Set", 
+            QString("Image size set to %1 × %2 (copied from '%3', existing line data was not scaled).")
+                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+    }
+
+    _updateImageSizeDisplay();
+}
+
+void Line_Widget::_populateMediaComboBox() {
+    ui->copy_from_media_combo->clear();
+    
+    if (!_data_manager) {
+        return;
+    }
+
+    // Get all MediaData keys
+    auto media_keys = _data_manager->getKeys<MediaData>();
+    
+    if (media_keys.empty()) {
+        ui->copy_from_media_combo->addItem("No media data available");
+        ui->copy_from_media_combo->setEnabled(false);
+        return;
+    }
+
+    ui->copy_from_media_combo->setEnabled(true);
+    
+    for (const auto& key : media_keys) {
+        ui->copy_from_media_combo->addItem(QString::fromStdString(key));
+    }
+    
+    std::cout << "Line_Widget::_populateMediaComboBox: Found " << media_keys.size() << " media keys" << std::endl;
 }

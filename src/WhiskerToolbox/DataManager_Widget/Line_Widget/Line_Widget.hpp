@@ -5,9 +5,13 @@
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
 
+#include "CoreGeometry/ImageSize.hpp"
+
 #include <QModelIndex>
 #include <QWidget>
 #include <QString>
+#include <QLineEdit>
+#include <QPushButton>
 #include "nlohmann/json.hpp"
 
 #include <memory>
@@ -81,10 +85,14 @@ private slots:
     void _handleSaveMultiFileCSVRequested(QString const & format, nlohmann::json const & config);
     void _handleSaveBinaryRequested(QString const & format, nlohmann::json const & config);
     void _onExportMediaFramesCheckboxToggled(bool checked);
+    void _onApplyImageSizeClicked();
+    void _onCopyImageSizeClicked();
 
 private:
     void _initiateSaveProcess(QString const& format, LineSaverConfig const& config);
     bool _performRegistrySave(QString const& format, LineSaverConfig const& config);
+    void _updateImageSizeDisplay();
+    void _populateMediaComboBox();
 
     /**
      * @brief Get selected frames from the table view
