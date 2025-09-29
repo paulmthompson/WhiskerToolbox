@@ -10,12 +10,24 @@
 #include "TimeFrame/interval_data.hpp"
 
 #include <cstddef>
+#include <functional>
 #include <map>
 #include <optional>
 #include <ranges>
 #include <vector>
 
 class EntityRegistry;
+
+/**
+ * @brief Structure holding a Line2D and its associated EntityId
+ */
+struct LineEntry {
+    Line2D line;
+    EntityId entity_id;
+    
+    LineEntry() = default;
+    LineEntry(Line2D l, EntityId id) : line(std::move(l)), entity_id(id) {}
+};
 
 /*
  * @brief LineData
@@ -233,6 +245,46 @@ public:
     [[nodiscard]] std::vector<std::tuple<EntityId, TimeFrameIndex, int>> getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
     /**
+    * @brief Get zero-copy view of Line2D objects at a specific time
+    *
+    * @param time The time to get lines for
+    * @return A view that iterates over Line2D objects only
+    */
+    [[nodiscard]] std::vector<std::reference_wrapper<Line2D const>> getLinesViewAtTime(TimeFrameIndex time) const {
+        std::vector<std::reference_wrapper<Line2D const>> result;
+        
+        auto it = _data.find(time);
+        if (it != _data.end()) {
+            result.reserve(it->second.size());
+            for (auto const & entry : it->second) {
+                result.emplace_back(std::cref(entry.line));
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+    * @brief Get zero-copy view of EntityId objects at a specific time
+    *
+    * @param time The time to get entity IDs for
+    * @return A view that iterates over EntityId objects only
+    */
+    [[nodiscard]] std::vector<std::reference_wrapper<EntityId const>> getEntityIdsViewAtTime(TimeFrameIndex time) const {
+        std::vector<std::reference_wrapper<EntityId const>> result;
+        
+        auto it = _data.find(time);
+        if (it != _data.end()) {
+            result.reserve(it->second.size());
+            for (auto const & entry : it->second) {
+                result.emplace_back(std::cref(entry.entity_id));
+            }
+        }
+        
+        return result;
+    }
+
+    /**
     * @brief Get all lines with their associated times as a range
     *
     * @return A view of time-lines pairs for all times
@@ -240,13 +292,20 @@ public:
     [[nodiscard]] auto GetAllLinesAsRange() const {
         struct TimeLinesPair {
             TimeFrameIndex time;
-            std::vector<Line2D> const & lines;
+            std::vector<Line2D> lines; // Note: This creates a copy for backward compatibility
         };
 
         return _data | std::views::transform([](auto const & pair) {
-                   return TimeLinesPair{TimeFrameIndex(pair.first), pair.second};
+                   std::vector<Line2D> lines;
+                   lines.reserve(pair.second.size());
+                   for (auto const & entry : pair.second) {
+                       lines.push_back(entry.line);
+                   }
+                   return TimeLinesPair{pair.first, std::move(lines)};
                });
     }
+
+
 
     /**
     * @brief Get lines with their associated times as a range within a TimeFrameInterval
@@ -259,14 +318,19 @@ public:
     [[nodiscard]] auto GetLinesInRange(TimeFrameInterval const & interval) const {
         struct TimeLinesPair {
             TimeFrameIndex time;
-            std::vector<Line2D> const & lines;
+            std::vector<Line2D> lines; // Copy for backward compatibility
         };
 
         return _data | std::views::filter([interval](auto const & pair) {
                    return pair.first >= interval.start && pair.first <= interval.end;
                }) |
                std::views::transform([](auto const & pair) {
-                   return TimeLinesPair{pair.first, pair.second};
+                   std::vector<Line2D> lines;
+                   lines.reserve(pair.second.size());
+                   for (auto const & entry : pair.second) {
+                       lines.push_back(entry.line);
+                   }
+                   return TimeLinesPair{pair.first, std::move(lines)};
                });
     }
 
@@ -386,15 +450,17 @@ public:
 
 protected:
 private:
-    std::map<TimeFrameIndex, std::vector<Line2D>> _data;
+    std::map<TimeFrameIndex, std::vector<LineEntry>> _data;
     std::vector<Line2D> _empty{};
+    std::vector<EntityId> _empty_entity_ids{};
+    mutable std::vector<Line2D> _temp_lines{}; // For getAtTime compatibility
+    mutable std::vector<EntityId> _temp_entity_ids{}; // For getEntityIdsAtTime compatibility
     ImageSize _image_size;
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
     // Identity management
     std::string _identity_data_key;
     EntityRegistry * _identity_registry{nullptr};
-    std::map<TimeFrameIndex, std::vector<EntityId>> _entity_ids_by_time;
 };
 
 

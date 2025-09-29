@@ -264,10 +264,10 @@ public:
         setTimeKey(key, time_key);
 
         //Rebuild the EntityIds
-        if constexpr ((std::is_same_v<T, LineData>) || 
-            (std::is_same_v<T, PointData>) ||
-            (std::is_same_v<T, DigitalEventSeries>) ||
-            (std::is_same_v<T, DigitalIntervalSeries>)) {
+        if constexpr ((std::is_same_v<T, LineData>) ||
+                      (std::is_same_v<T, PointData>) ||
+                      (std::is_same_v<T, DigitalEventSeries>) ||
+                      (std::is_same_v<T, DigitalIntervalSeries>) ) {
             //std::is_same_v<T, MaskData>) {
             std::get<std::shared_ptr<T>>(_data[key])->setIdentityContext(key, getEntityRegistry());
             std::get<std::shared_ptr<T>>(_data[key])->rebuildAllEntityIds();
@@ -279,34 +279,35 @@ public:
 
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data, TimeKey const & time_key) {
-        // Check if we're setting the same shared_ptr to avoid unnecessary ID rebuilding
-        bool is_same_data = false;
-        if (_data.find(key) != _data.end()) {
-            auto existing_variant = _data[key];
-            // Use visitor to check if the existing data is the same shared_ptr
-            is_same_data = std::visit([&data](auto const& existing_ptr) -> bool {
+        // Loop through all _data. If shared_ptr data is already in _data, return
+        for (auto const & [existing_key, existing_variant]: _data) {
+            bool found = std::visit([&data](auto const & existing_ptr) -> bool {
                 using ExistingType = std::decay_t<decltype(*existing_ptr)>;
-                if constexpr (std::is_same_v<ExistingType, T>) {
+                using NewType = std::decay_t<decltype(*data)>;
+                if constexpr (std::is_same_v<ExistingType, NewType>) {
                     return existing_ptr == data;
                 } else {
                     return false;
                 }
-            }, existing_variant);
+            },
+                                    existing_variant);
+            if (found) {
+                std::cerr << "Data with key '" << key
+                          << "' already exists, not setting again." << std::endl;
+                return;// Data already exists, do not set again
+            }
         }
-        
+
         _data[key] = data;
         setTimeKey(key, time_key);
 
-        // Only rebuild EntityIds if this is new data or different data
-        if (!is_same_data) {
-            if constexpr ((std::is_same_v<T, LineData>) || 
-            (std::is_same_v<T, PointData>) ||
-            (std::is_same_v<T, DigitalEventSeries>) ||
-            (std::is_same_v<T, DigitalIntervalSeries>)) {
+        if constexpr ((std::is_same_v<T, LineData>) ||
+                      (std::is_same_v<T, PointData>) ||
+                      (std::is_same_v<T, DigitalEventSeries>) ||
+                      (std::is_same_v<T, DigitalIntervalSeries>) ) {
             //std::is_same_v<T, MaskData>) {
-                std::get<std::shared_ptr<T>>(_data[key])->setIdentityContext(key, getEntityRegistry());
-                std::get<std::shared_ptr<T>>(_data[key])->rebuildAllEntityIds();
-            }
+            std::get<std::shared_ptr<T>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+            std::get<std::shared_ptr<T>>(_data[key])->rebuildAllEntityIds();
         }
 
         _notifyObservers();

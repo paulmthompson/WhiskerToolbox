@@ -40,8 +40,8 @@
 #include "transforms/TransformRegistry.hpp"
 #include "utils/string_manip.hpp"
 
-#include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityGroupManager.hpp"
+#include "Entity/EntityRegistry.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -102,7 +102,6 @@ bool tryRegistryThenLegacyLoad(
 
                             std::string const color = item.value("color", "0000FF");
                             data_info_list.push_back({name, "MaskData", color});
-
                         }
                         break;
                     }
@@ -392,42 +391,42 @@ std::optional<DataTypeVariant> DataManager::getDataVariant(std::string const & k
 }
 
 void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey const & time_key) {
-    // Check if we're setting the same shared_ptr to avoid unnecessary ID rebuilding
-    bool is_same_data = false;
-    if (_data.find(key) != _data.end()) {
-        auto existing_variant = _data[key];
-        // Use visitor to check if the existing data is the same shared_ptr
-        is_same_data = std::visit([&data](auto const& existing_ptr) -> bool {
-            return std::visit([&existing_ptr](auto const& new_ptr) -> bool {
-                using ExistingType = std::decay_t<decltype(*existing_ptr)>;
-                using NewType = std::decay_t<decltype(*new_ptr)>;
-                if constexpr (std::is_same_v<ExistingType, NewType>) {
-                    return existing_ptr == new_ptr;
-                } else {
-                    return false;
-                }
-            }, data);
+    // Loop through all _data. If shared_ptr data is already in _data, return
+    for (auto const & [existing_key, existing_variant]: _data) {
+        // Safely compare only when the variant alternatives match; avoid std::bad_variant_access
+        bool found = std::visit([
+            &data
+        ](auto const & existing_ptr) -> bool {
+            using PtrT = std::decay_t<decltype(existing_ptr)>;
+            if (auto const * incoming_ptr = std::get_if<PtrT>(&data)) {
+                return existing_ptr == *incoming_ptr; // shared_ptr comparison (same pointee address)
+            }
+            return false;
         }, existing_variant);
+
+        if (found) {
+            std::cerr << "Data with key '" << existing_key
+                      << "' already exists; not setting duplicate under key '" << key << "'."
+                      << std::endl;
+            return; // Data already exists, do not set again
+        }
     }
-    
+
     _data[key] = data;
     setTimeKey(key, time_key);
 
-    // Only rebuild EntityIds if this is new data or different data
-    if (!is_same_data) {
-        if (std::holds_alternative<std::shared_ptr<LineData>>(_data[key])) {
-            std::get<std::shared_ptr<LineData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
-            std::get<std::shared_ptr<LineData>>(_data[key])->rebuildAllEntityIds();
-        } else if (std::holds_alternative<std::shared_ptr<PointData>>(_data[key])) {
-            std::get<std::shared_ptr<PointData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
-            std::get<std::shared_ptr<PointData>>(_data[key])->rebuildAllEntityIds();
-        } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(_data[key])) {
-            std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
-            std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->rebuildAllEntityIds();
-        } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(_data[key])) {
-            std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
-            std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->rebuildAllEntityIds();
-        } 
+    if (std::holds_alternative<std::shared_ptr<LineData>>(_data[key])) {
+        std::get<std::shared_ptr<LineData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+        std::get<std::shared_ptr<LineData>>(_data[key])->rebuildAllEntityIds();
+    } else if (std::holds_alternative<std::shared_ptr<PointData>>(_data[key])) {
+        std::get<std::shared_ptr<PointData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+        std::get<std::shared_ptr<PointData>>(_data[key])->rebuildAllEntityIds();
+    } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(_data[key])) {
+        std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+        std::get<std::shared_ptr<DigitalEventSeries>>(_data[key])->rebuildAllEntityIds();
+    } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(_data[key])) {
+        std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+        std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->rebuildAllEntityIds();
     }
 
     _notifyObservers();
@@ -442,13 +441,13 @@ bool DataManager::deleteData(std::string const & key) {
 
     // Remove the time frame mapping if it exists
     _time_frames.erase(key);
-    
+
     // Remove the data from storage
     _data.erase(key);
-    
+
     // Notify all observers that data has changed
     _notifyObservers();
-    
+
     std::cout << "DataManager: Successfully deleted data with key: " << key << std::endl;
     return true;
 }
@@ -584,13 +583,13 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 // Check if this is a DLC CSV format that needs special handling
                 if (item.contains("format") && item["format"] == "dlc_csv") {
                     auto multi_point_data = load_multiple_PointData_from_dlc(file_path, item);
-                    
+
                     // For DLC data, let Media_Window assign colors automatically via getColorForIndex
                     // Don't use a single color for all bodyparts
-                    
-                    for (auto const& [bodypart, point_data] : multi_point_data) {
+
+                    for (auto const & [bodypart, point_data]: multi_point_data) {
                         std::string const bodypart_name = name + "_" + bodypart;
-                        
+
                         // Attach identity context and generate EntityIds
                         if (point_data) {
                             point_data->setIdentityContext(bodypart_name, dm->getEntityRegistry());
