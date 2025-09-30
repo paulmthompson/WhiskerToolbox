@@ -1,6 +1,7 @@
 
 
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(Eigen3 CONFIG REQUIRED)
 
 if (ENABLE_OPENCV)
 # OPEN CV INTERFERES WITH TENSOR DATA. we need to import it first
@@ -175,6 +176,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.cpp
         transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.cpp
         transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp
+        transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.cpp
+        transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp
         transforms/Lines/Line_Alignment/line_alignment.hpp
         transforms/Lines/Line_Alignment/line_alignment.cpp
         transforms/Lines/Line_Resample/line_resample.cpp
@@ -220,8 +223,10 @@ add_library(DataManager SHARED ${DATAMANAGER_SOURCES}
 
 target_include_directories(DataManager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" # State Estimation
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
         "${iir_SOURCE_DIR}"   
+
     )
 
 
@@ -241,6 +246,8 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
 target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
+target_link_libraries(DataManager PUBLIC StateEstimation)
+
 if(ENABLE_OPENCV)
     target_link_libraries(DataManager PUBLIC ImageProcessing)
 endif()

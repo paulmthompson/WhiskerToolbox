@@ -20,6 +20,7 @@
 #include "Masks/Mask_To_Line/mask_to_line.hpp"
 #include "Media/whisker_tracing.hpp"
 #include "Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
+#include "Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
 
 #include <iostream>
 
@@ -437,4 +438,44 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<LineProximityGroupingParameters, std::string>(
             "Group Lines by Proximity", "new_group_name", &LineProximityGroupingParameters::new_group_name);
+
+    // ==================== Line Kalman Grouping ===============
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "dt", &LineKalmanGroupingParameters::dt);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "process_noise_position", &LineKalmanGroupingParameters::process_noise_position);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "process_noise_velocity", &LineKalmanGroupingParameters::process_noise_velocity);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "measurement_noise", &LineKalmanGroupingParameters::measurement_noise);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "initial_position_uncertainty", &LineKalmanGroupingParameters::initial_position_uncertainty);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "initial_velocity_uncertainty", &LineKalmanGroupingParameters::initial_velocity_uncertainty);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "max_assignment_distance", &LineKalmanGroupingParameters::max_assignment_distance);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "min_kalman_confidence", &LineKalmanGroupingParameters::min_kalman_confidence);
+
+    registerBasicParameter<LineKalmanGroupingParameters, bool>(
+            "Group Lines using Kalman Filtering", "estimate_noise_empirically", &LineKalmanGroupingParameters::estimate_noise_empirically);
+
+    registerBasicParameter<LineKalmanGroupingParameters, bool>(
+            "Group Lines using Kalman Filtering", "run_backward_smoothing", &LineKalmanGroupingParameters::run_backward_smoothing);
+
+    registerBasicParameter<LineKalmanGroupingParameters, bool>(
+            "Group Lines using Kalman Filtering", "create_new_group_for_outliers", &LineKalmanGroupingParameters::create_new_group_for_outliers);
+
+    registerBasicParameter<LineKalmanGroupingParameters, std::string>(
+            "Group Lines using Kalman Filtering", "new_group_name", &LineKalmanGroupingParameters::new_group_name);
+
+    registerBasicParameter<LineKalmanGroupingParameters, bool>(
+            "Group Lines using Kalman Filtering", "verbose_output", &LineKalmanGroupingParameters::verbose_output);
 }

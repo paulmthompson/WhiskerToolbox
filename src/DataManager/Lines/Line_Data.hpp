@@ -305,6 +305,25 @@ public:
                });
     }
 
+    /**
+    * @brief Get all line entries with their associated times as a zero-copy range
+    *
+    * This method provides zero-copy access to the underlying LineEntry data structure,
+    * which contains both Line2D and EntityId information.
+    *
+    * @return A view of time-line entries pairs for all times
+    */
+    [[nodiscard]] auto GetAllLineEntriesAsRange() const {
+        struct TimeLineEntriesPair {
+            TimeFrameIndex time;
+            std::vector<LineEntry> const & entries;
+        };
+
+        return _data | std::views::transform([](auto const & pair) {
+                   return TimeLineEntriesPair{pair.first, pair.second};
+               });
+    }
+
 
 
     /**
@@ -331,6 +350,29 @@ public:
                        lines.push_back(entry.line);
                    }
                    return TimeLinesPair{pair.first, std::move(lines)};
+               });
+    }
+
+    /**
+    * @brief Get line entries with their associated times as a zero-copy range within a TimeFrameInterval
+    *
+    * Returns a filtered view of time-line entries pairs for times within the specified interval [start, end] (inclusive).
+    * This method provides zero-copy access to the underlying LineEntry data structure.
+    *
+    * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
+    * @return A zero-copy view of time-line entries pairs for times within the specified interval
+    */
+    [[nodiscard]] auto GetLineEntriesInRange(TimeFrameInterval const & interval) const {
+        struct TimeLineEntriesPair {
+            TimeFrameIndex time;
+            std::vector<LineEntry> const & entries;
+        };
+
+        return _data | std::views::filter([interval](auto const & pair) {
+                   return pair.first >= interval.start && pair.first <= interval.end;
+               }) |
+               std::views::transform([](auto const & pair) {
+                   return TimeLineEntriesPair{pair.first, pair.second};
                });
     }
 
@@ -371,6 +413,46 @@ public:
         // 3. Create converted interval and use the original function
         TimeFrameInterval target_interval{target_start_index, target_end_index};
         return GetLinesInRange(target_interval);
+    }
+
+    /**
+    * @brief Get line entries with their associated times as a zero-copy range within a TimeFrameInterval with timeframe conversion
+    *
+    * Converts the time range from the source timeframe to the target timeframe (this line data's timeframe)
+    * and returns a filtered view of time-line entries pairs for times within the converted interval range.
+    * If the timeframes are the same, no conversion is performed.
+    * This method provides zero-copy access to the underlying LineEntry data structure.
+    *
+    * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
+    * @param source_timeframe The timeframe that the interval is expressed in
+    * @param target_timeframe The timeframe that this line data uses
+    * @return A zero-copy view of time-line entries pairs for times within the converted interval range
+    */
+    [[nodiscard]] auto GetLineEntriesInRange(TimeFrameInterval const & interval,
+                                             TimeFrame const * source_timeframe,
+                                             TimeFrame const * target_timeframe) const {
+        // If the timeframes are the same object, no conversion is needed
+        if (source_timeframe == target_timeframe) {
+            return GetLineEntriesInRange(interval);
+        }
+
+        // If either timeframe is null, fall back to original behavior
+        if (!source_timeframe || !target_timeframe) {
+            return GetLineEntriesInRange(interval);
+        }
+
+        // Convert the time range from source timeframe to target timeframe
+        // 1. Get the time values from the source timeframe
+        auto start_time_value = source_timeframe->getTimeAtIndex(interval.start);
+        auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
+
+        // 2. Convert those time values to indices in the target timeframe
+        auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
+        auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
+
+        // 3. Create converted interval and use the original function
+        TimeFrameInterval target_interval{target_start_index, target_end_index};
+        return GetLineEntriesInRange(target_interval);
     }
 
     // ========== Copy and Move ==========

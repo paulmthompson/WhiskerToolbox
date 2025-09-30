@@ -5,6 +5,7 @@ set(STATE_ESTIMATION_SOURCES
     StateEstimation.cpp
     Kalman/kalman.hpp
     Kalman/kalman.cpp
+    Assignment/hungarian.hpp
     Assignment/hungarian.cpp
 )
 

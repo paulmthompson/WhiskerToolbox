@@ -13,6 +13,7 @@
 #include "transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp"
 #include "transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
+#include "transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
 #include "transforms/Lines/Line_Resample/line_resample.hpp"
 #include "transforms/Lines/Line_Subsegment/line_subsegment.hpp"
 #include "transforms/Masks/Mask_Area/mask_area.hpp"
@@ -59,6 +60,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LinePointExtractionOperation>());
     _registerOperation(std::make_unique<LineClipOperation>());
     _registerOperation(std::make_unique<LineProximityGroupingOperation>());
+    _registerOperation(std::make_unique<LineKalmanGroupingOperation>());
     _registerOperation(std::make_unique<GroupOperation>());
     _registerOperation(std::make_unique<AnalogFilterOperation>());
     _registerOperation(std::make_unique<WhiskerTracingOperation>());

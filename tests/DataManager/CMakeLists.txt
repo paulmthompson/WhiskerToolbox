@@ -73,6 +73,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Resample/line_resample.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Subsegment/line_subsegment.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Area/mask_area.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Centroid/mask_centroid.test.cpp
@@ -123,6 +124,7 @@ target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)
 
 target_include_directories(test_data_manager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/..>"
 )
 
 if (APPLE)

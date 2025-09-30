@@ -539,6 +539,10 @@
  
  } // end of namespace munkres
  
+ // Explicit instantiation for the types we need
+ template int Munkres::hungarian<std::vector, int>(
+     const std::vector<std::vector<int>>& original, bool allow_negatives);
+
  
  /*
  int main() //example of usage
