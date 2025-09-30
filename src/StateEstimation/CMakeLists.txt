@@ -7,6 +7,18 @@ set(STATE_ESTIMATION_SOURCES
     Kalman/kalman.cpp
     Assignment/hungarian.hpp
     Assignment/hungarian.cpp
+    Assignment/AssignmentProblem.hpp
+    Assignment/AssignmentProblem.cpp
+    Features/FeatureVector.hpp
+    Features/FeatureVector.cpp
+    Features/LineFeatureExtractor.hpp
+    Tracking/MultiFeatureKalman.hpp
+    Tracking/TrackingSession.hpp
+)
+
+# Optional demo/example files (not included in library)
+set(STATE_ESTIMATION_EXAMPLES
+    examples/tracking_framework_demo.cpp
 )
 
 add_library(StateEstimation STATIC ${STATE_ESTIMATION_SOURCES})

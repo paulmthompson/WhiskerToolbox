@@ -3,4 +3,16 @@
 
 #include <Eigen/Dense>
 
+// Core feature framework
+#include "Features/FeatureVector.hpp"
+#include "Features/LineFeatureExtractor.hpp"
+
+// Assignment algorithms
+#include "Assignment/AssignmentProblem.hpp"
+#include "Assignment/hungarian.hpp"
+
+// Tracking components
+#include "Tracking/MultiFeatureKalman.hpp"
+#include "Kalman/kalman.hpp"
+
 #endif
