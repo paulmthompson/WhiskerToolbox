@@ -19,6 +19,7 @@
  #include <iterator>
  #include <limits>
  #include <list>
+ #include <stdexcept>
  #include <string>
  #include <type_traits>
  #include <vector>
@@ -358,6 +359,10 @@
          find_star_in_col(path[path_count - 1][1], r, M);
          if (r > -1) {
              path_count += 1;
+             // Bounds check to prevent buffer overflow
+             if (path_count > static_cast<int>(path.size())) {
+                 throw std::runtime_error("Hungarian algorithm: path length exceeded maximum size");
+             }
              path[path_count - 1][0] = r;
              path[path_count - 1][1] = path[path_count - 2][1];
          }
@@ -366,6 +371,10 @@
          if (!done) {
              find_prime_in_row(path[path_count - 1][0], c, M);
              path_count += 1;
+             // Bounds check to prevent buffer overflow
+             if (path_count > static_cast<int>(path.size())) {
+                 throw std::runtime_error("Hungarian algorithm: path length exceeded maximum size");
+             }
              path[path_count - 1][0] = path[path_count - 2][0];
              path[path_count - 1][1] = c;
          }
@@ -493,7 +502,8 @@
      int path_row_0, path_col_0; //temporary to hold the smallest uncovered value
      
      // Array for the augmenting path algorithm
-     std::vector<std::vector<int>> path (sz+1, std::vector<int>(2, 0));
+     // Path can potentially alternate between starred and primed zeros up to 2*sz length
+     std::vector<std::vector<int>> path (2*sz, std::vector<int>(2, 0));
      
      /* Now Work The Steps */
      bool done = false;
@@ -530,8 +540,8 @@
      }
      
      //Printing part (optional)
-     std::cout << "Cost Matrix: \n" << original << std::endl 
-               << "Optimal assignment: \n" << M;
+     //std::cout << "Cost Matrix: \n" << original << std::endl 
+     //          << "Optimal assignment: \n" << M;
      
      return output_solution(original, M);
  }
