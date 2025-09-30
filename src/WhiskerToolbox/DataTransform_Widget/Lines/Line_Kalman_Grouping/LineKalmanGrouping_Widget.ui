@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LineKalmanGrouping_Widget</class>
+ <widget class="QWidget" name="LineKalmanGrouping_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Line Kalman Grouping</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="kalmanParametersGroupBox">
+     <property name="title">
+      <string>Kalman Filter Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="kalmanFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="dtLabel">
+        <property name="text">
+         <string>Time Step (dt):</string>
+        </property>
+        <property name="toolTip">
+         <string>Time step between frames</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="dtSpinBox">
+        <property name="toolTip">
+         <string>Time step between frames</string>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+        <property name="minimum">
+         <double>0.001000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="processNoisePositionLabel">
+        <property name="text">
+         <string>Process Noise (Position):</string>
+        </property>
+        <property name="toolTip">
+         <string>Process noise for position components</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="processNoisePositionSpinBox">
+        <property name="toolTip">
+         <string>Process noise for position components</string>
+        </property>
+        <property name="suffix">
+         <string> pixels</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>10.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="processNoiseVelocityLabel">
+        <property name="text">
+         <string>Process Noise (Velocity):</string>
+        </property>
+        <property name="toolTip">
+         <string>Process noise for velocity components</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="processNoiseVelocitySpinBox">
+        <property name="toolTip">
+         <string>Process noise for velocity components</string>
+        </property>
+        <property name="suffix">
+         <string> px/frame</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="measurementNoiseLabel">
+        <property name="text">
+         <string>Measurement Noise:</string>
+        </property>
+        <property name="toolTip">
+         <string>Measurement noise for observations</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="measurementNoiseSpinBox">
+        <property name="toolTip">
+         <string>Measurement noise for observations</string>
+        </property>
+        <property name="suffix">
+         <string> pixels</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>5.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="initialPositionUncertaintyLabel">
+        <property name="text">
+         <string>Initial Position Uncertainty:</string>
+        </property>
+        <property name="toolTip">
+         <string>Initial uncertainty in position estimates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QDoubleSpinBox" name="initialPositionUncertaintySpinBox">
+        <property name="toolTip">
+         <string>Initial uncertainty in position estimates</string>
+        </property>
+        <property name="suffix">
+         <string> pixels</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>50.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="initialVelocityUncertaintyLabel">
+        <property name="text">
+         <string>Initial Velocity Uncertainty:</string>
+        </property>
+        <property name="toolTip">
+         <string>Initial uncertainty in velocity estimates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QDoubleSpinBox" name="initialVelocityUncertaintySpinBox">
+        <property name="toolTip">
+         <string>Initial uncertainty in velocity estimates</string>
+        </property>
+        <property name="suffix">
+         <string> px/frame</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>10.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="assignmentParametersGroupBox">
+     <property name="title">
+      <string>Assignment Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="assignmentFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="maxAssignmentDistanceLabel">
+        <property name="text">
+         <string>Max Assignment Distance:</string>
+        </property>
+        <property name="toolTip">
+         <string>Maximum Mahalanobis distance for assignment</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="maxAssignmentDistanceSpinBox">
+        <property name="toolTip">
+         <string>Maximum Mahalanobis distance for assignment</string>
+        </property>
+        <property name="suffix">
+         <string> units</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>100.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="minKalmanConfidenceLabel">
+        <property name="text">
+         <string>Min Kalman Confidence:</string>
+        </property>
+        <property name="toolTip">
+         <string>Minimum confidence threshold for predictions</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="minKalmanConfidenceSpinBox">
+        <property name="toolTip">
+         <string>Minimum confidence threshold for predictions</string>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.100000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="algorithmControlGroupBox">
+     <property name="title">
+      <string>Algorithm Control</string>
+     </property>
+     <layout class="QVBoxLayout" name="algorithmVerticalLayout">
+      <item>
+       <widget class="QCheckBox" name="estimateNoiseEmpiricallyCheckBox">
+        <property name="text">
+         <string>Estimate noise parameters empirically from grouped data</string>
+        </property>
+        <property name="toolTip">
+         <string>Automatically estimate noise parameters from existing grouped data</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="noiseEstimationNoteLabel">
+        <property name="text">
+         <string>Noise parameters will be estimated from existing grouped data</string>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: #666; font-style: italic; }</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="runBackwardSmoothingCheckBox">
+        <property name="text">
+         <string>Run backward smoothing (RTS)</string>
+        </property>
+        <property name="toolTip">
+         <string>Run Rauch-Tung-Striebel smoothing between anchor frames</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="createNewGroupCheckBox">
+        <property name="text">
+         <string>Create new group for outliers</string>
+        </property>
+        <property name="toolTip">
+         <string>Create a new group for lines that don't fit existing groups</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="newGroupNameLayout">
+        <item>
+         <widget class="QLabel" name="newGroupNameLabel">
+          <property name="text">
+           <string>New Group Name:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="newGroupNameLineEdit">
+          <property name="text">
+           <string>Kalman Tracked Lines</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="verboseOutputCheckBox">
+        <property name="text">
+         <string>Enable verbose output (debugging)</string>
+        </property>
+        <property name="toolTip">
+         <string>Enable detailed logging for debugging purposes</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <spacer name="buttonSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="resetDefaultsButton">
+       <property name="text">
+        <string>Reset to Defaults</string>
+       </property>
+       <property name="toolTip">
+        <string>Reset all parameters to their default values</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
