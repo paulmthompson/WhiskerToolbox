@@ -12,8 +12,11 @@ set(STATE_ESTIMATION_SOURCES
     Features/FeatureVector.hpp
     Features/FeatureVector.cpp
     Features/LineFeatureExtractor.hpp
+    Features/LineFeatureExtractor.cpp
     Tracking/MultiFeatureKalman.hpp
+    Tracking/MultiFeatureKalman.cpp
     Tracking/TrackingSession.hpp
+    Tracking/TrackingSession.cpp
 )
 
 # Optional demo/example files (not included in library)

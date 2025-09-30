@@ -37,17 +37,27 @@ AssignmentResult HungarianAssignment::solve(std::vector<std::vector<double>> con
     
     try {
         // Convert double cost matrix to integer for Hungarian algorithm
-        std::vector<std::vector<int>> int_cost_matrix(cost_matrix.size());
-        const double scale_factor = 1000.0; // Scale for precision
-        const int max_cost_int = static_cast<int>(constraints.max_cost * scale_factor);
+        // Hungarian algorithm requires square matrix, so pad if necessary
+        size_t matrix_size = std::max(cost_matrix.size(), cost_matrix.empty() ? 0 : cost_matrix[0].size());
+        std::vector<std::vector<int>> int_cost_matrix(matrix_size, std::vector<int>(matrix_size));
         
-        for (std::size_t i = 0; i < cost_matrix.size(); ++i) {
-            int_cost_matrix[i].resize(cost_matrix[i].size());
-            for (std::size_t j = 0; j < cost_matrix[i].size(); ++j) {
-                if (cost_matrix[i][j] > constraints.max_cost) {
-                    int_cost_matrix[i][j] = max_cost_int + 1000; // Make infeasible
+        const double scale_factor = 1000.0; // Scale for precision
+        const int max_cost_int = std::isinf(constraints.max_cost) ? 1000000 : static_cast<int>(constraints.max_cost * scale_factor);
+        const int infeasible_cost = max_cost_int + 1000;
+        
+        // Fill the matrix
+        for (std::size_t i = 0; i < matrix_size; ++i) {
+            for (std::size_t j = 0; j < matrix_size; ++j) {
+                if (i < cost_matrix.size() && j < cost_matrix[i].size()) {
+                    // Real cost from original matrix
+                    if (std::isinf(cost_matrix[i][j]) || cost_matrix[i][j] > constraints.max_cost) {
+                        int_cost_matrix[i][j] = infeasible_cost;
+                    } else {
+                        int_cost_matrix[i][j] = static_cast<int>(cost_matrix[i][j] * scale_factor);
+                    }
                 } else {
-                    int_cost_matrix[i][j] = static_cast<int>(cost_matrix[i][j] * scale_factor);
+                    // Padding area - make it feasible but high cost so it's only used if necessary
+                    int_cost_matrix[i][j] = infeasible_cost;
                 }
             }
         }
@@ -63,11 +73,12 @@ AssignmentResult HungarianAssignment::solve(std::vector<std::vector<double>> con
         for (std::size_t i = 0; i < assignment_matrix.size() && i < result.assignments.size(); ++i) {
             for (std::size_t j = 0; j < assignment_matrix[i].size(); ++j) {
                 if (assignment_matrix[i][j] == 1) {
-                    if (j < cost_matrix[i].size() && cost_matrix[i][j] <= constraints.max_cost) {
+                    // Check if this is a valid assignment (not padding area)
+                    if (j < cost_matrix[i].size() && !std::isinf(cost_matrix[i][j]) && cost_matrix[i][j] <= constraints.max_cost) {
                         result.assignments[i] = static_cast<int>(j);
                         result.costs[i] = cost_matrix[i][j];
                     } else {
-                        result.assignments[i] = -1; // Unassigned due to cost constraint
+                        result.assignments[i] = -1; // Unassigned due to cost constraint or padding
                         result.costs[i] = std::numeric_limits<double>::infinity();
                     }
                     break;
@@ -158,12 +169,13 @@ double FeatureWeightedDistance::operator()(FeatureVector const& object, FeatureV
             continue; // Skip features not present in target
         }
         
-        double weight = 1.0; // Default weight
+        // Only consider features that are explicitly weighted
         auto weight_it = feature_weights_.find(desc.name);
-        if (weight_it != feature_weights_.end()) {
-            weight = weight_it->second;
+        if (weight_it == feature_weights_.end()) {
+            continue; // Skip features not in weights map
         }
         
+        double weight = weight_it->second;
         if (weight <= 0.0) {
             continue; // Skip features with zero or negative weight
         }

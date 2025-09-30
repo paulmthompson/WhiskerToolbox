@@ -70,7 +70,7 @@ public:
     /**
      * @brief Check if filter is initialized and ready for prediction/update
      */
-    [[nodiscard]] bool isInitialized() const { return initialized_; }
+    [[nodiscard]] bool isInitialized() const;
     
     /**
      * @brief Predict features at next time step
@@ -155,6 +155,11 @@ private:
     void createSystemMatrices();
     
     /**
+     * @brief Create dynamics matrix for given time step
+     */
+    Eigen::MatrixXd createDynamicsMatrix(double dt) const;
+    
+    /**
      * @brief Convert feature vector to state vector (with derivatives set to zero)
      */
     Eigen::VectorXd featureVectorToState(FeatureVector const& features) const;
@@ -168,6 +173,16 @@ private:
      * @brief Convert feature vector to measurement vector
      */
     Eigen::VectorXd featureVectorToMeasurement(FeatureVector const& features) const;
+    
+    /**
+     * @brief Get measurement covariance matrix
+     */
+    Eigen::MatrixXd getMeasurementCovariance() const;
+    
+    /**
+     * @brief Calculate confidence from covariance matrix
+     */
+    double calculateConfidence(Eigen::MatrixXd const& covariance) const;
     
     /**
      * @brief Get noise parameter for a specific feature

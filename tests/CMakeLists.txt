@@ -13,6 +13,7 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(Catch)
 
 add_subdirectory(CoreGeometry)
+add_subdirectory(StateEstimation)
 add_subdirectory(DataManager)
 if (ENABLE_UI)
         add_subdirectory(WhiskerToolbox)
