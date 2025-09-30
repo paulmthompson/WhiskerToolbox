@@ -5,10 +5,14 @@ set(STATE_ESTIMATION_SOURCES
     StateEstimation.cpp
     Kalman/kalman.hpp
     Kalman/kalman.cpp
+    Kalman/KalmanFilter.hpp
     Assignment/hungarian.hpp
     Assignment/hungarian.cpp
     Assignment/AssignmentProblem.hpp
     Assignment/AssignmentProblem.cpp
+    Assignment/IAssigner.hpp
+    Assignment/HungarianAssigner.hpp
+    Assignment/HungarianAssigner.cpp
     Features/FeatureVector.hpp
     Features/FeatureVector.cpp
     Features/LineFeatureExtractor.hpp
@@ -17,6 +21,8 @@ set(STATE_ESTIMATION_SOURCES
     Tracking/MultiFeatureKalman.cpp
     Tracking/TrackingSession.hpp
     Tracking/TrackingSession.cpp
+    Filter/IFilter.hpp
+    Tracker.hpp
 )
 
 # Optional demo/example files (not included in library)
