@@ -3,6 +3,7 @@
 
 #include "CoreGeometry/lines.hpp"
 #include "Features/FeatureVector.hpp"
+
 #include <Eigen/Dense>
 
 namespace StateEstimation {

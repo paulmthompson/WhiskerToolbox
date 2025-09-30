@@ -1,8 +1,8 @@
 #ifndef HUNGARIAN_HPP
 #define HUNGARIAN_HPP
 
-#include <vector>
 #include <type_traits>
+#include <vector>
 
 namespace Munkres {
 
@@ -22,11 +22,11 @@ namespace Munkres {
  *       - Zeros indicate the optimal assignment
  *       - Use the starred zeros to extract the actual assignments
  */
-template<template <typename, typename...> class Container,
+template<template<typename, typename...> class Container,
          typename T,
          typename... Args>
 typename std::enable_if<std::is_integral<T>::value, T>::type
-hungarian(const Container<Container<T,Args...>>& original, bool allow_negatives = true);
+hungarian(Container<Container<T, Args...>> const & original, bool allow_negatives = true);
 
 /**
  * @brief Hungarian algorithm with assignment matrix output
@@ -38,28 +38,28 @@ hungarian(const Container<Container<T,Args...>>& original, bool allow_negatives 
  * @param allow_negatives Whether to allow negative costs in the matrix
  * @return Total minimum cost of the optimal assignment
  */
-template<template <typename, typename...> class Container,
+template<template<typename, typename...> class Container,
          typename T,
          typename... Args>
 typename std::enable_if<std::is_integral<T>::value, T>::type
-hungarian_with_assignment(const Container<Container<T,Args...>>& original, 
-                         std::vector<std::vector<int>>& assignment_matrix,
-                         bool allow_negatives = true);
+hungarian_with_assignment(Container<Container<T, Args...>> const & original,
+                          std::vector<std::vector<int>> & assignment_matrix,
+                          bool allow_negatives = true);
 
 // Non-template overloads for the common std::vector<std::vector<int>> case.
 // MSVC has difficulty deducing nested template-template parameters in some
 // call sites; these overloads forward to the template with explicit
 // template arguments to avoid that problem.
-inline int hungarian(const std::vector<std::vector<int>>& original, bool allow_negatives = true) {
+inline int hungarian(std::vector<std::vector<int>> const & original, bool allow_negatives = true) {
     return hungarian<std::vector, int>(original, allow_negatives);
 }
 
-inline int hungarian_with_assignment(const std::vector<std::vector<int>>& original,
-                                    std::vector<std::vector<int>>& assignment_matrix,
-                                    bool allow_negatives = true) {
+inline int hungarian_with_assignment(std::vector<std::vector<int>> const & original,
+                                     std::vector<std::vector<int>> & assignment_matrix,
+                                     bool allow_negatives = true) {
     return hungarian_with_assignment<std::vector, int>(original, assignment_matrix, allow_negatives);
 }
 
-} // namespace Munkres
+}// namespace Munkres
 
-#endif // HUNGARIAN_HPP
+#endif// HUNGARIAN_HPP
