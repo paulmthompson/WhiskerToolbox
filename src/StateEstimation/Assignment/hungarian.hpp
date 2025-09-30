@@ -28,6 +28,24 @@ template<template <typename, typename...> class Container,
 typename std::enable_if<std::is_integral<T>::value, T>::type
 hungarian(const Container<Container<T,Args...>>& original, bool allow_negatives = true);
 
+/**
+ * @brief Hungarian algorithm with assignment matrix output
+ * 
+ * Solves the assignment problem and returns both cost and assignment matrix.
+ * 
+ * @param original Cost matrix where original[i][j] is the cost of assigning worker i to job j
+ * @param assignment_matrix Output matrix where assignment_matrix[i][j] = 1 if worker i is assigned to job j
+ * @param allow_negatives Whether to allow negative costs in the matrix
+ * @return Total minimum cost of the optimal assignment
+ */
+template<template <typename, typename...> class Container,
+         typename T,
+         typename... Args>
+typename std::enable_if<std::is_integral<T>::value, T>::type
+hungarian_with_assignment(const Container<Container<T,Args...>>& original, 
+                         std::vector<std::vector<int>>& assignment_matrix,
+                         bool allow_negatives = true);
+
 } // namespace Munkres
 
 #endif // HUNGARIAN_HPP

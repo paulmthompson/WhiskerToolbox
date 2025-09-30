@@ -545,15 +545,88 @@
      
      return output_solution(original, M);
  }
- 
- 
- } // end of namespace munkres
- 
- // Explicit instantiation for the types we need
- template int Munkres::hungarian<std::vector, int>(
-     const std::vector<std::vector<int>>& original, bool allow_negatives);
 
- 
+ template<template <typename, typename...> class Container,
+          typename T,
+          typename... Args>
+ typename std::enable_if<std::is_integral<T>::value, T>::type
+ hungarian_with_assignment(const Container<Container<T,Args...>>& original, 
+                          std::vector<std::vector<int>>& assignment_matrix,
+                          bool allow_negatives)
+ {
+     Container<Container<T,Args...>> matrix (original);
+     
+     /* If the problem is an odd sized matrix then we adjust to an even size by padding with zeroes  */
+     pad_matrix(matrix);
+     std::size_t sz = matrix.size();
+     
+     /* The masked matrix M.  If M(i,j)=1 then C(i,j) is a starred zero,  
+      * If M(i,j)=2 then C(i,j) is a primed zero. */
+     std::vector<std::vector<int>> M (sz, std::vector<int>(sz, 0));
+     
+     /* We also define two vectors RowCover and ColCover that are used to "cover" 
+      *the rows and columns of the cost matrix C*/
+     std::vector<int> RowCover (sz, 0);
+     std::vector<int> ColCover (sz, 0);
+     
+     int path_row_0, path_col_0; //temporary to hold the smallest uncovered value
+     
+     // Array for the augmenting path algorithm
+     // Path can potentially alternate between starred and primed zeros up to 2*sz length
+     std::vector<std::vector<int>> path (2*sz, std::vector<int>(2, 0));
+     
+     /* Now Work The Steps */
+     bool done = false;
+     int step = 1;
+     while (!done) {
+         switch (step) {
+             case 1:
+                 step1(matrix, step);
+                 break;
+             case 2:
+                 step2(matrix, M, RowCover, ColCover, step);
+                 break;
+             case 3:
+                 step3(M, ColCover, step);
+                 break;
+             case 4:
+                 step4(matrix, M, RowCover, ColCover, path_row_0, path_col_0, step);
+                 break;
+             case 5:
+                 step5(path, path_row_0, path_col_0, M, RowCover, ColCover, step);
+                 break;
+             case 6:
+                 step6(matrix, RowCover, ColCover, step);
+                 break;
+             case 7:
+                 for (auto& vec: M) {vec.resize(original.begin()->size());}
+                 M.resize(original.size());
+                 done = true;
+                 break;
+             default:
+                 done = true;
+                 break;
+         }
+     }
+     
+     // Copy the assignment matrix to output
+     assignment_matrix = M;
+     
+     return output_solution(original, M);
+ }
+
+
+
+} // end of namespace munkres
+
+// Explicit instantiation for the types we need
+template int Munkres::hungarian<std::vector, int>(
+    const std::vector<std::vector<int>>& original, bool allow_negatives);
+
+template int Munkres::hungarian_with_assignment<std::vector, int>(
+    const std::vector<std::vector<int>>& original, 
+    std::vector<std::vector<int>>& assignment_matrix,
+    bool allow_negatives); 
  /*
  int main() //example of usage
  {

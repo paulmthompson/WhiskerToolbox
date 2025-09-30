@@ -253,41 +253,32 @@ std::vector<int> solveAssignmentProblem(std::vector<Eigen::Vector2d> const& ungr
     
     // Solve using Hungarian algorithm
     try {
-        // Hungarian algorithm takes const reference and makes internal copy
-        auto total_cost = Munkres::hungarian(cost_matrix, true);
+        std::vector<std::vector<int>> assignment_matrix;
+        auto total_cost = Munkres::hungarian_with_assignment(cost_matrix, assignment_matrix, true);
         
-        // Extract assignments from the solved matrix
-        // The Hungarian algorithm implementation doesn't directly give us the assignment matrix,
-        // so we need a different approach. Let's use a simpler greedy assignment for now.
-        
+        // Extract assignments from the assignment matrix
         std::vector<int> assignments(n_ungrouped, -1);
-        std::vector<bool> used_predictions(n_predicted, false);
         
-        // Create a vector of (distance, ungrouped_idx, predicted_idx) and sort by distance
-        std::vector<std::tuple<double, int, int>> candidate_assignments;
-        
-        for (size_t i = 0; i < n_ungrouped; ++i) {
-            for (size_t j = 0; j < n_predicted; ++j) {
-                double distance = calculateMahalanobisDistance(
-                    ungrouped_centroids[i], 
-                    predicted_centroids[j], 
-                    covariances[j]
-                );
-                
-                if (distance <= max_distance) {
-                    candidate_assignments.emplace_back(distance, static_cast<int>(i), static_cast<int>(j));
+        for (size_t i = 0; i < n_ungrouped && i < assignment_matrix.size(); ++i) {
+            for (size_t j = 0; j < n_predicted && j < assignment_matrix[i].size(); ++j) {
+                if (assignment_matrix[i][j] == 1) { // Starred zero indicates assignment
+                    // Check if this is a valid assignment (not a dummy)
+                    double distance = calculateMahalanobisDistance(
+                        ungrouped_centroids[i], 
+                        predicted_centroids[j], 
+                        covariances[j]
+                    );
+                    
+                    if (distance <= max_distance) {
+                        assignments[i] = static_cast<int>(j);
+                        
+                        //if (debug_output) {
+                        //    std::cout << "  Assignment: ungrouped[" << i << "] -> predicted[" << j 
+                         //            << "] (distance: " << distance << ")" << std::endl;
+                        //}
+                    }
+                    break; // Each row should have at most one assignment
                 }
-            }
-        }
-        
-        // Sort by distance
-        std::sort(candidate_assignments.begin(), candidate_assignments.end());
-        
-        // Greedily assign (this is a simplified approach)
-        for (auto const& [distance, i, j] : candidate_assignments) {
-            if (assignments[i] == -1 && !used_predictions[j]) {
-                assignments[i] = j;
-                used_predictions[j] = true;
             }
         }
         
@@ -372,6 +363,14 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
     // Initialize tracking states for existing groups
     std::map<GroupId, GroupTrackingState> tracking_states;
     auto all_group_ids = group_manager->getAllGroupIds();
+    
+    if (params->verbose_output) {
+        std::cout << "Found " << all_group_ids.size() << " existing groups: ";
+        for (auto gid : all_group_ids) {
+            std::cout << gid << " ";
+        }
+        std::cout << std::endl;
+    }
     
     for (auto group_id : all_group_ids) {
         GroupTrackingState state;
@@ -494,6 +493,15 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
                     ungrouped_entities.push_back(entity_id);
                     ungrouped_centroids.push_back(calculateLineCentroid(line_opt.value()));
                 }
+            } else {
+                // This entity is already grouped - log for debugging
+                if (params->verbose_output) {
+                    std::cout << "  Entity " << entity_id << " already in group(s): ";
+                    for (auto gid : groups_containing_entity) {
+                        std::cout << gid << " ";
+                    }
+                    std::cout << std::endl;
+                }
             }
         }
         
@@ -545,6 +553,25 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
                         std::cout << assignments[i] << " ";
                     }
                     std::cout << std::endl;
+                }
+                
+                // Validate assignments - ensure no duplicates
+                std::vector<bool> used_groups(active_group_ids.size(), false);
+                bool has_duplicate = false;
+                for (size_t i = 0; i < assignments.size(); ++i) {
+                    if (assignments[i] >= 0 && assignments[i] < static_cast<int>(active_group_ids.size())) {
+                        if (used_groups[assignments[i]]) {
+                            std::cerr << "ERROR: Duplicate assignment detected! Group " << assignments[i] 
+                                     << " assigned to multiple lines at frame " << time.getValue() << std::endl;
+                            has_duplicate = true;
+                        }
+                        used_groups[assignments[i]] = true;
+                    }
+                }
+                
+                if (has_duplicate) {
+                    std::cerr << "Skipping assignment application due to duplicates" << std::endl;
+                    continue; // Skip this frame to avoid corruption
                 }
                 
                 // Apply assignments
