@@ -46,6 +46,20 @@ hungarian_with_assignment(const Container<Container<T,Args...>>& original,
                          std::vector<std::vector<int>>& assignment_matrix,
                          bool allow_negatives = true);
 
+// Non-template overloads for the common std::vector<std::vector<int>> case.
+// MSVC has difficulty deducing nested template-template parameters in some
+// call sites; these overloads forward to the template with explicit
+// template arguments to avoid that problem.
+inline int hungarian(const std::vector<std::vector<int>>& original, bool allow_negatives = true) {
+    return hungarian<std::vector, int>(original, allow_negatives);
+}
+
+inline int hungarian_with_assignment(const std::vector<std::vector<int>>& original,
+                                    std::vector<std::vector<int>>& assignment_matrix,
+                                    bool allow_negatives = true) {
+    return hungarian_with_assignment<std::vector, int>(original, assignment_matrix, allow_negatives);
+}
+
 } // namespace Munkres
 
 #endif // HUNGARIAN_HPP

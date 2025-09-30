@@ -543,7 +543,7 @@
      //std::cout << "Cost Matrix: \n" << original << std::endl 
      //          << "Optimal assignment: \n" << M;
      
-     return output_solution(original, M);
+    return output_solution<Container, T, Args...>(original, M);
  }
 
  template<template <typename, typename...> class Container,
@@ -612,7 +612,7 @@
      // Copy the assignment matrix to output
      assignment_matrix = M;
      
-     return output_solution(original, M);
+    return output_solution<Container, T, Args...>(original, M);
  }
 
 
