@@ -46,13 +46,13 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
 };
 
 /**
- * @brief Lightweight wrapper that only stores EntityID for tracking
+ * @brief Lightweight wrapper that only stores EntityId for tracking
  * 
  * All feature data (centroids) are pre-computed and stored in a separate cache.
  * This avoids copying Line2D objects entirely.
  */
 struct TrackedEntity {
-    StateEstimation::EntityID id;
+    EntityId id;
 };
 
 /**
@@ -63,7 +63,7 @@ struct TrackedEntity {
  */
 class CachedCentroidExtractor : public StateEstimation::IFeatureExtractor<TrackedEntity> {
 public:
-    explicit CachedCentroidExtractor(std::unordered_map<StateEstimation::EntityID, Eigen::Vector2d> centroid_cache)
+    explicit CachedCentroidExtractor(std::unordered_map<EntityId, Eigen::Vector2d> centroid_cache)
         : centroid_cache_(std::move(centroid_cache)) {}
     
     Eigen::VectorXd getFilterFeatures(const TrackedEntity& data) const override;
@@ -73,7 +73,7 @@ public:
     std::unique_ptr<StateEstimation::IFeatureExtractor<TrackedEntity>> clone() const override;
 
 private:
-    std::unordered_map<StateEstimation::EntityID, Eigen::Vector2d> centroid_cache_;
+    std::unordered_map<EntityId, Eigen::Vector2d> centroid_cache_;
 };
 
 /**
@@ -120,7 +120,7 @@ public:
                            
     DataTypeVariant execute(DataTypeVariant const& dataVariant,
                            TransformParametersBase const* transformParameters,
-                           ProgressCallback progressCallback);
+                           ProgressCallback progressCallback) override;
 };
 
 #endif // LINE_KALMAN_GROUPING_HPP

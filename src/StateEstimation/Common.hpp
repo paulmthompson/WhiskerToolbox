@@ -1,6 +1,10 @@
 #ifndef STATE_ESTIMATION_COMMON_HPP
 #define STATE_ESTIMATION_COMMON_HPP
 
+#include "Entity/EntityTypes.hpp"
+#include "Entity/EntityGroupManager.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+
 #include <Eigen/Dense>
 
 #include <any>
@@ -9,10 +13,7 @@
 
 namespace StateEstimation {
 
-// --- Basic Type Definitions ---
-using EntityID = uint64_t;
-using GroupId = uint64_t;
-using FrameIndex = int;
+// Note: EntityId, GroupId, and TimeFrameIndex are now imported from Entity/ and TimeFrame/
 
 // --- Core Data Structures ---
 
@@ -38,7 +39,7 @@ struct Prediction {
 
 /// @brief Represents an unassigned observation.
 struct Observation {
-    EntityID entity_id;
+    EntityId entity_id;
 };
 
 /// @brief The result of the assignment process.

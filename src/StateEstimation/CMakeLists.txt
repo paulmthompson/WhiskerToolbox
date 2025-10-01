@@ -26,6 +26,7 @@ set(STATE_ESTIMATION_SOURCES
     Tracker.hpp
     Tracker.cpp
     Common.hpp
+    DataSource.hpp
 )
 
 # Optional demo/example files (not included in library)
@@ -37,11 +38,14 @@ add_library(StateEstimation STATIC ${STATE_ESTIMATION_SOURCES})
 
 target_include_directories(StateEstimation PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>  # For Entity/ and TimeFrame/ includes
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
 target_link_libraries(StateEstimation PUBLIC
     NEURALYZER_GEOMETRY
+    WhiskerToolbox::Entity
+    WhiskerToolbox::TimeFrame
 )
 
 target_link_libraries(StateEstimation PRIVATE Eigen3::Eigen)

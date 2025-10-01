@@ -2,6 +2,7 @@
 #define TRACKER_HPP
 
 #include "Assignment/IAssigner.hpp"
+#include "DataSource.hpp"
 #include "Features/IFeatureExtractor.hpp"
 #include "Filter/IFilter.hpp"
 
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -37,9 +39,7 @@ struct TrackedGroupState;
 template<typename DataType>
 class Tracker {
 public:
-    using DataSource = std::map<FrameIndex, std::vector<DataType>>;
-    using GroupMap = std::map<GroupId, std::vector<EntityID>>;
-    using GroundTruthMap = std::map<FrameIndex, std::map<GroupId, EntityID>>;
+    using GroundTruthMap = std::map<TimeFrameIndex, std::map<GroupId, EntityId>>;
 
     /**
      * @brief Constructs a Tracker.
@@ -56,25 +56,38 @@ public:
           assigner_(std::move(assigner)) {}
 
     /**
-     * @brief Main processing entry point. Runs the tracking algorithm over a range of frames.
+     * @brief Main processing entry point. Runs the tracking algorithm using a zero-copy data source.
      *
-     * @param data_source A map from frame index to a vector of data objects for that frame.
-     * @param groups The initial group assignments. The tracker will modify this map in-place for new assignments.
+     * @tparam Source A range type satisfying the DataSource concept
+     * @param data_source A range providing tuples of (DataType, EntityId, TimeFrameIndex)
+     * @param group_manager The EntityGroupManager containing group assignments. Will be modified for new assignments.
      * @param ground_truth A map indicating ground-truth labels for specific groups at specific frames.
      * @param start_frame The first frame to process.
      * @param end_frame The last frame to process.
      * @param progress_callback Optional callback for progress reporting (percentage 0-100).
      * @return A map from GroupId to a vector of smoothed filter states.
      */
-    SmoothedResults process(DataSource const & data_source,
-                            GroupMap & groups,
+    template<typename Source>
+        requires DataSource<Source, DataType>
+    SmoothedResults process(Source && data_source,
+                            EntityGroupManager & group_manager,
                             GroundTruthMap const & ground_truth,
-                            FrameIndex start_frame,
-                            FrameIndex end_frame,
+                            TimeFrameIndex start_frame,
+                            TimeFrameIndex end_frame,
                             ProgressCallback progress_callback = nullptr) {
 
-        // Initialize tracks from initial group map
-        for (auto const & [group_id, entities]: groups) {
+        // Build frame-indexed lookup for efficient access
+        std::map<TimeFrameIndex, std::vector<std::tuple<DataType const*, EntityId, TimeFrameIndex>>> frame_data_lookup;
+        
+        for (auto const & item : data_source) {
+            TimeFrameIndex time = getTimeFrameIndex(item);
+            if (time >= start_frame && time <= end_frame) {
+                frame_data_lookup[time].emplace_back(&getData(item), getEntityId(item), time);
+            }
+        }
+
+        // Initialize tracks from EntityGroupManager
+        for (auto group_id : group_manager.getAllGroupIds()) {
             if (active_tracks_.find(group_id) == active_tracks_.end()) {
                 active_tracks_[group_id] = TrackedGroupState<DataType>{
                         .group_id = group_id,
@@ -84,17 +97,19 @@ public:
 
         SmoothedResults all_smoothed_results;
 
-        FrameIndex const total_frames = end_frame - start_frame + 1;
-        FrameIndex frames_processed = 0;
+        TimeFrameIndex const total_frames = end_frame - start_frame + TimeFrameIndex(1);
+        int64_t frames_processed = 0;
 
-        for (FrameIndex current_frame = start_frame; current_frame <= end_frame; ++current_frame) {
-            auto frame_data_it = data_source.find(current_frame);
-            auto const & all_frame_data = (frame_data_it != data_source.end()) ? frame_data_it->second : std::vector<DataType>{};
+        for (TimeFrameIndex current_frame = start_frame; current_frame <= end_frame; ++current_frame) {
+            auto frame_data_it = frame_data_lookup.find(current_frame);
+            auto const & all_frame_data = (frame_data_it != frame_data_lookup.end()) 
+                ? frame_data_it->second 
+                : std::vector<std::tuple<DataType const*, EntityId, TimeFrameIndex>>{};
 
             // Report progress
             if (progress_callback) {
                 ++frames_processed;
-                int const percentage = static_cast<int>((frames_processed * 100) / total_frames);
+                int const percentage = static_cast<int>((frames_processed * 100) / total_frames.getValue());
                 progress_callback(percentage);
             }
 
@@ -108,7 +123,7 @@ public:
             }
 
             std::set<GroupId> updated_groups_this_frame;
-            std::set<EntityID> assigned_entities_this_frame;
+            std::set<EntityId> assigned_entities_this_frame;
 
             // --- Ground Truth Updates & Activation ---
             auto gt_frame_it = ground_truth.find(current_frame);
@@ -119,9 +134,9 @@ public:
                     auto & track = track_it->second;
 
                     DataType const * gt_item = nullptr;
-                    for (auto const & item: all_frame_data) {
-                        if (item.id == entity_id) {
-                            gt_item = &item;
+                    for (auto const & [data_ptr, eid, time] : all_frame_data) {
+                        if (eid == entity_id) {
+                            gt_item = data_ptr;
                             break;
                         }
                     }
@@ -143,18 +158,20 @@ public:
             // --- Assignment for Ungrouped Data ---
             if (assigner_) {
                 std::vector<Observation> observations;
-                std::map<EntityID, FeatureCache> feature_cache;
+                std::map<EntityId, FeatureCache> feature_cache;
 
-                std::set<EntityID> all_grouped_entities;
-                for (auto const & pair: groups) {
-                    all_grouped_entities.insert(pair.second.begin(), pair.second.end());
+                // Get all grouped entities from the group manager
+                std::set<EntityId> all_grouped_entities;
+                for (auto group_id : group_manager.getAllGroupIds()) {
+                    auto entities = group_manager.getEntitiesInGroup(group_id);
+                    all_grouped_entities.insert(entities.begin(), entities.end());
                 }
 
-                for (auto const & item: all_frame_data) {
-                    if (assigned_entities_this_frame.find(item.id) == assigned_entities_this_frame.end() &&
-                        all_grouped_entities.find(item.id) == all_grouped_entities.end()) {
-                        observations.push_back({item.id});
-                        feature_cache[item.id] = feature_extractor_->getAllFeatures(item);
+                for (auto const & [data_ptr, entity_id, time] : all_frame_data) {
+                    if (assigned_entities_this_frame.find(entity_id) == assigned_entities_this_frame.end() &&
+                        all_grouped_entities.find(entity_id) == all_grouped_entities.end()) {
+                        observations.push_back({entity_id});
+                        feature_cache[entity_id] = feature_extractor_->getAllFeatures(*data_ptr);
                     }
                 }
 
@@ -174,9 +191,9 @@ public:
 
                         auto & track = active_tracks_.at(pred.group_id);
                         DataType const * obs_data = nullptr;
-                        for (auto const & item: all_frame_data) {
-                            if (item.id == obs.entity_id) {
-                                obs_data = &item;
+                        for (auto const & [data_ptr, eid, time] : all_frame_data) {
+                            if (eid == obs.entity_id) {
+                                obs_data = data_ptr;
                                 break;
                             }
                         }
@@ -184,7 +201,7 @@ public:
                         if (obs_data) {
                             Measurement measurement = {feature_extractor_->getFilterFeatures(*obs_data)};
                             track.filter->update(pred.filter_state, measurement);
-                            groups[pred.group_id].push_back(obs.entity_id);
+                            group_manager.addEntityToGroup(pred.group_id, obs.entity_id);
 
                             updated_groups_this_frame.insert(pred.group_id);
                             assigned_entities_this_frame.insert(obs.entity_id);
@@ -256,7 +273,7 @@ struct TrackedGroupState {
     double confidence = 1.0;
 
     // History for smoothing between anchors
-    std::vector<FrameIndex> anchor_frames;
+    std::vector<TimeFrameIndex> anchor_frames;
     std::vector<FilterState> forward_pass_history;
 };
 

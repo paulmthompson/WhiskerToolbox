@@ -6,12 +6,15 @@
 #include "Tracker.hpp"
 #include "Features/IFeatureExtractor.hpp"
 #include "Assignment/HungarianAssigner.hpp"
+#include "Entity/EntityTypes.hpp"
+#include "Entity/EntityGroupManager.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 // --- Test-Specific Mocks and Implementations ---
 
 // A simple Line2D struct for this test, mirroring what CoreGeometry might provide.
 struct TestLine2D {
-    StateEstimation::EntityID id;
+    EntityId id;
     Eigen::Vector2d p1;
     Eigen::Vector2d p2;
 
@@ -90,33 +93,37 @@ TEST_CASE("KalmanFilter tracking and smoothing", "[KalmanFilter]") {
     Tracker<TestLine2D> tracker(std::move(kalman_filter), std::move(feature_extractor), nullptr);
 
     // --- Generate Artificial Data ---
-    Tracker<TestLine2D>::DataSource data_source;
-    Tracker<TestLine2D>::GroupMap groups;
-    Tracker<TestLine2D>::GroundTruthMap ground_truth;
+    // New API: vector of tuples (DataType, EntityId, TimeFrameIndex)
+    std::vector<std::tuple<TestLine2D, EntityId, TimeFrameIndex>> data_source;
     
-    GroupId group1 = 1;
-    GroupId group2 = 2;
+    EntityGroupManager group_manager;
+    GroupId group1 = group_manager.createGroup("Group 1");
+    GroupId group2 = group_manager.createGroup("Group 2");
 
     for (int i = 0; i <= 10; ++i) {
         // Line 1 moves from (10,10) to (60,60)
-        TestLine2D line1 = { (EntityID)i, {10.0 + i * 5.0, 10.0 + i * 5.0}, {10.0 + i * 5.0, 10.0 + i * 5.0} };
+        TestLine2D line1 = { (EntityId)i, {10.0 + i * 5.0, 10.0 + i * 5.0}, {10.0 + i * 5.0, 10.0 + i * 5.0} };
         // Line 2 moves from (100,50) to (50,50)
-        TestLine2D line2 = { (EntityID)(i + 100), {100.0 - i * 5.0, 50.0}, {100.0 - i * 5.0, 50.0} };
+        TestLine2D line2 = { (EntityId)(i + 100), {100.0 - i * 5.0, 50.0}, {100.0 - i * 5.0, 50.0} };
         
-        data_source[i] = {line1, line2};
+        data_source.emplace_back(line1, (EntityId)i, TimeFrameIndex(i));
+        data_source.emplace_back(line2, (EntityId)(i + 100), TimeFrameIndex(i));
     }
 
-    // Set ground truth at start and end frames
-    ground_truth[0] = {{group1, 0}, {group2, 100}};
-    ground_truth[10] = {{group1, 10}, {group2, 110}};
+    // Ground truth map with TimeFrameIndex keys
+    Tracker<TestLine2D>::GroundTruthMap ground_truth;
+    ground_truth[TimeFrameIndex(0)] = {{group1, 0}, {group2, 100}};
+    ground_truth[TimeFrameIndex(10)] = {{group1, 10}, {group2, 110}};
     
-    // Populate the initial groups map
-    groups[group1] = {0, 10};
-    groups[group2] = {100, 110};
+    // Populate the initial groups in EntityGroupManager
+    group_manager.addEntityToGroup(group1, 0);
+    group_manager.addEntityToGroup(group1, 10);
+    group_manager.addEntityToGroup(group2, 100);
+    group_manager.addEntityToGroup(group2, 110);
 
 
     // 2. --- EXECUTION ---
-    SmoothedResults results = tracker.process(data_source, groups, ground_truth, 0, 10);
+    SmoothedResults results = tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(10));
 
     // 3. --- ASSERTIONS ---
     REQUIRE(results.count(group1) == 1);
@@ -165,48 +172,58 @@ TEST_CASE("StateEstimation - KalmanFilter - assignment with Hungarian algorithm"
     Tracker<TestLine2D> tracker(std::move(kalman_filter), std::move(feature_extractor), std::move(assigner));
 
     // --- Generate Artificial Data ---
-    Tracker<TestLine2D>::DataSource data_source;
-    Tracker<TestLine2D>::GroupMap groups;
-    Tracker<TestLine2D>::GroundTruthMap ground_truth;
-
-    GroupId group1 = 10;
-    GroupId group2 = 20;
+    // New API: vector of tuples (DataType, EntityId, TimeFrameIndex)
+    std::vector<std::tuple<TestLine2D, EntityId, TimeFrameIndex>> data_source;
+    
+    EntityGroupManager group_manager;
+    GroupId group1 = group_manager.createGroup("Group 1");
+    GroupId group2 = group_manager.createGroup("Group 2");
 
     // Frame 0: Ground truth
-    data_source[0] = {
-        { (EntityID)1, {10, 10}, {10, 10} },
-        { (EntityID)2, {100, 50}, {100, 50} }
-    };
-    ground_truth[0] = {{group1, 1}, {group2, 2}};
-    groups[group1] = {1};
-    groups[group2] = {2};
+    data_source.emplace_back(TestLine2D{ (EntityId)1, {10, 10}, {10, 10} }, (EntityId)1, TimeFrameIndex(0));
+    data_source.emplace_back(TestLine2D{ (EntityId)2, {100, 50}, {100, 50} }, (EntityId)2, TimeFrameIndex(0));
+    
+    Tracker<TestLine2D>::GroundTruthMap ground_truth;
+    ground_truth[TimeFrameIndex(0)] = {{group1, 1}, {group2, 2}};
+    
+    group_manager.addEntityToGroup(group1, 1);
+    group_manager.addEntityToGroup(group2, 2);
 
     // Frames 1-4: Ungrouped data that should be assigned
     for (int i = 1; i <= 4; ++i) {
-        data_source[i] = {
-            { (EntityID)(10 + i), {10.0 + i * 5.0, 10.0 + i * 5.0}, {10.0 + i * 5.0, 10.0 + i * 5.0} },
-            { (EntityID)(20 + i), {100.0 - i * 5.0, 50.0}, {100.0 - i * 5.0, 50.0} }
-        };
+        data_source.emplace_back(
+            TestLine2D{ (EntityId)(10 + i), {10.0 + i * 5.0, 10.0 + i * 5.0}, {10.0 + i * 5.0, 10.0 + i * 5.0} },
+            (EntityId)(10 + i),
+            TimeFrameIndex(i)
+        );
+        data_source.emplace_back(
+            TestLine2D{ (EntityId)(20 + i), {100.0 - i * 5.0, 50.0}, {100.0 - i * 5.0, 50.0} },
+            (EntityId)(20 + i),
+            TimeFrameIndex(i)
+        );
     }
 
     // 2. --- EXECUTION ---
-    tracker.process(data_source, groups, ground_truth, 0, 4);
+    tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(4));
 
     // 3. --- ASSERTIONS ---
-    REQUIRE(groups.count(group1) == 1);
-    REQUIRE(groups.count(group2) == 1);
+    // Verify groups exist
+    REQUIRE(group_manager.hasGroup(group1));
+    REQUIRE(group_manager.hasGroup(group2));
 
     // Check that all entities were correctly assigned. Each group should have 5 entities now.
-    REQUIRE(groups.at(group1).size() == 5); // 1 (initial) + 4 (assigned)
-    REQUIRE(groups.at(group2).size() == 5);
+    REQUIRE(group_manager.getGroupSize(group1) == 5); // 1 (initial) + 4 (assigned)
+    REQUIRE(group_manager.getGroupSize(group2) == 5);
 
     // Verify the correct entities were assigned to group 1
-    std::vector<EntityID> expected_g1 = {1, 11, 12, 13, 14};
-    std::sort(groups.at(group1).begin(), groups.at(group1).end());
-    REQUIRE(groups.at(group1) == expected_g1);
+    std::vector<EntityId> expected_g1 = {1, 11, 12, 13, 14};
+    auto group1_entities = group_manager.getEntitiesInGroup(group1);
+    std::sort(group1_entities.begin(), group1_entities.end());
+    REQUIRE(group1_entities == expected_g1);
 
     // Verify the correct entities were assigned to group 2
-    std::vector<EntityID> expected_g2 = {2, 21, 22, 23, 24};
-    std::sort(groups.at(group2).begin(), groups.at(group2).end());
-    REQUIRE(groups.at(group2) == expected_g2);
+    std::vector<EntityId> expected_g2 = {2, 21, 22, 23, 24};
+    auto group2_entities = group_manager.getEntitiesInGroup(group2);
+    std::sort(group2_entities.begin(), group2_entities.end());
+    REQUIRE(group2_entities == expected_g2);
 }

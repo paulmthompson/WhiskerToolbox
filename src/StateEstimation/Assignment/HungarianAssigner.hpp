@@ -33,7 +33,7 @@ public:
     Assignment solve(
             std::vector<Prediction> const & predictions,
             std::vector<Observation> const & observations,
-            std::map<EntityID, FeatureCache> const & feature_cache) override;
+            std::map<EntityId, FeatureCache> const & feature_cache) override;
 
     std::unique_ptr<IAssigner> clone() const override;
 

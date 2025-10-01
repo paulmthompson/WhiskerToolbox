@@ -32,7 +32,7 @@ HungarianAssigner::HungarianAssigner(double max_assignment_distance,
 Assignment HungarianAssigner::solve(
         std::vector<Prediction> const & predictions,
         std::vector<Observation> const & observations,
-        std::map<EntityID, FeatureCache> const & feature_cache) {
+        std::map<EntityId, FeatureCache> const & feature_cache) {
 
     if (predictions.empty() || observations.empty()) {
         return {};

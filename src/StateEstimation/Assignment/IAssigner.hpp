@@ -29,7 +29,7 @@ public:
      *
      * @param predictions A vector of predicted states from the filter for each active track.
      * @param observations A vector of new, unassigned observations from the current frame.
-     * @param feature_cache A map where the key is an EntityID from an observation and the value is a
+     * @param feature_cache A map where the key is an EntityId from an observation and the value is a
      * cache of its pre-calculated features. The assigner uses this to
      * retrieve the feature vectors it needs for its cost matrix calculation.
      * @return An Assignment object detailing the successful matches.
@@ -37,7 +37,7 @@ public:
     virtual Assignment solve(
             std::vector<Prediction> const & predictions,
             std::vector<Observation> const & observations,
-            std::map<EntityID, FeatureCache> const & feature_cache) = 0;
+            std::map<EntityId, FeatureCache> const & feature_cache) = 0;
 
     /**
      * @brief Clones the assigner object.

@@ -103,17 +103,17 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
     }
     
     std::sort(all_times.begin(), all_times.end());
-    FrameIndex start_frame = static_cast<FrameIndex>(all_times.front().getValue());
-    FrameIndex end_frame = static_cast<FrameIndex>(all_times.back().getValue());
+    TimeFrameIndex start_frame = all_times.front();
+    TimeFrameIndex end_frame = all_times.back();
     
     if (params->verbose_output) {
         std::cout << "Processing " << all_times.size() << " frames from " 
-                  << start_frame << " to " << end_frame << std::endl;
+                  << start_frame.getValue() << " to " << end_frame.getValue() << std::endl;
     }
     
     // PHASE 1: Pre-compute all centroids and build cache
     // This eliminates the need to copy Line2D objects or hold pointers
-    std::unordered_map<StateEstimation::EntityID, Eigen::Vector2d> centroid_cache;
+    std::unordered_map<EntityId, Eigen::Vector2d> centroid_cache;
     
     if (params->verbose_output) {
         std::cout << "Pre-computing centroids for all lines..." << std::endl;
@@ -132,33 +132,31 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
         std::cout << "Cached " << centroid_cache.size() << " centroids" << std::endl;
     }
     
-    // Build DataSource: map from FrameIndex to vector of TrackedEntity (lightweight, no copying)
-    Tracker<TrackedEntity>::DataSource data_source;
+    // Build DataSource: vector of tuples (TrackedEntity, EntityId, TimeFrameIndex)
+    // This satisfies the new DataSource concept for zero-copy iteration
+    std::vector<std::tuple<TrackedEntity, EntityId, TimeFrameIndex>> data_source;
     
     for (auto time : all_times) {
         const auto& entity_ids = line_data->getEntityIdsAtTime(time);
         
-        std::vector<TrackedEntity> frame_data;
-        frame_data.reserve(entity_ids.size());
-        
         for (auto entity_id : entity_ids) {
-            frame_data.push_back({entity_id});
+            data_source.emplace_back(
+                TrackedEntity{entity_id},
+                entity_id,
+                time
+            );
         }
-        
-        data_source[static_cast<FrameIndex>(time.getValue())] = std::move(frame_data);
     }
     
-    // Build initial GroupMap from EntityGroupManager
-    Tracker<TrackedEntity>::GroupMap groups;
-    auto all_group_ids = group_manager->getAllGroupIds();
-    for (auto group_id : all_group_ids) {
-        auto entities_in_group = group_manager->getEntitiesInGroup(group_id);
-        groups[group_id] = std::vector<EntityID>(entities_in_group.begin(), entities_in_group.end());
+    if (params->verbose_output) {
+        std::cout << "Built data source with " << data_source.size() << " tracked entities" << std::endl;
     }
     
     // Build GroundTruthMap: frames where entities are already grouped
     // More efficient: iterate through groups instead of all entities at all frames
     Tracker<TrackedEntity>::GroundTruthMap ground_truth;
+    auto all_group_ids = group_manager->getAllGroupIds();
+    
     for (auto group_id : all_group_ids) {
         const auto& entities_in_group = group_manager->getEntitiesInGroup(group_id);
         
@@ -166,8 +164,7 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
             // Find which frame this entity belongs to
             auto time_info = line_data->getTimeAndIndexByEntityId(entity_id);
             if (time_info.has_value()) {
-                FrameIndex frame_idx = static_cast<FrameIndex>(time_info->first.getValue());
-                ground_truth[frame_idx][group_id] = entity_id;
+                ground_truth[time_info->first][group_id] = entity_id;
             }
         }
     }
@@ -216,32 +213,25 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
     );
     
     // Run the tracking process with progress callback
-    // Wrap the DataManager's ProgressCallback into StateEstimation's ProgressCallback (both are compatible)
+    // The new API uses EntityGroupManager directly and modifies it in-place
     StateEstimation::ProgressCallback se_callback = progressCallback;
-    SmoothedResults smoothed_results = tracker.process(
+    [[maybe_unused]] auto smoothed_results = tracker.process(
         data_source, 
-        groups, 
+        *group_manager,  // Pass EntityGroupManager directly!
         ground_truth, 
         start_frame, 
         end_frame,
-        se_callback  // Pass through the progress callback!
+        se_callback
     );
     
-    // Apply the group assignments back to the EntityGroupManager
-    for (const auto& [group_id, entity_ids] : groups) {
-        // Get existing entities
-        auto existing_entities = group_manager->getEntitiesInGroup(group_id);
-        std::unordered_set<EntityID> existing_set(existing_entities.begin(), existing_entities.end());
-        
-        // Add new entities that were assigned by the tracker
-        for (auto entity_id : entity_ids) {
-            if (!existing_set.contains(entity_id)) {
-                group_manager->addEntityToGroup(group_id, entity_id);
-                
-                if (params->verbose_output) {
-                    std::cout << "Added entity " << entity_id << " to group " << group_id << std::endl;
-                }
-            }
+    // No need to manually apply group assignments - the tracker already did this
+    // through EntityGroupManager::addEntityToGroup() calls
+    
+    if (params->verbose_output) {
+        std::cout << "Tracking complete. Groups updated in EntityGroupManager." << std::endl;
+        for (auto group_id : all_group_ids) {
+            auto entities = group_manager->getEntitiesInGroup(group_id);
+            std::cout << "Group " << group_id << " now has " << entities.size() << " entities" << std::endl;
         }
     }
     
