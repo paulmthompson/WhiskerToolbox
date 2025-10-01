@@ -1,6 +1,8 @@
 #ifndef STATE_ESTIMATION_I_FILTER_HPP
 #define STATE_ESTIMATION_I_FILTER_HPP
 
+#include "Common.hpp"
+
 #include <Eigen/Dense>
 
 #include <memory>
@@ -8,24 +10,7 @@
 
 namespace StateEstimation {
 
-/**
- * @brief Represents the state (mean and covariance) of a tracked object.
- * This is the primary data structure passed to and from the filter.
- */
-struct FilterState {
-    Eigen::VectorXd state_mean;
-    Eigen::MatrixXd state_covariance;
-};
 
-/**
- * @brief Represents a measurement taken at a specific time, already converted
- * into a feature vector.
- */
-struct Measurement {
-    Eigen::VectorXd feature_vector;
-    // In the future, this could be extended to include measurement uncertainty (R matrix)
-    // if it varies per measurement.
-};
 
 /**
  * @brief Abstract interface for a state estimation filter.
@@ -58,6 +43,13 @@ public:
      * @return The updated (corrected) state (posterior estimate).
      */
     virtual FilterState update(FilterState const & predicted_state, Measurement const & measurement) = 0;
+
+
+    /**
+     * @brief Gets the current state of the filter.
+     * @return The current state (posterior estimate).
+     */
+    virtual FilterState getState() const = 0;
 
     /**
      * @brief Performs Rauch-Tung-Striebel (RTS) smoothing on a sequence of states.

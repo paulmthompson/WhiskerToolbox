@@ -2,143 +2,199 @@
 #define TRACKER_HPP
 
 #include "Assignment/IAssigner.hpp"
+#include "Features/IFeatureExtractor.hpp"
 #include "Filter/IFilter.hpp"
 
-#include <any>
-#include <functional>
+#include <algorithm>
+#include <iostream>
 #include <map>
 #include <memory>
-#include <string>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
 namespace StateEstimation {
 
-/**
- * @brief Abstract interface for extracting feature vectors from a raw data type.
- *
- * This allows the Tracker to remain generic and decoupled from the specifics
- * of any given data type (e.g., Line2D, Point2D). A concrete implementation
- * of this interface will know how to convert a specific DataType into the
- * feature vectors needed by the IFilter and IAssigner.
- *
- * @tparam DataType The raw data type (e.g., CoreGeometry::Line2D).
- */
-template<typename DataType>
-class IFeatureExtractor {
-public:
-    virtual ~IFeatureExtractor() = default;
-
-    /**
-     * @brief Extracts all features from a data object and returns them in a cache.
-     * This is used to populate the feature cache that gets passed to the IAssigner.
-     * @param data The raw data object (e.g., Line2D).
-     * @return A map of feature names to their values.
-     */
-    virtual FeatureCache extractFeatures(DataType const & data) const = 0;
-
-    /**
-     * @brief Extracts the specific feature vector required for the filter's update step.
-     * @param data The raw data object.
-     * @return A Measurement struct containing the correctly formatted feature vector.
-     */
-    virtual Measurement getFilterMeasurement(DataType const & data) const = 0;
-
-    /**
-     * @brief Clones the feature extractor.
-     * @return A std::unique_ptr to a new instance of the extractor.
-     */
-    virtual std::unique_ptr<IFeatureExtractor<DataType>> clone() const = 0;
-};
-
-
-// The final output of a smoothing-only operation.
-// Maps each GroupId to its full time-series of smoothed states.
+// The return type: a map from each GroupId to its series of smoothed states.
 using SmoothedResults = std::map<GroupId, std::vector<FilterState>>;
-using ProgressCallback = std::function<void(double)>;
+
+// Forward declaration for the state structure
+template<typename DataType>
+struct TrackedGroupState;
 
 /**
- * @brief The central class for orchestrating tracking, assignment, and smoothing.
+ * @brief The central orchestrator for the tracking process.
  *
- * The Tracker manages the lifecycle of tracked objects (groups) and coordinates
- * the filter and assigner components to process data over a range of time frames.
+ * This class manages the lifecycle of tracked objects (groups) and coordinates
+ * the filter, feature extraction, and assignment components to process data
+ * across multiple time frames. It is templated on the raw data type it operates on.
  *
- * @tparam DataType The raw data type being tracked (e.g., CoreGeometry::Line2D).
+ * @tparam DataType The raw data type (e.g., Line2D, Point2D).
  */
 template<typename DataType>
 class Tracker {
 public:
-    using TimePoint = int64_t;
-    using ObjectID = uint64_t;
-
-    // A map from a unique object ID to the data object itself for a single time point.
-    using FrameObservations = std::map<ObjectID, DataType>;
-    // A map from a time point (frame index) to the observations in that frame.
-    using TimeSeriesObservations = std::map<TimePoint, FrameObservations>;
-    // A map from an object's unique ID to the group it belongs to.
-    using GroupAssignments = std::map<ObjectID, GroupId>;
+    using DataSource = std::map<FrameIndex, std::vector<DataType>>;
+    using GroupMap = std::map<GroupId, std::vector<EntityID>>;
+    using GroundTruthMap = std::map<FrameIndex, std::map<GroupId, EntityID>>;
 
     /**
-     * @brief Holds the complete results of a tracking session.
-     */
-    struct ProcessResults {
-        GroupAssignments assignments;
-        SmoothedResults smoothed_states;
-    };
-
-    /**
-     * @brief Constructs a Tracker with prototype algorithms and a feature extractor.
+     * @brief Constructs a Tracker.
      *
-     * @param filter_prototype A unique_ptr to an IFilter implementation. This will be cloned for each new track.
-     * @param assigner A unique_ptr to an IAssigner. Can be nullptr for smoothing/outlier detection.
-     * @param feature_extractor A unique_ptr to an IFeatureExtractor for the specified DataType.
+     * @param filter_prototype A prototype of the filter to be used for each track. It will be cloned.
+     * @param feature_extractor A unique_ptr to the feature extractor strategy.
+     * @param assigner A unique_ptr to the assignment strategy. Can be nullptr for smoothing-only tasks.
      */
     Tracker(std::unique_ptr<IFilter> filter_prototype,
-            std::unique_ptr<IAssigner> assigner,
-            std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor);
+            std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor,
+            std::unique_ptr<IAssigner> assigner = nullptr)
+        : filter_prototype_(std::move(filter_prototype)),
+          feature_extractor_(std::move(feature_extractor)),
+          assigner_(std::move(assigner)) {}
 
     /**
-     * @brief The main entry point to run a tracking/smoothing session.
+     * @brief Main processing entry point. Runs the tracking algorithm over a range of frames.
      *
-     * This function iterates through a time series of observations, applying the configured
-     * filter and assigner. It returns the final group assignments and smoothed trajectories.
-     *
-     * @param observations The time-series data to be processed.
-     * @param initial_groups The initial ground-truth group assignments.
-     * @param progress_callback A function to report progress (0.0 to 1.0).
-     * @return The results of the processing, including final assignments and smoothed states.
+     * @param data_source A map from frame index to a vector of data objects for that frame.
+     * @param groups The initial group assignments. The tracker will modify this map in-place for new assignments.
+     * @param ground_truth A map indicating ground-truth labels for specific groups at specific frames.
+     * @param start_frame The first frame to process.
+     * @param end_frame The last frame to process.
+     * @return A map from GroupId to a vector of smoothed filter states.
      */
-    ProcessResults process(
-            TimeSeriesObservations<DataType> const & observations,
-            GroupAssignments const & initial_groups,
-            ProgressCallback progress_callback);
+    SmoothedResults process(const DataSource& data_source,
+                            GroupMap& groups,
+                            const GroundTruthMap& ground_truth,
+                            FrameIndex start_frame,
+                            FrameIndex end_frame) {
+        
+        // Initialize tracks from initial group map
+        for (const auto& [group_id, entities] : groups) {
+            if (active_tracks_.find(group_id) == active_tracks_.end()) {
+                active_tracks_[group_id] = TrackedGroupState<DataType>{
+                    .group_id = group_id,
+                    .filter = filter_prototype_->clone()
+                };
+            }
+        }
+        
+        SmoothedResults all_smoothed_results;
+
+        for (FrameIndex current_frame = start_frame; current_frame <= end_frame; ++current_frame) {
+            auto frame_data_it = data_source.find(current_frame);
+            const auto& all_frame_data = (frame_data_it != data_source.end()) ? frame_data_it->second : std::vector<DataType>{};
+
+            // --- Predictions ---
+            std::map<GroupId, FilterState> predictions;
+            for (auto& [group_id, track] : active_tracks_) {
+                if (track.is_active) {
+                    predictions[group_id] = track.filter->predict();
+                    track.frames_since_last_seen++;
+                }
+            }
+
+            std::set<GroupId> updated_groups_this_frame;
+            std::set<EntityID> assigned_entities_this_frame;
+
+            // --- Ground Truth Updates & Activation ---
+            auto gt_frame_it = ground_truth.find(current_frame);
+            if (gt_frame_it != ground_truth.end()) {
+                for (const auto& [group_id, entity_id] : gt_frame_it->second) {
+                    auto track_it = active_tracks_.find(group_id);
+                    if (track_it == active_tracks_.end()) continue;
+                    auto& track = track_it->second;
+
+                    const DataType* gt_item = nullptr;
+                    for(const auto& item : all_frame_data) {
+                        if (item.id == entity_id) { gt_item = &item; break; }
+                    }
+                    if (!gt_item) continue;
+
+                    if (!track.is_active) {
+                        track.filter->initialize(feature_extractor_->getInitialState(*gt_item));
+                        track.is_active = true;
+                    } else {
+                        Measurement measurement = {feature_extractor_->getFilterFeatures(*gt_item)};
+                        track.filter->update(predictions.at(group_id), measurement);
+                    }
+                    track.frames_since_last_seen = 0;
+                    updated_groups_this_frame.insert(group_id);
+                    assigned_entities_this_frame.insert(entity_id);
+                }
+            }
+            
+            // --- Assignment for Ungrouped Data ---
+            // ... (Full assignment logic would go here) ...
+
+
+            // --- Finalize Frame State, Log History, and Handle Smoothing ---
+            for (auto& [group_id, track] : active_tracks_) {
+                if (!track.is_active) continue;
+
+                // If a track was NOT updated this frame, its state is the predicted state. Commit it.
+                if (updated_groups_this_frame.find(group_id) == updated_groups_this_frame.end()) {
+                    track.filter->initialize(predictions.at(group_id));
+                }
+                
+                track.forward_pass_history.push_back(track.filter->getState());
+
+                // Check for smoothing trigger on new anchor frames
+                bool is_anchor = (gt_frame_it != ground_truth.end() && gt_frame_it->second.count(group_id));
+                if (is_anchor) {
+                    if (std::find(track.anchor_frames.begin(), track.anchor_frames.end(), current_frame) == track.anchor_frames.end()) {
+                         track.anchor_frames.push_back(current_frame);
+                    }
+                    
+                    if (track.anchor_frames.size() >= 2) {
+                        auto smoothed = track.filter->smooth(track.forward_pass_history);
+                        
+                        if (all_smoothed_results[group_id].empty()) {
+                            all_smoothed_results[group_id] = smoothed;
+                        } else {
+                            all_smoothed_results[group_id].insert(
+                                all_smoothed_results[group_id].end(), 
+                                std::next(smoothed.begin()), 
+                                smoothed.end()
+                            );
+                        }
+                        
+                        track.forward_pass_history.clear();
+                        track.forward_pass_history.push_back(smoothed.back());
+                        // Keep only the last anchor for the next interval
+                        track.anchor_frames = { current_frame };
+                    }
+                }
+            }
+        }
+        return all_smoothed_results;
+    }
 
 private:
-    // Internal state for managing an individual tracked group.
-    struct TrackedGroupState {
-        GroupId group_id;
-        std::unique_ptr<IFilter> filter;
-        int frames_since_last_seen = 0;
-        double confidence = 1.0;
-
-        // For asynchronous smoothing
-        std::vector<TimePoint> anchor_frames;
-        std::vector<Measurement> anchor_measurements;
-        std::vector<FilterState> forward_pass_history;
-    };
-
-    // Prototypes for creating new instances
     std::unique_ptr<IFilter> filter_prototype_;
-    std::unique_ptr<IAssigner> assigner_;
     std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor_;
-
-    // Map to hold the state of all currently active tracks.
-    std::unordered_map<GroupId, TrackedGroupState> active_tracks_;
-
-    // --- Private Helper Methods ---
-    // (e.g., for initializing new tracks, handling lost tracks, populating feature cache, etc.)
+    std::unique_ptr<IAssigner> assigner_;
+    std::unordered_map<GroupId, TrackedGroupState<DataType>> active_tracks_;
 };
 
-}// namespace StateEstimation
 
-#endif// TRACKER_HPP
+/**
+ * @brief Holds the state for a single tracked group.
+ * @tparam DataType The raw data type (e.g., Line2D, Point2D).
+ */
+template<typename DataType>
+struct TrackedGroupState {
+    GroupId group_id;
+    std::unique_ptr<IFilter> filter;
+    bool is_active = false;
+    int frames_since_last_seen = 0;
+    double confidence = 1.0;
+
+    // History for smoothing between anchors
+    std::vector<FrameIndex> anchor_frames;
+    std::vector<FilterState> forward_pass_history;
+};
+
+} // namespace StateEstimation
+
+#endif // TRACKER_HPP
+

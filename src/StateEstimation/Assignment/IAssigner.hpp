@@ -1,7 +1,7 @@
 #ifndef STATE_ESTIMATION_I_ASSIGNER_HPP
 #define STATE_ESTIMATION_I_ASSIGNER_HPP
 
-#include "Filter/IFilter.hpp"// For FilterState
+#include "Common.hpp"
 
 #include <any>
 #include <cstdint>
@@ -12,44 +12,6 @@
 
 namespace StateEstimation {
 
-// Type aliases for core identifiers, assumed to be defined elsewhere in the application.
-// These are included here for clarity.
-using GroupId = uint64_t;
-using EntityID = uint64_t;
-
-/**
- * @brief A cache for storing pre-calculated features of a data object for a single frame.
- *
- * This uses the Flyweight pattern to avoid re-calculating features that might be needed
- * by multiple parts of the tracking algorithm (e.g., both filtering and assignment).
- * The key is a user-defined string (e.g., "centroid", "length").
- */
-using FeatureCache = std::map<std::string, std::any>;
-
-/**
- * @brief Represents a predicted state for a tracked group, ready for assignment.
- */
-struct Prediction {
-    GroupId group_id;
-    FilterState filter_state;
-};
-
-/**
- * @brief Represents an unassigned observation in the current frame.
- */
-struct Observation {
-    EntityID entity_id;
-};
-
-/**
- * @brief Holds the results of the assignment process.
- */
-struct Assignment {
-    // Maps the index of an observation in the input vector to the index
-    // of a prediction in the input vector.
-    // Unassigned observations will not have an entry in this map.
-    std::map<int, int> observation_to_prediction;
-};
 
 /**
  * @brief Abstract interface for a data association (assignment) algorithm.

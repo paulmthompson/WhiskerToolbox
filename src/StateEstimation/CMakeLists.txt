@@ -6,6 +6,7 @@ set(STATE_ESTIMATION_SOURCES
     Kalman/kalman.hpp
     Kalman/kalman.cpp
     Kalman/KalmanFilter.hpp
+    Kalman/KalmanFilter.cpp
     Assignment/hungarian.hpp
     Assignment/hungarian.cpp
     Assignment/AssignmentProblem.hpp
@@ -23,6 +24,8 @@ set(STATE_ESTIMATION_SOURCES
     Tracking/TrackingSession.cpp
     Filter/IFilter.hpp
     Tracker.hpp
+    Tracker.cpp
+    Common.hpp
 )
 
 # Optional demo/example files (not included in library)
