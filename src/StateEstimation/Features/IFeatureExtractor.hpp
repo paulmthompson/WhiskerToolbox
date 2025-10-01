@@ -26,15 +26,15 @@ public:
      * @param data The raw data object.
      * @return An Eigen::VectorXd containing features for the filter.
      */
-    virtual Eigen::VectorXd getFilterFeatures(const DataType& data) const = 0;
+    virtual Eigen::VectorXd getFilterFeatures(DataType const & data) const = 0;
 
     /**
      * @brief Extracts all available features for caching.
      * @param data The raw data object.
      * @return A FeatureCache map with all calculated features.
      */
-    virtual FeatureCache getAllFeatures(const DataType& data) const = 0;
-    
+    virtual FeatureCache getAllFeatures(DataType const & data) const = 0;
+
     /**
      * @brief Gets the name of the feature set used by the filter.
      * @return A string identifier for the filter features in the cache.
@@ -47,7 +47,7 @@ public:
      * @param data The raw data object.
      * @return The initial FilterState.
      */
-    virtual FilterState getInitialState(const DataType& data) const = 0;
+    virtual FilterState getInitialState(DataType const & data) const = 0;
 
     /**
      * @brief Clones the feature extractor.
@@ -56,6 +56,6 @@ public:
     virtual std::unique_ptr<IFeatureExtractor<DataType>> clone() const = 0;
 };
 
-} // namespace StateEstimation
+}// namespace StateEstimation
 
-#endif // IFEATURE_EXTRACTOR_HPP
+#endif// IFEATURE_EXTRACTOR_HPP

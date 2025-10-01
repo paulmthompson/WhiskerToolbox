@@ -11,7 +11,6 @@
 namespace StateEstimation {
 
 
-
 /**
  * @brief Abstract interface for a state estimation filter.
  *

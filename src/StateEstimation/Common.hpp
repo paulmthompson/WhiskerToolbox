@@ -3,8 +3,8 @@
 
 #include <Eigen/Dense>
 
-#include <map>
 #include <any>
+#include <map>
 #include <vector>
 
 namespace StateEstimation {
@@ -47,6 +47,6 @@ struct Assignment {
     std::map<int, int> observation_to_prediction;
 };
 
-} // namespace StateEstimation
+}// namespace StateEstimation
 
-#endif // STATE_ESTIMATION_COMMON_HPP
+#endif// STATE_ESTIMATION_COMMON_HPP
