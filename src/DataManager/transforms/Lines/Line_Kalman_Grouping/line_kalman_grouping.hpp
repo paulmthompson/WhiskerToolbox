@@ -45,44 +45,8 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
     bool verbose_output = false;                         // Enable detailed logging
 };
 
-/**
- * @brief Lightweight wrapper that only stores EntityId for tracking
- * 
- * All feature data (centroids) are pre-computed and stored in a separate cache.
- * This avoids copying Line2D objects entirely.
- */
-struct TrackedEntity {
-    EntityId id;
-};
-
-/**
- * @brief Feature extractor that looks up pre-computed centroids from a cache
- * 
- * This extractor doesn't compute features on-demand. Instead, it looks up
- * pre-computed centroids from an internal cache built during construction.
- */
-class CachedCentroidExtractor : public StateEstimation::IFeatureExtractor<TrackedEntity> {
-public:
-    explicit CachedCentroidExtractor(std::unordered_map<EntityId, Eigen::Vector2d> centroid_cache)
-        : centroid_cache_(std::move(centroid_cache)) {}
-    
-    Eigen::VectorXd getFilterFeatures(const TrackedEntity& data) const override;
-    StateEstimation::FeatureCache getAllFeatures(const TrackedEntity& data) const override;
-    std::string getFilterFeatureName() const override;
-    StateEstimation::FilterState getInitialState(const TrackedEntity& data) const override;
-    std::unique_ptr<StateEstimation::IFeatureExtractor<TrackedEntity>> clone() const override;
-
-private:
-    std::unordered_map<EntityId, Eigen::Vector2d> centroid_cache_;
-};
-
-/**
- * @brief Calculate the centroid of a line
- * 
- * @param line The line to calculate centroid for
- * @return 2D centroid position
- */
-Eigen::Vector2d calculateLineCentroid(Line2D const& line);
+// NOTE: No longer need TrackedEntity wrapper or CachedCentroidExtractor!
+// The tracker now operates directly on Line2D objects with on-demand feature extraction.
 
 /**
  * @brief Main function: Group lines using Kalman filtering and assignment
