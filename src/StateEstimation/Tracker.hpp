@@ -18,6 +18,9 @@ namespace StateEstimation {
 // The return type: a map from each GroupId to its series of smoothed states.
 using SmoothedResults = std::map<GroupId, std::vector<FilterState>>;
 
+// Progress callback: takes percentage (0-100) and current frame
+using ProgressCallback = std::function<void(int)>;
+
 // Forward declaration for the state structure
 template<typename DataType>
 struct TrackedGroupState;
@@ -60,13 +63,15 @@ public:
      * @param ground_truth A map indicating ground-truth labels for specific groups at specific frames.
      * @param start_frame The first frame to process.
      * @param end_frame The last frame to process.
+     * @param progress_callback Optional callback for progress reporting (percentage 0-100).
      * @return A map from GroupId to a vector of smoothed filter states.
      */
     SmoothedResults process(const DataSource& data_source,
                             GroupMap& groups,
                             const GroundTruthMap& ground_truth,
                             FrameIndex start_frame,
-                            FrameIndex end_frame) {
+                            FrameIndex end_frame,
+                            ProgressCallback progress_callback = nullptr) {
         
         // Initialize tracks from initial group map
         for (const auto& [group_id, entities] : groups) {
@@ -80,9 +85,19 @@ public:
         
         SmoothedResults all_smoothed_results;
 
+        const FrameIndex total_frames = end_frame - start_frame + 1;
+        FrameIndex frames_processed = 0;
+
         for (FrameIndex current_frame = start_frame; current_frame <= end_frame; ++current_frame) {
             auto frame_data_it = data_source.find(current_frame);
             const auto& all_frame_data = (frame_data_it != data_source.end()) ? frame_data_it->second : std::vector<DataType>{};
+            
+            // Report progress
+            if (progress_callback) {
+                ++frames_processed;
+                const int percentage = static_cast<int>((frames_processed * 100) / total_frames);
+                progress_callback(percentage);
+            }
 
             // --- Predictions ---
             std::map<GroupId, FilterState> predictions;

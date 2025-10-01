@@ -271,38 +271,6 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="minKalmanConfidenceLabel">
-        <property name="text">
-         <string>Min Kalman Confidence:</string>
-        </property>
-        <property name="toolTip">
-         <string>Minimum confidence threshold for predictions</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="minKalmanConfidenceSpinBox">
-        <property name="toolTip">
-         <string>Minimum confidence threshold for predictions</string>
-        </property>
-        <property name="decimals">
-         <number>3</number>
-        </property>
-        <property name="minimum">
-         <double>0.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>1.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.100000000000000</double>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
@@ -313,22 +281,9 @@
      </property>
      <layout class="QVBoxLayout" name="algorithmVerticalLayout">
       <item>
-       <widget class="QCheckBox" name="estimateNoiseEmpiricallyCheckBox">
+       <widget class="QLabel" name="algorithmNoteLabel">
         <property name="text">
-         <string>Estimate noise parameters empirically from grouped data</string>
-        </property>
-        <property name="toolTip">
-         <string>Automatically estimate noise parameters from existing grouped data</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="noiseEstimationNoteLabel">
-        <property name="text">
-         <string>Noise parameters will be estimated from existing grouped data</string>
+         <string>The algorithm uses Kalman filtering to track line centroids across frames and assigns ungrouped lines to existing groups using the Hungarian algorithm. Smoothing is automatically applied between ground truth frames.</string>
         </property>
         <property name="styleSheet">
          <string>QLabel { color: #666; font-style: italic; }</string>
@@ -337,47 +292,6 @@
          <bool>true</bool>
         </property>
        </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="runBackwardSmoothingCheckBox">
-        <property name="text">
-         <string>Run backward smoothing (RTS)</string>
-        </property>
-        <property name="toolTip">
-         <string>Run Rauch-Tung-Striebel smoothing between anchor frames</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="createNewGroupCheckBox">
-        <property name="text">
-         <string>Create new group for outliers</string>
-        </property>
-        <property name="toolTip">
-         <string>Create a new group for lines that don't fit existing groups</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="newGroupNameLayout">
-        <item>
-         <widget class="QLabel" name="newGroupNameLabel">
-          <property name="text">
-           <string>New Group Name:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="newGroupNameLineEdit">
-          <property name="text">
-           <string>Kalman Tracked Lines</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
       <item>
        <widget class="QCheckBox" name="verboseOutputCheckBox">
