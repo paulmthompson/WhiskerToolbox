@@ -28,6 +28,59 @@ template<typename DataType>
 struct TrackedGroupState;
 
 /**
+ * @brief Helper structure for batching group assignment updates.
+ * 
+ * Accumulates entity-to-group assignments during tracking and flushes them
+ * to the EntityGroupManager at strategic points (anchor frames). This provides
+ * significant performance benefits by:
+ * - Avoiding O(G × E_g × log E) cost of rebuilding group membership set every frame
+ * - Providing O(1) membership checks via hash set
+ * - Batching updates for better cache locality
+ */
+struct PendingGroupUpdates {
+    // Accumulates new assignments per group
+    std::unordered_map<GroupId, std::vector<EntityId>> pending_additions;
+    
+    // Fast O(1) lookup for entities assigned during this pass
+    std::unordered_set<EntityId> entities_added_this_pass;
+    
+    /**
+     * @brief Adds a pending assignment without updating the EntityGroupManager.
+     */
+    void addPending(GroupId group_id, EntityId entity_id) {
+        pending_additions[group_id].push_back(entity_id);
+        entities_added_this_pass.insert(entity_id);
+    }
+    
+    /**
+     * @brief Flushes all pending assignments to the EntityGroupManager.
+     */
+    void flushToManager(EntityGroupManager & manager) {
+        for (auto const & [group_id, entities] : pending_additions) {
+            for (auto entity_id : entities) {
+                manager.addEntityToGroup(group_id, entity_id);
+            }
+        }
+        pending_additions.clear();
+        entities_added_this_pass.clear();
+    }
+    
+    /**
+     * @brief Checks if an entity has been assigned during this pass.
+     */
+    bool contains(EntityId entity_id) const {
+        return entities_added_this_pass.find(entity_id) != entities_added_this_pass.end();
+    }
+    
+    /**
+     * @brief Returns the set of all entities added during this pass.
+     */
+    std::unordered_set<EntityId> const & getAddedEntities() const {
+        return entities_added_this_pass;
+    }
+};
+
+/**
  * @brief The central orchestrator for the tracking process.
  *
  * This class manages the lifecycle of tracked objects (groups) and coordinates
@@ -95,6 +148,17 @@ public:
             }
         }
 
+        // OPTIMIZATION 1: Build initial grouped entities set ONCE
+        // This avoids O(G × E_g × log E) rebuild every frame
+        std::unordered_set<EntityId> initially_grouped_entities;
+        for (auto group_id : group_manager.getAllGroupIds()) {
+            auto entities = group_manager.getEntitiesInGroup(group_id);
+            initially_grouped_entities.insert(entities.begin(), entities.end());
+        }
+        
+        // OPTIMIZATION 1: Deferred group updates for batch processing
+        PendingGroupUpdates pending_updates;
+
         SmoothedResults all_smoothed_results;
 
         TimeFrameIndex const total_frames = end_frame - start_frame + TimeFrameIndex(1);
@@ -105,6 +169,14 @@ public:
             auto const & all_frame_data = (frame_data_it != frame_data_lookup.end()) 
                 ? frame_data_it->second 
                 : std::vector<std::tuple<DataType const*, EntityId, TimeFrameIndex>>{};
+
+            // OPTIMIZATION 2: Build per-frame entity index for O(1) entity lookup
+            // Eliminates O(E) linear searches repeated 3+ times per frame
+            std::unordered_map<EntityId, size_t> entity_to_index;
+            for (size_t i = 0; i < all_frame_data.size(); ++i) {
+                EntityId eid = std::get<1>(all_frame_data[i]);
+                entity_to_index[eid] = i;
+            }
 
             // Report progress
             if (progress_callback) {
@@ -133,14 +205,11 @@ public:
                     if (track_it == active_tracks_.end()) continue;
                     auto & track = track_it->second;
 
-                    DataType const * gt_item = nullptr;
-                    for (auto const & [data_ptr, eid, time] : all_frame_data) {
-                        if (eid == entity_id) {
-                            gt_item = data_ptr;
-                            break;
-                        }
-                    }
-                    if (!gt_item) continue;
+                    // OPTIMIZATION 2: O(1) entity lookup instead of O(E) linear search
+                    auto entity_it = entity_to_index.find(entity_id);
+                    if (entity_it == entity_to_index.end()) continue;
+                    
+                    DataType const * gt_item = std::get<0>(all_frame_data[entity_it->second]);
 
                     if (!track.is_active) {
                         track.filter->initialize(feature_extractor_->getInitialState(*gt_item));
@@ -160,16 +229,12 @@ public:
                 std::vector<Observation> observations;
                 std::map<EntityId, FeatureCache> feature_cache;
 
-                // Get all grouped entities from the group manager
-                std::set<EntityId> all_grouped_entities;
-                for (auto group_id : group_manager.getAllGroupIds()) {
-                    auto entities = group_manager.getEntitiesInGroup(group_id);
-                    all_grouped_entities.insert(entities.begin(), entities.end());
-                }
-
+                // OPTIMIZATION 1: O(1) membership checks using cached sets
+                // Avoids O(G × E_g × log E) rebuild every frame
                 for (auto const & [data_ptr, entity_id, time] : all_frame_data) {
                     if (assigned_entities_this_frame.find(entity_id) == assigned_entities_this_frame.end() &&
-                        all_grouped_entities.find(entity_id) == all_grouped_entities.end()) {
+                        initially_grouped_entities.find(entity_id) == initially_grouped_entities.end() &&
+                        !pending_updates.contains(entity_id)) {
                         observations.push_back({entity_id});
                         feature_cache[entity_id] = feature_extractor_->getAllFeatures(*data_ptr);
                     }
@@ -190,28 +255,28 @@ public:
                         auto const & pred = prediction_list[pred_idx];
 
                         auto & track = active_tracks_.at(pred.group_id);
-                        DataType const * obs_data = nullptr;
-                        for (auto const & [data_ptr, eid, time] : all_frame_data) {
-                            if (eid == obs.entity_id) {
-                                obs_data = data_ptr;
-                                break;
-                            }
-                        }
+                        
+                        // OPTIMIZATION 2: O(1) entity lookup instead of O(E) linear search
+                        auto entity_it = entity_to_index.find(obs.entity_id);
+                        if (entity_it == entity_to_index.end()) continue;
+                        
+                        DataType const * obs_data = std::get<0>(all_frame_data[entity_it->second]);
 
-                        if (obs_data) {
-                            Measurement measurement = {feature_extractor_->getFilterFeatures(*obs_data)};
-                            track.filter->update(pred.filter_state, measurement);
-                            group_manager.addEntityToGroup(pred.group_id, obs.entity_id);
+                        Measurement measurement = {feature_extractor_->getFilterFeatures(*obs_data)};
+                        track.filter->update(pred.filter_state, measurement);
+                        
+                        // OPTIMIZATION 1: Defer update to batch flush at anchor frames
+                        pending_updates.addPending(pred.group_id, obs.entity_id);
 
-                            updated_groups_this_frame.insert(pred.group_id);
-                            assigned_entities_this_frame.insert(obs.entity_id);
-                            track.frames_since_last_seen = 0;
-                        }
+                        updated_groups_this_frame.insert(pred.group_id);
+                        assigned_entities_this_frame.insert(obs.entity_id);
+                        track.frames_since_last_seen = 0;
                     }
                 }
             }
 
             // --- Finalize Frame State, Log History, and Handle Smoothing ---
+            bool any_smoothing_this_frame = false;
             for (auto & [group_id, track]: active_tracks_) {
                 if (!track.is_active) continue;
 
@@ -245,10 +310,26 @@ public:
                         track.forward_pass_history.push_back(smoothed.back());
                         // Keep only the last anchor for the next interval
                         track.anchor_frames = {current_frame};
+                        
+                        any_smoothing_this_frame = true;
                     }
                 }
             }
+            
+            // OPTIMIZATION 1: Flush pending updates at anchor frames (smoothing boundaries)
+            // This is the natural synchronization point between tracking intervals
+            if (any_smoothing_this_frame) {
+                pending_updates.flushToManager(group_manager);
+                
+                // Update the cached grouped entities set for the next interval
+                auto const & newly_added = pending_updates.getAddedEntities();
+                initially_grouped_entities.insert(newly_added.begin(), newly_added.end());
+            }
         }
+        
+        // Final flush of any remaining pending updates
+        pending_updates.flushToManager(group_manager);
+        
         return all_smoothed_results;
     }
 
