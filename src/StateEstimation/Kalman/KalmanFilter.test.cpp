@@ -5,6 +5,7 @@
 #include "Kalman/KalmanFilter.hpp"
 #include "Tracker.hpp"
 #include "Features/IFeatureExtractor.hpp"
+#include "Assignment/HungarianAssigner.hpp"
 
 // --- Test-Specific Mocks and Implementations ---
 
@@ -57,7 +58,7 @@ public:
 };
 
 
-TEST_CASE("StateEstimation - KalmanFilter - tracking and smoothing", "[KalmanFilter]") {
+TEST_CASE("KalmanFilter tracking and smoothing", "[KalmanFilter]") {
     using namespace StateEstimation;
 
     // 1. --- SETUP ---
@@ -147,3 +148,65 @@ TEST_CASE("StateEstimation - KalmanFilter - tracking and smoothing", "[KalmanFil
     REQUIRE(std::abs(smoothed_g2[5].state_mean(3)) < 1.0); // vy
 }
 
+TEST_CASE("StateEstimation - KalmanFilter - assignment with Hungarian algorithm", "[KalmanFilter][Assignment]") {
+    using namespace StateEstimation;
+
+    // 1. --- SETUP ---
+    double dt = 1.0;
+    Eigen::MatrixXd F(4, 4); F << 1, 0, dt, 0, 0, 1, 0, dt, 0, 0, 1, 0, 0, 0, 0, 1;
+    Eigen::MatrixXd H(2, 4); H << 1, 0, 0, 0, 0, 1, 0, 0;
+    Eigen::MatrixXd Q(4, 4); Q.setIdentity(); Q *= 0.1;
+    Eigen::MatrixXd R(2, 2); R.setIdentity(); R *= 5.0;
+
+    auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
+    auto feature_extractor = std::make_unique<LineCentroidExtractor>();
+    auto assigner = std::make_unique<HungarianAssigner>(100.0, H, R, "kalman_features");
+
+    Tracker<TestLine2D> tracker(std::move(kalman_filter), std::move(feature_extractor), std::move(assigner));
+
+    // --- Generate Artificial Data ---
+    Tracker<TestLine2D>::DataSource data_source;
+    Tracker<TestLine2D>::GroupMap groups;
+    Tracker<TestLine2D>::GroundTruthMap ground_truth;
+
+    GroupId group1 = 10;
+    GroupId group2 = 20;
+
+    // Frame 0: Ground truth
+    data_source[0] = {
+        { (EntityID)1, {10, 10}, {10, 10} },
+        { (EntityID)2, {100, 50}, {100, 50} }
+    };
+    ground_truth[0] = {{group1, 1}, {group2, 2}};
+    groups[group1] = {1};
+    groups[group2] = {2};
+
+    // Frames 1-4: Ungrouped data that should be assigned
+    for (int i = 1; i <= 4; ++i) {
+        data_source[i] = {
+            { (EntityID)(10 + i), {10.0 + i * 5.0, 10.0 + i * 5.0}, {10.0 + i * 5.0, 10.0 + i * 5.0} },
+            { (EntityID)(20 + i), {100.0 - i * 5.0, 50.0}, {100.0 - i * 5.0, 50.0} }
+        };
+    }
+
+    // 2. --- EXECUTION ---
+    tracker.process(data_source, groups, ground_truth, 0, 4);
+
+    // 3. --- ASSERTIONS ---
+    REQUIRE(groups.count(group1) == 1);
+    REQUIRE(groups.count(group2) == 1);
+
+    // Check that all entities were correctly assigned. Each group should have 5 entities now.
+    REQUIRE(groups.at(group1).size() == 5); // 1 (initial) + 4 (assigned)
+    REQUIRE(groups.at(group2).size() == 5);
+
+    // Verify the correct entities were assigned to group 1
+    std::vector<EntityID> expected_g1 = {1, 11, 12, 13, 14};
+    std::sort(groups.at(group1).begin(), groups.at(group1).end());
+    REQUIRE(groups.at(group1) == expected_g1);
+
+    // Verify the correct entities were assigned to group 2
+    std::vector<EntityID> expected_g2 = {2, 21, 22, 23, 24};
+    std::sort(groups.at(group2).begin(), groups.at(group2).end());
+    REQUIRE(groups.at(group2) == expected_g2);
+}

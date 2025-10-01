@@ -124,8 +124,55 @@ public:
             }
             
             // --- Assignment for Ungrouped Data ---
-            // ... (Full assignment logic would go here) ...
+            if (assigner_) {
+                std::vector<Observation> observations;
+                std::map<EntityID, FeatureCache> feature_cache;
 
+                std::set<EntityID> all_grouped_entities;
+                for(const auto& pair : groups) {
+                    all_grouped_entities.insert(pair.second.begin(), pair.second.end());
+                }
+
+                for(const auto& item : all_frame_data) {
+                    if(assigned_entities_this_frame.find(item.id) == assigned_entities_this_frame.end() &&
+                       all_grouped_entities.find(item.id) == all_grouped_entities.end()) {
+                        observations.push_back({item.id});
+                        feature_cache[item.id] = feature_extractor_->getAllFeatures(item);
+                    }
+                }
+                
+                std::vector<Prediction> prediction_list;
+                for(const auto& [group_id, pred_state] : predictions) {
+                    if(active_tracks_.at(group_id).is_active) {
+                        prediction_list.push_back({group_id, pred_state});
+                    }
+                }
+
+                if (!observations.empty() && !prediction_list.empty()) {
+                    Assignment assignment = assigner_->solve(prediction_list, observations, feature_cache);
+
+                    for (const auto& [obs_idx, pred_idx] : assignment.observation_to_prediction) {
+                        const auto& obs = observations[obs_idx];
+                        const auto& pred = prediction_list[pred_idx];
+
+                        auto& track = active_tracks_.at(pred.group_id);
+                        const DataType* obs_data = nullptr;
+                        for(const auto& item : all_frame_data) {
+                            if(item.id == obs.entity_id) { obs_data = &item; break;}
+                        }
+
+                        if(obs_data) {
+                            Measurement measurement = {feature_extractor_->getFilterFeatures(*obs_data)};
+                            track.filter->update(pred.filter_state, measurement);
+                            groups[pred.group_id].push_back(obs.entity_id);
+                            
+                            updated_groups_this_frame.insert(pred.group_id);
+                            assigned_entities_this_frame.insert(obs.entity_id);
+                            track.frames_since_last_seen = 0;
+                        }
+                    }
+                }
+            }
 
             // --- Finalize Frame State, Log History, and Handle Smoothing ---
             for (auto& [group_id, track] : active_tracks_) {
@@ -195,6 +242,7 @@ struct TrackedGroupState {
 };
 
 } // namespace StateEstimation
+
 
 #endif // TRACKER_HPP
 
