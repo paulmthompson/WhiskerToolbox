@@ -2,7 +2,7 @@
 #define BEHAVIORTOOLBOX_ML_WIDGET_HPP
 
 #include "ClassBalancingWidget/ClassBalancingWidget.hpp"
-#include "DataManager/TimeFrame/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "FeatureProcessingWidget/FeatureProcessingWidget.hpp"
 #include "MLModelOperation.hpp"
 #include "MLModelRegistry.hpp"

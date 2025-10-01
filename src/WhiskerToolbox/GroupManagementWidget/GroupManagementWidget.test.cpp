@@ -1,5 +1,5 @@
 #include "GroupManagementWidget.hpp"
-#include "DataManager/Entity/EntityGroupManager.hpp"
+#include "Entity/EntityGroupManager.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GroupManager.hpp"
 

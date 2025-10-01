@@ -1,5 +1,9 @@
+add_subdirectory(TimeFrame)
+
+add_subdirectory(Entity)
 
 add_subdirectory(CoreGeometry)
+
 if (ENABLE_OPENCV)
     add_subdirectory(ImageProcessing)
 endif()

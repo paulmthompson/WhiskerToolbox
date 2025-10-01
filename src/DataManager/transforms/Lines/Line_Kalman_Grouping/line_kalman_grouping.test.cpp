@@ -163,55 +163,9 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Basic Func
         REQUIRE(centroid.y() == Catch::Approx(100.0).epsilon(0.01));
     }
     
-    SECTION("Noise estimation from grouped data") {
-        // Create parameters and test empirical noise estimation
-        LineKalmanGroupingParameters params(group_manager.get());
-        params.estimate_noise_empirically = true;
-        
-        // Store original noise values
-        double original_pos_noise = params.process_noise_position;
-        double original_vel_noise = params.process_noise_velocity;
-        double original_meas_noise = params.measurement_noise;
-        
-        // Estimate noise from grouped data
-        estimateNoiseFromGroupedData(line_data.get(), group_manager.get(), &params);
-        
-        // Noise values should have been updated (we have predictable motion)
-        REQUIRE(params.process_noise_position > 0.0);
-        REQUIRE(params.process_noise_velocity > 0.0);
-        REQUIRE(params.measurement_noise > 0.0);
-        
-        // With our predictable motion, noise should be reasonable but account for oscillation
-        // Line moves 2 pixels/frame horizontally + 10 pixel sine wave vertically
-        // Expected position variance: ~(10^2)/2 = ~50, so sqrt(50) ≈ 7 for std dev
-        // But algorithm takes overall variance which includes the full oscillation range
-        REQUIRE(params.process_noise_position < 100.0); // Allow for oscillation variance
-        REQUIRE(params.process_noise_position > 1.0);   // Should be above noise floor
-    }
+    // Note: Noise estimation test removed since the function is now internal to the Tracker
     
-    SECTION("Kalman filter creation") {
-        LineKalmanGroupingParameters params(group_manager.get());
-        
-        auto kalman_filter = createKalmanFilter(&params);
-        
-        // Test that filter can be initialized and used
-        Eigen::VectorXd initial_state(4);
-        initial_state << 100.0, 100.0, 2.0, 0.0; // x, y, vx, vy
-        
-        kalman_filter.init(0.0, initial_state);
-        
-        // Test prediction
-        Eigen::VectorXd measurement(2);
-        measurement << 102.0, 100.0; // Moved 2 pixels right
-        kalman_filter.update(measurement);
-        
-        auto state = kalman_filter.state();
-        REQUIRE(state.size() == 4);
-        
-        // Position should be close to measurement
-        REQUIRE(state(0) == Catch::Approx(102.0).epsilon(0.1));
-        REQUIRE(state(1) == Catch::Approx(100.0).epsilon(0.1));
-    }
+    // Note: Kalman filter creation test removed since it's now handled by the Tracker
 }
 
 TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algorithm Test", "[LineKalmanGrouping]") {
@@ -220,8 +174,6 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         // Create parameters
         LineKalmanGroupingParameters params(group_manager.get());
         params.verbose_output = false;
-        params.estimate_noise_empirically = true;
-        params.run_backward_smoothing = false; // Skip for basic test
         
         // Count ungrouped entities before
         auto all_entities = line_data->getAllEntityIds();
@@ -257,9 +209,7 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         // Create parameters with verbose output for debugging
         LineKalmanGroupingParameters params(group_manager.get());
         params.verbose_output = true; // Enable for debugging
-        params.estimate_noise_empirically = true;
         params.max_assignment_distance = 100.0; // More lenient threshold
-        params.min_kalman_confidence = 0.01; // Lower confidence threshold
         
         // Debug: Check initial state
         auto all_entities_before = line_data->getAllEntityIds();
@@ -338,7 +288,6 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         // Test with stricter distance threshold
         LineKalmanGroupingParameters strict_params(group_manager.get());
         strict_params.max_assignment_distance = 10.0; // Very strict
-        strict_params.estimate_noise_empirically = false;
         strict_params.process_noise_position = 5.0;
         strict_params.measurement_noise = 2.0;
         
@@ -365,7 +314,6 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         // Test with lenient distance threshold
         LineKalmanGroupingParameters lenient_params(group_manager.get());
         lenient_params.max_assignment_distance = 100.0; // Very lenient
-        lenient_params.estimate_noise_empirically = false;
         lenient_params.process_noise_position = 20.0;
         lenient_params.measurement_noise = 10.0;
         

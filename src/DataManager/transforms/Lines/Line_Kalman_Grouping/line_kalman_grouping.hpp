@@ -4,7 +4,10 @@
 #include "transforms/grouping_transforms.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "Entity/EntityGroupManager.hpp"
-#include "StateEstimation/Kalman/kalman.hpp"
+#include "StateEstimation/Tracker.hpp"
+#include "StateEstimation/Kalman/KalmanFilter.hpp"
+#include "StateEstimation/Features/IFeatureExtractor.hpp"
+#include "StateEstimation/Assignment/HungarianAssigner.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <memory>
@@ -37,29 +40,40 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
     
     // === Assignment Parameters ===
     double max_assignment_distance = 100.0;             // Maximum Mahalanobis distance for assignment
-    double min_kalman_confidence = 0.1;                 // Minimum confidence threshold for predictions
-    
-    // === Algorithm Control ===
-    bool estimate_noise_empirically = true;             // Estimate noise from existing grouped data
-    bool run_backward_smoothing = true;                 // Run RTS smoothing between anchor frames
-    bool create_new_group_for_outliers = false;         // Create new groups for unassigned lines
-    std::string new_group_name = "Kalman Tracked Lines"; // Name for new groups if created
     
     // === Debugging/Validation ===
     bool verbose_output = false;                         // Enable detailed logging
 };
 
 /**
- * @brief Structure to hold the state of a group being tracked
+ * @brief Lightweight wrapper that only stores EntityId for tracking
+ * 
+ * All feature data (centroids) are pre-computed and stored in a separate cache.
+ * This avoids copying Line2D objects entirely.
  */
-struct GroupTrackingState {
-    GroupId group_id;
-    KalmanFilter kalman_filter;
-    std::vector<TimeFrameIndex> anchor_frames;           // Frames with manual labels
-    std::vector<Eigen::Vector2d> anchor_centroids;      // Centroids at anchor frames
-    TimeFrameIndex last_update_frame = TimeFrameIndex(0);
-    bool is_active = false;
-    double confidence = 1.0;
+struct TrackedEntity {
+    EntityId id;
+};
+
+/**
+ * @brief Feature extractor that looks up pre-computed centroids from a cache
+ * 
+ * This extractor doesn't compute features on-demand. Instead, it looks up
+ * pre-computed centroids from an internal cache built during construction.
+ */
+class CachedCentroidExtractor : public StateEstimation::IFeatureExtractor<TrackedEntity> {
+public:
+    explicit CachedCentroidExtractor(std::unordered_map<EntityId, Eigen::Vector2d> centroid_cache)
+        : centroid_cache_(std::move(centroid_cache)) {}
+    
+    Eigen::VectorXd getFilterFeatures(const TrackedEntity& data) const override;
+    StateEstimation::FeatureCache getAllFeatures(const TrackedEntity& data) const override;
+    std::string getFilterFeatureName() const override;
+    StateEstimation::FilterState getInitialState(const TrackedEntity& data) const override;
+    std::unique_ptr<StateEstimation::IFeatureExtractor<TrackedEntity>> clone() const override;
+
+private:
+    std::unordered_map<EntityId, Eigen::Vector2d> centroid_cache_;
 };
 
 /**
@@ -69,64 +83,6 @@ struct GroupTrackingState {
  * @return 2D centroid position
  */
 Eigen::Vector2d calculateLineCentroid(Line2D const& line);
-
-/**
- * @brief Estimate process and measurement noise from existing grouped data
- * 
- * @param line_data The LineData containing all lines
- * @param group_manager The EntityGroupManager containing existing groups
- * @param params Parameters to update with estimated noise values
- */
-void estimateNoiseFromGroupedData(LineData const* line_data,
-                                  EntityGroupManager* group_manager,
-                                  LineKalmanGroupingParameters* params);
-
-/**
- * @brief Initialize Kalman filter for position and velocity tracking
- * 
- * @param params Parameters containing noise settings
- * @return Configured KalmanFilter
- */
-KalmanFilter createKalmanFilter(LineKalmanGroupingParameters const* params);
-
-/**
- * @brief Calculate Mahalanobis distance between observation and prediction
- * 
- * @param observation Observed centroid position
- * @param prediction Kalman filter predicted position
- * @param covariance Covariance matrix from Kalman filter
- * @return Mahalanobis distance
- */
-double calculateMahalanobisDistance(Eigen::Vector2d const& observation,
-                                    Eigen::Vector2d const& prediction,
-                                    Eigen::Matrix2d const& covariance);
-
-/**
- * @brief Solve assignment problem using Hungarian algorithm
- * 
- * @param ungrouped_centroids Centroids of ungrouped lines
- * @param predicted_centroids Predicted centroids from Kalman filters
- * @param covariances Covariance matrices for each prediction
- * @param max_distance Maximum allowed assignment distance
- * @return Vector of assignments (ungrouped_index -> prediction_index, -1 for unassigned)
- */
-std::vector<int> solveAssignmentProblem(std::vector<Eigen::Vector2d> const& ungrouped_centroids,
-                                        std::vector<Eigen::Vector2d> const& predicted_centroids,
-                                        std::vector<Eigen::Matrix2d> const& covariances,
-                                        double max_distance);
-
-/**
- * @brief Run RTS (Rauch-Tung-Striebel) smoothing between anchor frames
- * 
- * @param tracking_states Map of group tracking states
- * @param start_frame Start frame for smoothing interval
- * @param end_frame End frame for smoothing interval
- * @param params Algorithm parameters
- */
-void runRTSSmoothing(std::map<GroupId, GroupTrackingState>& tracking_states,
-                     TimeFrameIndex start_frame,
-                     TimeFrameIndex end_frame,
-                     LineKalmanGroupingParameters const* params);
 
 /**
  * @brief Main function: Group lines using Kalman filtering and assignment
@@ -144,7 +100,7 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
 
 std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data,
                                              LineKalmanGroupingParameters const * params,
-                                             ProgressCallback progressCallback);
+                                             ProgressCallback const& progressCallback);
 
 /**
  * @brief Transform operation for Kalman-based line grouping
@@ -160,11 +116,11 @@ public:
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
     
     DataTypeVariant execute(DataTypeVariant const& dataVariant,
-                           TransformParametersBase const* transformParameters,
-                           ProgressCallback progressCallback) override;
+                           TransformParametersBase const* transformParameters) override;
                            
     DataTypeVariant execute(DataTypeVariant const& dataVariant,
-                           TransformParametersBase const* transformParameters) override;
+                           TransformParametersBase const* transformParameters,
+                           ProgressCallback progressCallback) override;
 };
 
 #endif // LINE_KALMAN_GROUPING_HPP

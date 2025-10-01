@@ -3,7 +3,7 @@
 
 #include "../Scaling_Widget/Scaling_Widget.hpp"
 #include "CoreGeometry/lines.hpp"
-#include "DataManager/TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>
 #include <QString>

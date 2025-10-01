@@ -3,7 +3,7 @@
 #include "Widgets/Common/BasePlotOpenGLWidget.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "Selection/SelectionHandlers.hpp"
-#include "DataManager/Entity/EntityTypes.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <QString>
 

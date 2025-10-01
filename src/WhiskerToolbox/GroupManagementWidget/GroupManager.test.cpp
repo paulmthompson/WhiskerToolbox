@@ -1,5 +1,5 @@
 #include "GroupManager.hpp"
-#include "DataManager/Entity/EntityGroupManager.hpp"
+#include "Entity/EntityGroupManager.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include <catch2/catch_test_macros.hpp>

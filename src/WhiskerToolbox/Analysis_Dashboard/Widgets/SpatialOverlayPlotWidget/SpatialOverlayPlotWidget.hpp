@@ -3,7 +3,7 @@
 
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 #include "Selection/SelectionModes.hpp"
-#include "DataManager/Entity/EntityTypes.hpp"
+#include "Entity/EntityTypes.hpp"
 
 
 #include <QGraphicsSceneMouseEvent>

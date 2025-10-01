@@ -1,6 +1,8 @@
 #ifndef STATE_ESTIMATION_FEATURE_VECTOR_HPP
 #define STATE_ESTIMATION_FEATURE_VECTOR_HPP
 
+#include "Entity/EntityGroupManager.hpp"
+
 #include <Eigen/Dense>
 
 #include <cstdint>
@@ -10,10 +12,7 @@
 
 namespace StateEstimation {
 
-/**
- * @brief Type alias for group identifiers in the state estimation library
- */
-using GroupId = std::uint64_t;
+// Note: GroupId is now imported from EntityGroupManager.hpp
 
 /**
  * @brief Describes the type and properties of a feature

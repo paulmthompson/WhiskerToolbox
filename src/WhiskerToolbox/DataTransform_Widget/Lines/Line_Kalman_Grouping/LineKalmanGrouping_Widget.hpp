@@ -42,9 +42,6 @@ protected:
 
 private slots:
     void onParametersChanged();
-    void onCreateNewGroupToggled([[maybe_unused]] bool enabled);
-    void onEstimateNoiseToggled([[maybe_unused]] bool enabled);
-    void onBackwardSmoothingToggled([[maybe_unused]] bool enabled);
 
 private:
     std::unique_ptr<Ui::LineKalmanGrouping_Widget> ui;
@@ -52,8 +49,6 @@ private:
     void setupUI();
     void connectSignals();
     void updateParametersFromUI();
-    void updateNewGroupControls();
-    void updateNoiseControls();
     void resetToDefaults();
     
     bool validateParameters() const;

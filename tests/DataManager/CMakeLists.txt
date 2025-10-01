@@ -26,7 +26,7 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/Observer/Observer_Data.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Entity/EntityGroupManager.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/Entity/EntityGroupManager.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp

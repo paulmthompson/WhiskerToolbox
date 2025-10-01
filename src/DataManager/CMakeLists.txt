@@ -13,10 +13,6 @@ find_package(OpenBLAS REQUIRED)
 
 add_subdirectory(Observer)
 
-add_subdirectory(TimeFrame)
-
-add_subdirectory(Entity)
-
 add_subdirectory(Lines)
 
 add_subdirectory(IO)

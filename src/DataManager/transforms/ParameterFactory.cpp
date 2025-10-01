@@ -476,21 +476,6 @@ void ParameterFactory::initializeDefaultSetters() {
     registerBasicParameter<LineKalmanGroupingParameters, double>(
             "Group Lines using Kalman Filtering", "max_assignment_distance", &LineKalmanGroupingParameters::max_assignment_distance);
 
-    registerBasicParameter<LineKalmanGroupingParameters, double>(
-            "Group Lines using Kalman Filtering", "min_kalman_confidence", &LineKalmanGroupingParameters::min_kalman_confidence);
-
-    registerBasicParameter<LineKalmanGroupingParameters, bool>(
-            "Group Lines using Kalman Filtering", "estimate_noise_empirically", &LineKalmanGroupingParameters::estimate_noise_empirically);
-
-    registerBasicParameter<LineKalmanGroupingParameters, bool>(
-            "Group Lines using Kalman Filtering", "run_backward_smoothing", &LineKalmanGroupingParameters::run_backward_smoothing);
-
-    registerBasicParameter<LineKalmanGroupingParameters, bool>(
-            "Group Lines using Kalman Filtering", "create_new_group_for_outliers", &LineKalmanGroupingParameters::create_new_group_for_outliers);
-
-    registerBasicParameter<LineKalmanGroupingParameters, std::string>(
-            "Group Lines using Kalman Filtering", "new_group_name", &LineKalmanGroupingParameters::new_group_name);
-
     registerBasicParameter<LineKalmanGroupingParameters, bool>(
             "Group Lines using Kalman Filtering", "verbose_output", &LineKalmanGroupingParameters::verbose_output);
 }
