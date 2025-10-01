@@ -151,21 +151,6 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Basic Func
         REQUIRE(group2_entities.size() == 10);
     }
     
-    SECTION("Centroid calculation") {
-        // Test centroid calculation for a known line
-        auto line_opt = line_data->getLineByEntityId(line1_entities[0]);
-        REQUIRE(line_opt.has_value());
-        
-        auto centroid = calculateLineCentroid(line_opt.value());
-        
-        // Expected centroid for frame 0, line 1: center of horizontal line at (100-109, 100)
-        REQUIRE(centroid.x() == Catch::Approx(104.5).epsilon(0.01)); // (100+109)/2 = 104.5
-        REQUIRE(centroid.y() == Catch::Approx(100.0).epsilon(0.01));
-    }
-    
-    // Note: Noise estimation test removed since the function is now internal to the Tracker
-    
-    // Note: Kalman filter creation test removed since it's now handled by the Tracker
 }
 
 TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algorithm Test", "[LineKalmanGrouping]") {

@@ -3,77 +3,12 @@
 #include "Lines/Line_Data.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityTypes.hpp"
-#include "CoreGeometry/line_geometry.hpp"
+#include "StateEstimation/DataAdapter.hpp"
+#include "StateEstimation/Features/LineCentroidExtractor.hpp"
 
 #include <algorithm>
-#include <cmath>
-#include <limits>
-#include <unordered_set>
-#include <unordered_map>
 #include <iostream>
 #include <ranges>
-
-Eigen::Vector2d calculateLineCentroid(Line2D const& line) {
-    if (line.empty()) {
-        return Eigen::Vector2d::Zero();
-    }
-    
-    double sum_x = 0.0;
-    double sum_y = 0.0;
-    
-    for (auto const& point : line) {
-        sum_x += static_cast<double>(point.x);
-        sum_y += static_cast<double>(point.y);
-    }
-    
-    double count = static_cast<double>(line.size());
-    return Eigen::Vector2d(sum_x / count, sum_y / count);
-}
-
-// CachedCentroidExtractor implementation
-Eigen::VectorXd CachedCentroidExtractor::getFilterFeatures(const TrackedEntity& data) const {
-    auto it = centroid_cache_.find(data.id);
-    if (it == centroid_cache_.end()) {
-        return Eigen::VectorXd::Zero(2);
-    }
-    
-    const Eigen::Vector2d& centroid = it->second;
-    Eigen::VectorXd features(2);
-    features << centroid.x(), centroid.y();
-    return features;
-}
-
-StateEstimation::FeatureCache CachedCentroidExtractor::getAllFeatures(const TrackedEntity& data) const {
-    StateEstimation::FeatureCache cache;
-    cache[getFilterFeatureName()] = getFilterFeatures(data);
-    return cache;
-}
-
-std::string CachedCentroidExtractor::getFilterFeatureName() const {
-    return "kalman_features";
-}
-
-StateEstimation::FilterState CachedCentroidExtractor::getInitialState(const TrackedEntity& data) const {
-    Eigen::VectorXd initialState(4);
-    
-    auto it = centroid_cache_.find(data.id);
-    if (it == centroid_cache_.end()) {
-        initialState.setZero();
-    } else {
-        const Eigen::Vector2d& centroid = it->second;
-        initialState << centroid.x(), centroid.y(), 0, 0; // Position from centroid, velocity is zero
-    }
-
-    Eigen::MatrixXd p(4, 4);
-    p.setIdentity();
-    p *= 100.0; // High initial uncertainty
-
-    return {.state_mean = initialState, .state_covariance = p};
-}
-
-std::unique_ptr<StateEstimation::IFeatureExtractor<TrackedEntity>> CachedCentroidExtractor::clone() const {
-    return std::make_unique<CachedCentroidExtractor>(*this);
-}
 
 
 
@@ -111,50 +46,17 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
                   << start_frame.getValue() << " to " << end_frame.getValue() << std::endl;
     }
     
-    // PHASE 1: Pre-compute all centroids and build cache
-    // This eliminates the need to copy Line2D objects or hold pointers
-    std::unordered_map<EntityId, Eigen::Vector2d> centroid_cache;
+    // Get natural iterator from LineData and flatten to individual items
+    // This provides zero-copy access to Line2D objects
+    auto line_entries_range = line_data->GetAllLineEntriesAsRange();
+    auto data_source = StateEstimation::flattenLineData(line_entries_range);
     
     if (params->verbose_output) {
-        std::cout << "Pre-computing centroids for all lines..." << std::endl;
-    }
-    
-    for (auto time : all_times) {
-        const auto& lines_at_time = line_data->getAtTime(time);
-        const auto& entity_ids = line_data->getEntityIdsAtTime(time);
-        
-        for (size_t i = 0; i < lines_at_time.size() && i < entity_ids.size(); ++i) {
-            centroid_cache[entity_ids[i]] = calculateLineCentroid(lines_at_time[i]);
-        }
-    }
-    
-    if (params->verbose_output) {
-        std::cout << "Cached " << centroid_cache.size() << " centroids" << std::endl;
-    }
-    
-    // Build DataSource: vector of tuples (TrackedEntity, EntityId, TimeFrameIndex)
-    // This satisfies the new DataSource concept for zero-copy iteration
-    std::vector<std::tuple<TrackedEntity, EntityId, TimeFrameIndex>> data_source;
-    
-    for (auto time : all_times) {
-        const auto& entity_ids = line_data->getEntityIdsAtTime(time);
-        
-        for (auto entity_id : entity_ids) {
-            data_source.emplace_back(
-                TrackedEntity{entity_id},
-                entity_id,
-                time
-            );
-        }
-    }
-    
-    if (params->verbose_output) {
-        std::cout << "Built data source with " << data_source.size() << " tracked entities" << std::endl;
+        std::cout << "Created zero-copy data source from LineData" << std::endl;
     }
     
     // Build GroundTruthMap: frames where entities are already grouped
-    // More efficient: iterate through groups instead of all entities at all frames
-    Tracker<TrackedEntity>::GroundTruthMap ground_truth;
+    StateEstimation::Tracker<Line2D>::GroundTruthMap ground_truth;
     auto all_group_ids = group_manager->getAllGroupIds();
     
     for (auto group_id : all_group_ids) {
@@ -197,35 +99,33 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
          0, params->measurement_noise * params->measurement_noise;
     
     auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
-    auto feature_extractor = std::make_unique<CachedCentroidExtractor>(std::move(centroid_cache));
+    // Use on-demand feature extractor - no pre-computation needed!
+    auto feature_extractor = std::make_unique<StateEstimation::LineCentroidExtractor>();
     auto assigner = std::make_unique<HungarianAssigner>(
         params->max_assignment_distance, 
         H, 
         R, 
-        "kalman_features"
+        "line_centroid"  // Updated feature name
     );
     
-    // Create the tracker with lightweight TrackedEntity (no Line2D copying!)
-    Tracker<TrackedEntity> tracker(
+    // Create the tracker with Line2D as the template parameter (correct type!)
+    StateEstimation::Tracker<Line2D> tracker(
         std::move(kalman_filter), 
         std::move(feature_extractor), 
         std::move(assigner)
     );
     
-    // Run the tracking process with progress callback
-    // The new API uses EntityGroupManager directly and modifies it in-place
+    // Run the tracking process with zero-copy data source
+    // Features are computed on-demand from Line2D references
     StateEstimation::ProgressCallback se_callback = progressCallback;
     [[maybe_unused]] auto smoothed_results = tracker.process(
-        data_source, 
-        *group_manager,  // Pass EntityGroupManager directly!
+        std::move(data_source),  // Move the adapter (it stores the range by value)
+        *group_manager,          // Modified in-place
         ground_truth, 
         start_frame, 
         end_frame,
         se_callback
     );
-    
-    // No need to manually apply group assignments - the tracker already did this
-    // through EntityGroupManager::addEntityToGroup() calls
     
     if (params->verbose_output) {
         std::cout << "Tracking complete. Groups updated in EntityGroupManager." << std::endl;
