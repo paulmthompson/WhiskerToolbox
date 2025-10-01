@@ -2,7 +2,7 @@
 #define LINEDATAVISUALIZATION_HPP
 
 #include "CoreGeometry/boundingbox.hpp"
-#include "DataManager/Entity/EntityTypes.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "Selection/SelectionHandlers.hpp"

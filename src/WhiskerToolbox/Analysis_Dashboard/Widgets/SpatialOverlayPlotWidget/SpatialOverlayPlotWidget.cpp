@@ -2,7 +2,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "SpatialOverlayOpenGLWidget.hpp"   
 
 

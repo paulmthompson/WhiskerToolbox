@@ -26,7 +26,7 @@
 #include "DockManager.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Entity/EntityGroupManager.hpp"
+#include "Entity/EntityGroupManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "ShaderManager/ShaderManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"

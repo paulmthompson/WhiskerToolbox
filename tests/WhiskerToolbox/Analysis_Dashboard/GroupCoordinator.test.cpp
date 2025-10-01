@@ -3,7 +3,7 @@
 
 #include "Analysis_Dashboard/Groups/GroupCoordinator.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
-#include "DataManager/Entity/EntityGroupManager.hpp"
+#include "Entity/EntityGroupManager.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 

@@ -1,6 +1,6 @@
 #include "GroupManager.hpp"
 
-#include "DataManager/Entity/EntityGroupManager.hpp"
+#include "Entity/EntityGroupManager.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Lines/Line_Data.hpp"

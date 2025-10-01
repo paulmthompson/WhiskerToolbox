@@ -15,7 +15,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 // Qt includes for widget testing
 #include <QApplication>

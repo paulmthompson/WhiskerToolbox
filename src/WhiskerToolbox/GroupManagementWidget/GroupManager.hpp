@@ -1,7 +1,7 @@
 #ifndef GROUPMANAGER_HPP
 #define GROUPMANAGER_HPP
 
-#include "DataManager/Entity/EntityTypes.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <QColor>
 #include <QMap>

@@ -61,6 +61,7 @@ add_library(TensorData SHARED ${TENSOR_SOURCES})
 
 # Set up include directories
 target_include_directories(TensorData PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../..>" # For TimeFrame includes
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>  # For DataManager includes
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>     # For local includes
     $<INSTALL_INTERFACE:include>

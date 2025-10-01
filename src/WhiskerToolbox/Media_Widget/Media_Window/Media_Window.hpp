@@ -5,7 +5,7 @@
 #include "../Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
-#include "DataManager/Entity/EntityTypes.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <QGraphicsEllipseItem>
 #include <QGraphicsItem>

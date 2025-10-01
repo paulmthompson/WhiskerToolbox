@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_INTERVALTABLEMODEL_HPP
 #define WHISKERTOOLBOX_INTERVALTABLEMODEL_HPP
 
-#include "DataManager/TimeFrame/interval_data.hpp"
+#include "TimeFrame/interval_data.hpp"
 
 #include <QAbstractTableModel>
 

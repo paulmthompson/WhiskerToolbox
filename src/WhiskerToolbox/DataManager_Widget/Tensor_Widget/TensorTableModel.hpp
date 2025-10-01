@@ -1,7 +1,7 @@
 #ifndef TENSORTABLEMODEL_HPP
 #define TENSORTABLEMODEL_HPP
 
-#include "DataManager/TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots

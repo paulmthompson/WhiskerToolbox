@@ -15,7 +15,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 # Create TimeFrame test executable
 add_executable(test_timeframe
         test_timeframe_main.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/TimeFrame/StrongTimeTypes.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/TimeFrame/StrongTimeTypes.test.cpp
 )
 
 target_link_libraries(test_timeframe PRIVATE 
@@ -24,7 +24,7 @@ target_link_libraries(test_timeframe PRIVATE
 )
 
 target_include_directories(test_timeframe PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager/TimeFrame>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/TimeFrame>"
 )
 
 if (APPLE)

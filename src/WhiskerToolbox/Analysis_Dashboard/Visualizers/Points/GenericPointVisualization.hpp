@@ -1,7 +1,7 @@
 #ifndef GENERICPOINTVISUALIZATION_HPP
 #define GENERICPOINTVISUALIZATION_HPP
 
-#include "DataManager/Entity/EntityTypes.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"

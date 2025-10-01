@@ -1,7 +1,7 @@
 #ifndef MEDIAPOINT_WIDGET_HPP
 #define MEDIAPOINT_WIDGET_HPP
 
-#include "DataManager/Entity/EntityTypes.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <QWidget>
 

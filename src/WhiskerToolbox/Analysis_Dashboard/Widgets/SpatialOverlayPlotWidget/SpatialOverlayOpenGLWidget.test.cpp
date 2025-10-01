@@ -8,7 +8,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/Entity/EntityGroupManager.hpp"
+#include "Entity/EntityGroupManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
 #include "DataManager/Lines/Line_Data.hpp"

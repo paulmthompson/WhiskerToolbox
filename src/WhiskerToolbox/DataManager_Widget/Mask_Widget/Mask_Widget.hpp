@@ -3,7 +3,7 @@
 
 // Remove direct OpenCV dependency - use registry system instead
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
-#include "DataManager/TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "nlohmann/json.hpp"
 
 #include <QModelIndex>
