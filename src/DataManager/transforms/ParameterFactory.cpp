@@ -6,6 +6,7 @@
 #include "AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
 #include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
+#include "DigitalIntervalSeries/Digital_Interval_Invert/digital_interval_invert.hpp"
 #include "Lines/Line_Alignment/line_alignment.hpp"
 #include "Lines/Line_Angle/line_angle.hpp"
 #include "Lines/Line_Clip/line_clip.hpp"
@@ -182,6 +183,20 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<GroupParams, double>(
             "Group Intervals", "max_spacing", &GroupParams::maxSpacing);
+
+    // ================= Digital Interval Invert ===============
+
+    std::unordered_map<std::string, DomainType> domain_type_map = {
+            {"Bounded", DomainType::Bounded},
+            {"Unbounded", DomainType::Unbounded}};
+    registerEnumParameter<InvertParams, DomainType>(
+            "Invert Intervals", "domain_type", &InvertParams::domainType, domain_type_map);
+
+    registerBasicParameter<InvertParams, double>(
+            "Invert Intervals", "bound_start", &InvertParams::boundStart);
+
+    registerBasicParameter<InvertParams, double>(
+            "Invert Intervals", "bound_end", &InvertParams::boundEnd);
 
     // ====================================================
     // ============== Line Series ==================
