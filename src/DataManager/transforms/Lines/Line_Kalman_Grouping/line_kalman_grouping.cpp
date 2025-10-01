@@ -5,6 +5,9 @@
 #include "Entity/EntityTypes.hpp"
 #include "StateEstimation/DataAdapter.hpp"
 #include "StateEstimation/Features/LineCentroidExtractor.hpp"
+#include "StateEstimation/Features/LineBasePointExtractor.hpp"
+#include "StateEstimation/Features/CompositeFeatureExtractor.hpp"
+#include "StateEstimation/Kalman/KalmanMatrixBuilder.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -76,42 +79,36 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
                   << ground_truth.size() << " ground truth frames" << std::endl;
     }
     
-    // Create Kalman filter prototype
-    double dt = params->dt;
-    Eigen::MatrixXd F(4, 4);
-    F << 1, 0, dt, 0,
-         0, 1, 0, dt,
-         0, 0, 1, 0,
-         0, 0, 0, 1;
+    // Create composite feature extractor with centroid + base point
+    // This will track both features simultaneously (4D measurement space)
+    auto composite_extractor = std::make_unique<StateEstimation::CompositeFeatureExtractor<Line2D>>();
+    composite_extractor->addExtractor(std::make_unique<StateEstimation::LineCentroidExtractor>());
+    composite_extractor->addExtractor(std::make_unique<StateEstimation::LineBasePointExtractor>());
     
-    Eigen::MatrixXd H(2, 4);
-    H << 1, 0, 0, 0,
-         0, 1, 0, 0;
+    // Build Kalman matrices for 2 features (centroid + base point)
+    // Each feature has 2D measurement (x, y) and 4D state (x, y, vx, vy)
+    // Total: 4D measurement space, 8D state space
+    StateEstimation::KalmanMatrixBuilder::FeatureConfig config;
+    config.dt = params->dt;
+    config.process_noise_position = params->process_noise_position;
+    config.process_noise_velocity = params->process_noise_velocity;
+    config.measurement_noise = params->measurement_noise;
     
-    Eigen::MatrixXd Q(4, 4);
-    Q << params->process_noise_position * params->process_noise_position, 0, 0, 0,
-         0, params->process_noise_position * params->process_noise_position, 0, 0,
-         0, 0, params->process_noise_velocity * params->process_noise_velocity, 0,
-         0, 0, 0, params->process_noise_velocity * params->process_noise_velocity;
-    
-    Eigen::MatrixXd R(2, 2);
-    R << params->measurement_noise * params->measurement_noise, 0,
-         0, params->measurement_noise * params->measurement_noise;
+    auto [F, H, Q, R] = StateEstimation::KalmanMatrixBuilder::buildAllMatrices(2, config);
     
     auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
-    // Use on-demand feature extractor - no pre-computation needed!
-    auto feature_extractor = std::make_unique<StateEstimation::LineCentroidExtractor>();
+    
     auto assigner = std::make_unique<HungarianAssigner>(
         params->max_assignment_distance, 
         H, 
         R, 
-        "line_centroid"  // Updated feature name
+        "composite_features"  // Updated feature name for composite extractor
     );
     
     // Create the tracker with Line2D as the template parameter (correct type!)
     StateEstimation::Tracker<Line2D> tracker(
         std::move(kalman_filter), 
-        std::move(feature_extractor), 
+        std::move(composite_extractor), 
         std::move(assigner)
     );
     

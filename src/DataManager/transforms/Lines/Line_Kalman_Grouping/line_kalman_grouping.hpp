@@ -22,9 +22,15 @@ class LineData;
 /**
  * @brief Parameters for the line Kalman grouping operation
  * 
- * This operation uses Kalman filtering and smoothing to track line centroids
- * across time frames and assign ungrouped lines to existing groups using
- * the Hungarian algorithm with Mahalanobis distance.
+ * This operation uses Kalman filtering and smoothing to track multiple line features
+ * (centroid + base point) across time frames and assign ungrouped lines to existing 
+ * groups using the Hungarian algorithm with Mahalanobis distance.
+ * 
+ * Features tracked:
+ * - Line centroid (center of mass of all points)
+ * - Line base point (first point in the line)
+ * 
+ * These features are concatenated into a 4D measurement vector for tracking.
  */
 struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
     explicit LineKalmanGroupingParameters(EntityGroupManager* group_manager)
@@ -45,15 +51,17 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
     bool verbose_output = false;                         // Enable detailed logging
 };
 
-// NOTE: No longer need TrackedEntity wrapper or CachedCentroidExtractor!
-// The tracker now operates directly on Line2D objects with on-demand feature extraction.
-
 /**
  * @brief Main function: Group lines using Kalman filtering and assignment
  * 
  * This function processes all time frames, using existing grouped lines as
- * anchor points and tracking centroids with Kalman filters. Ungrouped lines
- * are assigned to groups using the Hungarian algorithm with Mahalanobis distance.
+ * anchor points and tracking multiple line features (centroid + base point) with 
+ * Kalman filters. Ungrouped lines are assigned to groups using the Hungarian 
+ * algorithm with Mahalanobis distance.
+ * 
+ * The tracker operates directly on Line2D objects with on-demand feature extraction,
+ * avoiding unnecessary memory overhead. Features are computed only when needed for
+ * prediction, update, or assignment operations.
  * 
  * @param line_data The LineData to process
  * @param params Parameters including thresholds and Kalman settings
