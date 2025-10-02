@@ -2,6 +2,7 @@
 #define IFEATURE_EXTRACTOR_HPP
 
 #include "Common.hpp"
+#include "FeatureMetadata.hpp"
 
 #include <memory>
 #include <string>
@@ -13,6 +14,9 @@ namespace StateEstimation {
  *
  * This class abstracts the conversion of a specific data type (e.g., Line2D)
  * into generic feature vectors that the filter and assigner can use.
+ * 
+ * Each extractor provides metadata describing its temporal behavior,
+ * which determines how the state space is constructed for tracking.
  *
  * @tparam DataType The raw data type to extract features from.
  */
@@ -54,6 +58,19 @@ public:
      * @return A unique_ptr to a copy of this object.
      */
     virtual std::unique_ptr<IFeatureExtractor<DataType>> clone() const = 0;
+    
+    /**
+     * @brief Get metadata describing this feature's characteristics.
+     * 
+     * This metadata includes:
+     * - Feature name
+     * - Measurement dimensionality
+     * - State dimensionality (may include derivatives)
+     * - Temporal behavior type (static, kinematic, etc.)
+     * 
+     * @return FeatureMetadata describing this feature
+     */
+    virtual FeatureMetadata getMetadata() const = 0;
 };
 
 }// namespace StateEstimation

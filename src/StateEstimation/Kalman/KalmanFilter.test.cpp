@@ -58,6 +58,14 @@ public:
     std::unique_ptr<IFeatureExtractor<TestLine2D>> clone() const override {
         return std::make_unique<LineCentroidExtractor>(*this);
     }
+
+    StateEstimation::FeatureMetadata getMetadata() const override {
+        return StateEstimation::FeatureMetadata::create(
+            "kalman_features",
+            2,  // 2D measurement
+            StateEstimation::FeatureTemporalType::KINEMATIC_2D
+        );
+    }
 };
 
 

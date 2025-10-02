@@ -100,6 +100,17 @@ public:
         return std::make_unique<LineCentroidExtractor>(*this);
     }
     
+    /**
+     * @brief Get metadata for this feature
+     * 
+     * Line centroid is a 2D kinematic feature (position with velocity).
+     * 
+     * @return FeatureMetadata with KINEMATIC_2D type
+     */
+    FeatureMetadata getMetadata() const override {
+        return FeatureMetadata::create("line_centroid", 2, FeatureTemporalType::KINEMATIC_2D);
+    }
+    
 private:
     /**
      * @brief Compute the centroid (center of mass) of a line

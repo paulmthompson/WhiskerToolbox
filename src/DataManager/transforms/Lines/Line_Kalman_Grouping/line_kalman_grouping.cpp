@@ -80,21 +80,43 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
     }
     
     // Create composite feature extractor with centroid + base point
-    // This will track both features simultaneously (4D measurement space)
+    // Uses metadata-driven approach to handle different feature types
     auto composite_extractor = std::make_unique<StateEstimation::CompositeFeatureExtractor<Line2D>>();
     composite_extractor->addExtractor(std::make_unique<StateEstimation::LineCentroidExtractor>());
     composite_extractor->addExtractor(std::make_unique<StateEstimation::LineBasePointExtractor>());
     
-    // Build Kalman matrices for 2 features (centroid + base point)
-    // Each feature has 2D measurement (x, y) and 4D state (x, y, vx, vy)
-    // Total: 4D measurement space, 8D state space
+    // Get metadata from all child extractors
+    // This automatically handles different temporal behaviors (kinematic, static, etc.)
+    auto metadata_list = composite_extractor->getChildMetadata();
+    
+    if (params->verbose_output) {
+        std::cout << "Building Kalman filter for " << metadata_list.size() << " features:" << std::endl;
+        int total_meas = 0, total_state = 0;
+        for (auto const& meta : metadata_list) {
+            std::cout << "  - " << meta.name << ": " 
+                      << meta.measurement_size << "D measurement → "
+                      << meta.state_size << "D state";
+            if (meta.hasDerivatives()) {
+                std::cout << " (with derivatives)";
+            }
+            std::cout << std::endl;
+            total_meas += meta.measurement_size;
+            total_state += meta.state_size;
+        }
+        std::cout << "Total measurement space: " << total_meas << "D" << std::endl;
+        std::cout << "Total state space: " << total_state << "D" << std::endl;
+    }
+    
+    // Build Kalman matrices from metadata
+    // This automatically creates correct block-diagonal structure
     StateEstimation::KalmanMatrixBuilder::FeatureConfig config;
     config.dt = params->dt;
     config.process_noise_position = params->process_noise_position;
     config.process_noise_velocity = params->process_noise_velocity;
     config.measurement_noise = params->measurement_noise;
     
-    auto [F, H, Q, R] = StateEstimation::KalmanMatrixBuilder::buildAllMatrices(2, config);
+    auto [F, H, Q, R] = StateEstimation::KalmanMatrixBuilder::buildAllMatricesFromMetadata(
+        metadata_list, config);
     
     auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
     
@@ -102,7 +124,7 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
         params->max_assignment_distance, 
         H, 
         R, 
-        "composite_features"  // Updated feature name for composite extractor
+        "composite_features"  // Feature name from composite extractor
     );
     
     // Create the tracker with Line2D as the template parameter (correct type!)

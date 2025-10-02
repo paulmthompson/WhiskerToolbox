@@ -17,8 +17,14 @@ namespace StateEstimation {
  * a concatenated feature vector. The extractors are applied in the order
  * they are added, and their outputs are concatenated together.
  * 
- * Example: Combining centroid + base point extractors produces a 4D feature vector:
- *   [x_centroid, y_centroid, x_base, y_base]
+ * The composite respects each feature's temporal behavior metadata:
+ * - KINEMATIC_2D features: 2D measurement → 4D state (position + velocity)
+ * - STATIC features: 1D measurement → 1D state (no velocity)
+ * - SCALAR_DYNAMIC features: 1D measurement → 2D state (value + derivative)
+ * 
+ * Example: Combining centroid (KINEMATIC_2D) + length (STATIC):
+ *   Measurements: [x_centroid, y_centroid, length] (3D)
+ *   State: [x, y, vx, vy, length] (5D)
  * 
  * The initial state is constructed by concatenating the states from each extractor
  * and combining their covariances into a block-diagonal matrix.
@@ -196,6 +202,49 @@ public:
      */
     size_t getExtractorCount() const {
         return extractors_.size();
+    }
+    
+    /**
+     * @brief Get metadata for the composite feature
+     * 
+     * Creates aggregate metadata by combining information from all child extractors.
+     * The measurement size is the sum of all child measurement sizes.
+     * The state size is the sum of all child state sizes.
+     * Type is marked as CUSTOM since it's a composition of multiple types.
+     * 
+     * @return FeatureMetadata describing the composite
+     */
+    FeatureMetadata getMetadata() const override {
+        int total_measurement_size = 0;
+        int total_state_size = 0;
+        
+        for (auto const& extractor : extractors_) {
+            auto metadata = extractor->getMetadata();
+            total_measurement_size += metadata.measurement_size;
+            total_state_size += metadata.state_size;
+        }
+        
+        return FeatureMetadata{
+            .name = "composite_features",
+            .measurement_size = total_measurement_size,
+            .state_size = total_state_size,
+            .temporal_type = FeatureTemporalType::CUSTOM
+        };
+    }
+    
+    /**
+     * @brief Get metadata for all child extractors
+     * 
+     * Useful for building Kalman matrices with proper structure.
+     * 
+     * @return Vector of metadata from each child extractor in order
+     */
+    std::vector<FeatureMetadata> getChildMetadata() const {
+        std::vector<FeatureMetadata> metadata_list;
+        for (auto const& extractor : extractors_) {
+            metadata_list.push_back(extractor->getMetadata());
+        }
+        return metadata_list;
     }
     
 private:

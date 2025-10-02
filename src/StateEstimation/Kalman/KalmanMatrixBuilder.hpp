@@ -1,6 +1,8 @@
 #ifndef STATE_ESTIMATION_KALMAN_MATRIX_BUILDER_HPP
 #define STATE_ESTIMATION_KALMAN_MATRIX_BUILDER_HPP
 
+#include "Features/FeatureMetadata.hpp"
+
 #include <Eigen/Dense>
 #include <vector>
 
@@ -9,17 +11,16 @@ namespace StateEstimation {
 /**
  * @brief Utility class for building Kalman filter matrices for composite features
  * 
- * This class helps construct the state transition (F), measurement (H), process noise (Q),
- * and measurement noise (R) matrices when multiple features are tracked independently.
+ * This class constructs the state transition (F), measurement (H), process noise (Q),
+ * and measurement noise (R) matrices for tracking systems with heterogeneous features.
  * 
- * Each feature is assumed to have a 2D measurement space (e.g., x, y coordinates)
- * and a 4D state space (x, y, vx, vy - position + velocity).
+ * Features can have different temporal behaviors:
+ * - KINEMATIC_2D: 2D measurement (x,y) → 4D state (x, y, vx, vy)
+ * - STATIC: 1D measurement → 1D state (no velocity)
+ * - SCALAR_DYNAMIC: 1D measurement → 2D state (value + derivative)
  * 
- * For N features, the resulting matrices are:
- * - F: (4N × 4N) - Block diagonal with N copies of the 2D position + velocity model
- * - H: (2N × 4N) - Block diagonal with N copies of [I_2 | 0_2]
- * - Q: (4N × 4N) - Block diagonal with N copies of process noise
- * - R: (2N × 2N) - Block diagonal with N copies of measurement noise
+ * The builder uses feature metadata to construct appropriate block-diagonal matrices
+ * where each block corresponds to one feature with its specific dynamics.
  */
 class KalmanMatrixBuilder {
 public:
@@ -173,6 +174,272 @@ public:
             buildH(num_features),
             buildQ(configs),
             buildR(configs)
+        };
+    }
+    
+    // ========================================================================
+    // METADATA-BASED MATRIX BUILDERS
+    // ========================================================================
+    
+    /**
+     * @brief Build F matrix from feature metadata
+     * 
+     * Constructs a block-diagonal state transition matrix where each block
+     * corresponds to one feature's temporal dynamics:
+     * - KINEMATIC_2D/3D: Position + velocity model with dt
+     * - STATIC: Identity (no change)
+     * - SCALAR_DYNAMIC: Value + derivative model with dt
+     * 
+     * @param metadata_list Metadata for each feature in order
+     * @param config Configuration (dt, noise parameters)
+     * @return Block-diagonal F matrix
+     */
+    static Eigen::MatrixXd buildFFromMetadata(std::vector<FeatureMetadata> const& metadata_list,
+                                               FeatureConfig const& config) {
+        int total_state_size = 0;
+        for (auto const& meta : metadata_list) {
+            total_state_size += meta.state_size;
+        }
+        
+        Eigen::MatrixXd F = Eigen::MatrixXd::Zero(total_state_size, total_state_size);
+        
+        int offset = 0;
+        for (auto const& meta : metadata_list) {
+            int state_size = meta.state_size;
+            
+            switch (meta.temporal_type) {
+                case FeatureTemporalType::STATIC:
+                    // Identity: state doesn't change
+                    for (int i = 0; i < state_size; ++i) {
+                        F(offset + i, offset + i) = 1.0;
+                    }
+                    break;
+                
+                case FeatureTemporalType::KINEMATIC_2D:
+                    // 2D position + velocity: [x, y, vx, vy]
+                    F(offset + 0, offset + 0) = 1.0;
+                    F(offset + 0, offset + 2) = config.dt;
+                    F(offset + 1, offset + 1) = 1.0;
+                    F(offset + 1, offset + 3) = config.dt;
+                    F(offset + 2, offset + 2) = 1.0;
+                    F(offset + 3, offset + 3) = 1.0;
+                    break;
+                
+                case FeatureTemporalType::KINEMATIC_3D:
+                    // 3D position + velocity: [x, y, z, vx, vy, vz]
+                    for (int i = 0; i < 3; ++i) {
+                        F(offset + i, offset + i) = 1.0;
+                        F(offset + i, offset + i + 3) = config.dt;
+                        F(offset + i + 3, offset + i + 3) = 1.0;
+                    }
+                    break;
+                
+                case FeatureTemporalType::SCALAR_DYNAMIC:
+                    // Each scalar gets: [value, derivative]
+                    for (int i = 0; i < state_size / 2; ++i) {
+                        F(offset + 2*i, offset + 2*i) = 1.0;
+                        F(offset + 2*i, offset + 2*i + 1) = config.dt;
+                        F(offset + 2*i + 1, offset + 2*i + 1) = 1.0;
+                    }
+                    break;
+                
+                case FeatureTemporalType::CUSTOM:
+                    // Default to identity - user should override if needed
+                    for (int i = 0; i < state_size; ++i) {
+                        F(offset + i, offset + i) = 1.0;
+                    }
+                    break;
+            }
+            
+            offset += state_size;
+        }
+        
+        return F;
+    }
+    
+    /**
+     * @brief Build H matrix from feature metadata
+     * 
+     * Constructs a measurement matrix that extracts the measurement components
+     * from the full state vector. For features with derivatives, this extracts
+     * only the base values (not velocities).
+     * 
+     * @param metadata_list Metadata for each feature in order
+     * @return Block-diagonal H matrix
+     */
+    static Eigen::MatrixXd buildHFromMetadata(std::vector<FeatureMetadata> const& metadata_list) {
+        int total_measurement_size = 0;
+        int total_state_size = 0;
+        
+        for (auto const& meta : metadata_list) {
+            total_measurement_size += meta.measurement_size;
+            total_state_size += meta.state_size;
+        }
+        
+        Eigen::MatrixXd H = Eigen::MatrixXd::Zero(total_measurement_size, total_state_size);
+        
+        int m_offset = 0;
+        int s_offset = 0;
+        
+        for (auto const& meta : metadata_list) {
+            switch (meta.temporal_type) {
+                case FeatureTemporalType::STATIC:
+                    // Direct observation of state
+                    for (int i = 0; i < meta.measurement_size; ++i) {
+                        H(m_offset + i, s_offset + i) = 1.0;
+                    }
+                    break;
+                
+                case FeatureTemporalType::KINEMATIC_2D:
+                    // Observe position, not velocity
+                    H(m_offset + 0, s_offset + 0) = 1.0;
+                    H(m_offset + 1, s_offset + 1) = 1.0;
+                    break;
+                
+                case FeatureTemporalType::KINEMATIC_3D:
+                    // Observe position, not velocity
+                    H(m_offset + 0, s_offset + 0) = 1.0;
+                    H(m_offset + 1, s_offset + 1) = 1.0;
+                    H(m_offset + 2, s_offset + 2) = 1.0;
+                    break;
+                
+                case FeatureTemporalType::SCALAR_DYNAMIC:
+                    // Observe value, not derivative
+                    for (int i = 0; i < meta.measurement_size; ++i) {
+                        H(m_offset + i, s_offset + 2*i) = 1.0;
+                    }
+                    break;
+                
+                case FeatureTemporalType::CUSTOM:
+                    // Default: observe first measurement_size components
+                    for (int i = 0; i < meta.measurement_size; ++i) {
+                        H(m_offset + i, s_offset + i) = 1.0;
+                    }
+                    break;
+            }
+            
+            m_offset += meta.measurement_size;
+            s_offset += meta.state_size;
+        }
+        
+        return H;
+    }
+    
+    /**
+     * @brief Build Q matrix from feature metadata
+     * 
+     * Constructs process noise covariance. Features with derivatives get
+     * noise for both the value and its rate of change.
+     * 
+     * @param metadata_list Metadata for each feature in order
+     * @param config Configuration with noise parameters
+     * @return Block-diagonal Q matrix
+     */
+    static Eigen::MatrixXd buildQFromMetadata(std::vector<FeatureMetadata> const& metadata_list,
+                                               FeatureConfig const& config) {
+        int total_state_size = 0;
+        for (auto const& meta : metadata_list) {
+            total_state_size += meta.state_size;
+        }
+        
+        Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(total_state_size, total_state_size);
+        
+        double pos_var = config.process_noise_position * config.process_noise_position;
+        double vel_var = config.process_noise_velocity * config.process_noise_velocity;
+        
+        int offset = 0;
+        for (auto const& meta : metadata_list) {
+            switch (meta.temporal_type) {
+                case FeatureTemporalType::STATIC:
+                    // Very small noise (nearly constant)
+                    for (int i = 0; i < meta.state_size; ++i) {
+                        Q(offset + i, offset + i) = 0.01 * pos_var;  // 100x smaller
+                    }
+                    break;
+                
+                case FeatureTemporalType::KINEMATIC_2D:
+                    Q(offset + 0, offset + 0) = pos_var;
+                    Q(offset + 1, offset + 1) = pos_var;
+                    Q(offset + 2, offset + 2) = vel_var;
+                    Q(offset + 3, offset + 3) = vel_var;
+                    break;
+                
+                case FeatureTemporalType::KINEMATIC_3D:
+                    for (int i = 0; i < 3; ++i) {
+                        Q(offset + i, offset + i) = pos_var;
+                        Q(offset + i + 3, offset + i + 3) = vel_var;
+                    }
+                    break;
+                
+                case FeatureTemporalType::SCALAR_DYNAMIC:
+                    for (int i = 0; i < meta.state_size / 2; ++i) {
+                        Q(offset + 2*i, offset + 2*i) = pos_var;
+                        Q(offset + 2*i + 1, offset + 2*i + 1) = vel_var;
+                    }
+                    break;
+                
+                case FeatureTemporalType::CUSTOM:
+                    // Default: moderate noise on all state components
+                    for (int i = 0; i < meta.state_size; ++i) {
+                        Q(offset + i, offset + i) = pos_var;
+                    }
+                    break;
+            }
+            
+            offset += meta.state_size;
+        }
+        
+        return Q;
+    }
+    
+    /**
+     * @brief Build R matrix from feature metadata
+     * 
+     * Constructs measurement noise covariance.
+     * 
+     * @param metadata_list Metadata for each feature in order
+     * @param config Configuration with noise parameters
+     * @return Block-diagonal R matrix
+     */
+    static Eigen::MatrixXd buildRFromMetadata(std::vector<FeatureMetadata> const& metadata_list,
+                                               FeatureConfig const& config) {
+        int total_measurement_size = 0;
+        for (auto const& meta : metadata_list) {
+            total_measurement_size += meta.measurement_size;
+        }
+        
+        Eigen::MatrixXd R = Eigen::MatrixXd::Zero(total_measurement_size, total_measurement_size);
+        
+        double meas_var = config.measurement_noise * config.measurement_noise;
+        
+        int offset = 0;
+        for (auto const& meta : metadata_list) {
+            for (int i = 0; i < meta.measurement_size; ++i) {
+                R(offset + i, offset + i) = meas_var;
+            }
+            offset += meta.measurement_size;
+        }
+        
+        return R;
+    }
+    
+    /**
+     * @brief Build all matrices from metadata
+     * 
+     * Convenience function to build all four matrices at once.
+     * 
+     * @param metadata_list Metadata for each feature in order
+     * @param config Configuration with dt and noise parameters
+     * @return Tuple of (F, H, Q, R) matrices
+     */
+    static std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, Eigen::MatrixXd, Eigen::MatrixXd>
+    buildAllMatricesFromMetadata(std::vector<FeatureMetadata> const& metadata_list,
+                                  FeatureConfig const& config) {
+        return {
+            buildFFromMetadata(metadata_list, config),
+            buildHFromMetadata(metadata_list),
+            buildQFromMetadata(metadata_list, config),
+            buildRFromMetadata(metadata_list, config)
         };
     }
 };

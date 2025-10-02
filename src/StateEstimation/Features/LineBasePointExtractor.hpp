@@ -95,6 +95,17 @@ public:
         return std::make_unique<LineBasePointExtractor>(*this);
     }
     
+    /**
+     * @brief Get metadata for this feature
+     * 
+     * Line base point is a 2D kinematic feature (position with velocity).
+     * 
+     * @return FeatureMetadata with KINEMATIC_2D type
+     */
+    FeatureMetadata getMetadata() const override {
+        return FeatureMetadata::create("line_base_point", 2, FeatureTemporalType::KINEMATIC_2D);
+    }
+    
 private:
     /**
      * @brief Get the base point (first point) of a line
