@@ -30,6 +30,8 @@ public:
 
     FilterState update(FilterState const & predicted_state, Measurement const & measurement) override;
 
+    FilterState update(FilterState const & predicted_state, Measurement const & measurement, double noise_scale_factor) override;
+
     std::vector<FilterState> smooth(std::vector<FilterState> const & forward_states) override;
 
     FilterState getState() const override;

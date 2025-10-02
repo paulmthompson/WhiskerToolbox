@@ -5,6 +5,7 @@
 #include "DataSource.hpp"
 #include "Features/IFeatureExtractor.hpp"
 #include "Filter/IFilter.hpp"
+#include "IdentityConfidence.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -40,10 +41,10 @@ struct TrackedGroupState;
 struct PendingGroupUpdates {
     // Accumulates new assignments per group
     std::unordered_map<GroupId, std::vector<EntityId>> pending_additions;
-    
+
     // Fast O(1) lookup for entities assigned during this pass
     std::unordered_set<EntityId> entities_added_this_pass;
-    
+
     /**
      * @brief Adds a pending assignment without updating the EntityGroupManager.
      */
@@ -51,27 +52,27 @@ struct PendingGroupUpdates {
         pending_additions[group_id].push_back(entity_id);
         entities_added_this_pass.insert(entity_id);
     }
-    
+
     /**
      * @brief Flushes all pending assignments to the EntityGroupManager.
      */
     void flushToManager(EntityGroupManager & manager) {
-        for (auto const & [group_id, entities] : pending_additions) {
-            for (auto entity_id : entities) {
+        for (auto const & [group_id, entities]: pending_additions) {
+            for (auto entity_id: entities) {
                 manager.addEntityToGroup(group_id, entity_id);
             }
         }
         pending_additions.clear();
         entities_added_this_pass.clear();
     }
-    
+
     /**
      * @brief Checks if an entity has been assigned during this pass.
      */
     bool contains(EntityId entity_id) const {
         return entities_added_this_pass.find(entity_id) != entities_added_this_pass.end();
     }
-    
+
     /**
      * @brief Returns the set of all entities added during this pass.
      */
@@ -130,9 +131,9 @@ public:
                             ProgressCallback progress_callback = nullptr) {
 
         // Build frame-indexed lookup for efficient access
-        std::map<TimeFrameIndex, std::vector<std::tuple<DataType const*, EntityId, TimeFrameIndex>>> frame_data_lookup;
-        
-        for (auto const & item : data_source) {
+        std::map<TimeFrameIndex, std::vector<std::tuple<DataType const *, EntityId, TimeFrameIndex>>> frame_data_lookup;
+
+        for (auto const & item: data_source) {
             TimeFrameIndex time = getTimeFrameIndex(item);
             if (time >= start_frame && time <= end_frame) {
                 frame_data_lookup[time].emplace_back(&getData(item), getEntityId(item), time);
@@ -140,22 +141,28 @@ public:
         }
 
         // Initialize tracks from EntityGroupManager
-        for (auto group_id : group_manager.getAllGroupIds()) {
+        for (auto group_id: group_manager.getAllGroupIds()) {
             if (active_tracks_.find(group_id) == active_tracks_.end()) {
                 active_tracks_[group_id] = TrackedGroupState<DataType>{
                         .group_id = group_id,
-                        .filter = filter_prototype_->clone()};
+                        .filter = filter_prototype_->clone(),
+                        .is_active = false,
+                        .frames_since_last_seen = 0,
+                        .confidence = 1.0,
+                        .identity_confidence = IdentityConfidence{},
+                        .anchor_frames = {},
+                        .forward_pass_history = {}};
             }
         }
 
         // OPTIMIZATION 1: Build initial grouped entities set ONCE
         // This avoids O(G × E_g × log E) rebuild every frame
         std::unordered_set<EntityId> initially_grouped_entities;
-        for (auto group_id : group_manager.getAllGroupIds()) {
+        for (auto group_id: group_manager.getAllGroupIds()) {
             auto entities = group_manager.getEntitiesInGroup(group_id);
             initially_grouped_entities.insert(entities.begin(), entities.end());
         }
-        
+
         // OPTIMIZATION 1: Deferred group updates for batch processing
         PendingGroupUpdates pending_updates;
 
@@ -166,9 +173,9 @@ public:
 
         for (TimeFrameIndex current_frame = start_frame; current_frame <= end_frame; ++current_frame) {
             auto frame_data_it = frame_data_lookup.find(current_frame);
-            auto const & all_frame_data = (frame_data_it != frame_data_lookup.end()) 
-                ? frame_data_it->second 
-                : std::vector<std::tuple<DataType const*, EntityId, TimeFrameIndex>>{};
+            auto const & all_frame_data = (frame_data_it != frame_data_lookup.end())
+                                                  ? frame_data_it->second
+                                                  : std::vector<std::tuple<DataType const *, EntityId, TimeFrameIndex>>{};
 
             // OPTIMIZATION 2: Build per-frame entity index for O(1) entity lookup
             // Eliminates O(E) linear searches repeated 3+ times per frame
@@ -194,35 +201,19 @@ public:
                 }
             }
 
+            auto gt_frame_it = ground_truth.find(current_frame);
+
             std::set<GroupId> updated_groups_this_frame;
             std::set<EntityId> assigned_entities_this_frame;
 
             // --- Ground Truth Updates & Activation ---
-            auto gt_frame_it = ground_truth.find(current_frame);
-            if (gt_frame_it != ground_truth.end()) {
-                for (auto const & [group_id, entity_id]: gt_frame_it->second) {
-                    auto track_it = active_tracks_.find(group_id);
-                    if (track_it == active_tracks_.end()) continue;
-                    auto & track = track_it->second;
-
-                    // OPTIMIZATION 2: O(1) entity lookup instead of O(E) linear search
-                    auto entity_it = entity_to_index.find(entity_id);
-                    if (entity_it == entity_to_index.end()) continue;
-                    
-                    DataType const * gt_item = std::get<0>(all_frame_data[entity_it->second]);
-
-                    if (!track.is_active) {
-                        track.filter->initialize(feature_extractor_->getInitialState(*gt_item));
-                        track.is_active = true;
-                    } else {
-                        Measurement measurement = {feature_extractor_->getFilterFeatures(*gt_item)};
-                        track.filter->update(predictions.at(group_id), measurement);
-                    }
-                    track.frames_since_last_seen = 0;
-                    updated_groups_this_frame.insert(group_id);
-                    assigned_entities_this_frame.insert(entity_id);
-                }
-            }
+            processGroundTruthUpdates(current_frame,
+                                      ground_truth,
+                                      all_frame_data,
+                                      entity_to_index,
+                                      predictions,
+                                      updated_groups_this_frame,
+                                      assigned_entities_this_frame);
 
             // --- Assignment for Ungrouped Data ---
             if (assigner_) {
@@ -231,7 +222,7 @@ public:
 
                 // OPTIMIZATION 1: O(1) membership checks using cached sets
                 // Avoids O(G × E_g × log E) rebuild every frame
-                for (auto const & [data_ptr, entity_id, time] : all_frame_data) {
+                for (auto const & [data_ptr, entity_id, time]: all_frame_data) {
                     if (assigned_entities_this_frame.find(entity_id) == assigned_entities_this_frame.end() &&
                         initially_grouped_entities.find(entity_id) == initially_grouped_entities.end() &&
                         !pending_updates.contains(entity_id)) {
@@ -251,20 +242,34 @@ public:
                     Assignment assignment = assigner_->solve(prediction_list, observations, feature_cache);
 
                     for (auto const & [obs_idx, pred_idx]: assignment.observation_to_prediction) {
-                        auto const & obs = observations[obs_idx];
-                        auto const & pred = prediction_list[pred_idx];
+                        auto const & obs = observations[static_cast<size_t>(obs_idx)];
+                        auto const & pred = prediction_list[static_cast<size_t>(pred_idx)];
 
                         auto & track = active_tracks_.at(pred.group_id);
-                        
+
                         // OPTIMIZATION 2: O(1) entity lookup instead of O(E) linear search
                         auto entity_it = entity_to_index.find(obs.entity_id);
                         if (entity_it == entity_to_index.end()) continue;
-                        
+
                         DataType const * obs_data = std::get<0>(all_frame_data[entity_it->second]);
 
+                        // Update identity confidence based on assignment cost
+                        auto cost_it = assignment.assignment_costs.find(obs_idx);
+                        if (cost_it != assignment.assignment_costs.end()) {
+                            track.identity_confidence.updateOnAssignment(cost_it->second, assignment.cost_threshold);
+                            
+                            // Allow slow recovery for excellent assignments
+                            double excellent_threshold = assignment.cost_threshold * 0.1;
+                            track.identity_confidence.allowSlowRecovery(cost_it->second, excellent_threshold);
+                        }
+
+                        // Scale measurement noise based on identity confidence
+                        double noise_scale = track.identity_confidence.getMeasurementNoiseScale();
                         Measurement measurement = {feature_extractor_->getFilterFeatures(*obs_data)};
-                        track.filter->update(pred.filter_state, measurement);
                         
+                        // Apply noise scaling to the measurement
+                        track.filter->update(pred.filter_state, measurement, noise_scale);
+
                         // OPTIMIZATION 1: Defer update to batch flush at anchor frames
                         pending_updates.addPending(pred.group_id, obs.entity_id);
 
@@ -273,7 +278,7 @@ public:
                         track.frames_since_last_seen = 0;
                     }
                 }
-            }
+            } // end of assignment for ungrouped data
 
             // --- Finalize Frame State, Log History, and Handle Smoothing ---
             bool any_smoothing_this_frame = false;
@@ -310,30 +315,114 @@ public:
                         track.forward_pass_history.push_back(smoothed.back());
                         // Keep only the last anchor for the next interval
                         track.anchor_frames = {current_frame};
-                        
+
                         any_smoothing_this_frame = true;
                     }
-                }
+                } // end of anchor frame backward pass
             }
-            
+
             // OPTIMIZATION 1: Flush pending updates at anchor frames (smoothing boundaries)
             // This is the natural synchronization point between tracking intervals
             if (any_smoothing_this_frame) {
                 pending_updates.flushToManager(group_manager);
-                
+
                 // Update the cached grouped entities set for the next interval
                 auto const & newly_added = pending_updates.getAddedEntities();
                 initially_grouped_entities.insert(newly_added.begin(), newly_added.end());
             }
         }
-        
+
         // Final flush of any remaining pending updates
         pending_updates.flushToManager(group_manager);
-        
+
         return all_smoothed_results;
     }
 
+    /**
+     * @brief Gets the current identity confidence for a specific group.
+     * @param group_id The group to query
+     * @return The current identity confidence [0.1, 1.0], or -1.0 if group not found
+     */
+    double getIdentityConfidence(GroupId group_id) const {
+        auto it = active_tracks_.find(group_id);
+        if (it == active_tracks_.end()) return -1.0;
+        return it->second.identity_confidence.getConfidence();
+    }
+
+    /**
+     * @brief Gets the measurement noise scale factor for a specific group.
+     * @param group_id The group to query
+     * @return The current noise scale factor, or -1.0 if group not found
+     */
+    double getMeasurementNoiseScale(GroupId group_id) const {
+        auto it = active_tracks_.find(group_id);
+        if (it == active_tracks_.end()) return -1.0;
+        return it->second.identity_confidence.getMeasurementNoiseScale();
+    }
+
+    /**
+     * @brief Gets the minimum confidence since last anchor for a specific group.
+     * @param group_id The group to query
+     * @return The minimum confidence since last anchor, or -1.0 if group not found
+     */
+    double getMinConfidenceSinceAnchor(GroupId group_id) const {
+        auto it = active_tracks_.find(group_id);
+        if (it == active_tracks_.end()) return -1.0;
+        return it->second.identity_confidence.getMinConfidenceSinceAnchor();
+    }
+
 private:
+    /**
+     * @brief Processes ground truth updates and activates tracks for the current frame.
+     * 
+     * @param current_frame The current frame being processed
+     * @param ground_truth The ground truth map for all frames
+     * @param all_frame_data The data for the current frame
+     * @param entity_to_index Fast lookup map from EntityId to data index
+     * @param predictions The predicted states for all active tracks
+     * @param updated_groups_this_frame Set of groups updated this frame (modified)
+     * @param assigned_entities_this_frame Set of entities assigned this frame (modified)
+     */
+    void processGroundTruthUpdates(
+            TimeFrameIndex current_frame,
+            GroundTruthMap const & ground_truth,
+            std::vector<std::tuple<DataType const *, EntityId, TimeFrameIndex>> const & all_frame_data,
+            std::unordered_map<EntityId, size_t> const & entity_to_index,
+            std::map<GroupId, FilterState> const & predictions,
+            std::set<GroupId> & updated_groups_this_frame,
+            std::set<EntityId> & assigned_entities_this_frame) {
+
+        auto gt_frame_it = ground_truth.find(current_frame);
+        if (gt_frame_it != ground_truth.end()) {
+            for (auto const & [group_id, entity_id]: gt_frame_it->second) {
+                auto track_it = active_tracks_.find(group_id);
+                if (track_it == active_tracks_.end()) continue;
+                auto & track = track_it->second;
+
+                // OPTIMIZATION 2: O(1) entity lookup instead of O(E) linear search
+                auto entity_it = entity_to_index.find(entity_id);
+                if (entity_it == entity_to_index.end()) continue;
+
+                DataType const * gt_item = std::get<0>(all_frame_data[entity_it->second]);
+
+                 if (!track.is_active) {
+                     track.filter->initialize(feature_extractor_->getInitialState(*gt_item));
+                     track.is_active = true;
+                 } else {
+                     Measurement measurement = {feature_extractor_->getFilterFeatures(*gt_item)};
+                     track.filter->update(predictions.at(group_id), measurement);
+                 }
+                 
+                 // Reset identity confidence on ground truth updates
+                 track.identity_confidence.resetOnGroundTruth();
+                 
+                 track.frames_since_last_seen = 0;
+                 updated_groups_this_frame.insert(group_id);
+                 assigned_entities_this_frame.insert(entity_id);
+            }
+        }
+    }
+
     std::unique_ptr<IFilter> filter_prototype_;
     std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor_;
     std::unique_ptr<IAssigner> assigner_;
@@ -352,6 +441,9 @@ struct TrackedGroupState {
     bool is_active = false;
     int frames_since_last_seen = 0;
     double confidence = 1.0;
+
+    // Identity confidence tracking for assignment uncertainty
+    IdentityConfidence identity_confidence;
 
     // History for smoothing between anchors
     std::vector<TimeFrameIndex> anchor_frames;

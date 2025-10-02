@@ -82,6 +82,8 @@ Assignment HungarianAssigner::solve(
 
     // 3. Format the results
     Assignment result;
+    result.cost_threshold = max_assignment_distance_;
+    
     for (size_t i = 0; i < assignment_matrix.size(); ++i) {
         for (size_t j = 0; j < assignment_matrix[i].size(); ++j) {
             // A value of 1 in the assignment matrix indicates a match
@@ -89,6 +91,9 @@ Assignment HungarianAssigner::solve(
                 // Ensure the assignment is not an "infinite" cost one
                 if (cost_matrix[i][j] < std::numeric_limits<int>::max()) {
                     result.observation_to_prediction[i] = j;
+                    // Store the actual cost (convert back from scaled integer)
+                    double actual_cost = static_cast<double>(cost_matrix[i][j]) / cost_scaling_factor;
+                    result.assignment_costs[i] = actual_cost;
                 }
                 break;// Move to the next observation row
             }

@@ -11,7 +11,9 @@ KalmanFilter::KalmanFilter(Eigen::MatrixXd const & F, Eigen::MatrixXd const & H,
     : F_(F),
       H_(H),
       Q_(Q),
-      R_(R) {}
+      R_(R),
+      x_(Eigen::VectorXd::Zero(F.rows())),
+      P_(Eigen::MatrixXd::Identity(F.rows(), F.rows())) {}
 
 void KalmanFilter::initialize(FilterState const & initial_state) {
     x_ = initial_state.state_mean;
@@ -21,24 +23,31 @@ void KalmanFilter::initialize(FilterState const & initial_state) {
 FilterState KalmanFilter::predict() {
     x_ = F_ * x_;
     P_ = F_ * P_ * F_.transpose() + Q_;
-    return {x_, P_};
+    return FilterState{.state_mean = x_, .state_covariance = P_};
 }
 
 FilterState KalmanFilter::update(FilterState const & predicted_state, Measurement const & measurement) {
+    return update(predicted_state, measurement, 1.0);
+}
+
+FilterState KalmanFilter::update(FilterState const & predicted_state, Measurement const & measurement, double noise_scale_factor) {
     Eigen::VectorXd const & z = measurement.feature_vector;
 
     // Use the predicted state passed in
-    Eigen::VectorXd x_pred = predicted_state.state_mean;
-    Eigen::MatrixXd P_pred = predicted_state.state_covariance;
+    Eigen::VectorXd const x_pred = predicted_state.state_mean;
+    Eigen::MatrixXd const P_pred = predicted_state.state_covariance;
 
-    Eigen::VectorXd y = z - H_ * x_pred;                      // Innovation or residual
-    Eigen::MatrixXd S = H_ * P_pred * H_.transpose() + R_;    // Innovation covariance
+    // Scale the measurement noise matrix R by the noise scale factor
+    Eigen::MatrixXd const R_scaled = noise_scale_factor * R_;
+
+    Eigen::VectorXd const y = z - H_ * x_pred;                      // Innovation or residual
+    Eigen::MatrixXd S = H_ * P_pred * H_.transpose() + R_scaled;    // Innovation covariance
     Eigen::MatrixXd K = P_pred * H_.transpose() * S.inverse();// Kalman gain
 
     x_ = x_pred + K * y;
     P_ = (Eigen::MatrixXd::Identity(x_.size(), x_.size()) - K * H_) * P_pred;
 
-    return {x_, P_};
+    return FilterState{.state_mean = x_, .state_covariance = P_};
 }
 
 std::vector<FilterState> KalmanFilter::smooth(std::vector<FilterState> const & forward_states) {
@@ -71,7 +80,7 @@ std::vector<FilterState> KalmanFilter::smooth(std::vector<FilterState> const & f
 }
 
 FilterState KalmanFilter::getState() const {
-    return {x_, P_};
+    return FilterState{.state_mean = x_, .state_covariance = P_};
 }
 
 std::unique_ptr<IFilter> KalmanFilter::clone() const {

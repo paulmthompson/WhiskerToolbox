@@ -43,6 +43,15 @@ public:
      */
     virtual FilterState update(FilterState const & predicted_state, Measurement const & measurement) = 0;
 
+    /**
+     * @brief Updates the filter's state with scaled measurement noise.
+     * @param predicted_state The state predicted by the most recent call to `predict()`.
+     * @param measurement The new observation, converted into a feature vector.
+     * @param noise_scale_factor Factor to scale the measurement noise matrix R.
+     * @return The updated (corrected) state (posterior estimate).
+     */
+    virtual FilterState update(FilterState const & predicted_state, Measurement const & measurement, double noise_scale_factor) = 0;
+
 
     /**
      * @brief Gets the current state of the filter.

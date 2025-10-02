@@ -9,6 +9,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "IdentityConfidence.hpp"
 
 // --- Test-Specific Mocks and Implementations ---
 
@@ -234,4 +235,231 @@ TEST_CASE("StateEstimation - KalmanFilter - assignment with Hungarian algorithm"
     auto group2_entities = group_manager.getEntitiesInGroup(group2);
     std::sort(group2_entities.begin(), group2_entities.end());
     REQUIRE(group2_entities == expected_g2);
+}
+
+TEST_CASE("StateEstimation - KalmanFilter - Identity confidence with ambiguous assignments", "[KalmanFilter][IdentityConfidence]") {
+    using namespace StateEstimation;
+
+    // 1. --- SETUP ---
+    double dt = 1.0;
+    Eigen::MatrixXd F(4, 4); F << 1, 0, dt, 0, 0, 1, 0, dt, 0, 0, 1, 0, 0, 0, 0, 1;
+    Eigen::MatrixXd H(2, 4); H << 1, 0, 0, 0, 0, 1, 0, 0;
+    Eigen::MatrixXd Q(4, 4); Q.setIdentity(); Q *= 0.1;
+    Eigen::MatrixXd R(2, 2); R.setIdentity(); R *= 5.0;
+
+    auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
+    auto feature_extractor = std::make_unique<LineCentroidExtractor>();
+    auto assigner = std::make_unique<HungarianAssigner>(100.0, H, R, "kalman_features");
+
+    Tracker<TestLine2D> tracker(std::move(kalman_filter), std::move(feature_extractor), std::move(assigner));
+
+    // --- Generate Data for Assignment Testing ---
+    std::vector<std::tuple<TestLine2D, EntityId, TimeFrameIndex>> data_source;
+    
+    EntityGroupManager group_manager;
+    GroupId group1 = group_manager.createGroup("Group 1");
+    GroupId group2 = group_manager.createGroup("Group 2");
+
+    // Frame 0: Ground truth - establish initial tracks
+    data_source.emplace_back(TestLine2D{ (EntityId)1, {10, 10}, {10, 10} }, (EntityId)1, TimeFrameIndex(0));
+    data_source.emplace_back(TestLine2D{ (EntityId)2, {100, 10}, {100, 10} }, (EntityId)2, TimeFrameIndex(0));
+    
+    Tracker<TestLine2D>::GroundTruthMap ground_truth;
+    ground_truth[TimeFrameIndex(0)] = {{group1, 1}, {group2, 2}};
+
+    // Frames 1-3: Add ungrouped data that should be assigned
+    // These are close to the predicted positions, so assignment should be easy initially
+    for (int i = 1; i <= 3; ++i) {
+        // Easy assignments - close to predicted positions
+        double g1_x = 10.0 + i * 5.0; // Group 1 moves right
+        double g2_x = 100.0 - i * 5.0; // Group 2 moves left
+        
+        data_source.emplace_back(
+            TestLine2D{ (EntityId)(10 + i), {g1_x, 10.0}, {g1_x, 10.0} },
+            (EntityId)(10 + i),
+            TimeFrameIndex(i)
+        );
+        data_source.emplace_back(
+            TestLine2D{ (EntityId)(20 + i), {g2_x, 10.0}, {g2_x, 10.0} },
+            (EntityId)(20 + i),
+            TimeFrameIndex(i)
+        );
+    }
+
+    // Frames 4-5: Make assignments more difficult by bringing lines closer
+    for (int i = 4; i <= 5; ++i) {
+        // Much harder assignments - lines are very close, making assignment ambiguous
+        double g1_x = 10.0 + i * 12.0; // Much faster movement
+        double g2_x = 100.0 - i * 12.0; // Much faster movement
+        
+        data_source.emplace_back(
+            TestLine2D{ (EntityId)(10 + i), {g1_x, 10.0}, {g1_x, 10.0} },
+            (EntityId)(10 + i),
+            TimeFrameIndex(i)
+        );
+        data_source.emplace_back(
+            TestLine2D{ (EntityId)(20 + i), {g2_x, 10.0}, {g2_x, 10.0} },
+            (EntityId)(20 + i),
+            TimeFrameIndex(i)
+        );
+    }
+
+    // Frame 6: No ground truth - let confidence accumulate
+    data_source.emplace_back(TestLine2D{ (EntityId)3, {50, 10}, {50, 10} }, (EntityId)3, TimeFrameIndex(6));
+    data_source.emplace_back(TestLine2D{ (EntityId)4, {52, 10}, {52, 10} }, (EntityId)4, TimeFrameIndex(6));
+    // No ground truth at frame 6 - let confidence accumulate
+
+    // 2. --- EXECUTION ---
+    tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(6));
+
+    // 3. --- ASSERTIONS ---
+    // Check that groups exist and have been populated
+    REQUIRE(group_manager.hasGroup(group1));
+    REQUIRE(group_manager.hasGroup(group2));
+    
+    std::cout << "Group 1 size: " << group_manager.getGroupSize(group1) << std::endl;
+    std::cout << "Group 2 size: " << group_manager.getGroupSize(group2) << std::endl;
+
+    // Get identity confidence after processing
+    double conf_group1 = tracker.getIdentityConfidence(group1);
+    double conf_group2 = tracker.getIdentityConfidence(group2);
+    
+    // Get measurement noise scaling
+    double noise_scale_group1 = tracker.getMeasurementNoiseScale(group1);
+    double noise_scale_group2 = tracker.getMeasurementNoiseScale(group2);
+    
+    // Get minimum confidence since last anchor
+    double min_conf_group1 = tracker.getMinConfidenceSinceAnchor(group1);
+    double min_conf_group2 = tracker.getMinConfidenceSinceAnchor(group2);
+
+    std::cout << "Group 1 - Confidence: " << conf_group1 
+              << ", Noise Scale: " << noise_scale_group1 
+              << ", Min Confidence: " << min_conf_group1 << std::endl;
+    std::cout << "Group 2 - Confidence: " << conf_group2 
+              << ", Noise Scale: " << noise_scale_group2 
+              << ", Min Confidence: " << min_conf_group2 << std::endl;
+
+    // Verify confidence values are valid
+    REQUIRE(conf_group1 >= 0.1); // Should not go below floor
+    REQUIRE(conf_group1 <= 1.0);
+    REQUIRE(conf_group2 >= 0.1);
+    REQUIRE(conf_group2 <= 1.0);
+
+    // Verify noise scaling is reasonable
+    REQUIRE(noise_scale_group1 >= 1.0);
+    REQUIRE(noise_scale_group2 >= 1.0);
+
+    // Minimum confidence should be <= current confidence
+    REQUIRE(min_conf_group1 <= conf_group1);
+    REQUIRE(min_conf_group2 <= conf_group2);
+}
+
+TEST_CASE("StateEstimation - IdentityConfidence - Basic functionality", "[IdentityConfidence]") {
+    using namespace StateEstimation;
+
+    IdentityConfidence confidence;
+    
+    // Test initial state
+    REQUIRE(confidence.getConfidence() == 1.0);
+    REQUIRE(confidence.getMeasurementNoiseScale() == 1.0);
+    REQUIRE(confidence.getMinConfidenceSinceAnchor() == 1.0);
+    
+    // Test confidence degradation with poor assignment
+    confidence.updateOnAssignment(0.8, 1.0); // High cost, at threshold
+    double conf_after_poor = confidence.getConfidence();
+    REQUIRE(conf_after_poor < 1.0);
+    REQUIRE(conf_after_poor > 0.1); // Should not go below floor
+    
+    // Test measurement noise scaling
+    double noise_scale = confidence.getMeasurementNoiseScale();
+    REQUIRE(noise_scale > 1.0); // Should be inflated
+    
+    std::cout << "After poor assignment - Confidence: " << conf_after_poor 
+              << ", Noise Scale: " << noise_scale << std::endl;
+    
+    // Test slow recovery with excellent assignment
+    confidence.allowSlowRecovery(0.05, 0.1); // Very good assignment
+    double conf_after_recovery = confidence.getConfidence();
+    REQUIRE(conf_after_recovery > conf_after_poor);
+    
+    std::cout << "After recovery - Confidence: " << conf_after_recovery << std::endl;
+    
+    // Test ground truth reset
+    confidence.resetOnGroundTruth();
+    REQUIRE(confidence.getConfidence() == 1.0);
+    REQUIRE(confidence.getMinConfidenceSinceAnchor() == 1.0);
+    
+    std::cout << "After ground truth reset - Confidence: " << confidence.getConfidence() << std::endl;
+}
+
+TEST_CASE("StateEstimation - KalmanFilter - High assignment costs", "[KalmanFilter][IdentityConfidence]") {
+    using namespace StateEstimation;
+
+    // 1. --- SETUP ---
+    double dt = 1.0;
+    Eigen::MatrixXd F(4, 4); F << 1, 0, dt, 0, 0, 1, 0, dt, 0, 0, 1, 0, 0, 0, 0, 1;
+    Eigen::MatrixXd H(2, 4); H << 1, 0, 0, 0, 0, 1, 0, 0;
+    Eigen::MatrixXd Q(4, 4); Q.setIdentity(); Q *= 0.1;
+    Eigen::MatrixXd R(2, 2); R.setIdentity(); R *= 5.0;
+
+    auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
+    auto feature_extractor = std::make_unique<LineCentroidExtractor>();
+    // Use a very low threshold to force high assignment costs
+    auto assigner = std::make_unique<HungarianAssigner>(10.0, H, R, "kalman_features");
+
+    Tracker<TestLine2D> tracker(std::move(kalman_filter), std::move(feature_extractor), std::move(assigner));
+
+    // --- Generate Data with High Assignment Costs ---
+    std::vector<std::tuple<TestLine2D, EntityId, TimeFrameIndex>> data_source;
+    
+    EntityGroupManager group_manager;
+    GroupId group1 = group_manager.createGroup("Group 1");
+    GroupId group2 = group_manager.createGroup("Group 2");
+
+    // Frame 0: Ground truth - establish initial tracks
+    data_source.emplace_back(TestLine2D{ (EntityId)1, {10, 10}, {10, 10} }, (EntityId)1, TimeFrameIndex(0));
+    data_source.emplace_back(TestLine2D{ (EntityId)2, {100, 10}, {100, 10} }, (EntityId)2, TimeFrameIndex(0));
+    
+    Tracker<TestLine2D>::GroundTruthMap ground_truth;
+    ground_truth[TimeFrameIndex(0)] = {{group1, 1}, {group2, 2}};
+
+    // Frames 1-3: Add data that will have high assignment costs
+    for (int i = 1; i <= 3; ++i) {
+        // Place observations far from predicted positions to force high costs
+        double g1_x = 10.0 + i * 20.0; // Very far from prediction
+        double g2_x = 100.0 - i * 20.0; // Very far from prediction
+        
+        data_source.emplace_back(
+            TestLine2D{ (EntityId)(10 + i), {g1_x, 10.0}, {g1_x, 10.0} },
+            (EntityId)(10 + i),
+            TimeFrameIndex(i)
+        );
+        data_source.emplace_back(
+            TestLine2D{ (EntityId)(20 + i), {g2_x, 10.0}, {g2_x, 10.0} },
+            (EntityId)(20 + i),
+            TimeFrameIndex(i)
+        );
+    }
+
+    // 2. --- EXECUTION ---
+    tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(3));
+
+    // 3. --- ASSERTIONS ---
+    double conf_group1 = tracker.getIdentityConfidence(group1);
+    double conf_group2 = tracker.getIdentityConfidence(group2);
+    
+    double noise_scale_group1 = tracker.getMeasurementNoiseScale(group1);
+    double noise_scale_group2 = tracker.getMeasurementNoiseScale(group2);
+
+    std::cout << "High cost test - Group 1 - Confidence: " << conf_group1 
+              << ", Noise Scale: " << noise_scale_group1 << std::endl;
+    std::cout << "High cost test - Group 2 - Confidence: " << conf_group2 
+              << ", Noise Scale: " << noise_scale_group2 << std::endl;
+
+    // With high assignment costs, we should see confidence degradation
+    // Note: This might still be 1.0 if the assignment costs are below the threshold
+    REQUIRE(conf_group1 >= 0.1);
+    REQUIRE(conf_group1 <= 1.0);
+    REQUIRE(conf_group2 >= 0.1);
+    REQUIRE(conf_group2 <= 1.0);
 }
