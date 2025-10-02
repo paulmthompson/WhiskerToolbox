@@ -1,4 +1,3 @@
-
 if (APPLE)
     message(STATUS "Testing Currenly not supported on MacOS")
     return()
@@ -63,6 +62,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.test.cpp
         
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/DigitalIntervalSeries/Digital_Interval_Invert/digital_interval_invert.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Alignment/line_alignment.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Angle/line_angle.test.cpp
