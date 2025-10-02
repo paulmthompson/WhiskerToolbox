@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace StateEstimation {
@@ -71,6 +72,19 @@ public:
      * @return A vector of smoothed FilterState objects, one for each corresponding input state.
      */
     virtual std::vector<FilterState> smooth(std::vector<FilterState> const & forward_states) = 0;
+
+    /**
+     * @brief Indicates whether the filter supports backward one-step prediction.
+     * @return true if backward prediction is supported.
+     */
+    virtual bool supportsBackwardPrediction() const { return false; }
+
+    /**
+     * @brief Predict the previous-time state given the current state.
+     * @param current_state The current state estimate.
+     * @return The predicted previous state if supported; std::nullopt otherwise.
+     */
+    virtual std::optional<FilterState> predictPrevious(FilterState const & current_state) { return std::nullopt; }
 
     /**
      * @brief Clones the filter object.

@@ -38,6 +38,9 @@ public:
 
     std::unique_ptr<IFilter> clone() const override;
 
+    bool supportsBackwardPrediction() const override { return true; }
+    std::optional<FilterState> predictPrevious(FilterState const & current_state) override;
+
 
 private:
     // Kalman matrices
@@ -49,6 +52,8 @@ private:
     // Filter state
     Eigen::VectorXd x_;// State estimate vector
     Eigen::MatrixXd P_;// State covariance matrix
+    Eigen::MatrixXd F_inv_;// Cached inverse for backward prediction (if invertible)
+    Eigen::MatrixXd Q_backward_;// Process noise for backward model
 };
 
 }// namespace StateEstimation

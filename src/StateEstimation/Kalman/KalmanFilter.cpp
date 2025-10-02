@@ -13,7 +13,18 @@ KalmanFilter::KalmanFilter(Eigen::MatrixXd const & F, Eigen::MatrixXd const & H,
       Q_(Q),
       R_(R),
       x_(Eigen::VectorXd::Zero(F.rows())),
-      P_(Eigen::MatrixXd::Identity(F.rows(), F.rows())) {}
+      P_(Eigen::MatrixXd::Identity(F.rows(), F.rows())),
+      F_inv_(Eigen::MatrixXd::Zero(F.rows(), F.cols())),
+      Q_backward_(Q.rows(), Q.cols()) {
+    if (F_.rows() == F_.cols()) {
+        // Compute inverse if well-conditioned; allow Eigen to throw if singular
+        F_inv_ = F_.inverse();
+        // Backward process noise: Q_b = F_inv * Q * F_inv^T (approximate mapping)
+        Q_backward_ = F_inv_ * Q_ * F_inv_.transpose();
+        // Ensure symmetry
+        Q_backward_ = 0.5 * (Q_backward_ + Q_backward_.transpose());
+    }
+}
 
 void KalmanFilter::initialize(FilterState const & initial_state) {
     x_ = initial_state.state_mean;
@@ -85,6 +96,27 @@ FilterState KalmanFilter::getState() const {
 
 std::unique_ptr<IFilter> KalmanFilter::clone() const {
     return std::make_unique<KalmanFilter>(*this);
+}
+
+std::optional<FilterState> KalmanFilter::predictPrevious(FilterState const & current_state) {
+    if (F_inv_.rows() == 0 || F_inv_.cols() == 0) {
+        return std::nullopt;
+    }
+    Eigen::VectorXd x_prev = F_inv_ * current_state.state_mean;
+    // Covariance backward propagation: P_prev = F_inv * P * F_inv^T + Q_backward
+    Eigen::MatrixXd P_prev = F_inv_ * current_state.state_covariance * F_inv_.transpose() + Q_backward_;
+    // Force symmetry
+    P_prev = 0.5 * (P_prev + P_prev.transpose());
+    // Clamp negative eigenvalues to small positive to maintain PSD
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(P_prev);
+    Eigen::VectorXd eig = es.eigenvalues();
+    Eigen::MatrixXd V = es.eigenvectors();
+    double const eps = 1e-9;
+    for (int i = 0; i < eig.size(); ++i) {
+        if (eig[i] < eps) eig[i] = eps;
+    }
+    Eigen::MatrixXd P_prev_psd = V * eig.asDiagonal() * V.transpose();
+    return FilterState{.state_mean = x_prev, .state_covariance = P_prev_psd};
 }
 
 }// namespace StateEstimation

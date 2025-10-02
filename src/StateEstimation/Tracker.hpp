@@ -8,10 +8,12 @@
 #include "IdentityConfidence.hpp"
 
 #include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/spdlog.h"
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -123,13 +125,28 @@ public:
      */
     void enableDebugLogging(std::string const & file_path) {
         try {
-            logger_ = spdlog::basic_logger_mt("TrackerLogger", file_path);
+            // Use a rotating sink to avoid losing logs in long runs
+            std::size_t const max_bytes = static_cast<std::size_t>(500) * 1024 * 1024; // 500 MB
+            std::size_t const max_files = 3;
+            auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_path, max_bytes, max_files);
+            auto existing = spdlog::get("TrackerLogger");
+            if (existing) {
+                logger_ = existing;
+                logger_->sinks().clear();
+                logger_->sinks().push_back(sink);
+            } else {
+                logger_ = std::make_shared<spdlog::logger>("TrackerLogger", sink);
+                spdlog::register_logger(logger_);
+            }
             logger_->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
             logger_->set_level(spdlog::level::debug);
+            logger_->flush_on(spdlog::level::debug);
+            spdlog::flush_every(std::chrono::seconds(1));
         } catch (spdlog::spdlog_ex const &) {
             logger_ = spdlog::get("TrackerLogger");
             if (logger_) {
                 logger_->set_level(spdlog::level::debug);
+                logger_->flush_on(spdlog::level::debug);
             }
         }
     }
@@ -493,6 +510,91 @@ public:
                                                        frame.getValue(),
                                                        group_id,
                                                        recorded.has_value() ? recorded.value() : -1, chosen_entity);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3) True backward filtering from anchor: run from last index to first
+                        if (assigner_ && track.filter->supportsBackwardPrediction()) {
+                            // Seed with anchor state (smoothed back)
+                            FilterState backward_state = smoothed.back();
+                            for (size_t rev = smoothed.size(); rev-- > 0;) {
+                                TimeFrameIndex const frame = track.processed_frames_history[rev];
+                                // Skip anchors
+                                auto gt_it_for_frame = ground_truth.find(frame);
+                                if (gt_it_for_frame != ground_truth.end() && gt_it_for_frame->second.count(group_id)) {
+                                    backward_state = smoothed[rev];
+                                    if (logger_) {
+                                        logger_->debug("bwd anchor f={} g={}", frame.getValue(), group_id);
+                                    }
+                                    continue;
+                                }
+
+                                // One-step backward prediction
+                                auto prev_opt = track.filter->predictPrevious(backward_state);
+                                if (!prev_opt.has_value()) {
+                                    break;
+                                }
+                                Prediction backward_pred{group_id, prev_opt.value()};
+                                if (logger_) {
+                                    logger_->debug("bwd predict f={} g={} cov_tr={:.3f}", frame.getValue(), group_id, prev_opt->state_covariance.trace());
+                                }
+
+                                // Build observations for this frame
+                                std::vector<Observation> observations;
+                                std::map<EntityId, FeatureCache> feature_cache;
+                                auto fd_it = frame_data_lookup.find(frame);
+                                if (fd_it != frame_data_lookup.end()) {
+                                    auto const & frame_items = fd_it->second;
+                                    for (auto const & [data_ptr, entity_id, /*time*/ _t]: frame_items) {
+                                        observations.push_back({entity_id});
+                                        feature_cache[entity_id] = feature_extractor_->getAllFeatures(*data_ptr);
+                                    }
+                                }
+                                if (!observations.empty()) {
+                                    auto assignment_bwd = assigner_->solve({backward_pred}, observations, feature_cache);
+                                    if (!assignment_bwd.observation_to_prediction.empty()) {
+                                        int obs_idx = assignment_bwd.observation_to_prediction.begin()->first;
+                                        EntityId chosen_entity = observations[static_cast<size_t>(obs_idx)].entity_id;
+                                        if (logger_) {
+                                            double cost = 0.0;
+                                            auto itc = assignment_bwd.assignment_costs.find(obs_idx);
+                                            if (itc != assignment_bwd.assignment_costs.end()) cost = itc->second;
+                                            logger_->debug("bwd assign f={} g={} obs={} cost={:.3f}", frame.getValue(), group_id, chosen_entity, cost);
+                                        }
+                                        // If chosen differs from existing record, replace
+                                        auto const & recorded = track.assigned_entity_history[rev];
+                                        if (!recorded.has_value() || recorded.value() != chosen_entity) {
+                                            pending_updates.replaceForFrame(group_id, frame, chosen_entity);
+                                        }
+
+                                        // Update backward filter state with measurement at this frame
+                                        auto fd2_it = frame_data_lookup.find(frame);
+                                        if (fd2_it != frame_data_lookup.end()) {
+                                            auto const & frame_items2 = fd2_it->second;
+                                            for (auto const & [data_ptr, entity_id, /*t*/ _]: frame_items2) {
+                                                if (entity_id == chosen_entity) {
+                                                    Measurement m{feature_extractor_->getFilterFeatures(*data_ptr)};
+                                                    backward_state = track.filter->update(prev_opt.value(), m);
+                                                    if (logger_) {
+                                                        logger_->debug("bwd update f={} g={} obs={} cov_tr={:.3f}", frame.getValue(), group_id, chosen_entity, backward_state.state_covariance.trace());
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        // No assignment; carry predicted backward state
+                                        backward_state = prev_opt.value();
+                                        if (logger_) {
+                                            logger_->debug("bwd noassign f={} g={} carry cov_tr={:.3f}", frame.getValue(), group_id, backward_state.state_covariance.trace());
+                                        }
+                                    }
+                                } else {
+                                    backward_state = prev_opt.value();
+                                    if (logger_) {
+                                        logger_->debug("bwd noobs f={} g={} carry cov_tr={:.3f}", frame.getValue(), group_id, backward_state.state_covariance.trace());
                                     }
                                 }
                             }
