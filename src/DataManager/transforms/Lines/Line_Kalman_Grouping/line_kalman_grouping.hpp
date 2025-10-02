@@ -23,14 +23,20 @@ class LineData;
  * @brief Parameters for the line Kalman grouping operation
  * 
  * This operation uses Kalman filtering and smoothing to track multiple line features
- * (centroid + base point) across time frames and assign ungrouped lines to existing 
- * groups using the Hungarian algorithm with Mahalanobis distance.
+ * across time frames and assign ungrouped lines to existing groups using the 
+ * Hungarian algorithm with Mahalanobis distance.
  * 
  * Features tracked:
- * - Line centroid (center of mass of all points)
- * - Line base point (first point in the line)
+ * - Line centroid (center of mass of all points) - KINEMATIC_2D
+ * - Line base point (first point in the line) - KINEMATIC_2D
+ * - Line length (total arc length) - STATIC
  * 
- * These features are concatenated into a 4D measurement vector for tracking.
+ * The metadata-driven system automatically handles different temporal behaviors:
+ * - Kinematic features: Track position + velocity (2D measurement → 4D state)
+ * - Static features: Track value only, no velocity (1D measurement → 1D state)
+ * 
+ * Total measurement space: 5D (2D + 2D + 1D)
+ * Total state space: 9D (4D + 4D + 1D)
  */
 struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
     explicit LineKalmanGroupingParameters(EntityGroupManager* group_manager)
@@ -38,9 +44,24 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
 
     // === Kalman Filter Parameters ===
     double dt = 1.0;                                    // Time step between frames
-    double process_noise_position = 10.0;               // Process noise for position
-    double process_noise_velocity = 1.0;                // Process noise for velocity
-    double measurement_noise = 5.0;                     // Measurement noise for observations
+    
+    // Process noise for kinematic features (centroid, base point)
+    double process_noise_position = 10.0;               // Process noise for position (pixels)
+    double process_noise_velocity = 1.0;                // Process noise for velocity (pixels/frame)
+    
+    // Process noise for static features (length)
+    double static_feature_process_noise_scale = 0.01;   // Multiplier for static features (0.01 = 100x less noise)
+    
+    // Automatic noise estimation from ground truth data
+    bool auto_estimate_static_noise = false;            // Estimate static feature noise from ground truth
+    double static_noise_percentile = 0.1;               // Use this fraction of observed variance (e.g., 0.1 = 10%)
+    
+    // Measurement noise per feature type
+    double measurement_noise_position = 5.0;            // Measurement noise for x,y coordinates (pixels)
+    double measurement_noise_length = 10.0;             // Measurement noise for length (pixels)
+    bool auto_estimate_measurement_noise = false;       // Estimate measurement noise from ground truth residuals
+    
+    // Initial uncertainties
     double initial_position_uncertainty = 50.0;         // Initial uncertainty in position
     double initial_velocity_uncertainty = 10.0;         // Initial uncertainty in velocity
     
@@ -55,13 +76,17 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
  * @brief Main function: Group lines using Kalman filtering and assignment
  * 
  * This function processes all time frames, using existing grouped lines as
- * anchor points and tracking multiple line features (centroid + base point) with 
- * Kalman filters. Ungrouped lines are assigned to groups using the Hungarian 
+ * anchor points and tracking multiple line features (centroid + base point + length) 
+ * with Kalman filters. Ungrouped lines are assigned to groups using the Hungarian 
  * algorithm with Mahalanobis distance.
  * 
  * The tracker operates directly on Line2D objects with on-demand feature extraction,
  * avoiding unnecessary memory overhead. Features are computed only when needed for
  * prediction, update, or assignment operations.
+ * 
+ * The system uses a metadata-driven approach to handle features with different
+ * temporal behaviors: kinematic features (with velocity) and static features
+ * (time-invariant) are combined seamlessly in the same tracking system.
  * 
  * @param line_data The LineData to process
  * @param params Parameters including thresholds and Kalman settings

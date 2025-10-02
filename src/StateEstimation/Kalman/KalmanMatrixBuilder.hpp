@@ -32,6 +32,23 @@ public:
         double process_noise_position = 10.0;      // Process noise for position
         double process_noise_velocity = 1.0;       // Process noise for velocity
         double measurement_noise = 5.0;            // Measurement noise
+        double static_noise_scale = 0.01;          // Multiplier for static features
+    };
+    
+    /**
+     * @brief Per-feature noise configuration
+     * 
+     * Allows different noise parameters for each feature in a composite system.
+     */
+    struct PerFeatureConfig {
+        double dt = 1.0;
+        double process_noise_position = 10.0;
+        double process_noise_velocity = 1.0;
+        double measurement_noise = 5.0;            // Used if feature-specific noise not provided
+        double static_noise_scale = 0.01;
+        
+        // Feature-specific measurement noise (overrides default)
+        std::map<std::string, double> feature_measurement_noise;
     };
     
     /**
@@ -351,9 +368,9 @@ public:
         for (auto const& meta : metadata_list) {
             switch (meta.temporal_type) {
                 case FeatureTemporalType::STATIC:
-                    // Very small noise (nearly constant)
+                    // Small noise (nearly constant) - configurable scale
                     for (int i = 0; i < meta.state_size; ++i) {
-                        Q(offset + i, offset + i) = 0.01 * pos_var;  // 100x smaller
+                        Q(offset + i, offset + i) = config.static_noise_scale * pos_var;
                     }
                     break;
                 
@@ -440,6 +457,94 @@ public:
             buildHFromMetadata(metadata_list),
             buildQFromMetadata(metadata_list, config),
             buildRFromMetadata(metadata_list, config)
+        };
+    }
+    
+    /**
+     * @brief Build R matrix with per-feature measurement noise
+     * 
+     * Allows different measurement noise for each feature based on name.
+     * 
+     * @param metadata_list Metadata for each feature in order
+     * @param config Configuration with feature-specific noise map
+     * @return Block-diagonal R matrix with per-feature noise
+     */
+    static Eigen::MatrixXd buildRFromMetadataPerFeature(
+            std::vector<FeatureMetadata> const& metadata_list,
+            PerFeatureConfig const& config) {
+        int total_measurement_size = 0;
+        for (auto const& meta : metadata_list) {
+            total_measurement_size += meta.measurement_size;
+        }
+        
+        Eigen::MatrixXd R = Eigen::MatrixXd::Zero(total_measurement_size, total_measurement_size);
+        
+        int offset = 0;
+        for (auto const& meta : metadata_list) {
+            // Check if feature has custom measurement noise
+            double meas_noise = config.measurement_noise;  // Default
+            auto it = config.feature_measurement_noise.find(meta.name);
+            if (it != config.feature_measurement_noise.end()) {
+                meas_noise = it->second;  // Use feature-specific noise
+            }
+            
+            double meas_var = meas_noise * meas_noise;
+            
+            for (int i = 0; i < meta.measurement_size; ++i) {
+                R(offset + i, offset + i) = meas_var;
+            }
+            offset += meta.measurement_size;
+        }
+        
+        return R;
+    }
+    
+    /**
+     * @brief Build Q matrix with per-feature process noise
+     * 
+     * Uses configurable static noise scale for static features.
+     * 
+     * @param metadata_list Metadata for each feature in order
+     * @param config Configuration with static noise scale
+     * @return Block-diagonal Q matrix
+     */
+    static Eigen::MatrixXd buildQFromMetadataPerFeature(
+            std::vector<FeatureMetadata> const& metadata_list,
+            PerFeatureConfig const& config) {
+        // Convert to old FeatureConfig for compatibility
+        FeatureConfig fc;
+        fc.dt = config.dt;
+        fc.process_noise_position = config.process_noise_position;
+        fc.process_noise_velocity = config.process_noise_velocity;
+        fc.static_noise_scale = config.static_noise_scale;
+        
+        return buildQFromMetadata(metadata_list, fc);
+    }
+    
+    /**
+     * @brief Build all matrices with per-feature noise configuration
+     * 
+     * Allows different measurement noise for each feature type.
+     * 
+     * @param metadata_list Metadata for each feature in order
+     * @param config Per-feature configuration
+     * @return Tuple of (F, H, Q, R) matrices
+     */
+    static std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, Eigen::MatrixXd, Eigen::MatrixXd>
+    buildAllMatricesFromMetadataPerFeature(
+            std::vector<FeatureMetadata> const& metadata_list,
+            PerFeatureConfig const& config) {
+        FeatureConfig fc;
+        fc.dt = config.dt;
+        fc.process_noise_position = config.process_noise_position;
+        fc.process_noise_velocity = config.process_noise_velocity;
+        fc.static_noise_scale = config.static_noise_scale;
+        
+        return {
+            buildFFromMetadata(metadata_list, fc),
+            buildHFromMetadata(metadata_list),
+            buildQFromMetadataPerFeature(metadata_list, config),
+            buildRFromMetadataPerFeature(metadata_list, config)
         };
     }
 };
