@@ -7,14 +7,18 @@
 #include "Filter/IFilter.hpp"
 #include "IdentityConfidence.hpp"
 
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/spdlog.h"
+
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <map>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <set>
-#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -67,7 +71,7 @@ struct PendingGroupUpdates {
 
     void flushToManager(EntityGroupManager & manager) {
         for (auto const & [group_id, entries]: pending_additions) {
-            for (auto const & [/*frame*/_, entity_id]: entries) {
+            for (auto const & [/*frame*/ _, entity_id]: entries) {
                 manager.addEntityToGroup(group_id, entity_id);
             }
         }
@@ -113,6 +117,24 @@ public:
           assigner_(std::move(assigner)) {}
 
     /**
+     * @brief Enable detailed debug logging to a file.
+     * @pre File path is writable.
+     * @post Subsequent calls to process will emit per-frame diagnostics.
+     */
+    void enableDebugLogging(std::string const & file_path) {
+        try {
+            logger_ = spdlog::basic_logger_mt("TrackerLogger", file_path);
+            logger_->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
+            logger_->set_level(spdlog::level::debug);
+        } catch (spdlog::spdlog_ex const &) {
+            logger_ = spdlog::get("TrackerLogger");
+            if (logger_) {
+                logger_->set_level(spdlog::level::debug);
+            }
+        }
+    }
+
+    /**
      * @brief Main processing entry point. Runs the tracking algorithm using a zero-copy data source.
      *
      * @tparam Source A range type satisfying the DataSource concept
@@ -154,7 +176,11 @@ public:
                         .confidence = 1.0,
                         .identity_confidence = IdentityConfidence{},
                         .anchor_frames = {},
-                        .forward_pass_history = {}};
+                        .forward_pass_history = {},
+                        .forward_prediction_history = {},
+                        .processed_frames_history = {},
+                        .identity_confidence_history = {},
+                        .assigned_entity_history = {}};
             }
         }
 
@@ -193,6 +219,13 @@ public:
                 ++frames_processed;
                 int const percentage = static_cast<int>((frames_processed * 100) / total_frames.getValue());
                 progress_callback(percentage);
+            }
+
+            if (logger_) {
+                logger_->debug("frame={} entities={} active_groups={}",
+                               current_frame.getValue(),
+                               all_frame_data.size(),
+                               active_tracks_.size());
             }
 
             // --- Predictions ---
@@ -263,18 +296,35 @@ public:
                         auto cost_it = assignment.assignment_costs.find(obs_idx);
                         if (cost_it != assignment.assignment_costs.end()) {
                             track.identity_confidence.updateOnAssignment(cost_it->second, assignment.cost_threshold);
-                            
+
                             // Allow slow recovery for excellent assignments
                             double excellent_threshold = assignment.cost_threshold * 0.1;
                             track.identity_confidence.allowSlowRecovery(cost_it->second, excellent_threshold);
+                            if (logger_) {
+                                logger_->debug("assign f={} g={} obs={} cost={:.3f} conf={:.3f}",
+                                               current_frame.getValue(),
+                                               pred.group_id,
+                                               obs.entity_id,
+                                               cost_it->second,
+                                               track.identity_confidence.getConfidence());
+                            }
                         }
 
                         // Scale measurement noise based on identity confidence
                         double noise_scale = track.identity_confidence.getMeasurementNoiseScale();
                         Measurement measurement = {feature_extractor_->getFilterFeatures(*obs_data)};
-                        
+
                         // Apply noise scaling to the measurement
                         track.filter->update(pred.filter_state, measurement, noise_scale);
+
+                        if (logger_) {
+                            double cov_tr = track.filter->getState().state_covariance.trace();
+                            logger_->debug("update f={} g={} obs={} noise_scale={:.3f} cov_tr={:.3f}",
+                                           current_frame.getValue(),
+                                           pred.group_id,
+                                           obs.entity_id,
+                                           noise_scale, cov_tr);
+                        }
 
                         // OPTIMIZATION 1: Defer update to batch flush at anchor frames (track frame)
                         pending_updates.addPending(pred.group_id, obs.entity_id, current_frame);
@@ -285,7 +335,7 @@ public:
                         track.frames_since_last_seen = 0;
                     }
                 }
-            } // end of assignment for ungrouped data
+            }// end of assignment for ungrouped data
 
             // --- Finalize Frame State, Log History, and Handle Smoothing ---
             bool any_smoothing_this_frame = false;
@@ -325,12 +375,32 @@ public:
                         // 1) Smooth forward history between anchors
                         auto smoothed = track.filter->smooth(track.forward_pass_history);
 
-                        // 1a) Assignment-aware covariance inflation based on identity confidence history
-                        for (size_t i = 0; i < smoothed.size(); ++i) {
-                            double const conf = track.identity_confidence_history[static_cast<size_t>(i)];
-                            // Map confidence in [0.1,1.0] to inflation factor >= 1.0
-                            double const inflation = (conf <= 0.0) ? 1.0 : std::max(1.0, 1.0 + (1.0 - conf) * 2.0);
-                            smoothed[i].state_covariance *= inflation;
+                        // 1a) Assignment-aware covariance inflation with anchor proximity decay
+                        // Reduce inflation near anchors so anchor certainty propagates backwards/forwards
+                        if (smoothed.size() >= 2) {
+                            size_t const Nseg = smoothed.size();
+                            double const nminus = static_cast<double>(Nseg - 1);
+                            double const half_len = nminus / 2.0;
+                            for (size_t i = 0; i < Nseg; ++i) {
+                                double const conf = track.identity_confidence_history[static_cast<size_t>(i)];
+                                // Proximity weight: 0 at anchors, 1 at the midpoint
+                                double const i_d = static_cast<double>(i);
+                                double const d_to_edge = std::min(i_d, nminus - i_d);
+                                double const proximity_weight = (half_len <= 0.0) ? 0.0 : std::clamp(d_to_edge / half_len, 0.0, 1.0);
+                                // Map confidence to base inflation then attenuate by proximity to anchors
+                                double const base_inflation = (conf <= 0.0) ? 1.0 : std::max(1.0, 1.0 + (1.0 - conf) * 2.0);
+                                double const inflation = 1.0 + (base_inflation - 1.0) * proximity_weight;
+                                smoothed[i].state_covariance *= inflation;
+                                if (logger_) {
+                                    double tr = smoothed[i].state_covariance.trace();
+                                    logger_->debug("smooth f={} g={} i={} conf={:.3f} infl={:.3f} cov_tr={:.3f}",
+                                                   track.processed_frames_history[i].getValue(),
+                                                   group_id,
+                                                   i,
+                                                   conf,
+                                                   inflation, tr);
+                                }
+                            }
                         }
 
                         // 2) Reverse-pass reconciliation via assigner using smoothed predictions
@@ -351,7 +421,7 @@ public:
                                 if (fd_it != frame_data_lookup.end()) {
                                     auto const & frame_items = fd_it->second;
                                     observations.reserve(frame_items.size());
-                                    for (auto const & [data_ptr, entity_id, /*time*/_t]: frame_items) {
+                                    for (auto const & [data_ptr, entity_id, /*time*/ _t]: frame_items) {
                                         observations.push_back({entity_id});
                                         feature_cache[entity_id] = feature_extractor_->getAllFeatures(*data_ptr);
                                     }
@@ -366,7 +436,7 @@ public:
                                 auto assign_forward = assigner_->solve(pred_forward, observations, feature_cache);
 
                                 // Extract chosen entities and costs, if any
-                                auto pick_entity_and_cost = [](Assignment const & a) -> std::optional<std::pair<int,double>> {
+                                auto pick_entity_and_cost = [](Assignment const & a) -> std::optional<std::pair<int, double>> {
                                     if (a.observation_to_prediction.empty()) return std::nullopt;
                                     auto const & kv = *a.observation_to_prediction.begin();
                                     int obs_idx = kv.first;
@@ -379,10 +449,28 @@ public:
                                 auto fwd_pick = pick_entity_and_cost(assign_forward);
                                 if (!sm_pick && !fwd_pick) continue;
 
-                                // Default to whichever is available; if both, pick lower cost
+                                // Choose by assignment cost; if similar, prefer lower predicted covariance (more certain)
                                 int chosen_obs_idx = -1;
                                 if (sm_pick && fwd_pick) {
-                                    chosen_obs_idx = (sm_pick->second <= fwd_pick->second) ? sm_pick->first : fwd_pick->first;
+                                    double const cost_sm = sm_pick->second;
+                                    double const cost_fw = fwd_pick->second;
+                                    double const epsilon_cost = 0.5;// tie-break threshold
+                                    if (std::abs(cost_sm - cost_fw) <= epsilon_cost) {
+                                        double const cov_sm = smoothed[i].state_covariance.trace();
+                                        double const cov_fw = track.forward_prediction_history[static_cast<size_t>(i)].state_covariance.trace();
+                                        chosen_obs_idx = (cov_sm <= cov_fw) ? sm_pick->first : fwd_pick->first;
+                                    } else {
+                                        chosen_obs_idx = (cost_sm <= cost_fw) ? sm_pick->first : fwd_pick->first;
+                                    }
+                                    if (logger_) {
+                                        logger_->debug("reconcile f={} g={} cost_sm={:.3f} cost_fw={:.3f} cov_sm={:.3f} cov_fw={:.3f}",
+                                                       frame.getValue(),
+                                                       group_id,
+                                                       cost_sm,
+                                                       cost_fw,
+                                                       smoothed[i].state_covariance.trace(),
+                                                       track.forward_prediction_history[static_cast<size_t>(i)].state_covariance.trace());
+                                    }
                                 } else if (sm_pick) {
                                     chosen_obs_idx = sm_pick->first;
                                 } else {
@@ -400,6 +488,12 @@ public:
                                 auto const & recorded = track.assigned_entity_history[static_cast<size_t>(i)];
                                 if (!recorded.has_value() || recorded.value() != chosen_entity) {
                                     pending_updates.replaceForFrame(group_id, frame, chosen_entity);
+                                    if (logger_) {
+                                        logger_->debug("replace f={} g={} old={} new={}",
+                                                       frame.getValue(),
+                                                       group_id,
+                                                       recorded.has_value() ? recorded.value() : -1, chosen_entity);
+                                    }
                                 }
                             }
                         }
@@ -431,7 +525,7 @@ public:
 
                         any_smoothing_this_frame = true;
                     }
-                } // end of anchor frame backward pass
+                }// end of anchor frame backward pass
             }
 
             // OPTIMIZATION 1: Flush pending updates at anchor frames (smoothing boundaries)
@@ -518,20 +612,22 @@ private:
 
                 DataType const * gt_item = std::get<0>(all_frame_data[entity_it->second]);
 
-                 if (!track.is_active) {
-                     track.filter->initialize(feature_extractor_->getInitialState(*gt_item));
-                     track.is_active = true;
-                 } else {
-                     Measurement measurement = {feature_extractor_->getFilterFeatures(*gt_item)};
-                     track.filter->update(predictions.at(group_id), measurement);
-                 }
-                 
-                 // Reset identity confidence on ground truth updates
-                 track.identity_confidence.resetOnGroundTruth();
-                 
-                 track.frames_since_last_seen = 0;
-                 updated_groups_this_frame.insert(group_id);
-                 assigned_entities_this_frame.insert(entity_id);
+                if (!track.is_active) {
+                    track.filter->initialize(feature_extractor_->getInitialState(*gt_item));
+                    track.is_active = true;
+                } else {
+                    Measurement measurement = {feature_extractor_->getFilterFeatures(*gt_item)};
+                    // Strengthen anchor certainty by reducing measurement noise at GT frames
+                    double const anchor_noise_scale = 0.25;
+                    track.filter->update(predictions.at(group_id), measurement, anchor_noise_scale);
+                }
+
+                // Reset identity confidence on ground truth updates
+                track.identity_confidence.resetOnGroundTruth();
+
+                track.frames_since_last_seen = 0;
+                updated_groups_this_frame.insert(group_id);
+                assigned_entities_this_frame.insert(entity_id);
             }
         }
     }
@@ -540,6 +636,7 @@ private:
     std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor_;
     std::unique_ptr<IAssigner> assigner_;
     std::unordered_map<GroupId, TrackedGroupState<DataType>> active_tracks_;
+    std::shared_ptr<spdlog::logger> logger_;
 };
 
 
@@ -559,13 +656,13 @@ struct TrackedGroupState {
     IdentityConfidence identity_confidence;
 
     // History for smoothing between anchors
-    std::vector<TimeFrameIndex> anchor_frames;
-    std::vector<FilterState> forward_pass_history;
+    std::vector<TimeFrameIndex> anchor_frames = {};
+    std::vector<FilterState> forward_pass_history = {};
     // Auxiliary histories aligned with forward_pass_history indices
-    std::vector<FilterState> forward_prediction_history;
-    std::vector<TimeFrameIndex> processed_frames_history;
-    std::vector<double> identity_confidence_history;
-    std::vector<std::optional<EntityId>> assigned_entity_history;
+    std::vector<FilterState> forward_prediction_history = {};
+    std::vector<TimeFrameIndex> processed_frames_history = {};
+    std::vector<double> identity_confidence_history = {};
+    std::vector<std::optional<EntityId>> assigned_entity_history = {};
 };
 
 }// namespace StateEstimation

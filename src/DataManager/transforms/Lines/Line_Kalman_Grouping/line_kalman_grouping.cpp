@@ -330,6 +330,8 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
         std::move(composite_extractor), 
         std::move(assigner)
     );
+
+    tracker.enableDebugLogging("tracker.log");
     
     // Run the tracking process with zero-copy data source
     // Features are computed on-demand from Line2D references
