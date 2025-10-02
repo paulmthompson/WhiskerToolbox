@@ -9,11 +9,14 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <ranges>
 #include <set>
+#include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace StateEstimation {
@@ -39,26 +42,32 @@ struct TrackedGroupState;
  * - Batching updates for better cache locality
  */
 struct PendingGroupUpdates {
-    // Accumulates new assignments per group
-    std::unordered_map<GroupId, std::vector<EntityId>> pending_additions;
+    // Frame-aware pending additions per group
+    std::unordered_map<GroupId, std::vector<std::pair<TimeFrameIndex, EntityId>>> pending_additions;
 
     // Fast O(1) lookup for entities assigned during this pass
     std::unordered_set<EntityId> entities_added_this_pass;
 
-    /**
-     * @brief Adds a pending assignment without updating the EntityGroupManager.
-     */
-    void addPending(GroupId group_id, EntityId entity_id) {
-        pending_additions[group_id].push_back(entity_id);
+    void addPending(GroupId group_id, EntityId entity_id, TimeFrameIndex frame) {
+        pending_additions[group_id].emplace_back(frame, entity_id);
         entities_added_this_pass.insert(entity_id);
     }
 
-    /**
-     * @brief Flushes all pending assignments to the EntityGroupManager.
-     */
+    // Replace the entity assigned for a given group and frame, if present
+    void replaceForFrame(GroupId group_id, TimeFrameIndex frame, EntityId new_entity_id) {
+        auto it = pending_additions.find(group_id);
+        if (it == pending_additions.end()) return;
+        for (auto & entry: it->second) {
+            if (entry.first == frame) {
+                entry.second = new_entity_id;
+            }
+        }
+        entities_added_this_pass.insert(new_entity_id);
+    }
+
     void flushToManager(EntityGroupManager & manager) {
-        for (auto const & [group_id, entities]: pending_additions) {
-            for (auto entity_id: entities) {
+        for (auto const & [group_id, entries]: pending_additions) {
+            for (auto const & [/*frame*/_, entity_id]: entries) {
                 manager.addEntityToGroup(group_id, entity_id);
             }
         }
@@ -66,16 +75,10 @@ struct PendingGroupUpdates {
         entities_added_this_pass.clear();
     }
 
-    /**
-     * @brief Checks if an entity has been assigned during this pass.
-     */
     bool contains(EntityId entity_id) const {
         return entities_added_this_pass.find(entity_id) != entities_added_this_pass.end();
     }
 
-    /**
-     * @brief Returns the set of all entities added during this pass.
-     */
     std::unordered_set<EntityId> const & getAddedEntities() const {
         return entities_added_this_pass;
     }
@@ -205,6 +208,7 @@ public:
 
             std::set<GroupId> updated_groups_this_frame;
             std::set<EntityId> assigned_entities_this_frame;
+            std::unordered_map<GroupId, std::optional<EntityId>> group_assigned_entity_in_frame;
 
             // --- Ground Truth Updates & Activation ---
             processGroundTruthUpdates(current_frame,
@@ -233,7 +237,9 @@ public:
 
                 std::vector<Prediction> prediction_list;
                 for (auto const & [group_id, pred_state]: predictions) {
-                    if (active_tracks_.at(group_id).is_active) {
+                    if (active_tracks_.at(group_id).is_active &&
+                        updated_groups_this_frame.find(group_id) == updated_groups_this_frame.end()) {
+                        // Do not allow assignment to groups already updated by ground truth this frame
                         prediction_list.push_back({group_id, pred_state});
                     }
                 }
@@ -270,11 +276,12 @@ public:
                         // Apply noise scaling to the measurement
                         track.filter->update(pred.filter_state, measurement, noise_scale);
 
-                        // OPTIMIZATION 1: Defer update to batch flush at anchor frames
-                        pending_updates.addPending(pred.group_id, obs.entity_id);
+                        // OPTIMIZATION 1: Defer update to batch flush at anchor frames (track frame)
+                        pending_updates.addPending(pred.group_id, obs.entity_id, current_frame);
 
                         updated_groups_this_frame.insert(pred.group_id);
                         assigned_entities_this_frame.insert(obs.entity_id);
+                        group_assigned_entity_in_frame[pred.group_id] = obs.entity_id;
                         track.frames_since_last_seen = 0;
                     }
                 }
@@ -290,7 +297,22 @@ public:
                     track.filter->initialize(predictions.at(group_id));
                 }
 
+                // Record histories aligned by frame
                 track.forward_pass_history.push_back(track.filter->getState());
+                auto pred_it_for_hist = predictions.find(group_id);
+                if (pred_it_for_hist != predictions.end()) {
+                    track.forward_prediction_history.push_back(pred_it_for_hist->second);
+                } else {
+                    // At activation frames we may not have a prediction; use current state as placeholder
+                    track.forward_prediction_history.push_back(track.filter->getState());
+                }
+                track.processed_frames_history.push_back(current_frame);
+                track.identity_confidence_history.push_back(track.identity_confidence.getConfidence());
+                if (auto it_assigned = group_assigned_entity_in_frame.find(group_id); it_assigned != group_assigned_entity_in_frame.end()) {
+                    track.assigned_entity_history.push_back(it_assigned->second);
+                } else {
+                    track.assigned_entity_history.push_back(std::nullopt);
+                }
 
                 // Check for smoothing trigger on new anchor frames
                 bool is_anchor = (gt_frame_it != ground_truth.end() && gt_frame_it->second.count(group_id));
@@ -300,7 +322,87 @@ public:
                     }
 
                     if (track.anchor_frames.size() >= 2) {
+                        // 1) Smooth forward history between anchors
                         auto smoothed = track.filter->smooth(track.forward_pass_history);
+
+                        // 1a) Assignment-aware covariance inflation based on identity confidence history
+                        for (size_t i = 0; i < smoothed.size(); ++i) {
+                            double const conf = track.identity_confidence_history[static_cast<size_t>(i)];
+                            // Map confidence in [0.1,1.0] to inflation factor >= 1.0
+                            double const inflation = (conf <= 0.0) ? 1.0 : std::max(1.0, 1.0 + (1.0 - conf) * 2.0);
+                            smoothed[i].state_covariance *= inflation;
+                        }
+
+                        // 2) Reverse-pass reconciliation via assigner using smoothed predictions
+                        if (assigner_) {
+                            for (size_t i = 0; i < smoothed.size(); ++i) {
+                                TimeFrameIndex const frame = track.processed_frames_history[static_cast<size_t>(i)];
+
+                                // Do not reconcile on anchor frames (respect labels)
+                                auto gt_it_for_frame = ground_truth.find(frame);
+                                if (gt_it_for_frame != ground_truth.end() && gt_it_for_frame->second.count(group_id)) {
+                                    continue;
+                                }
+
+                                // Build observation set for frame
+                                std::vector<Observation> observations;
+                                std::map<EntityId, FeatureCache> feature_cache;
+                                auto fd_it = frame_data_lookup.find(frame);
+                                if (fd_it != frame_data_lookup.end()) {
+                                    auto const & frame_items = fd_it->second;
+                                    observations.reserve(frame_items.size());
+                                    for (auto const & [data_ptr, entity_id, /*time*/_t]: frame_items) {
+                                        observations.push_back({entity_id});
+                                        feature_cache[entity_id] = feature_extractor_->getAllFeatures(*data_ptr);
+                                    }
+                                }
+                                if (observations.empty()) continue;
+
+                                // Build prediction lists: smoothed and forward predicted
+                                std::vector<Prediction> pred_smoothed = {{group_id, smoothed[i]}};
+                                std::vector<Prediction> pred_forward = {{group_id, track.forward_prediction_history[static_cast<size_t>(i)]}};
+
+                                auto assign_smoothed = assigner_->solve(pred_smoothed, observations, feature_cache);
+                                auto assign_forward = assigner_->solve(pred_forward, observations, feature_cache);
+
+                                // Extract chosen entities and costs, if any
+                                auto pick_entity_and_cost = [](Assignment const & a) -> std::optional<std::pair<int,double>> {
+                                    if (a.observation_to_prediction.empty()) return std::nullopt;
+                                    auto const & kv = *a.observation_to_prediction.begin();
+                                    int obs_idx = kv.first;
+                                    auto itc = a.assignment_costs.find(obs_idx);
+                                    double cost = (itc != a.assignment_costs.end()) ? itc->second : std::numeric_limits<double>::infinity();
+                                    return std::make_optional(std::make_pair(obs_idx, cost));
+                                };
+
+                                auto sm_pick = pick_entity_and_cost(assign_smoothed);
+                                auto fwd_pick = pick_entity_and_cost(assign_forward);
+                                if (!sm_pick && !fwd_pick) continue;
+
+                                // Default to whichever is available; if both, pick lower cost
+                                int chosen_obs_idx = -1;
+                                if (sm_pick && fwd_pick) {
+                                    chosen_obs_idx = (sm_pick->second <= fwd_pick->second) ? sm_pick->first : fwd_pick->first;
+                                } else if (sm_pick) {
+                                    chosen_obs_idx = sm_pick->first;
+                                } else {
+                                    chosen_obs_idx = fwd_pick->first;
+                                }
+
+                                // Resolve entity id from chosen_obs_idx
+                                auto fd2_it = frame_data_lookup.find(frame);
+                                if (fd2_it == frame_data_lookup.end()) continue;
+                                auto const & frame_items2 = fd2_it->second;
+                                if (chosen_obs_idx < 0 || static_cast<size_t>(chosen_obs_idx) >= frame_items2.size()) continue;
+                                EntityId chosen_entity = std::get<1>(frame_items2[static_cast<size_t>(chosen_obs_idx)]);
+
+                                // If differs from forward assignment for this frame, replace in pending updates
+                                auto const & recorded = track.assigned_entity_history[static_cast<size_t>(i)];
+                                if (!recorded.has_value() || recorded.value() != chosen_entity) {
+                                    pending_updates.replaceForFrame(group_id, frame, chosen_entity);
+                                }
+                            }
+                        }
 
                         if (all_smoothed_results[group_id].empty()) {
                             all_smoothed_results[group_id] = smoothed;
@@ -311,8 +413,19 @@ public:
                                     smoothed.end());
                         }
 
+                        // Collapse histories to keep only the last element for continuity into next interval
                         track.forward_pass_history.clear();
                         track.forward_pass_history.push_back(smoothed.back());
+                        // Align auxiliary histories
+                        TimeFrameIndex last_frame = track.processed_frames_history.back();
+                        track.forward_prediction_history.clear();
+                        track.forward_prediction_history.push_back(smoothed.back());
+                        track.processed_frames_history.clear();
+                        track.processed_frames_history.push_back(last_frame);
+                        track.identity_confidence_history.clear();
+                        track.identity_confidence_history.push_back(track.identity_confidence.getConfidence());
+                        track.assigned_entity_history.clear();
+                        track.assigned_entity_history.push_back(std::nullopt);
                         // Keep only the last anchor for the next interval
                         track.anchor_frames = {current_frame};
 
@@ -448,6 +561,11 @@ struct TrackedGroupState {
     // History for smoothing between anchors
     std::vector<TimeFrameIndex> anchor_frames;
     std::vector<FilterState> forward_pass_history;
+    // Auxiliary histories aligned with forward_pass_history indices
+    std::vector<FilterState> forward_prediction_history;
+    std::vector<TimeFrameIndex> processed_frames_history;
+    std::vector<double> identity_confidence_history;
+    std::vector<std::optional<EntityId>> assigned_entity_history;
 };
 
 }// namespace StateEstimation
