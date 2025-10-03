@@ -71,6 +71,11 @@
      </column>
      <column>
       <property name="text">
+       <string>Visible</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
        <string>Members</string>
       </property>
      </column>

@@ -32,15 +32,23 @@ public:
         int id;
         QString name;
         QColor color;
+        bool visible;
 
         Group()
             : id(0),
               name(""),
-              color(QColor()) {}
+              color(QColor()),
+              visible(true) {}
         Group(int group_id, QString const & group_name, QColor const & group_color)
             : id(group_id),
               name(group_name),
-              color(group_color) {}
+              color(group_color),
+              visible(true) {}
+        Group(int group_id, QString const & group_name, QColor const & group_color, bool group_visible)
+            : id(group_id),
+              name(group_name),
+              color(group_color),
+              visible(group_visible) {}
     };
 
     explicit GroupManager(EntityGroupManager * entity_group_manager, std::shared_ptr<DataManager> data_manager, QObject * parent = nullptr);
@@ -104,6 +112,14 @@ public:
      */
     bool setGroupColor(int group_id, QColor const & color);
 
+    /**
+     * @brief Update group visibility
+     * @param group_id The group ID
+     * @param visible The new visibility state
+     * @return True if successful, false if group doesn't exist
+     */
+    bool setGroupVisibility(int group_id, bool visible);
+
     // ===== EntityId-based API =====
     /**
      * @brief Assign entities (EntityId) to a group
@@ -129,6 +145,13 @@ public:
      * @brief Get the color for an entity based on its group assignment
      */
     [[nodiscard]] QColor getEntityColor(EntityId id, QColor const & default_color) const;
+
+    /**
+     * @brief Check if an entity's group is visible
+     * @param id The entity ID
+     * @return True if the entity's group is visible, false if not in a group or group is hidden
+     */
+    [[nodiscard]] bool isEntityGroupVisible(EntityId id) const;
 
     /**
      * @brief Get the number of entities assigned to a specific group
@@ -179,6 +202,7 @@ private:
     EntityGroupManager * m_entity_group_manager;
     std::shared_ptr<DataManager> m_data_manager;
     QMap<int, QColor> m_group_colors;// Maps EntityGroupManager GroupId to QColor
+    QMap<int, bool> m_group_visibility;// Maps EntityGroupManager GroupId to visibility state
     int m_next_group_id;
 
     static QVector<QColor> const DEFAULT_COLORS;

@@ -7,6 +7,8 @@
 
 #include <QApplication>
 #include <QTableWidget>
+#include <QCheckBox>
+
 #include <optional>
 #include <unordered_set>
 
@@ -143,4 +145,41 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
     REQUIRE(row >= 0);
     members_item = table->item(row, 2);
     REQUIRE(members_item->text().toInt() == 1);
+}
+
+TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Visibility column updates", "[groupmanagementwidget][visibility]") {
+    EntityGroupManager egm;
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
+    GroupManagementWidget widget(&gm);
+    auto * table = findGroupsTable(widget);
+
+    int g = gm.createGroup(QString("TestGroup"));
+    QCoreApplication::processEvents();
+    REQUIRE(table->rowCount() == 1);
+
+    int row = findRowForGroupId(table, g);
+    REQUIRE(row >= 0);
+    
+    // Check that visibility checkbox exists and is checked by default
+    auto * visibility_checkbox = qobject_cast<QCheckBox *>(table->cellWidget(row, 2));
+    REQUIRE(visibility_checkbox != nullptr);
+    REQUIRE(visibility_checkbox->isChecked() == true);
+
+    // Toggle visibility
+    visibility_checkbox->setChecked(false);
+    QCoreApplication::processEvents();
+    
+    // Verify the group visibility was updated
+    auto group = gm.getGroup(g);
+    REQUIRE(group.has_value());
+    REQUIRE(group->visible == false);
+
+    // Toggle back to visible
+    visibility_checkbox->setChecked(true);
+    QCoreApplication::processEvents();
+    
+    group = gm.getGroup(g);
+    REQUIRE(group.has_value());
+    REQUIRE(group->visible == true);
 }

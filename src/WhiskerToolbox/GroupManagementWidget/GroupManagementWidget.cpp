@@ -12,6 +12,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QMessageBox>
+#include <QCheckBox>
 
 GroupManagementWidget::GroupManagementWidget(GroupManager * group_manager, QWidget * parent)
     : QWidget(parent),
@@ -57,9 +58,11 @@ void GroupManagementWidget::setupUI() {
     header->setStretchLastSection(false);
     header->setSectionResizeMode(0, QHeaderView::Stretch);// Name column stretches
     header->setSectionResizeMode(1, QHeaderView::Fixed);  // Color column fixed width
-    header->setSectionResizeMode(2, QHeaderView::Fixed);  // Members column fixed width
+    header->setSectionResizeMode(2, QHeaderView::Fixed);  // Visible column fixed width
+    header->setSectionResizeMode(3, QHeaderView::Fixed);  // Members column fixed width
     m_ui->groupsTable->setColumnWidth(1, 50);             // Color button column width
-    m_ui->groupsTable->setColumnWidth(2, 60);             // Members column width
+    m_ui->groupsTable->setColumnWidth(2, 50);             // Visible checkbox column width
+    m_ui->groupsTable->setColumnWidth(3, 60);             // Members column width
 
     m_ui->groupsTable->verticalHeader()->setVisible(false);
 }
@@ -99,12 +102,17 @@ void GroupManagementWidget::addGroupRow(int group_id, int row) {
     updateColorButton(color_button, group.value().color);
     m_ui->groupsTable->setCellWidget(row, 1, color_button);
 
+    // Visible column
+    QCheckBox * visibility_checkbox = createVisibilityCheckbox(group_id);
+    visibility_checkbox->setChecked(group.value().visible);
+    m_ui->groupsTable->setCellWidget(row, 2, visibility_checkbox);
+
     // Members column
     int const member_count = m_group_manager->getGroupMemberCount(group_id);
     auto * members_item = new QTableWidgetItem(QString::number(member_count));
     members_item->setFlags(members_item->flags() & ~Qt::ItemIsEditable);// Make read-only
     members_item->setTextAlignment(Qt::AlignCenter);
-    m_ui->groupsTable->setItem(row, 2, members_item);
+    m_ui->groupsTable->setItem(row, 3, members_item);
 }
 
 QPushButton * GroupManagementWidget::createColorButton(int group_id) {
@@ -117,6 +125,17 @@ QPushButton * GroupManagementWidget::createColorButton(int group_id) {
             this, &GroupManagementWidget::onColorButtonClicked);
 
     return button;
+}
+
+QCheckBox * GroupManagementWidget::createVisibilityCheckbox(int group_id) {
+    auto * checkbox = new QCheckBox();
+    checkbox->setProperty("group_id", group_id);
+    checkbox->setText(""); // No text, just the checkbox
+
+    connect(checkbox, &QCheckBox::toggled,
+            this, &GroupManagementWidget::onVisibilityToggled);
+
+    return checkbox;
 }
 
 void GroupManagementWidget::updateColorButton(QPushButton * button, QColor const & color) {
@@ -178,8 +197,14 @@ void GroupManagementWidget::onGroupModified(int group_id) {
                     updateColorButton(color_button, group.value().color);
                 }
 
+                // Update visibility checkbox
+                auto * visibility_checkbox = qobject_cast<QCheckBox *>(m_ui->groupsTable->cellWidget(row, 2));
+                if (visibility_checkbox) {
+                    visibility_checkbox->setChecked(group.value().visible);
+                }
+
                 // Update member count
-                QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 2);
+                QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 3);
                 if (members_item) {
                     int const member_count = m_group_manager->getGroupMemberCount(group_id);
                     members_item->setText(QString::number(member_count));
@@ -195,7 +220,7 @@ void GroupManagementWidget::onPointAssignmentsChanged(std::unordered_set<int> co
         for (int const group_id: affected_groups) {
             int const row = findRowForGroupId(group_id);
             if (row >= 0) {
-                QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 2);
+                QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 3);
                 if (members_item) {
                     int const member_count = m_group_manager->getGroupMemberCount(group_id);
                     members_item->setText(QString::number(member_count));
@@ -244,6 +269,16 @@ void GroupManagementWidget::onColorButtonClicked() {
     if (new_color.isValid() && new_color != group.value().color) {
         m_group_manager->setGroupColor(group_id, new_color);
     }
+}
+
+void GroupManagementWidget::onVisibilityToggled(bool visible) {
+    auto * checkbox = qobject_cast<QCheckBox *>(sender());
+    if (!checkbox) {
+        return;
+    }
+
+    int const group_id = checkbox->property("group_id").toInt();
+    m_group_manager->setGroupVisibility(group_id, visible);
 }
 
 void GroupManagementWidget::onSelectionChanged() {

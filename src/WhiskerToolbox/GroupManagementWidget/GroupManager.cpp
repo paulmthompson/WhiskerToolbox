@@ -41,6 +41,7 @@ int GroupManager::createGroup(QString const & name, QColor const & color) {
 
     auto const group_id = static_cast<int>(entity_group_id);
     m_group_colors[group_id] = color;
+    m_group_visibility[group_id] = true; // Groups are visible by default
 
     qDebug() << "GroupManager: Created group" << group_id << "with name" << name;
 
@@ -56,6 +57,7 @@ bool GroupManager::removeGroup(int group_id) {
     }
 
     m_group_colors.remove(group_id);
+    m_group_visibility.remove(group_id);
 
     qDebug() << "GroupManager: Removed group" << group_id;
 
@@ -73,7 +75,8 @@ std::optional<GroupManager::Group> GroupManager::getGroup(int group_id) const {
 
     Group group(group_id,
                 QString::fromStdString(descriptor->name),
-                m_group_colors.value(group_id, QColor(128, 128, 128)));
+                m_group_colors.value(group_id, QColor(128, 128, 128)),
+                m_group_visibility.value(group_id, true));
 
     return group;
 }
@@ -117,6 +120,21 @@ bool GroupManager::setGroupColor(int group_id, QColor const & color) {
     return true;
 }
 
+bool GroupManager::setGroupVisibility(int group_id, bool visible) {
+    auto entity_group_id = static_cast<GroupId>(group_id);
+
+    if (!m_entity_group_manager->hasGroup(entity_group_id)) {
+        return false;
+    }
+
+    m_group_visibility[group_id] = visible;
+
+    qDebug() << "GroupManager: Updated group" << group_id << "visibility to" << visible;
+
+    emit groupModified(group_id);
+    return true;
+}
+
 QMap<int, GroupManager::Group> GroupManager::getGroups() const {
     QMap<int, Group> result;
 
@@ -127,7 +145,8 @@ QMap<int, GroupManager::Group> GroupManager::getGroups() const {
             auto group_id = static_cast<int>(entity_group_id);
             Group const group(group_id,
                               QString::fromStdString(descriptor->name),
-                              m_group_colors.value(group_id, QColor(128, 128, 128)));
+                              m_group_colors.value(group_id, QColor(128, 128, 128)),
+                              m_group_visibility.value(group_id, true));
             result[group_id] = group;
         }
     }
@@ -217,6 +236,15 @@ QColor GroupManager::getEntityColor(EntityId id, QColor const & default_color) c
     return m_group_colors.value(group_id, default_color);
 }
 
+bool GroupManager::isEntityGroupVisible(EntityId id) const {
+    int const group_id = getEntityGroup(id);
+    if (group_id == -1) {
+        return true; // Entities not in a group are always visible
+    }
+
+    return m_group_visibility.value(group_id, true);
+}
+
 int GroupManager::getGroupMemberCount(int group_id) const {
     auto entity_group_id = static_cast<GroupId>(group_id);
     return static_cast<int>(m_entity_group_manager->getGroupSize(entity_group_id));
@@ -228,8 +256,9 @@ void GroupManager::clearAllGroups() {
     // Clear EntityGroupManager
     m_entity_group_manager->clear();
 
-    // Clear our color mappings
+    // Clear our color and visibility mappings
     m_group_colors.clear();
+    m_group_visibility.clear();
 
     m_next_group_id = 1;
 

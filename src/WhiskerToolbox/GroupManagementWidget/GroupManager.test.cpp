@@ -121,6 +121,66 @@ TEST_CASE("GroupManager - Assign and Remove Entities", "[groupmanager][entities]
     }
 }
 
+TEST_CASE("GroupManager - Group Visibility", "[groupmanager][visibility]") {
+    EntityGroupManager egm;
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
+
+    int g = gm.createGroup(QString("VisibleGroup"));
+    GroupId gid = static_cast<GroupId>(g);
+
+    SECTION("Default visibility is true") {
+        auto group = gm.getGroup(g);
+        REQUIRE(group.has_value());
+        REQUIRE(group->visible == true);
+    }
+
+    SECTION("Set group visibility") {
+        REQUIRE(gm.setGroupVisibility(g, false));
+        
+        auto group = gm.getGroup(g);
+        REQUIRE(group.has_value());
+        REQUIRE(group->visible == false);
+        
+        REQUIRE(gm.setGroupVisibility(g, true));
+        
+        group = gm.getGroup(g);
+        REQUIRE(group.has_value());
+        REQUIRE(group->visible == true);
+    }
+
+    SECTION("Entity group visibility check") {
+        std::unordered_set<EntityId> ids = {1, 2, 3};
+        REQUIRE(gm.assignEntitiesToGroup(g, ids));
+        
+        // Group is visible by default
+        REQUIRE(gm.isEntityGroupVisible(1) == true);
+        REQUIRE(gm.isEntityGroupVisible(2) == true);
+        REQUIRE(gm.isEntityGroupVisible(3) == true);
+        
+        // Hide the group
+        REQUIRE(gm.setGroupVisibility(g, false));
+        REQUIRE(gm.isEntityGroupVisible(1) == false);
+        REQUIRE(gm.isEntityGroupVisible(2) == false);
+        REQUIRE(gm.isEntityGroupVisible(3) == false);
+        
+        // Show the group again
+        REQUIRE(gm.setGroupVisibility(g, true));
+        REQUIRE(gm.isEntityGroupVisible(1) == true);
+        REQUIRE(gm.isEntityGroupVisible(2) == true);
+        REQUIRE(gm.isEntityGroupVisible(3) == true);
+    }
+
+    SECTION("Entities not in groups are always visible") {
+        // Entity 999 is not in any group
+        REQUIRE(gm.isEntityGroupVisible(999) == true);
+    }
+
+    SECTION("Set visibility on non-existent group fails") {
+        REQUIRE_FALSE(gm.setGroupVisibility(999, false));
+    }
+}
+
 TEST_CASE("GroupManager - Signals emit once per logical change", "[groupmanager][signals]") {
     EntityGroupManager egm;
     auto dm = std::make_shared<DataManager>();
