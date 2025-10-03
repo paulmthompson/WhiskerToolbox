@@ -136,6 +136,14 @@ void LineData::addPointToLineInterpolate(TimeFrameIndex const time, int const li
     }
 }
 
+void LineData::addLineEntryAtTime(TimeFrameIndex const time, Line2D const & line, EntityId entity_id, bool notify) {
+    _data[time].emplace_back(line, entity_id);
+
+    if (notify) {
+        notifyObservers();
+    }
+}
+
 // ========== Getters ==========
 
 std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time) const {
@@ -224,8 +232,8 @@ std::optional<Line2D> LineData::getLineByEntityId(EntityId entity_id) const {
         return std::nullopt;
     }
     
-    TimeFrameIndex time{descriptor->time_value};
-    int local_index = descriptor->local_index;
+    TimeFrameIndex const time{descriptor->time_value};
+    int const local_index = descriptor->local_index;
     
     auto time_it = _data.find(time);
     if (time_it == _data.end()) {
@@ -249,8 +257,8 @@ std::optional<std::pair<TimeFrameIndex, int>> LineData::getTimeAndIndexByEntityI
         return std::nullopt;
     }
     
-    TimeFrameIndex time{descriptor->time_value};
-    int local_index = descriptor->local_index;
+    TimeFrameIndex const time{descriptor->time_value};
+    int const local_index = descriptor->local_index;
     
     // Verify the time and index are valid
     auto time_it = _data.find(time);
@@ -265,7 +273,7 @@ std::vector<std::pair<EntityId, Line2D>> LineData::getLinesByEntityIds(std::vect
     std::vector<std::pair<EntityId, Line2D>> results;
     results.reserve(entity_ids.size());
     
-    for (EntityId entity_id : entity_ids) {
+    for (EntityId const entity_id : entity_ids) {
         auto line = getLineByEntityId(entity_id);
         if (line.has_value()) {
             results.emplace_back(entity_id, std::move(line.value()));
@@ -279,7 +287,7 @@ std::vector<std::tuple<EntityId, TimeFrameIndex, int>> LineData::getTimeInfoByEn
     std::vector<std::tuple<EntityId, TimeFrameIndex, int>> results;
     results.reserve(entity_ids.size());
     
-    for (EntityId entity_id : entity_ids) {
+    for (EntityId const entity_id : entity_ids) {
         auto time_info = getTimeAndIndexByEntityId(entity_id);
         if (time_info.has_value()) {
             results.emplace_back(entity_id, time_info->first, time_info->second);
@@ -372,7 +380,7 @@ std::size_t LineData::copyTo(LineData& target, std::vector<TimeFrameIndex> const
     std::size_t total_lines_copied = 0;
 
     // Copy lines for each specified time
-    for (TimeFrameIndex time : times) {
+    for (TimeFrameIndex const time : times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
             for (auto const& entry : it->second) {
@@ -412,7 +420,7 @@ std::size_t LineData::moveTo(LineData& target, TimeFrameInterval const & interva
     }
 
     // Then, clear all the times from source
-    for (TimeFrameIndex time : times_to_clear) {
+    for (TimeFrameIndex const time : times_to_clear) {
         (void)clearAtTime(time, false); // Don't notify for each operation
     }
 
@@ -430,7 +438,7 @@ std::size_t LineData::moveTo(LineData& target, std::vector<TimeFrameIndex> const
     std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy lines for each specified time to target
-    for (TimeFrameIndex time : times) {
+    for (TimeFrameIndex const time : times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
             for (auto const& entry : it->second) {
@@ -442,7 +450,7 @@ std::size_t LineData::moveTo(LineData& target, std::vector<TimeFrameIndex> const
     }
 
     // Then, clear all the times from source
-    for (TimeFrameIndex time : times_to_clear) {
+    for (TimeFrameIndex const time : times_to_clear) {
         (void)clearAtTime(time, false); // Don't notify for each operation
     }
 
@@ -452,5 +460,71 @@ std::size_t LineData::moveTo(LineData& target, std::vector<TimeFrameIndex> const
         notifyObservers();
     }
 
+    return total_lines_moved;
+}
+
+std::size_t LineData::copyLinesByEntityIds(LineData & target, std::vector<EntityId> const & entity_ids, bool notify) {
+    std::size_t total_lines_copied = 0;
+    
+    // Iterate through all data to find matching EntityIds
+    for (auto const & [time, entries] : _data) {
+        for (auto const & entry : entries) {
+            // Check if this entry's EntityId is in the list to copy
+            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
+                target.addAtTime(time, entry.line, false); // Don't notify for each operation
+                total_lines_copied++;
+            }
+        }
+    }
+    
+    // Notify observer only once at the end if requested
+    if (notify && total_lines_copied > 0) {
+        target.notifyObservers();
+    }
+    
+    return total_lines_copied;
+}
+
+std::size_t LineData::moveLinesByEntityIds(LineData & target, std::vector<EntityId> const & entity_ids, bool notify) {
+    std::size_t total_lines_moved = 0;
+    std::vector<std::pair<TimeFrameIndex, size_t>> entries_to_remove;
+    
+    // First, copy all matching lines to target and collect removal information
+    for (auto const & [time, entries] : _data) {
+        for (size_t i = 0; i < entries.size(); ++i) {
+            auto const & entry = entries[i];
+            // Check if this entry's EntityId is in the list to move
+            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
+                // For move operations, preserve the original entity ID
+                target.addLineEntryAtTime(time, entry.line, entry.entity_id, false);
+                entries_to_remove.emplace_back(time, i);
+                total_lines_moved++;
+            }
+        }
+    }
+    
+    // Then, remove the moved entries from source (in reverse order to maintain indices)
+    std::ranges::sort(entries_to_remove, 
+                      [](auto const & a, auto const & b) {
+                          if (a.first != b.first) return a.first > b.first; // Sort by time descending
+                          return a.second > b.second; // Then by index descending
+                      });
+    
+    for (auto const & [time, index] : entries_to_remove) {
+        auto it = _data.find(time);
+        if (it != _data.end() && index < it->second.size()) {
+            it->second.erase(it->second.begin() + static_cast<long>(index));
+            if (it->second.empty()) {
+                _data.erase(it);
+            }
+        }
+    }
+    
+    // Notify observers only once at the end if requested
+    if (notify && total_lines_moved > 0) {
+        target.notifyObservers();
+        notifyObservers();
+    }
+    
     return total_lines_moved;
 }

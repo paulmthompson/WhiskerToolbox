@@ -130,6 +130,18 @@ public:
      */
     void addPointToLineInterpolate(TimeFrameIndex time, int line_id, Point2D<float> point, bool notify = true);
 
+    /**
+     * @brief Add a line entry at a specific time with a specific entity ID
+     * 
+     * This method is used internally for move operations to preserve entity IDs.
+     * 
+     * @param time The time to add the line at
+     * @param line The line to add
+     * @param entity_id The entity ID to assign to the line
+     * @param notify If true, the observers will be notified
+     */
+    void addLineEntryAtTime(TimeFrameIndex time, Line2D const & line, EntityId entity_id, bool notify = true);
+
     // ========== Image Size ==========
 
     /**
@@ -511,6 +523,32 @@ public:
      * @return The number of lines actually moved
      */
     std::size_t moveTo(LineData & target, std::vector<TimeFrameIndex> const & times, bool notify = true);
+
+    /**
+     * @brief Copy lines with specific EntityIds to another LineData
+     * 
+     * Copies all lines that match the given EntityIds to the target LineData.
+     * The copied lines will get new EntityIds in the target.
+     * 
+     * @param target The target LineData to copy lines to
+     * @param entity_ids Vector of EntityIds to copy
+     * @param notify If true, the target will notify its observers after the operation
+     * @return The number of lines actually copied
+     */
+    std::size_t copyLinesByEntityIds(LineData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+
+    /**
+     * @brief Move lines with specific EntityIds to another LineData
+     * 
+     * Moves all lines that match the given EntityIds to the target LineData.
+     * The moved lines will get new EntityIds in the target and be removed from source.
+     * 
+     * @param target The target LineData to move lines to
+     * @param entity_ids Vector of EntityIds to move
+     * @param notify If true, both source and target will notify their observers after the operation
+     * @return The number of lines actually moved
+     */
+    std::size_t moveLinesByEntityIds(LineData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
 
     // ========== Time Frame ==========
     /**

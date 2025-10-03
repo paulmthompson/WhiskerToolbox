@@ -91,7 +91,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
 
     int row = findRowForGroupId(table, g);
     REQUIRE(row >= 0);
-    QTableWidgetItem * members_item = table->item(row, 2);
+    QTableWidgetItem * members_item = table->item(row, 3);
     REQUIRE(members_item != nullptr);
     REQUIRE(members_item->text().toInt() == 3);
 
@@ -105,7 +105,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
 
     row = findRowForGroupId(table, g);
     REQUIRE(row >= 0);
-    members_item = table->item(row, 2);
+    members_item = table->item(row, 3);
     REQUIRE(members_item != nullptr);
     REQUIRE(members_item->text().toInt() == 2);
 }
@@ -124,7 +124,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
 
     int row = findRowForGroupId(table, g);
     REQUIRE(row >= 0);
-    QTableWidgetItem * members_item = table->item(row, 2);
+    QTableWidgetItem * members_item = table->item(row, 3);
     REQUIRE(members_item != nullptr);
     REQUIRE(members_item->text().toInt() == 0);
 
@@ -134,7 +134,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
     QCoreApplication::processEvents();
     row = findRowForGroupId(table, g);
     REQUIRE(row >= 0);
-    members_item = table->item(row, 2);
+    members_item = table->item(row, 3);
     REQUIRE(members_item->text().toInt() == 2);
 
     // Remove one entity and expect decrement
@@ -143,7 +143,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
     QCoreApplication::processEvents();
     row = findRowForGroupId(table, g);
     REQUIRE(row >= 0);
-    members_item = table->item(row, 2);
+    members_item = table->item(row, 3);
     REQUIRE(members_item->text().toInt() == 1);
 }
 
