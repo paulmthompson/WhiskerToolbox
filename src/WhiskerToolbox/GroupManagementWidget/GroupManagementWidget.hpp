@@ -104,6 +104,11 @@ private slots:
      */
     void deleteSelectedGroupAndEntities();
 
+    /**
+     * @brief Show dialog for merging selected groups
+     */
+    void showMergeDialog();
+
 private:
     GroupManager * m_group_manager;
 

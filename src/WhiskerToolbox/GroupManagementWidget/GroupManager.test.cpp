@@ -181,6 +181,87 @@ TEST_CASE("GroupManager - Group Visibility", "[groupmanager][visibility]") {
     }
 }
 
+TEST_CASE("GroupManager - Group Merge", "[groupmanager][merge]") {
+    EntityGroupManager egm;
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
+
+    int g1 = gm.createGroup(QString("Group1"));
+    int g2 = gm.createGroup(QString("Group2"));
+    int g3 = gm.createGroup(QString("Group3"));
+    GroupId gid1 = static_cast<GroupId>(g1);
+    GroupId gid2 = static_cast<GroupId>(g2);
+    GroupId gid3 = static_cast<GroupId>(g3);
+
+    SECTION("Merge two groups") {
+        // Add entities to both groups
+        std::unordered_set<EntityId> ids1 = {1, 2, 3};
+        std::unordered_set<EntityId> ids2 = {4, 5, 6};
+        REQUIRE(gm.assignEntitiesToGroup(g1, ids1));
+        REQUIRE(gm.assignEntitiesToGroup(g2, ids2));
+        
+        REQUIRE(gm.getGroupMemberCount(g1) == 3);
+        REQUIRE(gm.getGroupMemberCount(g2) == 3);
+        
+        // Merge g2 into g1
+        std::vector<int> source_groups = {g2};
+        REQUIRE(gm.mergeGroups(g1, source_groups));
+        
+        // Check that g1 now has all entities
+        REQUIRE(gm.getGroupMemberCount(g1) == 6);
+        REQUIRE(egm.getGroupSize(gid1) == 6);
+        
+        // Check that g2 no longer exists
+        REQUIRE_FALSE(egm.hasGroup(gid2));
+        REQUIRE(gm.getGroupMemberCount(g2) == 0);
+        
+        // Verify entities are in the merged group
+        REQUIRE(egm.isEntityInGroup(gid1, 1));
+        REQUIRE(egm.isEntityInGroup(gid1, 2));
+        REQUIRE(egm.isEntityInGroup(gid1, 3));
+        REQUIRE(egm.isEntityInGroup(gid1, 4));
+        REQUIRE(egm.isEntityInGroup(gid1, 5));
+        REQUIRE(egm.isEntityInGroup(gid1, 6));
+    }
+
+    SECTION("Merge multiple groups") {
+        // Add entities to all three groups
+        std::unordered_set<EntityId> ids1 = {1, 2};
+        std::unordered_set<EntityId> ids2 = {3, 4};
+        std::unordered_set<EntityId> ids3 = {5, 6};
+        REQUIRE(gm.assignEntitiesToGroup(g1, ids1));
+        REQUIRE(gm.assignEntitiesToGroup(g2, ids2));
+        REQUIRE(gm.assignEntitiesToGroup(g3, ids3));
+        
+        // Merge g2 and g3 into g1
+        std::vector<int> source_groups = {g2, g3};
+        REQUIRE(gm.mergeGroups(g1, source_groups));
+        
+        // Check that g1 now has all entities
+        REQUIRE(gm.getGroupMemberCount(g1) == 6);
+        REQUIRE(egm.getGroupSize(gid1) == 6);
+        
+        // Check that source groups no longer exist
+        REQUIRE_FALSE(egm.hasGroup(gid2));
+        REQUIRE_FALSE(egm.hasGroup(gid3));
+    }
+
+    SECTION("Merge into non-existent group fails") {
+        std::vector<int> source_groups = {g2};
+        REQUIRE_FALSE(gm.mergeGroups(999, source_groups));
+    }
+
+    SECTION("Merge non-existent group fails") {
+        std::vector<int> source_groups = {999};
+        REQUIRE_FALSE(gm.mergeGroups(g1, source_groups));
+    }
+
+    SECTION("Merge group into itself fails") {
+        std::vector<int> source_groups = {g1};
+        REQUIRE_FALSE(gm.mergeGroups(g1, source_groups));
+    }
+}
+
 TEST_CASE("GroupManager - Signals emit once per logical change", "[groupmanager][signals]") {
     EntityGroupManager egm;
     auto dm = std::make_shared<DataManager>();

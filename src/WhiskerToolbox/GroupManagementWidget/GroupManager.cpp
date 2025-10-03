@@ -304,6 +304,73 @@ std::vector<std::pair<int, QString>> GroupManager::getGroupsForContextMenu() con
     return result;
 }
 
+bool GroupManager::mergeGroups(int target_group_id, std::vector<int> const & source_group_ids) {
+    // Validate target group exists
+    auto target_entity_group_id = static_cast<GroupId>(target_group_id);
+    if (!m_entity_group_manager->hasGroup(target_entity_group_id)) {
+        qDebug() << "GroupManager: Target group" << target_group_id << "does not exist";
+        return false;
+    }
+
+    // Validate source groups exist and are different from target
+    for (int source_group_id : source_group_ids) {
+        if (source_group_id == target_group_id) {
+            qDebug() << "GroupManager: Cannot merge group into itself:" << source_group_id;
+            return false;
+        }
+        
+        auto source_entity_group_id = static_cast<GroupId>(source_group_id);
+        if (!m_entity_group_manager->hasGroup(source_entity_group_id)) {
+            qDebug() << "GroupManager: Source group" << source_group_id << "does not exist";
+            return false;
+        }
+    }
+
+    // Collect all entities from source groups
+    std::unordered_set<EntityId> entities_to_merge;
+    for (int source_group_id : source_group_ids) {
+        auto source_entity_group_id = static_cast<GroupId>(source_group_id);
+        auto entities_in_group = m_entity_group_manager->getEntitiesInGroup(source_entity_group_id);
+        
+        for (EntityId entity_id : entities_in_group) {
+            entities_to_merge.insert(entity_id);
+        }
+    }
+
+    // Move all entities to target group
+    if (!entities_to_merge.empty()) {
+        std::vector<EntityId> entities_vector(entities_to_merge.begin(), entities_to_merge.end());
+        m_entity_group_manager->addEntitiesToGroup(target_entity_group_id, entities_vector);
+    }
+
+    // Remove source groups
+    for (int source_group_id : source_group_ids) {
+        auto source_entity_group_id = static_cast<GroupId>(source_group_id);
+        
+        // Remove all entities from source group first
+        auto entities_in_group = m_entity_group_manager->getEntitiesInGroup(source_entity_group_id);
+        if (!entities_in_group.empty()) {
+            std::vector<EntityId> entities_vector(entities_in_group.begin(), entities_in_group.end());
+            m_entity_group_manager->removeEntitiesFromGroup(source_entity_group_id, entities_vector);
+        }
+        
+        // Delete the source group
+        m_entity_group_manager->deleteGroup(source_entity_group_id);
+        
+        // Clean up our mappings
+        m_group_colors.remove(source_group_id);
+        m_group_visibility.remove(source_group_id);
+        
+        qDebug() << "GroupManager: Removed source group" << source_group_id;
+        emit groupRemoved(source_group_id);
+    }
+
+    qDebug() << "GroupManager: Merged" << source_group_ids.size() << "groups into group" << target_group_id;
+    emit groupModified(target_group_id);
+    
+    return true;
+}
+
 bool GroupManager::deleteGroupAndEntities(int group_id) {
     auto entity_group_id = static_cast<GroupId>(group_id);
 

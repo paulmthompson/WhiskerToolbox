@@ -179,6 +179,14 @@ public:
      */
     std::vector<std::pair<int, QString>> getGroupsForContextMenu() const;
 
+    /**
+     * @brief Merge multiple groups into a target group
+     * @param target_group_id The group to merge into
+     * @param source_group_ids The groups to merge from (will be deleted)
+     * @return True if merge was successful, false otherwise
+     */
+    bool mergeGroups(int target_group_id, std::vector<int> const & source_group_ids);
+
 signals:
     /**
      * @brief Emitted when a new group is created
