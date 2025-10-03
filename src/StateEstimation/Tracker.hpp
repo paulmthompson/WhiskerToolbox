@@ -413,7 +413,9 @@ public:
                             if (logger_) logger_->warn("SMOOTH_BLOCK SKIP g={} | interval too small or backward prediction not supported. Applying standard smoothing.", group_id);
                             auto smoothed = track.filter->smooth(track.forward_pass_history);
                             if (!smoothed.empty()) {
-                                all_smoothed_results[group_id].insert(all_smoothed_results[group_id].end(), std::next(smoothed.begin()), smoothed.end());
+                                // Only skip the first element if we already have results (to avoid duplication)
+                                auto start_it = all_smoothed_results[group_id].empty() ? smoothed.begin() : std::next(smoothed.begin());
+                                all_smoothed_results[group_id].insert(all_smoothed_results[group_id].end(), start_it, smoothed.end());
                             }
                         } else {
                             // --- STEP 1A: GENERATE A TRUE BACKWARD-FILTERED HYPOTHESIS ---
@@ -644,9 +646,10 @@ public:
                                 }
                             }
 
-                            // Store results, excluding the first element which is the last from the previous interval
+                            // Store results, excluding the first element only if we already have results (to avoid duplication)
                             if (!smoothed.empty()) {
-                                all_smoothed_results[group_id].insert(all_smoothed_results[group_id].end(), std::next(smoothed.begin()), smoothed.end());
+                                auto start_it = all_smoothed_results[group_id].empty() ? smoothed.begin() : std::next(smoothed.begin());
+                                all_smoothed_results[group_id].insert(all_smoothed_results[group_id].end(), start_it, smoothed.end());
                             }
                         }
 
