@@ -12,8 +12,8 @@
 #include "spdlog/spdlog.h"
 
 #include <algorithm>
-#include <cmath>
 #include <chrono>
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -126,7 +126,7 @@ public:
     void enableDebugLogging(std::string const & file_path) {
         try {
             // Use a rotating sink to avoid losing logs in long runs
-            std::size_t const max_bytes = static_cast<std::size_t>(500) * 1024 * 1024; // 500 MB
+            std::size_t const max_bytes = static_cast<std::size_t>(500) * 1024 * 1024;// 500 MB
             std::size_t const max_files = 3;
             auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_path, max_bytes, max_files);
             auto existing = spdlog::get("TrackerLogger");
@@ -269,6 +269,14 @@ public:
                                       updated_groups_this_frame,
                                       assigned_entities_this_frame);
 
+            // **FIX 3: SYNCHRONIZE PREDICTION HISTORY**
+            // For any group updated by GT, overwrite its prediction with the certain, GT-updated state.
+            for (GroupId group_id : updated_groups_this_frame) {
+                if(active_tracks_.count(group_id)) {
+                    predictions[group_id] = active_tracks_.at(group_id).filter->getState();
+                }
+            }
+
             // --- Assignment for Ungrouped Data ---
             if (assigner_) {
                 std::vector<Observation> observations;
@@ -389,243 +397,185 @@ public:
                     }
 
                     if (track.anchor_frames.size() >= 2) {
-                        // 1) Smooth forward history between anchors
-                        auto smoothed = track.filter->smooth(track.forward_pass_history);
+                        /**************************************************************************
+                         * RE-IMPLEMENTED SMOOTHING AND RE-ASSIGNMENT BLOCK
+                         **************************************************************************/
+                        any_smoothing_this_frame = true;
+                        size_t const interval_size = track.processed_frames_history.size();
 
-                        // 1a) Assignment-aware covariance inflation with anchor proximity decay
-                        // Reduce inflation near anchors so anchor certainty propagates backwards/forwards
-                        if (smoothed.size() >= 2) {
-                            size_t const Nseg = smoothed.size();
-                            double const nminus = static_cast<double>(Nseg - 1);
-                            double const half_len = nminus / 2.0;
-                            for (size_t i = 0; i < Nseg; ++i) {
-                                double const conf = track.identity_confidence_history[static_cast<size_t>(i)];
-                                // Proximity weight: 0 at anchors, 1 at the midpoint
-                                double const i_d = static_cast<double>(i);
-                                double const d_to_edge = std::min(i_d, nminus - i_d);
-                                double const proximity_weight = (half_len <= 0.0) ? 0.0 : std::clamp(d_to_edge / half_len, 0.0, 1.0);
-                                // Map confidence to base inflation then attenuate by proximity to anchors
-                                double const base_inflation = (conf <= 0.0) ? 1.0 : std::max(1.0, 1.0 + (1.0 - conf) * 2.0);
-                                double const inflation = 1.0 + (base_inflation - 1.0) * proximity_weight;
-                                smoothed[i].state_covariance *= inflation;
-                                if (logger_) {
-                                    double tr = smoothed[i].state_covariance.trace();
-                                    logger_->debug("smooth f={} g={} i={} conf={:.3f} infl={:.3f} cov_tr={:.3f}",
-                                                   track.processed_frames_history[i].getValue(),
-                                                   group_id,
-                                                   i,
-                                                   conf,
-                                                   inflation, tr);
-                                }
-                            }
+                        if (logger_) {
+                            logger_->info("SMOOTH_BLOCK START g={} | interval=[{}, {}] | size={}",
+                                          group_id, track.anchor_frames.front().getValue(),
+                                          current_frame.getValue(), interval_size);
                         }
 
-                        // 2) Reverse-pass reconciliation via assigner using smoothed predictions
-                        if (assigner_) {
-                            for (size_t i = 0; i < smoothed.size(); ++i) {
-                                TimeFrameIndex const frame = track.processed_frames_history[static_cast<size_t>(i)];
+                        if (interval_size <= 1 || !assigner_ || !track.filter->supportsBackwardPrediction()) {
+                            if (logger_) logger_->warn("SMOOTH_BLOCK SKIP g={} | interval too small or backward prediction not supported.", group_id);
+                            auto smoothed = track.filter->smooth(track.forward_pass_history);
+                            if (!smoothed.empty()) {
+                                all_smoothed_results[group_id].insert(all_smoothed_results[group_id].end(), std::next(smoothed.begin()), smoothed.end());
+                            }
+                        } else {
+                            // --- STEP 1: RE-ASSIGNMENT. COMPARE FWD/BWD HYPOTHESES ---
+                            std::map<TimeFrameIndex, EntityId> revised_assignments;
+                            std::map<TimeFrameIndex, double> revised_confidences;
 
-                                // Do not reconcile on anchor frames (respect labels)
-                                auto gt_it_for_frame = ground_truth.find(frame);
-                                if (gt_it_for_frame != ground_truth.end() && gt_it_for_frame->second.count(group_id)) {
-                                    continue;
-                                }
-
-                                // Build observation set for frame
-                                std::vector<Observation> observations;
-                                std::map<EntityId, FeatureCache> feature_cache;
-                                auto fd_it = frame_data_lookup.find(frame);
-                                if (fd_it != frame_data_lookup.end()) {
-                                    auto const & frame_items = fd_it->second;
-                                    observations.reserve(frame_items.size());
-                                    for (auto const & [data_ptr, entity_id, /*time*/ _t]: frame_items) {
-                                        observations.push_back({entity_id});
-                                        feature_cache[entity_id] = feature_extractor_->getAllFeatures(*data_ptr);
-                                    }
-                                }
-                                if (observations.empty()) continue;
-
-                                // Build prediction lists: smoothed and forward predicted
-                                std::vector<Prediction> pred_smoothed = {{group_id, smoothed[i]}};
-                                std::vector<Prediction> pred_forward = {{group_id, track.forward_prediction_history[static_cast<size_t>(i)]}};
-
-                                auto assign_smoothed = assigner_->solve(pred_smoothed, observations, feature_cache);
-                                auto assign_forward = assigner_->solve(pred_forward, observations, feature_cache);
-
-                                // Extract chosen entities and costs, if any
-                                auto pick_entity_and_cost = [](Assignment const & a) -> std::optional<std::pair<int, double>> {
-                                    if (a.observation_to_prediction.empty()) return std::nullopt;
-                                    auto const & kv = *a.observation_to_prediction.begin();
-                                    int obs_idx = kv.first;
-                                    auto itc = a.assignment_costs.find(obs_idx);
-                                    double cost = (itc != a.assignment_costs.end()) ? itc->second : std::numeric_limits<double>::infinity();
-                                    return std::make_optional(std::make_pair(obs_idx, cost));
-                                };
-
-                                auto sm_pick = pick_entity_and_cost(assign_smoothed);
-                                auto fwd_pick = pick_entity_and_cost(assign_forward);
-                                if (!sm_pick && !fwd_pick) continue;
-
-                                // Choose by assignment cost; if similar, prefer lower predicted covariance (more certain)
-                                int chosen_obs_idx = -1;
-                                if (sm_pick && fwd_pick) {
-                                    double const cost_sm = sm_pick->second;
-                                    double const cost_fw = fwd_pick->second;
-                                    double const epsilon_cost = 0.5;// tie-break threshold
-                                    if (std::abs(cost_sm - cost_fw) <= epsilon_cost) {
-                                        double const cov_sm = smoothed[i].state_covariance.trace();
-                                        double const cov_fw = track.forward_prediction_history[static_cast<size_t>(i)].state_covariance.trace();
-                                        chosen_obs_idx = (cov_sm <= cov_fw) ? sm_pick->first : fwd_pick->first;
-                                    } else {
-                                        chosen_obs_idx = (cost_sm <= cost_fw) ? sm_pick->first : fwd_pick->first;
-                                    }
-                                    if (logger_) {
-                                        logger_->debug("reconcile f={} g={} cost_sm={:.3f} cost_fw={:.3f} cov_sm={:.3f} cov_fw={:.3f}",
-                                                       frame.getValue(),
-                                                       group_id,
-                                                       cost_sm,
-                                                       cost_fw,
-                                                       smoothed[i].state_covariance.trace(),
-                                                       track.forward_prediction_history[static_cast<size_t>(i)].state_covariance.trace());
-                                    }
-                                } else if (sm_pick) {
-                                    chosen_obs_idx = sm_pick->first;
+                            // Pre-compute all backward predictions for the interval
+                            std::vector<std::optional<FilterState>> bwd_preds(interval_size);
+                            FilterState bwd_state = track.forward_pass_history.back();
+                            bwd_preds[interval_size - 1] = bwd_state;
+                            for (size_t i = interval_size - 1; i-- > 0;) {
+                                // Pass logger to predictPrevious for covariance reset logging
+                                auto prev = track.filter->predictPrevious(bwd_state);
+                                if (prev) {
+                                    bwd_state = *prev;
+                                    bwd_preds[i] = bwd_state;
                                 } else {
-                                    chosen_obs_idx = fwd_pick->first;
-                                }
-
-                                // Resolve entity id from chosen_obs_idx
-                                auto fd2_it = frame_data_lookup.find(frame);
-                                if (fd2_it == frame_data_lookup.end()) continue;
-                                auto const & frame_items2 = fd2_it->second;
-                                if (chosen_obs_idx < 0 || static_cast<size_t>(chosen_obs_idx) >= frame_items2.size()) continue;
-                                EntityId chosen_entity = std::get<1>(frame_items2[static_cast<size_t>(chosen_obs_idx)]);
-
-                                // If differs from forward assignment for this frame, replace in pending updates
-                                auto const & recorded = track.assigned_entity_history[static_cast<size_t>(i)];
-                                if (!recorded.has_value() || recorded.value() != chosen_entity) {
-                                    pending_updates.replaceForFrame(group_id, frame, chosen_entity);
-                                    if (logger_) {
-                                        logger_->debug("replace f={} g={} old={} new={}",
-                                                       frame.getValue(),
-                                                       group_id,
-                                                       recorded.has_value() ? recorded.value() : -1, chosen_entity);
-                                    }
-                                }
-                            }
-                        }
-
-                        // 3) True backward filtering from anchor: run from last index to first
-                        if (assigner_ && track.filter->supportsBackwardPrediction()) {
-                            // Seed with anchor state (smoothed back)
-                            FilterState backward_state = smoothed.back();
-                            for (size_t rev = smoothed.size(); rev-- > 0;) {
-                                TimeFrameIndex const frame = track.processed_frames_history[rev];
-                                // Skip anchors
-                                auto gt_it_for_frame = ground_truth.find(frame);
-                                if (gt_it_for_frame != ground_truth.end() && gt_it_for_frame->second.count(group_id)) {
-                                    backward_state = smoothed[rev];
-                                    if (logger_) {
-                                        logger_->debug("bwd anchor f={} g={}", frame.getValue(), group_id);
-                                    }
-                                    continue;
-                                }
-
-                                // One-step backward prediction
-                                auto prev_opt = track.filter->predictPrevious(backward_state);
-                                if (!prev_opt.has_value()) {
+                                    if (logger_) logger_->error("BWD_PRED_FAIL g={} at history index {}", group_id, i);
                                     break;
                                 }
-                                Prediction backward_pred{group_id, prev_opt.value()};
-                                if (logger_) {
-                                    logger_->debug("bwd predict f={} g={} cov_tr={:.3f}", frame.getValue(), group_id, prev_opt->state_covariance.trace());
+                            }
+
+                            for (size_t i = 0; i < interval_size; ++i) {
+                                TimeFrameIndex frame = track.processed_frames_history[i];
+                                if (ground_truth.count(frame) && ground_truth.at(frame).count(group_id)) {
+                                    revised_assignments[frame] = ground_truth.at(frame).at(group_id);
+                                    revised_confidences[frame] = 1.0;
+                                    continue;
                                 }
 
-                                // Build observations for this frame
+                                auto fd_it = frame_data_lookup.find(frame);
+                                if (fd_it == frame_data_lookup.end() || fd_it->second.empty()) continue;
+
                                 std::vector<Observation> observations;
                                 std::map<EntityId, FeatureCache> feature_cache;
-                                auto fd_it = frame_data_lookup.find(frame);
-                                if (fd_it != frame_data_lookup.end()) {
-                                    auto const & frame_items = fd_it->second;
-                                    for (auto const & [data_ptr, entity_id, /*time*/ _t]: frame_items) {
-                                        observations.push_back({entity_id});
-                                        feature_cache[entity_id] = feature_extractor_->getAllFeatures(*data_ptr);
-                                    }
+                                for (auto const & item: fd_it->second) {
+                                    observations.push_back({std::get<1>(item)});
+                                    feature_cache[std::get<1>(item)] = feature_extractor_->getAllFeatures(*std::get<0>(item));
                                 }
-                                if (!observations.empty()) {
-                                    auto assignment_bwd = assigner_->solve({backward_pred}, observations, feature_cache);
-                                    if (!assignment_bwd.observation_to_prediction.empty()) {
-                                        int obs_idx = assignment_bwd.observation_to_prediction.begin()->first;
-                                        EntityId chosen_entity = observations[static_cast<size_t>(obs_idx)].entity_id;
-                                        if (logger_) {
-                                            double cost = 0.0;
-                                            auto itc = assignment_bwd.assignment_costs.find(obs_idx);
-                                            if (itc != assignment_bwd.assignment_costs.end()) cost = itc->second;
-                                            logger_->debug("bwd assign f={} g={} obs={} cost={:.3f}", frame.getValue(), group_id, chosen_entity, cost);
-                                        }
-                                        // If chosen differs from existing record, replace
-                                        auto const & recorded = track.assigned_entity_history[rev];
-                                        if (!recorded.has_value() || recorded.value() != chosen_entity) {
-                                            pending_updates.replaceForFrame(group_id, frame, chosen_entity);
-                                        }
 
-                                        // Update backward filter state with measurement at this frame
-                                        auto fd2_it = frame_data_lookup.find(frame);
-                                        if (fd2_it != frame_data_lookup.end()) {
-                                            auto const & frame_items2 = fd2_it->second;
-                                            for (auto const & [data_ptr, entity_id, /*t*/ _]: frame_items2) {
-                                                if (entity_id == chosen_entity) {
-                                                    Measurement m{feature_extractor_->getFilterFeatures(*data_ptr)};
-                                                    backward_state = track.filter->update(prev_opt.value(), m);
-                                                    if (logger_) {
-                                                        logger_->debug("bwd update f={} g={} obs={} cov_tr={:.3f}", frame.getValue(), group_id, chosen_entity, backward_state.state_covariance.trace());
-                                                    }
-                                                    break;
-                                                }
+                                auto pick = [&](Assignment const & a, std::vector<Observation> const& obs) -> std::optional<std::pair<EntityId, double>> {
+                                    if (a.observation_to_prediction.empty()) return std::nullopt;
+                                    // Handle cases where assignment might be valid but cost is not stored (should not happen with Hungarian)
+                                    auto it = a.observation_to_prediction.begin();
+                                    if (a.assignment_costs.find(it->first) == a.assignment_costs.end()) return std::nullopt;
+                                    return std::make_pair(obs.at(it->first).entity_id, a.assignment_costs.at(it->first));
+                                };
+
+                                auto fwd_assign = assigner_->solve({{group_id, track.forward_prediction_history[i]}}, observations, feature_cache);
+                                auto fwd_pick = pick(fwd_assign, observations);
+
+                                std::optional<std::pair<EntityId, double>> bwd_pick;
+                                if (bwd_preds[i]) {
+                                    auto bwd_assign = assigner_->solve({{group_id, *bwd_preds[i]}}, observations, feature_cache);
+                                    bwd_pick = pick(bwd_assign, observations);
+                                }
+
+                                if (logger_) {
+                                    double fwd_cov_tr = track.forward_prediction_history[i].state_covariance.trace();
+                                    double bwd_cov_tr = bwd_preds[i] ? bwd_preds[i]->state_covariance.trace() : -1.0;
+                                    EntityId fwd_entity = fwd_pick ? fwd_pick->first : -1;
+                                    double fwd_cost = fwd_pick ? fwd_pick->second : -1.0;
+                                    EntityId bwd_entity = bwd_pick ? bwd_pick->first : -1;
+                                    double bwd_cost = bwd_pick ? bwd_pick->second : -1.0;
+                                    logger_->debug("RECONCILE f={} g={} | FWD: entity={}, cost={:.4f}, cov_tr={:.4f} | BWD: entity={}, cost={:.4f}, cov_tr={:.4f}",
+                                                   frame.getValue(), group_id, fwd_entity, fwd_cost, fwd_cov_tr, bwd_entity, bwd_cost, bwd_cov_tr);
+                                }
+
+                                if (!fwd_pick && !bwd_pick) continue;
+
+                                bool use_bwd = (fwd_pick && bwd_pick) ? (bwd_pick->second < fwd_pick->second) : (bwd_pick.has_value());
+                                auto & winner = use_bwd ? bwd_pick : fwd_pick;
+
+                                revised_assignments[frame] = winner->first;
+                                pending_updates.replaceForFrame(group_id, frame, winner->first);
+
+                                if (logger_) {
+                                    EntityId original_entity = track.assigned_entity_history[i].has_value() ? track.assigned_entity_history[i].value() : -1;
+                                    logger_->info("RECONCILE_WINNER f={} g={} | winner={} chosen_entity={} (original={})",
+                                                  frame.getValue(), group_id, (use_bwd ? "BWD" : "FWD"), winner->first, original_entity);
+                                }
+
+                                IdentityConfidence temp_conf;
+                                temp_conf.updateOnAssignment(winner->second, assigner_->getCostThreshold());
+                                revised_confidences[frame] = temp_conf.getConfidence();
+                            }
+
+                            // --- STEP 2: RE-FILTER THE INTERVAL WITH CORRECTED ASSIGNMENTS ---
+                            std::vector<FilterState> corrected_history;
+                            auto temp_filter = filter_prototype_->clone();
+                            temp_filter->initialize(track.forward_pass_history.front());
+                            corrected_history.push_back(temp_filter->getState());
+
+                            for (size_t i = 1; i < interval_size; ++i) {
+                                TimeFrameIndex frame = track.processed_frames_history[i];
+                                FilterState pred = temp_filter->predict();
+                                if (revised_assignments.count(frame)) {
+                                    EntityId entity_id = revised_assignments.at(frame);
+                                    auto it = entity_to_index.find(entity_id);// This map is from the current frame, need to rebuild for past frames
+
+                                    // Rebuild small lookup for this past frame
+                                    DataType const * data = nullptr;
+                                    // CORRECTED: Look for data in the correct historical frame's data list
+                                    auto const & past_frame_data_it = frame_data_lookup.find(frame);
+                                    if (past_frame_data_it != frame_data_lookup.end()){
+                                        for (auto const & item: past_frame_data_it->second) {
+                                            if (std::get<1>(item) == entity_id) {
+                                                data = std::get<0>(item);
+                                                break;
                                             }
                                         }
-                                    } else {
-                                        // No assignment; carry predicted backward state
-                                        backward_state = prev_opt.value();
-                                        if (logger_) {
-                                            logger_->debug("bwd noassign f={} g={} carry cov_tr={:.3f}", frame.getValue(), group_id, backward_state.state_covariance.trace());
-                                        }
                                     }
+                                    if (data) {
+                                        Measurement m = {feature_extractor_->getFilterFeatures(*data)};
+                                        double noise_scale = std::pow(10.0, 2.0 * (1.0 - revised_confidences.at(frame)));
+                                        temp_filter->update(pred, m, noise_scale);
+                                        if (logger_) {
+                                            logger_->debug("RE-FILTER f={} g={} | entity={} noise_scale={:.3f} new_cov_tr={:.4f}",
+                                                           frame.getValue(), group_id, entity_id, noise_scale, temp_filter->getState().state_covariance.trace());
+                                        }
+                                    } else
+                                        temp_filter->initialize(pred);
+                                        if (logger_) logger_->warn("RE-FILTER f={} g={} | entity {} not found in frame data, coasting.", frame.getValue(), group_id, entity_id);
                                 } else {
-                                    backward_state = prev_opt.value();
-                                    if (logger_) {
-                                        logger_->debug("bwd noobs f={} g={} carry cov_tr={:.3f}", frame.getValue(), group_id, backward_state.state_covariance.trace());
+                                    temp_filter->initialize(pred);
+                                    if (logger_) logger_->warn("RE-FILTER f={} g={} | no revised assignment, coasting.", frame.getValue(), group_id);
+
+                                }
+                                corrected_history.push_back(temp_filter->getState());
+                            }
+
+                            // --- STEP 3: SMOOTH THE CORRECTED HISTORY ---
+                            auto smoothed = track.filter->smooth(corrected_history);
+
+                            // --- STEP 4: APPLY ASSIGNMENT-AWARE COVARIANCE INFLATION ---
+                            // Your original logic is sound and can be applied here to the new smoothed states
+                            if (smoothed.size() >= 2) {
+                                for (size_t i = 0; i < smoothed.size(); ++i) {
+                                    if(revised_confidences.count(track.processed_frames_history[i])){
+                                        double conf = revised_confidences.at(track.processed_frames_history[i]);
+                                        double inflation = 1.0 + (1.0 - conf); // Simplified inflation
+                                        smoothed[i].state_covariance *= inflation;
                                     }
                                 }
                             }
+
+                            // Store results, excluding the first element which is the last from the previous interval
+                            if (!smoothed.empty()) {
+                                all_smoothed_results[group_id].insert(all_smoothed_results[group_id].end(), std::next(smoothed.begin()), smoothed.end());
+                            }
                         }
 
-                        if (all_smoothed_results[group_id].empty()) {
-                            all_smoothed_results[group_id] = smoothed;
-                        } else {
-                            all_smoothed_results[group_id].insert(
-                                    all_smoothed_results[group_id].end(),
-                                    std::next(smoothed.begin()),
-                                    smoothed.end());
-                        }
+                        /**************************************************************************
+                         * END OF RE-IMPLEMENTED BLOCK
+                         **************************************************************************/
 
-                        // Collapse histories to keep only the last element for continuity into next interval
-                        track.forward_pass_history.clear();
-                        track.forward_pass_history.push_back(smoothed.back());
-                        // Align auxiliary histories
-                        TimeFrameIndex last_frame = track.processed_frames_history.back();
-                        track.forward_prediction_history.clear();
-                        track.forward_prediction_history.push_back(smoothed.back());
-                        track.processed_frames_history.clear();
-                        track.processed_frames_history.push_back(last_frame);
-                        track.identity_confidence_history.clear();
-                        track.identity_confidence_history.push_back(track.identity_confidence.getConfidence());
-                        track.assigned_entity_history.clear();
-                        track.assigned_entity_history.push_back(std::nullopt);
-                        // Keep only the last anchor for the next interval
+                        // Collapse histories to keep only the last element for continuity
+                        track.forward_pass_history = {track.forward_pass_history.back()};
+                        track.forward_prediction_history = {track.forward_prediction_history.back()};
+                        track.processed_frames_history = {track.processed_frames_history.back()};
+                        track.assigned_entity_history = {track.assigned_entity_history.back()};
                         track.anchor_frames = {current_frame};
-
-                        any_smoothing_this_frame = true;
                     }
                 }// end of anchor frame backward pass
             }
@@ -652,7 +602,8 @@ public:
      * @param group_id The group to query
      * @return The current identity confidence [0.1, 1.0], or -1.0 if group not found
      */
-    double getIdentityConfidence(GroupId group_id) const {
+    double
+    getIdentityConfidence(GroupId group_id) const {
         auto it = active_tracks_.find(group_id);
         if (it == active_tracks_.end()) return -1.0;
         return it->second.identity_confidence.getConfidence();

@@ -42,6 +42,9 @@ Assignment HungarianAssigner::solve(
     int const cost_scaling_factor = 1000;
     int const max_cost = static_cast<int>(max_assignment_distance_ * cost_scaling_factor);
     std::vector<std::vector<int>> cost_matrix(observations.size(), std::vector<int>(predictions.size()));
+    // Track per-observation best candidate for fallback when solver yields no assignment (single prediction case)
+    std::vector<int> best_col_for_row(observations.size(), -1);
+    std::vector<int> best_cost_for_row(observations.size(), std::numeric_limits<int>::max());
 
     for (size_t i = 0; i < observations.size(); ++i) {
         auto cache_it = feature_cache.find(observations[i].entity_id);
@@ -66,12 +69,14 @@ Assignment HungarianAssigner::solve(
 
             double distance = std::sqrt(dist_sq);
             int cost = static_cast<int>(distance * cost_scaling_factor);
-
-            if (cost < max_cost) {
-                cost_matrix[i][j] = cost;
-            } else {
-                // Use a large integer value to represent infinity for the integer-based solver
-                cost_matrix[i][j] = std::numeric_limits<int>::max();
+            // Keep original costs to allow solver; cap at INT_MAX - 1 to avoid overflow
+            if (cost >= std::numeric_limits<int>::max()) {
+                cost = std::numeric_limits<int>::max() - 1;
+            }
+            cost_matrix[i][j] = cost;
+            if (cost < best_cost_for_row[i]) {
+                best_cost_for_row[i] = cost;
+                best_col_for_row[i] = static_cast<int>(j);
             }
         }
     }
@@ -97,6 +102,23 @@ Assignment HungarianAssigner::solve(
                 }
                 break;// Move to the next observation row
             }
+        }
+    }
+
+    // Fallback for single-prediction case: if solver produced no assignment, pick the best observation greedily
+    if (result.observation_to_prediction.empty() && predictions.size() == 1 && !observations.empty()) {
+        // Select the observation row with the minimal cost
+        int best_row = -1;
+        int best_cost = std::numeric_limits<int>::max();
+        for (size_t i = 0; i < best_cost_for_row.size(); ++i) {
+            if (best_cost_for_row[i] < best_cost && best_col_for_row[i] != -1) {
+                best_cost = best_cost_for_row[i];
+                best_row = static_cast<int>(i);
+            }
+        }
+        if (best_row != -1) {
+            result.observation_to_prediction[best_row] = 0;
+            result.assignment_costs[best_row] = static_cast<double>(best_cost) / cost_scaling_factor;
         }
     }
 
