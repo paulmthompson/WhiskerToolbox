@@ -50,7 +50,7 @@ target_link_libraries(StateEstimation PUBLIC
 )
 
 target_link_libraries(StateEstimation PRIVATE Eigen3::Eigen)
-target_link_libraries(StateEstimation PUBLIC spdlog::spdlog)
+target_link_libraries(StateEstimation PUBLIC spdlog::spdlog_header_only)
 
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
