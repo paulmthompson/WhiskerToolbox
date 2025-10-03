@@ -95,6 +95,8 @@ public:
      * @return A std::unique_ptr to a new instance of the filter with the same configuration.
      */
     virtual std::unique_ptr<IFilter> clone() const = 0;
+
+    virtual std::unique_ptr<IFilter> createBackwardFilter() const = 0;
 };
 
 }// namespace StateEstimation

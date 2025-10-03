@@ -38,8 +38,10 @@ public:
 
     std::unique_ptr<IFilter> clone() const override;
 
+    std::unique_ptr<IFilter> createBackwardFilter() const override;
+
     bool supportsBackwardPrediction() const override { return true; }
-    std::optional<FilterState> predictPrevious(FilterState const & current_state) override;
+    //std::optional<FilterState> predictPrevious(FilterState const & current_state) override;
 
 
 private:

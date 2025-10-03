@@ -98,6 +98,20 @@ std::unique_ptr<IFilter> KalmanFilter::clone() const {
     return std::make_unique<KalmanFilter>(*this);
 }
 
+// Add the implementation for our new method
+std::unique_ptr<IFilter> KalmanFilter::createBackwardFilter() const {
+    if (F_inv_.rows() == 0 || F_inv_.cols() == 0) {
+        // If the matrix isn't invertible, we can't create a backward filter.
+        // Return nullptr or throw an exception.
+        return nullptr;
+    }
+    // Create a new KalmanFilter, but feed it the INVERSE matrices.
+    // Its "forward" is our "backward".
+    auto backward_filter = std::make_unique<KalmanFilter>(F_inv_, H_, Q_backward_, R_);
+    return backward_filter;
+}
+
+/*
 std::optional<FilterState> KalmanFilter::predictPrevious(FilterState const & current_state) {
     if (F_inv_.rows() == 0 || F_inv_.cols() == 0) {
         return std::nullopt;
@@ -118,5 +132,6 @@ std::optional<FilterState> KalmanFilter::predictPrevious(FilterState const & cur
     Eigen::MatrixXd P_prev_psd = V * eig.asDiagonal() * V.transpose();
     return FilterState{.state_mean = x_prev, .state_covariance = P_prev_psd};
 }
+*/
 
 }// namespace StateEstimation
