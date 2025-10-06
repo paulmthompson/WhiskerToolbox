@@ -465,7 +465,22 @@ void ParameterFactory::initializeDefaultSetters() {
             "Group Lines using Kalman Filtering", "process_noise_velocity", &LineKalmanGroupingParameters::process_noise_velocity);
 
     registerBasicParameter<LineKalmanGroupingParameters, double>(
-            "Group Lines using Kalman Filtering", "measurement_noise", &LineKalmanGroupingParameters::measurement_noise);
+            "Group Lines using Kalman Filtering", "static_feature_process_noise_scale", &LineKalmanGroupingParameters::static_feature_process_noise_scale);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "measurement_noise_position", &LineKalmanGroupingParameters::measurement_noise_position);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "measurement_noise_length", &LineKalmanGroupingParameters::measurement_noise_length);
+
+    registerBasicParameter<LineKalmanGroupingParameters, bool>(
+            "Group Lines using Kalman Filtering", "auto_estimate_static_noise", &LineKalmanGroupingParameters::auto_estimate_static_noise);
+
+    registerBasicParameter<LineKalmanGroupingParameters, bool>(
+            "Group Lines using Kalman Filtering", "auto_estimate_measurement_noise", &LineKalmanGroupingParameters::auto_estimate_measurement_noise);
+
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "static_noise_percentile", &LineKalmanGroupingParameters::static_noise_percentile);
 
     registerBasicParameter<LineKalmanGroupingParameters, double>(
             "Group Lines using Kalman Filtering", "initial_position_uncertainty", &LineKalmanGroupingParameters::initial_position_uncertainty);

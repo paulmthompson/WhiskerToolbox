@@ -31,6 +31,8 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Lines/Line_Data.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/DataAggregation/DataAggregation.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/computers/AnalogSliceGathererComputer.test.cpp

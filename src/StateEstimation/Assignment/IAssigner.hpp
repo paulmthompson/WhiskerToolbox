@@ -39,6 +39,8 @@ public:
             std::vector<Observation> const & observations,
             std::map<EntityId, FeatureCache> const & feature_cache) = 0;
 
+    virtual double getCostThreshold() const = 0; // New method
+
     /**
      * @brief Clones the assigner object.
      * @return A std::unique_ptr to a new instance of the assigner with the same configuration.

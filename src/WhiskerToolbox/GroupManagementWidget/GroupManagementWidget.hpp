@@ -10,6 +10,7 @@ class QContextMenuEvent;
 class GroupManager;
 class QTableWidgetItem;
 class QPushButton;
+class QCheckBox;
 
 namespace Ui {
 class GroupManagementWidget;
@@ -77,6 +78,12 @@ private slots:
     void onColorButtonClicked();
 
     /**
+     * @brief Handle when a visibility checkbox is toggled
+     * @param visible The new visibility state
+     */
+    void onVisibilityToggled(bool visible);
+
+    /**
      * @brief Handle selection changes in the table
      */
     void onSelectionChanged();
@@ -96,6 +103,11 @@ private slots:
      * @brief Delete the selected group and all its entities
      */
     void deleteSelectedGroupAndEntities();
+
+    /**
+     * @brief Show dialog for merging selected groups
+     */
+    void showMergeDialog();
 
 private:
     GroupManager * m_group_manager;
@@ -127,6 +139,13 @@ private:
      * @return The created color button
      */
     QPushButton * createColorButton(int group_id);
+
+    /**
+     * @brief Create a visibility checkbox for a group
+     * @param group_id The group ID
+     * @return The created visibility checkbox
+     */
+    QCheckBox * createVisibilityCheckbox(int group_id);
 
     /**
      * @brief Update the color button appearance

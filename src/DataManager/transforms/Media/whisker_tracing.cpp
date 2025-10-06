@@ -2,6 +2,7 @@
 
 #include "Masks/Mask_Data.hpp"
 #include "whiskertracker.hpp"
+#include "producer_consumer_pipeline.hpp"
 
 #include <omp.h>
 
@@ -231,111 +232,6 @@ std::vector<std::vector<Line2D>> WhiskerTracingOperation::trace_multiple_images(
     return result;
 }
 
-// Producer thread function that loads frames from media_data
-void WhiskerTracingOperation::producer_thread(std::shared_ptr<MediaData> media_data,
-                                             FrameQueue& frame_queue,
-                                             WhiskerTracingParameters const* params,
-                                             int total_frames,
-                                             std::atomic<int>& progress_atomic) {
-    try {
-        for (int frame_idx = 0; frame_idx < total_frames; ++frame_idx) {
-            std::vector<uint8_t> image_data;
-            
-            if (params->use_processed_data) {
-                image_data = media_data->getProcessedData8(frame_idx);
-            } else {
-                image_data = media_data->getRawData8(frame_idx);
-            }
-            
-            if (!image_data.empty()) {
-                FrameData frame(std::move(image_data), frame_idx);
-                frame_queue.push(std::move(frame));
-            }
-            
-            progress_atomic.fetch_add(1);
-        }
-        
-        // Signal end of data
-        frame_queue.push_end_marker();
-    } catch (const std::exception& e) {
-        std::cerr << "Producer thread error: " << e.what() << std::endl;
-        frame_queue.push_end_marker();
-    }
-}
-
-// Consumer function that processes frames from the queue
-void WhiskerTracingOperation::consumer_processing(FrameQueue& frame_queue,
-                                                 whisker::WhiskerTracker& tracker,
-                                                 ImageSize const& image_size,
-                                                 WhiskerTracingParameters const* params,
-                                                 std::shared_ptr<LineData> traced_whiskers,
-                                                 std::atomic<int>& progress_atomic,
-                                                 int total_frames,
-                                                 ProgressCallback progressCallback) {
-    std::vector<std::vector<uint8_t>> batch_images;
-    std::vector<int> batch_times;
-    batch_images.reserve(params->batch_size);
-    batch_times.reserve(params->batch_size);
-    
-    int processed_frames = 0;
-    
-    while (processed_frames < total_frames) {
-        FrameData frame;
-        
-        // Try to get a frame with timeout
-        bool got_frame = frame_queue.pop(frame, std::chrono::milliseconds(1000));
-        
-        if (!got_frame) {
-            std::cerr << "Consumer timeout waiting for frame" << std::endl;
-            break;
-        }
-        
-        // Check for end marker
-        if (frame.is_end_marker) {
-            break;
-        }
-        
-        batch_images.push_back(std::move(frame.image_data));
-        batch_times.push_back(frame.time_index);
-        
-        // Process batch when we have enough frames or we've reached the end
-        // Use adaptive batch sizing: smaller batches when queue is empty, larger when full
-        int adaptive_batch_size = (frame_queue.size() > 10) ? params->batch_size : std::min(params->batch_size, 20);
-        if (batch_images.size() >= static_cast<size_t>(adaptive_batch_size) || 
-            processed_frames + batch_images.size() >= total_frames) {
-            
-            if (!batch_images.empty()) {
-                // Trace whiskers in parallel for this batch
-                auto batch_results = trace_multiple_images(tracker,
-                                                         batch_images,
-                                                         image_size,
-                                                         params->clip_length,
-                                                         params->use_mask_data ? params->mask_data.get() : nullptr,
-                                                         batch_times);
-                
-                // Add results to LineData
-                for (size_t j = 0; j < batch_results.size(); ++j) {
-                    for (auto const & line: batch_results[j]) {
-                        traced_whiskers->addAtTime(TimeFrameIndex(batch_times[j]), line, false);
-                    }
-                }
-                
-                processed_frames += batch_images.size();
-                
-                // Update progress from consumer thread
-                if (progressCallback) {
-                    int const current_progress = static_cast<int>(std::round(static_cast<double>(processed_frames) / static_cast<double>(total_frames) * PROGRESS_SCALE));
-                    progressCallback(current_progress);
-                }
-                
-                // Clear batch for next iteration
-                batch_images.clear();
-                batch_times.clear();
-            }
-        }
-    }
-}
-
 std::string WhiskerTracingOperation::getName() const {
     return "Whisker Tracing";
 }
@@ -362,102 +258,147 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
     return execute(dataVariant, transformParameters, [](int) {});
 }
 
-DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVariant,
-                                                 TransformParametersBase const * transformParameters,
+/**
+ * @brief A simple data structure to hold a frame's image data and its timestamp.
+ *
+ * This replaces the original FrameData struct, removing the is_end_marker
+ * which is no longer needed with the new BlockingQueue design.
+ */
+struct MediaFrame {
+    std::vector<uint8_t> image_data;
+    int time_index;
+};
+
+
+DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const& dataVariant,
+                                                 TransformParametersBase const* transformParameters,
                                                  ProgressCallback progressCallback) {
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<MediaData>>(&dataVariant);
+    auto const* ptr_ptr = std::get_if<std::shared_ptr<MediaData>>(&dataVariant);
     if (!ptr_ptr || !(*ptr_ptr)) {
         std::cerr << "WhiskerTracingOperation::execute: Incompatible variant type or null data." << std::endl;
-        if (progressCallback) progressCallback(PROGRESS_COMPLETE);
+        if (progressCallback) progressCallback(100);
         return {};
     }
 
     auto media_data = *ptr_ptr;
+    auto const* params = dynamic_cast<WhiskerTracingParameters const*>(transformParameters);
 
-    auto const * typed_params =
-            transformParameters ? dynamic_cast<WhiskerTracingParameters const *>(transformParameters) : nullptr;
-
-    if (!typed_params) {
+    if (!params) {
         std::cerr << "WhiskerTracingOperation::execute: Invalid parameters." << std::endl;
-        if (progressCallback) progressCallback(PROGRESS_COMPLETE);
+        if (progressCallback) progressCallback(100);
         return {};
     }
 
-    // Allow caller (tests) to pass an already-initialized tracker to avoid heavy setup
-    std::shared_ptr<whisker::WhiskerTracker> tracker_ptr = typed_params->tracker;
-    if (!tracker_ptr) {
-        tracker_ptr = std::make_shared<whisker::WhiskerTracker>();
+    std::shared_ptr<whisker::WhiskerTracker> tracker = params->tracker;
+    if (!tracker) {
+        tracker = std::make_shared<whisker::WhiskerTracker>();
         std::cout << "Whisker Tracker Initialized" << std::endl;
     }
-    tracker_ptr->setWhiskerLengthThreshold(typed_params->whisker_length_threshold);
-    // Disable whisker pad exclusion by using a large radius by default
-    tracker_ptr->setWhiskerPadRadius(1000.0f);
+    tracker->setWhiskerLengthThreshold(params->whisker_length_threshold);
+    tracker->setWhiskerPadRadius(1000.0f);
 
     if (progressCallback) progressCallback(0);
 
-    // Create new LineData for the traced whiskers
     auto traced_whiskers = std::make_shared<LineData>();
     traced_whiskers->setImageSize(media_data->getImageSize());
 
-    // Get times with data
     auto total_frame_count = media_data->getTotalFrameCount();
     if (total_frame_count <= 0) {
-        std::cerr << "WhiskerTracingOperation::execute: No data available in media." << std::endl;
-        if (progressCallback) progressCallback(PROGRESS_COMPLETE);
+        if (progressCallback) progressCallback(100);
         return {};
     }
 
-    auto total_time_points = static_cast<size_t>(total_frame_count);
-    size_t processed_time_points = 0;
+    if (params->use_parallel_processing && params->batch_size > 1) {
+        // --- Producer-Consumer Parallel Processing ---
 
-    // Process frames using producer-consumer pattern for parallel processing
-    if (typed_params->use_parallel_processing && typed_params->batch_size > 1) {
+        // BUG FIX: The original code was not thread-safe if MediaData is not.
+        // This mutex protects access to media_data from the producer thread.
+        std::mutex media_data_mutex;
 
-        auto max_threads = omp_get_max_threads();
-        // Reserve threads for producer, use rest for OpenMP processing
-        int omp_threads = std::max(1, max_threads - typed_params->producer_threads);
+        // The consumer will update the final LineData object. This mutex protects it.
+        std::mutex results_mutex;
+
+        // Define the producer logic as a lambda function.
+        auto producer = [&](size_t frame_idx) -> std::optional<MediaFrame> {
+            std::vector<uint8_t> image_data;
+            try {
+                // Lock the mutex before accessing media_data
+                std::lock_guard<std::mutex> lock(media_data_mutex);
+                if (params->use_processed_data) {
+                    image_data = media_data->getProcessedData8(frame_idx);
+                } else {
+                    image_data = media_data->getRawData8(frame_idx);
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error producing frame " << frame_idx << ": " << e.what() << std::endl;
+                return std::nullopt; // Signal failure for this item
+            }
+
+            if (image_data.empty()) {
+                return std::nullopt; // Can happen if a frame is invalid
+            }
+            return MediaFrame{std::move(image_data), static_cast<int>(frame_idx)};
+        };
+
+        // Define the consumer logic as a lambda function.
+        auto consumer = [&](std::vector<MediaFrame> batch) {
+            std::vector<std::vector<uint8_t>> batch_images;
+            std::vector<int> batch_times;
+            batch_images.reserve(batch.size());
+            batch_times.reserve(batch.size());
+
+            for (auto& frame : batch) {
+                batch_images.push_back(std::move(frame.image_data));
+                batch_times.push_back(frame.time_index);
+            }
+
+            auto batch_results = trace_multiple_images(*tracker,
+                                                       batch_images,
+                                                       media_data->getImageSize(),
+                                                       params->clip_length,
+                                                       params->use_mask_data ? params->mask_data.get() : nullptr,
+                                                       batch_times);
+            
+            // Lock the mutex to safely update the shared results container
+            std::lock_guard<std::mutex> lock(results_mutex);
+            for (size_t j = 0; j < batch_results.size(); ++j) {
+                for (auto const& line : batch_results[j]) {
+                    traced_whiskers->addAtTime(TimeFrameIndex(batch_times[j]), line, false);
+                }
+            }
+        };
+
+        // Set OpenMP threads. For an application-wide effect, this is okay.
+        // For library code, using the 'num_threads' clause on the pragma is safer.
+        int max_threads = omp_get_max_threads();
+        int omp_threads = std::max(1, max_threads - 1); // Reserve 1 core for producer
         omp_set_num_threads(omp_threads);
-        std::cout << "Total CPU cores: " << max_threads 
-                  << ", OpenMP threads: " << omp_threads 
-                  << ", Producer threads: " << typed_params->producer_threads << std::endl;
+        std::cout << "Using " << omp_threads << " OpenMP threads for processing." << std::endl;
 
-        // Create frame queue for producer-consumer pattern
-        FrameQueue frame_queue(typed_params->queue_size);
-        
-        // Atomic counter for progress tracking
-        std::atomic<int> progress_atomic{0};
-        
-        // Start producer thread
-        std::thread producer([&]() {
-            producer_thread(media_data, frame_queue, typed_params, 
-                          static_cast<int>(total_time_points), progress_atomic);
-        });
-        
-        // Consumer processing (runs in main thread)
-        consumer_processing(frame_queue, *tracker_ptr, media_data->getImageSize(),
-                          typed_params, traced_whiskers, progress_atomic,
-                          static_cast<int>(total_time_points), progressCallback);
-        
-        // Wait for producer to finish
-        producer.join();
-        
-        processed_time_points = total_time_points;
-        
+        // Execute the pipeline
+        run_pipeline<MediaFrame>(
+            params->queue_size,
+            total_frame_count,
+            producer,
+            consumer,
+            params->batch_size,
+            progressCallback);
+
     } else {
         // Process frames one by one (original sequential approach)
-        for (size_t time = 0; time < total_time_points; ++time) {
+        for (size_t time = 0; time < total_frame_count; ++time) {
             std::vector<uint8_t> image_data;
 
-            if (typed_params->use_processed_data) {
+            if (params->use_processed_data) {
                 image_data = media_data->getProcessedData8(static_cast<int>(time));
             } else {
                 image_data = media_data->getRawData8(static_cast<int>(time));
             }
 
             if (!image_data.empty()) {
-                auto whisker_lines = trace_single_image(*tracker_ptr, image_data, media_data->getImageSize(),
-                                                        typed_params->clip_length,
-                                                        typed_params->use_mask_data ? typed_params->mask_data.get() : nullptr,
+                auto whisker_lines = trace_single_image(*tracker, image_data, media_data->getImageSize(),
+                                                        params->clip_length,
+                                                        params->use_mask_data ? params->mask_data.get() : nullptr,
                                                         static_cast<int>(time));
 
                 for (auto const & line: whisker_lines) {
@@ -465,9 +406,8 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
                 }
             }
 
-            processed_time_points++;
             if (progressCallback) {
-                int const current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * PROGRESS_SCALE));
+                int const current_progress = static_cast<int>(std::round(static_cast<double>(time) / static_cast<double>(total_frame_count) * PROGRESS_SCALE));
                 progressCallback(current_progress);
             }
         }
@@ -477,7 +417,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const & dataVar
 
     std::cout << "WhiskerTracingOperation executed successfully. Traced "
               << traced_whiskers->GetAllLinesAsRange().size() << " whiskers across "
-              << total_frame_count << " time points." << std::endl;
+              << total_frame_count << " frames." << std::endl;
 
     return traced_whiskers;
 }

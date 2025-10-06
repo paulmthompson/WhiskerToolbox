@@ -46,6 +46,12 @@ struct Observation {
 struct Assignment {
     // Maps Observation index to Prediction index.
     std::map<int, int> observation_to_prediction;
+    
+    // Cost information for each assignment (for identity confidence tracking)
+    std::map<int, double> assignment_costs;
+    
+    // Maximum cost threshold used for this assignment
+    double cost_threshold = 1.0;
 };
 
 }// namespace StateEstimation

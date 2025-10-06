@@ -12,6 +12,14 @@
 #include <QMenu>
 #include <QAction>
 #include <QMessageBox>
+#include <QCheckBox>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QListWidget>
+#include <QListWidgetItem>
+#include <QDialogButtonBox>
 
 GroupManagementWidget::GroupManagementWidget(GroupManager * group_manager, QWidget * parent)
     : QWidget(parent),
@@ -41,6 +49,11 @@ GroupManagementWidget::GroupManagementWidget(GroupManager * group_manager, QWidg
             this, &GroupManagementWidget::createNewGroup);
     connect(m_ui->removeButton, &QPushButton::clicked,
             this, &GroupManagementWidget::removeSelectedGroup);
+    
+    // Enable context menu
+    m_ui->groupsTable->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_ui->groupsTable, &QTableWidget::customContextMenuRequested,
+            this, &GroupManagementWidget::showContextMenu);
 
     // Initial table refresh
     refreshTable();
@@ -57,11 +70,17 @@ void GroupManagementWidget::setupUI() {
     header->setStretchLastSection(false);
     header->setSectionResizeMode(0, QHeaderView::Stretch);// Name column stretches
     header->setSectionResizeMode(1, QHeaderView::Fixed);  // Color column fixed width
-    header->setSectionResizeMode(2, QHeaderView::Fixed);  // Members column fixed width
+    header->setSectionResizeMode(2, QHeaderView::Fixed);  // Visible column fixed width
+    header->setSectionResizeMode(3, QHeaderView::Fixed);  // Members column fixed width
     m_ui->groupsTable->setColumnWidth(1, 50);             // Color button column width
-    m_ui->groupsTable->setColumnWidth(2, 60);             // Members column width
+    m_ui->groupsTable->setColumnWidth(2, 50);             // Visible checkbox column width
+    m_ui->groupsTable->setColumnWidth(3, 60);             // Members column width
 
     m_ui->groupsTable->verticalHeader()->setVisible(false);
+    
+    // Enable multi-selection for group operations
+    m_ui->groupsTable->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_ui->groupsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 }
 
 void GroupManagementWidget::refreshTable() {
@@ -99,12 +118,17 @@ void GroupManagementWidget::addGroupRow(int group_id, int row) {
     updateColorButton(color_button, group.value().color);
     m_ui->groupsTable->setCellWidget(row, 1, color_button);
 
+    // Visible column
+    QCheckBox * visibility_checkbox = createVisibilityCheckbox(group_id);
+    visibility_checkbox->setChecked(group.value().visible);
+    m_ui->groupsTable->setCellWidget(row, 2, visibility_checkbox);
+
     // Members column
     int const member_count = m_group_manager->getGroupMemberCount(group_id);
     auto * members_item = new QTableWidgetItem(QString::number(member_count));
     members_item->setFlags(members_item->flags() & ~Qt::ItemIsEditable);// Make read-only
     members_item->setTextAlignment(Qt::AlignCenter);
-    m_ui->groupsTable->setItem(row, 2, members_item);
+    m_ui->groupsTable->setItem(row, 3, members_item);
 }
 
 QPushButton * GroupManagementWidget::createColorButton(int group_id) {
@@ -117,6 +141,17 @@ QPushButton * GroupManagementWidget::createColorButton(int group_id) {
             this, &GroupManagementWidget::onColorButtonClicked);
 
     return button;
+}
+
+QCheckBox * GroupManagementWidget::createVisibilityCheckbox(int group_id) {
+    auto * checkbox = new QCheckBox();
+    checkbox->setProperty("group_id", group_id);
+    checkbox->setText(""); // No text, just the checkbox
+
+    connect(checkbox, &QCheckBox::toggled,
+            this, &GroupManagementWidget::onVisibilityToggled);
+
+    return checkbox;
 }
 
 void GroupManagementWidget::updateColorButton(QPushButton * button, QColor const & color) {
@@ -178,8 +213,14 @@ void GroupManagementWidget::onGroupModified(int group_id) {
                     updateColorButton(color_button, group.value().color);
                 }
 
+                // Update visibility checkbox
+                auto * visibility_checkbox = qobject_cast<QCheckBox *>(m_ui->groupsTable->cellWidget(row, 2));
+                if (visibility_checkbox) {
+                    visibility_checkbox->setChecked(group.value().visible);
+                }
+
                 // Update member count
-                QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 2);
+                QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 3);
                 if (members_item) {
                     int const member_count = m_group_manager->getGroupMemberCount(group_id);
                     members_item->setText(QString::number(member_count));
@@ -195,7 +236,7 @@ void GroupManagementWidget::onPointAssignmentsChanged(std::unordered_set<int> co
         for (int const group_id: affected_groups) {
             int const row = findRowForGroupId(group_id);
             if (row >= 0) {
-                QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 2);
+                QTableWidgetItem * members_item = m_ui->groupsTable->item(row, 3);
                 if (members_item) {
                     int const member_count = m_group_manager->getGroupMemberCount(group_id);
                     members_item->setText(QString::number(member_count));
@@ -246,6 +287,16 @@ void GroupManagementWidget::onColorButtonClicked() {
     }
 }
 
+void GroupManagementWidget::onVisibilityToggled(bool visible) {
+    auto * checkbox = qobject_cast<QCheckBox *>(sender());
+    if (!checkbox) {
+        return;
+    }
+
+    int const group_id = checkbox->property("group_id").toInt();
+    m_group_manager->setGroupVisibility(group_id, visible);
+}
+
 void GroupManagementWidget::onSelectionChanged() {
     bool const has_selection = m_ui->groupsTable->currentRow() >= 0;
     m_ui->removeButton->setEnabled(has_selection);
@@ -270,63 +321,172 @@ void GroupManagementWidget::contextMenuEvent(QContextMenuEvent * event) {
 }
 
 void GroupManagementWidget::showContextMenu(QPoint const & pos) {
-    // Get the group at the current position
-    int const current_row = m_ui->groupsTable->currentRow();
-    if (current_row < 0) {
-        return;
-    }
-
-    int const group_id = getGroupIdForRow(current_row);
-    if (group_id == -1) {
+    // Get selected rows
+    auto selected_rows = m_ui->groupsTable->selectionModel()->selectedRows();
+    if (selected_rows.isEmpty()) {
         return;
     }
 
     // Create context menu
     QMenu context_menu(this);
     
-    // Add delete group and entities action
-    QAction * delete_action = context_menu.addAction("Delete Group and All Data");
+    QAction * merge_action = nullptr;
+    QAction * delete_action = nullptr;
+    
+    // Add merge option if multiple groups are selected
+    if (selected_rows.size() >= 2) {
+        merge_action = context_menu.addAction("Merge Groups");
+        merge_action->setIcon(QIcon::fromTheme("edit-merge"));
+        
+        context_menu.addSeparator();
+    }
+    
+    // Add delete group and entities action (for single or multiple selection)
+    delete_action = context_menu.addAction("Delete Group and All Data");
     delete_action->setIcon(QIcon::fromTheme("edit-delete"));
     
     // Show the menu and handle the action
-    QAction * selected_action = context_menu.exec(pos);
-    if (selected_action == delete_action) {
+    QAction * selected_action = context_menu.exec(m_ui->groupsTable->mapToGlobal(pos));
+    if (selected_action == merge_action && selected_rows.size() >= 2) {
+        showMergeDialog();
+    } else if (selected_action == delete_action) {
         deleteSelectedGroupAndEntities();
     }
 }
 
 void GroupManagementWidget::deleteSelectedGroupAndEntities() {
-    int const current_row = m_ui->groupsTable->currentRow();
-    if (current_row < 0) {
+    // Get selected rows
+    auto selected_rows = m_ui->groupsTable->selectionModel()->selectedRows();
+    if (selected_rows.isEmpty()) {
         return;
     }
 
-    int const group_id = getGroupIdForRow(current_row);
-    if (group_id == -1) {
+    // Get group information for selected rows
+    std::vector<std::pair<int, QString>> selected_groups;
+    int total_members = 0;
+    
+    for (auto const & index : selected_rows) {
+        int const group_id = getGroupIdForRow(index.row());
+        if (group_id != -1) {
+            auto group = m_group_manager->getGroup(group_id);
+            if (group.has_value()) {
+                selected_groups.emplace_back(group_id, group->name);
+                total_members += m_group_manager->getGroupMemberCount(group_id);
+            }
+        }
+    }
+
+    if (selected_groups.empty()) {
         return;
     }
 
-    // Get group info for confirmation dialog
-    auto group = m_group_manager->getGroup(group_id);
-    if (!group.has_value()) {
-        return;
+    // Create confirmation message
+    QString message;
+    if (selected_groups.size() == 1) {
+        message = QString("Are you sure you want to delete group '%1' and all %2 entities in it?\n\nThis action cannot be undone.")
+                    .arg(selected_groups[0].second)
+                    .arg(total_members);
+    } else {
+        QString group_names;
+        for (size_t i = 0; i < selected_groups.size(); ++i) {
+            if (i > 0) group_names += ", ";
+            group_names += "'" + selected_groups[i].second + "'";
+        }
+        message = QString("Are you sure you want to delete %1 groups (%2) and all %3 entities in them?\n\nThis action cannot be undone.")
+                    .arg(selected_groups.size())
+                    .arg(group_names)
+                    .arg(total_members);
     }
-
-    int const member_count = m_group_manager->getGroupMemberCount(group_id);
     
     // Show confirmation dialog
     QMessageBox::StandardButton reply = QMessageBox::question(
         this,
-        "Delete Group and Data",
-        QString("Are you sure you want to delete group '%1' and all %2 entities in it?\n\nThis action cannot be undone.")
-            .arg(group.value().name)
-            .arg(member_count),
+        "Delete Groups and Data",
+        message,
         QMessageBox::Yes | QMessageBox::No,
         QMessageBox::No
     );
 
     if (reply == QMessageBox::Yes) {
-        // Delete the group and all its entities
-        m_group_manager->deleteGroupAndEntities(group_id);
+        // Delete all selected groups
+        for (auto const & [group_id, group_name] : selected_groups) {
+            m_group_manager->deleteGroupAndEntities(group_id);
+        }
+    }
+}
+
+
+void GroupManagementWidget::showMergeDialog() {
+    // Get selected rows
+    auto selected_rows = m_ui->groupsTable->selectionModel()->selectedRows();
+    if (selected_rows.size() < 2) {
+        return;
+    }
+
+    // Get group information for selected rows
+    std::vector<std::pair<int, QString>> selected_groups;
+    for (auto const & index : selected_rows) {
+        int const group_id = getGroupIdForRow(index.row());
+        if (group_id != -1) {
+            auto group = m_group_manager->getGroup(group_id);
+            if (group.has_value()) {
+                selected_groups.emplace_back(group_id, group->name);
+            }
+        }
+    }
+
+    if (selected_groups.size() < 2) {
+        return;
+    }
+
+    // Create merge dialog
+    QDialog merge_dialog(this);
+    merge_dialog.setWindowTitle("Merge Groups");
+    merge_dialog.setModal(true);
+    
+    QVBoxLayout * layout = new QVBoxLayout(&merge_dialog);
+    
+    QLabel * instruction_label = new QLabel("Select the target group to merge into:");
+    layout->addWidget(instruction_label);
+    
+    QListWidget * group_list = new QListWidget();
+    for (auto const & [group_id, group_name] : selected_groups) {
+        QListWidgetItem * item = new QListWidgetItem(group_name);
+        item->setData(Qt::UserRole, group_id);
+        group_list->addItem(item);
+    }
+    group_list->setSelectionMode(QAbstractItemView::SingleSelection);
+    layout->addWidget(group_list);
+    
+    QHBoxLayout * button_layout = new QHBoxLayout();
+    QPushButton * cancel_button = new QPushButton("Cancel");
+    QPushButton * merge_button = new QPushButton("Merge");
+    merge_button->setDefault(true);
+    
+    button_layout->addWidget(cancel_button);
+    button_layout->addWidget(merge_button);
+    layout->addLayout(button_layout);
+    
+    // Connect buttons
+    connect(cancel_button, &QPushButton::clicked, &merge_dialog, &QDialog::reject);
+    connect(merge_button, &QPushButton::clicked, &merge_dialog, &QDialog::accept);
+    
+    // Show dialog
+    if (merge_dialog.exec() == QDialog::Accepted) {
+        auto selected_items = group_list->selectedItems();
+        if (!selected_items.isEmpty()) {
+            int const target_group_id = selected_items.first()->data(Qt::UserRole).toInt();
+            
+            // Collect source group IDs (all except target)
+            std::vector<int> source_group_ids;
+            for (auto const & [group_id, group_name] : selected_groups) {
+                if (group_id != target_group_id) {
+                    source_group_ids.push_back(group_id);
+                }
+            }
+            
+            // Perform merge
+            m_group_manager->mergeGroups(target_group_id, source_group_ids);
+        }
     }
 }

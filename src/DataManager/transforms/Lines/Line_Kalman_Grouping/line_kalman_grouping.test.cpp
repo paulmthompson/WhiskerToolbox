@@ -274,7 +274,8 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         LineKalmanGroupingParameters strict_params(group_manager.get());
         strict_params.max_assignment_distance = 10.0; // Very strict
         strict_params.process_noise_position = 5.0;
-        strict_params.measurement_noise = 2.0;
+        strict_params.measurement_noise_position = 2.0;
+        strict_params.measurement_noise_length = 5.0;
         
         auto result1 = lineKalmanGrouping(line_data, &strict_params);
         
@@ -300,7 +301,8 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         LineKalmanGroupingParameters lenient_params(group_manager.get());
         lenient_params.max_assignment_distance = 100.0; // Very lenient
         lenient_params.process_noise_position = 20.0;
-        lenient_params.measurement_noise = 10.0;
+        lenient_params.measurement_noise_position = 10.0;
+        lenient_params.measurement_noise_length = 20.0;
         
         auto result2 = lineKalmanGrouping(line_data, &lenient_params);
         
@@ -312,6 +314,87 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         
         // Lenient parameters should generally result in more assignments
         REQUIRE(grouped_lenient.size() >= grouped_strict.size());
+    }
+    
+    SECTION("Test auto-estimation parameters") {
+        // Test with auto-estimation enabled
+        LineKalmanGroupingParameters auto_params(group_manager.get());
+        auto_params.auto_estimate_static_noise = true;
+        auto_params.auto_estimate_measurement_noise = true;
+        auto_params.static_noise_percentile = 0.1;
+        auto_params.verbose_output = true; // To see estimation output
+        
+        auto result = lineKalmanGrouping(line_data, &auto_params);
+        REQUIRE(result == line_data);
+        
+        // Should still make some assignments
+        std::unordered_set<EntityId> grouped;
+        for (auto group_id : {group1_id, group2_id}) {
+            auto entities_in_group = group_manager->getEntitiesInGroup(group_id);
+            grouped.insert(entities_in_group.begin(), entities_in_group.end());
+        }
+        
+        // At minimum, ground truth should still be grouped
+        REQUIRE(grouped.size() >= ground_truth_frames.size() * 2);
+    }
+    
+    SECTION("Test static feature noise scale parameter") {
+        // Test with different static noise scales
+        LineKalmanGroupingParameters params1(group_manager.get());
+        params1.static_feature_process_noise_scale = 0.001; // Very small
+        params1.verbose_output = false;
+        
+        auto result1 = lineKalmanGrouping(line_data, &params1);
+        
+        std::unordered_set<EntityId> grouped1;
+        for (auto group_id : {group1_id, group2_id}) {
+            auto entities_in_group = group_manager->getEntitiesInGroup(group_id);
+            grouped1.insert(entities_in_group.begin(), entities_in_group.end());
+        }
+        
+        // Reset groups
+        group_manager->clearGroup(group1_id);
+        group_manager->clearGroup(group2_id);
+        for (int frame : ground_truth_frames) {
+            group_manager->addEntityToGroup(group1_id, line1_entities[frame]);
+            group_manager->addEntityToGroup(group2_id, line2_entities[frame]);
+        }
+        
+        // Test with larger static noise scale
+        LineKalmanGroupingParameters params2(group_manager.get());
+        params2.static_feature_process_noise_scale = 0.1; // Larger
+        params2.verbose_output = false;
+        
+        auto result2 = lineKalmanGrouping(line_data, &params2);
+        
+        std::unordered_set<EntityId> grouped2;
+        for (auto group_id : {group1_id, group2_id}) {
+            auto entities_in_group = group_manager->getEntitiesInGroup(group_id);
+            grouped2.insert(entities_in_group.begin(), entities_in_group.end());
+        }
+        
+        // Both should make some assignments
+        REQUIRE(grouped1.size() > ground_truth_frames.size() * 2);
+        REQUIRE(grouped2.size() > ground_truth_frames.size() * 2);
+    }
+    
+    SECTION("Test per-feature measurement noise") {
+        LineKalmanGroupingParameters params(group_manager.get());
+        params.measurement_noise_position = 2.0; // Low noise for position
+        params.measurement_noise_length = 20.0;  // High noise for length
+        params.verbose_output = false;
+        
+        auto result = lineKalmanGrouping(line_data, &params);
+        REQUIRE(result == line_data);
+        
+        // Should make assignments primarily based on position, not length
+        std::unordered_set<EntityId> grouped;
+        for (auto group_id : {group1_id, group2_id}) {
+            auto entities_in_group = group_manager->getEntitiesInGroup(group_id);
+            grouped.insert(entities_in_group.begin(), entities_in_group.end());
+        }
+        
+        REQUIRE(grouped.size() > ground_truth_frames.size() * 2);
     }
 }
 

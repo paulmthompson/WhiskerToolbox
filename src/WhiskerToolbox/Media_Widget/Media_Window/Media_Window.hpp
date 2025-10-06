@@ -312,6 +312,7 @@ private:
     // Group-aware color helpers
     [[nodiscard]] QColor _getGroupAwareColor(EntityId entity_id, QColor const & default_color) const;
     [[nodiscard]] QRgb _getGroupAwareColorRgb(EntityId entity_id, QRgb default_color) const;
+    [[nodiscard]] bool _isEntityGroupVisible(EntityId entity_id) const;
 
     // Selection and context menu helpers
     EntityId _findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);

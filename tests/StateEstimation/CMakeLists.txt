@@ -20,6 +20,7 @@ add_executable(test_StateEstimation
      ${CMAKE_SOURCE_DIR}/src/StateEstimation/Assignment/AssignmentProblem.test.cpp
      ${CMAKE_SOURCE_DIR}/src/StateEstimation/Features/LineFeatureExtractor.test.cpp
      ${CMAKE_SOURCE_DIR}/src/StateEstimation/Kalman/KalmanFilter.test.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/test_composite_feature_extractor.cpp
 )
 
 target_link_libraries(test_StateEstimation PRIVATE 

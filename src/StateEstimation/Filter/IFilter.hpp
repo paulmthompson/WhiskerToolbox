@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace StateEstimation {
@@ -43,6 +44,15 @@ public:
      */
     virtual FilterState update(FilterState const & predicted_state, Measurement const & measurement) = 0;
 
+    /**
+     * @brief Updates the filter's state with scaled measurement noise.
+     * @param predicted_state The state predicted by the most recent call to `predict()`.
+     * @param measurement The new observation, converted into a feature vector.
+     * @param noise_scale_factor Factor to scale the measurement noise matrix R.
+     * @return The updated (corrected) state (posterior estimate).
+     */
+    virtual FilterState update(FilterState const & predicted_state, Measurement const & measurement, double noise_scale_factor) = 0;
+
 
     /**
      * @brief Gets the current state of the filter.
@@ -64,6 +74,19 @@ public:
     virtual std::vector<FilterState> smooth(std::vector<FilterState> const & forward_states) = 0;
 
     /**
+     * @brief Indicates whether the filter supports backward one-step prediction.
+     * @return true if backward prediction is supported.
+     */
+    virtual bool supportsBackwardPrediction() const { return false; }
+
+    /**
+     * @brief Predict the previous-time state given the current state.
+     * @param current_state The current state estimate.
+     * @return The predicted previous state if supported; std::nullopt otherwise.
+     */
+    virtual std::optional<FilterState> predictPrevious(FilterState const & current_state) { return std::nullopt; }
+
+    /**
      * @brief Clones the filter object.
      *
      * This is essential for the Tracker, which will hold a "prototype" filter and clone it
@@ -72,6 +95,8 @@ public:
      * @return A std::unique_ptr to a new instance of the filter with the same configuration.
      */
     virtual std::unique_ptr<IFilter> clone() const = 0;
+
+    virtual std::unique_ptr<IFilter> createBackwardFilter() const = 0;
 };
 
 }// namespace StateEstimation

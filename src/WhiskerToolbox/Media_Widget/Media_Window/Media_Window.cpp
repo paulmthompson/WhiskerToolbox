@@ -1039,6 +1039,11 @@ void Media_Window::_plotLineData() {
                 continue;
             }
 
+            // Check if the entity's group is visible
+            if (!_isEntityGroupVisible(entity_id)) {
+                continue; // Skip rendering this entity if its group is not visible
+            }
+
             // Use group-aware color if available, otherwise use default plot color
             QColor line_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
 
@@ -1406,6 +1411,11 @@ void Media_Window::_plotPointData() {
         for (size_t i = 0; i < count; ++i) {
             auto const & single_point = pointData[i];
             EntityId entity_id = entityIds[i];
+            
+            // Check if the entity's group is visible
+            if (!_isEntityGroupVisible(entity_id)) {
+                continue; // Skip rendering this entity if its group is not visible
+            }
             
             float const x_pos = single_point.x * xAspect;
             float const y_pos = single_point.y * yAspect;
@@ -1985,6 +1995,14 @@ QColor Media_Window::_getGroupAwareColor(EntityId entity_id, QColor const & defa
     }
     
     return _group_manager->getEntityColor(entity_id, default_color);
+}
+
+bool Media_Window::_isEntityGroupVisible(EntityId entity_id) const {
+    if (!_group_manager || entity_id == 0) {
+        return true; // Entities not in a group or without group manager are always visible
+    }
+    
+    return _group_manager->isEntityGroupVisible(entity_id);
 }
 
 QRgb Media_Window::_getGroupAwareColorRgb(EntityId entity_id, QRgb default_color) const {

@@ -34,6 +34,8 @@ public:
             std::vector<Prediction> const & predictions,
             std::vector<Observation> const & observations,
             std::map<EntityId, FeatureCache> const & feature_cache) override;
+    
+    double getCostThreshold() const override { return max_assignment_distance_; }
 
     std::unique_ptr<IAssigner> clone() const override;
 

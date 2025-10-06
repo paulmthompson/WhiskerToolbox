@@ -30,11 +30,18 @@ public:
 
     FilterState update(FilterState const & predicted_state, Measurement const & measurement) override;
 
+    FilterState update(FilterState const & predicted_state, Measurement const & measurement, double noise_scale_factor) override;
+
     std::vector<FilterState> smooth(std::vector<FilterState> const & forward_states) override;
 
     FilterState getState() const override;
 
     std::unique_ptr<IFilter> clone() const override;
+
+    std::unique_ptr<IFilter> createBackwardFilter() const override;
+
+    bool supportsBackwardPrediction() const override { return true; }
+    //std::optional<FilterState> predictPrevious(FilterState const & current_state) override;
 
 
 private:
@@ -47,6 +54,8 @@ private:
     // Filter state
     Eigen::VectorXd x_;// State estimate vector
     Eigen::MatrixXd P_;// State covariance matrix
+    Eigen::MatrixXd F_inv_;// Cached inverse for backward prediction (if invertible)
+    Eigen::MatrixXd Q_backward_;// Process noise for backward model
 };
 
 }// namespace StateEstimation

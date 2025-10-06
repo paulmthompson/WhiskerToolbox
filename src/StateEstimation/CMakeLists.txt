@@ -1,4 +1,5 @@
 find_package(Eigen3 CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 set(STATE_ESTIMATION_SOURCES
     StateEstimation.hpp
@@ -49,6 +50,7 @@ target_link_libraries(StateEstimation PUBLIC
 )
 
 target_link_libraries(StateEstimation PRIVATE Eigen3::Eigen)
+target_link_libraries(StateEstimation PUBLIC spdlog::spdlog_header_only)
 
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
