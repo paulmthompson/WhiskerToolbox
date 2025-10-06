@@ -329,7 +329,7 @@ void MainWindow::_updateFrameCount() {
 
     if (_data_manager->getTime()->getTotalFrameCount() != media->getTotalFrameCount()) {
 
-        auto frame_count = media->getTotalFrameCount() - 1;
+        auto frame_count = media->getTotalFrameCount();
 
         std::cout << "There is a mismatch between the time in the time vector and number of samples in the video"
                   << "The video has " << frame_count
