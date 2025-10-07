@@ -473,9 +473,6 @@ void ParameterFactory::initializeDefaultSetters() {
     registerBasicParameter<LineKalmanGroupingParameters, double>(
             "Group Lines using Kalman Filtering", "initial_velocity_uncertainty", &LineKalmanGroupingParameters::initial_velocity_uncertainty);
 
-    registerBasicParameter<LineKalmanGroupingParameters, double>(
-            "Group Lines using Kalman Filtering", "max_assignment_distance", &LineKalmanGroupingParameters::max_assignment_distance);
-
     registerBasicParameter<LineKalmanGroupingParameters, bool>(
             "Group Lines using Kalman Filtering", "verbose_output", &LineKalmanGroupingParameters::verbose_output);
 }

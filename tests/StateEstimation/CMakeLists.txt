@@ -9,6 +9,7 @@ if (WIN32)
 endif()
 
 find_package(Eigen3 CONFIG REQUIRED)
+find_package(Boost COMPONENTS random serialization)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -28,6 +29,9 @@ Catch2::Catch2WithMain
 NEURALYZER_GEOMETRY
 StateEstimation
 Eigen3::Eigen
+Boost::random
+Boost::serialization
+ortools::ortools
 )
 
 target_include_directories(test_StateEstimation PRIVATE

@@ -194,7 +194,6 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         // Create parameters with verbose output for debugging
         LineKalmanGroupingParameters params(group_manager.get());
         params.verbose_output = true; // Enable for debugging
-        params.max_assignment_distance = 100.0; // More lenient threshold
         
         // Debug: Check initial state
         auto all_entities_before = line_data->getAllEntityIds();
@@ -272,7 +271,6 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
     SECTION("Test with different parameter settings") {
         // Test with stricter distance threshold
         LineKalmanGroupingParameters strict_params(group_manager.get());
-        strict_params.max_assignment_distance = 10.0; // Very strict
         strict_params.process_noise_position = 5.0;
         strict_params.measurement_noise_position = 2.0;
         strict_params.measurement_noise_length = 5.0;
@@ -299,7 +297,6 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         
         // Test with lenient distance threshold
         LineKalmanGroupingParameters lenient_params(group_manager.get());
-        lenient_params.max_assignment_distance = 100.0; // Very lenient
         lenient_params.process_noise_position = 20.0;
         lenient_params.measurement_noise_position = 10.0;
         lenient_params.measurement_noise_length = 20.0;

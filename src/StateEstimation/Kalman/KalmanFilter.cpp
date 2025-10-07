@@ -67,24 +67,23 @@ std::vector<FilterState> KalmanFilter::smooth(std::vector<FilterState> const & f
     }
 
     std::vector<FilterState> smoothed_states = forward_states;
-    FilterState & last_smoothed = smoothed_states.back();
 
-    // The backward pass
+    // The backward pass (Rauch-Tung-Striebel smoother)
+    // Propagate information backward from k+1 to k
     for (int k = static_cast<int>(forward_states.size()) - 2; k >= 0; --k) {
-        FilterState const & prev_forward = forward_states[k];
+        FilterState const & fwd_k = forward_states[k];
+        FilterState const & smoothed_k_plus_1 = smoothed_states[k + 1];
 
-        // Prediction for the next state based on the previous forward state
-        Eigen::VectorXd x_pred_next = F_ * prev_forward.state_mean;
-        Eigen::MatrixXd P_pred_next = F_ * prev_forward.state_covariance * F_.transpose() + Q_;
+        // Prediction for k+1 based on forward estimate at k
+        Eigen::VectorXd x_pred_k_plus_1 = F_ * fwd_k.state_mean;
+        Eigen::MatrixXd P_pred_k_plus_1 = F_ * fwd_k.state_covariance * F_.transpose() + Q_;
 
-        // Smoother gain
-        Eigen::MatrixXd Ck = prev_forward.state_covariance * F_.transpose() * P_pred_next.inverse();
+        // Smoother gain: C_k = P_k * F^T * P_pred^{-1}
+        Eigen::MatrixXd Ck = fwd_k.state_covariance * F_.transpose() * P_pred_k_plus_1.inverse();
 
-        // Update the state and covariance
-        smoothed_states[k].state_mean = prev_forward.state_mean + Ck * (last_smoothed.state_mean - x_pred_next);
-        smoothed_states[k].state_covariance = prev_forward.state_covariance + Ck * (last_smoothed.state_covariance - P_pred_next) * Ck.transpose();
-
-        last_smoothed = smoothed_states[k];
+        // Smoothed estimate at k incorporating information from future (k+1)
+        smoothed_states[k].state_mean = fwd_k.state_mean + Ck * (smoothed_k_plus_1.state_mean - x_pred_k_plus_1);
+        smoothed_states[k].state_covariance = fwd_k.state_covariance + Ck * (smoothed_k_plus_1.state_covariance - P_pred_k_plus_1) * Ck.transpose();
     }
 
     return smoothed_states;

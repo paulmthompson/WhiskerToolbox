@@ -120,9 +120,6 @@ std::unique_ptr<TransformParametersBase> LineKalmanGrouping_Widget::getParameter
     params->initial_position_uncertainty = ui->initialPositionUncertaintySpinBox->value();
     params->initial_velocity_uncertainty = ui->initialVelocityUncertaintySpinBox->value();
     
-    // Assignment Parameters
-    params->max_assignment_distance = ui->maxAssignmentDistanceSpinBox->value();
-    
     // Auto-Estimation Parameters
     params->auto_estimate_static_noise = ui->autoEstimateStaticNoiseCheckBox->isChecked();
     params->auto_estimate_measurement_noise = ui->autoEstimateMeasurementNoiseCheckBox->isChecked();

@@ -1,5 +1,6 @@
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+#find_package(ortools CONFIG REQUIRED)
 
 set(STATE_ESTIMATION_SOURCES
     StateEstimation.hpp
@@ -28,6 +29,7 @@ set(STATE_ESTIMATION_SOURCES
     Tracker.cpp
     Common.hpp
     DataSource.hpp
+    MinCostFlowTracker.hpp
 )
 
 # Optional demo/example files (not included in library)
@@ -41,6 +43,7 @@ target_include_directories(StateEstimation PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>  # For Entity/ and TimeFrame/ includes
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+    "$<BUILD_INTERFACE:${ortools_SOURCE_DIR}>"  # For ortools includes
 )
 
 target_link_libraries(StateEstimation PUBLIC
@@ -50,6 +53,7 @@ target_link_libraries(StateEstimation PUBLIC
 )
 
 target_link_libraries(StateEstimation PRIVATE Eigen3::Eigen)
+target_link_libraries(StateEstimation PRIVATE ortools::ortools)
 target_link_libraries(StateEstimation PUBLIC spdlog::spdlog_header_only)
 
 

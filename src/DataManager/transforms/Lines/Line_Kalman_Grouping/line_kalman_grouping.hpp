@@ -4,10 +4,9 @@
 #include "transforms/grouping_transforms.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "Entity/EntityGroupManager.hpp"
-#include "StateEstimation/Tracker.hpp"
+#include "StateEstimation/MinCostFlowTracker.hpp"
 #include "StateEstimation/Kalman/KalmanFilter.hpp"
 #include "StateEstimation/Features/IFeatureExtractor.hpp"
-#include "StateEstimation/Assignment/HungarianAssigner.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <memory>
@@ -65,11 +64,13 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
     double initial_position_uncertainty = 50.0;         // Initial uncertainty in position
     double initial_velocity_uncertainty = 10.0;         // Initial uncertainty in velocity
     
-    // === Assignment Parameters ===
-    double max_assignment_distance = 100.0;             // Maximum Mahalanobis distance for assignment
+    // === Min-Cost Flow Assignment Parameters ===
+    int max_gap_frames = 10;                            // Maximum frames a track can be missing
+    double gap_penalty = 100.0;                         // Cost penalty per missing frame
+    double cost_scale_factor = 100.0;                   // Multiplier for integer conversion
     
     // === Debugging/Validation ===
-    bool verbose_output = false;                         // Enable detailed logging
+    bool verbose_output = false;                        // Enable detailed logging
 };
 
 /**
