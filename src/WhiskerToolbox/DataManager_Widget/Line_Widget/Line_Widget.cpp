@@ -165,6 +165,18 @@ void Line_Widget::_showContextMenu(QPoint const & position) {
 
     add_move_copy_submenus<LineData>(&context_menu, _data_manager.get(), _active_key, move_callback, copy_callback);
 
+    // Add group management options
+    context_menu.addSeparator();
+    QMenu * group_menu = context_menu.addMenu("Group Management");
+    
+    // Add "Move to Group" submenu
+    QMenu * move_to_group_menu = group_menu->addMenu("Move to Group");
+    _populateGroupSubmenu(move_to_group_menu, true);
+    
+    // Add "Remove from Group" action
+    QAction * remove_from_group_action = group_menu->addAction("Remove from Group");
+    connect(remove_from_group_action, &QAction::triggered, this, &Line_Widget::_removeSelectedLinesFromGroup);
+
     // Add separator and existing operations
     context_menu.addSeparator();
     QAction * delete_action = context_menu.addAction("Delete Selected Line");
@@ -746,4 +758,106 @@ void Line_Widget::_populateGroupFilterCombo() {
     for (auto it = groups.begin(); it != groups.end(); ++it) {
         ui->groupFilterCombo->addItem(it.value().name);
     }
+}
+
+void Line_Widget::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
+    if (!_group_manager) {
+        return;
+    }
+    
+    // Get current groups of selected entities to exclude them from the move list
+    std::set<int> current_groups;
+    if (for_moving) {
+        QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+        for (auto const & index : selectedIndexes) {
+            LineTableRow const row_data = _line_table_model->getRowData(index.row());
+            if (row_data.entity_id != 0) {
+                int current_group = _group_manager->getEntityGroup(row_data.entity_id);
+                if (current_group != -1) {
+                    current_groups.insert(current_group);
+                }
+            }
+        }
+    }
+    
+    auto groups = _group_manager->getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        int group_id = it.key();
+        QString group_name = it.value().name;
+        
+        // Skip current groups when moving
+        if (for_moving && current_groups.find(group_id) != current_groups.end()) {
+            continue;
+        }
+        
+        QAction * action = menu->addAction(group_name);
+        connect(action, &QAction::triggered, this, [this, group_id]() {
+            _moveSelectedLinesToGroup(group_id);
+        });
+    }
+}
+
+void Line_Widget::_moveSelectedLinesToGroup(int group_id) {
+    if (!_group_manager) {
+        return;
+    }
+    
+    // Get selected rows
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    if (selectedIndexes.isEmpty()) {
+        return;
+    }
+    
+    // Collect EntityIds from selected rows
+    std::unordered_set<EntityId> entity_ids;
+    for (auto const & index : selectedIndexes) {
+        LineTableRow const row_data = _line_table_model->getRowData(index.row());
+        if (row_data.entity_id != 0) { // Valid entity ID
+            entity_ids.insert(row_data.entity_id);
+        }
+    }
+    
+    if (entity_ids.empty()) {
+        return;
+    }
+    
+    // First, remove entities from their current groups
+    _group_manager->ungroupEntities(entity_ids);
+    
+    // Then, assign entities to the specified group
+    _group_manager->assignEntitiesToGroup(group_id, entity_ids);
+    
+    // Refresh the table to show updated group information
+    updateTable();
+}
+
+void Line_Widget::_removeSelectedLinesFromGroup() {
+    if (!_group_manager) {
+        return;
+    }
+    
+    // Get selected rows
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    if (selectedIndexes.isEmpty()) {
+        return;
+    }
+    
+    // Collect EntityIds from selected rows
+    std::unordered_set<EntityId> entity_ids;
+    for (auto const & index : selectedIndexes) {
+        LineTableRow const row_data = _line_table_model->getRowData(index.row());
+        if (row_data.entity_id != 0) { // Valid entity ID
+            entity_ids.insert(row_data.entity_id);
+        }
+    }
+    
+    if (entity_ids.empty()) {
+        return;
+    }
+    
+    // Remove entities from all groups
+    _group_manager->ungroupEntities(entity_ids);
+    
+    // Refresh the table to show updated group information
+    updateTable();
 }

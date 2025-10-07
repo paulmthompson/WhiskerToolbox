@@ -99,6 +99,9 @@ private:
     void _updateImageSizeDisplay();
     void _populateMediaComboBox();
     void _populateGroupFilterCombo();
+    void _populateGroupSubmenu(QMenu * menu, bool for_moving);
+    void _moveSelectedLinesToGroup(int group_id);
+    void _removeSelectedLinesFromGroup();
 
     /**
      * @brief Get selected frames from the table view
