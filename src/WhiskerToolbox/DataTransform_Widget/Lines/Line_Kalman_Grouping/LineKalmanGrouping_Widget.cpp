@@ -56,6 +56,8 @@ void LineKalmanGrouping_Widget::setupUI() {
 
     // Algorithm Control
     ui->verboseOutputCheckBox->setChecked(false);
+    ui->writePutativeGroupsCheckBox->setChecked(true);
+    ui->putativePrefixLineEdit->setText("Putative:");
 }
 
 void LineKalmanGrouping_Widget::connectSignals() {
@@ -101,6 +103,10 @@ void LineKalmanGrouping_Widget::connectSignals() {
     // Algorithm Control checkboxes
     connect(ui->verboseOutputCheckBox, &QCheckBox::toggled,
             this, &LineKalmanGrouping_Widget::onParametersChanged);
+    connect(ui->writePutativeGroupsCheckBox, &QCheckBox::toggled,
+            this, &LineKalmanGrouping_Widget::onParametersChanged);
+    connect(ui->putativePrefixLineEdit, &QLineEdit::textChanged,
+            this, &LineKalmanGrouping_Widget::onParametersChanged);
 
     // Reset button
     connect(ui->resetDefaultsButton, &QPushButton::clicked,
@@ -137,6 +143,8 @@ std::unique_ptr<TransformParametersBase> LineKalmanGrouping_Widget::getParameter
     // Algorithm Control
     params->verbose_output = ui->verboseOutputCheckBox->isChecked();
     params->cheap_assignment_threshold = ui->cheapLinkageThresholdSpinBox->value();
+    params->write_to_putative_groups = ui->writePutativeGroupsCheckBox->isChecked();
+    params->putative_group_prefix = ui->putativePrefixLineEdit->text().toStdString();
 
     return params;
 }

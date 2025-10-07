@@ -72,6 +72,10 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
 
     // === Debugging/Validation ===
     bool verbose_output = false;// Enable detailed logging
+
+    // === Output Control ===
+    bool write_to_putative_groups = true;           // If true, write results to new putative groups per anchor group
+    std::string putative_group_prefix = "Putative:";// Prefix for new putative groups
 };
 
 /**

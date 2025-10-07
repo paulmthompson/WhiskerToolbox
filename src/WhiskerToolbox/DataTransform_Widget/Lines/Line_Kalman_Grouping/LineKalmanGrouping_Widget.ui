@@ -431,6 +431,40 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="writePutativeGroupsCheckBox">
+        <property name="text">
+         <string>Write results to new putative groups</string>
+        </property>
+        <property name="toolTip">
+         <string>Create new groups per anchor group with putative labels. Existing labels are never overwritten.</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="putativePrefixLayout">
+        <item>
+         <widget class="QLabel" name="putativePrefixLabel">
+          <property name="text">
+           <string>Putative Group Prefix:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="putativePrefixLineEdit">
+          <property name="text">
+           <string>Putative:</string>
+          </property>
+          <property name="toolTip">
+           <string>Prefix used for new putative groups created by the transform.</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
      </layout>
     </widget>
    </item>

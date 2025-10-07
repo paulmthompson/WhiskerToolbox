@@ -361,6 +361,15 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
             std::cout << std::endl;
         }
 
+        // Create putative output group for this anchor group if requested
+        std::optional<GroupId> putative_group_id;
+        if (params->write_to_putative_groups) {
+            auto desc = group_manager->getGroupDescriptor(group_id);
+            std::string base_name = desc ? desc->name : std::string("Group ") + std::to_string(group_id);
+            std::string putative_name = params->putative_group_prefix + base_name;
+            putative_group_id = group_manager->createGroup(putative_name, "Putative labels from Kalman grouping");
+        }
+
         for (size_t i = 0; i + 1 < frames.size(); ++i) {
             TimeFrameIndex interval_start = frames[i];
             TimeFrameIndex interval_end = frames[i + 1];
@@ -382,12 +391,32 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
                           << interval_start.getValue() << " -> " << interval_end.getValue() << std::endl;
             }
 
+            // Exclude already-labeled entities from matching; allow anchors explicitly
+            std::unordered_set<EntityId> excluded_entities;
+            for (auto gid: all_group_ids) {
+                auto ents = group_manager->getEntitiesInGroup(gid);
+                excluded_entities.insert(ents.begin(), ents.end());
+            }
+            std::unordered_set<EntityId> include_entities;// whitelist (anchors at ends)
+            include_entities.insert(start_it->second);
+            include_entities.insert(end_it->second);
+
+            // Map write group: default write back to same anchor group; if putative, write to new group
+            std::map<GroupId, GroupId> write_group_map;
+            if (putative_group_id.has_value()) {
+                write_group_map[group_id] = *putative_group_id;
+            }
+
             [[maybe_unused]] auto smoothed_results = tracker.process(
                     data_source,
                     *group_manager,
                     gt_local,
                     interval_start,
-                    interval_end);
+                    interval_end,
+                    progressCallback,
+                    putative_group_id.has_value() ? &write_group_map : nullptr,
+                    &excluded_entities,
+                    &include_entities);
 
             // Report progress across all group-intervals
             processed_pairs++;

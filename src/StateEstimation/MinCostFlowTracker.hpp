@@ -150,7 +150,10 @@ public:
                                           GroundTruthMap const & ground_truth,
                                           TimeFrameIndex start_frame,
                                           TimeFrameIndex end_frame,
-                                          ProgressCallback progress = nullptr) {
+                                          ProgressCallback progress = nullptr,
+                                          std::map<GroupId, GroupId> const * output_group_ids = nullptr,
+                                          std::unordered_set<EntityId> const * excluded_entities = nullptr,
+                                          std::unordered_set<EntityId> const * include_entities = nullptr) {
         if (_logger) {
             _logger->debug("MCF process: start={} end={}", start_frame.getValue(), end_frame.getValue());
         }
@@ -165,7 +168,13 @@ public:
         }
 
         // 1. --- Build and Solve the Graph ---
-        auto solved_paths = solve_flow_problem(frame_lookup, start_anchors_it->second, end_anchors_it->second, start_frame, end_frame);
+        auto solved_paths = solve_flow_problem(frame_lookup,
+                                               start_anchors_it->second,
+                                               end_anchors_it->second,
+                                               start_frame,
+                                               end_frame,
+                                               excluded_entities,
+                                               include_entities);
 
         if (solved_paths.empty()) {
             if (_logger) _logger->error("Min-cost flow solver failed or found no paths.");
@@ -174,8 +183,16 @@ public:
 
         // 2. --- Update Group Manager with Solved Tracks ---
         for (auto const & [group_id, path]: solved_paths) {
+            GroupId write_group = group_id;
+            if (output_group_ids) {
+                auto it = output_group_ids->find(group_id);
+                if (it != output_group_ids->end()) write_group = it->second;
+            }
             for (auto const & node: path) {
-                group_manager.addEntityToGroup(group_id, node.entity_id);
+                // Never overwrite anchors or any labeled entity: only add unlabeled entities
+                auto groups = group_manager.getGroupsContainingEntity(node.entity_id);
+                if (!groups.empty()) continue;
+                group_manager.addEntityToGroup(write_group, node.entity_id);
             }
         }
 
@@ -321,10 +338,12 @@ private:
             std::map<GroupId, EntityId> const & start_anchors,
             std::map<GroupId, EntityId> const & end_anchors,
             TimeFrameIndex start_frame,
-            TimeFrameIndex end_frame) {
+            TimeFrameIndex end_frame,
+            std::unordered_set<EntityId> const * excluded_entities,
+            std::unordered_set<EntityId> const * include_entities) {
 
         // 1) Build greedy meta-nodes (cheap consecutive links) independent of groups
-        auto meta_nodes = build_meta_nodes(frame_lookup, start_frame, end_frame);
+        auto meta_nodes = build_meta_nodes(frame_lookup, start_frame, end_frame, excluded_entities, include_entities);
 
         std::map<GroupId, Path> all_solved_paths;
 
@@ -486,7 +505,9 @@ private:
     std::vector<MetaNode> build_meta_nodes(
             std::map<TimeFrameIndex, FrameBucket> const & frame_lookup,
             TimeFrameIndex start_frame,
-            TimeFrameIndex end_frame) {
+            TimeFrameIndex end_frame,
+            std::unordered_set<EntityId> const * excluded_entities,
+            std::unordered_set<EntityId> const * include_entities) {
         std::vector<MetaNode> meta_nodes;
         std::set<std::pair<long long, EntityId>> used;// key: (frame, entity)
 
@@ -496,6 +517,12 @@ private:
                 NodeInfo start_info{f, std::get<1>(item)};
                 auto used_key = std::make_pair(static_cast<long long>(f.getValue()), start_info.entity_id);
                 if (used.count(used_key)) continue;
+                if (excluded_entities && excluded_entities->count(start_info.entity_id) > 0) {
+                    // Allow included exceptions (e.g., anchors)
+                    if (!(include_entities && include_entities->count(start_info.entity_id) > 0)) {
+                        continue;
+                    }
+                }
 
                 DataType const * start_data = std::get<0>(item);
                 // Initialize filter for this potential chain
@@ -535,6 +562,11 @@ private:
                         EntityId cand_id = std::get<1>(cand);
                         auto key = std::make_pair(static_cast<long long>(next_frame.getValue()), cand_id);
                         if (used.count(key)) continue;
+                        if (excluded_entities && excluded_entities->count(cand_id) > 0) {
+                            if (!(include_entities && include_entities->count(cand_id) > 0)) {
+                                continue;
+                            }
+                        }
                         DataType const * cand_data = std::get<0>(cand);
                         Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*cand_data);
                         double cost = _filter_prototype ? _cost_function(predicted, obs, 1)

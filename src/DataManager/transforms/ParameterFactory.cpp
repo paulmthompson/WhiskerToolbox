@@ -479,4 +479,10 @@ void ParameterFactory::initializeDefaultSetters() {
     // New: cheap linkage threshold exposed to UI
     registerBasicParameter<LineKalmanGroupingParameters, double>(
             "Group Lines using Kalman Filtering", "cheap_assignment_threshold", &LineKalmanGroupingParameters::cheap_assignment_threshold);
+
+    // New: putative output control
+    registerBasicParameter<LineKalmanGroupingParameters, bool>(
+            "Group Lines using Kalman Filtering", "write_to_putative_groups", &LineKalmanGroupingParameters::write_to_putative_groups);
+    registerBasicParameter<LineKalmanGroupingParameters, std::string>(
+            "Group Lines using Kalman Filtering", "putative_group_prefix", &LineKalmanGroupingParameters::putative_group_prefix);
 }
