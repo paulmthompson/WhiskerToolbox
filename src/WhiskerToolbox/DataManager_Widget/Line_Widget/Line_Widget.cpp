@@ -13,6 +13,7 @@
 #include "IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp"
 #include "IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
+#include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 // Media export functions
 #include "MediaExport/media_export.hpp"
 
@@ -62,6 +63,8 @@ Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
             this, &Line_Widget::_onApplyImageSizeClicked);
     connect(ui->copy_image_size_button, &QPushButton::clicked,
             this, &Line_Widget::_onCopyImageSizeClicked);
+    connect(ui->groupFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &Line_Widget::_onGroupFilterChanged);
 
     // Setup collapsible export section
     ui->export_section->autoSetContentLayout();
@@ -675,4 +678,72 @@ void Line_Widget::_populateMediaComboBox() {
     }
     
     std::cout << "Line_Widget::_populateMediaComboBox: Found " << media_keys.size() << " media keys" << std::endl;
+}
+
+void Line_Widget::setGroupManager(GroupManager * group_manager) {
+    _group_manager = group_manager;
+    _line_table_model->setGroupManager(group_manager);
+    _populateGroupFilterCombo();
+    
+    // Connect to group manager signals to update when groups change
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated,
+                this, &Line_Widget::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupRemoved,
+                this, &Line_Widget::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupModified,
+                this, &Line_Widget::_onGroupChanged);
+    }
+}
+
+void Line_Widget::_onGroupFilterChanged(int index) {
+    if (!_group_manager) {
+        return;
+    }
+    
+    if (index == 0) {
+        // "All Groups" selected
+        _line_table_model->clearGroupFilter();
+    } else {
+        // Specific group selected (index - 1 because index 0 is "All Groups")
+        auto groups = _group_manager->getGroups();
+        auto group_ids = groups.keys();
+        if (index - 1 < group_ids.size()) {
+            int group_id = group_ids[index - 1];
+            _line_table_model->setGroupFilter(group_id);
+        }
+    }
+}
+
+void Line_Widget::_onGroupChanged() {
+    // Store current selection
+    int current_index = ui->groupFilterCombo->currentIndex();
+    
+    // Update the group filter combo box when groups change
+    _populateGroupFilterCombo();
+    
+    // If the previously selected group no longer exists, reset to "All Groups"
+    if (current_index > 0 && current_index >= ui->groupFilterCombo->count()) {
+        ui->groupFilterCombo->setCurrentIndex(0); // "All Groups"
+        _line_table_model->clearGroupFilter();
+    }
+    
+    // Refresh the table to update group names
+    if (!_active_key.empty()) {
+        updateTable();
+    }
+}
+
+void Line_Widget::_populateGroupFilterCombo() {
+    ui->groupFilterCombo->clear();
+    ui->groupFilterCombo->addItem("All Groups");
+    
+    if (!_group_manager) {
+        return;
+    }
+    
+    auto groups = _group_manager->getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        ui->groupFilterCombo->addItem(it.value().name);
+    }
 }

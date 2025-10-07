@@ -27,6 +27,7 @@ class BinaryLineSaver_Widget;
 class QStackedWidget;
 class QComboBox;
 class QCheckBox;
+class GroupManager;
 
 // JSON-based saver configuration - no need for variant types
 using LineSaverConfig = nlohmann::json;
@@ -41,6 +42,7 @@ public:
     void setActiveKey(std::string const & key);
     void removeCallbacks();
     void updateTable();
+    void setGroupManager(GroupManager * group_manager);
 
 signals:
     void frameSelected(int frame_id);
@@ -51,6 +53,7 @@ private:
     LineTableModel * _line_table_model;
     std::string _active_key;
     int _callback_id{-1};
+    GroupManager * _group_manager{nullptr};
 
     // No longer need SaverType enum - use format strings directly
 
@@ -87,12 +90,15 @@ private slots:
     void _onExportMediaFramesCheckboxToggled(bool checked);
     void _onApplyImageSizeClicked();
     void _onCopyImageSizeClicked();
+    void _onGroupFilterChanged(int index);
+    void _onGroupChanged();
 
 private:
     void _initiateSaveProcess(QString const& format, LineSaverConfig const& config);
     bool _performRegistrySave(QString const& format, LineSaverConfig const& config);
     void _updateImageSizeDisplay();
     void _populateMediaComboBox();
+    void _populateGroupFilterCombo();
 
     /**
      * @brief Get selected frames from the table view

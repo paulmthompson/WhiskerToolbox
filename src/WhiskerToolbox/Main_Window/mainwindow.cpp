@@ -79,6 +79,11 @@ MainWindow::MainWindow(QWidget * parent)
 
     // Create the DataManager_Widget 
     _data_manager_widget = new DataManager_Widget(_data_manager, ui->time_scrollbar, this);
+    
+    // Set the GroupManager for the DataManager_Widget
+    if (_group_manager) {
+        _data_manager_widget->setGroupManager(_group_manager.get());
+    }
 
     // Create media widget manager
     _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, this);

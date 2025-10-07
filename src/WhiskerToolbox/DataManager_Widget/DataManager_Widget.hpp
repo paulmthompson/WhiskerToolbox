@@ -17,6 +17,7 @@ class DataManager_Widget;
 
 class DataManager;
 class TimeScrollBar;
+class GroupManager;
 
 class DataManager_Widget : public QScrollArea {
     Q_OBJECT
@@ -27,6 +28,12 @@ public:
     ~DataManager_Widget() override;
 
     void openWidget();// Call
+
+    /**
+     * @brief Set the GroupManager for group functionality
+     * @param group_manager The GroupManager instance
+     */
+    void setGroupManager(GroupManager * group_manager);
 
     /**
      * @brief Clear the currently selected feature and return to no-selection state
@@ -50,6 +57,10 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     QString _highlighted_available_feature;
     std::vector<int> _current_data_callbacks;
+    GroupManager * _group_manager{nullptr};
+    
+    // Store references to widgets for group manager setup
+    class Line_Widget * _line_widget{nullptr};
 
 
 private slots:

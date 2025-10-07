@@ -67,7 +67,8 @@ DataManager_Widget::DataManager_Widget(
     ui->stackedWidget->addWidget(new Point_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Image_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Mask_Widget(_data_manager));
-    ui->stackedWidget->addWidget(new Line_Widget(_data_manager));
+    _line_widget = new Line_Widget(_data_manager);
+    ui->stackedWidget->addWidget(_line_widget);
     ui->stackedWidget->addWidget(new AnalogTimeSeries_Widget(_data_manager));
     ui->stackedWidget->addWidget(new DigitalIntervalSeries_Widget(_data_manager));
     ui->stackedWidget->addWidget(new DigitalEventSeries_Widget(_data_manager));
@@ -105,6 +106,13 @@ void DataManager_Widget::openWidget() {
         ui->new_data_widget->populateTimeframes();
     }
     this->show();
+}
+
+void DataManager_Widget::setGroupManager(GroupManager * group_manager) {
+    _group_manager = group_manager;
+    if (_line_widget) {
+        _line_widget->setGroupManager(group_manager);
+    }
 }
 
 void DataManager_Widget::clearFeatureSelection() {
