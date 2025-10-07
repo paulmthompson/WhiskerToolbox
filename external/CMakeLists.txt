@@ -21,30 +21,47 @@ if (LINUX)
         GIT_REPOSITORY https://github.com/google/or-tools.git
         GIT_TAG        stable
 )
-set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
-set(BUILD_DEPS OFF)
+    set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
+    set(BUILD_DEPS OFF)
 
-set(BUILD_SCIP ON)
-set(BUILD_soplex ON)
+    set(BUILD_SCIP ON)
+    set(BUILD_soplex ON)
 
-set(BUILD_re2 ON)
+    set(BUILD_re2 ON)
 
-set(USE_COINOR OFF)
+    set(USE_COINOR OFF)
 
-set(BUILD_SAMPLES OFF)
-set(BUILD_EXAMPLES OFF)
+    set(BUILD_SAMPLES OFF)
+    set(BUILD_EXAMPLES OFF)
 elseif (APPLE)
     FetchContent_Declare(
         ortools
         GIT_REPOSITORY https://github.com/google/or-tools.git
         GIT_TAG v9.14
     )
-elseif (WINDOWS)
-    FetchContent_Declare(
-        ortools
-        GIT_REPOSITORY https://github.com/google/or-tools.git
-        GIT_TAG v9.14
-    )
+elseif (WIN32)
+  find_package(Boost COMPONENTS serialization multiprecision)
+  FetchContent_Declare(
+      ortools
+      GIT_REPOSITORY https://github.com/google/or-tools.git
+      GIT_TAG        stable
+)
+  set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
+  set(BUILD_DEPS OFF)
+
+  set(BUILD_SCIP ON)
+  set(BUILD_soplex ON)
+
+  set(BUILD_re2 ON)
+
+  set(BUILD_BZip2 ON)
+
+  set(BUILD_absl OFF)
+
+  set(USE_COINOR OFF)
+
+  set(BUILD_SAMPLES OFF)
+  set(BUILD_EXAMPLES OFF)
 endif()
 
 FetchContent_Declare(

@@ -70,6 +70,14 @@
         },
         {
             "name": "protobuf"
+        },
+        {
+            "name": "abseil",
+            "features": [
+                {
+                    "name": "cxx17"
+                }
+            ]
         }
 
     ],
