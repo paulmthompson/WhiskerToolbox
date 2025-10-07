@@ -1,20 +1,20 @@
 #ifndef LINE_KALMAN_GROUPING_HPP
 #define LINE_KALMAN_GROUPING_HPP
 
-#include "transforms/grouping_transforms.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "Entity/EntityGroupManager.hpp"
-#include "StateEstimation/MinCostFlowTracker.hpp"
-#include "StateEstimation/Kalman/KalmanFilter.hpp"
 #include "StateEstimation/Features/IFeatureExtractor.hpp"
+#include "StateEstimation/Kalman/KalmanFilter.hpp"
+#include "StateEstimation/MinCostFlowTracker.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "transforms/grouping_transforms.hpp"
 
+#include <Eigen/Dense>
+#include <map>
 #include <memory>
 #include <string>
 #include <typeindex>
 #include <vector>
-#include <map>
-#include <Eigen/Dense>
 
 class LineData;
 
@@ -38,39 +38,40 @@ class LineData;
  * Total state space: 9D (4D + 4D + 1D)
  */
 struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
-    explicit LineKalmanGroupingParameters(EntityGroupManager* group_manager)
+    explicit LineKalmanGroupingParameters(EntityGroupManager * group_manager)
         : GroupingTransformParametersBase(group_manager) {}
 
     // === Kalman Filter Parameters ===
-    double dt = 1.0;                                    // Time step between frames
-    
+    double dt = 1.0;// Time step between frames
+
     // Process noise for kinematic features (centroid, base point)
-    double process_noise_position = 10.0;               // Process noise for position (pixels)
-    double process_noise_velocity = 1.0;                // Process noise for velocity (pixels/frame)
-    
+    double process_noise_position = 10.0;// Process noise for position (pixels)
+    double process_noise_velocity = 1.0; // Process noise for velocity (pixels/frame)
+
     // Process noise for static features (length)
-    double static_feature_process_noise_scale = 0.01;   // Multiplier for static features (0.01 = 100x less noise)
-    
+    double static_feature_process_noise_scale = 0.01;// Multiplier for static features (0.01 = 100x less noise)
+
     // Automatic noise estimation from ground truth data
-    bool auto_estimate_static_noise = false;            // Estimate static feature noise from ground truth
-    double static_noise_percentile = 0.1;               // Use this fraction of observed variance (e.g., 0.1 = 10%)
-    
+    bool auto_estimate_static_noise = false;// Estimate static feature noise from ground truth
+    double static_noise_percentile = 0.1;   // Use this fraction of observed variance (e.g., 0.1 = 10%)
+
     // Measurement noise per feature type
-    double measurement_noise_position = 5.0;            // Measurement noise for x,y coordinates (pixels)
-    double measurement_noise_length = 10.0;             // Measurement noise for length (pixels)
-    bool auto_estimate_measurement_noise = false;       // Estimate measurement noise from ground truth residuals
-    
+    double measurement_noise_position = 5.0;     // Measurement noise for x,y coordinates (pixels)
+    double measurement_noise_length = 10.0;      // Measurement noise for length (pixels)
+    bool auto_estimate_measurement_noise = false;// Estimate measurement noise from ground truth residuals
+
     // Initial uncertainties
-    double initial_position_uncertainty = 50.0;         // Initial uncertainty in position
-    double initial_velocity_uncertainty = 10.0;         // Initial uncertainty in velocity
-    
-    // === Min-Cost Flow Assignment Parameters ===
-    int max_gap_frames = 10;                            // Maximum frames a track can be missing
-    double gap_penalty = 100.0;                         // Cost penalty per missing frame
-    double cost_scale_factor = 100.0;                   // Multiplier for integer conversion
-    
+    double initial_position_uncertainty = 50.0;// Initial uncertainty in position
+    double initial_velocity_uncertainty = 10.0;// Initial uncertainty in velocity
+
+    // === Linkage and Optimization Parameters ===
+    // Threshold (in Mahalanobis distance units) for greedy frame-to-frame linkage into meta-nodes
+    double cheap_assignment_threshold = 5.0;
+    // Scale factor for converting costs to integers for OR-Tools
+    double cost_scale_factor = 100.0;
+
     // === Debugging/Validation ===
-    bool verbose_output = false;                        // Enable detailed logging
+    bool verbose_output = false;// Enable detailed logging
 };
 
 /**
@@ -98,7 +99,7 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
 
 std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data,
                                              LineKalmanGroupingParameters const * params,
-                                             ProgressCallback const& progressCallback);
+                                             ProgressCallback const & progressCallback);
 
 /**
  * @brief Transform operation for Kalman-based line grouping
@@ -106,19 +107,19 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
 class LineKalmanGroupingOperation final : public TransformOperation {
 public:
     [[nodiscard]] std::string getName() const override;
-    
+
     [[nodiscard]] std::type_index getTargetInputTypeIndex() const override;
-    
-    [[nodiscard]] bool canApply(DataTypeVariant const& dataVariant) const override;
-    
+
+    [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
+
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
-    
-    DataTypeVariant execute(DataTypeVariant const& dataVariant,
-                           TransformParametersBase const* transformParameters) override;
-                           
-    DataTypeVariant execute(DataTypeVariant const& dataVariant,
-                           TransformParametersBase const* transformParameters,
-                           ProgressCallback progressCallback) override;
+
+    DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                            TransformParametersBase const * transformParameters) override;
+
+    DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                            TransformParametersBase const * transformParameters,
+                            ProgressCallback progressCallback) override;
 };
 
-#endif // LINE_KALMAN_GROUPING_HPP
+#endif// LINE_KALMAN_GROUPING_HPP

@@ -300,23 +300,23 @@
    <item>
     <widget class="QGroupBox" name="assignmentParametersGroupBox">
      <property name="title">
-      <string>Assignment Parameters</string>
+      <string>Linkage Parameters</string>
      </property>
      <layout class="QFormLayout" name="assignmentFormLayout">
       <item row="0" column="0">
-       <widget class="QLabel" name="maxAssignmentDistanceLabel">
+       <widget class="QLabel" name="cheapLinkageThresholdLabel">
         <property name="text">
-         <string>Max Assignment Distance:</string>
+         <string>Cheap Linkage Threshold:</string>
         </property>
         <property name="toolTip">
-         <string>Maximum Mahalanobis distance for assignment</string>
+         <string>Maximum Mahalanobis distance to greedily link consecutive frames into a meta-node. Lower = stricter chaining.</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QDoubleSpinBox" name="maxAssignmentDistanceSpinBox">
+       <widget class="QDoubleSpinBox" name="cheapLinkageThresholdSpinBox">
         <property name="toolTip">
-         <string>Maximum Mahalanobis distance for assignment</string>
+         <string>Maximum Mahalanobis distance to greedily link consecutive frames into a meta-node. Lower = stricter chaining.</string>
         </property>
         <property name="suffix">
          <string> units</string>
@@ -334,7 +334,7 @@
          <double>0.500000000000000</double>
         </property>
         <property name="value">
-         <double>3.000000000000000</double>
+         <double>5.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -411,7 +411,7 @@
       <item>
        <widget class="QLabel" name="algorithmNoteLabel">
         <property name="text">
-         <string>The algorithm uses Kalman filtering to track multiple line features (centroid + base point + length) across frames and assigns ungrouped lines to existing groups using the Hungarian algorithm. Smoothing is automatically applied between ground truth frames.</string>
+         <string>The algorithm greedily chains consecutive frames into meta-nodes using a Kalman filter when the Mahalanobis distance is below the Cheap Linkage Threshold, then uses min-cost flow to connect these meta-nodes between anchors. Smoothing is applied within each solved path.</string>
         </property>
         <property name="styleSheet">
          <string>QLabel { color: #666; font-style: italic; }</string>

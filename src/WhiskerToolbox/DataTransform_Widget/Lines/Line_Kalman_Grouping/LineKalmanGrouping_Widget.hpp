@@ -32,7 +32,7 @@ class LineKalmanGrouping_Widget : public DataManagerParameter_Widget {
     Q_OBJECT
 
 public:
-    explicit LineKalmanGrouping_Widget(QWidget* parent = nullptr);
+    explicit LineKalmanGrouping_Widget(QWidget * parent = nullptr);
     ~LineKalmanGrouping_Widget() override;
 
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getParameters() const override;
@@ -45,13 +45,13 @@ private slots:
 
 private:
     std::unique_ptr<Ui::LineKalmanGrouping_Widget> ui;
-    
+
     void setupUI();
     void connectSignals();
     void updateParametersFromUI();
     void resetToDefaults();
-    
+
     bool validateParameters() const;
 };
 
-#endif // LINEKALMANGROUOING_WIDGET_HPP
+#endif// LINEKALMANGROUOING_WIDGET_HPP

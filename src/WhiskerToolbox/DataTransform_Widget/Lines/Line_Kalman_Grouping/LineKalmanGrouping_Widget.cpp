@@ -1,20 +1,32 @@
 #include "LineKalmanGrouping_Widget.hpp"
 #include "ui_LineKalmanGrouping_Widget.h"
 
-#include "DataManager/transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
 
-#include <QDoubleSpinBox>
 #include <QCheckBox>
-#include <QLineEdit>
-#include <QLabel>
+#include <QDoubleSpinBox>
 #include <QGroupBox>
+#include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
 
-LineKalmanGrouping_Widget::LineKalmanGrouping_Widget(QWidget* parent)
-    : DataManagerParameter_Widget(parent)
-    , ui(std::make_unique<Ui::LineKalmanGrouping_Widget>())
-{
+namespace {
+constexpr double kDefaultDt = 1.0;
+constexpr double kDefaultProcessNoisePosition = 10.0;
+constexpr double kDefaultProcessNoiseVelocity = 1.0;
+constexpr double kDefaultStaticNoiseScale = 0.01;
+constexpr double kDefaultMeasNoisePosition = 5.0;
+constexpr double kDefaultMeasNoiseLength = 10.0;
+constexpr double kDefaultInitialPosUncertainty = 50.0;
+constexpr double kDefaultInitialVelUncertainty = 10.0;
+constexpr double kDefaultCheapLinkageThreshold = 5.0;
+constexpr double kDefaultStaticNoisePercentile = 0.1;
+}// namespace
+
+LineKalmanGrouping_Widget::LineKalmanGrouping_Widget(QWidget * parent)
+    : DataManagerParameter_Widget(parent),
+      ui(std::make_unique<Ui::LineKalmanGrouping_Widget>()) {
     ui->setupUi(this);
     setupUI();
     connectSignals();
@@ -22,94 +34,91 @@ LineKalmanGrouping_Widget::LineKalmanGrouping_Widget(QWidget* parent)
 
 LineKalmanGrouping_Widget::~LineKalmanGrouping_Widget() = default;
 
-void LineKalmanGrouping_Widget::setupUI()
-{
+void LineKalmanGrouping_Widget::setupUI() {
     // Set reasonable default values
     // Kalman Filter Parameters
-    ui->dtSpinBox->setValue(1.0);
-    ui->processNoisePositionSpinBox->setValue(10.0);
-    ui->processNoiseVelocitySpinBox->setValue(1.0);
-    ui->staticNoiseScaleSpinBox->setValue(0.01);
-    ui->measurementNoisePositionSpinBox->setValue(5.0);
-    ui->measurementNoiseLengthSpinBox->setValue(10.0);
-    ui->initialPositionUncertaintySpinBox->setValue(50.0);
-    ui->initialVelocityUncertaintySpinBox->setValue(10.0);
-    
+    ui->dtSpinBox->setValue(kDefaultDt);
+    ui->processNoisePositionSpinBox->setValue(kDefaultProcessNoisePosition);
+    ui->processNoiseVelocitySpinBox->setValue(kDefaultProcessNoiseVelocity);
+    ui->staticNoiseScaleSpinBox->setValue(kDefaultStaticNoiseScale);
+    ui->measurementNoisePositionSpinBox->setValue(kDefaultMeasNoisePosition);
+    ui->measurementNoiseLengthSpinBox->setValue(kDefaultMeasNoiseLength);
+    ui->initialPositionUncertaintySpinBox->setValue(kDefaultInitialPosUncertainty);
+    ui->initialVelocityUncertaintySpinBox->setValue(kDefaultInitialVelUncertainty);
+
     // Assignment Parameters
-    ui->maxAssignmentDistanceSpinBox->setValue(3.0);
-    
+    ui->cheapLinkageThresholdSpinBox->setValue(kDefaultCheapLinkageThreshold);
+
     // Auto-Estimation Parameters
     ui->autoEstimateStaticNoiseCheckBox->setChecked(false);
     ui->autoEstimateMeasurementNoiseCheckBox->setChecked(false);
-    ui->staticNoisePercentileSpinBox->setValue(0.1);
-    
+    ui->staticNoisePercentileSpinBox->setValue(kDefaultStaticNoisePercentile);
+
     // Algorithm Control
     ui->verboseOutputCheckBox->setChecked(false);
 }
 
-void LineKalmanGrouping_Widget::connectSignals()
-{
+void LineKalmanGrouping_Widget::connectSignals() {
     // Kalman Filter Parameters
     connect(ui->dtSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     connect(ui->processNoisePositionSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     connect(ui->processNoiseVelocitySpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     connect(ui->staticNoiseScaleSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     connect(ui->measurementNoisePositionSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     connect(ui->measurementNoiseLengthSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     connect(ui->initialPositionUncertaintySpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     connect(ui->initialVelocityUncertaintySpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     // Assignment Parameters
-    connect(ui->maxAssignmentDistanceSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+    connect(ui->cheapLinkageThresholdSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     // Auto-Estimation Parameters
     connect(ui->autoEstimateStaticNoiseCheckBox, &QCheckBox::toggled,
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     connect(ui->autoEstimateMeasurementNoiseCheckBox, &QCheckBox::toggled,
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     connect(ui->staticNoisePercentileSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     // Algorithm Control checkboxes
     connect(ui->verboseOutputCheckBox, &QCheckBox::toggled,
             this, &LineKalmanGrouping_Widget::onParametersChanged);
-    
+
     // Reset button
     connect(ui->resetDefaultsButton, &QPushButton::clicked,
             this, &LineKalmanGrouping_Widget::resetToDefaults);
 }
 
-std::unique_ptr<TransformParametersBase> LineKalmanGrouping_Widget::getParameters() const
-{
+std::unique_ptr<TransformParametersBase> LineKalmanGrouping_Widget::getParameters() const {
     if (!dataManager()) {
         return nullptr;
     }
-    
+
     auto group_manager = dataManager()->getEntityGroupManager();
     if (!group_manager) {
         return nullptr;
     }
-    
+
     auto params = std::make_unique<LineKalmanGroupingParameters>(group_manager);
-    
+
     // Kalman Filter Parameters
     params->dt = ui->dtSpinBox->value();
     params->process_noise_position = ui->processNoisePositionSpinBox->value();
@@ -119,20 +128,20 @@ std::unique_ptr<TransformParametersBase> LineKalmanGrouping_Widget::getParameter
     params->measurement_noise_length = ui->measurementNoiseLengthSpinBox->value();
     params->initial_position_uncertainty = ui->initialPositionUncertaintySpinBox->value();
     params->initial_velocity_uncertainty = ui->initialVelocityUncertaintySpinBox->value();
-    
+
     // Auto-Estimation Parameters
     params->auto_estimate_static_noise = ui->autoEstimateStaticNoiseCheckBox->isChecked();
     params->auto_estimate_measurement_noise = ui->autoEstimateMeasurementNoiseCheckBox->isChecked();
     params->static_noise_percentile = ui->staticNoisePercentileSpinBox->value();
-    
+
     // Algorithm Control
     params->verbose_output = ui->verboseOutputCheckBox->isChecked();
-    
+    params->cheap_assignment_threshold = ui->cheapLinkageThresholdSpinBox->value();
+
     return params;
 }
 
-void LineKalmanGrouping_Widget::onDataManagerChanged()
-{
+void LineKalmanGrouping_Widget::onDataManagerChanged() {
     // Called when the DataManager changes
     // Validate that we have a group manager available
     if (dataManager()) {
@@ -147,30 +156,26 @@ void LineKalmanGrouping_Widget::onDataManagerChanged()
     }
 }
 
-void LineKalmanGrouping_Widget::onParametersChanged()
-{
+void LineKalmanGrouping_Widget::onParametersChanged() {
     // Validate parameters
     if (validateParameters()) {
         updateParametersFromUI();
     }
 }
 
-void LineKalmanGrouping_Widget::updateParametersFromUI()
-{
+void LineKalmanGrouping_Widget::updateParametersFromUI() {
     // This could be used to update any dependent UI elements
     // or emit signals if needed
 }
 
-void LineKalmanGrouping_Widget::resetToDefaults()
-{
+void LineKalmanGrouping_Widget::resetToDefaults() {
     setupUI();
 }
 
-bool LineKalmanGrouping_Widget::validateParameters() const
-{
+bool LineKalmanGrouping_Widget::validateParameters() const {
     // Basic validation
     if (ui->dtSpinBox->value() <= 0.0) return false;
-    if (ui->maxAssignmentDistanceSpinBox->value() <= 0.0) return false;
+    if (ui->cheapLinkageThresholdSpinBox->value() <= 0.0) return false;
     if (ui->processNoisePositionSpinBox->value() <= 0.0) return false;
     if (ui->processNoiseVelocitySpinBox->value() <= 0.0) return false;
     if (ui->staticNoiseScaleSpinBox->value() <= 0.0) return false;
@@ -180,6 +185,6 @@ bool LineKalmanGrouping_Widget::validateParameters() const
     if (ui->initialVelocityUncertaintySpinBox->value() <= 0.0) return false;
     if (ui->staticNoisePercentileSpinBox->value() <= 0.0) return false;
     if (ui->staticNoisePercentileSpinBox->value() > 1.0) return false;
-    
+
     return true;
 }

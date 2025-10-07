@@ -322,7 +322,8 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
             std::move(composite_extractor),
             H,// Measurement matrix for Mahalanobis distance
             R,// Measurement noise for Mahalanobis distance
-            params->cost_scale_factor);
+            params->cost_scale_factor,
+            params->cheap_assignment_threshold);
 
     tracker.enableDebugLogging("tracker.log");
 

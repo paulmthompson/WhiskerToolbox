@@ -10,8 +10,10 @@
 #include "Lines/Line_Angle/line_angle.hpp"
 #include "Lines/Line_Clip/line_clip.hpp"
 #include "Lines/Line_Curvature/line_curvature.hpp"
+#include "Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
 #include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "Lines/Line_Point_Extraction/line_point_extraction.hpp"
+#include "Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
 #include "Lines/Line_Resample/line_resample.hpp"
 #include "Lines/Line_Subsegment/line_subsegment.hpp"
 #include "Masks/Mask_Connected_Component/mask_connected_component.hpp"
@@ -19,13 +21,11 @@
 #include "Masks/Mask_Principal_Axis/mask_principal_axis.hpp"
 #include "Masks/Mask_To_Line/mask_to_line.hpp"
 #include "Media/whisker_tracing.hpp"
-#include "Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
-#include "Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
 
 #include <iostream>
 
-void ParameterFactory::registerParameterSetter(std::string const & transform_name,
-                                               std::string const & param_name,
+void ParameterFactory::registerParameterSetter(std::string const & transform_name,// NOLINT(bugprone-easily-swappable-parameters)
+                                               std::string const & param_name,    // NOLINT(bugprone-easily-swappable-parameters)
                                                ParameterSetter setter) {
     setters_[transform_name][param_name] = std::move(setter);
 }
@@ -475,4 +475,8 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<LineKalmanGroupingParameters, bool>(
             "Group Lines using Kalman Filtering", "verbose_output", &LineKalmanGroupingParameters::verbose_output);
+
+    // New: cheap linkage threshold exposed to UI
+    registerBasicParameter<LineKalmanGroupingParameters, double>(
+            "Group Lines using Kalman Filtering", "cheap_assignment_threshold", &LineKalmanGroupingParameters::cheap_assignment_threshold);
 }
