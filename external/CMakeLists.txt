@@ -13,7 +13,39 @@ if(ENABLE_FFMPEG)
     )
 endif()
 
-#add_subdirectory(ffmpeg_wrapper)
+
+if (LINUX)
+    find_package(Boost COMPONENTS serialization multiprecision)
+    FetchContent_Declare(
+        ortools
+        GIT_REPOSITORY https://github.com/google/or-tools.git
+        GIT_TAG        stable
+)
+set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
+set(BUILD_DEPS OFF)
+
+set(BUILD_SCIP ON)
+set(BUILD_soplex ON)
+
+set(BUILD_re2 ON)
+
+set(USE_COINOR OFF)
+
+set(BUILD_SAMPLES OFF)
+set(BUILD_EXAMPLES OFF)
+elseif (APPLE)
+    FetchContent_Declare(
+        ortools
+        GIT_REPOSITORY https://github.com/google/or-tools.git
+        GIT_TAG v9.14
+    )
+elseif (WINDOWS)
+    FetchContent_Declare(
+        ortools
+        GIT_REPOSITORY https://github.com/google/or-tools.git
+        GIT_TAG v9.14
+    )
+endif()
 
 FetchContent_Declare(
   Whisker-Analysis
@@ -81,7 +113,7 @@ elseif (WIN32)
 endif()
 
 #We should use make available
-set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir")
+set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir" "ortools")
 
 if(ENABLE_FFMPEG)
     list(APPEND FETCHCONTENT_TARGETS "ffmpeg_wrapper")
@@ -91,7 +123,17 @@ if(ENABLE_UI)
     list(APPEND FETCHCONTENT_TARGETS "qt6advanceddocking")
 endif()
 
-FetchContent_MakeAvailable(${FETCHCONTENT_TARGETS})
+# Force OR-Tools to build in Release mode to avoid stack protection issues with abseil
+set(ortools_BUILD_TYPE_SAVED ${CMAKE_BUILD_TYPE})
+set(CMAKE_BUILD_TYPE Release)
+FetchContent_MakeAvailable(ortools)
+set(CMAKE_BUILD_TYPE ${ortools_BUILD_TYPE_SAVED})
+
+# Make available the rest of the targets
+list(REMOVE_ITEM FETCHCONTENT_TARGETS "ortools")
+if(FETCHCONTENT_TARGETS)
+    FetchContent_MakeAvailable(${FETCHCONTENT_TARGETS})
+endif()
 
 # Conditionally set ffmpeg_wrapper properties if it was built
 if(ENABLE_FFMPEG)
@@ -109,5 +151,11 @@ endif()
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${torch_SOURCE_DIR}/share/cmake/Torch" PARENT_SCOPE)
 
+#I need to add the lib folder for ortools to be used when we find_package with ortools
+
+
+#set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${ortools_SOURCE_DIR}/lib/cmake/ortools" PARENT_SCOPE)
+
 set(npy_SOURCE_DIR ${npy_SOURCE_DIR} PARENT_SCOPE)
 set(iir_SOURCE_DIR ${iir_SOURCE_DIR} PARENT_SCOPE)
+set(ortools_SOURCE_DIR ${ortools_SOURCE_DIR} PARENT_SCOPE)
