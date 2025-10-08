@@ -1,5 +1,8 @@
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+#include "Entity/EntityRegistry.hpp"
+#include "DataManager.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
@@ -323,6 +326,319 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
 
         auto max_points = point_data.getMaxPoints();
         REQUIRE(max_points == 2);
+    }
+}
+
+TEST_CASE("PointData - Entity ID handling in copy/move operations", "[points][data][entity][copy][move]") {
+    PointData source_data;
+    PointData target_data;
+
+    // Setup test points
+    Point2D<float> a{1.0f, 2.0f};
+    Point2D<float> b{3.0f, 4.0f};
+    Point2D<float> c{5.0f, 6.0f};
+
+    // Add test points
+    source_data.addAtTime(TimeFrameIndex(10), a);
+    source_data.addAtTime(TimeFrameIndex(10), b);
+    source_data.addAtTime(TimeFrameIndex(20), c);
+
+    SECTION("Copy operations create new entity IDs") {
+        // Get original entity IDs
+        auto original_entity_ids = source_data.getAllEntityIds();
+        REQUIRE(original_entity_ids.size() == 3);
+
+        // Copy data
+        TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
+        source_data.copyTo(target_data, interval);
+
+        // Get new entity IDs from target
+        auto target_entity_ids = target_data.getAllEntityIds();
+        REQUIRE(target_entity_ids.size() == 3);
+
+        // Verify source entity IDs are unchanged
+        auto source_entity_ids_after = source_data.getAllEntityIds();
+        REQUIRE(source_entity_ids_after == original_entity_ids);
+    }
+
+    SECTION("Move operations create new entity IDs in target") {
+        // Get original entity IDs
+        auto original_entity_ids = source_data.getAllEntityIds();
+        REQUIRE(original_entity_ids.size() == 3);
+
+        // Move data
+        TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
+        source_data.moveTo(target_data, interval);
+
+        // Get new entity IDs from target
+        auto target_entity_ids = target_data.getAllEntityIds();
+        REQUIRE(target_entity_ids.size() == 2); // 2 points at time 10
+
+        // Verify source still has remaining data with original entity IDs
+        auto remaining_entity_ids = source_data.getAllEntityIds();
+        REQUIRE(remaining_entity_ids.size() == 1); // 1 point at time 20
+    }
+
+    SECTION("Entity ID consistency within time frames") {
+        PointData pd;
+        pd.addAtTime(TimeFrameIndex(10), a);
+        pd.addAtTime(TimeFrameIndex(10), b);
+        pd.addAtTime(TimeFrameIndex(30), a);
+        pd.addAtTime(TimeFrameIndex(30), b);
+
+        auto entity_ids_10 = pd.getEntityIdsAtTime(TimeFrameIndex(10));
+        auto entity_ids_30 = pd.getEntityIdsAtTime(TimeFrameIndex(30));
+
+        REQUIRE(entity_ids_10.size() == 2);
+        REQUIRE(entity_ids_30.size() == 2);
+    }
+}
+
+TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy][move][by_id]") {
+    // Setup test points
+    Point2D<float> p1{1.0f, 2.0f};
+    Point2D<float> p2{3.0f, 4.0f};
+    Point2D<float> p3{5.0f, 6.0f};
+    Point2D<float> p4{7.0f, 8.0f};
+
+    auto data_manager = std::make_unique<DataManager>();
+    auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 10, 20, 30});
+    data_manager->setTime(TimeKey("test_time"), time_frame);
+
+    SECTION("Copy points by EntityID - basic functionality") {
+        // Setup fresh source and target data
+        data_manager->setData<PointData>("source_data", TimeKey("test_time"));
+        data_manager->setData<PointData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<PointData>("source_data");
+        auto target_data = data_manager->getData<PointData>("target_data");
+
+        // Add test points
+        source_data->addAtTime(TimeFrameIndex(10), p1);
+        source_data->addAtTime(TimeFrameIndex(10), p2);
+        source_data->addAtTime(TimeFrameIndex(20), p3);
+        source_data->addAtTime(TimeFrameIndex(30), p4);
+
+        // Get entity IDs for testing
+        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_10.size() == 2);
+
+        // Copy points from time 10 (2 points)
+        std::size_t points_copied = source_data->copyPointsByEntityIds(*target_data, entity_ids_10);
+
+        REQUIRE(points_copied == 2);
+
+        // Verify source data is unchanged
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 2);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 1);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(30)).size() == 1);
+
+        // Verify target has copied data
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 2);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 0);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
+
+        // Verify target has new entity IDs
+        auto target_entity_ids = target_data->getAllEntityIds();
+        REQUIRE(target_entity_ids.size() == 2);
+        REQUIRE(target_entity_ids != entity_ids_10);
+    }
+
+    SECTION("Copy points by EntityID - mixed times") {
+        data_manager->setData<PointData>("source_data", TimeKey("test_time"));
+        data_manager->setData<PointData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<PointData>("source_data");
+        auto target_data = data_manager->getData<PointData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), p1);
+        source_data->addAtTime(TimeFrameIndex(10), p2);
+        source_data->addAtTime(TimeFrameIndex(20), p3);
+        source_data->addAtTime(TimeFrameIndex(30), p4);
+
+        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto entity_ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        REQUIRE(entity_ids_10.size() == 2);
+        REQUIRE(entity_ids_20.size() == 1);
+
+        std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
+        std::size_t points_copied = source_data->copyPointsByEntityIds(*target_data, mixed_entity_ids);
+
+        REQUIRE(points_copied == 2);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 1);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
+    }
+
+    SECTION("Copy points by EntityID - non-existent EntityIDs") {
+        data_manager->setData<PointData>("source_data", TimeKey("test_time"));
+        data_manager->setData<PointData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<PointData>("source_data");
+        auto target_data = data_manager->getData<PointData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), p1);
+        source_data->addAtTime(TimeFrameIndex(10), p2);
+        source_data->addAtTime(TimeFrameIndex(20), p3);
+        source_data->addAtTime(TimeFrameIndex(30), p4);
+
+        std::vector<EntityId> fake_entity_ids = {99999, 88888};
+        std::size_t points_copied = source_data->copyPointsByEntityIds(*target_data, fake_entity_ids);
+
+        REQUIRE(points_copied == 0);
+        REQUIRE(target_data->getTimesWithData().empty());
+    }
+
+    SECTION("Copy points by EntityID - empty EntityID list") {
+        data_manager->setData<PointData>("target_data", TimeKey("test_time"));
+        data_manager->setData<PointData>("source_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<PointData>("source_data");
+        auto target_data = data_manager->getData<PointData>("target_data");
+
+        std::vector<EntityId> empty_entity_ids;
+        std::size_t points_copied = source_data->copyPointsByEntityIds(*target_data, empty_entity_ids);
+
+        REQUIRE(points_copied == 0);
+        REQUIRE(target_data->getTimesWithData().empty());
+    }
+
+    SECTION("Move points by EntityID - basic functionality") {
+        data_manager->setData<PointData>("source_data", TimeKey("test_time"));
+        data_manager->setData<PointData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<PointData>("source_data");
+        auto target_data = data_manager->getData<PointData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), p1);
+        source_data->addAtTime(TimeFrameIndex(10), p2);
+        source_data->addAtTime(TimeFrameIndex(20), p3);
+        source_data->addAtTime(TimeFrameIndex(30), p4);
+
+        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_10.size() == 2);
+
+        std::size_t points_moved = source_data->movePointsByEntityIds(*target_data, entity_ids_10);
+
+        REQUIRE(points_moved == 2);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 0);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 1);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(30)).size() == 1);
+
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 2);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 0);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
+
+        auto target_entity_ids = target_data->getAllEntityIds();
+        REQUIRE(target_entity_ids.size() == 2);
+        REQUIRE(target_entity_ids == entity_ids_10);
+    }
+
+    SECTION("Move points by EntityID - mixed times") {
+        data_manager->setData<PointData>("target_data", TimeKey("test_time"));
+        data_manager->setData<PointData>("source_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<PointData>("source_data");
+        auto target_data = data_manager->getData<PointData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), p1);
+        source_data->addAtTime(TimeFrameIndex(10), p2);
+        source_data->addAtTime(TimeFrameIndex(20), p3);
+        source_data->addAtTime(TimeFrameIndex(30), p4);
+
+        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto entity_ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
+
+        std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
+        std::size_t points_moved = source_data->movePointsByEntityIds(*target_data, mixed_entity_ids);
+
+        REQUIRE(points_moved == 2);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 0);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(30)).size() == 1);
+
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 1);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
+    }
+
+    SECTION("Move points by EntityID - non-existent EntityIDs") {
+        data_manager->setData<PointData>("target_data", TimeKey("test_time"));
+        data_manager->setData<PointData>("source_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<PointData>("source_data");
+        auto target_data = data_manager->getData<PointData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), p1);
+        source_data->addAtTime(TimeFrameIndex(10), p2);
+        source_data->addAtTime(TimeFrameIndex(20), p3);
+        source_data->addAtTime(TimeFrameIndex(30), p4);
+
+        std::vector<EntityId> fake_entity_ids = {99999, 88888};
+        std::size_t points_moved = source_data->movePointsByEntityIds(*target_data, fake_entity_ids);
+
+        REQUIRE(points_moved == 0);
+        REQUIRE(target_data->getTimesWithData().empty());
+
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 2);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 1);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(30)).size() == 1);
+    }
+
+    SECTION("Copy preserves point data integrity") {
+        data_manager->setData<PointData>("target_data", TimeKey("test_time"));
+        data_manager->setData<PointData>("source_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<PointData>("source_data");
+        auto target_data = data_manager->getData<PointData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), p1);
+        source_data->addAtTime(TimeFrameIndex(10), p2);
+        source_data->addAtTime(TimeFrameIndex(20), p3);
+        source_data->addAtTime(TimeFrameIndex(30), p4);
+
+        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        source_data->copyPointsByEntityIds(*target_data, entity_ids_10);
+
+        auto source_points = source_data->getAtTime(TimeFrameIndex(10));
+        auto target_points = target_data->getAtTime(TimeFrameIndex(10));
+
+        REQUIRE(source_points.size() == target_points.size());
+        for (size_t i = 0; i < source_points.size(); ++i) {
+            REQUIRE(source_points[i].x == Catch::Approx(target_points[i].x));
+            REQUIRE(source_points[i].y == Catch::Approx(target_points[i].y));
+        }
+    }
+
+    SECTION("Move preserves point data integrity") {
+        data_manager->setData<PointData>("target_data", TimeKey("test_time"));
+        data_manager->setData<PointData>("source_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<PointData>("source_data");
+        auto target_data = data_manager->getData<PointData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), p1);
+        source_data->addAtTime(TimeFrameIndex(10), p2);
+        source_data->addAtTime(TimeFrameIndex(20), p3);
+        source_data->addAtTime(TimeFrameIndex(30), p4);
+
+        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto original_points = source_data->getAtTime(TimeFrameIndex(10));
+        REQUIRE(original_points.size() == 2);
+
+        source_data->movePointsByEntityIds(*target_data, entity_ids_10);
+
+        auto target_points = target_data->getAtTime(TimeFrameIndex(10));
+        REQUIRE(target_points.size() == 2);
+
+        // Verify each original point is present in target (order may differ)
+        for (auto const & sp : original_points) {
+            bool found = false;
+            for (auto const & tp : target_points) {
+                if (sp.x == tp.x && sp.y == tp.y) { found = true; break; }
+            }
+            REQUIRE(found);
+        }
     }
 }
 

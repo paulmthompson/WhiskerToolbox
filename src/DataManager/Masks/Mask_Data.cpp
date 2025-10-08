@@ -1,17 +1,21 @@
 #include "Mask_Data.hpp"
 
 #include "utils/map_timeseries.hpp"
+#include "Entity/EntityRegistry.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <ranges>
 
 // ========== Constructors ==========
 
 // ========== Setters ==========
 
 bool MaskData::clearAtTime(TimeFrameIndex const time, bool notify) {
-    if (clear_at_time(time, _data)) {
+    auto it = _data.find(time);
+    if (it != _data.end()) {
+        _data.erase(it);
         if (notify) {
             notifyObservers();
         }
@@ -44,7 +48,15 @@ bool MaskData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, bool 
 }
 
 bool MaskData::clearAtTime(TimeFrameIndex const time, size_t const index, bool notify) {
-    if (clear_at_time(time, index, _data)) {
+    auto it = _data.find(time);
+    if (it != _data.end()) {
+        if (index >= it->second.size()) {
+            return false;
+        }
+        it->second.erase(it->second.begin() + static_cast<std::ptrdiff_t>(index));
+        if (it->second.empty()) {
+            _data.erase(it);
+        }
         if (notify) {
             notifyObservers();
         }
@@ -58,7 +70,12 @@ void MaskData::addAtTime(TimeFrameIndex const time,
                          std::vector<uint32_t> const & y,
                          bool notify) {
     auto new_mask = create_mask(x, y);
-    add_at_time(time, std::move(new_mask), _data);
+    int const local_index = static_cast<int>(_data[time].size());
+    EntityId entity_id = 0;
+    if (_identity_registry) {
+        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, time, local_index);
+    }
+    _data[time].emplace_back(std::move(new_mask), entity_id);
 
     if (notify) {
         notifyObservers();
@@ -68,7 +85,12 @@ void MaskData::addAtTime(TimeFrameIndex const time,
 void MaskData::addAtTime(TimeFrameIndex const time,
                          std::vector<Point2D<uint32_t>> mask,
                          bool notify) {
-    add_at_time(time, std::move(mask), _data);
+    int const local_index = static_cast<int>(_data[time].size());
+    EntityId entity_id = 0;
+    if (_identity_registry) {
+        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, time, local_index);
+    }
+    _data[time].emplace_back(std::move(mask), entity_id);
 
     if (notify) {
         notifyObservers();
@@ -80,6 +102,7 @@ void MaskData::addAtTime(TimeIndexAndFrame const & time_index_and_frame,
                          bool notify) {
     if (time_index_and_frame.time_frame.get() == _time_frame.get()) {
         addAtTime(time_index_and_frame.index, std::move(mask), notify);
+        return;
     }
 
     if (!time_index_and_frame.time_frame || !_time_frame.get()) {
@@ -89,7 +112,12 @@ void MaskData::addAtTime(TimeIndexAndFrame const & time_index_and_frame,
     auto time = time_index_and_frame.time_frame->getTimeAtIndex(time_index_and_frame.index);
     auto time_index = _time_frame->getIndexAtTime(static_cast<float>(time));
 
-    add_at_time(time_index, std::move(mask), _data);
+    int const local_index = static_cast<int>(_data[time_index].size());
+    EntityId entity_id = 0;
+    if (_identity_registry) {
+        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, time_index, local_index);
+    }
+    _data[time_index].emplace_back(std::move(mask), entity_id);
 }
 
 void MaskData::addAtTime(TimeFrameIndex const time,
@@ -98,15 +126,31 @@ void MaskData::addAtTime(TimeFrameIndex const time,
                          bool notify) {
     // Create mask efficiently using move semantics
     auto new_mask = Mask2D{};
-    new_mask.reserve(x.size());
+    auto xx = std::move(x);
+    auto yy = std::move(y);
+    new_mask.reserve(xx.size());
 
-    for (std::size_t i = 0; i < x.size(); i++) {
-        //new_mask.emplace_back(x[i], y[i]);
-        new_mask.push_back({x[i], y[i]});
+    for (std::size_t i = 0; i < xx.size(); i++) {
+        new_mask.emplace_back(xx[i], yy[i]);
     }
 
-    _data[time].push_back(std::move(new_mask));
+    int const local_index = static_cast<int>(_data[time].size());
+    EntityId entity_id = 0;
+    if (_identity_registry) {
+        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, time, local_index);
+    }
+    _data[time].emplace_back(std::move(new_mask), entity_id);
 
+    if (notify) {
+        notifyObservers();
+    }
+}
+
+void MaskData::addMaskEntryAtTime(TimeFrameIndex const time,
+                                  Mask2D const & mask,
+                                  EntityId const entity_id,
+                                  bool const notify) {
+    _data[time].emplace_back(mask, entity_id);
     if (notify) {
         notifyObservers();
     }
@@ -115,22 +159,31 @@ void MaskData::addAtTime(TimeFrameIndex const time,
 // ========== Getters ==========
 
 std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const {
-    return get_at_time(time, _data, _empty);
+    auto it = _data.find(time);
+    if (it == _data.end()) {
+        return _empty;
+    }
+    _temp_masks.clear();
+    _temp_masks.reserve(it->second.size());
+    for (auto const & entry : it->second) {
+        _temp_masks.push_back(entry.mask);
+    }
+    return _temp_masks;
 }
 
 std::vector<Mask2D> const & MaskData::getAtTime(TimeIndexAndFrame const & time_index_and_frame) const {
-    return get_at_time(time_index_and_frame.index,
-                       _data,
-                       _empty,
-                       time_index_and_frame.time_frame.get(),
-                       _time_frame.get());
+    auto converted = convert_time_index(time_index_and_frame.index,
+                                        time_index_and_frame.time_frame.get(),
+                                        _time_frame.get());
+    return getAtTime(converted);
 }
 
 std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time,
                                                 TimeFrame const * source_timeframe,
                                                 TimeFrame const * mask_timeframe) const {
 
-    return get_at_time(time, _data, _empty, source_timeframe, mask_timeframe);
+    TimeFrameIndex const converted = convert_time_index(time, source_timeframe, mask_timeframe);
+    return getAtTime(converted);
 }
 
 // ========== Image Size ==========
@@ -149,9 +202,10 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
     float const scale_x = static_cast<float>(image_size.width) / static_cast<float>(_image_size.width);
     float const scale_y = static_cast<float>(image_size.height) / static_cast<float>(_image_size.height);
 
-    for (auto & [time, masks]: _data) {
-        for (auto & mask: masks) {
-            for (auto & point: mask) {
+    for (auto & [time, entries]: _data) {
+        (void)time;
+        for (auto & entry: entries) {
+            for (auto & point: entry.mask) {
                 point.x = static_cast<uint32_t>(std::round(static_cast<float>(point.x) * scale_x));
                 point.y = static_cast<uint32_t>(std::round(static_cast<float>(point.y) * scale_y));
             }
@@ -178,10 +232,10 @@ std::size_t MaskData::copyTo(MaskData & target, TimeFrameInterval const & interv
     std::size_t total_masks_copied = 0;
 
     // Iterate through all times in the source data within the interval
-    for (auto const & [time, masks]: _data) {
-        if (time >= interval.start && time <= interval.end && !masks.empty()) {
-            for (auto const & mask: masks) {
-                target.addAtTime(time, mask, false);// Don't notify for each operation
+    for (auto const & [time, entries]: _data) {
+        if (time >= interval.start && time <= interval.end && !entries.empty()) {
+            for (auto const & entry: entries) {
+                target.addAtTime(time, entry.mask, false);// Don't notify for each operation
                 total_masks_copied++;
             }
         }
@@ -199,11 +253,11 @@ std::size_t MaskData::copyTo(MaskData & target, std::vector<TimeFrameIndex> cons
     std::size_t total_masks_copied = 0;
 
     // Copy masks for each specified time
-    for (TimeFrameIndex time: times) {
+    for (const TimeFrameIndex time: times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
-            for (auto const & mask: it->second) {
-                target.addAtTime(time, mask, false);// Don't notify for each operation
+            for (auto const & entry: it->second) {
+                target.addAtTime(time, entry.mask, false);// Don't notify for each operation
                 total_masks_copied++;
             }
         }
@@ -228,10 +282,10 @@ std::size_t MaskData::moveTo(MaskData & target, TimeFrameInterval const & interv
     std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy all masks in the interval to target
-    for (auto const & [time, masks]: _data) {
-        if (time >= interval.start && time <= interval.end && !masks.empty()) {
-            for (auto const & mask: masks) {
-                target.addAtTime(time, mask, false);// Don't notify for each operation
+    for (auto const & [time, entries]: _data) {
+        if (time >= interval.start && time <= interval.end && !entries.empty()) {
+            for (auto const & entry: entries) {
+                target.addAtTime(time, entry.mask, false);// Don't notify for each operation
                 total_masks_moved++;
             }
             times_to_clear.push_back(time);
@@ -239,7 +293,7 @@ std::size_t MaskData::moveTo(MaskData & target, TimeFrameInterval const & interv
     }
 
     // Then, clear all the times from source
-    for (TimeFrameIndex time: times_to_clear) {
+    for (const TimeFrameIndex time: times_to_clear) {
         (void)clearAtTime(time, false);// Don't notify for each operation
     }
 
@@ -257,11 +311,11 @@ std::size_t MaskData::moveTo(MaskData & target, std::vector<TimeFrameIndex> cons
     std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy masks for each specified time to target
-    for (TimeFrameIndex time: times) {
+    for (const TimeFrameIndex time: times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
-            for (auto const & mask: it->second) {
-                target.addAtTime(time, mask, false);// Don't notify for each operation
+            for (auto const & entry: it->second) {
+                target.addAtTime(time, entry.mask, false);// Don't notify for each operation
                 total_masks_moved++;
             }
             times_to_clear.push_back(time);
@@ -269,7 +323,7 @@ std::size_t MaskData::moveTo(MaskData & target, std::vector<TimeFrameIndex> cons
     }
 
     // Then, clear all the times from source
-    for (TimeFrameIndex time: times_to_clear) {
+    for (const TimeFrameIndex time: times_to_clear) {
         (void)clearAtTime(time, false);// Don't notify for each operation
     }
 
@@ -280,4 +334,103 @@ std::size_t MaskData::moveTo(MaskData & target, std::vector<TimeFrameIndex> cons
     }
 
     return total_masks_moved;
+}
+
+std::size_t MaskData::copyMasksByEntityIds(MaskData & target, std::vector<EntityId> const & entity_ids, bool const notify) {
+    std::size_t total_copied = 0;
+    for (auto const & [time, entries] : _data) {
+        for (auto const & entry : entries) {
+            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
+                target.addAtTime(time, entry.mask, false);
+                total_copied++;
+            }
+        }
+    }
+    if (notify && total_copied > 0) {
+        target.notifyObservers();
+    }
+    return total_copied;
+}
+
+std::size_t MaskData::moveMasksByEntityIds(MaskData & target, std::vector<EntityId> const & entity_ids, bool const notify) {
+    std::size_t total_moved = 0;
+    std::vector<std::pair<TimeFrameIndex, size_t>> to_remove;
+
+    for (auto const & [time, entries] : _data) {
+        for (size_t i = 0; i < entries.size(); ++i) {
+            auto const & entry = entries[i];
+            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
+                target.addMaskEntryAtTime(time, entry.mask, entry.entity_id, false);
+                to_remove.emplace_back(time, i);
+                total_moved++;
+            }
+        }
+    }
+
+    std::ranges::sort(to_remove, [](auto const & a, auto const & b) {
+        if (a.first != b.first) return a.first > b.first;
+        return a.second > b.second;
+    });
+
+    for (auto const & [time, idx] : to_remove) {
+        auto it = _data.find(time);
+        if (it != _data.end() && idx < it->second.size()) {
+            it->second.erase(it->second.begin() + static_cast<long>(idx));
+            if (it->second.empty()) {
+                _data.erase(it);
+            }
+        }
+    }
+
+    if (notify && total_moved > 0) {
+        target.notifyObservers();
+        notifyObservers();
+    }
+    return total_moved;
+}
+
+void MaskData::setIdentityContext(std::string const & data_key, EntityRegistry * registry) {
+    _identity_data_key = data_key;
+    _identity_registry = registry;
+}
+
+void MaskData::rebuildAllEntityIds() {
+    if (!_identity_registry) {
+        for (auto & [t, entries] : _data) {
+            (void)t;
+            for (auto & entry : entries) {
+                entry.entity_id = 0;
+            }
+        }
+        return;
+    }
+    for (auto & [t, entries] : _data) {
+        for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
+            entries[static_cast<size_t>(i)].entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, t, i);
+        }
+    }
+}
+
+std::vector<EntityId> const & MaskData::getEntityIdsAtTime(TimeFrameIndex time) const {
+    auto it = _data.find(time);
+    if (it == _data.end()) {
+        return _empty_entity_ids;
+    }
+    _temp_entity_ids.clear();
+    _temp_entity_ids.reserve(it->second.size());
+    for (auto const & entry : it->second) {
+        _temp_entity_ids.push_back(entry.entity_id);
+    }
+    return _temp_entity_ids;
+}
+
+std::vector<EntityId> MaskData::getAllEntityIds() const {
+    std::vector<EntityId> out;
+    for (auto const & [t, entries] : _data) {
+        (void)t;
+        for (auto const & entry : entries) {
+            out.push_back(entry.entity_id);
+        }
+    }
+    return out;
 }

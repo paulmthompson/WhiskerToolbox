@@ -16,6 +16,19 @@
 
 class EntityRegistry;
 
+
+/**
+ * @brief Structure holding a Point2D<float> and its associated EntityId
+ */
+struct PointEntry {
+    Point2D<float> point;
+    EntityId entity_id;
+    
+    PointEntry() = default;
+    PointEntry(Point2D<float> p, EntityId id) : point(std::move(p)), entity_id(id) {}
+};
+
+
 /**
  * @brief PointData
  *
@@ -100,6 +113,18 @@ public:
      * @param notify If true, the observers will be notified
      */
     void addPointsAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & points, bool notify = true);
+
+    /**
+     * @brief Add a point entry at a specific time with a specific entity ID
+     *
+     * This method is used internally for move operations to preserve entity IDs.
+     *
+     * @param time The time to add the point at
+     * @param point The point to add
+     * @param entity_id The entity ID to assign to the point
+     * @param notify If true, the observers will be notified
+     */
+    void addPointEntryAtTime(TimeFrameIndex time, Point2D<float> const & point, EntityId entity_id, bool notify = true);
 
     /**
      * @brief Overwrite a point at a specific time
@@ -219,11 +244,16 @@ public:
     [[nodiscard]] auto GetAllPointsAsRange() const {
         struct TimePointsPair {
             TimeFrameIndex time;
-            std::vector<Point2D<float>> const & points;
+            std::vector<Point2D<float>> points; // Copy for backward compatibility with entry storage
         };
 
         return _data | std::views::transform([](auto const & pair) {
-                   return TimePointsPair{TimeFrameIndex(pair.first), pair.second};
+                   std::vector<Point2D<float>> points;
+                   points.reserve(pair.second.size());
+                   for (auto const & entry : pair.second) {
+                       points.push_back(entry.point);
+                   }
+                   return TimePointsPair{pair.first, std::move(points)};
                });
     }
 
@@ -238,7 +268,7 @@ public:
     [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval) const {
         struct TimePointsPair {
             TimeFrameIndex time;
-            std::vector<Point2D<float>> const & points;
+            std::vector<Point2D<float>> points; // Copy for backward compatibility
         };
 
         return _data 
@@ -246,7 +276,12 @@ public:
                 return pair.first >= interval.start && pair.first <= interval.end;
               })
             | std::views::transform([](auto const & pair) {
-                return TimePointsPair{pair.first, pair.second};
+                std::vector<Point2D<float>> points;
+                points.reserve(pair.second.size());
+                for (auto const & entry : pair.second) {
+                    points.push_back(entry.point);
+                }
+                return TimePointsPair{pair.first, std::move(points)};
               });
     }
 
@@ -346,6 +381,32 @@ public:
      */
     std::size_t moveTo(PointData& target, std::vector<TimeFrameIndex> const& times, bool notify = true);
 
+    /**
+     * @brief Copy points with specific EntityIds to another PointData
+     *
+     * Copies all points that match the given EntityIds to the target PointData.
+     * The copied points will get new EntityIds in the target.
+     *
+     * @param target The target PointData to copy points to
+     * @param entity_ids Vector of EntityIds to copy
+     * @param notify If true, the target will notify its observers after the operation
+     * @return The number of points actually copied
+     */
+    std::size_t copyPointsByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+
+    /**
+     * @brief Move points with specific EntityIds to another PointData
+     *
+     * Moves all points that match the given EntityIds to the target PointData.
+     * The moved points will get the same EntityIds in the target and be removed from source.
+     *
+     * @param target The target PointData to move points to
+     * @param entity_ids Vector of EntityIds to move
+     * @param notify If true, both source and target will notify their observers after the operation
+     * @return The number of points actually moved
+     */
+    std::size_t movePointsByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+
     // ========== Time Frame ==========
 
     /**
@@ -424,15 +485,18 @@ public:
 
 protected:
 private:
-    std::map<TimeFrameIndex, std::vector<Point2D<float>>> _data;
+    std::map<TimeFrameIndex, std::vector<PointEntry>> _data;
     std::vector<Point2D<float>> _empty{};
+    std::vector<EntityId> _empty_entity_ids{};
+    mutable std::vector<Point2D<float>> _temp_points{};
+    mutable std::vector<EntityId> _temp_entity_ids{};
     ImageSize _image_size;
     std::shared_ptr<TimeFrame> _time_frame {nullptr};
 
     // Identity management
     std::string _identity_data_key;
     EntityRegistry * _identity_registry {nullptr};
-    std::map<TimeFrameIndex, std::vector<EntityId>> _entity_ids_by_time;
+    // Entity IDs are stored within PointEntry alongside points in _data
 };
 
 #endif// POINT_DATA_HPP

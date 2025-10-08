@@ -7,12 +7,26 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
-
+#include "Entity/EntityTypes.hpp"
 
 #include <cstddef>
 #include <map>
 #include <ranges>
 #include <vector>
+
+class EntityRegistry;
+
+/**
+ * @brief Structure holding a Mask2D and its associated EntityId
+ */
+struct MaskEntry {
+    Mask2D mask;
+    EntityId entity_id;
+    
+    MaskEntry() = default;
+    MaskEntry(Mask2D m, EntityId id) : mask(std::move(m)), entity_id(id) {}
+};
+
 
 /**
  * @brief The MaskData class
@@ -103,6 +117,18 @@ public:
                        std::vector<uint32_t> && y,
                        bool notify = true);
 
+    /**
+     * @brief Add a mask entry at a specific time with a specific entity ID
+     *
+     * This method is used internally for move operations to preserve entity IDs.
+     *
+     * @param time The time to add the mask at
+     * @param mask The mask to add
+     * @param entity_id The entity ID to assign to the mask
+     * @param notify If true, the observers will be notified
+     */
+    void addMaskEntryAtTime(TimeFrameIndex time, Mask2D const & mask, EntityId entity_id, bool notify = true);
+
 
     // ========== Getters ==========
 
@@ -147,11 +173,16 @@ public:
     [[nodiscard]] auto getAllAsRange() const {
         struct TimeMaskPair {
             TimeFrameIndex time;
-            std::vector<Mask2D> const & masks;
+            std::vector<Mask2D> masks; // Copy for backward compatibility with entry storage
         };
 
         return _data | std::views::transform([](auto const & pair) {
-                   return TimeMaskPair{pair.first, pair.second};
+                   std::vector<Mask2D> masks;
+                   masks.reserve(pair.second.size());
+                   for (auto const & entry : pair.second) {
+                       masks.push_back(entry.mask);
+                   }
+                   return TimeMaskPair{pair.first, std::move(masks)};
                });
     };
 
@@ -166,7 +197,7 @@ public:
     [[nodiscard]] auto GetMasksInRange(TimeFrameInterval const & interval) const {
         struct TimeMaskPair {
             TimeFrameIndex time;
-            std::vector<Mask2D> const & masks;
+            std::vector<Mask2D> masks; // Copy out of entries
         };
 
         return _data 
@@ -174,7 +205,12 @@ public:
                 return pair.first >= interval.start && pair.first <= interval.end;
               })
             | std::views::transform([](auto const & pair) {
-                return TimeMaskPair{pair.first, pair.second};
+                std::vector<Mask2D> masks;
+                masks.reserve(pair.second.size());
+                for (auto const & entry : pair.second) {
+                    masks.push_back(entry.mask);
+                }
+                return TimeMaskPair{pair.first, std::move(masks)};
               });
     }
 
@@ -299,6 +335,32 @@ public:
      */
     std::size_t moveTo(MaskData& target, std::vector<TimeFrameIndex> const& times, bool notify = true);
 
+    /**
+     * @brief Copy masks with specific EntityIds to another MaskData
+     *
+     * Copies all masks that match the given EntityIds to the target MaskData.
+     * The copied masks will get new EntityIds in the target.
+     *
+     * @param target The target MaskData to copy masks to
+     * @param entity_ids Vector of EntityIds to copy
+     * @param notify If true, the target will notify its observers after the operation
+     * @return The number of masks actually copied
+     */
+    std::size_t copyMasksByEntityIds(MaskData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+
+    /**
+     * @brief Move masks with specific EntityIds to another MaskData
+     *
+     * Moves all masks that match the given EntityIds to the target MaskData.
+     * The moved masks will keep the same EntityIds in the target and be removed from source.
+     *
+     * @param target The target MaskData to move masks to
+     * @param entity_ids Vector of EntityIds to move
+     * @param notify If true, both source and target will notify their observers after the operation
+     * @return The number of masks actually moved
+     */
+    std::size_t moveMasksByEntityIds(MaskData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+
 
     // ========== Time Frame ==========
     /**
@@ -308,12 +370,39 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
 
+    /**
+     * @brief Set identity context for automatic EntityId maintenance.
+     */
+    void setIdentityContext(std::string const & data_key, EntityRegistry * registry);
+
+    /**
+     * @brief Rebuild EntityIds for all masks using the current identity context.
+     */
+    void rebuildAllEntityIds();
+
+    /**
+     * @brief Get EntityIds aligned with masks at a specific time.
+     */
+    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
+
+    /**
+     * @brief Get flattened EntityIds for all masks across all times.
+     */
+    [[nodiscard]] std::vector<EntityId> getAllEntityIds() const;
+
 protected:
 private:
-    std::map<TimeFrameIndex, std::vector<Mask2D>> _data;
+    std::map<TimeFrameIndex, std::vector<MaskEntry>> _data;
     std::vector<Mask2D> _empty{};
+    std::vector<EntityId> _empty_entity_ids{};
+    mutable std::vector<Mask2D> _temp_masks{};
+    mutable std::vector<EntityId> _temp_entity_ids{};
     ImageSize _image_size;
     std::shared_ptr<TimeFrame> _time_frame {nullptr};
+
+    // Identity management
+    std::string _identity_data_key;
+    EntityRegistry * _identity_registry {nullptr};
 };
 
 

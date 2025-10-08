@@ -11,23 +11,27 @@
 
 PointData::PointData(std::map<TimeFrameIndex, Point2D<float>> const & data) {
     for (auto const & [time, point]: data) {
-        _data[time].push_back(point);
-        _entity_ids_by_time[time].push_back(0); // placeholder until identity context is set
+        _data[time].emplace_back(point, 0);
     }
 }
 
 PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const & data) 
-    : _data(data) {
-    for (auto const & [time, points] : _data) {
-        _entity_ids_by_time[time].resize(points.size(), 0);
+{
+    for (auto const & [time, points] : data) {
+        auto & entries = _data[time];
+        entries.reserve(points.size());
+        for (auto const & p : points) {
+            entries.emplace_back(p, 0);
+        }
     }
 }
 
 // ========== Setters ==========
 
 bool PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
-    if (clear_at_time(time, _data)) {
-        _entity_ids_by_time.erase(time);
+    auto it = _data.find(time);
+    if (it != _data.end()) {
+        _data.erase(it);
         if (notify) {
             notifyObservers();
         }
@@ -37,15 +41,14 @@ bool PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
 }
 
 bool PointData::clearAtTime(TimeFrameIndex const time, size_t const index, bool notify) {
-    if (clear_at_time(time, index, _data)) {
-        auto it = _entity_ids_by_time.find(time);
-        if (it != _entity_ids_by_time.end()) {
-            if (index < it->second.size()) {
-                it->second.erase(it->second.begin() + static_cast<std::ptrdiff_t>(index));
-            }
-            if (it->second.empty()) {
-                _entity_ids_by_time.erase(it);
-            }
+    auto it = _data.find(time);
+    if (it != _data.end()) {
+        if (index >= it->second.size()) {
+            return false;
+        }
+        it->second.erase(it->second.begin() + static_cast<std::ptrdiff_t>(index));
+        if (it->second.empty()) {
+            _data.erase(it);
         }
         if (notify) {
             notifyObservers();
@@ -56,31 +59,27 @@ bool PointData::clearAtTime(TimeFrameIndex const time, size_t const index, bool 
 }
 
 void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
-    _data[time] = {point};
+    EntityId entity_id = 0;
     if (_identity_registry) {
-        _entity_ids_by_time[time] = {
-            _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, 0)
-        };
-    } else {
-        _entity_ids_by_time[time] = {0};
+        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, 0);
     }
+    _data[time].clear();
+    _data[time].emplace_back(point, entity_id);
     if (notify) {
         notifyObservers();
     }
 }
 
 void PointData::overwritePointsAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & points, bool notify) {
-    _data[time] = points;
-    _entity_ids_by_time[time].clear();
-    _entity_ids_by_time[time].reserve(points.size());
+    auto & entries = _data[time];
+    entries.clear();
+    entries.reserve(points.size());
     for (int i = 0; i < static_cast<int>(points.size()); ++i) {
+        EntityId id = 0;
         if (_identity_registry) {
-            _entity_ids_by_time[time].push_back(
-                _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, i)
-            );
-        } else {
-            _entity_ids_by_time[time].push_back(0);
+            id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, i);
         }
+        entries.emplace_back(points[static_cast<size_t>(i)], id);
     }
     if (notify) {
         notifyObservers();
@@ -97,17 +96,17 @@ void PointData::overwritePointsAtTimes(
     }
 
     for (std::size_t i = 0; i < times.size(); i++) {
-        _data[times[i]] = points[i];
-        _entity_ids_by_time[times[i]].clear();
-        _entity_ids_by_time[times[i]].reserve(points[i].size());
-        for (int j = 0; j < static_cast<int>(points[i].size()); ++j) {
+        auto const & pts = points[i];
+        auto const time = times[i];
+        auto & entries = _data[time];
+        entries.clear();
+        entries.reserve(pts.size());
+        for (int j = 0; j < static_cast<int>(pts.size()); ++j) {
+            EntityId id = 0;
             if (_identity_registry) {
-                _entity_ids_by_time[times[i]].push_back(
-                    _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, times[i], j)
-                );
-            } else {
-                _entity_ids_by_time[times[i]].push_back(0);
+                id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, j);
             }
+            entries.emplace_back(pts[static_cast<size_t>(j)], id);
         }
     }
     if (notify) {
@@ -116,14 +115,12 @@ void PointData::overwritePointsAtTimes(
 }
 
 void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
-    add_at_time(time, point, _data);
-    int local_index = static_cast<int>(_data[time].size()) - 1;
+    int const local_index = static_cast<int>(_data[time].size());
+    EntityId entity_id = 0;
     if (_identity_registry) {
-        EntityId id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
-        _entity_ids_by_time[time].push_back(id);
-    } else {
-        _entity_ids_by_time[time].push_back(0);
+        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
     }
+    _data[time].emplace_back(point, entity_id);
 
     if (notify) {
         notifyObservers();
@@ -131,18 +128,27 @@ void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point,
 }
 
 void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & points, bool notify) {
-    _data[time].insert(_data[time].end(), points.begin(), points.end());
-    int start_index = static_cast<int>(_entity_ids_by_time[time].size());
+    auto & entries = _data[time];
+    int const start_index = static_cast<int>(entries.size());
+    entries.reserve(entries.size() + points.size());
     for (int i = 0; i < static_cast<int>(points.size()); ++i) {
+        EntityId id = 0;
         if (_identity_registry) {
-            _entity_ids_by_time[time].push_back(
-                _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, start_index + i)
-            );
-        } else {
-            _entity_ids_by_time[time].push_back(0);
+            id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, start_index + i);
         }
+        entries.emplace_back(points[static_cast<size_t>(i)], id);
     }
     
+    if (notify) {
+        notifyObservers();
+    }
+}
+
+void PointData::addPointEntryAtTime(TimeFrameIndex const time,
+                                    Point2D<float> const & point,
+                                    EntityId const entity_id,
+                                    bool const notify) {
+    _data[time].emplace_back(point, entity_id);
     if (notify) {
         notifyObservers();
     }
@@ -151,19 +157,30 @@ void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<f
 // ========== Getters ==========
 
 std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const time) const {
-    return get_at_time(time, _data, _empty);
+    auto it = _data.find(time);
+    if (it == _data.end()) {
+        return _empty;
+    }
+    _temp_points.clear();
+    _temp_points.reserve(it->second.size());
+    for (auto const & entry : it->second) {
+        _temp_points.push_back(entry.point);
+    }
+    return _temp_points;
 }
 
 std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const time, 
                                                         TimeFrame const * source_timeframe,
                                                         TimeFrame const * target_timeframe) const {
-    return get_at_time(time, _data, _empty, source_timeframe, target_timeframe);
+    TimeFrameIndex const converted = convert_time_index(time, source_timeframe, target_timeframe);
+    return getAtTime(converted);
 }
 
 std::size_t PointData::getMaxPoints() const {
     std::size_t max_points = 0;
-    for (auto const & [time, points] : _data) {
-        max_points = std::max(max_points, points.size());
+    for (auto const & [time, entries] : _data) {
+        (void)time;
+        max_points = std::max(max_points, entries.size());
     }
     return max_points;
 }
@@ -186,10 +203,11 @@ void PointData::changeImageSize(ImageSize const & image_size) {
     float const scale_x = static_cast<float>(image_size.width) / static_cast<float>(_image_size.width);
     float const scale_y = static_cast<float>(image_size.height) / static_cast<float>(_image_size.height);
 
-    for (auto & [time, points] : _data) {
-        for (auto & point : points) {
-            point.x *= scale_x;
-            point.y *= scale_y;
+    for (auto & [time, entries] : _data) {
+        (void)time;
+        for (auto & entry : entries) {
+            entry.point.x *= scale_x;
+            entry.point.y *= scale_y;
         }
     }
     _image_size = image_size;
@@ -207,10 +225,12 @@ std::size_t PointData::copyTo(PointData& target, TimeFrameInterval const & inter
     std::size_t total_points_copied = 0;
 
     // Iterate through all times in the source data within the interval
-    for (auto const & [time, points] : _data) {
-        if (time >= interval.start && time <= interval.end && !points.empty()) {
-            target.addPointsAtTime(time, points, false); // Don't notify for each operation
-            total_points_copied += points.size();
+    for (auto const & [time, entries] : _data) {
+        if (time >= interval.start && time <= interval.end && !entries.empty()) {
+            for (auto const & entry : entries) {
+                target.addAtTime(time, entry.point, false);
+                total_points_copied += 1;
+            }
         }
     }
 
@@ -229,8 +249,10 @@ std::size_t PointData::copyTo(PointData& target, std::vector<TimeFrameIndex> con
     for (TimeFrameIndex time : times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
-            target.addPointsAtTime(time, it->second, false); // Don't notify for each operation
-            total_points_copied += it->second.size();
+            for (auto const & entry : it->second) {
+                target.addAtTime(time, entry.point, false);
+                total_points_copied += 1;
+            }
         }
     }
 
@@ -253,10 +275,12 @@ std::size_t PointData::moveTo(PointData& target, TimeFrameInterval const & inter
     std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy all points in the interval to target
-    for (auto const & [time, points] : _data) {
-        if (time >= interval.start && time <= interval.end && !points.empty()) {
-            target.addPointsAtTime(time, points, false); // Don't notify for each operation
-            total_points_moved += points.size();
+    for (auto const & [time, entries] : _data) {
+        if (time >= interval.start && time <= interval.end && !entries.empty()) {
+            for (auto const & entry : entries) {
+                target.addAtTime(time, entry.point, false);
+                total_points_moved += 1;
+            }
             times_to_clear.push_back(time);
         }
     }
@@ -283,8 +307,10 @@ std::size_t PointData::moveTo(PointData& target, std::vector<TimeFrameIndex> con
     for (TimeFrameIndex time : times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
-            target.addPointsAtTime(time, it->second, false); // Don't notify for each operation
-            total_points_moved += it->second.size();
+            for (auto const & entry : it->second) {
+                target.addAtTime(time, entry.point, false);
+                total_points_moved += 1;
+            }
             times_to_clear.push_back(time);
         }
     }
@@ -310,35 +336,41 @@ void PointData::setIdentityContext(std::string const & data_key, EntityRegistry 
 
 void PointData::rebuildAllEntityIds() {
     if (!_identity_registry) {
-        // Clear to placeholder zeros to maintain alignment
-        for (auto & [t, pts] : _data) {
-            _entity_ids_by_time[t].assign(pts.size(), 0);
+        for (auto & [t, entries] : _data) {
+            (void)t;
+            for (auto & entry : entries) {
+                entry.entity_id = 0;
+            }
         }
         return;
     }
-    for (auto & [t, pts] : _data) {
-        auto & ids = _entity_ids_by_time[t];
-        ids.clear();
-        ids.reserve(pts.size());
-        for (int i = 0; i < static_cast<int>(pts.size()); ++i) {
-            ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, t, i));
+    for (auto & [t, entries] : _data) {
+        for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
+            entries[static_cast<size_t>(i)].entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, t, i);
         }
     }
 }
 
 std::vector<EntityId> const & PointData::getEntityIdsAtTime(TimeFrameIndex time) const {
-    auto it = _entity_ids_by_time.find(time);
-    if (it == _entity_ids_by_time.end()) {
-        static const std::vector<EntityId> kEmpty;
-        return kEmpty;
+    auto it = _data.find(time);
+    if (it == _data.end()) {
+        return _empty_entity_ids;
     }
-    return it->second;
+    _temp_entity_ids.clear();
+    _temp_entity_ids.reserve(it->second.size());
+    for (auto const & entry : it->second) {
+        _temp_entity_ids.push_back(entry.entity_id);
+    }
+    return _temp_entity_ids;
 }
 
 std::vector<EntityId> PointData::getAllEntityIds() const {
     std::vector<EntityId> out;
-    for (auto const & [t, ids] : _entity_ids_by_time) {
-        out.insert(out.end(), ids.begin(), ids.end());
+    for (auto const & [t, entries] : _data) {
+        (void)t;
+        for (auto const & entry : entries) {
+            out.push_back(entry.entity_id);
+        }
     }
     return out;
 }
@@ -367,7 +399,7 @@ std::optional<Point2D<float>> PointData::getPointByEntityId(EntityId entity_id) 
         return std::nullopt;
     }
     
-    return time_it->second[static_cast<size_t>(local_index)];
+    return time_it->second[static_cast<size_t>(local_index)].point;
 }
 
 std::optional<std::pair<TimeFrameIndex, int>> PointData::getTimeAndIndexByEntityId(EntityId entity_id) const {
@@ -418,4 +450,61 @@ std::vector<std::tuple<EntityId, TimeFrameIndex, int>> PointData::getTimeInfoByE
     }
     
     return result;
+}
+
+// ======== Copy/Move by EntityIds =========
+
+std::size_t PointData::copyPointsByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool const notify) {
+    std::size_t total_points_copied = 0;
+    for (auto const & [time, entries] : _data) {
+        for (auto const & entry : entries) {
+            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
+                target.addAtTime(time, entry.point, false);
+                total_points_copied++;
+            }
+        }
+    }
+    if (notify && total_points_copied > 0) {
+        target.notifyObservers();
+    }
+    return total_points_copied;
+}
+
+std::size_t PointData::movePointsByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool const notify) {
+    std::size_t total_points_moved = 0;
+    std::vector<std::pair<TimeFrameIndex, size_t>> entries_to_remove;
+
+    for (auto const & [time, entries] : _data) {
+        for (size_t i = 0; i < entries.size(); ++i) {
+            auto const & entry = entries[i];
+            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
+                target.addPointEntryAtTime(time, entry.point, entry.entity_id, false);
+                entries_to_remove.emplace_back(time, i);
+                total_points_moved++;
+            }
+        }
+    }
+
+    std::ranges::sort(entries_to_remove,
+                      [](auto const & a, auto const & b) {
+                          if (a.first != b.first) return a.first > b.first;
+                          return a.second > b.second;
+                      });
+
+    for (auto const & [time, index] : entries_to_remove) {
+        auto it = _data.find(time);
+        if (it != _data.end() && index < it->second.size()) {
+            it->second.erase(it->second.begin() + static_cast<long>(index));
+            if (it->second.empty()) {
+                _data.erase(it);
+            }
+        }
+    }
+
+    if (notify && total_points_moved > 0) {
+        target.notifyObservers();
+        notifyObservers();
+    }
+
+    return total_points_moved;
 }
