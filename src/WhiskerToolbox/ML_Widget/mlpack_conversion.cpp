@@ -6,6 +6,8 @@
 #include "DataManager/Tensors/Tensor_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <numeric>
+
 /**
  * Convert a DigitalIntervalSeries to an mlpack row vector
  * @param series The DigitalIntervalSeries to convert

@@ -56,6 +56,13 @@ add_custom_command(TARGET WhiskerToolbox POST_BUILD
         COMMENT "Copying qt6advanceddocking DLL to Qt directory"
 )
 
+add_custom_command(TARGET WhiskerToolbox POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/bin/bz2.dll;${CMAKE_BINARY_DIR}/bin/libscip.dll"
+        $<TARGET_FILE_DIR:WhiskerToolbox>
+        COMMAND_EXPAND_LISTS
+)
+
 function(copy_dlls_during_install dll_list dest_dir)
     foreach(dll IN LISTS dll_list)
         install(CODE "
