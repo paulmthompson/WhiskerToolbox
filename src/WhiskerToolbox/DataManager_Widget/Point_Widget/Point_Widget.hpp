@@ -100,6 +100,10 @@ private slots:
     void _handleSaveCSVRequested(CSVPointSaverOptions options);
     void _onExportMediaFramesCheckboxToggled(bool checked);
     void _deleteSelectedPoints();
+    void _onApplyImageSizeClicked();
+    void _onCopyImageSizeClicked();
+    void _updateImageSizeDisplay();
+    void _populateMediaComboBox();
 };
 
 #endif// POINT_WIDGET_HPP
