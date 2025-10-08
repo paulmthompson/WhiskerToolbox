@@ -10,7 +10,7 @@
 
 #include <Eigen/Dense>
 
-#include "ortools/graph/min_cost_flow.h"
+#include "MinCostFlowSolver.hpp"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/spdlog.h"
 
@@ -60,17 +60,9 @@ using CostFunction = std::function<double(FilterState const &, Eigen::VectorXd c
  * @param R Measurement noise covariance matrix
  * @return CostFunction that computes Mahalanobis distance
  */
-inline CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
-                                                  Eigen::MatrixXd const & R) {
-    return [H, R](FilterState const & predicted_state,
-                  Eigen::VectorXd const & observation,
-                  int /* num_gap_frames */) -> double {
-        Eigen::VectorXd innovation = observation - (H * predicted_state.state_mean);
-        Eigen::MatrixXd innovation_covariance = H * predicted_state.state_covariance * H.transpose() + R;
-        double dist_sq = innovation.transpose() * innovation_covariance.inverse() * innovation;
-        return std::sqrt(dist_sq);
-    };
-}
+CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
+                                                  Eigen::MatrixXd const & R);
+
 
 /**
  * @brief A tracker that uses a global min-cost flow optimization to solve data association.
@@ -408,16 +400,17 @@ private:
             return {};
         }
 
-        operations_research::SimpleMinCostFlow min_cost_flow;
         // Node indexing: 0..num_meta-1 are meta-nodes, plus source and sink
         int const source_node = num_meta;
         int const sink_node = num_meta + 1;
 
-        // Build arcs
+        // Build arcs for the abstract solver
+        std::vector<ArcSpec> arcs;
+        arcs.reserve(static_cast<size_t>(num_meta * num_meta / 4 + 4));
         // Source -> start meta
-        min_cost_flow.AddArcWithCapacityAndUnitCost(source_node, *start_meta_opt, 1, 0);
+        arcs.push_back({source_node, *start_meta_opt, 1, 0});
         // End meta -> sink
-        min_cost_flow.AddArcWithCapacityAndUnitCost(*end_meta_opt, sink_node, 1, 0);
+        arcs.push_back({*end_meta_opt, sink_node, 1, 0});
 
         // Transitions between meta-nodes (only forward in time)
         int num_transition_arcs = 0;
@@ -445,7 +438,7 @@ private:
                 Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*to_start_data);
                 double dist = _cost_function(predicted_state, obs, num_steps);
                 int64_t arc_cost = static_cast<int64_t>(dist * _cost_scale_factor);
-                min_cost_flow.AddArcWithCapacityAndUnitCost(i, j, 1, arc_cost);
+                arcs.push_back({i, j, 1, arc_cost});
                 num_transition_arcs++;
             }
         }
@@ -455,42 +448,24 @@ private:
                            static_cast<unsigned long long>(group_id), num_meta, num_transition_arcs);
         }
 
-        // Supplies
-        min_cost_flow.SetNodeSupply(source_node, 1);
-        min_cost_flow.SetNodeSupply(sink_node, -1);
-
-        auto solve_status = min_cost_flow.Solve();
-        if (solve_status != operations_research::SimpleMinCostFlow::OPTIMAL) {
+        // Solve using private solver and reconstruct meta-node path
+        auto const seq_opt = solveMinCostSingleUnitPath(num_meta + 2, source_node, sink_node, arcs);
+        if (!seq_opt.has_value()) {
             if (_logger) {
-                _logger->error("Min-cost flow (meta) failed with status: {}", static_cast<int>(solve_status));
+                _logger->error("Min-cost flow (meta) failed: no optimal path");
             }
             return {};
         }
 
-        // Reconstruct meta-node path
-        std::map<int, int> succ;
-        for (int a = 0; a < min_cost_flow.NumArcs(); ++a) {
-            if (min_cost_flow.Flow(a) > 0) {
-                int tail = min_cost_flow.Tail(a);
-                int head = min_cost_flow.Head(a);
-                succ[tail] = head;
-            }
-        }
-
         Path expanded_path;
-        int current = source_node;
-        std::unordered_set<int> visited;
-        while (succ.find(current) != succ.end() && current != sink_node) {
-            int next = succ[current];
-            if (next >= 0 && next < num_meta) {
-                // Append all members of this meta-node
-                for (auto const & n: meta_nodes[next].members) {
+        auto const & sequence = *seq_opt;
+        for (size_t idx = 1; idx < sequence.size(); ++idx) { // skip the source at index 0
+            int node_index = sequence[idx];
+            if (node_index >= 0 && node_index < num_meta) {
+                for (auto const & n : meta_nodes[static_cast<size_t>(node_index)].members) {
                     expanded_path.push_back(n);
                 }
             }
-            if (visited.count(next)) break;// safety against unexpected cycles
-            visited.insert(next);
-            current = next;
         }
 
         return expanded_path;

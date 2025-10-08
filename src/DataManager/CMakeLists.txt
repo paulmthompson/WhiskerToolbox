@@ -230,7 +230,7 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
 
-target_link_libraries(DataManager PUBLIC StateEstimation)
+target_link_libraries(DataManager PRIVATE StateEstimation)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 

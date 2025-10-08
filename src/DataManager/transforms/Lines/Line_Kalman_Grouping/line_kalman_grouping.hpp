@@ -3,9 +3,6 @@
 
 #include "CoreGeometry/lines.hpp"
 #include "Entity/EntityGroupManager.hpp"
-#include "StateEstimation/Features/IFeatureExtractor.hpp"
-#include "StateEstimation/Kalman/KalmanFilter.hpp"
-#include "StateEstimation/MinCostFlowTracker.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "transforms/grouping_transforms.hpp"
 

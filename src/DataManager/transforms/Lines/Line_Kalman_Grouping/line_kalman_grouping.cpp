@@ -9,6 +9,9 @@
 #include "StateEstimation/Features/LineCentroidExtractor.hpp"
 #include "StateEstimation/Features/LineLengthExtractor.hpp"
 #include "StateEstimation/Kalman/KalmanMatrixBuilder.hpp"
+#include "StateEstimation/Features/IFeatureExtractor.hpp"
+#include "StateEstimation/Kalman/KalmanFilter.hpp"
+#include "StateEstimation/MinCostFlowTracker.hpp"
 
 #include <algorithm>
 #include <cmath>

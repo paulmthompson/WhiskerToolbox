@@ -30,6 +30,9 @@ set(STATE_ESTIMATION_SOURCES
     Common.hpp
     DataSource.hpp
     MinCostFlowTracker.hpp
+    MinCostFlowTracker.cpp
+    MinCostFlowSolver.hpp
+    MinCostFlowSolver.cpp
 )
 
 # Optional demo/example files (not included in library)
@@ -43,6 +46,9 @@ target_include_directories(StateEstimation PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>  # For Entity/ and TimeFrame/ includes
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
+target_include_directories(StateEstimation PRIVATE
     "$<BUILD_INTERFACE:${ortools_SOURCE_DIR}>"  # For ortools includes
 )
 
