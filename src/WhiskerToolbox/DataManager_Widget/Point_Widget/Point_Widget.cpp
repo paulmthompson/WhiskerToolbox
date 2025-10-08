@@ -49,6 +49,11 @@ Point_Widget::Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * 
     connect(ui->export_media_frames_checkbox, &QCheckBox::toggled,
             this, &Point_Widget::_onExportMediaFramesCheckboxToggled);
 
+    // Setup collapsible export section
+    ui->export_section->autoSetContentLayout();
+    ui->export_section->setTitle("Export Options");
+    ui->export_section->toggle(false); // Start collapsed
+
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
     ui->media_export_options_widget->setVisible(ui->export_media_frames_checkbox->isChecked());
 }
