@@ -87,7 +87,7 @@ std::shared_ptr<LineData> load(BinaryLineLoaderOptions & opts) {
         infile.close();
 
         capnp::ReaderOptions options;
-        options.traversalLimitInWords = 256ull * 1024 * 1024;
+        options.traversalLimitInWords = 1024ull * 1024 * 1024;
         return IO::CapnProto::deserializeLineData(words.asPtr(), options);
 
     } catch (kj::Exception const & e) {
