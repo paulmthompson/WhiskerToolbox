@@ -87,6 +87,7 @@ private:
 
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, TimeFrameIndex current_time);
+    void _erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time);
     void _applyPolynomialFit(Line2D & line, int order);
 
     void _detectEdges();
@@ -115,8 +116,9 @@ private:
     void _updateTemporaryLineFromWidget();
 
 private slots:
-    void _clickedInVideo(qreal x, qreal y);
+    void _clickedInVideoWithModifiers(qreal x, qreal y, Qt::KeyboardModifiers modifiers);
     void _rightClickedInVideo(qreal x, qreal y);
+    void _mouseMoved(qreal x, qreal y);
     void _toggleSelectionMode(QString text);
     void _setSmoothingMode(int index);
     void _setPolynomialOrder(int order);
@@ -129,7 +131,6 @@ private slots:
     void _toggleShowSegment(bool checked);
     void _setSegmentStartPercentage(int percentage);
     void _setSegmentEndPercentage(int percentage);
-    void _lineSelectionChanged(int index);
     void _toggleEdgeSnapping(bool checked);
     void _setEdgeThreshold(int threshold);
     void _setEdgeSearchRadius(int radius);

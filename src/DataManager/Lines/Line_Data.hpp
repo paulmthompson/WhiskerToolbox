@@ -224,6 +224,17 @@ public:
     [[nodiscard]] std::optional<Line2D> getLineByEntityId(EntityId entity_id) const;
 
     /**
+     * @brief Get a mutable reference to a line by EntityId.
+     * 
+     * This method allows direct modification of a line while preserving its EntityId.
+     * The returned reference points to the actual line data in the LineData structure.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing a mutable reference to the line if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<std::reference_wrapper<Line2D>> getMutableLineByEntityId(EntityId entity_id);
+
+    /**
      * @brief Find the time frame and local index for a specific EntityId.
      * 
      * Returns the time frame and local line index (within that time frame)
