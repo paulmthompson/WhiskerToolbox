@@ -33,6 +33,9 @@ if (LINUX)
 
     set(BUILD_SAMPLES OFF)
     set(BUILD_EXAMPLES OFF)
+
+    set(BUILD_FLATZINC OFF)
+    #set(BUILD_MATH_OPT OFF)
 elseif (APPLE)
     FetchContent_Declare(
         ortools
@@ -62,6 +65,8 @@ elseif (WIN32)
 
   set(BUILD_SAMPLES OFF)
   set(BUILD_EXAMPLES OFF)
+
+  set(BUILD_FLATZINC OFF)
 endif()
 
 FetchContent_Declare(
