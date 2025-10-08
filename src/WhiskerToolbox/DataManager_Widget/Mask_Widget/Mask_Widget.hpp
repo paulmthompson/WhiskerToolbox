@@ -103,6 +103,9 @@ private slots:
     void _onExportTypeChanged(int index);
     void _handleSaveImageMaskRequested(QString format, nlohmann::json config);
     void _onExportMediaFramesCheckboxToggled(bool checked);
+    void _onApplyImageSizeClicked();
+    void _onCopyImageSizeClicked();
+    void _populateMediaComboBox();
 };
 
 

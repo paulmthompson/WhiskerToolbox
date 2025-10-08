@@ -31,104 +31,34 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="imageSizeLayout">
+    <layout class="QVBoxLayout" name="imageSizeMainLayout">
      <item>
-      <widget class="QLabel" name="label_image_size_title">
-       <property name="text">
-        <string>Image Size:</string>
-       </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_image_size_value">
-       <property name="text">
-        <string>Not Available</string>
-       </property>
-       <property name="styleSheet">
-        <string>color: rgb(100, 100, 100);</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_imageSize">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="topControlsLayout">
-     <item>
-      <layout class="QVBoxLayout" name="leftVerticalLayout">
+      <layout class="QHBoxLayout" name="imageSizeLayout">
        <item>
-        <layout class="QHBoxLayout" name="exportTypeLayout">
-         <item>
-          <widget class="QLabel" name="label_export_type">
-           <property name="text">
-            <string>Export Type:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="export_type_combo">
-           <item>
-            <property name="text">
-             <string>HDF5</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Image</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QStackedWidget" name="stacked_saver_options">
-         <property name="currentIndex">
-          <number>0</number>
-         </property>
-         <widget class="HDF5MaskSaver_Widget" name="hdf5_mask_saver_widget"/>
-         <widget class="ImageMaskSaver_Widget" name="image_mask_saver_widget"/>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="export_media_frames_checkbox">
+        <widget class="QLabel" name="label_image_size">
          <property name="text">
-          <string>Export matching media frames</string>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
+          <string>Image Size:</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="MediaExport_Widget" name="media_export_options_widget" native="true"/>
+        <widget class="QLabel" name="image_size_status_label">
+         <property name="text">
+          <string>Not Set</string>
+         </property>
+         <property name="styleSheet">
+          <string>color: #666666; font-style: italic;</string>
+         </property>
+        </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_left">
+        <spacer name="horizontalSpacer_imageSize">
          <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
+           <width>40</width>
            <height>20</height>
           </size>
          </property>
@@ -137,15 +67,172 @@
       </layout>
      </item>
      <item>
-      <widget class="QTableView" name="tableView"/>
+      <layout class="QHBoxLayout" name="imageSizeControlsLayout">
+       <item>
+        <widget class="QLineEdit" name="image_width_edit">
+         <property name="placeholderText">
+          <string>Width</string>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_x_separator">
+         <property name="text">
+          <string>×</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="image_height_edit">
+         <property name="placeholderText">
+          <string>Height</string>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="apply_image_size_button">
+         <property name="text">
+          <string>Apply</string>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>60</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_or">
+         <property name="text">
+          <string>or</string>
+         </property>
+         <property name="styleSheet">
+          <string>color: #666666;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="copy_from_media_combo">
+         <property name="placeholderText">
+          <string>Copy from media...</string>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="copy_image_size_button">
+         <property name="text">
+          <string>Copy Size</string>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QTableView" name="tableView"/>
    </item>
    <item>
     <widget class="QPushButton" name="load_sam_button">
      <property name="text">
       <string>Load SAM Model</string>
      </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Section" name="export_section" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <layout class="QVBoxLayout" name="exportSectionLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="exportTypeLayout">
+        <item>
+         <widget class="QLabel" name="label_export_type">
+          <property name="text">
+           <string>Export Type:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="export_type_combo">
+          <item>
+           <property name="text">
+            <string>HDF5</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Image</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QStackedWidget" name="stacked_saver_options">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="HDF5MaskSaver_Widget" name="hdf5_mask_saver_widget"/>
+        <widget class="ImageMaskSaver_Widget" name="image_mask_saver_widget"/>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="export_media_frames_checkbox">
+        <property name="text">
+         <string>Export matching media frames</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="MediaExport_Widget" name="media_export_options_widget" native="true"/>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -183,6 +270,12 @@
    <class>MediaExport_Widget</class>
    <extends>QWidget</extends>
            <header>MediaExport/MediaExport_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>Section</class>
+   <extends>QWidget</extends>
+   <header>Collapsible_Widget/Section.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
