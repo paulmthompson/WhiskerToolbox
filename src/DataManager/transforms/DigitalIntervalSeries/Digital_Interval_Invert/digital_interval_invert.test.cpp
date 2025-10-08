@@ -29,16 +29,16 @@ TEST_CASE("Digital Interval Invert Transform", "[transforms][digital_interval_in
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
 
-        // Expected: (10,13), (20,23), (40,56), (70,72) -> (11,12), (21,22), (41,55), (71,71)
+        // Expected: (10,13), (20,23), (40,56), (70,72) -> exact boundary values
         REQUIRE(result_intervals.size() == 4);
-        REQUIRE(result_intervals[0].start == 11);
-        REQUIRE(result_intervals[0].end == 12);
-        REQUIRE(result_intervals[1].start == 21);
-        REQUIRE(result_intervals[1].end == 22);
-        REQUIRE(result_intervals[2].start == 41);
-        REQUIRE(result_intervals[2].end == 55);
-        REQUIRE(result_intervals[3].start == 71);
-        REQUIRE(result_intervals[3].end == 71);
+        REQUIRE(result_intervals[0].start == 10);
+        REQUIRE(result_intervals[0].end == 13);
+        REQUIRE(result_intervals[1].start == 20);
+        REQUIRE(result_intervals[1].end == 23);
+        REQUIRE(result_intervals[2].start == 40);
+        REQUIRE(result_intervals[2].end == 56);
+        REQUIRE(result_intervals[3].start == 70);
+        REQUIRE(result_intervals[3].end == 72);
     }
 
     SECTION("Bounded inversion") {
@@ -60,19 +60,19 @@ TEST_CASE("Digital Interval Invert Transform", "[transforms][digital_interval_in
         auto const & result_intervals = result->getDigitalIntervalSeries();
 
         // Expected: (0,5), (10,13), (20,23), (40,56), (70,72), (91,100)
-        // -> (0,4), (11,12), (21,22), (41,55), (71,71), (92,100)
+        // -> exact boundary values
         REQUIRE(result_intervals.size() == 6);
         REQUIRE(result_intervals[0].start == 0);
-        REQUIRE(result_intervals[0].end == 4);
-        REQUIRE(result_intervals[1].start == 11);
-        REQUIRE(result_intervals[1].end == 12);
-        REQUIRE(result_intervals[2].start == 21);
-        REQUIRE(result_intervals[2].end == 22);
-        REQUIRE(result_intervals[3].start == 41);
-        REQUIRE(result_intervals[3].end == 55);
-        REQUIRE(result_intervals[4].start == 71);
-        REQUIRE(result_intervals[4].end == 71);
-        REQUIRE(result_intervals[5].start == 92);
+        REQUIRE(result_intervals[0].end == 5);
+        REQUIRE(result_intervals[1].start == 10);
+        REQUIRE(result_intervals[1].end == 13);
+        REQUIRE(result_intervals[2].start == 20);
+        REQUIRE(result_intervals[2].end == 23);
+        REQUIRE(result_intervals[3].start == 40);
+        REQUIRE(result_intervals[3].end == 56);
+        REQUIRE(result_intervals[4].start == 70);
+        REQUIRE(result_intervals[4].end == 72);
+        REQUIRE(result_intervals[5].start == 91);
         REQUIRE(result_intervals[5].end == 100);
     }
 
@@ -121,16 +121,16 @@ TEST_CASE("Digital Interval Invert Transform", "[transforms][digital_interval_in
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->getDigitalIntervalSeries();
 
-        // Expected: (0,9), (21,30)
+        // Expected: (0,10), (20,30) -> exact boundary values
         REQUIRE(result_intervals.size() == 2);
         REQUIRE(result_intervals[0].start == 0);
-        REQUIRE(result_intervals[0].end == 9);
-        REQUIRE(result_intervals[1].start == 21);
+        REQUIRE(result_intervals[0].end == 10);
+        REQUIRE(result_intervals[1].start == 20);
         REQUIRE(result_intervals[1].end == 30);
     }
 
     SECTION("Adjacent intervals - no gaps") {
-        std::vector<Interval> input_intervals = {{5, 10}, {11, 20}};
+        std::vector<Interval> input_intervals = {{5, 10}, {10, 20}};
         auto input_series = std::make_shared<DigitalIntervalSeries>(input_intervals);
 
         params.domainType = DomainType::Unbounded;
@@ -140,7 +140,7 @@ TEST_CASE("Digital Interval Invert Transform", "[transforms][digital_interval_in
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->getDigitalIntervalSeries();
 
-        // No gaps between intervals, so result should be empty
+        // No gaps between intervals since they share endpoint 10, so result should be empty
         REQUIRE(result_intervals.size() == 0);
     }
 

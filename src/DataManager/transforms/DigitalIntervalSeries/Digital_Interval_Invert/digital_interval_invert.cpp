@@ -61,7 +61,7 @@ std::shared_ptr<DigitalIntervalSeries> invert_intervals(
         auto const bound_end = static_cast<int64_t>(invertParams.boundEnd);
 
         if (sorted_intervals[0].start > bound_start) {
-            inverted_intervals.emplace_back(bound_start, sorted_intervals[0].start - 1);
+            inverted_intervals.emplace_back(bound_start, sorted_intervals[0].start);
         }
     }
 
@@ -80,8 +80,8 @@ std::shared_ptr<DigitalIntervalSeries> invert_intervals(
         Interval const & next = sorted_intervals[i + 1];
 
         // Check if there's a gap between current interval end and next interval start
-        if (current.end + 1 < next.start) {
-            inverted_intervals.emplace_back(current.end + 1, next.start - 1);
+        if (current.end < next.start) {
+            inverted_intervals.emplace_back(current.end, next.start);
         }
     }
 
@@ -94,7 +94,7 @@ std::shared_ptr<DigitalIntervalSeries> invert_intervals(
         auto const bound_end = static_cast<int64_t>(invertParams.boundEnd);
 
         if (sorted_intervals.back().end < bound_end) {
-            inverted_intervals.emplace_back(sorted_intervals.back().end + 1, bound_end);
+            inverted_intervals.emplace_back(sorted_intervals.back().end, bound_end);
         }
     }
 
