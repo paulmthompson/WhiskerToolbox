@@ -6,6 +6,7 @@
 #include "MediaExport/MediaExport_Widget.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <QModelIndex>
 #include <QWidget>
@@ -109,6 +110,13 @@ private:
      * @return Vector of unique frame numbers that are currently selected
      */
     std::vector<TimeFrameIndex> _getSelectedFrames();
+
+    /**
+     * @brief Get selected EntityIds from the table view
+     * 
+     * @return Vector of EntityIds that are currently selected
+     */
+    std::vector<EntityId> _getSelectedEntityIds();
 };
 
 #endif// LINE_WIDGET_HPP

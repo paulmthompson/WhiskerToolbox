@@ -202,9 +202,25 @@ std::vector<TimeFrameIndex> Line_Widget::_getSelectedFrames() {
     return {unique_frames.begin(), unique_frames.end()};
 }
 
+std::vector<EntityId> Line_Widget::_getSelectedEntityIds() {
+    QModelIndexList const selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    std::vector<EntityId> entity_ids;
+
+    for (auto const & index: selectedIndexes) {
+        if (index.isValid()) {
+            LineTableRow const row_data = _line_table_model->getRowData(index.row());
+            if (row_data.entity_id != 0) { // Valid entity ID
+                entity_ids.push_back(row_data.entity_id);
+            }
+        }
+    }
+
+    return entity_ids;
+}
+
 void Line_Widget::_moveLineToTarget(std::string const & target_key) {
-   auto selected_frames = _getSelectedFrames();
-    if (selected_frames.empty()) {
+    auto selected_entity_ids = _getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
         std::cout << "Line_Widget: No lines selected to move." << std::endl;
         return;
     }
@@ -221,26 +237,26 @@ void Line_Widget::_moveLineToTarget(std::string const & target_key) {
         return;
     }
 
-    std::cout << "Line_Widget: Moving lines from " << selected_frames.size()
-              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+    std::cout << "Line_Widget: Moving " << selected_entity_ids.size()
+              << " selected lines from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    // Use the new moveTo method with the vector of selected times
-    std::size_t const total_lines_moved = source_line_data->moveTo(*target_line_data, selected_frames, true);
+    // Use the moveLinesByEntityIds method to move only the selected lines
+    std::size_t const total_lines_moved = source_line_data->moveLinesByEntityIds(*target_line_data, selected_entity_ids, true);
 
     if (total_lines_moved > 0) {
         // Update the table view to reflect changes
         updateTable();
 
         std::cout << "Line_Widget: Successfully moved " << total_lines_moved
-                  << " lines from " << selected_frames.size() << " frames." << std::endl;
+                  << " selected lines." << std::endl;
     } else {
-        std::cout << "Line_Widget: No lines found in any of the selected frames to move." << std::endl;
+        std::cout << "Line_Widget: No lines found with the selected EntityIds to move." << std::endl;
     }
 }
 
 void Line_Widget::_copyLineToTarget(std::string const & target_key) {
-    auto selected_frames = _getSelectedFrames();
-    if (selected_frames.empty()) {
+    auto selected_entity_ids = _getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
         std::cout << "Line_Widget: No lines selected to copy." << std::endl;
         return;
     }
@@ -257,17 +273,17 @@ void Line_Widget::_copyLineToTarget(std::string const & target_key) {
         return;
     }
 
-    std::cout << "Line_Widget: Copying lines from " << selected_frames.size()
-              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+    std::cout << "Line_Widget: Copying " << selected_entity_ids.size()
+              << " selected lines from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    // Use the new copyTo method with the vector of selected times
-    std::size_t const total_lines_copied = source_line_data->copyTo(*target_line_data, selected_frames, true);
+    // Use the copyLinesByEntityIds method to copy only the selected lines
+    std::size_t const total_lines_copied = source_line_data->copyLinesByEntityIds(*target_line_data, selected_entity_ids, true);
 
     if (total_lines_copied > 0) {
         std::cout << "Line_Widget: Successfully copied " << total_lines_copied
-                  << " lines from " << selected_frames.size() << " frames." << std::endl;
+                  << " selected lines." << std::endl;
     } else {
-        std::cout << "Line_Widget: No lines found in any of the selected frames to copy." << std::endl;
+        std::cout << "Line_Widget: No lines found with the selected EntityIds to copy." << std::endl;
     }
 }
 
