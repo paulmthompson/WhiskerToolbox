@@ -423,6 +423,9 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
             int progress = total_pairs > 0 ? static_cast<int>(100.0 * processed_pairs / total_pairs) : 100;
             progressCallback(progress);
         }
+
+        // After completing all intervals for this anchor group, emit one bulk notification
+        group_manager->notifyGroupsChanged();
     }
 
     if (params->verbose_output) {

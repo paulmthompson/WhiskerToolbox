@@ -28,6 +28,50 @@ GroupManager::GroupManager(EntityGroupManager * entity_group_manager, std::share
     // Assert that we have valid managers
     Q_ASSERT(m_entity_group_manager != nullptr);
     Q_ASSERT(m_data_manager != nullptr);
+
+    // Initialize known groups set
+    auto ids = m_entity_group_manager->getAllGroupIds();
+    for (auto gid : ids) m_known_group_ids.insert(static_cast<int>(gid));
+
+    // Subscribe to bulk group change notifications
+    m_groupObserverId = m_entity_group_manager->getGroupObservers().addObserver([this]() {
+        // Ensure we update on the UI thread
+        QMetaObject::invokeMethod(this, [this]() {
+            // Detect newly created groups and emit groupCreated for them
+            auto current_ids = m_entity_group_manager->getAllGroupIds();
+            QSet<int> current_set;
+            for (auto gid : current_ids) current_set.insert(static_cast<int>(gid));
+
+            // New groups = current - known
+            for (int gid : current_set) {
+                if (!m_known_group_ids.contains(gid)) {
+                    // Assign a default color for new groups only; don't touch existing colors
+                    // Use the number of colors already assigned to select a palette entry
+                    int const color_index = static_cast<int>(m_group_colors.size()) % DEFAULT_COLORS.size();
+                    m_group_colors[gid] = DEFAULT_COLORS[color_index];
+                    m_group_visibility[gid] = true;
+                    emit groupCreated(gid);
+                }
+            }
+            // Removed groups = known - current
+            for (int gid : m_known_group_ids) {
+                if (!current_set.contains(gid)) {
+                    m_group_colors.remove(gid);
+                    m_group_visibility.remove(gid);
+                    emit groupRemoved(gid);
+                }
+            }
+            // Update known set after emitting create/remove
+            m_known_group_ids = current_set;
+        }, Qt::QueuedConnection);
+    });
+}
+
+GroupManager::~GroupManager() {
+    if (m_groupObserverId != 0) {
+        m_entity_group_manager->getGroupObservers().removeObserver(m_groupObserverId);
+        m_groupObserverId = 0;
+    }
 }
 
 int GroupManager::createGroup(QString const & name) {
@@ -42,6 +86,8 @@ int GroupManager::createGroup(QString const & name, QColor const & color) {
     auto const group_id = static_cast<int>(entity_group_id);
     m_group_colors[group_id] = color;
     m_group_visibility[group_id] = true; // Groups are visible by default
+    // Track as known to avoid duplicate create on next observer notification
+    m_known_group_ids.insert(group_id);
 
     qDebug() << "GroupManager: Created group" << group_id << "with name" << name;
 
@@ -58,6 +104,7 @@ bool GroupManager::removeGroup(int group_id) {
 
     m_group_colors.remove(group_id);
     m_group_visibility.remove(group_id);
+    m_known_group_ids.remove(group_id);
 
     qDebug() << "GroupManager: Removed group" << group_id;
 

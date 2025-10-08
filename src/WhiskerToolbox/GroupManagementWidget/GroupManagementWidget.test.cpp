@@ -183,3 +183,48 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Visibi
     REQUIRE(group.has_value());
     REQUIRE(group->visible == true);
 }
+
+TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Observer-driven bulk update does not duplicate existing groups", "[groupmanagementwidget][observer][dedupe]") {
+    EntityGroupManager egm;
+    auto dm = std::make_shared<DataManager>();
+    GroupManager gm(&egm, dm);
+    GroupManagementWidget widget(&gm);
+
+    auto * table = findGroupsTable(widget);
+    QCoreApplication::processEvents();
+    REQUIRE(table->rowCount() == 0);
+
+    // Create an anchor group via GroupManager (normal UI path)
+    int g_anchor = gm.createGroup(QString("Group 1"));
+    QCoreApplication::processEvents();
+    REQUIRE(table->rowCount() == 1);
+
+    // Add some entities to the anchor group
+    std::unordered_set<EntityId> ids = {101, 102, 103};
+    REQUIRE(gm.assignEntitiesToGroup(g_anchor, ids));
+
+    // Trigger bulk notification (as the transform would) - should NOT duplicate existing rows
+    egm.notifyGroupsChanged();
+    QCoreApplication::processEvents();
+    REQUIRE(table->rowCount() == 1);
+
+    // Simulate transform-created putative group created directly on EntityGroupManager
+    GroupId putative_gid = egm.createGroup("Putative:Group 1");
+    (void)putative_gid;
+    egm.notifyGroupsChanged();
+    QCoreApplication::processEvents();
+
+    // Expect exactly two rows: the original anchor group and its putative group
+    REQUIRE(table->rowCount() == 2);
+
+    // Ensure there is exactly one row for the anchor group id
+    int anchor_rows = 0;
+    for (int row = 0; row < table->rowCount(); ++row) {
+        QTableWidgetItem * item = table->item(row, 0);
+        REQUIRE(item != nullptr);
+        if (item->data(Qt::UserRole).toInt() == g_anchor) {
+            anchor_rows++;
+        }
+    }
+    REQUIRE(anchor_rows == 1);
+}

@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "DataManager/Observer/Observer_Data.hpp"
+
 /**
  * @brief Unique identifier for user-defined groups of entities.
  */
@@ -170,6 +172,19 @@ public:
      */
     [[nodiscard]] std::size_t getTotalEntityCount() const;
 
+    // --- Observer integration for UI updates ---
+    /**
+     * @brief Access the observer sink for group changes.
+     * Subscribers will be notified when notifyGroupsChanged() is called.
+     */
+    [[nodiscard]] ObserverData & getGroupObservers() { return m_group_observers; }
+
+    /**
+     * @brief Notify observers that group membership or descriptors changed.
+     * Call this once after bulk updates to avoid excessive UI refreshes.
+     */
+    void notifyGroupsChanged() { m_group_observers.notifyObservers(); }
+
 private:
     // Group metadata
     std::unordered_map<GroupId, std::string> m_group_names;
@@ -182,6 +197,9 @@ private:
     std::unordered_map<EntityId, std::unordered_set<GroupId>> m_entity_groups;
     
     GroupId m_next_group_id{1}; // Start at 1, 0 reserved for invalid/null
+
+    // Observer for bulk change notifications
+    ObserverData m_group_observers;
 };
 
 #endif // ENTITYGROUPMANAGER_HPP

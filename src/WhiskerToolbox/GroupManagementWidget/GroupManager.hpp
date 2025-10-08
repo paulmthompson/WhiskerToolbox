@@ -7,6 +7,7 @@
 #include <QMap>
 #include <QObject>
 #include <QString>
+#include <QSet>
 
 #include <cstdint>
 #include <optional>
@@ -52,7 +53,7 @@ public:
     };
 
     explicit GroupManager(EntityGroupManager * entity_group_manager, std::shared_ptr<DataManager> data_manager, QObject * parent = nullptr);
-    ~GroupManager() = default;
+    ~GroupManager() override;
 
     /**
      * @brief Create a new group with auto-generated color
@@ -212,6 +213,10 @@ private:
     QMap<int, QColor> m_group_colors;// Maps EntityGroupManager GroupId to QColor
     QMap<int, bool> m_group_visibility;// Maps EntityGroupManager GroupId to visibility state
     int m_next_group_id;
+
+    // Track known groups to detect new ones on observer callbacks
+    QSet<int> m_known_group_ids;
+    int m_groupObserverId{0};
 
     static QVector<QColor> const DEFAULT_COLORS;
 
