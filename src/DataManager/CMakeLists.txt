@@ -225,6 +225,12 @@ target_include_directories(DataManager PRIVATE
 
     )
 
+target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
+
+target_link_libraries(DataManager PUBLIC StateEstimation)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 
@@ -232,17 +238,10 @@ target_link_libraries(DataManager PRIVATE Whisker-Analysis)
 
 target_link_libraries(DataManager PUBLIC iir::iir)
 
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::TensorData)
-
-
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
-target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
+target_link_libraries(DataManager PRIVATE WhiskerToolbox::TensorData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
-target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
-target_link_libraries(DataManager PUBLIC StateEstimation)
 
 if(ENABLE_OPENCV)
     target_link_libraries(DataManager PUBLIC ImageProcessing)

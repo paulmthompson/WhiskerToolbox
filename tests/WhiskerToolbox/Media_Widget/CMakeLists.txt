@@ -24,6 +24,7 @@ target_link_libraries(test_media_widget PRIVATE
     DataManager 
     Qt6::Widgets
     Qt6::Core
+    TensorData
 )
 
 target_include_directories(test_media_widget PRIVATE

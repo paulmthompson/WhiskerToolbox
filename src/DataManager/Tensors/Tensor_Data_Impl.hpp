@@ -1,10 +1,11 @@
-#ifndef TENSOR_DATA_HPP
-#define TENSOR_DATA_HPP
+#ifndef TENSOR_DATA_IMPL_HPP
+#define TENSOR_DATA_IMPL_HPP
 
-#include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#ifndef TENSOR_BACKEND_LIBTORCH
+#ifdef TENSOR_BACKEND_LIBTORCH
+#include <torch/torch.h>
+#else
 #include <armadillo>
 #endif
 
@@ -12,63 +13,59 @@
 #include <vector>
 #include <memory>
 
-// Forward declarations
-class TensorDataImpl;
-
 /**
- * @brief TensorData class with configurable backend implementations
+ * @brief Implementation class for TensorData using PIMPL pattern
  * 
- * This class provides tensor storage and operations with different backends
- * selected at compile time (LibTorch or Armadillo).
- * Uses PIMPL pattern to hide heavy tensor types from the interface.
+ * This class contains the actual implementation details and heavy dependencies
+ * that are hidden from the public interface.
  */
-class TensorData : public ObserverData {
+class TensorDataImpl {
 public:
     // ========== Constructors ==========
     /**
      * @brief Default constructor
      */
-    TensorData();
+    TensorDataImpl() = default;
 
     /**
      * @brief Destructor
      */
-    ~TensorData();
+    ~TensorDataImpl() = default;
 
     /**
      * @brief Copy constructor
-     * @param other TensorData to copy from
+     * @param other TensorDataImpl to copy from
      */
-    TensorData(const TensorData& other);
+    TensorDataImpl(const TensorDataImpl& other);
 
     /**
      * @brief Move constructor
-     * @param other TensorData to move from
+     * @param other TensorDataImpl to move from
      */
-    TensorData(TensorData&& other) noexcept;
+    TensorDataImpl(TensorDataImpl&& other) noexcept;
 
     /**
      * @brief Copy assignment operator
-     * @param other TensorData to copy from
-     * @return Reference to this TensorData
+     * @param other TensorDataImpl to copy from
+     * @return Reference to this TensorDataImpl
      */
-    TensorData& operator=(const TensorData& other);
+    TensorDataImpl& operator=(const TensorDataImpl& other);
 
     /**
      * @brief Move assignment operator
-     * @param other TensorData to move from
-     * @return Reference to this TensorData
+     * @param other TensorDataImpl to move from
+     * @return Reference to this TensorDataImpl
      */
-    TensorData& operator=(TensorData&& other) noexcept;
+    TensorDataImpl& operator=(TensorDataImpl&& other) noexcept;
 
 #ifdef TENSOR_BACKEND_LIBTORCH
     /**
-     * @brief Constructor for TensorData from a map of TimeFrameIndex to torch::Tensor
+     * @brief Constructor for TensorDataImpl from a map of TimeFrameIndex to torch::Tensor
      * @param data Map of TimeFrameIndex to torch::Tensor
      * @param shape Vector of integers representing the shape of the tensors
      */
     template<typename T>
-    TensorData(std::map<TimeFrameIndex, void*> data, std::vector<T> shape);
+    TensorDataImpl(std::map<TimeFrameIndex, torch::Tensor> data, std::vector<T> shape);
 #endif
 
     // ========== Setters ==========
@@ -77,16 +74,16 @@ public:
     /**
      * @brief Add a tensor at a specific time (LibTorch version)
      * @param time The time to add the tensor at
-     * @param tensor The tensor to add (as void* to hide torch::Tensor)
+     * @param tensor The tensor to add
      */
-    void addTensorAtTime(TimeFrameIndex time, void* tensor);
+    void addTensorAtTime(TimeFrameIndex time, torch::Tensor const & tensor);
     
     /**
      * @brief Overwrite a tensor at a specific time (LibTorch version)
      * @param time The time to overwrite the tensor at
-     * @param tensor The tensor to add (as void* to hide torch::Tensor)
+     * @param tensor The tensor to add
      */
-    void overwriteTensorAtTime(TimeFrameIndex time, void* tensor);
+    void overwriteTensorAtTime(TimeFrameIndex time, torch::Tensor const & tensor);
 #endif
 
     /**
@@ -111,16 +108,15 @@ public:
     /**
      * @brief Get tensor at a specific time (LibTorch version)
      * @param time The time to get the tensor at
-     * @return PyTorch tensor as void*, nullptr if not found
+     * @return PyTorch tensor, empty if not found
      */
-    [[nodiscard]] void* getTensorAtTime(TimeFrameIndex time) const;
+    [[nodiscard]] torch::Tensor getTensorAtTime(TimeFrameIndex time) const;
 
     /**
-     * @brief Get all tensor data as a map of void* pointers (LibTorch version)
-     * @return Map of TimeFrameIndex to void* tensor pointers
-     * @note Caller is responsible for managing the lifetime of returned pointers
+     * @brief Get direct access to internal data (LibTorch version)
+     * @return Reference to internal tensor map
      */
-    [[nodiscard]] std::map<TimeFrameIndex, void*> getData() const;
+    [[nodiscard]] std::map<TimeFrameIndex, torch::Tensor> const & getData() const;
 #endif
 
     /**
@@ -169,26 +165,24 @@ public:
      */
     void setFeatureShape(const std::vector<std::size_t>& shape);
 
-    // ========== Time Frame ==========
-
-    /**
-     * @brief Set the time frame
-     * @param time_frame The time frame to set
-     */
-    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
-
-    /**
-     * @brief Get the time frame
-     * @return Shared pointer to the time frame
-     */
-    std::shared_ptr<TimeFrame> getTimeFrame() const { return _time_frame; }
-
 private:
-    // PIMPL implementation
-    std::unique_ptr<TensorDataImpl> _pimpl;
-    
-    // Time frame is kept in the interface as it's lightweight
-    std::shared_ptr<TimeFrame> _time_frame {nullptr};
+#ifdef TENSOR_BACKEND_LIBTORCH
+    std::map<TimeFrameIndex, torch::Tensor> _data;
+#else
+    std::map<TimeFrameIndex, arma::fcube> _data;
+#endif
+    std::vector<std::size_t> _feature_shape;
+
+#ifndef TENSOR_BACKEND_LIBTORCH
+    // Helper methods for Armadillo backend
+    arma::fcube vectorToCube(const std::vector<float>& data, const std::vector<std::size_t>& shape) const;
+    std::vector<float> cubeToVector(const arma::fcube& cube) const;
+    arma::fmat applySigmoid(const arma::fmat& mat) const;
+#else
+    // Helper methods for LibTorch backend
+    torch::Tensor vectorToTensor(const std::vector<float>& data, const std::vector<std::size_t>& shape) const;
+    std::vector<float> tensorToVector(const torch::Tensor& tensor) const;
+#endif
 };
 
-#endif// TENSOR_DATA_HPP
+#endif// TENSOR_DATA_IMPL_HPP

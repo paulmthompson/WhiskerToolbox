@@ -311,7 +311,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
-target_link_libraries(WhiskerToolbox PRIVATE DataManager DataManagerIO)
+target_link_libraries(WhiskerToolbox PRIVATE DataManager DataManagerIO TensorData)
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
 target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)

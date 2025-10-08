@@ -65,6 +65,9 @@ target_include_directories(TensorData PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>  # For DataManager includes
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>     # For local includes
     $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(TensorData PRIVATE
     "${npy_SOURCE_DIR}/include"  # For numpy loading
 )
 
@@ -74,11 +77,11 @@ target_link_libraries(TensorData PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(TensorData PUBLIC WhiskerToolbox::TimeFrame)
 
 # Link backend-specific libraries
-target_link_libraries(TensorData PUBLIC ${BACKEND_LIBRARIES})
+target_link_libraries(TensorData PRIVATE ${BACKEND_LIBRARIES})
 
 # Set backend-specific compile definitions
 message(STATUS "Using Backend definition: ${BACKEND_DEFINITIONS}")
-target_compile_definitions(TensorData PUBLIC ${BACKEND_DEFINITIONS})
+target_compile_definitions(TensorData PRIVATE ${BACKEND_DEFINITIONS})
 
 # Compiler-specific options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

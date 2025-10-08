@@ -28,6 +28,7 @@ target_link_libraries(test_io_widgets PRIVATE
     DataManagerIO_CapnProto
     Qt6::Widgets
     Qt6::Core
+    TensorData
 )
 
 target_include_directories(test_io_widgets PRIVATE
