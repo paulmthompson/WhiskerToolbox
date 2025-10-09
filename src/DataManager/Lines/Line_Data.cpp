@@ -247,6 +247,31 @@ std::optional<Line2D> LineData::getLineByEntityId(EntityId entity_id) const {
     return time_it->second[static_cast<size_t>(local_index)].line;
 }
 
+std::optional<std::reference_wrapper<Line2D>> LineData::getMutableLineByEntityId(EntityId entity_id) {
+    if (!_identity_registry) {
+        return std::nullopt;
+    }
+    
+    auto descriptor = _identity_registry->get(entity_id);
+    if (!descriptor || descriptor->kind != EntityKind::LineEntity || descriptor->data_key != _identity_data_key) {
+        return std::nullopt;
+    }
+    
+    TimeFrameIndex const time{descriptor->time_value};
+    int const local_index = descriptor->local_index;
+    
+    auto time_it = _data.find(time);
+    if (time_it == _data.end()) {
+        return std::nullopt;
+    }
+    
+    if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
+        return std::nullopt;
+    }
+    
+    return std::ref(time_it->second[static_cast<size_t>(local_index)].line);
+}
+
 std::optional<std::pair<TimeFrameIndex, int>> LineData::getTimeAndIndexByEntityId(EntityId entity_id) const {
     if (!_identity_registry) {
         return std::nullopt;

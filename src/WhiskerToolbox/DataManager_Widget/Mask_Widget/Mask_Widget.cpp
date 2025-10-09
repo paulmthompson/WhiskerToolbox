@@ -3,6 +3,7 @@
 
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/IO/LoaderRegistry.hpp"
@@ -11,6 +12,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "MaskTableModel.hpp"
+#include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
 
@@ -24,6 +26,7 @@
 #include <QComboBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
@@ -58,9 +61,30 @@ Mask_Widget::Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
             this, &Mask_Widget::_handleSaveImageMaskRequested);
     connect(ui->export_media_frames_checkbox, &QCheckBox::toggled,
             this, &Mask_Widget::_onExportMediaFramesCheckboxToggled);
+    connect(ui->apply_image_size_button, &QPushButton::clicked,
+            this, &Mask_Widget::_onApplyImageSizeClicked);
+    connect(ui->copy_image_size_button, &QPushButton::clicked,
+            this, &Mask_Widget::_onCopyImageSizeClicked);
+    connect(ui->groupFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &Mask_Widget::_onGroupFilterChanged);
+
+    // Setup collapsible export section
+    ui->export_section->autoSetContentLayout();
+    ui->export_section->setTitle("Export Options");
+    ui->export_section->toggle(false); // Start collapsed
 
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
     ui->media_export_options_widget->setVisible(ui->export_media_frames_checkbox->isChecked());
+    
+    // Populate media combo box
+    _populateMediaComboBox();
+    
+    // Set up callback to refresh media combo box when data changes
+    if (_data_manager) {
+        _data_manager->addObserver([this]() {
+            _populateMediaComboBox();
+        });
+    }
 }
 
 Mask_Widget::~Mask_Widget() {
@@ -69,6 +93,8 @@ Mask_Widget::~Mask_Widget() {
 
 void Mask_Widget::openWidget() {
     this->show();
+    // Update image size display when widget is opened
+    _updateImageSizeDisplay();
 }
 
 void Mask_Widget::setActiveKey(std::string const & key) {
@@ -85,6 +111,7 @@ void Mask_Widget::setActiveKey(std::string const & key) {
         auto mask_data = _data_manager->getData<MaskData>(_active_key);
         if (mask_data) {
             _callback_id = _data_manager->addCallbackToData(_active_key, [this]() { _onDataChanged(); });
+            _updateImageSizeDisplay();
         } else {
             std::cerr << "Mask_Widget: No MaskData found for key '" << _active_key << "' to attach callback." << std::endl;
         }
@@ -151,6 +178,18 @@ void Mask_Widget::_showContextMenu(QPoint const & position) {
     };
 
     add_move_copy_submenus<MaskData>(&context_menu, _data_manager.get(), _active_key, move_callback, copy_callback);
+
+    // Add group management options
+    context_menu.addSeparator();
+    QMenu * group_menu = context_menu.addMenu("Group Management");
+    
+    // Add "Move to Group" submenu
+    QMenu * move_to_group_menu = group_menu->addMenu("Move to Group");
+    _populateGroupSubmenu(move_to_group_menu, true);
+    
+    // Add "Remove from Group" action
+    QAction * remove_from_group_action = group_menu->addAction("Remove from Group");
+    connect(remove_from_group_action, &QAction::triggered, this, &Mask_Widget::_removeSelectedMasksFromGroup);
 
     // Add separator and delete operation
     context_menu.addSeparator();
@@ -572,26 +611,387 @@ bool Mask_Widget::_performRegistrySave(QString const & format, MaskSaverConfig c
 
 void Mask_Widget::_updateImageSizeDisplay() {
     if (_active_key.empty()) {
-        ui->label_image_size_value->setText("Not Available");
-        ui->label_image_size_value->setStyleSheet("color: rgb(100, 100, 100);");
+        ui->image_width_edit->setText("");
+        ui->image_height_edit->setText("");
+        ui->image_size_status_label->setText("No Data Selected");
+        ui->image_size_status_label->setStyleSheet("color: #666666; font-style: italic;");
+        std::cout << "Mask_Widget::_updateImageSizeDisplay: No active key" << std::endl;
         return;
     }
 
     auto mask_data = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data) {
-        ui->label_image_size_value->setText("Not Available");
-        ui->label_image_size_value->setStyleSheet("color: rgb(100, 100, 100);");
+        ui->image_width_edit->setText("");
+        ui->image_height_edit->setText("");
+        ui->image_size_status_label->setText("Data Not Found");
+        ui->image_size_status_label->setStyleSheet("color: #cc0000; font-style: italic;");
+        std::cout << "Mask_Widget::_updateImageSizeDisplay: No mask data found for key: " << _active_key << std::endl;
         return;
     }
 
-    ImageSize image_size = mask_data->getImageSize();
-
-    if (image_size.width == -1 && image_size.height == -1) {
-        ui->label_image_size_value->setText("Uninitialized (-1 x -1)");
-        ui->label_image_size_value->setStyleSheet("color: rgb(255, 140, 0);");// Orange color for uninitialized
+    ImageSize current_size = mask_data->getImageSize();
+    std::cout << "Mask_Widget::_updateImageSizeDisplay: Current size: " << current_size.width << " x " << current_size.height << std::endl;
+    
+    if (current_size.width == -1 || current_size.height == -1) {
+        ui->image_width_edit->setText("");
+        ui->image_height_edit->setText("");
+        ui->image_size_status_label->setText("Not Set");
+        ui->image_size_status_label->setStyleSheet("color: #666666; font-style: italic;");
+        std::cout << "Mask_Widget::_updateImageSizeDisplay: No size set, clearing fields" << std::endl;
     } else {
-        QString size_text = QString("%1 x %2").arg(image_size.height).arg(image_size.width);
-        ui->label_image_size_value->setText(size_text);
-        ui->label_image_size_value->setStyleSheet("color: rgb(0, 120, 0);");// Green color for valid size
+        ui->image_width_edit->setText(QString::number(current_size.width));
+        ui->image_height_edit->setText(QString::number(current_size.height));
+        ui->image_size_status_label->setText(QString("%1 × %2").arg(current_size.width).arg(current_size.height));
+        ui->image_size_status_label->setStyleSheet("color: #000000; font-weight: bold;");
+        std::cout << "Mask_Widget::_updateImageSizeDisplay: Set fields to " << current_size.width << " x " << current_size.height << std::endl;
     }
+}
+
+void Mask_Widget::_onApplyImageSizeClicked() {
+    if (_active_key.empty()) {
+        QMessageBox::warning(this, "No Data Selected", "Please select a MaskData item to modify image size.");
+        return;
+    }
+
+    auto mask_data = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data) {
+        QMessageBox::critical(this, "Error", "Could not retrieve MaskData for image size modification. Key: " + QString::fromStdString(_active_key));
+        return;
+    }
+
+    // Get current values from the line edits
+    QString width_text = ui->image_width_edit->text().trimmed();
+    QString height_text = ui->image_height_edit->text().trimmed();
+
+    if (width_text.isEmpty() || height_text.isEmpty()) {
+        QMessageBox::warning(this, "Invalid Input", "Please enter both width and height values.");
+        return;
+    }
+
+    bool width_ok, height_ok;
+    int new_width = width_text.toInt(&width_ok);
+    int new_height = height_text.toInt(&height_ok);
+
+    if (!width_ok || !height_ok) {
+        QMessageBox::warning(this, "Invalid Input", "Please enter valid integer values for width and height.");
+        return;
+    }
+
+    if (new_width <= 0 || new_height <= 0) {
+        QMessageBox::warning(this, "Invalid Input", "Width and height must be positive values.");
+        return;
+    }
+
+    // Get current image size
+    ImageSize current_size = mask_data->getImageSize();
+    
+    // If no current size is set, just set the new size without scaling
+    if (current_size.width == -1 || current_size.height == -1) {
+        mask_data->setImageSize({new_width, new_height});
+        _updateImageSizeDisplay();
+        QMessageBox::information(this, "Image Size Set", 
+            QString("Image size set to %1 × %2 (no scaling applied as no previous size was set).")
+                .arg(new_width).arg(new_height));
+        return;
+    }
+
+    // Ask user if they want to scale existing data
+    int ret = QMessageBox::question(this, "Scale Existing Data", 
+        QString("Current image size is %1 × %2. Do you want to scale all existing mask data to the new size %3 × %4?\n\n"
+               "Click 'Yes' to scale all mask data proportionally.\n"
+               "Click 'No' to just change the image size without scaling.\n"
+               "Click 'Cancel' to abort the operation.")
+            .arg(current_size.width).arg(current_size.height)
+            .arg(new_width).arg(new_height),
+        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+
+    if (ret == QMessageBox::Cancel) {
+        return;
+    }
+
+    if (ret == QMessageBox::Yes) {
+        // Scale the data
+        mask_data->changeImageSize({new_width, new_height});
+        QMessageBox::information(this, "Image Size Changed", 
+            QString("Image size changed to %1 × %2 and all mask data has been scaled proportionally.")
+                .arg(new_width).arg(new_height));
+    } else {
+        // Just set the new size without scaling
+        mask_data->setImageSize({new_width, new_height});
+        QMessageBox::information(this, "Image Size Set", 
+            QString("Image size set to %1 × %2 (existing mask data was not scaled).")
+                .arg(new_width).arg(new_height));
+    }
+
+    _updateImageSizeDisplay();
+}
+
+void Mask_Widget::_onCopyImageSizeClicked() {
+    if (_active_key.empty()) {
+        QMessageBox::warning(this, "No Data Selected", "Please select a MaskData item to modify image size.");
+        return;
+    }
+
+    QString selected_media_key = ui->copy_from_media_combo->currentText();
+    if (selected_media_key.isEmpty()) {
+        QMessageBox::warning(this, "No Media Selected", "Please select a media source to copy image size from.");
+        return;
+    }
+
+    auto media_data = _data_manager->getData<MediaData>(selected_media_key.toStdString());
+    if (!media_data) {
+        QMessageBox::critical(this, "Error", "Could not retrieve MediaData for key: " + selected_media_key);
+        return;
+    }
+
+    ImageSize media_size = media_data->getImageSize();
+    if (media_size.width == -1 || media_size.height == -1) {
+        QMessageBox::warning(this, "No Image Size", 
+            QString("The selected media '%1' does not have an image size set.").arg(selected_media_key));
+        return;
+    }
+
+    auto mask_data = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data) {
+        QMessageBox::critical(this, "Error", "Could not retrieve MaskData for image size modification. Key: " + QString::fromStdString(_active_key));
+        return;
+    }
+
+    // Get current image size
+    ImageSize current_size = mask_data->getImageSize();
+    
+    // If no current size is set, just set the new size without scaling
+    if (current_size.width == -1 || current_size.height == -1) {
+        mask_data->setImageSize(media_size);
+        _updateImageSizeDisplay();
+        QMessageBox::information(this, "Image Size Set", 
+            QString("Image size set to %1 × %2 (copied from '%3').")
+                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+        return;
+    }
+
+    // Ask user if they want to scale existing data
+    int ret = QMessageBox::question(this, "Scale Existing Data", 
+        QString("Current image size is %1 × %2. Do you want to scale all existing mask data to the new size %3 × %4 (from '%5')?\n\n"
+               "Click 'Yes' to scale all mask data proportionally.\n"
+               "Click 'No' to just change the image size without scaling.\n"
+               "Click 'Cancel' to abort the operation.")
+            .arg(current_size.width).arg(current_size.height)
+            .arg(media_size.width).arg(media_size.height).arg(selected_media_key),
+        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+
+    if (ret == QMessageBox::Cancel) {
+        return;
+    }
+
+    if (ret == QMessageBox::Yes) {
+        // Scale the data
+        mask_data->changeImageSize(media_size);
+        QMessageBox::information(this, "Image Size Changed", 
+            QString("Image size changed to %1 × %2 (copied from '%3') and all mask data has been scaled proportionally.")
+                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+    } else {
+        // Just set the new size without scaling
+        mask_data->setImageSize(media_size);
+        QMessageBox::information(this, "Image Size Set", 
+            QString("Image size set to %1 × %2 (copied from '%3', existing mask data was not scaled).")
+                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+    }
+
+    _updateImageSizeDisplay();
+}
+
+void Mask_Widget::_populateMediaComboBox() {
+    ui->copy_from_media_combo->clear();
+    
+    if (!_data_manager) {
+        return;
+    }
+
+    // Get all MediaData keys
+    auto media_keys = _data_manager->getKeys<MediaData>();
+    
+    if (media_keys.empty()) {
+        ui->copy_from_media_combo->addItem("No media data available");
+        ui->copy_from_media_combo->setEnabled(false);
+        return;
+    }
+
+    ui->copy_from_media_combo->setEnabled(true);
+    
+    for (const auto& key : media_keys) {
+        ui->copy_from_media_combo->addItem(QString::fromStdString(key));
+    }
+    
+    std::cout << "Mask_Widget::_populateMediaComboBox: Found " << media_keys.size() << " media keys" << std::endl;
+}
+
+void Mask_Widget::setGroupManager(GroupManager * group_manager) {
+    _group_manager = group_manager;
+    _mask_table_model->setGroupManager(group_manager);
+    _populateGroupFilterCombo();
+    
+    // Connect to group manager signals to update when groups change
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated,
+                this, &Mask_Widget::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupRemoved,
+                this, &Mask_Widget::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupModified,
+                this, &Mask_Widget::_onGroupChanged);
+    }
+}
+
+void Mask_Widget::_onGroupFilterChanged(int index) {
+    if (!_group_manager) {
+        return;
+    }
+    
+    if (index == 0) {
+        // "All Groups" selected
+        _mask_table_model->clearGroupFilter();
+    } else {
+        // Specific group selected (index - 1 because index 0 is "All Groups")
+        auto groups = _group_manager->getGroups();
+        auto group_ids = groups.keys();
+        if (index - 1 < group_ids.size()) {
+            int group_id = group_ids[index - 1];
+            _mask_table_model->setGroupFilter(group_id);
+        }
+    }
+}
+
+void Mask_Widget::_onGroupChanged() {
+    // Store current selection
+    int current_index = ui->groupFilterCombo->currentIndex();
+    
+    // Update the group filter combo box when groups change
+    _populateGroupFilterCombo();
+    
+    // If the previously selected group no longer exists, reset to "All Groups"
+    if (current_index > 0 && current_index >= ui->groupFilterCombo->count()) {
+        ui->groupFilterCombo->setCurrentIndex(0); // "All Groups"
+        _mask_table_model->clearGroupFilter();
+    }
+    
+    // Refresh the table to update group names
+    if (!_active_key.empty()) {
+        updateTable();
+    }
+}
+
+void Mask_Widget::_populateGroupFilterCombo() {
+    ui->groupFilterCombo->clear();
+    ui->groupFilterCombo->addItem("All Groups");
+    
+    if (!_group_manager) {
+        return;
+    }
+    
+    auto groups = _group_manager->getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        ui->groupFilterCombo->addItem(it.value().name);
+    }
+}
+
+void Mask_Widget::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
+    if (!_group_manager) {
+        return;
+    }
+    
+    // Get current groups of selected entities to exclude them from the move list
+    std::set<int> current_groups;
+    if (for_moving) {
+        QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+        for (auto const & index : selectedIndexes) {
+            MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
+            if (row_data.entity_id != 0) {
+                int current_group = _group_manager->getEntityGroup(row_data.entity_id);
+                if (current_group != -1) {
+                    current_groups.insert(current_group);
+                }
+            }
+        }
+    }
+    
+    auto groups = _group_manager->getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        int group_id = it.key();
+        QString group_name = it.value().name;
+        
+        // Skip current groups when moving
+        if (for_moving && current_groups.find(group_id) != current_groups.end()) {
+            continue;
+        }
+        
+        QAction * action = menu->addAction(group_name);
+        connect(action, &QAction::triggered, this, [this, group_id]() {
+            _moveSelectedMasksToGroup(group_id);
+        });
+    }
+}
+
+void Mask_Widget::_moveSelectedMasksToGroup(int group_id) {
+    if (!_group_manager) {
+        return;
+    }
+    
+    // Get selected rows
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    if (selectedIndexes.isEmpty()) {
+        return;
+    }
+    
+    // Collect EntityIds from selected rows
+    std::unordered_set<EntityId> entity_ids;
+    for (auto const & index : selectedIndexes) {
+        MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
+        if (row_data.entity_id != 0) { // Valid entity ID
+            entity_ids.insert(row_data.entity_id);
+        }
+    }
+    
+    if (entity_ids.empty()) {
+        return;
+    }
+    
+    // First, remove entities from their current groups
+    _group_manager->ungroupEntities(entity_ids);
+    
+    // Then, assign entities to the specified group
+    _group_manager->assignEntitiesToGroup(group_id, entity_ids);
+    
+    // Refresh the table to show updated group information
+    updateTable();
+}
+
+void Mask_Widget::_removeSelectedMasksFromGroup() {
+    if (!_group_manager) {
+        return;
+    }
+    
+    // Get selected rows
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    if (selectedIndexes.isEmpty()) {
+        return;
+    }
+    
+    // Collect EntityIds from selected rows
+    std::unordered_set<EntityId> entity_ids;
+    for (auto const & index : selectedIndexes) {
+        MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
+        if (row_data.entity_id != 0) { // Valid entity ID
+            entity_ids.insert(row_data.entity_id);
+        }
+    }
+    
+    if (entity_ids.empty()) {
+        return;
+    }
+    
+    // Remove entities from all groups
+    _group_manager->ungroupEntities(entity_ids);
+    
+    // Refresh the table to show updated group information
+    updateTable();
 }

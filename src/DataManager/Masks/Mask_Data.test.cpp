@@ -1,6 +1,8 @@
 #include "Masks/Mask_Data.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "Entity/EntityRegistry.hpp"
+#include "DataManager.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 #include <vector>
@@ -222,6 +224,133 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
             }
             REQUIRE(count == 3); // Should include converted times 2, 3, 4
         }
+    }
+}
+
+TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][move][by_id]") {
+    // Setup test data vectors
+    std::vector<uint32_t> x1 = {1, 2, 3, 1};
+    std::vector<uint32_t> y1 = {1, 1, 2, 2};
+    std::vector<uint32_t> x2 = {4, 5, 6, 4};
+    std::vector<uint32_t> y2 = {3, 3, 4, 4};
+    std::vector<Point2D<uint32_t>> points = {{10, 10}, {11, 10}, {11, 11}};
+
+    auto data_manager = std::make_unique<DataManager>();
+    auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 10, 20, 30});
+    data_manager->setTime(TimeKey("test_time"), time_frame);
+
+    SECTION("Copy masks by EntityID - basic functionality") {
+        data_manager->setData<MaskData>("source_data", TimeKey("test_time"));
+        data_manager->setData<MaskData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<MaskData>("source_data");
+        auto target_data = data_manager->getData<MaskData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
+        source_data->addAtTime(TimeFrameIndex(20), points);
+
+        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_10.size() == 2);
+
+        std::size_t copied = source_data->copyMasksByEntityIds(*target_data, entity_ids_10);
+        REQUIRE(copied == 2);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 2);
+        auto target_entity_ids = target_data->getAllEntityIds();
+        REQUIRE(target_entity_ids.size() == 2);
+        REQUIRE(target_entity_ids != entity_ids_10);
+    }
+
+    SECTION("Copy masks by EntityID - mixed times") {
+        data_manager->setData<MaskData>("source_data", TimeKey("test_time"));
+        data_manager->setData<MaskData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<MaskData>("source_data");
+        auto target_data = data_manager->getData<MaskData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->addAtTime(TimeFrameIndex(20), points);
+
+        auto ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        REQUIRE(ids_10.size() == 1);
+        REQUIRE(ids_20.size() == 1);
+
+        std::vector<EntityId> mixed = {ids_10[0], ids_20[0]};
+        std::size_t copied = source_data->copyMasksByEntityIds(*target_data, mixed);
+        REQUIRE(copied == 2);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 1);
+    }
+
+    SECTION("Copy masks by EntityID - non-existent EntityIDs") {
+        data_manager->setData<MaskData>("source_data", TimeKey("test_time"));
+        data_manager->setData<MaskData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<MaskData>("source_data");
+        auto target_data = data_manager->getData<MaskData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
+        std::vector<EntityId> fake_ids = {99999, 88888};
+        std::size_t copied = source_data->copyMasksByEntityIds(*target_data, fake_ids);
+        REQUIRE(copied == 0);
+        REQUIRE(target_data->getTimesWithData().empty());
+    }
+
+    SECTION("Move masks by EntityID - basic functionality") {
+        data_manager->setData<MaskData>("source_data", TimeKey("test_time"));
+        data_manager->setData<MaskData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<MaskData>("source_data");
+        auto target_data = data_manager->getData<MaskData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
+        auto ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(ids_10.size() == 2);
+
+        std::size_t moved = source_data->moveMasksByEntityIds(*target_data, ids_10);
+        REQUIRE(moved == 2);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 0);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 2);
+        auto target_entity_ids = target_data->getAllEntityIds();
+        REQUIRE(target_entity_ids == ids_10);
+    }
+
+    SECTION("Move masks by EntityID - mixed times") {
+        data_manager->setData<MaskData>("source_data", TimeKey("test_time"));
+        data_manager->setData<MaskData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<MaskData>("source_data");
+        auto target_data = data_manager->getData<MaskData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->addAtTime(TimeFrameIndex(20), points);
+
+        auto ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        std::vector<EntityId> mixed = {ids_10[0], ids_20[0]};
+        std::size_t moved = source_data->moveMasksByEntityIds(*target_data, mixed);
+        REQUIRE(moved == 2);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 0);
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 0);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 1);
+    }
+
+    SECTION("Move masks by EntityID - non-existent EntityIDs") {
+        data_manager->setData<MaskData>("source_data", TimeKey("test_time"));
+        data_manager->setData<MaskData>("target_data", TimeKey("test_time"));
+
+        auto source_data = data_manager->getData<MaskData>("source_data");
+        auto target_data = data_manager->getData<MaskData>("target_data");
+
+        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
+        std::vector<EntityId> fake_ids = {99999, 88888};
+        std::size_t moved = source_data->moveMasksByEntityIds(*target_data, fake_ids);
+        REQUIRE(moved == 0);
+        REQUIRE(target_data->getTimesWithData().empty());
+        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 1);
     }
 }
 

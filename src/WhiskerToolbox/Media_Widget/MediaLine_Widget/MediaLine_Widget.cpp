@@ -37,8 +37,6 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     ui->setupUi(this);
 
     _selection_modes["(None)"] = Selection_Mode::None;
-    _selection_modes["Add Points"] = Selection_Mode::Add;
-    _selection_modes["Erase Points"] = Selection_Mode::Erase;
     _selection_modes["Select Line"] = Selection_Mode::Select;
     _selection_modes["Draw Across All Frames"] = Selection_Mode::DrawAllFrames;
 
@@ -97,7 +95,6 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     // Note: Removed direct slider-spinbox synchronization to prevent infinite loops
     // The synchronization is now handled within the percentage setter functions
 
-    connect(ui->line_select_slider, &QSlider::valueChanged, this, &MediaLine_Widget::_lineSelectionChanged);
 
     _setupSelectionModePages();
 }
@@ -165,8 +162,16 @@ void MediaLine_Widget::showEvent(QShowEvent * event) {
     static_cast<void>(event);
 
     std::cout << "Show Event" << std::endl;
-    connect(_scene, &Media_Window::leftClickMedia, this, &MediaLine_Widget::_clickedInVideo);
+    
+    // Debug: Check initial selection state
+    auto initial_selections = _scene->getSelectedEntities();
+    std::cout << "Debug: Initial selected entities on show: " << initial_selections.size() << std::endl;
+    
+    connect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
     connect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
+    connect(_scene, &Media_Window::mouseMove, this, [this](qreal x, qreal y) {
+        _mouseMoved(x, y);
+    });
 }
 
 void MediaLine_Widget::hideEvent(QHideEvent * event) {
@@ -174,11 +179,14 @@ void MediaLine_Widget::hideEvent(QHideEvent * event) {
     static_cast<void>(event);
 
     std::cout << "Hide Event" << std::endl;
-    disconnect(_scene, &Media_Window::leftClickMedia, this, &MediaLine_Widget::_clickedInVideo);
+    disconnect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
     disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
+    disconnect(_scene, &Media_Window::mouseMove, this, nullptr);
 
     // Clean up hover circle when switching away from line widget
     _scene->setShowHoverCircle(false);
+    
+    // Note: We don't disable group selection here to preserve selections
 }
 
 void MediaLine_Widget::setActiveKey(std::string const & key) {
@@ -237,23 +245,8 @@ void MediaLine_Widget::setActiveKey(std::string const & key) {
             ui->segment_end_slider->blockSignals(false);
             ui->segment_end_spinbox->blockSignals(false);
 
-            // Reset line selection and update slider
+            // Reset line selection
             _current_line_index = 0;
-
-            auto line_data = _data_manager->getData<LineData>(_active_key);
-            if (line_data) {
-                auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-                auto lines = line_data->getAtTime(current_time);
-
-                // Update the slider with the number of lines
-                int num_lines = static_cast<int>(lines.size());
-
-                ui->line_select_slider->blockSignals(true);
-                ui->line_select_slider->setMaximum(num_lines > 0 ? num_lines - 1 : 0);
-                ui->line_select_slider->setValue(0);// Reset to first line
-                ui->line_select_slider->setEnabled(num_lines > 1);
-                ui->line_select_slider->blockSignals(false);
-            }
         }
     }
 }
@@ -280,7 +273,7 @@ void MediaLine_Widget::_setLineColor(QString const & hex_color) {
     }
 }
 
-void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
+void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canvas, Qt::KeyboardModifiers modifiers) {
     if (_active_key.empty()) {
         std::cout << "No active key" << std::endl;
         return;
@@ -295,41 +288,39 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
     auto const x_media = static_cast<float>(x_canvas);
     auto const y_media = static_cast<float>(y_canvas);
     auto const current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-    auto const line_img_size = line_data->getImageSize();
-
-    auto lines = line_data->getAtTime(current_time);
 
     switch (_selection_mode) {
         case Selection_Mode::None: {
             std::cout << "Selection mode is None" << std::endl;
             break;
         }
-        case Selection_Mode::Add: {
-            std::cout << "Selection mode is Add" << std::endl;
-            _addPointToLine(x_media, y_media, current_time);
-            break;
-        }
-        case Selection_Mode::Erase: {
-            std::cout << "Selection mode is Erase" << std::endl;
-            std::cout << "Not yet implemented" << std::endl;
-            break;
-        }
         case Selection_Mode::Select: {
             std::cout << "Selection mode is Select" << std::endl;
             
-            // Use Media_Window's entity finding and selection system for group integration
-            QPointF scene_pos(x_canvas * _scene->getXAspect(), y_canvas * _scene->getYAspect());
-            std::string data_key, data_type;
-            EntityId entity_id = _scene->findEntityAtPosition(scene_pos, data_key, data_type);
-            
-            if (entity_id != 0 && data_type == "line" && data_key == _active_key) {
-                // Use the group-based selection system for consistency
-                _scene->selectEntity(entity_id, data_key, data_type);
-                std::cout << "Selected line entity " << entity_id << " in group system" << std::endl;
+            // Check for modifier keys to determine action
+            if (modifiers & Qt::ControlModifier) {
+                // Ctrl+click: Add points to selected line
+                std::cout << "Ctrl+click: Adding points to selected line" << std::endl;
+                _addPointToLine(x_media, y_media, current_time);
+            } else if (modifiers & Qt::AltModifier) {
+                // Alt+click: Erase points from selected line
+                std::cout << "Alt+click: Erasing points from selected line" << std::endl;
+                _erasePointsFromLine(x_media, y_media, current_time);
             } else {
-                // Clear selections if no line found
-                _scene->clearAllSelections();
-                std::cout << "No line found within threshold - cleared selections" << std::endl;
+                // Normal click: Select/deselect lines
+                QPointF scene_pos(x_canvas * _scene->getXAspect(), y_canvas * _scene->getYAspect());
+                std::string data_key, data_type;
+                EntityId entity_id = _scene->findEntityAtPosition(scene_pos, data_key, data_type);
+                
+                if (entity_id != 0 && data_type == "line" && data_key == _active_key) {
+                    // Use the group-based selection system for consistency
+                    _scene->selectEntity(entity_id, data_key, data_type);
+                    std::cout << "Selected line entity " << entity_id << " in group system" << std::endl;
+                } else {
+                    // Clear selections if no line found
+                    _scene->clearAllSelections();
+                    std::cout << "No line found within threshold - cleared selections" << std::endl;
+                }
             }
             break;
         }
@@ -341,9 +332,60 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
     }
 }
 
+void MediaLine_Widget::_mouseMoved(qreal x, qreal y) {
+    // Only handle mouse move in Select Line mode
+    if (_selection_mode != Selection_Mode::Select) {
+        return;
+    }
+    
+    // Check if Alt is currently held (we can't get modifier state from mouse move,
+    // so we'll track it from the last click event)
+    // For now, we'll show the eraser circle when in Select mode
+    // This could be improved by tracking modifier state
+    static bool alt_held = false;
+    
+    // Update hover circle position and show/hide based on modifier state
+    if (alt_held) {
+        _scene->setShowHoverCircle(true);
+        if (_eraseSelectionWidget) {
+            _scene->setHoverCircleRadius(_eraseSelectionWidget->getEraserRadius());
+        }
+    } else {
+        _scene->setShowHoverCircle(false);
+    }
+}
+
 void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIndex current_time) {
+    // Check if we have a selected line from the group system
+    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
+    if (selected_line_index < 0) {
+        std::cout << "No line selected - cannot add points" << std::endl;
+        return;
+    }
+
     auto line_data = _data_manager->getData<LineData>(_active_key);
-    auto lines = line_data->getAtTime(current_time);
+    if (!line_data) {
+        std::cout << "No line data for active key" << std::endl;
+        return;
+    }
+
+    // Get the EntityID for the selected line
+    auto selected_entities = _scene->getSelectedEntities();
+    if (selected_entities.empty()) {
+        std::cout << "No selected entities" << std::endl;
+        return;
+    }
+    
+    EntityId selected_entity_id = *selected_entities.begin();
+    
+    // Get a mutable reference to the line
+    auto line_ref = line_data->getMutableLineByEntityId(selected_entity_id);
+    if (!line_ref.has_value()) {
+        std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id << std::endl;
+        return;
+    }
+    
+    Line2D& line = line_ref.value().get();
 
     // Check if edge snapping is enabled
     bool use_edge_snapping = false;
@@ -353,7 +395,6 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
     }
 
     if (use_edge_snapping && _edge_snapping_enabled) {
-
         if (_current_edges.empty()) {
             _detectEdges();
         }
@@ -363,70 +404,111 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
         y_media = edge_point.second;
     }
 
-    if (lines.empty()) {
-        // If no lines exist, create a new one with the single point
-        _data_manager->getData<LineData>(_active_key)->addAtTime(current_time, Line2D{Point2D{x_media, y_media}});
-        // After adding a new line, it's line index 0
-        _current_line_index = 0;
-        ui->line_select_slider->setValue(0);
-    } else {
-        if (_smoothing_mode == Smoothing_Mode::SimpleSmooth) {
-            // Use the original smoothing approach with the selected line index
-            _data_manager->getData<LineData>(_active_key)->addPointToLineInterpolate(current_time, _current_line_index, Point2D<float>{x_media, y_media});
-        } else if (_smoothing_mode == Smoothing_Mode::PolynomialFit) {
-            // Make sure current_line_index is valid
-            if (_current_line_index >= static_cast<int>(lines.size())) {
-                std::cout << "Warning: line index out of bounds, using first line" << std::endl;
-                _current_line_index = 0;
-                ui->line_select_slider->setValue(0);
-            }
+    if (_smoothing_mode == Smoothing_Mode::SimpleSmooth) {
+        // Use the original smoothing approach - add point directly
+        line.push_back(Point2D<float>{x_media, y_media});
+    } else if (_smoothing_mode == Smoothing_Mode::PolynomialFit) {
+        // If the line already exists, add interpolated points between the last point and the new point
+        if (!line.empty()) {
+            Point2D<float> const last_point = line.back();
 
-            // Get a copy of the current line using the selected index
-            auto line = lines[_current_line_index];
+            // Calculate distance between last point and new point
+            float dx = x_media - last_point.x;
+            float dy = y_media - last_point.y;
+            float distance = std::sqrt(dx * dx + dy * dy);
 
-            // If the line already exists, add interpolated points between the last point and the new point
-            if (!line.empty()) {
-                Point2D<float> const last_point = line.back();
-
-                // Calculate distance between last point and new point
-                float dx = x_media - last_point.x;
-                float dy = y_media - last_point.y;
-                float distance = std::sqrt(dx * dx + dy * dy);
-
-                // Add interpolated points if the distance is significant
-                if (distance > 5.0f) {// Threshold for adding interpolation
-                    int num_interp_points = std::max(2, static_cast<int>(distance / 5.0f));
-                    for (int i = 1; i <= num_interp_points; ++i) {
-                        float t = static_cast<float>(i) / (num_interp_points + 1);
-                        float interp_x = last_point.x + t * dx;
-                        float interp_y = last_point.y + t * dy;
-                        line.push_back(Point2D<float>{interp_x, interp_y});
-                    }
+            // Add interpolated points if the distance is significant
+            if (distance > 5.0f) {// Threshold for adding interpolation
+                int num_interp_points = std::max(2, static_cast<int>(distance / 5.0f));
+                for (int i = 1; i <= num_interp_points; ++i) {
+                    float t = static_cast<float>(i) / (num_interp_points + 1);
+                    float interp_x = last_point.x + t * dx;
+                    float interp_y = last_point.y + t * dy;
+                    line.push_back(Point2D<float>{interp_x, interp_y});
                 }
             }
+        }
 
-            // Add the actual new point
-            line.push_back(Point2D<float>{x_media, y_media});
+        // Add the actual new point
+        line.push_back(Point2D<float>{x_media, y_media});
 
-            // Apply polynomial fitting if we have enough points
-            if (line.size() >= 3) {
-                _applyPolynomialFit(line, _polynomial_order);
-            }
-
-            // Update the line in the data manager
-            std::vector<Line2D> updated_lines = lines;
-            updated_lines[_current_line_index] = line;
-
-            _data_manager->getData<LineData>(_active_key)->clearAtTime(current_time);
-            for (auto const & updated_line: updated_lines) {
-                _data_manager->getData<LineData>(_active_key)->addAtTime(current_time, updated_line);
-            }
+        // Apply polynomial fitting if we have enough points
+        if (line.size() >= 3) {
+            _applyPolynomialFit(line, _polynomial_order);
         }
     }
 
+    // Notify observers that the data has changed
+    line_data->notifyObservers();
+
     _scene->UpdateCanvas();
     std::cout << "Added point (" << x_media << ", " << y_media << ") to line "
-              << _active_key << " (index: " << _current_line_index << ")" << std::endl;
+              << _active_key << " (EntityID: " << selected_entity_id << ")" << std::endl;
+}
+
+void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time) {
+    // Check if we have a selected line from the group system
+    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
+    if (selected_line_index < 0) {
+        std::cout << "No line selected - cannot erase points" << std::endl;
+        return;
+    }
+
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        std::cout << "No line data for active key" << std::endl;
+        return;
+    }
+
+    // Get the EntityID for the selected line
+    auto selected_entities = _scene->getSelectedEntities();
+    if (selected_entities.empty()) {
+        std::cout << "No selected entities" << std::endl;
+        return;
+    }
+    
+    EntityId selected_entity_id = *selected_entities.begin();
+    
+    // Get a mutable reference to the line
+    auto line_ref = line_data->getMutableLineByEntityId(selected_entity_id);
+    if (!line_ref.has_value()) {
+        std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id << std::endl;
+        return;
+    }
+    
+    Line2D& line = line_ref.value().get();
+    
+    if (line.empty()) {
+        std::cout << "Selected line is empty - nothing to erase" << std::endl;
+        return;
+    }
+
+    // Get eraser radius from the erase selection widget
+    float eraser_radius = 10.0f; // Default radius
+    if (_eraseSelectionWidget) {
+        eraser_radius = static_cast<float>(_eraseSelectionWidget->getEraserRadius());
+    }
+
+    // Find points within eraser radius and remove them
+    std::vector<Point2D<float>> remaining_points;
+    Point2D<float> click_point{x_media, y_media};
+    
+    for (auto const & point : line) {
+        float distance = calc_distance(click_point, point);
+        if (distance > eraser_radius) {
+            remaining_points.push_back(point);
+        }
+    }
+
+    // Update the line with remaining points (this modifies the original line)
+    line = Line2D(remaining_points);
+
+    // Notify observers that the data has changed
+    line_data->notifyObservers();
+
+    _scene->UpdateCanvas();
+    std::cout << "Erased points near (" << x_media << ", " << y_media << ") from line "
+              << _active_key << " (EntityID: " << selected_entity_id << ")" << std::endl;
 }
 
 void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {
@@ -494,15 +576,26 @@ void MediaLine_Widget::_toggleSelectionMode(QString text) {
     // Switch to the appropriate page in the stacked widget
     int pageIndex = static_cast<int>(_selection_mode);
     ui->mode_stacked_widget->setCurrentIndex(pageIndex);
+    
+    // For Select Line mode, show both add and erase options
+    if (_selection_mode == Selection_Mode::Select) {
+        // Show both add and erase widgets by creating a combined layout
+        // For now, we'll show the add widget as the primary options
+        // The erase options will be available through the existing erase widget
+    }
 
-    // Enable group selection ONLY when in "Select Line" mode
-    bool enable_group_selection = (_selection_mode == Selection_Mode::Select);
-    _scene->setGroupSelectionEnabled(enable_group_selection);
-    std::cout << "MediaLine_Widget: Group selection " << (enable_group_selection ? "enabled" : "disabled") << std::endl;
+    // Always enable group selection for line operations
+    // This prevents selections from being cleared when switching modes
+    _scene->setGroupSelectionEnabled(true);
+    std::cout << "MediaLine_Widget: Group selection enabled for line operations" << std::endl;
+    
+    // Debug: Check if we have any selections after mode change
+    auto selected_entities = _scene->getSelectedEntities();
+    std::cout << "Debug: Selected entities after mode change: " << selected_entities.size() << std::endl;
 
-    if (_selection_mode == Selection_Mode::Erase) {
-        _scene->setShowHoverCircle(true);
-        _scene->setHoverCircleRadius(_eraseSelectionWidget->getEraserRadius());
+    if (_selection_mode == Selection_Mode::Select) {
+        // Show hover circle for eraser when in Select mode (will be controlled by Shift key)
+        _scene->setShowHoverCircle(false); // Initially off, will be controlled by mouse move events
     } else {
         _scene->setShowHoverCircle(false);
     }
@@ -559,59 +652,13 @@ void MediaLine_Widget::LoadFrame(int frame_id) {
         auto line_data = _data_manager->getData<LineData>(_active_key);
         if (line_data) {
             auto lines = line_data->getAtTime(TimeFrameIndex(frame_id));
-
-            // Update the line_select_slider's maximum value based on the number of lines
             int num_lines = static_cast<int>(lines.size());
 
-            // Disconnect and reconnect to avoid triggering slider value changed signals
-            // during this programmatic update
-            ui->line_select_slider->blockSignals(true);
-
-            // Set the maximum value to the number of lines - 1 (or 0 if there are no lines)
-            // Slider indices are 0-based, so max should be (num_lines - 1) when there are lines
-            ui->line_select_slider->setMaximum(num_lines > 0 ? num_lines - 1 : 0);
-
-            // If the current slider value exceeds the new maximum, adjust it
-            if (ui->line_select_slider->value() > ui->line_select_slider->maximum()) {
-                ui->line_select_slider->setValue(ui->line_select_slider->maximum());
-            }
-
-            ui->line_select_slider->blockSignals(false);
-
-            // Update slider enabled state
-            ui->line_select_slider->setEnabled(num_lines > 1);
-
-            std::cout << "Frame " << frame_id << ": Updated line selector for "
-                      << num_lines << " lines in " << _active_key << std::endl;
+            std::cout << "Frame " << frame_id << ": " << num_lines << " lines in " << _active_key << std::endl;
         }
     }
 }
 
-void MediaLine_Widget::_lineSelectionChanged(int index) {
-    if (_current_line_index == index) {
-        return;// No change
-    }
-
-    _current_line_index = index;
-    std::cout << "Selected line index: " << _current_line_index << std::endl;
-
-    // Update any UI or visualization based on the selected line
-    if (!_active_key.empty()) {
-        auto line_data = _data_manager->getData<LineData>(_active_key);
-        if (line_data) {
-            auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-            auto lines = line_data->getAtTime(current_time);
-
-            if (!lines.empty() && _current_line_index < static_cast<int>(lines.size())) {
-                // Here you can perform any specific actions needed when a different line is selected
-                // For example, updating a visualization to highlight the selected line
-
-                // Request canvas update to reflect any visualization changes
-                _scene->UpdateCanvas();
-            }
-        }
-    }
-}
 
 void MediaLine_Widget::_setEdgeThreshold(int threshold) {
     _edge_threshold = threshold;
@@ -1267,14 +1314,18 @@ int MediaLine_Widget::_getSelectedLineIndexFromGroupSystem() const {
     // Get the selected entities from the group system
     auto selected_entities = _scene->getSelectedEntities();
     
+    std::cout << "Debug: Selected entities count: " << selected_entities.size() << std::endl;
+    
     // If no entities are selected, return -1
     if (selected_entities.empty()) {
+        std::cout << "Debug: No entities selected" << std::endl;
         return -1;
     }
     
     // For now, just return the first selected entity as the line index
     // EntityId for lines corresponds to their index in the line data
     EntityId first_selected = *selected_entities.begin();
+    std::cout << "Debug: First selected entity ID: " << first_selected << std::endl;
     return static_cast<int>(first_selected);
 }
 

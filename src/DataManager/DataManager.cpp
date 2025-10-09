@@ -427,6 +427,9 @@ void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey
     } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(_data[key])) {
         std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->setIdentityContext(key, getEntityRegistry());
         std::get<std::shared_ptr<DigitalIntervalSeries>>(_data[key])->rebuildAllEntityIds();
+    } else if (std::holds_alternative<std::shared_ptr<MaskData>>(_data[key])) {
+        std::get<std::shared_ptr<MaskData>>(_data[key])->setIdentityContext(key, getEntityRegistry());
+        std::get<std::shared_ptr<MaskData>>(_data[key])->rebuildAllEntityIds();
     }
 
     _notifyObservers();

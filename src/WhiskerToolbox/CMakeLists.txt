@@ -65,6 +65,7 @@ set(PROJECT_SOURCES
         DataManager_Widget/Point_Widget/Point_Widget.hpp
         DataManager_Widget/Point_Widget/Point_Widget.cpp
         DataManager_Widget/Point_Widget/Point_Widget.ui
+        DataManager_Widget/Point_Widget/PointTableModel.cpp
         DataManager_Widget/Point_Widget/PointTableModel.hpp
 
         DataManager_Widget/Line_Widget/Line_Widget.hpp
