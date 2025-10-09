@@ -9,6 +9,7 @@
 #include "MediaExport/media_export.hpp"
 #include "IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "PointTableModel.hpp"
+#include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 
@@ -56,6 +57,8 @@ Point_Widget::Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * 
             this, &Point_Widget::_onApplyImageSizeClicked);
     connect(ui->copy_image_size_button, &QPushButton::clicked,
             this, &Point_Widget::_onCopyImageSizeClicked);
+    connect(ui->groupFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &Point_Widget::_onGroupFilterChanged);
 
     // Setup collapsible export section
     ui->export_section->autoSetContentLayout();
@@ -150,6 +153,18 @@ void Point_Widget::_showContextMenu(QPoint const & position) {
     };
 
     add_move_copy_submenus<PointData>(&context_menu, _data_manager.get(), _active_key, move_callback, copy_callback);
+
+    // Add group management options
+    context_menu.addSeparator();
+    QMenu * group_menu = context_menu.addMenu("Group Management");
+    
+    // Add "Move to Group" submenu
+    QMenu * move_to_group_menu = group_menu->addMenu("Move to Group");
+    _populateGroupSubmenu(move_to_group_menu, true);
+    
+    // Add "Remove from Group" action
+    QAction * remove_from_group_action = group_menu->addAction("Remove from Group");
+    connect(remove_from_group_action, &QAction::triggered, this, &Point_Widget::_removeSelectedPointsFromGroup);
 
     // Add separator and existing operations
     context_menu.addSeparator();
@@ -619,4 +634,174 @@ void Point_Widget::_populateMediaComboBox() {
     }
     
     std::cout << "Point_Widget::_populateMediaComboBox: Found " << media_keys.size() << " media keys" << std::endl;
+}
+
+void Point_Widget::setGroupManager(GroupManager * group_manager) {
+    _group_manager = group_manager;
+    _point_table_model->setGroupManager(group_manager);
+    _populateGroupFilterCombo();
+    
+    // Connect to group manager signals to update when groups change
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated,
+                this, &Point_Widget::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupRemoved,
+                this, &Point_Widget::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupModified,
+                this, &Point_Widget::_onGroupChanged);
+    }
+}
+
+void Point_Widget::_onGroupFilterChanged(int index) {
+    if (!_group_manager) {
+        return;
+    }
+    
+    if (index == 0) {
+        // "All Groups" selected
+        _point_table_model->clearGroupFilter();
+    } else {
+        // Specific group selected (index - 1 because index 0 is "All Groups")
+        auto groups = _group_manager->getGroups();
+        auto group_ids = groups.keys();
+        if (index - 1 < group_ids.size()) {
+            int group_id = group_ids[index - 1];
+            _point_table_model->setGroupFilter(group_id);
+        }
+    }
+}
+
+void Point_Widget::_onGroupChanged() {
+    // Store current selection
+    int current_index = ui->groupFilterCombo->currentIndex();
+    
+    // Update the group filter combo box when groups change
+    _populateGroupFilterCombo();
+    
+    // If the previously selected group no longer exists, reset to "All Groups"
+    if (current_index > 0 && current_index >= ui->groupFilterCombo->count()) {
+        ui->groupFilterCombo->setCurrentIndex(0); // "All Groups"
+        _point_table_model->clearGroupFilter();
+    }
+    
+    // Refresh the table to update group names
+    if (!_active_key.empty()) {
+        updateTable();
+    }
+}
+
+void Point_Widget::_populateGroupFilterCombo() {
+    ui->groupFilterCombo->clear();
+    ui->groupFilterCombo->addItem("All Groups");
+    
+    if (!_group_manager) {
+        return;
+    }
+    
+    auto groups = _group_manager->getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        ui->groupFilterCombo->addItem(it.value().name);
+    }
+}
+
+void Point_Widget::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
+    if (!_group_manager) {
+        return;
+    }
+    
+    // Get current groups of selected entities to exclude them from the move list
+    std::set<int> current_groups;
+    if (for_moving) {
+        QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+        for (auto const & index : selectedIndexes) {
+            PointTableRow const row_data = _point_table_model->getRowData(index.row());
+            if (row_data.entity_id != 0) {
+                int current_group = _group_manager->getEntityGroup(row_data.entity_id);
+                if (current_group != -1) {
+                    current_groups.insert(current_group);
+                }
+            }
+        }
+    }
+    
+    auto groups = _group_manager->getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        int group_id = it.key();
+        QString group_name = it.value().name;
+        
+        // Skip current groups when moving
+        if (for_moving && current_groups.find(group_id) != current_groups.end()) {
+            continue;
+        }
+        
+        QAction * action = menu->addAction(group_name);
+        connect(action, &QAction::triggered, this, [this, group_id]() {
+            _moveSelectedPointsToGroup(group_id);
+        });
+    }
+}
+
+void Point_Widget::_moveSelectedPointsToGroup(int group_id) {
+    if (!_group_manager) {
+        return;
+    }
+    
+    // Get selected rows
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    if (selectedIndexes.isEmpty()) {
+        return;
+    }
+    
+    // Collect EntityIds from selected rows
+    std::unordered_set<EntityId> entity_ids;
+    for (auto const & index : selectedIndexes) {
+        PointTableRow const row_data = _point_table_model->getRowData(index.row());
+        if (row_data.entity_id != 0) { // Valid entity ID
+            entity_ids.insert(row_data.entity_id);
+        }
+    }
+    
+    if (entity_ids.empty()) {
+        return;
+    }
+    
+    // First, remove entities from their current groups
+    _group_manager->ungroupEntities(entity_ids);
+    
+    // Then, assign entities to the specified group
+    _group_manager->assignEntitiesToGroup(group_id, entity_ids);
+    
+    // Refresh the table to show updated group information
+    updateTable();
+}
+
+void Point_Widget::_removeSelectedPointsFromGroup() {
+    if (!_group_manager) {
+        return;
+    }
+    
+    // Get selected rows
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    if (selectedIndexes.isEmpty()) {
+        return;
+    }
+    
+    // Collect EntityIds from selected rows
+    std::unordered_set<EntityId> entity_ids;
+    for (auto const & index : selectedIndexes) {
+        PointTableRow const row_data = _point_table_model->getRowData(index.row());
+        if (row_data.entity_id != 0) { // Valid entity ID
+            entity_ids.insert(row_data.entity_id);
+        }
+    }
+    
+    if (entity_ids.empty()) {
+        return;
+    }
+    
+    // Remove entities from all groups
+    _group_manager->ungroupEntities(entity_ids);
+    
+    // Refresh the table to show updated group information
+    updateTable();
 }

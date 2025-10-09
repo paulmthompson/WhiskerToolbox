@@ -26,6 +26,7 @@ class MaskTableModel;
 class ImageMaskSaver_Widget;
 class HDF5MaskSaver_Widget;
 class MediaExport_Widget;
+class GroupManager;
 
 // JSON-based saver options - no need for variant types
 using MaskSaverConfig = nlohmann::json;
@@ -41,6 +42,7 @@ public:
     void setActiveKey(std::string const & key);
     void removeCallbacks();
     void updateTable();
+    void setGroupManager(GroupManager * group_manager);
 
 signals:
     void frameSelected(int frame_id);
@@ -52,6 +54,7 @@ private:
     std::string _active_key;
     std::unique_ptr<MaskTableModel> _mask_table_model;
     int _callback_id{-1};
+    GroupManager * _group_manager{nullptr};
 
     /**
      * @brief Get frame numbers from selected table rows
@@ -106,6 +109,12 @@ private slots:
     void _onApplyImageSizeClicked();
     void _onCopyImageSizeClicked();
     void _populateMediaComboBox();
+    void _onGroupFilterChanged(int index);
+    void _onGroupChanged();
+    void _populateGroupFilterCombo();
+    void _populateGroupSubmenu(QMenu * menu, bool for_moving);
+    void _moveSelectedMasksToGroup(int group_id);
+    void _removeSelectedMasksFromGroup();
 };
 
 

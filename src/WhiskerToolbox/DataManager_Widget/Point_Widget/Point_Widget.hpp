@@ -20,6 +20,7 @@ class DataManager;
 class PointTableModel;
 class CSVPointSaver_Widget;
 class MediaData;
+class GroupManager;
 
 // Define the variant type for saver options
 using PointSaverOptionsVariant = std::variant<CSVPointSaverOptions>;
@@ -47,6 +48,7 @@ public:
     void updateTable();
 
     void removeCallbacks();
+    void setGroupManager(GroupManager * group_manager);
 
 signals:
     void frameSelected(int frame_id);
@@ -58,6 +60,7 @@ private:
     std::string _active_key;
     int _previous_frame{0};
     int _callback_id{-1};
+    GroupManager * _group_manager{nullptr};
 
     enum SaverType { CSV };
 
@@ -104,6 +107,12 @@ private slots:
     void _onCopyImageSizeClicked();
     void _updateImageSizeDisplay();
     void _populateMediaComboBox();
+    void _onGroupFilterChanged(int index);
+    void _onGroupChanged();
+    void _populateGroupFilterCombo();
+    void _populateGroupSubmenu(QMenu * menu, bool for_moving);
+    void _moveSelectedPointsToGroup(int group_id);
+    void _removeSelectedPointsFromGroup();
 };
 
 #endif// POINT_WIDGET_HPP

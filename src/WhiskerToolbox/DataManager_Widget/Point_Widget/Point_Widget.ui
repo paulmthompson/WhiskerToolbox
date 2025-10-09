@@ -145,6 +145,37 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="groupFilterLayout">
+     <item>
+      <widget class="QLabel" name="groupFilterLabel">
+       <property name="text">
+        <string>Filter by Group:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="groupFilterCombo">
+       <property name="placeholderText">
+        <string>All Groups</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_groupFilter">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QTableView" name="tableView"/>
    </item>
    <item>
