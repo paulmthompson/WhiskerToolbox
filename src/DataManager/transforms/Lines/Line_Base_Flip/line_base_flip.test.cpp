@@ -2,8 +2,10 @@
 #include "Lines/Line_Data.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <memory>
 
 TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
@@ -28,7 +30,7 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         original_line.push_back(Point2D<float>{10.0f, 0.0f}); // End point
 
         // Add line to frame 0
-        line_data->addAtTime(0, original_line);
+        line_data->addAtTime(TimeFrameIndex(0), original_line);
 
         // Set reference point closer to the end (10,0) than the base (0,0)
         Point2D<float> reference_point{12.0f, 0.0f};
@@ -42,7 +44,7 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         REQUIRE(std::holds_alternative<std::shared_ptr<LineData>>(result_variant));
         auto result_data = std::get<std::shared_ptr<LineData>>(result_variant);
 
-        auto const & result_lines = result_data->getAtTime(0);
+        auto const & result_lines = result_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_lines.size() == 1);
 
         auto const & flipped_line = result_lines[0];
@@ -63,7 +65,7 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         original_line.push_back(Point2D<float>{10.0f, 0.0f}); // End point
 
         // Add line to frame 0
-        line_data->addAtTime(0, original_line);
+        line_data->addAtTime(TimeFrameIndex(0), original_line);
 
         // Set reference point closer to the base (0,0) than the end (10,0)
         Point2D<float> reference_point{-2.0f, 0.0f};
@@ -77,7 +79,7 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         REQUIRE(std::holds_alternative<std::shared_ptr<LineData>>(result_variant));
         auto result_data = std::get<std::shared_ptr<LineData>>(result_variant);
 
-        auto const & result_lines = result_data->getAtTime(0);
+        auto const & result_lines = result_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_lines.size() == 1);
 
         auto const & unchanged_line = result_lines[0];
@@ -95,7 +97,7 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         Line2D empty_line;
 
         // Add line to frame 0
-        line_data->addAtTime(0, empty_line);
+        line_data->addAtTime(TimeFrameIndex(0), empty_line);
 
         Point2D<float> reference_point{5.0f, 5.0f};
         LineBaseFlipParameters params(reference_point);
@@ -108,7 +110,7 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         REQUIRE(std::holds_alternative<std::shared_ptr<LineData>>(result_variant));
         auto result_data = std::get<std::shared_ptr<LineData>>(result_variant);
 
-        auto const & result_lines = result_data->getAtTime(0);
+        auto const & result_lines = result_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_lines.size() == 1);
         REQUIRE(result_lines[0].empty());
     }
@@ -119,7 +121,7 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         single_point_line.push_back(Point2D<float>{5.0f, 5.0f});
 
         // Add line to frame 0
-        line_data->addAtTime(0, single_point_line);
+        line_data->addAtTime(TimeFrameIndex(0), single_point_line);
 
         Point2D<float> reference_point{0.0f, 0.0f};
         LineBaseFlipParameters params(reference_point);
@@ -132,7 +134,7 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         REQUIRE(std::holds_alternative<std::shared_ptr<LineData>>(result_variant));
         auto result_data = std::get<std::shared_ptr<LineData>>(result_variant);
 
-        auto const & result_lines = result_data->getAtTime(0);
+        auto const & result_lines = result_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_lines.size() == 1);
         REQUIRE(result_lines[0].size() == 1);
         REQUIRE(result_lines[0].front().x == Catch::Approx(5.0f));
@@ -150,8 +152,8 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         line2.push_back(Point2D<float>{10.0f, 10.0f});
 
         // Add lines to different frames
-        line_data->addAtTime(0, line1);
-        line_data->addAtTime(1, line2);
+        line_data->addAtTime(TimeFrameIndex(0), line1);
+        line_data->addAtTime(TimeFrameIndex(1), line2);
 
         // Reference point closer to end points
         Point2D<float> reference_point{12.0f, 5.0f};
@@ -166,12 +168,12 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         auto result_data = std::get<std::shared_ptr<LineData>>(result_variant);
 
         // Check frame 0
-        auto const & frame0_lines = result_data->getAtTime(0);
+        auto const & frame0_lines = result_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(frame0_lines.size() == 1);
         REQUIRE(frame0_lines[0].front().x == Catch::Approx(10.0f)); // Should be flipped
 
         // Check frame 1
-        auto const & frame1_lines = result_data->getAtTime(1);
+        auto const & frame1_lines = result_data->getAtTime(TimeFrameIndex(1));
         REQUIRE(frame1_lines.size() == 1);
         REQUIRE(frame1_lines[0].front().x == Catch::Approx(10.0f)); // Should be flipped
     }
