@@ -183,6 +183,16 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QPushButton" name="autoScrollButton">
+       <property name="text">
+        <string>Go to Current Frame</string>
+       </property>
+       <property name="toolTip">
+        <string>Scroll table to show data for the current time frame</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

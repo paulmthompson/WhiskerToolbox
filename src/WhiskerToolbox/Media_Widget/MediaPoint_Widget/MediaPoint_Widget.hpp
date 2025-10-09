@@ -42,6 +42,7 @@ private:
     void _clearPointSelection();
     void _moveSelectedPoint(qreal x_media, qreal y_media);
     void _assignPoint(qreal x_media, qreal y_media);
+    void _addPointAtCurrentTime(qreal x_media, qreal y_media);
 
 private slots:
     //void _handlePointClick(qreal x_media, qreal y_media);

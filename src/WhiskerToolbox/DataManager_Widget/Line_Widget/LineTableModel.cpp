@@ -27,14 +27,13 @@ void LineTableModel::setLines(LineData const * lineData) {
                         }
                     }
                 }
-                
+
                 LineTableRow row = {
-                    .frame = frame, 
-                    .lineIndex = lineIndex, 
-                    .length = static_cast<int>(entry.line.size()),
-                    .entity_id = entry.entity_id,
-                    .group_name = group_name
-                };
+                        .frame = frame,
+                        .lineIndex = lineIndex,
+                        .length = static_cast<int>(entry.line.size()),
+                        .entity_id = entry.entity_id,
+                        .group_name = group_name};
                 _all_data.push_back(row);
                 lineIndex++;
             }
@@ -130,13 +129,13 @@ void LineTableModel::clearGroupFilter() {
 void LineTableModel::_applyGroupFilter() {
     beginResetModel();
     _display_data.clear();
-    
+
     if (_filtered_group_id == -1) {
         // Show all groups
         _display_data = _all_data;
     } else {
         // Filter by specific group
-        for (auto const & row : _all_data) {
+        for (auto const & row: _all_data) {
             if (_group_manager) {
                 int entity_group_id = _group_manager->getEntityGroup(row.entity_id);
                 if (entity_group_id == _filtered_group_id) {
@@ -146,4 +145,13 @@ void LineTableModel::_applyGroupFilter() {
         }
     }
     endResetModel();
+}
+
+int LineTableModel::findRowForFrame(int64_t frame) const {
+    for (size_t i = 0; i < _display_data.size(); ++i) {
+        if (_display_data[i].frame == frame) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;// Frame not found
 }
