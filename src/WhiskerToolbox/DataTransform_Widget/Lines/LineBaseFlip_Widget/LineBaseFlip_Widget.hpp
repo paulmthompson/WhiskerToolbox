@@ -29,6 +29,7 @@ public:
 protected:
     void onDataManagerChanged() override;
     void onDataManagerDataChanged() override;
+    void showEvent(QShowEvent* event) override; // Add this to ensure combo box is populated when visible
 
 private slots:
     void onComboBoxSelectionChanged(int index);

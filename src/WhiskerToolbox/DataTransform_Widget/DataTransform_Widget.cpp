@@ -169,8 +169,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         return widget;
     };
 
-    _parameterWidgetFactories["Line Base Flip"] = [](QWidget * parent) -> TransformParameter_Widget * {
-        return new LineBaseFlip_Widget(parent);
+    _parameterWidgetFactories["Line Base Flip"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new LineBaseFlip_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
     };
 
     _parameterWidgetFactories["Convert Mask To Line"] = [this](QWidget * parent) -> TransformParameter_Widget * {
