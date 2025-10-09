@@ -161,6 +161,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.hpp
         DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.cpp
         DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.ui
+        DataTransform_Widget/Lines/LineBaseFlip_Widget/LineBaseFlip_Widget.hpp
+        DataTransform_Widget/Lines/LineBaseFlip_Widget/LineBaseFlip_Widget.cpp
+        DataTransform_Widget/Lines/LineBaseFlip_Widget/LineBaseFlip_Widget.ui
         DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.cpp
         DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp
         DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.ui
