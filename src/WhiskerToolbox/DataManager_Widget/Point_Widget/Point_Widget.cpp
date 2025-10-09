@@ -126,11 +126,9 @@ void Point_Widget::removeCallbacks() {
 
 void Point_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid()) {
-        int const frame = _point_table_model->getFrameForRow(index.row());
-        if (frame != -1) {
-            emit frameSelected(frame);
-        } else {
-            emit frameSelected(index.row());
+        PointTableRow const row_data = _point_table_model->getRowData(index.row());
+        if (row_data.frame != -1) {
+            emit frameSelected(static_cast<int>(row_data.frame));
         }
     }
 }
@@ -181,9 +179,9 @@ std::vector<TimeFrameIndex> Point_Widget::_getSelectedFrames() {
 
     for (QModelIndex const & index: selected_rows) {
         if (index.isValid()) {
-            int const frame = _point_table_model->getFrameForRow(index.row());
-            if (frame != -1) {
-                selected_frames.emplace_back(frame);
+            PointTableRow const row_data = _point_table_model->getRowData(index.row());
+            if (row_data.frame != -1) {
+                selected_frames.emplace_back(static_cast<int>(row_data.frame));
             }
         }
     }
@@ -191,9 +189,25 @@ std::vector<TimeFrameIndex> Point_Widget::_getSelectedFrames() {
     return selected_frames;
 }
 
+std::vector<EntityId> Point_Widget::_getSelectedEntityIds() {
+    QModelIndexList const selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    std::vector<EntityId> entity_ids;
+
+    for (auto const & index: selectedIndexes) {
+        if (index.isValid()) {
+            PointTableRow const row_data = _point_table_model->getRowData(index.row());
+            if (row_data.entity_id != 0) { // Valid entity ID
+                entity_ids.push_back(row_data.entity_id);
+            }
+        }
+    }
+
+    return entity_ids;
+}
+
 void Point_Widget::_movePointsToTarget(std::string const & target_key) {
-    auto selected_frames = _getSelectedFrames();
-    if (selected_frames.empty()) {
+    auto selected_entity_ids = _getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
         std::cout << "Point_Widget: No points selected to move." << std::endl;
         return;
     }
@@ -210,26 +224,26 @@ void Point_Widget::_movePointsToTarget(std::string const & target_key) {
         return;
     }
 
-    std::cout << "Point_Widget: Moving points from " << selected_frames.size()
-              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+    std::cout << "Point_Widget: Moving " << selected_entity_ids.size()
+              << " selected points from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    // Use the new moveTo method with the vector of selected times
-    std::size_t const total_points_moved = source_point_data->moveTo(*target_point_data, selected_frames, true);
+    // Use the movePointsByEntityIds method to move only the selected points
+    std::size_t const total_points_moved = source_point_data->movePointsByEntityIds(*target_point_data, selected_entity_ids, true);
 
     if (total_points_moved > 0) {
         // Update the table view to reflect changes
         updateTable();
 
         std::cout << "Point_Widget: Successfully moved " << total_points_moved
-                  << " points from " << selected_frames.size() << " frames." << std::endl;
+                  << " selected points." << std::endl;
     } else {
-        std::cout << "Point_Widget: No points found in any of the selected frames to move." << std::endl;
+        std::cout << "Point_Widget: No points found with the selected EntityIds to move." << std::endl;
     }
 }
 
 void Point_Widget::_copyPointsToTarget(std::string const & target_key) {
-    auto selected_frames = _getSelectedFrames();
-    if (selected_frames.empty()) {
+    auto selected_entity_ids = _getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
         std::cout << "Point_Widget: No points selected to copy." << std::endl;
         return;
     }
@@ -246,23 +260,23 @@ void Point_Widget::_copyPointsToTarget(std::string const & target_key) {
         return;
     }
 
-    std::cout << "Point_Widget: Copying points from " << selected_frames.size()
-              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+    std::cout << "Point_Widget: Copying " << selected_entity_ids.size()
+              << " selected points from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    // Use the new copyTo method with the vector of selected times
-    std::size_t const total_points_copied = source_point_data->copyTo(*target_point_data, selected_frames, true);
+    // Use the copyPointsByEntityIds method to copy only the selected points
+    std::size_t const total_points_copied = source_point_data->copyPointsByEntityIds(*target_point_data, selected_entity_ids, true);
 
     if (total_points_copied > 0) {
         std::cout << "Point_Widget: Successfully copied " << total_points_copied
-                  << " points from " << selected_frames.size() << " frames." << std::endl;
+                  << " selected points." << std::endl;
     } else {
-        std::cout << "Point_Widget: No points found in any of the selected frames to copy." << std::endl;
+        std::cout << "Point_Widget: No points found with the selected EntityIds to copy." << std::endl;
     }
 }
 
 void Point_Widget::_deleteSelectedPoints() {
-    auto selected_frames = _getSelectedFrames();
-    if (selected_frames.empty()) {
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    if (selectedIndexes.isEmpty()) {
         std::cout << "Point_Widget: No points selected to delete." << std::endl;
         return;
     }
@@ -273,37 +287,35 @@ void Point_Widget::_deleteSelectedPoints() {
         return;
     }
 
-    std::cout << "Point_Widget: Deleting points from " << selected_frames.size()
-              << " frames in '" << _active_key << "'..." << std::endl;
+    std::cout << "Point_Widget: Deleting " << selectedIndexes.size()
+              << " selected points from '" << _active_key << "'..." << std::endl;
 
-    std::size_t frames_with_points = 0;
     int total_points_deleted = 0;
 
-    // Count points before deletion and batch operations to minimize observer notifications
-    for (auto frame: selected_frames) {
-        auto points_at_frame = point_data_ptr->getAtTime(frame);
-        if (!points_at_frame.empty()) {
-            frames_with_points++;
-            total_points_deleted += static_cast<int>(points_at_frame.size());
-            (void) point_data_ptr->clearAtTime(frame, false);
+    // Delete each selected point individually
+    for (auto const & index: selectedIndexes) {
+        if (index.isValid()) {
+            PointTableRow const row_data = _point_table_model->getRowData(index.row());
+            if (row_data.frame != -1 && row_data.pointIndex >= 0) {
+                bool success = point_data_ptr->clearAtTime(TimeFrameIndex(row_data.frame), static_cast<size_t>(row_data.pointIndex), false);
+                if (success) {
+                    total_points_deleted++;
+                }
+            }
         }
     }
 
     // Notify observers only once at the end
-    if (frames_with_points > 0) {
+    if (total_points_deleted > 0) {
         point_data_ptr->notifyObservers();
 
         // Update the table view to reflect changes
         updateTable();
 
         std::cout << "Point_Widget: Successfully deleted " << total_points_deleted
-                  << " points from " << frames_with_points << " frames." << std::endl;
-        if (frames_with_points < selected_frames.size()) {
-            std::cout << "Point_Widget: Note: " << (selected_frames.size() - frames_with_points)
-                      << " selected frames contained no points to delete." << std::endl;
-        }
+                  << " selected points." << std::endl;
     } else {
-        std::cout << "Point_Widget: No points found in any of the selected frames to delete." << std::endl;
+        std::cout << "Point_Widget: No points found to delete from the selected rows." << std::endl;
     }
 }
 

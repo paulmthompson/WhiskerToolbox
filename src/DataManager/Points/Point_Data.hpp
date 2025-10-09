@@ -258,6 +258,25 @@ public:
     }
 
     /**
+    * @brief Get all point entries with their associated times as a zero-copy range
+    *
+    * This method provides zero-copy access to the underlying PointEntry data structure,
+    * which contains both Point2D<float> and EntityId information.
+    *
+    * @return A view of time-point entries pairs for all times
+    */
+    [[nodiscard]] auto GetAllPointEntriesAsRange() const {
+        struct TimePointEntriesPair {
+            TimeFrameIndex time;
+            std::vector<PointEntry> const & entries;
+        };
+
+        return _data | std::views::transform([](auto const & pair) {
+                   return TimePointEntriesPair{pair.first, pair.second};
+               });
+    }
+
+    /**
     * @brief Get points with their associated times as a range within a TimeFrameInterval
     *
     * Returns a filtered view of time-points pairs for times within the specified interval [start, end] (inclusive).

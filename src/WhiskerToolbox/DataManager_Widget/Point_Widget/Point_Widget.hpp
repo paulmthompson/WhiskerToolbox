@@ -7,6 +7,7 @@
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
 #include "MediaExport/MediaExport_Widget.hpp"              // For MediaExport_Widget
 #include "TimeFrame/TimeFrame.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <memory>
 #include <string>
@@ -74,6 +75,13 @@ private:
      * @return Vector of frame numbers corresponding to selected rows
      */
     std::vector<TimeFrameIndex> _getSelectedFrames();
+
+    /**
+     * @brief Get selected EntityIds from the table view
+     * 
+     * @return Vector of EntityIds that are currently selected
+     */
+    std::vector<EntityId> _getSelectedEntityIds();
 
     /**
      * @brief Move selected points to the specified target key

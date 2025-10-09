@@ -14,33 +14,32 @@ void PointTableModel::setPoints(PointData const * pointData) {
     _all_data.clear();
     _point_data_source = pointData;
     if (pointData) {
-        for (auto const & timePointsPair: pointData->GetAllPointsAsRange()) {
-            auto frame = timePointsPair.time.getValue();
-            int pointCount = static_cast<int>(timePointsPair.points.size());
-            EntityId entity_id = 0; // Default to 0 for points without entity ID
-            QString group_name = "No Group";
-            
-            // For points, we need to get the entity ID from the point data
-            // Since points don't have individual entity IDs like lines, we'll use a default approach
-            // This might need to be adjusted based on how points are associated with entities
-            
-            if (_group_manager && entity_id != 0) {
-                int const group_id = _group_manager->getEntityGroup(entity_id);
-                if (group_id != -1) {
-                    auto group = _group_manager->getGroup(group_id);
-                    if (group.has_value()) {
-                        group_name = group->name;
+        for (auto const & timePointEntriesPair: pointData->GetAllPointEntriesAsRange()) {
+            auto frame = timePointEntriesPair.time.getValue();
+            int pointIndex = 0;
+            for (auto const & entry: timePointEntriesPair.entries) {
+                QString group_name = "No Group";
+                if (_group_manager) {
+                    int group_id = _group_manager->getEntityGroup(entry.entity_id);
+                    if (group_id != -1) {
+                        auto group = _group_manager->getGroup(group_id);
+                        if (group.has_value()) {
+                            group_name = group->name;
+                        }
                     }
                 }
+                
+                PointTableRow row = {
+                    .frame = frame, 
+                    .pointIndex = pointIndex, 
+                    .x = entry.point.x,
+                    .y = entry.point.y,
+                    .entity_id = entry.entity_id,
+                    .group_name = group_name
+                };
+                _all_data.push_back(row);
+                pointIndex++;
             }
-            
-            PointTableRow const row = {
-                .frame = frame,
-                .pointCount = pointCount,
-                .entity_id = entity_id,
-                .group_name = group_name
-            };
-            _all_data.push_back(row);
         }
     }
     _applyGroupFilter();
@@ -54,7 +53,7 @@ int PointTableModel::rowCount(QModelIndex const & parent) const {
 
 int PointTableModel::columnCount(QModelIndex const & parent) const {
     Q_UNUSED(parent);
-    return 3; // Frame, Point Count, Group
+    return 5; // Frame, Point Index, X, Y, Group
 }
 
 QVariant PointTableModel::data(QModelIndex const & index, int role) const {
@@ -72,8 +71,12 @@ QVariant PointTableModel::data(QModelIndex const & index, int role) const {
         case 0:
             return QVariant::fromValue(rowData.frame);
         case 1:
-            return QVariant::fromValue(rowData.pointCount);
+            return QVariant::fromValue(rowData.pointIndex);
         case 2:
+            return QVariant::fromValue(rowData.x);
+        case 3:
+            return QVariant::fromValue(rowData.y);
+        case 4:
             return QVariant::fromValue(rowData.group_name);
         default:
             return QVariant{};
@@ -90,8 +93,12 @@ QVariant PointTableModel::headerData(int section, Qt::Orientation orientation, i
             case 0:
                 return QString("Frame");
             case 1:
-                return QString("Point Count");
+                return QString("Point Index");
             case 2:
+                return QString("X");
+            case 3:
+                return QString("Y");
+            case 4:
                 return QString("Group");
             default:
                 return QVariant{};
@@ -100,20 +107,13 @@ QVariant PointTableModel::headerData(int section, Qt::Orientation orientation, i
     return QVariant{}; // No vertical header
 }
 
-int PointTableModel::getFrameForRow(int row) const {
-    if (row >= 0 && static_cast<size_t>(row) < _display_data.size()) {
-        return static_cast<int>(_display_data[row].frame);
-    }
-    return -1; // Invalid row
-}
-
 PointTableRow PointTableModel::getRowData(int row) const {
     if (row >= 0 && row < _display_data.size()) {
         return _display_data[row];
     }
     // Return a default/invalid PointTableRow or throw an exception
     // For simplicity, returning a default-constructed one here, but error handling might be better.
-    return PointTableRow{-1, -1, 0, "Invalid"};
+    return PointTableRow{-1, -1, 0.0f, 0.0f, 0, "Invalid"};
 }
 
 void PointTableModel::setGroupManager(GroupManager * group_manager) {

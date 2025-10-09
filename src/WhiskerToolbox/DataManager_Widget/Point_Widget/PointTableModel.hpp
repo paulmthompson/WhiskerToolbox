@@ -18,9 +18,11 @@ class GroupManager;
 
 struct PointTableRow {
     int64_t frame;
-    int pointCount; // Number of points in this frame
-    EntityId entity_id; // EntityId for group lookup (using first point's entity ID)
-    QString group_name; // Name of the group this frame belongs to
+    int pointIndex; // Index of the point within that frame
+    float x; // X coordinate of the point
+    float y; // Y coordinate of the point
+    EntityId entity_id; // EntityId for group lookup
+    QString group_name; // Name of the group this point belongs to
 };
 
 class PointTableModel : public QAbstractTableModel {
@@ -41,7 +43,6 @@ public:
 
     [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
-    [[nodiscard]] int getFrameForRow(int row) const;
     [[nodiscard]] PointTableRow getRowData(int row) const;
 
 private:
