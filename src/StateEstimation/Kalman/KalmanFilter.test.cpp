@@ -271,6 +271,363 @@ TEST_CASE("StateEstimator smoothing and outlier detection", "[StateEstimator]") 
     REQUIRE(found_outlier);
 }
 
+TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimator][Outliers][Comprehensive]") {
+    using namespace StateEstimation;
+
+    // 1. --- SETUP ---
+    double dt = 1.0;
+    Eigen::MatrixXd F(4, 4);
+    F << 1, 0, dt, 0,
+         0, 1, 0, dt,
+         0, 0, 1, 0,
+         0, 0, 0, 1;
+
+    Eigen::MatrixXd H(2, 4);
+    H << 1, 0, 0, 0,
+         0, 1, 0, 0;
+
+    Eigen::MatrixXd Q(4, 4);
+    Q.setIdentity();
+    Q *= 0.1;
+
+    Eigen::MatrixXd R(2, 2);
+    R.setIdentity();
+    R *= 0.5;  // Reduced measurement noise to make outliers more obvious
+
+    auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
+    auto feature_extractor = std::make_unique<LineCentroidExtractor>();
+
+    StateEstimator<TestLine2D> estimator(std::move(kalman_filter), std::move(feature_extractor));
+
+    // 2. --- CREATE TEST DATA WITH MULTIPLE OUTLIERS ---
+    EntityGroupManager group_manager;
+    GroupId track1 = group_manager.createGroup("Track1");
+    GroupId track2 = group_manager.createGroup("Track2");
+
+    auto makeLine = [](int frame, double x, double y, EntityId id) {
+        TestLine2D line;
+        line.id = id;
+        line.p1 = Eigen::Vector2d(x - 1.0, y);
+        line.p2 = Eigen::Vector2d(x + 1.0, y);
+        return line;
+    };
+
+    std::vector<std::tuple<TestLine2D, EntityId, TimeFrameIndex>> data_source;
+
+    // Track 1: Moving smoothly from (0,0) to (30,30) with THREE large error jumps
+    std::vector<EntityId> track1_outlier_ids;
+    for (int i = 0; i <= 30; ++i) {
+        EntityId eid = 1000 + i;
+        double x = i * 1.0;
+        double y = i * 1.0;
+        
+        // Inject VERY large jumps representing calculation errors
+        if (i == 8) {
+            x += 35.0;  // Very large error in x
+            y += 30.0;  // Very large error in y
+            track1_outlier_ids.push_back(eid);
+        } else if (i == 16) {
+            x -= 32.0;  // Very large negative error
+            y += 28.0;
+            track1_outlier_ids.push_back(eid);
+        } else if (i == 24) {
+            x += 40.0;  // Another very large error
+            y -= 25.0;
+            track1_outlier_ids.push_back(eid);
+        }
+        
+        TestLine2D line = makeLine(i, x, y, eid);
+        data_source.emplace_back(line, eid, TimeFrameIndex(i));
+        group_manager.addEntityToGroup(track1, eid);
+    }
+
+    // Track 2: Moving from (50,10) to (50,40) with TWO outliers
+    std::vector<EntityId> track2_outlier_ids;
+    for (int i = 0; i <= 30; ++i) {
+        EntityId eid = 2000 + i;
+        double x = 50.0;
+        double y = 10.0 + i * 1.0;
+        
+        // Inject very large errors
+        if (i == 10) {
+            x += 45.0;  // Huge horizontal error
+            track2_outlier_ids.push_back(eid);
+        } else if (i == 22) {
+            y += 35.0;  // Huge vertical error
+            track2_outlier_ids.push_back(eid);
+        }
+        
+        TestLine2D line = makeLine(i, x, y, eid);
+        data_source.emplace_back(line, eid, TimeFrameIndex(i));
+        group_manager.addEntityToGroup(track2, eid);
+    }
+
+    // 3. --- TEST OUTLIER DETECTION WITH 3-SIGMA THRESHOLD ---
+    INFO("Testing with 3-sigma threshold (should catch major outliers)");
+    auto results_3sigma = estimator.detectOutliers(
+        data_source, group_manager,
+        TimeFrameIndex(0), TimeFrameIndex(30),
+        3.0  // 3-sigma threshold
+    );
+
+    // Print statistics for debugging
+    INFO("3-sigma results: " << results_3sigma.outliers.size() << " outliers detected");
+    if (results_3sigma.mean_innovation.count(track1) > 0) {
+        INFO("Track1 mean innovation: " << results_3sigma.mean_innovation[track1]);
+        INFO("Track1 std deviation: " << results_3sigma.std_innovation[track1]);
+    }
+    if (results_3sigma.mean_innovation.count(track2) > 0) {
+        INFO("Track2 mean innovation: " << results_3sigma.mean_innovation[track2]);
+        INFO("Track2 std deviation: " << results_3sigma.std_innovation[track2]);
+    }
+    
+    // Verify statistics were computed for both tracks
+    REQUIRE(results_3sigma.mean_innovation.count(track1) > 0);
+    REQUIRE(results_3sigma.std_innovation.count(track1) > 0);
+    REQUIRE(results_3sigma.mean_innovation.count(track2) > 0);
+    REQUIRE(results_3sigma.std_innovation.count(track2) > 0);
+
+    // Collect detected outlier IDs and print info
+    std::set<EntityId> detected_3sigma;
+    for (auto const & outlier : results_3sigma.outliers) {
+        detected_3sigma.insert(outlier.entity_id);
+        
+        // Verify each outlier exceeds its threshold
+        REQUIRE(outlier.innovation_magnitude > outlier.threshold_used);
+        INFO("Outlier EntityID: " << outlier.entity_id 
+             << " at frame " << outlier.frame.getValue()
+             << " with magnitude " << outlier.innovation_magnitude
+             << " (threshold: " << outlier.threshold_used << ")");
+    }
+
+    // We injected 5 major outliers, but 3-sigma is conservative
+    // so we require at least 3 to be detected (the largest ones)
+    REQUIRE(results_3sigma.outliers.size() >= 3);
+    
+    // Count how many of our injected outliers were found
+    int track1_found = 0;
+    for (EntityId eid : track1_outlier_ids) {
+        if (detected_3sigma.count(eid) > 0) {
+            track1_found++;
+            INFO("Track1 outlier EntityID " << eid << " was detected");
+        } else {
+            INFO("Track1 outlier EntityID " << eid << " was NOT detected");
+        }
+    }
+    int track2_found = 0;
+    for (EntityId eid : track2_outlier_ids) {
+        if (detected_3sigma.count(eid) > 0) {
+            track2_found++;
+            INFO("Track2 outlier EntityID " << eid << " was detected");
+        } else {
+            INFO("Track2 outlier EntityID " << eid << " was NOT detected");
+        }
+    }
+    
+    // With 3-sigma, we should find at least 2 of our 5 injected outliers
+    REQUIRE((track1_found + track2_found) >= 2);
+
+    // 4. --- TEST WITH TIGHTER 2-SIGMA THRESHOLD ---
+    INFO("Testing with 2-sigma threshold (should catch more outliers)");
+    auto results_2sigma = estimator.detectOutliers(
+        data_source, group_manager,
+        TimeFrameIndex(0), TimeFrameIndex(30),
+        2.0  // Tighter threshold
+    );
+
+    INFO("2-sigma results: " << results_2sigma.outliers.size() << " outliers detected");
+    
+    // Tighter threshold should detect at least as many outliers
+    REQUIRE(results_2sigma.outliers.size() >= results_3sigma.outliers.size());
+
+    std::set<EntityId> detected_2sigma;
+    for (auto const & outlier : results_2sigma.outliers) {
+        detected_2sigma.insert(outlier.entity_id);
+        INFO("2-sigma Outlier EntityID: " << outlier.entity_id 
+             << " at frame " << outlier.frame.getValue()
+             << " magnitude: " << outlier.innovation_magnitude);
+    }
+
+    // All 3-sigma outliers should also be in 2-sigma results
+    for (EntityId eid : detected_3sigma) {
+        INFO("EntityID " << eid << " from 3-sigma should also be in 2-sigma");
+        REQUIRE(detected_2sigma.count(eid) > 0);
+    }
+
+    // Report how many additional outliers were found
+    size_t additional_outliers = results_2sigma.outliers.size() - results_3sigma.outliers.size();
+    INFO("2-sigma threshold found " << additional_outliers << " additional outliers beyond 3-sigma");
+    INFO("Total outliers with 2-sigma: " << results_2sigma.outliers.size());
+    INFO("Total outliers with 3-sigma: " << results_3sigma.outliers.size());
+
+    // Should find at least 4 of our 5 injected outliers with 2-sigma
+    int total_2sigma_found = 0;
+    for (EntityId eid : track1_outlier_ids) {
+        if (detected_2sigma.count(eid) > 0) total_2sigma_found++;
+    }
+    for (EntityId eid : track2_outlier_ids) {
+        if (detected_2sigma.count(eid) > 0) total_2sigma_found++;
+    }
+    INFO("2-sigma found " << total_2sigma_found << " of 5 injected outliers");
+    REQUIRE(total_2sigma_found >= 4);
+
+    // 5. --- TEST WITH EVEN TIGHTER 1.5-SIGMA THRESHOLD ---
+    INFO("Testing with 1.5-sigma threshold (should catch even more)");
+    auto results_1_5sigma = estimator.detectOutliers(
+        data_source, group_manager,
+        TimeFrameIndex(0), TimeFrameIndex(30),
+        1.5  // Even tighter threshold
+    );
+
+    INFO("1.5-sigma results: " << results_1_5sigma.outliers.size() << " outliers detected");
+    
+    // Should find at least as many as 2-sigma
+    REQUIRE(results_1_5sigma.outliers.size() >= results_2sigma.outliers.size());
+
+    std::set<EntityId> detected_1_5sigma;
+    for (auto const & outlier : results_1_5sigma.outliers) {
+        detected_1_5sigma.insert(outlier.entity_id);
+    }
+    
+    // Should find ALL 5 of our injected outliers with 1.5-sigma
+    int total_1_5sigma_found = 0;
+    for (EntityId eid : track1_outlier_ids) {
+        if (detected_1_5sigma.count(eid) > 0) total_1_5sigma_found++;
+    }
+    for (EntityId eid : track2_outlier_ids) {
+        if (detected_1_5sigma.count(eid) > 0) total_1_5sigma_found++;
+    }
+    INFO("1.5-sigma found " << total_1_5sigma_found << " of 5 injected outliers");
+    REQUIRE(total_1_5sigma_found == 5);
+    
+    // Verify the hierarchy: 1.5-sigma >= 2-sigma >= 3-sigma
+    REQUIRE(results_1_5sigma.outliers.size() >= results_2sigma.outliers.size());
+    REQUIRE(results_2sigma.outliers.size() >= results_3sigma.outliers.size());
+}
+
+TEST_CASE("StateEstimator - outlier detection with varying error magnitudes", "[StateEstimator][Outliers][Thresholds]") {
+    using namespace StateEstimation;
+
+    // Setup with lower measurement noise for better sensitivity
+    double dt = 1.0;
+    Eigen::MatrixXd F(4, 4);
+    F << 1, 0, dt, 0, 0, 1, 0, dt, 0, 0, 1, 0, 0, 0, 0, 1;
+    Eigen::MatrixXd H(2, 4);
+    H << 1, 0, 0, 0, 0, 1, 0, 0;
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(4, 4) * 0.05;
+    Eigen::MatrixXd R = Eigen::MatrixXd::Identity(2, 2) * 0.3;  // Lower noise for better sensitivity
+
+    StateEstimator<TestLine2D> estimator(
+        std::make_unique<KalmanFilter>(F, H, Q, R),
+        std::make_unique<LineCentroidExtractor>()
+    );
+
+    // Create track with small, medium, and large errors
+    std::vector<std::tuple<TestLine2D, EntityId, TimeFrameIndex>> data_source;
+    EntityGroupManager group_manager;
+    GroupId group = group_manager.createGroup("VaryingErrors");
+
+    std::map<std::string, std::vector<EntityId>> error_categories = {
+        {"small", {}},
+        {"medium", {}},
+        {"large", {}}
+    };
+
+    // Create a smooth trajectory with injected errors of varying magnitude
+    for (int i = 0; i <= 40; ++i) {
+        EntityId eid = 3000 + i;
+        double x = i * 1.0;
+        double y = i * 0.5;
+        
+        // Inject errors of different magnitudes - make them more distinct
+        if (i == 10) {
+            x += 8.0;  // Small-ish error
+            error_categories["small"].push_back(eid);
+        } else if (i == 20) {
+            x += 20.0;  // Medium error
+            error_categories["medium"].push_back(eid);
+        } else if (i == 30) {
+            x += 40.0;  // Large error
+            error_categories["large"].push_back(eid);
+        }
+        
+        TestLine2D line;
+        line.id = eid;
+        line.p1 = Eigen::Vector2d(x - 0.5, y);
+        line.p2 = Eigen::Vector2d(x + 0.5, y);
+        
+        data_source.emplace_back(line, eid, TimeFrameIndex(i));
+        group_manager.addEntityToGroup(group, eid);
+    }
+
+    // Test multiple thresholds and verify detection hierarchy
+    auto results_3sigma = estimator.detectOutliers(data_source, group_manager, 
+                                                   TimeFrameIndex(0), TimeFrameIndex(40), 3.0);
+    auto results_2sigma = estimator.detectOutliers(data_source, group_manager, 
+                                                   TimeFrameIndex(0), TimeFrameIndex(40), 2.0);
+    auto results_1sigma = estimator.detectOutliers(data_source, group_manager, 
+                                                   TimeFrameIndex(0), TimeFrameIndex(40), 1.0);
+
+    INFO("3-sigma found " << results_3sigma.outliers.size() << " outliers");
+    INFO("2-sigma found " << results_2sigma.outliers.size() << " outliers");
+    INFO("1-sigma found " << results_1sigma.outliers.size() << " outliers");
+
+    // Get detected IDs for each threshold
+    std::set<EntityId> ids_3sigma, ids_2sigma, ids_1sigma;
+    for (auto const & o : results_3sigma.outliers) {
+        ids_3sigma.insert(o.entity_id);
+        INFO("3-sigma detected EntityID " << o.entity_id << " at frame " << o.frame.getValue());
+    }
+    for (auto const & o : results_2sigma.outliers) {
+        ids_2sigma.insert(o.entity_id);
+        INFO("2-sigma detected EntityID " << o.entity_id << " at frame " << o.frame.getValue());
+    }
+    for (auto const & o : results_1sigma.outliers) {
+        ids_1sigma.insert(o.entity_id);
+    }
+
+    // 3-sigma should catch at least the large error
+    REQUIRE(results_3sigma.outliers.size() >= 1);
+    
+    // 2-sigma should catch more (large + medium)
+    REQUIRE(results_2sigma.outliers.size() >= results_3sigma.outliers.size());
+    REQUIRE(results_2sigma.outliers.size() >= 2);
+    
+    // 1-sigma should catch all errors
+    REQUIRE(results_1sigma.outliers.size() >= results_2sigma.outliers.size());
+    REQUIRE(results_1sigma.outliers.size() >= 3);
+    
+    // Large error should be in all results
+    for (EntityId eid : error_categories["large"]) {
+        INFO("Checking large error EntityID " << eid);
+        REQUIRE(ids_3sigma.count(eid) > 0);
+        REQUIRE(ids_2sigma.count(eid) > 0);
+        REQUIRE(ids_1sigma.count(eid) > 0);
+    }
+    
+    // Medium error should be in 2-sigma and 1-sigma
+    for (EntityId eid : error_categories["medium"]) {
+        INFO("Checking medium error EntityID " << eid);
+        REQUIRE(ids_2sigma.count(eid) > 0);
+        REQUIRE(ids_1sigma.count(eid) > 0);
+    }
+    
+    // Small error should be in 1-sigma
+    for (EntityId eid : error_categories["small"]) {
+        INFO("Checking small error EntityID " << eid);
+        REQUIRE(ids_1sigma.count(eid) > 0);
+    }
+    
+    // Verify proper subset relationship: 3σ ⊆ 2σ ⊆ 1σ
+    for (EntityId eid : ids_3sigma) {
+        REQUIRE(ids_2sigma.count(eid) > 0);
+        REQUIRE(ids_1sigma.count(eid) > 0);
+    }
+    for (EntityId eid : ids_2sigma) {
+        REQUIRE(ids_1sigma.count(eid) > 0);
+    }
+}
+
 TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostFlowTracker][FlipBlackout]") {
     using namespace StateEstimation;
 

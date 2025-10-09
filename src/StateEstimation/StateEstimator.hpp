@@ -10,6 +10,7 @@
 #include <Eigen/Dense>
 
 #include <algorithm>
+#include <cmath>
 #include <map>
 #include <memory>
 #include <optional>
@@ -264,6 +265,9 @@ private:
 
     /**
      * @brief Detect outliers in a chronological sequence based on innovation statistics.
+     * 
+     * Uses forward-backward smoothing to get robust predictions that aren't corrupted
+     * by outliers, then computes innovations against smoothed predictions.
      */
     OutlierDetectionResults detectOutliersInSequence(std::vector<ObservationNode> const & sequence,
                                                       GroupId group_id,
@@ -272,52 +276,52 @@ private:
         
         if (sequence.empty()) return results;
         
-        auto filter = _filter_prototype->clone();
-        std::vector<double> innovation_magnitudes;
+        // First, get smoothed estimates for this sequence
+        std::vector<FilterState> smoothed_states = smoothSequence(sequence);
         
-        // Forward pass: compute innovations
+        if (smoothed_states.empty()) return results;
+        
+        // Now compute innovations between actual measurements and smoothed predictions
+        std::vector<double> innovation_magnitudes;
+        std::vector<Eigen::VectorXd> innovation_vectors;
+        
         for (size_t i = 0; i < sequence.size(); ++i) {
             auto const & node = sequence[i];
             
             if (i == 0) {
-                // Initialize with first observation (no innovation to compute)
-                filter->initialize(_feature_extractor->getInitialState(*node.data));
-                innovation_magnitudes.push_back(0.0);  // No innovation for first observation
+                // Skip first observation (no prior prediction)
+                innovation_magnitudes.push_back(0.0);
+                innovation_vectors.push_back(Eigen::VectorXd::Zero(2));
                 continue;
             }
             
-            // Predict forward from previous state
+            // Get actual observation
+            Eigen::VectorXd observation = _feature_extractor->getFilterFeatures(*node.data);
+            
+            // Get smoothed prediction from previous state
+            // For better outlier detection, we could interpolate, but for now use previous smoothed state
+            // to predict current state
+            auto filter = _filter_prototype->clone();
+            filter->initialize(smoothed_states[i - 1]);
+            
+            // Predict forward by the number of frames
             TimeFrameIndex prev_frame = sequence[i - 1].frame;
             int num_steps = (node.frame - prev_frame).getValue();
             
-            if (num_steps <= 0) {
-                innovation_magnitudes.push_back(0.0);  // Skip invalid steps
-                continue;
-            }
-            
-            // Multi-step prediction
-            FilterState pred = filter->getState();
-            for (int step = 0; step < num_steps; ++step) {
+            FilterState pred = smoothed_states[i - 1];
+            for (int step = 0; step < num_steps && num_steps > 0; ++step) {
                 pred = filter->predict();
             }
             
-            // Compute innovation (prediction error)
-            // Note: We compute innovation in measurement space by comparing the observation
-            // to the predicted observation. For a proper Kalman filter, this would use
-            // the measurement matrix H to project state to measurement space.
-            // For simplicity, we assume the observation is comparable to part of the state.
-            Eigen::VectorXd observation = _feature_extractor->getFilterFeatures(*node.data);
-            
-            // Extract the measurement portion of the state (first N elements matching observation size)
+            // Extract predicted observation (first N elements of state)
             Eigen::VectorXd predicted_observation = pred.state_mean.head(observation.size());
+            
+            // Compute innovation
             Eigen::VectorXd innovation = observation - predicted_observation;
-            
-            // Compute innovation magnitude (could use Mahalanobis, but L2 norm is simpler)
             double magnitude = innovation.norm();
-            innovation_magnitudes.push_back(magnitude);
             
-            // Update filter with measurement
-            filter->update(pred, {observation});
+            innovation_magnitudes.push_back(magnitude);
+            innovation_vectors.push_back(innovation);
         }
         
         // Compute statistics (skip first observation which has 0 innovation)
@@ -325,41 +329,60 @@ private:
             std::vector<double> valid_magnitudes(innovation_magnitudes.begin() + 1, 
                                                  innovation_magnitudes.end());
             
+            // Use median and MAD (Median Absolute Deviation) for robust statistics
+            // that aren't affected by outliers
+            std::vector<double> sorted_mags = valid_magnitudes;
+            std::sort(sorted_mags.begin(), sorted_mags.end());
+            
+            // Compute median
+            double median = 0.0;
+            size_t n = sorted_mags.size();
+            if (n % 2 == 0) {
+                median = (sorted_mags[n/2 - 1] + sorted_mags[n/2]) / 2.0;
+            } else {
+                median = sorted_mags[n/2];
+            }
+            
+            // Compute MAD (Median Absolute Deviation)
+            std::vector<double> absolute_deviations;
+            for (double mag : valid_magnitudes) {
+                absolute_deviations.push_back(std::abs(mag - median));
+            }
+            std::sort(absolute_deviations.begin(), absolute_deviations.end());
+            
+            double mad = 0.0;
+            if (n % 2 == 0) {
+                mad = (absolute_deviations[n/2 - 1] + absolute_deviations[n/2]) / 2.0;
+            } else {
+                mad = absolute_deviations[n/2];
+            }
+            
+            // Convert MAD to equivalent standard deviation (for normally distributed data)
+            // sigma ≈ 1.4826 * MAD
+            double robust_std = 1.4826 * mad;
+            
+            // Also compute traditional mean/std for reporting
             double mean = 0.0;
             for (double mag : valid_magnitudes) {
                 mean += mag;
             }
             mean /= valid_magnitudes.size();
             
-            double variance = 0.0;
-            for (double mag : valid_magnitudes) {
-                variance += (mag - mean) * (mag - mean);
-            }
-            variance /= valid_magnitudes.size();
-            double std_dev = std::sqrt(variance);
-            
             results.innovation_magnitudes[group_id] = innovation_magnitudes;
-            results.mean_innovation[group_id] = mean;
-            results.std_innovation[group_id] = std_dev;
+            results.mean_innovation[group_id] = median;  // Report median as "mean"
+            results.std_innovation[group_id] = robust_std;  // Report robust std
             
-            // Flag outliers
-            double threshold = mean + threshold_sigma * std_dev;
+            // Flag outliers using robust threshold
+            double threshold = median + threshold_sigma * robust_std;
             for (size_t i = 1; i < sequence.size(); ++i) {  // Start from 1 (skip first)
                 if (innovation_magnitudes[i] > threshold) {
-                    // Recompute innovation vector for outlier info
-                    Eigen::VectorXd observation = _feature_extractor->getFilterFeatures(*sequence[i].data);
-                    
-                    // Would need to re-run filter to get exact innovation at this point,
-                    // but for simplicity we'll create a placeholder
-                    Eigen::VectorXd innovation = Eigen::VectorXd::Zero(observation.size());
-                    
                     results.outliers.push_back({
                         sequence[i].frame,
                         sequence[i].entity_id,
                         group_id,
                         innovation_magnitudes[i],
                         threshold,
-                        innovation
+                        innovation_vectors[i]
                     });
                 }
             }
