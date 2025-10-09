@@ -6,18 +6,26 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QGroupBox>
-#include <QPushButton>
 #include <QDoubleSpinBox>
-#include <QMessageBox>
+#include <QComboBox>
+#include <QString>
+
+// Include DataManager and PointData headers
+#include "DataManager/DataManager.hpp"
+#include "DataManager/Points/Point_Data.hpp"
 
 LineBaseFlip_Widget::LineBaseFlip_Widget(QWidget* parent)
-    : TransformParameter_Widget(parent)
+    : DataManagerParameter_Widget(parent)
     , ui(new Ui::LineBaseFlip_Widget)
 {
     ui->setupUi(this);
 
-    // Connect signals
-    connect(ui->getFromViewerButton, &QPushButton::clicked, this, &LineBaseFlip_Widget::onGetFromMediaViewer);
+    // Connect combo box signal
+    connect(ui->comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &LineBaseFlip_Widget::onComboBoxSelectionChanged);
+
+    // Initialize combo box
+    populateComboBoxWithPointData();
 }
 
 LineBaseFlip_Widget::~LineBaseFlip_Widget()
@@ -34,14 +42,72 @@ std::unique_ptr<TransformParametersBase> LineBaseFlip_Widget::getParameters() co
     return std::make_unique<LineBaseFlipParameters>(reference_point);
 }
 
-void LineBaseFlip_Widget::onGetFromMediaViewer() {
-    // For now, show a message box explaining the feature
-    // In a full implementation, this would integrate with the media viewer
-    // to allow the user to click and place a reference point
+void LineBaseFlip_Widget::onDataManagerChanged() {
+    // Repopulate combo box when data manager changes
+    populateComboBoxWithPointData();
+}
 
-    QMessageBox::information(this, "Get from Media Viewer",
-        "This feature would allow you to click in the media viewer to place a reference point.\n\n"
-        "Implementation note: This would require integration with the media viewer widget "
-        "to capture mouse clicks and convert them to image coordinates.\n\n"
-        "For now, please enter the coordinates manually in the X and Y fields above.");
+void LineBaseFlip_Widget::onDataManagerDataChanged() {
+    // Repopulate combo box when data changes
+    populateComboBoxWithPointData();
+}
+
+void LineBaseFlip_Widget::populateComboBoxWithPointData() {
+    ui->comboBox->clear();
+
+    // Add default "None" option
+    ui->comboBox->addItem("(None)");
+
+    // Check if we have a data manager
+    auto dm = dataManager();
+    if (!dm) {
+        return;
+    }
+
+    // Get all PointData keys and add them to combo box
+    auto pointDataKeys = dm->getKeys<PointData>();
+    for (const auto& key : pointDataKeys) {
+        ui->comboBox->addItem(QString::fromStdString(key));
+    }
+}
+
+void LineBaseFlip_Widget::onComboBoxSelectionChanged(int index) {
+    if (index <= 0) {
+        // "(None)" selected or invalid index
+        return;
+    }
+
+    QString selectedKey = ui->comboBox->itemText(index);
+    setSpinBoxesFromPointData(selectedKey);
+}
+
+void LineBaseFlip_Widget::setSpinBoxesFromPointData(const QString& pointDataKey) {
+    auto dm = dataManager();
+    if (!dm) {
+        return;
+    }
+
+    std::string key = pointDataKey.toStdString();
+    auto pointData = dm->getData<PointData>(key);
+    if (!pointData) {
+        return;
+    }
+
+    // Get the first available time with data
+    auto timesWithData = pointData->getTimesWithData();
+    if (timesWithData.empty()) {
+        return;
+    }
+
+    // Get points at the first time
+    auto firstTime = *timesWithData.begin();
+    const auto& points = pointData->getAtTime(firstTime);
+    if (points.empty()) {
+        return;
+    }
+
+    // Take the first point and swap X and Y as requested
+    const auto& firstPoint = points.front();
+    ui->xSpinBox->setValue(static_cast<double>(firstPoint.y)); // X spinbox gets Y coordinate
+    ui->ySpinBox->setValue(static_cast<double>(firstPoint.x)); // Y spinbox gets X coordinate
 }

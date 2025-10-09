@@ -1,7 +1,7 @@
 #ifndef LINEBASEFLIP_WIDGET_HPP
 #define LINEBASEFLIP_WIDGET_HPP
 
-#include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
+#include "DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.hpp"
 #include "transforms/Lines/Line_Base_Flip/line_base_flip.hpp"
 
 #include <QWidget>
@@ -17,7 +17,7 @@ class LineBaseFlip_Widget;
  * This widget allows users to specify the reference point coordinates
  * that will be used to determine which end of each line should be the base.
  */
-class LineBaseFlip_Widget : public TransformParameter_Widget {
+class LineBaseFlip_Widget : public DataManagerParameter_Widget {
     Q_OBJECT
 
 public:
@@ -26,10 +26,17 @@ public:
 
     std::unique_ptr<TransformParametersBase> getParameters() const override;
 
+protected:
+    void onDataManagerChanged() override;
+    void onDataManagerDataChanged() override;
+
 private slots:
-    void onGetFromMediaViewer();
+    void onComboBoxSelectionChanged(int index);
 
 private:
+    void populateComboBoxWithPointData();
+    void setSpinBoxesFromPointData(const QString& pointDataKey);
+
     Ui::LineBaseFlip_Widget* ui;
 };
 

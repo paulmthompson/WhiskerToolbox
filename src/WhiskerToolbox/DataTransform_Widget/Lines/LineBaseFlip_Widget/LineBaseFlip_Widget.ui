@@ -1,120 +1,118 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-    <class>LineBaseFlip_Widget</class>
-    <widget class="QWidget" name="LineBaseFlip_Widget">
-        <property name="geometry">
-            <rect>
-                <x>0</x>
-                <y>0</y>
-                <width>350</width>
-                <height>300</height>
-            </rect>
-        </property>
-        <property name="windowTitle">
-            <string>Line Base Flip Parameters</string>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
-            <item>
-                <widget class="QLabel" name="descriptionLabel">
-                    <property name="text">
-                        <string>Specify a reference point to determine line base orientation.
-                            Lines will be flipped so that the end closer to the reference point becomes the base.
-                            You can either enter coordinates manually or click 'Get from Media Viewer' to place a point interactively.</string>
-                    </property>
-                    <property name="wordWrap">
-                        <bool>true</bool>
-                    </property>
-                    <property name="styleSheet">
-                        <string>QLabel { color: gray; font-size: 10pt; }</string>
-                    </property>
-                </widget>
-            </item>
-            <item>
-                <widget class="QGroupBox" name="referencePointGroupBox">
-                    <property name="title">
-                        <string>Reference Point</string>
-                    </property>
-                    <layout class="QGridLayout" name="gridLayout">
-                        <item row="0" column="0">
-                            <widget class="QLabel" name="xLabel">
-                                <property name="text">
-                                    <string>X Coordinate:</string>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="0" column="1">
-                            <widget class="QDoubleSpinBox" name="xSpinBox">
-                                <property name="minimum">
-                                    <double>-999999.000000000000000</double>
-                                </property>
-                                <property name="maximum">
-                                    <double>999999.000000000000000</double>
-                                </property>
-                                <property name="decimals">
-                                    <number>2</number>
-                                </property>
-                                <property name="suffix">
-                                    <string> px</string>
-                                </property>
-                                <property name="value">
-                                    <double>0.000000000000000</double>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="1" column="0">
-                            <widget class="QLabel" name="yLabel">
-                                <property name="text">
-                                    <string>Y Coordinate:</string>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="1" column="1">
-                            <widget class="QDoubleSpinBox" name="ySpinBox">
-                                <property name="minimum">
-                                    <double>-999999.000000000000000</double>
-                                </property>
-                                <property name="maximum">
-                                    <double>999999.000000000000000</double>
-                                </property>
-                                <property name="decimals">
-                                    <number>2</number>
-                                </property>
-                                <property name="suffix">
-                                    <string> px</string>
-                                </property>
-                                <property name="value">
-                                    <double>0.000000000000000</double>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="2" column="0" colspan="2">
-                            <widget class="QPushButton" name="getFromViewerButton">
-                                <property name="text">
-                                    <string>Get from Media Viewer</string>
-                                </property>
-                                <property name="toolTip">
-                                    <string>Click to manually place a reference point in the media viewer</string>
-                                </property>
-                            </widget>
-                        </item>
-                    </layout>
-                </widget>
-            </item>
-            <item>
-                <spacer name="verticalSpacer">
-                    <property name="orientation">
-                        <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                        <size>
-                            <width>20</width>
-                            <height>40</height>
-                        </size>
-                    </property>
-                </spacer>
-            </item>
-        </layout>
+ <class>LineBaseFlip_Widget</class>
+ <widget class="QWidget" name="LineBaseFlip_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>350</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Line Base Flip Parameters</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="descriptionLabel">
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify a reference point to determine line base orientation.&lt;/p&gt;&lt;p&gt;Lines will be flipped so that the end closer to the reference point becomes the base.&lt;/p&gt;&lt;p&gt;You can either enter coordinates manually or specify a keypoint data feature to populate the coordinate spinboxes. &lt;br/&gt;(Only the first keypoint if selected will be considered)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
     </widget>
-    <resources/>
-    <connections/>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="referencePointGroupBox">
+     <property name="title">
+      <string>Reference Point</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="ySpinBox">
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>-999999.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>999999.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="yLabel">
+        <property name="text">
+         <string>Y Coordinate:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="xLabel">
+        <property name="text">
+         <string>X Coordinate:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="xSpinBox">
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>-999999.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>999999.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="comboBox"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Select Point Data:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
 </ui>
