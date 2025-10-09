@@ -97,6 +97,13 @@ void MediaPoint_Widget::_handlePointClickWithModifiers(qreal x_media, qreal y_me
     if (!_selection_enabled || _active_key.empty())
         return;
 
+    // Check if Alt is held for point creation
+    if (modifiers & Qt::AltModifier) {
+        // Alt+click: add new point at current time
+        _addPointAtCurrentTime(x_media, y_media);
+        return;
+    }
+
     // Check if Ctrl is held for point movement
     if (modifiers & Qt::ControlModifier) {
         // Ctrl+click: move selected point if one is selected
@@ -211,6 +218,33 @@ void MediaPoint_Widget::_moveSelectedPoint(qreal x_media, qreal y_media) {
 void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
     // Legacy method - now just calls the move function for compatibility
     _moveSelectedPoint(x_media, y_media);
+}
+
+void MediaPoint_Widget::_addPointAtCurrentTime(qreal x_media, qreal y_media) {
+    if (_active_key.empty())
+        return;
+    
+    auto current_time = _data_manager->getCurrentTime();
+    
+    // Handle timeframe conversion if necessary
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
+    auto point_timeframe_key = _data_manager->getTimeKey(_active_key);
+    
+    if (!point_timeframe_key.empty()) {
+        auto point_timeframe = _data_manager->getTime(point_timeframe_key);
+        if (video_timeframe.get() != point_timeframe.get()) {
+            current_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
+            current_time = point_timeframe->getIndexAtTime(current_time).getValue();
+        }
+    }
+    
+    auto point_data = _data_manager->getData<PointData>(_active_key);
+    if (point_data) {
+        Point2D<float> new_point(static_cast<float>(x_media), static_cast<float>(y_media));
+        point_data->addAtTime(TimeFrameIndex(current_time), new_point);
+        _scene->UpdateCanvas();
+        std::cout << "Added new point at: (" << x_media << ", " << y_media << ") at time " << current_time << std::endl;
+    }
 }
 
 void MediaPoint_Widget::_setPointColor(const QString& hex_color) {

@@ -8,12 +8,12 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "Entity/EntityTypes.hpp"
 
-#include <QModelIndex>
-#include <QWidget>
-#include <QString>
-#include <QLineEdit>
-#include <QPushButton>
 #include "nlohmann/json.hpp"
+#include <QLineEdit>
+#include <QModelIndex>
+#include <QPushButton>
+#include <QString>
+#include <QWidget>
 
 #include <memory>
 #include <string>
@@ -93,10 +93,11 @@ private slots:
     void _onCopyImageSizeClicked();
     void _onGroupFilterChanged(int index);
     void _onGroupChanged();
+    void _onAutoScrollToCurrentFrame();
 
 private:
-    void _initiateSaveProcess(QString const& format, LineSaverConfig const& config);
-    bool _performRegistrySave(QString const& format, LineSaverConfig const& config);
+    void _initiateSaveProcess(QString const & format, LineSaverConfig const & config);
+    bool _performRegistrySave(QString const & format, LineSaverConfig const & config);
     void _updateImageSizeDisplay();
     void _populateMediaComboBox();
     void _populateGroupFilterCombo();
