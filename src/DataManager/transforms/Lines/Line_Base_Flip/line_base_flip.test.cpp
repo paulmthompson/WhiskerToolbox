@@ -1,5 +1,6 @@
 #include "line_base_flip.hpp"
 #include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -18,7 +19,9 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
     }
 
     SECTION("CannotApplyToNonLineData") {
-        DataTypeVariant variant = std::make_shared<int>(42);
+        // Use a different valid DataTypeVariant type (not LineData)
+        auto mask_data = std::make_shared<MaskData>();
+        DataTypeVariant variant = mask_data;
         REQUIRE_FALSE(transform->canApply(variant));
     }
 
