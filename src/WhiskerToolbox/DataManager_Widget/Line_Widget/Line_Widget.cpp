@@ -2,11 +2,11 @@
 #include "ui_Line_Widget.h"
 
 #include "DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Media/Media_Data.hpp"
+#include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/IO/LoaderRegistry.hpp"
 #include "DataManager/IO/interface/IOTypes.hpp"
-#include "DataManager/ConcreteDataFactory.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 #include "LineTableModel.hpp"
 
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
@@ -65,18 +65,20 @@ Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
             this, &Line_Widget::_onCopyImageSizeClicked);
     connect(ui->groupFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &Line_Widget::_onGroupFilterChanged);
+    connect(ui->autoScrollButton, &QPushButton::clicked,
+            this, &Line_Widget::_onAutoScrollToCurrentFrame);
 
     // Setup collapsible export section
     ui->export_section->autoSetContentLayout();
     ui->export_section->setTitle("Export Options");
-    ui->export_section->toggle(false); // Start collapsed
+    ui->export_section->toggle(false);// Start collapsed
 
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
     ui->media_export_options_widget->setVisible(ui->export_media_frames_checkbox->isChecked());
-    
+
     // Populate media combo box
     _populateMediaComboBox();
-    
+
     // Set up callback to refresh media combo box when data changes
     if (_data_manager) {
         _data_manager->addObserver([this]() {
@@ -88,7 +90,7 @@ Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
 Line_Widget::~Line_Widget() {
     // Remove the line data callback
     removeCallbacks();
-    
+
     delete ui;
 }
 
@@ -138,7 +140,7 @@ void Line_Widget::_handleCellDoubleClicked(QModelIndex const & index) {
     }
     LineTableRow const rowData = _line_table_model->getRowData(index.row());
     if (rowData.frame != -1) {
-        emit frameSelected(rowData.frame);
+        emit frameSelected(static_cast<int>(rowData.frame));
     }
 }
 
@@ -168,11 +170,11 @@ void Line_Widget::_showContextMenu(QPoint const & position) {
     // Add group management options
     context_menu.addSeparator();
     QMenu * group_menu = context_menu.addMenu("Group Management");
-    
+
     // Add "Move to Group" submenu
     QMenu * move_to_group_menu = group_menu->addMenu("Move to Group");
     _populateGroupSubmenu(move_to_group_menu, true);
-    
+
     // Add "Remove from Group" action
     QAction * remove_from_group_action = group_menu->addAction("Remove from Group");
     connect(remove_from_group_action, &QAction::triggered, this, &Line_Widget::_removeSelectedLinesFromGroup);
@@ -194,7 +196,7 @@ std::vector<TimeFrameIndex> Line_Widget::_getSelectedFrames() {
         if (index.isValid()) {
             LineTableRow const row_data = _line_table_model->getRowData(index.row());
             if (row_data.frame != -1) {
-                unique_frames.insert(row_data.frame);
+                unique_frames.insert(static_cast<int>(row_data.frame));
             }
         }
     }
@@ -209,7 +211,7 @@ std::vector<EntityId> Line_Widget::_getSelectedEntityIds() {
     for (auto const & index: selectedIndexes) {
         if (index.isValid()) {
             LineTableRow const row_data = _line_table_model->getRowData(index.row());
-            if (row_data.entity_id != 0) { // Valid entity ID
+            if (row_data.entity_id != 0) {// Valid entity ID
                 entity_ids.push_back(row_data.entity_id);
             }
         }
@@ -315,7 +317,11 @@ void Line_Widget::_deleteSelectedLine() {
         return;
     }
 
-    source_line_data->clearAtTime(TimeFrameIndex(row_data.frame), row_data.lineIndex);
+    bool const clear_success = source_line_data->clearAtTime(TimeFrameIndex(row_data.frame), row_data.lineIndex);
+    if (!clear_success) {
+        std::cerr << "Line_Widget: Failed to clear line at frame " << row_data.frame
+                  << ", index " << row_data.lineIndex << std::endl;
+    }
 
     updateTable();
 
@@ -349,7 +355,7 @@ void Line_Widget::_onExportMediaFramesCheckboxToggled(bool checked) {
     ui->media_export_options_widget->setVisible(checked);
 }
 
-void Line_Widget::_initiateSaveProcess(QString const& format, LineSaverConfig const& config) {
+void Line_Widget::_initiateSaveProcess(QString const & format, LineSaverConfig const & config) {
     if (_active_key.empty()) {
         QMessageBox::warning(this, "No Data Selected", "Please select a LineData item to save.");
         return;
@@ -364,7 +370,7 @@ void Line_Widget::_initiateSaveProcess(QString const& format, LineSaverConfig co
     // Update config with full path
     LineSaverConfig updated_config = config;
     std::string parent_dir = config.value("parent_dir", ".");
-    
+
     // Only prepend output path if parent_dir is relative (starts with "." or doesn't start with "/")
     if (parent_dir == "." || (!parent_dir.empty() && parent_dir[0] != '/')) {
         if (parent_dir == ".") {
@@ -406,9 +412,7 @@ void Line_Widget::_initiateSaveProcess(QString const& format, LineSaverConfig co
             try {
                 std::filesystem::create_directories(options.image_save_dir);
             } catch (std::exception const & e) {
-                QMessageBox::critical(this, "Export Error", QString("Failed to create output directory: %1\n%2")
-                                                               .arg(QString::fromStdString(options.image_save_dir))
-                                                               .arg(QString::fromStdString(e.what())));
+                QMessageBox::critical(this, "Export Error", QString("Failed to create output directory: %1\n%2").arg(QString::fromStdString(options.image_save_dir)).arg(QString::fromStdString(e.what())));
                 return;
             }
 
@@ -421,14 +425,14 @@ void Line_Widget::_initiateSaveProcess(QString const& format, LineSaverConfig co
             QMessageBox::information(this,
                                      "Media Export",
                                      QString("Exported %1 media frames to: %2/%3")
-                                         .arg(frames_exported)
-                                         .arg(QString::fromStdString(options.image_save_dir))
-                                         .arg(QString::fromStdString(options.image_folder)));
+                                             .arg(frames_exported)
+                                             .arg(QString::fromStdString(options.image_save_dir))
+                                             .arg(QString::fromStdString(options.image_folder)));
         }
     }
 }
 
-bool Line_Widget::_performRegistrySave(QString const& format, LineSaverConfig const& config) {
+bool Line_Widget::_performRegistrySave(QString const & format, LineSaverConfig const & config) {
     auto line_data_ptr = _data_manager->getData<LineData>(_active_key);
     if (!line_data_ptr) {
         QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve LineData for saving. Key: " + QString::fromStdString(_active_key));
@@ -436,17 +440,18 @@ bool Line_Widget::_performRegistrySave(QString const& format, LineSaverConfig co
     }
 
     // Check if format is supported through registry
-    LoaderRegistry& registry = LoaderRegistry::getInstance();
+    LoaderRegistry & registry = LoaderRegistry::getInstance();
     std::string const format_str = format.toStdString();
-    
+
     if (!registry.isFormatSupported(format_str, IODataType::Line)) {
-        QMessageBox::warning(this, "Format Not Supported", 
-            QString("Format '%1' saving is not available. This may require additional plugins to be enabled.\n\n"
-                   "To enable format support:\n"
-                   "1. Ensure required libraries are available in your build environment\n"
-                   "2. Build with appropriate -DENABLE_* flags\n"
-                   "3. Restart the application").arg(format));
-        
+        QMessageBox::warning(this, "Format Not Supported",
+                             QString("Format '%1' saving is not available. This may require additional plugins to be enabled.\n\n"
+                                     "To enable format support:\n"
+                                     "1. Ensure required libraries are available in your build environment\n"
+                                     "2. Build with appropriate -DENABLE_* flags\n"
+                                     "3. Restart the application")
+                                     .arg(format));
+
         std::cout << "Format '" << format_str << "' saving not available - plugin not registered" << std::endl;
         return false;
     }
@@ -455,7 +460,7 @@ bool Line_Widget::_performRegistrySave(QString const& format, LineSaverConfig co
         // Construct filepath for the registry (though CSVLoader doesn't use it directly)
         std::string const save_type = config.value("save_type", "single");
         std::string filepath;
-        
+
         if (save_type == "single") {
             std::string const parent_dir = config.value("parent_dir", ".");
             std::string const filename = config.value("filename", "line_data.csv");
@@ -463,27 +468,27 @@ bool Line_Widget::_performRegistrySave(QString const& format, LineSaverConfig co
         } else if (save_type == "multi") {
             filepath = config.value("parent_dir", ".");
         }
-        
+
         // Use registry to save through the new save interface
-        LoadResult const result = registry.trySave(format_str, 
-                                           IODataType::Line, 
-                                           filepath,
-                                           config, 
-                                           line_data_ptr.get());
-        
+        LoadResult const result = registry.trySave(format_str,
+                                                   IODataType::Line,
+                                                   filepath,
+                                                   config,
+                                                   line_data_ptr.get());
+
         if (result.success) {
             std::string const save_location = config.value("parent_dir", ".");
-            QMessageBox::information(this, "Save Successful", 
-                QString("Line data saved successfully to: %1").arg(QString::fromStdString(save_location)));
+            QMessageBox::information(this, "Save Successful",
+                                     QString("Line data saved successfully to: %1").arg(QString::fromStdString(save_location)));
             std::cout << "Line data saved successfully using " << format_str << " format" << std::endl;
             return true;
         } else {
-            QMessageBox::critical(this, "Save Error", 
-                QString("Failed to save line data: %1").arg(QString::fromStdString(result.error_message)));
+            QMessageBox::critical(this, "Save Error",
+                                  QString("Failed to save line data: %1").arg(QString::fromStdString(result.error_message)));
             std::cerr << "Failed to save line data: " << result.error_message << std::endl;
             return false;
         }
-        
+
     } catch (std::exception const & e) {
         QMessageBox::critical(this, "Save Error", "Failed to save line data: " + QString::fromStdString(e.what()));
         std::cerr << "Failed to save line data: " << e.what() << std::endl;
@@ -528,26 +533,29 @@ void Line_Widget::_onApplyImageSizeClicked() {
 
     // Get current image size
     ImageSize current_size = line_data->getImageSize();
-    
+
     // If no current size is set, just set the new size without scaling
     if (current_size.width == -1 || current_size.height == -1) {
         line_data->setImageSize({new_width, new_height});
         _updateImageSizeDisplay();
-        QMessageBox::information(this, "Image Size Set", 
-            QString("Image size set to %1 × %2 (no scaling applied as no previous size was set).")
-                .arg(new_width).arg(new_height));
+        QMessageBox::information(this, "Image Size Set",
+                                 QString("Image size set to %1 × %2 (no scaling applied as no previous size was set).")
+                                         .arg(new_width)
+                                         .arg(new_height));
         return;
     }
 
     // Ask user if they want to scale existing data
-    int ret = QMessageBox::question(this, "Scale Existing Data", 
-        QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4?\n\n"
-               "Click 'Yes' to scale all line data proportionally.\n"
-               "Click 'No' to just change the image size without scaling.\n"
-               "Click 'Cancel' to abort the operation.")
-            .arg(current_size.width).arg(current_size.height)
-            .arg(new_width).arg(new_height),
-        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+    int ret = QMessageBox::question(this, "Scale Existing Data",
+                                    QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4?\n\n"
+                                            "Click 'Yes' to scale all line data proportionally.\n"
+                                            "Click 'No' to just change the image size without scaling.\n"
+                                            "Click 'Cancel' to abort the operation.")
+                                            .arg(current_size.width)
+                                            .arg(current_size.height)
+                                            .arg(new_width)
+                                            .arg(new_height),
+                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
     if (ret == QMessageBox::Cancel) {
         return;
@@ -556,15 +564,17 @@ void Line_Widget::_onApplyImageSizeClicked() {
     if (ret == QMessageBox::Yes) {
         // Scale the data
         line_data->changeImageSize({new_width, new_height});
-        QMessageBox::information(this, "Image Size Changed", 
-            QString("Image size changed to %1 × %2 and all line data has been scaled proportionally.")
-                .arg(new_width).arg(new_height));
+        QMessageBox::information(this, "Image Size Changed",
+                                 QString("Image size changed to %1 × %2 and all line data has been scaled proportionally.")
+                                         .arg(new_width)
+                                         .arg(new_height));
     } else {
         // Just set the new size without scaling
         line_data->setImageSize({new_width, new_height});
-        QMessageBox::information(this, "Image Size Set", 
-            QString("Image size set to %1 × %2 (existing line data was not scaled).")
-                .arg(new_width).arg(new_height));
+        QMessageBox::information(this, "Image Size Set",
+                                 QString("Image size set to %1 × %2 (existing line data was not scaled).")
+                                         .arg(new_width)
+                                         .arg(new_height));
     }
 
     _updateImageSizeDisplay();
@@ -592,7 +602,7 @@ void Line_Widget::_updateImageSizeDisplay() {
 
     ImageSize current_size = line_data->getImageSize();
     std::cout << "Line_Widget::_updateImageSizeDisplay: Current size: " << current_size.width << " x " << current_size.height << std::endl;
-    
+
     if (current_size.width == -1 || current_size.height == -1) {
         ui->image_width_edit->setText("");
         ui->image_height_edit->setText("");
@@ -628,8 +638,8 @@ void Line_Widget::_onCopyImageSizeClicked() {
 
     ImageSize media_size = media_data->getImageSize();
     if (media_size.width == -1 || media_size.height == -1) {
-        QMessageBox::warning(this, "No Image Size", 
-            QString("The selected media '%1' does not have an image size set.").arg(selected_media_key));
+        QMessageBox::warning(this, "No Image Size",
+                             QString("The selected media '%1' does not have an image size set.").arg(selected_media_key));
         return;
     }
 
@@ -641,26 +651,31 @@ void Line_Widget::_onCopyImageSizeClicked() {
 
     // Get current image size
     ImageSize current_size = line_data->getImageSize();
-    
+
     // If no current size is set, just set the new size without scaling
     if (current_size.width == -1 || current_size.height == -1) {
         line_data->setImageSize(media_size);
         _updateImageSizeDisplay();
-        QMessageBox::information(this, "Image Size Set", 
-            QString("Image size set to %1 × %2 (copied from '%3').")
-                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+        QMessageBox::information(this, "Image Size Set",
+                                 QString("Image size set to %1 × %2 (copied from '%3').")
+                                         .arg(media_size.width)
+                                         .arg(media_size.height)
+                                         .arg(selected_media_key));
         return;
     }
 
     // Ask user if they want to scale existing data
-    int ret = QMessageBox::question(this, "Scale Existing Data", 
-        QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4 (from '%5')?\n\n"
-               "Click 'Yes' to scale all line data proportionally.\n"
-               "Click 'No' to just change the image size without scaling.\n"
-               "Click 'Cancel' to abort the operation.")
-            .arg(current_size.width).arg(current_size.height)
-            .arg(media_size.width).arg(media_size.height).arg(selected_media_key),
-        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+    int ret = QMessageBox::question(this, "Scale Existing Data",
+                                    QString("Current image size is %1 × %2. Do you want to scale all existing line data to the new size %3 × %4 (from '%5')?\n\n"
+                                            "Click 'Yes' to scale all line data proportionally.\n"
+                                            "Click 'No' to just change the image size without scaling.\n"
+                                            "Click 'Cancel' to abort the operation.")
+                                            .arg(current_size.width)
+                                            .arg(current_size.height)
+                                            .arg(media_size.width)
+                                            .arg(media_size.height)
+                                            .arg(selected_media_key),
+                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
     if (ret == QMessageBox::Cancel) {
         return;
@@ -669,15 +684,19 @@ void Line_Widget::_onCopyImageSizeClicked() {
     if (ret == QMessageBox::Yes) {
         // Scale the data
         line_data->changeImageSize(media_size);
-        QMessageBox::information(this, "Image Size Changed", 
-            QString("Image size changed to %1 × %2 (copied from '%3') and all line data has been scaled proportionally.")
-                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+        QMessageBox::information(this, "Image Size Changed",
+                                 QString("Image size changed to %1 × %2 (copied from '%3') and all line data has been scaled proportionally.")
+                                         .arg(media_size.width)
+                                         .arg(media_size.height)
+                                         .arg(selected_media_key));
     } else {
         // Just set the new size without scaling
         line_data->setImageSize(media_size);
-        QMessageBox::information(this, "Image Size Set", 
-            QString("Image size set to %1 × %2 (copied from '%3', existing line data was not scaled).")
-                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+        QMessageBox::information(this, "Image Size Set",
+                                 QString("Image size set to %1 × %2 (copied from '%3', existing line data was not scaled).")
+                                         .arg(media_size.width)
+                                         .arg(media_size.height)
+                                         .arg(selected_media_key));
     }
 
     _updateImageSizeDisplay();
@@ -685,14 +704,14 @@ void Line_Widget::_onCopyImageSizeClicked() {
 
 void Line_Widget::_populateMediaComboBox() {
     ui->copy_from_media_combo->clear();
-    
+
     if (!_data_manager) {
         return;
     }
 
     // Get all MediaData keys
     auto media_keys = _data_manager->getKeys<MediaData>();
-    
+
     if (media_keys.empty()) {
         ui->copy_from_media_combo->addItem("No media data available");
         ui->copy_from_media_combo->setEnabled(false);
@@ -700,11 +719,11 @@ void Line_Widget::_populateMediaComboBox() {
     }
 
     ui->copy_from_media_combo->setEnabled(true);
-    
-    for (const auto& key : media_keys) {
+
+    for (auto const & key: media_keys) {
         ui->copy_from_media_combo->addItem(QString::fromStdString(key));
     }
-    
+
     std::cout << "Line_Widget::_populateMediaComboBox: Found " << media_keys.size() << " media keys" << std::endl;
 }
 
@@ -712,7 +731,7 @@ void Line_Widget::setGroupManager(GroupManager * group_manager) {
     _group_manager = group_manager;
     _line_table_model->setGroupManager(group_manager);
     _populateGroupFilterCombo();
-    
+
     // Connect to group manager signals to update when groups change
     if (_group_manager) {
         connect(_group_manager, &GroupManager::groupCreated,
@@ -728,7 +747,7 @@ void Line_Widget::_onGroupFilterChanged(int index) {
     if (!_group_manager) {
         return;
     }
-    
+
     if (index == 0) {
         // "All Groups" selected
         _line_table_model->clearGroupFilter();
@@ -746,16 +765,16 @@ void Line_Widget::_onGroupFilterChanged(int index) {
 void Line_Widget::_onGroupChanged() {
     // Store current selection
     int current_index = ui->groupFilterCombo->currentIndex();
-    
+
     // Update the group filter combo box when groups change
     _populateGroupFilterCombo();
-    
+
     // If the previously selected group no longer exists, reset to "All Groups"
     if (current_index > 0 && current_index >= ui->groupFilterCombo->count()) {
-        ui->groupFilterCombo->setCurrentIndex(0); // "All Groups"
+        ui->groupFilterCombo->setCurrentIndex(0);// "All Groups"
         _line_table_model->clearGroupFilter();
     }
-    
+
     // Refresh the table to update group names
     if (!_active_key.empty()) {
         updateTable();
@@ -765,11 +784,11 @@ void Line_Widget::_onGroupChanged() {
 void Line_Widget::_populateGroupFilterCombo() {
     ui->groupFilterCombo->clear();
     ui->groupFilterCombo->addItem("All Groups");
-    
+
     if (!_group_manager) {
         return;
     }
-    
+
     auto groups = _group_manager->getGroups();
     for (auto it = groups.begin(); it != groups.end(); ++it) {
         ui->groupFilterCombo->addItem(it.value().name);
@@ -780,12 +799,12 @@ void Line_Widget::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
     if (!_group_manager) {
         return;
     }
-    
+
     // Get current groups of selected entities to exclude them from the move list
     std::set<int> current_groups;
     if (for_moving) {
         QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
-        for (auto const & index : selectedIndexes) {
+        for (auto const & index: selectedIndexes) {
             LineTableRow const row_data = _line_table_model->getRowData(index.row());
             if (row_data.entity_id != 0) {
                 int current_group = _group_manager->getEntityGroup(row_data.entity_id);
@@ -795,17 +814,17 @@ void Line_Widget::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
             }
         }
     }
-    
+
     auto groups = _group_manager->getGroups();
     for (auto it = groups.begin(); it != groups.end(); ++it) {
         int group_id = it.key();
         QString group_name = it.value().name;
-        
+
         // Skip current groups when moving
         if (for_moving && current_groups.find(group_id) != current_groups.end()) {
             continue;
         }
-        
+
         QAction * action = menu->addAction(group_name);
         connect(action, &QAction::triggered, this, [this, group_id]() {
             _moveSelectedLinesToGroup(group_id);
@@ -817,32 +836,32 @@ void Line_Widget::_moveSelectedLinesToGroup(int group_id) {
     if (!_group_manager) {
         return;
     }
-    
+
     // Get selected rows
     QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
     if (selectedIndexes.isEmpty()) {
         return;
     }
-    
+
     // Collect EntityIds from selected rows
     std::unordered_set<EntityId> entity_ids;
-    for (auto const & index : selectedIndexes) {
+    for (auto const & index: selectedIndexes) {
         LineTableRow const row_data = _line_table_model->getRowData(index.row());
-        if (row_data.entity_id != 0) { // Valid entity ID
+        if (row_data.entity_id != 0) {// Valid entity ID
             entity_ids.insert(row_data.entity_id);
         }
     }
-    
+
     if (entity_ids.empty()) {
         return;
     }
-    
+
     // First, remove entities from their current groups
     _group_manager->ungroupEntities(entity_ids);
-    
+
     // Then, assign entities to the specified group
     _group_manager->assignEntitiesToGroup(group_id, entity_ids);
-    
+
     // Refresh the table to show updated group information
     updateTable();
 }
@@ -851,29 +870,51 @@ void Line_Widget::_removeSelectedLinesFromGroup() {
     if (!_group_manager) {
         return;
     }
-    
+
     // Get selected rows
     QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
     if (selectedIndexes.isEmpty()) {
         return;
     }
-    
+
     // Collect EntityIds from selected rows
     std::unordered_set<EntityId> entity_ids;
-    for (auto const & index : selectedIndexes) {
+    for (auto const & index: selectedIndexes) {
         LineTableRow const row_data = _line_table_model->getRowData(index.row());
-        if (row_data.entity_id != 0) { // Valid entity ID
+        if (row_data.entity_id != 0) {// Valid entity ID
             entity_ids.insert(row_data.entity_id);
         }
     }
-    
+
     if (entity_ids.empty()) {
         return;
     }
-    
+
     // Remove entities from all groups
     _group_manager->ungroupEntities(entity_ids);
-    
+
     // Refresh the table to show updated group information
     updateTable();
+}
+
+void Line_Widget::_onAutoScrollToCurrentFrame() {
+    if (!_data_manager) {
+        return;
+    }
+
+    int64_t current_frame = _data_manager->getCurrentTime();
+    int row_index = _line_table_model->findRowForFrame(current_frame);
+
+    if (row_index >= 0) {
+        // Scroll to the found row
+        QModelIndex index = _line_table_model->index(row_index, 0);
+        ui->tableView->scrollTo(index, QAbstractItemView::PositionAtCenter);
+
+        // Optionally select the row
+        ui->tableView->selectRow(row_index);
+
+        std::cout << "Line_Widget: Scrolled to frame " << current_frame << " at row " << row_index << std::endl;
+    } else {
+        std::cout << "Line_Widget: No data found for current frame " << current_frame << std::endl;
+    }
 }
