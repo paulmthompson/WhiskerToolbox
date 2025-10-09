@@ -9,6 +9,8 @@ namespace StateEstimation {
 
 namespace {
 // Helper function to calculate the squared Mahalanobis distance.
+// Uses robust matrix solving to handle ill-conditioned covariance matrices
+// that can arise from cross-feature correlations.
 double calculateMahalanobisDistanceSq(Eigen::VectorXd const & observation,
                                       Eigen::VectorXd const & predicted_mean,
                                       Eigen::MatrixXd const & predicted_covariance,
@@ -16,7 +18,51 @@ double calculateMahalanobisDistanceSq(Eigen::VectorXd const & observation,
                                       Eigen::MatrixXd const & R) {
     Eigen::VectorXd innovation = observation - (H * predicted_mean);
     Eigen::MatrixXd innovation_covariance = H * predicted_covariance * H.transpose() + R;
-    return innovation.transpose() * innovation_covariance.inverse() * innovation;
+    
+    // Use LLT (Cholesky) decomposition for positive definite matrices
+    // This is more numerically stable than direct matrix inversion
+    Eigen::LLT<Eigen::MatrixXd> llt(innovation_covariance);
+    
+    if (llt.info() == Eigen::Success) {
+        // Solve: innovation_covariance^-1 * innovation
+        Eigen::VectorXd solved = llt.solve(innovation);
+        double dist_sq = innovation.transpose() * solved;
+        
+        // Sanity check: distance should be non-negative
+        if (std::isfinite(dist_sq) && dist_sq >= 0.0) {
+            return dist_sq;
+        }
+    }
+    
+    // Fallback: use pseudo-inverse for ill-conditioned/singular matrices
+    // This can happen with strong cross-feature correlations
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(innovation_covariance, 
+                                          Eigen::ComputeThinU | Eigen::ComputeThinV);
+    
+    // Filter out near-zero singular values to handle near-singular matrices
+    double tolerance = 1e-10 * svd.singularValues()(0);
+    Eigen::VectorXd inv_singular_values = svd.singularValues();
+    for (int i = 0; i < inv_singular_values.size(); ++i) {
+        if (inv_singular_values(i) > tolerance) {
+            inv_singular_values(i) = 1.0 / inv_singular_values(i);
+        } else {
+            inv_singular_values(i) = 0.0;
+        }
+    }
+    
+    // Compute pseudo-inverse: V * Σ^-1 * U^T
+    Eigen::MatrixXd pseudo_inv = svd.matrixV() * 
+                                 inv_singular_values.asDiagonal() * 
+                                 svd.matrixU().transpose();
+    
+    double dist_sq = innovation.transpose() * pseudo_inv * innovation;
+    
+    // Return a large but finite distance if still invalid
+    if (!std::isfinite(dist_sq) || dist_sq < 0.0) {
+        return 1e10;
+    }
+    
+    return dist_sq;
 }
 }// namespace
 

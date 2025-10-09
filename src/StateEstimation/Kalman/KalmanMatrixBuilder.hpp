@@ -547,6 +547,79 @@ public:
             buildRFromMetadataPerFeature(metadata_list, config)
         };
     }
+    
+    /**
+     * @brief Add cross-feature covariance to Q matrix
+     * 
+     * Modifies a process noise covariance matrix to include off-diagonal terms
+     * representing correlated process noise between features. This is useful when
+     * features are known to covary, such as position and measured length when
+     * camera clipping causes the measured length to depend on position.
+     * 
+     * @param Q The base Q matrix (typically block-diagonal)
+     * @param metadata_list Metadata for each feature (to find state offsets)
+     * @param cross_correlations Map of (feature_i, feature_j) -> correlation coefficient
+     * @return Modified Q matrix with cross-feature covariance
+     */
+    static Eigen::MatrixXd addCrossFeatureProcessNoise(
+            Eigen::MatrixXd Q,
+            std::vector<FeatureMetadata> const& metadata_list,
+            std::map<std::pair<int, int>, double> const& cross_correlations) {
+        
+        if (cross_correlations.empty()) {
+            return Q;
+        }
+        
+        // Calculate feature state offsets
+        std::vector<int> feature_state_offsets;
+        int offset = 0;
+        for (auto const& meta : metadata_list) {
+            feature_state_offsets.push_back(offset);
+            offset += meta.state_size;
+        }
+        
+        // Apply cross-correlations
+        for (auto const& [feature_pair, correlation] : cross_correlations) {
+            int feat_i = feature_pair.first;
+            int feat_j = feature_pair.second;
+            
+            if (feat_i >= static_cast<int>(metadata_list.size()) || 
+                feat_j >= static_cast<int>(metadata_list.size())) {
+                continue;  // Invalid indices
+            }
+            
+            auto const& meta_i = metadata_list[feat_i];
+            auto const& meta_j = metadata_list[feat_j];
+            
+            int offset_i = feature_state_offsets[feat_i];
+            int offset_j = feature_state_offsets[feat_j];
+            
+            // Apply correlation to position components
+            int pos_dim_i = (meta_i.temporal_type == FeatureTemporalType::KINEMATIC_2D) ? 2 : 
+                           (meta_i.temporal_type == FeatureTemporalType::KINEMATIC_3D) ? 3 :
+                           meta_i.measurement_size;
+            int pos_dim_j = (meta_j.temporal_type == FeatureTemporalType::KINEMATIC_2D) ? 2 :
+                           (meta_j.temporal_type == FeatureTemporalType::KINEMATIC_3D) ? 3 :
+                           meta_j.measurement_size;
+            
+            for (int pi = 0; pi < pos_dim_i; ++pi) {
+                for (int pj = 0; pj < pos_dim_j; ++pj) {
+                    int si = offset_i + pi;
+                    int sj = offset_j + pj;
+                    
+                    // Covariance = correlation * sqrt(var_i * var_j)
+                    double std_i = std::sqrt(Q(si, si));
+                    double std_j = std::sqrt(Q(sj, sj));
+                    double cov = correlation * std_i * std_j;
+                    
+                    Q(si, sj) = cov;
+                    Q(sj, si) = cov;  // Symmetric
+                }
+            }
+        }
+        
+        return Q;
+    }
 };
 
 } // namespace StateEstimation

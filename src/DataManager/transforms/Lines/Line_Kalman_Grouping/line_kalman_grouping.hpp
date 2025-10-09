@@ -73,6 +73,16 @@ struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
     // === Output Control ===
     bool write_to_putative_groups = true;           // If true, write results to new putative groups per anchor group
     std::string putative_group_prefix = "Putative:";// Prefix for new putative groups
+    
+    // === Cross-Feature Covariance ===
+    // Enable modeling of correlations between features (e.g., position-length coupling due to camera clipping)
+    // When enabled, correlations are automatically estimated from ground truth data.
+    // The Kalman filter then naturally propagates and refines these correlations over time.
+    bool enable_cross_feature_covariance = false;
+    
+    // Minimum absolute correlation to include (filter out weak correlations)
+    // Correlations below this threshold are treated as zero (independent features)
+    double min_correlation_threshold = 0.1;
 };
 
 /**
