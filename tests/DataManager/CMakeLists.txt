@@ -1,4 +1,3 @@
-
 if (APPLE)
     message(STATUS "Testing Currenly not supported on MacOS")
     return()
@@ -68,6 +67,7 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Alignment/line_alignment.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Angle/line_angle.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Base_Flip/line_base_flip.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Clip/line_clip.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Curvature/line_curvature.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.test.cpp

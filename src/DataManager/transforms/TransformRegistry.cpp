@@ -8,6 +8,7 @@
 #include "transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "transforms/Lines/Line_Alignment/line_alignment.hpp"
 #include "transforms/Lines/Line_Angle/line_angle.hpp"
+#include "transforms/Lines/Line_Base_Flip/line_base_flip.hpp"
 #include "transforms/Lines/Line_Clip/line_clip.hpp"
 #include "transforms/Lines/Line_Curvature/line_curvature.hpp"
 #include "transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
@@ -54,6 +55,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LineAngleOperation>());
     _registerOperation(std::make_unique<LineMinPointDistOperation>());
     _registerOperation(std::make_unique<LineAlignmentOperation>());
+    _registerOperation(std::make_unique<LineBaseFlipTransform>());
     _registerOperation(std::make_unique<LineResampleOperation>());
     _registerOperation(std::make_unique<LineCurvatureOperation>());
     _registerOperation(std::make_unique<LineSubsegmentOperation>());

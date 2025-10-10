@@ -176,6 +176,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp
         transforms/Lines/Line_Alignment/line_alignment.hpp
         transforms/Lines/Line_Alignment/line_alignment.cpp
+        transforms/Lines/Line_Base_Flip/line_base_flip.hpp
+        transforms/Lines/Line_Base_Flip/line_base_flip.cpp
         transforms/Lines/Line_Resample/line_resample.cpp
         transforms/Lines/Line_Resample/line_resample.hpp
         transforms/Lines/Line_Curvature/line_curvature.cpp
