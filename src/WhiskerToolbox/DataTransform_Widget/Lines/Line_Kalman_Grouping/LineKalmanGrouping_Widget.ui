@@ -380,13 +380,77 @@
       <item row="2" column="1">
        <widget class="QDoubleSpinBox" name="staticNoisePercentileSpinBox">
         <property name="toolTip">
-         <string>Fraction of observed variation to use for noise estimation (e.g., 0.1 = 10%). Lower values = trust measurements more.</string>
+         <string>Fraction of observed ground truth variation to use for process noise (0.5-1.0 recommended). Higher values allow more dynamic changes. Lower values trust measurements more strictly.</string>
         </property>
         <property name="decimals">
          <number>3</number>
         </property>
         <property name="minimum">
          <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.050000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.750000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="crossCovarianceGroupBox">
+     <property name="title">
+      <string>Cross-Feature Covariance</string>
+     </property>
+     <layout class="QFormLayout" name="crossCovFormLayout">
+      <item row="0" column="0" colspan="2">
+       <widget class="QCheckBox" name="enableCrossCovarianceCheckBox">
+        <property name="text">
+         <string>Enable cross-feature covariance modeling</string>
+        </property>
+        <property name="toolTip">
+         <string>Model correlations between features (e.g., position-length coupling due to camera clipping). Correlations are automatically estimated from ground truth data.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QLabel" name="crossCovExplanationLabel">
+        <property name="text">
+         <string>When enabled, the system analyzes ground truth data to detect correlations between features and initializes the Kalman filter accordingly. The filter then naturally evolves these correlations over time.</string>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: #666; font-style: italic; font-size: 9pt; }</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="minCorrelationLabel">
+        <property name="text">
+         <string>Min Correlation Threshold:</string>
+        </property>
+        <property name="toolTip">
+         <string>Minimum absolute correlation coefficient to include. Weak correlations below this threshold are treated as zero (independent features).</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="minCorrelationThresholdSpinBox">
+        <property name="toolTip">
+         <string>Minimum absolute correlation coefficient to include. Typical range: 0.05 to 0.2</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
         </property>
         <property name="maximum">
          <double>1.000000000000000</double>

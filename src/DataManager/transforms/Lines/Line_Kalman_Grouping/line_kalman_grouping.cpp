@@ -35,6 +35,15 @@ struct FeatureStatistics {
 };
 
 /**
+ * @brief Cross-correlation statistics between two features
+ */
+struct CrossCorrelationStatistics {
+    double pearson_correlation = 0.0;  // Pearson correlation coefficient (-1 to 1)
+    int num_paired_samples = 0;
+    bool is_valid = false;
+};
+
+/**
  * @brief Analyze ground truth data to estimate realistic noise parameters
  * 
  * For static features (like length), computes:
@@ -125,6 +134,92 @@ FeatureStatistics analyzeGroundTruthFeatureStatistics(
     return stats;
 }
 
+/**
+ * @brief Compute empirical correlation between two features from ground truth data
+ * 
+ * Uses Pearson correlation coefficient to measure linear relationship between features.
+ * This is computed from actual observed data, not assumptions.
+ * 
+ * @param line_data The LineData containing lines
+ * @param ground_truth Map of ground truth assignments
+ * @param extractor_a First feature extractor
+ * @param extractor_b Second feature extractor
+ * @param feature_a_name Name of first feature (for logging)
+ * @param feature_b_name Name of second feature (for logging)
+ * @return Cross-correlation statistics
+ */
+template<typename ExtractorA, typename ExtractorB>
+CrossCorrelationStatistics computeFeatureCrossCorrelation(
+        std::shared_ptr<LineData> const & line_data,
+        std::map<TimeFrameIndex, std::map<GroupId, EntityId>> const & ground_truth,
+        ExtractorA const & extractor_a,
+        ExtractorB const & extractor_b,
+        std::string const & feature_a_name,
+        std::string const & feature_b_name) {
+
+    CrossCorrelationStatistics stats;
+    
+    // Collect paired feature values across all groups and times
+    std::vector<double> values_a, values_b;
+    
+    for (auto const & [time, group_assignments]: ground_truth) {
+        for (auto const & [group_id, entity_id]: group_assignments) {
+            auto line = line_data->getLineByEntityId(entity_id);
+            if (!line.has_value()) continue;
+            
+            // Extract both features
+            Eigen::VectorXd feat_a = extractor_a.getFilterFeatures(line.value());
+            Eigen::VectorXd feat_b = extractor_b.getFilterFeatures(line.value());
+            
+            // For multi-dimensional features, use first component or magnitude
+            double val_a = (feat_a.size() == 1) ? feat_a(0) : feat_a.norm();
+            double val_b = (feat_b.size() == 1) ? feat_b(0) : feat_b.norm();
+            
+            values_a.push_back(val_a);
+            values_b.push_back(val_b);
+        }
+    }
+    
+    if (values_a.size() < 3) {
+        return stats;  // Not enough data for meaningful correlation
+    }
+    
+    stats.num_paired_samples = static_cast<int>(values_a.size());
+    
+    // Compute means
+    double mean_a = std::accumulate(values_a.begin(), values_a.end(), 0.0) / values_a.size();
+    double mean_b = std::accumulate(values_b.begin(), values_b.end(), 0.0) / values_b.size();
+    
+    // Compute covariance and standard deviations
+    double cov_ab = 0.0;
+    double var_a = 0.0;
+    double var_b = 0.0;
+    
+    for (size_t i = 0; i < values_a.size(); ++i) {
+        double diff_a = values_a[i] - mean_a;
+        double diff_b = values_b[i] - mean_b;
+        
+        cov_ab += diff_a * diff_b;
+        var_a += diff_a * diff_a;
+        var_b += diff_b * diff_b;
+    }
+    
+    cov_ab /= values_a.size();
+    var_a /= values_a.size();
+    var_b /= values_b.size();
+    
+    // Compute Pearson correlation: ρ = cov(A,B) / (σ_A × σ_B)
+    double std_a = std::sqrt(var_a);
+    double std_b = std::sqrt(var_b);
+    
+    if (std_a > 1e-10 && std_b > 1e-10) {
+        stats.pearson_correlation = cov_ab / (std_a * std_b);
+        stats.is_valid = true;
+    }
+    
+    return stats;
+}
+
 }// anonymous namespace
 
 
@@ -200,6 +295,73 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
     composite_extractor->addExtractor(std::make_unique<StateEstimation::LineCentroidExtractor>());
     composite_extractor->addExtractor(std::make_unique<StateEstimation::LineBasePointExtractor>());
     composite_extractor->addExtractor(std::make_unique<StateEstimation::LineLengthExtractor>());
+
+    // Auto-estimate cross-feature correlations from ground truth data if requested
+    std::map<std::pair<int, int>, double> estimated_correlations;
+    
+    if (params->enable_cross_feature_covariance && !ground_truth.empty()) {
+        if (params->verbose_output) {
+            std::cout << "\n=== Auto-Estimating Cross-Feature Correlations ===" << std::endl;
+        }
+        
+        // Create extractors for correlation analysis
+        StateEstimation::LineCentroidExtractor centroid_extractor;
+        StateEstimation::LineBasePointExtractor base_point_extractor;
+        StateEstimation::LineLengthExtractor length_extractor;
+        
+        // Compute centroid-length correlation
+        auto centroid_length_corr = computeFeatureCrossCorrelation(
+            line_data, ground_truth, centroid_extractor, length_extractor,
+            "centroid", "length");
+        
+        // Compute base_point-length correlation
+        auto base_point_length_corr = computeFeatureCrossCorrelation(
+            line_data, ground_truth, base_point_extractor, length_extractor,
+            "base_point", "length");
+        
+        if (params->verbose_output) {
+            std::cout << "Centroid-Length correlation: " << centroid_length_corr.pearson_correlation
+                     << " (n=" << centroid_length_corr.num_paired_samples << ")" << std::endl;
+            std::cout << "BasePoint-Length correlation: " << base_point_length_corr.pearson_correlation
+                     << " (n=" << base_point_length_corr.num_paired_samples << ")" << std::endl;
+        }
+        
+        // Apply correlations above threshold
+        // Feature indices: 0 = centroid, 1 = base_point, 2 = length
+        if (centroid_length_corr.is_valid && 
+            std::abs(centroid_length_corr.pearson_correlation) >= params->min_correlation_threshold) {
+            estimated_correlations[{0, 2}] = centroid_length_corr.pearson_correlation;
+            if (params->verbose_output) {
+                std::cout << "  → Using centroid-length correlation: " 
+                         << centroid_length_corr.pearson_correlation << std::endl;
+            }
+        }
+        
+        if (base_point_length_corr.is_valid && 
+            std::abs(base_point_length_corr.pearson_correlation) >= params->min_correlation_threshold) {
+            estimated_correlations[{1, 2}] = base_point_length_corr.pearson_correlation;
+            if (params->verbose_output) {
+                std::cout << "  → Using base_point-length correlation: " 
+                         << base_point_length_corr.pearson_correlation << std::endl;
+            }
+        }
+        
+        if (estimated_correlations.empty() && params->verbose_output) {
+            std::cout << "  → No significant correlations found (all below threshold "
+                     << params->min_correlation_threshold << ")" << std::endl;
+        }
+    }
+    
+    // Configure cross-feature covariance in composite extractor
+    if (!estimated_correlations.empty()) {
+        StateEstimation::CompositeFeatureExtractor<Line2D>::CrossCovarianceConfig cross_cov_config;
+        cross_cov_config.feature_correlations = estimated_correlations;
+        composite_extractor->setCrossCovarianceConfig(std::move(cross_cov_config));
+        
+        if (params->verbose_output) {
+            std::cout << "Configured initial cross-feature covariance from empirical correlations" << std::endl;
+        }
+    }
 
     // Get metadata from all child extractors
     // This automatically handles different temporal behaviors (kinematic, static, etc.)
@@ -300,13 +462,31 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
     auto [F, H, Q, R] = StateEstimation::KalmanMatrixBuilder::buildAllMatricesFromMetadataPerFeature(
             metadata_list, config);
 
+    // Add cross-feature process noise using estimated correlations
+    if (!estimated_correlations.empty()) {
+        Q = StateEstimation::KalmanMatrixBuilder::addCrossFeatureProcessNoise(
+            Q, metadata_list, estimated_correlations);
+        
+        if (params->verbose_output) {
+            std::cout << "\nAdded cross-feature process noise covariance based on empirical correlations" << std::endl;
+        }
+    }
+
     if (params->verbose_output) {
         std::cout << "\nNoise configuration:" << std::endl;
         std::cout << "  Process noise - position: " << params->process_noise_position << std::endl;
         std::cout << "  Process noise - velocity: " << params->process_noise_velocity << std::endl;
-        std::cout << "  Process noise - static scale: " << params->static_feature_process_noise_scale << std::endl;
+        std::cout << "  Process noise - static scale: " << estimated_length_process_noise_scale;
+        if (params->auto_estimate_static_noise) {
+            std::cout << " (auto-estimated, parameter was: " << params->static_feature_process_noise_scale << ")";
+        }
+        std::cout << std::endl;
         std::cout << "  Measurement noise - position: " << params->measurement_noise_position << std::endl;
-        std::cout << "  Measurement noise - length: " << params->measurement_noise_length << std::endl;
+        std::cout << "  Measurement noise - length: " << estimated_length_measurement_noise;
+        if (params->auto_estimate_measurement_noise) {
+            std::cout << " (auto-estimated, parameter was: " << params->measurement_noise_length << ")";
+        }
+        std::cout << std::endl;
         std::cout << "\nResulting Q (process noise covariance) diagonal:" << std::endl;
         for (int i = 0; i < Q.rows(); ++i) {
             std::cout << "    Q[" << i << "," << i << "] = " << Q(i, i) << std::endl;
@@ -358,12 +538,6 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
     for (auto const & [group_id, frames]: group_to_anchor_frames) {
         if (frames.size() < 2) continue;
 
-        if (params->verbose_output) {
-            std::cout << "Group " << group_id << " anchors at: ";
-            for (auto f: frames) std::cout << f.getValue() << ' ';
-            std::cout << std::endl;
-        }
-
         // Create putative output group for this anchor group if requested
         std::optional<GroupId> putative_group_id;
         if (params->write_to_putative_groups) {
@@ -376,6 +550,11 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
         for (size_t i = 0; i + 1 < frames.size(); ++i) {
             TimeFrameIndex interval_start = frames[i];
             TimeFrameIndex interval_end = frames[i + 1];
+
+            // Skip if consecutive frames - no gap to fill with MCF
+            if (interval_end.getValue() - interval_start.getValue() <= 1) {
+                continue;
+            }
 
             // Build a minimal ground truth map for this group and interval only
             std::map<TimeFrameIndex, std::map<GroupId, EntityId>> gt_local;

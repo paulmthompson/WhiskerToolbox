@@ -4,8 +4,11 @@
 #include "IFeatureExtractor.hpp"
 
 #include <Eigen/Dense>
+#include <cmath>
+#include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace StateEstimation {
@@ -247,8 +250,123 @@ public:
         return metadata_list;
     }
     
+    /**
+     * @brief Configuration for cross-feature covariance in initial state
+     * 
+     * Allows modeling correlations between different features, e.g., when
+     * a static feature (length) correlates with position due to measurement
+     * artifacts like camera clipping.
+     */
+    struct CrossCovarianceConfig {
+        /// Correlation coefficient between features (-1 to 1)
+        /// Example: position-length correlation when camera clips
+        std::map<std::pair<int, int>, double> feature_correlations;
+        
+        /// State-level covariance entries (for fine-grained control)
+        /// Maps (state_index_1, state_index_2) -> covariance value
+        std::map<std::pair<int, int>, double> state_covariances;
+    };
+    
+    /**
+     * @brief Set cross-feature covariance configuration
+     * 
+     * This allows the initial state covariance to include off-diagonal terms
+     * modeling known correlations between features.
+     * 
+     * Example: If position (feature 0) affects measured length (feature 2):
+     *   config.feature_correlations[{0, 2}] = 0.3;  // 30% correlation
+     * 
+     * @param config Cross-covariance configuration
+     */
+    void setCrossCovarianceConfig(CrossCovarianceConfig config) {
+        cross_cov_config_ = std::move(config);
+    }
+    
+    /**
+     * @brief Create initial filter state with optional cross-feature covariance
+     * 
+     * Extends the base implementation to add cross-feature covariance terms
+     * based on the configured correlations. This allows modeling cases where
+     * features are statistically dependent, such as when camera clipping causes
+     * measured length to correlate with position.
+     * 
+     * @param data The raw data object to initialize from
+     * @return FilterState with full covariance (including off-diagonal terms)
+     */
+    FilterState getInitialStateWithCrossCovariance(DataType const& data) const {
+        // Get base state with block-diagonal covariance
+        FilterState base_state = getInitialState(data);
+        
+        if (cross_cov_config_.feature_correlations.empty() && 
+            cross_cov_config_.state_covariances.empty()) {
+            return base_state;  // No cross-covariance requested
+        }
+        
+        // Apply cross-feature correlations
+        auto metadata_list = getChildMetadata();
+        std::vector<int> feature_state_offsets;
+        int offset = 0;
+        for (auto const& meta : metadata_list) {
+            feature_state_offsets.push_back(offset);
+            offset += meta.state_size;
+        }
+        
+        // Add feature-level correlations (position components of different features)
+        for (auto const& [feature_pair, correlation] : cross_cov_config_.feature_correlations) {
+            int feat_i = feature_pair.first;
+            int feat_j = feature_pair.second;
+            
+            if (feat_i >= static_cast<int>(metadata_list.size()) || 
+                feat_j >= static_cast<int>(metadata_list.size())) {
+                continue;  // Invalid feature indices
+            }
+            
+            auto const& meta_i = metadata_list[feat_i];
+            auto const& meta_j = metadata_list[feat_j];
+            
+            int offset_i = feature_state_offsets[feat_i];
+            int offset_j = feature_state_offsets[feat_j];
+            
+            // Apply correlation to position components
+            // For KINEMATIC features: position is first components
+            // For STATIC features: the value itself is the position
+            int pos_dim_i = (meta_i.temporal_type == FeatureTemporalType::KINEMATIC_2D) ? 2 : meta_i.measurement_size;
+            int pos_dim_j = (meta_j.temporal_type == FeatureTemporalType::KINEMATIC_2D) ? 2 : meta_j.measurement_size;
+            
+            for (int pi = 0; pi < pos_dim_i; ++pi) {
+                for (int pj = 0; pj < pos_dim_j; ++pj) {
+                    int si = offset_i + pi;
+                    int sj = offset_j + pj;
+                    
+                    // Covariance = correlation * sqrt(var_i * var_j)
+                    double std_i = std::sqrt(base_state.state_covariance(si, si));
+                    double std_j = std::sqrt(base_state.state_covariance(sj, sj));
+                    double cov = correlation * std_i * std_j;
+                    
+                    base_state.state_covariance(si, sj) = cov;
+                    base_state.state_covariance(sj, si) = cov;  // Symmetric
+                }
+            }
+        }
+        
+        // Add explicit state-level covariances
+        for (auto const& [state_pair, cov_value] : cross_cov_config_.state_covariances) {
+            int si = state_pair.first;
+            int sj = state_pair.second;
+            
+            if (si < base_state.state_covariance.rows() && 
+                sj < base_state.state_covariance.cols()) {
+                base_state.state_covariance(si, sj) = cov_value;
+                base_state.state_covariance(sj, si) = cov_value;  // Symmetric
+            }
+        }
+        
+        return base_state;
+    }
+    
 private:
     std::vector<std::unique_ptr<IFeatureExtractor<DataType>>> extractors_;
+    CrossCovarianceConfig cross_cov_config_;
 };
 
 } // namespace StateEstimation

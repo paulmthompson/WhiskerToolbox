@@ -21,7 +21,8 @@ constexpr double kDefaultMeasNoiseLength = 10.0;
 constexpr double kDefaultInitialPosUncertainty = 50.0;
 constexpr double kDefaultInitialVelUncertainty = 10.0;
 constexpr double kDefaultCheapLinkageThreshold = 5.0;
-constexpr double kDefaultStaticNoisePercentile = 0.1;
+constexpr double kDefaultStaticNoisePercentile = 0.75;  // Use 75% of observed variation (was 0.1)
+constexpr double kDefaultMinCorrelationThreshold = 0.1;
 }// namespace
 
 LineKalmanGrouping_Widget::LineKalmanGrouping_Widget(QWidget * parent)
@@ -53,6 +54,10 @@ void LineKalmanGrouping_Widget::setupUI() {
     ui->autoEstimateStaticNoiseCheckBox->setChecked(false);
     ui->autoEstimateMeasurementNoiseCheckBox->setChecked(false);
     ui->staticNoisePercentileSpinBox->setValue(kDefaultStaticNoisePercentile);
+
+    // Cross-Covariance Parameters
+    ui->enableCrossCovarianceCheckBox->setChecked(false);
+    ui->minCorrelationThresholdSpinBox->setValue(kDefaultMinCorrelationThreshold);
 
     // Algorithm Control
     ui->verboseOutputCheckBox->setChecked(false);
@@ -100,6 +105,13 @@ void LineKalmanGrouping_Widget::connectSignals() {
     connect(ui->staticNoisePercentileSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &LineKalmanGrouping_Widget::onParametersChanged);
 
+    // Cross-Covariance Parameters
+    connect(ui->enableCrossCovarianceCheckBox, &QCheckBox::toggled,
+            this, &LineKalmanGrouping_Widget::onParametersChanged);
+
+    connect(ui->minCorrelationThresholdSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &LineKalmanGrouping_Widget::onParametersChanged);
+
     // Algorithm Control checkboxes
     connect(ui->verboseOutputCheckBox, &QCheckBox::toggled,
             this, &LineKalmanGrouping_Widget::onParametersChanged);
@@ -139,6 +151,10 @@ std::unique_ptr<TransformParametersBase> LineKalmanGrouping_Widget::getParameter
     params->auto_estimate_static_noise = ui->autoEstimateStaticNoiseCheckBox->isChecked();
     params->auto_estimate_measurement_noise = ui->autoEstimateMeasurementNoiseCheckBox->isChecked();
     params->static_noise_percentile = ui->staticNoisePercentileSpinBox->value();
+
+    // Cross-Covariance Parameters
+    params->enable_cross_feature_covariance = ui->enableCrossCovarianceCheckBox->isChecked();
+    params->min_correlation_threshold = ui->minCorrelationThresholdSpinBox->value();
 
     // Algorithm Control
     params->verbose_output = ui->verboseOutputCheckBox->isChecked();
@@ -193,6 +209,8 @@ bool LineKalmanGrouping_Widget::validateParameters() const {
     if (ui->initialVelocityUncertaintySpinBox->value() <= 0.0) return false;
     if (ui->staticNoisePercentileSpinBox->value() <= 0.0) return false;
     if (ui->staticNoisePercentileSpinBox->value() > 1.0) return false;
+    if (ui->minCorrelationThresholdSpinBox->value() < 0.0) return false;
+    if (ui->minCorrelationThresholdSpinBox->value() > 1.0) return false;
 
     return true;
 }
