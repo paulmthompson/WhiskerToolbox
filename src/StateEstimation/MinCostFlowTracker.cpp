@@ -5,16 +5,9 @@
 #include <chrono>
 #include <iostream>
 #include <sstream>
-#include <spdlog/spdlog.h>
+
 
 namespace StateEstimation {
-
-// Global logger for cost function diagnostics
-static std::shared_ptr<spdlog::logger> get_cost_function_logger() {
-    static std::shared_ptr<spdlog::logger> logger = spdlog::get("MinCostFlowTracker");
-    return logger;
-}
-
 
 CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
     Eigen::MatrixXd const & R) {
@@ -74,27 +67,6 @@ if (!std::isfinite(dist_sq) || dist_sq < 0.0) {
         double condition_number = svd.singularValues()(0) / 
                                  (svd.singularValues()(svd.singularValues().size()-1) + 1e-20);
         double determinant = innovation_covariance.determinant();
-        
-        auto logger = get_cost_function_logger();
-        if (logger) {
-            std::ostringstream sv_stream;
-            sv_stream << "[";
-            for (int i = 0; i < std::min(5, static_cast<int>(svd.singularValues().size())); ++i) {
-                sv_stream << svd.singularValues()(i);
-                if (i < std::min(4, static_cast<int>(svd.singularValues().size())-1)) sv_stream << ", ";
-            }
-            sv_stream << "]";
-            
-            logger->warn("Mahalanobis distance calculation failed!");
-            logger->warn("  Innovation covariance size: {}x{}", innovation_covariance.rows(), innovation_covariance.cols());
-            logger->warn("  Determinant: {:.6e} ({})", determinant, determinant < 0 ? "NEGATIVE - not positive semi-definite!" : "positive");
-            logger->warn("  Condition number: {:.6e}", condition_number);
-            logger->warn("  Singular values: {}", sv_stream.str());
-            logger->warn("  Zero singular values: {}", num_zero_singular_values);
-            logger->warn("  LLT decomposition: {}", llt.info() == Eigen::Success ? "succeeded" : "FAILED");
-            logger->warn("  SVD result: dist_sq={:.6f} (invalid, returning 1e5)", dist_sq);
-            logger->warn("  This occurred {} times", failure_count + 1);
-        }
         
         last_log_time = now;
         failure_count = 0;
