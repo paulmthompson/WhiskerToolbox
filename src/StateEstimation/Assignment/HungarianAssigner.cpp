@@ -16,6 +16,13 @@ double calculateMahalanobisDistanceSq(Eigen::VectorXd const & observation,
                                       Eigen::MatrixXd const & predicted_covariance,
                                       Eigen::MatrixXd const & H,
                                       Eigen::MatrixXd const & R) {
+    // Dimension guard: ensure consistency before multiplying
+    if (H.cols() != predicted_mean.size() ||
+        predicted_covariance.rows() != predicted_mean.size() ||
+        predicted_covariance.cols() != predicted_mean.size() ||
+        observation.size() != H.rows()) {
+        return 1e10;  // Large but finite cost to avoid assertion and discourage assignment
+    }
     Eigen::VectorXd innovation = observation - (H * predicted_mean);
     Eigen::MatrixXd innovation_covariance = H * predicted_covariance * H.transpose() + R;
     

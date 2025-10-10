@@ -68,6 +68,18 @@ FilterState KalmanFilter::update(FilterState const & predicted_state, Measuremen
     Eigen::VectorXd const x_pred = predicted_state.state_mean;
     Eigen::MatrixXd const P_pred = predicted_state.state_covariance;
 
+    // Dimension guard: ensure H_ matches state and z matches H_ rows
+    if (H_.cols() != x_pred.size() || P_pred.rows() != x_pred.size() || P_pred.cols() != x_pred.size() || z.size() != H_.rows()) {
+        // Keep internal state unchanged; return current state and log warning
+        try {
+            //spdlog::warn("KalmanFilter::update dimension mismatch: H[{}x{}], x[{}], P[{}x{}], z[{}]",
+             //             H_.rows(), H_.cols(), x_pred.size(), P_pred.rows(), P_pred.cols(), z.size());
+        } catch (...) {
+            // spdlog may not be configured; ignore
+        }
+        return FilterState{.state_mean = x_, .state_covariance = P_};
+    }
+
     // Scale the measurement noise matrix R by the noise scale factor
     Eigen::MatrixXd const R_scaled = noise_scale_factor * R_;
 

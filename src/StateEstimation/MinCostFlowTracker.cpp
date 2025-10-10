@@ -15,17 +15,44 @@ static std::shared_ptr<spdlog::logger> get_cost_function_logger() {
     return logger;
 }
 
+namespace {
+// Named constants to avoid magic numbers
+constexpr double kLargeInvalidAssociationCost = 1e5;
+constexpr double kMahalanobisFallbackPenalty = 1e4;
+constexpr double kHalf = 0.5;
+constexpr double kInnovationRegEps = 1e-6;
+constexpr double kSvdTolScale = 1e-10;
+constexpr double kTinyDenomEps = 1e-20;
+constexpr int kMaxLoggedSingularValues = 5;
+}
+
 
 CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
     Eigen::MatrixXd const & R) {
 return [H, R](FilterState const & predicted_state,
 Eigen::VectorXd const & observation,
 int /* num_gap_frames */) -> double {
+// Dimension guards to prevent Eigen assertion on invalid products
+int const state_size = static_cast<int>(predicted_state.state_mean.size());
+int const cov_rows = static_cast<int>(predicted_state.state_covariance.rows());
+int const cov_cols = static_cast<int>(predicted_state.state_covariance.cols());
+int const H_rows = static_cast<int>(H.rows());
+int const H_cols = static_cast<int>(H.cols());
+
+if (H_cols != state_size || cov_rows != H_cols || cov_cols != H_cols || observation.size() != H_rows) {
+    auto logger = get_cost_function_logger();
+    if (logger) {
+        logger->warn("Mahalanobis cost dimension mismatch: H[{}x{}], x[{}], P[{}x{}], z[{}]",
+                     H_rows, H_cols, state_size, cov_rows, cov_cols, observation.size());
+    }
+    return kLargeInvalidAssociationCost;  // Large but finite cost to effectively discourage this association
+}
+
 Eigen::VectorXd innovation = observation - (H * predicted_state.state_mean);
 Eigen::MatrixXd innovation_covariance = H * predicted_state.state_covariance * H.transpose() + R;
 
 // Regularize to prevent singularity
-innovation_covariance.diagonal().array() += 1e-6;
+innovation_covariance.diagonal().array() += kInnovationRegEps;
 
 // Use LLT (Cholesky) decomposition for numerical stability with cross-correlated features
 Eigen::LLT<Eigen::MatrixXd> llt(innovation_covariance);
@@ -43,7 +70,7 @@ if (llt.info() == Eigen::Success) {
 Eigen::JacobiSVD<Eigen::MatrixXd> svd(innovation_covariance, 
                                       Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-double tolerance = 1e-10 * svd.singularValues()(0);
+double tolerance = kSvdTolScale * svd.singularValues()(0);
 Eigen::VectorXd inv_singular_values = svd.singularValues();
 int num_zero_singular_values = 0;
 for (int i = 0; i < inv_singular_values.size(); ++i) {
@@ -72,16 +99,16 @@ if (!std::isfinite(dist_sq) || dist_sq < 0.0) {
         std::chrono::duration_cast<std::chrono::seconds>(now - last_log_time).count() >= 1) {
         
         double condition_number = svd.singularValues()(0) / 
-                                 (svd.singularValues()(svd.singularValues().size()-1) + 1e-20);
+                                 (svd.singularValues()(svd.singularValues().size()-1) + kTinyDenomEps);
         double determinant = innovation_covariance.determinant();
         
         auto logger = get_cost_function_logger();
         if (logger) {
             std::ostringstream sv_stream;
             sv_stream << "[";
-            for (int i = 0; i < std::min(5, static_cast<int>(svd.singularValues().size())); ++i) {
+            for (int i = 0; i < std::min(kMaxLoggedSingularValues, static_cast<int>(svd.singularValues().size())); ++i) {
                 sv_stream << svd.singularValues()(i);
-                if (i < std::min(4, static_cast<int>(svd.singularValues().size())-1)) sv_stream << ", ";
+                if (i < std::min(kMaxLoggedSingularValues - 1, static_cast<int>(svd.singularValues().size())-1)) sv_stream << ", ";
             }
             sv_stream << "]";
             
@@ -92,7 +119,7 @@ if (!std::isfinite(dist_sq) || dist_sq < 0.0) {
             logger->warn("  Singular values: {}", sv_stream.str());
             logger->warn("  Zero singular values: {}", num_zero_singular_values);
             logger->warn("  LLT decomposition: {}", llt.info() == Eigen::Success ? "succeeded" : "FAILED");
-            logger->warn("  SVD result: dist_sq={:.6f} (invalid, returning 1e5)", dist_sq);
+            logger->warn("  SVD result: dist_sq={:.6f} (invalid, returning large penalty)", dist_sq);
             logger->warn("  This occurred {} times", failure_count + 1);
         }
         
@@ -101,7 +128,7 @@ if (!std::isfinite(dist_sq) || dist_sq < 0.0) {
     }
     failure_count++;
     
-    return 1e5;  // Large but finite distance
+    return kLargeInvalidAssociationCost;  // Large but finite distance
 }
 
 return std::sqrt(dist_sq);
@@ -149,12 +176,12 @@ CostFunction createDynamicsAwareCostFunction(
             return out;
         };
 
-        auto mahalHalf = [](Eigen::VectorXd const & r, Eigen::MatrixXd const & S) -> double {
+    auto mahalHalf = [](Eigen::VectorXd const & r, Eigen::MatrixXd const & S) -> double {
             Eigen::LLT<Eigen::MatrixXd> llt(S);
             if (llt.info() == Eigen::Success) {
                 Eigen::VectorXd const solved = llt.solve(r);
                 double const d2 = r.transpose() * solved;
-                return std::isfinite(d2) && d2 >= 0.0 ? 0.5 * d2 : 1e4;
+            return std::isfinite(d2) && d2 >= 0.0 ? kHalf * d2 : kMahalanobisFallbackPenalty;
             }
             Eigen::JacobiSVD<Eigen::MatrixXd> svd(S, Eigen::ComputeThinU | Eigen::ComputeThinV);
             Eigen::VectorXd inv_sv = svd.singularValues();
@@ -163,7 +190,7 @@ CostFunction createDynamicsAwareCostFunction(
             for (int i = 0; i < inv_sv.size(); ++i) inv_sv(i) = inv_sv(i) > tol ? 1.0 / inv_sv(i) : 0.0;
             Eigen::MatrixXd const S_pinv = svd.matrixV() * inv_sv.asDiagonal() * svd.matrixU().transpose();
             double const d2 = r.transpose() * S_pinv * r;
-            return std::isfinite(d2) && d2 >= 0.0 ? 0.5 * d2 : 1e4;
+        return std::isfinite(d2) && d2 >= 0.0 ? kHalf * d2 : kMahalanobisFallbackPenalty;
         };
 
         double cost = 0.0;

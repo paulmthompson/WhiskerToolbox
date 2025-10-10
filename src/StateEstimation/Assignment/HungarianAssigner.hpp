@@ -28,7 +28,7 @@ public:
     HungarianAssigner(double max_assignment_distance,
                       Eigen::MatrixXd const & measurement_matrix,
                       Eigen::MatrixXd const & measurement_noise_covariance,
-                      std::string feature_name = "kalman_features");
+                      std::string feature_name = "composite_features");
 
     Assignment solve(
             std::vector<Prediction> const & predictions,
