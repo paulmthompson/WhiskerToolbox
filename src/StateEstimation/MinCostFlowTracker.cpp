@@ -5,27 +5,9 @@
 #include <chrono>
 #include <iostream>
 #include <sstream>
-#include <spdlog/spdlog.h>
+
 
 namespace StateEstimation {
-
-// Global logger for cost function diagnostics
-static std::shared_ptr<spdlog::logger> get_cost_function_logger() {
-    static std::shared_ptr<spdlog::logger> logger = spdlog::get("MinCostFlowTracker");
-    return logger;
-}
-
-namespace {
-// Named constants to avoid magic numbers
-constexpr double kLargeInvalidAssociationCost = 1e5;
-constexpr double kMahalanobisFallbackPenalty = 1e4;
-constexpr double kHalf = 0.5;
-constexpr double kInnovationRegEps = 1e-6;
-constexpr double kSvdTolScale = 1e-10;
-constexpr double kTinyDenomEps = 1e-20;
-constexpr int kMaxLoggedSingularValues = 5;
-}
-
 
 CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
     Eigen::MatrixXd const & R) {
@@ -101,27 +83,6 @@ if (!std::isfinite(dist_sq) || dist_sq < 0.0) {
         double condition_number = svd.singularValues()(0) / 
                                  (svd.singularValues()(svd.singularValues().size()-1) + kTinyDenomEps);
         double determinant = innovation_covariance.determinant();
-        
-        auto logger = get_cost_function_logger();
-        if (logger) {
-            std::ostringstream sv_stream;
-            sv_stream << "[";
-            for (int i = 0; i < std::min(kMaxLoggedSingularValues, static_cast<int>(svd.singularValues().size())); ++i) {
-                sv_stream << svd.singularValues()(i);
-                if (i < std::min(kMaxLoggedSingularValues - 1, static_cast<int>(svd.singularValues().size())-1)) sv_stream << ", ";
-            }
-            sv_stream << "]";
-            
-            logger->warn("Mahalanobis distance calculation failed!");
-            logger->warn("  Innovation covariance size: {}x{}", innovation_covariance.rows(), innovation_covariance.cols());
-            logger->warn("  Determinant: {:.6e} ({})", determinant, determinant < 0 ? "NEGATIVE - not positive semi-definite!" : "positive");
-            logger->warn("  Condition number: {:.6e}", condition_number);
-            logger->warn("  Singular values: {}", sv_stream.str());
-            logger->warn("  Zero singular values: {}", num_zero_singular_values);
-            logger->warn("  LLT decomposition: {}", llt.info() == Eigen::Success ? "succeeded" : "FAILED");
-            logger->warn("  SVD result: dist_sq={:.6f} (invalid, returning large penalty)", dist_sq);
-            logger->warn("  This occurred {} times", failure_count + 1);
-        }
         
         last_log_time = now;
         failure_count = 0;
