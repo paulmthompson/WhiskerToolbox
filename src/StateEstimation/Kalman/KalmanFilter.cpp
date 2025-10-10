@@ -34,6 +34,26 @@ void KalmanFilter::initialize(FilterState const & initial_state) {
 FilterState KalmanFilter::predict() {
     x_ = F_ * x_;
     P_ = F_ * P_ * F_.transpose() + Q_;
+    
+    // Force symmetry to counteract numerical errors
+    P_ = 0.5 * (P_ + P_.transpose());
+    
+    // Ensure positive semi-definite by clamping negative eigenvalues
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(P_);
+    Eigen::VectorXd eig = es.eigenvalues();
+    Eigen::MatrixXd V = es.eigenvectors();
+    double const eps = 1e-9;
+    bool has_negative = false;
+    for (int i = 0; i < eig.size(); ++i) {
+        if (eig[i] < eps) {
+            eig[i] = eps;
+            has_negative = true;
+        }
+    }
+    if (has_negative) {
+        P_ = V * eig.asDiagonal() * V.transpose();
+    }
+    
     return FilterState{.state_mean = x_, .state_covariance = P_};
 }
 
@@ -56,7 +76,14 @@ FilterState KalmanFilter::update(FilterState const & predicted_state, Measuremen
     Eigen::MatrixXd K = P_pred * H_.transpose() * S.inverse();// Kalman gain
 
     x_ = x_pred + K * y;
-    P_ = (Eigen::MatrixXd::Identity(x_.size(), x_.size()) - K * H_) * P_pred;
+    
+    // Use Joseph form for covariance update (guarantees PSD)
+    Eigen::MatrixXd I = Eigen::MatrixXd::Identity(x_.size(), x_.size());
+    Eigen::MatrixXd A = I - K * H_;
+    P_ = A * P_pred * A.transpose() + K * R_scaled * K.transpose();
+    
+    // Force symmetry
+    P_ = 0.5 * (P_ + P_.transpose());
 
     return FilterState{.state_mean = x_, .state_covariance = P_};
 }
@@ -77,6 +104,9 @@ std::vector<FilterState> KalmanFilter::smooth(std::vector<FilterState> const & f
         // Prediction for k+1 based on forward estimate at k
         Eigen::VectorXd x_pred_k_plus_1 = F_ * fwd_k.state_mean;
         Eigen::MatrixXd P_pred_k_plus_1 = F_ * fwd_k.state_covariance * F_.transpose() + Q_;
+        
+        // Force symmetry on predicted covariance
+        P_pred_k_plus_1 = 0.5 * (P_pred_k_plus_1 + P_pred_k_plus_1.transpose());
 
         // Smoother gain: C_k = P_k * F^T * P_pred^{-1}
         Eigen::MatrixXd Ck = fwd_k.state_covariance * F_.transpose() * P_pred_k_plus_1.inverse();
@@ -84,6 +114,9 @@ std::vector<FilterState> KalmanFilter::smooth(std::vector<FilterState> const & f
         // Smoothed estimate at k incorporating information from future (k+1)
         smoothed_states[k].state_mean = fwd_k.state_mean + Ck * (smoothed_k_plus_1.state_mean - x_pred_k_plus_1);
         smoothed_states[k].state_covariance = fwd_k.state_covariance + Ck * (smoothed_k_plus_1.state_covariance - P_pred_k_plus_1) * Ck.transpose();
+        
+        // Force symmetry on smoothed covariance
+        smoothed_states[k].state_covariance = 0.5 * (smoothed_states[k].state_covariance + smoothed_states[k].state_covariance.transpose());
     }
 
     return smoothed_states;

@@ -25,6 +25,137 @@ namespace StateEstimation {
 class KalmanMatrixBuilder {
 public:
     /**
+     * @brief Mapping of state/measurement indices for each feature block.
+     *
+     * Provides order-independent access to position and velocity indices in the
+     * stacked state vector and measurement rows built from feature metadata.
+     */
+    struct StateIndexMap {
+        struct FeatureLayout {
+            std::string name;
+            FeatureTemporalType temporal_type;
+            int state_offset = 0;            // starting column in state vector
+            int measurement_offset = 0;      // starting row in measurement vector
+            int position_dim = 0;            // 1,2,3 depending on feature
+            std::vector<int> position_state_indices;  // absolute state indices
+            std::vector<int> velocity_state_indices;  // empty if not kinematic
+            std::vector<int> measurement_indices;     // absolute measurement rows
+        };
+
+        std::vector<FeatureLayout> features;
+        std::vector<int> all_position_state_indices;
+        std::vector<int> all_velocity_state_indices;
+        std::vector<int> all_measurement_indices;
+        int total_state_size = 0;
+        int total_measurement_size = 0;
+    };
+
+    /**
+     * @brief Build a StateIndexMap from feature metadata.
+     *
+     * @pre metadata_list reflects the exact order used to build F/H/Q/R
+     * @post Indices correspond to absolute matrix columns/rows.
+     */
+    static StateIndexMap buildStateIndexMap(std::vector<FeatureMetadata> const& metadata_list) {
+        StateIndexMap map;
+        // Compute totals first
+        for (auto const& meta : metadata_list) {
+            map.total_state_size += meta.state_size;
+            map.total_measurement_size += meta.measurement_size;
+        }
+
+        int s_offset = 0;
+        int m_offset = 0;
+        for (auto const& meta : metadata_list) {
+            StateIndexMap::FeatureLayout layout;
+            layout.name = meta.name;
+            layout.temporal_type = meta.temporal_type;
+            layout.state_offset = s_offset;
+            layout.measurement_offset = m_offset;
+
+            switch (meta.temporal_type) {
+                case FeatureTemporalType::STATIC: {
+                    layout.position_dim = meta.measurement_size;
+                    // Position indices are the first measurement_size state entries
+                    for (int i = 0; i < meta.measurement_size; ++i) {
+                        int si = s_offset + i;
+                        int mi = m_offset + i;
+                        layout.position_state_indices.push_back(si);
+                        layout.measurement_indices.push_back(mi);
+                        map.all_position_state_indices.push_back(si);
+                        map.all_measurement_indices.push_back(mi);
+                    }
+                    break;
+                }
+                case FeatureTemporalType::KINEMATIC_2D: {
+                    layout.position_dim = 2;
+                    // state: [x,y,vx,vy]
+                    layout.position_state_indices.push_back(s_offset + 0);
+                    layout.position_state_indices.push_back(s_offset + 1);
+                    layout.velocity_state_indices.push_back(s_offset + 2);
+                    layout.velocity_state_indices.push_back(s_offset + 3);
+                    layout.measurement_indices.push_back(m_offset + 0);
+                    layout.measurement_indices.push_back(m_offset + 1);
+                    map.all_position_state_indices.push_back(s_offset + 0);
+                    map.all_position_state_indices.push_back(s_offset + 1);
+                    map.all_velocity_state_indices.push_back(s_offset + 2);
+                    map.all_velocity_state_indices.push_back(s_offset + 3);
+                    map.all_measurement_indices.push_back(m_offset + 0);
+                    map.all_measurement_indices.push_back(m_offset + 1);
+                    break;
+                }
+                case FeatureTemporalType::KINEMATIC_3D: {
+                    layout.position_dim = 3;
+                    // state: [x,y,z,vx,vy,vz]
+                    for (int d = 0; d < 3; ++d) {
+                        layout.position_state_indices.push_back(s_offset + d);
+                        layout.velocity_state_indices.push_back(s_offset + 3 + d);
+                        layout.measurement_indices.push_back(m_offset + d);
+                        map.all_position_state_indices.push_back(s_offset + d);
+                        map.all_velocity_state_indices.push_back(s_offset + 3 + d);
+                        map.all_measurement_indices.push_back(m_offset + d);
+                    }
+                    break;
+                }
+                case FeatureTemporalType::SCALAR_DYNAMIC: {
+                    // state per scalar: [value, derivative], measured value only
+                    layout.position_dim = meta.measurement_size;
+                    for (int i = 0; i < meta.measurement_size; ++i) {
+                        int val_index = s_offset + 2 * i;
+                        int der_index = s_offset + 2 * i + 1;
+                        int m_index = m_offset + i;
+                        layout.position_state_indices.push_back(val_index);
+                        layout.velocity_state_indices.push_back(der_index);
+                        layout.measurement_indices.push_back(m_index);
+                        map.all_position_state_indices.push_back(val_index);
+                        map.all_velocity_state_indices.push_back(der_index);
+                        map.all_measurement_indices.push_back(m_index);
+                    }
+                    break;
+                }
+                case FeatureTemporalType::CUSTOM: {
+                    // Conservative default: treat first measurement_size as "position"
+                    layout.position_dim = meta.measurement_size;
+                    for (int i = 0; i < meta.measurement_size; ++i) {
+                        int si = s_offset + i;
+                        int mi = m_offset + i;
+                        layout.position_state_indices.push_back(si);
+                        layout.measurement_indices.push_back(mi);
+                        map.all_position_state_indices.push_back(si);
+                        map.all_measurement_indices.push_back(mi);
+                    }
+                    break;
+                }
+            }
+
+            map.features.push_back(std::move(layout));
+            s_offset += meta.state_size;
+            m_offset += meta.measurement_size;
+        }
+
+        return map;
+    }
+    /**
      * @brief Configuration for a single 2D feature (position + velocity model)
      */
     struct FeatureConfig {

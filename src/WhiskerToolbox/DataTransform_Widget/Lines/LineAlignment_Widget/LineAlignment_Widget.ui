@@ -143,6 +143,40 @@
         <item row="6" column="1">
          <widget class="QComboBox" name="outputModeComboBox"/>
         </item>
+        <item row="7" column="0">
+         <widget class="QCheckBox" name="enableGroupingCheckBox">
+          <property name="text">
+           <string>Enable Grouping</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QLabel" name="groupingDescriptionLabel">
+          <property name="text">
+           <string>Group FWHM lines by vertex index</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: gray;</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QLabel" name="groupPrefixLabel">
+          <property name="text">
+           <string>Group Prefix:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1">
+         <widget class="QLineEdit" name="groupPrefixLineEdit">
+          <property name="text">
+           <string>FWHM_Vertex_</string>
+          </property>
+         </widget>
+        </item>
      </layout>
     </widget>
    </item>

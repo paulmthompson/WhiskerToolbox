@@ -39,6 +39,8 @@ private slots:
     void _approachChanged(int index);
     void _outputModeChanged(int index);
     void _mediaDataKeyChanged(int index);
+    void _enableGroupingToggled(bool checked);
+    void _groupPrefixChanged();
 };
 
 #endif// LINEALIGNMENT_WIDGET_HPP

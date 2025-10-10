@@ -62,6 +62,7 @@ FeatureStatistics analyzeGroundTruthFeatureStatistics(
         std::map<TimeFrameIndex, std::map<GroupId, EntityId>> const & ground_truth,
         FeatureExtractor const & feature_extractor,
         std::string const & feature_name) {
+    (void)feature_name;
 
     FeatureStatistics stats;
 
@@ -156,6 +157,8 @@ CrossCorrelationStatistics computeFeatureCrossCorrelation(
         ExtractorB const & extractor_b,
         std::string const & feature_a_name,
         std::string const & feature_b_name) {
+    (void)feature_a_name;
+    (void)feature_b_name;
 
     CrossCorrelationStatistics stats;
     
@@ -433,6 +436,11 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
             if (params->auto_estimate_measurement_noise) {
                 // Use the percentile of the overall standard deviation as measurement noise
                 estimated_length_measurement_noise = params->static_noise_percentile * length_stats.std_dev;
+                // Clamp to a small positive floor for numerical stability
+                double constexpr kMinMeasNoise = 1.0; // pixels
+                if (estimated_length_measurement_noise < kMinMeasNoise) {
+                    estimated_length_measurement_noise = kMinMeasNoise;
+                }
 
                 if (params->verbose_output) {
                     std::cout << "\nAuto-estimated measurement noise:" << std::endl;
@@ -499,14 +507,31 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
 
     auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
 
-    // Create MinCostFlowTracker with Mahalanobis distance cost function (default)
+    // Build a state index map for dynamics-aware costs (order-independent)
+    auto index_map = StateEstimation::KalmanMatrixBuilder::buildStateIndexMap(metadata_list);
+
+    // Create dynamics-aware transition cost (measurement NLL + velocity + implied-acceleration)
+    auto cost_fn = StateEstimation::createDynamicsAwareCostFunction(
+            H,
+            R,
+            index_map,
+            config.dt,
+            /*beta=*/1.0,
+            /*gamma=*/0.25,
+            /*lambda_gap=*/0.0);
+
+    // Use MinCostFlowTracker with the custom cost function
+    // Relax greedy cheap-link threshold to account for added dynamics terms
+    double const cheap_threshold = params->cheap_assignment_threshold * 5.0;
+    // Use Mahalanobis for greedy chaining and dynamics-aware for transitions
+    auto chain_cost = StateEstimation::createMahalanobisCostFunction(H, R);
     StateEstimation::MinCostFlowTracker<Line2D> tracker(
             std::move(kalman_filter),
             std::move(composite_extractor),
-            H,// Measurement matrix for Mahalanobis distance
-            R,// Measurement noise for Mahalanobis distance
+            chain_cost,
+            cost_fn,
             params->cost_scale_factor,
-            params->cheap_assignment_threshold);
+            cheap_threshold);
 
     tracker.enableDebugLogging("tracker.log");
 
