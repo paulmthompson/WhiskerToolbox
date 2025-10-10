@@ -43,30 +43,7 @@
             "name": "boost-random"
         },
         {
-            "name": "capnproto"
-        },
-        {
-            "name": "hdf5",
-            "features": ["cpp"]
-        },
-        {
             "name": "highfive"
-        },
-        {
-            "name": "ffmpeg",
-            "default-features": true,
-            "features": [
-                {
-                    "name": "nvcodec",
-                    "platform": "!osx"
-                }
-            ]
-        },
-        {
-            "name": "mlpack"
-        },
-        {
-            "name": "opencv4"
         },
         {
             "name": "protobuf"

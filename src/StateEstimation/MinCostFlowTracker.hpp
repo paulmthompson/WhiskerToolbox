@@ -468,7 +468,39 @@ private:
                 FilterState predicted_state;
                 if (_filter_prototype) {
                     auto temp_filter = _filter_prototype->clone();
-                    temp_filter->initialize(from.end_state);
+                    // Coerce the saved end_state to the filter's expected state dimension if needed
+                    FilterState const proto_state = temp_filter->getState();
+                    int const target_dim = static_cast<int>(proto_state.state_mean.size());
+                    FilterState init_state = from.end_state;
+                    if (static_cast<int>(init_state.state_mean.size()) != target_dim ||
+                        init_state.state_covariance.rows() != target_dim ||
+                        init_state.state_covariance.cols() != target_dim) {
+                        // Build a compatible state by copying what fits and padding the rest
+                        FilterState coerced;
+                        coerced.state_mean = Eigen::VectorXd::Zero(target_dim);
+                        int const copy_dim = std::min<int>(target_dim, static_cast<int>(init_state.state_mean.size()));
+                        if (copy_dim > 0) coerced.state_mean.head(copy_dim) = init_state.state_mean.head(copy_dim);
+
+                        coerced.state_covariance = Eigen::MatrixXd::Zero(target_dim, target_dim);
+                        int const cr = std::min<int>(target_dim, init_state.state_covariance.rows());
+                        int const cc = std::min<int>(target_dim, init_state.state_covariance.cols());
+                        if (cr > 0 && cc > 0) {
+                            int const b = std::min(cr, cc);
+                            coerced.state_covariance.topLeftCorner(b, b) = init_state.state_covariance.topLeftCorner(b, b);
+                        }
+                        // Pad remaining diagonal to a large uncertainty to remain conservative
+                        constexpr double kPadVar = 1e6;
+                        for (int d = 0; d < target_dim; ++d) {
+                            if (coerced.state_covariance(d, d) <= 0.0) coerced.state_covariance(d, d) = kPadVar;
+                        }
+                        init_state = std::move(coerced);
+                        if (_logger) {
+                            _logger->warn("State dimension coerced for transition prediction: was {} -> now {}",
+                                          static_cast<int>(from.end_state.state_mean.size()), target_dim);
+                        }
+                    }
+
+                    temp_filter->initialize(init_state);
                     for (int s = 0; s < num_steps; ++s) {
                         predicted_state = temp_filter->predict();
                     }
@@ -583,6 +615,8 @@ private:
                 node.start_entity = entity_id;
                 node.members.push_back(NodeInfo{f, entity_id});
                 node.start_state = start_state;
+                // Seed end_state so it's never empty even for single-frame nodes
+                node.end_state = start_state;
                 used.insert(used_key);
                 
                 size_t node_idx = meta_nodes.size();

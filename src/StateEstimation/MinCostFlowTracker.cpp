@@ -14,11 +14,17 @@ CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
 return [H, R](FilterState const & predicted_state,
 Eigen::VectorXd const & observation,
 int /* num_gap_frames */) -> double {
+
+constexpr double kInnovationRegEps = 1e-6;
+constexpr double kLargeInvalidAssociationCost = 1e5;
+constexpr double kSvdTolScale = 1e-10;
+constexpr double kTinyDenomEps = 1e-20;
+
 Eigen::VectorXd innovation = observation - (H * predicted_state.state_mean);
 Eigen::MatrixXd innovation_covariance = H * predicted_state.state_covariance * H.transpose() + R;
 
 // Regularize to prevent singularity
-innovation_covariance.diagonal().array() += 1e-6;
+innovation_covariance.diagonal().array() += kInnovationRegEps;
 
 // Use LLT (Cholesky) decomposition for numerical stability with cross-correlated features
 Eigen::LLT<Eigen::MatrixXd> llt(innovation_covariance);
@@ -36,7 +42,7 @@ if (llt.info() == Eigen::Success) {
 Eigen::JacobiSVD<Eigen::MatrixXd> svd(innovation_covariance, 
                                       Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-double tolerance = 1e-10 * svd.singularValues()(0);
+double tolerance = kSvdTolScale * svd.singularValues()(0);
 Eigen::VectorXd inv_singular_values = svd.singularValues();
 int num_zero_singular_values = 0;
 for (int i = 0; i < inv_singular_values.size(); ++i) {
@@ -65,7 +71,7 @@ if (!std::isfinite(dist_sq) || dist_sq < 0.0) {
         std::chrono::duration_cast<std::chrono::seconds>(now - last_log_time).count() >= 1) {
         
         double condition_number = svd.singularValues()(0) / 
-                                 (svd.singularValues()(svd.singularValues().size()-1) + 1e-20);
+                                 (svd.singularValues()(svd.singularValues().size()-1) + kTinyDenomEps);
         double determinant = innovation_covariance.determinant();
         
         last_log_time = now;
@@ -73,7 +79,7 @@ if (!std::isfinite(dist_sq) || dist_sq < 0.0) {
     }
     failure_count++;
     
-    return 1e5;  // Large but finite distance
+    return kLargeInvalidAssociationCost;  // Large but finite distance
 }
 
 return std::sqrt(dist_sq);
@@ -121,12 +127,15 @@ CostFunction createDynamicsAwareCostFunction(
             return out;
         };
 
-        auto mahalHalf = [](Eigen::VectorXd const & r, Eigen::MatrixXd const & S) -> double {
+    auto mahalHalf = [](Eigen::VectorXd const & r, Eigen::MatrixXd const & S) -> double {
+
+
+        constexpr double kMahalanobisFallbackPenalty = 1e4;
             Eigen::LLT<Eigen::MatrixXd> llt(S);
             if (llt.info() == Eigen::Success) {
                 Eigen::VectorXd const solved = llt.solve(r);
                 double const d2 = r.transpose() * solved;
-                return std::isfinite(d2) && d2 >= 0.0 ? 0.5 * d2 : 1e4;
+            return std::isfinite(d2) && d2 >= 0.0 ? kHalf * d2 : kMahalanobisFallbackPenalty;
             }
             Eigen::JacobiSVD<Eigen::MatrixXd> svd(S, Eigen::ComputeThinU | Eigen::ComputeThinV);
             Eigen::VectorXd inv_sv = svd.singularValues();
@@ -135,7 +144,7 @@ CostFunction createDynamicsAwareCostFunction(
             for (int i = 0; i < inv_sv.size(); ++i) inv_sv(i) = inv_sv(i) > tol ? 1.0 / inv_sv(i) : 0.0;
             Eigen::MatrixXd const S_pinv = svd.matrixV() * inv_sv.asDiagonal() * svd.matrixU().transpose();
             double const d2 = r.transpose() * S_pinv * r;
-            return std::isfinite(d2) && d2 >= 0.0 ? 0.5 * d2 : 1e4;
+        return std::isfinite(d2) && d2 >= 0.0 ? kHalf * d2 : kMahalanobisFallbackPenalty;
         };
 
         double cost = 0.0;
