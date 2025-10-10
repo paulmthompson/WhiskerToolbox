@@ -10,6 +10,8 @@
 
 #include <Eigen/Dense>
 
+#include "Kalman/KalmanMatrixBuilder.hpp"
+
 #include "MinCostFlowSolver.hpp"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/spdlog.h"
@@ -63,6 +65,24 @@ using CostFunction = std::function<double(FilterState const &, Eigen::VectorXd c
 CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
                                                   Eigen::MatrixXd const & R);
 
+/**
+ * @brief Factory: dynamics-aware transition cost with velocity and implied-acceleration penalties.
+ *
+ * c = 0.5 r^T S^{-1} r + 0.5 log det S
+ *   + beta * 0.5 (v_impl - v_pred)^T Sigma_v^{-1} (v_impl - v_pred)
+ *   + gamma * 0.5 ||a_impl||^2 (simple L2 penalty)
+ * where r = z_to - H x_pred, S = H P_pred H^T + R,
+ * v_impl = (z_pos - x_pred_pos) / (k * dt), and a_impl = 2 * (z_pos - x_pred_pos) / ((k * dt)^2).
+ */
+CostFunction createDynamicsAwareCostFunction(
+        Eigen::MatrixXd const & H,
+        Eigen::MatrixXd const & R,
+        KalmanMatrixBuilder::StateIndexMap const & index_map,
+        double dt,
+        double beta = 1.0,
+        double gamma = 0.25,
+        double lambda_gap = 0.0);
+
 
 /**
  * @brief A tracker that uses a global min-cost flow optimization to solve data association.
@@ -97,7 +117,27 @@ public:
                        double cheap_assignment_threshold = 5.0)
         : _filter_prototype(std::move(filter_prototype)),
           _feature_extractor(std::move(feature_extractor)),
-          _cost_function(std::move(cost_function)),
+          _chain_cost_function(cost_function),
+          _transition_cost_function(std::move(cost_function)),
+          _cost_scale_factor(cost_scale_factor),
+          _cheap_assignment_threshold(cheap_assignment_threshold) {}
+
+    /**
+     * @brief Construct with separate cost functions for greedy chaining and meta-node transitions.
+     *
+     * @param chain_cost_function Cost for frame-to-frame greedy chaining (typically 1-step)
+     * @param transition_cost_function Cost for meta-node transitions across k-step gaps
+     */
+    MinCostFlowTracker(std::unique_ptr<IFilter> filter_prototype,
+                       std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor,
+                       CostFunction chain_cost_function,
+                       CostFunction transition_cost_function,
+                       double cost_scale_factor,
+                       double cheap_assignment_threshold)
+        : _filter_prototype(std::move(filter_prototype)),
+          _feature_extractor(std::move(feature_extractor)),
+          _chain_cost_function(std::move(chain_cost_function)),
+          _transition_cost_function(std::move(transition_cost_function)),
           _cost_scale_factor(cost_scale_factor),
           _cheap_assignment_threshold(cheap_assignment_threshold) {}
 
@@ -294,7 +334,7 @@ private:
                     temp_filter->initialize(_feature_extractor->getInitialState(*current_data));
                     FilterState predicted = temp_filter->predict();
                     Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*candidate_data);
-                    cost = _cost_function(predicted, obs, 1);
+                    cost = _chain_cost_function(predicted, obs, 1);
                 } else {
                     // Simple distance without filter
                     Eigen::VectorXd feat_current = _feature_extractor->getFilterFeatures(*current_data);
@@ -436,7 +476,7 @@ private:
                 DataType const * to_start_data = findEntity(frame_lookup.at(to.start_frame), to.start_entity);
                 if (!to_start_data) continue;
                 Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*to_start_data);
-                double dist = _cost_function(predicted_state, obs, num_steps);
+                double dist = _transition_cost_function(predicted_state, obs, num_steps);
                 int64_t arc_cost = static_cast<int64_t>(dist * _cost_scale_factor);
                 arcs.push_back({i, j, 1, arc_cost});
                 num_transition_arcs++;
@@ -517,8 +557,8 @@ private:
                 used.insert(used_key);
 
                 // Try to greedily extend to next frames while cheap
-                TimeFrameIndex curr_frame = f;
-                EntityId curr_entity = start_info.entity_id;
+                    TimeFrameIndex curr_frame = f;
+                    EntityId curr_entity = start_info.entity_id;
                 DataType const * curr_data = start_data;
                 while (curr_frame + TimeFrameIndex(1) <= end_frame) {
                     TimeFrameIndex next_frame = curr_frame + TimeFrameIndex(1);
@@ -544,7 +584,7 @@ private:
                         }
                         DataType const * cand_data = std::get<0>(cand);
                         Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*cand_data);
-                        double cost = _filter_prototype ? _cost_function(predicted, obs, 1)
+                        double cost = _filter_prototype ? _chain_cost_function(predicted, obs, 1)
                                                         : (_feature_extractor->getFilterFeatures(*curr_data) - obs).norm();
                         if (cost < best_cost) {
                             best_cost = cost;
@@ -668,7 +708,8 @@ private:
 private:
     std::unique_ptr<IFilter> _filter_prototype;
     std::unique_ptr<IFeatureExtractor<DataType>> _feature_extractor;
-    CostFunction _cost_function;
+    CostFunction _chain_cost_function;
+    CostFunction _transition_cost_function;
     double _cost_scale_factor;
     double _cheap_assignment_threshold;
     std::shared_ptr<spdlog::logger> _logger;

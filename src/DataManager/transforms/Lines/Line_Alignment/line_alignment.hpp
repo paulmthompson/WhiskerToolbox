@@ -3,6 +3,7 @@
 
 
 #include "transforms/data_transforms.hpp"
+#include "transforms/grouping_transforms.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/line_geometry.hpp"
@@ -39,6 +40,25 @@ template<typename T>
 T get_pixel_value(Point2D<float> const & point,
                   std::vector<T> const & image_data,
                   ImageSize const & image_size);
+
+
+struct LineAlignmentParameters : public GroupingTransformParametersBase {
+    explicit LineAlignmentParameters(EntityGroupManager * group_manager = nullptr)
+        : GroupingTransformParametersBase(group_manager) {}
+
+    std::shared_ptr<MediaData> media_data;                                          // Pointer to the MediaData
+    int width = 20;                                                                 // Width of analysis strip
+    int perpendicular_range = 50;                                                   // Range of perpendicular analysis (pixels)
+    bool use_processed_data = true;                                                 // Whether to use processed or raw data
+    FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX;                      // FWHM calculation approach
+    LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES;// Output mode
+
+    // === Grouping Parameters ===
+    bool enable_grouping = true;                                    // Enable grouping of FWHM lines by vertex index
+    std::string group_prefix = "FWHM_Vertex_";                      // Prefix for generated group names
+    std::string group_description = "FWHM profile lines for vertex";// Description for generated groups
+};
+
 
 /**
  * @brief Calculate FWHM center point for a single vertex
@@ -90,6 +110,7 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
  * @param use_processed_data Whether to use processed or raw media data
  * @param approach The FWHM calculation approach
  * @param output_mode The output mode (aligned vertices or FWHM profile extents)
+ * @param params Parameters including grouping settings
  * @return A new LineData with aligned vertices or FWHM profile extents
  */
 std::shared_ptr<LineData> line_alignment(LineData const * line_data,
@@ -98,7 +119,8 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          int perpendicular_range = 50,
                                          bool use_processed_data = true,
                                          FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX,
-                                         LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES);
+                                         LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES,
+                                         LineAlignmentParameters const * params = nullptr);
 
 /**
  * @brief Align a line to bright linear objects in media data with progress callback
@@ -106,10 +128,13 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
  * @param line_data The input line data
  * @param media_data The media data containing the images
  * @param width The width of the analysis strip perpendicular to the line
+ * @param perpendicular_range The range of perpendicular analysis
  * @param use_processed_data Whether to use processed or raw media data
  * @param approach The FWHM calculation approach
+ * @param output_mode The output mode (aligned vertices or FWHM profile extents)
+ * @param params Parameters including grouping settings
  * @param progressCallback Progress callback function
- * @return A new LineData with aligned vertices
+ * @return A new LineData with aligned vertices or FWHM profile extents
  */
 std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          MediaData * media_data,
@@ -118,18 +143,11 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          bool use_processed_data,
                                          FWHMApproach approach,
                                          LineAlignmentOutputMode output_mode,
+                                         LineAlignmentParameters const * params,
                                          ProgressCallback progressCallback);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-struct LineAlignmentParameters : public TransformParametersBase {
-    std::shared_ptr<MediaData> media_data;                                          // Pointer to the MediaData
-    int width = 20;                                                                 // Width of analysis strip
-    int perpendicular_range = 50;                                                   // Range of perpendicular analysis (pixels)
-    bool use_processed_data = true;                                                 // Whether to use processed or raw data
-    FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX;                      // FWHM calculation approach
-    LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES;// Output mode
-};
 
 class LineAlignmentOperation final : public TransformOperation {
 public:
@@ -151,6 +169,9 @@ public:
     /**
      * @brief Gets the default parameters for the line alignment operation.
      * @return A unique_ptr to the default parameters.
+     * @note Returns nullptr since we can't create a GroupingTransformParametersBase
+     * without an EntityGroupManager pointer. The calling code will need to provide
+     * the actual parameters with the group manager.
      */
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
 
@@ -188,12 +209,12 @@ extern template Point2D<float> calculate_fwhm_center<uint8_t>(Point2D<float> con
                                                               FWHMApproach approach);
 
 extern template Point2D<float> calculate_fwhm_center<float>(Point2D<float> const & vertex,
-                                                              Point2D<float> const & perpendicular_dir,
-                                                              int width,
-                                                              int perpendicular_range,
-                                                              std::vector<float> const & image_data,
-                                                              ImageSize const & image_size,
-                                                              FWHMApproach approach);
+                                                            Point2D<float> const & perpendicular_dir,
+                                                            int width,
+                                                            int perpendicular_range,
+                                                            std::vector<float> const & image_data,
+                                                            ImageSize const & image_size,
+                                                            FWHMApproach approach);
 
 
 extern template Line2D calculate_fwhm_profile_extents<uint8_t>(Point2D<float> const & vertex,
@@ -204,12 +225,12 @@ extern template Line2D calculate_fwhm_profile_extents<uint8_t>(Point2D<float> co
                                                                ImageSize const & image_size,
                                                                FWHMApproach approach);
 extern template Line2D calculate_fwhm_profile_extents<float>(Point2D<float> const & vertex,
-                                                               Point2D<float> const & perpendicular_dir,
-                                                               int width,
-                                                               int perpendicular_range,
-                                                               std::vector<float> const & image_data,
-                                                               ImageSize const & image_size,
-                                                               FWHMApproach approach);
+                                                             Point2D<float> const & perpendicular_dir,
+                                                             int width,
+                                                             int perpendicular_range,
+                                                             std::vector<float> const & image_data,
+                                                             ImageSize const & image_size,
+                                                             FWHMApproach approach);
 
 
 #endif//LINE_ALIGNMENT_HPP

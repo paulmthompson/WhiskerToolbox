@@ -3,6 +3,8 @@
 #include "Lines/Line_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "CoreGeometry/line_geometry.hpp"
+#include "Entity/EntityGroupManager.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -453,7 +455,10 @@ bool LineAlignmentOperation::canApply(DataTypeVariant const & dataVariant) const
 }
 
 std::unique_ptr<TransformParametersBase> LineAlignmentOperation::getDefaultParameters() const {
-    return std::make_unique<LineAlignmentParameters>();
+    // Note: Returns nullptr since we can't create a GroupingTransformParametersBase
+    // without an EntityGroupManager pointer. The calling code will need to provide
+    // the actual parameters with the group manager.
+    return nullptr;
 }
 
 DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVariant,
@@ -476,9 +481,16 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
     auto const * typed_params =
             transformParameters ? dynamic_cast<LineAlignmentParameters const *>(transformParameters) : nullptr;
 
+    // Check if we have valid parameters
+    if (!typed_params) {
+        std::cerr << "LineAlignmentOperation::execute: Invalid parameters provided. Operation requires LineAlignmentParameters." << std::endl;
+        if (progressCallback) progressCallback(100);
+        return {};
+    }
+
     // Auto-find media data if not provided in parameters
     std::shared_ptr<MediaData> media_data;
-    if (typed_params && typed_params->media_data) {
+    if (typed_params->media_data) {
         media_data = typed_params->media_data;
     } else {
         std::cerr << "LineAlignmentOperation::execute: No media data provided. Operation requires media data to align lines to bright features." << std::endl;
@@ -488,12 +500,12 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
 
     if (progressCallback) progressCallback(0);
 
-    // Use default parameters if none provided
-    int width = typed_params ? typed_params->width : 20;
-    int perpendicular_range = typed_params ? typed_params->perpendicular_range : 50;
-    bool use_processed_data = typed_params ? typed_params->use_processed_data : true;
-    FWHMApproach approach = typed_params ? typed_params->approach : FWHMApproach::PEAK_WIDTH_HALF_MAX;
-    LineAlignmentOutputMode output_mode = typed_params ? typed_params->output_mode : LineAlignmentOutputMode::ALIGNED_VERTICES;
+    // Use parameters from the typed_params object
+    int width = typed_params->width;
+    int perpendicular_range = typed_params->perpendicular_range;
+    bool use_processed_data = typed_params->use_processed_data;
+    FWHMApproach approach = typed_params->approach;
+    LineAlignmentOutputMode output_mode = typed_params->output_mode;
 
     std::shared_ptr<LineData> result = line_alignment(
             line_data.get(),
@@ -503,6 +515,7 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
             use_processed_data,
             approach,
             output_mode,
+            typed_params,
             progressCallback);
 
     if (!result) {
@@ -520,8 +533,9 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          int perpendicular_range,
                                          bool use_processed_data,
                                          FWHMApproach approach,
-                                         LineAlignmentOutputMode output_mode) {
-    return line_alignment(line_data, media_data, width, perpendicular_range, use_processed_data, approach, output_mode, [](int) {});
+                                         LineAlignmentOutputMode output_mode,
+                                         LineAlignmentParameters const * params) {
+    return line_alignment(line_data, media_data, width, perpendicular_range, use_processed_data, approach, output_mode, params, [](int) {});
 }
 
 std::shared_ptr<LineData> line_alignment(LineData const * line_data,
@@ -531,6 +545,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          bool use_processed_data,
                                          FWHMApproach approach,
                                          LineAlignmentOutputMode output_mode,
+                                         LineAlignmentParameters const * params,
                                          ProgressCallback progressCallback) {
     if (!line_data || !media_data) {
         std::cerr << "LineAlignment: Null LineData or MediaData provided." << std::endl;
@@ -548,6 +563,33 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
     // Create new LineData for the aligned lines
     auto aligned_line_data = std::make_shared<LineData>();
     aligned_line_data->setImageSize(line_data->getImageSize());
+
+    // Set up grouping if enabled and we have a group manager
+    std::map<size_t, std::uint64_t> vertex_to_group_map; // Maps vertex index to group ID
+    bool grouping_enabled = params && params->enable_grouping && params->getGroupManager();
+    EntityGroupManager* group_manager = grouping_enabled ? params->getGroupManager() : nullptr;
+
+    //aligned_line_data->setIdentityContext(line_data->getIdentityContext());
+    
+    // Pre-create groups for all vertices if grouping is enabled and we're in FWHM mode
+    if (grouping_enabled && params->output_mode == LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS) {
+        // Determine the maximum number of vertices by checking all time frames
+        size_t max_vertices = 0;
+        for (auto time: line_times) {
+            auto const & lines = line_data->getAtTime(time);
+            for (auto const & line: lines) {
+                max_vertices = std::max(max_vertices, line.size());
+            }
+        }
+        
+        // Create groups for all possible vertex indices
+        for (size_t vertex_idx = 0; vertex_idx < max_vertices; ++vertex_idx) {
+            std::string group_name = params->group_prefix + std::to_string(vertex_idx);
+            std::string group_desc = params->group_description + " " + std::to_string(vertex_idx);
+            std::uint64_t group_id = group_manager->createGroup(group_name, group_desc);
+            vertex_to_group_map[vertex_idx] = group_id;
+        }
+    }
 
     size_t total_time_points = line_times.size();
     size_t processed_time_points = 0;
@@ -606,12 +648,35 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
         for (auto const & aligned_line: aligned_lines) {
             aligned_line_data->addAtTime(time, aligned_line, false);
         }
+        
+        // Handle grouping for FWHM profile extents mode
+        if (grouping_enabled && output_mode == LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS) {
+            // Get the EntityIds for the lines we just added
+            auto const & entity_ids = aligned_line_data->getEntityIdsAtTime(time);
+            
+            // For FWHM mode, each line corresponds to a vertex from the original line
+            for (size_t line_idx = 0; line_idx < entity_ids.size(); ++line_idx) {
+                EntityId entity_id = entity_ids[line_idx];
+                size_t vertex_index = line_idx; // In FWHM mode, lines are created per vertex
+                
+                // Add this entity to the appropriate group (groups are already created)
+                if (vertex_to_group_map.find(vertex_index) != vertex_to_group_map.end()) {
+                    std::uint64_t group_id = vertex_to_group_map[vertex_index];
+                    group_manager->addEntityToGroup(group_id, entity_id);
+                }
+            }
+        }
 
         processed_time_points++;
         if (progressCallback) {
             int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
             progressCallback(current_progress);
         }
+    }
+
+    // Notify group manager of changes if grouping was enabled
+    if (grouping_enabled && group_manager) {
+        group_manager->notifyGroupsChanged();
     }
 
     if (progressCallback) progressCallback(100);

@@ -42,6 +42,10 @@ LineAlignment_Widget::LineAlignment_Widget(QWidget * parent)
             this, &LineAlignment_Widget::_outputModeChanged);
     connect(ui->mediaDataKeyComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LineAlignment_Widget::_mediaDataKeyChanged);
+    connect(ui->enableGroupingCheckBox, &QCheckBox::toggled,
+            this, &LineAlignment_Widget::_enableGroupingToggled);
+    connect(ui->groupPrefixLineEdit, &QLineEdit::textChanged,
+            this, &LineAlignment_Widget::_groupPrefixChanged);
 }
 
 LineAlignment_Widget::~LineAlignment_Widget() {
@@ -49,11 +53,20 @@ LineAlignment_Widget::~LineAlignment_Widget() {
 }
 
 std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() const {
-    auto params = std::make_unique<LineAlignmentParameters>();
+    auto dm = dataManager();
+    if (!dm) {
+        return nullptr;
+    }
+
+    auto group_manager = dm->getEntityGroupManager();
+    if (!group_manager) {
+        return nullptr;
+    }
+
+    auto params = std::make_unique<LineAlignmentParameters>(group_manager);
 
     // Use the selected media data key from the combo box
-    auto dm = dataManager();
-    if (dm && !_selected_media_key.empty()) {
+    if (!_selected_media_key.empty()) {
         try {
             auto data_variant = dm->getDataVariant(_selected_media_key);
             if (data_variant.has_value() &&
@@ -78,11 +91,28 @@ std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() c
     params->use_processed_data = ui->useProcessedDataCheckBox->isChecked();
     params->approach = static_cast<FWHMApproach>(ui->approachComboBox->currentData().toInt());
     params->output_mode = static_cast<LineAlignmentOutputMode>(ui->outputModeComboBox->currentData().toInt());
+    
+    // Set grouping parameters
+    params->enable_grouping = ui->enableGroupingCheckBox->isChecked();
+    params->group_prefix = ui->groupPrefixLineEdit->text().toStdString();
 
     return params;
 }
 
 void LineAlignment_Widget::onDataManagerChanged() {
+    // Called when the DataManager changes
+    // Validate that we have a group manager available
+    if (dataManager()) {
+        auto group_manager = dataManager()->getEntityGroupManager();
+        if (!group_manager) {
+            setEnabled(false);
+        } else {
+            setEnabled(true);
+        }
+    } else {
+        setEnabled(false);
+    }
+    
     _refreshMediaDataKeys();
 }
 
@@ -190,4 +220,18 @@ void LineAlignment_Widget::_outputModeChanged(int index) {
         LineAlignmentOutputMode output_mode = static_cast<LineAlignmentOutputMode>(ui->outputModeComboBox->itemData(index).toInt());
         (void)output_mode; // currently unused
     }
+}
+
+void LineAlignment_Widget::_enableGroupingToggled(bool checked) {
+    // Update the grouping description based on the selection
+    if (checked) {
+        ui->groupingDescriptionLabel->setText("Group FWHM lines by vertex index");
+    } else {
+        ui->groupingDescriptionLabel->setText("No grouping - lines will not be assigned to groups");
+    }
+}
+
+void LineAlignment_Widget::_groupPrefixChanged() {
+    // Update the group prefix parameter
+    // This is handled automatically in getParameters()
 }
