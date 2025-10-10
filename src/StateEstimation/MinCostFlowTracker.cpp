@@ -14,21 +14,11 @@ CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
 return [H, R](FilterState const & predicted_state,
 Eigen::VectorXd const & observation,
 int /* num_gap_frames */) -> double {
-// Dimension guards to prevent Eigen assertion on invalid products
-int const state_size = static_cast<int>(predicted_state.state_mean.size());
-int const cov_rows = static_cast<int>(predicted_state.state_covariance.rows());
-int const cov_cols = static_cast<int>(predicted_state.state_covariance.cols());
-int const H_rows = static_cast<int>(H.rows());
-int const H_cols = static_cast<int>(H.cols());
 
-if (H_cols != state_size || cov_rows != H_cols || cov_cols != H_cols || observation.size() != H_rows) {
-    auto logger = get_cost_function_logger();
-    if (logger) {
-        logger->warn("Mahalanobis cost dimension mismatch: H[{}x{}], x[{}], P[{}x{}], z[{}]",
-                     H_rows, H_cols, state_size, cov_rows, cov_cols, observation.size());
-    }
-    return kLargeInvalidAssociationCost;  // Large but finite cost to effectively discourage this association
-}
+constexpr double kInnovationRegEps = 1e-6;
+constexpr double kLargeInvalidAssociationCost = 1e5;
+constexpr double kSvdTolScale = 1e-10;
+constexpr double kTinyDenomEps = 1e-20;
 
 Eigen::VectorXd innovation = observation - (H * predicted_state.state_mean);
 Eigen::MatrixXd innovation_covariance = H * predicted_state.state_covariance * H.transpose() + R;
@@ -138,6 +128,9 @@ CostFunction createDynamicsAwareCostFunction(
         };
 
     auto mahalHalf = [](Eigen::VectorXd const & r, Eigen::MatrixXd const & S) -> double {
+
+
+        constexpr double kMahalanobisFallbackPenalty = 1e4;
             Eigen::LLT<Eigen::MatrixXd> llt(S);
             if (llt.info() == Eigen::Success) {
                 Eigen::VectorXd const solved = llt.solve(r);
