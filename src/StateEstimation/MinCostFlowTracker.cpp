@@ -2,7 +2,18 @@
 
 #include "Kalman/KalmanMatrixBuilder.hpp"
 
+#include <chrono>
+#include <iostream>
+#include <sstream>
+#include <spdlog/spdlog.h>
+
 namespace StateEstimation {
+
+// Global logger for cost function diagnostics
+static std::shared_ptr<spdlog::logger> get_cost_function_logger() {
+    static std::shared_ptr<spdlog::logger> logger = spdlog::get("MinCostFlowTracker");
+    return logger;
+}
 
 
 CostFunction createMahalanobisCostFunction(Eigen::MatrixXd const & H,
@@ -12,6 +23,9 @@ Eigen::VectorXd const & observation,
 int /* num_gap_frames */) -> double {
 Eigen::VectorXd innovation = observation - (H * predicted_state.state_mean);
 Eigen::MatrixXd innovation_covariance = H * predicted_state.state_covariance * H.transpose() + R;
+
+// Regularize to prevent singularity
+innovation_covariance.diagonal().array() += 1e-6;
 
 // Use LLT (Cholesky) decomposition for numerical stability with cross-correlated features
 Eigen::LLT<Eigen::MatrixXd> llt(innovation_covariance);
@@ -31,11 +45,13 @@ Eigen::JacobiSVD<Eigen::MatrixXd> svd(innovation_covariance,
 
 double tolerance = 1e-10 * svd.singularValues()(0);
 Eigen::VectorXd inv_singular_values = svd.singularValues();
+int num_zero_singular_values = 0;
 for (int i = 0; i < inv_singular_values.size(); ++i) {
     if (inv_singular_values(i) > tolerance) {
         inv_singular_values(i) = 1.0 / inv_singular_values(i);
     } else {
         inv_singular_values(i) = 0.0;
+        num_zero_singular_values++;
     }
 }
 
@@ -46,6 +62,45 @@ Eigen::MatrixXd pseudo_inv = svd.matrixV() *
 double dist_sq = innovation.transpose() * pseudo_inv * innovation;
 
 if (!std::isfinite(dist_sq) || dist_sq < 0.0) {
+    // Log diagnostic information about the numerical failure
+    static thread_local int failure_count = 0;
+    static thread_local std::chrono::steady_clock::time_point last_log_time;
+    auto now = std::chrono::steady_clock::now();
+    
+    // Throttle logging to once per second to avoid spam
+    if (failure_count == 0 || 
+        std::chrono::duration_cast<std::chrono::seconds>(now - last_log_time).count() >= 1) {
+        
+        double condition_number = svd.singularValues()(0) / 
+                                 (svd.singularValues()(svd.singularValues().size()-1) + 1e-20);
+        double determinant = innovation_covariance.determinant();
+        
+        auto logger = get_cost_function_logger();
+        if (logger) {
+            std::ostringstream sv_stream;
+            sv_stream << "[";
+            for (int i = 0; i < std::min(5, static_cast<int>(svd.singularValues().size())); ++i) {
+                sv_stream << svd.singularValues()(i);
+                if (i < std::min(4, static_cast<int>(svd.singularValues().size())-1)) sv_stream << ", ";
+            }
+            sv_stream << "]";
+            
+            logger->warn("Mahalanobis distance calculation failed!");
+            logger->warn("  Innovation covariance size: {}x{}", innovation_covariance.rows(), innovation_covariance.cols());
+            logger->warn("  Determinant: {:.6e} ({})", determinant, determinant < 0 ? "NEGATIVE - not positive semi-definite!" : "positive");
+            logger->warn("  Condition number: {:.6e}", condition_number);
+            logger->warn("  Singular values: {}", sv_stream.str());
+            logger->warn("  Zero singular values: {}", num_zero_singular_values);
+            logger->warn("  LLT decomposition: {}", llt.info() == Eigen::Success ? "succeeded" : "FAILED");
+            logger->warn("  SVD result: dist_sq={:.6f} (invalid, returning 1e5)", dist_sq);
+            logger->warn("  This occurred {} times", failure_count + 1);
+        }
+        
+        last_log_time = now;
+        failure_count = 0;
+    }
+    failure_count++;
+    
     return 1e5;  // Large but finite distance
 }
 
