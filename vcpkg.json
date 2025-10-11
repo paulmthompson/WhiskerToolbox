@@ -43,9 +43,6 @@
             "name": "boost-random"
         },
         {
-            "name": "highfive"
-        },
-        {
             "name": "protobuf"
         },
         {
