@@ -30,6 +30,7 @@ if (LINUX)
     set(BUILD_re2 ON)
 
     set(USE_COINOR OFF)
+    set(USE_HIGHS OFF)
 
     set(BUILD_SAMPLES OFF)
     set(BUILD_EXAMPLES OFF)
@@ -62,6 +63,7 @@ elseif (WIN32)
   set(BUILD_absl OFF)
 
   set(USE_COINOR OFF)
+  set(USE_HIGHS OFF)
 
   set(BUILD_SAMPLES OFF)
   set(BUILD_EXAMPLES OFF)

@@ -30,9 +30,6 @@
             "name": "spdlog"
         },
         {
-            "name": "highs"
-        },
-        {
             "name": "boost-multiprecision"
         
         },
@@ -165,10 +162,6 @@
         {
             "name": "protobuf",
             "version": "5.29.3"
-        },
-        {
-            "name": "highs",
-            "version": "1.10.0"
         }
         ]
 
