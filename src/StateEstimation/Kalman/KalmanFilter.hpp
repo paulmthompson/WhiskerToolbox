@@ -42,14 +42,14 @@ public:
 
 private:
     // Kalman matrices
-    Eigen::MatrixXd StateTransitionMat_;// State transition
-    Eigen::MatrixXd MeasurementMat_;// Measurement
-    Eigen::MatrixXd ProcessNoiseCovMat_;// Process noise covariance
-    Eigen::MatrixXd MeasurementNoiseCovMat_;// Measurement noise covariance
-
+    Eigen::MatrixXd StateTransitionMat_;
+    Eigen::MatrixXd MeasurementMat_;
+    Eigen::MatrixXd ProcessNoiseCovMat_;
+    Eigen::MatrixXd MeasurementNoiseCovMat_;
+    
     // Filter state
-    Eigen::VectorXd StateEstimateVec_;// State estimate vector
-    Eigen::MatrixXd StateCovarianceMat_;// State covariance matrix
+    Eigen::VectorXd StateEstimateVec_;
+    Eigen::MatrixXd StateCovarianceMat_;
 };
 
 }// namespace StateEstimation

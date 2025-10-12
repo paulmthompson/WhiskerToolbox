@@ -1,8 +1,8 @@
 #ifndef STATE_ESTIMATION_COMMON_HPP
 #define STATE_ESTIMATION_COMMON_HPP
 
-#include "Entity/EntityTypes.hpp"
 #include "Entity/EntityGroupManager.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <Eigen/Dense>
@@ -12,8 +12,6 @@
 #include <vector>
 
 namespace StateEstimation {
-
-// Note: EntityId, GroupId, and TimeFrameIndex are now imported from Entity/ and TimeFrame/
 
 // --- Core Data Structures ---
 
@@ -46,13 +44,24 @@ struct Observation {
 struct Assignment {
     // Maps Observation index to Prediction index.
     std::map<int, int> observation_to_prediction;
-    
+
     // Cost information for each assignment (for identity confidence tracking)
     std::map<int, double> assignment_costs;
-    
+
     // Maximum cost threshold used for this assignment
     double cost_threshold = 1.0;
 };
+
+/**
+ * @brief Smoothed results for each group over frames.
+ */
+using SmoothedResults = std::map<GroupId, std::vector<FilterState>>;
+
+/**
+ * @brief Progress callback: percent complete [0,100].
+ */
+using ProgressCallback = std::function<void(int)>;
+
 
 }// namespace StateEstimation
 

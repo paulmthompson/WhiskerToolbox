@@ -3,20 +3,18 @@
 
 #include "Assignment/IAssigner.hpp"
 #include "Assignment/hungarian.hpp"
+#include "Cost/CostFunctions.hpp"
 #include "DataSource.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Features/IFeatureExtractor.hpp"
 #include "Filter/IFilter.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "Kalman/KalmanMatrixBuilder.hpp"
 #include "MinCostFlowSolver.hpp"
-#include "Cost/CostFunctions.hpp"
-
-
-#include <Eigen/Dense>
+#include "TimeFrame/TimeFrame.hpp"
 
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/spdlog.h"
+#include <Eigen/Dense>
 
 #include <algorithm>
 #include <chrono>
@@ -33,17 +31,6 @@
 #include <vector>
 
 namespace StateEstimation {
-
-/**
- * @brief Smoothed results for each group over frames.
- */
-using SmoothedResults = std::map<GroupId, std::vector<FilterState>>;
-
-/**
- * @brief Progress callback: percent complete [0,100].
- */
-using ProgressCallback = std::function<void(int)>;
-
 
 /**
  * @brief A tracker that uses a global min-cost flow optimization to solve data association.
@@ -492,10 +479,10 @@ private:
 
         Path expanded_path;
         auto const & sequence = *seq_opt;
-        for (size_t idx = 1; idx < sequence.size(); ++idx) { // skip the source at index 0
+        for (size_t idx = 1; idx < sequence.size(); ++idx) {// skip the source at index 0
             int node_index = sequence[idx];
             if (node_index >= 0 && node_index < num_meta) {
-                for (auto const & n : meta_nodes[static_cast<size_t>(node_index)].members) {
+                for (auto const & n: meta_nodes[static_cast<size_t>(node_index)].members) {
                     expanded_path.push_back(n);
                 }
             }
@@ -520,24 +507,24 @@ private:
             TimeFrameIndex end_frame,
             std::unordered_set<EntityId> const * excluded_entities,
             std::unordered_set<EntityId> const * include_entities) {
-        
+
         // Structure to track active chains being built
         struct ActiveChain {
-            size_t meta_node_idx;  // Index in meta_nodes vector
+            size_t meta_node_idx;// Index in meta_nodes vector
             TimeFrameIndex curr_frame;
             EntityId curr_entity;
             DataType const * curr_data;
-            std::unique_ptr<IFilter> filter;  // Cloned filter for this chain
-            FilterState predicted;  // Cached prediction for next frame
-            
+            std::unique_ptr<IFilter> filter;// Cloned filter for this chain
+            FilterState predicted;          // Cached prediction for next frame
+
             // Constructor to properly initialize TimeFrameIndex
-            ActiveChain() 
-                : meta_node_idx(0), 
-                  curr_frame(TimeFrameIndex(0)), 
-                  curr_entity(0), 
+            ActiveChain()
+                : meta_node_idx(0),
+                  curr_frame(TimeFrameIndex(0)),
+                  curr_entity(0),
                   curr_data(nullptr) {}
         };
-        
+
         std::vector<MetaNode> meta_nodes;
         std::set<std::pair<long long, EntityId>> used;// key: (frame, entity)
         std::vector<ActiveChain> active_chains;
@@ -545,13 +532,13 @@ private:
         // Process frame by frame, using Hungarian algorithm to extend chains optimally
         for (TimeFrameIndex f = start_frame; f <= end_frame; ++f) {
             if (!frame_lookup.count(f)) continue;
-            
+
             // Step 1: Start new chains for unused observations in current frame
             for (auto const & item: frame_lookup.at(f)) {
                 EntityId entity_id = std::get<1>(item);
                 auto used_key = std::make_pair(static_cast<long long>(f.getValue()), entity_id);
                 if (used.count(used_key)) continue;
-                
+
                 if (excluded_entities && excluded_entities->count(entity_id) > 0) {
                     if (!(include_entities && include_entities->count(entity_id) > 0)) {
                         continue;
@@ -559,7 +546,7 @@ private:
                 }
 
                 DataType const * start_data = std::get<0>(item);
-                
+
                 // Initialize filter for this new chain
                 FilterState start_state;
                 std::unique_ptr<IFilter> chain_filter;
@@ -578,10 +565,10 @@ private:
                 // Seed end_state so it's never empty even for single-frame nodes
                 node.end_state = start_state;
                 used.insert(used_key);
-                
+
                 size_t node_idx = meta_nodes.size();
                 meta_nodes.push_back(std::move(node));
-                
+
                 // Add to active chains for extension
                 ActiveChain chain;
                 chain.meta_node_idx = node_idx;
@@ -591,24 +578,24 @@ private:
                 chain.filter = std::move(chain_filter);
                 active_chains.push_back(std::move(chain));
             }
-            
+
             // Step 2: Try to extend all active chains to next frame using Hungarian algorithm
             TimeFrameIndex next_frame = f + TimeFrameIndex(1);
             if (next_frame > end_frame || !frame_lookup.count(next_frame)) {
-                continue;  // No next frame, chains will terminate
+                continue;// No next frame, chains will terminate
             }
-            
+
             if (active_chains.empty()) continue;
-            
+
             // Predict all active chains
-            for (auto & chain : active_chains) {
+            for (auto & chain: active_chains) {
                 if (chain.filter) {
                     chain.predicted = chain.filter->predict();
                 }
             }
-            
+
             // Collect available candidates in next frame
-            std::vector<std::tuple<EntityId, DataType const *, size_t>> candidates;  // entity_id, data, index
+            std::vector<std::tuple<EntityId, DataType const *, size_t>> candidates;// entity_id, data, index
             for (size_t cand_idx = 0; cand_idx < frame_lookup.at(next_frame).size(); ++cand_idx) {
                 auto const & cand = frame_lookup.at(next_frame)[cand_idx];
                 EntityId cand_id = std::get<1>(cand);
@@ -622,30 +609,30 @@ private:
                 DataType const * cand_data = std::get<0>(cand);
                 candidates.emplace_back(cand_id, cand_data, cand_idx);
             }
-            
+
             if (candidates.empty()) {
                 // No candidates available - all chains terminate
                 if (_logger) {
                     _logger->debug("{} active chains terminating at frame {} (no available candidates in frame {})",
-                                 active_chains.size(), f.getValue(), next_frame.getValue());
+                                   active_chains.size(), f.getValue(), next_frame.getValue());
                 }
                 active_chains.clear();
                 continue;
             }
-            
+
             // Build cost matrix for Hungarian algorithm
             // Rows = active chains, Cols = candidates
             int const cost_scaling_factor = 1000;
             int const max_cost = static_cast<int>(_cheap_assignment_threshold * cost_scaling_factor);
-            std::vector<std::vector<int>> cost_matrix(active_chains.size(), 
+            std::vector<std::vector<int>> cost_matrix(active_chains.size(),
                                                       std::vector<int>(candidates.size()));
-            
+
             for (size_t chain_idx = 0; chain_idx < active_chains.size(); ++chain_idx) {
                 auto const & chain = active_chains[chain_idx];
                 for (size_t cand_idx = 0; cand_idx < candidates.size(); ++cand_idx) {
                     DataType const * cand_data = std::get<1>(candidates[cand_idx]);
                     Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*cand_data);
-                    
+
                     double cost_double;
                     if (chain.filter) {
                         cost_double = _chain_cost_function(chain.predicted, obs, 1);
@@ -653,7 +640,7 @@ private:
                         Eigen::VectorXd curr_obs = _feature_extractor->getFilterFeatures(*chain.curr_data);
                         cost_double = (curr_obs - obs).norm();
                     }
-                    
+
                     int cost = static_cast<int>(cost_double * cost_scaling_factor);
                     if (cost >= std::numeric_limits<int>::max()) {
                         cost = std::numeric_limits<int>::max() - 1;
@@ -661,19 +648,19 @@ private:
                     cost_matrix[chain_idx][cand_idx] = cost;
                 }
             }
-            
+
             // Solve Hungarian assignment
             std::vector<std::vector<int>> assignment_matrix;
             Munkres::hungarian_with_assignment(cost_matrix, assignment_matrix);
-            
+
             // Process assignments
             std::vector<bool> chain_extended(active_chains.size(), false);
             std::vector<ActiveChain> remaining_chains;
-            
+
             for (size_t chain_idx = 0; chain_idx < assignment_matrix.size(); ++chain_idx) {
                 bool found_assignment = false;
                 int assigned_cand_idx = -1;
-                
+
                 for (size_t cand_idx = 0; cand_idx < assignment_matrix[chain_idx].size(); ++cand_idx) {
                     if (assignment_matrix[chain_idx][cand_idx] == 1) {
                         // Check if cost is within threshold
@@ -684,43 +671,43 @@ private:
                         break;
                     }
                 }
-                
+
                 auto & chain = active_chains[chain_idx];
                 auto & node = meta_nodes[chain.meta_node_idx];
-                
+
                 if (found_assignment) {
                     // Extend chain
                     EntityId best_entity = std::get<0>(candidates[assigned_cand_idx]);
                     DataType const * best_data = std::get<1>(candidates[assigned_cand_idx]);
-                    
+
                     Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*best_data);
                     if (chain.filter) {
                         chain.filter->update(chain.predicted, {obs});
-                        
+
                         // Check covariance health
                         auto updated_state = chain.filter->getState();
                         double determinant = updated_state.state_covariance.determinant();
-                        
+
                         if (std::abs(determinant) < 1e-10 && _logger) {
                             Eigen::JacobiSVD<Eigen::MatrixXd> svd(updated_state.state_covariance);
-                            double condition_number = svd.singularValues()(0) / 
-                                                     (svd.singularValues()(svd.singularValues().size()-1) + 1e-20);
-                            
+                            double condition_number = svd.singularValues()(0) /
+                                                      (svd.singularValues()(svd.singularValues().size() - 1) + 1e-20);
+
                             _logger->warn("State covariance singular at frame {} entity {}: det={:.2e}, cond={:.2e}",
-                                        next_frame.getValue(), best_entity, determinant, condition_number);
-                            
+                                          next_frame.getValue(), best_entity, determinant, condition_number);
+
                             if (condition_number > 1e12) {
                                 _logger->warn("  Terminating chain due to ill-conditioned covariance");
-                                found_assignment = false;  // Terminate this chain
+                                found_assignment = false;// Terminate this chain
                             }
                         }
                     }
-                    
+
                     if (found_assignment) {
                         NodeInfo next_info{next_frame, best_entity};
                         node.members.push_back(next_info);
                         used.insert(std::make_pair(static_cast<long long>(next_frame.getValue()), best_entity));
-                        
+
                         chain.curr_frame = next_frame;
                         chain.curr_entity = best_entity;
                         chain.curr_data = best_data;
@@ -728,7 +715,7 @@ private:
                         remaining_chains.push_back(std::move(chain));
                     }
                 }
-                
+
                 if (!found_assignment) {
                     // Chain terminates - finalize meta-node
                     node.end_frame = node.members.back().frame;
@@ -736,87 +723,87 @@ private:
                     if (chain.filter) {
                         node.end_state = chain.filter->getState();
                     }
-                    
+
                     if (_logger) {
                         // Log why chain ended
                         double best_cost_double = std::numeric_limits<double>::infinity();
                         if (assigned_cand_idx >= 0) {
                             best_cost_double = cost_matrix[chain_idx][assigned_cand_idx] / static_cast<double>(cost_scaling_factor);
                         }
-                        
+
                         _logger->debug("Meta-node #{}: frames {} to {} ({} frames), entities {} to {}, {} members - terminated (best_cost={:.2f}, threshold={:.2f})",
-                                     chain.meta_node_idx,
-                                     node.start_frame.getValue(),
-                                     node.end_frame.getValue(),
-                                     node.end_frame.getValue() - node.start_frame.getValue() + 1,
-                                     node.start_entity,
-                                     node.end_entity,
-                                     node.members.size(),
-                                     best_cost_double,
-                                     _cheap_assignment_threshold);
+                                       chain.meta_node_idx,
+                                       node.start_frame.getValue(),
+                                       node.end_frame.getValue(),
+                                       node.end_frame.getValue() - node.start_frame.getValue() + 1,
+                                       node.start_entity,
+                                       node.end_entity,
+                                       node.members.size(),
+                                       best_cost_double,
+                                       _cheap_assignment_threshold);
                     }
                 }
             }
-            
+
             active_chains = std::move(remaining_chains);
         }
-        
+
         // Finalize any remaining active chains at end of range
-        for (auto & chain : active_chains) {
+        for (auto & chain: active_chains) {
             auto & node = meta_nodes[chain.meta_node_idx];
             node.end_frame = node.members.back().frame;
             node.end_entity = node.members.back().entity_id;
             if (chain.filter) {
                 node.end_state = chain.filter->getState();
             }
-            
+
             if (_logger) {
                 _logger->debug("Meta-node #{}: frames {} to {} ({} frames), entities {} to {}, {} members - reached end",
-                             chain.meta_node_idx,
-                             node.start_frame.getValue(),
-                             node.end_frame.getValue(),
-                             node.end_frame.getValue() - node.start_frame.getValue() + 1,
-                             node.start_entity,
-                             node.end_entity,
-                             node.members.size());
+                               chain.meta_node_idx,
+                               node.start_frame.getValue(),
+                               node.end_frame.getValue(),
+                               node.end_frame.getValue() - node.start_frame.getValue() + 1,
+                               node.start_entity,
+                               node.end_entity,
+                               node.members.size());
             }
         }
 
         if (_logger) {
             _logger->debug("Built {} meta-nodes using Hungarian assignment", meta_nodes.size());
-            
+
             // Compute statistics on meta-node lengths
             if (!meta_nodes.empty()) {
                 std::vector<int> lengths;
-                for (auto const & mn : meta_nodes) {
+                for (auto const & mn: meta_nodes) {
                     lengths.push_back(static_cast<int>(mn.members.size()));
                 }
                 std::sort(lengths.begin(), lengths.end());
-                
+
                 int total_length = 0;
-                for (int len : lengths) total_length += len;
+                for (int len: lengths) total_length += len;
                 double mean_length = static_cast<double>(total_length) / lengths.size();
-                
+
                 int median_length = lengths[lengths.size() / 2];
                 int min_length = lengths.front();
                 int max_length = lengths.back();
-                
-                _logger->debug("Meta-node length statistics: min={}, median={}, mean={:.1f}, max={}", 
-                             min_length, median_length, mean_length, max_length);
-                
+
+                _logger->debug("Meta-node length statistics: min={}, median={}, mean={:.1f}, max={}",
+                               min_length, median_length, mean_length, max_length);
+
                 // Count single-frame meta-nodes
                 int single_frame_count = 0;
-                for (int len : lengths) {
+                for (int len: lengths) {
                     if (len == 1) single_frame_count++;
                 }
                 if (single_frame_count > 0) {
-                    _logger->debug("  {} single-frame meta-nodes ({:.1f}%)", 
-                                 single_frame_count, 
-                                 100.0 * single_frame_count / meta_nodes.size());
+                    _logger->debug("  {} single-frame meta-nodes ({:.1f}%)",
+                                   single_frame_count,
+                                   100.0 * single_frame_count / meta_nodes.size());
                 }
             }
         }
-        
+
         return meta_nodes;
     }
 
