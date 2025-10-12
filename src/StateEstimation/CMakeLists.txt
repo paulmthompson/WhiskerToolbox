@@ -16,6 +16,8 @@ set(STATE_ESTIMATION_SOURCES
     Assignment/IAssigner.hpp
     Assignment/HungarianAssigner.hpp
     Assignment/HungarianAssigner.cpp
+    Cost/CostFunctions.hpp
+    Cost/CostFunctions.cpp
     Features/FeatureVector.hpp
     Features/FeatureVector.cpp
     Features/LineFeatureExtractor.hpp

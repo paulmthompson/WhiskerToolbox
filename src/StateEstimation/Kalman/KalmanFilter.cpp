@@ -142,40 +142,5 @@ std::unique_ptr<IFilter> KalmanFilter::clone() const {
     return std::make_unique<KalmanFilter>(*this);
 }
 
-// Add the implementation for our new method
-std::unique_ptr<IFilter> KalmanFilter::createBackwardFilter() const {
-    if (F_inv_.rows() == 0 || F_inv_.cols() == 0) {
-        // If the matrix isn't invertible, we can't create a backward filter.
-        // Return nullptr or throw an exception.
-        return nullptr;
-    }
-    // Create a new KalmanFilter, but feed it the INVERSE matrices.
-    // Its "forward" is our "backward".
-    auto backward_filter = std::make_unique<KalmanFilter>(F_inv_, H_, Q_backward_, R_);
-    return backward_filter;
-}
-
-/*
-std::optional<FilterState> KalmanFilter::predictPrevious(FilterState const & current_state) {
-    if (F_inv_.rows() == 0 || F_inv_.cols() == 0) {
-        return std::nullopt;
-    }
-    Eigen::VectorXd x_prev = F_inv_ * current_state.state_mean;
-    // Covariance backward propagation: P_prev = F_inv * P * F_inv^T + Q_backward
-    Eigen::MatrixXd P_prev = F_inv_ * current_state.state_covariance * F_inv_.transpose() + Q_backward_;
-    // Force symmetry
-    P_prev = 0.5 * (P_prev + P_prev.transpose());
-    // Clamp negative eigenvalues to small positive to maintain PSD
-    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(P_prev);
-    Eigen::VectorXd eig = es.eigenvalues();
-    Eigen::MatrixXd V = es.eigenvectors();
-    double const eps = 1e-9;
-    for (int i = 0; i < eig.size(); ++i) {
-        if (eig[i] < eps) eig[i] = eps;
-    }
-    Eigen::MatrixXd P_prev_psd = V * eig.asDiagonal() * V.transpose();
-    return FilterState{.state_mean = x_prev, .state_covariance = P_prev_psd};
-}
-*/
 
 }// namespace StateEstimation
