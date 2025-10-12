@@ -20,6 +20,31 @@ LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data) {
     }
 }
 
+LineData::LineData(LineData&& other) noexcept
+    : ObserverData(std::move(other)),
+      _data(std::move(other._data)),
+      _image_size(other._image_size),
+      _time_frame(std::move(other._time_frame)),
+      _identity_data_key(std::move(other._identity_data_key)),
+      _identity_registry(other._identity_registry)
+{
+    other._identity_registry = nullptr;
+}
+
+LineData& LineData::operator=(LineData&& other) noexcept
+{
+    if (this != &other) {
+        ObserverData::operator=(std::move(other));
+        _data = std::move(other._data);
+        _image_size = other._image_size;
+        _time_frame = std::move(other._time_frame);
+        _identity_data_key = std::move(other._identity_data_key);
+        _identity_registry = other._identity_registry;
+        other._identity_registry = nullptr;
+    }
+    return *this;
+}
+
 // ========== Setters ==========
 
 bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
@@ -425,31 +450,28 @@ std::size_t LineData::copyTo(LineData& target, std::vector<TimeFrameIndex> const
 
 std::size_t LineData::moveTo(LineData& target, TimeFrameInterval const & interval, bool notify) {
     if (interval.start > interval.end) {
-        std::cerr << "LineData::moveTo: interval start (" << interval.start.getValue() 
+        std::cerr << "LineData::moveTo: interval start (" << interval.start.getValue()
                   << ") must be <= interval end (" << interval.end.getValue() << ")" << std::endl;
         return 0;
     }
 
     std::size_t total_lines_moved = 0;
-    std::vector<TimeFrameIndex> times_to_clear;
 
-    // First, copy all lines in the interval to target
-    for (auto const & [time, entries] : _data) {
-        if (time >= interval.start && time <= interval.end && !entries.empty()) {
-            for (auto const& entry : entries) {
-                target.addAtTime(time, entry.line, false); // Don't notify for each operation
-                total_lines_moved++;
-            }
-            times_to_clear.push_back(time);
+    auto start_it = _data.lower_bound(interval.start);
+    auto end_it = _data.upper_bound(interval.end);
+
+    for (auto it = start_it; it != end_it; ) {
+        auto node = _data.extract(it++);
+        total_lines_moved += node.mapped().size();
+        auto [target_it, inserted, node_handle] = target._data.insert(std::move(node));
+        if (!inserted) {
+            // If the key already exists in the target, merge the vectors
+            target_it->second.insert(target_it->second.end(),
+                                     std::make_move_iterator(node_handle.mapped().begin()),
+                                     std::make_move_iterator(node_handle.mapped().end()));
         }
     }
 
-    // Then, clear all the times from source
-    for (TimeFrameIndex const time : times_to_clear) {
-        (void)clearAtTime(time, false); // Don't notify for each operation
-    }
-
-    // Notify observers only once at the end if requested
     if (notify && total_lines_moved > 0) {
         target.notifyObservers();
         notifyObservers();
@@ -460,26 +482,21 @@ std::size_t LineData::moveTo(LineData& target, TimeFrameInterval const & interva
 
 std::size_t LineData::moveTo(LineData& target, std::vector<TimeFrameIndex> const & times, bool notify) {
     std::size_t total_lines_moved = 0;
-    std::vector<TimeFrameIndex> times_to_clear;
 
-    // First, copy lines for each specified time to target
     for (TimeFrameIndex const time : times) {
-        auto it = _data.find(time);
-        if (it != _data.end() && !it->second.empty()) {
-            for (auto const& entry : it->second) {
-                target.addAtTime(time, entry.line, false); // Don't notify for each operation
-                total_lines_moved++;
+        if (auto it = _data.find(time); it != _data.end()) {
+            auto node = _data.extract(it);
+            total_lines_moved += node.mapped().size();
+            auto [target_it, inserted, node_handle] = target._data.insert(std::move(node));
+            if (!inserted) {
+                // If the key already exists in the target, merge the vectors
+                target_it->second.insert(target_it->second.end(),
+                                         std::make_move_iterator(node_handle.mapped().begin()),
+                                         std::make_move_iterator(node_handle.mapped().end()));
             }
-            times_to_clear.push_back(time);
         }
     }
 
-    // Then, clear all the times from source
-    for (TimeFrameIndex const time : times_to_clear) {
-        (void)clearAtTime(time, false); // Don't notify for each operation
-    }
-
-    // Notify observers only once at the end if requested
     if (notify && total_lines_moved > 0) {
         target.notifyObservers();
         notifyObservers();
