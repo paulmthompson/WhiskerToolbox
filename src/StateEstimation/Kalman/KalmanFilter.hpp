@@ -42,16 +42,14 @@ public:
 
 private:
     // Kalman matrices
-    Eigen::MatrixXd F_;// State transition
-    Eigen::MatrixXd H_;// Measurement
-    Eigen::MatrixXd Q_;// Process noise covariance
-    Eigen::MatrixXd R_;// Measurement noise covariance
+    Eigen::MatrixXd StateTransitionMat_;// State transition
+    Eigen::MatrixXd MeasurementMat_;// Measurement
+    Eigen::MatrixXd ProcessNoiseCovMat_;// Process noise covariance
+    Eigen::MatrixXd MeasurementNoiseCovMat_;// Measurement noise covariance
 
     // Filter state
-    Eigen::VectorXd x_;// State estimate vector
-    Eigen::MatrixXd P_;// State covariance matrix
-    Eigen::MatrixXd F_inv_;// Cached inverse for backward prediction (if invertible)
-    Eigen::MatrixXd Q_backward_;// Process noise for backward model
+    Eigen::VectorXd StateEstimateVec_;// State estimate vector
+    Eigen::MatrixXd StateCovarianceMat_;// State covariance matrix
 };
 
 }// namespace StateEstimation

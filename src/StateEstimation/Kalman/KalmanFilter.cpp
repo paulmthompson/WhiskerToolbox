@@ -8,38 +8,27 @@ namespace StateEstimation {
 
 KalmanFilter::KalmanFilter(Eigen::MatrixXd const & F, Eigen::MatrixXd const & H,
                            Eigen::MatrixXd const & Q, Eigen::MatrixXd const & R)
-    : F_(F),
-      H_(H),
-      Q_(Q),
-      R_(R),
-      x_(Eigen::VectorXd::Zero(F.rows())),
-      P_(Eigen::MatrixXd::Identity(F.rows(), F.rows())),
-      F_inv_(Eigen::MatrixXd::Zero(F.rows(), F.cols())),
-      Q_backward_(Q.rows(), Q.cols()) {
-    if (F_.rows() == F_.cols()) {
-        // Compute inverse if well-conditioned; allow Eigen to throw if singular
-        F_inv_ = F_.inverse();
-        // Backward process noise: Q_b = F_inv * Q * F_inv^T (approximate mapping)
-        Q_backward_ = F_inv_ * Q_ * F_inv_.transpose();
-        // Ensure symmetry
-        Q_backward_ = 0.5 * (Q_backward_ + Q_backward_.transpose());
-    }
-}
+    : StateTransitionMat_(F),
+      MeasurementMat_(H),
+      ProcessNoiseCovMat_(Q),
+      MeasurementNoiseCovMat_(R),
+      StateEstimateVec_(Eigen::VectorXd::Zero(F.rows())),
+      StateCovarianceMat_(Eigen::MatrixXd::Identity(F.rows(), F.rows())) {}
 
 void KalmanFilter::initialize(FilterState const & initial_state) {
-    x_ = initial_state.state_mean;
-    P_ = initial_state.state_covariance;
+    StateEstimateVec_ = initial_state.state_mean;
+    StateCovarianceMat_ = initial_state.state_covariance;
 }
 
 FilterState KalmanFilter::predict() {
-    x_ = F_ * x_;
-    P_ = F_ * P_ * F_.transpose() + Q_;
+    StateEstimateVec_ = StateTransitionMat_ * StateEstimateVec_;
+    StateCovarianceMat_ = StateTransitionMat_ * StateCovarianceMat_ * StateTransitionMat_.transpose() + ProcessNoiseCovMat_;
     
     // Force symmetry to counteract numerical errors
-    P_ = 0.5 * (P_ + P_.transpose());
+    StateCovarianceMat_ = 0.5 * (StateCovarianceMat_ + StateCovarianceMat_.transpose());
     
     // Ensure positive semi-definite by clamping negative eigenvalues
-    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(P_);
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(StateCovarianceMat_);
     Eigen::VectorXd eig = es.eigenvalues();
     Eigen::MatrixXd V = es.eigenvectors();
     double const eps = 1e-9;
@@ -51,10 +40,10 @@ FilterState KalmanFilter::predict() {
         }
     }
     if (has_negative) {
-        P_ = V * eig.asDiagonal() * V.transpose();
+        StateCovarianceMat_ = V * eig.asDiagonal() * V.transpose();
     }
     
-    return FilterState{.state_mean = x_, .state_covariance = P_};
+    return FilterState{.state_mean = StateEstimateVec_, .state_covariance = StateCovarianceMat_};
 }
 
 FilterState KalmanFilter::update(FilterState const & predicted_state, Measurement const & measurement) {
@@ -69,35 +58,29 @@ FilterState KalmanFilter::update(FilterState const & predicted_state, Measuremen
     Eigen::MatrixXd const P_pred = predicted_state.state_covariance;
 
     // Dimension guard: ensure H_ matches state and z matches H_ rows
-    if (H_.cols() != x_pred.size() || P_pred.rows() != x_pred.size() || P_pred.cols() != x_pred.size() || z.size() != H_.rows()) {
+    if (MeasurementMat_.cols() != x_pred.size() || P_pred.rows() != x_pred.size() || P_pred.cols() != x_pred.size() || z.size() != MeasurementMat_.rows()) {
         // Keep internal state unchanged; return current state and log warning
-        try {
-            //spdlog::warn("KalmanFilter::update dimension mismatch: H[{}x{}], x[{}], P[{}x{}], z[{}]",
-             //             H_.rows(), H_.cols(), x_pred.size(), P_pred.rows(), P_pred.cols(), z.size());
-        } catch (...) {
-            // spdlog may not be configured; ignore
-        }
-        return FilterState{.state_mean = x_, .state_covariance = P_};
+        return FilterState{.state_mean = StateEstimateVec_, .state_covariance = StateCovarianceMat_};
     }
 
     // Scale the measurement noise matrix R by the noise scale factor
-    Eigen::MatrixXd const R_scaled = noise_scale_factor * R_;
+    Eigen::MatrixXd const R_scaled = noise_scale_factor * MeasurementNoiseCovMat_;
 
-    Eigen::VectorXd const y = z - H_ * x_pred;                      // Innovation or residual
-    Eigen::MatrixXd S = H_ * P_pred * H_.transpose() + R_scaled;    // Innovation covariance
-    Eigen::MatrixXd K = P_pred * H_.transpose() * S.inverse();// Kalman gain
+    Eigen::VectorXd const y = z - MeasurementMat_ * x_pred;                      // Innovation or residual
+    Eigen::MatrixXd S = MeasurementMat_ * P_pred * MeasurementMat_.transpose() + R_scaled;    // Innovation covariance
+    Eigen::MatrixXd K = P_pred * MeasurementMat_.transpose() * S.inverse();// Kalman gain
 
-    x_ = x_pred + K * y;
+    StateEstimateVec_ = x_pred + K * y;
     
     // Use Joseph form for covariance update (guarantees PSD)
-    Eigen::MatrixXd I = Eigen::MatrixXd::Identity(x_.size(), x_.size());
-    Eigen::MatrixXd A = I - K * H_;
-    P_ = A * P_pred * A.transpose() + K * R_scaled * K.transpose();
+    Eigen::MatrixXd I = Eigen::MatrixXd::Identity(StateEstimateVec_.size(), StateEstimateVec_.size());
+    Eigen::MatrixXd A = I - K * MeasurementMat_;
+    StateCovarianceMat_ = A * P_pred * A.transpose() + K * R_scaled * K.transpose();
     
     // Force symmetry
-    P_ = 0.5 * (P_ + P_.transpose());
+    StateCovarianceMat_ = 0.5 * (StateCovarianceMat_ + StateCovarianceMat_.transpose());
 
-    return FilterState{.state_mean = x_, .state_covariance = P_};
+    return FilterState{.state_mean = StateEstimateVec_, .state_covariance = StateCovarianceMat_};
 }
 
 std::vector<FilterState> KalmanFilter::smooth(std::vector<FilterState> const & forward_states) {
@@ -114,14 +97,14 @@ std::vector<FilterState> KalmanFilter::smooth(std::vector<FilterState> const & f
         FilterState const & smoothed_k_plus_1 = smoothed_states[k + 1];
 
         // Prediction for k+1 based on forward estimate at k
-        Eigen::VectorXd x_pred_k_plus_1 = F_ * fwd_k.state_mean;
-        Eigen::MatrixXd P_pred_k_plus_1 = F_ * fwd_k.state_covariance * F_.transpose() + Q_;
+        Eigen::VectorXd x_pred_k_plus_1 = StateTransitionMat_ * fwd_k.state_mean;
+        Eigen::MatrixXd P_pred_k_plus_1 = StateTransitionMat_ * fwd_k.state_covariance * StateTransitionMat_.transpose() + ProcessNoiseCovMat_;
         
         // Force symmetry on predicted covariance
         P_pred_k_plus_1 = 0.5 * (P_pred_k_plus_1 + P_pred_k_plus_1.transpose());
 
         // Smoother gain: C_k = P_k * F^T * P_pred^{-1}
-        Eigen::MatrixXd Ck = fwd_k.state_covariance * F_.transpose() * P_pred_k_plus_1.inverse();
+        Eigen::MatrixXd Ck = fwd_k.state_covariance * StateTransitionMat_.transpose() * P_pred_k_plus_1.inverse();
 
         // Smoothed estimate at k incorporating information from future (k+1)
         smoothed_states[k].state_mean = fwd_k.state_mean + Ck * (smoothed_k_plus_1.state_mean - x_pred_k_plus_1);
@@ -135,7 +118,7 @@ std::vector<FilterState> KalmanFilter::smooth(std::vector<FilterState> const & f
 }
 
 FilterState KalmanFilter::getState() const {
-    return FilterState{.state_mean = x_, .state_covariance = P_};
+    return FilterState{.state_mean = StateEstimateVec_, .state_covariance = StateCovarianceMat_};
 }
 
 std::unique_ptr<IFilter> KalmanFilter::clone() const {
