@@ -183,6 +183,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.cpp
         DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.hpp
         DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.ui
+        DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.cpp
+        DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.hpp
+        DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.ui
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.cpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.ui

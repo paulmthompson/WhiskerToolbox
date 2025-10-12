@@ -23,6 +23,7 @@
 #include "DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp"
+#include "DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.hpp"
@@ -208,6 +209,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Group Lines using Kalman Filtering"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new LineKalmanGrouping_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
+
+    _parameterWidgetFactories["Track Points Through Masks (Particle Filter)"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new PointParticleFilter_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;
     };

@@ -77,6 +77,8 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.test.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Points/Point_Particle_Filter/point_particle_filter.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Area/mask_area.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Centroid/mask_centroid.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Connected_Component/mask_connected_component.test.cpp

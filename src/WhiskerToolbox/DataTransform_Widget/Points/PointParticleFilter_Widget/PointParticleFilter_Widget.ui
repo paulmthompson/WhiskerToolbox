@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PointParticleFilter_Widget</class>
+ <widget class="QWidget" name="PointParticleFilter_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Point Particle Filter</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>&lt;b&gt;Track Points Through Masks (Particle Filter)&lt;/b&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QLabel" name="descriptionLabel">
+     <property name="text">
+      <string>Tracks sparse point labels through mask data using a discrete particle filter with forward filtering and backward smoothing.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="Line" name="separator1">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   
+   <!-- Mask Data Selection -->
+   <item>
+    <widget class="QGroupBox" name="maskDataGroupBox">
+     <property name="title">
+      <string>Mask Data</string>
+     </property>
+     <layout class="QVBoxLayout" name="maskDataLayout">
+      <item>
+       <widget class="QLabel" name="maskDataLabel">
+        <property name="text">
+         <string>Select mask data to constrain particle states:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="maskDataComboBox">
+        <property name="toolTip">
+         <string>Mask data defines allowable pixel locations for tracking</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <!-- Particle Filter Parameters -->
+   <item>
+    <widget class="QGroupBox" name="filterParamsGroupBox">
+     <property name="title">
+      <string>Particle Filter Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="filterParamsLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="numParticlesLabel">
+        <property name="text">
+         <string>Number of Particles:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="numParticlesSpinBox">
+        <property name="toolTip">
+         <string>Number of particles for the filter (more particles = better accuracy but slower)</string>
+        </property>
+        <property name="minimum">
+         <number>100</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="singleStep">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>1000</number>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="1" column="0">
+       <widget class="QLabel" name="transitionRadiusLabel">
+        <property name="text">
+         <string>Transition Radius (pixels):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="transitionRadiusSpinBox">
+        <property name="toolTip">
+         <string>Maximum distance a point can move per frame (pixels)</string>
+        </property>
+        <property name="minimum">
+         <double>1.0</double>
+        </property>
+        <property name="maximum">
+         <double>100.0</double>
+        </property>
+        <property name="singleStep">
+         <double>1.0</double>
+        </property>
+        <property name="value">
+         <double>10.0</double>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="2" column="0">
+       <widget class="QLabel" name="randomWalkProbLabel">
+        <property name="text">
+         <string>Random Walk Probability:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="randomWalkProbSpinBox">
+        <property name="toolTip">
+         <string>Probability of random walk vs local transition (0.0 = always local, 1.0 = always random)</string>
+        </property>
+        <property name="minimum">
+         <double>0.0</double>
+        </property>
+        <property name="maximum">
+         <double>1.0</double>
+        </property>
+        <property name="singleStep">
+         <double>0.01</double>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+        <property name="value">
+         <double>0.1</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <!-- Info Label -->
+   <item>
+    <widget class="QLabel" name="infoLabel">
+     <property name="text">
+      <string>ℹ️ Points are tracked between ground truth labels using particle filtering. Each group is tracked independently.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel { 
+        background-color: #e3f2fd; 
+        padding: 8px; 
+        border-radius: 4px;
+        color: #1565c0;
+      }</string>
+     </property>
+    </widget>
+   </item>
+   
+   <!-- Spacer -->
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
