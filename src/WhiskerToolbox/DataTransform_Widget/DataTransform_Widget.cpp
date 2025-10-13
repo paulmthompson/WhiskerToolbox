@@ -20,6 +20,7 @@
 #include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineBaseFlip_Widget/LineBaseFlip_Widget.hpp"
 #include "DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp"
@@ -165,6 +166,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Line Alignment to Bright Features"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new LineAlignment_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
+
+    _parameterWidgetFactories["Line Base Flip"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new LineBaseFlip_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;
     };
