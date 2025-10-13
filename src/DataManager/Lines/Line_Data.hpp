@@ -47,6 +47,17 @@ public:
     LineData() = default;
 
     /**
+     * @brief Move constructor
+     */
+    LineData(LineData&& other) noexcept;
+
+    /**
+     * @brief Move assignment operator
+     */
+    LineData& operator=(LineData&& other) noexcept;
+
+
+    /**
      * @brief Constructor with data
      * 
      * This constructor creates a LineData with the given data
