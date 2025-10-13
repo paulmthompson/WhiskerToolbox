@@ -1,0 +1,69 @@
+---
+title: "State Estimation Library"
+---
+
+## Core Goals
+
+The primary goals of this library are to provide a modular framework for state estimation tasks. The high-level objectives include:
+
+-   **Generate Smooth Estimates**: Produce a smooth estimate of a state from raw data.
+-   **Compare and Validate**: Generate a smooth estimate and compare it against a pre-existing estimate, with the ability to flag potential outliers.
+-   **Interpolate Missing Data**: Generate smoothed predictions that can fill in gaps where data is missing. This is in contrast to simply refining existing measurements.
+-   **Assign Identity to Unlabeled Data**: Use predictions to assign identities to measured data points within a time series that has only sparse labels.
+
+## Design Principles and Variation Points
+
+The library should be designed in a modular fashion to accommodate several key points of variation in state estimation problems. The interfaces should be flexible enough to handle significant structural differences between algorithms.
+
+### Data Type
+
+The nature of the input data is a primary variation point. The library must handle:
+
+-   **Continuous Data**: Analog time series or other continuous state variables.
+-   **Discrete Data**: Data that exists on a discrete grid or set of points. An example would be making a prediction for a point within an image mask where only certain pixels are available.
+
+### Filtering Schemes
+
+The design must support different families of filtering algorithms, which may have different assumptions about data distributions and different methodological considerations.
+
+-   **Kalman Filters**:
+    -   Standard Kalman Filter
+    -   Extended Kalman Filter (EKF) for linearized systems
+    -   Unscented Kalman Filter (UKF)
+-   **Particle Filters**:
+    -   Bootstrap Particle Filter
+    -   Sequential Importance Sampling with Resampling (SIR)
+
+### Smoothing Operations
+
+Alongside forward-in-time filtering, the library must incorporate smoothing operations, which use the full dataset to refine estimates by making a backward pass through the data. The design should recognize that some smoothers are tightly paired with specific filters, while others may be more general.
+
+-   **Paired Smoother**: An example is the Rauch-Tung-Striebel (RTS) smoother, which is specifically paired with the Kalman filter.
+-   **Complex Smoothers**: For particle filters, smoothing and resampling schemes can be more complicated and may require filter-specific implementations.
+
+### Ancillary Tools for Performance
+
+To ensure high performance, especially for complex schemes, the library should incorporate specialized data structures and algorithms.
+
+-   **Example**: For particle filters operating on spatial data, a k-d tree could be implemented to accelerate the lookup and resampling of large particle fields based on their location.
+
+The overall goal is to design interfaces that are modular enough to accommodate these major structural variations as new algorithms and techniques are implemented.
+
+## Design Roadmap
+
+### Filter Types
+
+| Filter Type                       | Completion Status |
+| --------------------------------- | ----------------- |
+| Standard Kalman Filter            | Implemented       |
+| Extended Kalman Filter (EKF)      | Planned           |
+| Unscented Kalman Filter (UKF)     | Planned           |
+| Bootstrap Particle Filter         | Implemented       |
+| Sequential Importance Resampling  | Planned           |
+
+### Smoothing Types
+
+| Smoothing Type                  | Completion Status |
+| ------------------------------- | ----------------- |
+| Rauch-Tung-Striebel (RTS)       | Implemented       |
+| Particle Filter Smoother        | Planned           |
