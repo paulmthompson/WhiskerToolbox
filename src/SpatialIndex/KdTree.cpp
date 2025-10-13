@@ -8,7 +8,7 @@
 //            (see the file LICENSE for details)
 //
 
-#include "kdtree.hpp"
+#include "KdTree.hpp"
 #include <math.h>
 #include <algorithm>
 #include <limits>
