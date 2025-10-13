@@ -4,6 +4,8 @@ add_subdirectory(Entity)
 
 add_subdirectory(CoreGeometry)
 
+add_subdirectory(SpatialIndex)
+
 if (ENABLE_OPENCV)
     add_subdirectory(ImageProcessing)
 endif()

@@ -10,8 +10,9 @@ endif()
 
 # Test executable for SpatialIndex
 add_executable(SpatialIndexTests
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/SpatialIndex/QuadTree.test.cpp
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/SpatialIndex/RTree.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/SpatialIndex/QuadTree.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/SpatialIndex/RTree.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/SpatialIndex/KdTree.test.cpp
 )
 
 # Link against our SpatialIndex library and Catch2
