@@ -18,50 +18,62 @@ static LineData create_test_data(size_t num_times, size_t num_lines_per_time, si
             line_data.addAtTime(TimeFrameIndex(static_cast<int64_t>(t)), line);
         }
     }
-    return line_data;
+    return std::move(line_data);
 }
 
 TEST_CASE("Benchmark LineData Copy and Move", "[!benchmark]") {
-    auto line_data_small = create_test_data(10, 10, 10);
-    auto line_data_medium = create_test_data(100, 100, 10);
-    auto line_data_large = create_test_data(1000, 100, 10);
+    auto line_data_small_template = create_test_data(10, 10, 10);
+    auto line_data_medium_template = create_test_data(100, 100, 10);
+    auto line_data_large_template = create_test_data(1000, 100, 10);
 
     BENCHMARK("Copy small LineData") {
         LineData target;
-        line_data_small.copyTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)});
+        line_data_small_template.copyTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)});
         return target;
     };
 
-    BENCHMARK("Move small LineData") {
-        LineData source = line_data_small;
+    BENCHMARK_ADVANCED("Move small LineData") (Catch::Chronometer meter) {
+        LineData source;
+        line_data_small_template.copyTo(source, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)});
         LineData target;
-        source.moveTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)});
+
+        meter.measure([&] {
+            source.moveTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)});
+        });
         return target;
     };
 
     BENCHMARK("Copy medium LineData") {
         LineData target;
-        line_data_medium.copyTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)});
+        line_data_medium_template.copyTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)});
         return target;
     };
 
-    BENCHMARK("Move medium LineData") {
-        LineData source = line_data_medium;
+    BENCHMARK_ADVANCED("Move medium LineData") (Catch::Chronometer meter) {
+        LineData source;
+        line_data_medium_template.copyTo(source, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)});
         LineData target;
-        source.moveTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)});
+
+        meter.measure([&] {
+            source.moveTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)});
+        });
         return target;
     };
 
     BENCHMARK("Copy large LineData") {
         LineData target;
-        line_data_large.copyTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)});
+        line_data_large_template.copyTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)});
         return target;
     };
 
-    BENCHMARK("Move large LineData") {
-        LineData source = line_data_large;
+    BENCHMARK_ADVANCED("Move large LineData") (Catch::Chronometer meter) {
+        LineData source;
+        line_data_large_template.copyTo(source, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)});
         LineData target;
-        source.moveTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)});
+
+        meter.measure([&] {
+            source.moveTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)});
+        });
         return target;
     };
 }

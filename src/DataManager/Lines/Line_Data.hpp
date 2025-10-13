@@ -56,15 +56,6 @@ public:
      */
     LineData& operator=(LineData&& other) noexcept;
 
-    /**
-     * @brief Copy constructor
-     */
-    LineData(const LineData& other);
-
-    /**
-     * @brief Copy assignment operator
-     */
-    LineData& operator=(const LineData& other);
 
     /**
      * @brief Constructor with data

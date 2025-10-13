@@ -45,29 +45,6 @@ LineData& LineData::operator=(LineData&& other) noexcept
     return *this;
 }
 
-LineData::LineData(const LineData& other)
-    : ObserverData(other),
-      _data(other._data),
-      _image_size(other._image_size),
-      _time_frame(other._time_frame),
-      _identity_data_key(other._identity_data_key),
-      _identity_registry(other._identity_registry)
-{
-}
-
-LineData& LineData::operator=(const LineData& other)
-{
-    if (this != &other) {
-        ObserverData::operator=(other);
-        _data = other._data;
-        _image_size = other._image_size;
-        _time_frame = other._time_frame;
-        _identity_data_key = other._identity_data_key;
-        _identity_registry = other._identity_registry;
-    }
-    return *this;
-}
-
 // ========== Setters ==========
 
 bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
