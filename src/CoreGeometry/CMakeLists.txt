@@ -2,6 +2,7 @@
 # This library provides header-only geometry utilities
 
 set(NEURALYZER_GEOMETRY_INCLUDES
+    include/CoreGeometry/bezier.hpp
     include/CoreGeometry/boundingbox.hpp
     include/CoreGeometry/geometry.hpp
     include/CoreGeometry/Image.hpp
@@ -24,6 +25,7 @@ set(NEURALYZER_GEOMETRY_INCLUDES
 )
 
 set(NEURALYZER_GEOMETRY_SOURCES
+   src/bezier.cpp
    src/Image.cpp
    src/lines.cpp
    src/line_geometry.cpp
@@ -42,6 +44,7 @@ set(NEURALYZER_GEOMETRY_SOURCES
 set_property(GLOBAL PROPERTY CORE_GEOMETRY_TEST_SOURCES )
 
 set(core_geometry_test_sources
+    src/bezier.test.cpp
     src/Image.test.cpp
     src/line_geometry.test.cpp
     src/masks.test.cpp
