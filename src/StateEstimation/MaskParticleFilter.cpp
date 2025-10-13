@@ -63,7 +63,7 @@ std::vector<Point2D<uint32_t>> MaskPointTracker::track(
     }
     
     // Backward smoothing pass
-    return backwardSmooth(forward_history, masks, end_point);
+    return backwardSmooth(forward_history, masks, start_point, end_point);
 }
 
 void MaskPointTracker::initializeParticles(
@@ -315,6 +315,7 @@ Point2D<uint32_t> MaskPointTracker::sampleFromNeighbors(
 std::vector<Point2D<uint32_t>> MaskPointTracker::backwardSmooth(
     std::vector<std::vector<Particle>> const& forward_history,
     std::vector<Mask2D> const& /*masks*/,
+    Point2D<uint32_t> const& start_point,
     Point2D<uint32_t> const& end_point) const {
     
     const size_t num_frames = forward_history.size();
@@ -323,23 +324,26 @@ std::vector<Point2D<uint32_t>> MaskPointTracker::backwardSmooth(
     // Track selected velocities for velocity consistency (if using velocity model)
     std::vector<Point2D<float>> selected_velocities(num_frames, {0.0f, 0.0f});
     
-    // Start from the end point
-    auto const& last_frame_particles = forward_history.back();
-    path[num_frames - 1] = selectBestParticle(last_frame_particles, end_point);
+    // Set the first and last frames to exact ground truth
+    path[0] = start_point;
+    path[num_frames - 1] = end_point;
     
-    // Find the selected particle's velocity at the last frame
+    // Find the particle closest to the end point to get its velocity estimate
     if (use_velocity_model_) {
+        auto const& last_frame_particles = forward_history.back();
+        float best_dist = std::numeric_limits<float>::infinity();
         for (auto const& p : last_frame_particles) {
-            if (p.position.x == path[num_frames - 1].x && 
-                p.position.y == path[num_frames - 1].y) {
+            float dist = pointDistance(p.position, end_point);
+            if (dist < best_dist) {
+                best_dist = dist;
                 selected_velocities[num_frames - 1] = p.velocity;
-                break;
             }
         }
     }
     
-    // Work backwards
-    for (size_t t = num_frames - 1; t > 0; --t) {
+    // Work backwards from the second-to-last frame to the second frame
+    // (Skip both first and last frames since they are ground truth)
+    for (size_t t = num_frames - 1; t > 1; --t) {
         auto const& current_frame_particles = forward_history[t - 1];
         Point2D<uint32_t> const& next_selected = path[t];
         Point2D<float> const& next_velocity = selected_velocities[t];

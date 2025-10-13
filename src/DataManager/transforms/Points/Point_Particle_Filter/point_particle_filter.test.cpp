@@ -694,14 +694,11 @@ TEST_CASE("PointParticleFilter: Mismatched image sizes (requires scaling)", "[Po
     auto start_point = result->getAtTime(TimeFrameIndex(0))[0];
     auto end_point = result->getAtTime(TimeFrameIndex(10))[0];
 
-    // Start point should be near (25, 25) in 100x100 space
-    // Particle filter is stochastic - use larger tolerance
-    REQUIRE(std::abs(start_point.x - 25.0f) < 20.0f);
-    REQUIRE(std::abs(start_point.y - 25.0f) < 20.0f);
-    
-    // End point should be near (75, 75) in 100x100 space
-    REQUIRE(std::abs(end_point.x - 75.0f) < 20.0f);
-    REQUIRE(std::abs(end_point.y - 75.0f) < 20.0f);
+    // Start and end points should be exact ground truth (not approximations)
+    REQUIRE(start_point.x == 25.0f);
+    REQUIRE(start_point.y == 25.0f);
+    REQUIRE(end_point.x == 75.0f);
+    REQUIRE(end_point.y == 75.0f);
     
     // Mid-point should be roughly in the middle in 100x100 space
     auto mid_point = result->getAtTime(TimeFrameIndex(5))[0];
@@ -776,16 +773,11 @@ TEST_CASE("PointParticleFilter: Non-uniform scaling (different x and y scales)",
     auto start_point = result->getAtTime(TimeFrameIndex(0))[0];
     auto end_point = result->getAtTime(TimeFrameIndex(10))[0];
 
-    // X should stay roughly constant around 50 in 100x200 space
-    // Particle filter is stochastic - allow reasonable variance
-    REQUIRE(std::abs(start_point.x - 50.0f) < 20.0f);
-    REQUIRE(std::abs(end_point.x - 50.0f) < 20.0f);
-    
-    // Y should progress from 50 to 150 in 100x200 space
-    REQUIRE(start_point.y >= 30.0f);
-    REQUIRE(start_point.y <= 70.0f);
-    REQUIRE(end_point.y >= 130.0f);
-    REQUIRE(end_point.y <= 170.0f);
+    // Start and end points should be exact ground truth
+    REQUIRE(start_point.x == 50.0f);
+    REQUIRE(start_point.y == 50.0f);
+    REQUIRE(end_point.x == 50.0f);
+    REQUIRE(end_point.y == 150.0f);
 }
 
 TEST_CASE("PointParticleFilter: Diagonal line with minimal motion (anti-walking test)", "[PointParticleFilter]") {
@@ -926,9 +918,15 @@ TEST_CASE("PointParticleFilter: Diagonal line with minimal motion (anti-walking 
             float expected_x = 180.0f + static_cast<float>(t) * 0.1f;
             float expected_y = 180.0f + static_cast<float>(t) * 0.1f;
             
-            // Should stay within reasonable distance of expected position
-            REQUIRE(std::abs(point.x - expected_x) < 25.0f);
-            REQUIRE(std::abs(point.y - expected_y) < 25.0f);
+            // Endpoints should be exact ground truth
+            if (t == 0 || t == 20) {
+                REQUIRE(point.x == expected_x);
+                REQUIRE(point.y == expected_y);
+            } else {
+                // Intermediate frames - allow reasonable variance
+                REQUIRE(std::abs(point.x - expected_x) < 25.0f);
+                REQUIRE(std::abs(point.y - expected_y) < 25.0f);
+            }
         }
     }
     
@@ -975,9 +973,99 @@ TEST_CASE("PointParticleFilter: Diagonal line with minimal motion (anti-walking 
             float expected_x = 180.0f + static_cast<float>(t) * 0.1f;
             float expected_y = 180.0f + static_cast<float>(t) * 0.1f;
             
-            // Much tighter tolerance with optimized parameters
-            REQUIRE(std::abs(point.x - expected_x) < 15.0f);
-            REQUIRE(std::abs(point.y - expected_y) < 15.0f);
+            // Endpoints should be exact ground truth
+            if (t == 0 || t == 20) {
+                REQUIRE(point.x == expected_x);
+                REQUIRE(point.y == expected_y);
+            } else {
+                // Intermediate frames - allow some variance
+                REQUIRE(std::abs(point.x - expected_x) < 15.0f);
+                REQUIRE(std::abs(point.y - expected_y) < 15.0f);
+            }
+        }
+    }
+}
+
+TEST_CASE("PointParticleFilter: No predictions on labeled frames", "[PointParticleFilter][LabelHandling]") {
+    // Test that when we have ground truth labels, the result ONLY contains those labels
+    // and does NOT add filtered predictions on top of them
+    
+    auto data_manager = std::make_unique<DataManager>();
+    
+    std::vector<int> timeValues;
+    for (int i = 0; i <= 10; ++i) {
+        timeValues.push_back(i);
+    }
+    auto timeframe = std::make_shared<TimeFrame>(timeValues);
+    data_manager->setTime(TimeKey("test_timeframe"), timeframe);
+    
+    data_manager->setData<PointData>("test_points", TimeKey("test_timeframe"));
+    auto point_data = data_manager->getData<PointData>("test_points");
+    
+    data_manager->setData<MaskData>("test_masks", TimeKey("test_timeframe"));
+    auto mask_data = data_manager->getData<MaskData>("test_masks");
+    
+    auto group_manager = std::make_shared<EntityGroupManager>();
+    GroupId group1 = group_manager->createGroup("Test Group 1", "Label handling test");
+    
+    // Add ground truth labels at frames 0, 5, and 10
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f});
+    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{150.0f, 150.0f});
+    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{200.0f, 200.0f});
+    
+    auto entities_t0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+    auto entities_t5 = point_data->getEntityIdsAtTime(TimeFrameIndex(5));
+    auto entities_t10 = point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+    
+    REQUIRE(entities_t0.size() == 1);
+    REQUIRE(entities_t5.size() == 1);
+    REQUIRE(entities_t10.size() == 1);
+    
+    group_manager->addEntityToGroup(group1, entities_t0[0]);
+    group_manager->addEntityToGroup(group1, entities_t5[0]);
+    group_manager->addEntityToGroup(group1, entities_t10[0]);
+    
+    // Create masks for all frames
+    for (int t = 0; t <= 10; ++t) {
+        float center = 100.0f + static_cast<float>(t) * 10.0f;
+        mask_data->addAtTime(TimeFrameIndex(t), generateCircleMask(
+            static_cast<uint32_t>(center), static_cast<uint32_t>(center), 30));
+    }
+    
+    // Run particle filter
+    auto result = pointParticleFilter(
+        point_data.get(), mask_data.get(), group_manager.get(),
+        500, 5.0f, 0.01f, true, 1.0f
+    );
+    
+    REQUIRE(result != nullptr);
+    
+    // CRITICAL TEST: Labeled frames should have EXACTLY ONE point (the ground truth)
+    // NOT a prediction added on top of it
+    
+    auto points_t0 = result->getAtTime(TimeFrameIndex(0));
+    REQUIRE(points_t0.size() == 1);
+    // Should be the EXACT original ground truth (not a prediction)
+    REQUIRE(points_t0[0].x == 100.0f);
+    REQUIRE(points_t0[0].y == 100.0f);
+    
+    auto points_t5 = result->getAtTime(TimeFrameIndex(5));
+    REQUIRE(points_t5.size() == 1);
+    // Should be the EXACT original ground truth (not a prediction)
+    REQUIRE(points_t5[0].x == 150.0f);
+    REQUIRE(points_t5[0].y == 150.0f);
+    
+    auto points_t10 = result->getAtTime(TimeFrameIndex(10));
+    REQUIRE(points_t10.size() == 1);
+    // Should be the EXACT original ground truth (not a prediction)
+    REQUIRE(points_t10[0].x == 200.0f);
+    REQUIRE(points_t10[0].y == 200.0f);
+    
+    // Unlabeled frames (1-4, 6-9) should have predictions
+    for (int t = 1; t <= 9; ++t) {
+        if (t != 5) {  // Skip the labeled frame at t=5
+            auto points = result->getAtTime(TimeFrameIndex(t));
+            REQUIRE(points.size() == 1);  // Should have a prediction
         }
     }
 }

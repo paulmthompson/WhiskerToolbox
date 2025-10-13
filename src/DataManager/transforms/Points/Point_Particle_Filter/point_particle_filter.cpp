@@ -203,6 +203,16 @@ std::map<TimeFrameIndex, Point2D<float>> trackGroup(
     std::vector<std::pair<TimeFrameIndex, Point2D<float>>> gt_vec(
         ground_truth.begin(), ground_truth.end());
     
+    // First, add all ground truth labels to preserve them exactly
+    // Ground truth is in mask space, so convert back to point space
+    for (auto const & [time, point] : ground_truth) {
+        Point2D<float> point_in_point_space{
+            point.x * inv_scale_x,
+            point.y * inv_scale_y
+        };
+        result[time] = point_in_point_space;
+    }
+    
     // Track each segment between consecutive ground truth labels
     for (size_t i = 0; i < gt_vec.size() - 1; ++i) {
         TimeFrameIndex start_time = gt_vec[i].first;
@@ -214,8 +224,10 @@ std::map<TimeFrameIndex, Point2D<float>> trackGroup(
             start_time, end_time, start_point, end_point, mask_data, tracker,
             frames_completed, total_frames, progressCallback, inv_scale_x, inv_scale_y);
         
-        // Add tracked points to result (already in point coordinate space)
-        for (size_t j = 0; j < tracked_segment.size(); ++j) {
+        // Add tracked points ONLY for intermediate frames (skip start and end)
+        // tracked_segment[0] corresponds to start_time (skip - has ground truth)
+        // tracked_segment[last] corresponds to end_time (skip - has ground truth)
+        for (size_t j = 1; j < tracked_segment.size() - 1; ++j) {
             TimeFrameIndex time(start_time.getValue() + static_cast<int64_t>(j));
             result[time] = tracked_segment[j];
         }
