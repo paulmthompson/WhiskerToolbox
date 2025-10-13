@@ -6,7 +6,6 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Features/IFeatureExtractor.hpp"
 #include "Filter/IFilter.hpp"
-#include "IdentityConfidence.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include "spdlog/sinks/basic_file_sink.h"

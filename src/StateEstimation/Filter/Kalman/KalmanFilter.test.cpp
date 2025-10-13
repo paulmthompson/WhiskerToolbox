@@ -6,7 +6,6 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Features/IFeatureExtractor.hpp"
-#include "IdentityConfidence.hpp"
 #include "Filter/Kalman/KalmanFilter.hpp"
 #include "MinCostFlowTracker.hpp"
 #include "StateEstimator.hpp"
