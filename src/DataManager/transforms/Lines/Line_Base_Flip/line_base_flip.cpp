@@ -35,43 +35,50 @@ DataTypeVariant LineBaseFlipTransform::execute(DataTypeVariant const & dataVaria
         return dataVariant;
     }
 
-    // Create a copy of the input data for modification
-    auto output_line_data = std::make_shared<LineData>(*input_line_data);
+    // Create new LineData for output
+    auto output_line_data = std::make_shared<LineData>();
+    
+    // Copy image size from input
+    output_line_data->setImageSize(input_line_data->getImageSize());
 
     // Get all times with data for progress tracking
-    auto times_with_data = output_line_data->getTimesWithData();
-    std::vector<TimeFrameIndex> time_vector(times_with_data.begin(), times_with_data.end());
+    auto times_with_data = input_line_data->getTimesWithData();
+    if (times_with_data.empty()) {
+        progressCallback(100);
+        return output_line_data;
+    }
 
-    int total_frames = static_cast<int>(time_vector.size());
-    int processed_frames = 0;
+    progressCallback(0);
 
-    // Process each frame
-    for (auto time : time_vector) {
+    size_t processed_times = 0;
+    for (auto time : times_with_data) {
         // Get lines at this time
-        auto const & lines = output_line_data->getAtTime(time);
-
-        // Create a vector to hold the processed lines
-        std::vector<Line2D> processed_lines;
-        processed_lines.reserve(lines.size());
+        auto const & lines = input_line_data->getAtTime(time);
 
         // Process each line in the frame
         for (auto const & line : lines) {
+            if (line.empty()) {
+                continue;
+            }
+            
+            Line2D processed_line;
             if (shouldFlipLine(line, params->reference_point)) {
-                processed_lines.push_back(flipLine(line));
+                processed_line = flipLine(line);
             } else {
-                processed_lines.push_back(line);
+                processed_line = line;
+            }
+
+            // Add processed line to output
+            if (!processed_line.empty()) {
+                output_line_data->addAtTime(time, processed_line, false);
             }
         }
 
-        // Clear existing data at this time and add processed lines
-        output_line_data->clearAtTime(time, false);
-        for (auto const & processed_line : processed_lines) {
-            output_line_data->addAtTime(time, processed_line, false);
-        }
-
         // Update progress
-        processed_frames++;
-        int progress = (processed_frames * 100) / total_frames;
+        processed_times++;
+        int progress = static_cast<int>(
+            std::round(static_cast<double>(processed_times) / static_cast<double>(times_with_data.size()) * 100.0)
+        );
         progressCallback(progress);
     }
 
@@ -80,8 +87,8 @@ DataTypeVariant LineBaseFlipTransform::execute(DataTypeVariant const & dataVaria
 }
 
 float LineBaseFlipTransform::distanceSquared(Point2D<float> const & p1, Point2D<float> const & p2) {
-    float dx = p1.x - p2.x;
-    float dy = p1.y - p2.y;
+    float const dx = p1.x - p2.x;
+    float const dy = p1.y - p2.y;
     return dx * dx + dy * dy;
 }
 
@@ -91,12 +98,12 @@ bool LineBaseFlipTransform::shouldFlipLine(Line2D const & line, Point2D<float> c
     }
 
     // Get the current base (first point) and end (last point)
-    Point2D<float> current_base = line.front();
-    Point2D<float> current_end = line.back();
+    Point2D<float> const current_base = line.front();
+    Point2D<float> const current_end = line.back();
 
     // Calculate squared distances to avoid expensive sqrt operations
-    float base_distance_sq = distanceSquared(current_base, reference_point);
-    float end_distance_sq = distanceSquared(current_end, reference_point);
+    float const base_distance_sq = distanceSquared(current_base, reference_point);
+    float const end_distance_sq = distanceSquared(current_end, reference_point);
 
     // Flip if the current base is farther from reference than the end
     return base_distance_sq > end_distance_sq;
@@ -116,5 +123,5 @@ Line2D LineBaseFlipTransform::flipLine(Line2D const & line) {
         flipped_points.push_back(*it);
     }
 
-    return Line2D(std::move(flipped_points));
+    return Line2D{std::move(flipped_points)};
 }

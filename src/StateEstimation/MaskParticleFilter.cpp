@@ -63,7 +63,7 @@ std::vector<Point2D<uint32_t>> MaskPointTracker::track(
     }
     
     // Backward smoothing pass
-    return backwardSmooth(forward_history, masks, start_point, end_point);
+    return backwardSmooth(forward_history, masks, start_point, end_point, initial_velocity);
 }
 
 void MaskPointTracker::initializeParticles(
@@ -316,7 +316,8 @@ std::vector<Point2D<uint32_t>> MaskPointTracker::backwardSmooth(
     std::vector<std::vector<Particle>> const& forward_history,
     std::vector<Mask2D> const& /*masks*/,
     Point2D<uint32_t> const& start_point,
-    Point2D<uint32_t> const& end_point) const {
+    Point2D<uint32_t> const& end_point,
+    Point2D<float> const& estimated_velocity) const {
     
     const size_t num_frames = forward_history.size();
     std::vector<Point2D<uint32_t>> path(num_frames);
@@ -328,17 +329,11 @@ std::vector<Point2D<uint32_t>> MaskPointTracker::backwardSmooth(
     path[0] = start_point;
     path[num_frames - 1] = end_point;
     
-    // Find the particle closest to the end point to get its velocity estimate
+    // Use the estimated velocity from ground truth for both start and end
+    // This is more reliable than trying to infer from particles that may have drifted
     if (use_velocity_model_) {
-        auto const& last_frame_particles = forward_history.back();
-        float best_dist = std::numeric_limits<float>::infinity();
-        for (auto const& p : last_frame_particles) {
-            float dist = pointDistance(p.position, end_point);
-            if (dist < best_dist) {
-                best_dist = dist;
-                selected_velocities[num_frames - 1] = p.velocity;
-            }
-        }
+        selected_velocities[0] = estimated_velocity;
+        selected_velocities[num_frames - 1] = estimated_velocity;
     }
     
     // Work backwards from the second-to-last frame to the second frame

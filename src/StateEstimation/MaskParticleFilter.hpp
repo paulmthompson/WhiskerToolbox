@@ -234,13 +234,15 @@ private:
      * @param masks Mask data (currently unused but kept for future enhancements)
      * @param start_point Ground truth start point
      * @param end_point Ground truth end point
+     * @param estimated_velocity Expected velocity based on ground truth endpoints
      * @return Smoothed trajectory (one point per frame)
      */
     std::vector<Point2D<uint32_t>> backwardSmooth(
         std::vector<std::vector<Particle>> const& forward_history,
         std::vector<Mask2D> const& masks,
         Point2D<uint32_t> const& start_point,
-        Point2D<uint32_t> const& end_point) const;
+        Point2D<uint32_t> const& end_point,
+        Point2D<float> const& estimated_velocity) const;
     
     /**
      * @brief Select best particle based on weight, proximity, and velocity consistency

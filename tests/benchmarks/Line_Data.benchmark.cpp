@@ -32,7 +32,7 @@ TEST_CASE("Benchmark LineData Copy and Move", "[!benchmark]") {
         return target;
     };
 
-    BENCHMARK_ADVANCED("Move small LineData") (Catch::Chronometer meter) {
+    BENCHMARK_ADVANCED("Move small LineData") (Catch::Benchmark::Chronometer meter) {
         LineData source;
         line_data_small_template.copyTo(source, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)});
         LineData target;
@@ -49,7 +49,7 @@ TEST_CASE("Benchmark LineData Copy and Move", "[!benchmark]") {
         return target;
     };
 
-    BENCHMARK_ADVANCED("Move medium LineData") (Catch::Chronometer meter) {
+    BENCHMARK_ADVANCED("Move medium LineData") (Catch::Benchmark::Chronometer meter) {
         LineData source;
         line_data_medium_template.copyTo(source, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)});
         LineData target;
@@ -66,7 +66,7 @@ TEST_CASE("Benchmark LineData Copy and Move", "[!benchmark]") {
         return target;
     };
 
-    BENCHMARK_ADVANCED("Move large LineData") (Catch::Chronometer meter) {
+    BENCHMARK_ADVANCED("Move large LineData") (Catch::Benchmark::Chronometer meter) {
         LineData source;
         line_data_large_template.copyTo(source, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)});
         LineData target;

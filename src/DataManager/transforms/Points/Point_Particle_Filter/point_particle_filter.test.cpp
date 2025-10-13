@@ -1069,3 +1069,148 @@ TEST_CASE("PointParticleFilter: No predictions on labeled frames", "[PointPartic
         }
     }
 }
+
+TEST_CASE("PointParticleFilter: Backward smoothing quality near labels", "[PointParticleFilter][Smoothing]") {
+    // Test that backward smoothing produces smooth trajectories near ground truth labels
+    // This verifies that the frames immediately before/after labels don't have large jumps
+    
+    auto data_manager = std::make_unique<DataManager>();
+    
+    std::vector<int> timeValues;
+    for (int i = 0; i <= 20; ++i) {
+        timeValues.push_back(i);
+    }
+    auto timeframe = std::make_shared<TimeFrame>(timeValues);
+    data_manager->setTime(TimeKey("test_timeframe"), timeframe);
+    
+    data_manager->setData<PointData>("test_points", TimeKey("test_timeframe"));
+    auto point_data = data_manager->getData<PointData>("test_points");
+    
+    data_manager->setData<MaskData>("test_masks", TimeKey("test_timeframe"));
+    auto mask_data = data_manager->getData<MaskData>("test_masks");
+    
+    auto group_manager = std::make_shared<EntityGroupManager>();
+    GroupId group1 = group_manager->createGroup("Test Group 1", "Smoothness test");
+    
+    // Ground truth: straight line trajectory from (50, 50) to (150, 50)
+    // Labels at start, middle, and end
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{50.0f, 50.0f});
+    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.0f, 50.0f});
+    point_data->addAtTime(TimeFrameIndex(20), Point2D<float>{150.0f, 50.0f});
+    
+    auto entities_t0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+    auto entities_t10 = point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+    auto entities_t20 = point_data->getEntityIdsAtTime(TimeFrameIndex(20));
+    REQUIRE(entities_t0.size() == 1);
+    REQUIRE(entities_t10.size() == 1);
+    REQUIRE(entities_t20.size() == 1);
+    
+    group_manager->addEntityToGroup(group1, entities_t0[0]);
+    group_manager->addEntityToGroup(group1, entities_t10[0]);
+    group_manager->addEntityToGroup(group1, entities_t20[0]);
+    
+    // Create a horizontal corridor mask
+    for (int t = 0; t <= 20; ++t) {
+        Mask2D mask;
+        for (uint32_t y = 40; y <= 60; ++y) {
+            for (uint32_t x = 40; x <= 160; ++x) {
+                mask.push_back(Point2D<uint32_t>{x, y});
+            }
+        }
+        mask_data->addAtTime(TimeFrameIndex(t), mask);
+    }
+    
+    // Run filter with velocity model for better smoothing
+    auto result = pointParticleFilter(
+        point_data.get(), mask_data.get(), group_manager.get(),
+        1000,  // More particles for stable estimates
+        5.0f,  // Small transition radius
+        0.01f, // Low random walk
+        true,  // Velocity model enabled
+        1.0f   // Moderate velocity noise
+    );
+    
+    REQUIRE(result != nullptr);
+    
+    // Verify ground truth labels are exact
+    REQUIRE(result->getAtTime(TimeFrameIndex(0))[0].x == 50.0f);
+    REQUIRE(result->getAtTime(TimeFrameIndex(10))[0].x == 100.0f);
+    REQUIRE(result->getAtTime(TimeFrameIndex(20))[0].x == 150.0f);
+    
+    SECTION("Smoothness near start label") {
+        // Check that frame 1 is close to frame 0
+        auto point_t0 = result->getAtTime(TimeFrameIndex(0))[0];
+        auto point_t1 = result->getAtTime(TimeFrameIndex(1))[0];
+        
+        float dist_0_to_1 = std::sqrt(
+            std::pow(point_t1.x - point_t0.x, 2.0f) +
+            std::pow(point_t1.y - point_t0.y, 2.0f)
+        );
+        
+        std::cout << "Distance from label at t=0 to prediction at t=1: " << dist_0_to_1 << "\n";
+        
+        // Expected: roughly 5 pixels per frame (100 pixels over 20 frames)
+        // Allow for some variance, but shouldn't be huge jump
+        REQUIRE(dist_0_to_1 < 20.0f);  // Should be much less than 20 pixels
+        
+        // Check that trajectory is approximately linear in first segment
+        for (int t = 1; t < 10; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            float expected_x = 50.0f + (50.0f / 10.0f) * t;  // Linear interpolation
+            float error = std::abs(point.x - expected_x);
+            
+            std::cout << "t=" << t << ": x=" << point.x << " (expected ~" << expected_x 
+                      << ", error=" << error << ")\n";
+        }
+    }
+    
+    SECTION("Smoothness near middle label") {
+        // Check frames around t=10
+        auto point_t9 = result->getAtTime(TimeFrameIndex(9))[0];
+        auto point_t10 = result->getAtTime(TimeFrameIndex(10))[0];
+        auto point_t11 = result->getAtTime(TimeFrameIndex(11))[0];
+        
+        float dist_9_to_10 = std::sqrt(
+            std::pow(point_t10.x - point_t9.x, 2.0f) +
+            std::pow(point_t10.y - point_t9.y, 2.0f)
+        );
+        
+        float dist_10_to_11 = std::sqrt(
+            std::pow(point_t11.x - point_t10.x, 2.0f) +
+            std::pow(point_t11.y - point_t10.y, 2.0f)
+        );
+        
+        std::cout << "Distance from prediction at t=9 to label at t=10: " << dist_9_to_10 << "\n";
+        std::cout << "Distance from label at t=10 to prediction at t=11: " << dist_10_to_11 << "\n";
+        
+        // Both should be reasonable (roughly 5 pixels per frame)
+        REQUIRE(dist_9_to_10 < 20.0f);
+        REQUIRE(dist_10_to_11 < 20.0f);
+    }
+    
+    SECTION("Smoothness near end label") {
+        // Check that frame 19 is close to frame 20
+        auto point_t19 = result->getAtTime(TimeFrameIndex(19))[0];
+        auto point_t20 = result->getAtTime(TimeFrameIndex(20))[0];
+        
+        float dist_19_to_20 = std::sqrt(
+            std::pow(point_t20.x - point_t19.x, 2.0f) +
+            std::pow(point_t20.y - point_t19.y, 2.0f)
+        );
+        
+        std::cout << "Distance from prediction at t=19 to label at t=20: " << dist_19_to_20 << "\n";
+        
+        // Should be smooth approach to end label
+        REQUIRE(dist_19_to_20 < 20.0f);
+        
+        // Check that trajectory is approximately linear in second segment
+        for (int t = 11; t < 20; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            float expected_x = 100.0f + (50.0f / 10.0f) * (t - 10);  // Linear interpolation
+            float error = std::abs(point.x - expected_x);
+            
+            std::cout << "t=" << t << ": x=" << point.x << " (expected ~" << expected_x 
+                      << ", error=" << error << ")\n";
+        }
+    }
+}
