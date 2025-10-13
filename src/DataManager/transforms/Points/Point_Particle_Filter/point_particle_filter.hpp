@@ -30,10 +30,10 @@ class EntityGroupManager;
  * @param mask_data The mask data defining allowable pixel locations at each frame
  * @param group_manager The group manager for accessing entity groups
  * @param num_particles Number of particles for the filter (default: 1000)
- * @param transition_radius Maximum distance a point can move per frame in pixels (default: 10.0)
- * @param random_walk_prob Probability of random walk vs local transition (default: 0.1)
- * @param use_velocity_model Enable velocity-aware particle filter (default: false)
- * @param velocity_noise_std Standard deviation of velocity process noise (default: 2.0)
+ * @param transition_radius Maximum distance a point can move per frame in pixels (default: 5.0)
+ * @param random_walk_prob Probability of random walk vs local transition (default: 0.01)
+ * @param use_velocity_model Enable velocity-aware particle filter (default: true)
+ * @param velocity_noise_std Standard deviation of velocity process noise (default: 1.0)
  * @return A new PointData with filled-in trajectories
  */
 std::shared_ptr<PointData> pointParticleFilter(
@@ -41,10 +41,10 @@ std::shared_ptr<PointData> pointParticleFilter(
     MaskData const * mask_data,
     EntityGroupManager * group_manager,
     size_t num_particles = 1000,
-    float transition_radius = 10.0f,
-    float random_walk_prob = 0.1f,
-    bool use_velocity_model = false,
-    float velocity_noise_std = 2.0f);
+    float transition_radius = 5.0f,
+    float random_walk_prob = 0.01f,
+    bool use_velocity_model = true,
+    float velocity_noise_std = 1.0f);
 
 std::shared_ptr<PointData> pointParticleFilter(
     PointData const * point_data,
@@ -61,17 +61,23 @@ std::shared_ptr<PointData> pointParticleFilter(
 
 /**
  * @brief Parameters for the point particle filter operation
+ * 
+ * Default values are tuned to prevent "walking" behavior on elongated masks:
+ * - Velocity model enabled to maintain spatial consistency
+ * - Small transition_radius (5.0) limits movement per frame
+ * - Low random_walk_prob (0.01) minimizes random exploration
+ * - Moderate velocity_noise_std (1.0) allows smooth motion
  */
 struct PointParticleFilterParameters : public TransformParametersBase {
     std::shared_ptr<MaskData> mask_data;  // Mask data defining allowable states
     EntityGroupManager * group_manager = nullptr;  // Group manager for accessing entity groups
     
-    // Particle filter parameters
+    // Particle filter parameters (tuned to prevent walking on elongated masks)
     size_t num_particles = 1000;           // Number of particles
-    float transition_radius = 10.0f;       // Max distance per frame (pixels)
-    float random_walk_prob = 0.1f;         // Probability of random walk
-    bool use_velocity_model = false;       // Enable velocity-aware tracking
-    float velocity_noise_std = 2.0f;       // Velocity process noise (pixels/frame)
+    float transition_radius = 5.0f;        // Max distance per frame (pixels) - smaller prevents walking
+    float random_walk_prob = 0.01f;        // Probability of random walk - low to maintain position
+    bool use_velocity_model = true;        // Enable velocity-aware tracking (recommended)
+    float velocity_noise_std = 1.0f;       // Velocity process noise (pixels/frame)
 };
 
 /**

@@ -156,6 +156,11 @@ public:
     /**
      * @brief Construct a new MaskPointTracker
      * 
+     * Default parameters are tuned to prevent "walking" on elongated masks:
+     * - Velocity model enabled by default for spatial consistency
+     * - Smaller transition_radius (5.0) limits per-frame movement
+     * - Lower random_walk_prob (0.01) reduces random exploration
+     * 
      * @param num_particles Number of particles to use
      * @param transition_radius Maximum distance a particle can move in one time step (in pixels)
      * @param random_walk_prob Probability of random walk vs staying on nearby mask pixels
@@ -163,10 +168,10 @@ public:
      * @param velocity_noise_std Standard deviation of velocity process noise (pixels/frame)
      */
     explicit MaskPointTracker(size_t num_particles = 1000, 
-                              float transition_radius = 10.0f,
-                              float random_walk_prob = 0.1f,
-                              bool use_velocity_model = false,
-                              float velocity_noise_std = 2.0f)
+                              float transition_radius = 5.0f,
+                              float random_walk_prob = 0.01f,
+                              bool use_velocity_model = true,
+                              float velocity_noise_std = 1.0f)
         : num_particles_(num_particles),
           transition_radius_(transition_radius),
           random_walk_prob_(random_walk_prob),

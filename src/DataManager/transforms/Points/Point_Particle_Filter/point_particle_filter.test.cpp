@@ -787,3 +787,197 @@ TEST_CASE("PointParticleFilter: Non-uniform scaling (different x and y scales)",
     REQUIRE(end_point.y >= 130.0f);
     REQUIRE(end_point.y <= 170.0f);
 }
+
+TEST_CASE("PointParticleFilter: Diagonal line with minimal motion (anti-walking test)", "[PointParticleFilter]") {
+    // This test addresses the "walking" problem: when tracking a point on a diagonal line
+    // that barely moves between frames, the particle filter tends to "walk" up and down
+    // the length of the line due to the large state space.
+    //
+    // Solutions tested:
+    // 1. Use velocity model (point stays near previous position)
+    // 2. Low random_walk_prob (less exploration)
+    // 3. Small transition_radius (limited movement per frame)
+    
+    auto data_manager = std::make_unique<DataManager>();
+    
+    std::vector<int> timeValues;
+    for (int i = 0; i <= 20; ++i) {
+        timeValues.push_back(i);
+    }
+    auto timeframe = std::make_shared<TimeFrame>(timeValues);
+    data_manager->setTime(TimeKey("test_timeframe"), timeframe);
+    
+    data_manager->setData<PointData>("test_points", TimeKey("test_timeframe"));
+    auto point_data = data_manager->getData<PointData>("test_points");
+    
+    data_manager->setData<MaskData>("test_masks", TimeKey("test_timeframe"));
+    auto mask_data = data_manager->getData<MaskData>("test_masks");
+    
+    auto group_manager = std::make_shared<EntityGroupManager>();
+    GroupId group1 = group_manager->createGroup("Test Group 1", "Diagonal line tracking");
+    
+    // Ground truth: label northeast corner at frame 0 and frame 20
+    // The point barely moves (only 2 pixels total over 20 frames)
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{180.0f, 180.0f});
+    point_data->addAtTime(TimeFrameIndex(20), Point2D<float>{182.0f, 182.0f});
+    
+    auto entities_t0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+    auto entities_t20 = point_data->getEntityIdsAtTime(TimeFrameIndex(20));
+    REQUIRE(entities_t0.size() == 1);
+    REQUIRE(entities_t20.size() == 1);
+    
+    group_manager->addEntityToGroup(group1, entities_t0[0]);
+    group_manager->addEntityToGroup(group1, entities_t20[0]);
+    
+    // Create a diagonal line mask (southwest to northeast) that barely moves
+    // Line runs from (100, 100) to (200, 200) with slight drift
+    for (int t = 0; t <= 20; ++t) {
+        Mask2D mask;
+        float drift = static_cast<float>(t) * 0.1f;  // Very subtle movement
+        
+        // Create diagonal line with some thickness
+        for (int offset = -3; offset <= 3; ++offset) {
+            for (int i = 100; i <= 200; ++i) {
+                uint32_t x = static_cast<uint32_t>(static_cast<float>(i) + drift);
+                uint32_t y = static_cast<uint32_t>(static_cast<float>(i + offset) + drift);
+                if (x <= 250 && y <= 250) {
+                    mask.push_back(Point2D<uint32_t>{x, y});
+                }
+            }
+        }
+        mask_data->addAtTime(TimeFrameIndex(t), mask);
+    }
+    
+    SECTION("Without velocity model (prone to walking)") {
+        // Standard parameters - will show walking behavior
+        auto result = pointParticleFilter(
+            point_data.get(), mask_data.get(), group_manager.get(),
+            500, 10.0f, 0.1f,  // Standard settings
+            false, 2.0f        // No velocity model
+        );
+        
+        REQUIRE(result != nullptr);
+        
+        // Verify we got results for all frames
+        for (int t = 0; t <= 20; ++t) {
+            auto points = result->getAtTime(TimeFrameIndex(t));
+            REQUIRE(points.size() == 1);
+        }
+        
+        // Calculate variance in position along the diagonal
+        // High variance = "walking" behavior
+        float sum_x = 0.0f, sum_y = 0.0f;
+        for (int t = 0; t <= 20; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            sum_x += point.x;
+            sum_y += point.y;
+        }
+        float mean_x = sum_x / 21.0f;
+        float mean_y = sum_y / 21.0f;
+        
+        float variance = 0.0f;
+        for (int t = 0; t <= 20; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            float dx = point.x - mean_x;
+            float dy = point.y - mean_y;
+            variance += dx * dx + dy * dy;
+        }
+        variance /= 21.0f;
+        
+        std::cout << "Without velocity model - Position variance: " << variance << "\n";
+        // Don't assert - just document the behavior
+    }
+    
+    SECTION("With velocity model (reduces walking)") {
+        // Enable velocity model to maintain spatial consistency
+        auto result = pointParticleFilter(
+            point_data.get(), mask_data.get(), group_manager.get(),
+            500, 10.0f, 0.1f,
+            true,  // Velocity model enabled
+            1.0f   // Low velocity noise for stable tracking
+        );
+        
+        REQUIRE(result != nullptr);
+        
+        // Calculate variance
+        float sum_x = 0.0f, sum_y = 0.0f;
+        for (int t = 0; t <= 20; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            sum_x += point.x;
+            sum_y += point.y;
+        }
+        float mean_x = sum_x / 21.0f;
+        float mean_y = sum_y / 21.0f;
+        
+        float variance_with_vel = 0.0f;
+        for (int t = 0; t <= 20; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            float dx = point.x - mean_x;
+            float dy = point.y - mean_y;
+            variance_with_vel += dx * dx + dy * dy;
+        }
+        variance_with_vel /= 21.0f;
+        
+        std::cout << "With velocity model - Position variance: " << variance_with_vel << "\n";
+        
+        // Verify point stays near northeast corner (180, 180)
+        for (int t = 0; t <= 20; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            float expected_x = 180.0f + static_cast<float>(t) * 0.1f;
+            float expected_y = 180.0f + static_cast<float>(t) * 0.1f;
+            
+            // Should stay within reasonable distance of expected position
+            REQUIRE(std::abs(point.x - expected_x) < 25.0f);
+            REQUIRE(std::abs(point.y - expected_y) < 25.0f);
+        }
+    }
+    
+    SECTION("With tight parameters (minimal walking)") {
+        // Combine: velocity model + low random walk + small transition radius
+        auto result = pointParticleFilter(
+            point_data.get(), mask_data.get(), group_manager.get(),
+            1000,  // More particles for better coverage
+            3.0f,  // Small transition radius (limited movement)
+            0.01f, // Very low random walk probability
+            true,  // Velocity model
+            0.5f   // Very tight velocity noise
+        );
+        
+        REQUIRE(result != nullptr);
+        
+        // Calculate variance
+        float sum_x = 0.0f, sum_y = 0.0f;
+        for (int t = 0; t <= 20; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            sum_x += point.x;
+            sum_y += point.y;
+        }
+        float mean_x = sum_x / 21.0f;
+        float mean_y = sum_y / 21.0f;
+        
+        float variance_tight = 0.0f;
+        for (int t = 0; t <= 20; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            float dx = point.x - mean_x;
+            float dy = point.y - mean_y;
+            variance_tight += dx * dx + dy * dy;
+        }
+        variance_tight /= 21.0f;
+        
+        std::cout << "With tight parameters - Position variance: " << variance_tight << "\n";
+        
+        // With tight parameters, should have very low variance
+        REQUIRE(variance_tight < 100.0f);  // Tight clustering
+        
+        // Should track smoothly near the expected position
+        for (int t = 0; t <= 20; ++t) {
+            auto point = result->getAtTime(TimeFrameIndex(t))[0];
+            float expected_x = 180.0f + static_cast<float>(t) * 0.1f;
+            float expected_y = 180.0f + static_cast<float>(t) * 0.1f;
+            
+            // Much tighter tolerance with optimized parameters
+            REQUIRE(std::abs(point.x - expected_x) < 15.0f);
+            REQUIRE(std::abs(point.y - expected_y) < 15.0f);
+        }
+    }
+}
