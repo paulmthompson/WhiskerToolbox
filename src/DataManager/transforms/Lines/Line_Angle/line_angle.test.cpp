@@ -520,6 +520,80 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Both should give the same angle (reference direction is what matters, not magnitude)
         REQUIRE_THAT(result1->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(result2->getAnalogTimeSeries()[0], 0.001f));
     }
+
+    SECTION("Specific problematic 2-point lines with negative reference vector") {
+        // Test Line 1: (565, 253), (408, 277)
+        std::vector<float> x1 = {565.0f, 408.0f};
+        std::vector<float> y1 = {253.0f, 277.0f};
+        line_data->addAtTime(TimeFrameIndex(200), x1, y1);
+
+        // Test Line 2: (567, 252), (434, 265)
+        std::vector<float> x2 = {567.0f, 434.0f};
+        std::vector<float> y2 = {252.0f, 265.0f};
+        line_data->addAtTime(TimeFrameIndex(210), x2, y2);
+
+        // Test with reference vector (-1, 0) at 80% position
+        auto params_80 = std::make_unique<LineAngleParameters>();
+        params_80->position = 0.8f;
+        params_80->reference_x = -1.0f;
+        params_80->reference_y = 0.0f;
+        params_80->method = AngleCalculationMethod::DirectPoints;
+        auto result_80 = line_angle(line_data.get(), params_80.get());
+
+        // Test with reference vector (-1, 0) at 100% position
+        auto params_100 = std::make_unique<LineAngleParameters>();
+        params_100->position = 1.0f;
+        params_100->reference_x = -1.0f;
+        params_100->reference_y = 0.0f;
+        params_100->method = AngleCalculationMethod::DirectPoints;
+        auto result_100 = line_angle(line_data.get(), params_100.get());
+
+        // Verify we get results for both lines
+        REQUIRE(result_80->getAnalogTimeSeries().size() == 2);
+        REQUIRE(result_80->getTimeSeries().size() == 2);
+        REQUIRE(result_100->getAnalogTimeSeries().size() == 2);
+        REQUIRE(result_100->getTimeSeries().size() == 2);
+
+        // Check that results are not +/- 180 degrees (the problematic values)
+        for (size_t i = 0; i < result_80->getAnalogTimeSeries().size(); ++i) {
+            float angle_80 = result_80->getAnalogTimeSeries()[i];
+            float angle_100 = result_100->getAnalogTimeSeries()[i];
+            
+            // Results should not be exactly 180 or -180
+            REQUIRE(angle_80 != 180.0f);
+            REQUIRE(angle_80 != -180.0f);
+            REQUIRE(angle_100 != 180.0f);
+            REQUIRE(angle_100 != -180.0f);
+            
+            // Results should be within valid angle range
+            REQUIRE(angle_80 >= -180.0f);
+            REQUIRE(angle_80 <= 180.0f);
+            REQUIRE(angle_100 >= -180.0f);
+            REQUIRE(angle_100 <= 180.0f);
+            
+            // Print the actual values for debugging
+            std::cout << "Line " << (i+1) << " at 80%: " << angle_80 << " degrees" << std::endl;
+            std::cout << "Line " << (i+1) << " at 100%: " << angle_100 << " degrees" << std::endl;
+        }
+
+        // Test with polynomial fit method as well
+        auto params_poly_80 = std::make_unique<LineAngleParameters>();
+        params_poly_80->position = 0.8f;
+        params_poly_80->reference_x = -1.0f;
+        params_poly_80->reference_y = 0.0f;
+        params_poly_80->method = AngleCalculationMethod::PolynomialFit;
+        params_poly_80->polynomial_order = 1; // Linear fit for 2 points
+        auto result_poly_80 = line_angle(line_data.get(), params_poly_80.get());
+
+        // Polynomial fit should fall back to direct method for 2 points
+        REQUIRE(result_poly_80->getAnalogTimeSeries().size() == 2);
+        for (size_t i = 0; i < result_poly_80->getAnalogTimeSeries().size(); ++i) {
+            float angle_poly = result_poly_80->getAnalogTimeSeries()[i];
+            REQUIRE(angle_poly != 180.0f);
+            REQUIRE(angle_poly != -180.0f);
+            std::cout << "Line " << (i+1) << " polynomial at 80%: " << angle_poly << " degrees" << std::endl;
+        }
+    }
 }
 
 #include "DataManager.hpp"
