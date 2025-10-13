@@ -234,10 +234,13 @@ std::shared_ptr<PointData> pointParticleFilter(
     EntityGroupManager * group_manager,
     size_t num_particles,
     float transition_radius,
-    float random_walk_prob) {
+    float random_walk_prob,
+    bool use_velocity_model,
+    float velocity_noise_std) {
     
     return pointParticleFilter(
         point_data, mask_data, group_manager, num_particles, transition_radius, random_walk_prob,
+        use_velocity_model, velocity_noise_std,
         [](int) { /* no-op progress */ });
 }
 
@@ -248,6 +251,8 @@ std::shared_ptr<PointData> pointParticleFilter(
     size_t num_particles,
     float transition_radius,
     float random_walk_prob,
+    bool use_velocity_model,
+    float velocity_noise_std,
     ProgressCallback progressCallback) {
     
     if (!point_data || !mask_data) {
@@ -332,9 +337,10 @@ std::shared_ptr<PointData> pointParticleFilter(
         }
     }
     
-    // Create particle filter tracker
+    // Create particle filter tracker with velocity model if enabled
     StateEstimation::MaskPointTracker tracker(
-        num_particles, transition_radius, random_walk_prob);
+        num_particles, transition_radius, random_walk_prob, 
+        use_velocity_model, velocity_noise_std);
     
     // Track each group independently
     size_t frames_completed = 0;
@@ -448,6 +454,8 @@ DataTypeVariant PointParticleFilterOperation::execute(
         typed_params->num_particles,
         typed_params->transition_radius,
         typed_params->random_walk_prob,
+        typed_params->use_velocity_model,
+        typed_params->velocity_noise_std,
         progressCallback
     );
 

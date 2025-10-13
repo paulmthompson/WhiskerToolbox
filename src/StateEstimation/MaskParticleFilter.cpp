@@ -14,23 +14,50 @@ namespace StateEstimation {
 std::vector<Point2D<uint32_t>> MaskPointTracker::track(
     Point2D<uint32_t> const& start_point,
     Point2D<uint32_t> const& end_point,
-    std::vector<Mask2D> const& masks) {
+    std::vector<Mask2D> const& masks,
+    std::vector<float> const& time_deltas) {
     
     if (masks.empty()) {
         return {};
+    }
+    
+    // Estimate initial velocity from ground truth if using velocity model
+    Point2D<float> initial_velocity{0.0f, 0.0f};
+    if (use_velocity_model_ && masks.size() > 1) {
+        // Compute total time span
+        float total_time = 0.0f;
+        if (!time_deltas.empty()) {
+            for (float dt : time_deltas) {
+                total_time += dt;
+            }
+        } else {
+            total_time = static_cast<float>(masks.size() - 1);  // Assume dt=1
+        }
+        
+        // Estimate velocity: (end - start) / total_time
+        if (total_time > 0.0f) {
+            initial_velocity.x = (static_cast<float>(end_point.x) - static_cast<float>(start_point.x)) / total_time;
+            initial_velocity.y = (static_cast<float>(end_point.y) - static_cast<float>(start_point.y)) / total_time;
+        }
     }
     
     // Forward filtering pass
     std::vector<std::vector<Particle>> forward_history;
     forward_history.reserve(masks.size());
     
-    // Initialize with the starting point
-    initializeParticles(start_point, masks[0]);
+    // Initialize with the starting point and estimated velocity
+    initializeParticles(start_point, masks[0], initial_velocity);
     forward_history.push_back(particles_);
     
     // Forward pass through all masks
     for (size_t t = 1; t < masks.size(); ++t) {
-        predict(masks[t]);
+        // Get time delta for this step
+        float dt = 1.0f;  // Default
+        if (!time_deltas.empty() && t - 1 < time_deltas.size()) {
+            dt = time_deltas[t - 1];
+        }
+        
+        predict(masks[t], dt);
         resample();
         forward_history.push_back(particles_);
     }
@@ -41,7 +68,8 @@ std::vector<Point2D<uint32_t>> MaskPointTracker::track(
 
 void MaskPointTracker::initializeParticles(
     Point2D<uint32_t> const& start_point, 
-    Mask2D const& first_mask) {
+    Mask2D const& first_mask,
+    Point2D<float> const& initial_velocity) {
     
     particles_.clear();
     particles_.reserve(num_particles_);
@@ -49,11 +77,19 @@ void MaskPointTracker::initializeParticles(
     // Get pixels near the start point
     auto nearby_pixels = getNeighborPixels(start_point, first_mask, transition_radius_);
     
+    // Velocity noise distribution (for velocity model)
+    std::normal_distribution<float> vel_noise(0.0f, velocity_noise_std_);
+    
     if (nearby_pixels.empty()) {
         // Fall back to the nearest pixel in the mask
         auto nearest = findNearestMaskPixel(start_point, first_mask);
         for (size_t i = 0; i < num_particles_; ++i) {
-            particles_.emplace_back(nearest, 0.0f);  // Equal weights (log weight = 0)
+            Point2D<float> velocity = initial_velocity;
+            if (use_velocity_model_) {
+                velocity.x += vel_noise(rng_);
+                velocity.y += vel_noise(rng_);
+            }
+            particles_.emplace_back(nearest, velocity, 0.0f);  // Equal weights (log weight = 0)
         }
     } else {
         // Sample particles from nearby pixels with weights based on distance
@@ -67,12 +103,19 @@ void MaskPointTracker::initializeParticles(
             float dist = pointDistance(pixel, start_point);
             float log_weight = -dist / transition_radius_;  // Exponential decay
             
-            particles_.emplace_back(pixel, log_weight);
+            // Initialize velocity with noise
+            Point2D<float> velocity = initial_velocity;
+            if (use_velocity_model_) {
+                velocity.x += vel_noise(rng_);
+                velocity.y += vel_noise(rng_);
+            }
+            
+            particles_.emplace_back(pixel, velocity, log_weight);
         }
     }
 }
 
-void MaskPointTracker::predict(Mask2D const& current_mask) {
+void MaskPointTracker::predict(Mask2D const& current_mask, float dt) {
     if (current_mask.empty()) {
         // If no mask pixels available, keep particles where they are
         return;
@@ -84,40 +127,75 @@ void MaskPointTracker::predict(Mask2D const& current_mask) {
     
     // Transition each particle
     std::uniform_real_distribution<float> unif(0.0f, 1.0f);
+    std::normal_distribution<float> vel_noise(0.0f, velocity_noise_std_);
     
     for (auto& particle : particles_) {
         Point2D<uint32_t> new_pos;
+        Point2D<float> new_velocity = particle.velocity;
         
-        // With probability random_walk_prob, do random walk; otherwise stay nearby
-        if (unif(rng_) < random_walk_prob_) {
-            // Random walk: sample uniformly from mask
-            std::uniform_int_distribution<size_t> idx_dist(0, current_mask.size() - 1);
-            new_pos = current_mask[idx_dist(rng_)];
+        if (use_velocity_model_) {
+            // ====== VELOCITY-AWARE MODEL ======
+            // Predict position using constant-velocity model: pos = pos + vel * dt
+            float predicted_x = static_cast<float>(particle.position.x) + particle.velocity.x * dt;
+            float predicted_y = static_cast<float>(particle.position.y) + particle.velocity.y * dt;
             
-            // Penalize large jumps
-            float dist = pointDistance(particle.position, new_pos);
-            particle.weight -= dist / (2.0f * transition_radius_);
+            Point2D<uint32_t> predicted_pos{
+                static_cast<uint32_t>(std::round(predicted_x)),
+                static_cast<uint32_t>(std::round(predicted_y))
+            };
+            
+            // Find nearest mask pixel to predicted position
+            new_pos = findNearestMaskPixel(predicted_pos, current_mask);
+            
+            // Update velocity with process noise
+            new_velocity.x += vel_noise(rng_);
+            new_velocity.y += vel_noise(rng_);
+            
+            // Penalize deviation from predicted position
+            float deviation = pointDistance(predicted_pos, new_pos);
+            particle.weight -= deviation / transition_radius_;
+            
+            // Optional: Small random walk for exploration
+            if (unif(rng_) < random_walk_prob_ * 0.1f) {  // Lower prob for velocity model
+                std::uniform_int_distribution<size_t> idx_dist(0, current_mask.size() - 1);
+                new_pos = current_mask[idx_dist(rng_)];
+                particle.weight -= 2.0f;  // Larger penalty for random jumps
+            }
+            
         } else {
-            // Local transition: sample from nearby mask pixels
-            auto neighbors = getNeighborPixels(particle.position, current_mask, transition_radius_);
-            
-            if (neighbors.empty()) {
-                // No neighbors found, snap to nearest mask pixel
-                new_pos = findNearestMaskPixel(particle.position, current_mask);
-                float dist = pointDistance(particle.position, new_pos);
-                particle.weight -= dist / transition_radius_;
-            } else {
-                // Sample uniformly from neighbors
-                std::uniform_int_distribution<size_t> idx_dist(0, neighbors.size() - 1);
-                new_pos = neighbors[idx_dist(rng_)];
+            // ====== POSITION-ONLY MODEL (original) ======
+            // With probability random_walk_prob, do random walk; otherwise stay nearby
+            if (unif(rng_) < random_walk_prob_) {
+                // Random walk: sample uniformly from mask
+                std::uniform_int_distribution<size_t> idx_dist(0, current_mask.size() - 1);
+                new_pos = current_mask[idx_dist(rng_)];
                 
-                // Reward staying close (small penalty)
+                // Penalize large jumps
                 float dist = pointDistance(particle.position, new_pos);
-                particle.weight -= dist / (10.0f * transition_radius_);
+                particle.weight -= dist / (2.0f * transition_radius_);
+            } else {
+                // Local transition: sample from nearby mask pixels
+                auto neighbors = getNeighborPixels(particle.position, current_mask, transition_radius_);
+                
+                if (neighbors.empty()) {
+                    // No neighbors found, snap to nearest mask pixel
+                    new_pos = findNearestMaskPixel(particle.position, current_mask);
+                    float dist = pointDistance(particle.position, new_pos);
+                    particle.weight -= dist / transition_radius_;
+                } else {
+                    // Sample uniformly from neighbors
+                    std::uniform_int_distribution<size_t> idx_dist(0, neighbors.size() - 1);
+                    new_pos = neighbors[idx_dist(rng_)];
+                    
+                    // Reward staying close (small penalty)
+                    float dist = pointDistance(particle.position, new_pos);
+                    particle.weight -= dist / (10.0f * transition_radius_);
+                }
             }
         }
         
         particle.position = new_pos;
+        particle.velocity = new_velocity;
     }
 }
 
@@ -242,15 +320,42 @@ std::vector<Point2D<uint32_t>> MaskPointTracker::backwardSmooth(
     const size_t num_frames = forward_history.size();
     std::vector<Point2D<uint32_t>> path(num_frames);
     
+    // Track selected velocities for velocity consistency (if using velocity model)
+    std::vector<Point2D<float>> selected_velocities(num_frames, {0.0f, 0.0f});
+    
     // Start from the end point
     auto const& last_frame_particles = forward_history.back();
     path[num_frames - 1] = selectBestParticle(last_frame_particles, end_point);
+    
+    // Find the selected particle's velocity at the last frame
+    if (use_velocity_model_) {
+        for (auto const& p : last_frame_particles) {
+            if (p.position.x == path[num_frames - 1].x && 
+                p.position.y == path[num_frames - 1].y) {
+                selected_velocities[num_frames - 1] = p.velocity;
+                break;
+            }
+        }
+    }
     
     // Work backwards
     for (size_t t = num_frames - 1; t > 0; --t) {
         auto const& current_frame_particles = forward_history[t - 1];
         Point2D<uint32_t> const& next_selected = path[t];
-        path[t - 1] = selectBestParticle(current_frame_particles, next_selected);
+        Point2D<float> const& next_velocity = selected_velocities[t];
+        
+        path[t - 1] = selectBestParticle(current_frame_particles, next_selected, next_velocity);
+        
+        // Find the selected particle's velocity
+        if (use_velocity_model_) {
+            for (auto const& p : current_frame_particles) {
+                if (p.position.x == path[t - 1].x && 
+                    p.position.y == path[t - 1].y) {
+                    selected_velocities[t - 1] = p.velocity;
+                    break;
+                }
+            }
+        }
     }
     
     return path;
@@ -258,21 +363,33 @@ std::vector<Point2D<uint32_t>> MaskPointTracker::backwardSmooth(
 
 Point2D<uint32_t> MaskPointTracker::selectBestParticle(
     std::vector<Particle> const& particles,
-    Point2D<uint32_t> const& next_selected) const {
+    Point2D<uint32_t> const& next_selected,
+    Point2D<float> const& next_velocity) const {
     
     if (particles.empty()) {
         return next_selected;
     }
     
     // Find particle that is closest to the next selected point
-    // and has good weight
+    // and has good weight (and velocity consistency if using velocity model)
     float best_score = -std::numeric_limits<float>::infinity();
     Point2D<uint32_t> best_particle = particles[0].position;
     
     for (auto const& p : particles) {
         float dist = pointDistance(p.position, next_selected);
-        // Score combines weight and proximity to next state
+        
+        // Base score: weight and proximity to next state
         float score = p.weight - dist / transition_radius_;
+        
+        // Add velocity consistency term if using velocity model
+        if (use_velocity_model_) {
+            float vel_diff = std::sqrt(
+                std::pow(p.velocity.x - next_velocity.x, 2.0f) +
+                std::pow(p.velocity.y - next_velocity.y, 2.0f)
+            );
+            // Penalize velocity discontinuities
+            score -= vel_diff / velocity_noise_std_;
+        }
         
         if (score > best_score) {
             best_score = score;

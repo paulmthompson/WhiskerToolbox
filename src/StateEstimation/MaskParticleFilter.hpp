@@ -78,14 +78,20 @@ inline Point2D<uint32_t> findNearestMaskPixel(Point2D<uint32_t> const& target_po
 // ============================================================================
 
 /**
- * @brief A weighted particle representing a discrete state (pixel location)
+ * @brief A weighted particle representing a discrete state (pixel location + velocity)
+ * 
+ * When use_velocity_model is enabled, particles track both position and velocity.
+ * Velocity is in pixels per frame (or pixels per time unit if using actual dt).
  */
 struct Particle {
-    Point2D<uint32_t> position;  // Current pixel position
+    Point2D<uint32_t> position;  // Current pixel position on mask
+    Point2D<float> velocity;      // Velocity in pixels/frame (vx, vy)
     float weight;                 // Particle weight (unnormalized log weight)
     
-    Particle() : position{0, 0}, weight(0.0f) {}
-    Particle(Point2D<uint32_t> pos, float w) : position(pos), weight(w) {}
+    Particle() : position{0, 0}, velocity{0.0f, 0.0f}, weight(0.0f) {}
+    Particle(Point2D<uint32_t> pos, float w) : position(pos), velocity{0.0f, 0.0f}, weight(w) {}
+    Particle(Point2D<uint32_t> pos, Point2D<float> vel, float w) 
+        : position(pos), velocity(vel), weight(w) {}
 };
 
 // ============================================================================
@@ -153,13 +159,19 @@ public:
      * @param num_particles Number of particles to use
      * @param transition_radius Maximum distance a particle can move in one time step (in pixels)
      * @param random_walk_prob Probability of random walk vs staying on nearby mask pixels
+     * @param use_velocity_model If true, particles track velocity and use constant-velocity motion model
+     * @param velocity_noise_std Standard deviation of velocity process noise (pixels/frame)
      */
     explicit MaskPointTracker(size_t num_particles = 1000, 
                               float transition_radius = 10.0f,
-                              float random_walk_prob = 0.1f)
+                              float random_walk_prob = 0.1f,
+                              bool use_velocity_model = false,
+                              float velocity_noise_std = 2.0f)
         : num_particles_(num_particles),
           transition_radius_(transition_radius),
-          random_walk_prob_(random_walk_prob) {
+          random_walk_prob_(random_walk_prob),
+          use_velocity_model_(use_velocity_model),
+          velocity_noise_std_(velocity_noise_std) {
         rng_.seed(std::random_device{}());
     }
     
@@ -169,17 +181,22 @@ public:
      * @param start_point Ground truth starting point
      * @param end_point Ground truth ending point
      * @param masks Vector of masks for each time frame (in order)
+     * @param time_deltas Optional vector of time differences between frames (for velocity model)
+     *                    If empty, assumes dt=1.0 for all frames. Should have size masks.size()-1
      * @return Vector of tracked points (one per mask frame)
      */
     std::vector<Point2D<uint32_t>> track(
         Point2D<uint32_t> const& start_point,
         Point2D<uint32_t> const& end_point,
-        std::vector<Mask2D> const& masks);
+        std::vector<Mask2D> const& masks,
+        std::vector<float> const& time_deltas = {});
     
 private:
     // Core particle filter operations
-    void initializeParticles(Point2D<uint32_t> const& start_point, Mask2D const& first_mask);
-    void predict(Mask2D const& current_mask);
+    void initializeParticles(Point2D<uint32_t> const& start_point, 
+                             Mask2D const& first_mask,
+                             Point2D<float> const& initial_velocity = {0.0f, 0.0f});
+    void predict(Mask2D const& current_mask, float dt = 1.0f);
     void resample();
     Point2D<uint32_t> getWeightedMeanPosition() const;
     
@@ -219,25 +236,28 @@ private:
         Point2D<uint32_t> const& end_point) const;
     
     /**
-     * @brief Select best particle based on weight and proximity to next selected point
+     * @brief Select best particle based on weight, proximity, and velocity consistency
      * 
-     * Score = particle.weight - distance_to_next / transition_radius
-     * 
-     * This greedy selection can cause jumps when particles with similar scores
-     * came from different trajectories.
+     * Position-only: Score = particle.weight - distance_to_next / transition_radius
+     * Velocity-aware: Score = particle.weight - distance_to_next / transition_radius
+     *                        - velocity_diff / velocity_noise_std
      * 
      * @param particles Particle set at current frame
      * @param next_selected Selected point in next frame (working backward)
+     * @param next_velocity Selected velocity in next frame (for velocity model)
      * @return Best particle position for current frame
      */
     Point2D<uint32_t> selectBestParticle(
         std::vector<Particle> const& particles,
-        Point2D<uint32_t> const& next_selected) const;
+        Point2D<uint32_t> const& next_selected,
+        Point2D<float> const& next_velocity = {0.0f, 0.0f}) const;
     
     // Parameters
     size_t num_particles_;
     float transition_radius_;
     float random_walk_prob_;
+    bool use_velocity_model_;
+    float velocity_noise_std_;
     
     // State
     std::vector<Particle> particles_;
