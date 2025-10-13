@@ -7,7 +7,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Features/IFeatureExtractor.hpp"
 #include "IdentityConfidence.hpp"
-#include "Kalman/KalmanFilter.hpp"
+#include "Filter/Kalman/KalmanFilter.hpp"
 #include "MinCostFlowTracker.hpp"
 #include "StateEstimator.hpp"
 #include "TimeFrame/TimeFrame.hpp"

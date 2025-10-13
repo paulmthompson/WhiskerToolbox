@@ -8,7 +8,7 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Features/IFeatureExtractor.hpp"
 #include "Filter/IFilter.hpp"
-#include "Kalman/KalmanMatrixBuilder.hpp"
+#include "Filter/Kalman/KalmanMatrixBuilder.hpp"
 #include "MinCostFlowSolver.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 

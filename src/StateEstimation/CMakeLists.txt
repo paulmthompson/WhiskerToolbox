@@ -5,10 +5,13 @@ find_package(spdlog CONFIG REQUIRED)
 set(STATE_ESTIMATION_SOURCES
     StateEstimation.hpp
     StateEstimation.cpp
-    Kalman/kalman.hpp
-    Kalman/kalman.cpp
-    Kalman/KalmanFilter.hpp
-    Kalman/KalmanFilter.cpp
+
+    Filter/Kalman/kalman.hpp
+    Filter/Kalman/kalman.cpp
+    Filter/Kalman/KalmanFilter.hpp
+    Filter/Kalman/KalmanFilter.cpp
+    Filter/IFilter.hpp
+
     Assignment/hungarian.hpp
     Assignment/hungarian.cpp
     Assignment/AssignmentProblem.hpp
@@ -26,7 +29,7 @@ set(STATE_ESTIMATION_SOURCES
     Tracking/MultiFeatureKalman.cpp
     Tracking/TrackingSession.hpp
     Tracking/TrackingSession.cpp
-    Filter/IFilter.hpp
+
     Tracker.hpp
     Tracker.cpp
     Common.hpp

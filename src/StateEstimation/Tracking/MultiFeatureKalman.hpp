@@ -2,7 +2,7 @@
 #define STATE_ESTIMATION_MULTI_FEATURE_KALMAN_HPP
 
 #include "Features/FeatureVector.hpp"
-#include "Kalman/kalman.hpp"
+#include "Filter/Kalman/kalman.hpp"
 
 #include <Eigen/Dense>
 

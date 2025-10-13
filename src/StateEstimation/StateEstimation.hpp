@@ -13,6 +13,6 @@
 
 // Tracking components
 #include "Tracking/MultiFeatureKalman.hpp"
-#include "Kalman/kalman.hpp"
+#include "Filter/Kalman/kalman.hpp"
 
 #endif

@@ -3,7 +3,7 @@
 #include "StateEstimation/Features/LineBasePointExtractor.hpp"
 #include "StateEstimation/Features/LineLengthExtractor.hpp"
 #include "StateEstimation/Features/FeatureMetadata.hpp"
-#include "StateEstimation/Kalman/KalmanMatrixBuilder.hpp"
+#include "StateEstimation/Filter/Kalman/KalmanMatrixBuilder.hpp"
 #include "CoreGeometry/lines.hpp"
 
 #include <catch2/catch_test_macros.hpp>
