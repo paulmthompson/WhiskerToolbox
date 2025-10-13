@@ -97,6 +97,53 @@ struct Particle {
  * 
  * This filter maintains particles that are constrained to lie on mask pixels.
  * It performs forward filtering and backward smoothing between ground truth labels.
+ * 
+ * IMPORTANT STATE MODEL LIMITATIONS:
+ * ------------------------------------
+ * This is a POSITION-ONLY particle filter with NO VELOCITY component in the state.
+ * 
+ * Each particle represents only a 2D position (x, y) on the mask. There is no
+ * tracking of velocity, momentum, or direction of motion. The state transition
+ * model is a MEMORYLESS random walk on mask pixels:
+ * 
+ * 1. With probability (1 - random_walk_prob):
+ *    - Sample uniformly from pixels within transition_radius of current position
+ *    - This creates local, short-range transitions
+ * 
+ * 2. With probability random_walk_prob:
+ *    - Sample uniformly from ALL mask pixels (with distance penalty)
+ *    - This allows exploration and recovery from tracking failures
+ * 
+ * CONSEQUENCES OF NO VELOCITY MODEL:
+ * -----------------------------------
+ * • Particles have no "momentum" or preferred direction of motion
+ * • Over long gaps between labels, particles spread out randomly across the mask
+ * • Backward smoothing selects based on proximity to next frame, not trajectory smoothness
+ * • This can cause JUMPS at label boundaries when the best particle isn't actually
+ *   following a smooth path
+ * • The filter cannot predict where the point is "heading" - it only knows where it was
+ * 
+ * WHEN JUMPS OCCUR:
+ * -----------------
+ * Large jumps between frames happen when:
+ * 1. Gap between ground truth labels is large (many frames)
+ * 2. Mask topology allows particles to explore distant regions
+ * 3. Random walk allows particles to "teleport" across the mask
+ * 4. Backward smoothing picks a particle that's close spatially but came from
+ *    a different trajectory
+ * 
+ * POTENTIAL IMPROVEMENTS:
+ * -----------------------
+ * To reduce jumps, consider:
+ * • Add velocity to particle state: Particle { position, velocity }
+ * • Use velocity in transition: new_position = position + velocity + noise
+ * • Track trajectory smoothness during backward smoothing
+ * • Penalize sudden direction changes in the backward pass
+ * • Use a constant-velocity Kalman filter for comparison
+ * 
+ * However, velocity models increase state dimensionality and may not work well
+ * when motion is highly constrained by mask topology or when the point genuinely
+ * changes direction rapidly.
  */
 class MaskPointTracker {
 public:
@@ -147,11 +194,42 @@ private:
         Mask2D const& mask) const;
     
     // Backward smoothing
+    /**
+     * @brief Perform backward smoothing pass to select best trajectory
+     * 
+     * This is a greedy backward pass that selects the "best" particle at each
+     * frame working backwards from the end point. The scoring function combines:
+     * - Particle weight (from forward filtering)
+     * - Distance to the selected point in the next frame
+     * 
+     * LIMITATION: This can cause jumps because it doesn't enforce trajectory
+     * smoothness or velocity consistency. A particle that's spatially close to
+     * the next selected point may have arrived there from a completely different
+     * trajectory than neighboring particles. The algorithm has no memory of 
+     * the path history or direction of motion.
+     * 
+     * @param forward_history All particle sets from forward pass
+     * @param masks Mask data (currently unused but kept for future enhancements)
+     * @param end_point Ground truth end point
+     * @return Smoothed trajectory (one point per frame)
+     */
     std::vector<Point2D<uint32_t>> backwardSmooth(
         std::vector<std::vector<Particle>> const& forward_history,
         std::vector<Mask2D> const& masks,
         Point2D<uint32_t> const& end_point) const;
     
+    /**
+     * @brief Select best particle based on weight and proximity to next selected point
+     * 
+     * Score = particle.weight - distance_to_next / transition_radius
+     * 
+     * This greedy selection can cause jumps when particles with similar scores
+     * came from different trajectories.
+     * 
+     * @param particles Particle set at current frame
+     * @param next_selected Selected point in next frame (working backward)
+     * @return Best particle position for current frame
+     */
     Point2D<uint32_t> selectBestParticle(
         std::vector<Particle> const& particles,
         Point2D<uint32_t> const& next_selected) const;

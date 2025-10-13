@@ -1,5 +1,6 @@
 #include "point_particle_filter.hpp"
 
+#include "CoreGeometry/ImageSize.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "Entity/EntityRegistry.hpp"
@@ -43,12 +44,16 @@ Point2D<float> toFloatPoint(Point2D<uint32_t> const & p) {
  * @param point_data The point data containing labeled points
  * @param group_manager The group manager for accessing entity groups
  * @param group_id The group ID to extract
- * @return Map from time frame to point position (sorted by time)
+ * @param scale_x Scaling factor for x coordinates (point space -> mask space)
+ * @param scale_y Scaling factor for y coordinates (point space -> mask space)
+ * @return Map from time frame to point position (in mask coordinate space)
  */
 std::map<TimeFrameIndex, Point2D<float>> extractGroundTruthForGroup(
     PointData const * point_data,
     EntityGroupManager const * group_manager,
-    GroupId group_id) {
+    GroupId group_id,
+    float scale_x,
+    float scale_y) {
     
     std::map<TimeFrameIndex, Point2D<float>> ground_truth;
     
@@ -66,7 +71,12 @@ std::map<TimeFrameIndex, Point2D<float>> extractGroundTruthForGroup(
         for (auto const & entry : timePointEntriesPair.entries) {
             // Check if this entity belongs to the target group
             if (entities_in_group.find(entry.entity_id) != entities_in_group.end()) {
-                ground_truth[timePointEntriesPair.time] = entry.point;
+                // Apply scaling to convert from point space to mask space
+                Point2D<float> scaled_point{
+                    entry.point.x * scale_x,
+                    entry.point.y * scale_y
+                };
+                ground_truth[timePointEntriesPair.time] = scaled_point;
                 break;  // Assume one point per group per frame
             }
         }
@@ -80,11 +90,16 @@ std::map<TimeFrameIndex, Point2D<float>> extractGroundTruthForGroup(
  * 
  * @param start_time Starting frame
  * @param end_time Ending frame
- * @param start_point Ground truth start point
- * @param end_point Ground truth end point
+ * @param start_point Ground truth start point (in mask coordinate space)
+ * @param end_point Ground truth end point (in mask coordinate space)
  * @param mask_data Mask data for all frames
  * @param tracker Particle filter tracker
- * @return Vector of tracked points (one per frame from start_time to end_time inclusive)
+ * @param frames_completed Accumulated frame count for progress tracking (modified in-place)
+ * @param total_frames Total frames to track across all segments
+ * @param progressCallback Optional callback for progress updates
+ * @param inv_scale_x Inverse scaling factor for x coordinates (mask space -> point space)
+ * @param inv_scale_y Inverse scaling factor for y coordinates (mask space -> point space)
+ * @return Vector of tracked points (one per frame, in original point coordinate space)
  */
 std::vector<Point2D<float>> trackSegment(
     TimeFrameIndex start_time,
@@ -92,7 +107,12 @@ std::vector<Point2D<float>> trackSegment(
     Point2D<float> const & start_point,
     Point2D<float> const & end_point,
     MaskData const * mask_data,
-    StateEstimation::MaskPointTracker & tracker) {
+    StateEstimation::MaskPointTracker & tracker,
+    size_t & frames_completed,
+    size_t total_frames,
+    ProgressCallback progressCallback,
+    float inv_scale_x,
+    float inv_scale_y) {
     
     if (start_time.getValue() > end_time.getValue()) {
         return {};
@@ -127,11 +147,23 @@ std::vector<Point2D<float>> trackSegment(
     // Run particle filter
     auto tracked_uint = tracker.track(start_uint, end_uint, masks);
     
-    // Convert back to float
+    // Convert back to float and apply inverse scaling to return to original point coordinate space
     std::vector<Point2D<float>> tracked_float;
     tracked_float.reserve(tracked_uint.size());
     for (auto const & p : tracked_uint) {
-        tracked_float.push_back(toFloatPoint(p));
+        Point2D<float> point_in_mask_space = toFloatPoint(p);
+        Point2D<float> point_in_point_space{
+            point_in_mask_space.x * inv_scale_x,
+            point_in_mask_space.y * inv_scale_y
+        };
+        tracked_float.push_back(point_in_point_space);
+    }
+    
+    // Update progress
+    frames_completed += tracked_uint.size();
+    if (progressCallback && total_frames > 0) {
+        auto progress = static_cast<int>(100.0 * static_cast<double>(frames_completed) / static_cast<double>(total_frames));
+        progressCallback(std::min(progress, 99));  // Reserve 100 for completion
     }
     
     return tracked_float;
@@ -140,15 +172,25 @@ std::vector<Point2D<float>> trackSegment(
 /**
  * @brief Track all segments for a single group
  * 
- * @param ground_truth Map of time -> point for this group
+ * @param ground_truth Map of time -> point for this group (in mask coordinate space)
  * @param mask_data Mask data for constraint
  * @param tracker Particle filter tracker
- * @return Map of time -> tracked point for all frames between ground truth labels
+ * @param frames_completed Accumulated frame count for progress tracking (modified in-place)
+ * @param total_frames Total frames to track across all segments
+ * @param progressCallback Optional callback for progress updates
+ * @param inv_scale_x Inverse scaling factor for x coordinates (mask space -> point space)
+ * @param inv_scale_y Inverse scaling factor for y coordinates (mask space -> point space)
+ * @return Map of time -> tracked point for all frames (in original point coordinate space)
  */
 std::map<TimeFrameIndex, Point2D<float>> trackGroup(
     std::map<TimeFrameIndex, Point2D<float>> const & ground_truth,
     MaskData const * mask_data,
-    StateEstimation::MaskPointTracker & tracker) {
+    StateEstimation::MaskPointTracker & tracker,
+    size_t & frames_completed,
+    size_t total_frames,
+    ProgressCallback progressCallback,
+    float inv_scale_x,
+    float inv_scale_y) {
     
     std::map<TimeFrameIndex, Point2D<float>> result;
     
@@ -169,9 +211,10 @@ std::map<TimeFrameIndex, Point2D<float>> trackGroup(
         Point2D<float> const & end_point = gt_vec[i + 1].second;
         
         auto tracked_segment = trackSegment(
-            start_time, end_time, start_point, end_point, mask_data, tracker);
+            start_time, end_time, start_point, end_point, mask_data, tracker,
+            frames_completed, total_frames, progressCallback, inv_scale_x, inv_scale_y);
         
-        // Add tracked points to result
+        // Add tracked points to result (already in point coordinate space)
         for (size_t j = 0; j < tracked_segment.size(); ++j) {
             TimeFrameIndex time(start_time.getValue() + static_cast<int64_t>(j));
             result[time] = tracked_segment[j];
@@ -221,9 +264,42 @@ std::shared_ptr<PointData> pointParticleFilter(
     
     if (progressCallback) progressCallback(0);
     
-    // Create result PointData (copy structure from input)
+    // Check image sizes and scale if necessary
+    ImageSize point_size = point_data->getImageSize();
+    ImageSize mask_size = mask_data->getImageSize();
+    
+    bool needs_scaling = (point_size != mask_size);
+    float scale_x = 1.0f;
+    float scale_y = 1.0f;
+    
+    if (needs_scaling) {
+        if (point_size.width <= 0 || point_size.height <= 0) {
+            std::cerr << "PointParticleFilter: Invalid PointData image size ("
+                      << point_size.width << " x " << point_size.height << ")." << std::endl;
+            if (progressCallback) progressCallback(100);
+            return std::make_shared<PointData>();
+        }
+        
+        if (mask_size.width <= 0 || mask_size.height <= 0) {
+            std::cerr << "PointParticleFilter: Invalid MaskData image size ("
+                      << mask_size.width << " x " << mask_size.height << ")." << std::endl;
+            if (progressCallback) progressCallback(100);
+            return std::make_shared<PointData>();
+        }
+        
+        // Calculate scaling factors: point_space -> mask_space
+        scale_x = static_cast<float>(mask_size.width) / static_cast<float>(point_size.width);
+        scale_y = static_cast<float>(mask_size.height) / static_cast<float>(point_size.height);
+        
+        std::cout << "PointParticleFilter: Image size mismatch detected." << std::endl;
+        std::cout << "  Point data: " << point_size.width << " x " << point_size.height << std::endl;
+        std::cout << "  Mask data:  " << mask_size.width << " x " << mask_size.height << std::endl;
+        std::cout << "  Applying scaling: " << scale_x << " x " << scale_y << std::endl;
+    }
+    
+    // Create result PointData (with original point data image size)
     auto result = std::make_shared<PointData>();
-    result->setImageSize(point_data->getImageSize());
+    result->setImageSize(point_size);
     
     // Get all unique group IDs
     auto all_group_ids = group_manager->getAllGroupIds();
@@ -235,15 +311,36 @@ std::shared_ptr<PointData> pointParticleFilter(
         return result;
     }
     
+    // Calculate inverse scaling factors for converting results back to point space
+    float inv_scale_x = 1.0f / scale_x;
+    float inv_scale_y = 1.0f / scale_y;
+    
+    // First pass: Calculate total number of frames to track for progress reporting
+    size_t total_frames = 0;
+    for (GroupId group_id : group_ids) {
+        auto ground_truth = extractGroundTruthForGroup(point_data, group_manager, group_id, scale_x, scale_y);
+        if (ground_truth.size() >= 2) {
+            // Convert to vector for easier iteration
+            std::vector<std::pair<TimeFrameIndex, Point2D<float>>> gt_vec(
+                ground_truth.begin(), ground_truth.end());
+            
+            // Sum up frames in all segments
+            for (size_t i = 0; i < gt_vec.size() - 1; ++i) {
+                int64_t segment_frames = gt_vec[i + 1].first.getValue() - gt_vec[i].first.getValue() + 1;
+                total_frames += static_cast<size_t>(segment_frames);
+            }
+        }
+    }
+    
     // Create particle filter tracker
     StateEstimation::MaskPointTracker tracker(
         num_particles, transition_radius, random_walk_prob);
     
     // Track each group independently
-    size_t group_count = 0;
+    size_t frames_completed = 0;
     for (GroupId group_id : group_ids) {
-        // Extract ground truth for this group
-        auto ground_truth = extractGroundTruthForGroup(point_data, group_manager, group_id);
+        // Extract ground truth for this group (scaled to mask coordinate space)
+        auto ground_truth = extractGroundTruthForGroup(point_data, group_manager, group_id, scale_x, scale_y);
         
         // Get all entities in this group and convert to set for fast lookup
         auto entities_vec = group_manager->getEntitiesInGroup(group_id);
@@ -265,8 +362,10 @@ std::shared_ptr<PointData> pointParticleFilter(
                 }
             }
         } else {
-            // Track this group through masks
-            auto tracked = trackGroup(ground_truth, mask_data, tracker);
+            // Track this group through masks (results will be scaled back to point space)
+            auto tracked = trackGroup(ground_truth, mask_data, tracker,
+                                     frames_completed, total_frames, progressCallback,
+                                     inv_scale_x, inv_scale_y);
             
             // Find an entity ID from this group to use for all tracked points
             EntityId representative_entity_id = 0;
@@ -274,17 +373,10 @@ std::shared_ptr<PointData> pointParticleFilter(
                 representative_entity_id = entities_vec.front();
             }
             
-            // Add tracked points to result
+            // Add tracked points to result (already in original point coordinate space)
             for (auto const & [time, point] : tracked) {
                 result->addPointEntryAtTime(time, point, representative_entity_id, false);
             }
-        }
-        
-        // Update progress
-        ++group_count;
-        if (progressCallback) {
-            auto progress = static_cast<int>(100.0 * static_cast<double>(group_count) / static_cast<double>(group_ids.size()));
-            progressCallback(progress);
         }
     }
     
