@@ -235,7 +235,13 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
 std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data,
                                              LineKalmanGroupingParameters const * params,
                                              ProgressCallback const & progressCallback) {
-    if (!line_data || !params || !params->getGroupManager()) {
+    if (!line_data || !params) {
+        return line_data;
+    }
+
+    // Check if group manager is valid (required for grouping operations)
+    if (!params->hasValidGroupManager()) {
+        std::cerr << "lineKalmanGrouping: EntityGroupManager is required but not set. Call setGroupManager() on parameters before execution." << std::endl;
         return line_data;
     }
 
@@ -663,10 +669,9 @@ bool LineKalmanGroupingOperation::canApply(DataTypeVariant const & dataVariant) 
 }
 
 std::unique_ptr<TransformParametersBase> LineKalmanGroupingOperation::getDefaultParameters() const {
-    // Note: Returns nullptr since we can't create a GroupingTransformParametersBase
-    // without an EntityGroupManager pointer. The calling code will need to provide
-    // the actual parameters with the group manager.
-    return nullptr;
+    // Create default parameters with null group manager
+    // The EntityGroupManager must be set via setGroupManager() before execution
+    return std::make_unique<LineKalmanGroupingParameters>();
 }
 
 DataTypeVariant LineKalmanGroupingOperation::execute(DataTypeVariant const & dataVariant,
@@ -686,6 +691,12 @@ DataTypeVariant LineKalmanGroupingOperation::execute(DataTypeVariant const & dat
     auto params = dynamic_cast<LineKalmanGroupingParameters const *>(transformParameters);
 
     if (!params) {
+        return DataTypeVariant{};
+    }
+
+    // Check if group manager is valid (required for grouping operations)
+    if (!params->hasValidGroupManager()) {
+        std::cerr << "LineKalmanGroupingOperation::execute: EntityGroupManager is required but not set. Call setGroupManager() on parameters before execution." << std::endl;
         return DataTypeVariant{};
     }
 

@@ -35,7 +35,7 @@ class LineData;
  * Total state space: 9D (4D + 4D + 1D)
  */
 struct LineKalmanGroupingParameters : public GroupingTransformParametersBase {
-    explicit LineKalmanGroupingParameters(EntityGroupManager * group_manager)
+    explicit LineKalmanGroupingParameters(EntityGroupManager * group_manager = nullptr)
         : GroupingTransformParametersBase(group_manager) {}
 
     // === Kalman Filter Parameters ===
@@ -123,6 +123,11 @@ public:
 
     [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
 
+    /**
+     * @brief Gets the default parameters for the Kalman grouping operation.
+     * @return A unique_ptr to the default parameters with null group manager.
+     * @note The EntityGroupManager must be set via setGroupManager() before execution.
+     */
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
 
     DataTypeVariant execute(DataTypeVariant const & dataVariant,

@@ -455,10 +455,9 @@ bool LineAlignmentOperation::canApply(DataTypeVariant const & dataVariant) const
 }
 
 std::unique_ptr<TransformParametersBase> LineAlignmentOperation::getDefaultParameters() const {
-    // Note: Returns nullptr since we can't create a GroupingTransformParametersBase
-    // without an EntityGroupManager pointer. The calling code will need to provide
-    // the actual parameters with the group manager.
-    return nullptr;
+    // Create default parameters with null group manager
+    // The EntityGroupManager must be set via setGroupManager() before execution
+    return std::make_unique<LineAlignmentParameters>();
 }
 
 DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVariant,
@@ -484,6 +483,13 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
     // Check if we have valid parameters
     if (!typed_params) {
         std::cerr << "LineAlignmentOperation::execute: Invalid parameters provided. Operation requires LineAlignmentParameters." << std::endl;
+        if (progressCallback) progressCallback(100);
+        return {};
+    }
+
+    // Check if group manager is valid (only required if grouping is enabled)
+    if (typed_params->enable_grouping && !typed_params->hasValidGroupManager()) {
+        std::cerr << "LineAlignmentOperation::execute: EntityGroupManager is required when grouping is enabled but not set. Call setGroupManager() on parameters before execution." << std::endl;
         if (progressCallback) progressCallback(100);
         return {};
     }
@@ -563,6 +569,13 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
     // Create new LineData for the aligned lines
     auto aligned_line_data = std::make_shared<LineData>();
     aligned_line_data->setImageSize(line_data->getImageSize());
+
+    // Check if group manager is valid (only required if grouping is enabled)
+    if (params && params->enable_grouping && !params->hasValidGroupManager()) {
+        std::cerr << "line_alignment: EntityGroupManager is required when grouping is enabled but not set. Call setGroupManager() on parameters before execution." << std::endl;
+        if (progressCallback) progressCallback(100);
+        return std::make_shared<LineData>();
+    }
 
     // Set up grouping if enabled and we have a group manager
     std::map<size_t, std::uint64_t> vertex_to_group_map; // Maps vertex index to group ID

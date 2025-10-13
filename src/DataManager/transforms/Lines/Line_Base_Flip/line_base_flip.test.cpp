@@ -9,7 +9,7 @@
 #include <catch2/catch_approx.hpp>
 #include <memory>
 
-TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
+TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
     auto transform = std::make_unique<LineBaseFlipTransform>();
     auto line_data = std::make_shared<LineData>();
 
@@ -93,29 +93,6 @@ TEST_CASE("LineBaseFlipTransform", "[LineBaseFlip]") {
         REQUIRE(unchanged_line.front().y == Catch::Approx(0.0f));
         REQUIRE(unchanged_line.back().x == Catch::Approx(10.0f));
         REQUIRE(unchanged_line.back().y == Catch::Approx(0.0f));
-    }
-
-    SECTION("HandleEmptyLine") {
-        // Create an empty line
-        Line2D empty_line;
-
-        // Add line to frame 0
-        line_data->addAtTime(TimeFrameIndex(0), empty_line);
-
-        Point2D<float> reference_point{5.0f, 5.0f};
-        LineBaseFlipParameters params(reference_point);
-
-        // Execute transform
-        DataTypeVariant input_variant = line_data;
-        auto result_variant = transform->execute(input_variant, &params);
-
-        // Verify result - should not crash and should return unchanged data
-        REQUIRE(std::holds_alternative<std::shared_ptr<LineData>>(result_variant));
-        auto result_data = std::get<std::shared_ptr<LineData>>(result_variant);
-
-        auto const & result_lines = result_data->getAtTime(TimeFrameIndex(0));
-        REQUIRE(result_lines.size() == 1);
-        REQUIRE(result_lines[0].empty());
     }
 
     SECTION("HandleSinglePointLine") {

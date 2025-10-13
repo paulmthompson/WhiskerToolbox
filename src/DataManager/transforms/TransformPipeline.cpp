@@ -4,6 +4,7 @@
 #include "ParameterFactory.hpp"
 #include "TransformRegistry.hpp"
 #include "transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
+#include "transforms/grouping_transforms.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -418,9 +419,24 @@ std::unique_ptr<TransformParametersBase> TransformPipeline::createParametersFrom
         return std::move(parameters);
     }
     
+    // Get default parameters first
     auto parameters = operation->getDefaultParameters();
     if (!parameters) {
         return nullptr;
+    }
+    
+    // Check if this is a grouping operation that needs EntityGroupManager
+    auto* grouping_params = dynamic_cast<GroupingTransformParametersBase*>(parameters.get());
+    if (grouping_params) {
+        auto* group_manager = data_manager_->getEntityGroupManager();
+        if (!group_manager) {
+            std::cerr << "Error: EntityGroupManager not available for grouping operation '" 
+                      << transform_name << "'" << std::endl;
+            return nullptr;
+        }
+        
+        // Set the group manager
+        grouping_params->setGroupManager(group_manager);
     }
     
     // Set parameters from JSON

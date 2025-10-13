@@ -53,8 +53,9 @@ void GroupingParameterFactory::registerGroupingTransform(std::string const& tran
 template<typename ParamClass>
 ParameterSetter GroupingParameterFactory::createGroupingParameterSetter(std::string const& transform_name) {
     return [transform_name](TransformParametersBase* param_obj, nlohmann::json const& json_value, DataManager* dm) -> bool {
-        // This is a special case - we're not actually setting a parameter on an existing object,
-        // we're creating the object itself. This is handled specially in the pipeline.
+        // For grouping parameters, the EntityGroupManager is now set automatically
+        // by the TransformPipeline::createParametersFromJson method, so we don't need
+        // to do anything special here - just return true to indicate success
         return true;
     };
 }

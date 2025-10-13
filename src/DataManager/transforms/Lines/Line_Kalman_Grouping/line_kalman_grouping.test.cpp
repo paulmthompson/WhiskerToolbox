@@ -586,8 +586,40 @@ TEST_CASE("LineKalmanGrouping - Transform Operation Interface", "[LineKalmanGrou
         auto target_type = operation.getTargetInputTypeIndex();
         REQUIRE(target_type == std::type_index(typeid(std::shared_ptr<LineData>)));
 
-        // Test getDefaultParameters (should return nullptr)
+        // Test getDefaultParameters (should return actual parameters with null group manager)
         auto default_params = operation.getDefaultParameters();
-        REQUIRE(default_params == nullptr);
+        REQUIRE(default_params != nullptr);
+        
+        // Cast to the specific parameter type to verify it's the right type
+        auto kalman_params = dynamic_cast<LineKalmanGroupingParameters*>(default_params.get());
+        REQUIRE(kalman_params != nullptr);
+        REQUIRE(!kalman_params->hasValidGroupManager()); // Should have null group manager initially
+        
+        // Test that we can set the group manager
+        kalman_params->setGroupManager(nullptr); // Test with null first
+        REQUIRE(!kalman_params->hasValidGroupManager());
+        
+        // Test with actual group manager (using a mock one)
+        auto mock_group_manager = std::make_unique<EntityGroupManager>();
+        kalman_params->setGroupManager(mock_group_manager.get());
+        REQUIRE(kalman_params->hasValidGroupManager());
+        REQUIRE(kalman_params->getGroupManager() == mock_group_manager.get());
+    }
+
+    SECTION("Test execution with null group manager") {
+        // Create a simple test scenario
+        auto test_line_data = std::make_shared<LineData>();
+        Line2D test_line;
+        test_line.push_back({0.0f, 0.0f});
+        test_line.push_back({10.0f, 0.0f});
+        test_line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+
+        // Create parameters without group manager
+        LineKalmanGroupingParameters params; // No group manager set (defaults to nullptr)
+        REQUIRE(!params.hasValidGroupManager());
+
+        // Execution should fail gracefully
+        auto result = lineKalmanGrouping(test_line_data, &params);
+        REQUIRE(result == test_line_data); // Should return original data unchanged
     }
 }

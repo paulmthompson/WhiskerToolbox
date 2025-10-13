@@ -54,7 +54,7 @@ struct LineAlignmentParameters : public GroupingTransformParametersBase {
     LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES;// Output mode
 
     // === Grouping Parameters ===
-    bool enable_grouping = true;                                    // Enable grouping of FWHM lines by vertex index
+    bool enable_grouping = false;                                   // Enable grouping of FWHM lines by vertex index
     std::string group_prefix = "FWHM_Vertex_";                      // Prefix for generated group names
     std::string group_description = "FWHM profile lines for vertex";// Description for generated groups
 };
@@ -168,10 +168,8 @@ public:
 
     /**
      * @brief Gets the default parameters for the line alignment operation.
-     * @return A unique_ptr to the default parameters.
-     * @note Returns nullptr since we can't create a GroupingTransformParametersBase
-     * without an EntityGroupManager pointer. The calling code will need to provide
-     * the actual parameters with the group manager.
+     * @return A unique_ptr to the default parameters with null group manager.
+     * @note The EntityGroupManager must be set via setGroupManager() before execution.
      */
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
 
