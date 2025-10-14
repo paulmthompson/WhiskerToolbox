@@ -12,6 +12,7 @@
 #include "StateEstimator.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Tracker.hpp"
+#include "TestFixture.hpp"
 
 // --- Test-Specific Mocks and Implementations ---
 
@@ -1035,4 +1036,122 @@ TEST_CASE("Mahalanobis distance with ill-conditioned covariance", "[StateEstimat
             // This is what causes MCF to produce "no optimal path" errors
         }
     }
+}
+
+TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowTracker][Fixture][Tracking]") {
+    using namespace StateEstimation;
+
+    // Create a fixture with two bouncing points
+    TestFixture fixture(100.0, 100.0);
+    fixture.add_point({10.0, 10.0}, {3.0, 2.0});
+    fixture.add_point({80.0, 20.0}, {-2.5, 1.5});
+
+    // Simulate frames
+    int const num_frames = 25;
+    double const dt = 1.0;
+    for (int i = 0; i < num_frames; ++i) {
+        fixture.step(dt);
+    }
+
+    // Define a simple point observation type
+    struct ObsPoint2D {
+        EntityId id;
+        double x;
+        double y;
+    };
+
+    // Feature extractor for points
+    class PointExtractor : public IFeatureExtractor<ObsPoint2D> {
+    public:
+        Eigen::VectorXd getFilterFeatures(ObsPoint2D const & p) const override {
+            Eigen::VectorXd z(2);
+            z << p.x, p.y;
+            return z;
+        }
+        FeatureCache getAllFeatures(ObsPoint2D const & p) const override {
+            FeatureCache c;
+            c[getFilterFeatureName()] = getFilterFeatures(p);
+            return c;
+        }
+        std::string getFilterFeatureName() const override { return "kalman_features"; }
+        FilterState getInitialState(ObsPoint2D const & p) const override {
+            Eigen::VectorXd x0(4);
+            x0 << p.x, p.y, 0.0, 0.0;
+            Eigen::MatrixXd P0 = Eigen::MatrixXd::Identity(4, 4) * 100.0;
+            return {x0, P0};
+        }
+        std::unique_ptr<IFeatureExtractor<ObsPoint2D>> clone() const override {
+            return std::make_unique<PointExtractor>(*this);
+        }
+        FeatureMetadata getMetadata() const override {
+            return FeatureMetadata::create("kalman_features", 2, FeatureTemporalType::KINEMATIC_2D);
+        }
+    };
+
+    // Build observations from fixture
+    std::vector<std::tuple<ObsPoint2D, EntityId, TimeFrameIndex>> data_source;
+    EntityGroupManager group_manager;
+    GroupId g1 = group_manager.createGroup("Ball1");
+    GroupId g2 = group_manager.createGroup("Ball2");
+
+    // Anchor maps: first and last frames labeled
+    MinCostFlowTracker<ObsPoint2D>::GroundTruthMap ground_truth;
+
+    auto const & gt0 = fixture.get_ground_truth(0);
+    auto const & gt1 = fixture.get_ground_truth(1);
+
+    // Create observations with unique IDs per frame per track
+    for (int f = 0; f <= num_frames; ++f) {
+        // Track 1
+        EntityId id1 = static_cast<EntityId>(1000 + f);
+        ObsPoint2D p1{ id1, gt0[f].p.x, gt0[f].p.y };
+        data_source.emplace_back(p1, id1, TimeFrameIndex(f));
+        // Track 2
+        EntityId id2 = static_cast<EntityId>(2000 + f);
+        ObsPoint2D p2{ id2, gt1[f].p.x, gt1[f].p.y };
+        data_source.emplace_back(p2, id2, TimeFrameIndex(f));
+    }
+
+    // Set anchors at first and last frames
+    ground_truth[TimeFrameIndex(0)] = {{g1, (EntityId)1000}, {g2, (EntityId)2000}};
+    ground_truth[TimeFrameIndex(num_frames)] = {{g1, (EntityId)(1000 + num_frames)}, {g2, (EntityId)(2000 + num_frames)}};
+
+    // Kalman filter matrices (CV model)
+    Eigen::Matrix<double, 4, 4> F;
+    F.setIdentity();
+    F(0, 2) = dt;
+    F(1, 3) = dt;
+    Eigen::Matrix<double, 2, 4> H;
+    H.setZero();
+    H(0, 0) = 1.0;
+    H(1, 1) = 1.0;
+    Eigen::Matrix<double, 4, 4> Q;
+    Q.setIdentity();
+    Q *= 0.1;
+    Eigen::Matrix<double, 2, 2> R;
+    R.setIdentity();
+    R *= 1.0;
+
+    auto kalman = std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R);
+    auto extractor = std::make_unique<PointExtractor>();
+
+    MinCostFlowTracker<ObsPoint2D> tracker(std::move(kalman), std::move(extractor), H, R);
+
+    // Process
+    tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(num_frames));
+
+    // Assertions: ensure both groups contain the expected entity IDs in order
+    std::vector<EntityId> expected_g1, expected_g2;
+    for (int f = 0; f <= num_frames; ++f) {
+        expected_g1.push_back((EntityId)(1000 + f));
+        expected_g2.push_back((EntityId)(2000 + f));
+    }
+
+    auto got_g1 = group_manager.getEntitiesInGroup(g1);
+    auto got_g2 = group_manager.getEntitiesInGroup(g2);
+    std::sort(got_g1.begin(), got_g1.end());
+    std::sort(got_g2.begin(), got_g2.end());
+
+    REQUIRE(got_g1 == expected_g1);
+    REQUIRE(got_g2 == expected_g2);
 }
