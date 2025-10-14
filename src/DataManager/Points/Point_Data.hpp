@@ -124,7 +124,7 @@ public:
      * @param entity_id The entity ID to assign to the point
      * @param notify If true, the observers will be notified
      */
-    void addPointEntryAtTime(TimeFrameIndex time, Point2D<float> const & point, EntityId entity_id, bool notify = true);
+    void addEntryAtTime(TimeFrameIndex time, Point2D<float> const & point, EntityId entity_id, bool notify = true);
 
     /**
      * @brief Overwrite a point at a specific time
@@ -424,7 +424,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of points actually moved
      */
-    std::size_t movePointsByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+    std::size_t moveByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
 
     // ========== Time Frame ==========
 

@@ -24,9 +24,11 @@ class EntityRegistry;
 struct LineEntry {
     Line2D line;
     EntityId entity_id;
-    
+
     LineEntry() = default;
-    LineEntry(Line2D l, EntityId id) : line(std::move(l)), entity_id(id) {}
+    LineEntry(Line2D l, EntityId id)
+        : line(std::move(l)),
+          entity_id(id) {}
 };
 
 /*
@@ -49,12 +51,12 @@ public:
     /**
      * @brief Move constructor
      */
-    LineData(LineData&& other) noexcept;
+    LineData(LineData && other) noexcept;
 
     /**
      * @brief Move assignment operator
      */
-    LineData& operator=(LineData&& other) noexcept;
+    LineData & operator=(LineData && other) noexcept;
 
 
     /**
@@ -151,7 +153,7 @@ public:
      * @param entity_id The entity ID to assign to the line
      * @param notify If true, the observers will be notified
      */
-    void addLineEntryAtTime(TimeFrameIndex time, Line2D const & line, EntityId entity_id, bool notify = true);
+    void addEntryAtTime(TimeFrameIndex time, Line2D const & line, EntityId entity_id, bool notify = true);
 
     // ========== Image Size ==========
 
@@ -286,15 +288,15 @@ public:
     */
     [[nodiscard]] std::vector<std::reference_wrapper<Line2D const>> getLinesViewAtTime(TimeFrameIndex time) const {
         std::vector<std::reference_wrapper<Line2D const>> result;
-        
+
         auto it = _data.find(time);
         if (it != _data.end()) {
             result.reserve(it->second.size());
-            for (auto const & entry : it->second) {
+            for (auto const & entry: it->second) {
                 result.emplace_back(std::cref(entry.line));
             }
         }
-        
+
         return result;
     }
 
@@ -306,15 +308,15 @@ public:
     */
     [[nodiscard]] std::vector<std::reference_wrapper<EntityId const>> getEntityIdsViewAtTime(TimeFrameIndex time) const {
         std::vector<std::reference_wrapper<EntityId const>> result;
-        
+
         auto it = _data.find(time);
         if (it != _data.end()) {
             result.reserve(it->second.size());
-            for (auto const & entry : it->second) {
+            for (auto const & entry: it->second) {
                 result.emplace_back(std::cref(entry.entity_id));
             }
         }
-        
+
         return result;
     }
 
@@ -326,13 +328,13 @@ public:
     [[nodiscard]] auto GetAllLinesAsRange() const {
         struct TimeLinesPair {
             TimeFrameIndex time;
-            std::vector<Line2D> lines; // Note: This creates a copy for backward compatibility
+            std::vector<Line2D> lines;// Note: This creates a copy for backward compatibility
         };
 
         return _data | std::views::transform([](auto const & pair) {
                    std::vector<Line2D> lines;
                    lines.reserve(pair.second.size());
-                   for (auto const & entry : pair.second) {
+                   for (auto const & entry: pair.second) {
                        lines.push_back(entry.line);
                    }
                    return TimeLinesPair{pair.first, std::move(lines)};
@@ -359,7 +361,6 @@ public:
     }
 
 
-
     /**
     * @brief Get lines with their associated times as a range within a TimeFrameInterval
     *
@@ -371,7 +372,7 @@ public:
     [[nodiscard]] auto GetLinesInRange(TimeFrameInterval const & interval) const {
         struct TimeLinesPair {
             TimeFrameIndex time;
-            std::vector<Line2D> lines; // Copy for backward compatibility
+            std::vector<Line2D> lines;// Copy for backward compatibility
         };
 
         return _data | std::views::filter([interval](auto const & pair) {
@@ -380,7 +381,7 @@ public:
                std::views::transform([](auto const & pair) {
                    std::vector<Line2D> lines;
                    lines.reserve(pair.second.size());
-                   for (auto const & entry : pair.second) {
+                   for (auto const & entry: pair.second) {
                        lines.push_back(entry.line);
                    }
                    return TimeLinesPair{pair.first, std::move(lines)};
@@ -570,7 +571,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of lines actually moved
      */
-    std::size_t moveLinesByEntityIds(LineData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+    std::size_t moveByEntityIds(LineData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
 
     // ========== Time Frame ==========
     /**
@@ -595,8 +596,8 @@ private:
     std::map<TimeFrameIndex, std::vector<LineEntry>> _data;
     std::vector<Line2D> _empty{};
     std::vector<EntityId> _empty_entity_ids{};
-    mutable std::vector<Line2D> _temp_lines{}; // For getAtTime compatibility
-    mutable std::vector<EntityId> _temp_entity_ids{}; // For getEntityIdsAtTime compatibility
+    mutable std::vector<Line2D> _temp_lines{};       // For getAtTime compatibility
+    mutable std::vector<EntityId> _temp_entity_ids{};// For getEntityIdsAtTime compatibility
     ImageSize _image_size;
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
 

@@ -371,7 +371,7 @@ std::shared_ptr<PointData> pointParticleFilter(
                     if (timePointEntriesPair.time == time) {
                         for (auto const & entry : timePointEntriesPair.entries) {
                             if (entities_in_group.find(entry.entity_id) != entities_in_group.end()) {
-                                result->addPointEntryAtTime(time, entry.point, entry.entity_id, false);
+                                result->addEntryAtTime(time, entry.point, entry.entity_id, false);
                                 break;
                             }
                         }
@@ -393,7 +393,7 @@ std::shared_ptr<PointData> pointParticleFilter(
             
             // Add tracked points to result (already in original point coordinate space)
             for (auto const & [time, point] : tracked) {
-                result->addPointEntryAtTime(time, point, representative_entity_id, false);
+                result->addEntryAtTime(time, point, representative_entity_id, false);
             }
         }
     }

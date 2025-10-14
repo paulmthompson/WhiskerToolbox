@@ -243,7 +243,7 @@ void Line_Widget::_moveLineToTarget(std::string const & target_key) {
               << " selected lines from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the moveLinesByEntityIds method to move only the selected lines
-    std::size_t const total_lines_moved = source_line_data->moveLinesByEntityIds(*target_line_data, selected_entity_ids, true);
+    std::size_t const total_lines_moved = source_line_data->moveByEntityIds(*target_line_data, selected_entity_ids, true);
 
     if (total_lines_moved > 0) {
         // Update the table view to reflect changes

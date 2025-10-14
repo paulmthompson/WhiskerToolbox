@@ -227,8 +227,8 @@ void Point_Widget::_movePointsToTarget(std::string const & target_key) {
     std::cout << "Point_Widget: Moving " << selected_entity_ids.size()
               << " selected points from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    // Use the movePointsByEntityIds method to move only the selected points
-    std::size_t const total_points_moved = source_point_data->movePointsByEntityIds(*target_point_data, selected_entity_ids, true);
+    // Use the moveByEntityIds method to move only the selected points
+    std::size_t const total_points_moved = source_point_data->moveByEntityIds(*target_point_data, selected_entity_ids, true);
 
     if (total_points_moved > 0) {
         // Update the table view to reflect changes

@@ -309,7 +309,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         REQUIRE(ids_10.size() == 2);
 
-        std::size_t moved = source_data->moveMasksByEntityIds(*target_data, ids_10);
+        std::size_t moved = source_data->moveByEntityIds(*target_data, ids_10);
         REQUIRE(moved == 2);
         REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 0);
         REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 2);
@@ -330,7 +330,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         auto ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
         std::vector<EntityId> mixed = {ids_10[0], ids_20[0]};
-        std::size_t moved = source_data->moveMasksByEntityIds(*target_data, mixed);
+        std::size_t moved = source_data->moveByEntityIds(*target_data, mixed);
         REQUIRE(moved == 2);
         REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 0);
         REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 0);
@@ -347,7 +347,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
 
         source_data->addAtTime(TimeFrameIndex(10), x1, y1);
         std::vector<EntityId> fake_ids = {99999, 88888};
-        std::size_t moved = source_data->moveMasksByEntityIds(*target_data, fake_ids);
+        std::size_t moved = source_data->moveByEntityIds(*target_data, fake_ids);
         REQUIRE(moved == 0);
         REQUIRE(target_data->getTimesWithData().empty());
         REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 1);
