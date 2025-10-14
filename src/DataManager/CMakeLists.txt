@@ -1,5 +1,3 @@
-
-
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
 
@@ -166,6 +164,8 @@ set(DATAMANAGER_SOURCES
         transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp
         transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.cpp
         transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp
+        transforms/DigitalIntervalSeries/Digital_Interval_Invert/digital_interval_invert.cpp
+        transforms/DigitalIntervalSeries/Digital_Interval_Invert/digital_interval_invert.hpp
         transforms/Lines/Line_Angle/line_angle.hpp
         transforms/Lines/Line_Angle/line_angle.cpp
         transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp

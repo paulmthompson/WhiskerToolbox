@@ -191,6 +191,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.cpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.ui
+        DataTransform_Widget/DigitalIntervalSeries/InvertIntervals_Widget/InvertIntervals_Widget.cpp
+        DataTransform_Widget/DigitalIntervalSeries/InvertIntervals_Widget/InvertIntervals_Widget.hpp
+        DataTransform_Widget/DigitalIntervalSeries/InvertIntervals_Widget/InvertIntervals_Widget.ui
         DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.hpp
         DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.cpp
         DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.ui

@@ -6,6 +6,7 @@
 #include "transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
 #include "transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
+#include "transforms/DigitalIntervalSeries/Digital_Interval_Invert/digital_interval_invert.hpp"
 #include "transforms/Lines/Line_Alignment/line_alignment.hpp"
 #include "transforms/Lines/Line_Angle/line_angle.hpp"
 #include "transforms/Lines/Line_Base_Flip/line_base_flip.hpp"
@@ -68,6 +69,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<GroupOperation>());
     _registerOperation(std::make_unique<AnalogFilterOperation>());
     _registerOperation(std::make_unique<WhiskerTracingOperation>());
+    _registerOperation(std::make_unique<InvertIntervalOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;

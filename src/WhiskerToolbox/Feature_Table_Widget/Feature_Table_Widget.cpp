@@ -31,9 +31,9 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
     tableFont.setPointSize(9);// Set table content font to 9pt
     ui->available_features_table->setFont(tableFont);
 
-    // Set uniform row spacing
+    // Set uniform row spacing - use Fixed instead of Stretch to allow scrolling
     ui->available_features_table->verticalHeader()->setDefaultSectionSize(25);
-    ui->available_features_table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->available_features_table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     // Set equal column widths
     ui->available_features_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -228,13 +228,8 @@ void Feature_Table_Widget::populateTable() {
         ui->available_features_table->sortItems(featureColumnIndex, Qt::AscendingOrder);
     }
 
-
-    // Adjust table height to show all rows
-    int rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
-    int headerHeight = ui->available_features_table->horizontalHeader()->height();
-    int totalHeight = (rowHeight * ui->available_features_table->rowCount()) + headerHeight;
-    ui->available_features_table->setMinimumHeight(totalHeight);
-    ui->available_features_table->setMaximumHeight(totalHeight);
+    // Don't adjust table height - let it use the constraints from the UI file
+    // This allows the scrollbar to appear when there are too many rows to fit
 
     // Restore state after rebuilding the table
     _restoreState();
@@ -302,12 +297,8 @@ void Feature_Table_Widget::resizeEvent(QResizeEvent * event) {
     // Make the table widget take up the full width of the widget minus margins
     ui->available_features_table->setFixedWidth(this->width());
 
-    // Recalculate height based on content
-    int rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
-    int headerHeight = ui->available_features_table->horizontalHeader()->height();
-    int totalHeight = (rowHeight * ui->available_features_table->rowCount()) + headerHeight;
-    ui->available_features_table->setMinimumHeight(totalHeight);
-    ui->available_features_table->setMaximumHeight(totalHeight);
+    // Don't recalculate height - let the UI constraints handle it
+    // This allows the scrollbar to appear when there are too many rows to fit
 
     _is_resizing = false;
 }

@@ -13,6 +13,7 @@
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.hpp"
 #include "DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp"
+#include "DataTransform_Widget/DigitalIntervalSeries/InvertIntervals_Widget/InvertIntervals_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp"
 #include "DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp"
@@ -208,6 +209,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         return new GroupIntervals_Widget(parent);
     };
 
+    _parameterWidgetFactories["Invert Intervals"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new InvertIntervals_Widget(parent);
+    };
+
     _parameterWidgetFactories["Group Lines by Proximity"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new LineProximityGrouping_Widget(parent);
         widget->setDataManager(_data_manager);
@@ -346,13 +351,9 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
     if (newParamWidget) {
         std::cout << "Adding Widget" << std::endl;
 
-        // Set size policy for dynamic resizing without scrollbars
+        // Set size policy for dynamic resizing
         newParamWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         newParamWidget->setMaximumWidth(ui->stackedWidget->width());
-
-        // Ensure no scrollbars appear
-        setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
         int const widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
         Q_UNUSED(widgetIndex) // Suppress the warning about unused variable
