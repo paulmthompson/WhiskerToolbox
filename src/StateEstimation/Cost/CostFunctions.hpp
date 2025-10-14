@@ -1,3 +1,6 @@
+#ifndef STATE_ESTIMATION_COST_FUNCTIONS_HPP
+#define STATE_ESTIMATION_COST_FUNCTIONS_HPP
+
 #include "Common.hpp"
 
 #include "Filter/Kalman/KalmanMatrixBuilder.hpp"
@@ -46,3 +49,5 @@ CostFunction createDynamicsAwareCostFunction(
         double lambda_gap = 0.0);
 
 }// namespace StateEstimation
+
+#endif// STATE_ESTIMATION_COST_FUNCTIONS_HPP

@@ -15,6 +15,8 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "Tracker.hpp"
 #include "TestFixture.hpp"
+#include "Cost/CostFunctions.hpp"
+#include "OutlierDetection.hpp"
 
 // --- Test-Specific Mocks and Implementations ---
 
@@ -1268,4 +1270,111 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
     }
     // they match
     REQUIRE(true);
+}
+
+TEST_CASE("OutlierDetection with LineLengthExtractor", "[OutlierDetection]") {
+    using namespace StateEstimation;
+
+    // 1. --- SETUP ---
+
+    // Define a 1D Kalman Filter for line length
+    Eigen::Matrix<double, 1, 1> F;
+    F << 1.0;
+
+    Eigen::Matrix<double, 1, 1> H;
+    H << 1.0;
+
+    Eigen::Matrix<double, 1, 1> Q;
+    Q << 0.1;
+
+    Eigen::Matrix<double, 1, 1> R;
+    R << 5.0;
+
+    struct TestLine {
+        std::vector<std::pair<double, double>> points;
+        size_t size() const { return points.size(); }
+        const std::pair<double, double>& operator[](size_t i) const { return points[i]; }
+    };
+
+    class TestLineLengthExtractor : public IFeatureExtractor<TestLine> {
+    public:
+        Eigen::VectorXd getFilterFeatures(const TestLine& line) const override {
+            double length = 0.0;
+            if (line.size() >= 2) {
+                for (size_t i = 1; i < line.size(); ++i) {
+                    double dx = line[i].first - line[i-1].first;
+                    double dy = line[i].second - line[i-1].second;
+                    length += std::sqrt(dx*dx + dy*dy);
+                }
+            }
+            Eigen::VectorXd features(1);
+            features << length;
+            return features;
+        }
+
+        FeatureCache getAllFeatures(const TestLine& line) const override {
+            FeatureCache cache;
+            cache[getFilterFeatureName()] = getFilterFeatures(line);
+            return cache;
+        }
+
+        std::string getFilterFeatureName() const override { return "line_length"; }
+
+        FilterState getInitialState(const TestLine& line) const override {
+            Eigen::VectorXd state(1);
+            state << getFilterFeatures(line);
+            Eigen::MatrixXd cov(1, 1);
+            cov << 1.0;
+            return {state, cov};
+        }
+
+        std::unique_ptr<IFeatureExtractor<TestLine>> clone() const override {
+            return std::make_unique<TestLineLengthExtractor>(*this);
+        }
+
+        FeatureMetadata getMetadata() const override {
+            return FeatureMetadata::create("line_length", 1, FeatureTemporalType::STATIC);
+        }
+    };
+
+    auto kalman_filter = std::make_unique<KalmanFilterT<1, 1>>(F, H, Q, R);
+    auto feature_extractor = std::make_unique<TestLineLengthExtractor>();
+    auto cost_function = createMahalanobisCostFunction(H, R);
+
+    OutlierDetection<TestLine> outlier_detector(std::move(kalman_filter), std::move(feature_extractor), cost_function);
+
+    // --- Generate Artificial Data ---
+    std::vector<std::tuple<TestLine, EntityId, TimeFrameIndex>> data_source;
+
+    EntityGroupManager group_manager;
+    GroupId group1 = group_manager.createGroup("Group 1");
+
+    // Create a series of lines with consistent length, and one outlier
+    for (int i = 0; i <= 10; ++i) {
+        TestLine line;
+        double length = (i == 5) ? 100.0 : 10.0; // Outlier at frame 5
+        line.points.push_back({(double)i, 0.0});
+        line.points.push_back({(double)i, length});
+        
+        EntityId entity_id = (EntityId)i;
+        data_source.emplace_back(line, entity_id, TimeFrameIndex(i));
+        group_manager.addEntityToGroup(group1, entity_id);
+    }
+
+    // 2. --- EXECUTION ---
+    outlier_detector.process(data_source, group_manager, TimeFrameIndex(0), TimeFrameIndex(10), nullptr, {group1});
+
+    // 3. --- ASSERTIONS ---
+    GroupId outlier_group_id = 0;
+    for(auto const& descriptor : group_manager.getAllGroupDescriptors()){
+        if(descriptor.name == "outlier"){
+            outlier_group_id = descriptor.id;
+            break;
+        }
+    }
+    REQUIRE(outlier_group_id != 0);
+
+    auto outlier_entities = group_manager.getEntitiesInGroup(outlier_group_id);
+    REQUIRE(outlier_entities.size() == 1);
+    REQUIRE(outlier_entities[0] == (EntityId)5);
 }
