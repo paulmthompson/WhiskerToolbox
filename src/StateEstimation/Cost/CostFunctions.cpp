@@ -156,7 +156,11 @@ CostFunction createDynamicsAwareCostFunction(
 
             // Velocity consistency
             Eigen::VectorXd const v_impl = (z_pos - x_pred_pos) / gap_dt;
-            Eigen::MatrixXd const Sigma_v = gatherCov(predicted_state.state_covariance, feat.velocity_state_indices);
+            Eigen::MatrixXd Sigma_v = gatherCov(predicted_state.state_covariance, feat.velocity_state_indices);
+            // Symmetrize and regularize Sigma_v like in Mahalanobis
+            Sigma_v = 0.5 * (Sigma_v + Sigma_v.transpose());
+            constexpr double kVelRegEps = 1e-9;
+            Sigma_v.diagonal().array() += kVelRegEps;
             cost += beta * mahalHalf(v_impl - v_pred, Sigma_v);
 
             // Implied acceleration toward zero

@@ -1,6 +1,8 @@
 #include <Eigen/Dense>
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
+#include <set>
+#include <sstream>
 
 #include "Assignment/HungarianAssigner.hpp"
 #include "Entity/EntityGroupManager.hpp"
@@ -1047,7 +1049,7 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
     fixture.add_point({80.0, 20.0}, {-2.5, 1.5});
 
     // Simulate frames
-    int const num_frames = 25;
+    int const num_frames = 100;
     double const dt = 1.0;
     for (int i = 0; i < num_frames; ++i) {
         fixture.step(dt);
@@ -1136,6 +1138,25 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
     auto extractor = std::make_unique<PointExtractor>();
 
     MinCostFlowTracker<ObsPoint2D> tracker(std::move(kalman), std::move(extractor), H, R);
+    /*
+    MinCostFlowTracker<ObsPoint2D> tracker(
+        std::move(kalman),
+        std::move(extractor),
+        createDynamicsAwareCostFunction(
+            H, R,
+            KalmanMatrixBuilder::buildStateIndexMap({
+                FeatureMetadata::create("kalman_features", 2, FeatureTemporalType::KINEMATIC_2D)
+            }),
+            dt, 
+            1.0, 
+            0.1, 
+            0.0
+        ),
+        100.0,
+        5.0
+    );
+    */
+
 
     // Process
     tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(num_frames));
@@ -1152,6 +1173,99 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
     std::sort(got_g1.begin(), got_g1.end());
     std::sort(got_g2.begin(), got_g2.end());
 
-    REQUIRE(got_g1 == expected_g1);
-    REQUIRE(got_g2 == expected_g2);
+    // Print a single concise failure with details if mismatch (more reliable than INFO in lambdas)
+    if (got_g1 != expected_g1) {
+        std::set<EntityId> exp(expected_g1.begin(), expected_g1.end());
+        std::set<EntityId> gset(got_g1.begin(), got_g1.end());
+        std::vector<EntityId> missing;
+        std::vector<EntityId> extra;
+        for (auto id : expected_g1) if (!gset.count(id)) missing.push_back(id);
+        for (auto id : got_g1) if (!exp.count(id)) extra.push_back(id);
+        size_t first_mismatch = std::min(expected_g1.size(), got_g1.size());
+        for (size_t i = 0; i < std::min(expected_g1.size(), got_g1.size()); ++i) {
+            if (expected_g1[i] != got_g1[i]) { first_mismatch = i; break; }
+        }
+        std::ostringstream msg;
+        msg << "Group1 mismatch: size expected=" << expected_g1.size() << " got=" << got_g1.size()
+            << "; missing=" << missing.size() << ", extra=" << extra.size();
+        if (!missing.empty()) {
+            msg << "; missing(first10)=";
+            for (size_t i = 0; i < std::min<size_t>(10, missing.size()); ++i) { if (i) msg << ","; msg << missing[i]; }
+        }
+        if (!extra.empty()) {
+            msg << "; extra(first10)=";
+            for (size_t i = 0; i < std::min<size_t>(10, extra.size()); ++i) { if (i) msg << ","; msg << extra[i]; }
+        }
+        if (first_mismatch < std::min(expected_g1.size(), got_g1.size())) {
+            msg << "; firstIdx=" << first_mismatch
+                << " exp=" << expected_g1[first_mismatch]
+                << " got=" << got_g1[first_mismatch];
+        }
+        // Dump a small GT window around the mismatch for both tracks
+        int const win = 3;
+        int start = static_cast<int>(first_mismatch) - win;
+        if (start < 0) start = 0;
+        int end = static_cast<int>(first_mismatch) + win;
+        if (end >= static_cast<int>(expected_g1.size())) end = static_cast<int>(expected_g1.size()) - 1;
+        msg << "; window GT around mismatch:";
+        for (int i = start; i <= end; ++i) {
+            auto const & s0 = gt0[i];
+            msg << " [i=" << i
+                << ", expId=" << (1000 + i)
+                << ", gotId=" << (i < static_cast<int>(got_g1.size()) ? got_g1[i] : (EntityId) -1)
+                << ", gt0=(" << s0.p.x << "," << s0.p.y << ") v=(" << s0.v.vx << "," << s0.v.vy << ")]";
+        }
+        for (int i = start; i <= end; ++i) {
+            auto const & s1 = gt1[i];
+            msg << " [i=" << i
+                << ", expId=" << (2000 + i)
+                << ", gotId=" << (i < static_cast<int>(got_g2.size()) ? got_g2[i] : (EntityId) -1)
+                << ", gt1=(" << s1.p.x << "," << s1.p.y << ") v=(" << s1.v.vx << "," << s1.v.vy << ")]";
+        }
+        FAIL(msg.str());
+    }
+    if (got_g2 != expected_g2) {
+        std::set<EntityId> exp(expected_g2.begin(), expected_g2.end());
+        std::set<EntityId> gset(got_g2.begin(), got_g2.end());
+        std::vector<EntityId> missing;
+        std::vector<EntityId> extra;
+        for (auto id : expected_g2) if (!gset.count(id)) missing.push_back(id);
+        for (auto id : got_g2) if (!exp.count(id)) extra.push_back(id);
+        size_t first_mismatch = std::min(expected_g2.size(), got_g2.size());
+        for (size_t i = 0; i < std::min(expected_g2.size(), got_g2.size()); ++i) {
+            if (expected_g2[i] != got_g2[i]) { first_mismatch = i; break; }
+        }
+        std::ostringstream msg;
+        msg << "Group2 mismatch: size expected=" << expected_g2.size() << " got=" << got_g2.size()
+            << "; missing=" << missing.size() << ", extra=" << extra.size();
+        if (!missing.empty()) {
+            msg << "; missing(first10)=";
+            for (size_t i = 0; i < std::min<size_t>(10, missing.size()); ++i) { if (i) msg << ","; msg << missing[i]; }
+        }
+        if (!extra.empty()) {
+            msg << "; extra(first10)=";
+            for (size_t i = 0; i < std::min<size_t>(10, extra.size()); ++i) { if (i) msg << ","; msg << extra[i]; }
+        }
+        if (first_mismatch < std::min(expected_g2.size(), got_g2.size())) {
+            msg << "; firstIdx=" << first_mismatch
+                << " exp=" << expected_g2[first_mismatch]
+                << " got=" << got_g2[first_mismatch];
+        }
+        int const win = 3;
+        int start = static_cast<int>(first_mismatch) - win;
+        if (start < 0) start = 0;
+        int end = static_cast<int>(first_mismatch) + win;
+        if (end >= static_cast<int>(expected_g2.size())) end = static_cast<int>(expected_g2.size()) - 1;
+        msg << "; window GT around mismatch:";
+        for (int i = start; i <= end; ++i) {
+            auto const & s1 = gt1[i];
+            msg << " [i=" << i
+                << ", expId=" << (2000 + i)
+                << ", gotId=" << (i < static_cast<int>(got_g2.size()) ? got_g2[i] : (EntityId) -1)
+                << ", gt1=(" << s1.p.x << "," << s1.p.y << ") v=(" << s1.v.vx << "," << s1.v.vy << ")]";
+        }
+        FAIL(msg.str());
+    }
+    // they match
+    REQUIRE(true);
 }
