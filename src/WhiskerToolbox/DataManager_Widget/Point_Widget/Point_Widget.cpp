@@ -27,6 +27,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <unordered_set>
 #include <set>
 #include <variant>
 
@@ -228,7 +229,8 @@ void Point_Widget::_movePointsToTarget(std::string const & target_key) {
               << " selected points from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the moveByEntityIds method to move only the selected points
-    std::size_t const total_points_moved = source_point_data->moveByEntityIds(*target_point_data, selected_entity_ids, true);
+    std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_points_moved = source_point_data->moveByEntityIds(*target_point_data, selected_entity_ids_set, true);
 
     if (total_points_moved > 0) {
         // Update the table view to reflect changes

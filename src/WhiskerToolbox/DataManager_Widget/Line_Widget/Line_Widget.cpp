@@ -32,6 +32,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <unordered_set>
 #include <set>
 
 Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
@@ -243,7 +244,8 @@ void Line_Widget::_moveLineToTarget(std::string const & target_key) {
               << " selected lines from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the moveLinesByEntityIds method to move only the selected lines
-    std::size_t const total_lines_moved = source_line_data->moveByEntityIds(*target_line_data, selected_entity_ids, true);
+    std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_lines_moved = source_line_data->moveByEntityIds(*target_line_data, selected_entity_ids_set, true);
 
     if (total_lines_moved > 0) {
         // Update the table view to reflect changes

@@ -11,6 +11,7 @@
 #include <map>
 #include <optional>
 #include <ranges>
+#include <unordered_set>
 #include <vector>
 
 
@@ -424,7 +425,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of points actually moved
      */
-    std::size_t moveByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+    std::size_t moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
 
     // ========== Time Frame ==========
 

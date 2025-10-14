@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <ranges>
+#include <unordered_set>
 
 template<typename T>
 [[nodiscard]] bool clear_at_time(TimeFrameIndex const time, T & data) {
@@ -100,21 +101,20 @@ inline void fill_extracted_vector(std::vector<Entry> const & entries,
     }
 }
 
-// Template function for moving entries by EntityIds
+// Template function for moving entries by EntityIds (unordered_set variant for O(1) lookups)
 template <typename SourceDataMap, typename TargetType, typename DataExtractor>
 inline std::size_t move_by_entity_ids(SourceDataMap & source_data,
                                       TargetType & target,
-                                      std::vector<EntityId> const & entity_ids,
+                                      std::unordered_set<EntityId> const & entity_ids_set,
                                       bool const notify,
                                       DataExtractor extract_data) {
     std::size_t total_moved = 0;
     std::vector<std::pair<TimeFrameIndex, size_t>> entries_to_remove;
 
-    // First, copy all matching entries to target and collect removal information
-    for (auto const & [time, entries]: source_data) {
+    for (auto const & [time, entries] : source_data) {
         for (size_t i = 0; i < entries.size(); ++i) {
             auto const & entry = entries[i];
-            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
+            if (entity_ids_set.contains(entry.entity_id)) {
                 target.addEntryAtTime(time, extract_data(entry), entry.entity_id, false);
                 entries_to_remove.emplace_back(time, i);
                 total_moved++;
@@ -122,15 +122,13 @@ inline std::size_t move_by_entity_ids(SourceDataMap & source_data,
         }
     }
 
-    // Sort entries to remove in reverse order to maintain indices
     std::ranges::sort(entries_to_remove,
                       [](auto const & a, auto const & b) {
                           if (a.first != b.first) return a.first > b.first;
                           return a.second > b.second;
                       });
 
-    // Remove the moved entries from source
-    for (auto const & [time, index]: entries_to_remove) {
+    for (auto const & [time, index] : entries_to_remove) {
         auto it = source_data.find(time);
         if (it != source_data.end() && index < it->second.size()) {
             it->second.erase(it->second.begin() + static_cast<long>(index));
@@ -140,13 +138,14 @@ inline std::size_t move_by_entity_ids(SourceDataMap & source_data,
         }
     }
 
-    // Notify observers if requested and entries were moved
     if (notify && total_moved > 0) {
         target.notifyObservers();
-        // Note: Source notification should be handled by the calling class
+        // Note: Source notification for the source container should be handled by the calling class
     }
 
     return total_moved;
 }
+
+// Vector-based overload removed per API change; prefer unordered_set for performance
 
 #endif // MAP_TIMESERIES_HPP

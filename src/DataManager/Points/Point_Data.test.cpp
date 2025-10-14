@@ -518,7 +518,8 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         REQUIRE(entity_ids_10.size() == 2);
 
-        std::size_t points_moved = source_data->moveByEntityIds(*target_data, entity_ids_10);
+        std::unordered_set<EntityId> const ids_set_10(entity_ids_10.begin(), entity_ids_10.end());
+        std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_10);
 
         REQUIRE(points_moved == 2);
         REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 0);
@@ -550,7 +551,8 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto entity_ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
 
         std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
-        std::size_t points_moved = source_data->moveByEntityIds(*target_data, mixed_entity_ids);
+        std::unordered_set<EntityId> const ids_set_mixed(mixed_entity_ids.begin(), mixed_entity_ids.end());
+        std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_mixed);
 
         REQUIRE(points_moved == 2);
         REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 1);
@@ -575,7 +577,8 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         source_data->addAtTime(TimeFrameIndex(30), p4);
 
         std::vector<EntityId> fake_entity_ids = {99999, 88888};
-        std::size_t points_moved = source_data->moveByEntityIds(*target_data, fake_entity_ids);
+        std::unordered_set<EntityId> const ids_set_fake(fake_entity_ids.begin(), fake_entity_ids.end());
+        std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_fake);
 
         REQUIRE(points_moved == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -626,7 +629,8 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto original_points = source_data->getAtTime(TimeFrameIndex(10));
         REQUIRE(original_points.size() == 2);
 
-        source_data->moveByEntityIds(*target_data, entity_ids_10);
+        std::unordered_set<EntityId> const ids_set_10b(entity_ids_10.begin(), entity_ids_10.end());
+        source_data->moveByEntityIds(*target_data, ids_set_10b);
 
         auto target_points = target_data->getAtTime(TimeFrameIndex(10));
         REQUIRE(target_points.size() == 2);

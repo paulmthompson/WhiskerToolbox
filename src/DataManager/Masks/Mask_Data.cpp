@@ -352,7 +352,7 @@ std::size_t MaskData::copyMasksByEntityIds(MaskData & target, std::vector<Entity
     return total_copied;
 }
 
-std::size_t MaskData::moveByEntityIds(MaskData & target, std::vector<EntityId> const & entity_ids, bool const notify) {
+std::size_t MaskData::moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
     auto result = move_by_entity_ids(_data, target, entity_ids, notify,
                                      [](MaskEntry const & entry) -> Mask2D const & { return entry.mask; });
     

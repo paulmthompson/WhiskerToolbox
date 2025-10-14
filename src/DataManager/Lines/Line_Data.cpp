@@ -523,7 +523,7 @@ std::size_t LineData::copyLinesByEntityIds(LineData & target, std::vector<Entity
     return total_lines_copied;
 }
 
-std::size_t LineData::moveByEntityIds(LineData & target, std::vector<EntityId> const & entity_ids, bool notify) {
+std::size_t LineData::moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
     auto result = move_by_entity_ids(_data, target, entity_ids, notify,
                                      [](LineEntry const & entry) -> Line2D const & { return entry.line; });
     

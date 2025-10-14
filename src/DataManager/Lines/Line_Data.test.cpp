@@ -631,7 +631,8 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         REQUIRE(entity_ids_10.size() == 2);
         
         // Move lines from time 10 (2 lines)
-        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, entity_ids_10);
+        std::unordered_set<EntityId> const ids_set_10(entity_ids_10.begin(), entity_ids_10.end());
+        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_10);
         
         REQUIRE(lines_moved == 2);
         
@@ -671,7 +672,8 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         
         // Move one line from time 10 and one from time 20
         std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
-        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, mixed_entity_ids);
+        std::unordered_set<EntityId> const ids_set_mixed(mixed_entity_ids.begin(), mixed_entity_ids.end());
+        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_mixed);
         
         REQUIRE(lines_moved == 2);
         
@@ -701,7 +703,8 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         std::vector<EntityId> fake_entity_ids = {99999, 88888};
-        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, fake_entity_ids);
+        std::unordered_set<EntityId> const ids_set_fake(fake_entity_ids.begin(), fake_entity_ids.end());
+        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_fake);
         
         REQUIRE(lines_moved == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -760,7 +763,8 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto original_lines = source_data->getAtTime(TimeFrameIndex(10));
         REQUIRE(original_lines.size() == 2);
         
-        source_data->moveByEntityIds(*target_data, entity_ids_10);
+        std::unordered_set<EntityId> const ids_set_10b(entity_ids_10.begin(), entity_ids_10.end());
+        source_data->moveByEntityIds(*target_data, ids_set_10b);
         
         auto target_lines = target_data->getAtTime(TimeFrameIndex(10));
         REQUIRE(target_lines.size() == 2);

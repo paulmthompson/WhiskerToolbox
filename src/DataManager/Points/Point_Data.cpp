@@ -469,7 +469,7 @@ std::size_t PointData::copyPointsByEntityIds(PointData & target, std::vector<Ent
     return total_points_copied;
 }
 
-std::size_t PointData::moveByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool const notify) {
+std::size_t PointData::moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
     auto result = move_by_entity_ids(_data, target, entity_ids, notify, 
                                      [](PointEntry const & entry) -> Point2D<float> const & { return entry.point; });
     

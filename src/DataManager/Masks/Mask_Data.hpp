@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <map>
 #include <ranges>
+#include <unordered_set>
 #include <vector>
 
 class EntityRegistry;
@@ -360,7 +361,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of masks actually moved
      */
-    std::size_t moveByEntityIds(MaskData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+    std::size_t moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
 
 
     // ========== Time Frame ==========
