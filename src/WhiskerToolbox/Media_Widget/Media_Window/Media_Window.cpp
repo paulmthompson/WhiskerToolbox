@@ -2130,7 +2130,7 @@ EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::strin
         auto const & line = lines[i];
         
         // Check distance from each line segment
-        for (size_t j = 0; j < line.size(); ++j) {
+        for (size_t j = 0; j < line.size(); j++) {
             if (j + 1 >= line.size()) continue;
             
             auto const & p1 = line[j];
@@ -2355,3 +2355,38 @@ void Media_Window::onUngroupSelected() {
 void Media_Window::onClearSelection() {
     clearAllSelections();
 }
+
+void Media_Window::keyPressEvent(QKeyEvent * event) {
+    // Handle keyboard shortcuts for group assignment (1-9)
+    if (!_group_manager || _selected_entities.empty()) {
+        QGraphicsScene::keyPressEvent(event);
+        return;
+    }
+
+    // Check if the pressed key is a digit from 1 to 9
+    int key_value = event->key();
+    if (key_value >= Qt::Key_1 && key_value <= Qt::Key_9) {
+        // Convert key to group number (Qt::Key_1 = 49, so subtract 48 to get 1-9)
+        int group_number = key_value - Qt::Key_0;
+
+        // Get available groups from the group manager
+        auto groups = _group_manager->getGroupsForContextMenu();
+
+        // Find the group with the matching number in the display order
+        if (group_number <= static_cast<int>(groups.size())) {
+            // Groups are returned in order, so we can use index-based access
+            auto it = groups.begin();
+            std::advance(it, group_number - 1);
+            int group_id = it->first;
+
+            // Assign selected entities to the group
+            onAssignToGroup(group_id);
+            event->accept();
+            return;
+        }
+    }
+
+    // If not handled, pass to parent
+    QGraphicsScene::keyPressEvent(event);
+}
+
