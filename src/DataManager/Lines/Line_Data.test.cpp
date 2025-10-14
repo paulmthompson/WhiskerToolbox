@@ -521,7 +521,8 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         REQUIRE(entity_ids_10.size() == 2);
         
         // Copy lines from time 10 (2 lines)
-        std::size_t lines_copied = source_data->copyLinesByEntityIds(*target_data, entity_ids_10);
+        std::unordered_set<EntityId> ids_set_10c(entity_ids_10.begin(), entity_ids_10.end());
+        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_10c);
         
         REQUIRE(lines_copied == 2);
         
@@ -566,7 +567,8 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         
         // Copy one line from time 10 and one from time 20
         std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
-        std::size_t lines_copied = source_data->copyLinesByEntityIds(*target_data, mixed_entity_ids);
+        std::unordered_set<EntityId> ids_set_mixedc(mixed_entity_ids.begin(), mixed_entity_ids.end());
+        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_mixedc);
         
         REQUIRE(lines_copied == 2);
         
@@ -591,7 +593,8 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         source_data->addAtTime(TimeFrameIndex(30), x1, y1);
         
         std::vector<EntityId> fake_entity_ids = {99999, 88888};
-        std::size_t lines_copied = source_data->copyLinesByEntityIds(*target_data, fake_entity_ids);
+        std::unordered_set<EntityId> ids_set_fakec(fake_entity_ids.begin(), fake_entity_ids.end());
+        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_fakec);
         
         REQUIRE(lines_copied == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -606,7 +609,8 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto target_data = data_manager->getData<LineData>("target_data");
         
         std::vector<EntityId> empty_entity_ids;
-        std::size_t lines_copied = source_data->copyLinesByEntityIds(*target_data, empty_entity_ids);
+        std::unordered_set<EntityId> ids_set_emptyc(empty_entity_ids.begin(), empty_entity_ids.end());
+        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_emptyc);
         
         REQUIRE(lines_copied == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -729,7 +733,8 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         source_data->addAtTime(TimeFrameIndex(30), x1, y1);
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        source_data->copyLinesByEntityIds(*target_data, entity_ids_10);
+        std::unordered_set<EntityId> ids_set_10c2(entity_ids_10.begin(), entity_ids_10.end());
+        source_data->copyByEntityIds(*target_data, ids_set_10c2);
         
         auto source_lines = source_data->getAtTime(TimeFrameIndex(10));
         auto target_lines = target_data->getAtTime(TimeFrameIndex(10));

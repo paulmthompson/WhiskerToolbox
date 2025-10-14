@@ -266,7 +266,8 @@ void Point_Widget::_copyPointsToTarget(std::string const & target_key) {
               << " selected points from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the copyPointsByEntityIds method to copy only the selected points
-    std::size_t const total_points_copied = source_point_data->copyPointsByEntityIds(*target_point_data, selected_entity_ids, true);
+    std::unordered_set<EntityId> const selected_entity_ids_set2(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_points_copied = source_point_data->copyByEntityIds(*target_point_data, selected_entity_ids_set2, true);
 
     if (total_points_copied > 0) {
         std::cout << "Point_Widget: Successfully copied " << total_points_copied

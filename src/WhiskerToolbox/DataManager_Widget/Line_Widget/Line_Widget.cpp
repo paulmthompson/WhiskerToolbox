@@ -281,7 +281,8 @@ void Line_Widget::_copyLineToTarget(std::string const & target_key) {
               << " selected lines from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the copyLinesByEntityIds method to copy only the selected lines
-    std::size_t const total_lines_copied = source_line_data->copyLinesByEntityIds(*target_line_data, selected_entity_ids, true);
+    std::unordered_set<EntityId> const selected_entity_ids_set2(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_lines_copied = source_line_data->copyByEntityIds(*target_line_data, selected_entity_ids_set2, true);
 
     if (total_lines_copied > 0) {
         std::cout << "Line_Widget: Successfully copied " << total_lines_copied

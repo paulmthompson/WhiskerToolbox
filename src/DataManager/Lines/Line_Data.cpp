@@ -501,26 +501,9 @@ std::size_t LineData::moveTo(LineData & target, std::vector<TimeFrameIndex> cons
     return total_lines_moved;
 }
 
-std::size_t LineData::copyLinesByEntityIds(LineData & target, std::vector<EntityId> const & entity_ids, bool notify) {
-    std::size_t total_lines_copied = 0;
-
-    // Iterate through all data to find matching EntityIds
-    for (auto const & [time, entries]: _data) {
-        for (auto const & entry: entries) {
-            // Check if this entry's EntityId is in the list to copy
-            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
-                target.addAtTime(time, entry.line, false);// Don't notify for each operation
-                total_lines_copied++;
-            }
-        }
-    }
-
-    // Notify observer only once at the end if requested
-    if (notify && total_lines_copied > 0) {
-        target.notifyObservers();
-    }
-
-    return total_lines_copied;
+std::size_t LineData::copyByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
+    return copy_by_entity_ids(_data, target, entity_ids, notify,
+                              [](LineEntry const & entry) -> Line2D const & { return entry.line; });
 }
 
 std::size_t LineData::moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {

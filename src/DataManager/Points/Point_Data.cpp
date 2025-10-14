@@ -453,20 +453,9 @@ std::vector<std::tuple<EntityId, TimeFrameIndex, int>> PointData::getTimeInfoByE
 
 // ======== Copy/Move by EntityIds =========
 
-std::size_t PointData::copyPointsByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool const notify) {
-    std::size_t total_points_copied = 0;
-    for (auto const & [time, entries]: _data) {
-        for (auto const & entry: entries) {
-            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
-                target.addAtTime(time, entry.point, false);
-                total_points_copied++;
-            }
-        }
-    }
-    if (notify && total_points_copied > 0) {
-        target.notifyObservers();
-    }
-    return total_points_copied;
+std::size_t PointData::copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool const notify) {
+    return copy_by_entity_ids(_data, target, entity_ids, notify,
+                              [](PointEntry const & entry) -> Point2D<float> const & { return entry.point; });
 }
 
 std::size_t PointData::moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {

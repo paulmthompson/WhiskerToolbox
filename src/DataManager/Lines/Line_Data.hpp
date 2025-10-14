@@ -559,7 +559,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of lines actually copied
      */
-    std::size_t copyLinesByEntityIds(LineData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+    std::size_t copyByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
 
     /**
      * @brief Move lines with specific EntityIds to another LineData

@@ -424,7 +424,8 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         REQUIRE(entity_ids_10.size() == 2);
 
         // Copy points from time 10 (2 points)
-        std::size_t points_copied = source_data->copyPointsByEntityIds(*target_data, entity_ids_10);
+        std::unordered_set<EntityId> ids_set_10c(entity_ids_10.begin(), entity_ids_10.end());
+        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_10c);
 
         REQUIRE(points_copied == 2);
 
@@ -462,7 +463,8 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         REQUIRE(entity_ids_20.size() == 1);
 
         std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
-        std::size_t points_copied = source_data->copyPointsByEntityIds(*target_data, mixed_entity_ids);
+        std::unordered_set<EntityId> ids_set_mixedc(mixed_entity_ids.begin(), mixed_entity_ids.end());
+        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_mixedc);
 
         REQUIRE(points_copied == 2);
         REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 1);
@@ -483,7 +485,8 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         source_data->addAtTime(TimeFrameIndex(30), p4);
 
         std::vector<EntityId> fake_entity_ids = {99999, 88888};
-        std::size_t points_copied = source_data->copyPointsByEntityIds(*target_data, fake_entity_ids);
+        std::unordered_set<EntityId> ids_set_fakec(fake_entity_ids.begin(), fake_entity_ids.end());
+        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_fakec);
 
         REQUIRE(points_copied == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -497,7 +500,8 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto target_data = data_manager->getData<PointData>("target_data");
 
         std::vector<EntityId> empty_entity_ids;
-        std::size_t points_copied = source_data->copyPointsByEntityIds(*target_data, empty_entity_ids);
+        std::unordered_set<EntityId> ids_set_emptyc(empty_entity_ids.begin(), empty_entity_ids.end());
+        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_emptyc);
 
         REQUIRE(points_copied == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -601,7 +605,8 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         source_data->addAtTime(TimeFrameIndex(30), p4);
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        source_data->copyPointsByEntityIds(*target_data, entity_ids_10);
+        std::unordered_set<EntityId> ids_set_10c2(entity_ids_10.begin(), entity_ids_10.end());
+        source_data->copyByEntityIds(*target_data, ids_set_10c2);
 
         auto source_points = source_data->getAtTime(TimeFrameIndex(10));
         auto target_points = target_data->getAtTime(TimeFrameIndex(10));

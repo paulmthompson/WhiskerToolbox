@@ -336,20 +336,9 @@ std::size_t MaskData::moveTo(MaskData & target, std::vector<TimeFrameIndex> cons
     return total_masks_moved;
 }
 
-std::size_t MaskData::copyMasksByEntityIds(MaskData & target, std::vector<EntityId> const & entity_ids, bool const notify) {
-    std::size_t total_copied = 0;
-    for (auto const & [time, entries]: _data) {
-        for (auto const & entry: entries) {
-            if (std::ranges::find(entity_ids, entry.entity_id) != entity_ids.end()) {
-                target.addAtTime(time, entry.mask, false);
-                total_copied++;
-            }
-        }
-    }
-    if (notify && total_copied > 0) {
-        target.notifyObservers();
-    }
-    return total_copied;
+std::size_t MaskData::copyByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool const notify) {
+    return copy_by_entity_ids(_data, target, entity_ids, notify,
+                              [](MaskEntry const & entry) -> Mask2D const & { return entry.mask; });
 }
 
 std::size_t MaskData::moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {

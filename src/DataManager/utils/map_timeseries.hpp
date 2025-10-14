@@ -146,6 +146,27 @@ inline std::size_t move_by_entity_ids(SourceDataMap & source_data,
     return total_moved;
 }
 
-// Vector-based overload removed per API change; prefer unordered_set for performance
+// Copy entries by EntityIds (unordered_set variant for O(1) lookups)
+template <typename SourceDataMap, typename TargetType, typename DataExtractor>
+inline std::size_t copy_by_entity_ids(SourceDataMap const & source_data,
+                                      TargetType & target,
+                                      std::unordered_set<EntityId> const & entity_ids_set,
+                                      bool const notify,
+                                      DataExtractor extract_data) {
+    std::size_t total_copied = 0;
+    for (auto const & [time, entries] : source_data) {
+        for (auto const & entry : entries) {
+            if (entity_ids_set.contains(entry.entity_id)) {
+                target.addAtTime(time, extract_data(entry), false);
+                total_copied++;
+            }
+        }
+    }
+    if (notify && total_copied > 0) {
+        target.notifyObservers();
+    }
+    return total_copied;
+}
+
 
 #endif // MAP_TIMESERIES_HPP

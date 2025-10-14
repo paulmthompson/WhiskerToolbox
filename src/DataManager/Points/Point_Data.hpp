@@ -412,7 +412,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of points actually copied
      */
-    std::size_t copyPointsByEntityIds(PointData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+     std::size_t copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
 
     /**
      * @brief Move points with specific EntityIds to another PointData

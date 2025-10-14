@@ -348,7 +348,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of masks actually copied
      */
-    std::size_t copyMasksByEntityIds(MaskData & target, std::vector<EntityId> const & entity_ids, bool notify = true);
+    std::size_t copyByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
 
     /**
      * @brief Move masks with specific EntityIds to another MaskData
