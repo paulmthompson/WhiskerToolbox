@@ -7,6 +7,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Features/IFeatureExtractor.hpp"
 #include "Filter/Kalman/KalmanFilter.hpp"
+#include "Filter/Kalman/KalmanFilterT.hpp"
 #include "MinCostFlowTracker.hpp"
 #include "StateEstimator.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -77,25 +78,25 @@ TEST_CASE("StateEstimator - tracking and smoothing", "[StateEstimator][Smoothing
 
     // Define a constant velocity Kalman Filter
     double dt = 1.0;
-    Eigen::MatrixXd F(4, 4);
+    Eigen::Matrix<double, 4, 4> F;
     F << 1, 0, dt, 0,
          0, 1, 0, dt,
          0, 0, 1, 0,
          0, 0, 0, 1;
 
-    Eigen::MatrixXd H(2, 4);
+    Eigen::Matrix<double, 2, 4> H;
     H << 1, 0, 0, 0,
          0, 1, 0, 0;
 
-    Eigen::MatrixXd Q(4, 4);
+    Eigen::Matrix<double, 4, 4> Q;
     Q.setIdentity();
     Q *= 0.1;
 
-    Eigen::MatrixXd R(2, 2);
+    Eigen::Matrix<double, 2, 2> R;
     R.setIdentity();
     R *= 5.0;
 
-    auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
+    auto kalman_filter = std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R);
     auto feature_extractor = std::make_unique<LineCentroidExtractor>();
 
     // Use StateEstimator for smoothing already-grouped data
@@ -163,25 +164,25 @@ TEST_CASE("StateEstimator smoothing and outlier detection", "[StateEstimator]") 
 
     // Define a constant velocity Kalman Filter
     double dt = 1.0;
-    Eigen::MatrixXd F(4, 4);
+    Eigen::Matrix<double, 4, 4> F;
     F << 1, 0, dt, 0,
          0, 1, 0, dt,
          0, 0, 1, 0,
          0, 0, 0, 1;
 
-    Eigen::MatrixXd H(2, 4);
+    Eigen::Matrix<double, 2, 4> H;
     H << 1, 0, 0, 0,
          0, 1, 0, 0;
 
-    Eigen::MatrixXd Q(4, 4);
+    Eigen::Matrix<double, 4, 4> Q;
     Q.setIdentity();
     Q *= 0.1;
 
-    Eigen::MatrixXd R(2, 2);
+    Eigen::Matrix<double, 2, 2> R;
     R.setIdentity();
     R *= 5.0;
 
-    auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
+    auto kalman_filter = std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R);
     auto feature_extractor = std::make_unique<LineCentroidExtractor>();
 
     // Create StateEstimator (separate from MinCostFlowTracker)
@@ -293,7 +294,7 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
     R.setIdentity();
     R *= 0.5;  // Reduced measurement noise to make outliers more obvious
 
-    auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
+    auto kalman_filter = std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R);
     auto feature_extractor = std::make_unique<LineCentroidExtractor>();
 
     StateEstimator<TestLine2D> estimator(std::move(kalman_filter), std::move(feature_extractor));
@@ -517,7 +518,7 @@ TEST_CASE("StateEstimator - outlier detection with varying error magnitudes", "[
     Eigen::MatrixXd R = Eigen::MatrixXd::Identity(2, 2) * 0.3;  // Lower noise for better sensitivity
 
     StateEstimator<TestLine2D> estimator(
-        std::make_unique<KalmanFilter>(F, H, Q, R),
+        std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R),
         std::make_unique<LineCentroidExtractor>()
     );
 
@@ -633,18 +634,18 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
     // 1. --- SETUP ---
     // This setup is identical to the failing test for the old tracker.
     double dt = 1.0;
-    Eigen::MatrixXd F(4, 4);
+    Eigen::Matrix<double, 4, 4> F;
     F << 1, 0, dt, 0, 0, 1, 0, dt, 0, 0, 1, 0, 0, 0, 0, 1;
-    Eigen::MatrixXd H(2, 4);
+    Eigen::Matrix<double, 2, 4> H;
     H << 1, 0, 0, 0, 0, 1, 0, 0;
-    Eigen::MatrixXd Q(4, 4);
+    Eigen::Matrix<double, 4, 4> Q;
     Q.setIdentity();
     Q *= 0.1;
-    Eigen::MatrixXd R(2, 2);
+    Eigen::Matrix<double, 2, 2> R;
     R.setIdentity();
     R *= 5.0;
 
-    auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
+    auto kalman_filter = std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R);
     auto feature_extractor = std::make_unique<LineCentroidExtractor>();
 
     // Instantiate the new MinCostFlowTracker
@@ -823,7 +824,7 @@ TEST_CASE("StateEstimator - cross-correlated features with MinCostFlow", "[State
         }
     };
 
-    auto kalman_filter = std::make_unique<KalmanFilter>(F, H, Q, R);
+    auto kalman_filter = std::make_unique<KalmanFilterT<6, 3>>(F, H, Q, R);
     auto feature_extractor = std::make_unique<LineWithLengthExtractor>();
 
     MinCostFlowTracker<TestLine2D> tracker(std::move(kalman_filter), std::move(feature_extractor), H, R);

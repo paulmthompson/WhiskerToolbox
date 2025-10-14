@@ -1,56 +1,17 @@
 #ifndef KALMAN_FILTER_HPP
 #define KALMAN_FILTER_HPP
 
-#include "Filter/IFilter.hpp"
-
+#include "Filter/Kalman/KalmanFilterT.hpp"
 
 namespace StateEstimation {
 
 /**
-     * @brief A concrete implementation of a standard linear Kalman Filter.
-     */
-class KalmanFilter final : public IFilter {
-public:
-    /**
-         * @brief Constructs a KalmanFilter.
-         *
-         * @param F State transition matrix.
-         * @param H Measurement matrix.
-         * @param Q Process noise covariance.
-         * @param R Measurement noise covariance.
-         */
-    KalmanFilter(Eigen::MatrixXd const & F,
-                 Eigen::MatrixXd const & H,
-                 Eigen::MatrixXd const & Q,
-                 Eigen::MatrixXd const & R);
-
-    void initialize(FilterState const & initial_state) override;
-
-    FilterState predict() override;
-
-    FilterState update(FilterState const & predicted_state, Measurement const & measurement) override;
-
-    FilterState update(FilterState const & predicted_state, Measurement const & measurement, double noise_scale_factor) override;
-
-    std::vector<FilterState> smooth(std::vector<FilterState> const & forward_states) override;
-
-    FilterState getState() const override;
-
-    std::unique_ptr<IFilter> clone() const override;
-
-
-
-private:
-    // Kalman matrices
-    Eigen::MatrixXd StateTransitionMat_;
-    Eigen::MatrixXd MeasurementMat_;
-    Eigen::MatrixXd ProcessNoiseCovMat_;
-    Eigen::MatrixXd MeasurementNoiseCovMat_;
-    
-    // Filter state
-    Eigen::VectorXd StateEstimateVec_;
-    Eigen::MatrixXd StateCovarianceMat_;
-};
+ * @brief Dynamic-size Kalman filter alias using the templated implementation.
+ *
+ * This maintains the existing type name while consolidating code into a single
+ * templated implementation that also supports fixed-size variants in tests.
+ */
+using KalmanFilter = KalmanFilterT<Eigen::Dynamic, Eigen::Dynamic>;
 
 }// namespace StateEstimation
 
