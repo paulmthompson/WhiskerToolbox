@@ -10,6 +10,7 @@
 #include <QGraphicsEllipseItem>
 #include <QGraphicsItem>
 #include <QGraphicsScene>
+#include <QKeyEvent>
 #include <QMenu>
 #include <QtCore/QtGlobal>
 
@@ -214,6 +215,7 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent * event) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent * event) override;
+    void keyPressEvent(QKeyEvent * event) override;
 
 private:
     std::shared_ptr<DataManager> _data_manager;

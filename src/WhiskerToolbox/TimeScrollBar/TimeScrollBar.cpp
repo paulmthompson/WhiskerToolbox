@@ -176,3 +176,8 @@ void TimeScrollBar::FrameSpinBoxChanged(int new_frame)
 
     emit timeChanged(frame_id);
 }
+
+int TimeScrollBar::getFrameJumpValue() const
+{
+    return ui->frame_jump_spinbox->value();
+}

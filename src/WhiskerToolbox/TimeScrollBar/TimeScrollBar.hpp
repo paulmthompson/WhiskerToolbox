@@ -25,6 +25,8 @@ public:
     void updateScrollBarNewMax(int new_max);
     void changeScrollBarValue(int new_value, bool relative=false); // Should be friend
 
+    int getFrameJumpValue() const;
+
 protected:
 private:
     Ui::TimeScrollBar *ui;
