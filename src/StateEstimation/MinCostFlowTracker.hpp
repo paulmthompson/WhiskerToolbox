@@ -33,6 +33,19 @@
 namespace StateEstimation {
 
 /**
+ * @brief Contract policy for how MinCostFlowTracker handles invariant violations.
+ */
+enum class TrackerContractPolicy {
+    Throw,          // Throw std::logic_error
+    LogAndContinue, // Log error and continue with best-effort result
+    Abort           // Log critical and abort process
+};
+
+struct TrackerDiagnostics {
+    std::size_t noOptimalPathCount = 0; // Number of times solver found no optimal path
+};
+
+/**
  * @brief A tracker that uses a global min-cost flow optimization to solve data association.
  *
  * This tracker formulates the tracking problem as a graph problem, finding the globally
@@ -62,13 +75,15 @@ public:
                        std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor,
                        CostFunction cost_function,
                        double cost_scale_factor = 100.0,
-                       double cheap_assignment_threshold = 5.0)
+                       double cheap_assignment_threshold = 5.0,
+                       TrackerContractPolicy policy = TrackerContractPolicy::Throw)
         : _filter_prototype(std::move(filter_prototype)),
           _feature_extractor(std::move(feature_extractor)),
           _chain_cost_function(cost_function),
           _transition_cost_function(std::move(cost_function)),
           _cost_scale_factor(cost_scale_factor),
-          _cheap_assignment_threshold(cheap_assignment_threshold) {}
+          _cheap_assignment_threshold(cheap_assignment_threshold),
+          _policy(policy) {}
 
     /**
      * @brief Construct with separate cost functions for greedy chaining and meta-node transitions.
@@ -81,13 +96,15 @@ public:
                        CostFunction chain_cost_function,
                        CostFunction transition_cost_function,
                        double cost_scale_factor,
-                       double cheap_assignment_threshold)
+                       double cheap_assignment_threshold,
+                       TrackerContractPolicy policy = TrackerContractPolicy::Throw)
         : _filter_prototype(std::move(filter_prototype)),
           _feature_extractor(std::move(feature_extractor)),
           _chain_cost_function(std::move(chain_cost_function)),
           _transition_cost_function(std::move(transition_cost_function)),
           _cost_scale_factor(cost_scale_factor),
-          _cheap_assignment_threshold(cheap_assignment_threshold) {}
+          _cheap_assignment_threshold(cheap_assignment_threshold),
+          _policy(policy) {}
 
     /**
      * @brief Convenience constructor using default Mahalanobis distance cost function.
@@ -105,12 +122,14 @@ public:
                        Eigen::MatrixXd const & measurement_matrix,
                        Eigen::MatrixXd const & measurement_noise_covariance,
                        double cost_scale_factor = 100.0,
-                       double cheap_assignment_threshold = 5.0)
+                       double cheap_assignment_threshold = 5.0,
+                       TrackerContractPolicy policy = TrackerContractPolicy::Throw)
         : MinCostFlowTracker(std::move(filter_prototype),
                              std::move(feature_extractor),
                              createMahalanobisCostFunction(measurement_matrix, measurement_noise_covariance),
                              cost_scale_factor,
-                             cheap_assignment_threshold) {}
+                             cheap_assignment_threshold,
+                             policy) {}
 
     /**
      * @brief Process a range of frames using min-cost flow optimization.
@@ -187,6 +206,8 @@ public:
         _logger->set_level(spdlog::level::debug);
         _logger->flush_on(spdlog::level::debug);
     }
+
+    [[nodiscard]] TrackerDiagnostics getDiagnostics() const { return _diagnostics; }
 
 private:
     struct NodeInfo {
@@ -471,10 +492,44 @@ private:
         // Solve using private solver and reconstruct meta-node path
         auto const seq_opt = solveMinCostSingleUnitPath(num_meta + 2, source_node, sink_node, arcs);
         if (!seq_opt.has_value()) {
+            _diagnostics.noOptimalPathCount += 1;
+            std::ostringstream oss;
+            oss << "Min-cost flow failed: no optimal path. "
+                << "metaNodes=" << num_meta
+                << ", arcs=" << arcs.size()
+                << ", groupId=" << static_cast<unsigned long long>(group_id)
+                << ", startFrame=" << start_frame.getValue()
+                << ", endFrame=" << end_frame.getValue();
+            // Dump the meta-graph: nodes and arcs with basic details
             if (_logger) {
-                _logger->error("Min-cost flow (meta) failed: no optimal path");
+                _logger->error("{}", oss.str());
+                _logger->error("Meta-nodes dump (index: start->end, members, frames, entities):");
+                for (int i = 0; i < num_meta; ++i) {
+                    MetaNode const & mn = meta_nodes[i];
+                    std::ostringstream nd;
+                    nd << "  [" << i << "] "
+                       << mn.start_frame.getValue() << "->" << mn.end_frame.getValue()
+                       << ", members=" << mn.members.size()
+                       << ", startEntity=" << mn.start_entity
+                       << ", endEntity=" << mn.end_entity;
+                    _logger->error("{}", nd.str());
+                }
+                _logger->error("Arcs dump (tail->head, cap, cost):");
+                for (auto const & a : arcs) {
+                    _logger->error("  {} -> {}  cap={}  cost={}", a.tail, a.head, a.capacity, a.unit_cost);
+                }
             }
-            return {};
+            switch (_policy) {
+                case TrackerContractPolicy::Throw:
+                    throw std::logic_error(oss.str());
+                case TrackerContractPolicy::Abort:
+                    if (_logger) _logger->critical("{}", oss.str());
+                    std::abort();
+                case TrackerContractPolicy::LogAndContinue:
+                default:
+                    // already logged
+                    return {};
+            }
         }
 
         Path expanded_path;
@@ -908,6 +963,8 @@ private:
     double _cost_scale_factor;
     double _cheap_assignment_threshold;
     std::shared_ptr<spdlog::logger> _logger;
+    TrackerContractPolicy _policy = TrackerContractPolicy::Throw;
+    TrackerDiagnostics _diagnostics{};
 };
 
 }// namespace StateEstimation
