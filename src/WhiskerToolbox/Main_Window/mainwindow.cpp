@@ -499,10 +499,10 @@ bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
         // Always handle Ctrl+Left/Right for frame navigation regardless of focus
         if (keyEvent->modifiers() & Qt::ControlModifier) {
             if (keyEvent->key() == Qt::Key_Right) {
-                ui->time_scrollbar->changeScrollBarValue(1, true);
+                ui->time_scrollbar->changeScrollBarValue(ui->time_scrollbar->getFrameJumpValue(), true);
                 return true; // Event handled, don't pass it on
             } else if (keyEvent->key() == Qt::Key_Left) {
-                ui->time_scrollbar->changeScrollBarValue(-1, true);
+                ui->time_scrollbar->changeScrollBarValue(-ui->time_scrollbar->getFrameJumpValue(), true);
                 return true; // Event handled, don't pass it on
             }
         }
@@ -535,10 +535,10 @@ bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
             
             // Otherwise, use arrow keys for frame navigation
             if (keyEvent->key() == Qt::Key_Right) {
-                ui->time_scrollbar->changeScrollBarValue(1, true);
+                ui->time_scrollbar->changeScrollBarValue(ui->time_scrollbar->getFrameJumpValue(), true);
                 return true; // Event handled
             } else if (keyEvent->key() == Qt::Key_Left) {
-                ui->time_scrollbar->changeScrollBarValue(-1, true);
+                ui->time_scrollbar->changeScrollBarValue(-ui->time_scrollbar->getFrameJumpValue(), true);
                 return true; // Event handled
             }
         }

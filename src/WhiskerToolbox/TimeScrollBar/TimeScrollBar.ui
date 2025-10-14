@@ -48,7 +48,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../whiskertoolbox.qrc">
+            <iconset>
              <normaloff>:/images/rewind.png</normaloff>:/images/rewind.png</iconset>
            </property>
            <property name="iconSize">
@@ -78,7 +78,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../whiskertoolbox.qrc">
+            <iconset>
              <normaloff>:/images/fastforward.png</normaloff>:/images/fastforward.png</iconset>
            </property>
            <property name="iconSize">
@@ -183,6 +183,36 @@
         </layout>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Arrow Step Size:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="frame_jump_spinbox">
+           <property name="focusPolicy">
+            <enum>Qt::FocusPolicy::StrongFocus</enum>
+           </property>
+           <property name="toolTip">
+            <string>Number of frames to jump when using arrow keys</string>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>1000</number>
+           </property>
+           <property name="value">
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Orientation::Vertical</enum>
@@ -227,8 +257,6 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../whiskertoolbox.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
