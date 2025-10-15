@@ -652,6 +652,9 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
 
     auto kalman_filter = std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R);
     auto feature_extractor = std::make_unique<LineCentroidExtractor>();
+    auto index_map = KalmanMatrixBuilder::buildStateIndexMap({
+        feature_extractor->getMetadata()
+    });
 
     // Instantiate the new MinCostFlowTracker
     // No max_gap_frames needed - filter uncertainty naturally handles long gaps
@@ -692,16 +695,23 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
 
     // Frames 9-10: Lines continue moving
     data_source.emplace_back(makeA(9, 54.0, 10.0), (EntityId)1009, TimeFrameIndex(9));
-    data_source.emplace_back(makeB(9, 49.0, 10.0), (EntityId)2009, TimeFrameIndex(9));
+    data_source.emplace_back(makeB(9, 47.0, 10.0), (EntityId)2009, TimeFrameIndex(9));
     data_source.emplace_back(makeA(10, 56.0, 10.0), (EntityId)1010, TimeFrameIndex(10));
-    data_source.emplace_back(makeB(10, 50.0, 10.0), (EntityId)2010, TimeFrameIndex(10));
+    data_source.emplace_back(makeB(10, 46.0, 10.0), (EntityId)2010, TimeFrameIndex(10));
 
     // Frame 11: Final ground truth anchor
     data_source.emplace_back(makeA(11, 58.0, 10.0), (EntityId)1011, TimeFrameIndex(11));
-    data_source.emplace_back(makeB(11, 51.0, 10.0), (EntityId)2011, TimeFrameIndex(11));
+    data_source.emplace_back(makeB(11, 45.0, 10.0), (EntityId)2011, TimeFrameIndex(11));
     ground_truth[TimeFrameIndex(11)] = {{group1, (EntityId)1011}, {group2, (EntityId)2011}};
 
     // 2. --- EXECUTION ---
+    // Switch N-scan lookahead to a dynamics-aware cost to resolve blackout ambiguity
+    //auto lookahead_cost = createDynamicsAwareCostFunction(H, R, index_map, dt, 1.0, 0.25, 0.0);
+    //tracker.setLookaheadCostFunction(lookahead_cost);
+    // Also use dynamics-aware transition cost with a small lambda_gap to prefer fewer long skips
+    auto transition_cost = createDynamicsAwareCostFunction(H, R, index_map, dt, 1.0, 0.25, 0.05);
+    tracker.setTransitionCostFunction(transition_cost);
+    tracker.setLookaheadThreshold(std::numeric_limits<double>::infinity());
     tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(11));
 
     // 3. --- ASSERTIONS ---

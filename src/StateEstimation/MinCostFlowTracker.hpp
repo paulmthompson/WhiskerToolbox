@@ -2,6 +2,7 @@
 #define MIN_COST_FLOW_TRACKER_HPP
 
 #include "Assignment/IAssigner.hpp"
+#include "Assignment/NScanLookahead.hpp"
 #include "Assignment/hungarian.hpp"
 #include "Cost/CostFunctions.hpp"
 #include "DataSource.hpp"
@@ -11,6 +12,7 @@
 #include "Filter/Kalman/KalmanMatrixBuilder.hpp"
 #include "MinCostFlowSolver.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "Tracking/Tracklet.hpp"
 
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/spdlog.h"
@@ -36,13 +38,13 @@ namespace StateEstimation {
  * @brief Contract policy for how MinCostFlowTracker handles invariant violations.
  */
 enum class TrackerContractPolicy {
-    Throw,          // Throw std::logic_error
-    LogAndContinue, // Log error and continue with best-effort result
-    Abort           // Log critical and abort process
+    Throw,         // Throw std::logic_error
+    LogAndContinue,// Log error and continue with best-effort result
+    Abort          // Log critical and abort process
 };
 
 struct TrackerDiagnostics {
-    std::size_t noOptimalPathCount = 0; // Number of times solver found no optimal path
+    std::size_t noOptimalPathCount = 0;// Number of times solver found no optimal path
 };
 
 /**
@@ -58,7 +60,6 @@ template<typename DataType>
 class MinCostFlowTracker {
 public:
     using GroundTruthMap = std::map<TimeFrameIndex, std::map<GroupId, EntityId>>;
-    using FrameBucket = std::vector<std::tuple<DataType const *, EntityId, TimeFrameIndex>>;
 
     /**
      * @brief Construct a new MinCostFlowTracker
@@ -70,26 +71,40 @@ public:
      * @param feature_extractor Feature extractor for DataType
      * @param cost_function Function to compute cost between predicted state and observation
      * @param cost_scale_factor Multiplier to convert floating-point costs to integers for the solver.
+     * @param cheap_assignment_threshold Threshold for greedy chaining
+     * @param policy Contract violation policy
+     * @param n_scan_depth Number of frames to look ahead when assignments are ambiguous (default 3)
+     * @param enable_n_scan Enable N-scan lookahead for ambiguous assignments (default true)
+     * @param max_gap_frames Maximum frames a chain can skip before terminating (default 3, set to -1 for unlimited)
      */
     MinCostFlowTracker(std::unique_ptr<IFilter> filter_prototype,
                        std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor,
                        CostFunction cost_function,
                        double cost_scale_factor = 100.0,
                        double cheap_assignment_threshold = 5.0,
-                       TrackerContractPolicy policy = TrackerContractPolicy::Throw)
+                       TrackerContractPolicy policy = TrackerContractPolicy::Throw,
+                       int n_scan_depth = 3,
+                       bool enable_n_scan = true,
+                       int max_gap_frames = 3)
         : _filter_prototype(std::move(filter_prototype)),
           _feature_extractor(std::move(feature_extractor)),
           _chain_cost_function(cost_function),
-          _transition_cost_function(std::move(cost_function)),
+          _transition_cost_function(cost_function),
+          _lookahead_cost_function(cost_function),
           _cost_scale_factor(cost_scale_factor),
           _cheap_assignment_threshold(cheap_assignment_threshold),
-          _policy(policy) {}
+          _policy(policy),
+          _n_scan_depth(n_scan_depth),
+          _enable_n_scan(enable_n_scan),
+          _max_gap_frames(max_gap_frames) {}
 
     /**
      * @brief Construct with separate cost functions for greedy chaining and meta-node transitions.
      *
      * @param chain_cost_function Cost for frame-to-frame greedy chaining (typically 1-step)
      * @param transition_cost_function Cost for meta-node transitions across k-step gaps
+     * @param n_scan_depth Number of frames to look ahead when assignments are ambiguous (default 3)
+     * @param enable_n_scan Enable N-scan lookahead for ambiguous assignments (default true)
      */
     MinCostFlowTracker(std::unique_ptr<IFilter> filter_prototype,
                        std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor,
@@ -97,14 +112,21 @@ public:
                        CostFunction transition_cost_function,
                        double cost_scale_factor,
                        double cheap_assignment_threshold,
-                       TrackerContractPolicy policy = TrackerContractPolicy::Throw)
+                       TrackerContractPolicy policy = TrackerContractPolicy::Throw,
+                       int n_scan_depth = 3,
+                       bool enable_n_scan = true,
+                       int max_gap_frames = 3)
         : _filter_prototype(std::move(filter_prototype)),
           _feature_extractor(std::move(feature_extractor)),
-          _chain_cost_function(std::move(chain_cost_function)),
+          _chain_cost_function(chain_cost_function),
           _transition_cost_function(std::move(transition_cost_function)),
+          _lookahead_cost_function(chain_cost_function),
           _cost_scale_factor(cost_scale_factor),
           _cheap_assignment_threshold(cheap_assignment_threshold),
-          _policy(policy) {}
+          _policy(policy),
+          _n_scan_depth(n_scan_depth),
+          _enable_n_scan(enable_n_scan),
+          _max_gap_frames(max_gap_frames) {}
 
     /**
      * @brief Convenience constructor using default Mahalanobis distance cost function.
@@ -116,6 +138,10 @@ public:
      * @param measurement_matrix H matrix for Mahalanobis distance calculation
      * @param measurement_noise_covariance R matrix for Mahalanobis distance calculation
      * @param cost_scale_factor Multiplier to convert floating-point costs to integers for the solver.
+     * @param cheap_assignment_threshold Threshold for greedy chaining
+     * @param policy Contract violation policy
+     * @param n_scan_depth Number of frames to look ahead when assignments are ambiguous (default 3)
+     * @param enable_n_scan Enable N-scan lookahead for ambiguous assignments (default true)
      */
     MinCostFlowTracker(std::unique_ptr<IFilter> filter_prototype,
                        std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor,
@@ -123,13 +149,49 @@ public:
                        Eigen::MatrixXd const & measurement_noise_covariance,
                        double cost_scale_factor = 100.0,
                        double cheap_assignment_threshold = 5.0,
-                       TrackerContractPolicy policy = TrackerContractPolicy::Throw)
+                       TrackerContractPolicy policy = TrackerContractPolicy::Throw,
+                       int n_scan_depth = 3,
+                       bool enable_n_scan = true,
+                       int max_gap_frames = 3)
         : MinCostFlowTracker(std::move(filter_prototype),
                              std::move(feature_extractor),
                              createMahalanobisCostFunction(measurement_matrix, measurement_noise_covariance),
                              cost_scale_factor,
                              cheap_assignment_threshold,
-                             policy) {}
+                             policy,
+                             n_scan_depth,
+                             enable_n_scan,
+                             max_gap_frames) {}
+
+    /**
+     * @brief Set a dedicated cost function for N-scan lookahead scoring.
+     *
+     * This function is used exclusively inside the lookahead expansion and can
+     * differ from the greedy chaining or meta-node transition costs. It is
+     * useful to introduce dynamics-aware penalties (velocity/acceleration) only
+     * for ambiguity resolution while keeping cheaper costs elsewhere.
+     *
+     * @pre cost_fn should be a valid callable; behavior is undefined if empty
+     * @post Subsequent N-scan calls will use the provided function
+     */
+    void setLookaheadCostFunction(CostFunction cost_fn) {
+        _lookahead_cost_function = std::move(cost_fn);
+    }
+
+    /**
+     * @brief Override the transition cost used between meta-nodes in the MCF graph.
+     */
+    void setTransitionCostFunction(CostFunction cost_fn) {
+        _transition_cost_function = std::move(cost_fn);
+    }
+
+    /**
+     * @brief Set the acceptance threshold for N-scan lookahead costs.
+     *
+     * Use a larger threshold for dynamics-aware costs whose scale exceeds the
+     * cheap chaining threshold. Set to infinity to disable pruning by threshold.
+     */
+    void setLookaheadThreshold(double threshold) { _lookahead_threshold = threshold; }
 
     /**
      * @brief Process a range of frames using min-cost flow optimization.
@@ -157,7 +219,7 @@ public:
             _logger->debug("MCF process: start={} end={}", start_frame.getValue(), end_frame.getValue());
         }
 
-        auto frame_lookup = buildFrameLookup(data_source, start_frame, end_frame);
+        auto frame_lookup = buildFrameLookup<Source, DataType>(data_source, start_frame, end_frame);
         auto start_anchors_it = ground_truth.find(start_frame);
         auto end_anchors_it = ground_truth.find(end_frame);
 
@@ -210,32 +272,25 @@ public:
     [[nodiscard]] TrackerDiagnostics getDiagnostics() const { return _diagnostics; }
 
 private:
-    struct NodeInfo {
-        TimeFrameIndex frame = TimeFrameIndex(0);
-        EntityId entity_id = 0;
+    
 
-        bool operator<(NodeInfo const & other) const {
-            if (frame != other.frame) return frame < other.frame;
-            return entity_id < other.entity_id;
-        }
-    };
+    // Structure to track active chains being built
+    struct ActiveChain {
+        size_t meta_node_idx;// Index in meta_nodes vector
+        TimeFrameIndex curr_frame;
+        EntityId curr_entity;
+        DataType const * curr_data;
+        std::unique_ptr<IFilter> filter;// Cloned filter for this chain
+        FilterState predicted;          // Cached prediction for next frame
+        std::vector<NodeInfo> members;  // Collected nodes for this chain
+        FilterState start_state;         // Initial state at chain start (for meta-node)
 
-    using Path = std::vector<NodeInfo>;
-
-    /**
-     * @brief Represents a greedy-linked sequence (meta-node) of cheap assignments across consecutive frames.
-     * 
-     * Each meta-node aggregates observations that are very likely to belong to the same chain, so that
-     * min-cost flow can operate sparsely on these chains instead of per-observation nodes.
-     */
-    struct MetaNode {
-        std::vector<NodeInfo> members;// consecutive observations included in this chain
-        FilterState start_state;      // filter state after initializing on first observation
-        FilterState end_state;        // filter state after updating on last observation
-        TimeFrameIndex start_frame = TimeFrameIndex(0);
-        TimeFrameIndex end_frame = TimeFrameIndex(0);
-        EntityId start_entity = 0;
-        EntityId end_entity = 0;
+        // Constructor to properly initialize TimeFrameIndex
+        ActiveChain()
+            : meta_node_idx(0),
+              curr_frame(TimeFrameIndex(0)),
+              curr_entity(0),
+              curr_data(nullptr) {}
     };
 
     // Arc metadata: stores the actual chain of entities represented by this arc
@@ -249,7 +304,7 @@ private:
     ArcChain build_entity_chain(
             NodeInfo const & start_node,
             NodeInfo const & end_node,
-            std::map<TimeFrameIndex, FrameBucket> const & frame_lookup) {
+            std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup) {
 
         ArcChain chain;
         chain.entities.push_back(start_node);
@@ -335,7 +390,7 @@ private:
 
     // --- Main Graph Building and Solving Logic ---
     std::map<GroupId, Path> solve_flow_problem(
-            std::map<TimeFrameIndex, FrameBucket> const & frame_lookup,
+            std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
             std::map<GroupId, EntityId> const & start_anchors,
             std::map<GroupId, EntityId> const & end_anchors,
             TimeFrameIndex start_frame,
@@ -371,7 +426,7 @@ private:
     // Solve min-cost flow for a single group over meta-nodes
     Path solve_single_group_flow_over_meta(
             std::vector<MetaNode> const & meta_nodes,
-            std::map<TimeFrameIndex, FrameBucket> const & frame_lookup,
+            std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
             GroupId group_id,
             EntityId start_entity_id,
             EntityId end_entity_id,
@@ -515,7 +570,7 @@ private:
                     _logger->error("{}", nd.str());
                 }
                 _logger->error("Arcs dump (tail->head, cap, cost):");
-                for (auto const & a : arcs) {
+                for (auto const & a: arcs) {
                     _logger->error("  {} -> {}  cap={}  cost={}", a.tail, a.head, a.capacity, a.unit_cost);
                 }
             }
@@ -557,264 +612,560 @@ private:
      * @post Each observation belongs to at most one meta-node
      */
     std::vector<MetaNode> build_meta_nodes(
-            std::map<TimeFrameIndex, FrameBucket> const & frame_lookup,
+            std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
             TimeFrameIndex start_frame,
             TimeFrameIndex end_frame,
             std::unordered_set<EntityId> const * excluded_entities,
             std::unordered_set<EntityId> const * include_entities) {
 
-        // Structure to track active chains being built
-        struct ActiveChain {
-            size_t meta_node_idx;// Index in meta_nodes vector
-            TimeFrameIndex curr_frame;
-            EntityId curr_entity;
-            DataType const * curr_data;
-            std::unique_ptr<IFilter> filter;// Cloned filter for this chain
-            FilterState predicted;          // Cached prediction for next frame
-
-            // Constructor to properly initialize TimeFrameIndex
-            ActiveChain()
-                : meta_node_idx(0),
-                  curr_frame(TimeFrameIndex(0)),
-                  curr_entity(0),
-                  curr_data(nullptr) {}
-        };
-
         std::vector<MetaNode> meta_nodes;
         std::set<std::pair<long long, EntityId>> used;// key: (frame, entity)
         std::vector<ActiveChain> active_chains;
+
 
         // Process frame by frame, using Hungarian algorithm to extend chains optimally
         for (TimeFrameIndex f = start_frame; f <= end_frame; ++f) {
             if (!frame_lookup.count(f)) continue;
 
-            // Step 1: Start new chains for unused observations in current frame
+            if (_logger) {
+                _logger->debug("Processing frame {}: {} active chains, {} observations",
+                             f.getValue(), active_chains.size(), frame_lookup.at(f).size());
+            }
+
+            std::unordered_set<EntityId> this_frame_entities;
+            for (size_t cand_idx = 0; cand_idx < frame_lookup.at(f).size(); ++cand_idx) {
+                auto const & cand = frame_lookup.at(f)[cand_idx];
+                this_frame_entities.insert(std::get<1>(cand));
+            }
+
+            // Step 1: Try to extend existing active chains to current frame (if any)
+            // This must happen BEFORE creating new chains, so that chains can jump gaps
+            if (!active_chains.empty() && f > start_frame) {
+                
+                // Predict all remaining active chains forward to current frame
+                for (size_t chain_idx = 0; chain_idx < active_chains.size(); ++chain_idx) {
+                    auto & chain = active_chains[chain_idx];
+                    if (chain.filter) {
+                        // Predict forward from last known frame to current frame
+                        int gap_frames = static_cast<int>(f.getValue() - chain.curr_frame.getValue());
+                        if (_logger && gap_frames > 0) {
+                            auto initial_state = chain.filter->getState();
+                            _logger->debug("Chain {} at frame {} before predictions: state=[{:.2f},{:.2f},{:.2f},{:.2f}], curr_entity={}", 
+                                         chain_idx, f.getValue(), 
+                                         initial_state.state_mean(0), initial_state.state_mean(1), 
+                                         initial_state.state_mean(2), initial_state.state_mean(3),
+                                         chain.curr_entity);
+                        }
+                        for (int step = 0; step < gap_frames; ++step) {
+                            chain.predicted = chain.filter->predict();
+                            if (_logger && gap_frames > 1) {
+                                _logger->debug("  After predict step {}/{}: state=[{:.2f},{:.2f},{:.2f},{:.2f}]",
+                                             step+1, gap_frames,
+                                             chain.predicted.state_mean(0), chain.predicted.state_mean(1),
+                                             chain.predicted.state_mean(2), chain.predicted.state_mean(3));
+                            }
+                        }
+                        if (_logger && gap_frames > 0) {
+                            _logger->debug("  Final predicted state: [{:.2f},{:.2f},{:.2f},{:.2f}]",
+                                         chain.predicted.state_mean(0), chain.predicted.state_mean(1),
+                                         chain.predicted.state_mean(2), chain.predicted.state_mean(3));
+                        }
+                    }
+                }
+
+                // Collect available candidates at current frame
+                std::vector<std::tuple<EntityId, DataType const *, size_t>> candidates;
+                for (size_t cand_idx = 0; cand_idx < frame_lookup.at(f).size(); ++cand_idx) {
+                    auto const & cand = frame_lookup.at(f)[cand_idx];
+                    EntityId cand_id = std::get<1>(cand);
+                    auto key = std::make_pair(static_cast<long long>(f.getValue()), cand_id);
+                    if (used.count(key)) continue; // How could this be true?
+                   // if (excluded_entities && excluded_entities->count(cand_id) > 0) {
+                  //      if (!(include_entities && include_entities->count(cand_id) > 0)) {
+                   //         continue;
+                          //  }
+                    // }
+                    DataType const * cand_data = std::get<0>(cand);
+                    candidates.emplace_back(cand_id, cand_data, cand_idx);
+                }
+
+                if (!candidates.empty() && !active_chains.empty()) {
+                    // Build cost matrix for Hungarian algorithm
+                    int const cost_scaling_factor = 1000;
+                    int const max_cost = static_cast<int>(_cheap_assignment_threshold * cost_scaling_factor);
+                    std::vector<std::vector<int>> cost_matrix(active_chains.size(),
+                                                              std::vector<int>(candidates.size()));
+
+                    for (size_t chain_idx = 0; chain_idx < active_chains.size(); ++chain_idx) {
+                        auto const & chain = active_chains[chain_idx];
+                        for (size_t cand_idx = 0; cand_idx < candidates.size(); ++cand_idx) {
+                            DataType const * cand_data = std::get<1>(candidates[cand_idx]);
+                            Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*cand_data);
+
+                            double cost_double;
+                            if (chain.filter) {
+                                int gap_frames = static_cast<int>(f.getValue() - chain.curr_frame.getValue());
+                                cost_double = _chain_cost_function(chain.predicted, obs, gap_frames);
+                            } else {
+                                Eigen::VectorXd curr_obs = _feature_extractor->getFilterFeatures(*chain.curr_data);
+                                cost_double = (curr_obs - obs).norm();
+                            }
+
+                            int cost = static_cast<int>(cost_double * cost_scaling_factor);
+                            if (cost >= std::numeric_limits<int>::max()) {
+                                cost = std::numeric_limits<int>::max() - 1;
+                            }
+                            cost_matrix[chain_idx][cand_idx] = cost;
+                        }
+                    }
+
+                    // Solve Hungarian assignment
+                    std::vector<std::vector<int>> assignment_matrix;
+                    Munkres::hungarian_with_assignment(cost_matrix, assignment_matrix);
+
+                    // Check for ambiguity and trigger N-scan if enabled
+                    std::unordered_set<size_t> ambiguous_chain_indices;
+                    if (_enable_n_scan && _filter_prototype) {
+                        Eigen::MatrixXd cost_matrix_eigen(active_chains.size(), candidates.size());
+                        for (size_t i = 0; i < active_chains.size(); ++i) {
+                            for (size_t j = 0; j < candidates.size(); ++j) {
+                                cost_matrix_eigen(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j)) = 
+                                    cost_matrix[i][j] / static_cast<double>(cost_scaling_factor);
+                            }
+                        }
+                        ambiguous_chain_indices = detect_ambiguous_chains(cost_matrix_eigen, _cheap_assignment_threshold);
+                        
+                        if (_logger && !ambiguous_chain_indices.empty()) {
+                            _logger->debug("Frame {}: Detected {} ambiguous chains (threshold={:.3f})",
+                                         f.getValue(), ambiguous_chain_indices.size(), _cheap_assignment_threshold);
+                            
+                            // Check if we can run N-scan
+                            int frames_ahead = (end_frame - f).getValue();
+                            if (frames_ahead < _n_scan_depth) {
+                                _logger->debug("  N-scan SKIPPED: need {} frames ahead, only have {} (end_frame={})",
+                                             _n_scan_depth, frames_ahead, end_frame.getValue());
+                            }
+                        }
+                    }
+
+                    // If there are ambiguous chains, run N-scan for ALL of them FIRST, then assign globally
+                    std::map<size_t, std::pair<std::vector<NodeInfo>, double>> n_scan_results; // chain_idx -> (path, total_cost)
+                    // Variable-depth lookahead: allow shorter depth near tail
+                    int frames_ahead_var = (end_frame - f).getValue();
+                    int allowable_depth = std::min(_n_scan_depth, frames_ahead_var + 1);
+                    if (!ambiguous_chain_indices.empty() && allowable_depth >= 1) {
+                        if (_logger) {
+                            _logger->debug("  Running N-scan with depth={} (need {} future frames, have {})",
+                                         allowable_depth, allowable_depth - 1, (end_frame - f).getValue());
+                        }
+                        // Step 1: Run N-scan for each ambiguous chain independently
+                        std::map<size_t, std::vector<std::pair<std::vector<NodeInfo>, double>>> all_paths; // chain_idx -> [(path, cost), ...]
+                        
+                        int const saved_depth = _n_scan_depth;
+                        _n_scan_depth = allowable_depth; // temporary override for lookahead
+                        for (size_t chain_idx : ambiguous_chain_indices) {
+                            auto & chain = active_chains[chain_idx];
+                            
+                            if (_logger) {
+                                _logger->debug("  N-scan for chain {} (curr_entity={}, curr_frame={})",
+                                             chain_idx, chain.curr_entity, chain.curr_frame.getValue());
+                            }
+                            
+                            // Collect viable candidates with their costs using lookahead cost
+                            std::vector<std::tuple<EntityId, DataType const *, double>> viable_candidates;
+                            int const gap_frames = static_cast<int>(f.getValue() - chain.curr_frame.getValue());
+                            for (size_t cand_idx = 0; cand_idx < candidates.size(); ++cand_idx) {
+                                DataType const * cand_data = std::get<1>(candidates[cand_idx]);
+                                Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*cand_data);
+                                double cost_double = _lookahead_cost_function(chain.predicted, obs, std::max(1, gap_frames));
+                                if (cost_double < _lookahead_threshold || !std::isfinite(_lookahead_threshold)) {
+                                    viable_candidates.emplace_back(
+                                        std::get<0>(candidates[cand_idx]),
+                                        cand_data,
+                                        cost_double
+                                    );
+                                }
+                            }
+                            
+                            // Each chain gets its own copy of 'used' to explore independently
+                            std::set<std::pair<long long, EntityId>> chain_used = used;
+                            auto [n_scan_path, path_cost] = run_n_scan_lookahead(chain, viable_candidates, f, end_frame,
+                                                                                 frame_lookup, chain_used, excluded_entities, include_entities);
+                            
+                            if (!n_scan_path.empty()) {
+                                n_scan_results[chain_idx] = {n_scan_path, path_cost};
+                            } else if (allowable_depth == 1) {
+                                // One-step fallback: pick best single candidate not used
+                                double best_c = std::numeric_limits<double>::infinity();
+                                EntityId best_eid = 0;
+                                for (auto const & tup : viable_candidates) {
+                                    EntityId eid = std::get<0>(tup);
+                                    auto key = std::make_pair(static_cast<long long>(f.getValue()), eid);
+                                    if (used.count(key)) continue;
+                                    double c = std::get<2>(tup);
+                                    if (c < best_c) { best_c = c; best_eid = eid; }
+                                }
+                                if (best_eid != 0 && (best_c < _lookahead_threshold || !std::isfinite(_lookahead_threshold))) {
+                                    std::vector<NodeInfo> single{{f, best_eid}};
+                                    n_scan_results[chain_idx] = {single, best_c};
+                                }
+                            }
+                        }
+                        _n_scan_depth = saved_depth; // restore
+                        
+                        // Step 2: Detect conflicts - check if multiple chains want the same observations
+                        if (_logger && !n_scan_results.empty()) {
+                            _logger->debug("N-scan completed for {} chains at frame {}", n_scan_results.size(), f.getValue());
+                            for (auto const & [chain_idx, path_and_cost] : n_scan_results) {
+                                _logger->debug("  Chain {}: cost={:.2f}, path length={}", 
+                                              chain_idx, path_and_cost.second, path_and_cost.first.size());
+                            }
+                        }
+                        
+                        std::map<std::pair<long long, EntityId>, std::vector<size_t>> obs_to_chains;
+                        for (auto const & [chain_idx, path_and_cost] : n_scan_results) {
+                            // Only the current frame decision participates in conflicts
+                            if (!path_and_cost.first.empty()) {
+                                auto const & first_node = path_and_cost.first.front();
+                                auto key = std::make_pair(static_cast<long long>(first_node.frame.getValue()), first_node.entity_id);
+                                obs_to_chains[key].push_back(chain_idx);
+                            }
+                        }
+                        
+                        if (_logger && !obs_to_chains.empty()) {
+                            _logger->debug("Observation assignment: {} unique observations claimed", obs_to_chains.size());
+                            for (auto const & [obs_key, claiming_chains] : obs_to_chains) {
+                                if (claiming_chains.size() > 1) {
+                                    _logger->debug("  Frame {}, entity {}: {} chains want it", 
+                                                  obs_key.first, obs_key.second, claiming_chains.size());
+                                }
+                            }
+                        }
+                        
+                        // Step 3: Resolve conflicts - if multiple chains want same observation, keep lowest cost
+                        std::set<size_t> rejected_chains;
+                        for (auto const & [obs_key, claiming_chains] : obs_to_chains) {
+                            if (claiming_chains.size() > 1) {
+                                // Conflict! Keep chain with lowest cost, reject others
+                                if (_logger) {
+                                    _logger->debug("N-scan conflict at frame {}, entity {}: {} chains competing",
+                                                   obs_key.first, obs_key.second, claiming_chains.size());
+                                    for (size_t chain_idx : claiming_chains) {
+                                        _logger->debug("  Chain {} has cost {:.2f}", chain_idx, n_scan_results[chain_idx].second);
+                                    }
+                                }
+                                
+                                size_t best_chain = claiming_chains[0];
+                                double best_cost = n_scan_results[best_chain].second;
+                                for (size_t chain_idx : claiming_chains) {
+                                    if (n_scan_results[chain_idx].second < best_cost) {
+                                        best_chain = chain_idx;
+                                        best_cost = n_scan_results[chain_idx].second;
+                                    }
+                                }
+                                
+                                if (_logger) {
+                                    _logger->debug("  Keeping chain {} (cost {:.2f}), rejecting others", best_chain, best_cost);
+                                }
+                                
+                                // Reject all other chains
+                                for (size_t chain_idx : claiming_chains) {
+                                    if (chain_idx != best_chain) {
+                                        rejected_chains.insert(chain_idx);
+                                        if (_logger) {
+                                            _logger->debug("  Rejected chain {}", chain_idx);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Step 4: Remove rejected chains from results
+                        for (size_t rejected : rejected_chains) {
+                            n_scan_results.erase(rejected);
+                        }
+                        
+                        // Step 5: Mark accepted N-scan selections (current frame only) as used
+                        for (auto const & [chain_idx, path_and_cost] : n_scan_results) {
+                            if (!path_and_cost.first.empty()) {
+                                auto const & node = path_and_cost.first.front();
+                                used.insert(std::make_pair(static_cast<long long>(node.frame.getValue()), node.entity_id));
+                            }
+                        }
+
+                        // Step 5b: Attempt fallback N-scan for rejected/failed ambiguous chains
+                        // Re-run N-scan for chains that were ambiguous but have no accepted result,
+                        // now honoring the updated 'used' set (to avoid prior conflicts).
+                        for (size_t chain_idx : ambiguous_chain_indices) {
+                            if (n_scan_results.count(chain_idx) > 0) continue; // already accepted
+                            auto & chain = active_chains[chain_idx];
+
+                            // Rebuild viable candidates using lookahead cost and current 'used'
+                            std::vector<std::tuple<EntityId, DataType const *, double>> viable_candidates_alt;
+                            int const gap_frames_alt = static_cast<int>(f.getValue() - chain.curr_frame.getValue());
+                            for (size_t cand_idx = 0; cand_idx < candidates.size(); ++cand_idx) {
+                                EntityId eid = std::get<0>(candidates[cand_idx]);
+                                auto key = std::make_pair(static_cast<long long>(f.getValue()), eid);
+                                if (used.count(key)) continue; // avoid already claimed obs
+                                DataType const * cand_data = std::get<1>(candidates[cand_idx]);
+                                Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*cand_data);
+                                double cost_double = _lookahead_cost_function(chain.predicted, obs, std::max(1, gap_frames_alt));
+                                if (cost_double < _lookahead_threshold || !std::isfinite(_lookahead_threshold)) {
+                                    viable_candidates_alt.emplace_back(eid, cand_data, cost_double);
+                                }
+                            }
+
+                            if (!viable_candidates_alt.empty()) {
+                                int const saved_depth2 = _n_scan_depth;
+                                _n_scan_depth = allowable_depth; // use same allowable depth
+                                // Use the updated 'used' set so we avoid previous conflicts
+                                auto [alt_path, alt_cost] = run_n_scan_lookahead(chain, viable_candidates_alt, f, end_frame,
+                                                                                  frame_lookup, used, excluded_entities, include_entities);
+                                _n_scan_depth = saved_depth2;
+                                if (!alt_path.empty()) {
+                                    // Accept alternate but commit only current frame
+                                    std::vector<NodeInfo> single{alt_path.front()};
+                                    n_scan_results[chain_idx] = {single, alt_cost};
+                                    used.insert(std::make_pair(static_cast<long long>(single.front().frame.getValue()), single.front().entity_id));
+                                    if (_logger) {
+                                        _logger->debug("  Fallback N-scan accepted for chain {}: cost={:.2f}, eid={}",
+                                                       chain_idx, alt_cost, single.front().entity_id);
+                                    }
+                                } else if (allowable_depth == 1) {
+                                    // One-step fallback here too
+                                    double best_c = std::numeric_limits<double>::infinity();
+                                    EntityId best_eid = 0;
+                                    for (auto const & tup : viable_candidates_alt) {
+                                        EntityId eid = std::get<0>(tup);
+                                        auto key = std::make_pair(static_cast<long long>(f.getValue()), eid);
+                                        if (used.count(key)) continue;
+                                        double c = std::get<2>(tup);
+                                        if (c < best_c) { best_c = c; best_eid = eid; }
+                                    }
+                                    if (best_eid != 0 && (best_c < _lookahead_threshold || !std::isfinite(_lookahead_threshold))) {
+                                        std::vector<NodeInfo> single{{f, best_eid}};
+                                        n_scan_results[chain_idx] = {single, best_c};
+                                        used.insert(std::make_pair(static_cast<long long>(f.getValue()), best_eid));
+                                        if (_logger) {
+                                            _logger->debug("  Fallback single-step accepted for chain {}: eid={}, cost={:.2f}",
+                                                           chain_idx, best_eid, best_c);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Process assignments
+                    std::vector<ActiveChain> remaining_chains;
+
+                    for (size_t chain_idx = 0; chain_idx < assignment_matrix.size(); ++chain_idx) {
+                        // Check if this chain has N-scan results
+                        if (n_scan_results.count(chain_idx) > 0) {
+                            auto & chain = active_chains[chain_idx];
+                            auto const & n_scan_path = n_scan_results[chain_idx].first; // current-frame selection
+                            
+                            // Extend chain with the single current-frame decision
+                            if (!n_scan_path.empty()) {
+                                auto const & sel = n_scan_path.front();
+                                chain.members.push_back(sel);
+                                this_frame_entities.erase(sel.entity_id);
+                            }
+                            
+                            // Update chain to the selected node at current frame
+                            auto const & last_node = n_scan_path.front();
+                            chain.curr_frame = last_node.frame;
+                            chain.curr_entity = last_node.entity_id;
+                            chain.curr_data = findEntity(frame_lookup.at(last_node.frame), last_node.entity_id);
+                            
+                            // Re-sync filter
+                            if (chain.filter && chain.curr_data) {
+                                Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*chain.curr_data);
+                                // At current frame, update with the current predicted
+                                chain.filter->update(chain.predicted, Measurement{obs});
+                            }
+                            
+                            remaining_chains.push_back(std::move(chain));
+                            continue;
+                        }
+                        
+                        // Check if this chain was ambiguous but N-scan failed
+                        if (ambiguous_chain_indices.count(chain_idx) > 0) {
+                            auto & chain = active_chains[chain_idx];
+                            auto & node = meta_nodes[chain.meta_node_idx];
+                            
+                            // N-scan failed - terminate chain
+                            // Finalize chain into a meta-node upon termination
+                            MetaNode term;
+                            term.start_frame = chain.members.front().frame;
+                            term.start_entity = chain.members.front().entity_id;
+                            term.members = chain.members;
+                            term.end_frame = chain.members.back().frame;
+                            term.end_entity = chain.members.back().entity_id;
+                            term.start_state = chain.start_state;
+                            if (chain.filter) term.end_state = chain.filter->getState();
+                            meta_nodes.push_back(std::move(term));
+                            this_frame_entities.erase(chain.members.back().entity_id);
+                            continue;
+                        }
+                        
+                        // Normal assignment processing
+                        bool found_assignment = false;
+                        int assigned_cand_idx = -1;
+
+                        for (size_t cand_idx = 0; cand_idx < assignment_matrix[chain_idx].size(); ++cand_idx) {
+                            if (assignment_matrix[chain_idx][cand_idx] == 1) {
+                                if (cost_matrix[chain_idx][cand_idx] <= max_cost) {
+                                    found_assignment = true;
+                                    assigned_cand_idx = static_cast<int>(cand_idx);
+                                }
+                                break;
+                            }
+                        }
+
+                        auto & chain = active_chains[chain_idx];
+                        auto & node = meta_nodes[chain.meta_node_idx];
+
+                        if (found_assignment) {
+                            // Extend chain
+                            EntityId best_entity = std::get<0>(candidates[assigned_cand_idx]);
+                            DataType const * best_data = std::get<1>(candidates[assigned_cand_idx]);
+                            
+                            if (_logger) {
+                                double cost_unscaled = static_cast<double>(cost_matrix[chain_idx][assigned_cand_idx]) / cost_scaling_factor;
+                                _logger->debug("  Chain {} (entity {}) → entity {} (cost={:.3f}, threshold={:.3f})",
+                                             chain_idx, chain.curr_entity, best_entity, cost_unscaled, _cheap_assignment_threshold);
+                            }
+
+                            Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*best_data);
+                            if (chain.filter) {
+                                chain.filter->update(chain.predicted, {obs});
+
+                                // Check covariance health
+                                auto updated_state = chain.filter->getState();
+                                double determinant = updated_state.state_covariance.determinant();
+
+                                if (std::abs(determinant) < 1e-10 && _logger) {
+                                    Eigen::JacobiSVD<Eigen::MatrixXd> svd(updated_state.state_covariance);
+                                    double condition_number = svd.singularValues()(0) /
+                                                              (svd.singularValues()(svd.singularValues().size() - 1) + 1e-20);
+
+                                    _logger->warn("State covariance singular: det={:.2e}, cond={:.2e}",
+                                                  determinant, condition_number);
+
+                                    if (condition_number > 1e12) {
+                                        _logger->warn("  Terminating chain due to ill-conditioned covariance");
+                                        found_assignment = false;
+                                    }
+                                }
+                            }
+
+                            if (found_assignment) {
+                                NodeInfo next_info{f, best_entity};
+                                chain.members.push_back(next_info);
+                                used.insert(std::make_pair(static_cast<long long>(f.getValue()), best_entity));
+
+                                chain.curr_frame = f;
+                                chain.curr_entity = best_entity;
+                                chain.curr_data = best_data;
+                                this_frame_entities.erase(best_entity);
+                                remaining_chains.push_back(std::move(chain));
+                            }
+                        }
+
+                        if (!found_assignment) {
+                            // Chain terminates -> emit meta-node
+                            if (_logger) {
+                                _logger->debug("  Chain {} (entity {}) terminated at frame {} - emit meta-node",
+                                             chain_idx, chain.curr_entity, chain.curr_frame.getValue());
+                            }
+                            MetaNode term;
+                            term.start_frame = chain.members.front().frame;
+                            term.start_entity = chain.members.front().entity_id;
+                            term.members = chain.members;
+                            term.end_frame = chain.members.back().frame;
+                            term.end_entity = chain.members.back().entity_id;
+                            term.start_state = chain.start_state;
+                            if (chain.filter) term.end_state = chain.filter->getState();
+                            meta_nodes.push_back(std::move(term));
+                            this_frame_entities.erase(chain.members.back().entity_id);
+                        }
+                    }
+
+                    active_chains = std::move(remaining_chains);
+                }
+            }
+
+            // Step 2: Start new chains for any remaining unused observations in current frame
             for (auto const & item: frame_lookup.at(f)) {
                 EntityId entity_id = std::get<1>(item);
                 auto used_key = std::make_pair(static_cast<long long>(f.getValue()), entity_id);
                 if (used.count(used_key)) continue;
 
-                if (excluded_entities && excluded_entities->count(entity_id) > 0) {
-                    if (!(include_entities && include_entities->count(entity_id) > 0)) {
-                        continue;
-                    }
-                }
+                //if (excluded_entities && excluded_entities->count(entity_id) > 0) {
+                //    if (!(include_entities && include_entities->count(entity_id) > 0)) {
+                //        continue;
+                //    }
+                //}
 
                 DataType const * start_data = std::get<0>(item);
 
                 // Initialize filter for this new chain
                 FilterState start_state;
+                FilterState updated_state;
                 std::unique_ptr<IFilter> chain_filter;
                 if (_filter_prototype) {
                     chain_filter = _filter_prototype->clone();
-                    chain_filter->initialize(_feature_extractor->getInitialState(*start_data));
+                    FilterState initial_state = _feature_extractor->getInitialState(*start_data);
+                    chain_filter->initialize(initial_state);
                     start_state = chain_filter->getState();
+                    
+                    // Immediately update filter with the first observation
+                    // This ensures single-frame meta-nodes have correct end_state
+                    Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*start_data);
+                    updated_state = chain_filter->update(start_state, Measurement{obs});
                 }
 
-                // Create new meta-node
-                MetaNode node;
-                node.start_frame = f;
-                node.start_entity = entity_id;
-                node.members.push_back(NodeInfo{f, entity_id});
-                node.start_state = start_state;
-                // Seed end_state so it's never empty even for single-frame nodes
-                node.end_state = start_state;
+                // Start new active chain (defer meta-node until termination)
+                this_frame_entities.erase(entity_id);
                 used.insert(used_key);
 
-                size_t node_idx = meta_nodes.size();
-                meta_nodes.push_back(std::move(node));
-
-                // Add to active chains for extension
                 ActiveChain chain;
-                chain.meta_node_idx = node_idx;
+                chain.meta_node_idx = static_cast<size_t>(-1);
                 chain.curr_frame = f;
                 chain.curr_entity = entity_id;
                 chain.curr_data = start_data;
                 chain.filter = std::move(chain_filter);
+                chain.members.push_back(NodeInfo{f, entity_id});
+                chain.start_state = start_state;
                 active_chains.push_back(std::move(chain));
             }
 
-            // Step 2: Try to extend all active chains to next frame using Hungarian algorithm
-            TimeFrameIndex next_frame = f + TimeFrameIndex(1);
-            if (next_frame > end_frame || !frame_lookup.count(next_frame)) {
-                continue;// No next frame, chains will terminate
-            }
-
-            if (active_chains.empty()) continue;
-
-            // Predict all active chains
-            for (auto & chain: active_chains) {
-                if (chain.filter) {
-                    chain.predicted = chain.filter->predict();
-                }
-            }
-
-            // Collect available candidates in next frame
-            std::vector<std::tuple<EntityId, DataType const *, size_t>> candidates;// entity_id, data, index
-            for (size_t cand_idx = 0; cand_idx < frame_lookup.at(next_frame).size(); ++cand_idx) {
-                auto const & cand = frame_lookup.at(next_frame)[cand_idx];
-                EntityId cand_id = std::get<1>(cand);
-                auto key = std::make_pair(static_cast<long long>(next_frame.getValue()), cand_id);
-                if (used.count(key)) continue;
-                if (excluded_entities && excluded_entities->count(cand_id) > 0) {
-                    if (!(include_entities && include_entities->count(cand_id) > 0)) {
-                        continue;
-                    }
-                }
-                DataType const * cand_data = std::get<0>(cand);
-                candidates.emplace_back(cand_id, cand_data, cand_idx);
-            }
-
-            if (candidates.empty()) {
-                // No candidates available - all chains terminate
+            if (this_frame_entities.size() != 0) {
+                // ERROR WE LEFT A MAN BEHIND
+                // Error out
                 if (_logger) {
-                    _logger->debug("{} active chains terminating at frame {} (no available candidates in frame {})",
-                                   active_chains.size(), f.getValue(), next_frame.getValue());
+                    _logger->error("We left a man behind at frame {}", f.getValue(), 
+                    " with entities: ", this_frame_entities.size());
                 }
-                active_chains.clear();
-                continue;
+                throw std::runtime_error(
+                    "We left a man behind at frame " + std::to_string(f.getValue()) +
+                    " with entities: " + std::to_string(this_frame_entities.size()));
             }
-
-            // Build cost matrix for Hungarian algorithm
-            // Rows = active chains, Cols = candidates
-            int const cost_scaling_factor = 1000;
-            int const max_cost = static_cast<int>(_cheap_assignment_threshold * cost_scaling_factor);
-            std::vector<std::vector<int>> cost_matrix(active_chains.size(),
-                                                      std::vector<int>(candidates.size()));
-
-            for (size_t chain_idx = 0; chain_idx < active_chains.size(); ++chain_idx) {
-                auto const & chain = active_chains[chain_idx];
-                for (size_t cand_idx = 0; cand_idx < candidates.size(); ++cand_idx) {
-                    DataType const * cand_data = std::get<1>(candidates[cand_idx]);
-                    Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*cand_data);
-
-                    double cost_double;
-                    if (chain.filter) {
-                        cost_double = _chain_cost_function(chain.predicted, obs, 1);
-                    } else {
-                        Eigen::VectorXd curr_obs = _feature_extractor->getFilterFeatures(*chain.curr_data);
-                        cost_double = (curr_obs - obs).norm();
-                    }
-
-                    int cost = static_cast<int>(cost_double * cost_scaling_factor);
-                    if (cost >= std::numeric_limits<int>::max()) {
-                        cost = std::numeric_limits<int>::max() - 1;
-                    }
-                    cost_matrix[chain_idx][cand_idx] = cost;
-                }
-            }
-
-            // Solve Hungarian assignment
-            std::vector<std::vector<int>> assignment_matrix;
-            Munkres::hungarian_with_assignment(cost_matrix, assignment_matrix);
-
-            // Process assignments
-            std::vector<bool> chain_extended(active_chains.size(), false);
-            std::vector<ActiveChain> remaining_chains;
-
-            for (size_t chain_idx = 0; chain_idx < assignment_matrix.size(); ++chain_idx) {
-                bool found_assignment = false;
-                int assigned_cand_idx = -1;
-
-                for (size_t cand_idx = 0; cand_idx < assignment_matrix[chain_idx].size(); ++cand_idx) {
-                    if (assignment_matrix[chain_idx][cand_idx] == 1) {
-                        // Check if cost is within threshold
-                        if (cost_matrix[chain_idx][cand_idx] <= max_cost) {
-                            found_assignment = true;
-                            assigned_cand_idx = static_cast<int>(cand_idx);
-                        }
-                        break;
-                    }
-                }
-
-                auto & chain = active_chains[chain_idx];
-                auto & node = meta_nodes[chain.meta_node_idx];
-
-                if (found_assignment) {
-                    // Extend chain
-                    EntityId best_entity = std::get<0>(candidates[assigned_cand_idx]);
-                    DataType const * best_data = std::get<1>(candidates[assigned_cand_idx]);
-
-                    Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*best_data);
-                    if (chain.filter) {
-                        chain.filter->update(chain.predicted, {obs});
-
-                        // Check covariance health
-                        auto updated_state = chain.filter->getState();
-                        double determinant = updated_state.state_covariance.determinant();
-
-                        if (std::abs(determinant) < 1e-10 && _logger) {
-                            Eigen::JacobiSVD<Eigen::MatrixXd> svd(updated_state.state_covariance);
-                            double condition_number = svd.singularValues()(0) /
-                                                      (svd.singularValues()(svd.singularValues().size() - 1) + 1e-20);
-
-                            _logger->warn("State covariance singular at frame {} entity {}: det={:.2e}, cond={:.2e}",
-                                          next_frame.getValue(), best_entity, determinant, condition_number);
-
-                            if (condition_number > 1e12) {
-                                _logger->warn("  Terminating chain due to ill-conditioned covariance");
-                                found_assignment = false;// Terminate this chain
-                            }
-                        }
-                    }
-
-                    if (found_assignment) {
-                        NodeInfo next_info{next_frame, best_entity};
-                        node.members.push_back(next_info);
-                        used.insert(std::make_pair(static_cast<long long>(next_frame.getValue()), best_entity));
-
-                        chain.curr_frame = next_frame;
-                        chain.curr_entity = best_entity;
-                        chain.curr_data = best_data;
-                        chain_extended[chain_idx] = true;
-                        remaining_chains.push_back(std::move(chain));
-                    }
-                }
-
-                if (!found_assignment) {
-                    // Chain terminates - finalize meta-node
-                    node.end_frame = node.members.back().frame;
-                    node.end_entity = node.members.back().entity_id;
-                    if (chain.filter) {
-                        node.end_state = chain.filter->getState();
-                    }
-
-                    if (_logger) {
-                        // Log why chain ended
-                        double best_cost_double = std::numeric_limits<double>::infinity();
-                        if (assigned_cand_idx >= 0) {
-                            best_cost_double = cost_matrix[chain_idx][assigned_cand_idx] / static_cast<double>(cost_scaling_factor);
-                        }
-
-                        _logger->debug("Meta-node #{}: frames {} to {} ({} frames), entities {} to {}, {} members - terminated (best_cost={:.2f}, threshold={:.2f})",
-                                       chain.meta_node_idx,
-                                       node.start_frame.getValue(),
-                                       node.end_frame.getValue(),
-                                       node.end_frame.getValue() - node.start_frame.getValue() + 1,
-                                       node.start_entity,
-                                       node.end_entity,
-                                       node.members.size(),
-                                       best_cost_double,
-                                       _cheap_assignment_threshold);
-                    }
-                }
-            }
-
-            active_chains = std::move(remaining_chains);
         }
 
         // Finalize any remaining active chains at end of range
         for (auto & chain: active_chains) {
-            auto & node = meta_nodes[chain.meta_node_idx];
-            node.end_frame = node.members.back().frame;
-            node.end_entity = node.members.back().entity_id;
-            if (chain.filter) {
-                node.end_state = chain.filter->getState();
-            }
-
+            MetaNode node;
+            node.start_frame = chain.members.front().frame;
+            node.start_entity = chain.members.front().entity_id;
+            node.members = chain.members;
+            node.end_frame = chain.members.back().frame;
+            node.end_entity = chain.members.back().entity_id;
+            node.start_state = chain.start_state;
+            if (chain.filter) node.end_state = chain.filter->getState();
             if (_logger) {
-                _logger->debug("Meta-node #{}: frames {} to {} ({} frames), entities {} to {}, {} members - reached end",
-                               chain.meta_node_idx,
+                _logger->debug("Meta-node (finalized): frames {} to {} ({} frames), entities {} to {}, {} members - reached end",
                                node.start_frame.getValue(),
                                node.end_frame.getValue(),
                                node.end_frame.getValue() - node.start_frame.getValue() + 1,
@@ -822,10 +1173,24 @@ private:
                                node.end_entity,
                                node.members.size());
             }
+            meta_nodes.push_back(std::move(node));
         }
 
         if (_logger) {
             _logger->debug("Built {} meta-nodes using Hungarian assignment", meta_nodes.size());
+            
+            // Log each meta-node's contents for debugging
+            for (size_t i = 0; i < meta_nodes.size(); ++i) {
+                auto const & mn = meta_nodes[i];
+                std::ostringstream oss;
+                oss << "Meta-node #" << i << " [frames " << mn.start_frame.getValue() << "-" << mn.end_frame.getValue() << "]: entities {";
+                for (size_t j = 0; j < mn.members.size(); ++j) {
+                    if (j > 0) oss << ", ";
+                    oss << mn.members[j].entity_id << "@f" << mn.members[j].frame.getValue();
+                }
+                oss << "}";
+                _logger->debug(oss.str());
+            }
 
             // Compute statistics on meta-node lengths
             if (!meta_nodes.empty()) {
@@ -876,10 +1241,293 @@ private:
     This prevents "stealing" where long chains take candidates that would be better matches for other chains.
     */
 
+    // --- N-Scan Lookahead Functions ---
+
+
+    /**
+     * @brief Detect if assignments are ambiguous at current frame.
+     * Ambiguous if: (1) A chain has ≥2 candidates below threshold, OR
+     *               (2) Multiple chains compete for the same candidate.
+     * 
+     * @param cost_matrix Cost matrix (chains x candidates)
+     * @param threshold Assignment threshold
+     * @return Indices of chains involved in ambiguous assignments
+     */
+    std::unordered_set<size_t> detect_ambiguous_chains(
+            Eigen::MatrixXd const & cost_matrix,
+            double threshold) const {
+
+        std::unordered_set<size_t> ambiguous_chains;
+        size_t num_chains = static_cast<size_t>(cost_matrix.rows());
+        size_t num_candidates = static_cast<size_t>(cost_matrix.cols());
+
+        // Check condition 1: chain has ≥2 candidates below threshold
+        for (size_t chain_idx = 0; chain_idx < num_chains; ++chain_idx) {
+            int count_below_threshold = 0;
+            for (size_t cand_idx = 0; cand_idx < num_candidates; ++cand_idx) {
+                if (cost_matrix(static_cast<Eigen::Index>(chain_idx),
+                                static_cast<Eigen::Index>(cand_idx)) < threshold) {
+                    ++count_below_threshold;
+                }
+            }
+            if (count_below_threshold >= 2) {
+                ambiguous_chains.insert(chain_idx);
+            }
+        }
+
+        // Check condition 2: multiple chains compete for same candidate
+        for (size_t cand_idx = 0; cand_idx < num_candidates; ++cand_idx) {
+            int count_below_threshold = 0;
+            size_t competing_chain = 0;
+            for (size_t chain_idx = 0; chain_idx < num_chains; ++chain_idx) {
+                if (cost_matrix(static_cast<Eigen::Index>(chain_idx),
+                                static_cast<Eigen::Index>(cand_idx)) < threshold) {
+                    ++count_below_threshold;
+                    competing_chain = chain_idx;
+                }
+            }
+            if (count_below_threshold >= 2) {
+                // Mark all competing chains as ambiguous
+                for (size_t chain_idx = 0; chain_idx < num_chains; ++chain_idx) {
+                    if (cost_matrix(static_cast<Eigen::Index>(chain_idx),
+                                    static_cast<Eigen::Index>(cand_idx)) < threshold) {
+                        ambiguous_chains.insert(chain_idx);
+                    }
+                }
+            }
+        }
+
+        return ambiguous_chains;
+    }
+
+    /**
+     * @brief Expand hypotheses by one frame: predict, compute costs, and branch.
+     * 
+     * @param hypotheses Current hypotheses for a chain
+     * @param candidates Available observations at next frame
+     * @param next_frame Frame index of candidates
+     * @param frame_lookup Frame data lookup
+     * @param scoring_fn Function to compute total cost from frame costs
+     * @return Updated hypotheses (terminated branches are marked)
+     */
+    std::vector<Hypothesis> expand_hypotheses(
+            std::vector<Hypothesis> && hypotheses,
+            std::vector<std::pair<EntityId, DataType const *>> const & candidates,
+            TimeFrameIndex next_frame,
+            std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
+            HypothesisScoringFunction const & scoring_fn) {
+
+        std::vector<Hypothesis> expanded;
+
+        for (auto & hyp: hypotheses) {
+            if (hyp.terminated) {
+                expanded.push_back(std::move(hyp));
+                continue;
+            }
+
+            // Predict forward one frame
+            FilterState predicted_state = hyp.filter->predict();
+
+            if (_logger) {
+                _logger->debug("      Expanding hyp (current_path_length={}): predicted_mean=[{:.2f},{:.2f}]",
+                             hyp.path.size(), predicted_state.state_mean(0), predicted_state.state_mean(1));
+            }
+
+            // Try each candidate
+            bool found_valid_branch = false;
+            for (auto const & [cand_entity_id, cand_data]: candidates) {
+                // Extract features
+                Eigen::VectorXd measurement = _feature_extractor->getFilterFeatures(*cand_data);
+
+                // Compute cost
+                double cost = _lookahead_cost_function(predicted_state, measurement, 1);
+
+                if (_logger && cost < _cheap_assignment_threshold) {
+                    _logger->debug("        → entity {}: obs=[{:.2f},{:.2f}], cost={:.3f}",
+                                 cand_entity_id, measurement(0), measurement(1), cost);
+                }
+
+                // Prune if exceeds lookahead threshold
+                if (std::isfinite(_lookahead_threshold) && cost >= _lookahead_threshold) {
+                    continue;
+                }
+
+                // Clone hypothesis and extend
+                Hypothesis new_hyp;
+                new_hyp.filter = hyp.filter->clone();
+                new_hyp.current_state = new_hyp.filter->update(predicted_state, Measurement{measurement});
+                new_hyp.path = hyp.path;
+                new_hyp.path.push_back({next_frame, cand_entity_id});
+                new_hyp.frame_costs = hyp.frame_costs;
+                new_hyp.frame_costs.push_back(cost);
+                new_hyp.total_cost = scoring_fn(new_hyp.frame_costs);
+                new_hyp.terminated = false;
+
+                expanded.push_back(std::move(new_hyp));
+                found_valid_branch = true;
+            }
+
+            // If no valid branches, terminate this hypothesis
+            if (!found_valid_branch) {
+                hyp.terminated = true;
+                expanded.push_back(std::move(hyp));
+            }
+        }
+
+        return expanded;
+    }
+
+    /**
+     * @brief Run N-scan lookahead for an ambiguous chain.
+     * Explores multiple hypothesis paths over the next N frames and selects the best.
+     * 
+     * @param chain The active chain to run N-scan on
+     * @param candidates_at_next_frame Initial candidates at the first lookahead frame
+     * @param start_scan_frame The frame where N-scan starts
+     * @param frame_lookup All frame data
+     * @param used Set of already-used (frame, entity) pairs (will be updated)
+     * @param excluded_entities Entities to exclude
+     * @param include_entities Entities to force include despite exclusion
+     * @return Pair of (path, total_cost), or ({}, 0.0) if chain should terminate
+     */
+    std::pair<std::vector<NodeInfo>, double> run_n_scan_lookahead(
+            ActiveChain const & chain,
+            std::vector<std::tuple<EntityId, DataType const *, double>> const & candidates_with_costs,
+            TimeFrameIndex start_scan_frame,
+            TimeFrameIndex end_frame,
+            std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
+            std::set<std::pair<long long, EntityId>> & used,
+            std::unordered_set<EntityId> const * excluded_entities,
+            std::unordered_set<EntityId> const * include_entities) {
+
+        // Early return if we can't scan ahead (at or near end frame)
+        if (start_scan_frame + TimeFrameIndex(1) > end_frame) {
+            if (_logger) {
+                _logger->debug("N-scan skipped at frame {}: no future frames to scan", start_scan_frame.getValue());
+            }
+            return {{}, 0.0};
+        }
+
+        // Initialize hypotheses for each viable candidate
+        std::vector<Hypothesis> hypotheses;
+        for (auto const & [cand_entity, cand_data, cost_double]: candidates_with_costs) {
+            if (cost_double >= _cheap_assignment_threshold) continue;
+
+            Hypothesis hyp;
+            hyp.filter = chain.filter ? chain.filter->clone() : nullptr;
+            if (hyp.filter) {
+                Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*cand_data);
+                
+                // Check if cloned filter state matches chain.predicted
+                auto cloned_state = hyp.filter->getState();
+                
+                hyp.current_state = hyp.filter->update(chain.predicted, Measurement{obs});
+                
+                if (_logger) {
+                    _logger->debug("    Init hyp for entity {}: chain.predicted=[{:.2f},{:.2f},{:.2f},{:.2f}], cloned_filter=[{:.2f},{:.2f},{:.2f},{:.2f}], obs=[{:.2f},{:.2f}], cost={:.3f}",
+                                 cand_entity, 
+                                 chain.predicted.state_mean(0), chain.predicted.state_mean(1),
+                                 chain.predicted.state_mean(2), chain.predicted.state_mean(3),
+                                 cloned_state.state_mean(0), cloned_state.state_mean(1),
+                                 cloned_state.state_mean(2), cloned_state.state_mean(3),
+                                 obs(0), obs(1), cost_double);
+                    _logger->debug("       After update: state=[{:.2f},{:.2f},{:.2f},{:.2f}]",
+                                 hyp.current_state.state_mean(0), hyp.current_state.state_mean(1),
+                                 hyp.current_state.state_mean(2), hyp.current_state.state_mean(3));
+                }
+            }
+            hyp.path.push_back({start_scan_frame, cand_entity});
+            hyp.frame_costs.push_back(cost_double);
+            hyp.total_cost = score_hypothesis_simple_sum(hyp.frame_costs);
+            hyp.terminated = false;
+
+            hypotheses.push_back(std::move(hyp));
+        }
+
+        if (hypotheses.empty()) {
+            return {{}, 0.0};// No viable paths
+        }
+
+        if (_logger) {
+            _logger->debug("Starting N-scan at frame {} with {} initial hypotheses",
+                           start_scan_frame.getValue(), hypotheses.size());
+        }
+
+        // Expand hypotheses over N frames
+        for (int depth = 1; depth < _n_scan_depth; ++depth) {
+            TimeFrameIndex scan_frame = start_scan_frame + TimeFrameIndex(depth);
+            if (scan_frame > end_frame || !frame_lookup.count(scan_frame)) {
+                break;// Reached end of available frames
+            }
+
+            // Collect available candidates
+            std::vector<std::pair<EntityId, DataType const *>> scan_candidates;
+            for (auto const & item: frame_lookup.at(scan_frame)) {
+                EntityId cand_id = std::get<1>(item);
+                auto key = std::make_pair(static_cast<long long>(scan_frame.getValue()), cand_id);
+                if (used.count(key)) continue;
+                if (excluded_entities && excluded_entities->count(cand_id) > 0) {
+                    if (!(include_entities && include_entities->count(cand_id) > 0)) {
+                        continue;
+                    }
+                }
+                scan_candidates.emplace_back(cand_id, std::get<0>(item));
+            }
+
+            if (scan_candidates.empty()) {
+                break;// No candidates available
+            }
+
+            // Expand all hypotheses
+            hypotheses = expand_hypotheses(std::move(hypotheses), scan_candidates, scan_frame,
+                                           frame_lookup, score_hypothesis_simple_sum);
+
+            // Check for early termination
+            int viable_count = 0;
+            for (auto const & hyp: hypotheses) {
+                if (!hyp.terminated) viable_count++;
+            }
+
+            if (_logger) {
+                _logger->debug("N-scan depth {}: {} viable hypotheses at frame {}",
+                               depth, viable_count, scan_frame.getValue());
+            }
+
+            if (viable_count <= 1) {
+                break;// Only one path remains, can commit early
+            }
+        }
+
+        // Select best hypothesis
+        bool reached_n = (hypotheses.empty() ? false : (hypotheses[0].path.size() >= static_cast<size_t>(_n_scan_depth)));
+        auto best_hyp_opt = select_best_hypothesis(hypotheses, reached_n);
+
+        if (!best_hyp_opt.has_value()) {
+            if (_logger) {
+                _logger->debug("N-scan terminated: ambiguity persists or no viable paths");
+            }
+            return {{}, 0.0};
+        }
+
+        // Mark used entities from the selected path
+        auto const & best_path = best_hyp_opt->path;
+        double best_cost = best_hyp_opt->total_cost;
+        for (auto const & node: best_path) {
+            used.insert(std::make_pair(static_cast<long long>(node.frame.getValue()), node.entity_id));
+        }
+
+        if (_logger) {
+            _logger->debug("N-scan committed path with {} nodes, total cost {:.2f}",
+                           best_path.size(), best_cost);
+        }
+
+        return {best_path, best_cost};
+    }
+
     // --- Final Smoothing Step ---
     SmoothedResults generate_smoothed_results(
             std::map<GroupId, Path> const & solved_paths,
-            std::map<TimeFrameIndex, FrameBucket> const & frame_lookup,
+            std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
             TimeFrameIndex start_frame,
             TimeFrameIndex end_frame) {
 
@@ -935,36 +1583,21 @@ private:
         return final_results;
     }
 
-    // --- Utility Functions ---
-    [[nodiscard]] std::map<TimeFrameIndex, FrameBucket>
-    buildFrameLookup(auto && data_source, TimeFrameIndex start_frame, TimeFrameIndex end_frame) const {
-        std::map<TimeFrameIndex, FrameBucket> lookup;
-        for (auto const & item: data_source) {
-            TimeFrameIndex t = getTimeFrameIndex(item);
-            if (t >= start_frame && t <= end_frame) {
-                lookup[t].emplace_back(&getData(item), getEntityId(item), t);
-            }
-        }
-        return lookup;
-    }
-
-    static DataType const * findEntity(FrameBucket const & bucket, EntityId id) {
-        for (auto const & item: bucket) {
-            if (std::get<1>(item) == id) return std::get<0>(item);
-        }
-        return nullptr;
-    }
-
 private:
     std::unique_ptr<IFilter> _filter_prototype;
     std::unique_ptr<IFeatureExtractor<DataType>> _feature_extractor;
     CostFunction _chain_cost_function;
     CostFunction _transition_cost_function;
+    CostFunction _lookahead_cost_function;
     double _cost_scale_factor;
     double _cheap_assignment_threshold;
     std::shared_ptr<spdlog::logger> _logger;
     TrackerContractPolicy _policy = TrackerContractPolicy::Throw;
     TrackerDiagnostics _diagnostics{};
+    int _n_scan_depth = 3;
+    bool _enable_n_scan = true;
+    int _max_gap_frames = 3;  // Maximum frames to skip before terminating chain (-1 = unlimited)
+    double _lookahead_threshold = std::numeric_limits<double>::infinity();
 };
 
 }// namespace StateEstimation

@@ -20,20 +20,19 @@ namespace StateEstimation {
  * This dual support allows both legacy tuple-based sources and new adapter-based sources.
  */
 template<typename T, typename DataType>
-concept DataItem = 
-    // Option 1: Tuple-like access
-    (requires(T item) {
-        { std::get<0>(item) } -> std::convertible_to<DataType const&>;
-        { std::get<1>(item) } -> std::convertible_to<EntityId>;
-        { std::get<2>(item) } -> std::convertible_to<TimeFrameIndex>;
-    })
-    ||
-    // Option 2: Accessor methods
-    (requires(T item) {
-        { item.getData() } -> std::convertible_to<DataType const&>;
-        { item.getEntityId() } -> std::convertible_to<EntityId>;
-        { item.getTimeFrameIndex() } -> std::convertible_to<TimeFrameIndex>;
-    });
+concept DataItem =
+        // Option 1: Tuple-like access
+        (requires(T item) {
+            { std::get<0>(item) } -> std::convertible_to<DataType const &>;
+            { std::get<1>(item) } -> std::convertible_to<EntityId>;
+            { std::get<2>(item) } -> std::convertible_to<TimeFrameIndex>;
+        }) ||
+        // Option 2: Accessor methods
+        (requires(T item) {
+            { item.getData() } -> std::convertible_to<DataType const &>;
+            { item.getEntityId() } -> std::convertible_to<EntityId>;
+            { item.getTimeFrameIndex() } -> std::convertible_to<TimeFrameIndex>;
+        });
 
 /**
  * @brief Concept for a data source that provides a range of data items.
@@ -49,13 +48,13 @@ concept DataItem =
  */
 template<typename Source, typename DataType>
 concept DataSource = std::ranges::input_range<std::remove_reference_t<Source>> &&
-    DataItem<std::ranges::range_value_t<std::remove_reference_t<Source>>, DataType>;
+                     DataItem<std::ranges::range_value_t<std::remove_reference_t<Source>>, DataType>;
 
 /**
  * @brief Helper to extract data from a DataItem (supports both tuple and accessor)
  */
 template<typename Item>
-inline auto const& getData(Item const& item) {
+inline auto const & getData(Item const & item) {
     if constexpr (requires { item.getData(); }) {
         return item.getData();
     } else {
@@ -67,7 +66,7 @@ inline auto const& getData(Item const& item) {
  * @brief Helper to extract EntityId from a DataItem (supports both tuple and accessor)
  */
 template<typename Item>
-inline EntityId getEntityId(Item const& item) {
+inline EntityId getEntityId(Item const & item) {
     if constexpr (requires { item.getEntityId(); }) {
         return item.getEntityId();
     } else {
@@ -79,7 +78,7 @@ inline EntityId getEntityId(Item const& item) {
  * @brief Helper to extract TimeFrameIndex from a DataItem (supports both tuple and accessor)
  */
 template<typename Item>
-inline TimeFrameIndex getTimeFrameIndex(Item const& item) {
+inline TimeFrameIndex getTimeFrameIndex(Item const & item) {
     if constexpr (requires { item.getTimeFrameIndex(); }) {
         return item.getTimeFrameIndex();
     } else {
@@ -87,6 +86,31 @@ inline TimeFrameIndex getTimeFrameIndex(Item const& item) {
     }
 }
 
-} // namespace StateEstimation
+template<typename DataType>
+using FrameBucket = std::vector<std::tuple<DataType const *, EntityId, TimeFrameIndex>>;
 
-#endif // STATE_ESTIMATION_DATASOURCE_HPP
+template<typename DataType>
+inline DataType const * findEntity(FrameBucket<DataType> const & bucket, EntityId id) {
+    for (auto const & item: bucket) {
+        if (std::get<1>(item) == id) return std::get<0>(item);
+    }
+    return nullptr;
+}
+
+template <typename Source, typename DataType>
+    requires DataSource<Source, DataType>
+inline std::map<TimeFrameIndex, FrameBucket<DataType>>
+buildFrameLookup(Source && data_source, TimeFrameIndex start_frame, TimeFrameIndex end_frame) {
+    std::map<TimeFrameIndex, FrameBucket<DataType>> lookup;
+    for (auto const & item: data_source) {
+        TimeFrameIndex t = getTimeFrameIndex(item);
+        if (t >= start_frame && t <= end_frame) {
+            lookup[t].emplace_back(&getData(item), getEntityId(item), t);
+        }
+    }
+    return lookup;
+}
+
+}// namespace StateEstimation
+
+#endif// STATE_ESTIMATION_DATASOURCE_HPP

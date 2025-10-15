@@ -195,10 +195,7 @@ private:
 
     [[nodiscard]] FilterState toFilterState() const {
         FilterState s{};
-        int const n = stateDim();
-        s.state_mean = Eigen::VectorXd::Zero(n);
-        s.state_covariance = Eigen::MatrixXd::Zero(n, n);
-        s.state_mean = x_;
+        s.state_mean = x_;  // Eigen handles fixed->dynamic conversion
         s.state_covariance = P_;
         return s;
     }
