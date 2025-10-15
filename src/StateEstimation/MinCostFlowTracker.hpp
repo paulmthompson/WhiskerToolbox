@@ -194,6 +194,14 @@ public:
     void setLookaheadThreshold(double threshold) { _lookahead_threshold = threshold; }
 
     /**
+     * @brief Set ambiguity threshold and optional margin to decide when to run N-scan.
+     * If the best cost < ambiguity_threshold and (second_best - best) >= ambiguity_margin,
+     * the chain is considered certain and N-scan is skipped.
+     */
+    void setAmbiguityThreshold(double threshold) { _ambiguity_threshold = threshold; }
+    void setAmbiguityMargin(double margin) { _ambiguity_margin = margin; }
+
+    /**
      * @brief Process a range of frames using min-cost flow optimization.
      *
      * @param data_source Zero-copy data source
@@ -733,7 +741,26 @@ private:
                                     cost_matrix[i][j] / static_cast<double>(cost_scaling_factor);
                             }
                         }
-                        ambiguous_chain_indices = detect_ambiguous_chains(cost_matrix_eigen, _cheap_assignment_threshold);
+                    ambiguous_chain_indices = detect_ambiguous_chains(cost_matrix_eigen, _ambiguity_threshold);
+                    // Apply certainty margin: drop chains whose best is clearly better than next-best
+                    if (_ambiguity_margin > 0.0) {
+                        std::unordered_set<size_t> pruned;
+                        for (size_t i = 0; i < active_chains.size(); ++i) {
+                            if (ambiguous_chain_indices.find(i) == ambiguous_chain_indices.end()) continue;
+                            // compute best and second best
+                            double best = std::numeric_limits<double>::infinity();
+                            double second = std::numeric_limits<double>::infinity();
+                            for (size_t j = 0; j < candidates.size(); ++j) {
+                                double c = cost_matrix_eigen(static_cast<Eigen::Index>(i), static_cast<Eigen::Index>(j));
+                                if (c < best) { second = best; best = c; }
+                                else if (c < second) { second = c; }
+                            }
+                            if (best < _ambiguity_threshold && (second - best) >= _ambiguity_margin) {
+                                pruned.insert(i);
+                            }
+                        }
+                        for (auto idx : pruned) ambiguous_chain_indices.erase(idx);
+                    }
                         
                         if (_logger && !ambiguous_chain_indices.empty()) {
                             _logger->debug("Frame {}: Detected {} ambiguous chains (threshold={:.3f})",
@@ -1036,6 +1063,13 @@ private:
                                 double cost_unscaled = static_cast<double>(cost_matrix[chain_idx][assigned_cand_idx]) / cost_scaling_factor;
                                 _logger->debug("  Chain {} (entity {}) → entity {} (cost={:.3f}, threshold={:.3f})",
                                              chain_idx, chain.curr_entity, best_entity, cost_unscaled, _cheap_assignment_threshold);
+                            }
+
+                            // Guard: if N-scan (or another chain) already committed this obs at current frame,
+                            // do not double-claim it. Treat as no assignment and let fallback/termination handle it.
+                            auto used_key_current = std::make_pair(static_cast<long long>(f.getValue()), best_entity);
+                            if (used.count(used_key_current)) {
+                                found_assignment = false;
                             }
 
                             Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*best_data);
@@ -1599,6 +1633,8 @@ private:
     bool _enable_n_scan = true;
     int _max_gap_frames = 3;  // Maximum frames to skip before terminating chain (-1 = unlimited)
     double _lookahead_threshold = std::numeric_limits<double>::infinity();
+    double _ambiguity_threshold = 1.0; // default: stricter than cheap assignment
+    double _ambiguity_margin = 0.0;    // default off
 };
 
 }// namespace StateEstimation
