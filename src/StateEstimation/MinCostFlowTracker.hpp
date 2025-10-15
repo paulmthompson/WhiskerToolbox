@@ -969,13 +969,14 @@ private:
                             if (!n_scan_path.empty()) {
                                 auto const & sel = n_scan_path.front();
                                 chain.members.push_back(sel);
-                                this_frame_entities.erase(sel.entity_id);
+                                //this_frame_entities.erase(sel.entity_id);
                             }
                             
                             // Update chain to the selected node at current frame
                             auto const & last_node = n_scan_path.front();
                             chain.curr_frame = last_node.frame;
                             chain.curr_entity = last_node.entity_id;
+                            this_frame_entities.erase(last_node.entity_id);
                             chain.curr_data = findEntity(frame_lookup.at(last_node.frame), last_node.entity_id);
                             
                             // Re-sync filter
