@@ -541,7 +541,6 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
 
     tracker.enableDebugLogging("tracker.log");
 
-    // Process per-group consecutive anchor spans (safer when anchors are not coincident across groups)
     // Build group -> sorted anchor frames mapping
     std::map<GroupId, std::vector<TimeFrameIndex>> group_to_anchor_frames;
     for (auto const & [frame, assignments]: ground_truth) {
@@ -555,12 +554,12 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
         frames.erase(std::unique(frames.begin(), frames.end()), frames.end());
     }
 
-    // Count total per-group intervals for progress
-    size_t total_pairs = 0;
+    // Count total groups we will process (with at least two anchors)
+    size_t total_groups_to_process = 0;
     for (auto const & [gid, frames]: group_to_anchor_frames) {
-        if (frames.size() > 1) total_pairs += (frames.size() - 1);
+        if (frames.size() > 1) total_groups_to_process += 1;
     }
-    size_t processed_pairs = 0;
+    size_t processed_groups = 0;
 
     if (params->verbose_output) {
         std::cout << "\nProcessing per-group anchors across " << group_to_anchor_frames.size() << " groups" << std::endl;
@@ -578,67 +577,62 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
             putative_group_id = group_manager->createGroup(putative_name, "Putative labels from Kalman grouping");
         }
 
-        for (size_t i = 0; i + 1 < frames.size(); ++i) {
-            TimeFrameIndex interval_start = frames[i];
-            TimeFrameIndex interval_end = frames[i + 1];
+        // Solve once across the full anchor span: first -> last
+        TimeFrameIndex interval_start = frames.front();
+        TimeFrameIndex interval_end = frames.back();
 
-            // Skip if consecutive frames - no gap to fill with MCF
-            if (interval_end.getValue() - interval_start.getValue() <= 1) {
-                continue;
-            }
+        // Build a minimal ground truth map for this group across the full span
+        std::map<TimeFrameIndex, std::map<GroupId, EntityId>> gt_local;
+        auto const & start_map = ground_truth.at(interval_start);
+        auto const & end_map = ground_truth.at(interval_end);
+        auto start_it = start_map.find(group_id);
+        auto end_it = end_map.find(group_id);
+        if (start_it == start_map.end() || end_it == end_map.end()) {
+            continue; // safety
+        }
+        gt_local[interval_start][group_id] = start_it->second;
+        gt_local[interval_end][group_id] = end_it->second;
 
-            // Build a minimal ground truth map for this group and interval only
-            std::map<TimeFrameIndex, std::map<GroupId, EntityId>> gt_local;
-            auto const & start_map = ground_truth.at(interval_start);
-            auto const & end_map = ground_truth.at(interval_end);
-            auto start_it = start_map.find(group_id);
-            auto end_it = end_map.find(group_id);
-            if (start_it == start_map.end() || end_it == end_map.end()) {
-                continue;// safety: skip if either end missing
-            }
-            gt_local[interval_start][group_id] = start_it->second;
-            gt_local[interval_end][group_id] = end_it->second;
-
-            if (params->verbose_output) {
-                std::cout << "\nProcessing group " << group_id << " interval: "
-                          << interval_start.getValue() << " -> " << interval_end.getValue() << std::endl;
-            }
-
-            // Exclude already-labeled entities from matching; allow anchors explicitly
-            std::unordered_set<EntityId> excluded_entities;
-            for (auto gid: all_group_ids) {
-                auto ents = group_manager->getEntitiesInGroup(gid);
-                excluded_entities.insert(ents.begin(), ents.end());
-            }
-            std::unordered_set<EntityId> include_entities;// whitelist (anchors at ends)
-            include_entities.insert(start_it->second);
-            include_entities.insert(end_it->second);
-
-            // Map write group: default write back to same anchor group; if putative, write to new group
-            std::map<GroupId, GroupId> write_group_map;
-            if (putative_group_id.has_value()) {
-                write_group_map[group_id] = *putative_group_id;
-            }
-
-            [[maybe_unused]] auto smoothed_results = tracker.process(
-                    data_source,
-                    *group_manager,
-                    gt_local,
-                    interval_start,
-                    interval_end,
-                    progressCallback,
-                    putative_group_id.has_value() ? &write_group_map : nullptr,
-                    &excluded_entities,
-                    &include_entities);
-
-            // Report progress across all group-intervals
-            processed_pairs++;
-            int progress = total_pairs > 0 ? static_cast<int>(100.0 * processed_pairs / total_pairs) : 100;
-            progressCallback(progress);
+        if (params->verbose_output) {
+            std::cout << "\nProcessing group " << group_id << " full span: "
+                      << interval_start.getValue() << " -> " << interval_end.getValue() << std::endl;
         }
 
-        // After completing all intervals for this anchor group, emit one bulk notification
+        // Exclude already-labeled entities from matching; allow anchors explicitly
+        std::unordered_set<EntityId> excluded_entities;
+        for (auto gid: all_group_ids) {
+            auto ents = group_manager->getEntitiesInGroup(gid);
+            excluded_entities.insert(ents.begin(), ents.end());
+        }
+        std::unordered_set<EntityId> include_entities; // whitelist anchors at ends
+        include_entities.insert(start_it->second);
+        include_entities.insert(end_it->second);
+
+        // Map write group
+        std::map<GroupId, GroupId> write_group_map;
+        if (putative_group_id.has_value()) {
+            write_group_map[group_id] = *putative_group_id;
+        }
+
+        [[maybe_unused]] auto smoothed_results = tracker.process(
+                data_source,
+                *group_manager,
+                gt_local,
+                interval_start,
+                interval_end,
+                progressCallback,
+                putative_group_id.has_value() ? &write_group_map : nullptr,
+                //&excluded_entities,
+                //&include_entities
+                nullptr,
+                nullptr
+            );
+
+        // After completing this group, notify and update progress
         group_manager->notifyGroupsChanged();
+        processed_groups++;
+        int progress = total_groups_to_process > 0 ? static_cast<int>(100.0 * processed_groups / total_groups_to_process) : 100;
+        progressCallback(progress);
     }
 
     if (params->verbose_output) {
