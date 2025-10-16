@@ -539,7 +539,9 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
             params->cost_scale_factor,
             cheap_threshold);
 
-    tracker.enableDebugLogging("tracker.log");
+    if (params->verbose_output) {
+        tracker.enableDebugLogging("tracker.log");
+    }
 
     // Build group -> sorted anchor frames mapping
     std::map<GroupId, std::vector<TimeFrameIndex>> group_to_anchor_frames;

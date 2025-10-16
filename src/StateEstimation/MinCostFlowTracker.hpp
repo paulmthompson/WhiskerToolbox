@@ -219,7 +219,7 @@ public:
                                           GroundTruthMap const & ground_truth,
                                           TimeFrameIndex start_frame,
                                           TimeFrameIndex end_frame,
-                                          ProgressCallback progress = nullptr,
+                                          ProgressCallback progress,
                                           std::map<GroupId, GroupId> const * output_group_ids = nullptr,
                                           std::unordered_set<EntityId> const * excluded_entities = nullptr,
                                           std::unordered_set<EntityId> const * include_entities = nullptr) {
@@ -244,7 +244,8 @@ public:
         auto solved_paths = solve_flow_problem_new(frame_lookup,
                                                    ground_truth,
                                                    start_frame,
-                                                   end_frame);
+                                                   end_frame,
+                                                   progress);
 
         if (solved_paths.empty()) {
             if (_logger) _logger->error("Min-cost flow solver failed or found no paths.");
@@ -751,7 +752,8 @@ private:
             std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
             GroundTruthMap const & ground_truth,
             TimeFrameIndex start_frame,
-            TimeFrameIndex end_frame) {
+            TimeFrameIndex end_frame,
+            ProgressCallback progress) {
 
 
         auto start_anchors_it = ground_truth.find(start_frame);
@@ -766,7 +768,7 @@ private:
         auto end_anchors = end_anchors_it->second;
 
         // 1) Build greedy meta-nodes (cheap consecutive links) independent of groups
-        auto meta_nodes = build_meta_nodes(frame_lookup, start_frame, end_frame);
+        auto meta_nodes = build_meta_nodes(frame_lookup, start_frame, end_frame, progress);
 
         // 2) Solve paths per group by iterating ground-truth segments and concatenating
         auto all_solved_paths = solve_flow_over_segments(meta_nodes,
@@ -994,282 +996,6 @@ private:
     }
 
 
-    // ==========================================================
-
-    // --- Main Graph Building and Solving Logic ---
-    std::map<GroupId, Path> solve_flow_problem(
-            std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
-            GroundTruthMap const & ground_truth,
-            TimeFrameIndex start_frame,
-            TimeFrameIndex end_frame) {
-
-
-        auto start_anchors_it = ground_truth.find(start_frame);
-        auto end_anchors_it = ground_truth.find(end_frame);
-
-        if (start_anchors_it == ground_truth.end() || end_anchors_it == ground_truth.end()) {
-            if (_logger) _logger->error("Min-cost flow requires anchors at both start and end frames.");
-            return {};
-        }
-
-        auto start_anchors = start_anchors_it->second;
-        auto end_anchors = end_anchors_it->second;
-
-        // 1) Build greedy meta-nodes (cheap consecutive links) independent of groups
-        auto meta_nodes = build_meta_nodes(frame_lookup,
-                                           start_frame,
-                                           end_frame);
-
-        // Now we will solve a min cost flow between each pair on consequitive frames of the same group
-        // Whenever we get a path, we can remove it from the meta nodes if we have additional groups.
-
-        //
-
-        std::map<GroupId, Path> all_solved_paths;
-
-        // 2) Solve a separate min-cost flow problem for each group over meta-nodes
-        for (auto const & [group_id, start_entity_id]: start_anchors) {
-            auto end_anchors_it = end_anchors.find(group_id);
-            if (end_anchors_it == end_anchors.end()) {
-                if (_logger) {
-                    _logger->error("No end anchor found for group {}", static_cast<unsigned long long>(group_id));
-                }
-                continue;
-            }
-            EntityId end_entity_id = end_anchors_it->second;
-
-            Path solved_path = solve_single_group_flow_over_meta(meta_nodes,
-                                                                 frame_lookup,
-                                                                 group_id,
-                                                                 start_entity_id,
-                                                                 end_entity_id,
-                                                                 start_frame,
-                                                                 end_frame);
-            if (!solved_path.empty()) {
-                all_solved_paths[group_id] = solved_path;
-            }
-        }
-
-        return all_solved_paths;
-    }
-
-    // Solve min-cost flow for a single group over meta-nodes
-    Path solve_single_group_flow_over_meta(
-            std::vector<MetaNode> const & meta_nodes,
-            std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
-            GroupId group_id,
-            EntityId start_entity_id,
-            EntityId end_entity_id,
-            TimeFrameIndex start_frame,
-            TimeFrameIndex end_frame) {
-
-        // Fast path: if there is a single meta-node that already spans from the group's
-        // start anchor to end anchor, bypass MCF and return its members directly.
-        for (auto const & mn: meta_nodes) {
-            if (mn.start_frame == start_frame &&
-                mn.start_entity == start_entity_id &&
-                mn.end_frame == end_frame &&
-                mn.end_entity == end_entity_id) {
-                if (_logger) {
-                    _logger->debug("Group {} fast-path: single meta-node spans full interval ({}->{})",
-                                   static_cast<unsigned long long>(group_id),
-                                   start_frame.getValue(), end_frame.getValue());
-                }
-                return mn.members;
-            }
-        }
-
-        // Map each meta-node to an index and locate anchor positions (allow anchors inside a meta-node)
-        int const num_meta = static_cast<int>(meta_nodes.size());
-        auto find_anchor_pos = [&](TimeFrameIndex f_anchor, EntityId e_anchor) -> std::optional<std::pair<int, size_t>> {
-            for (int i = 0; i < num_meta; ++i) {
-                auto const & mn = meta_nodes[i];
-                for (size_t k = 0; k < mn.members.size(); ++k) {
-                    if (mn.members[k].frame == f_anchor && mn.members[k].entity_id == e_anchor) {
-                        return std::make_pair(i, k);
-                    }
-                }
-            }
-            return std::nullopt;
-        };
-
-        auto start_pos_opt = find_anchor_pos(start_frame, start_entity_id);
-        auto end_pos_opt = find_anchor_pos(end_frame, end_entity_id);
-        if (!start_pos_opt.has_value() || !end_pos_opt.has_value()) {
-            if (_logger) {
-                _logger->error("Group {} missing start or end anchor inside any meta-node (start={}, end={})",
-                               static_cast<unsigned long long>(group_id),
-                               start_pos_opt.has_value(), end_pos_opt.has_value());
-            }
-            return {};
-        }
-        int const start_meta_index = start_pos_opt->first;
-        size_t const start_member_index = start_pos_opt->second;
-        int const end_meta_index = end_pos_opt->first;
-        size_t const end_member_index = end_pos_opt->second;
-
-        // If both anchors lie within the same meta-node, slice and return directly
-        if (start_meta_index == end_meta_index) {
-            Path out;
-            auto const & mem = meta_nodes[static_cast<size_t>(start_meta_index)].members;
-            for (size_t k = start_member_index; k <= end_member_index && k < mem.size(); ++k) {
-                out.push_back(mem[k]);
-            }
-            return out;
-        }
-
-        // Trim a local copy so that anchors become true meta-node boundaries for arc construction
-        std::vector<MetaNode> local_meta = meta_nodes;
-        // Trim start meta-node to suffix starting at the anchor member
-        {
-            auto & mn = local_meta[static_cast<size_t>(start_meta_index)];
-            std::vector<NodeInfo> trimmed;
-            for (size_t k = start_member_index; k < mn.members.size(); ++k) trimmed.push_back(mn.members[k]);
-            mn.members = std::move(trimmed);
-            if (!mn.members.empty()) {
-                mn.start_frame = mn.members.front().frame;
-                mn.start_entity = mn.members.front().entity_id;
-            }
-        }
-        // Trim end meta-node to prefix ending at the anchor member
-        {
-            auto & mn = local_meta[static_cast<size_t>(end_meta_index)];
-            std::vector<NodeInfo> trimmed;
-            for (size_t k = 0; k <= end_member_index && k < mn.members.size(); ++k) trimmed.push_back(mn.members[k]);
-            mn.members = std::move(trimmed);
-            if (!mn.members.empty()) {
-                mn.end_frame = mn.members.back().frame;
-                mn.end_entity = mn.members.back().entity_id;
-            }
-        }
-
-        // Node indexing: 0..num_meta-1 are meta-nodes, plus source and sink
-        int const source_node = num_meta;
-        int const sink_node = num_meta + 1;
-
-        // Build arcs for the abstract solver
-        std::vector<ArcSpec> arcs;
-        arcs.reserve(static_cast<size_t>(num_meta * num_meta / 4 + 4));
-        // Source -> start meta
-        arcs.push_back({source_node, start_meta_index, 1, 0});
-        // End meta -> sink
-        arcs.push_back({end_meta_index, sink_node, 1, 0});
-
-        // Transitions between meta-nodes (only forward in time)
-        int num_transition_arcs = 0;
-        constexpr int64_t max_prediction_horizon = 50;// allow longer jumps across blackouts
-        for (int i = 0; i < num_meta; ++i) {
-            MetaNode const & from = local_meta[i];
-            for (int j = 0; j < num_meta; ++j) {
-                MetaNode const & to = local_meta[j];
-                if (to.start_frame <= from.end_frame) continue;// must go forward
-                int num_steps = (to.start_frame - from.end_frame).getValue();
-                if (num_steps <= 0 || num_steps > max_prediction_horizon) continue;
-
-                // Predict from the end of 'from' to the start of 'to'
-                FilterState predicted_state;
-                if (_filter_prototype) {
-                    auto temp_filter = _filter_prototype->clone();
-                    // Coerce the saved end_state to the filter's expected state dimension if needed
-                    FilterState const proto_state = temp_filter->getState();
-                    int const target_dim = static_cast<int>(proto_state.state_mean.size());
-                    FilterState init_state = from.end_state;
-                    if (static_cast<int>(init_state.state_mean.size()) != target_dim ||
-                        init_state.state_covariance.rows() != target_dim ||
-                        init_state.state_covariance.cols() != target_dim) {
-                        // Build a compatible state by copying what fits and padding the rest
-                        FilterState coerced;
-                        coerced.state_mean = Eigen::VectorXd::Zero(target_dim);
-                        int const copy_dim = std::min<int>(target_dim, static_cast<int>(init_state.state_mean.size()));
-                        if (copy_dim > 0) coerced.state_mean.head(copy_dim) = init_state.state_mean.head(copy_dim);
-
-                        coerced.state_covariance = Eigen::MatrixXd::Zero(target_dim, target_dim);
-                        int const cr = std::min<int>(target_dim, init_state.state_covariance.rows());
-                        int const cc = std::min<int>(target_dim, init_state.state_covariance.cols());
-                        if (cr > 0 && cc > 0) {
-                            int const b = std::min(cr, cc);
-                            coerced.state_covariance.topLeftCorner(b, b) = init_state.state_covariance.topLeftCorner(b, b);
-                        }
-                        // Pad remaining diagonal to a large uncertainty to remain conservative
-                        constexpr double kPadVar = 1e6;
-                        for (int d = 0; d < target_dim; ++d) {
-                            if (coerced.state_covariance(d, d) <= 0.0) coerced.state_covariance(d, d) = kPadVar;
-                        }
-                        init_state = std::move(coerced);
-                        if (_logger) {
-                            _logger->warn("State dimension coerced for transition prediction: was {} -> now {}",
-                                          static_cast<int>(from.end_state.state_mean.size()), target_dim);
-                        }
-                    }
-
-                    temp_filter->initialize(init_state);
-                    for (int s = 0; s < num_steps; ++s) {
-                        predicted_state = temp_filter->predict();
-                    }
-                }
-                // Compute cost to the first observation of 'to'
-                DataType const * to_start_data = findEntity(frame_lookup.at(to.start_frame), to.start_entity);
-                if (!to_start_data) continue;
-                Eigen::VectorXd obs = _feature_extractor->getFilterFeatures(*to_start_data);
-                double dist = _transition_cost_function(predicted_state, obs, num_steps);
-                int64_t arc_cost = static_cast<int64_t>(dist * _cost_scale_factor);
-                arcs.push_back({i, j, 1, arc_cost});
-                num_transition_arcs++;
-            }
-        }
-
-        if (_logger) {
-            _logger->debug("Group {} meta-graph: {} meta-nodes, transitions={}",
-                           static_cast<unsigned long long>(group_id), num_meta, num_transition_arcs);
-        }
-
-        // Solve using private solver and reconstruct meta-node path
-        auto const seq_opt = solveMinCostSingleUnitPath(num_meta + 2, source_node, sink_node, arcs);
-        if (!seq_opt.has_value()) {
-            _diagnostics.noOptimalPathCount += 1;
-            std::ostringstream oss;
-            oss << "Min-cost flow failed: no optimal path. "
-                << "metaNodes=" << num_meta
-                << ", arcs=" << arcs.size()
-                << ", groupId=" << static_cast<unsigned long long>(group_id)
-                << ", startFrame=" << start_frame.getValue()
-                << ", endFrame=" << end_frame.getValue();
-            // Dump the meta-graph: nodes and arcs with basic details
-            if (_logger) {
-                _logger->error("{}", oss.str());
-                _logger->error("Arcs dump (tail->head, cap, cost):");
-                for (auto const & a: arcs) {
-                    _logger->error("  {} -> {}  cap={}  cost={}", a.tail, a.head, a.capacity, a.unit_cost);
-                }
-            }
-            switch (_policy) {
-                case TrackerContractPolicy::Throw:
-                    throw std::logic_error(oss.str());
-                case TrackerContractPolicy::Abort:
-                    if (_logger) _logger->critical("{}", oss.str());
-                    std::abort();
-                case TrackerContractPolicy::LogAndContinue:
-                default:
-                    // already logged
-                    return {};
-            }
-        }
-
-        Path expanded_path;
-        auto const & sequence = *seq_opt;
-        for (size_t idx = 1; idx < sequence.size(); ++idx) {// skip the source at index 0
-            int node_index = sequence[idx];
-            if (node_index >= 0 && node_index < num_meta) {
-                auto const & mem = local_meta[static_cast<size_t>(node_index)].members;
-                for (auto const & n: mem) expanded_path.push_back(n);
-            }
-        }
-
-        return expanded_path;
-    }
-
-    // ==========================================================
-
     /**
      * @brief Build meta-nodes using Hungarian algorithm for optimal chain extension.
      * 
@@ -1283,7 +1009,11 @@ private:
     std::vector<MetaNode> build_meta_nodes(
             std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
             TimeFrameIndex start_frame,
-            TimeFrameIndex end_frame) {
+            TimeFrameIndex end_frame,
+            ProgressCallback progress) {
+
+
+        progress(0);
 
         std::vector<MetaNode> meta_nodes;
         std::set<std::pair<long long, EntityId>> used;// key: (frame, entity)
@@ -1868,6 +1598,11 @@ private:
                         "We left a man behind at frame " + std::to_string(f.getValue()) +
                         " with entities: " + std::to_string(this_frame_entities.size()));
             }
+            
+                //Update progress every 1000 frames
+            if (f.getValue() % 1000 == 0) {
+                progress(static_cast<int>(f.getValue()) / (end_frame.getValue() - start_frame.getValue() + 1) * 100);
+            }
         }
 
         // Finalize any remaining active chains at end of range
@@ -1925,8 +1660,7 @@ private:
                                    100.0 * single_frame_count / meta_nodes.size());
                 }
             }
-        }
-
+        } 
         return meta_nodes;
     }
 

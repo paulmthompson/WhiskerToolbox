@@ -20,9 +20,20 @@ solveMinCostSingleUnitPath(int num_nodes,
     min_cost_flow.SetNodeSupply(source_node, 1);
     min_cost_flow.SetNodeSupply(sink_node, -1);
 
-    auto const status = min_cost_flow.Solve();
+    auto status = min_cost_flow.Solve();
     if (status != operations_research::SimpleMinCostFlow::OPTIMAL) {
-        return std::nullopt;
+        std::cerr << "Min-cost flow solver failed with status: " << status << std::endl;
+
+        //Try again with solvemaxflowwithmincost
+        status = min_cost_flow.SolveMaxFlowWithMinCost();
+
+        if (status != operations_research::SimpleMinCostFlow::OPTIMAL) {
+            std::cerr << "Min-cost with max flow failed with status: " << status << std::endl;
+            return std::nullopt;
+        }
+        else {
+            std::cout << "Min-cost flow solver succeeded when switched to max flow with status: " << status << std::endl;
+        }
     }
 
     // Build successor map from positive-flow arcs
@@ -39,8 +50,10 @@ solveMinCostSingleUnitPath(int num_nodes,
     sequence.reserve(static_cast<size_t>(num_nodes));
     int current = source_node;
     sequence.push_back(current);
-    // Safety cap to prevent infinite loops on malformed graphs
-    for (int steps = 0; steps < num_nodes + 2; ++steps) {
+
+    const int flow_limit = 10;
+
+    for (int steps = 0; steps < (num_nodes + 2)*flow_limit; ++steps) {
         auto it = successor.find(current);
         if (it == successor.end()) break;
         current = it->second;
@@ -49,6 +62,7 @@ solveMinCostSingleUnitPath(int num_nodes,
     }
 
     if (sequence.empty() || sequence.front() != source_node) {
+        std::cerr << "Min-cost flow solver failed to find a path from source to sink" << std::endl;
         return std::nullopt;
     }
     return sequence;

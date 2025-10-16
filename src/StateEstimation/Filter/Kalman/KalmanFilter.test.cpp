@@ -712,7 +712,12 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
     auto transition_cost = createDynamicsAwareCostFunction(H, R, index_map, dt, 1.0, 0.25, 0.05);
     tracker.setTransitionCostFunction(transition_cost);
     tracker.setLookaheadThreshold(std::numeric_limits<double>::infinity());
-    tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(11));
+    tracker.process(data_source, 
+        group_manager, 
+        ground_truth, 
+        TimeFrameIndex(0), 
+        TimeFrameIndex(11),
+        [](int) { /* no progress reporting */ });
 
     // 3. --- ASSERTIONS ---
     REQUIRE(group_manager.hasGroup(group1));
@@ -878,7 +883,12 @@ TEST_CASE("StateEstimator - cross-correlated features with MinCostFlow", "[State
 
     // --- EXECUTION ---
     // This should not crash or produce NaN/Inf costs
-    REQUIRE_NOTHROW(tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(19)));
+    REQUIRE_NOTHROW(tracker.process(data_source, 
+        group_manager, 
+        ground_truth, 
+        TimeFrameIndex(0), 
+        TimeFrameIndex(19),
+        [](int) { /* no progress reporting */ }));
 
     // --- ASSERTIONS ---
     auto group1_entities = group_manager.getEntitiesInGroup(group1);
@@ -1171,7 +1181,12 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
 
 
     // Process
-    tracker.process(data_source, group_manager, ground_truth, TimeFrameIndex(0), TimeFrameIndex(num_frames));
+    tracker.process(data_source, 
+        group_manager, 
+        ground_truth, 
+        TimeFrameIndex(0), 
+        TimeFrameIndex(num_frames),
+        [](int) { /* no progress reporting */ });
 
     // Assertions: ensure both groups contain the expected entity IDs in order
     std::vector<EntityId> expected_g1, expected_g2;
