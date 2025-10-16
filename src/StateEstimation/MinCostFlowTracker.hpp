@@ -229,6 +229,17 @@ public:
 
         auto frame_lookup = buildFrameLookup<Source, DataType>(data_source, start_frame, end_frame);
 
+        // Print ground truth map contents
+        if (_logger) {
+            _logger->debug("Ground truth map contents:");
+            for (auto const & [frame, group_entities]: ground_truth) {
+                _logger->debug("  Frame {}:", frame.getValue());
+                for (auto const & [group_id, entity_id]: group_entities) {
+                    _logger->debug("    Group {}: Entity {}", static_cast<unsigned long long>(group_id), static_cast<unsigned long long>(entity_id));
+                }
+            }
+        }
+
         // 1. --- Build and Solve the Graph ---
         auto solved_paths = solve_flow_problem_new(frame_lookup,
                                                    ground_truth,
@@ -469,7 +480,8 @@ private:
             auto const & mn = meta_nodes[i];
 
             // Completely outside the segment range
-            if (mn.end_frame <= segment.start_frame || mn.start_frame >= segment.end_frame) {
+            //if (mn.end_frame <= segment.start_frame || mn.start_frame >= segment.end_frame) {
+            if (mn.end_frame < segment.start_frame || mn.start_frame > segment.end_frame) {
                 continue;
             }
 
@@ -541,6 +553,13 @@ private:
             std::map<TimeFrameIndex, FrameBucket<DataType>> const & frame_lookup,
             GroupId group_id,
             GroundTruthSegment const & segment) {
+
+        if (_logger) {
+            _logger->debug("Solving single segment flow over meta: group={} start=({}, {}) end=({}, {})",
+                           static_cast<unsigned long long>(group_id),
+                           segment.start_frame.getValue(), segment.start_entity,
+                           segment.end_frame.getValue(), segment.end_entity);
+        }
 
         // Fast path: check if a single meta-node spans the segment exactly
         for (auto const & mn: meta_nodes_trimmed) {
@@ -692,6 +711,14 @@ private:
                     }
                     continue;
                 }
+
+                if (_logger) {
+                    _logger->debug("Solving segment: group={} start=({}, {}) end=({}, {})",
+                                   static_cast<unsigned long long>(gid),
+                                   seg.start_frame.getValue(), seg.start_entity,
+                                   seg.end_frame.getValue(), seg.end_entity);
+                }
+
                 Path segment_path = solve_single_segment_flow_over_meta(trimmed, frame_lookup, gid, seg);
                 if (segment_path.empty()) continue;
 
@@ -930,17 +957,6 @@ private:
             // Dump the meta-graph: nodes and arcs with basic details
             if (_logger) {
                 _logger->error("{}", oss.str());
-                _logger->error("Meta-nodes dump (index: start->end, members, frames, entities):");
-                for (int i = 0; i < num_meta; ++i) {
-                    MetaNode const & mn = meta_nodes[i];
-                    std::ostringstream nd;
-                    nd << "  [" << i << "] "
-                       << mn.start_frame.getValue() << "->" << mn.end_frame.getValue()
-                       << ", members=" << mn.members.size()
-                       << ", startEntity=" << mn.start_entity
-                       << ", endEntity=" << mn.end_entity;
-                    _logger->error("{}", nd.str());
-                }
                 _logger->error("Arcs dump (tail->head, cap, cost):");
                 for (auto const & a: arcs) {
                     _logger->error("  {} -> {}  cap={}  cost={}", a.tail, a.head, a.capacity, a.unit_cost);
@@ -1216,17 +1232,6 @@ private:
             // Dump the meta-graph: nodes and arcs with basic details
             if (_logger) {
                 _logger->error("{}", oss.str());
-                _logger->error("Meta-nodes dump (index: start->end, members, frames, entities):");
-                for (int i = 0; i < num_meta; ++i) {
-                    MetaNode const & mn = meta_nodes[i];
-                    std::ostringstream nd;
-                    nd << "  [" << i << "] "
-                       << mn.start_frame.getValue() << "->" << mn.end_frame.getValue()
-                       << ", members=" << mn.members.size()
-                       << ", startEntity=" << mn.start_entity
-                       << ", endEntity=" << mn.end_entity;
-                    _logger->error("{}", nd.str());
-                }
                 _logger->error("Arcs dump (tail->head, cap, cost):");
                 for (auto const & a: arcs) {
                     _logger->error("  {} -> {}  cap={}  cost={}", a.tail, a.head, a.capacity, a.unit_cost);
@@ -1884,19 +1889,6 @@ private:
 
         if (_logger) {
             _logger->debug("Built {} meta-nodes using Hungarian assignment", meta_nodes.size());
-
-            // Log each meta-node's contents for debugging
-            for (size_t i = 0; i < meta_nodes.size(); ++i) {
-                auto const & mn = meta_nodes[i];
-                std::ostringstream oss;
-                oss << "Meta-node #" << i << " [frames " << mn.start_frame.getValue() << "-" << mn.end_frame.getValue() << "]: entities {";
-                for (size_t j = 0; j < mn.members.size(); ++j) {
-                    if (j > 0) oss << ", ";
-                    oss << mn.members[j].entity_id << "@f" << mn.members[j].frame.getValue();
-                }
-                oss << "}";
-                _logger->debug(oss.str());
-            }
 
             // Compute statistics on meta-node lengths
             if (!meta_nodes.empty()) {

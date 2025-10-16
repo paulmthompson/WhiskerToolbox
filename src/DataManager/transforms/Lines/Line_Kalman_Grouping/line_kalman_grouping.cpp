@@ -5,12 +5,12 @@
 #include "Lines/Line_Data.hpp"
 #include "StateEstimation/DataAdapter.hpp"
 #include "StateEstimation/Features/CompositeFeatureExtractor.hpp"
+#include "StateEstimation/Features/IFeatureExtractor.hpp"
 #include "StateEstimation/Features/LineBasePointExtractor.hpp"
 #include "StateEstimation/Features/LineCentroidExtractor.hpp"
 #include "StateEstimation/Features/LineLengthExtractor.hpp"
-#include "StateEstimation/Filter/Kalman/KalmanMatrixBuilder.hpp"
-#include "StateEstimation/Features/IFeatureExtractor.hpp"
 #include "StateEstimation/Filter/Kalman/KalmanFilter.hpp"
+#include "StateEstimation/Filter/Kalman/KalmanMatrixBuilder.hpp"
 #include "StateEstimation/MinCostFlowTracker.hpp"
 
 #include <algorithm>
@@ -38,7 +38,7 @@ struct FeatureStatistics {
  * @brief Cross-correlation statistics between two features
  */
 struct CrossCorrelationStatistics {
-    double pearson_correlation = 0.0;  // Pearson correlation coefficient (-1 to 1)
+    double pearson_correlation = 0.0;// Pearson correlation coefficient (-1 to 1)
     int num_paired_samples = 0;
     bool is_valid = false;
 };
@@ -62,7 +62,7 @@ FeatureStatistics analyzeGroundTruthFeatureStatistics(
         std::map<TimeFrameIndex, std::map<GroupId, EntityId>> const & ground_truth,
         FeatureExtractor const & feature_extractor,
         std::string const & feature_name) {
-    (void)feature_name;
+    (void) feature_name;
 
     FeatureStatistics stats;
 
@@ -157,69 +157,69 @@ CrossCorrelationStatistics computeFeatureCrossCorrelation(
         ExtractorB const & extractor_b,
         std::string const & feature_a_name,
         std::string const & feature_b_name) {
-    (void)feature_a_name;
-    (void)feature_b_name;
+    (void) feature_a_name;
+    (void) feature_b_name;
 
     CrossCorrelationStatistics stats;
-    
+
     // Collect paired feature values across all groups and times
     std::vector<double> values_a, values_b;
-    
+
     for (auto const & [time, group_assignments]: ground_truth) {
         for (auto const & [group_id, entity_id]: group_assignments) {
             auto line = line_data->getLineByEntityId(entity_id);
             if (!line.has_value()) continue;
-            
+
             // Extract both features
             Eigen::VectorXd feat_a = extractor_a.getFilterFeatures(line.value());
             Eigen::VectorXd feat_b = extractor_b.getFilterFeatures(line.value());
-            
+
             // For multi-dimensional features, use first component or magnitude
             double val_a = (feat_a.size() == 1) ? feat_a(0) : feat_a.norm();
             double val_b = (feat_b.size() == 1) ? feat_b(0) : feat_b.norm();
-            
+
             values_a.push_back(val_a);
             values_b.push_back(val_b);
         }
     }
-    
+
     if (values_a.size() < 3) {
-        return stats;  // Not enough data for meaningful correlation
+        return stats;// Not enough data for meaningful correlation
     }
-    
+
     stats.num_paired_samples = static_cast<int>(values_a.size());
-    
+
     // Compute means
     double mean_a = std::accumulate(values_a.begin(), values_a.end(), 0.0) / values_a.size();
     double mean_b = std::accumulate(values_b.begin(), values_b.end(), 0.0) / values_b.size();
-    
+
     // Compute covariance and standard deviations
     double cov_ab = 0.0;
     double var_a = 0.0;
     double var_b = 0.0;
-    
+
     for (size_t i = 0; i < values_a.size(); ++i) {
         double diff_a = values_a[i] - mean_a;
         double diff_b = values_b[i] - mean_b;
-        
+
         cov_ab += diff_a * diff_b;
         var_a += diff_a * diff_a;
         var_b += diff_b * diff_b;
     }
-    
+
     cov_ab /= values_a.size();
     var_a /= values_a.size();
     var_b /= values_b.size();
-    
+
     // Compute Pearson correlation: ρ = cov(A,B) / (σ_A × σ_B)
     double std_a = std::sqrt(var_a);
     double std_b = std::sqrt(var_b);
-    
+
     if (std_a > 1e-10 && std_b > 1e-10) {
         stats.pearson_correlation = cov_ab / (std_a * std_b);
         stats.is_valid = true;
     }
-    
+
     return stats;
 }
 
@@ -307,66 +307,66 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
 
     // Auto-estimate cross-feature correlations from ground truth data if requested
     std::map<std::pair<int, int>, double> estimated_correlations;
-    
+
     if (params->enable_cross_feature_covariance && !ground_truth.empty()) {
         if (params->verbose_output) {
             std::cout << "\n=== Auto-Estimating Cross-Feature Correlations ===" << std::endl;
         }
-        
+
         // Create extractors for correlation analysis
         StateEstimation::LineCentroidExtractor centroid_extractor;
         StateEstimation::LineBasePointExtractor base_point_extractor;
         StateEstimation::LineLengthExtractor length_extractor;
-        
+
         // Compute centroid-length correlation
         auto centroid_length_corr = computeFeatureCrossCorrelation(
-            line_data, ground_truth, centroid_extractor, length_extractor,
-            "centroid", "length");
-        
+                line_data, ground_truth, centroid_extractor, length_extractor,
+                "centroid", "length");
+
         // Compute base_point-length correlation
         auto base_point_length_corr = computeFeatureCrossCorrelation(
-            line_data, ground_truth, base_point_extractor, length_extractor,
-            "base_point", "length");
-        
+                line_data, ground_truth, base_point_extractor, length_extractor,
+                "base_point", "length");
+
         if (params->verbose_output) {
             std::cout << "Centroid-Length correlation: " << centroid_length_corr.pearson_correlation
-                     << " (n=" << centroid_length_corr.num_paired_samples << ")" << std::endl;
+                      << " (n=" << centroid_length_corr.num_paired_samples << ")" << std::endl;
             std::cout << "BasePoint-Length correlation: " << base_point_length_corr.pearson_correlation
-                     << " (n=" << base_point_length_corr.num_paired_samples << ")" << std::endl;
+                      << " (n=" << base_point_length_corr.num_paired_samples << ")" << std::endl;
         }
-        
+
         // Apply correlations above threshold
         // Feature indices: 0 = centroid, 1 = base_point, 2 = length
-        if (centroid_length_corr.is_valid && 
+        if (centroid_length_corr.is_valid &&
             std::abs(centroid_length_corr.pearson_correlation) >= params->min_correlation_threshold) {
             estimated_correlations[{0, 2}] = centroid_length_corr.pearson_correlation;
             if (params->verbose_output) {
-                std::cout << "  → Using centroid-length correlation: " 
-                         << centroid_length_corr.pearson_correlation << std::endl;
+                std::cout << "  → Using centroid-length correlation: "
+                          << centroid_length_corr.pearson_correlation << std::endl;
             }
         }
-        
-        if (base_point_length_corr.is_valid && 
+
+        if (base_point_length_corr.is_valid &&
             std::abs(base_point_length_corr.pearson_correlation) >= params->min_correlation_threshold) {
             estimated_correlations[{1, 2}] = base_point_length_corr.pearson_correlation;
             if (params->verbose_output) {
-                std::cout << "  → Using base_point-length correlation: " 
-                         << base_point_length_corr.pearson_correlation << std::endl;
+                std::cout << "  → Using base_point-length correlation: "
+                          << base_point_length_corr.pearson_correlation << std::endl;
             }
         }
-        
+
         if (estimated_correlations.empty() && params->verbose_output) {
             std::cout << "  → No significant correlations found (all below threshold "
-                     << params->min_correlation_threshold << ")" << std::endl;
+                      << params->min_correlation_threshold << ")" << std::endl;
         }
     }
-    
+
     // Configure cross-feature covariance in composite extractor
     if (!estimated_correlations.empty()) {
         StateEstimation::CompositeFeatureExtractor<Line2D>::CrossCovarianceConfig cross_cov_config;
         cross_cov_config.feature_correlations = estimated_correlations;
         composite_extractor->setCrossCovarianceConfig(std::move(cross_cov_config));
-        
+
         if (params->verbose_output) {
             std::cout << "Configured initial cross-feature covariance from empirical correlations" << std::endl;
         }
@@ -443,7 +443,7 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
                 // Use the percentile of the overall standard deviation as measurement noise
                 estimated_length_measurement_noise = params->static_noise_percentile * length_stats.std_dev;
                 // Clamp to a small positive floor for numerical stability
-                double constexpr kMinMeasNoise = 1.0; // pixels
+                double constexpr kMinMeasNoise = 1.0;// pixels
                 if (estimated_length_measurement_noise < kMinMeasNoise) {
                     estimated_length_measurement_noise = kMinMeasNoise;
                 }
@@ -479,8 +479,8 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
     // Add cross-feature process noise using estimated correlations
     if (!estimated_correlations.empty()) {
         Q = StateEstimation::KalmanMatrixBuilder::addCrossFeatureProcessNoise(
-            Q, metadata_list, estimated_correlations);
-        
+                Q, metadata_list, estimated_correlations);
+
         if (params->verbose_output) {
             std::cout << "\nAdded cross-feature process noise covariance based on empirical correlations" << std::endl;
         }
@@ -581,17 +581,21 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
         TimeFrameIndex interval_start = frames.front();
         TimeFrameIndex interval_end = frames.back();
 
-        // Build a minimal ground truth map for this group across the full span
+        // Build ground truth map including ALL anchors for this group across the full span
         std::map<TimeFrameIndex, std::map<GroupId, EntityId>> gt_local;
-        auto const & start_map = ground_truth.at(interval_start);
-        auto const & end_map = ground_truth.at(interval_end);
-        auto start_it = start_map.find(group_id);
-        auto end_it = end_map.find(group_id);
-        if (start_it == start_map.end() || end_it == end_map.end()) {
-            continue; // safety
+        for (auto const & f: frames) {
+            auto it_frame = ground_truth.find(f);
+            if (it_frame == ground_truth.end()) continue;
+            auto const & fmap = it_frame->second;
+            auto it_gid = fmap.find(group_id);
+            if (it_gid != fmap.end()) {
+                gt_local[f][group_id] = it_gid->second;
+            }
         }
-        gt_local[interval_start][group_id] = start_it->second;
-        gt_local[interval_end][group_id] = end_it->second;
+        // Safety: require anchors at both ends of the interval
+        if (gt_local.count(interval_start) == 0 || gt_local.count(interval_end) == 0) {
+            continue;
+        }
 
         if (params->verbose_output) {
             std::cout << "\nProcessing group " << group_id << " full span: "
@@ -604,9 +608,9 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
             auto ents = group_manager->getEntitiesInGroup(gid);
             excluded_entities.insert(ents.begin(), ents.end());
         }
-        std::unordered_set<EntityId> include_entities; // whitelist anchors at ends
-        include_entities.insert(start_it->second);
-        include_entities.insert(end_it->second);
+        std::unordered_set<EntityId> include_entities;// whitelist anchors at ends
+        include_entities.insert(gt_local[interval_start][group_id]);
+        include_entities.insert(gt_local[interval_end][group_id]);
 
         // Map write group
         std::map<GroupId, GroupId> write_group_map;
@@ -623,8 +627,7 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
                 progressCallback,
                 putative_group_id.has_value() ? &write_group_map : nullptr,
                 nullptr,
-                nullptr
-            );
+                nullptr);
 
         // After completing this group, notify and update progress
         group_manager->notifyGroupsChanged();
