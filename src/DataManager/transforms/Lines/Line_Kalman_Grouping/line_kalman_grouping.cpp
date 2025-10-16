@@ -622,8 +622,6 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
                 interval_end,
                 progressCallback,
                 putative_group_id.has_value() ? &write_group_map : nullptr,
-                //&excluded_entities,
-                //&include_entities
                 nullptr,
                 nullptr
             );
