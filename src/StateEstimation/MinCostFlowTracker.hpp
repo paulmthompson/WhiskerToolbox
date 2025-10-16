@@ -351,6 +351,11 @@ private:
 
             // Create consecutive pairs
             for (size_t i = 0; i < anchors.size() - 1; ++i) {
+                // Only produce segments when there are unlabeled frames between anchors
+                // i.e., skip pairs on consecutive frames (no work to assign)
+                int const gap = (anchors[i + 1].first - anchors[i].first).getValue();
+                if (gap <= 1) continue;
+
                 GroundTruthSegment segment;
                 segment.group_id = group_id;
                 segment.start_frame = anchors[i].first;
