@@ -447,21 +447,7 @@ private:
                 _logger->error("Min-cost flow failed for segment: group={} metaNodes={} arcs={} — falling back to anchors only",
                                static_cast<unsigned long long>(group_id), num_meta, arcs.size());
             }
-            // Fallback: Return all members of the sliced source and sink meta-nodes.
-            Path fallback_path;
-
-            // Add all members of the sliced source meta-node.
-            if (start_meta_index >= 0 && start_meta_index < num_meta) {
-                auto const & start_node_members = meta_nodes_trimmed[static_cast<size_t>(start_meta_index)].members;
-                fallback_path.insert(fallback_path.end(), start_node_members.begin(), start_node_members.end());
-            }
-
-            // Add all members of the sliced end meta-node, if it's a different node.
-            if (end_meta_index >= 0 && end_meta_index < num_meta && end_meta_index != start_meta_index) {
-                auto const & end_node_members = meta_nodes_trimmed[static_cast<size_t>(end_meta_index)].members;
-                fallback_path.insert(fallback_path.end(), end_node_members.begin(), end_node_members.end());
-            }
-            return fallback_path;
+            return buildFallbackPathFromTrimmed(meta_nodes_trimmed, start_meta_index, end_meta_index);
         }
 
         Path expanded_path;

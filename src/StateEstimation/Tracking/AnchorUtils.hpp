@@ -2,7 +2,10 @@
 #define STATEESTIMATION_TRACKING_ANCHOR_UTILS_HPP
 
 #include "Tracking/Tracklet.hpp"
+#include "Entity/EntityGroupManager.hpp"
 
+#include <algorithm>
+#include <map>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -292,14 +295,13 @@ inline std::vector<MetaNode> sliceMetaNodesToSegment(
         }
 
         if (static_cast<int>(i) == end_meta_index) {
-            // Splice prefix ending at the end anchor member
+            // Splice only the end anchor member to avoid duplicating frames with interior nodes
             MetaNode trimmed = mn;
             std::vector<NodeInfo> members;
             for (size_t k = 0; k <= end_member_index && k < mn.members.size(); ++k) {
-                // Drop anything strictly before start_frame to avoid leaking before boundary
-                //if (mn.members[k].frame < segment.start_frame) continue;
-                if (mn.members[k].frame <= segment.start_frame) continue;
-                members.push_back(mn.members[k]);
+                if (mn.members[k].frame == segment.end_frame) {
+                    members.push_back(mn.members[k]);
+                }
             }
             if (members.empty()) continue;
             trimmed.members = std::move(members);
@@ -321,6 +323,29 @@ inline std::vector<MetaNode> sliceMetaNodesToSegment(
     }
 
     return output;
+}
+
+/**
+ * @brief Build a simple fallback path by concatenating members of start and end meta-nodes.
+ *
+ * Assumes the input meta-nodes are already trimmed to the segment using sliceMetaNodesToSegment.
+ * If start and end refer to the same meta-node, returns its members. Otherwise, concatenates
+ * all members from the start meta-node followed by all members from the end meta-node.
+ */
+inline Path buildFallbackPathFromTrimmed(std::vector<MetaNode> const & meta_nodes_trimmed,
+                                         int start_meta_index,
+                                         int end_meta_index) {
+    Path fallback_path;
+    int const num_meta = static_cast<int>(meta_nodes_trimmed.size());
+    if (start_meta_index >= 0 && start_meta_index < num_meta) {
+        auto const & start_node_members = meta_nodes_trimmed[static_cast<size_t>(start_meta_index)].members;
+        fallback_path.insert(fallback_path.end(), start_node_members.begin(), start_node_members.end());
+    }
+    if (end_meta_index >= 0 && end_meta_index < num_meta && end_meta_index != start_meta_index) {
+        auto const & end_node_members = meta_nodes_trimmed[static_cast<size_t>(end_meta_index)].members;
+        fallback_path.insert(fallback_path.end(), end_node_members.begin(), end_node_members.end());
+    }
+    return fallback_path;
 }
 
 }// namespace StateEstimation
