@@ -17,6 +17,7 @@
 #include "TestFixture.hpp"
 #include "Cost/CostFunctions.hpp"
 #include "OutlierDetection.hpp"
+#include "Tracking/AnchorUtils.hpp"
 
 // --- Test-Specific Mocks and Implementations ---
 
@@ -678,7 +679,7 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
     data_source.emplace_back(makeA(0, 10.0, 10.0), (EntityId)1000, TimeFrameIndex(0));
     data_source.emplace_back(makeB(0, 90.0, 10.0), (EntityId)2000, TimeFrameIndex(0));
 
-    MinCostFlowTracker<TestLine2D>::GroundTruthMap ground_truth;
+    GroundTruthMap ground_truth;
     ground_truth[TimeFrameIndex(0)] = {{group1, (EntityId)1000}, {group2, (EntityId)2000}};
 
     // Frames 1-2: Lines move toward each other
@@ -873,7 +874,7 @@ TEST_CASE("StateEstimator - cross-correlated features with MinCostFlow", "[State
     }
 
     // Ground truth anchors - add them to the group manager
-    MinCostFlowTracker<TestLine2D>::GroundTruthMap ground_truth;
+    GroundTruthMap ground_truth;
     ground_truth[TimeFrameIndex(0)] = {{group1, (EntityId)1000}};
     ground_truth[TimeFrameIndex(19)] = {{group1, (EntityId)1019}};
     
@@ -1119,7 +1120,7 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
     GroupId g2 = group_manager.createGroup("Ball2");
 
     // Anchor maps: first and last frames labeled
-    MinCostFlowTracker<ObsPoint2D>::GroundTruthMap ground_truth;
+    GroundTruthMap ground_truth;
 
     auto const & gt0 = fixture.get_ground_truth(0);
     auto const & gt1 = fixture.get_ground_truth(1);
