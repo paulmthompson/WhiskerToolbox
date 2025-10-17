@@ -3,6 +3,7 @@
 
 #include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "Common.hpp"
 
 #include <vector>
 

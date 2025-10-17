@@ -13,6 +13,7 @@
 #include "MinCostFlowSolver.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Tracking/Tracklet.hpp"
+#include "Tracking/AnchorUtils.hpp"
 
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/spdlog.h"
@@ -31,6 +32,24 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+/*
+ data objects have features extracted in a time series. 
+ These time series of features have a filter applied to find "tracklets" or "meta nodes" that represent small 
+ time series of features that represent the same object across multiple frames. Once the tracklets are determined, 
+ sparse labels are used to try to assign IDs to each entity in the tracklets. To do this, we perform the 
+ following: we order or labels into pairs of time representing the nearest neighbor 
+ times (e.g. 1-1000, 1000-4000, 4000-10000 etc). we identify the frames with labels for a group. We construct a 
+ subset of meta nodes that repesent 1) the first frame in the tracklet assigned to that label along with the rest 
+ of the tracklet (source tracklet). if the label does not exist on the left side of this tracklet, the tracklet is 
+ modified into a sliced meta nodet; 2) the tracklet assigned to the last frame from its start to the end frame sliced 
+ to remove frames after the anchor; 3) all meta nodes into between these. WE then apply a minimum cost flow solver to 
+ find which tracklets can "link" the left and right sliced meta nodes. If a minimum cost flow solution is found, we add all 
+ entity IDs on that path to the group that label corresponds to. If the min cost flow solver fails (i.e. because there is a 
+ large gap somewhere between tracklets), we will just assign all the entities in the sliced tracklets attached to the 
+ anchors to the label group. We then repeat this procedure for all label pairs.
+
+*/
 
 namespace StateEstimation {
 
@@ -261,6 +280,12 @@ public:
             }
             for (auto const & node: path) {
                 // Never overwrite anchors or any labeled entity: only add unlabeled entities
+                // Additionally, skip any frame that already has ground truth for this group to avoid double assignment
+                auto gt_frame_it = ground_truth.find(node.frame);
+                if (gt_frame_it != ground_truth.end()) {
+                    auto const & gt_map = gt_frame_it->second;
+                    if (gt_map.find(group_id) != gt_map.end()) continue;
+                }
                 auto groups = group_manager.getGroupsContainingEntity(node.entity_id);
                 if (!groups.empty()) continue;
                 group_manager.addEntityToGroup(write_group, node.entity_id);
@@ -383,47 +408,24 @@ private:
     std::pair<int, int> findAnchorMetaNodes(
             std::vector<MetaNode> const & meta_nodes,
             GroundTruthSegment const & segment) const {
-        auto const positions_opt = findAnchorPositions(meta_nodes, segment);
-        if (!positions_opt.has_value()) return {-1, -1};
-        auto const & pos = *positions_opt;
-        return {pos.start_meta_index, pos.end_meta_index};
+        auto pair_indices = findAnchorMetaNodeIndices(meta_nodes,
+                                                      segment.start_frame,
+                                                      segment.start_entity,
+                                                      segment.end_frame,
+                                                      segment.end_entity);
+        return pair_indices;
     }
 
-    /**
-     * @brief Locate anchors with both meta-node and member indices.
-     *
-     * @return Optional positions if both anchors are found.
-     */
-    struct AnchorPositions {
-        int start_meta_index = -1;
-        size_t start_member_index = 0;
-        int end_meta_index = -1;
-        size_t end_member_index = 0;
-    };
+
 
     std::optional<AnchorPositions> findAnchorPositions(
             std::vector<MetaNode> const & meta_nodes,
             GroundTruthSegment const & segment) const {
-        AnchorPositions positions;
-        for (size_t i = 0; i < meta_nodes.size(); ++i) {
-            auto const & mn = meta_nodes[i];
-            for (size_t k = 0; k < mn.members.size(); ++k) {
-                auto const & m = mn.members[k];
-                if (positions.start_meta_index == -1 && m.frame == segment.start_frame && m.entity_id == segment.start_entity) {
-                    positions.start_meta_index = static_cast<int>(i);
-                    positions.start_member_index = k;
-                }
-                if (positions.end_meta_index == -1 && m.frame == segment.end_frame && m.entity_id == segment.end_entity) {
-                    positions.end_meta_index = static_cast<int>(i);
-                    positions.end_member_index = k;
-                }
-            }
-            if (positions.start_meta_index != -1 && positions.end_meta_index != -1) break;
-        }
-        if (positions.start_meta_index == -1 || positions.end_meta_index == -1) {
-            return std::nullopt;
-        }
-        return positions;
+        return StateEstimation::findAnchorPositions(meta_nodes,
+                                                    segment.start_frame,
+                                                    segment.start_entity,
+                                                    segment.end_frame,
+                                                    segment.end_entity);
     }
 
     /**
@@ -497,7 +499,8 @@ private:
                 std::vector<NodeInfo> members;
                 for (size_t k = start_member_index; k < mn.members.size(); ++k) {
                     // Keep only until strictly before end_frame to avoid leaking past boundary
-                    if (mn.members[k].frame > segment.end_frame) break;
+                    //if (mn.members[k].frame > segment.end_frame) break;
+                    if (mn.members[k].frame >= segment.end_frame) break;
                     members.push_back(mn.members[k]);
                 }
                 if (members.empty()) continue;
@@ -517,7 +520,8 @@ private:
                 std::vector<NodeInfo> members;
                 for (size_t k = 0; k <= end_member_index && k < mn.members.size(); ++k) {
                     // Drop anything strictly before start_frame to avoid leaking before boundary
-                    if (mn.members[k].frame < segment.start_frame) continue;
+                    //if (mn.members[k].frame < segment.start_frame) continue;
+                    if (mn.members[k].frame <= segment.start_frame) continue;
                     members.push_back(mn.members[k]);
                 }
                 if (members.empty()) continue;
@@ -590,7 +594,9 @@ private:
             return {};
         }
         int const start_meta_index = pos_opt->start_meta_index;
+        size_t const start_member_index = pos_opt->start_member_index;
         int const end_meta_index = pos_opt->end_meta_index;
+        size_t const end_member_index = pos_opt->end_member_index;
 
         int const num_meta = static_cast<int>(meta_nodes_trimmed.size());
         int const source_node = num_meta;
@@ -658,10 +664,24 @@ private:
         if (!seq_opt.has_value()) {
             _diagnostics.noOptimalPathCount += 1;
             if (_logger) {
-                _logger->error("Min-cost flow failed for segment: group={} metaNodes={} arcs={}",
+                _logger->error("Min-cost flow failed for segment: group={} metaNodes={} arcs={} — falling back to anchors only",
                                static_cast<unsigned long long>(group_id), num_meta, arcs.size());
             }
-            return {};
+            // Fallback: Return all members of the sliced source and sink meta-nodes.
+            Path fallback_path;
+
+            // Add all members of the sliced source meta-node.
+            if (start_meta_index >= 0 && start_meta_index < num_meta) {
+                auto const & start_node_members = meta_nodes_trimmed[static_cast<size_t>(start_meta_index)].members;
+                fallback_path.insert(fallback_path.end(), start_node_members.begin(), start_node_members.end());
+            }
+
+            // Add all members of the sliced end meta-node, if it's a different node.
+            if (end_meta_index >= 0 && end_meta_index < num_meta && end_meta_index != start_meta_index) {
+                auto const & end_node_members = meta_nodes_trimmed[static_cast<size_t>(end_meta_index)].members;
+                fallback_path.insert(fallback_path.end(), end_node_members.begin(), end_node_members.end());
+            }
+            return fallback_path;
         }
 
         Path expanded_path;
@@ -968,18 +988,24 @@ private:
                 for (auto const & a: arcs) {
                     _logger->error("  {} -> {}  cap={}  cost={}", a.tail, a.head, a.capacity, a.unit_cost);
                 }
+                _logger->warn("Falling back to anchors-only assignment for group {}", static_cast<unsigned long long>(group_id));
             }
-            switch (_policy) {
-                case TrackerContractPolicy::Throw:
-                    throw std::logic_error(oss.str());
-                case TrackerContractPolicy::Abort:
-                    if (_logger) _logger->critical("{}", oss.str());
-                    std::abort();
-                case TrackerContractPolicy::LogAndContinue:
-                default:
-                    // already logged
-                    return {};
+            // Fallback: return only interior members of source/sink meta-nodes, excluding the anchor frames
+            Path fallback_path;
+            if (start_meta_index >= 0 && start_meta_index < num_meta) {
+                auto const & mem = local_meta[static_cast<size_t>(start_meta_index)].members;
+                if (mem.size() > 1) {
+                    for (size_t k = 1; k < mem.size(); ++k) fallback_path.push_back(mem[k]);
+                }
             }
+            if (end_meta_index >= 0 && end_meta_index < num_meta && end_meta_index != start_meta_index) {
+                auto const & mem = local_meta[static_cast<size_t>(end_meta_index)].members;
+                if (!mem.empty()) {
+                    // exclude the last member which is the end anchor
+                    for (size_t k = 0; k + 1 < mem.size(); ++k) fallback_path.push_back(mem[k]);
+                }
+            }
+            return fallback_path;
         }
 
         Path expanded_path;
@@ -1598,8 +1624,8 @@ private:
                         "We left a man behind at frame " + std::to_string(f.getValue()) +
                         " with entities: " + std::to_string(this_frame_entities.size()));
             }
-            
-                //Update progress every 1000 frames
+
+            //Update progress every 1000 frames
             if (f.getValue() % 1000 == 0) {
                 progress(static_cast<int>(f.getValue()) / (end_frame.getValue() - start_frame.getValue() + 1) * 100);
             }
@@ -1660,7 +1686,7 @@ private:
                                    100.0 * single_frame_count / meta_nodes.size());
                 }
             }
-        } 
+        }
         return meta_nodes;
     }
 

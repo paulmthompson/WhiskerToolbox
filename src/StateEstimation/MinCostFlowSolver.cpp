@@ -29,11 +29,12 @@ solveMinCostSingleUnitPath(int num_nodes,
 
         if (status != operations_research::SimpleMinCostFlow::OPTIMAL) {
             std::cerr << "Min-cost with max flow failed with status: " << status << std::endl;
-            return std::nullopt;
         }
         else {
             std::cout << "Min-cost flow solver succeeded when switched to max flow with status: " << status << std::endl;
         }
+
+        return std::nullopt;
     }
 
     // Build successor map from positive-flow arcs
