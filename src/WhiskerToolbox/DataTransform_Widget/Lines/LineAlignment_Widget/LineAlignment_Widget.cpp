@@ -49,16 +49,13 @@ LineAlignment_Widget::~LineAlignment_Widget() {
 }
 
 std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() const {
-    if (!_data_manager) {
-        return nullptr;
-    }
-
     auto params = std::make_unique<LineAlignmentParameters>();
 
     // Use the selected media data key from the combo box
-    if (!_selected_media_key.empty()) {
+    auto dm = dataManager();
+    if (dm && !_selected_media_key.empty()) {
         try {
-            auto data_variant = _data_manager->getDataVariant(_selected_media_key);
+            auto data_variant = dm->getDataVariant(_selected_media_key);
             if (data_variant.has_value() &&
                 std::holds_alternative<std::shared_ptr<MediaData>>(*data_variant)) {
                 params->media_data = std::get<std::shared_ptr<MediaData>>(*data_variant);
@@ -85,17 +82,22 @@ std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() c
     return params;
 }
 
+void LineAlignment_Widget::onDataManagerChanged() {
+    _refreshMediaDataKeys();
+}
+
 void LineAlignment_Widget::onDataManagerDataChanged() {
     _refreshMediaDataKeys();
 }
 
 void LineAlignment_Widget::_refreshMediaDataKeys() {
-    if (!_data_manager) {
+    auto dm = dataManager();
+    if (!dm) {
         return;
     }
 
     // Get current media data keys
-    auto media_keys = _data_manager->getKeys<MediaData>();
+    auto media_keys = dm->getKeys<MediaData>();
 
     // Update the combo box
     _updateMediaDataKeyComboBox();
@@ -123,7 +125,8 @@ void LineAlignment_Widget::_refreshMediaDataKeys() {
 }
 
 void LineAlignment_Widget::_updateMediaDataKeyComboBox() {
-    if (!_data_manager) {
+    auto dm = dataManager();
+    if (!dm) {
         return;
     }
 
@@ -133,7 +136,7 @@ void LineAlignment_Widget::_updateMediaDataKeyComboBox() {
     // Clear and repopulate the combo box
     ui->mediaDataKeyComboBox->clear();
 
-    auto media_keys = _data_manager->getKeys<MediaData>();
+    auto media_keys = dm->getKeys<MediaData>();
     for (auto const & key: media_keys) {
         ui->mediaDataKeyComboBox->addItem(QString::fromStdString(key));
     }
@@ -148,7 +151,8 @@ void LineAlignment_Widget::_updateMediaDataKeyComboBox() {
 }
 
 void LineAlignment_Widget::_mediaDataKeyChanged(int index) {
-    if (index >= 0 && _data_manager) {
+    auto dm = dataManager();
+    if (index >= 0 && dm) {
         _selected_media_key = ui->mediaDataKeyComboBox->itemText(index).toStdString();
     }
 }

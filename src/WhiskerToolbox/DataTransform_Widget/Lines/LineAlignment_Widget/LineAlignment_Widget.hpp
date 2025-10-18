@@ -6,8 +6,6 @@
 #include <memory>
 #include <string>
 
-class DataManager;
-
 namespace Ui {
 class LineAlignment_Widget;
 }
@@ -22,12 +20,12 @@ public:
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getParameters() const override;
 
 protected:
+    void onDataManagerChanged() override;
     void onDataManagerDataChanged() override;
 
 private:
     Ui::LineAlignment_Widget * ui;
     std::string _selected_media_key;
-    DataManager * _data_manager = nullptr;
 
     void _refreshMediaDataKeys();
     void _updateMediaDataKeyComboBox();
