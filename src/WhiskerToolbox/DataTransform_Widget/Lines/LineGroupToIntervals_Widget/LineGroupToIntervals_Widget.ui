@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LineGroupToIntervals_Widget</class>
+ <widget class="QWidget" name="LineGroupToIntervals_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>450</width>
+    <height>550</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Line Group to Digital Intervals</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupSelectionGroupBox">
+     <property name="title">
+      <string>Group Selection</string>
+     </property>
+     <layout class="QVBoxLayout" name="groupSelectionLayout">
+      <item>
+       <layout class="QHBoxLayout" name="groupComboLayout">
+        <item>
+         <widget class="QLabel" name="groupLabel">
+          <property name="text">
+           <string>Target Group:</string>
+          </property>
+          <property name="toolTip">
+           <string>Select the group to track across time frames</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="groupComboBox">
+          <property name="toolTip">
+           <string>Choose which group's presence/absence to track</string>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="refreshGroupsButton">
+          <property name="text">
+           <string>🔄</string>
+          </property>
+          <property name="toolTip">
+           <string>Refresh the list of available groups</string>
+          </property>
+          <property name="maximumWidth">
+           <number>40</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="groupInfoLabel">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: #555; font-style: italic; margin-left: 10px; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="trackingModeGroupBox">
+     <property name="title">
+      <string>Tracking Mode</string>
+     </property>
+     <layout class="QVBoxLayout" name="trackingModeLayout">
+      <item>
+       <widget class="QRadioButton" name="trackPresenceRadioButton">
+        <property name="text">
+         <string>Track Presence</string>
+        </property>
+        <property name="toolTip">
+         <string>Create intervals for frames where the group IS detected</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="trackAbsenceRadioButton">
+        <property name="text">
+         <string>Track Absence (Gaps)</string>
+        </property>
+        <property name="toolTip">
+         <string>Create intervals for frames where the group is NOT detected</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="modeDescriptionLabel">
+        <property name="text">
+         <string>Create intervals for frames where the group IS detected</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: #555; margin: 5px 10px; font-style: italic; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="filteringGroupBox">
+     <property name="title">
+      <string>Filtering and Merging Options</string>
+     </property>
+     <layout class="QFormLayout" name="filteringFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="minIntervalLengthLabel">
+        <property name="text">
+         <string>Minimum Interval Length:</string>
+        </property>
+        <property name="toolTip">
+         <string>Filter out intervals shorter than this number of frames</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="minIntervalLengthSpinBox">
+        <property name="toolTip">
+         <string>Minimum number of consecutive frames to form a valid interval (1 = no filtering)</string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+        <property name="suffix">
+         <string> frames</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="mergeGapThresholdLabel">
+        <property name="text">
+         <string>Merge Gap Threshold:</string>
+        </property>
+        <property name="toolTip">
+         <string>Merge intervals separated by gaps smaller than or equal to this value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="mergeGapThresholdSpinBox">
+        <property name="toolTip">
+         <string>Maximum gap size to merge across (1 = no merging)</string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+        <property name="suffix">
+         <string> frames</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="processingInfoLabel">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
+&lt;p&gt;&lt;b&gt;Tracking Presence:&lt;/b&gt; Output intervals represent continuous frames where the group is detected.&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel { color: #555; margin: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; border: 1px solid #b8d4e0; }</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="infoLabel">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
+&lt;p&gt;&lt;b&gt;How it works:&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Analyzes each time frame to check if any lines belong to the selected group&lt;/li&gt;
+&lt;li&gt;Creates continuous intervals based on presence/absence&lt;/li&gt;
+&lt;li&gt;Applies optional filtering and merging&lt;/li&gt;
+&lt;li&gt;Outputs a DigitalIntervalSeries for temporal analysis&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;b&gt;Use Cases:&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Quality control: Identify tracking gaps&lt;/li&gt;
+&lt;li&gt;Temporal analysis: When specific features are detectable&lt;/li&gt;
+&lt;li&gt;Event correlation: Compare with behavioral events&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel { color: #555; margin: 10px; padding: 10px; background-color: #f0f0f0; border-radius: 5px; }</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="statusLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

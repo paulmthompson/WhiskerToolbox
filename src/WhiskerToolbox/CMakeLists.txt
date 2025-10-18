@@ -188,6 +188,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.cpp
         DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.hpp
         DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.ui
+        DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.cpp
+        DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.hpp
+        DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.ui
         DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.cpp
         DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.hpp
         DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.ui
