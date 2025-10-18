@@ -17,6 +17,7 @@
 #include "DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp"
 #include "DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp"
 #include "DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.hpp"
+#include "DataTransform_Widget/Lines/Line_Outlier_Detection/LineOutlierDetection_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
@@ -218,6 +219,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Group Lines using Kalman Filtering"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new LineKalmanGrouping_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
+
+    _parameterWidgetFactories["Line Outlier Detection"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new LineOutlierDetection_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;
     };

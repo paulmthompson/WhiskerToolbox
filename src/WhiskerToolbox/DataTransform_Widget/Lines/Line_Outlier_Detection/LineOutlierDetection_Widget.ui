@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LineOutlierDetection_Widget</class>
+ <widget class="QWidget" name="LineOutlierDetection_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Line Outlier Detection</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="kalmanParametersGroupBox">
+     <property name="title">
+      <string>Kalman Filter Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="kalmanFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="dtLabel">
+        <property name="text">
+         <string>Time Step (dt):</string>
+        </property>
+        <property name="toolTip">
+         <string>Time step between frames</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="dtSpinBox">
+        <property name="toolTip">
+         <string>Time step between frames</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.01</double>
+        </property>
+        <property name="maximum">
+         <double>100.00</double>
+        </property>
+        <property name="singleStep">
+         <double>0.1</double>
+        </property>
+        <property name="value">
+         <double>1.00</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="processNoisePositionLabel">
+        <property name="text">
+         <string>Process Noise (Position):</string>
+        </property>
+        <property name="toolTip">
+         <string>Process noise for position (pixels)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="processNoisePositionSpinBox">
+        <property name="toolTip">
+         <string>Process noise for position (pixels)</string>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.01</double>
+        </property>
+        <property name="maximum">
+         <double>1000.00</double>
+        </property>
+        <property name="singleStep">
+         <double>1.0</double>
+        </property>
+        <property name="value">
+         <double>10.00</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="processNoiseVelocityLabel">
+        <property name="text">
+         <string>Process Noise (Velocity):</string>
+        </property>
+        <property name="toolTip">
+         <string>Process noise for velocity (pixels/frame)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="processNoiseVelocitySpinBox">
+        <property name="toolTip">
+         <string>Process noise for velocity (pixels/frame)</string>
+        </property>
+        <property name="suffix">
+         <string> px/frame</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.01</double>
+        </property>
+        <property name="maximum">
+         <double>1000.00</double>
+        </property>
+        <property name="singleStep">
+         <double>0.1</double>
+        </property>
+        <property name="value">
+         <double>1.00</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="processNoiseLengthLabel">
+        <property name="text">
+         <string>Process Noise (Length):</string>
+        </property>
+        <property name="toolTip">
+         <string>Process noise for line length (pixels)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="processNoiseLengthSpinBox">
+        <property name="toolTip">
+         <string>Process noise for line length (pixels)</string>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.01</double>
+        </property>
+        <property name="maximum">
+         <double>1000.00</double>
+        </property>
+        <property name="singleStep">
+         <double>0.1</double>
+        </property>
+        <property name="value">
+         <double>0.10</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="measurementNoisePositionLabel">
+        <property name="text">
+         <string>Measurement Noise (Position):</string>
+        </property>
+        <property name="toolTip">
+         <string>Measurement noise for x,y coordinates (pixels)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QDoubleSpinBox" name="measurementNoisePositionSpinBox">
+        <property name="toolTip">
+         <string>Measurement noise for x,y coordinates (pixels)</string>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.01</double>
+        </property>
+        <property name="maximum">
+         <double>1000.00</double>
+        </property>
+        <property name="singleStep">
+         <double>1.0</double>
+        </property>
+        <property name="value">
+         <double>5.00</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="measurementNoiseLengthLabel">
+        <property name="text">
+         <string>Measurement Noise (Length):</string>
+        </property>
+        <property name="toolTip">
+         <string>Measurement noise for line length (pixels)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QDoubleSpinBox" name="measurementNoiseLengthSpinBox">
+        <property name="toolTip">
+         <string>Measurement noise for line length (pixels)</string>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.01</double>
+        </property>
+        <property name="maximum">
+         <double>1000.00</double>
+        </property>
+        <property name="singleStep">
+         <double>1.0</double>
+        </property>
+        <property name="value">
+         <double>10.00</double>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="initialPositionUncertaintyLabel">
+        <property name="text">
+         <string>Initial Position Uncertainty:</string>
+        </property>
+        <property name="toolTip">
+         <string>Initial uncertainty in position (pixels)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QDoubleSpinBox" name="initialPositionUncertaintySpinBox">
+        <property name="toolTip">
+         <string>Initial uncertainty in position (pixels)</string>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.01</double>
+        </property>
+        <property name="maximum">
+         <double>1000.00</double>
+        </property>
+        <property name="singleStep">
+         <double>5.0</double>
+        </property>
+        <property name="value">
+         <double>50.00</double>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="initialVelocityUncertaintyLabel">
+        <property name="text">
+         <string>Initial Velocity Uncertainty:</string>
+        </property>
+        <property name="toolTip">
+         <string>Initial uncertainty in velocity (pixels/frame)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QDoubleSpinBox" name="initialVelocityUncertaintySpinBox">
+        <property name="toolTip">
+         <string>Initial uncertainty in velocity (pixels/frame)</string>
+        </property>
+        <property name="suffix">
+         <string> px/frame</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.01</double>
+        </property>
+        <property name="maximum">
+         <double>1000.00</double>
+        </property>
+        <property name="singleStep">
+         <double>1.0</double>
+        </property>
+        <property name="value">
+         <double>10.00</double>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="initialLengthUncertaintyLabel">
+        <property name="text">
+         <string>Initial Length Uncertainty:</string>
+        </property>
+        <property name="toolTip">
+         <string>Initial uncertainty in line length (pixels)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QDoubleSpinBox" name="initialLengthUncertaintySpinBox">
+        <property name="toolTip">
+         <string>Initial uncertainty in line length (pixels)</string>
+        </property>
+        <property name="suffix">
+         <string> px</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>0.01</double>
+        </property>
+        <property name="maximum">
+         <double>1000.00</double>
+        </property>
+        <property name="singleStep">
+         <double>1.0</double>
+        </property>
+        <property name="value">
+         <double>20.00</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="outlierDetectionGroupBox">
+     <property name="title">
+      <string>Outlier Detection Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="outlierFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="madThresholdLabel">
+        <property name="text">
+         <string>MAD Threshold:</string>
+        </property>
+        <property name="toolTip">
+         <string>Number of MAD (Median Absolute Deviation) units above median to classify as outlier</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="madThresholdSpinBox">
+        <property name="toolTip">
+         <string>Number of MAD (Median Absolute Deviation) units above median to classify as outlier</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>1.0</double>
+        </property>
+        <property name="maximum">
+         <double>20.0</double>
+        </property>
+        <property name="singleStep">
+         <double>0.5</double>
+        </property>
+        <property name="value">
+         <double>5.0</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="outputControlGroupBox">
+     <property name="title">
+      <string>Output Control</string>
+     </property>
+     <layout class="QFormLayout" name="outputFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="outlierGroupNameLabel">
+        <property name="text">
+         <string>Outlier Group Name:</string>
+        </property>
+        <property name="toolTip">
+         <string>Name for the group containing detected outliers</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="outlierGroupNameLineEdit">
+        <property name="toolTip">
+         <string>Name for the group containing detected outliers</string>
+        </property>
+        <property name="text">
+         <string>Outliers</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QCheckBox" name="verboseOutputCheckBox">
+        <property name="text">
+         <string>Verbose Output</string>
+        </property>
+        <property name="toolTip">
+         <string>Enable detailed console logging</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <spacer name="buttonSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="resetDefaultsButton">
+       <property name="text">
+        <string>Reset to Defaults</string>
+       </property>
+       <property name="toolTip">
+        <string>Reset all parameters to their default values</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

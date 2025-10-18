@@ -17,6 +17,7 @@
 #include "transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp"
 #include "transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp"
 #include "transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
+#include "transforms/Lines/Line_Outlier_Detection/line_outlier_detection.hpp"
 #include "transforms/Lines/Line_Resample/line_resample.hpp"
 #include "transforms/Lines/Line_Subsegment/line_subsegment.hpp"
 #include "transforms/Points/Point_Particle_Filter/point_particle_filter.hpp"
@@ -66,6 +67,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LineClipOperation>());
     _registerOperation(std::make_unique<LineProximityGroupingOperation>());
     _registerOperation(std::make_unique<LineKalmanGroupingOperation>());
+    _registerOperation(std::make_unique<LineOutlierDetectionOperation>());
     _registerOperation(std::make_unique<LineIndexGroupingOperation>());
     _registerOperation(std::make_unique<LineGroupToIntervalsOperation>());
     _registerOperation(std::make_unique<PointParticleFilterOperation>());

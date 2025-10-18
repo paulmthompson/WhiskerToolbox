@@ -185,6 +185,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.cpp
         DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.hpp
         DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.ui
+        DataTransform_Widget/Lines/Line_Outlier_Detection/LineOutlierDetection_Widget.cpp
+        DataTransform_Widget/Lines/Line_Outlier_Detection/LineOutlierDetection_Widget.hpp
+        DataTransform_Widget/Lines/Line_Outlier_Detection/LineOutlierDetection_Widget.ui
         DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.cpp
         DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.hpp
         DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.ui

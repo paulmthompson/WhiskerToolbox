@@ -182,6 +182,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/Line_Group_To_Intervals/line_group_to_intervals.hpp
         transforms/Lines/Line_Alignment/line_alignment.hpp
         transforms/Lines/Line_Alignment/line_alignment.cpp
+        transforms/Lines/Line_Outlier_Detection/line_outlier_detection.cpp
+        transforms/Lines/Line_Outlier_Detection/line_outlier_detection.hpp
         transforms/Lines/Line_Base_Flip/line_base_flip.hpp
         transforms/Lines/Line_Base_Flip/line_base_flip.cpp
         transforms/Lines/Line_Resample/line_resample.cpp

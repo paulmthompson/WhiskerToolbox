@@ -9,8 +9,11 @@
 
 #include <vector>
 #include <map>
+#include <set>
 #include <functional>
 #include <memory>
+#include <iostream>
+#include <algorithm>
 
 namespace StateEstimation {
 
@@ -19,10 +22,14 @@ class OutlierDetection {
 public:
     OutlierDetection(std::unique_ptr<IFilter> filter_prototype,
                      std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor,
-                     CostFunction cost_function)
+                     CostFunction cost_function,
+                     double mad_threshold = 5.0,
+                     bool verbose = false)
         : filter_prototype_(std::move(filter_prototype)),
           feature_extractor_(std::move(feature_extractor)),
-          cost_function_(std::move(cost_function)) {}
+          cost_function_(std::move(cost_function)),
+          mad_threshold_(mad_threshold),
+          verbose_(verbose) {}
 
     void process(const std::vector<std::tuple<DataType, EntityId, TimeFrameIndex>>& data_source,
              EntityGroupManager& group_manager,
@@ -100,16 +107,23 @@ public:
         auto smoothed_states = filter->smooth(forward_states);
 
         // Calculate costs and MAD
+        // Skip first frame(s) as warmup - they are used for filter initialization
+        // and may have artificially high costs even after smoothing
+        constexpr size_t kWarmupFrames = 3;  // Skip the first frame used for initialization
+        
         std::vector<double> costs;
         std::map<TimeFrameIndex, double> costs_by_frame;
         size_t state_idx = 0;
         for (TimeFrameIndex frame = start_frame; frame <= end_frame; ++frame) {
             if (group_measurements.count(frame)) {
                 if (state_idx < smoothed_states.size()) {
-                    double cost = cost_function_(smoothed_states[state_idx],
-                                                 group_measurements.at(frame).second.feature_vector, 1.0);
-                    costs.push_back(cost);
-                    costs_by_frame[frame] = cost;
+                    // Skip warmup frames from outlier detection
+                    if (state_idx >= kWarmupFrames) {
+                        double cost = cost_function_(smoothed_states[state_idx],
+                                                     group_measurements.at(frame).second.feature_vector, 1.0);
+                        costs.push_back(cost);
+                        costs_by_frame[frame] = cost;
+                    }
                     state_idx++;
                 }
             }
@@ -130,12 +144,30 @@ public:
         std::sort(deviations.begin(), deviations.end());
         double mad = deviations[deviations.size() / 2];
 
-        // Identify outliers
+        if (verbose_) {
+            std::cout << "  Group " << group_id << ": median cost = " << median 
+                      << ", MAD = " << mad 
+                      << ", threshold = " << (median + mad_threshold_ * mad) << std::endl;
+            std::cout << "  Cost range: [" << sorted_costs.front() << ", " << sorted_costs.back() << "]" << std::endl;
+        }
+
+        // Identify outliers using configurable MAD threshold
+        int outlier_count = 0;
         for (const auto& pair : costs_by_frame) {
-            if (pair.second > median + 5.0 * mad) {
+            if (pair.second > median + mad_threshold_ * mad) {
                 EntityId outlier_entity_id = group_measurements.at(pair.first).first;
                 group_manager.addEntityToGroup(outlier_group_id, outlier_entity_id);
+                outlier_count++;
+                if (verbose_) {
+                    std::cout << "    Outlier at frame " << pair.first.getValue() 
+                              << ": cost = " << pair.second 
+                              << " (entity " << outlier_entity_id << ")" << std::endl;
+                }
             }
+        }
+        
+        if (verbose_) {
+            std::cout << "  Found " << outlier_count << " outliers out of " << costs.size() << " measurements" << std::endl;
         }
 
         if (progress_callback) {
@@ -148,6 +180,8 @@ private:
     std::unique_ptr<IFilter> filter_prototype_;
     std::unique_ptr<IFeatureExtractor<DataType>> feature_extractor_;
     CostFunction cost_function_;
+    double mad_threshold_;
+    bool verbose_;
 };
 
 } // namespace StateEstimation
