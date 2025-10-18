@@ -447,6 +447,37 @@ private:
                 _logger->error("Min-cost flow failed for segment: group={} metaNodes={} arcs={} — falling back to anchors only",
                                static_cast<unsigned long long>(group_id), num_meta, arcs.size());
             }
+            // If start/end nodes overlap, split them and return only the anchor-containing clipped nodes
+            auto resolved = resolveOverlappingAnchorNodes(meta_nodes_trimmed, start_meta_index, end_meta_index);
+
+            // Find nodes that contain the anchors in the resolved list
+            int start_idx_res = -1;
+            int end_idx_res = -1;
+            for (int i = 0; i < static_cast<int>(resolved.size()); ++i) {
+                auto const & mn = resolved[static_cast<size_t>(i)];
+                for (auto const & m : mn.members) {
+                    if (start_idx_res == -1 && m.frame == segment.start_frame && m.entity_id == segment.start_entity) {
+                        start_idx_res = i;
+                    }
+                    if (end_idx_res == -1 && m.frame == segment.end_frame && m.entity_id == segment.end_entity) {
+                        end_idx_res = i;
+                    }
+                    if (start_idx_res != -1 && end_idx_res != -1) break;
+                }
+                if (start_idx_res != -1 && end_idx_res != -1) break;
+            }
+
+            Path fallback_path;
+            if (start_idx_res >= 0 && start_idx_res < static_cast<int>(resolved.size())) {
+                auto const & mem = resolved[static_cast<size_t>(start_idx_res)].members;
+                fallback_path.insert(fallback_path.end(), mem.begin(), mem.end());
+            }
+            if (end_idx_res >= 0 && end_idx_res < static_cast<int>(resolved.size()) && end_idx_res != start_idx_res) {
+                auto const & mem = resolved[static_cast<size_t>(end_idx_res)].members;
+                fallback_path.insert(fallback_path.end(), mem.begin(), mem.end());
+            }
+            if (!fallback_path.empty()) return fallback_path;
+            // Fall back to simple concatenation if anchors not found (shouldn't happen)
             return buildFallbackPathFromTrimmed(meta_nodes_trimmed, start_meta_index, end_meta_index);
         }
 

@@ -347,6 +347,105 @@ inline Path buildFallbackPathFromTrimmed(std::vector<MetaNode> const & meta_node
     return fallback_path;
 }
 
+/**
+ * @brief If the start anchor node and end anchor node overlap in time, split them into
+ * non-overlapping prefix/suffix nodes and two explicit overlap nodes.
+ *
+ * Input is expected to be the trimmed/pruned meta-nodes for the segment produced by
+ * sliceMetaNodesToSegment(). This function inspects the meta-node at start_meta_index
+ * and end_meta_index; if their ranges overlap, returns a new vector where these two
+ * nodes are replaced by up to four nodes:
+ *   - start_prefix: [start.start_frame .. overlap_start-1]
+ *   - start_overlap: [overlap_start .. overlap_end] (from start node)
+ *   - end_overlap:   [overlap_start .. overlap_end] (from end node)
+ *   - end_suffix:    [overlap_end+1 .. end.end_frame]
+ * Nodes with empty ranges are omitted. All other nodes are copied unchanged.
+ */
+inline std::vector<MetaNode>
+resolveOverlappingAnchorNodes(std::vector<MetaNode> const & meta_nodes_trimmed,
+                              int start_meta_index,
+                              int end_meta_index) {
+    if (start_meta_index < 0 || end_meta_index < 0 ||
+        start_meta_index >= static_cast<int>(meta_nodes_trimmed.size()) ||
+        end_meta_index >= static_cast<int>(meta_nodes_trimmed.size())) {
+        return meta_nodes_trimmed;
+    }
+
+    MetaNode const & start_node = meta_nodes_trimmed[static_cast<size_t>(start_meta_index)];
+    MetaNode const & end_node = meta_nodes_trimmed[static_cast<size_t>(end_meta_index)];
+
+    // If no overlap, return as-is
+    if (start_node.end_frame < end_node.start_frame || end_node.end_frame < start_node.start_frame) {
+        return meta_nodes_trimmed;
+    }
+
+    TimeFrameIndex const overlap_start = (start_node.start_frame < end_node.start_frame)
+                                         ? end_node.start_frame
+                                         : start_node.start_frame;
+    TimeFrameIndex const overlap_end = (start_node.end_frame < end_node.end_frame)
+                                       ? start_node.end_frame
+                                       : end_node.end_frame;
+
+    auto make_node_from_members = [](MetaNode const & src, std::vector<NodeInfo> && members) -> std::optional<MetaNode> {
+        if (members.empty()) return std::nullopt;
+        MetaNode out;
+        out.members = std::move(members);
+        out.start_frame = out.members.front().frame;
+        out.end_frame = out.members.back().frame;
+        out.start_entity = out.members.front().entity_id;
+        out.end_entity = out.members.back().entity_id;
+        // Preserve states from source for consistency
+        out.start_state = src.start_state;
+        out.end_state = src.end_state;
+        return out;
+    };
+
+    // Split start node
+    std::vector<NodeInfo> start_prefix_members;
+    std::vector<NodeInfo> start_overlap_members;
+    for (auto const & ni : start_node.members) {
+        if (ni.frame < overlap_start) {
+            start_prefix_members.push_back(ni);
+        } else if (ni.frame <= overlap_end) {
+            start_overlap_members.push_back(ni);
+        }
+    }
+
+    // Split end node
+    std::vector<NodeInfo> end_overlap_members;
+    std::vector<NodeInfo> end_suffix_members;
+    for (auto const & ni : end_node.members) {
+        if (ni.frame < overlap_start) {
+            // discard
+        } else if (ni.frame <= overlap_end) {
+            end_overlap_members.push_back(ni);
+        } else {
+            end_suffix_members.push_back(ni);
+        }
+    }
+
+    // Assemble new list, replacing the two anchor nodes with up to four nodes
+    std::vector<MetaNode> result;
+    result.reserve(meta_nodes_trimmed.size() + 2);
+    for (int i = 0; i < static_cast<int>(meta_nodes_trimmed.size()); ++i) {
+        if (i == start_meta_index || i == end_meta_index) continue;
+        result.push_back(meta_nodes_trimmed[static_cast<size_t>(i)]);
+    }
+
+    // Maintain relative ordering: prefix, start_overlap, end_overlap, end_suffix
+    if (auto np = make_node_from_members(start_node, std::move(start_prefix_members))) result.push_back(std::move(*np));
+    if (auto no = make_node_from_members(start_node, std::move(start_overlap_members))) result.push_back(std::move(*no));
+    if (auto eo = make_node_from_members(end_node, std::move(end_overlap_members))) result.push_back(std::move(*eo));
+    if (auto ns = make_node_from_members(end_node, std::move(end_suffix_members))) result.push_back(std::move(*ns));
+
+    // Sort by start_frame to preserve chronological order
+    std::sort(result.begin(), result.end(), [](MetaNode const & a, MetaNode const & b) {
+        return a.start_frame < b.start_frame;
+    });
+
+    return result;
+}
+
 }// namespace StateEstimation
 
 #endif// STATEESTIMATION_TRACKING_ANCHOR_UTILS_HPP

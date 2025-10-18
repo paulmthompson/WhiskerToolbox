@@ -461,5 +461,3 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - overlapping long tracklets wit
     REQUIRE(find_entity(180).value() == static_cast<EntityId>(20180));
     REQUIRE(find_entity(200).value() == static_cast<EntityId>(20200));
 }
-
-
