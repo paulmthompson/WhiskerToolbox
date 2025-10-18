@@ -3,6 +3,7 @@
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
 #include "DataManagerTypes.hpp"
+#include "Collapsible_Widget/Section.hpp"
 
 #include <QString>
 #include <QScrollArea>
@@ -55,7 +56,7 @@ private:
     int _current_progress = 0;
 
     // JSON Pipeline members
-    QGroupBox* _jsonPipelineGroup;
+    Section* _jsonPipelineSection;
     QPushButton* _loadJsonButton;
     QTextEdit* _jsonTextEdit;
     QLabel* _jsonStatusLabel;

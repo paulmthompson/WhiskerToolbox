@@ -56,7 +56,7 @@ DataTransform_Widget::DataTransform_Widget(
     : QScrollArea(parent),
       ui(new Ui::DataTransform_Widget),
       _data_manager{std::move(data_manager)},
-      _jsonPipelineGroup(nullptr),
+      _jsonPipelineSection(nullptr),
       _loadJsonButton(nullptr),
       _jsonTextEdit(nullptr),
       _jsonStatusLabel(nullptr),
@@ -506,9 +506,10 @@ void DataTransform_Widget::resizeEvent(QResizeEvent* event) {
         _currentParameterWidget->updateGeometry();
     }
 
-    // Update JSON text editor width if it exists
-    if (_jsonTextEdit) {
-        _jsonTextEdit->setMaximumWidth(width() - 40); // Account for margins
+    // Update JSON pipeline section width if it exists
+    if (_jsonPipelineSection) {
+        _jsonPipelineSection->setMaximumWidth(ui->stackedWidget->width());
+        _jsonPipelineSection->updateGeometry();
     }
 
     // Ensure the stackedWidget is properly sized
@@ -531,13 +532,12 @@ QSize DataTransform_Widget::minimumSizeHint() const {
 }
 
 void DataTransform_Widget::_setupJsonPipelineUI() {
-    // Create the JSON pipeline group box
-    _jsonPipelineGroup = new QGroupBox("JSON Pipeline", this);
-    _jsonPipelineGroup->setCheckable(true);
-    _jsonPipelineGroup->setChecked(false); // Start collapsed
-    _jsonPipelineGroup->setMinimumHeight(50); // Smaller when collapsed
+    // Create the JSON pipeline section
+    _jsonPipelineSection = new Section(this, "JSON Pipeline");
+    _jsonPipelineSection->setMinimumHeight(50); // Smaller when collapsed
     
-    auto jsonLayout = new QVBoxLayout(_jsonPipelineGroup);
+    // Create the content layout for the section
+    auto jsonLayout = new QVBoxLayout();
     
     // JSON file loading section
     auto jsonButtonLayout = new QHBoxLayout();
@@ -595,15 +595,18 @@ void DataTransform_Widget::_setupJsonPipelineUI() {
     executeLayout->addWidget(_pipelineProgressBar, 1);
     jsonLayout->addLayout(executeLayout);
     
-    // Add the JSON pipeline group to the main layout
+    // Set the content layout for the section
+    _jsonPipelineSection->setContentLayout(*jsonLayout);
+    
+    // Add the JSON pipeline section to the main layout
     // Get the scroll area's widget and its layout
     auto* scrollWidget = widget();
     if (scrollWidget) {
         auto* mainLayout = qobject_cast<QVBoxLayout*>(scrollWidget->layout());
         if (mainLayout) {
-            // Insert the JSON pipeline group before the last spacer
+            // Insert the JSON pipeline section before the last spacer
             int spacerIndex = mainLayout->count() - 1;
-            mainLayout->insertWidget(spacerIndex, _jsonPipelineGroup);
+            mainLayout->insertWidget(spacerIndex, _jsonPipelineSection);
         }
     }
     
@@ -611,16 +614,6 @@ void DataTransform_Widget::_setupJsonPipelineUI() {
     connect(_loadJsonButton, &QPushButton::clicked, this, &DataTransform_Widget::_loadJsonPipeline);
     connect(_jsonTextEdit, &QTextEdit::textChanged, this, &DataTransform_Widget::_onJsonTextChanged);
     connect(_executeJsonButton, &QPushButton::clicked, this, &DataTransform_Widget::_executeJsonPipeline);
-    
-    // Connect group box toggle to adjust size
-    connect(_jsonPipelineGroup, &QGroupBox::toggled, this, [this](bool checked) {
-        if (checked) {
-            _jsonPipelineGroup->setMinimumHeight(350);
-        } else {
-            _jsonPipelineGroup->setMinimumHeight(50);
-        }
-        updateGeometry();
-    });
 }
 
 void DataTransform_Widget::_loadJsonPipeline() {
