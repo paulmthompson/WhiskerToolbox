@@ -178,6 +178,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp
         transforms/Lines/Line_Index_Grouping/line_index_grouping.cpp
         transforms/Lines/Line_Index_Grouping/line_index_grouping.hpp
+        transforms/Lines/Line_Group_To_Intervals/line_group_to_intervals.cpp
+        transforms/Lines/Line_Group_To_Intervals/line_group_to_intervals.hpp
         transforms/Lines/Line_Alignment/line_alignment.hpp
         transforms/Lines/Line_Alignment/line_alignment.cpp
         transforms/Lines/Line_Base_Flip/line_base_flip.hpp

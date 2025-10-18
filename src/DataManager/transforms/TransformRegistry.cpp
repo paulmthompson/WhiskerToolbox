@@ -11,6 +11,7 @@
 #include "transforms/Lines/Line_Base_Flip/line_base_flip.hpp"
 #include "transforms/Lines/Line_Clip/line_clip.hpp"
 #include "transforms/Lines/Line_Curvature/line_curvature.hpp"
+#include "transforms/Lines/Line_Group_To_Intervals/line_group_to_intervals.hpp"
 #include "transforms/Lines/Line_Index_Grouping/line_index_grouping.hpp"
 #include "transforms/Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "transforms/Lines/Line_Point_Extraction/line_point_extraction.hpp"
@@ -66,6 +67,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LineProximityGroupingOperation>());
     _registerOperation(std::make_unique<LineKalmanGroupingOperation>());
     _registerOperation(std::make_unique<LineIndexGroupingOperation>());
+    _registerOperation(std::make_unique<LineGroupToIntervalsOperation>());
     _registerOperation(std::make_unique<PointParticleFilterOperation>());
     _registerOperation(std::make_unique<GroupOperation>());
     _registerOperation(std::make_unique<AnalogFilterOperation>());
