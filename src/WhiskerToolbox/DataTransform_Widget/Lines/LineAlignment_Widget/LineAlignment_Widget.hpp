@@ -22,12 +22,12 @@ public:
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getParameters() const override;
 
 protected:
-    void onDataManagerChanged() override;
     void onDataManagerDataChanged() override;
 
 private:
     Ui::LineAlignment_Widget * ui;
     std::string _selected_media_key;
+    DataManager * _data_manager = nullptr;
 
     void _refreshMediaDataKeys();
     void _updateMediaDataKeyComboBox();
@@ -39,8 +39,6 @@ private slots:
     void _approachChanged(int index);
     void _outputModeChanged(int index);
     void _mediaDataKeyChanged(int index);
-    void _enableGroupingToggled(bool checked);
-    void _groupPrefixChanged();
 };
 
 #endif// LINEALIGNMENT_WIDGET_HPP

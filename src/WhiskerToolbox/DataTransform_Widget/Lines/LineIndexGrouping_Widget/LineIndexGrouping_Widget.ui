@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LineIndexGrouping_Widget</class>
+ <widget class="QWidget" name="LineIndexGrouping_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>350</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Line Index Grouping</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="parametersGroupBox">
+     <property name="title">
+      <string>Grouping Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="groupNamePrefixLabel">
+        <property name="text">
+         <string>Group Name Prefix:</string>
+        </property>
+        <property name="toolTip">
+         <string>Prefix for automatically generated group names (e.g., 'Whisker' creates 'Whisker 0', 'Whisker 1', etc.)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="groupNamePrefixLineEdit">
+        <property name="toolTip">
+         <string>Prefix for automatically generated group names</string>
+        </property>
+        <property name="text">
+         <string>Line</string>
+        </property>
+        <property name="placeholderText">
+         <string>e.g., Whisker, Object, Line</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="groupDescriptionLabel">
+        <property name="text">
+         <string>Description Template:</string>
+        </property>
+        <property name="toolTip">
+         <string>Template for group descriptions. Use {} as placeholder for index number.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="groupDescriptionTemplateLineEdit">
+        <property name="toolTip">
+         <string>Template for group descriptions. Use {} for index placeholders.</string>
+        </property>
+        <property name="text">
+         <string>Group {} - lines at vector index {}</string>
+        </property>
+        <property name="placeholderText">
+         <string>Use {} for index numbers</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="optionsGroupBox">
+     <property name="title">
+      <string>Options</string>
+     </property>
+     <layout class="QVBoxLayout" name="optionsLayout">
+      <item>
+       <widget class="QCheckBox" name="clearExistingGroupsCheckBox">
+        <property name="text">
+         <string>Clear existing groups before grouping</string>
+        </property>
+        <property name="toolTip">
+         <string>If enabled, all existing groups will be deleted before creating new ones</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="warningLabel">
+        <property name="text">
+         <string>⚠ Warning: This will delete all existing groups before creating new ones.</string>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: #cc0000; font-weight: bold; margin: 5px; padding: 5px; background-color: #fff3cd; border: 1px solid #cc0000; border-radius: 3px; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="infoLabel">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
+&lt;p&gt;&lt;b&gt;How it works:&lt;/b&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Finds the maximum number of lines at any timestamp&lt;/li&gt;
+&lt;li&gt;Creates that many groups (Group 0, 1, 2, ...)&lt;/li&gt;
+&lt;li&gt;Assigns lines at vector index 0 to Group 0, index 1 to Group 1, etc.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;i&gt;Example: If you have [3, 5, 4, 2] lines across timestamps, it creates 5 groups based on the maximum.&lt;/i&gt;&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string>QLabel { color: #555; margin: 10px; padding: 10px; background-color: #f0f0f0; border-radius: 5px; }</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -17,6 +17,7 @@
 #include "DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp"
 #include "DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp"
 #include "DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.hpp"
@@ -216,6 +217,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Group Lines using Kalman Filtering"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new LineKalmanGrouping_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
+
+    _parameterWidgetFactories["Group Lines by Index"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new LineIndexGrouping_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;
     };

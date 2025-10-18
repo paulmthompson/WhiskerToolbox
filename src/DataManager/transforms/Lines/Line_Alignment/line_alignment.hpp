@@ -3,7 +3,6 @@
 
 
 #include "transforms/data_transforms.hpp"
-#include "transforms/grouping_transforms.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/line_geometry.hpp"
@@ -42,21 +41,13 @@ T get_pixel_value(Point2D<float> const & point,
                   ImageSize const & image_size);
 
 
-struct LineAlignmentParameters : public GroupingTransformParametersBase {
-    explicit LineAlignmentParameters(EntityGroupManager * group_manager = nullptr)
-        : GroupingTransformParametersBase(group_manager) {}
-
+struct LineAlignmentParameters : public TransformParametersBase {
     std::shared_ptr<MediaData> media_data;                                          // Pointer to the MediaData
     int width = 20;                                                                 // Width of analysis strip
     int perpendicular_range = 50;                                                   // Range of perpendicular analysis (pixels)
     bool use_processed_data = true;                                                 // Whether to use processed or raw data
     FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX;                      // FWHM calculation approach
     LineAlignmentOutputMode output_mode = LineAlignmentOutputMode::ALIGNED_VERTICES;// Output mode
-
-    // === Grouping Parameters ===
-    bool enable_grouping = false;                                   // Enable grouping of FWHM lines by vertex index
-    std::string group_prefix = "FWHM_Vertex_";                      // Prefix for generated group names
-    std::string group_description = "FWHM profile lines for vertex";// Description for generated groups
 };
 
 

@@ -3,8 +3,6 @@
 #include "Lines/Line_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "CoreGeometry/line_geometry.hpp"
-#include "Entity/EntityGroupManager.hpp"
-#include "Entity/EntityTypes.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -455,8 +453,6 @@ bool LineAlignmentOperation::canApply(DataTypeVariant const & dataVariant) const
 }
 
 std::unique_ptr<TransformParametersBase> LineAlignmentOperation::getDefaultParameters() const {
-    // Create default parameters with null group manager
-    // The EntityGroupManager must be set via setGroupManager() before execution
     return std::make_unique<LineAlignmentParameters>();
 }
 
@@ -483,13 +479,6 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
     // Check if we have valid parameters
     if (!typed_params) {
         std::cerr << "LineAlignmentOperation::execute: Invalid parameters provided. Operation requires LineAlignmentParameters." << std::endl;
-        if (progressCallback) progressCallback(100);
-        return {};
-    }
-
-    // Check if group manager is valid (only required if grouping is enabled)
-    if (typed_params->enable_grouping && !typed_params->hasValidGroupManager()) {
-        std::cerr << "LineAlignmentOperation::execute: EntityGroupManager is required when grouping is enabled but not set. Call setGroupManager() on parameters before execution." << std::endl;
         if (progressCallback) progressCallback(100);
         return {};
     }
@@ -570,40 +559,6 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
     auto aligned_line_data = std::make_shared<LineData>();
     aligned_line_data->setImageSize(line_data->getImageSize());
 
-    // Check if group manager is valid (only required if grouping is enabled)
-    if (params && params->enable_grouping && !params->hasValidGroupManager()) {
-        std::cerr << "line_alignment: EntityGroupManager is required when grouping is enabled but not set. Call setGroupManager() on parameters before execution." << std::endl;
-        if (progressCallback) progressCallback(100);
-        return std::make_shared<LineData>();
-    }
-
-    // Set up grouping if enabled and we have a group manager
-    std::map<size_t, std::uint64_t> vertex_to_group_map; // Maps vertex index to group ID
-    bool grouping_enabled = params && params->enable_grouping && params->getGroupManager();
-    EntityGroupManager* group_manager = grouping_enabled ? params->getGroupManager() : nullptr;
-
-    //aligned_line_data->setIdentityContext(line_data->getIdentityContext());
-    
-    // Pre-create groups for all vertices if grouping is enabled and we're in FWHM mode
-    if (grouping_enabled && params->output_mode == LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS) {
-        // Determine the maximum number of vertices by checking all time frames
-        size_t max_vertices = 0;
-        for (auto time: line_times) {
-            auto const & lines = line_data->getAtTime(time);
-            for (auto const & line: lines) {
-                max_vertices = std::max(max_vertices, line.size());
-            }
-        }
-        
-        // Create groups for all possible vertex indices
-        for (size_t vertex_idx = 0; vertex_idx < max_vertices; ++vertex_idx) {
-            std::string group_name = params->group_prefix + std::to_string(vertex_idx);
-            std::string group_desc = params->group_description + " " + std::to_string(vertex_idx);
-            std::uint64_t group_id = group_manager->createGroup(group_name, group_desc);
-            vertex_to_group_map[vertex_idx] = group_id;
-        }
-    }
-
     size_t total_time_points = line_times.size();
     size_t processed_time_points = 0;
     if (progressCallback) progressCallback(0);
@@ -661,35 +616,12 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
         for (auto const & aligned_line: aligned_lines) {
             aligned_line_data->addAtTime(time, aligned_line, false);
         }
-        
-        // Handle grouping for FWHM profile extents mode
-        if (grouping_enabled && output_mode == LineAlignmentOutputMode::FWHM_PROFILE_EXTENTS) {
-            // Get the EntityIds for the lines we just added
-            auto const & entity_ids = aligned_line_data->getEntityIdsAtTime(time);
-            
-            // For FWHM mode, each line corresponds to a vertex from the original line
-            for (size_t line_idx = 0; line_idx < entity_ids.size(); ++line_idx) {
-                EntityId entity_id = entity_ids[line_idx];
-                size_t vertex_index = line_idx; // In FWHM mode, lines are created per vertex
-                
-                // Add this entity to the appropriate group (groups are already created)
-                if (vertex_to_group_map.find(vertex_index) != vertex_to_group_map.end()) {
-                    std::uint64_t group_id = vertex_to_group_map[vertex_index];
-                    group_manager->addEntityToGroup(group_id, entity_id);
-                }
-            }
-        }
 
         processed_time_points++;
         if (progressCallback) {
             int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
             progressCallback(current_progress);
         }
-    }
-
-    // Notify group manager of changes if grouping was enabled
-    if (grouping_enabled && group_manager) {
-        group_manager->notifyGroupsChanged();
     }
 
     if (progressCallback) progressCallback(100);

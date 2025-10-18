@@ -76,6 +76,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Subsegment/line_subsegment.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Index_Grouping/line_index_grouping.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Points/Point_Particle_Filter/point_particle_filter.test.cpp
 

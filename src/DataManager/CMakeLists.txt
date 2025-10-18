@@ -148,6 +148,8 @@ set(DATAMANAGER_SOURCES
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
+        transforms/grouping_transforms.hpp
+        transforms/utils/index_grouping.hpp
         transforms/TransformRegistry.hpp
         transforms/TransformRegistry.cpp
         transforms/TransformPipeline.hpp
@@ -174,6 +176,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/Line_Proximity_Grouping/line_proximity_grouping.hpp
         transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.cpp
         transforms/Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp
+        transforms/Lines/Line_Index_Grouping/line_index_grouping.cpp
+        transforms/Lines/Line_Index_Grouping/line_index_grouping.hpp
         transforms/Lines/Line_Alignment/line_alignment.hpp
         transforms/Lines/Line_Alignment/line_alignment.cpp
         transforms/Lines/Line_Base_Flip/line_base_flip.hpp
