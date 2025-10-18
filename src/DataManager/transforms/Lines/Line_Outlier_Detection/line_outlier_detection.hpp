@@ -17,14 +17,21 @@ class LineData;
  * 
  * This operation uses Kalman filtering and smoothing to detect outliers in grouped line data.
  * It processes each existing group independently, performing forward-backward smoothing and
- * identifying entities that deviate significantly from the predicted trajectory.
+ * identifying entities whose measurements deviate significantly from the smoothed trajectory.
  * 
  * Features used for outlier detection:
  * - Line centroid (center of mass of all points)
  * - Line length (total arc length)
  * 
- * The algorithm uses Median Absolute Deviation (MAD) to identify outliers:
- * - Entities with cost > median + (mad_threshold * MAD) are marked as outliers
+ * The algorithm detects outliers by comparing raw measurements to smoothed predictions:
+ * - Computes Mahalanobis distance (cost) between each measurement and its smoothed state
+ * - Flags measurements with cost > threshold as outliers (noisy measurements)
+ * - The cost measures how many standard deviations the measurement is from the prediction
+ * 
+ * Recommended threshold values:
+ * - 3.0: Conservative (flags ~1% as outliers if noise is Gaussian)
+ * - 5.0: Very conservative (flags ~0.025% as outliers)
+ * - Higher values = fewer detections, more tolerance for measurement noise
  */
 struct LineOutlierDetectionParameters : public GroupingTransformParametersBase {
     explicit LineOutlierDetectionParameters(EntityGroupManager * group_manager = nullptr)
@@ -44,7 +51,10 @@ struct LineOutlierDetectionParameters : public GroupingTransformParametersBase {
     double initial_length_uncertainty = 20.0;   // Initial uncertainty in length
 
     // === Outlier Detection Parameters ===
-    double mad_threshold = 5.0; // Number of MAD units above median to classify as outlier
+    // Mahalanobis distance threshold - measures how many "standard deviations" away from
+    // the smoothed prediction a measurement must be to be considered an outlier
+    // Common values: 3.0 (strict), 5.0 (moderate), 10.0 (permissive)
+    double mad_threshold = 5.0;
     
     // === Group Selection ===
     // If empty, process all groups. Otherwise, only process specified groups

@@ -14,6 +14,7 @@
 #include <memory>
 #include <iostream>
 #include <algorithm>
+#include <numeric>
 
 namespace StateEstimation {
 
@@ -133,28 +134,32 @@ public:
             continue;
         }
 
+        // For Mahalanobis distance, the cost follows a chi-squared distribution
+        // We can use the MAD threshold as a direct chi-squared threshold
+        // Common values:
+        //   - 3.0: ~99% confidence interval (1% false positive rate)
+        //   - 5.0: very conservative (0.025% false positive rate for 2D)
+        // User's mad_threshold_ parameter is interpreted as the Mahalanobis distance threshold
+        
+        double cost_threshold = mad_threshold_;  // Direct interpretation as Mahalanobis threshold
+        
+        // Also compute statistics for reporting
         std::vector<double> sorted_costs = costs;
         std::sort(sorted_costs.begin(), sorted_costs.end());
         double median = sorted_costs[sorted_costs.size() / 2];
-
-        std::vector<double> deviations;
-        for (double cost : costs) {
-            deviations.push_back(std::abs(cost - median));
-        }
-        std::sort(deviations.begin(), deviations.end());
-        double mad = deviations[deviations.size() / 2];
+        double mean_cost = std::accumulate(costs.begin(), costs.end(), 0.0) / costs.size();
 
         if (verbose_) {
             std::cout << "  Group " << group_id << ": median cost = " << median 
-                      << ", MAD = " << mad 
-                      << ", threshold = " << (median + mad_threshold_ * mad) << std::endl;
+                      << ", mean cost = " << mean_cost
+                      << ", threshold = " << cost_threshold << " (Mahalanobis distance)" << std::endl;
             std::cout << "  Cost range: [" << sorted_costs.front() << ", " << sorted_costs.back() << "]" << std::endl;
         }
 
-        // Identify outliers using configurable MAD threshold
+        // Identify outliers using Mahalanobis distance threshold
         int outlier_count = 0;
         for (const auto& pair : costs_by_frame) {
-            if (pair.second > median + mad_threshold_ * mad) {
+            if (pair.second > cost_threshold) {
                 EntityId outlier_entity_id = group_measurements.at(pair.first).first;
                 group_manager.addEntityToGroup(outlier_group_id, outlier_entity_id);
                 outlier_count++;
