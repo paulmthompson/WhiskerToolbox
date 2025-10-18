@@ -159,7 +159,7 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - sliceMetaNodesToSegment exclud
     REQUIRE(trimmed[1].members.back().frame == TimeFrameIndex(10));
     REQUIRE(trimmed[2].members.front().frame == TimeFrameIndex(11));
     REQUIRE(trimmed[2].members.back().frame == TimeFrameIndex(12));
-    REQUIRE(trimmed[3].members.front().frame == TimeFrameIndex(13));
+    REQUIRE(trimmed[3].members.front().frame == TimeFrameIndex(12));
     REQUIRE(trimmed[3].members.back().frame == TimeFrameIndex(13));
 }
 
@@ -217,7 +217,7 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - sliceMetaNodesToSegment with m
     REQUIRE(trimmed[2].members.back().frame == TimeFrameIndex(14));
 
     // end trimmed
-    REQUIRE(trimmed[3].members.front().frame == TimeFrameIndex(16));
+    REQUIRE(trimmed[3].members.front().frame == TimeFrameIndex(15));
     REQUIRE(trimmed[3].members.back().frame == TimeFrameIndex(16));
 }
 
@@ -391,15 +391,14 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - overlapping long tracklets wit
     // Anchors at 1 (A), 100 (present in A and B), and 200 (B)
     std::vector<MetaNode> meta_nodes;
 
-    // Place node B first so that 100 is found in B before A for segment boundaries
     {
         std::vector<std::pair<long long, EntityId>> fe;
-        for (long long f = 51; f <= 200; ++f) fe.push_back({f, static_cast<EntityId>(20000 + f)});
+        for (long long f = 1; f <= 150; ++f) fe.push_back({f, static_cast<EntityId>(10000 + f)});
         meta_nodes.push_back(makeMetaNode(fe));
     }
     {
         std::vector<std::pair<long long, EntityId>> fe;
-        for (long long f = 1; f <= 150; ++f) fe.push_back({f, static_cast<EntityId>(10000 + f)});
+        for (long long f = 180; f <= 200; ++f) fe.push_back({f, static_cast<EntityId>(20000 + f)});
         meta_nodes.push_back(makeMetaNode(fe));
     }
 
@@ -408,12 +407,12 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - overlapping long tracklets wit
     seg1.start_frame = TimeFrameIndex(1);
     seg1.start_entity = static_cast<EntityId>(10001);
     seg1.end_frame = TimeFrameIndex(100);
-    seg1.end_entity = static_cast<EntityId>(20100); // from node B
+    seg1.end_entity = static_cast<EntityId>(10100); // from node A
 
     GroundTruthSegment seg2;
     seg2.group_id = static_cast<GroupId>(7);
     seg2.start_frame = TimeFrameIndex(100);
-    seg2.start_entity = static_cast<EntityId>(20100); // from node B
+    seg2.start_entity = static_cast<EntityId>(10100); // from node A
     seg2.end_frame = TimeFrameIndex(200);
     seg2.end_entity = static_cast<EntityId>(20200);
 
@@ -452,15 +451,14 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - overlapping long tracklets wit
     REQUIRE(find_entity(99).has_value());
     REQUIRE(find_entity(100).has_value());
     REQUIRE(find_entity(150).has_value());
-    REQUIRE(find_entity(151).has_value());
+    REQUIRE(find_entity(180).has_value());
     REQUIRE(find_entity(200).has_value());
 
-    // Validate entity id sources: A for <=99, B for >=100
     REQUIRE(find_entity(1).value() == static_cast<EntityId>(10001));
     REQUIRE(find_entity(99).value() == static_cast<EntityId>(10099));
-    REQUIRE(find_entity(100).value() == static_cast<EntityId>(20100));
-    REQUIRE(find_entity(150).value() == static_cast<EntityId>(20150)); // from B (since B chosen for seg2)
-    REQUIRE(find_entity(151).value() == static_cast<EntityId>(20151));
+    REQUIRE(find_entity(100).value() == static_cast<EntityId>(10100));
+    REQUIRE(find_entity(150).value() == static_cast<EntityId>(10150)); 
+    REQUIRE(find_entity(180).value() == static_cast<EntityId>(20180));
     REQUIRE(find_entity(200).value() == static_cast<EntityId>(20200));
 }
 

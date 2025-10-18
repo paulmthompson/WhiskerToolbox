@@ -295,13 +295,12 @@ inline std::vector<MetaNode> sliceMetaNodesToSegment(
         }
 
         if (static_cast<int>(i) == end_meta_index) {
-            // Splice only the end anchor member to avoid duplicating frames with interior nodes
+            // Splice prefix ending at the end anchor member; include all frames after start_frame up to end anchor
             MetaNode trimmed = mn;
             std::vector<NodeInfo> members;
             for (size_t k = 0; k <= end_member_index && k < mn.members.size(); ++k) {
-                if (mn.members[k].frame == segment.end_frame) {
-                    members.push_back(mn.members[k]);
-                }
+                if (mn.members[k].frame <= segment.start_frame) continue;
+                members.push_back(mn.members[k]);
             }
             if (members.empty()) continue;
             trimmed.members = std::move(members);
