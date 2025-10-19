@@ -81,6 +81,19 @@
     </widget>
    </item>
    <item row="4" column="0" colspan="2">
+    <widget class="QCheckBox" name="export_by_group_checkbox">
+     <property name="text">
+      <string>Export Separate Files by Entity Group</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <property name="toolTip">
+      <string>When enabled, creates separate CSV files for each entity group instead of a single file</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="2">
     <widget class="QPushButton" name="export_csv_btn">
      <property name="text">
       <string>Export to CSV...</string>

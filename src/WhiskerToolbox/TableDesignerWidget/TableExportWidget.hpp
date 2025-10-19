@@ -46,6 +46,12 @@ public:
      */
     bool isHeaderIncluded() const;
 
+    /**
+     * @brief Whether to export separate files by entity group.
+     * @return True if data should be exported grouped by entity groups.
+     */
+    bool isExportByGroup() const;
+
 signals:
     /**
      * @brief Emitted when the user clicks the Export button.

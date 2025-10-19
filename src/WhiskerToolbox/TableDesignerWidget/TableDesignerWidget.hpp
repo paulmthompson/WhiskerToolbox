@@ -30,6 +30,7 @@ class Section;
 class TableTransformWidget;
 class TableExportWidget;
 class TableJSONWidget;
+class TableView;
 
 namespace Ui {
 class TableDesignerWidget;
@@ -274,6 +275,7 @@ private:
     std::vector<ColumnInfo> reorderColumnsBySavedOrder(std::vector<ColumnInfo> column_infos) const;
     std::vector<std::string> parseCommaSeparatedList(QString const & text) const;
     QString promptSaveCsvFilename() const;
+    QString promptSaveDirectoryForGroupExport() const;
     bool addColumnToBuilder(TableViewBuilder & builder, ColumnInfo const & column_info);
 
     /**
@@ -284,6 +286,37 @@ private:
      */
     template<typename T>
     void formatVectorForCsv(std::ofstream & file, std::vector<T> const & values, int precision);
+    
+    /**
+     * @brief Export table data to a single CSV file
+     * @param view The TableView to export
+     * @param filename The output filename
+     * @param delim The delimiter character/string
+     * @param eol The end-of-line string
+     * @param precision Decimal precision for floating point values
+     * @param includeHeader Whether to include column headers
+     * @return True if export succeeded, false otherwise
+     */
+    bool exportTableToSingleCsv(TableView * view, QString const & filename,
+                               std::string const & delim, std::string const & eol,
+                               int precision, bool includeHeader);
+    
+    /**
+     * @brief Export table data grouped by entity groups to separate CSV files
+     * @param view The TableView to export
+     * @param directory The output directory for CSV files
+     * @param base_name The base filename (will be appended with group names)
+     * @param delim The delimiter character/string
+     * @param eol The end-of-line string
+     * @param precision Decimal precision for floating point values
+     * @param includeHeader Whether to include column headers
+     * @return Number of files successfully exported
+     */
+    int exportTableByGroups(TableView * view, QString const & directory,
+                           QString const & base_name,
+                           std::string const & delim, std::string const & eol,
+                           int precision, bool includeHeader);
+    
     void setJsonTemplateFromCurrentState();
     void applyJsonTemplateToUI(QString const & jsonText);
     friend class TableDesignerWidgetJSONTestAccessor;// test helper

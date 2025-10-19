@@ -27,3 +27,7 @@ int TableExportWidget::getPrecision() const {
 bool TableExportWidget::isHeaderIncluded() const {
     return ui->export_header_checkbox && ui->export_header_checkbox->isChecked();
 }
+
+bool TableExportWidget::isExportByGroup() const {
+    return ui->export_by_group_checkbox && ui->export_by_group_checkbox->isChecked();
+}

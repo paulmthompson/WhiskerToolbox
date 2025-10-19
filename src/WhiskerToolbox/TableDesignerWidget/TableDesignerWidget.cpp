@@ -18,6 +18,7 @@
 #include "DataManager/utils/TableView/interfaces/IColumnComputer.h"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 #include "DataManager/utils/TableView/transforms/PCATransform.hpp"
+#include "Entity/EntityGroupManager.hpp"
 #include "TableExportWidget.hpp"
 #include "TableInfoWidget.hpp"
 #include "TableJSONWidget.hpp"
@@ -36,6 +37,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QSpinBox>
 #include <QTableView>
 #include <QTreeWidget>
@@ -610,15 +612,12 @@ void TableDesignerWidget::onExportCsv() {
         return;
     }
 
-    QString filename = promptSaveCsvFilename();
-    if (filename.isEmpty()) return;
-    if (!filename.endsWith(".csv", Qt::CaseInsensitive)) filename += ".csv";
-
     // CSV options from export widget
     QString delimiter = _table_export_widget ? _table_export_widget->getDelimiterText() : "Comma";
     QString lineEnding = _table_export_widget ? _table_export_widget->getLineEndingText() : "LF (\\n)";
     int precision = _table_export_widget ? _table_export_widget->getPrecision() : 3;
     bool includeHeader = _table_export_widget && _table_export_widget->isHeaderIncluded();
+    bool exportByGroup = _table_export_widget && _table_export_widget->isExportByGroup();
 
     std::string delim = ",";
     if (delimiter == "Space") delim = " ";
@@ -627,11 +626,55 @@ void TableDesignerWidget::onExportCsv() {
     std::string eol = "\n";
     if (lineEnding.startsWith("CRLF")) eol = "\r\n";
 
+    if (exportByGroup) {
+        // Export separate files by group
+        QString directory = promptSaveDirectoryForGroupExport();
+        if (directory.isEmpty()) return;
+        
+        // Extract base name from current table ID
+        QString base_name = _current_table_id;
+        
+        try {
+            int files_exported = exportTableByGroups(view.get(), directory, base_name, delim, eol, precision, includeHeader);
+            
+            if (files_exported > 0) {
+                updateBuildStatus(QString("Exported %1 CSV files to: %2").arg(files_exported).arg(directory));
+            } else {
+                // Error message already set by exportTableByGroups
+                // updateBuildStatus("No groups found or export failed", true);
+            }
+        } catch (std::exception const & e) {
+            updateBuildStatus(QString("Export by group failed: %1").arg(e.what()), true);
+        }
+    } else {
+        // Export single file
+        QString filename = promptSaveCsvFilename();
+        if (filename.isEmpty()) return;
+        if (!filename.endsWith(".csv", Qt::CaseInsensitive)) filename += ".csv";
+        
+        if (exportTableToSingleCsv(view.get(), filename, delim, eol, precision, includeHeader)) {
+            updateBuildStatus(QString("Exported CSV: %1").arg(filename));
+        } else {
+            updateBuildStatus("Export failed", true);
+        }
+    }
+}
+
+QString TableDesignerWidget::promptSaveCsvFilename() const {
+    return QFileDialog::getSaveFileName(const_cast<TableDesignerWidget *>(this), "Export Table to CSV", QString(), "CSV Files (*.csv)");
+}
+
+QString TableDesignerWidget::promptSaveDirectoryForGroupExport() const {
+    return QFileDialog::getExistingDirectory(const_cast<TableDesignerWidget *>(this), "Select Directory for Group CSV Export");
+}
+
+bool TableDesignerWidget::exportTableToSingleCsv(TableView * view, QString const & filename,
+                                                 std::string const & delim, std::string const & eol,
+                                                 int precision, bool includeHeader) {
     try {
         std::ofstream file(filename.toStdString());
         if (!file.is_open()) {
-            updateBuildStatus("Could not open file for writing", true);
-            return;
+            return false;
         }
         file << std::fixed << std::setprecision(precision);
 
@@ -643,6 +686,7 @@ void TableDesignerWidget::onExportCsv() {
             }
             file << eol;
         }
+        
         size_t rows = view->getRowCount();
         for (size_t r = 0; r < rows; ++r) {
             for (size_t c = 0; c < names.size(); ++c) {
@@ -650,7 +694,7 @@ void TableDesignerWidget::onExportCsv() {
 
                 // Use efficient visitColumnData approach instead of try/catch
                 try {
-                    view->visitColumnData(names[c], [&file, r, this](auto const & vec) {
+                    view->visitColumnData(names[c], [&file, r, precision, this](auto const & vec) {
                         using VecT = std::decay_t<decltype(vec)>;
                         using ElemT = typename VecT::value_type;
 
@@ -670,9 +714,9 @@ void TableDesignerWidget::onExportCsv() {
                         }
 
                         if constexpr (std::is_same_v<ElemT, double>) {
-                            file << std::fixed << std::setprecision(3) << vec[r];
+                            file << std::fixed << std::setprecision(precision) << vec[r];
                         } else if constexpr (std::is_same_v<ElemT, float>) {
-                            file << std::fixed << std::setprecision(3) << vec[r];
+                            file << std::fixed << std::setprecision(precision) << vec[r];
                         } else if constexpr (std::is_same_v<ElemT, int>) {
                             file << vec[r];
                         } else if constexpr (std::is_same_v<ElemT, int64_t>) {
@@ -684,7 +728,7 @@ void TableDesignerWidget::onExportCsv() {
                                 std::is_same_v<ElemT, std::vector<int>> ||
                                 std::is_same_v<ElemT, std::vector<float>>) {
                             // Format vector data as comma-separated values
-                            formatVectorForCsv(file, vec[r], 3);
+                            formatVectorForCsv(file, vec[r], precision);
                         } else {
                             file << "?";
                         }
@@ -696,14 +740,178 @@ void TableDesignerWidget::onExportCsv() {
             file << eol;
         }
         file.close();
-        updateBuildStatus(QString("Exported CSV: %1").arg(filename));
+        return true;
     } catch (std::exception const & e) {
-        updateBuildStatus(QString("Export failed: %1").arg(e.what()), true);
+        qWarning() << "Export failed:" << e.what();
+        return false;
     }
 }
 
-QString TableDesignerWidget::promptSaveCsvFilename() const {
-    return QFileDialog::getSaveFileName(const_cast<TableDesignerWidget *>(this), "Export Table to CSV", QString(), "CSV Files (*.csv)");
+int TableDesignerWidget::exportTableByGroups(TableView * view, QString const & directory,
+                                            QString const & base_name,
+                                            std::string const & delim, std::string const & eol,
+                                            int precision, bool includeHeader) {
+    if (!view || !_data_manager) {
+        return 0;
+    }
+
+    // Get the entity group manager
+    auto * group_manager = _data_manager->getEntityGroupManager();
+    if (!group_manager) {
+        qWarning() << "EntityGroupManager not available";
+        return 0;
+    }
+
+    // Get all groups
+    auto group_descriptors = group_manager->getAllGroupDescriptors();
+    if (group_descriptors.empty()) {
+        qWarning() << "No entity groups defined";
+        updateBuildStatus("Cannot export by group: No entity groups defined", true);
+        return 0;
+    }
+
+    // Materialize all columns first - this ensures entity IDs are computed and stored
+    try {
+        view->materializeAll();
+    } catch (std::exception const & e) {
+        qWarning() << "Failed to materialize table:" << e.what();
+        updateBuildStatus(QString("Cannot export by group: Failed to materialize table: %1").arg(e.what()), true);
+        return 0;
+    }
+
+    // Check if table has entity information
+    if (!view->hasEntityColumn()) {
+        qWarning() << "Table does not have entity information";
+        updateBuildStatus("Cannot export by group: Table does not have entity information", true);
+        return 0;
+    }
+
+    // Get all entity IDs for all rows
+    auto all_entity_ids = view->getEntityIds();
+    if (all_entity_ids.empty() || all_entity_ids.size() != view->getRowCount()) {
+        qWarning() << "Entity IDs not available or mismatch with row count";
+        updateBuildStatus("Cannot export by group: Entity IDs incomplete or unavailable", true);
+        return 0;
+    }
+
+    int files_exported = 0;
+
+    // For each group, find matching rows and export
+    for (auto const & group_desc : group_descriptors) {
+        // Get entities in this group
+        auto group_entities = group_manager->getEntitiesInGroup(group_desc.id);
+        if (group_entities.empty()) {
+            continue;
+        }
+
+        // Convert to unordered_set for fast lookup
+        std::unordered_set<EntityId> group_entity_set(group_entities.begin(), group_entities.end());
+
+        // Find rows that have any entity in this group
+        std::vector<size_t> matching_rows;
+        for (size_t r = 0; r < all_entity_ids.size(); ++r) {
+            // Check if any of the row's entities are in this group
+            bool has_match = false;
+            for (auto const & entity_id : all_entity_ids[r]) {
+                if (group_entity_set.count(entity_id) > 0) {
+                    has_match = true;
+                    break;
+                }
+            }
+            if (has_match) {
+                matching_rows.push_back(r);
+            }
+        }
+
+        // Skip if no matching rows
+        if (matching_rows.empty()) {
+            continue;
+        }
+
+        // Create filename for this group
+        QString group_name = QString::fromStdString(group_desc.name);
+        // Sanitize group name for filename (replace invalid characters)
+        group_name = group_name.replace(QRegularExpression("[^a-zA-Z0-9_\\-]"), "_");
+        QString filename = QString("%1/%2_%3.csv").arg(directory).arg(base_name).arg(group_name);
+
+        // Export this group to file
+        try {
+            std::ofstream file(filename.toStdString());
+            if (!file.is_open()) {
+                qWarning() << "Could not open file:" << filename;
+                continue;
+            }
+            file << std::fixed << std::setprecision(precision);
+
+            auto names = view->getColumnNames();
+            if (includeHeader) {
+                for (size_t i = 0; i < names.size(); ++i) {
+                    if (i > 0) file << delim;
+                    file << names[i];
+                }
+                file << eol;
+            }
+
+            // Write only matching rows
+            for (size_t r : matching_rows) {
+                for (size_t c = 0; c < names.size(); ++c) {
+                    if (c > 0) file << delim;
+
+                    try {
+                        view->visitColumnData(names[c], [&file, r, precision, this](auto const & vec) {
+                            using VecT = std::decay_t<decltype(vec)>;
+                            using ElemT = typename VecT::value_type;
+
+                            if (r >= vec.size()) {
+                                if constexpr (std::is_same_v<ElemT, double>) file << "NaN";
+                                else if constexpr (std::is_same_v<ElemT, float>)
+                                    file << "NaN";
+                                else if constexpr (std::is_same_v<ElemT, int>)
+                                    file << "NaN";
+                                else if constexpr (std::is_same_v<ElemT, int64_t>)
+                                    file << "NaN";
+                                else if constexpr (std::is_same_v<ElemT, bool>)
+                                    file << "false";
+                                else
+                                    file << "N/A";
+                                return;
+                            }
+
+                            if constexpr (std::is_same_v<ElemT, double>) {
+                                file << std::fixed << std::setprecision(precision) << vec[r];
+                            } else if constexpr (std::is_same_v<ElemT, float>) {
+                                file << std::fixed << std::setprecision(precision) << vec[r];
+                            } else if constexpr (std::is_same_v<ElemT, int>) {
+                                file << vec[r];
+                            } else if constexpr (std::is_same_v<ElemT, int64_t>) {
+                                file << static_cast<int64_t>(vec[r]);
+                            } else if constexpr (std::is_same_v<ElemT, bool>) {
+                                file << (vec[r] ? 1 : 0);
+                            } else if constexpr (
+                                    std::is_same_v<ElemT, std::vector<double>> ||
+                                    std::is_same_v<ElemT, std::vector<int>> ||
+                                    std::is_same_v<ElemT, std::vector<float>>) {
+                                formatVectorForCsv(file, vec[r], precision);
+                            } else {
+                                file << "?";
+                            }
+                        });
+                    } catch (...) {
+                        file << "Error";
+                    }
+                }
+                file << eol;
+            }
+            
+            file.close();
+            files_exported++;
+            
+        } catch (std::exception const & e) {
+            qWarning() << "Failed to export group" << group_name << ":" << e.what();
+        }
+    }
+
+    return files_exported;
 }
 
 template<typename T>

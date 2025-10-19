@@ -357,13 +357,13 @@
          <string>Mahalanobis distance threshold: how many standard deviations away from the smoothed prediction a measurement must be to be flagged as an outlier. Common values: 3.0 (strict), 5.0 (moderate), 10.0 (permissive)</string>
         </property>
         <property name="decimals">
-         <number>1</number>
+         <number>2</number>
         </property>
         <property name="minimum">
-         <double>1.0</double>
+         <double>0.10</double>
         </property>
         <property name="maximum">
-         <double>20.0</double>
+         <double>50.0</double>
         </property>
         <property name="singleStep">
          <double>0.5</double>
