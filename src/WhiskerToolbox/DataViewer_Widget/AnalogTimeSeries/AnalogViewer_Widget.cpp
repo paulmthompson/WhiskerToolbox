@@ -5,6 +5,7 @@
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
 
+#include <QColorDialog>
 #include <iostream>
 
 AnalogViewer_Widget::AnalogViewer_Widget(std::shared_ptr<DataManager> data_manager, OpenGLWidget * opengl_widget, QWidget * parent)
@@ -15,10 +16,12 @@ AnalogViewer_Widget::AnalogViewer_Widget(std::shared_ptr<DataManager> data_manag
 {
     ui->setupUi(this);
     
-    connect(ui->color_picker, &ColorPicker_Widget::colorChanged,
-            this, &AnalogViewer_Widget::_setAnalogColor);
-    connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
-            this, &AnalogViewer_Widget::_setAnalogAlpha);
+    // Set the color display button to be flat and show just the color
+    ui->color_display_button->setFlat(false);
+    ui->color_display_button->setEnabled(false); // Make it non-clickable, just for display
+    
+    connect(ui->color_button, &QPushButton::clicked,
+            this, &AnalogViewer_Widget::_openColorDialog);
     connect(ui->scale_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AnalogViewer_Widget::_setAnalogScaleFactor);
     connect(ui->line_thickness_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
@@ -39,12 +42,11 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
     _active_key = key;
     ui->name_label->setText(QString::fromStdString(key));
     
-    // Set the color picker and scale factor to current values from display options if available
+    // Set the color and scale factor to current values from display options if available
     if (!key.empty()) {
         auto config = _opengl_widget->getAnalogConfig(key);
         if (config.has_value()) {
-            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
-            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+            _updateColorDisplay(QString::fromStdString(config.value()->hex_color));
             
             // Set scale factor from user-friendly scale
             ui->scale_spinbox->setValue(static_cast<double>(config.value()->user_scale_factor));
@@ -56,8 +58,7 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
             ui->gap_mode_combo->setCurrentIndex(static_cast<int>(config.value()->gap_handling));
             ui->gap_threshold_spinbox->setValue(static_cast<double>(config.value()->gap_threshold));
         } else {
-            ui->color_picker->setColor("#0000FF"); // Default blue
-            ui->color_picker->setAlpha(100); // Default to full opacity
+            _updateColorDisplay("#0000FF"); // Default blue
             ui->scale_spinbox->setValue(1.0); // Default scale
             ui->line_thickness_spinbox->setValue(1); // Default line thickness
             ui->gap_mode_combo->setCurrentIndex(0); // Default to AlwaysConnect
@@ -66,6 +67,37 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
     }
     
     std::cout << "AnalogViewer_Widget: Active key set to " << key << std::endl;
+}
+
+void AnalogViewer_Widget::_openColorDialog() {
+    if (_active_key.empty()) {
+        return;
+    }
+    
+    // Get current color
+    QColor currentColor;
+    auto config = _opengl_widget->getAnalogConfig(_active_key);
+    if (config.has_value()) {
+        currentColor = QColor(QString::fromStdString(config.value()->hex_color));
+    } else {
+        currentColor = QColor("#0000FF");
+    }
+    
+    // Open color dialog
+    QColor color = QColorDialog::getColor(currentColor, this, "Choose Color");
+    
+    if (color.isValid()) {
+        QString hex_color = color.name();
+        _updateColorDisplay(hex_color);
+        _setAnalogColor(hex_color);
+    }
+}
+
+void AnalogViewer_Widget::_updateColorDisplay(QString const & hex_color) {
+    // Update the color display button with the new color
+    ui->color_display_button->setStyleSheet(
+        QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color)
+    );
 }
 
 void AnalogViewer_Widget::_setAnalogColor(const QString& hex_color) {

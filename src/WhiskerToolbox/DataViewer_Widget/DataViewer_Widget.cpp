@@ -88,9 +88,9 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         QTreeWidgetItem * item = tw->itemAt(pos);
         if (!item) return;
         std::string const key = item->text(0).toStdString();
-        // Group items have type column text "Group" and are under Analog data type parent
-        QString const type_text = item->text(1);
-        if (type_text == "Group") {
+        // Group items have children and are under Analog data type parent
+        bool const hasChildren = item->childCount() > 0;
+        if (hasChildren) {
             // Determine if parent is Analog data type or children are analog keys
             bool isAnalogGroup = false;
             if (auto * parent = item->parent()) {

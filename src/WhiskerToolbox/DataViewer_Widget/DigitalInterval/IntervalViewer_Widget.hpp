@@ -32,11 +32,14 @@ signals:
     void alphaChanged(std::string const & feature_key, float alpha);
 
 private slots:
+    void _openColorDialog();
     void _setIntervalColor(const QString& hex_color);
     void _setIntervalAlpha(int alpha);
     void _selectInterval(float time_coordinate, float canvas_y, QString const & series_info);
 
 private:
+    void _updateColorDisplay(QString const & hex_color);
+    
     Ui::IntervalViewer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     OpenGLWidget * _opengl_widget;

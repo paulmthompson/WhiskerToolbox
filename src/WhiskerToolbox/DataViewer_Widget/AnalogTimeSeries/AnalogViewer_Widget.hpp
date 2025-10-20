@@ -25,6 +25,7 @@ signals:
     void alphaChanged(std::string const & feature_key, float alpha);
 
 private slots:
+    void _openColorDialog();
     void _setAnalogColor(const QString& hex_color);
     void _setAnalogAlpha(int alpha);
     void _setAnalogScaleFactor(double scale_factor);
@@ -33,6 +34,8 @@ private slots:
     void _setGapThreshold(double threshold);
 
 private:
+    void _updateColorDisplay(QString const & hex_color);
+    
     Ui::AnalogViewer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     OpenGLWidget * _opengl_widget;

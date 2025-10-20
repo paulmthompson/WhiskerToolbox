@@ -5,9 +5,10 @@
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
 
-#include <iostream>
-#include <QShowEvent>
+#include <QColorDialog>
 #include <QHideEvent>
+#include <QShowEvent>
+#include <iostream>
 
 IntervalViewer_Widget::IntervalViewer_Widget(std::shared_ptr<DataManager> data_manager, OpenGLWidget * opengl_widget, QWidget * parent)
     : QWidget(parent),
@@ -17,10 +18,12 @@ IntervalViewer_Widget::IntervalViewer_Widget(std::shared_ptr<DataManager> data_m
 {
     ui->setupUi(this);
     
-    connect(ui->color_picker, &ColorPicker_Widget::colorChanged,
-            this, &IntervalViewer_Widget::_setIntervalColor);
-    connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
-            this, &IntervalViewer_Widget::_setIntervalAlpha);
+    // Set the color display button to be flat and show just the color
+    ui->color_display_button->setFlat(false);
+    ui->color_display_button->setEnabled(false); // Make it non-clickable, just for display
+    
+    connect(ui->color_button, &QPushButton::clicked,
+            this, &IntervalViewer_Widget::_openColorDialog);
 }
 
 IntervalViewer_Widget::~IntervalViewer_Widget() {
@@ -55,15 +58,13 @@ void IntervalViewer_Widget::setActiveKey(std::string const & key) {
     ui->name_label->setText(QString::fromStdString(key));
     _selection_enabled = !key.empty();
     
-    // Set the color picker to the current color from display options if available
+    // Set the color to the current color from display options if available
     if (!key.empty()) {
         auto config = _opengl_widget->getDigitalIntervalConfig(key);
         if (config.has_value()) {
-            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
-            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+            _updateColorDisplay(QString::fromStdString(config.value()->hex_color));
         } else {
-            ui->color_picker->setColor("#00FF00"); // Default green
-            ui->color_picker->setAlpha(100); // Default to full opacity
+            _updateColorDisplay("#00FF00"); // Default green
         }
     }
     
@@ -94,6 +95,37 @@ void IntervalViewer_Widget::_selectInterval(float time_coordinate, float canvas_
         // No interval found at this time - clear selection
         _opengl_widget->clearSelectedInterval(_active_key);
     }
+}
+
+void IntervalViewer_Widget::_openColorDialog() {
+    if (_active_key.empty()) {
+        return;
+    }
+    
+    // Get current color
+    QColor currentColor;
+    auto config = _opengl_widget->getDigitalIntervalConfig(_active_key);
+    if (config.has_value()) {
+        currentColor = QColor(QString::fromStdString(config.value()->hex_color));
+    } else {
+        currentColor = QColor("#00FF00");
+    }
+    
+    // Open color dialog
+    QColor color = QColorDialog::getColor(currentColor, this, "Choose Color");
+    
+    if (color.isValid()) {
+        QString hex_color = color.name();
+        _updateColorDisplay(hex_color);
+        _setIntervalColor(hex_color);
+    }
+}
+
+void IntervalViewer_Widget::_updateColorDisplay(QString const & hex_color) {
+    // Update the color display button with the new color
+    ui->color_display_button->setStyleSheet(
+        QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color)
+    );
 }
 
 void IntervalViewer_Widget::_setIntervalColor(const QString& hex_color) {

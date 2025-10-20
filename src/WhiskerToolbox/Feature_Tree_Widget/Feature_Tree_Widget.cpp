@@ -17,8 +17,8 @@ Feature_Tree_Widget::Feature_Tree_Widget(QWidget * parent)
     ui->setupUi(this);
 
     // Configure tree widget
-    ui->treeWidget->setColumnCount(4);
-    ui->treeWidget->setHeaderLabels(QStringList() << "Feature" << "Type" << "Enabled" << "Color");
+    ui->treeWidget->setColumnCount(3);
+    ui->treeWidget->setHeaderLabels(QStringList() << "Feature" << "Enabled" << "Color");
     ui->treeWidget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->treeWidget->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->treeWidget->setSortingEnabled(true);
@@ -104,10 +104,10 @@ void Feature_Tree_Widget::_itemSelected(QTreeWidgetItem * item, int column) {
 
 void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
     if (_is_rebuilding) return;      // Suppress changes during rebuild
-    if (!item || column != 2) return;// Only process checkbox column
+    if (!item || column != 1) return;// Only process checkbox column
 
     std::string const key = item->text(0).toStdString();
-    bool const enabled{item->checkState(2) == Qt::Checked};
+    bool const enabled{item->checkState(1) == Qt::Checked};
 
     // Update the feature state
     if (_features.find(key) != _features.end()) {
@@ -238,9 +238,8 @@ void Feature_Tree_Widget::_populateTreeByDataType(std::vector<std::string> const
 
                 auto * groupItem = new QTreeWidgetItem(dataTypeItem);
                 groupItem->setText(0, QString::fromStdString(groupName));
-                groupItem->setText(1, "Group");
                 groupItem->setFlags(groupItem->flags() | Qt::ItemIsUserCheckable);
-                setup_checkbox_column(groupItem, 2, false);
+                setup_checkbox_column(groupItem, 1, false);
                 _group_items[groupName] = groupItem;
 
                 // Add children
@@ -256,9 +255,8 @@ void Feature_Tree_Widget::_populateTreeByDataType(std::vector<std::string> const
 
                     auto * childItem = new QTreeWidgetItem(groupItem);
                     childItem->setText(0, QString::fromStdString(member));
-                    childItem->setText(1, QString::fromStdString(childFeature.type));
                     childItem->setFlags(childItem->flags() | Qt::ItemIsUserCheckable);
-                    setup_checkbox_column(childItem, 2, false);
+                    setup_checkbox_column(childItem, 1, false);
                     _feature_items[member] = childItem;
                 }
             }
@@ -286,9 +284,8 @@ void Feature_Tree_Widget::_populateTreeByDataType(std::vector<std::string> const
 
                 auto * item = new QTreeWidgetItem(dataTypeItem);
                 item->setText(0, QString::fromStdString(key));
-                item->setText(1, QString::fromStdString(feature.type));
                 item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-                setup_checkbox_column(item, 2, false);
+                setup_checkbox_column(item, 1, false);
                 _feature_items[key] = item;
             }
         }
@@ -350,10 +347,9 @@ void Feature_Tree_Widget::_populateTreeFlat(std::vector<std::string> const & all
                 QTreeWidgetItem * groupItem = _group_items[groupName];
                 auto * childItem = new QTreeWidgetItem(groupItem);
                 childItem->setText(0, QString::fromStdString(member));
-                childItem->setText(1, QString::fromStdString(childFeature.type));
                 childItem->setFlags(childItem->flags() | Qt::ItemIsUserCheckable);
 
-                setup_checkbox_column(childItem, 2, false);
+                setup_checkbox_column(childItem, 1, false);
 
                 _feature_items[member] = childItem;
             }
@@ -425,10 +421,9 @@ void Feature_Tree_Widget::_addFeatureToTree(std::string const & key, bool isGrou
 
     auto * item = new QTreeWidgetItem(ui->treeWidget);
     item->setText(0, QString::fromStdString(key));
-    item->setText(1, QString::fromStdString(_features[key].type));
     item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 
-    setup_checkbox_column(item, 2, false);
+    setup_checkbox_column(item, 1, false);
 
     if (isDataTypeGroup) {
         _datatype_items[key] = item;
@@ -441,9 +436,8 @@ void Feature_Tree_Widget::_addFeatureToTree(std::string const & key, bool isGrou
 
 void Feature_Tree_Widget::_setupTreeItem(QTreeWidgetItem * item, TreeFeature const & feature) {
     item->setText(0, QString::fromStdString(feature.key));
-    item->setText(1, QString::fromStdString(feature.type));
 
-    setup_checkbox_column(item, 2, feature.enabled);
+    setup_checkbox_column(item, 1, feature.enabled);
 }
 
 void setup_checkbox_column(QTreeWidgetItem * item, int column, bool checked) {
@@ -523,9 +517,8 @@ QTreeWidgetItem * Feature_Tree_Widget::_getOrCreateDataTypeItem(DM_DataType data
 
     auto * item = new QTreeWidgetItem(ui->treeWidget);
     item->setText(0, QString::fromStdString(dataTypeName));
-    item->setText(1, "Data Type");
     item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-    setup_checkbox_column(item, 2, false);
+    setup_checkbox_column(item, 1, false);
 
     _datatype_items[dataTypeName] = item;
     return item;
@@ -561,8 +554,8 @@ void Feature_Tree_Widget::_saveCurrentState() {
 
         std::string const itemKey = item->text(0).toStdString();
 
-        // Save enabled state (checkbox in column 2)
-        if (item->checkState(2) == Qt::Checked) {
+        // Save enabled state (checkbox in column 1)
+        if (item->checkState(1) == Qt::Checked) {
             _enabled_features.insert(itemKey);
         }
 
@@ -593,9 +586,9 @@ void Feature_Tree_Widget::_restoreState() {
 
         std::string const itemKey = item->text(0).toStdString();
 
-        // Restore enabled state (checkbox in column 2)
+        // Restore enabled state (checkbox in column 1)
         bool const shouldBeEnabled = _enabled_features.find(itemKey) != _enabled_features.end();
-        item->setCheckState(2, shouldBeEnabled ? Qt::Checked : Qt::Unchecked);
+        item->setCheckState(1, shouldBeEnabled ? Qt::Checked : Qt::Unchecked);
 
         // Update the feature state in our internal tracking
         if (_features.find(itemKey) != _features.end()) {

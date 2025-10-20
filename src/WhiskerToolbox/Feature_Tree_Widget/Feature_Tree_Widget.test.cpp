@@ -171,7 +171,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - Basic Func
         auto * tree = getTreeWidget();
         REQUIRE(tree != nullptr);
         REQUIRE(tree->topLevelItemCount() > 0);
-        REQUIRE(tree->columnCount() == 4);// Feature, Type, Enabled, Color
+        REQUIRE(tree->columnCount() == 3);// Feature, Enabled, Color
     }
 
     SECTION("Data type organization") {
@@ -243,12 +243,12 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
             QTreeWidgetItem * child = testPointsGroup->child(i);
             if (child->text(0).toStdString() == "test_points_1") {
                 testPoints1Item = child;
-                child->setCheckState(2, Qt::Checked);
+                child->setCheckState(1, Qt::Checked);
                 enabledFeatures.push_back("test_points_1");
                 
                 // The issue is that setCheckState doesn't automatically emit itemChanged in the test environment
                 // Let's manually emit the signal to trigger the widget's _itemChanged slot
-                emit tree->itemChanged(child, 2);
+                emit tree->itemChanged(child, 1);
                 QApplication::processEvents();
                 break;
             }
@@ -287,7 +287,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
         for (int i = 0; i < newTestPointsGroup->childCount(); ++i) {
             QTreeWidgetItem * child = newTestPointsGroup->child(i);
             if (child->text(0).toStdString() == "test_points_1") {
-                REQUIRE(child->checkState(2) == Qt::Checked);
+                REQUIRE(child->checkState(1) == Qt::Checked);
                 foundEnabledChild = true;
                 break;
             }
@@ -299,7 +299,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
         for (int i = 0; i < newTestPointsGroup->childCount(); ++i) {
             QTreeWidgetItem * child = newTestPointsGroup->child(i);
             if (child->text(0).toStdString() == "test_points_new") {
-                REQUIRE(child->checkState(2) == Qt::Unchecked);
+                REQUIRE(child->checkState(1) == Qt::Unchecked);
                 foundNewFeature = true;
                 break;
             }
@@ -484,11 +484,11 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - Signal Emi
 
         if (leafItem) {
             // Enable the checkbox
-            leafItem->setCheckState(2, Qt::Checked);
+            leafItem->setCheckState(1, Qt::Checked);
             QApplication::processEvents();
 
             // Disable the checkbox
-            leafItem->setCheckState(2, Qt::Unchecked);
+            leafItem->setCheckState(1, Qt::Unchecked);
             QApplication::processEvents();
 
             // The signals should have been emitted
@@ -586,7 +586,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - No emissio
         int addFeaturesBefore = addFeaturesCount;
         int addFeatureBefore = addFeatureCount;
 
-        leaf->setCheckState(2, Qt::Checked);
+        leaf->setCheckState(1, Qt::Checked);
         QApplication::processEvents();
 
         // After our change, leaf toggle should only emit addFeature, not addFeatures
@@ -631,15 +631,15 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - Group togg
     QTreeWidgetItem * nameGroup = nullptr;
     for (int i = 0; i < analogTop->childCount(); ++i) {
         QTreeWidgetItem * child = analogTop->child(i);
-        if (child->text(1) == QString("Group") && child->childCount() > 0) { nameGroup = child; break; }
+        if (child->childCount() > 0) { nameGroup = child; break; }
     }
     REQUIRE(nameGroup != nullptr);
 
     int addFeaturesBefore = addFeaturesCount;
     int addFeatureBefore = addFeatureCount;
 
-    // Toggle the group checkbox (column 2). Qt will emit itemChanged itself.
-    nameGroup->setCheckState(2, Qt::Checked);
+    // Toggle the group checkbox (column 1). Qt will emit itemChanged itself.
+    nameGroup->setCheckState(1, Qt::Checked);
     QApplication::processEvents();
 
     // Expect exactly one group emission and zero single-feature emissions

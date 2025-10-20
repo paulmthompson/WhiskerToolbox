@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>325</width>
-    <height>367</height>
+    <width>253</width>
+    <height>289</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -57,14 +57,54 @@
     </layout>
    </item>
    <item>
-    <widget class="ColorPicker_Widget" name="color_picker" native="true">
-     <property name="minimumSize">
-      <size>
-       <width>200</width>
-       <height>130</height>
-      </size>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="color_layout">
+     <item>
+      <widget class="QLabel" name="color_label">
+       <property name="text">
+        <string>Color:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="color_display_button">
+       <property name="minimumSize">
+        <size>
+         <width>40</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>40</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="color_button">
+       <property name="text">
+        <string>Choose Color...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="scale_layout">
@@ -157,7 +197,7 @@
         <item>
          <widget class="QDoubleSpinBox" name="gap_threshold_spinbox">
           <property name="suffix">
-           <string> time units</string>
+           <string> units</string>
           </property>
           <property name="minimum">
            <double>0.100000000000000</double>
@@ -193,14 +233,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>ColorPicker_Widget</class>
-   <extends>QWidget</extends>
-   <header>ColorPicker_Widget/ColorPicker_Widget.hpp</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

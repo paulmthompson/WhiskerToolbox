@@ -25,6 +25,7 @@ signals:
     void alphaChanged(std::string const & feature_key, float alpha);
 
 private slots:
+    void _openColorDialog();
     void _setEventColor(const QString& hex_color);
     void _setEventAlpha(int alpha);
     
@@ -47,6 +48,8 @@ private slots:
     void _setEventHeight(double height);
 
 private:
+    void _updateColorDisplay(QString const & hex_color);
+    
     Ui::EventViewer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     OpenGLWidget * _opengl_widget;
