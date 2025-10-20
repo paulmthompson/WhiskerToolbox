@@ -234,6 +234,30 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     // Initialize vertical spacing UI to match OpenGLWidget defaults
     ui->vertical_spacing->setValue(static_cast<double>(ui->openGLWidget->getVerticalSpacing()));
+
+    // Configure splitter behavior
+    ui->main_splitter->setStretchFactor(0, 0);  // Properties panel doesn't stretch
+    ui->main_splitter->setStretchFactor(1, 1);  // Plot area stretches
+    
+    // Set initial sizes: properties panel ~20%, plot area ~80%
+    ui->main_splitter->setSizes({250, 1000});
+    
+    // Prevent plot area from collapsing, but allow properties panel to collapse
+    ui->main_splitter->setCollapsible(0, true);  // Properties panel can collapse
+    ui->main_splitter->setCollapsible(1, false); // Plot area cannot collapse
+    
+    // Connect hide button (on properties panel)
+    connect(ui->hide_properties_button, &QPushButton::clicked, this, [this]() {
+        _hidePropertiesPanel();
+    });
+    
+    // Connect show button (on plot side) - initially hidden
+    connect(ui->show_properties_button, &QPushButton::clicked, this, [this]() {
+        _showPropertiesPanel();
+    });
+    
+    // Initially hide the show button since properties are visible
+    ui->show_properties_button->hide();
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -1417,4 +1441,46 @@ void DataViewer_Widget::cleanupDeletedData() {
 
     // Re-arrange remaining data
     autoArrangeVerticalSpacing();
+}
+
+void DataViewer_Widget::_hidePropertiesPanel() {
+    // Save current splitter sizes before hiding
+    _saved_splitter_sizes = ui->main_splitter->sizes();
+    
+    // Collapse the properties panel to 0 width
+    ui->main_splitter->setSizes({0, ui->main_splitter->sizes()[1]});
+    
+    // Hide the properties panel and show the reveal button
+    ui->properties_container->hide();
+    ui->show_properties_button->show();
+    
+    _properties_panel_collapsed = true;
+    
+    std::cout << "Properties panel hidden" << std::endl;
+    
+    // Trigger a canvas update to adjust to new size
+    ui->openGLWidget->update();
+}
+
+void DataViewer_Widget::_showPropertiesPanel() {
+    // Show the properties panel
+    ui->properties_container->show();
+    
+    // Restore saved splitter sizes
+    if (!_saved_splitter_sizes.isEmpty()) {
+        ui->main_splitter->setSizes(_saved_splitter_sizes);
+    } else {
+        // Default sizes if no saved sizes (250px for properties, rest for plot)
+        ui->main_splitter->setSizes({250, 1000});
+    }
+    
+    // Hide the reveal button
+    ui->show_properties_button->hide();
+    
+    _properties_panel_collapsed = false;
+    
+    std::cout << "Properties panel shown" << std::endl;
+    
+    // Trigger a canvas update to adjust to new size
+    ui->openGLWidget->update();
 }

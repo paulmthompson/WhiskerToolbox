@@ -104,6 +104,8 @@ private slots:
     void _loadSpikeSorterConfigurationForGroup(QString const & group_name);
     void _loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text);
     void _clearConfigurationForGroup(QString const & group_name);
+    void _hidePropertiesPanel();
+    void _showPropertiesPanel();
 
 private:
     std::shared_ptr<DataManager> _data_manager;
@@ -115,6 +117,10 @@ private:
 
     QString _highlighted_available_feature;
     ZoomScalingMode _zoom_scaling_mode{ZoomScalingMode::Adaptive};// Use adaptive scaling by default
+    
+    // Properties panel state
+    bool _properties_panel_collapsed{false};
+    QList<int> _saved_splitter_sizes;
 
     // Plotting management
     std::unique_ptr<PlottingManager> _plotting_manager;
