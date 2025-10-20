@@ -314,9 +314,9 @@
       </layout>
      </item>
      <item>
-      <widget class="QGroupBox" name="feature_controls_group">
+      <widget class="QGroupBox" name="feature_groupbox">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>2</horstretch>
          <verstretch>1</verstretch>
         </sizepolicy>
@@ -324,7 +324,7 @@
        <property name="minimumSize">
         <size>
          <width>300</width>
-         <height>250</height>
+         <height>100</height>
         </size>
        </property>
        <property name="title">
@@ -356,7 +356,7 @@
        <property name="minimumSize">
         <size>
          <width>250</width>
-         <height>250</height>
+         <height>100</height>
         </size>
        </property>
       </widget>
@@ -441,7 +441,7 @@
        <property name="minimumSize">
         <size>
          <width>200</width>
-         <height>400</height>
+         <height>100</height>
         </size>
        </property>
        <property name="cursor">
