@@ -19,7 +19,16 @@ Feature_Tree_Widget::Feature_Tree_Widget(QWidget * parent)
     // Configure tree widget
     ui->treeWidget->setColumnCount(3);
     ui->treeWidget->setHeaderLabels(QStringList() << "Feature" << "Enabled" << "Color");
-    ui->treeWidget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    
+    // Set column resize modes: Feature column stretches, others are fixed
+    ui->treeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->treeWidget->header()->setSectionResizeMode(1, QHeaderView::Fixed);
+    ui->treeWidget->header()->setSectionResizeMode(2, QHeaderView::Fixed);
+    
+    // Set fixed widths for checkbox and color columns
+    ui->treeWidget->setColumnWidth(1, 60);  // "Enabled" checkbox column
+    ui->treeWidget->setColumnWidth(2, 50);  // "Color" column
+    
     ui->treeWidget->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->treeWidget->setSortingEnabled(true);
 

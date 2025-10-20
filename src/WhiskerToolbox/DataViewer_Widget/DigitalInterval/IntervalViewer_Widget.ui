@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>225</width>
+    <width>200</width>
     <height>300</height>
    </rect>
   </property>
@@ -19,14 +19,14 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Data Type:</string>
+        <string>Type:</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Digital Interval Series</string>
+        <string>Interval</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -40,7 +40,7 @@
      <item>
       <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Data Name:</string>
+        <string>Name:</string>
        </property>
       </widget>
      </item>
@@ -69,14 +69,14 @@
       <widget class="QPushButton" name="color_display_button">
        <property name="minimumSize">
         <size>
-         <width>40</width>
-         <height>40</height>
+         <width>30</width>
+         <height>30</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>40</width>
-         <height>40</height>
+         <width>30</width>
+         <height>30</height>
         </size>
        </property>
        <property name="text">
@@ -87,7 +87,7 @@
      <item>
       <widget class="QPushButton" name="color_button">
        <property name="text">
-        <string>Choose Color...</string>
+        <string>Change...</string>
        </property>
       </widget>
      </item>
@@ -131,7 +131,7 @@
      <item>
       <widget class="QLabel" name="selection_model_label">
        <property name="text">
-        <string>Description: Clicking in the plot will select the interval at that time point and highlight it with a thicker border.</string>
+        <string>Click to select and highlight an interval.</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
