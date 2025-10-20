@@ -85,6 +85,10 @@ private:
     GroupManagementWidget * _group_management_widget;
     DataManager_Widget * _data_manager_widget;
 
+    // Main widgets created programmatically (not in UI file)
+    class Media_Widget * _media_widget;
+    class TimeScrollBar * _time_scrollbar;
+
     std::map<std::string, std::unique_ptr<QWidget>> _widgets;
     
     // Counter for generating unique media widget IDs

@@ -16,28 +16,7 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <widget class="TimeScrollBar" name="time_scrollbar" native="true">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>509</y>
-      <width>641</width>
-      <height>61</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="Media_Widget" name="media_widget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>20</y>
-      <width>611</width>
-      <height>471</height>
-     </rect>
-    </property>
-   </widget>
-  </widget>
+  <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -284,20 +263,6 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>TimeScrollBar</class>
-   <extends>QWidget</extends>
-   <header>TimeScrollBar/TimeScrollBar.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>Media_Widget</class>
-   <extends>QWidget</extends>
-   <header>Media_Widget/Media_Widget.hpp</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

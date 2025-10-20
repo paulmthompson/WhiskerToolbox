@@ -34,6 +34,7 @@
 #include "Whisker_Widget.hpp"
 #include "Terminal_Widget/TerminalWidget.hpp"
 #include "Test_Widget/Test_Widget.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QFileDialog>
 #include <QImage>
@@ -77,8 +78,12 @@ MainWindow::MainWindow(QWidget * parent)
         _group_management_widget = new GroupManagementWidget(_group_manager.get(), this);
     }
 
+    // Create TimeScrollBar programmatically (no longer in UI)
+    _time_scrollbar = new TimeScrollBar(this);
+    _time_scrollbar->setDataManager(_data_manager);
+
     // Create the DataManager_Widget 
-    _data_manager_widget = new DataManager_Widget(_data_manager, ui->time_scrollbar, this);
+    _data_manager_widget = new DataManager_Widget(_data_manager, _time_scrollbar, this);
     
     // Set the GroupManager for the DataManager_Widget
     if (_group_manager) {
@@ -95,15 +100,8 @@ MainWindow::MainWindow(QWidget * parent)
 
     _verbose = false;
 
-    ui->time_scrollbar->setDataManager(_data_manager);
-
     // Create the main media widget through the manager
-    auto* main_media_widget = _media_manager->createMediaWidget("main", this);
-    
-    // Replace the UI media widget with the managed one
-    // We need to replace the widget in the UI
-    delete ui->media_widget;
-    ui->media_widget = main_media_widget;
+    _media_widget = _media_manager->createMediaWidget("main", this);
 
     _createActions();// Creates callback functions
 
@@ -122,15 +120,26 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::_buildInitialLayout() {
+    // Add media widget to top
     auto media_dock_widget = new ads::CDockWidget(QString::fromStdString("media"));
-    media_dock_widget->setWidget(ui->media_widget);
-    auto dockArea = _m_DockManager->addDockWidget(ads::TopDockWidgetArea, media_dock_widget);
+    media_dock_widget->setWidget(_media_widget);
+    media_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+    media_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+    auto media_dockArea = _m_DockManager->addDockWidget(ads::TopDockWidgetArea, media_dock_widget);
 
-    registerDockWidget("scrollbar", ui->time_scrollbar, ads::BottomDockWidgetArea);
+    // Add time scrollbar below media widget
+    auto scrollbar_dock_widget = new ads::CDockWidget(QString::fromStdString("scrollbar"));
+    scrollbar_dock_widget->setWidget(_time_scrollbar);
+    scrollbar_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, false);
+    scrollbar_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+    _m_DockManager->addDockWidget(ads::BottomDockWidgetArea, scrollbar_dock_widget, media_dockArea);
 
-    auto * splitter = ads::internal::findParent<ads::CDockSplitter *>(dockArea);
-    int const height = splitter->height();
-    splitter->setSizes({height * 85 / 100, height * 15 / 100});
+    // Adjust splitter so scrollbar takes minimal space (e.g., 5%)
+    auto * media_scrollbar_splitter = ads::internal::findParent<ads::CDockSplitter *>(_time_scrollbar);
+    if (media_scrollbar_splitter) {
+        int const height = media_scrollbar_splitter->height();
+        media_scrollbar_splitter->setSizes({height * 95 / 100, height * 5 / 100});
+    }
 
     // Add the group management widget to the top right corner
     ads::CDockWidget* group_dock_widget = nullptr;
@@ -189,7 +198,7 @@ void MainWindow::_createActions() {
 
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
 
-    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _media_manager.get(), &MediaWidgetManager::loadFrameForAll);
+    connect(_time_scrollbar, &TimeScrollBar::timeChanged, _media_manager.get(), &MediaWidgetManager::loadFrameForAll);
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
@@ -214,27 +223,27 @@ void MainWindow::_createActions() {
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
 
     // Zoom actions (custom handling)
-    if (ui->actionZoom_In && ui->media_widget) {
+    if (ui->actionZoom_In && _media_widget) {
         ui->actionZoom_In->setShortcuts({}); // clear
         ui->actionZoom_In->setShortcut(QKeySequence());
         // Explicit shortcuts below; set text AFTER clearing to force display
         ui->actionZoom_In->setText("Zoom In\tCtrl+");
-        connect(ui->actionZoom_In, &QAction::triggered, this, [this]() { ui->media_widget->zoomIn(); });
+        connect(ui->actionZoom_In, &QAction::triggered, this, [this]() { _media_widget->zoomIn(); });
         auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus), this); // Ctrl++ (numpad or main with shift)
         s1->setContext(Qt::ApplicationShortcut);
-        connect(s1, &QShortcut::activated, this, [this]() { ui->media_widget->zoomIn(); });
+        connect(s1, &QShortcut::activated, this, [this]() { _media_widget->zoomIn(); });
         auto * s2 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Equal), this); // Ctrl+= (produces '+')
         s2->setContext(Qt::ApplicationShortcut);
-        connect(s2, &QShortcut::activated, this, [this]() { ui->media_widget->zoomIn(); });
+        connect(s2, &QShortcut::activated, this, [this]() { _media_widget->zoomIn(); });
     }
-    if (ui->actionZoom_Out && ui->media_widget) {
+    if (ui->actionZoom_Out && _media_widget) {
         ui->actionZoom_Out->setShortcuts({});
         ui->actionZoom_Out->setShortcut(QKeySequence());
         ui->actionZoom_Out->setText("Zoom Out\tCtrl-");
-        connect(ui->actionZoom_Out, &QAction::triggered, this, [this]() { ui->media_widget->zoomOut(); });
+        connect(ui->actionZoom_Out, &QAction::triggered, this, [this]() { _media_widget->zoomOut(); });
         auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Minus), this);
         s1->setContext(Qt::ApplicationShortcut);
-        connect(s1, &QShortcut::activated, this, [this]() { ui->media_widget->zoomOut(); });
+        connect(s1, &QShortcut::activated, this, [this]() { _media_widget->zoomOut(); });
     }
 }
 
@@ -355,9 +364,9 @@ void MainWindow::_updateFrameCount() {
         }
     }
 
-    ui->time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount() - 1);
+    _time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount() - 1);
 
-    ui->time_scrollbar->changeScrollBarValue(0);
+    _time_scrollbar->changeScrollBarValue(0);
 }
 
 void MainWindow::openWhiskerTracking() {
@@ -366,7 +375,7 @@ void MainWindow::openWhiskerTracking() {
     if (!_widgets.contains(key)) {
         auto whiskerWidget = std::make_unique<Whisker_Widget>(
                 _data_manager);
-        connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, whiskerWidget.get(), &Whisker_Widget::LoadFrame);
+        connect(_time_scrollbar, &TimeScrollBar::timeChanged, whiskerWidget.get(), &Whisker_Widget::LoadFrame);
 
         _widgets[key] = std::move(whiskerWidget);
         registerDockWidget(key, _widgets[key].get(), ads::RightDockWidgetArea);
@@ -431,11 +440,40 @@ void MainWindow::openDataViewer() {
     if (!_widgets.contains(key)) {
         auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
                 _data_manager,
-                ui->time_scrollbar,
+                _time_scrollbar,
                 this);
 
         DataViewerWidget->setObjectName(key);
-        registerDockWidget(key, DataViewerWidget.get(), ads::RightDockWidgetArea);
+        
+        // Insert DataViewer between media and scrollbar
+        // First, find the scrollbar dock widget
+        auto scrollbar_dock = findDockWidget("scrollbar");
+        if (scrollbar_dock && scrollbar_dock->dockAreaWidget()) {
+            // Create dock widget for DataViewer
+            auto dataviewer_dock = new ads::CDockWidget(QString::fromStdString(key));
+            dataviewer_dock->setWidget(DataViewerWidget.get());
+            dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+            dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+            
+            // Add DataViewer above the scrollbar (in the same dock area)
+            _m_DockManager->addDockWidget(ads::TopDockWidgetArea, dataviewer_dock, scrollbar_dock->dockAreaWidget());
+            
+            // Adjust splitter: give DataViewer most space, scrollbar minimal space
+            // The splitter now contains: media, dataviewer, scrollbar
+            auto media_dock = findDockWidget("media");
+            if (media_dock) {
+                auto * main_splitter = ads::internal::findParent<ads::CDockSplitter *>(media_dock->widget());
+                if (main_splitter) {
+                    int const height = main_splitter->height();
+                    // Split: 45% media, 50% dataviewer, 5% scrollbar
+                    main_splitter->setSizes({height * 45 / 100, height * 50 / 100, height * 5 / 100});
+                }
+            }
+        } else {
+            // Fallback to old behavior if scrollbar dock not found
+            registerDockWidget(key, DataViewerWidget.get(), ads::RightDockWidgetArea);
+        }
+        
         _widgets[key] = std::move(DataViewerWidget);
     }
 
@@ -499,10 +537,10 @@ bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
         // Always handle Ctrl+Left/Right for frame navigation regardless of focus
         if (keyEvent->modifiers() & Qt::ControlModifier) {
             if (keyEvent->key() == Qt::Key_Right) {
-                ui->time_scrollbar->changeScrollBarValue(ui->time_scrollbar->getFrameJumpValue(), true);
+                _time_scrollbar->changeScrollBarValue(_time_scrollbar->getFrameJumpValue(), true);
                 return true; // Event handled, don't pass it on
             } else if (keyEvent->key() == Qt::Key_Left) {
-                ui->time_scrollbar->changeScrollBarValue(-ui->time_scrollbar->getFrameJumpValue(), true);
+                _time_scrollbar->changeScrollBarValue(-_time_scrollbar->getFrameJumpValue(), true);
                 return true; // Event handled, don't pass it on
             }
         }
@@ -535,10 +573,10 @@ bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
             
             // Otherwise, use arrow keys for frame navigation
             if (keyEvent->key() == Qt::Key_Right) {
-                ui->time_scrollbar->changeScrollBarValue(ui->time_scrollbar->getFrameJumpValue(), true);
+                _time_scrollbar->changeScrollBarValue(_time_scrollbar->getFrameJumpValue(), true);
                 return true; // Event handled
             } else if (keyEvent->key() == Qt::Key_Left) {
-                ui->time_scrollbar->changeScrollBarValue(-ui->time_scrollbar->getFrameJumpValue(), true);
+                _time_scrollbar->changeScrollBarValue(-_time_scrollbar->getFrameJumpValue(), true);
                 return true; // Event handled
             }
         }
@@ -690,7 +728,7 @@ void MainWindow::openVideoExportWidget() {
         auto vid_widget = std::make_unique<Export_Video_Widget>(
                 _data_manager,
                 _media_manager.get(),
-                ui->time_scrollbar,
+                _time_scrollbar,
                 this);
 
         vid_widget->setObjectName(key);
@@ -783,7 +821,7 @@ void MainWindow::openAnalysisDashboard() {
         auto analysis_dashboard_widget = std::make_unique<Analysis_Dashboard>(
                 _data_manager,
                 _group_manager.get(),
-                ui->time_scrollbar,
+                _time_scrollbar,
                 _m_DockManager,
                 this);
 
