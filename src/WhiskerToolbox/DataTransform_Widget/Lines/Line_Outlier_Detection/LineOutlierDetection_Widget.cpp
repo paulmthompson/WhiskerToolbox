@@ -20,7 +20,7 @@ constexpr double kDefaultMeasNoiseLength = 10.0;
 constexpr double kDefaultInitialPosUncertainty = 50.0;
 constexpr double kDefaultInitialVelUncertainty = 10.0;
 constexpr double kDefaultInitialLengthUncertainty = 20.0;
-constexpr double kDefaultMadThreshold = 5.0;
+constexpr double kDefaultMadThreshold = 11.34;  // Chi-squared 99% confidence for ~3 DOF
 }// namespace
 
 LineOutlierDetection_Widget::LineOutlierDetection_Widget(QWidget * parent)

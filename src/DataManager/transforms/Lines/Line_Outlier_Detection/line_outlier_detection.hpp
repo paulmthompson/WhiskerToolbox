@@ -51,10 +51,14 @@ struct LineOutlierDetectionParameters : public GroupingTransformParametersBase {
     double initial_length_uncertainty = 20.0;   // Initial uncertainty in length
 
     // === Outlier Detection Parameters ===
-    // Mahalanobis distance threshold - measures how many "standard deviations" away from
-    // the smoothed prediction a measurement must be to be considered an outlier
-    // Common values: 3.0 (strict), 5.0 (moderate), 10.0 (permissive)
-    double mad_threshold = 5.0;
+    // Chi-squared threshold - the squared Mahalanobis distance follows a chi-squared distribution
+    // This provides proper statistical interpretation for outlier detection
+    // Common chi-squared threshold values (for ~3 degrees of freedom):
+    //   - 6.25:  ~90% confidence (10% false positive rate) - permissive
+    //   - 7.81:  ~95% confidence (5% false positive rate) - moderate
+    //   - 11.34: ~99% confidence (1% false positive rate) - strict
+    //   - 16.27: ~99.9% confidence (0.1% false positive rate) - very strict
+    double mad_threshold = 11.34;
     
     // === Group Selection ===
     // If empty, process all groups. Otherwise, only process specified groups

@@ -966,8 +966,9 @@ void OpenGLWidget::paintGL() {
 
 void OpenGLWidget::resizeGL(int w, int h) {
 
-    static_cast<void>(w);
-    static_cast<void>(h);
+    // Set the viewport to match the widget dimensions
+    // This is crucial for proper scaling - it tells OpenGL the actual pixel dimensions
+    glViewport(0, 0, w, h);
 
     // Store the new dimensions
     // Note: width() and height() will return the new values after this call

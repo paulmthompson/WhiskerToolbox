@@ -134,38 +134,54 @@ public:
             continue;
         }
 
-        // For Mahalanobis distance, the cost follows a chi-squared distribution
-        // We can use the MAD threshold as a direct chi-squared threshold
-        // Common values:
-        //   - 3.0: ~99% confidence interval (1% false positive rate)
-        //   - 5.0: very conservative (0.025% false positive rate for 2D)
-        // User's mad_threshold_ parameter is interpreted as the Mahalanobis distance threshold
+        // For Mahalanobis distance, we compare against chi-squared thresholds
+        // The cost function returns sqrt(d^2), so we square it to get the actual
+        // chi-squared distributed value for proper statistical interpretation
+        // Common chi-squared thresholds (for ~3 DOF):
+        //   - 7.81: 95% confidence (5% false positive rate)
+        //   - 11.34: 99% confidence (1% false positive rate)
+        //   - 16.27: 99.9% confidence (0.1% false positive rate)
+        // User's mad_threshold_ parameter is the chi-squared threshold value
         
-        double cost_threshold = mad_threshold_;  // Direct interpretation as Mahalanobis threshold
+        double chi_squared_threshold = mad_threshold_;
         
         // Also compute statistics for reporting
         std::vector<double> sorted_costs = costs;
         std::sort(sorted_costs.begin(), sorted_costs.end());
-        double median = sorted_costs[sorted_costs.size() / 2];
-        double mean_cost = std::accumulate(costs.begin(), costs.end(), 0.0) / costs.size();
+        
+        // Convert to chi-squared (squared Mahalanobis distance) for statistics
+        std::vector<double> chi_squared_costs;
+        chi_squared_costs.reserve(costs.size());
+        for (double cost : costs) {
+            chi_squared_costs.push_back(cost * cost);
+        }
+        std::sort(chi_squared_costs.begin(), chi_squared_costs.end());
+        
+        double median_mahalanobis = sorted_costs[sorted_costs.size() / 2];
+        double median_chi_squared = chi_squared_costs[chi_squared_costs.size() / 2];
+        double mean_chi_squared = std::accumulate(chi_squared_costs.begin(), chi_squared_costs.end(), 0.0) / chi_squared_costs.size();
 
         if (verbose_) {
-            std::cout << "  Group " << group_id << ": median cost = " << median 
-                      << ", mean cost = " << mean_cost
-                      << ", threshold = " << cost_threshold << " (Mahalanobis distance)" << std::endl;
-            std::cout << "  Cost range: [" << sorted_costs.front() << ", " << sorted_costs.back() << "]" << std::endl;
+            std::cout << "  Group " << group_id << ":" << std::endl;
+            std::cout << "    Median Mahalanobis distance = " << median_mahalanobis << std::endl;
+            std::cout << "    Median chi-squared = " << median_chi_squared 
+                      << ", mean chi-squared = " << mean_chi_squared << std::endl;
+            std::cout << "    Threshold (chi-squared) = " << chi_squared_threshold << std::endl;
+            std::cout << "    Chi-squared range: [" << chi_squared_costs.front() << ", " << chi_squared_costs.back() << "]" << std::endl;
         }
 
-        // Identify outliers using Mahalanobis distance threshold
+        // Identify outliers using chi-squared threshold
         int outlier_count = 0;
         for (const auto& pair : costs_by_frame) {
-            if (pair.second > cost_threshold) {
+            double chi_squared = pair.second * pair.second;  // Square the Mahalanobis distance
+            if (chi_squared > chi_squared_threshold) {
                 EntityId outlier_entity_id = group_measurements.at(pair.first).first;
                 group_manager.addEntityToGroup(outlier_group_id, outlier_entity_id);
                 outlier_count++;
                 if (verbose_) {
                     std::cout << "    Outlier at frame " << pair.first.getValue() 
-                              << ": cost = " << pair.second 
+                              << ": Mahalanobis distance = " << pair.second
+                              << ", chi-squared = " << chi_squared
                               << " (entity " << outlier_entity_id << ")" << std::endl;
                 }
             }
