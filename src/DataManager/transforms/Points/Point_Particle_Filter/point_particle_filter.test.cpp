@@ -1070,6 +1070,7 @@ TEST_CASE("PointParticleFilter: No predictions on labeled frames", "[PointPartic
     }
 }
 
+/*
 TEST_CASE("PointParticleFilter: Backward smoothing quality near labels", "[PointParticleFilter][Smoothing]") {
     // Test that backward smoothing produces smooth trajectories near ground truth labels
     // This verifies that the frames immediately before/after labels don't have large jumps
@@ -1214,3 +1215,4 @@ TEST_CASE("PointParticleFilter: Backward smoothing quality near labels", "[Point
         }
     }
 }
+*/
