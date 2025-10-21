@@ -15,7 +15,9 @@ endif()
 
 
 if (LINUX)
-    find_package(Boost COMPONENTS serialization multiprecision)
+    find_package(absl REQUIRED)
+    find_package(Protobuf REQUIRED)
+    
     FetchContent_Declare(
         ortools
         GIT_REPOSITORY https://github.com/google/or-tools.git
@@ -24,19 +26,31 @@ if (LINUX)
     set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
     set(BUILD_DEPS OFF)
 
-    set(BUILD_SCIP ON)
-    set(BUILD_soplex ON)
-
     set(BUILD_re2 ON)
-
+    set(BUILD_Protobuf OFF)
+    set(BUILD_absl OFF)
+    
+    set(USE_SCIP OFF)
+    set(BUILD_soplex OFF)
+    set(BUILD_SCIP OFF)
     set(USE_COINOR OFF)
     set(USE_HIGHS OFF)
+    set(USE_PDLP OFF)
+    set(USE_GLPK OFF)
+    set(USE_CPLEX OFF)
+
 
     set(BUILD_SAMPLES OFF)
     set(BUILD_EXAMPLES OFF)
+    set(BUILD_TESTING OFF)
 
     set(BUILD_FLATZINC OFF)
-    #set(BUILD_MATH_OPT OFF)
+    # Keep MATH_OPT enabled as other components depend on it
+    # set(BUILD_MATH_OPT OFF)
+    
+    # Disable all OR-Tools binaries/executables to avoid linking issues
+    set(BUILD_CXX_SAMPLES OFF)
+    set(BUILD_CXX_EXAMPLES OFF)
 elseif (APPLE)
     FetchContent_Declare(
         ortools
@@ -151,6 +165,23 @@ endif()
 
 if(ENABLE_UI)
     list(APPEND FETCHCONTENT_TARGETS "qt6advanceddocking")
+endif()
+
+# Create explicit Abseil log template instantiations for Clang 18 BEFORE building OR-Tools
+if(LINUX AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_library(absl_log_instantiations STATIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/absl_log_instantiations.cpp
+    )
+    target_link_libraries(absl_log_instantiations PUBLIC absl::log_internal_message)
+    set_target_properties(absl_log_instantiations PROPERTIES 
+        POSITION_INDEPENDENT_CODE ON
+    )
+    
+    # Make Abseil's log_internal_message library depend on our instantiations
+    # This ensures all OR-Tools binaries get the instantiations
+    if(TARGET absl::log_internal_message)
+        target_link_libraries(absl::log_internal_message INTERFACE absl_log_instantiations)
+    endif()
 endif()
 
 # Force OR-Tools to build in Release mode to avoid stack protection issues with abseil
