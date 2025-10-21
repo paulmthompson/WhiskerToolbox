@@ -52,11 +52,40 @@ if (LINUX)
     set(BUILD_CXX_SAMPLES OFF)
     set(BUILD_CXX_EXAMPLES OFF)
 elseif (APPLE)
+    find_package(absl REQUIRED)
+    find_package(Protobuf REQUIRED)
+    
     FetchContent_Declare(
         ortools
         GIT_REPOSITORY https://github.com/google/or-tools.git
-        GIT_TAG v9.14
-    )
+        GIT_TAG        stable
+)
+    set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
+    set(BUILD_DEPS OFF)
+
+    set(BUILD_re2 ON)
+    set(BUILD_Protobuf OFF)
+    set(BUILD_absl OFF)
+    
+    set(USE_SCIP OFF)
+    set(BUILD_soplex OFF)
+    set(BUILD_SCIP OFF)
+    set(USE_COINOR OFF)
+    set(USE_HIGHS OFF)
+    set(USE_PDLP OFF)
+    set(USE_GLPK OFF)
+    set(USE_CPLEX OFF)
+
+
+    set(BUILD_SAMPLES OFF)
+    set(BUILD_EXAMPLES OFF)
+    set(BUILD_TESTING OFF)
+
+    set(BUILD_FLATZINC OFF)
+    
+    # Disable all OR-Tools binaries/executables to avoid linking issues
+    set(BUILD_CXX_SAMPLES OFF)
+    set(BUILD_CXX_EXAMPLES OFF)
 elseif (WIN32)
   find_package(Boost COMPONENTS serialization multiprecision)
   FetchContent_Declare(
