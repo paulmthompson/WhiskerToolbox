@@ -168,11 +168,14 @@ TEST_CASE("Benchmark: Line Alignment - Single Image Processing", "[line][alignme
 
     // Create single-frame dataset
     auto [media_data, line_data] = createMultiFrameDataset8(1, image_size, 1);
+    // Extract pointers before OpenMP region (structured bindings can't be captured in OpenMP)
+    auto* line_data_ptr = line_data.get();
+    auto* media_data_ptr = media_data.get();
 
     BENCHMARK("Single Image Line Alignment - 8-bit") {
         return line_alignment(
-                line_data.get(),
-                media_data.get(),
+                line_data_ptr,
+                media_data_ptr,
                 width,
                 perpendicular_range,
                 false,// use_processed_data
@@ -191,11 +194,13 @@ TEST_CASE("Benchmark: Line Alignment - Multiple Images", "[line][alignment][benc
 
     // Create multi-frame dataset
     auto [media_data, line_data] = createMultiFrameDataset8(num_images, image_size, 3);
+    auto* line_data_ptr = line_data.get();
+    auto* media_data_ptr = media_data.get();
 
     BENCHMARK("10 Images Line Alignment - 8-bit") {
         return line_alignment(
-                line_data.get(),
-                media_data.get(),
+                line_data_ptr,
+                media_data_ptr,
                 width,
                 perpendicular_range,
                 false,// use_processed_data
@@ -214,11 +219,13 @@ TEST_CASE("Benchmark: Line Alignment - Different Image Sizes", "[line][alignment
     SECTION("50x50 Images") {
         constexpr ImageSize image_size{50, 50};
         auto [media_data, line_data] = createMultiFrameDataset8(num_images, image_size, 2);
+        auto* line_data_ptr = line_data.get();
+        auto* media_data_ptr = media_data.get();
 
         BENCHMARK("10 Images 50x50 Line Alignment") {
             return line_alignment(
-                    line_data.get(),
-                    media_data.get(),
+                    line_data_ptr,
+                    media_data_ptr,
                     width,
                     perpendicular_range,
                     false,
@@ -230,11 +237,13 @@ TEST_CASE("Benchmark: Line Alignment - Different Image Sizes", "[line][alignment
     SECTION("200x200 Images") {
         constexpr ImageSize image_size{200, 200};
         auto [media_data, line_data] = createMultiFrameDataset8(num_images, image_size, 2);
+        auto* line_data_ptr = line_data.get();
+        auto* media_data_ptr = media_data.get();
 
         BENCHMARK("10 Images 200x200 Line Alignment") {
             return line_alignment(
-                    line_data.get(),
-                    media_data.get(),
+                    line_data_ptr,
+                    media_data_ptr,
                     width,
                     perpendicular_range,
                     false,
@@ -251,6 +260,8 @@ TEST_CASE("Benchmark: Line Alignment - Different Parameters", "[line][alignment]
     std::cout << "CTEST_FULL_OUTPUT" << std::endl;
 
     auto [media_data_small, line_data_small] = createMultiFrameDataset8(num_images, image_size, 2);
+    auto* line_data_small_ptr = line_data_small.get();
+    auto* media_data_small_ptr = media_data_small.get();
 
     SECTION("Small Width and Range") {
         constexpr int width = 10;
@@ -258,8 +269,8 @@ TEST_CASE("Benchmark: Line Alignment - Different Parameters", "[line][alignment]
 
         BENCHMARK("Small Parameters (width=10, range=25)") {
             return line_alignment(
-                    line_data_small.get(),
-                    media_data_small.get(),
+                    line_data_small_ptr,
+                    media_data_small_ptr,
                     width,
                     perpendicular_range,
                     false,
@@ -272,11 +283,13 @@ TEST_CASE("Benchmark: Line Alignment - Different Parameters", "[line][alignment]
         constexpr int width = 40;
         constexpr int perpendicular_range = 100;
         auto [media_data_large, line_data_large] = createMultiFrameDataset8(num_images, image_size, 2);
+        auto* line_data_large_ptr = line_data_large.get();
+        auto* media_data_large_ptr = media_data_large.get();
 
         BENCHMARK("Large Parameters (width=40, range=100)") {
             return line_alignment(
-                    line_data_large.get(),
-                    media_data_large.get(),
+                    line_data_large_ptr,
+                    media_data_large_ptr,
                     width,
                     perpendicular_range,
                     false,
@@ -295,11 +308,13 @@ TEST_CASE("Benchmark: Line Alignment - FWHM Profile Extents Mode", "[line][align
     std::cout << "CTEST_FULL_OUTPUT" << std::endl;
 
     auto [media_data_multi, line_data_multi] = createMultiFrameDataset8(num_images, image_size, 2);
+    auto* line_data_multi_ptr = line_data_multi.get();
+    auto* media_data_multi_ptr = media_data_multi.get();
 
     BENCHMARK("FWHM Profile Extents Mode") {
         return line_alignment(
-                line_data_multi.get(),
-                media_data_multi.get(),
+                line_data_multi_ptr,
+                media_data_multi_ptr,
                 width,
                 perpendicular_range,
                 false,
@@ -318,13 +333,18 @@ TEST_CASE("Benchmark: Line Alignment - 32-bit vs 8-bit", "[line][alignment][benc
 
     // Create 8-bit and 32-bit multi-frame datasets
     auto [media_data_8bit, line_data_8bit] = createMultiFrameDataset8(num_images, image_size, 2);
+    auto* line_data_8bit_ptr = line_data_8bit.get();
+    auto* media_data_8bit_ptr = media_data_8bit.get();
+    
     auto [media_data_32bit, line_data_32bit] = createMultiFrameDataset32(num_images, image_size, 2);
+    auto* line_data_32bit_ptr = line_data_32bit.get();
+    auto* media_data_32bit_ptr = media_data_32bit.get();
 
     SECTION("32-bit Float Data") {
         BENCHMARK("32-bit Float Data") {
             return line_alignment(
-                    line_data_32bit.get(),
-                    media_data_32bit.get(),
+                    line_data_32bit_ptr,
+                    media_data_32bit_ptr,
                     width,
                     perpendicular_range,
                     false,
@@ -336,8 +356,8 @@ TEST_CASE("Benchmark: Line Alignment - 32-bit vs 8-bit", "[line][alignment][benc
     SECTION("8-bit Data") {
         BENCHMARK("8-bit Data") {
             return line_alignment(
-                    line_data_8bit.get(),
-                    media_data_8bit.get(),
+                    line_data_8bit_ptr,
+                    media_data_8bit_ptr,
                     width,
                     perpendicular_range,
                     false,
