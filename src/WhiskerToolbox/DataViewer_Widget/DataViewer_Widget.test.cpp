@@ -611,8 +611,8 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
     }
     REQUIRE(analogGroup != nullptr);
 
-    // Toggle the group checkbox (column 2 is the checkbox column)
-    analogGroup->setCheckState(2, Qt::Checked);
+    // Toggle the group checkbox (column 1 is the checkbox column)
+    analogGroup->setCheckState(1, Qt::Checked);
     QApplication::processEvents();
 
     // Verify that all five analog series became visible
