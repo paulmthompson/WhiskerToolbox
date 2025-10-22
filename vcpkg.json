@@ -146,7 +146,7 @@
         },
         {
             "name": "mlpack",
-            "version": "4.4.0"
+            "version": "4.5.1"
         },
         {   "name": "nlohmann-json",
             "version": "3.11.3"
