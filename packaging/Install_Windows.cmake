@@ -56,12 +56,12 @@ add_custom_command(TARGET WhiskerToolbox POST_BUILD
         COMMENT "Copying qt6advanceddocking DLL to Qt directory"
 )
 
-add_custom_command(TARGET WhiskerToolbox POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_BINARY_DIR}/bin/bz2.dll;${CMAKE_BINARY_DIR}/bin/libscip.dll"
-        $<TARGET_FILE_DIR:WhiskerToolbox>
-        COMMAND_EXPAND_LISTS
-)
+#add_custom_command(TARGET WhiskerToolbox POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#        "${CMAKE_BINARY_DIR}/bin/bz2.dll;${CMAKE_BINARY_DIR}/bin/libscip.dll"
+#        $<TARGET_FILE_DIR:WhiskerToolbox>
+#        COMMAND_EXPAND_LISTS
+#)
 
 function(copy_dlls_during_install dll_list dest_dir)
     foreach(dll IN LISTS dll_list)
@@ -124,11 +124,17 @@ set(TORCH_DLLS
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/uv.dll"
 )
 
+set(ABSEIL_DLLS
+    "${CMAKE_BINARY_DIR}/bin/abseil_dll.dll"
+    "${CMAKE_BINARY_DIR}/bin/libprotobuf.dll"
+)
+
 copy_dlls_during_install("${OPENCV_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${HDF5_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${WHISKER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${EXTRA_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${TORCH_DLLS}" "${CMAKE_INSTALL_BINDIR}")
+copy_dlls_during_install("${ABSEIL_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 
 # Print support and xml are dependencies of JKQTPlotter6
 # But they are not automatically found by qt windows deployment
