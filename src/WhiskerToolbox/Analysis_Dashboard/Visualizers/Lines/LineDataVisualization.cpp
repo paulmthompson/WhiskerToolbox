@@ -148,11 +148,21 @@ void LineDataVisualization::initializeOpenGLResources() {
     }
 
     QSurfaceFormat fmt = ctx->format();
+#ifdef __APPLE__
+    // macOS: Accept OpenGL 4.1 (no compute shaders, no SSBO)
+    if ((fmt.majorVersion() < 4) || (fmt.majorVersion() == 4 && fmt.minorVersion() < 1)) {
+        qWarning() << "LineDataVisualization: Requires OpenGL 4.1 core, current is"
+                   << fmt.majorVersion() << "." << fmt.minorVersion() << "- skipping init";
+        return;
+    }
+#else
+    // Other platforms: Require OpenGL 4.3 for compute shaders and SSBO
     if ((fmt.majorVersion() < 4) || (fmt.majorVersion() == 4 && fmt.minorVersion() < 3)) {
         qWarning() << "LineDataVisualization: Requires OpenGL 4.3 core for compute shader, current is"
                    << fmt.majorVersion() << "." << fmt.minorVersion() << "- skipping init";
         return;
     }
+#endif
 
     if (!m_gl_initialized) {
         if (!initializeOpenGLFunctions()) {
@@ -194,8 +204,10 @@ void LineDataVisualization::initializeOpenGLResources() {
 
     m_scene_framebuffer = new QOpenGLFramebufferObject(1024, 1024, format);
 
-    // Initialize compute shader resources for line intersection
+#ifndef __APPLE__
+    // Initialize compute shader resources for line intersection (OpenGL 4.3+ only)
     _initializeComputeShaderResources();
+#endif
 
     // Fullscreen quad setup for blitting
     m_fullscreen_quad_vbo.create();
@@ -234,18 +246,32 @@ void LineDataVisualization::initializeOpenGLResources() {
     // Load shader programs
     ShaderManager & shader_manager = ShaderManager::instance();
 
-    // Load line rendering shader
-    if (!shader_manager.getProgram("line_with_geometry")) {
-        bool success = shader_manager.loadProgram("line_with_geometry",
-                                                  ":/shaders/line_with_geometry.vert",
-                                                  ":/shaders/line_with_geometry.frag",
-                                                  ":/shaders/line_with_geometry.geom",
+    // Load line rendering shader - use version appropriate for OpenGL context
+#ifdef __APPLE__
+    // macOS: Use OpenGL 4.1 compatible shaders (no SSBO)
+    auto shader_name = "line_with_geometry";
+    auto vert_path = ":/shaders/line_with_geometry.vert";
+    auto frag_path = ":/shaders/line_with_geometry.frag";
+    auto geom_path = ":/shaders/line_with_geometry.geom";
+#else
+    // Other platforms: Use OpenGL 4.3 shaders with SSBO support
+    auto shader_name = "line_with_geometry_43";
+    auto vert_path = ":/shaders/line_with_geometry.vert";
+    auto frag_path = ":/shaders/line_with_geometry_43.frag";
+    auto geom_path = ":/shaders/line_with_geometry_43.geom";
+#endif
+
+    if (!shader_manager.getProgram(shader_name)) {
+        bool success = shader_manager.loadProgram(shader_name,
+                                                  vert_path,
+                                                  frag_path,
+                                                  geom_path,
                                                   ShaderSourceType::Resource);
         if (!success) {
-            qDebug() << "Failed to load line_with_geometry shader!";
+            qDebug() << "Failed to load" << shader_name << "shader!";
         }
     }
-    auto * line_program = shader_manager.getProgram("line_with_geometry");
+    auto * line_program = shader_manager.getProgram(shader_name);
     if (line_program) {
         m_line_shader_program = line_program->getNativeProgram();
 
@@ -264,7 +290,8 @@ void LineDataVisualization::initializeOpenGLResources() {
         m_cached_hover_uniform_location = -1;
     }
 
-    // Load compute shader through ShaderManager for proper context management
+#ifndef __APPLE__
+    // Load compute shader through ShaderManager for proper context management (OpenGL 4.3+ only)
     if (!shader_manager.getProgram("line_intersection_compute")) {
         bool success = shader_manager.loadComputeProgram("line_intersection_compute", 
                                                         ":/shaders/line_intersection.comp", 
@@ -283,6 +310,9 @@ void LineDataVisualization::initializeOpenGLResources() {
         qDebug() << "line_intersection_compute shader is null!";
         m_line_intersection_compute_shader = nullptr;
     }
+#else
+    qDebug() << "LineDataVisualization: Compute shader not available on macOS (OpenGL 4.1)";
+#endif
 
     // Load blit shader
     if (!shader_manager.getProgram("blit")) {
@@ -302,8 +332,10 @@ void LineDataVisualization::initializeOpenGLResources() {
         m_blit_shader_program = nullptr;
     }
 
+#ifndef __APPLE__
     m_selection_mask_buffer.create();
     m_visibility_mask_buffer.create();
+#endif
 
     updateOpenGLBuffers();
 
@@ -335,6 +367,7 @@ void LineDataVisualization::cleanupOpenGLResources() {
         delete m_scene_framebuffer;
         m_scene_framebuffer = nullptr;
     }
+#ifndef __APPLE__
     if (m_selection_mask_buffer.isCreated()) {
         m_selection_mask_buffer.destroy();
     }
@@ -343,6 +376,7 @@ void LineDataVisualization::cleanupOpenGLResources() {
     }
 
     _cleanupComputeShaderResources();
+#endif
 
     // Note: m_line_intersection_compute_shader is now managed by ShaderManager
     // Don't delete it manually - ShaderManager will handle cleanup
@@ -365,16 +399,20 @@ void LineDataVisualization::updateOpenGLBuffers() {
 
     // Initialize selection mask (all unselected initially)
     m_selection_mask.assign(m_line_entity_ids.size(), 0);
+#ifndef __APPLE__
     m_selection_mask_buffer.bind();
     m_selection_mask_buffer.allocate(m_selection_mask.data(), static_cast<int>(m_selection_mask.size() * sizeof(uint32_t)));
     m_selection_mask_buffer.release();
+#endif
 
     // Initialize visibility mask (all visible initially, except those in hidden_lines set)
     m_visibility_mask.assign(m_line_entity_ids.size(), 1);// Default to visible
     _updateVisibilityMask();                               // Apply any existing hidden lines
 
-    // Update line segments buffer for compute shader
+#ifndef __APPLE__
+    // Update line segments buffer for compute shader (OpenGL 4.3+ only)
     _updateLineSegmentsBuffer();
+#endif
 }
 
 void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_width) {
@@ -456,15 +494,17 @@ void LineDataVisualization::_renderLinesToSceneBuffer(QMatrix4x4 const & mvp_mat
     shader_program->setUniformValue("u_is_selected", false);
     shader_program->setUniformValue("u_hover_line_id", 0u);// Don't highlight any hover line in the main scene
 
-    // Bind selection mask buffer for geometry shader
+#ifndef __APPLE__
+    // Bind selection mask buffer for geometry shader (OpenGL 4.3+ only)
     m_selection_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_selection_mask_buffer.bufferId());
     m_selection_mask_buffer.release();
 
-    // Bind visibility mask buffer for geometry shader
+    // Bind visibility mask buffer for geometry shader (OpenGL 4.3+ only)
     m_visibility_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_visibility_mask_buffer.bufferId());
     m_visibility_mask_buffer.release();
+#endif
 
     // Set group palette uniform array (256 entries). If group manager is null, default to m_color
     {
@@ -540,15 +580,17 @@ void LineDataVisualization::_renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpe
         shader_program->setUniformValue("u_hover_line_id", shader_line_id);
     }
 
-    // Bind selection mask buffer for geometry shader
+#ifndef __APPLE__
+    // Bind selection mask buffer for geometry shader (OpenGL 4.3+ only)
     m_selection_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_selection_mask_buffer.bufferId());
     m_selection_mask_buffer.release();
 
-    // Bind visibility mask buffer for geometry shader
+    // Bind visibility mask buffer for geometry shader (OpenGL 4.3+ only)
     m_visibility_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_visibility_mask_buffer.bufferId());
     m_visibility_mask_buffer.release();
+#endif
 
     // Get the vertex range for the hovered line
     LineVertexRange const & range = m_line_vertex_ranges[m_cached_hover_line_index];
@@ -752,6 +794,7 @@ void LineDataVisualization::_renderSelection(QMatrix4x4 const & mvp_matrix, floa
     qDebug() << "LineDataVisualization::renderSelection: Finished rendering selected lines";
 }
 
+#ifndef __APPLE__
 void LineDataVisualization::_initializeComputeShaderResources() {
     // Create buffers for compute shader
     m_line_segments_buffer.create();
@@ -815,6 +858,7 @@ void LineDataVisualization::_updateLineSegmentsBuffer() {
 
     qDebug() << "LineDataVisualization: Updated line segments buffer with" << m_segments_data.size() / 5 << "segments";
 }
+#endif // __APPLE__
 
 void LineDataVisualization::_updateSelectionMask() {
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -835,10 +879,12 @@ void LineDataVisualization::_updateSelectionMask() {
 
     auto cpu_time = std::chrono::high_resolution_clock::now();
 
-    // Update GPU buffer
+#ifndef __APPLE__
+    // Update GPU buffer (OpenGL 4.3+ only)
     m_selection_mask_buffer.bind();
     m_selection_mask_buffer.write(0, m_selection_mask.data(), static_cast<int>(m_selection_mask.size() * sizeof(uint32_t)));
     m_selection_mask_buffer.release();
+#endif
 
     auto end_time = std::chrono::high_resolution_clock::now();
 
@@ -875,10 +921,12 @@ void LineDataVisualization::_updateVisibilityMask() {
 
     auto cpu_time = std::chrono::high_resolution_clock::now();
 
-    // Update GPU buffer
+#ifndef __APPLE__
+    // Update GPU buffer (OpenGL 4.3+ only)
     m_visibility_mask_buffer.bind();
     m_visibility_mask_buffer.allocate(m_visibility_mask.data(), static_cast<int>(m_visibility_mask.size() * sizeof(uint32_t)));
     m_visibility_mask_buffer.release();
+#endif
 
     auto end_time = std::chrono::high_resolution_clock::now();
 
@@ -933,6 +981,11 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
         int widget_width, int widget_height,
         QMatrix4x4 const & mvp_matrix, float line_width) {
 
+#ifdef __APPLE__
+    // Compute shader not available on macOS (OpenGL 4.1)
+    qDebug() << "LineDataVisualization: Line intersection selection not available on macOS (requires OpenGL 4.3)";
+    return {};
+#else
     // Ensure GL resources and 4.3 context are available
     if (!m_gl_initialized) {
         initializeOpenGLResources();
@@ -1146,6 +1199,7 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
 
     qDebug() << "LineDataVisualization: Returning" << intersecting_lines.size() << "unique intersecting lines";
     return intersecting_lines;
+#endif // __APPLE__
 }
 
 std::optional<EntityId> LineDataVisualization::getLineAtScreenPosition(

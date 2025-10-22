@@ -88,8 +88,15 @@ protected:
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* event) override;
 
-    // Request an OpenGL 4.3 Core context for compute shaders used by LineDataVisualization
-    std::pair<int, int> getRequiredOpenGLVersion() const override { return {4, 3}; }
+    // Request appropriate OpenGL version based on platform
+    // macOS: 4.1 (no compute shaders/SSBO), Other platforms: 4.3 (with compute shaders)
+    std::pair<int, int> getRequiredOpenGLVersion() const override {
+#ifdef __APPLE__
+        return {4, 1};  // macOS - limited feature set
+#else
+        return {4, 3};  // Other platforms - full feature set with compute shaders
+#endif
+    }
 
 private slots:
     void onSelectionChanged(size_t total_selected);

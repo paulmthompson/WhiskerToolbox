@@ -1,4 +1,4 @@
-#version 410 core
+#version 430 core
 
 in vec2 g_position;
 in vec2 g_tex_coord;

@@ -25,9 +25,10 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _data_bounds_valid(false),
       _data_bounds({0.0f, 0.0f, 0.0f, 0.0f}) {
 
-    // Ensure we request a 4.3 Core context for compute shaders on Windows
+    // Request appropriate OpenGL version based on platform
+    auto [major, minor] = getRequiredOpenGLVersion();
     QSurfaceFormat fmt = format();
-    fmt.setVersion(4, 3);
+    fmt.setVersion(major, minor);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
     fmt.setSamples(getRequiredSamples());
     setFormat(fmt);
