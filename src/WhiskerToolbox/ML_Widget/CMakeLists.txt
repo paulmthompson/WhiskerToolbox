@@ -92,20 +92,7 @@ target_link_libraries(ML_Widget PRIVATE
     Feature_Tree_Widget
 )
 
-# CRITICAL: Disable OpenMP for this target to avoid MLPack conflicts on Windows
-# MLPack is header-only and will use OpenMP macros if _OPENMP is defined
-# We explicitly undefine it for this compilation unit
-if(MSVC)
-    # On MSVC, remove /openmp flag and define a macro to prevent OpenMP usage
-    target_compile_options(ML_Widget PRIVATE /openmp-)
-    target_compile_definitions(ML_Widget PRIVATE MLPACK_HAS_NO_OPENMP)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    # On GCC/Clang, undefine _OPENMP to disable OpenMP in MLPack headers
-    target_compile_options(ML_Widget PRIVATE -U_OPENMP)
-    target_compile_definitions(ML_Widget PRIVATE MLPACK_HAS_NO_OPENMP)
-endif()
-
-# Apply compiler warnings (if defined in parent scope)
+# Apply compiler warnings (if defined in parent scope) but remove OpenMP flags
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND DEFINED CLANG_OPTIONS)
     target_compile_options(ML_Widget PRIVATE ${CLANG_OPTIONS})
 endif()
@@ -115,7 +102,18 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND DEFINED GCC_WARNINGS)
 endif()
 
 if (MSVC AND DEFINED MSVC_WARNINGS)
-    target_compile_options(ML_Widget PRIVATE ${MSVC_WARNINGS})
+    # Create a copy of MSVC_WARNINGS without OpenMP flags
+    set(ML_WIDGET_MSVC_WARNINGS ${MSVC_WARNINGS})
+    list(FILTER ML_WIDGET_MSVC_WARNINGS EXCLUDE REGEX "/openmp")
+    target_compile_options(ML_Widget PRIVATE ${ML_WIDGET_MSVC_WARNINGS})
+
+    # Explicitly disable OpenMP and define macro to prevent MLPack from using it
+    target_compile_options(ML_Widget PRIVATE /openmp-)
+    target_compile_definitions(ML_Widget PRIVATE MLPACK_HAS_NO_OPENMP)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # On GCC/Clang, undefine _OPENMP to disable OpenMP in MLPack headers
+    target_compile_options(ML_Widget PRIVATE -U_OPENMP)
+    target_compile_definitions(ML_Widget PRIVATE MLPACK_HAS_NO_OPENMP)
 endif()
 
 # Allow compiler/STL version mismatch (for PyTorch compatibility)

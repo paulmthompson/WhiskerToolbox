@@ -25,7 +25,7 @@ add_subdirectory(MediaExport)
 add_subdirectory(DataViewer)
 add_subdirectory(ShaderManager)
 add_subdirectory(TimeScrollBar)
-add_subdirectory(Analysis_Dashboard)    
+add_subdirectory(Analysis_Dashboard)
 add_subdirectory(Feature_Table_Widget)
 add_subdirectory(Feature_Tree_Widget)
 add_subdirectory(IO_Widgets)
@@ -268,7 +268,7 @@ target_link_libraries(WhiskerToolbox PRIVATE "${TORCH_LIBRARIES}")
 target_include_directories(WhiskerToolbox PRIVATE
 
   #      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" 
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/TableDesignerWidget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
