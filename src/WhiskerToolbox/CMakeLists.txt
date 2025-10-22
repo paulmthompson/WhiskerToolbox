@@ -34,6 +34,7 @@ add_subdirectory(Media_Widget)
 add_subdirectory(MediaWidgetManager)
 add_subdirectory(TableViewerWidget)
 add_subdirectory(TableDesignerWidget)
+add_subdirectory(ML_Widget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -211,46 +212,6 @@ set(PROJECT_SOURCES
         Whisker_Widget/janelia_config.hpp
         Whisker_Widget/janelia_config.cpp
 
-        ML_Widget/ML_Widget.hpp
-        ML_Widget/ML_Widget.cpp
-        ML_Widget/ML_Widget.ui
-        ML_Widget/mlpack_conversion.hpp
-        ML_Widget/mlpack_conversion.cpp
-        ML_Widget/MLModelOperation.hpp
-        ML_Widget/MLModelRegistry.cpp
-        ML_Widget/MLModelRegistry.hpp
-        ML_Widget/MLModelParameters.hpp
-        ML_Widget/MLParameterWidgetBase.hpp
-        ML_Widget/Transformations/TransformationsCommon.hpp
-        ML_Widget/Transformations/ITransformation.hpp
-        ML_Widget/Transformations/TransformationBase.cpp
-        ML_Widget/Transformations/TransformationBase.hpp
-        ML_Widget/Transformations/IdentityTransform.cpp
-        ML_Widget/Transformations/IdentityTransform.hpp
-        ML_Widget/Transformations/SquaredTransform.cpp
-        ML_Widget/Transformations/SquaredTransform.hpp
-        ML_Widget/Transformations/LagLeadTransform.cpp
-        ML_Widget/Transformations/LagLeadTransform.hpp
-        ML_Widget/ClassBalancingWidget/ClassBalancingWidget.cpp
-        ML_Widget/ClassBalancingWidget/ClassBalancingWidget.hpp
-        ML_Widget/ClassBalancingWidget/ClassBalancingWidget.ui
-        ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.cpp
-        ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.hpp
-        ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.ui
-        ML_Widget/ModelMetricsWidget/ModelMetricsWidget.cpp
-        ML_Widget/ModelMetricsWidget/ModelMetricsWidget.hpp
-        ML_Widget/ModelMetricsWidget/ModelMetricsWidget.ui
-        ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp
-        ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.cpp
-        ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.ui
-        ML_Widget/ML_Random_Forest_Widget/RandomForestModelOperation.hpp
-        ML_Widget/ML_Random_Forest_Widget/RandomForestModelOperation.cpp
-        ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp
-        ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.cpp
-        ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.ui
-        ML_Widget/ML_Naive_Bayes_Widget/NaiveBayesModelOperation.hpp
-        ML_Widget/ML_Naive_Bayes_Widget/NaiveBayesModelOperation.cpp
-
         Tongue_Widget/Tongue_Widget.hpp
         Tongue_Widget/Tongue_Widget.cpp
         Tongue_Widget/Tongue_Widget.ui
@@ -301,13 +262,8 @@ target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(WhiskerToolbox PRIVATE glm::glm)
 
-find_path(MLPACK_INCLUDE_DIRS "mlpack.hpp")
-
 message(STATUS ${TORCH_LIBRARIES})
 target_link_libraries(WhiskerToolbox PRIVATE "${TORCH_LIBRARIES}")
-
-message(STATUS "Find MLPack include DIRS")
-message(STATUS ${MLPACK_INCLUDE_DIRS})
 
 target_include_directories(WhiskerToolbox PRIVATE
 
@@ -319,8 +275,6 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Grabcut_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../MediaExport>"
-
-        ${MLPACK_INCLUDE_DIRS}
 
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
@@ -355,6 +309,7 @@ target_link_libraries(WhiskerToolbox PRIVATE TimeScrollBar)
 target_link_libraries(WhiskerToolbox PRIVATE Analysis_Dashboard)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Tree_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
 
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
