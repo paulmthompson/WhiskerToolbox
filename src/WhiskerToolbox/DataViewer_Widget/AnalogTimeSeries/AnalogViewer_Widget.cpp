@@ -48,8 +48,8 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
         if (config.has_value()) {
             _updateColorDisplay(QString::fromStdString(config.value()->hex_color));
             
-            // Set scale factor from user-friendly scale
-            ui->scale_spinbox->setValue(static_cast<double>(config.value()->user_scale_factor));
+            // Set scale factor from the scaling config (not legacy user_scale_factor)
+            ui->scale_spinbox->setValue(static_cast<double>(config.value()->scaling.user_scale_factor));
             
             // Set line thickness
             ui->line_thickness_spinbox->setValue(config.value()->line_thickness);
@@ -105,9 +105,10 @@ void AnalogViewer_Widget::_setAnalogColor(const QString& hex_color) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->hex_color = hex_color.toStdString();
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            emit colorChanged(_active_key, hex_color.toStdString());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
-        emit colorChanged(_active_key, hex_color.toStdString());
     }
 }
 
@@ -117,9 +118,10 @@ void AnalogViewer_Widget::_setAnalogAlpha(int alpha) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->alpha = alpha_float;
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            emit alphaChanged(_active_key, alpha_float);
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
-        emit alphaChanged(_active_key, alpha_float);
     }
 }
 
@@ -127,9 +129,12 @@ void AnalogViewer_Widget::_setAnalogScaleFactor(double scale_factor) {
     if (!_active_key.empty()) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
-            // Set the user-friendly scale factor directly
+            // Update the scaling config (the actual one used in rendering)
+            config.value()->scaling.user_scale_factor = static_cast<float>(scale_factor);
+            // Also update legacy field for compatibility
             config.value()->user_scale_factor = static_cast<float>(scale_factor);
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
     }
 }
@@ -139,7 +144,8 @@ void AnalogViewer_Widget::_setLineThickness(int thickness) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->line_thickness = thickness;
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
     }
 }
@@ -149,7 +155,8 @@ void AnalogViewer_Widget::_setGapHandlingMode(int mode_index) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->gap_handling = static_cast<AnalogGapHandling>(mode_index);
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
     }
 }
@@ -159,7 +166,8 @@ void AnalogViewer_Widget::_setGapThreshold(double threshold) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->gap_threshold = static_cast<float>(threshold);
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
     }
 } 

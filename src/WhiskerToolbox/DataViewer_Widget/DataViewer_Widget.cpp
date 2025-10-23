@@ -239,8 +239,8 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     ui->main_splitter->setStretchFactor(0, 0);  // Properties panel doesn't stretch
     ui->main_splitter->setStretchFactor(1, 1);  // Plot area stretches
     
-    // Set initial sizes: properties panel ~20%, plot area ~80%
-    ui->main_splitter->setSizes({250, 1000});
+    // Set initial sizes: properties panel gets enough space for controls, plot area gets the rest
+    ui->main_splitter->setSizes({320, 1000});
     
     // Prevent plot area from collapsing, but allow properties panel to collapse
     ui->main_splitter->setCollapsible(0, true);  // Properties panel can collapse
@@ -673,21 +673,24 @@ void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float ca
     // Get canvas size for debugging
     auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();
 
+    // Use fixed-width formatting to prevent label resizing
+    // Reserve space for reasonable max values (time: 10 digits, index: 10 digits, Y: 8 chars, canvas: 5x5 digits)
     QString coordinate_text;
     if (series_info.isEmpty()) {
-        coordinate_text = QString("Coordinates: Time: %1 (index: %2), Canvas Y: %3 | Canvas: %4x%5")
-                                  .arg(actual_time)
-                                  .arg(time_index)
-                                  .arg(canvas_y, 0, 'f', 1)
-                                  .arg(canvas_width)
-                                  .arg(canvas_height);
+        coordinate_text = QString("Time: %1  Index: %2  Y: %3  Canvas: %4x%5")
+                                  .arg(actual_time, 10)           // Right-aligned, width 10
+                                  .arg(time_index, 10)             // Right-aligned, width 10
+                                  .arg(canvas_y, 8, 'f', 1)       // Right-aligned, width 8, 1 decimal
+                                  .arg(canvas_width, 5)            // Right-aligned, width 5
+                                  .arg(canvas_height, 5);          // Right-aligned, width 5
     } else {
-        coordinate_text = QString("Coordinates: Time: %1 (index: %2), %3 | Canvas: %4x%5")
-                                  .arg(actual_time)
-                                  .arg(time_index)
-                                  .arg(series_info)
-                                  .arg(canvas_width)
-                                  .arg(canvas_height);
+        // For series info, still use fixed-width for numeric values but allow series info to vary
+        coordinate_text = QString("Time: %1  Index: %2  %3  Canvas: %4x%5")
+                                  .arg(actual_time, 10)
+                                  .arg(time_index, 10)
+                                  .arg(series_info, -30)           // Left-aligned, min width 30
+                                  .arg(canvas_width, 5)
+                                  .arg(canvas_height, 5);
     }
 
     ui->coordinate_label->setText(coordinate_text);
@@ -1470,8 +1473,8 @@ void DataViewer_Widget::_showPropertiesPanel() {
     if (!_saved_splitter_sizes.isEmpty()) {
         ui->main_splitter->setSizes(_saved_splitter_sizes);
     } else {
-        // Default sizes if no saved sizes (250px for properties, rest for plot)
-        ui->main_splitter->setSizes({250, 1000});
+        // Default sizes if no saved sizes (320px for properties, rest for plot)
+        ui->main_splitter->setSizes({320, 1000});
     }
     
     // Hide the reveal button

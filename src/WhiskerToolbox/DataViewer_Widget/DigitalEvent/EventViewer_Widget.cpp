@@ -96,9 +96,10 @@ void EventViewer_Widget::_setEventColor(QString const & hex_color) {
         auto config = _opengl_widget->getDigitalEventConfig(_active_key);
         if (config.has_value()) {
             config.value()->hex_color = hex_color.toStdString();
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            emit colorChanged(_active_key, hex_color.toStdString());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
-        emit colorChanged(_active_key, hex_color.toStdString());
     }
 }
 
@@ -108,9 +109,10 @@ void EventViewer_Widget::_setEventAlpha(int alpha) {
         auto config = _opengl_widget->getDigitalEventConfig(_active_key);
         if (config.has_value()) {
             config.value()->alpha = alpha_float;
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            emit alphaChanged(_active_key, alpha_float);
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
-        emit alphaChanged(_active_key, alpha_float);
     }
 }
 
@@ -119,7 +121,8 @@ void EventViewer_Widget::_setDisplayMode(int mode_index) {
         auto config = _opengl_widget->getDigitalEventConfig(_active_key);
         if (config.has_value()) {
             config.value()->display_mode = static_cast<EventDisplayMode>(mode_index);
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
     }
 }
@@ -129,7 +132,8 @@ void EventViewer_Widget::_setVerticalSpacing(double spacing) {
         auto config = _opengl_widget->getDigitalEventConfig(_active_key);
         if (config.has_value()) {
             config.value()->vertical_spacing = static_cast<float>(spacing);
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
     }
 }
@@ -139,7 +143,8 @@ void EventViewer_Widget::_setEventHeight(double height) {
         auto config = _opengl_widget->getDigitalEventConfig(_active_key);
         if (config.has_value()) {
             config.value()->event_height = static_cast<float>(height);
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
     }
 }

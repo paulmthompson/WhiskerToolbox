@@ -133,9 +133,10 @@ void IntervalViewer_Widget::_setIntervalColor(const QString& hex_color) {
         auto config = _opengl_widget->getDigitalIntervalConfig(_active_key);
         if (config.has_value()) {
             config.value()->hex_color = hex_color.toStdString();
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            emit colorChanged(_active_key, hex_color.toStdString());
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
-        emit colorChanged(_active_key, hex_color.toStdString());
     }
 }
 
@@ -145,8 +146,9 @@ void IntervalViewer_Widget::_setIntervalAlpha(int alpha) {
         auto config = _opengl_widget->getDigitalIntervalConfig(_active_key);
         if (config.has_value()) {
             config.value()->alpha = alpha_float;
-            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
+            emit alphaChanged(_active_key, alpha_float);
+            // Trigger immediate repaint
+            _opengl_widget->update();
         }
-        emit alphaChanged(_active_key, alpha_float);
     }
 } 
