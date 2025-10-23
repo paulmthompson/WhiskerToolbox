@@ -2,6 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "utils/armadillo_wrap/analog_armadillo.hpp"
+#include "utils/filter/FilterFactory.hpp"
 
 #include <armadillo>
 
@@ -10,6 +11,7 @@
 #include <iostream>
 #include <numbers>
 #include <numeric>//std::iota
+#include <span>
 #include <vector>
 
 /**
@@ -199,16 +201,54 @@ std::vector<SubChunk> splitIntoOverlappingChunks(
 }
 
 /**
+ * @brief Creates a bandpass filter based on parameters
+ * @param params Hilbert phase parameters containing filter settings
+ * @return Unique pointer to the filter, or nullptr if filtering is disabled
+ */
+std::unique_ptr<IFilter> createBandpassFilter(HilbertPhaseParams const & params) {
+    if (!params.applyBandpassFilter) {
+        return nullptr;
+    }
+    
+    // Create zero-phase Butterworth bandpass filter with runtime order dispatch
+    switch (params.filterOrder) {
+        case 1: return FilterFactory::createButterworthBandpass<1>(
+            params.filterLowFreq, params.filterHighFreq, params.samplingRate, true);
+        case 2: return FilterFactory::createButterworthBandpass<2>(
+            params.filterLowFreq, params.filterHighFreq, params.samplingRate, true);
+        case 3: return FilterFactory::createButterworthBandpass<3>(
+            params.filterLowFreq, params.filterHighFreq, params.samplingRate, true);
+        case 4: return FilterFactory::createButterworthBandpass<4>(
+            params.filterLowFreq, params.filterHighFreq, params.samplingRate, true);
+        case 5: return FilterFactory::createButterworthBandpass<5>(
+            params.filterLowFreq, params.filterHighFreq, params.samplingRate, true);
+        case 6: return FilterFactory::createButterworthBandpass<6>(
+            params.filterLowFreq, params.filterHighFreq, params.samplingRate, true);
+        case 7: return FilterFactory::createButterworthBandpass<7>(
+            params.filterLowFreq, params.filterHighFreq, params.samplingRate, true);
+        case 8: return FilterFactory::createButterworthBandpass<8>(
+            params.filterLowFreq, params.filterHighFreq, params.samplingRate, true);
+        default:
+            std::cerr << "Warning: Invalid filter order " << params.filterOrder 
+                      << ", defaulting to order 4" << std::endl;
+            return FilterFactory::createButterworthBandpass<4>(
+                params.filterLowFreq, params.filterHighFreq, params.samplingRate, true);
+    }
+}
+
+/**
  * @brief Applies Hilbert transform to a signal vector
  * @param signal Input signal
  * @param outputType Whether to extract phase or amplitude
  * @param applyWindow Whether to apply Hann window
+ * @param filter Optional bandpass filter to apply before Hilbert transform
  * @return Processed output (phase or amplitude)
  */
 std::vector<float> applyHilbertTransform(
     std::vector<float> const & signal,
     HilbertPhaseParams::OutputType outputType,
-    bool applyWindow) {
+    bool applyWindow,
+    IFilter * filter = nullptr) {
     
     if (signal.empty()) {
         return {};
@@ -217,6 +257,13 @@ std::vector<float> applyHilbertTransform(
     // Convert to arma::vec
     arma::vec arma_signal(signal.size());
     std::copy(signal.begin(), signal.end(), arma_signal.begin());
+    
+    // Apply bandpass filter first if provided
+    if (filter != nullptr) {
+        std::vector<float> filter_buffer(signal.begin(), signal.end());
+        filter->process(std::span<float>(filter_buffer.data(), filter_buffer.size()));
+        std::copy(filter_buffer.begin(), filter_buffer.end(), arma_signal.begin());
+    }
     
     // Apply window if requested
     if (applyWindow && signal.size() > 1) {
@@ -292,12 +339,19 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
     // Check if we need to split into smaller chunks for efficiency
     bool useWindowedProcessing = phaseParams.maxChunkSize > 0 && clean_values.size() > phaseParams.maxChunkSize;
     
+    // Create bandpass filter if requested (shared across all sub-chunks)
+    auto filter = createBandpassFilter(phaseParams);
+    
     std::vector<float> result_values;
     
     if (useWindowedProcessing) {
         // Split into overlapping sub-chunks
         std::cout << "  Using windowed processing with " << phaseParams.maxChunkSize 
                   << " samples per window, " << (phaseParams.overlapFraction * 100.0) << "% overlap" << std::endl;
+        
+        if (filter) {
+            std::cout << "  Applying " << filter->getName() << " bandpass filter" << std::endl;
+        }
         
         auto subchunks = splitIntoOverlappingChunks(clean_values, clean_times, 
                                                      phaseParams.maxChunkSize, 
@@ -310,10 +364,16 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
         std::vector<TimeFrameIndex> all_result_times;
         
         for (auto const & subchunk : subchunks) {
+            // Reset filter state for each sub-chunk (zero-phase filter handles this internally)
+            if (filter) {
+                filter->reset();
+            }
+            
             // Apply Hilbert transform to this sub-chunk
             auto sub_result = applyHilbertTransform(subchunk.values, 
                                                     phaseParams.outputType, 
-                                                    phaseParams.useWindowing);
+                                                    phaseParams.useWindowing,
+                                                    filter.get());
             
             // Extract only the valid portion (excluding edges)
             for (size_t i = subchunk.valid_start_idx; i < subchunk.valid_end_idx; ++i) {
@@ -327,7 +387,11 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
         
     } else {
         // Process entire chunk at once (original behavior for small chunks)
-        result_values = applyHilbertTransform(clean_values, phaseParams.outputType, false);
+        if (filter) {
+            std::cout << "  Applying " << filter->getName() << " bandpass filter" << std::endl;
+            filter->reset();
+        }
+        result_values = applyHilbertTransform(clean_values, phaseParams.outputType, false, filter.get());
     }
 
     // Now result_values and clean_times contain the processed data

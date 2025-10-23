@@ -62,59 +62,13 @@ Phase values are in radians (-π to π). Amplitude represents the signal envelop
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="low_freq_label">
-       <property name="text">
-        <string>Low Frequency (Hz):</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QDoubleSpinBox" name="low_frequency_spinbox">
-       <property name="minimum">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>1000.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.500000000000000</double>
-       </property>
-       <property name="value">
-        <double>5.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="high_freq_label">
-       <property name="text">
-        <string>High Frequency (Hz):</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QDoubleSpinBox" name="high_frequency_spinbox">
-       <property name="minimum">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>1000.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.500000000000000</double>
-       </property>
-       <property name="value">
-        <double>15.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
       <widget class="QLabel" name="discontinuity_label">
        <property name="text">
         <string>Discontinuity Threshold:</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
+     <item row="1" column="1">
       <widget class="QSpinBox" name="discontinuity_threshold_spinbox">
        <property name="minimum">
         <number>1</number>
@@ -133,14 +87,14 @@ Phase values are in radians (-π to π). Amplitude represents the signal envelop
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="max_chunk_label">
        <property name="text">
         <string>Max Chunk Size:</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="2" column="1">
       <widget class="QSpinBox" name="max_chunk_size_spinbox">
        <property name="minimum">
         <number>0</number>
@@ -162,14 +116,14 @@ Phase values are in radians (-π to π). Amplitude represents the signal envelop
        </property>
       </widget>
      </item>
-     <item row="5" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="overlap_label">
        <property name="text">
         <string>Overlap Fraction:</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
+     <item row="3" column="1">
       <widget class="QDoubleSpinBox" name="overlap_fraction_spinbox">
        <property name="minimum">
         <double>0.000000000000000</double>
@@ -185,21 +139,143 @@ Phase values are in radians (-π to π). Amplitude represents the signal envelop
        </property>
       </widget>
      </item>
-     <item row="6" column="0">
+     <item row="4" column="0">
       <widget class="QLabel" name="windowing_label">
        <property name="text">
         <string>Use Windowing:</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
+     <item row="4" column="1">
       <widget class="QCheckBox" name="use_windowing_checkbox">
        <property name="checked">
         <bool>true</bool>
        </property>
       </widget>
      </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="apply_filter_label">
+       <property name="text">
+        <string>Apply Bandpass Filter:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QCheckBox" name="apply_bandpass_filter_checkbox">
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="filter_low_freq_label">
+       <property name="text">
+        <string>Filter Low Freq (Hz):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QDoubleSpinBox" name="filter_low_freq_spinbox">
+       <property name="minimum">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.500000000000000</double>
+       </property>
+       <property name="value">
+        <double>5.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="filter_high_freq_label">
+       <property name="text">
+        <string>Filter High Freq (Hz):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QDoubleSpinBox" name="filter_high_freq_spinbox">
+       <property name="minimum">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.500000000000000</double>
+       </property>
+       <property name="value">
+        <double>15.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="filter_order_label">
+       <property name="text">
+        <string>Filter Order:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QSpinBox" name="filter_order_spinbox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>8</number>
+       </property>
+       <property name="value">
+        <number>4</number>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="sampling_rate_label">
+       <property name="text">
+        <string>Sampling Rate (Hz):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QDoubleSpinBox" name="sampling_rate_spinbox">
+       <property name="minimum">
+        <double>0.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>100000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>100.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>1000.000000000000000</double>
+       </property>
+       <property name="specialValueText">
+        <string>Auto-detect</string>
+       </property>
+      </widget>
+     </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="filter_help_label">
+     <property name="text">
+      <string>Bandpass filtering isolates frequency components before Hilbert transform. Uses zero-phase Butterworth filter.</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(80, 80, 80); font-size: 9pt;</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QLabel" name="windowing_help_label">
@@ -230,23 +306,6 @@ Phase values are in radians (-π to π). Amplitude represents the signal envelop
      </property>
      <property name="styleSheet">
       <string notr="true">color: rgb(80, 80, 80); font-size: 9pt;</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="note_label">
-     <property name="text">
-      <string>Note: Frequency parameters are for reference only. 
-Current implementation processes the full signal without filtering.</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: rgb(100, 100, 100); font-style: italic;</string>
      </property>
     </widget>
    </item>

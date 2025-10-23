@@ -16,8 +16,6 @@ struct HilbertPhaseParams : public TransformParametersBase {
         Amplitude   // Extract instantaneous amplitude (magnitude of analytic signal)
     };
 
-    double lowFrequency = 5.0;           // Low cutoff frequency in Hz
-    double highFrequency = 15.0;         // High cutoff frequency in Hz
     size_t discontinuityThreshold = 1000;// Gap size (in samples) above which to split processing into chunks
     OutputType outputType = OutputType::Phase; // What to extract from the Hilbert transform
     
@@ -25,6 +23,13 @@ struct HilbertPhaseParams : public TransformParametersBase {
     size_t maxChunkSize = 100000;        // Maximum samples per chunk (0 = no limit, process entire signal)
     double overlapFraction = 0.25;       // Fraction of overlap between chunks (0.0 to 0.5)
     bool useWindowing = true;            // Apply Hann window to reduce edge artifacts
+    
+    // Bandpass filtering parameters (applied before Hilbert transform)
+    bool applyBandpassFilter = false;    // Whether to apply bandpass filtering
+    double filterLowFreq = 5.0;          // Bandpass filter low cutoff (Hz)
+    double filterHighFreq = 15.0;        // Bandpass filter high cutoff (Hz)
+    int filterOrder = 4;                 // Butterworth filter order (1-8)
+    double samplingRate = 1000.0;        // Sampling rate in Hz (0 = auto-detect from data)
 };
 
 /**

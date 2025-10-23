@@ -45,8 +45,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         }
 
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 0.5;
-        params.highFrequency = 2.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -84,8 +84,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         }
 
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 1.0;
-        params.highFrequency = 4.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -117,8 +117,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         }
 
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 1.0;
-        params.highFrequency = 10.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -151,8 +151,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
                  TimeFrameIndex(2003)};// Large gap at 2000
 
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 100;// Should split at gap of 2000-3=1997
 
         result_phase = hilbert_phase(ats.get(), params);
@@ -188,8 +188,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
                  TimeFrameIndex(2000)};// Two large gaps
 
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 100;// Should create 3 chunks
 
         result_phase = hilbert_phase(ats.get(), params);
@@ -214,8 +214,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
                  TimeFrameIndex(75),
                  TimeFrameIndex(100)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
 
         progress_val = 0;
         call_count = 0;
@@ -281,8 +281,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         }
 
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 0.5;
-        params.highFrequency = 2.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
 
         auto result_amplitude = hilbert_phase(ats.get(), params);
@@ -326,8 +326,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         }
 
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
 
         auto result_amplitude = hilbert_phase(ats.get(), params);
@@ -374,8 +374,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
                  TimeFrameIndex(2003)};
 
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 100;
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
 
@@ -411,8 +411,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         
         // Configure for windowed processing
-        params.lowFrequency = 1.0;
-        params.highFrequency = 10.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
         params.maxChunkSize = 10000; // Process in 10k sample chunks
         params.overlapFraction = 0.25;
@@ -455,8 +455,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
 
     SECTION("Null input AnalogTimeSeries") {
         ats = nullptr;
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -476,8 +476,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
         std::vector<float> empty_values;
         std::vector<TimeFrameIndex> empty_times;
         ats = std::make_shared<AnalogTimeSeries>(empty_values, empty_times);
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -488,8 +488,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
         std::vector<float> values = {1.0f};
         std::vector<TimeFrameIndex> times = {TimeFrameIndex(0)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -510,8 +510,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
                                              TimeFrameIndex(75)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
-        params.lowFrequency = -1.0;// Invalid
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub) - Invalid negative frequency test no longer applicable
+        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -527,8 +527,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
                                              TimeFrameIndex(75)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
-        params.lowFrequency = 5.0;
-        params.highFrequency = 1000.0;// Way above Nyquist
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub) - High frequency test no longer applicable
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -544,8 +544,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
                                              TimeFrameIndex(75)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
-        params.lowFrequency = 15.0;
-        params.highFrequency = 5.0;// Low > High
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub) - Low > High test no longer applicable
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -560,8 +560,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
                                              TimeFrameIndex(50),
                                              TimeFrameIndex(75)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -584,8 +584,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
                                              TimeFrameIndex(11),
                                              TimeFrameIndex(100)};// Irregular spacing
         ats = std::make_shared<AnalogTimeSeries>(values, times);
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -605,8 +605,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
                                              TimeFrameIndex(15)};// Gaps of 5
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 2;// Smaller than gaps
 
         result_phase = hilbert_phase(ats.get(), params);
@@ -627,8 +627,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
                                              TimeFrameIndex(300)};// Large gaps
         ats = std::make_shared<AnalogTimeSeries>(values, times);
 
-        params.lowFrequency = 5.0;
-        params.highFrequency = 15.0;
+        // lowFrequency parameter removed (was stub)
+        // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 1000;// Larger than gaps
 
         result_phase = hilbert_phase(ats.get(), params);
@@ -679,8 +679,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Irregularly Sampled Data", "[transfor
 
     // Configure Hilbert transform parameters
     HilbertPhaseParams params;
-    params.lowFrequency = 5.0;
-    params.highFrequency = 15.0;
+    // lowFrequency parameter removed (was stub)
+    // highFrequency parameter removed (was stub)
     params.discontinuityThreshold = 10;// Allow interpolation for gaps <= 10 samples
 
     // Apply transform
@@ -840,9 +840,10 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - Parameter Factory", "[transfor
     REQUIRE(params_base != nullptr);
 
     const nlohmann::json params_json = {
-        {"low_frequency", 2.5},
-        {"high_frequency", 25.0},
-        {"discontinuity_threshold", 500}
+        {"discontinuity_threshold", 500},
+        {"filter_low_freq", 2.5},
+        {"filter_high_freq", 25.0},
+        {"apply_bandpass_filter", true}
     };
 
     for (auto const& [key, val] : params_json.items()) {
@@ -852,9 +853,10 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - Parameter Factory", "[transfor
     auto* params = dynamic_cast<HilbertPhaseParams*>(params_base.get());
     REQUIRE(params != nullptr);
 
-    REQUIRE(params->lowFrequency == 2.5);
-    REQUIRE(params->highFrequency == 25.0);
     REQUIRE(params->discontinuityThreshold == 500);
+    REQUIRE(params->filterLowFreq == 2.5);
+    REQUIRE(params->filterHighFreq == 25.0);
+    REQUIRE(params->applyBandpassFilter == true);
 }
 
 TEST_CASE("Data Transform: Analog Hilbert Phase - load_data_from_json_config", "[transforms][analog_hilbert_phase][json_config]") {

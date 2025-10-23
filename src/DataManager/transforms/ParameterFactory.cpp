@@ -135,10 +135,6 @@ void ParameterFactory::initializeDefaultSetters() {
 
     // ================== Analog Hilbert Phase ==================
 
-    registerBasicParameter<HilbertPhaseParams, double>(
-            "Hilbert Phase", "low_frequency", &HilbertPhaseParams::lowFrequency);
-    registerBasicParameter<HilbertPhaseParams, double>(
-            "Hilbert Phase", "high_frequency", &HilbertPhaseParams::highFrequency);
     registerBasicParameter<HilbertPhaseParams, size_t>(
             "Hilbert Phase", "discontinuity_threshold", &HilbertPhaseParams::discontinuityThreshold);
 
@@ -155,6 +151,18 @@ void ParameterFactory::initializeDefaultSetters() {
             "Hilbert Phase", "overlap_fraction", &HilbertPhaseParams::overlapFraction);
     registerBasicParameter<HilbertPhaseParams, bool>(
             "Hilbert Phase", "use_windowing", &HilbertPhaseParams::useWindowing);
+
+    // Bandpass filtering parameters
+    registerBasicParameter<HilbertPhaseParams, bool>(
+            "Hilbert Phase", "apply_bandpass_filter", &HilbertPhaseParams::applyBandpassFilter);
+    registerBasicParameter<HilbertPhaseParams, double>(
+            "Hilbert Phase", "filter_low_freq", &HilbertPhaseParams::filterLowFreq);
+    registerBasicParameter<HilbertPhaseParams, double>(
+            "Hilbert Phase", "filter_high_freq", &HilbertPhaseParams::filterHighFreq);
+    registerBasicParameter<HilbertPhaseParams, int>(
+            "Hilbert Phase", "filter_order", &HilbertPhaseParams::filterOrder);
+    registerBasicParameter<HilbertPhaseParams, double>(
+            "Hilbert Phase", "sampling_rate", &HilbertPhaseParams::samplingRate);
 
     // ================== Analog Scaling ==================
 
