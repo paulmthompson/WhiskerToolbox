@@ -3,6 +3,7 @@
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
 
+
 #include <memory>
 
 // Forward declarations
@@ -31,7 +32,7 @@ private:
     void _setupConnections();
     
     // Helper methods for creating filters with runtime order selection
-    std::unique_ptr<IFilter> createButterworthLowpassByOrder(int order, double cutoff_hz, double sampling_rate_hz, bool zero_phase) const ;
+    std::unique_ptr<IFilter> createButterworthLowpassByOrder(int order, double cutoff_hz, double sampling_rate_hz, bool zero_phase) const;
     std::unique_ptr<IFilter> createButterworthHighpassByOrder(int order, double cutoff_hz, double sampling_rate_hz, bool zero_phase) const;
     std::unique_ptr<IFilter> createButterworthBandpassByOrder(int order, double low_cutoff_hz, double high_cutoff_hz, double sampling_rate_hz, bool zero_phase) const;
     std::unique_ptr<IFilter> createButterworthBandstopByOrder(int order, double low_cutoff_hz, double high_cutoff_hz, double sampling_rate_hz, bool zero_phase) const;

@@ -416,7 +416,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
         params.maxChunkSize = 10000; // Process in 10k sample chunks
         params.overlapFraction = 0.25;
-        params.useWindowing = true;
+        params.useWindowing = false; // Disable Hann windowing - overlap-add handles edges
 
         auto result_amplitude = hilbert_phase(ats.get(), params);
         REQUIRE(result_amplitude != nullptr);
@@ -431,13 +431,19 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
 
         // Check that most amplitude values are close to the expected amplitude
         size_t count_within_tolerance = 0;
+        size_t count_non_zero = 0;
         for (auto const & amp: amplitude_values) {
-            if (amp > 0.1f && std::abs(amp - amplitude) < amplitude * 0.3f) {
-                count_within_tolerance++;
+            if (amp > 0.1f) {
+                count_non_zero++;
+                if (std::abs(amp - amplitude) < amplitude * 0.3f) {
+                    count_within_tolerance++;
+                }
             }
         }
-        // At least 60% of non-zero values should be close to expected amplitude
-        REQUIRE(count_within_tolerance > amplitude_values.size() * 0.6);
+        // At least 95% of non-zero values should be close to expected amplitude
+        // (overlap-add with edge discarding handles boundaries cleanly)
+        REQUIRE(count_non_zero > 0);
+        REQUIRE(static_cast<double>(count_within_tolerance) / count_non_zero > 0.95);
     }
 }
 

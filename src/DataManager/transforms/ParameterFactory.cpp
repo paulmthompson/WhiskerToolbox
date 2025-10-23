@@ -103,36 +103,6 @@ void ParameterFactory::initializeDefaultSetters() {
     registerEnumParameter<IntervalThresholdParams, IntervalThresholdParams::MissingDataMode>(
             "Threshold Interval Detection", "missing_data_mode", &IntervalThresholdParams::missingDataMode, missing_data_mode_map);
 
-
-    // ================ Analog Filter ================
-
-    // Register Analog Filter parameters
-    std::unordered_map<std::string, AnalogFilterParams::FilterType> filter_type_map = {
-            {"lowpass", AnalogFilterParams::FilterType::Lowpass},
-            {"highpass", AnalogFilterParams::FilterType::Highpass},
-            {"bandpass", AnalogFilterParams::FilterType::Bandpass},
-            {"bandstop", AnalogFilterParams::FilterType::Bandstop}};
-    registerEnumParameter<AnalogFilterParams, AnalogFilterParams::FilterType>(
-            "Analog Filter", "filter_type", &AnalogFilterParams::filter_type, filter_type_map);
-
-    registerBasicParameter<AnalogFilterParams, double>(
-            "Analog Filter", "cutoff_frequency", &AnalogFilterParams::cutoff_frequency);
-
-    registerBasicParameter<AnalogFilterParams, double>(
-            "Analog Filter", "cutoff_frequency2", &AnalogFilterParams::cutoff_frequency2);
-
-    registerBasicParameter<AnalogFilterParams, int>(
-            "Analog Filter", "order", &AnalogFilterParams::order);
-
-    registerBasicParameter<AnalogFilterParams, double>(
-            "Analog Filter", "ripple", &AnalogFilterParams::ripple);
-
-    registerBasicParameter<AnalogFilterParams, bool>(
-            "Analog Filter", "zero_phase", &AnalogFilterParams::zero_phase);
-
-    registerBasicParameter<AnalogFilterParams, double>(
-            "Analog Filter", "sampling_rate", &AnalogFilterParams::sampling_rate);
-
     // ================== Analog Hilbert Phase ==================
 
     registerBasicParameter<HilbertPhaseParams, size_t>(
