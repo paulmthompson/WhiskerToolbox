@@ -58,6 +58,14 @@ I will also only select the data that is present
 OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
     setMouseTracking(true);// Enable mouse tracking for hover events
+    
+    // Initialize tooltip timer
+    _tooltip_timer = new QTimer(this);
+    _tooltip_timer->setSingleShot(true);
+    _tooltip_timer->setInterval(TOOLTIP_DELAY_MS);
+    connect(_tooltip_timer, &QTimer::timeout, this, [this]() {
+        showSeriesInfoTooltip(_tooltip_hover_pos);
+    });
 }
 
 OpenGLWidget::~OpenGLWidget() {
@@ -112,12 +120,14 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (_is_dragging_interval) {
         // Update interval drag
         updateIntervalDrag(event->pos());
+        cancelTooltipTimer(); // Cancel tooltip during drag
         return;// Don't do other mouse move processing while dragging
     }
 
     if (_is_creating_new_interval) {
         // Update new interval creation
         updateNewIntervalCreation(event->pos());
+        cancelTooltipTimer(); // Cancel tooltip during interval creation
         return;// Don't do other mouse move processing while creating
     }
 
@@ -134,13 +144,17 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
         _lastMousePos = event->pos();
         update();// Request redraw
+        cancelTooltipTimer(); // Cancel tooltip during panning
     } else {
         // Check for cursor changes when hovering near interval edges
         auto edge_info = findIntervalEdgeAtPosition(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
         if (edge_info.has_value()) {
             setCursor(Qt::SizeHorCursor);
+            cancelTooltipTimer(); // Don't show tooltip when hovering over interval edges
         } else {
             setCursor(Qt::ArrowCursor);
+            // Start tooltip timer for series info
+            startTooltipTimer(event->pos());
         }
     }
 
@@ -180,6 +194,12 @@ void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
         }
     }
     QOpenGLWidget::mouseReleaseEvent(event);
+}
+
+void OpenGLWidget::leaveEvent(QEvent * event) {
+    // Cancel tooltip when mouse leaves the widget
+    cancelTooltipTimer();
+    QOpenGLWidget::leaveEvent(event);
 }
 
 void OpenGLWidget::setBackgroundColor(std::string const & hexColor) {
@@ -2018,4 +2038,116 @@ void OpenGLWidget::drawNewIntervalBeingCreated() {
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     glUseProgram(0);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Tooltip functionality
+///////////////////////////////////////////////////////////////////////////////
+
+void OpenGLWidget::startTooltipTimer(QPoint const & pos) {
+    // Restart the timer with new position
+    _tooltip_hover_pos = pos;
+    _tooltip_timer->start();
+}
+
+void OpenGLWidget::cancelTooltipTimer() {
+    _tooltip_timer->stop();
+    QToolTip::hideText();
+}
+
+std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPosition(float canvas_x, float canvas_y) const {
+    if (!_plotting_manager) {
+        return std::nullopt;
+    }
+
+    // Convert canvas Y to normalized device coordinates (NDC)
+    // In OpenGL, Y is inverted: top of window is -1, bottom is +1 in our view
+    float const ndc_y = -1.0f + 2.0f * (static_cast<float>(height()) - canvas_y) / static_cast<float>(height());
+    
+    // Apply vertical pan offset to get the actual Y position in the coordinate system
+    float const adjusted_y = ndc_y - _verticalPanOffset;
+
+    // Check analog series first (in stacked mode)
+    int analog_index = 0;
+    for (auto const & [key, analog_data] : _analog_series) {
+        if (!analog_data.display_options->is_visible) {
+            continue;
+        }
+
+        // Get the allocated space for this series
+        float allocated_center = analog_data.display_options->allocated_y_center;
+        float allocated_height = analog_data.display_options->allocated_height;
+
+        // Calculate bounds for this series
+        float const series_y_min = allocated_center - allocated_height * 0.5f;
+        float const series_y_max = allocated_center + allocated_height * 0.5f;
+
+        // Check if mouse Y is within this series' allocated space
+        if (adjusted_y >= series_y_min && adjusted_y <= series_y_max) {
+            return std::make_pair("Analog", key);
+        }
+
+        analog_index++;
+    }
+
+    // Check digital event series (only those in stacked mode)
+    int event_index = 0;
+    for (auto const & [key, event_data] : _digital_event_series) {
+        if (!event_data.display_options->is_visible) {
+            continue;
+        }
+
+        // Only check stacked events
+        if (event_data.display_options->display_mode != EventDisplayMode::Stacked) {
+            continue;
+        }
+
+        // Get the allocated space for this series
+        float allocated_center = event_data.display_options->allocated_y_center;
+        float allocated_height = event_data.display_options->allocated_height;
+
+        // Calculate bounds for this series
+        float const series_y_min = allocated_center - allocated_height * 0.5f;
+        float const series_y_max = allocated_center + allocated_height * 0.5f;
+
+        // Check if mouse Y is within this series' allocated space
+        if (adjusted_y >= series_y_min && adjusted_y <= series_y_max) {
+            return std::make_pair("Event", key);
+        }
+
+        event_index++;
+    }
+
+    return std::nullopt;
+}
+
+void OpenGLWidget::showSeriesInfoTooltip(QPoint const & pos) {
+    float const canvas_x = static_cast<float>(pos.x());
+    float const canvas_y = static_cast<float>(pos.y());
+
+    // Find which series is under the cursor
+    auto series_info = findSeriesAtPosition(canvas_x, canvas_y);
+    
+    if (series_info.has_value()) {
+        auto const & [series_type, series_key] = series_info.value();
+        
+        // Build tooltip text
+        QString tooltip_text;
+        if (series_type == "Analog") {
+            // Get the analog value at this Y coordinate
+            float const analog_value = canvasYToAnalogValue(canvas_y, series_key);
+            tooltip_text = QString("<b>Analog Series</b><br>Key: %1<br>Value: %2")
+                .arg(QString::fromStdString(series_key))
+                .arg(analog_value, 0, 'f', 3);
+        } else if (series_type == "Event") {
+            tooltip_text = QString("<b>Event Series</b><br>Key: %1")
+                .arg(QString::fromStdString(series_key));
+        }
+        
+        // Show tooltip at cursor position
+        QToolTip::showText(mapToGlobal(pos), tooltip_text, this);
+    } else {
+        // No series under cursor, hide tooltip
+        QToolTip::hideText();
+    }
 }

@@ -13,6 +13,9 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
+#include <QTimer>
+#include <QToolTip>
+#include <QEvent>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -384,6 +387,7 @@ protected:
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
     void mouseDoubleClickEvent(QMouseEvent * event) override;
+    void leaveEvent(QEvent * event) override;
 
 private:
     void setupVertexAttribs();
@@ -401,6 +405,35 @@ private:
     void _addSeries(std::string const & key);
     void _removeSeries(std::string const & key);
     void _updateYViewBoundaries();
+    
+    // Tooltip helper methods
+    /**
+     * @brief Find the series under the mouse cursor
+     * 
+     * Checks analog series and digital event series (in stacked mode) to determine
+     * which series is under the given canvas coordinates.
+     * 
+     * @param canvas_x X coordinate in canvas pixels
+     * @param canvas_y Y coordinate in canvas pixels
+     * @return Optional pair containing series type ("analog" or "event") and series key,
+     *         or nullopt if no series is under the cursor
+     */
+    std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(float canvas_x, float canvas_y) const;
+    
+    /**
+     * @brief Show tooltip with series information after hover delay
+     */
+    void showSeriesInfoTooltip(QPoint const & pos);
+    
+    /**
+     * @brief Start the tooltip timer on mouse hover
+     */
+    void startTooltipTimer(QPoint const & pos);
+    
+    /**
+     * @brief Cancel the tooltip timer
+     */
+    void cancelTooltipTimer();
 
     // Gap detection helper methods for analog series
     void _drawAnalogSeriesWithGapDetection(std::vector<float> const & data,
@@ -493,6 +526,11 @@ private:
     // GL lifecycle guards
     bool _gl_initialized{false};
     QMetaObject::Connection _ctxAboutToBeDestroyedConn;
+    
+    // Tooltip state
+    QTimer * _tooltip_timer{nullptr};
+    QPoint _tooltip_hover_pos;
+    static constexpr int TOOLTIP_DELAY_MS = 1000; ///< Delay before showing tooltip (1 second)
 };
 
 namespace TimeSeriesDefaultValues {
