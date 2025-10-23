@@ -27,8 +27,8 @@
    <item>
     <widget class="QLabel" name="description_label">
      <property name="text">
-      <string>Calculates the instantaneous phase using the Hilbert transform.
-Phase values will be in radians (-π to π).</string>
+      <string>Calculates instantaneous phase or amplitude using the Hilbert transform.
+Phase values are in radians (-π to π). Amplitude represents the signal envelope.</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -41,13 +41,34 @@ Phase values will be in radians (-π to π).</string>
    <item>
     <layout class="QFormLayout" name="formLayout">
      <item row="0" column="0">
+      <widget class="QLabel" name="output_type_label">
+       <property name="text">
+        <string>Output Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="output_type_combobox">
+       <item>
+        <property name="text">
+         <string>Phase</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Amplitude</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="0">
       <widget class="QLabel" name="low_freq_label">
        <property name="text">
         <string>Low Frequency (Hz):</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
+     <item row="1" column="1">
       <widget class="QDoubleSpinBox" name="low_frequency_spinbox">
        <property name="minimum">
         <double>0.100000000000000</double>
@@ -63,14 +84,14 @@ Phase values will be in radians (-π to π).</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="high_freq_label">
        <property name="text">
         <string>High Frequency (Hz):</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
+     <item row="2" column="1">
       <widget class="QDoubleSpinBox" name="high_frequency_spinbox">
        <property name="minimum">
         <double>0.100000000000000</double>
@@ -86,14 +107,14 @@ Phase values will be in radians (-π to π).</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="discontinuity_label">
        <property name="text">
         <string>Discontinuity Threshold:</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item row="3" column="1">
       <widget class="QSpinBox" name="discontinuity_threshold_spinbox">
        <property name="minimum">
         <number>1</number>
@@ -112,7 +133,89 @@ Phase values will be in radians (-π to π).</string>
        </property>
       </widget>
      </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="max_chunk_label">
+       <property name="text">
+        <string>Max Chunk Size:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QSpinBox" name="max_chunk_size_spinbox">
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>10000000</number>
+       </property>
+       <property name="singleStep">
+        <number>10000</number>
+       </property>
+       <property name="value">
+        <number>100000</number>
+       </property>
+       <property name="suffix">
+        <string> samples</string>
+       </property>
+       <property name="specialValueText">
+        <string>No limit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="overlap_label">
+       <property name="text">
+        <string>Overlap Fraction:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QDoubleSpinBox" name="overlap_fraction_spinbox">
+       <property name="minimum">
+        <double>0.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>0.500000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.050000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.250000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="windowing_label">
+       <property name="text">
+        <string>Use Windowing:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QCheckBox" name="use_windowing_checkbox">
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="windowing_help_label">
+     <property name="text">
+      <string>For long signals (e.g., 30kHz sampling), use windowed processing to improve performance. Set max chunk size to split signal into overlapping windows.</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(80, 80, 80); font-size: 9pt;</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QLabel" name="discontinuity_help_label">

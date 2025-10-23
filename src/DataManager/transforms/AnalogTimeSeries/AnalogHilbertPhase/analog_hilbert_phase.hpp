@@ -11,9 +11,20 @@
 class AnalogTimeSeries;
 
 struct HilbertPhaseParams : public TransformParametersBase {
+    enum class OutputType {
+        Phase,      // Extract instantaneous phase (radians, -π to π)
+        Amplitude   // Extract instantaneous amplitude (magnitude of analytic signal)
+    };
+
     double lowFrequency = 5.0;           // Low cutoff frequency in Hz
     double highFrequency = 15.0;         // High cutoff frequency in Hz
     size_t discontinuityThreshold = 1000;// Gap size (in samples) above which to split processing into chunks
+    OutputType outputType = OutputType::Phase; // What to extract from the Hilbert transform
+    
+    // Windowed processing parameters for long signals
+    size_t maxChunkSize = 100000;        // Maximum samples per chunk (0 = no limit, process entire signal)
+    double overlapFraction = 0.25;       // Fraction of overlap between chunks (0.0 to 0.5)
+    bool useWindowing = true;            // Apply Hann window to reduce edge artifacts
 };
 
 /**

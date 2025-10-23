@@ -11,6 +11,8 @@ AnalogHilbertPhase_Widget::AnalogHilbertPhase_Widget(QWidget *parent) :
     ui->setupUi(this);
     
     // Set up connections for parameter validation
+    connect(ui->output_type_combobox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &AnalogHilbertPhase_Widget::_validateParameters);
     connect(ui->low_frequency_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AnalogHilbertPhase_Widget::_validateFrequencyParameters);
     connect(ui->high_frequency_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
@@ -29,9 +31,21 @@ AnalogHilbertPhase_Widget::~AnalogHilbertPhase_Widget() {
 std::unique_ptr<TransformParametersBase> AnalogHilbertPhase_Widget::getParameters() const {
     auto params = std::make_unique<HilbertPhaseParams>();
     
+    // Get output type from combo box
+    if (ui->output_type_combobox->currentText() == "Phase") {
+        params->outputType = HilbertPhaseParams::OutputType::Phase;
+    } else {
+        params->outputType = HilbertPhaseParams::OutputType::Amplitude;
+    }
+    
     params->lowFrequency = ui->low_frequency_spinbox->value();
     params->highFrequency = ui->high_frequency_spinbox->value();
     params->discontinuityThreshold = static_cast<size_t>(ui->discontinuity_threshold_spinbox->value());
+    
+    // Windowed processing parameters
+    params->maxChunkSize = static_cast<size_t>(ui->max_chunk_size_spinbox->value());
+    params->overlapFraction = ui->overlap_fraction_spinbox->value();
+    params->useWindowing = ui->use_windowing_checkbox->isChecked();
 
     return params;
 }

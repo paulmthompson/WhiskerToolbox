@@ -142,6 +142,20 @@ void ParameterFactory::initializeDefaultSetters() {
     registerBasicParameter<HilbertPhaseParams, size_t>(
             "Hilbert Phase", "discontinuity_threshold", &HilbertPhaseParams::discontinuityThreshold);
 
+    std::unordered_map<std::string, HilbertPhaseParams::OutputType> hilbert_output_type_map = {
+            {"Phase", HilbertPhaseParams::OutputType::Phase},
+            {"Amplitude", HilbertPhaseParams::OutputType::Amplitude}};
+    registerEnumParameter<HilbertPhaseParams, HilbertPhaseParams::OutputType>(
+            "Hilbert Phase", "output_type", &HilbertPhaseParams::outputType, hilbert_output_type_map);
+
+    // Windowed processing parameters for long signals
+    registerBasicParameter<HilbertPhaseParams, size_t>(
+            "Hilbert Phase", "max_chunk_size", &HilbertPhaseParams::maxChunkSize);
+    registerBasicParameter<HilbertPhaseParams, double>(
+            "Hilbert Phase", "overlap_fraction", &HilbertPhaseParams::overlapFraction);
+    registerBasicParameter<HilbertPhaseParams, bool>(
+            "Hilbert Phase", "use_windowing", &HilbertPhaseParams::useWindowing);
+
     // ================== Analog Scaling ==================
 
     std::unordered_map<std::string, ScalingMethod> scaling_method_map = {

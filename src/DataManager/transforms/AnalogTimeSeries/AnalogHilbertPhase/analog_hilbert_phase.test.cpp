@@ -263,7 +263,184 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
             REQUIRE(phase <= std::numbers::pi_v<float>);
         }
     }
+
+    SECTION("Amplitude extraction - simple sine wave") {
+        // Create a simple sine wave with known amplitude
+        constexpr float amplitude = 2.5f;
+        constexpr float frequency = 1.0f;       // 1 Hz
+        constexpr size_t sample_rate = 100;     // 100 Hz
+        constexpr size_t duration_samples = 200;// 2 seconds
+
+        values.reserve(duration_samples);
+        times.reserve(duration_samples);
+
+        for (size_t i = 0; i < duration_samples; ++i) {
+            float t = static_cast<float>(i) / sample_rate;
+            values.push_back(amplitude * std::sin(2.0f * std::numbers::pi_v<float> * frequency * t));
+            times.push_back(TimeFrameIndex(i));
+        }
+
+        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        params.lowFrequency = 0.5;
+        params.highFrequency = 2.0;
+        params.outputType = HilbertPhaseParams::OutputType::Amplitude;
+
+        auto result_amplitude = hilbert_phase(ats.get(), params);
+        REQUIRE(result_amplitude != nullptr);
+        REQUIRE(!result_amplitude->getAnalogTimeSeries().empty());
+
+        auto const & amplitude_values = result_amplitude->getAnalogTimeSeries();
+
+        // Amplitude should be non-negative and close to the expected amplitude
+        for (auto const & amp: amplitude_values) {
+            REQUIRE(amp >= 0.0f);
+        }
+
+        // Check that most amplitude values are close to the expected amplitude (within 20% tolerance)
+        size_t count_within_tolerance = 0;
+        for (auto const & amp: amplitude_values) {
+            if (amp > 0.1f && std::abs(amp - amplitude) < amplitude * 0.2f) {
+                count_within_tolerance++;
+            }
+        }
+        // At least 70% of non-zero values should be close to expected amplitude
+        REQUIRE(count_within_tolerance > amplitude_values.size() * 0.7);
+    }
+
+    SECTION("Amplitude extraction - amplitude modulated signal") {
+        // Create an amplitude modulated signal
+        constexpr float carrier_freq = 10.0f;
+        constexpr float modulation_freq = 1.0f;
+        constexpr size_t sample_rate = 100;
+        constexpr size_t duration_samples = 200;
+
+        values.reserve(duration_samples);
+        times.reserve(duration_samples);
+
+        for (size_t i = 0; i < duration_samples; ++i) {
+            float t = static_cast<float>(i) / sample_rate;
+            float envelope = 1.0f + 0.5f * std::sin(2.0f * std::numbers::pi_v<float> * modulation_freq * t);
+            float carrier = std::sin(2.0f * std::numbers::pi_v<float> * carrier_freq * t);
+            values.push_back(envelope * carrier);
+            times.push_back(TimeFrameIndex(i));
+        }
+
+        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        params.lowFrequency = 5.0;
+        params.highFrequency = 15.0;
+        params.outputType = HilbertPhaseParams::OutputType::Amplitude;
+
+        auto result_amplitude = hilbert_phase(ats.get(), params);
+        REQUIRE(result_amplitude != nullptr);
+        REQUIRE(!result_amplitude->getAnalogTimeSeries().empty());
+
+        auto const & amplitude_values = result_amplitude->getAnalogTimeSeries();
+
+        // Amplitude should be non-negative
+        for (auto const & amp: amplitude_values) {
+            REQUIRE(amp >= 0.0f);
+        }
+
+        // The amplitude should vary between approximately 0.5 and 1.5 (the envelope)
+        float min_amp = *std::min_element(amplitude_values.begin(), amplitude_values.end());
+        float max_amp = *std::max_element(amplitude_values.begin(), amplitude_values.end());
+        
+        // Filter out zeros for this check
+        std::vector<float> non_zero_amps;
+        for (auto amp : amplitude_values) {
+            if (amp > 0.1f) {
+                non_zero_amps.push_back(amp);
+            }
+        }
+        
+        if (!non_zero_amps.empty()) {
+            min_amp = *std::min_element(non_zero_amps.begin(), non_zero_amps.end());
+            max_amp = *std::max_element(non_zero_amps.begin(), non_zero_amps.end());
+            REQUIRE(min_amp < 1.0f);  // Should have values below 1
+            REQUIRE(max_amp > 1.0f);  // Should have values above 1
+        }
+    }
+
+    SECTION("Amplitude extraction with discontinuities") {
+        // Create a discontinuous signal with varying amplitudes
+        values = {1.0f, 0.5f, -1.0f, 0.5f, 2.0f, 1.0f, -2.0f, 1.0f};
+        times = {TimeFrameIndex(0),
+                 TimeFrameIndex(1),
+                 TimeFrameIndex(2),
+                 TimeFrameIndex(3),
+                 TimeFrameIndex(2000),
+                 TimeFrameIndex(2001),
+                 TimeFrameIndex(2002),
+                 TimeFrameIndex(2003)};
+
+        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        params.lowFrequency = 5.0;
+        params.highFrequency = 15.0;
+        params.discontinuityThreshold = 100;
+        params.outputType = HilbertPhaseParams::OutputType::Amplitude;
+
+        auto result_amplitude = hilbert_phase(ats.get(), params);
+        REQUIRE(result_amplitude != nullptr);
+        REQUIRE(!result_amplitude->getAnalogTimeSeries().empty());
+
+        auto const & amplitude_values = result_amplitude->getAnalogTimeSeries();
+        REQUIRE(amplitude_values.size() == times.back().getValue() + 1);
+
+        // All amplitude values should be non-negative
+        for (auto const & amp: amplitude_values) {
+            REQUIRE(amp >= 0.0f);
+        }
+    }
+
+    SECTION("Windowed processing - long signal") {
+        // Create a long sine wave to test windowed processing
+        constexpr float amplitude = 2.0f;
+        constexpr float frequency = 5.0f;
+        constexpr size_t sample_rate = 1000; // 1 kHz
+        constexpr size_t duration_samples = 150000; // 150 seconds of data
+
+        values.reserve(duration_samples);
+        times.reserve(duration_samples);
+
+        for (size_t i = 0; i < duration_samples; ++i) {
+            float t = static_cast<float>(i) / sample_rate;
+            values.push_back(amplitude * std::sin(2.0f * std::numbers::pi_v<float> * frequency * t));
+            times.push_back(TimeFrameIndex(i));
+        }
+
+        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        
+        // Configure for windowed processing
+        params.lowFrequency = 1.0;
+        params.highFrequency = 10.0;
+        params.outputType = HilbertPhaseParams::OutputType::Amplitude;
+        params.maxChunkSize = 10000; // Process in 10k sample chunks
+        params.overlapFraction = 0.25;
+        params.useWindowing = true;
+
+        auto result_amplitude = hilbert_phase(ats.get(), params);
+        REQUIRE(result_amplitude != nullptr);
+        REQUIRE(!result_amplitude->getAnalogTimeSeries().empty());
+
+        auto const & amplitude_values = result_amplitude->getAnalogTimeSeries();
+
+        // Amplitude should be non-negative and close to expected amplitude
+        for (auto const & amp: amplitude_values) {
+            REQUIRE(amp >= 0.0f);
+        }
+
+        // Check that most amplitude values are close to the expected amplitude
+        size_t count_within_tolerance = 0;
+        for (auto const & amp: amplitude_values) {
+            if (amp > 0.1f && std::abs(amp - amplitude) < amplitude * 0.3f) {
+                count_within_tolerance++;
+            }
+        }
+        // At least 60% of non-zero values should be close to expected amplitude
+        REQUIRE(count_within_tolerance > amplitude_values.size() * 0.6);
+    }
 }
+
 
 TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][analog_hilbert_phase]") {
     std::shared_ptr<AnalogTimeSeries> ats;
