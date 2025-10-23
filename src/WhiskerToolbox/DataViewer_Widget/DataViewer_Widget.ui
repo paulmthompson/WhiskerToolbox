@@ -159,8 +159,8 @@
               <widget class="Feature_Tree_Widget" name="feature_tree_widget" native="true">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>3</horstretch>
-                 <verstretch>1</verstretch>
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="minimumSize">
@@ -174,15 +174,15 @@
              <item>
               <widget class="QGroupBox" name="feature_groupbox">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                 <horstretch>2</horstretch>
-                 <verstretch>1</verstretch>
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="minimumSize">
                 <size>
                  <width>100</width>
-                 <height>100</height>
+                 <height>300</height>
                 </size>
                </property>
                <property name="title">
@@ -192,7 +192,7 @@
                 <item>
                  <widget class="QStackedWidget" name="stackedWidget">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
