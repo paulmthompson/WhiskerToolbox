@@ -229,10 +229,12 @@ void Feature_Table_Widget::populateTable() {
     }
 
 
-    // Adjust table height to show all rows
+    // Adjust table height to show up to MAX_VISIBLE_ROWS rows (or fewer if less data)
+    constexpr int MAX_VISIBLE_ROWS = 10;
     int rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
     int headerHeight = ui->available_features_table->horizontalHeader()->height();
-    int totalHeight = (rowHeight * ui->available_features_table->rowCount()) + headerHeight;
+    int visibleRows = std::min(ui->available_features_table->rowCount(), MAX_VISIBLE_ROWS);
+    int totalHeight = (rowHeight * visibleRows) + headerHeight;
     ui->available_features_table->setMinimumHeight(totalHeight);
     ui->available_features_table->setMaximumHeight(totalHeight);
 
@@ -302,10 +304,12 @@ void Feature_Table_Widget::resizeEvent(QResizeEvent * event) {
     // Make the table widget take up the full width of the widget minus margins
     ui->available_features_table->setFixedWidth(this->width());
 
-    // Recalculate height based on content
+    // Recalculate height based on content, capped at MAX_VISIBLE_ROWS
+    constexpr int MAX_VISIBLE_ROWS = 10;
     int rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
     int headerHeight = ui->available_features_table->horizontalHeader()->height();
-    int totalHeight = (rowHeight * ui->available_features_table->rowCount()) + headerHeight;
+    int visibleRows = std::min(ui->available_features_table->rowCount(), MAX_VISIBLE_ROWS);
+    int totalHeight = (rowHeight * visibleRows) + headerHeight;
     ui->available_features_table->setMinimumHeight(totalHeight);
     ui->available_features_table->setMaximumHeight(totalHeight);
 
