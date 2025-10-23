@@ -13,6 +13,7 @@
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.hpp"
 #include "DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp"
+#include "DataTransform_Widget/DigitalIntervalSeries/BooleanOperation_Widget/BooleanOperation_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp"
 #include "DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp"
@@ -211,6 +212,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         return new GroupIntervals_Widget(parent);
     };
 
+    _parameterWidgetFactories["Boolean Operation"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new BooleanOperation_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
+
     _parameterWidgetFactories["Group Lines by Proximity"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new LineProximityGrouping_Widget(parent);
         widget->setDataManager(_data_manager);
@@ -285,11 +292,16 @@ void DataTransform_Widget::_handleFeatureSelected(QString const & feature) {
 
     _currentSelectedDataVariant = data_variant.value();
 
-    // Update current parameter widget if it's a scaling widget
+    // Update current parameter widget if it's a scaling widget or boolean operation widget
     if (_currentParameterWidget) {
         auto scalingWidget = dynamic_cast<AnalogScaling_Widget *>(_currentParameterWidget);
         if (scalingWidget) {
             scalingWidget->setCurrentDataKey(feature);
+        }
+        
+        auto booleanWidget = dynamic_cast<BooleanOperation_Widget *>(_currentParameterWidget);
+        if (booleanWidget) {
+            booleanWidget->setCurrentInputKey(key);
         }
     }
 
@@ -383,6 +395,12 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
         auto scalingWidget = dynamic_cast<AnalogScaling_Widget *>(newParamWidget);
         if (scalingWidget && !_highlighted_available_feature.isEmpty()) {
             scalingWidget->setCurrentDataKey(_highlighted_available_feature);
+        }
+
+        // If this is a boolean operation widget, set the current input key
+        auto booleanWidget = dynamic_cast<BooleanOperation_Widget *>(newParamWidget);
+        if (booleanWidget && !_highlighted_available_feature.isEmpty()) {
+            booleanWidget->setCurrentInputKey(_highlighted_available_feature.toStdString());
         }
 
         ui->stackedWidget->setCurrentWidget(newParamWidget);

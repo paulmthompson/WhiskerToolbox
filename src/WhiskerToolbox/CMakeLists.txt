@@ -201,6 +201,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.cpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.ui
+        DataTransform_Widget/DigitalIntervalSeries/BooleanOperation_Widget/BooleanOperation_Widget.cpp
+        DataTransform_Widget/DigitalIntervalSeries/BooleanOperation_Widget/BooleanOperation_Widget.hpp
+        DataTransform_Widget/DigitalIntervalSeries/BooleanOperation_Widget/BooleanOperation_Widget.ui
         DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.hpp
         DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.cpp
         DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.ui

@@ -177,6 +177,13 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
 
+    /**
+     * @brief Get the time frame
+     * 
+     * @return The time frame (may be nullptr)
+     */
+    [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const { return _time_frame; }
+
     // ===== Identity =====
     void setIdentityContext(std::string const & data_key, EntityRegistry * registry) {
         _identity_data_key = data_key;
