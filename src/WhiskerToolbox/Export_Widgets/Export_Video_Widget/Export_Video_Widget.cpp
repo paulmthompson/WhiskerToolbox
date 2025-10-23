@@ -4,6 +4,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/EventWithId.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -21,6 +22,7 @@
 #include <QTableWidgetItem>
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <regex>
 #include <numbers>
@@ -205,28 +207,50 @@ void Export_Video_Widget::_exportVideo() {
     if (ui->audio_output_groupbox->isChecked()) {
         std::cout << "Generating audio track..." << std::endl;
 
-        int start_frame, end_frame;
+        int content_start_frame, content_end_frame;
+        int title_frames_total = 0;
+
         if (!_video_sequences.empty()) {
-            // For multi-sequence mode, generate audio for entire span
-            start_frame = _video_sequences[0].start_frame;
-            end_frame = _video_sequences.back().end_frame;
+            // For multi-sequence mode, calculate total title frames and content range
+            content_start_frame = _video_sequences[0].start_frame;
+            content_end_frame = _video_sequences.back().end_frame;
             for (auto const & seq: _video_sequences) {
-                start_frame = std::min(start_frame, seq.start_frame);
-                end_frame = std::max(end_frame, seq.end_frame);
+                content_start_frame = std::min(content_start_frame, seq.start_frame);
+                content_end_frame = std::max(content_end_frame, seq.end_frame);
+                if (seq.has_title) {
+                    title_frames_total += seq.title_frames;
+                }
             }
         } else {
             // Single sequence mode
-            start_frame = ui->start_frame_spinbox->value();
-            end_frame = ui->end_frame_spinbox->value();
-            if (end_frame == -1) {
-                end_frame = _data_manager->getTime()->getTotalFrameCount();
+            content_start_frame = ui->start_frame_spinbox->value();
+            content_end_frame = ui->end_frame_spinbox->value();
+            if (content_end_frame == -1) {
+                content_end_frame = _data_manager->getTime()->getTotalFrameCount();
+            }
+            if (ui->title_sequence_groupbox->isChecked()) {
+                title_frames_total = ui->title_frames_spinbox->value();
             }
         }
 
         int video_fps = ui->frame_rate_spinbox->value();
         int audio_sample_rate = ui->audio_sample_rate_spinbox->value();
 
-        auto audio_track = _convertEventsToAudioTrack(start_frame, end_frame, video_fps, audio_sample_rate);
+        // Generate audio for content frames
+        auto content_audio = _convertEventsToAudioTrack(content_start_frame, content_end_frame, video_fps, audio_sample_rate);
+
+        // Calculate total audio length including title frames
+        int title_samples = static_cast<int>((static_cast<float>(title_frames_total) / static_cast<float>(video_fps)) * audio_sample_rate);
+        int total_samples = title_samples + static_cast<int>(content_audio.size());
+
+        // Create final audio track with silence for title frames
+        std::vector<float> audio_track(total_samples, 0.0f);
+
+        // Fill in silence for title frames (already initialized to 0.0)
+        // Copy content audio after title frames
+        std::copy(content_audio.begin(), content_audio.end(), audio_track.begin() + title_samples);
+
+        std::cout << "Audio track: " << title_samples << " title samples + " << content_audio.size() << " content samples = " << total_samples << " total samples" << std::endl;
 
         // Generate audio filename based on video filename
         std::string audio_filename = filename;
@@ -618,7 +642,7 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
 
     double click_duration = ui->click_duration_spinbox->value();
 
-    // Get master time frame for conversion (similar to OpenGLWidget approach)
+    // Get master time frame for conversion (camera/video time frame)
     auto master_time_frame = _data_manager->getTime(TimeKey("time"));
     if (!master_time_frame) {
         std::cerr << "Error: Could not get master time frame for audio conversion" << std::endl;
@@ -635,39 +659,31 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
         auto series_time_frame = _data_manager->getTime(TimeKey(audio_source.time_frame_key));
         if (!series_time_frame) continue;
 
-        // Get events in the frame range, handling timeframe conversion similar to OpenGLWidget
-        auto start_time = static_cast<float>(start_frame);
-        auto end_time = static_cast<float>(end_frame);
+        // Get events in the frame range using the proper time frame conversion API
+        TimeFrameIndex start_index(start_frame);
+        TimeFrameIndex end_index(end_frame);
 
-        // Convert master time coordinates to series time frame if needed
-        std::vector<float> converted_events;
+        std::vector<EventWithId> events_with_ids;
         if (series_time_frame.get() == master_time_frame.get()) {
             // Same time frame - use events directly
-            auto events_in_range = series->getEventsAsVector(start_time, end_time);
-            converted_events = events_in_range;
+            events_with_ids = series->getEventsWithIdsInRange(start_index, end_index);
         } else {
-            // Different time frames - convert each event from series to master coordinates
-            auto all_events = series->getEventSeries();
-            for (float event_idx: all_events) {
-                try {
-                    // Convert series time index to actual time, then to master time frame
-                    float event_time = static_cast<float>(series_time_frame->getTimeAtIndex(TimeFrameIndex(static_cast<int>(event_idx))));
-
-                    // Check if this event time falls within our frame range
-                    if (event_time >= start_time && event_time <= end_time) {
-                        converted_events.push_back(event_time);
-                    }
-                } catch (...) {
-                    // Skip events that can't be converted
-                    continue;
-                }
-            }
+            // Different time frames - let the series handle conversion
+            events_with_ids = series->getEventsWithIdsInRange(
+                start_index, end_index,
+                master_time_frame.get(),
+                series_time_frame.get()
+            );
         }
 
+        std::cout << "Processing " << events_with_ids.size() << " events from series " << audio_source.key << std::endl;
+
         // Generate click sounds for each event
-        for (float event_time: converted_events) {
-            // Convert event time to audio sample index
-            float relative_time = (event_time - start_time) / static_cast<float>(video_fps);
+        for (auto const & event_with_id: events_with_ids) {
+            float event_time = event_with_id.event_time;
+
+            // Convert event time (in frames) to relative time in seconds
+            float relative_time = (event_time - static_cast<float>(start_frame)) / static_cast<float>(video_fps);
             int sample_index = static_cast<int>(relative_time * audio_sample_rate);
 
             if (sample_index >= 0 && sample_index < total_samples) {
@@ -681,7 +697,7 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
             }
         }
 
-        std::cout << "Added " << converted_events.size() << " audio clicks from series " << audio_source.key << std::endl;
+        std::cout << "Added " << events_with_ids.size() << " audio clicks from series " << audio_source.key << std::endl;
     }
 
     return audio_track;
@@ -691,22 +707,72 @@ void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename,
                                           std::vector<float> const & audio_data,
                                           int sample_rate) const {
 
-    static_cast<void>(audio_filename);
-
-    // For now, we'll output a simple informational message about audio generation
-    // In a full implementation, you would use a library like libsndfile, Qt's audio classes,
-    // or integrate with FFmpeg to create an actual audio file
-
-    std::cout << "Audio track generated: " << audio_data.size() << " samples at " << sample_rate << " Hz" << std::endl;
+    std::cout << "Writing audio track: " << audio_data.size() << " samples at " << sample_rate << " Hz" << std::endl;
     std::cout << "Duration: " << static_cast<float>(audio_data.size()) / static_cast<float>(sample_rate) << " seconds" << std::endl;
-    std::cout << "Note: Audio file writing not yet implemented. Consider using FFmpeg for video+audio combination." << std::endl;
 
-    // TODO: Implement actual audio file writing
-    // This could involve:
-    // 1. Writing a WAV file directly
-    // 2. Using Qt's audio classes
-    // 3. Using FFmpeg to combine video and audio
-    // 4. Using a dedicated audio library like libsndfile
+    std::ofstream stream;
+    stream.open(audio_filename, std::ios::out | std::ios::binary);
+
+    if (!stream.is_open()) {
+        std::cerr << "Error: Could not open audio file for writing: " << audio_filename << std::endl;
+        return;
+    }
+
+    // WAV file parameters
+    int const num_channels = 1;  // Mono
+    int const bits_per_sample = 24;  // 24-bit audio
+    int const byte_rate = sample_rate * num_channels * (bits_per_sample / 8);
+    int const block_align = num_channels * (bits_per_sample / 8);
+    int const data_size = static_cast<int>(audio_data.size()) * (bits_per_sample / 8);
+
+    // Helper lambda to write little-endian integers
+    auto write_int32 = [&stream](int32_t value) {
+        stream.put(static_cast<char>(value & 0xFF));
+        stream.put(static_cast<char>((value >> 8) & 0xFF));
+        stream.put(static_cast<char>((value >> 16) & 0xFF));
+        stream.put(static_cast<char>((value >> 24) & 0xFF));
+    };
+
+    auto write_int16 = [&stream](int16_t value) {
+        stream.put(static_cast<char>(value & 0xFF));
+        stream.put(static_cast<char>((value >> 8) & 0xFF));
+    };
+
+    // Write WAV header
+    stream.write("RIFF", 4);  // RIFF chunk
+    write_int32(36 + data_size);  // RIFF chunk size (file size - 8)
+    stream.write("WAVE", 4);  // WAVE chunk
+
+    // Write fmt sub-chunk
+    stream.write("fmt ", 4);  // fmt chunk
+    write_int32(16);  // Size of fmt chunk (16 for PCM)
+    write_int16(1);   // Audio format (1 = PCM)
+    write_int16(num_channels);  // Number of channels
+    write_int32(sample_rate);   // Sample rate
+    write_int32(byte_rate);     // Byte rate
+    write_int16(block_align);   // Block align
+    write_int16(bits_per_sample);  // Bits per sample
+
+    // Write data sub-chunk
+    stream.write("data", 4);  // data chunk
+    write_int32(data_size);   // data chunk size
+
+    // Convert float samples to 24-bit PCM and write
+    for (float sample : audio_data) {
+        // Clamp sample to [-1.0, 1.0]
+        sample = std::max(-1.0f, std::min(1.0f, sample));
+
+        // Convert to 24-bit signed integer (range: -8388608 to 8388607)
+        int32_t int_val = static_cast<int32_t>(sample * 8388607.0f);
+
+        // Write 24-bit value (3 bytes, little-endian)
+        stream.put(static_cast<char>(int_val & 0xFF));
+        stream.put(static_cast<char>((int_val >> 8) & 0xFF));
+        stream.put(static_cast<char>((int_val >> 16) & 0xFF));
+    }
+
+    stream.close();
+    std::cout << "Audio file written successfully: " << audio_filename << std::endl;
 }
 
 Media_Window* Export_Video_Widget::_getCurrentMediaWindow() const {
