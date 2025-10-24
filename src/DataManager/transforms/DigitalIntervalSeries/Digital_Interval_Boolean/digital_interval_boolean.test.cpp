@@ -819,3 +819,232 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         REQUIRE(result_intervals[0].end == 6);
     }
 }
+
+#include "DataManager.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+TEST_CASE("Data Transform: Digital Interval Boolean - JSON pipeline", "[transforms][digital_interval_boolean][json]") {
+    const nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "boolean_step_1"},
+            {"transform_name", "Boolean Operation"},
+            {"input_key", "TestIntervals.input"},
+            {"output_key", "BooleanResult"},
+            {"parameters", {
+                {"operation", "AND"},
+                {"other_series", "TestIntervals.other"}
+            }}
+        }}}
+    };
+
+    DataManager dm;
+    TransformRegistry registry;
+
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+
+    // Create test intervals:
+    // Input: (1,10), (20,30)
+    // Other: (5,15), (25,35)
+    // Expected AND result: (5,10), (25,30)
+    std::vector<Interval> input_intervals = {{1, 10}, {20, 30}};
+    std::vector<Interval> other_intervals = {{5, 15}, {25, 35}};
+    
+    auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
+    input_dis->setTimeFrame(time_frame);
+    auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+    other_dis->setTimeFrame(time_frame);
+    
+    dm.setData("TestIntervals.input", input_dis, TimeKey("default"));
+    dm.setData("TestIntervals.other", other_dis, TimeKey("default"));
+
+    TransformPipeline pipeline(&dm, &registry);
+    pipeline.loadFromJson(json_config);
+    pipeline.execute();
+
+    // Verify the results
+    auto result_series = dm.getData<DigitalIntervalSeries>("BooleanResult");
+    REQUIRE(result_series != nullptr);
+
+    auto const & result_intervals = result_series->getDigitalIntervalSeries();
+    REQUIRE(result_intervals.size() == 2);
+
+    // Verify AND operation result
+    REQUIRE(result_intervals[0].start == 5);
+    REQUIRE(result_intervals[0].end == 10);
+    REQUIRE(result_intervals[1].start == 25);
+    REQUIRE(result_intervals[1].end == 30);
+}
+
+TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config", "[transforms][digital_interval_boolean][json_config]") {
+    // Create DataManager and populate it with DigitalIntervalSeries in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test interval data in code
+    // Input: (1,10), (20,30)
+    // Other: (5,15), (25,35)
+    std::vector<Interval> input_intervals = {{1, 10}, {20, 30}};
+    std::vector<Interval> other_intervals = {{5, 15}, {25, 35}};
+    
+    auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
+    input_dis->setTimeFrame(time_frame);
+    auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+    other_dis->setTimeFrame(time_frame);
+    
+    // Store the interval data in DataManager with known keys
+    dm.setData("input_intervals", input_dis, TimeKey("default"));
+    dm.setData("other_intervals", other_dis, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Boolean Operations Pipeline\",\n"
+        "            \"description\": \"Test boolean operations on digital interval series\",\n"
+        "            \"version\": \"1.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"Boolean Operation\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"input_intervals\",\n"
+        "                \"output_key\": \"and_result\",\n"
+        "                \"parameters\": {\n"
+        "                    \"operation\": \"AND\",\n"
+        "                    \"other_series\": \"other_intervals\"\n"
+        "                }\n"
+        "            },\n"
+        "            {\n"
+        "                \"step_id\": \"2\",\n"
+        "                \"transform_name\": \"Boolean Operation\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"input_intervals\",\n"
+        "                \"output_key\": \"or_result\",\n"
+        "                \"parameters\": {\n"
+        "                    \"operation\": \"OR\",\n"
+        "                    \"other_series\": \"other_intervals\"\n"
+        "                }\n"
+        "            },\n"
+        "            {\n"
+        "                \"step_id\": \"3\",\n"
+        "                \"transform_name\": \"Boolean Operation\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"input_intervals\",\n"
+        "                \"output_key\": \"xor_result\",\n"
+        "                \"parameters\": {\n"
+        "                    \"operation\": \"XOR\",\n"
+        "                    \"other_series\": \"other_intervals\"\n"
+        "                }\n"
+        "            },\n"
+        "            {\n"
+        "                \"step_id\": \"4\",\n"
+        "                \"transform_name\": \"Boolean Operation\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"input_intervals\",\n"
+        "                \"output_key\": \"not_result\",\n"
+        "                \"parameters\": {\n"
+        "                    \"operation\": \"NOT\"\n"
+        "                }\n"
+        "            },\n"
+        "            {\n"
+        "                \"step_id\": \"5\",\n"
+        "                \"transform_name\": \"Boolean Operation\",\n"
+        "                \"phase\": \"analysis\",\n"
+        "                \"input_key\": \"input_intervals\",\n"
+        "                \"output_key\": \"and_not_result\",\n"
+        "                \"parameters\": {\n"
+        "                    \"operation\": \"AND_NOT\",\n"
+        "                    \"other_series\": \"other_intervals\"\n"
+        "                }\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "digital_interval_boolean_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using load_data_from_json_config
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    
+    // Verify AND result: (5,10), (25,30)
+    auto and_result = dm.getData<DigitalIntervalSeries>("and_result");
+    REQUIRE(and_result != nullptr);
+    auto const & and_intervals = and_result->getDigitalIntervalSeries();
+    REQUIRE(and_intervals.size() == 2);
+    REQUIRE(and_intervals[0].start == 5);
+    REQUIRE(and_intervals[0].end == 10);
+    REQUIRE(and_intervals[1].start == 25);
+    REQUIRE(and_intervals[1].end == 30);
+    
+    // Verify OR result: (1,15), (20,35)
+    auto or_result = dm.getData<DigitalIntervalSeries>("or_result");
+    REQUIRE(or_result != nullptr);
+    auto const & or_intervals = or_result->getDigitalIntervalSeries();
+    REQUIRE(or_intervals.size() == 2);
+    REQUIRE(or_intervals[0].start == 1);
+    REQUIRE(or_intervals[0].end == 15);
+    REQUIRE(or_intervals[1].start == 20);
+    REQUIRE(or_intervals[1].end == 35);
+    
+    // Verify XOR result: (1,4), (11,15), (20,24), (31,35)
+    auto xor_result = dm.getData<DigitalIntervalSeries>("xor_result");
+    REQUIRE(xor_result != nullptr);
+    auto const & xor_intervals = xor_result->getDigitalIntervalSeries();
+    REQUIRE(xor_intervals.size() == 4);
+    REQUIRE(xor_intervals[0].start == 1);
+    REQUIRE(xor_intervals[0].end == 4);
+    REQUIRE(xor_intervals[1].start == 11);
+    REQUIRE(xor_intervals[1].end == 15);
+    REQUIRE(xor_intervals[2].start == 20);
+    REQUIRE(xor_intervals[2].end == 24);
+    REQUIRE(xor_intervals[3].start == 31);
+    REQUIRE(xor_intervals[3].end == 35);
+    
+    // Verify NOT result: (11,19)
+    auto not_result = dm.getData<DigitalIntervalSeries>("not_result");
+    REQUIRE(not_result != nullptr);
+    auto const & not_intervals = not_result->getDigitalIntervalSeries();
+    REQUIRE(not_intervals.size() == 1);
+    REQUIRE(not_intervals[0].start == 11);
+    REQUIRE(not_intervals[0].end == 19);
+    
+    // Verify AND_NOT result: (1,4), (20,24)
+    auto and_not_result = dm.getData<DigitalIntervalSeries>("and_not_result");
+    REQUIRE(and_not_result != nullptr);
+    auto const & and_not_intervals = and_not_result->getDigitalIntervalSeries();
+    REQUIRE(and_not_intervals.size() == 2);
+    REQUIRE(and_not_intervals[0].start == 1);
+    REQUIRE(and_not_intervals[0].end == 4);
+    REQUIRE(and_not_intervals[1].start == 20);
+    REQUIRE(and_not_intervals[1].end == 24);
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}
