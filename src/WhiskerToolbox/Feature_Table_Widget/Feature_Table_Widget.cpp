@@ -43,10 +43,20 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
     // Column widths will be set adaptively in _setAdaptiveColumnWidths()
     // after the table is populated
 
+    // Enable alternating row colors
+    ui->available_features_table->setAlternatingRowColors(true);
+
+    // Disable grid lines
+    ui->available_features_table->setShowGrid(false);
 
     // Apply dark mode compatible styling to maintain blue selection highlighting
     // This prevents checkboxes from interfering with row selection colors
     ui->available_features_table->setStyleSheet(
+            "QTableWidget {"
+            "    gridline-color: transparent;"        // Remove grid lines
+            "    alternate-background-color: #313131;"// Light gray for alternating rows
+            "    background-color: #2a2a2a;"          // Dark gray for regular rows
+            "}"
             "QTableWidget::item:selected {"
             "    background-color: #0078d4;"// Blue selection background
             "    color: white;"
@@ -253,7 +263,6 @@ void Feature_Table_Widget::_setAdaptiveColumnWidths() {
         // Set Feature column to Stretch mode so it takes remaining space
         ui->available_features_table->horizontalHeader()->setSectionResizeMode(featureColumnIndex, QHeaderView::Stretch);
     }
-
 }
 
 void Feature_Table_Widget::populateTable() {
