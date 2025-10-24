@@ -185,9 +185,13 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
     // Set the widget in the cell
     ui->available_features_table->setCellWidget(row, col, centerWidget);
 
+    // DON'T call _updateRowAppearance here - will be called after sorting in populateTable
+
     // Connect the state change signal
-    connect(checkboxItem, &QCheckBox::stateChanged, [this, key, checkboxItem](int state) {
-        if (state == Qt::Checked) {
+    connect(checkboxItem, &QCheckBox::stateChanged, [this, key](int state) {
+        bool const isEnabled = (state == Qt::Checked);
+        
+        if (isEnabled) {
             // Feature is enabled
             _enabled_features.insert(key);
             emit addFeature(QString::fromStdString(key));
@@ -203,7 +207,93 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
 
             // We don't change selection when unchecked
         }
+        
+        // Find the current row for this feature (row may have changed due to sorting)
+        int currentRow = _findRowByFeatureName(QString::fromStdString(key));
+        if (currentRow != -1) {
+            _updateRowAppearance(currentRow, isEnabled);
+        }
     });
+}
+
+void Feature_Table_Widget::_updateRowAppearance(int row, bool enabled) {
+    // Define colors for enabled and disabled text
+    QColor const enabledColor(204, 204, 204);    // Normal text color (light gray)
+    QColor const disabledColor(100, 100, 100);   // Faded text color (darker gray)
+    
+    QColor const textColor = enabled ? enabledColor : disabledColor;
+    
+    // Update all items in this row (except the Enabled column which has a widget)
+    for (int col = 0; col < ui->available_features_table->columnCount(); ++col) {
+        QTableWidgetItem * item = ui->available_features_table->item(row, col);
+        if (item) {
+            item->setForeground(QBrush(textColor));
+        }
+    }
+}
+
+int Feature_Table_Widget::_findRowByFeatureName(QString const & featureName) {
+    // Find the Feature column index
+    int featureColumnIndex = -1;
+    for (int i = 0; i < _columns.size(); i++) {
+        if (_columns[i] == "Feature") {
+            featureColumnIndex = i;
+            break;
+        }
+    }
+    
+    if (featureColumnIndex == -1) {
+        return -1;
+    }
+    
+    // Search for the row with this feature name
+    for (int row = 0; row < ui->available_features_table->rowCount(); ++row) {
+        QTableWidgetItem * item = ui->available_features_table->item(row, featureColumnIndex);
+        if (item && item->text() == featureName) {
+            return row;
+        }
+    }
+    
+    return -1;
+}
+
+void Feature_Table_Widget::_updateAllRowAppearances() {
+    // Only apply graying out if the Enabled column is present
+    bool hasEnabledColumn = false;
+    for (int i = 0; i < _columns.size(); i++) {
+        if (_columns[i] == "Enabled") {
+            hasEnabledColumn = true;
+            break;
+        }
+    }
+    
+    if (!hasEnabledColumn) {
+        // No Enabled column - all rows should appear enabled
+        return;
+    }
+    
+    // Find the Feature column index
+    int featureColumnIndex = -1;
+    for (int i = 0; i < _columns.size(); i++) {
+        if (_columns[i] == "Feature") {
+            featureColumnIndex = i;
+            break;
+        }
+    }
+    
+    if (featureColumnIndex == -1) {
+        return;
+    }
+    
+    // Update appearance for all rows based on their enabled state
+    for (int row = 0; row < ui->available_features_table->rowCount(); ++row) {
+        QTableWidgetItem * featureItem = ui->available_features_table->item(row, featureColumnIndex);
+        if (featureItem) {
+            std::string const featureName = featureItem->text().toStdString();
+            bool const isEnabled = (_enabled_features.find(featureName) != _enabled_features.end());
+            _updateRowAppearance(row, isEnabled);
+        }
+    }
 }
 
 void Feature_Table_Widget::_setAdaptiveColumnWidths() {
@@ -317,6 +407,9 @@ void Feature_Table_Widget::populateTable() {
     if (featureColumnIndex != -1) {
         ui->available_features_table->sortItems(featureColumnIndex, Qt::AscendingOrder);
     }
+
+    // Update row appearances based on enabled state (must be after sorting)
+    _updateAllRowAppearances();
 
     // Set adaptive column widths based on content
     _setAdaptiveColumnWidths();

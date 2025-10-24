@@ -65,6 +65,11 @@ private:
     void _addFeatureElements(std::string const & key, int row, int col);
     void _addFeatureEnabled(std::string const & key, int row, int col);
 
+    // Row appearance management
+    void _updateRowAppearance(int row, bool enabled);
+    void _updateAllRowAppearances();
+    int _findRowByFeatureName(QString const & featureName);
+
     // Column width management
     void _setAdaptiveColumnWidths();
 
