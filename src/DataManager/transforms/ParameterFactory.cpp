@@ -63,6 +63,24 @@ void ParameterFactory::initializeDefaultSetters() {
     // =============== Analog Time Series ===============
     // ==================================================
 
+    // =============== Filter ===============
+    
+    // Register filter_specification as a special nested JSON object
+    registerParameterSetter("Filter", "filter_specification",
+        [](TransformParametersBase * param_obj, nlohmann::json const & json_value, DataManager *) -> bool {
+            auto * filterParams = static_cast<AnalogFilterParams *>(param_obj);
+            
+            try {
+                // Parse the filter specification from JSON
+                auto spec = FilterSpecification::fromJson(json_value);
+                filterParams->filter_specification = std::move(spec);
+                return true;
+            } catch (std::exception const& e) {
+                std::cerr << "Failed to parse filter specification: " << e.what() << std::endl;
+                return false;
+            }
+        });
+
     // =============== Threshold Event Detection ===============
 
     registerBasicParameter<ThresholdParams, double>(

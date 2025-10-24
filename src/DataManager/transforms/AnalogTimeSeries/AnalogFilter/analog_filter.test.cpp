@@ -2,11 +2,14 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
 #include "transforms/ParameterFactory.hpp"
+#include "transforms/TransformPipeline.hpp"
+#include "transforms/TransformRegistry.hpp"
 #include "utils/filter/FilterFactory.hpp"
 #include "utils/filter/IFilter.hpp"
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 
@@ -244,4 +247,407 @@ TEST_CASE("Data Transform: Filter Analog Time Series - New Interface Features", 
         REQUIRE(filtered_cheby2->getNumSamples() == num_samples);
         REQUIRE(filtered_rbj->getNumSamples() == num_samples);
     }
+}
+
+TEST_CASE("Data Transform: Filter Specification - Validation", "[transforms][analog_filter][specification]") {
+    SECTION("Valid Butterworth lowpass specification") {
+        FilterSpecification spec;
+        spec.family = FilterFamily::Butterworth;
+        spec.response = FilterResponse::Lowpass;
+        spec.order = 4;
+        spec.cutoff_hz = 10.0;
+        spec.sampling_rate_hz = 1000.0;
+        spec.zero_phase = false;
+        
+        REQUIRE(spec.isValid());
+        REQUIRE(spec.validate().empty());
+    }
+    
+    SECTION("Invalid order") {
+        FilterSpecification spec;
+        spec.order = 10;  // Too high
+        
+        auto errors = spec.validate();
+        REQUIRE_FALSE(errors.empty());
+        REQUIRE(errors[0].find("order") != std::string::npos);
+    }
+    
+    SECTION("Invalid sampling rate") {
+        FilterSpecification spec;
+        spec.sampling_rate_hz = -100.0;
+        
+        auto errors = spec.validate();
+        REQUIRE_FALSE(errors.empty());
+        REQUIRE(errors[0].find("Sampling rate") != std::string::npos);
+    }
+    
+    SECTION("Cutoff above Nyquist") {
+        FilterSpecification spec;
+        spec.cutoff_hz = 600.0;
+        spec.sampling_rate_hz = 1000.0;  // Nyquist = 500 Hz
+        
+        auto errors = spec.validate();
+        REQUIRE_FALSE(errors.empty());
+        REQUIRE(errors[0].find("Nyquist") != std::string::npos);
+    }
+    
+    SECTION("Invalid bandpass frequencies") {
+        FilterSpecification spec;
+        spec.response = FilterResponse::Bandpass;
+        spec.cutoff_low_hz = 50.0;
+        spec.cutoff_high_hz = 30.0;  // Low > High
+        spec.sampling_rate_hz = 1000.0;
+        
+        auto errors = spec.validate();
+        REQUIRE_FALSE(errors.empty());
+        REQUIRE(errors[0].find("Low cutoff") != std::string::npos);
+    }
+    
+    SECTION("Missing ripple for Chebyshev") {
+        FilterSpecification spec;
+        spec.family = FilterFamily::ChebyshevI;
+        spec.ripple_db = -1.0;  // Invalid
+        
+        auto errors = spec.validate();
+        REQUIRE_FALSE(errors.empty());
+        REQUIRE(errors[0].find("Ripple") != std::string::npos);
+    }
+    
+    SECTION("RBJ only supports bandstop") {
+        FilterSpecification spec;
+        spec.family = FilterFamily::RBJ;
+        spec.response = FilterResponse::Lowpass;  // Invalid for RBJ
+        
+        auto errors = spec.validate();
+        REQUIRE_FALSE(errors.empty());
+        REQUIRE(errors[0].find("RBJ") != std::string::npos);
+    }
+}
+
+TEST_CASE("Data Transform: Filter Specification - JSON Serialization", "[transforms][analog_filter][specification][json]") {
+    SECTION("Butterworth lowpass roundtrip") {
+        FilterSpecification spec;
+        spec.family = FilterFamily::Butterworth;
+        spec.response = FilterResponse::Lowpass;
+        spec.order = 4;
+        spec.cutoff_hz = 10.0;
+        spec.sampling_rate_hz = 1000.0;
+        spec.zero_phase = true;
+        
+        auto json = spec.toJson();
+        auto spec2 = FilterSpecification::fromJson(json);
+        
+        REQUIRE(spec2.family == spec.family);
+        REQUIRE(spec2.response == spec.response);
+        REQUIRE(spec2.order == spec.order);
+        REQUIRE(spec2.cutoff_hz == spec.cutoff_hz);
+        REQUIRE(spec2.sampling_rate_hz == spec.sampling_rate_hz);
+        REQUIRE(spec2.zero_phase == spec.zero_phase);
+    }
+    
+    SECTION("Chebyshev I bandpass roundtrip") {
+        FilterSpecification spec;
+        spec.family = FilterFamily::ChebyshevI;
+        spec.response = FilterResponse::Bandpass;
+        spec.order = 6;
+        spec.cutoff_low_hz = 5.0;
+        spec.cutoff_high_hz = 20.0;
+        spec.sampling_rate_hz = 100.0;
+        spec.ripple_db = 0.5;
+        spec.zero_phase = false;
+        
+        auto json = spec.toJson();
+        auto spec2 = FilterSpecification::fromJson(json);
+        
+        REQUIRE(spec2.family == spec.family);
+        REQUIRE(spec2.response == spec.response);
+        REQUIRE(spec2.order == spec.order);
+        REQUIRE(spec2.cutoff_low_hz == spec.cutoff_low_hz);
+        REQUIRE(spec2.cutoff_high_hz == spec.cutoff_high_hz);
+        REQUIRE(spec2.sampling_rate_hz == spec.sampling_rate_hz);
+        REQUIRE(spec2.ripple_db == spec.ripple_db);
+        REQUIRE(spec2.zero_phase == spec.zero_phase);
+    }
+    
+    SECTION("RBJ notch roundtrip") {
+        FilterSpecification spec;
+        spec.family = FilterFamily::RBJ;
+        spec.response = FilterResponse::Bandstop;
+        spec.cutoff_hz = 60.0;  // 60 Hz notch
+        spec.sampling_rate_hz = 1000.0;
+        spec.q_factor = 30.0;
+        spec.zero_phase = true;
+        
+        auto json = spec.toJson();
+        auto spec2 = FilterSpecification::fromJson(json);
+        
+        REQUIRE(spec2.family == spec.family);
+        REQUIRE(spec2.response == spec.response);
+        REQUIRE(spec2.cutoff_hz == spec.cutoff_hz);
+        REQUIRE(spec2.sampling_rate_hz == spec.sampling_rate_hz);
+        REQUIRE(spec2.q_factor == spec.q_factor);
+        REQUIRE(spec2.zero_phase == spec.zero_phase);
+    }
+    
+    SECTION("Invalid JSON missing required field") {
+        nlohmann::json json = {
+            {"filter_family", "butterworth"},
+            {"order", 4}
+            // Missing filter_response
+        };
+        
+        REQUIRE_THROWS_AS(FilterSpecification::fromJson(json), std::invalid_argument);
+    }
+    
+    SECTION("Invalid JSON unknown filter family") {
+        nlohmann::json json = {
+            {"filter_family", "unknown_filter"},
+            {"filter_response", "lowpass"},
+            {"order", 4},
+            {"cutoff_hz", 10.0},
+            {"sampling_rate_hz", 1000.0}
+        };
+        
+        REQUIRE_THROWS_AS(FilterSpecification::fromJson(json), std::invalid_argument);
+    }
+}
+
+TEST_CASE("Data Transform: Filter Specification - Filter Creation", "[transforms][analog_filter][specification]") {
+    // Create test data
+    std::vector<float> data;
+    std::vector<TimeFrameIndex> times;
+    const size_t num_samples = 1000;
+    
+    for (size_t i = 0; i < num_samples; ++i) {
+        times.push_back(TimeFrameIndex(i));
+        data.push_back(std::sin(2.0 * M_PI * 10.0 * i / 1000.0));  // 10 Hz signal
+    }
+    
+    auto series = std::make_shared<AnalogTimeSeries>(data, times);
+    
+    SECTION("Create and apply Butterworth lowpass") {
+        FilterSpecification spec;
+        spec.family = FilterFamily::Butterworth;
+        spec.response = FilterResponse::Lowpass;
+        spec.order = 4;
+        spec.cutoff_hz = 5.0;
+        spec.sampling_rate_hz = 1000.0;
+        spec.zero_phase = false;
+        
+        auto filter = spec.createFilter();
+        REQUIRE(filter);
+        REQUIRE(filter->getName().find("Butterworth") != std::string::npos);
+        
+        // Apply filter
+        auto params = AnalogFilterParams::withSpecification(spec);
+        auto filtered = filter_analog(series.get(), params);
+        REQUIRE(filtered);
+        REQUIRE(filtered->getNumSamples() == num_samples);
+    }
+    
+    SECTION("Create and apply Chebyshev II highpass") {
+        FilterSpecification spec;
+        spec.family = FilterFamily::ChebyshevII;
+        spec.response = FilterResponse::Highpass;
+        spec.order = 3;
+        spec.cutoff_hz = 20.0;
+        spec.sampling_rate_hz = 1000.0;
+        spec.ripple_db = 1.0;
+        spec.zero_phase = true;
+        
+        auto filter = spec.createFilter();
+        REQUIRE(filter);
+        REQUIRE(filter->getName().find("Chebyshev II") != std::string::npos);
+        
+        auto params = AnalogFilterParams::withSpecification(spec);
+        auto filtered = filter_analog(series.get(), params);
+        REQUIRE(filtered);
+        REQUIRE(filtered->getNumSamples() == num_samples);
+    }
+    
+    SECTION("Invalid specification throws on filter creation") {
+        FilterSpecification spec;
+        spec.order = 10;  // Invalid
+        
+        REQUIRE_THROWS_AS(spec.createFilter(), std::invalid_argument);
+    }
+}
+
+TEST_CASE("Data Transform: Filter - JSON Pipeline Integration", "[transforms][analog_filter][pipeline]") {
+    const nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "filter_step_1"},
+            {"transform_name", "Filter"},
+            {"input_key", "raw_signal"},
+            {"output_key", "filtered_signal"},
+            {"parameters", {
+                {"filter_specification", {
+                    {"filter_family", "butterworth"},
+                    {"filter_response", "lowpass"},
+                    {"order", 4},
+                    {"cutoff_hz", 10.0},
+                    {"sampling_rate_hz", 1000.0},
+                    {"zero_phase", true}
+                }}
+            }}
+        }}}
+    };
+    
+    DataManager dm;
+    TransformRegistry registry;
+    
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test signal
+    std::vector<float> data;
+    std::vector<TimeFrameIndex> times;
+    const size_t num_samples = 2000;
+    
+    for (size_t i = 0; i < num_samples; ++i) {
+        times.push_back(TimeFrameIndex(i));
+        // Signal with 5 Hz and 50 Hz components
+        data.push_back(std::sin(2.0 * M_PI * 5.0 * i / 1000.0) + 
+                      0.5f * std::sin(2.0 * M_PI * 50.0 * i / 1000.0));
+    }
+    
+    auto series = std::make_shared<AnalogTimeSeries>(data, times);
+    series->setTimeFrame(time_frame);
+    dm.setData("raw_signal", series, TimeKey("default"));
+    
+    TransformPipeline pipeline(&dm, &registry);
+    REQUIRE(pipeline.loadFromJson(json_config));
+    
+    auto result = pipeline.execute();
+    REQUIRE(result.success);
+    REQUIRE(result.steps_completed == 1);
+    
+    // Verify the filtered output
+    auto filtered_series = dm.getData<AnalogTimeSeries>("filtered_signal");
+    REQUIRE(filtered_series != nullptr);
+    REQUIRE(filtered_series->getNumSamples() == num_samples);
+    
+    // The 50 Hz component should be attenuated (cutoff at 10 Hz)
+    // Original signal: 1.0 amplitude at 5 Hz + 0.5 amplitude at 50 Hz
+    // After 10 Hz lowpass: 5 Hz should pass through, 50 Hz should be heavily attenuated
+    auto& filtered_data = filtered_series->getAnalogTimeSeries();
+    
+    // Check that the signal is dominated by the low frequency (5 Hz) component
+    // The filtered max amplitude should be close to the original 5 Hz component (1.0)
+    // and much less than the original combined signal (would be ~1.5)
+    float max_amplitude = 0.0f;
+    for (size_t i = 500; i < filtered_data.size(); ++i) {
+        max_amplitude = std::max(max_amplitude, std::abs(filtered_data[i]));
+    }
+    // With 10 Hz lowpass, the output should be dominated by the 5 Hz component
+    // Allow some tolerance for passband ripple and phase effects
+    REQUIRE(max_amplitude > 0.8f);  // 5 Hz component mostly preserved
+    REQUIRE(max_amplitude < 1.3f);  // 50 Hz component significantly attenuated
+}
+
+TEST_CASE("Data Transform: Filter - Multiple Filter Types in Pipeline", "[transforms][analog_filter][pipeline]") {
+    const nlohmann::json json_config = {
+        {"steps", {
+            {
+                {"step_id", "lowpass_filter"},
+                {"transform_name", "Filter"},
+                {"input_key", "raw_signal"},
+                {"output_key", "lowpass_signal"},
+                {"phase", 0},
+                {"parameters", {
+                    {"filter_specification", {
+                        {"filter_family", "butterworth"},
+                        {"filter_response", "lowpass"},
+                        {"order", 4},
+                        {"cutoff_hz", 50.0},
+                        {"sampling_rate_hz", 1000.0},
+                        {"zero_phase", false}
+                    }}
+                }}
+            },
+            {
+                {"step_id", "notch_filter"},
+                {"transform_name", "Filter"},
+                {"input_key", "lowpass_signal"},
+                {"output_key", "notch_signal"},
+                {"phase", 1},
+                {"parameters", {
+                    {"filter_specification", {
+                        {"filter_family", "rbj"},
+                        {"filter_response", "bandstop"},
+                        {"cutoff_hz", 60.0},
+                        {"sampling_rate_hz", 1000.0},
+                        {"q_factor", 30.0},
+                        {"zero_phase", true}
+                    }}
+                }}
+            }
+        }}
+    };
+    
+    DataManager dm;
+    TransformRegistry registry;
+    
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test signal with multiple frequency components
+    std::vector<float> data;
+    std::vector<TimeFrameIndex> times;
+    const size_t num_samples = 2000;
+    
+    for (size_t i = 0; i < num_samples; ++i) {
+        times.push_back(TimeFrameIndex(i));
+        data.push_back(
+            std::sin(2.0 * M_PI * 10.0 * i / 1000.0) +   // 10 Hz
+            std::sin(2.0 * M_PI * 60.0 * i / 1000.0) +   // 60 Hz (to be notched)
+            std::sin(2.0 * M_PI * 100.0 * i / 1000.0)    // 100 Hz (to be lowpassed)
+        );
+    }
+    
+    auto series = std::make_shared<AnalogTimeSeries>(data, times);
+    series->setTimeFrame(time_frame);
+    dm.setData("raw_signal", series, TimeKey("default"));
+    
+    TransformPipeline pipeline(&dm, &registry);
+    REQUIRE(pipeline.loadFromJson(json_config));
+    
+    auto result = pipeline.execute();
+    REQUIRE(result.success);
+    REQUIRE(result.steps_completed == 2);
+    
+    // Verify both outputs exist
+    auto lowpass_series = dm.getData<AnalogTimeSeries>("lowpass_signal");
+    REQUIRE(lowpass_series != nullptr);
+    
+    auto notch_series = dm.getData<AnalogTimeSeries>("notch_signal");
+    REQUIRE(notch_series != nullptr);
+    REQUIRE(notch_series->getNumSamples() == num_samples);
+}
+
+TEST_CASE("Data Transform: Filter - Invalid Specification in Pipeline", "[transforms][analog_filter][pipeline]") {
+    const nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "invalid_filter"},
+            {"transform_name", "Filter"},
+            {"input_key", "raw_signal"},
+            {"output_key", "filtered_signal"},
+            {"parameters", {
+                {"filter_specification", {
+                    {"filter_family", "butterworth"},
+                    {"filter_response", "lowpass"},
+                    {"order", 10},  // Invalid order
+                    {"cutoff_hz", 10.0},
+                    {"sampling_rate_hz", 1000.0}
+                }}
+            }}
+        }}}
+    };
+    
+    DataManager dm;
+    TransformRegistry registry;
+    
+    // The pipeline should fail to load due to invalid filter specification
+    TransformPipeline pipeline(&dm, &registry);
+    REQUIRE_FALSE(pipeline.loadFromJson(json_config));
 }

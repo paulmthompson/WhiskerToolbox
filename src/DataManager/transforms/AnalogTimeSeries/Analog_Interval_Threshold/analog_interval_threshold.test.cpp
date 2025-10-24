@@ -1217,7 +1217,7 @@ TEST_CASE("Data Transform: Analog Interval Threshold - load_data_from_json_confi
         "                \"output_key\": \"detected_intervals_absolute\",\n"
         "                \"parameters\": {\n"
         "                    \"threshold_value\": 1.3,\n"
-        "                    \"direction\": \"Absolute\",\n"
+        "                    \"direction\": \"Absolute (Magnitude)\",\n"
         "                    \"lockout_time\": 0.0,\n"
         "                    \"min_duration\": 0.0,\n"
         "                    \"missing_data_mode\": \"Ignore\"\n"

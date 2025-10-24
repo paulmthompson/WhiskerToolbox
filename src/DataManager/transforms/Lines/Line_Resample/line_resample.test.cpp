@@ -186,7 +186,7 @@ TEST_CASE("Data Transform: Line Resample - Error and Edge Cases", "[transforms][
 
 TEST_CASE("Data Transform: Line Resample - JSON pipeline", "[transforms][line_resample][json]") {
     nlohmann::json const json_config = {
-            {"steps", {{{"step_id", "resample_step_1"}, {"transform_name", "Resample Line"}, {"input_key", "TestLines.channel1"}, {"output_key", "ResampledLines"}, {"parameters", {{"algorithm", "FixedSpacing"}, {"target_spacing", 15.0}, {"epsilon", 2.0}}}}}}};
+            {"steps", {{{"step_id", "resample_step_1"}, {"transform_name", "Resample Line"}, {"input_key", "TestLines.channel1"}, {"output_key", "ResampledLines"}, {"parameters", {{"algorithm", "Fixed Spacing"}, {"target_spacing", 15.0}, {"epsilon", 2.0}}}}}}};
 
     DataManager dm;
     TransformRegistry registry;
@@ -297,7 +297,7 @@ TEST_CASE("Data Transform: Line Resample - load_data_from_json_config", "[transf
             "                \"input_key\": \"test_lines\",\n"
             "                \"output_key\": \"resampled_lines\",\n"
             "                \"parameters\": {\n"
-            "                    \"algorithm\": \"FixedSpacing\",\n"
+            "                    \"algorithm\": \"Fixed Spacing\",\n"
             "                    \"target_spacing\": 15.0,\n"
             "                    \"epsilon\": 2.0\n"
             "                }\n"

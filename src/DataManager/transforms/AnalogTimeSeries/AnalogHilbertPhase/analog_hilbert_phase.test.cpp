@@ -789,8 +789,8 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - JSON pipeline", "[transforms][
             {"input_key", "TestSignal.channel1"},
             {"output_key", "PhaseSignal"},
             {"parameters", {
-                {"low_frequency", 5.0},
-                {"high_frequency", 15.0},
+                {"filter_low_freq", 5.0},
+                {"filter_high_freq", 15.0},
                 {"discontinuity_threshold", 1000}
             }}
         }}}
@@ -912,8 +912,8 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - load_data_from_json_config", "
         "                \"input_key\": \"test_signal\",\n"
         "                \"output_key\": \"phase_signal\",\n"
         "                \"parameters\": {\n"
-        "                    \"low_frequency\": 5.0,\n"
-        "                    \"high_frequency\": 15.0,\n"
+        "                    \"filter_low_freq\": 5.0,\n"
+        "                    \"filter_high_freq\": 15.0,\n"
         "                    \"discontinuity_threshold\": 1000\n"
         "                }\n"
         "            }\n"
@@ -967,8 +967,8 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - load_data_from_json_config", "
         "                \"input_key\": \"test_signal\",\n"
         "                \"output_key\": \"phase_signal_wideband\",\n"
         "                \"parameters\": {\n"
-        "                    \"low_frequency\": 1.0,\n"
-        "                    \"high_frequency\": 50.0,\n"
+        "                    \"filter_low_freq\": 1.0,\n"
+        "                    \"filter_high_freq\": 50.0,\n"
         "                    \"discontinuity_threshold\": 1000\n"
         "                }\n"
         "            }\n"
@@ -1017,8 +1017,8 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - load_data_from_json_config", "
         "                \"input_key\": \"test_signal\",\n"
         "                \"output_key\": \"phase_signal_small_threshold\",\n"
         "                \"parameters\": {\n"
-        "                    \"low_frequency\": 5.0,\n"
-        "                    \"high_frequency\": 15.0,\n"
+        "                    \"filter_low_freq\": 5.0,\n"
+        "                    \"filter_high_freq\": 15.0,\n"
         "                    \"discontinuity_threshold\": 10\n"
         "                }\n"
         "            }\n"

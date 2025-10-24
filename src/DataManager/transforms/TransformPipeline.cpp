@@ -381,6 +381,21 @@ std::pair<bool, PipelineStep> TransformPipeline::parseStep(nlohmann::json const&
             }
         }
         
+        // Validate parameters by attempting to create them (only if operation exists)
+        if (!step.parameters.empty()) {
+            auto* operation = registry_->findOperationByName(step.transform_name);
+            if (operation) {
+                // Only validate if operation is registered
+                auto test_params = createParametersFromJson(step.transform_name, step.parameters);
+                if (!test_params) {
+                    std::cerr << "Step " << step_index << " (" << step.step_id 
+                              << "): Failed to create valid parameters" << std::endl;
+                    return {false, step};
+                }
+            }
+            // If operation not found, validation will happen later in the validate() method
+        }
+        
         return {true, step};
     } catch (std::exception const& e) {
         std::cerr << "Error parsing step " << step_index << ": " << e.what() << std::endl;
@@ -442,8 +457,9 @@ std::unique_ptr<TransformParametersBase> TransformPipeline::createParametersFrom
     // Set parameters from JSON
     for (auto const& [param_name, param_value] : param_json.items()) {
         if (!setParameterValue(parameters.get(), param_name, param_value, transform_name)) {
-            std::cerr << "Warning: Failed to set parameter '" << param_name 
+            std::cerr << "Error: Failed to set parameter '" << param_name 
                       << "' for transform '" << transform_name << "'" << std::endl;
+            return nullptr;  // Fail the pipeline loading if parameter setting fails
         }
     }
     

@@ -5,18 +5,111 @@
 #include "utils/filter/FilterFactory.hpp"
 #include "utils/filter/IFilter.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <typeindex>
+#include <vector>
 
 class AnalogTimeSeries;
+
+/**
+ * @brief Enumeration of supported filter families
+ */
+enum class FilterFamily {
+    Butterworth,
+    ChebyshevI,
+    ChebyshevII,
+    RBJ
+};
+
+/**
+ * @brief Enumeration of supported filter responses
+ */
+enum class FilterResponse {
+    Lowpass,
+    Highpass,
+    Bandpass,
+    Bandstop
+};
+
+/**
+ * @brief Complete specification for creating a filter
+ * 
+ * This structure stores all parameters needed to create a filter and can be
+ * serialized to/from JSON for pipeline configuration.
+ */
+struct FilterSpecification {
+    FilterFamily family = FilterFamily::Butterworth;
+    FilterResponse response = FilterResponse::Lowpass;
+    int order = 4;
+    double cutoff_hz = 10.0;                    // For lowpass/highpass
+    double cutoff_low_hz = 5.0;                 // For bandpass/bandstop
+    double cutoff_high_hz = 15.0;               // For bandpass/bandstop
+    double sampling_rate_hz = 1000.0;
+    bool zero_phase = false;
+    double ripple_db = 0.5;                     // For Chebyshev filters
+    double q_factor = 10.0;                     // For RBJ filters
+    
+    /**
+     * @brief Validate the filter specification
+     * 
+     * @return std::vector<std::string> List of validation errors (empty if valid)
+     */
+    [[nodiscard]] std::vector<std::string> validate() const;
+    
+    /**
+     * @brief Check if the specification is valid
+     * 
+     * @return true if valid, false otherwise
+     */
+    [[nodiscard]] bool isValid() const {
+        return validate().empty();
+    }
+    
+    /**
+     * @brief Create a filter from this specification
+     * 
+     * @return std::unique_ptr<IFilter> Created filter instance
+     * @throws std::invalid_argument if specification is invalid
+     */
+    [[nodiscard]] std::unique_ptr<IFilter> createFilter() const;
+    
+    /**
+     * @brief Convert specification to JSON
+     * 
+     * @return nlohmann::json JSON representation
+     */
+    [[nodiscard]] nlohmann::json toJson() const;
+    
+    /**
+     * @brief Create specification from JSON
+     * 
+     * @param json JSON object
+     * @return FilterSpecification Created specification
+     * @throws std::invalid_argument if JSON is malformed
+     */
+    static FilterSpecification fromJson(nlohmann::json const& json);
+    
+    /**
+     * @brief Get a descriptive name for this filter configuration
+     * 
+     * @return std::string Human-readable filter description
+     */
+    [[nodiscard]] std::string getName() const;
+};
 
 /**
  * @brief Modern parameters for filtering analog time series data
  * 
  * This structure uses the new modular filter interface for efficient
- * and flexible filter configuration.
+ * and flexible filter configuration. Supports three modes:
+ * 1. Direct filter instance (for programmatic use)
+ * 2. Factory function (for deferred creation)
+ * 3. Filter specification (for JSON serialization/deserialization)
  */
 struct AnalogFilterParams : public TransformParametersBase {
     // Primary approach: Use a pre-created filter instance
@@ -24,6 +117,9 @@ struct AnalogFilterParams : public TransformParametersBase {
     
     // Alternative: Use a factory function to create the filter when needed
     std::function<std::unique_ptr<IFilter>()> filter_factory;
+    
+    // JSON-compatible approach: Use a filter specification
+    std::optional<FilterSpecification> filter_specification;
     
     /**
      * @brief Create parameters with a pre-created filter instance
@@ -40,6 +136,15 @@ struct AnalogFilterParams : public TransformParametersBase {
     static AnalogFilterParams withFactory(std::function<std::unique_ptr<IFilter>()> factory) {
         AnalogFilterParams params;
         params.filter_factory = std::move(factory);
+        return params;
+    }
+    
+    /**
+     * @brief Create parameters with a filter specification (for JSON pipelines)
+     */
+    static AnalogFilterParams withSpecification(FilterSpecification spec) {
+        AnalogFilterParams params;
+        params.filter_specification = std::move(spec);
         return params;
     }
     
@@ -75,7 +180,8 @@ struct AnalogFilterParams : public TransformParametersBase {
      * @brief Check if parameters are valid
      */
     [[nodiscard]] bool isValid() const {
-        return filter_instance != nullptr || filter_factory != nullptr;
+        return filter_instance != nullptr || filter_factory != nullptr || 
+               (filter_specification.has_value() && filter_specification->isValid());
     }
     
     /**
@@ -84,6 +190,8 @@ struct AnalogFilterParams : public TransformParametersBase {
     [[nodiscard]] std::string getFilterName() const {
         if (filter_instance) {
             return filter_instance->getName();
+        } else if (filter_specification.has_value()) {
+            return filter_specification->getName();
         } else if (filter_factory) {
             // For factory functions, we can try to create a temporary instance to get the name
             try {
