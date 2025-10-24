@@ -65,6 +65,9 @@ private:
     void _addFeatureElements(std::string const & key, int row, int col);
     void _addFeatureEnabled(std::string const & key, int row, int col);
 
+    // Column width management
+    void _setAdaptiveColumnWidths();
+
     // State management methods
     void _saveCurrentState();
     void _restoreState();
