@@ -61,6 +61,9 @@ signals:
     void removeFeature(std::string const & feature);
     void colorChangeFeatures(std::vector<std::string> const & features, std::string const & hex_color);
 
+protected:
+    void resizeEvent(QResizeEvent * event) override;
+
 private slots:
     void _itemSelected(QTreeWidgetItem * item, int column);
     void _itemChanged(QTreeWidgetItem * item, int column);
@@ -88,6 +91,7 @@ private:
     std::string _grouping_pattern = "(.+)_\\d+$";// Default pattern: name_number
     std::vector<DM_DataType> _type_filters;
     bool _organize_by_datatype = true;
+    bool _is_resizing = false;// Guard to prevent infinite resize loops
 
     // Maps feature keys to their tree items
     std::unordered_map<std::string, QTreeWidgetItem *> _feature_items;
@@ -119,6 +123,13 @@ private:
     void _updateParentState(QTreeWidgetItem * child, int column);
     QTreeWidgetItem * _getOrCreateDataTypeItem(DM_DataType dataType);
     std::string _getDataTypeGroupName(DM_DataType dataType);
+    
+    // Column width management
+    void _setAdaptiveColumnWidths();
+    
+    // Row appearance management
+    void _updateItemAppearance(QTreeWidgetItem * item, bool enabled);
+    void _updateAllItemAppearances();
 
     // State management methods
     void _saveCurrentState();

@@ -59,6 +59,11 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     connect(ui->csv_interval_saver_widget, &CSVIntervalSaver_Widget::saveIntervalCSVRequested,
             this, &DigitalIntervalSeries_Widget::_handleSaveIntervalCSVRequested);
 
+    // Setup collapsible export section
+    ui->export_section->autoSetContentLayout();
+    ui->export_section->setTitle("Export Options");
+    ui->export_section->toggle(false);// Start collapsed
+
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
 
     // Set initial filename

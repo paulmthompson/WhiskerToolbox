@@ -26,6 +26,11 @@ AnalogTimeSeries_Widget::AnalogTimeSeries_Widget(std::shared_ptr<DataManager> da
     connect(ui->csv_analog_saver_widget, &CSVAnalogSaver_Widget::saveAnalogCSVRequested,
             this, &AnalogTimeSeries_Widget::_handleSaveAnalogCSVRequested);
 
+    // Setup collapsible export section
+    ui->export_section->autoSetContentLayout();
+    ui->export_section->setTitle("Export Options");
+    ui->export_section->toggle(false);// Start collapsed
+
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
 }
 

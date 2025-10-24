@@ -20,17 +20,52 @@ Feature_Tree_Widget::Feature_Tree_Widget(QWidget * parent)
     ui->treeWidget->setColumnCount(3);
     ui->treeWidget->setHeaderLabels(QStringList() << "Feature" << "Enabled" << "Color");
     
-    // Set column resize modes: Feature column stretches, others are fixed
-    ui->treeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
-    ui->treeWidget->header()->setSectionResizeMode(1, QHeaderView::Fixed);
-    ui->treeWidget->header()->setSectionResizeMode(2, QHeaderView::Fixed);
+    // Disable horizontal scrollbar
+    ui->treeWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
-    // Set fixed widths for checkbox and color columns
-    ui->treeWidget->setColumnWidth(1, 60);  // "Enabled" checkbox column
-    ui->treeWidget->setColumnWidth(2, 50);  // "Color" column
+    // Set all columns to Interactive initially - we'll manage widths manually
+    ui->treeWidget->header()->setSectionResizeMode(0, QHeaderView::Interactive);
+    ui->treeWidget->header()->setSectionResizeMode(1, QHeaderView::Interactive);
+    ui->treeWidget->header()->setSectionResizeMode(2, QHeaderView::Interactive);
     
     ui->treeWidget->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->treeWidget->setSortingEnabled(true);
+    
+    // Enable alternating row colors
+    ui->treeWidget->setAlternatingRowColors(true);
+    
+    // Apply dark mode compatible styling for alternating rows and selection
+    ui->treeWidget->setStyleSheet(
+            "QTreeWidget {"
+            "    gridline-color: transparent;"
+            "    alternate-background-color: #313131;"
+            "    background-color: #2a2a2a;"
+            "}"
+            "QTreeWidget::item:selected {"
+            "    background-color: #0078d4;"
+            "    color: white;"
+            "}"
+            "QTreeWidget::item:selected:focus {"
+            "    background-color: #106ebe;"
+            "    color: white;"
+            "}"
+            "QCheckBox {"
+            "    background-color: transparent;"
+            "    color: white;"
+            "    spacing: 0px;"
+            "}"
+            "QCheckBox::indicator {"
+            "    width: 12px;"
+            "    height: 12px;"
+            "    border-radius: 2px;"
+            "    border: 1px solid #ffffff;"
+            "}"
+            "QCheckBox::indicator:unchecked {"
+            "    background-color: #2a2a2a;"
+            "}"
+            "QCheckBox::indicator:checked {"
+            "    background-color: #ffffff;"
+            "}");
 
     // Connect signals
     connect(ui->treeWidget, &QTreeWidget::itemClicked, this, &Feature_Tree_Widget::_itemSelected);
@@ -159,6 +194,22 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
                 emit removeFeature(key);
             }
         }
+        
+        // Update the appearance of the item and its children based on enabled state
+        _updateItemAppearance(item, enabled);
+        
+        // If it's a group, update all children appearances
+        if (_features[key].isGroup || _features[key].isDataTypeGroup) {
+            std::function<void(QTreeWidgetItem *)> updateChildren = [&](QTreeWidgetItem * parent) {
+                for (int i = 0; i < parent->childCount(); ++i) {
+                    QTreeWidgetItem * child = parent->child(i);
+                    bool childEnabled = (child->checkState(1) == Qt::Checked);
+                    _updateItemAppearance(child, childEnabled);
+                    updateChildren(child);
+                }
+            };
+            updateChildren(item);
+        }
     }
 }
 
@@ -179,6 +230,13 @@ void Feature_Tree_Widget::_refreshFeatures() {
 
     // Restore state after rebuilding
     _restoreState();
+    
+    // Update all item appearances based on enabled state
+    _updateAllItemAppearances();
+    
+    // Set adaptive column widths after tree is populated
+    _setAdaptiveColumnWidths();
+    
     _is_rebuilding = false;// End guard
 }
 
@@ -545,6 +603,91 @@ std::string Feature_Tree_Widget::getSelectedFeature() const {
     return item->text(0).toStdString();
 }
 
+void Feature_Tree_Widget::_setAdaptiveColumnWidths() {
+    if (!ui->treeWidget || ui->treeWidget->columnCount() == 0) {
+        return;
+    }
+
+    // Get the viewport width (this automatically accounts for scrollbar if present)
+    int const viewportWidth = ui->treeWidget->viewport()->width();
+    int const numColumns = ui->treeWidget->columnCount();
+
+    // Calculate the maximum content width for each column
+    QFontMetrics const fm(ui->treeWidget->font());
+    QFontMetrics const headerFm(ui->treeWidget->header()->font());
+
+    // Track total width used by non-Feature columns
+    int totalFixedWidth = 0;
+    int featureColumnIndex = 0; // Feature column is column 0
+
+    // Set widths for columns 1 and 2 (Enabled and Color)
+    for (int col = 1; col < numColumns; ++col) {
+        int maxWidth = 0;
+
+        // Get header width
+        QString const headerText = ui->treeWidget->headerItem()->text(col);
+        int const headerWidth = headerFm.horizontalAdvance(headerText) + 20; // +20 for padding
+        maxWidth = std::max(maxWidth, headerWidth);
+
+        // Get content width - need to iterate through all items
+        QTreeWidgetItemIterator it(ui->treeWidget);
+        while (*it) {
+            QString const cellText = (*it)->text(col);
+            int const cellWidth = fm.horizontalAdvance(cellText) + 20; // +20 for padding
+            maxWidth = std::max(maxWidth, cellWidth);
+            ++it;
+        }
+
+        // Set fixed width for this column
+        ui->treeWidget->setColumnWidth(col, maxWidth);
+        totalFixedWidth += maxWidth;
+    }
+
+    // Give "Feature" column (column 0) all remaining space
+    int const featureColumnWidth = std::max(100, viewportWidth - totalFixedWidth);
+    ui->treeWidget->setColumnWidth(featureColumnIndex, featureColumnWidth);
+}
+
+void Feature_Tree_Widget::_updateItemAppearance(QTreeWidgetItem * item, bool enabled) {
+    if (!item) {
+        return;
+    }
+
+    // Define colors for enabled and disabled text
+    QColor const enabledColor(204, 204, 204);    // Normal text color (light gray)
+    QColor const disabledColor(100, 100, 100);   // Faded text color (darker gray)
+    
+    QColor const textColor = enabled ? enabledColor : disabledColor;
+    
+    // Update all columns in this item
+    for (int col = 0; col < ui->treeWidget->columnCount(); ++col) {
+        item->setForeground(col, QBrush(textColor));
+    }
+}
+
+void Feature_Tree_Widget::_updateAllItemAppearances() {
+    // Recursively update all items in the tree
+    std::function<void(QTreeWidgetItem *)> updateItem = [&](QTreeWidgetItem * item) {
+        if (!item) {
+            return;
+        }
+
+        // Get the enabled state for this item
+        bool const enabled = (item->checkState(1) == Qt::Checked);
+        _updateItemAppearance(item, enabled);
+
+        // Update all children
+        for (int i = 0; i < item->childCount(); ++i) {
+            updateItem(item->child(i));
+        }
+    };
+
+    // Update all top-level items and their children
+    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
+        updateItem(ui->treeWidget->topLevelItem(i));
+    }
+}
+
 void Feature_Tree_Widget::_saveCurrentState() {
     // Clear previous state
     _enabled_features.clear();
@@ -626,4 +769,21 @@ void Feature_Tree_Widget::_restoreState() {
 
     // Unblock signals after restoration is complete
     ui->treeWidget->blockSignals(false);
+}
+
+void Feature_Tree_Widget::resizeEvent(QResizeEvent * event) {
+    QWidget::resizeEvent(event);
+
+    if (_is_resizing) {
+        return;// Prevent infinite resize loops
+    }
+
+    _is_resizing = true;
+
+    // Only recalculate if the tree has items
+    if (ui->treeWidget && ui->treeWidget->topLevelItemCount() > 0) {
+        _setAdaptiveColumnWidths();
+    }
+
+    _is_resizing = false;
 }
