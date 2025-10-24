@@ -123,14 +123,6 @@ private slots:
      * @param pos Global position where the context menu should appear
      */
     void _showContextMenu(QPoint const & pos);
-
-    /**
-     * @brief Get the feature name at the specified position in the feature table
-     * 
-     * @param pos Global position to check
-     * @return QString containing the feature name, or empty string if no feature found
-     */
-    QString _getFeatureAtPosition(QPoint const & pos) const;
 };
 
 
