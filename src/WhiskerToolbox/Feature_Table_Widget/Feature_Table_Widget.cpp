@@ -110,7 +110,23 @@ void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int
     }
 
     std::string const type = convert_data_type_to_string(_data_manager->getType(key));
-    auto * item = new QTableWidgetItem(QString::fromStdString(type));
+
+    // Apply custom type name filters
+    std::string displayType = type;
+    if (type == "video") {
+        displayType = "Video";
+    } else if (type == "digital_interval") {
+        displayType = "Intervals";
+    } else if (type == "analog") {
+        displayType = "Analog";
+    } else if (type == "digital_events") {
+        displayType = "Events";
+    } else if (type == "images") {
+        displayType = "Images";
+    }
+    // If no match, displayType remains as the original type string
+
+    auto * item = new QTableWidgetItem(QString::fromStdString(displayType));
     item->setTextAlignment(Qt::AlignCenter);
     ui->available_features_table->setItem(row, col, item);
 }
@@ -185,15 +201,9 @@ void Feature_Table_Widget::_setAdaptiveColumnWidths() {
         return;
     }
 
-    std::cout << "=== _setAdaptiveColumnWidths called ===" << std::endl;
-
     // Get the viewport width (this automatically accounts for scrollbar if present)
     int const tableWidth = ui->available_features_table->viewport()->width();
     int const numColumns = ui->available_features_table->columnCount();
-
-    std::cout << "Viewport width: " << tableWidth << ", Num columns: " << numColumns << std::endl;
-    std::cout << "Scrollbar visible: " << (ui->available_features_table->verticalScrollBar()->isVisible() ? "yes" : "no") << std::endl;
-
     // Calculate the maximum content width for each column
     QFontMetrics const fm(ui->available_features_table->font());
     QFontMetrics const headerFm(ui->available_features_table->horizontalHeader()->font());
@@ -205,13 +215,10 @@ void Feature_Table_Widget::_setAdaptiveColumnWidths() {
     // First pass: set widths for all columns except "Feature"
     for (int col = 0; col < numColumns; ++col) {
         QString const columnName = _columns[col];
-        
-        std::cout << "Processing column " << col << ": " << columnName.toStdString() << std::endl;
-        
+
         // Skip "Feature" column for now - it will get the remainder
         if (columnName == "Feature") {
             featureColumnIndex = col;
-            std::cout << "  -> Skipping Feature column (will set to Stretch)" << std::endl;
             continue;
         }
 
@@ -219,10 +226,8 @@ void Feature_Table_Widget::_setAdaptiveColumnWidths() {
 
         // Check header width
         QString const headerText = ui->available_features_table->horizontalHeaderItem(col)->text();
-        int const headerWidth = headerFm.horizontalAdvance(headerText) + 20; // 20px padding
+        int const headerWidth = headerFm.horizontalAdvance(headerText) + 20;// 20px padding
         maxWidth = std::max(maxWidth, headerWidth);
-
-        std::cout << "  Header width: " << headerWidth << std::endl;
 
         // For columns like "Type" and "Clock", also check cell content widths
         if (columnName == "Type" || columnName == "Clock") {
@@ -230,11 +235,10 @@ void Feature_Table_Widget::_setAdaptiveColumnWidths() {
                 QTableWidgetItem * item = ui->available_features_table->item(row, col);
                 if (item) {
                     QString const text = item->text();
-                    int const textWidth = fm.horizontalAdvance(text) + 20; // 20px padding
+                    int const textWidth = fm.horizontalAdvance(text) + 20;// 20px padding
                     maxWidth = std::max(maxWidth, textWidth);
                 }
             }
-            std::cout << "  Max content width: " << maxWidth << std::endl;
         }
 
         // IMPORTANT: Set resize mode to Fixed FIRST, then set the width
@@ -242,19 +246,14 @@ void Feature_Table_Widget::_setAdaptiveColumnWidths() {
         ui->available_features_table->horizontalHeader()->setSectionResizeMode(col, QHeaderView::Fixed);
         ui->available_features_table->horizontalHeader()->resizeSection(col, maxWidth);
         totalFixedWidth += maxWidth;
-        
-        std::cout << "  -> Set to Fixed width: " << maxWidth << std::endl;
     }
 
     // Second pass: give "Feature" column all remaining space
     if (featureColumnIndex != -1) {
         // Set Feature column to Stretch mode so it takes remaining space
         ui->available_features_table->horizontalHeader()->setSectionResizeMode(featureColumnIndex, QHeaderView::Stretch);
-        std::cout << "Feature column (index " << featureColumnIndex << ") set to Stretch mode" << std::endl;
-        std::cout << "Total fixed width: " << totalFixedWidth << ", Remaining for Feature: " << (tableWidth - totalFixedWidth) << std::endl;
     }
-    
-    std::cout << "=== End _setAdaptiveColumnWidths ===" << std::endl;
+
 }
 
 void Feature_Table_Widget::populateTable() {
@@ -395,7 +394,7 @@ void Feature_Table_Widget::resizeEvent(QResizeEvent * event) {
     int headerHeight = ui->available_features_table->horizontalHeader()->height();
     int visibleRows = std::min(ui->available_features_table->rowCount(), MAX_VISIBLE_ROWS);
     int totalHeight = (rowHeight * visibleRows) + headerHeight;
-    
+
     // Set table height
     ui->available_features_table->setMinimumHeight(totalHeight);
     ui->available_features_table->setMaximumHeight(totalHeight);
