@@ -84,6 +84,9 @@ private:
     // Audio support
     std::vector<AudioSource> _audio_sources;
 
+    // Frame tracking to prevent duplicate writes
+    int64_t _last_written_frame{-1};
+
 private slots:
     void _exportVideo();
     void _handleCanvasUpdated(QImage const & canvasImage);
@@ -108,6 +111,7 @@ private:
     std::vector<float> _generateClickAudio(float duration_seconds, int sample_rate, double click_duration) const;
     std::vector<float> _convertEventsToAudioTrack(int start_frame, int end_frame, int video_fps, int audio_sample_rate) const;
     void _writeAudioFile(std::string const & audio_filename, std::vector<float> const & audio_data, int sample_rate) const;
+
 };
 
 

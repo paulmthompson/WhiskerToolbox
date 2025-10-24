@@ -9,7 +9,7 @@ if(ENABLE_FFMPEG)
     FetchContent_Declare(
       ffmpeg_wrapper
       GIT_REPOSITORY https://github.com/paulmthompson/ffmpeg_wrapper.git
-      GIT_TAG 6ac8ba7760b718c882faa969eccecbf35e507ece
+      GIT_TAG b9214faca9333caf2914b7243a0424df0724687b
     )
 endif()
 

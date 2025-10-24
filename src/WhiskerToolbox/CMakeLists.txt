@@ -322,6 +322,7 @@ target_link_libraries(WhiskerToolbox PRIVATE LAPACK::LAPACK)
 target_link_libraries(WhiskerToolbox PRIVATE OpenBLAS::OpenBLAS)
 
 target_link_libraries(WhiskerToolbox PRIVATE qt6advanceddocking)
+target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_compile_definitions(WhiskerToolbox PRIVATE _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH)
 

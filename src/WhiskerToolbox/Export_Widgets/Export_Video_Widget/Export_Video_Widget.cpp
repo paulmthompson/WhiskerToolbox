@@ -20,6 +20,7 @@
 #include <QPainter>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#include "ffmpeg_wrapper/videoencoder.h"
 
 #include <filesystem>
 #include <fstream>
@@ -77,7 +78,7 @@ Export_Video_Widget::Export_Video_Widget(
 
     // Initialize media widget selection
     _updateMediaWidgetComboBox();
-    
+
     // Connect to media manager signals
     connect(_media_manager, &MediaWidgetManager::mediaWidgetCreated, this, &Export_Video_Widget::_updateMediaWidgetComboBox);
     connect(_media_manager, &MediaWidgetManager::mediaWidgetRemoved, this, &Export_Video_Widget::_updateMediaWidgetComboBox);
@@ -108,6 +109,10 @@ void Export_Video_Widget::_exportVideo() {
     if (!std::regex_match(filename, std::regex(".*\\.mp4"))) {
         filename += ".mp4";
     }
+
+
+    // Reset frame tracking
+    _last_written_frame = -1;
 
     // Get configured output dimensions
     int output_width = ui->output_width_spinbox->value();
@@ -252,16 +257,46 @@ void Export_Video_Widget::_exportVideo() {
 
         std::cout << "Audio track: " << title_samples << " title samples + " << content_audio.size() << " content samples = " << total_samples << " total samples" << std::endl;
 
-        // Generate audio filename based on video filename
+        // Generate temporary filenames
+        std::string video_only_filename = filename;
         std::string audio_filename = filename;
-        size_t last_dot = audio_filename.find_last_of('.');
+        std::string final_filename = filename;
+
+        size_t last_dot = filename.find_last_of('.');
         if (last_dot != std::string::npos) {
-            audio_filename = audio_filename.substr(0, last_dot) + "_audio.wav";
+            std::string base = filename.substr(0, last_dot);
+            video_only_filename = base + "_video_only.mp4";
+            audio_filename = base + "_audio.wav";
+            final_filename = filename; // Keep the original filename for the final output
         } else {
-            audio_filename += "_audio.wav";
+            video_only_filename = filename + "_video_only.mp4";
+            audio_filename = filename + "_audio.wav";
+            final_filename = filename + ".mp4";
         }
 
+        // Rename the video-only file
+        std::filesystem::rename(filename, video_only_filename);
+
+        // Write the audio file
         _writeAudioFile(audio_filename, audio_track, audio_sample_rate);
+
+        // Use FFmpeg libraries to combine video and audio
+        std::cout << "Combining video and audio streams..." << std::endl;
+
+        bool success = ffmpeg_wrapper::mux_video_and_audio(video_only_filename, audio_filename, final_filename, video_fps);
+
+        if (success) {
+            std::cout << "Successfully combined video and audio into: " << final_filename << std::endl;
+
+            // Clean up temporary files
+            std::filesystem::remove(video_only_filename);
+            std::filesystem::remove(audio_filename);
+            std::cout << "Cleaned up temporary files" << std::endl;
+        } else {
+            std::cerr << "Failed to combine video and audio. Temporary files preserved:" << std::endl;
+            std::cerr << "  Video: " << video_only_filename << std::endl;
+            std::cerr << "  Audio: " << audio_filename << std::endl;
+        }
     }
 
     std::cout << "Video export completed: " << filename << std::endl;
@@ -269,7 +304,16 @@ void Export_Video_Widget::_exportVideo() {
 
 void Export_Video_Widget::_handleCanvasUpdated(QImage const & canvasImage) {
     auto current_time = _data_manager->getCurrentTime();
+
+    // Prevent duplicate frames - only write if this is a new frame
+    if (current_time == _last_written_frame) {
+        std::cout << "Skipping duplicate frame " << current_time << std::endl;
+        return;
+    }
+
     std::cout << "Saving frame " << current_time << std::endl;
+    _last_written_frame = current_time;
+
 
     // Resize canvas image to output dimensions
     int output_width = ui->output_width_spinbox->value();
@@ -421,9 +465,9 @@ void Export_Video_Widget::_updateDurationEstimate() {
                                         .arg(_video_sequences.size());
             } else {
                 duration_text = QString("Estimated Duration: %1 seconds (%2 frames, %3 sequences)")
-                                        .arg(duration_seconds, 0, 'f', 1)
-                                        .arg(total_frames)
-                                        .arg(_video_sequences.size());
+                .arg(duration_seconds, 0, 'f', 1)
+                        .arg(total_frames)
+                        .arg(_video_sequences.size());
             }
 
             ui->duration_estimate_label->setText(duration_text);
@@ -464,8 +508,8 @@ void Export_Video_Widget::_updateDurationEstimate() {
                                         .arg(total_frames);
             } else {
                 duration_text = QString("Estimated Duration: %1 seconds (%2 frames)")
-                                        .arg(duration_seconds, 0, 'f', 1)
-                                        .arg(total_frames);
+                .arg(duration_seconds, 0, 'f', 1)
+                        .arg(total_frames);
             }
 
             ui->duration_estimate_label->setText(duration_text);
@@ -631,7 +675,7 @@ std::vector<float> Export_Video_Widget::_generateClickAudio(float duration_secon
 
 std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_frame, int end_frame, int video_fps, int audio_sample_rate) const {
     // Calculate total duration in seconds
-    float duration_seconds = static_cast<float>(end_frame - start_frame) / static_cast<float>(video_fps);
+    float duration_seconds = static_cast<float>(end_frame - start_frame + 1) / static_cast<float>(video_fps);
     int total_samples = static_cast<int>(duration_seconds * audio_sample_rate);
 
     std::vector<float> audio_track(total_samples, 0.0f);
@@ -670,21 +714,42 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
         } else {
             // Different time frames - let the series handle conversion
             events_with_ids = series->getEventsWithIdsInRange(
-                start_index, end_index,
-                master_time_frame.get(),
-                series_time_frame.get()
-            );
+                    start_index, end_index,
+                    master_time_frame.get(),
+                    series_time_frame.get()
+                    );
         }
 
         std::cout << "Processing " << events_with_ids.size() << " events from series " << audio_source.key << std::endl;
 
         // Generate click sounds for each event
         for (auto const & event_with_id: events_with_ids) {
-            float event_time = event_with_id.event_time;
+            // Event time represents a TimeFrameIndex in the series' time frame
+            float event_time_in_series_frame = event_with_id.event_time;
+            TimeFrameIndex event_index_in_series(static_cast<int64_t>(event_time_in_series_frame));
 
-            // Convert event time (in frames) to relative time in seconds
-            float relative_time = (event_time - static_cast<float>(start_frame)) / static_cast<float>(video_fps);
-            int sample_index = static_cast<int>(relative_time * audio_sample_rate);
+            // Convert event index from series time frame to master/video time frame index
+            TimeFrameIndex event_index_in_master{0};
+            if (series_time_frame.get() == master_time_frame.get()) {
+                // Same time frame - use index directly
+                event_index_in_master = event_index_in_series;
+            } else {
+                // Different time frames - convert index from series to master
+                // Get the time value at this index in the series time frame
+                int time_value_in_series = series_time_frame->getTimeAtIndex(event_index_in_series);
+
+                // Find the corresponding index in the master time frame with that time value
+                event_index_in_master = master_time_frame->getIndexAtTime(static_cast<float>(time_value_in_series), false);
+            }
+
+            // Now convert from master frame index to audio sample index
+            // Calculate relative position within the exported frame range (0.0 to 1.0)
+            int64_t master_frame_value = event_index_in_master.getValue();
+            float relative_position = static_cast<float>(master_frame_value - start_frame) /
+                                      static_cast<float>(end_frame - start_frame);
+
+            // Map relative position to audio sample index
+            int sample_index = static_cast<int>(relative_position * static_cast<float>(total_samples));
 
             if (sample_index >= 0 && sample_index < total_samples) {
                 // Generate click audio
@@ -789,7 +854,7 @@ void Export_Video_Widget::_updateMediaWidgetComboBox() {
 
     ui->media_widget_combobox->clear();
     auto widget_ids = _media_manager->getMediaWidgetIds();
-    
+
     for (const auto& id : widget_ids) {
         ui->media_widget_combobox->addItem(QString::fromStdString(id), QString::fromStdString(id));
     }
@@ -808,6 +873,6 @@ void Export_Video_Widget::_onMediaWidgetSelectionChanged() {
 
     QString selected = ui->media_widget_combobox->currentData().toString();
     _selected_media_widget_id = selected.toStdString();
-    
+
     std::cout << "Selected media widget for export: " << _selected_media_widget_id << std::endl;
 }
