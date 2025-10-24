@@ -376,8 +376,19 @@ private:
     std::unique_ptr<EntityGroupManager> _entity_group_manager;
 };
 
+/**
+ * @brief Progress callback function type for JSON config loading
+ * @param current Current item index (0-based)
+ * @param total Total number of items to load
+ * @param message Description of current operation (e.g., "Loading points from file.json")
+ * @return true to continue loading, false to cancel
+ */
+using JsonLoadProgressCallback = std::function<bool(int current, int total, std::string const & message)>;
+
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
+std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath, JsonLoadProgressCallback progress_callback);
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::filesystem::path const & base_path);
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::filesystem::path const & base_path, JsonLoadProgressCallback progress_callback);
 
 std::string convert_data_type_to_string(DM_DataType type);
 

@@ -522,10 +522,29 @@ DM_DataType stringToDataType(std::string const & data_type_str) {
     return DM_DataType::Unknown;
 }
 
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::filesystem::path const & base_path) {
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::filesystem::path const & base_path, JsonLoadProgressCallback progress_callback) {
     std::vector<DataInfo> data_info_list;
     // Create factory for plugin system
     ConcreteDataFactory factory;
+
+    // Count total items to load (excluding transformations which are processed separately)
+    int total_items = 0;
+    for (auto const & item: j) {
+        if (!item.contains("transformations")) {
+            total_items++;
+        }
+    }
+
+    // Report initial progress to show the dialog immediately
+    if (progress_callback) {
+        bool should_continue = progress_callback(0, total_items, "Preparing to load data...");
+        if (!should_continue) {
+            std::cout << "Loading cancelled by user" << std::endl;
+            return data_info_list;
+        }
+    }
+
+    int current_item = 0;
 
     // Iterate through JSON array
     for (auto const & item: j) {
@@ -821,6 +840,19 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             std::cout << "Setting time for " << name << " to " << clock << std::endl;
             dm->setTimeKey(name, clock);
         }
+
+        // Increment progress counter
+        current_item++;
+
+        // Report progress after loading this item
+        if (progress_callback) {
+            std::string message = "Loaded " + data_type_str + ": " + name;
+            bool should_continue = progress_callback(current_item, total_items, message);
+            if (!should_continue) {
+                std::cout << "Loading cancelled by user" << std::endl;
+                return data_info_list;
+            }
+        }
     }
 
     // Process all transformation objects found in the JSON array
@@ -862,7 +894,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
     return data_info_list;
 }
 
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::filesystem::path const & base_path) {
+    // Call the version with progress callback, passing nullptr
+    return load_data_from_json_config(dm, j, base_path, nullptr);
+}
+
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath, JsonLoadProgressCallback progress_callback) {
     // Open JSON file
     std::ifstream ifs(json_filepath);
     if (!ifs.is_open()) {
@@ -876,7 +913,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
     // get base path of filepath
     std::filesystem::path const base_path = std::filesystem::path(json_filepath).parent_path();
-    return load_data_from_json_config(dm, j, base_path);
+    return load_data_from_json_config(dm, j, base_path, progress_callback);
+}
+
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {
+    // Call the version with progress callback, passing nullptr
+    return load_data_from_json_config(dm, json_filepath, nullptr);
 }
 
 DM_DataType DataManager::getType(std::string const & key) const {

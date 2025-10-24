@@ -41,6 +41,7 @@
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QPlainTextEdit>
+#include <QProgressDialog>
 #include <QTextEdit>
 #include <QComboBox>
 #include <QListWidget>
@@ -48,6 +49,7 @@
 #include <QTreeWidget>
 #include <QShortcut>
 
+#include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QTimer>
 
@@ -298,7 +300,41 @@ void MainWindow::_loadJSONConfig() {
         return;
     }
 
-    auto data_info = load_data_from_json_config(_data_manager.get(), filename.toStdString());
+    // Create progress dialog without cancel button
+    QProgressDialog progress("Preparing to load data...", nullptr, 0, 100, this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(0);  // Show immediately
+    progress.setCancelButton(nullptr);  // Remove cancel button
+    progress.setValue(0);
+    progress.show();
+    
+    // Force the dialog to appear before loading starts
+    QCoreApplication::processEvents();
+
+    // Create progress callback
+    auto progress_callback = [&progress](int current, int total, std::string const & message) -> bool {
+        // Update progress bar
+        if (total > 0) {
+            int percent = (current * 100) / total;
+            progress.setValue(percent);
+        }
+        
+        // Update label text
+        progress.setLabelText(QString::fromStdString(message));
+        
+        // Process events to keep UI responsive
+        QCoreApplication::processEvents();
+        
+        // Always return true since we removed cancel functionality
+        return true;
+    };
+
+    // Load data with progress tracking
+    auto data_info = load_data_from_json_config(_data_manager.get(), filename.toStdString(), progress_callback);
+    
+    // Set to 100% when complete
+    progress.setValue(100);
+    
     processLoadedData(data_info);
 }
 
