@@ -1608,4 +1608,54 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Row sele
         // The counts should be different (different computers for different row selector types)
         REQUIRE(timestamp_computer_count != interval_computer_count);
     }
+    
+    SECTION("Data sources without compatible computers are not displayed") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Create a table
+        auto & registry = getTableRegistry();
+        auto table_id = registry.generateUniqueTableId("EmptySourceTest");
+        REQUIRE(registry.createTable(table_id, "Empty Source Test"));
+        
+        // Select table
+        auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+        REQUIRE(table_combo != nullptr);
+        for (int i = 0; i < table_combo->count(); ++i) {
+            if (table_combo->itemText(i).contains(QString::fromStdString(table_id))) {
+                table_combo->setCurrentIndex(i);
+                break;
+            }
+        }
+        
+        // Select TimeFrame as row source
+        auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        int timeframe_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("TimeFrame: ")) {
+                timeframe_index = i;
+                break;
+            }
+        }
+        REQUIRE(timeframe_index >= 0);
+        row_combo->setCurrentIndex(timeframe_index);
+        
+        // Get the computers tree
+        auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // Verify that event sources are NOT displayed (no timestamp-compatible computers for events)
+        bool has_event_source = false;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto * item = tree->topLevelItem(i);
+            if (item->text(0).startsWith("Events: ")) {
+                has_event_source = true;
+                break;
+            }
+        }
+        
+        // Event sources should not appear when TimeFrame is selected as row source
+        // because event computers require IntervalBased row selectors
+        REQUIRE_FALSE(has_event_source);
+    }
 }

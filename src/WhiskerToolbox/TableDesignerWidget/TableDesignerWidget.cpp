@@ -1736,6 +1736,12 @@ void TableDesignerWidget::refreshComputersTree() {
 
                 auto available_computers = computer_registry.getAvailableComputers(current_row_selector_type.value(), first_variant.value());
 
+                // Skip this group if no computers are available
+                if (available_computers.empty()) {
+                    delete group_item;
+                    continue;
+                }
+
                 // Add computers as children of the group
                 for (auto const & computer_info: available_computers) {
                     auto * computer_item = new QTreeWidgetItem(group_item);
@@ -1783,10 +1789,17 @@ void TableDesignerWidget::refreshComputersTree() {
 
                 auto data_source_variant = createColumnDataSourceVariant(data_source, data_manager_extension);
                 if (!data_source_variant.has_value()) {
+                    delete data_source_item;
                     continue;
                 }
 
                 auto available_computers = computer_registry.getAvailableComputers(current_row_selector_type.value(), data_source_variant.value());
+
+                // Skip this data source if no computers are available
+                if (available_computers.empty()) {
+                    delete data_source_item;
+                    continue;
+                }
 
                 for (auto const & computer_info: available_computers) {
                     auto * computer_item = new QTreeWidgetItem(data_source_item);
@@ -1836,11 +1849,18 @@ void TableDesignerWidget::refreshComputersTree() {
 
             if (!data_source_variant.has_value()) {
                 qDebug() << "Failed to create data source variant for:" << data_source;
+                delete data_source_item;
                 continue;
             }
 
             // Get available computers for this specific data source and current row selector type
             auto available_computers = computer_registry.getAvailableComputers(current_row_selector_type.value(), data_source_variant.value());
+
+            // Skip this data source if no computers are available
+            if (available_computers.empty()) {
+                delete data_source_item;
+                continue;
+            }
 
             // Add compatible computers as children
             for (auto const & computer_info: available_computers) {
