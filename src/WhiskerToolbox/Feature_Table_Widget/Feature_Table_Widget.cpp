@@ -129,7 +129,7 @@ void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int
         displayType = "Intervals";
     } else if (type == "analog") {
         displayType = "Analog";
-    } else if (type == "digital_events") {
+    } else if (type == "digital_event") {
         displayType = "Events";
     } else if (type == "images") {
         displayType = "Images";
