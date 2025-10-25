@@ -1239,6 +1239,57 @@ TableDesignerWidget::createDataSourceVariant(QString const & data_source_string,
     return {result, row_selector_type};
 }
 
+std::optional<DataSourceVariant>
+TableDesignerWidget::createColumnDataSourceVariant(QString const & data_source_string,
+                                                   std::shared_ptr<DataManagerExtension> data_manager_extension) const {
+    std::optional<DataSourceVariant> result;
+
+    if (data_source_string.startsWith("Events: ")) {
+        QString source_name = data_source_string.mid(8);// Remove "Events: " prefix
+        if (auto event_source = data_manager_extension->getEventSource(source_name.toStdString())) {
+            result = event_source;
+        }
+
+    } else if (data_source_string.startsWith("Intervals: ")) {
+        QString source_name = data_source_string.mid(11);// Remove "Intervals: " prefix
+        if (auto interval_source = data_manager_extension->getIntervalSource(source_name.toStdString())) {
+            result = interval_source;
+        }
+
+    } else if (data_source_string.startsWith("analog:")) {
+        QString source_name = data_source_string.mid(7);// Remove "analog:" prefix
+        if (auto analog_source = data_manager_extension->getAnalogSource(source_name.toStdString())) {
+            result = analog_source;
+        }
+
+    } else if (data_source_string.startsWith("lines:")) {
+        QString source_name = data_source_string.mid(6);// Remove "lines:" prefix
+        if (auto line_source = data_manager_extension->getLineSource(source_name.toStdString())) {
+            result = line_source;
+        }
+    }
+
+    return result;
+}
+
+std::optional<RowSelectorType> TableDesignerWidget::getCurrentRowSelectorType() const {
+    QString row_source = ui->row_data_source_combo->currentText();
+    
+    if (row_source.isEmpty()) {
+        return std::nullopt;
+    }
+
+    if (row_source.startsWith("TimeFrame: ")) {
+        return RowSelectorType::Timestamp;
+    } else if (row_source.startsWith("Events: ")) {
+        return RowSelectorType::Timestamp;  // Events create timestamp rows
+    } else if (row_source.startsWith("Intervals: ")) {
+        return RowSelectorType::IntervalBased;
+    }
+
+    return std::nullopt;
+}
+
 void TableDesignerWidget::updateRowInfoLabel(QString const & selected_source) {
     if (selected_source.isEmpty()) {
         ui->row_info_label->setText("No row source selected");
@@ -1647,6 +1698,14 @@ void TableDesignerWidget::refreshComputersTree() {
 
     auto & computer_registry = registry->getComputerRegistry();
 
+    // Get the current row selector type from the selected row source
+    auto current_row_selector_type = getCurrentRowSelectorType();
+    if (!current_row_selector_type.has_value()) {
+        // No row source selected, clear the tree and exit
+        _updating_computers_tree = false;
+        return;
+    }
+
     // Get available data sources
     auto data_sources = getAvailableDataSources();
 
@@ -1670,12 +1729,12 @@ void TableDesignerWidget::refreshComputersTree() {
                 group_item->setExpanded(false);// Start collapsed
 
                 // Get computers available for this group (use first member to determine available computers)
-                auto [first_variant, row_selector_type] = createDataSourceVariant(group_members.first(), data_manager_extension);
+                auto first_variant = createColumnDataSourceVariant(group_members.first(), data_manager_extension);
                 if (!first_variant.has_value()) {
                     continue;
                 }
 
-                auto available_computers = computer_registry.getAvailableComputers(row_selector_type, first_variant.value());
+                auto available_computers = computer_registry.getAvailableComputers(current_row_selector_type.value(), first_variant.value());
 
                 // Add computers as children of the group
                 for (auto const & computer_info: available_computers) {
@@ -1722,12 +1781,12 @@ void TableDesignerWidget::refreshComputersTree() {
                 data_source_item->setFlags(Qt::ItemIsEnabled);
                 data_source_item->setExpanded(false);
 
-                auto [data_source_variant, row_selector_type] = createDataSourceVariant(data_source, data_manager_extension);
+                auto data_source_variant = createColumnDataSourceVariant(data_source, data_manager_extension);
                 if (!data_source_variant.has_value()) {
                     continue;
                 }
 
-                auto available_computers = computer_registry.getAvailableComputers(row_selector_type, data_source_variant.value());
+                auto available_computers = computer_registry.getAvailableComputers(current_row_selector_type.value(), data_source_variant.value());
 
                 for (auto const & computer_info: available_computers) {
                     auto * computer_item = new QTreeWidgetItem(data_source_item);
@@ -1772,16 +1831,16 @@ void TableDesignerWidget::refreshComputersTree() {
             data_source_item->setFlags(Qt::ItemIsEnabled);
             data_source_item->setExpanded(false);// Start collapsed
 
-            // Convert data source string to DataSourceVariant and determine RowSelectorType
-            auto [data_source_variant, row_selector_type] = createDataSourceVariant(data_source, data_manager_extension);
+            // Convert data source string to DataSourceVariant
+            auto data_source_variant = createColumnDataSourceVariant(data_source, data_manager_extension);
 
             if (!data_source_variant.has_value()) {
                 qDebug() << "Failed to create data source variant for:" << data_source;
                 continue;
             }
 
-            // Get available computers for this specific data source and row selector combination
-            auto available_computers = computer_registry.getAvailableComputers(row_selector_type, data_source_variant.value());
+            // Get available computers for this specific data source and current row selector type
+            auto available_computers = computer_registry.getAvailableComputers(current_row_selector_type.value(), data_source_variant.value());
 
             // Add compatible computers as children
             for (auto const & computer_info: available_computers) {
@@ -2019,27 +2078,51 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
             if (!computer_exists) {
                 errors << QString("Requested computer does not exist: %1").arg(computer);
             }
-            // Validate compatibility (heuristic)
-            bool type_event = false, type_interval = false, type_analog = false;
-            for (int i = 0; i < tree->topLevelItemCount(); ++i) {
-                auto * ds_item = tree->topLevelItem(i);
-                QString ds_text = ds_item->text(0);
-                if (ds_text.contains(data_source)) {
-                    if (ds_text.startsWith("Events: ")) type_event = true;
-                    else if (ds_text.startsWith("Intervals: "))
-                        type_interval = true;
-                    else if (ds_text.startsWith("analog:"))
-                        type_analog = true;
+            
+            // Validate compatibility using registry and current row selector type
+            if (_data_manager) {
+                if (auto * reg = _data_manager->getTableRegistry()) {
+                    auto data_manager_ext = reg->getDataManagerExtension();
+                    if (data_manager_ext) {
+                        auto & cr = reg->getComputerRegistry();
+                        auto current_row_type = getCurrentRowSelectorType();
+                        
+                        // Build data source variant based on data type
+                        bool type_event = false, type_interval = false, type_analog = false;
+                        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+                            auto * ds_item = tree->topLevelItem(i);
+                            QString ds_text = ds_item->text(0);
+                            if (ds_text.contains(data_source)) {
+                                if (ds_text.startsWith("Events: ")) type_event = true;
+                                else if (ds_text.startsWith("Intervals: ")) type_interval = true;
+                                else if (ds_text.startsWith("analog:")) type_analog = true;
+                            }
+                        }
+                        
+                        QString ds_repr;
+                        if (type_event) ds_repr = QString("Events: %1").arg(data_source);
+                        else if (type_interval) ds_repr = QString("Intervals: %1").arg(data_source);
+                        else if (type_analog) ds_repr = QString("analog:%1").arg(data_source);
+                        
+                        if (!ds_repr.isEmpty() && current_row_type.has_value()) {
+                            auto ds_variant = createColumnDataSourceVariant(ds_repr, data_manager_ext);
+                            if (ds_variant.has_value()) {
+                                auto available = cr.getAvailableComputers(current_row_type.value(), ds_variant.value());
+                                bool found = false;
+                                for (auto const & comp_info : available) {
+                                    if (comp_info.name == computer.toStdString()) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (!found) {
+                                    errors << QString("Computer '%1' is not compatible with data source '%2' for the current row selector type")
+                                                  .arg(computer, ds_repr);
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-            QString ds_repr;
-            if (type_event) ds_repr = QString("Events: %1").arg(data_source);
-            else if (type_interval)
-                ds_repr = QString("Intervals: %1").arg(data_source);
-            else if (type_analog)
-                ds_repr = QString("analog:%1").arg(data_source);
-            if (!ds_repr.isEmpty() && !isComputerCompatibleWithDataSource(computer.toStdString(), ds_repr)) {
-                errors << QString("Computer '%1' is not valid for data source type requested (%2)").arg(computer, ds_repr);
             }
 
             // Find matching tree item with strict preference
@@ -2236,37 +2319,6 @@ std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
     }
 
     return column_infos;
-}
-
-bool TableDesignerWidget::isComputerCompatibleWithDataSource(std::string const & computer_name, QString const & data_source) const {
-    if (!_data_manager) return false;
-
-    auto * registry = _data_manager->getTableRegistry();
-    if (!registry) return false;
-
-    auto & computer_registry = registry->getComputerRegistry();
-    auto computer_info = computer_registry.findComputerInfo(computer_name);
-    if (!computer_info) return false;
-
-    // Basic compatibility check based on data source type and common computer patterns
-    if (data_source.startsWith("Events: ")) {
-        // Event-based computers typically have "Event" in their name
-        return computer_name.find("Event") != std::string::npos;
-    } else if (data_source.startsWith("Intervals: ")) {
-        // Interval-based computers typically work with intervals or events
-        return computer_name.find("Event") != std::string::npos ||
-               computer_name.find("Interval") != std::string::npos;
-    } else if (data_source.startsWith("analog:")) {
-        // Analog-based computers typically have "Analog" in their name
-        return computer_name.find("Analog") != std::string::npos;
-    } else if (data_source.startsWith("TimeFrame: ")) {
-        // TimeFrame-based computers - generally most computers can work with timestamps
-        return computer_name.find("Timestamp") != std::string::npos ||
-               computer_name.find("Time") != std::string::npos;
-    }
-
-    // Default: assume compatibility for unrecognized patterns
-    return true;
 }
 
 QString TableDesignerWidget::generateDefaultColumnName(QString const & data_source, QString const & computer_name) const {

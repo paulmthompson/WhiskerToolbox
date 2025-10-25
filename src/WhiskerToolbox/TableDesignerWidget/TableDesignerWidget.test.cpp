@@ -1351,3 +1351,261 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - LineData
     REQUIRE(built_table != nullptr);
     REQUIRE(built_table->getColumnCount() > 0);
 }
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Row selector type determines available computers", "[TableDesignerWidget][RowSelector][Compatibility]") {
+    
+    SECTION("TimeFrame row selector shows only timestamp-compatible computers for analog sources") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Create a table
+        auto & registry = getTableRegistry();
+        auto table_id = registry.generateUniqueTableId("TimestampTest");
+        REQUIRE(registry.createTable(table_id, "Timestamp Compatibility Test"));
+        
+        // Select table
+        auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+        REQUIRE(table_combo != nullptr);
+        for (int i = 0; i < table_combo->count(); ++i) {
+            if (table_combo->itemText(i).contains(QString::fromStdString(table_id))) {
+                table_combo->setCurrentIndex(i);
+                break;
+            }
+        }
+        
+        // Select TimeFrame as row source
+        auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        int timeframe_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("TimeFrame: ")) {
+                timeframe_index = i;
+                break;
+            }
+        }
+        REQUIRE(timeframe_index >= 0);
+        row_combo->setCurrentIndex(timeframe_index);
+        
+        // Get the computers tree
+        auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // Find analog data source items
+        QTreeWidgetItem * analog_source_item = nullptr;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto * item = tree->topLevelItem(i);
+            if (item->text(0).startsWith("analog:")) {
+                analog_source_item = item;
+                break;
+            }
+        }
+        REQUIRE(analog_source_item != nullptr);
+        
+        // Verify only timestamp-compatible computers are shown
+        bool has_timestamp_value = false;
+        bool has_timestamp_offsets = false;
+        bool has_interval_mean = false;
+        bool has_interval_max = false;
+        bool has_slice_gatherer = false;
+        
+        for (int j = 0; j < analog_source_item->childCount(); ++j) {
+            auto * computer_item = analog_source_item->child(j);
+            QString computer_name = computer_item->text(0);
+            
+            if (computer_name.contains("Timestamp Value")) has_timestamp_value = true;
+            if (computer_name.contains("Timestamp Offsets")) has_timestamp_offsets = true;
+            if (computer_name.contains("Interval Mean")) has_interval_mean = true;
+            if (computer_name.contains("Interval Max")) has_interval_max = true;
+            if (computer_name.contains("Slice Gatherer")) has_slice_gatherer = true;
+        }
+        
+        // Should have timestamp computers
+        REQUIRE(has_timestamp_value);
+        // Should NOT have interval-based computers
+        REQUIRE_FALSE(has_interval_mean);
+        REQUIRE_FALSE(has_interval_max);
+        REQUIRE_FALSE(has_slice_gatherer);
+    }
+    
+    SECTION("Intervals row selector shows only interval-compatible computers for analog sources") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Create a table
+        auto & registry = getTableRegistry();
+        auto table_id = registry.generateUniqueTableId("IntervalTest");
+        REQUIRE(registry.createTable(table_id, "Interval Compatibility Test"));
+        
+        // Select table
+        auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+        REQUIRE(table_combo != nullptr);
+        for (int i = 0; i < table_combo->count(); ++i) {
+            if (table_combo->itemText(i).contains(QString::fromStdString(table_id))) {
+                table_combo->setCurrentIndex(i);
+                break;
+            }
+        }
+        
+        // Select Intervals as row source
+        auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        int intervals_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("Intervals: ")) {
+                intervals_index = i;
+                break;
+            }
+        }
+        REQUIRE(intervals_index >= 0);
+        row_combo->setCurrentIndex(intervals_index);
+        
+        // Get the computers tree
+        auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // Find analog data source items
+        QTreeWidgetItem * analog_source_item = nullptr;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto * item = tree->topLevelItem(i);
+            if (item->text(0).startsWith("analog:")) {
+                analog_source_item = item;
+                break;
+            }
+        }
+        REQUIRE(analog_source_item != nullptr);
+        
+        // Verify only interval-compatible computers are shown
+        bool has_timestamp_value = false;
+        bool has_interval_mean = false;
+        bool has_interval_max = false;
+        bool has_interval_min = false;
+        bool has_slice_gatherer = false;
+        
+        for (int j = 0; j < analog_source_item->childCount(); ++j) {
+            auto * computer_item = analog_source_item->child(j);
+            QString computer_name = computer_item->text(0);
+            
+            if (computer_name.contains("Timestamp Value")) has_timestamp_value = true;
+            if (computer_name.contains("Interval Mean")) has_interval_mean = true;
+            if (computer_name.contains("Interval Max")) has_interval_max = true;
+            if (computer_name.contains("Interval Min")) has_interval_min = true;
+            if (computer_name.contains("Slice Gatherer")) has_slice_gatherer = true;
+        }
+        
+        // Should have interval computers
+        REQUIRE(has_interval_mean);
+        REQUIRE(has_interval_max);
+        REQUIRE(has_interval_min);
+        REQUIRE(has_slice_gatherer);
+        // Should NOT have timestamp-based computers
+        REQUIRE_FALSE(has_timestamp_value);
+    }
+    
+    SECTION("Events row selector shows timestamp-compatible computers") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Create a table
+        auto & registry = getTableRegistry();
+        auto table_id = registry.generateUniqueTableId("EventsTest");
+        REQUIRE(registry.createTable(table_id, "Events Compatibility Test"));
+        
+        // Select table
+        auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+        REQUIRE(table_combo != nullptr);
+        for (int i = 0; i < table_combo->count(); ++i) {
+            if (table_combo->itemText(i).contains(QString::fromStdString(table_id))) {
+                table_combo->setCurrentIndex(i);
+                break;
+            }
+        }
+        
+        // Select Events as row source
+        auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        int events_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("Events: ")) {
+                events_index = i;
+                break;
+            }
+        }
+        REQUIRE(events_index >= 0);
+        row_combo->setCurrentIndex(events_index);
+        
+        // Get the computers tree
+        auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // Verify that the tree is populated (not empty when row selector is chosen)
+        REQUIRE(tree->topLevelItemCount() > 0);
+    }
+    
+    SECTION("Changing row selector type updates available computers") {
+        TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Create a table
+        auto & registry = getTableRegistry();
+        auto table_id = registry.generateUniqueTableId("ChangeTest");
+        REQUIRE(registry.createTable(table_id, "Change Row Selector Test"));
+        
+        // Select table
+        auto * table_combo = widget.findChild<QComboBox*>("table_combo");
+        REQUIRE(table_combo != nullptr);
+        for (int i = 0; i < table_combo->count(); ++i) {
+            if (table_combo->itemText(i).contains(QString::fromStdString(table_id))) {
+                table_combo->setCurrentIndex(i);
+                break;
+            }
+        }
+        
+        auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
+        REQUIRE(tree != nullptr);
+        
+        // First select TimeFrame
+        int timeframe_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("TimeFrame: ")) {
+                timeframe_index = i;
+                break;
+            }
+        }
+        REQUIRE(timeframe_index >= 0);
+        row_combo->setCurrentIndex(timeframe_index);
+        
+        // Count computers for analog source with TimeFrame
+        int timestamp_computer_count = 0;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto * item = tree->topLevelItem(i);
+            if (item->text(0).startsWith("analog:")) {
+                timestamp_computer_count = item->childCount();
+                break;
+            }
+        }
+        REQUIRE(timestamp_computer_count > 0);
+        
+        // Now change to Intervals
+        int intervals_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("Intervals: ")) {
+                intervals_index = i;
+                break;
+            }
+        }
+        REQUIRE(intervals_index >= 0);
+        row_combo->setCurrentIndex(intervals_index);
+        
+        // Count computers for analog source with Intervals
+        int interval_computer_count = 0;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            auto * item = tree->topLevelItem(i);
+            if (item->text(0).startsWith("analog:")) {
+                interval_computer_count = item->childCount();
+                break;
+            }
+        }
+        REQUIRE(interval_computer_count > 0);
+        
+        // The counts should be different (different computers for different row selector types)
+        REQUIRE(timestamp_computer_count != interval_computer_count);
+    }
+}

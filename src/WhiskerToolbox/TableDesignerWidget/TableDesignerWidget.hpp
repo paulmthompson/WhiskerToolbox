@@ -215,19 +215,27 @@ private:
                             std::shared_ptr<DataManagerExtension> data_manager_extension) const;
 
     /**
+     * @brief Create a DataSourceVariant for a column data source (without determining row selector type)
+     * @param data_source_string The data source string (e.g., "analog:mySignal")
+     * @param data_manager_extension The data manager extension to use for lookups
+     * @return Optional DataSourceVariant
+     */
+    std::optional<DataSourceVariant>
+    createColumnDataSourceVariant(QString const & data_source_string,
+                                   std::shared_ptr<DataManagerExtension> data_manager_extension) const;
+
+    /**
+     * @brief Determine the row selector type from the currently selected row source
+     * @return The RowSelectorType for the current selection, or nullopt if none selected
+     */
+    std::optional<RowSelectorType> getCurrentRowSelectorType() const;
+
+    /**
      * @brief Create a row selector based on the selected row source
      * @param row_source The selected row source string
      * @return Unique pointer to the created row selector, or nullptr if creation failed
      */
     std::unique_ptr<IRowSelector> createRowSelector(QString const & row_source);
-
-    /**
-     * @brief Check if a computer is compatible with a data source
-     * @param computer_name The computer name
-     * @param data_source The data source string
-     * @return True if compatible
-     */
-    bool isComputerCompatibleWithDataSource(std::string const & computer_name, QString const & data_source) const;
 
     /**
      * @brief Generate a default column name for a data source and computer combination
