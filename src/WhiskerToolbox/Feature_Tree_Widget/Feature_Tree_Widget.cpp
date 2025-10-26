@@ -196,6 +196,8 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
         }
         
         // Update the appearance of the item and its children based on enabled state
+        // Important: setForeground triggers QTreeWidget::itemChanged; block signals to avoid re-entrancy
+        if (ui && ui->treeWidget) ui->treeWidget->blockSignals(true);
         _updateItemAppearance(item, enabled);
         
         // If it's a group, update all children appearances
@@ -210,6 +212,7 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
             };
             updateChildren(item);
         }
+        if (ui && ui->treeWidget) ui->treeWidget->blockSignals(false);
     }
 }
 
@@ -666,6 +669,8 @@ void Feature_Tree_Widget::_updateItemAppearance(QTreeWidgetItem * item, bool ena
 }
 
 void Feature_Tree_Widget::_updateAllItemAppearances() {
+    // Prevent appearance updates from emitting itemChanged
+    if (ui && ui->treeWidget) ui->treeWidget->blockSignals(true);
     // Recursively update all items in the tree
     std::function<void(QTreeWidgetItem *)> updateItem = [&](QTreeWidgetItem * item) {
         if (!item) {
@@ -686,6 +691,7 @@ void Feature_Tree_Widget::_updateAllItemAppearances() {
     for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
         updateItem(ui->treeWidget->topLevelItem(i));
     }
+    if (ui && ui->treeWidget) ui->treeWidget->blockSignals(false);
 }
 
 void Feature_Tree_Widget::_saveCurrentState() {

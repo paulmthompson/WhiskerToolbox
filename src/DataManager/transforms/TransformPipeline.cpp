@@ -36,13 +36,25 @@ bool TransformPipeline::loadFromJson(nlohmann::json const& json_config) {
             metadata_ = json_config["metadata"];
         }
         
+        // Extract variables from metadata for substitution
+        auto variables = extractVariables();
+        
+        // Create a mutable copy of the config for variable substitution
+        nlohmann::json processed_config = json_config;
+        
+        // Perform variable substitution on the entire config
+        // (but skip the metadata.variables section itself to avoid circular substitution)
+        if (processed_config.contains("steps")) {
+            substituteVariables(processed_config["steps"], variables);
+        }
+        
         // Load steps
-        if (!json_config.contains("steps") || !json_config["steps"].is_array()) {
+        if (!processed_config.contains("steps") || !processed_config["steps"].is_array()) {
             std::cerr << "Pipeline JSON must contain a 'steps' array" << std::endl;
             return false;
         }
         
-        auto const& steps_json = json_config["steps"];
+        auto const& steps_json = processed_config["steps"];
         steps_.reserve(steps_json.size());
         
         for (size_t i = 0; i < steps_json.size(); ++i) {
@@ -567,4 +579,63 @@ std::vector<StepResult> TransformPipeline::executePhase(
     }
     
     return results;
+}
+
+std::unordered_map<std::string, std::string> TransformPipeline::extractVariables() const {
+    std::unordered_map<std::string, std::string> variables;
+    
+    if (metadata_.contains("variables") && metadata_["variables"].is_object()) {
+        for (auto const& [key, value] : metadata_["variables"].items()) {
+            if (value.is_string()) {
+                variables[key] = value.get<std::string>();
+            } else if (value.is_number()) {
+                variables[key] = std::to_string(value.get<double>());
+            } else if (value.is_boolean()) {
+                variables[key] = value.get<bool>() ? "true" : "false";
+            }
+        }
+    }
+    
+    return variables;
+}
+
+void TransformPipeline::substituteVariables(nlohmann::json& json, 
+                                            std::unordered_map<std::string, std::string> const& variables) const {
+    if (json.is_string()) {
+        std::string str = json.get<std::string>();
+        
+        // Replace all ${variable_name} patterns
+        size_t pos = 0;
+        while ((pos = str.find("${", pos)) != std::string::npos) {
+            size_t end_pos = str.find("}", pos + 2);
+            if (end_pos == std::string::npos) {
+                // Malformed variable reference, skip it
+                pos += 2;
+                continue;
+            }
+            
+            std::string var_name = str.substr(pos + 2, end_pos - pos - 2);
+            auto it = variables.find(var_name);
+            
+            if (it != variables.end()) {
+                // Replace the ${var_name} with the value
+                str.replace(pos, end_pos - pos + 1, it->second);
+                pos += it->second.length();
+            } else {
+                // Variable not found, leave it as is and move past it
+                std::cerr << "Warning: Variable '${" << var_name << "}' not found in metadata.variables" << std::endl;
+                pos = end_pos + 1;
+            }
+        }
+        
+        json = str;
+    } else if (json.is_array()) {
+        for (auto& element : json) {
+            substituteVariables(element, variables);
+        }
+    } else if (json.is_object()) {
+        for (auto& [key, value] : json.items()) {
+            substituteVariables(value, variables);
+        }
+    }
 }

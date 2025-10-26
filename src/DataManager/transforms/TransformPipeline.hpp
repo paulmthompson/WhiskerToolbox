@@ -240,6 +240,23 @@ private:
         std::vector<int> const& phase_steps, 
         int phase_number,
         PipelineProgressCallback progress_callback);
+    
+    /**
+     * @brief Perform variable substitution on JSON using variables from metadata
+     * 
+     * Substitutes ${variable_name} patterns with values from metadata.variables
+     * 
+     * @param json The JSON object to process
+     * @param variables Map of variable names to values
+     */
+    void substituteVariables(nlohmann::json& json, std::unordered_map<std::string, std::string> const& variables) const;
+    
+    /**
+     * @brief Extract variables from metadata.variables section
+     * 
+     * @return std::unordered_map<std::string, std::string> Map of variable names to values
+     */
+    std::unordered_map<std::string, std::string> extractVariables() const;
 };
 
 #endif // TRANSFORM_PIPELINE_HPP
