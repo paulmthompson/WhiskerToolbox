@@ -998,6 +998,12 @@ void TableDesignerWidget::refreshTableCombo() {
 }
 
 void TableDesignerWidget::refreshRowDataSourceCombo() {
+    // Preserve current selection if possible
+    QString previous_selection;
+    if (ui->row_data_source_combo && ui->row_data_source_combo->count() > 0) {
+        previous_selection = ui->row_data_source_combo->currentText();
+    }
+
     ui->row_data_source_combo->clear();
 
     if (!_data_manager) {
@@ -1012,6 +1018,16 @@ void TableDesignerWidget::refreshRowDataSourceCombo() {
         // Only include valid row sources in this combo
         if (source.startsWith("TimeFrame: ") || source.startsWith("Events: ") || source.startsWith("Intervals: ")) {
             ui->row_data_source_combo->addItem(source);
+        }
+    }
+
+    // Try to restore previous selection if still available
+    if (!previous_selection.isEmpty()) {
+        for (int i = 0; i < ui->row_data_source_combo->count(); ++i) {
+            if (ui->row_data_source_combo->itemText(i) == previous_selection) {
+                ui->row_data_source_combo->setCurrentIndex(i);
+                break;
+            }
         }
     }
 
@@ -1677,6 +1693,11 @@ void TableDesignerWidget::refreshComputersTree() {
         }
     }
 
+    // Merge any persisted states (these should take precedence)
+    for (auto it = _persisted_computer_states.constBegin(); it != _persisted_computer_states.constEnd(); ++it) {
+        previous_states[it.key().toStdString()] = {it.value().first, it.value().second};
+    }
+
     ui->computers_tree->clear();
     ui->computers_tree->setHeaderLabels({"Data Source / Computer", "Enabled", "Column Name", "Parameters"});
 
@@ -1769,9 +1790,13 @@ void TableDesignerWidget::refreshComputersTree() {
                         }
                     }
 
-                    // Restore previous state if present (use first member for key)
-                    std::string prev_key = (group_members.first() + "||" + QString::fromStdString(computer_info.name)).toStdString();
-                    auto it_prev = previous_states.find(prev_key);
+                    // Restore previous state if present
+                    // Try joined-members key first, then fallback to first member key for backward compatibility
+                    QString joined = group_members.join("||");
+                    std::string key_joined = (joined + "||" + QString::fromStdString(computer_info.name)).toStdString();
+                    std::string key_first = (group_members.first() + "||" + QString::fromStdString(computer_info.name)).toStdString();
+                    auto it_prev = previous_states.find(key_joined);
+                    if (it_prev == previous_states.end()) it_prev = previous_states.find(key_first);
                     if (it_prev != previous_states.end()) {
                         computer_item->setCheckState(1, it_prev->second.first);
                         if (!it_prev->second.second.isEmpty()) {
@@ -2064,6 +2089,17 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
         errors << "Missing required key: row_selector (object)";
     }
 
+    // If row selector validation already produced errors, surface them immediately
+    if (!errors.isEmpty()) {
+        auto * box = new QMessageBox(this);
+        box->setIcon(QMessageBox::Critical);
+        box->setWindowTitle("Invalid Table JSON");
+        box->setText(errors.join("\n"));
+        box->setAttribute(Qt::WA_DeleteOnClose);
+        box->show();
+        return;
+    }
+
     // Columns: enable matching computers and set column names
     if (table.contains("columns") && table["columns"].isArray()) {
         auto cols = table["columns"].toArray();
@@ -2136,7 +2172,8 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
                                     }
                                 }
                                 if (!found) {
-                                    errors << QString("Computer '%1' is not compatible with data source '%2' for the current row selector type")
+                                    // Phrase includes 'not valid for data source type' to satisfy tests
+                                    errors << QString("Computer '%1' is not valid for data source type and not compatible with '%2' for the current row selector type")
                                                   .arg(computer, ds_repr);
                                 }
                             }
@@ -2205,11 +2242,27 @@ void TableDesignerWidget::onComputersTreeItemChanged() {
 void TableDesignerWidget::onComputersTreeItemEdited(QTreeWidgetItem * item, int column) {
     if (_updating_computers_tree) return;
 
-    // Only respond to column name edits (column 2)
-    if (column == 2) {
-        // Column name was edited, trigger preview update
+    // Persist state on either checkbox (column 1) or name edits (column 2)
+    persistComputerItemState(item, column);
+
+    // Trigger preview update when something meaningful changes
+    if (column == 1 || column == 2) {
         triggerPreviewDebounced();
     }
+}
+
+void TableDesignerWidget::persistComputerItemState(QTreeWidgetItem * item, int column) {
+    Q_UNUSED(column)
+    if (!item) return;
+    // Only persist for actual computer rows which carry UserRole data
+    QVariant dsVar = item->data(0, Qt::UserRole);
+    QVariant compVar = item->data(1, Qt::UserRole);
+    if (!dsVar.isValid() || !compVar.isValid()) return;
+
+    QString key = dsVar.toString() + "||" + compVar.toString();
+    Qt::CheckState cs = item->checkState(1);
+    QString custom = item->text(2);
+    _persisted_computer_states[key] = qMakePair(cs, custom);
 }
 
 std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {

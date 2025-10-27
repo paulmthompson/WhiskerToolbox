@@ -233,6 +233,16 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Basic tr
     
     SECTION("Create widget and verify tree is populated") {
         TableDesignerWidget widget(getDataManagerPtr());
+
+        // Select an interval-based row source so relevant computers are visible
+        auto* row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        int intervals_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("Intervals: ")) { intervals_index = i; break; }
+        }
+        REQUIRE(intervals_index >= 0);
+        row_combo->setCurrentIndex(intervals_index);
         
         // Get the computers tree
         auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
@@ -248,7 +258,7 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Basic tr
             found_sources << item->text(0);
         }
         
-        // Should have event sources
+        // Should have event sources and analog, under interval-based selection
         bool has_neuron1_events = false;
         bool has_neuron2_events = false;
         bool has_behavior_intervals = false;
@@ -269,7 +279,17 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Basic tr
     
     SECTION("Verify tree structure - data sources have computer children") {
         TableDesignerWidget widget(getDataManagerPtr());
-        
+
+        // Select an interval-based row source so event computers are visible
+        auto* row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        int intervals_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("Intervals: ")) { intervals_index = i; break; }
+        }
+        REQUIRE(intervals_index >= 0);
+        row_combo->setCurrentIndex(intervals_index);
+
         auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
         REQUIRE(tree != nullptr);
         
@@ -314,6 +334,16 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Basic tr
     SECTION("Verify analog sources have analog computers") {
         TableDesignerWidget widget(getDataManagerPtr());
         
+        // Select an interval-based row source so interval analog computers appear
+        auto* row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        int intervals_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("Intervals: ")) { intervals_index = i; break; }
+        }
+        REQUIRE(intervals_index >= 0);
+        row_combo->setCurrentIndex(intervals_index);
+        
         auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
         REQUIRE(tree != nullptr);
         
@@ -351,6 +381,16 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Computer
     
     SECTION("Enable computers and verify column info generation") {
         TableDesignerWidget widget(getDataManagerPtr());
+        
+        // Select an interval-based row source so event computers are available
+        auto* row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+        REQUIRE(row_combo != nullptr);
+        int intervals_index = -1;
+        for (int i = 0; i < row_combo->count(); ++i) {
+            if (row_combo->itemText(i).startsWith("Intervals: ")) { intervals_index = i; break; }
+        }
+        REQUIRE(intervals_index >= 0);
+        row_combo->setCurrentIndex(intervals_index);
         
         auto* tree = widget.findChild<QTreeWidget*>("computers_tree");
         REQUIRE(tree != nullptr);
@@ -1023,6 +1063,20 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Preview 
 
 TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Observes DataManager and updates tree on add/remove", "[TableDesignerWidget][Observer]") {
     TableDesignerWidget widget(getDataManagerPtr());
+
+    // Select an interval-based row source so event sources/computers are visible
+    auto * row_combo = widget.findChild<QComboBox*>("row_data_source_combo");
+    REQUIRE(row_combo != nullptr);
+    int intervals_index = -1;
+    for (int i = 0; i < row_combo->count(); ++i) {
+        if (row_combo->itemText(i).startsWith("Intervals: ") && row_combo->itemText(i).contains("BehaviorPeriods")) {
+            intervals_index = i;
+            break;
+        }
+    }
+    REQUIRE(intervals_index >= 0);
+    row_combo->setCurrentIndex(intervals_index);
+    QApplication::processEvents();
 
     auto * tree = widget.findChild<QTreeWidget*>("computers_tree");
     REQUIRE(tree != nullptr);

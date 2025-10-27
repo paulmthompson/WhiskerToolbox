@@ -165,6 +165,10 @@ private:
     std::map<std::string, QWidget *> _parameter_controls;
     std::map<QTreeWidgetItem *, QWidget *> _computer_parameter_widgets;// Map computer items to their parameter widgets
 
+    // Persisted computer states across refreshes: key = dataSource||computerName
+    // Value = pair(checkState, customColumnName)
+    QMap<QString, QPair<Qt::CheckState, QString>> _persisted_computer_states;
+
     TableInfoWidget * _table_info_widget = nullptr;
     Section * _table_info_section = nullptr;
     TableTransformWidget * _table_transform_widget = nullptr;
@@ -267,6 +271,9 @@ private:
      * @return Map of parameter name to parameter value
      */
     std::map<std::string, std::string> getParameterValues(QString const & computer_name) const;
+
+    // Persist state helper (updates _persisted_computer_states from a tree item)
+    void persistComputerItemState(QTreeWidgetItem * item, int column);
 
     // Helper methods for the new tree-based approach
     void loadTableInfo(QString const & table_id);
