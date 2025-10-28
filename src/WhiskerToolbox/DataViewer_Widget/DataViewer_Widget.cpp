@@ -852,6 +852,17 @@ void DataViewer_Widget::_removeSelectedFeatureWithoutUpdate(std::string const & 
 
     auto data_type = _data_manager->getType(key);
 
+    // Also unregister from the plotting manager so counts and ordering stay consistent
+    if (_plotting_manager) {
+        if (data_type == DM_DataType::Analog) {
+            (void) _plotting_manager->removeAnalogSeries(key);
+        } else if (data_type == DM_DataType::DigitalEvent) {
+            (void) _plotting_manager->removeDigitalEventSeries(key);
+        } else if (data_type == DM_DataType::DigitalInterval) {
+            (void) _plotting_manager->removeDigitalIntervalSeries(key);
+        }
+    }
+
     if (data_type == DM_DataType::Analog) {
         ui->openGLWidget->removeAnalogTimeSeries(key);
     } else if (data_type == DM_DataType::DigitalEvent) {

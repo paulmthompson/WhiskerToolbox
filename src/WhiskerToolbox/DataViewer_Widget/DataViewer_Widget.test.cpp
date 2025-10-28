@@ -624,6 +624,107 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
     }
 }
 
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Group toggle then single enable resets stacking", "[DataViewer_Widget][Analog][Group][Regression]") {
+    auto & widget = getWidget();
+    auto const & keys = getAnalogKeys();
+    REQUIRE(keys.size() == 5);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Locate the Feature_Tree_Widget inside the DataViewer widget
+    auto ftw = widget.findChild<Feature_Tree_Widget *>("feature_tree_widget");
+    REQUIRE(ftw != nullptr);
+
+    // Ensure the tree is populated
+    ftw->refreshTree();
+    QApplication::processEvents();
+
+    QTreeWidget * tree = ftw->treeWidget();
+    REQUIRE(tree != nullptr);
+
+    // Find the top-level "Analog" node
+    QTreeWidgetItem * analogRoot = nullptr;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        QTreeWidgetItem * item = tree->topLevelItem(i);
+        if (item && item->text(0) == QString("analog")) {
+            analogRoot = item;
+            break;
+        }
+    }
+    REQUIRE(analogRoot != nullptr);
+
+    // Find the group node for prefix "analog" (derived from keys like analog_1..analog_5)
+    QTreeWidgetItem * analogGroup = nullptr;
+    for (int i = 0; i < analogRoot->childCount(); ++i) {
+        QTreeWidgetItem * child = analogRoot->child(i);
+        if (child && child->text(0) == QString("analog")) {
+            analogGroup = child;
+            break;
+        }
+    }
+    REQUIRE(analogGroup != nullptr);
+
+    // 1) Enable the whole group
+    analogGroup->setCheckState(1, Qt::Checked);
+    QApplication::processEvents();
+
+    // Verify that all five analog series became visible
+    for (auto const & key: keys) {
+        auto cfg = widget.getAnalogConfig(key);
+        REQUIRE(cfg.has_value());
+        REQUIRE(cfg.value() != nullptr);
+        REQUIRE(cfg.value()->is_visible);
+    }
+
+    // 2) Disable the whole group
+    analogGroup->setCheckState(1, Qt::Unchecked);
+    QApplication::processEvents();
+
+    // Verify that all five analog series are no longer visible
+    for (auto const & key: keys) {
+        auto cfg = widget.getAnalogConfig(key);
+        if (cfg.has_value() && cfg.value() != nullptr) {
+            REQUIRE_FALSE(cfg.value()->is_visible);
+        }
+    }
+
+    // 3) Re-enable a single key (simulate selecting one channel from the group)
+    std::string const single_key = keys.front();
+    bool invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_addFeatureToModel",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(single_key)),
+            Q_ARG(bool, true));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    // 4) Assert this single key is treated as a single-lane stack:
+    //    center ~ 0 and height ~ full canvas (about 2.0), not a 1/5 lane.
+    auto cfg_single = widget.getAnalogConfig(single_key);
+    REQUIRE(cfg_single.has_value());
+    REQUIRE(cfg_single.value() != nullptr);
+    REQUIRE(cfg_single.value()->is_visible);
+
+    float const center = static_cast<float>(cfg_single.value()->allocated_y_center);
+    float const height = static_cast<float>(cfg_single.value()->allocated_height);
+
+    // Center should be near 0.0
+    REQUIRE(std::abs(center - 0.0f) <= 0.25f);
+    // Height should be near full canvas height ([-1,1] -> ~2.0)
+    REQUIRE(height >= 1.6f);
+    REQUIRE(height <= 2.2f);
+
+    // And all other keys should remain not visible
+    for (size_t i = 1; i < keys.size(); ++i) {
+        auto cfg = widget.getAnalogConfig(keys[i]);
+        if (cfg.has_value() && cfg.value() != nullptr) {
+            REQUIRE_FALSE(cfg.value()->is_visible);
+        }
+    }
+}
+
 TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Apply spikesorter configuration ordering", "[DataViewer_Widget][Analog][Config]") {
     auto & widget = getWidget();
     auto & dm = getDataManager();
