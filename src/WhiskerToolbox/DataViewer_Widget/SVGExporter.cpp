@@ -81,6 +81,11 @@ QString SVGExporter::exportToSVG() {
         }
     }
 
+    // 4. Add scalebar if enabled (drawn last so it's on top)
+    if (scalebar_enabled_) {
+        addScalebar(static_cast<float>(start_time), static_cast<float>(end_time));
+    }
+
     return buildSVGDocument();
 }
 
@@ -370,4 +375,105 @@ QString SVGExporter::buildSVGDocument() const {
     document += svg_footer;
 
     return document;
+}
+
+void SVGExporter::addScalebar(float start_time, float end_time) {
+    std::cout << "SVG Export - Adding scalebar (length: " << scalebar_length_ << " time units)" << std::endl;
+
+    // Get the same MVP matrices used for rendering to ensure proper coordinate conversion
+    auto const y_min = gl_widget_->getYMin();
+    auto const y_max = gl_widget_->getYMax();
+
+    // We'll use a simple orthographic projection for the scalebar
+    // Place it in the bottom-right corner with some padding
+    int const padding = 50;  // pixels from edges
+    int const bar_height = 4; // pixels thick
+    
+    // Calculate the scalebar in data coordinates
+    // The scalebar represents scalebar_length_ time units
+    float const scalebar_start_time = end_time - static_cast<float>(scalebar_length_);
+    float const scalebar_end_time = end_time;
+    
+    // Position the scalebar at the bottom of the canvas (in data Y coordinates)
+    float const scalebar_y = y_min;
+    
+    // Create vertices for the scalebar endpoints in data space
+    glm::vec4 const start_vertex(scalebar_start_time, scalebar_y, 0.0f, 1.0f);
+    glm::vec4 const end_vertex(scalebar_end_time, scalebar_y, 0.0f, 1.0f);
+    
+    // Use identity matrices for simple coordinate transformation
+    // We need to transform from data coordinates to SVG coordinates
+    glm::mat4 const Model(1.0f);
+    glm::mat4 const View(1.0f);
+    
+    // Create projection matrix that maps [start_time, end_time] x [y_min, y_max] to NDC
+    float const x_range = end_time - start_time;
+    float const y_range = y_max - y_min;
+    
+    glm::mat4 Projection(1.0f);
+    // Scale from data range to [-1, 1]
+    Projection[0][0] = 2.0f / x_range;
+    Projection[1][1] = 2.0f / y_range;
+    // Translate to center the range at origin
+    Projection[3][0] = -1.0f - 2.0f * start_time / x_range;
+    Projection[3][1] = -1.0f - 2.0f * y_min / y_range;
+    
+    glm::mat4 const mvp = Projection * View * Model;
+    
+    // Transform the endpoints to SVG coordinates
+    glm::vec2 const svg_start = transformVertexToSVG(start_vertex, mvp);
+    glm::vec2 const svg_end = transformVertexToSVG(end_vertex, mvp);
+    
+    // Adjust the scalebar to be in the bottom-right corner
+    // Calculate the width of the scalebar in pixels
+    float const bar_width_pixels = std::abs(svg_end.x - svg_start.x);
+    
+    // Position in bottom-right corner
+    float const bar_x = static_cast<float>(svg_width_) - bar_width_pixels - static_cast<float>(padding);
+    float const bar_y = static_cast<float>(svg_height_) - static_cast<float>(padding);
+    
+    // Draw the scalebar as a black horizontal line
+    QString const scalebar_line = QString(
+        R"(<line x1="%1" y1="%2" x2="%3" y2="%4" stroke="#000000" stroke-width="%5" stroke-linecap="butt"/>)")
+        .arg(bar_x)
+        .arg(bar_y)
+        .arg(bar_x + bar_width_pixels)
+        .arg(bar_y)
+        .arg(bar_height);
+    
+    svg_elements_.append(scalebar_line);
+    
+    // Add small vertical ticks at the ends
+    int const tick_height = 8; // pixels
+    QString const left_tick = QString(
+        R"(<line x1="%1" y1="%2" x2="%3" y2="%4" stroke="#000000" stroke-width="2"/>)")
+        .arg(bar_x)
+        .arg(bar_y - tick_height / 2)
+        .arg(bar_x)
+        .arg(bar_y + tick_height / 2);
+    
+    QString const right_tick = QString(
+        R"(<line x1="%1" y1="%2" x2="%3" y2="%4" stroke="#000000" stroke-width="2"/>)")
+        .arg(bar_x + bar_width_pixels)
+        .arg(bar_y - tick_height / 2)
+        .arg(bar_x + bar_width_pixels)
+        .arg(bar_y + tick_height / 2);
+    
+    svg_elements_.append(left_tick);
+    svg_elements_.append(right_tick);
+    
+    // Add text label showing the length
+    QString const label_text = QString::number(scalebar_length_);
+    float const label_x = bar_x + bar_width_pixels / 2.0f;
+    float const label_y = bar_y - 10.0f; // Above the bar
+    
+    QString const label = QString(
+        R"(<text x="%1" y="%2" font-family="Arial, sans-serif" font-size="14" fill="#000000" text-anchor="middle">%3</text>)")
+        .arg(label_x)
+        .arg(label_y)
+        .arg(label_text);
+    
+    svg_elements_.append(label);
+    
+    std::cout << "SVG Export - Scalebar added at bottom-right corner" << std::endl;
 }

@@ -264,6 +264,12 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     // Connect SVG export button
     connect(ui->export_svg_button, &QPushButton::clicked, this, &DataViewer_Widget::_exportToSVG);
+
+    // Connect scalebar checkbox to enable/disable the length spinbox
+    connect(ui->svg_scalebar_checkbox, &QCheckBox::toggled, this, [this](bool checked) {
+        ui->scalebar_length_spinbox->setEnabled(checked);
+        ui->scalebar_length_label->setEnabled(checked);
+    });
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -1535,6 +1541,12 @@ void DataViewer_Widget::_exportToSVG() {
     try {
         // Create SVG exporter with current plot state
         SVGExporter exporter(ui->openGLWidget, _plotting_manager.get());
+
+        // Configure scalebar if requested
+        if (ui->svg_scalebar_checkbox->isChecked()) {
+            int const scalebar_length = ui->scalebar_length_spinbox->value();
+            exporter.enableScalebar(true, scalebar_length);
+        }
 
         // Generate SVG document
         QString const svg_content = exporter.exportToSVG();

@@ -72,6 +72,17 @@ public:
      */
     [[nodiscard]] int getCanvasHeight() const { return svg_height_; }
 
+    /**
+     * @brief Enable or disable scalebar in SVG output
+     * 
+     * @param enabled Whether to include a scalebar
+     * @param length Length of the scalebar in time units
+     */
+    void enableScalebar(bool enabled, int length) {
+        scalebar_enabled_ = enabled;
+        scalebar_length_ = length;
+    }
+
 private:
     /**
      * @brief Transform vertex from data space to SVG coordinates
@@ -165,12 +176,27 @@ private:
      */
     QString buildSVGDocument() const;
 
+    /**
+     * @brief Add horizontal scalebar to SVG output
+     * 
+     * Draws a black horizontal scalebar in the bottom-right corner of the canvas
+     * with a label indicating its length in time units.
+     * 
+     * @param start_time Visible time range start (for coordinate conversion)
+     * @param end_time Visible time range end (for coordinate conversion)
+     */
+    void addScalebar(float start_time, float end_time);
+
     OpenGLWidget * gl_widget_;
     PlottingManager * plotting_manager_;
 
     // SVG canvas dimensions
     int svg_width_{1920};
     int svg_height_{1080};
+
+    // Scalebar configuration
+    bool scalebar_enabled_{false};
+    int scalebar_length_{100};
 
     // Accumulated SVG elements
     QStringList svg_elements_;
