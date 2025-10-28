@@ -6,6 +6,7 @@
 #include "DataManager.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
+#include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -13,12 +14,14 @@
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <QApplication>
 #include <QMetaObject>
 #include <QTimer>
 #include <QTreeWidget>
 #include <QWidget>
+#include <QDoubleSpinBox>
 
 #include "OpenGLWidget.hpp"
 #include <algorithm>
@@ -933,6 +936,155 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Pr
     if (c1.has_value()) REQUIRE_FALSE(c1.value()->is_visible);
     c3 = widget.getAnalogConfig(keys[3]);
     if (c3.has_value()) REQUIRE_FALSE(c3.value()->is_visible);
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Adding digital interval does not change analog gain", "[DataViewer_Widget][Analog][DigitalInterval][Regression]") {
+    auto & widget = getWidget();
+    auto & dm = getDataManager();
+    auto const keys = getAnalogKeys();
+    REQUIRE(keys.size() >= 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable two analog series
+    for (size_t i = 0; i < 2; ++i) {
+        bool const invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(keys[i])),
+                Q_ARG(bool, true));
+        REQUIRE(invoked);
+        QApplication::processEvents();
+    }
+
+    // Capture their allocated heights (proxy for gain)
+    auto cfg_a0_before = widget.getAnalogConfig(keys[0]);
+    auto cfg_a1_before = widget.getAnalogConfig(keys[1]);
+    REQUIRE(cfg_a0_before.has_value());
+    REQUIRE(cfg_a1_before.has_value());
+    float const h0_before = static_cast<float>(cfg_a0_before.value()->allocated_height);
+    float const h1_before = static_cast<float>(cfg_a1_before.value()->allocated_height);
+    // Sanity: they should be similar (two-lane stacking)
+    if (std::min(h0_before, h1_before) > 0.0f) {
+        REQUIRE((std::max(h0_before, h1_before) / std::min(h0_before, h1_before)) <= 1.4f);
+    }
+
+    // Add a digital interval series that by default renders full-canvas
+    auto interval_series = std::make_shared<DigitalIntervalSeries>();
+    interval_series->addEvent(TimeFrameIndex(150), TimeFrameIndex(350));
+    std::string const interval_key = "interval_fullcanvas";
+    dm.setData<DigitalIntervalSeries>(interval_key, interval_series, TimeKey("time"));
+    QApplication::processEvents();
+
+    // Enable the digital interval in the view
+    bool const invoked_interval = QMetaObject::invokeMethod(
+            &widget,
+            "_addFeatureToModel",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(interval_key)),
+            Q_ARG(bool, true));
+    REQUIRE(invoked_interval);
+    QApplication::processEvents();
+
+    // Verify the interval is visible and near full canvas height
+    auto cfg_interval = widget.getDigitalIntervalConfig(interval_key);
+    REQUIRE(cfg_interval.has_value());
+    REQUIRE(cfg_interval.value() != nullptr);
+    REQUIRE(cfg_interval.value()->is_visible);
+    REQUIRE(cfg_interval.value()->allocated_height >= 1.6f);
+    REQUIRE(cfg_interval.value()->allocated_height <= 2.2f);
+
+    // Re-capture analog heights after enabling the interval
+    auto cfg_a0_after = widget.getAnalogConfig(keys[0]);
+    auto cfg_a1_after = widget.getAnalogConfig(keys[1]);
+    REQUIRE(cfg_a0_after.has_value());
+    REQUIRE(cfg_a1_after.has_value());
+    float const h0_after = static_cast<float>(cfg_a0_after.value()->allocated_height);
+    float const h1_after = static_cast<float>(cfg_a1_after.value()->allocated_height);
+
+    INFO("h0_before=" << h0_before << ", h0_after=" << h0_after);
+    INFO("h1_before=" << h1_before << ", h1_after=" << h1_after);
+
+    // Regression check: enabling a full-canvas digital interval must NOT attenuate analog gain.
+    // Allow a small tolerance for layout jitter.
+    auto approx_equal = [](float a, float b) {
+        float const denom = std::max(1.0f, std::max(std::abs(a), std::abs(b)));
+        return std::abs(a - b) / denom <= 0.1f; // <=10% relative change
+    };
+    REQUIRE(approx_equal(h0_after, h0_before));
+    REQUIRE(approx_equal(h1_after, h1_before));
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Adding digital interval does not change global zoom or analog mapping", "[DataViewer_Widget][Analog][DigitalInterval][Regression]") {
+    auto & widget = getWidget();
+    auto & dm = getDataManager();
+    auto const keys = getAnalogKeys();
+    REQUIRE(keys.size() >= 2);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    // Enable two analog series
+    for (size_t i = 0; i < 2; ++i) {
+        bool const ok = QMetaObject::invokeMethod(
+                &widget,
+                "_addFeatureToModel",
+                Qt::DirectConnection,
+                Q_ARG(QString, QString::fromStdString(keys[i])),
+                Q_ARG(bool, true));
+        REQUIRE(ok);
+        QApplication::processEvents();
+    }
+
+    // Access the global zoom spinbox and record its value
+    auto zoomSpin = widget.findChild<QDoubleSpinBox *>("global_zoom");
+    REQUIRE(zoomSpin != nullptr);
+    double const zoom_before = zoomSpin->value();
+
+    // Also capture an analog canvasY->value slope proxy for one series
+    auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
+    REQUIRE(glw != nullptr);
+    QApplication::processEvents();
+    auto size = glw->getCanvasSize();
+    float const h = static_cast<float>(size.second);
+    float const y1 = h * 0.25f;
+    float const y2 = h * 0.75f;
+    auto map_delta = [&](std::string const & key) {
+        float const v1 = glw->canvasYToAnalogValue(y1, key);
+        float const v2 = glw->canvasYToAnalogValue(y2, key);
+        return std::abs(v2 - v1) / std::max(1e-6f, (y2 - y1));
+    };
+    float const slope_before = map_delta(keys[0]);
+
+    // Add and enable a full-canvas digital interval
+    auto interval_series = std::make_shared<DigitalIntervalSeries>();
+    interval_series->addEvent(TimeFrameIndex(100), TimeFrameIndex(300));
+    std::string const int_key = "interval_fc";
+    dm.setData<DigitalIntervalSeries>(int_key, interval_series, TimeKey("time"));
+    QApplication::processEvents();
+    bool const ok2 = QMetaObject::invokeMethod(
+            &widget,
+            "_addFeatureToModel",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(int_key)),
+            Q_ARG(bool, true));
+    REQUIRE(ok2);
+    QApplication::processEvents();
+
+    // Global zoom should not change when adding a full-canvas interval
+    double const zoom_after = zoomSpin->value();
+    INFO("zoom_before=" << zoom_before << ", zoom_after=" << zoom_after);
+    REQUIRE(Catch::Approx(zoom_after).margin(zoom_before * 0.05 + 1e-6) == zoom_before);
+
+    // Analog mapping slope should remain approximately the same
+    float const slope_after = map_delta(keys[0]);
+    INFO("slope_before=" << slope_before << ", slope_after=" << slope_after);
+    if (std::max(slope_before, slope_after) > 0.0f) {
+        float const rel_change = std::abs(slope_after - slope_before) / std::max(1e-6f, std::max(slope_before, slope_after));
+        REQUIRE(rel_change <= 0.1f);
+    }
 }
 
 // -----------------------------------------------------------------------------

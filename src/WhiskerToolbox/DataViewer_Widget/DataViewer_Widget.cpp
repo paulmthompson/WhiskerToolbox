@@ -418,9 +418,15 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
     }
 
     // Auto-arrange and auto-fill canvas to make optimal use of space
+    // IMPORTANT: Do not auto-arrange when adding DigitalInterval series, since intervals are
+    // drawn full-canvas and should not affect analog/event stacking or global zoom.
     if (!_is_batch_add) {
-        std::cout << "Auto-arranging and filling canvas after adding series" << std::endl;
-        autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+        if (data_type == DM_DataType::DigitalInterval) {
+            std::cout << "Skipping auto-arrange after adding DigitalInterval to preserve analog zoom" << std::endl;
+        } else {
+            std::cout << "Auto-arranging and filling canvas after adding series" << std::endl;
+            autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+        }
     }
 
     std::cout << "Series addition and auto-arrangement completed" << std::endl;
@@ -474,8 +480,14 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
     }
 
     // Auto-arrange and auto-fill canvas to rescale remaining elements
-    std::cout << "Auto-arranging and filling canvas after removing series" << std::endl;
-    autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+    // IMPORTANT: Do not auto-arrange when removing DigitalInterval series; removing an overlay
+    // interval should not change analog/event stacking or global zoom.
+    if (data_type == DM_DataType::DigitalInterval) {
+        std::cout << "Skipping auto-arrange after removing DigitalInterval to preserve analog zoom" << std::endl;
+    } else {
+        std::cout << "Auto-arranging and filling canvas after removing series" << std::endl;
+        autoArrangeVerticalSpacing();// This now includes auto-fill functionality
+    }
 
     std::cout << "Series removal and auto-arrangement completed" << std::endl;
     // Trigger canvas update to reflect the removal
