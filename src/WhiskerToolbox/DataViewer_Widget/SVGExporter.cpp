@@ -302,17 +302,24 @@ void SVGExporter::addDigitalIntervalSeries(
     int interval_count = 0;
     for (auto const & interval : visible_intervals) {
         interval_count++;
-        // Interval spans from start to end time
-        float const interval_start = static_cast<float>(interval.start);
-        float const interval_end = static_cast<float>(interval.end);
+        
+        // IMPORTANT: Convert interval times from series time frame to master time frame
+        // The interval.start and interval.end are in the series' time frame indices
+        // We need to convert them to actual time values in the master time frame for rendering
+        auto const interval_start = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.start)));
+        auto const interval_end = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.end)));
+
+        // Clip the interval to the visible range (same as OpenGL rendering)
+        float const clipped_start = std::max(interval_start, start_time);
+        float const clipped_end = std::min(interval_end, end_time);
 
         // Full canvas height for intervals
         float const y_bottom = gl_widget_->getYMin();
         float const y_top = gl_widget_->getYMax();
 
-        // Define rectangle corners
-        glm::vec4 const bottom_left(interval_start, y_bottom, 0.0f, 1.0f);
-        glm::vec4 const top_right(interval_end, y_top, 0.0f, 1.0f);
+        // Define rectangle corners using clipped times
+        glm::vec4 const bottom_left(clipped_start, y_bottom, 0.0f, 1.0f);
+        glm::vec4 const top_right(clipped_end, y_top, 0.0f, 1.0f);
 
         glm::vec2 const svg_bottom_left = transformVertexToSVG(bottom_left, mvp);
         glm::vec2 const svg_top_right = transformVertexToSVG(top_right, mvp);
