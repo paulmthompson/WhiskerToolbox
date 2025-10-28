@@ -288,6 +288,16 @@ public:
         _xAxis.setMax(xmax);
     };
 
+    // Accessors for SVG export
+    [[nodiscard]] XAxis const & getXAxis() const { return _xAxis; }
+    [[nodiscard]] float getYMin() const { return _yMin; }
+    [[nodiscard]] float getYMax() const { return _yMax; }
+    [[nodiscard]] std::string const & getBackgroundColor() const { return m_background_color; }
+    [[nodiscard]] std::shared_ptr<TimeFrame> getMasterTimeFrame() const { return _master_time_frame; }
+    [[nodiscard]] auto const & getAnalogSeriesMap() const { return _analog_series; }
+    [[nodiscard]] auto const & getDigitalEventSeriesMap() const { return _digital_event_series; }
+    [[nodiscard]] auto const & getDigitalIntervalSeriesMap() const { return _digital_interval_series; }
+
     /**
      * @brief Set the master time frame used for X-axis coordinates
      * 
@@ -324,8 +334,6 @@ public:
         updateCanvas(_time);
         return actual_range;// Return the actual range width achieved
     }
-
-    [[nodiscard]] XAxis getXAxis() const { return _xAxis; }
 
     void setGlobalScale(float scale) {
         

@@ -352,6 +352,16 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="7" column="0" colspan="2">
+                   <widget class="QPushButton" name="export_svg_button">
+                    <property name="toolTip">
+                     <string>Export current plot to SVG vector graphics format (1920x1080)</string>
+                    </property>
+                    <property name="text">
+                     <string>Export to SVG</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </widget>
                </item>

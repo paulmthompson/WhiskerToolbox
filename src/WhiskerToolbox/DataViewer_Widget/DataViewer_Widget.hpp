@@ -106,6 +106,7 @@ private slots:
     void _clearConfigurationForGroup(QString const & group_name);
     void _hidePropertiesPanel();
     void _showPropertiesPanel();
+    void _exportToSVG();
 
 private:
     std::shared_ptr<DataManager> _data_manager;

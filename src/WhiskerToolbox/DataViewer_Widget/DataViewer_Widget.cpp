@@ -16,6 +16,7 @@
 #include "Feature_Tree_Model.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "OpenGLWidget.hpp"
+#include "SVGExporter.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -29,7 +30,9 @@
 #include <QWheelEvent>
 #include <QMenu>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QFile>
+#include <QTextStream>
 
 #include <algorithm>
 #include <cmath>
@@ -258,6 +261,9 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     
     // Initially hide the show button since properties are visible
     ui->show_properties_button->hide();
+
+    // Connect SVG export button
+    connect(ui->export_svg_button, &QPushButton::clicked, this, &DataViewer_Widget::_exportToSVG);
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -1509,4 +1515,61 @@ void DataViewer_Widget::_showPropertiesPanel() {
     
     // Trigger a canvas update to adjust to new size
     ui->openGLWidget->update();
+}
+
+void DataViewer_Widget::_exportToSVG() {
+    std::cout << "SVG Export initiated" << std::endl;
+
+    // Get save file path from user
+    QString const fileName = QFileDialog::getSaveFileName(
+        this,
+        tr("Export Plot to SVG"),
+        QString(),
+        tr("SVG Files (*.svg);;All Files (*)"));
+
+    if (fileName.isEmpty()) {
+        std::cout << "SVG Export cancelled by user" << std::endl;
+        return;
+    }
+
+    try {
+        // Create SVG exporter with current plot state
+        SVGExporter exporter(ui->openGLWidget, _plotting_manager.get());
+
+        // Generate SVG document
+        QString const svg_content = exporter.exportToSVG();
+
+        // Write to file
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QMessageBox::critical(
+                this,
+                tr("Export Failed"),
+                tr("Could not open file for writing:\n%1").arg(fileName));
+            std::cerr << "Failed to open file: " << fileName.toStdString() << std::endl;
+            return;
+        }
+
+        QTextStream out(&file);
+        out << svg_content;
+        file.close();
+
+        std::cout << "SVG Export successful: " << fileName.toStdString() << std::endl;
+
+        // Show success message
+        QMessageBox::information(
+            this,
+            tr("Export Successful"),
+            tr("Plot exported to:\n%1\n\nCanvas size: %2x%3")
+                .arg(fileName)
+                .arg(exporter.getCanvasWidth())
+                .arg(exporter.getCanvasHeight()));
+
+    } catch (std::exception const & e) {
+        QMessageBox::critical(
+            this,
+            tr("Export Failed"),
+            tr("An error occurred during export:\n%1").arg(e.what()));
+        std::cerr << "SVG Export failed: " << e.what() << std::endl;
+    }
 }
