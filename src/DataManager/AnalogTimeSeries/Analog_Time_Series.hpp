@@ -163,7 +163,6 @@ public:
      * @param start_time The start time (inclusive boundary)
      * @param end_time The end time (inclusive boundary)
      * @param source_timeFrame The timeframe that the start and end times are expressed in
-     * @param analog_timeFrame The timeframe that this data series uses
      * @return std::span<const float> view over the data in the specified range
      *
      * @note Returns an empty span if no data points fall within the specified range
@@ -172,8 +171,8 @@ public:
      */
     [[nodiscard]] std::span<float const> getDataInTimeFrameIndexRange(TimeFrameIndex start_time,
                                                                       TimeFrameIndex end_time,
-                                                                      TimeFrame const * source_timeFrame,
-                                                                      TimeFrame const * analog_timeFrame) const;
+                                                                      TimeFrame const * source_timeFrame
+                                                                      ) const;
 
 
     /**
@@ -352,6 +351,25 @@ public:
      * @see getTimeValueRangeInTimeFrameIndexRange() for convenient range-based alternative
      */
     [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+
+    /**
+     * @brief Get time-value pairs with timeframe conversion
+     * 
+     * Similar to getTimeValueSpanInTimeFrameIndexRange, but accepts a source timeframe
+     * to convert the start and end time indices from the source coordinate system to
+     * the analog time series coordinate system.
+     * 
+     * @param start_time The start TimeFrameIndex in source timeframe coordinates
+     * @param end_time The end TimeFrameIndex in source timeframe coordinates
+     * @param source_timeFrame The timeframe that start_time and end_time are expressed in
+     * @return TimeValueSpanPair with zero-copy data access
+     * 
+     * @note If source_timeFrame equals the analog series' timeframe, or if either is null,
+     *       falls back to the non-converting version
+     */
+    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, 
+                                                                          TimeFrameIndex end_time,
+                                                                          TimeFrame const * source_timeFrame) const;
 
 
     /**

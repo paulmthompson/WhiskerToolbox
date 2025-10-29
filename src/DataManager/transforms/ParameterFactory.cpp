@@ -3,6 +3,7 @@
 #include "AnalogTimeSeries/AnalogFilter/analog_filter.hpp"
 #include "AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 #include "AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
+#include "AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.hpp"
 #include "AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
 #include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
@@ -184,6 +185,25 @@ void ParameterFactory::initializeDefaultSetters() {
 
     registerBasicParameter<AnalogScalingParams, double>(
             "Scale and Normalize", "quantile_high", &AnalogScalingParams::quantile_high);
+
+    // ================== Analog Interval Peak ==================
+
+    std::unordered_map<std::string, IntervalPeakParams::PeakType> peak_type_map = {
+            {"Maximum", IntervalPeakParams::PeakType::MAXIMUM},
+            {"Minimum", IntervalPeakParams::PeakType::MINIMUM}};
+    registerEnumParameter<IntervalPeakParams, IntervalPeakParams::PeakType>(
+            "Interval Peak Detection", "peak_type", &IntervalPeakParams::peak_type, peak_type_map);
+
+    std::unordered_map<std::string, IntervalPeakParams::SearchMode> search_mode_map = {
+            {"Within Intervals", IntervalPeakParams::SearchMode::WITHIN_INTERVALS},
+            {"Between Interval Starts", IntervalPeakParams::SearchMode::BETWEEN_INTERVAL_STARTS}};
+    registerEnumParameter<IntervalPeakParams, IntervalPeakParams::SearchMode>(
+            "Interval Peak Detection", "search_mode", &IntervalPeakParams::search_mode, search_mode_map);
+
+    // Register interval_series as a special nested object
+   registerDataParameter<IntervalPeakParams, DigitalIntervalSeries>(
+           "Interval Peak Detection", "interval_series", &IntervalPeakParams::interval_series);
+
 
     // ====================================================
     // ============== Digital Interval Series =============

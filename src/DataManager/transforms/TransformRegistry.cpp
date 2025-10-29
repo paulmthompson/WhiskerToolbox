@@ -3,6 +3,7 @@
 #include "transforms/AnalogTimeSeries/AnalogFilter/analog_filter.hpp"
 #include "transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 #include "transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
+#include "transforms/AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.hpp"
 #include "transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
 #include "transforms/DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
@@ -55,6 +56,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<MaskSkeletonizeOperation>());
     _registerOperation(std::make_unique<EventThresholdOperation>());
     _registerOperation(std::make_unique<IntervalThresholdOperation>());
+    _registerOperation(std::make_unique<AnalogIntervalPeakOperation>());
     _registerOperation(std::make_unique<HilbertPhaseOperation>());
     _registerOperation(std::make_unique<AnalogScalingOperation>());
     _registerOperation(std::make_unique<LineAngleOperation>());

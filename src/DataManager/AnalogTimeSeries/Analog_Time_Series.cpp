@@ -148,14 +148,13 @@ std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
 
 [[nodiscard]] std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameIndex start_time,
                                                                                     TimeFrameIndex end_time,
-                                                                                    TimeFrame const * source_timeFrame,
-                                                                                    TimeFrame const * analog_timeFrame) const {
-    if (source_timeFrame == analog_timeFrame) {
+                                                                                    TimeFrame const * source_timeFrame) const {
+    if (source_timeFrame == _time_frame.get()) {
         return getDataInTimeFrameIndexRange(start_time, end_time);
     }
 
     // If either timeframe is null, fall back to original behavior
-    if (!source_timeFrame || !analog_timeFrame) {
+    if (!source_timeFrame || !_time_frame) {
         return getDataInTimeFrameIndexRange(start_time, end_time);
     }
 
@@ -165,8 +164,8 @@ std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
     auto end_time_value = source_timeFrame->getTimeAtIndex(end_time);
 
     // 2. Convert that time value to an index in the analog timeframe
-    auto target_start_index = analog_timeFrame->getIndexAtTime(static_cast<float>(start_time_value), false);
-    auto target_end_index = analog_timeFrame->getIndexAtTime(static_cast<float>(end_time_value));
+    auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
+    auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
 
     // 3. Use the converted indices to get the data in the target timeframe
     return getDataInTimeFrameIndexRange(target_start_index, target_end_index);
@@ -577,4 +576,31 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
 
     // Create span pair (end_idx + 1 because end is exclusive for the range)
     return {data_span, this, DataArrayIndex(start_idx), DataArrayIndex(end_idx + 1)};
+}
+
+AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFrameIndexRange(
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time,
+        TimeFrame const * source_timeFrame) const {
+    
+    if (source_timeFrame == _time_frame.get()) {
+        return getTimeValueSpanInTimeFrameIndexRange(start_time, end_time);
+    }
+
+    // If either timeframe is null, fall back to original behavior
+    if (!source_timeFrame || !_time_frame) {
+        return getTimeValueSpanInTimeFrameIndexRange(start_time, end_time);
+    }
+
+    // Convert the time index from source timeframe to target timeframe
+    // 1. Get the time value from the source timeframe
+    auto start_time_value = source_timeFrame->getTimeAtIndex(start_time);
+    auto end_time_value = source_timeFrame->getTimeAtIndex(end_time);
+
+    // 2. Convert that time value to an index in the analog timeframe
+    auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
+    auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
+
+    // 3. Use the converted indices to get the data in the target timeframe
+    return getTimeValueSpanInTimeFrameIndexRange(target_start_index, target_end_index);
 }

@@ -160,6 +160,8 @@ set(DATAMANAGER_SOURCES
         transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp
         transforms/AnalogTimeSeries/AnalogFilter/analog_filter.cpp
         transforms/AnalogTimeSeries/AnalogFilter/analog_filter.hpp
+        transforms/AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.cpp
+        transforms/AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.hpp
         transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.cpp
         transforms/AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp
         transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp

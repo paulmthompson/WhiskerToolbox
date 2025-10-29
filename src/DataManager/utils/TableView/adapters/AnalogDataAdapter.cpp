@@ -30,8 +30,8 @@ size_t AnalogDataAdapter::size() const {
 std::vector<float> AnalogDataAdapter::getDataInRange(TimeFrameIndex start,
                                                      TimeFrameIndex end,
                                                      TimeFrame const * target_timeFrame) {
-    auto const * timeFrame = m_timeFrame.get();
-    auto data_span = m_analogData->getDataInTimeFrameIndexRange(start, end, target_timeFrame, timeFrame);
+
+    auto data_span = m_analogData->getDataInTimeFrameIndexRange(start, end, target_timeFrame);
     return std::vector<float>(data_span.begin(), data_span.end());
 }
 
