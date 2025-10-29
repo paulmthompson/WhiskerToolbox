@@ -5,11 +5,16 @@
 
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
+#include "IO_Widgets/DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp"
 
+#include <QComboBox>
 #include <QFileDialog>
 #include <QKeyEvent>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QStackedWidget>
 
 #include <filesystem>
 #include <fstream>
@@ -27,10 +32,19 @@ DigitalEventSeries_Widget::DigitalEventSeries_Widget(std::shared_ptr<DataManager
 
     ui->tableView->setEditTriggers(QAbstractItemView::SelectedClicked);
 
-    //connect(ui->save_csv, &QPushButton::clicked, this, &DigitalEventSeries_Widget::_saveCSV);
     connect(ui->add_event_button, &QPushButton::clicked, this, &DigitalEventSeries_Widget::_addEventButton);
     connect(ui->remove_event_button, &QPushButton::clicked, this, &DigitalEventSeries_Widget::_removeEventButton);
     connect(ui->tableView, &QTableView::doubleClicked, this, &DigitalEventSeries_Widget::_handleCellClicked);
+
+    // Export section connections
+    connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &DigitalEventSeries_Widget::_onExportTypeChanged);
+    connect(ui->csv_event_saver_widget, &CSVEventSaver_Widget::saveEventCSVRequested,
+            this, &DigitalEventSeries_Widget::_handleSaveEventCSVRequested);
+
+    // Set up export section
+    ui->export_section->setTitle("Export");
+    ui->export_section->autoSetContentLayout();
 }
 
 DigitalEventSeries_Widget::~DigitalEventSeries_Widget() {
@@ -42,41 +56,6 @@ void DigitalEventSeries_Widget::openWidget() {
     this->show();
 }
 
-/*
-void DigitalEventSeries_Widget::_saveCSV() {
-    auto output_path = _data_manager->getOutputPath();
-    if (output_path.empty()) {
-        QString fileName = QFileDialog::getSaveFileName(this, tr("Save Events CSV"),
-                                                        QString(), tr("CSV Files (*.csv)"));
-        if (fileName.isEmpty())
-            return;
-        output_path = fileName.toStdString();
-    } else {
-        auto filename = ui->filename_textbox->text().toStdString();
-        if (filename.empty()) {
-            QMessageBox::warning(this, "Warning", "Please enter a filename");
-            return;
-        }
-        output_path.append(filename);
-    }
-
-    auto events = _data_manager->getData<DigitalEventSeries>(_active_key)->getEventSeries();
-
-    std::ofstream file(output_path);
-    if (!file) {
-        QMessageBox::critical(this, "Error", "Failed to open file for writing");
-        return;
-    }
-
-    file << "Frame\n";
-    for (const auto& event : events) {
-        file << event << "\n";
-    }
-
-    QMessageBox::information(this, "Success", "Events saved successfully");
-}
-*/
-
 void DigitalEventSeries_Widget::setActiveKey(std::string key) {
     _active_key = std::move(key);
 
@@ -85,6 +64,9 @@ void DigitalEventSeries_Widget::setActiveKey(std::string key) {
     _assignCallbacks();
 
     _calculateEvents();
+    
+    // Update filename based on new active key
+    _updateFilename();
 }
 
 void DigitalEventSeries_Widget::_changeDataTable(QModelIndex const & topLeft,
@@ -159,4 +141,71 @@ void DigitalEventSeries_Widget::_handleCellClicked(QModelIndex const & index) {
     float const frameNumber = _event_table_model->getEvent(index.row());
 
     emit frameSelected(static_cast<int>(frameNumber));
+}
+
+void DigitalEventSeries_Widget::_onExportTypeChanged(int index) {
+    // Update the stacked widget to show the correct saver options widget
+    ui->stacked_saver_options->setCurrentIndex(index);
+    
+    // Update filename when export type changes
+    _updateFilename();
+}
+
+void DigitalEventSeries_Widget::_handleSaveEventCSVRequested(CSVEventSaverOptions options) {
+    EventSaverOptionsVariant options_variant = options;
+    _initiateSaveProcess(SaverType::CSV, options_variant);
+}
+
+void DigitalEventSeries_Widget::_initiateSaveProcess(SaverType saver_type, EventSaverOptionsVariant & options_variant) {
+    // Get output path from DataManager
+    auto output_path = _data_manager->getOutputPath();
+    if (output_path.empty()) {
+        QMessageBox::warning(this, "Warning", "Please set an output directory in the Data Manager settings");
+        return;
+    }
+
+    if (saver_type == SaverType::CSV) {
+        auto & csv_options = std::get<CSVEventSaverOptions>(options_variant);
+        csv_options.parent_dir = output_path;
+        csv_options.filename = ui->filename_edit->text().toStdString();
+        
+        if (_performActualCSVSave(csv_options)) {
+            QMessageBox::information(this, "Success", "Events saved successfully to CSV");
+        }
+    }
+}
+
+bool DigitalEventSeries_Widget::_performActualCSVSave(CSVEventSaverOptions const & options) {
+    auto events = _data_manager->getData<DigitalEventSeries>(_active_key);
+    if (!events) {
+        QMessageBox::critical(this, "Error", "No event data available");
+        return false;
+    }
+
+    try {
+        ::save(events.get(), options);
+        return true;
+    } catch (std::runtime_error const & e) {
+        QMessageBox::critical(this, "Error", QString("Failed to save CSV: %1").arg(e.what()));
+        return false;
+    }
+}
+
+std::string DigitalEventSeries_Widget::_generateFilename() const {
+    if (_active_key.empty()) {
+        return "events.csv";
+    }
+    
+    // Get the export type
+    QString export_type = ui->export_type_combo->currentText();
+    
+    if (export_type == "CSV") {
+        return _active_key + ".csv";
+    }
+    
+    return _active_key + ".csv"; // Default to CSV
+}
+
+void DigitalEventSeries_Widget::_updateFilename() {
+    ui->filename_edit->setText(QString::fromStdString(_generateFilename()));
 }

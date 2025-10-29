@@ -78,6 +78,9 @@ set(IO_WIDGET_SOURCES
         DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.cpp
         DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.hpp
         DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.ui
+        DigitalTimeSeries/CSV/CSVEventSaver_Widget.cpp
+        DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp
+        DigitalTimeSeries/CSV/CSVEventSaver_Widget.ui
 
         Tensors/Tensor_Loader_Widget.hpp
         Tensors/Tensor_Loader_Widget.cpp

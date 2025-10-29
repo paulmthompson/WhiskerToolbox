@@ -1,10 +1,13 @@
 #ifndef DIGITALEVENTSERIES_WIDGET_HPP
 #define DIGITALEVENTSERIES_WIDGET_HPP
 
+#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
+
 #include <QWidget>
 
 #include <memory>
 #include <string>
+#include <variant>
 
 namespace Ui {
 class DigitalEventSeries_Widget;
@@ -12,6 +15,9 @@ class DigitalEventSeries_Widget;
 
 class DataManager;
 class EventTableModel;
+class CSVEventSaver_Widget;
+
+using EventSaverOptionsVariant = std::variant<CSVEventSaverOptions>;
 
 class DigitalEventSeries_Widget : public QWidget {
     Q_OBJECT
@@ -34,15 +40,34 @@ private:
     int _callback_id{0};
     EventTableModel * _event_table_model;
 
+    enum SaverType { CSV };
+
     void _calculateEvents();
     void _assignCallbacks();
 
+    void _initiateSaveProcess(SaverType saver_type, EventSaverOptionsVariant & options_variant);
+    bool _performActualCSVSave(CSVEventSaverOptions const & options);
+
+    /**
+     * @brief Generate appropriate filename based on active key and export type
+     * 
+     * @return String containing the filename with appropriate extension
+     */
+    std::string _generateFilename() const;
+
+    /**
+     * @brief Update the filename field based on current active key and export type
+     */
+    void _updateFilename();
+
 private slots:
-    //void _saveCSV();
     void _addEventButton();
     void _removeEventButton();
     void _handleCellClicked(QModelIndex const & index);
     void _changeDataTable(QModelIndex const & topLeft, QModelIndex const & bottomRight, QVector<int> const & roles);
+
+    void _onExportTypeChanged(int index);
+    void _handleSaveEventCSVRequested(CSVEventSaverOptions options);
 };
 
 
