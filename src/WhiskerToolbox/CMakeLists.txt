@@ -144,6 +144,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp
         DataTransform_Widget/AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.cpp
         DataTransform_Widget/AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.ui
+        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalPeak_Widget/AnalogIntervalPeak_Widget.hpp
+        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalPeak_Widget/AnalogIntervalPeak_Widget.cpp
+        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalPeak_Widget/AnalogIntervalPeak_Widget.ui
         DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp
         DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.cpp
         DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.ui

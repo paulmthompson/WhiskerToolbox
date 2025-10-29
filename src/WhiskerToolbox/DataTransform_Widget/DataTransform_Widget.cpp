@@ -10,6 +10,7 @@
 
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp"
+#include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalPeak_Widget/AnalogIntervalPeak_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.hpp"
 #include "DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp"
@@ -146,6 +147,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Threshold Interval Detection"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new AnalogIntervalThreshold_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Interval Peak Detection"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new AnalogIntervalPeak_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
     };
 
     _parameterWidgetFactories["Hilbert Phase"] = [](QWidget * parent) -> TransformParameter_Widget * {
