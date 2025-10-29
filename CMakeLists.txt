@@ -66,7 +66,7 @@ endif()
 
 message(STATUS "VCPKG_MANIFEST_FEATURES: ${VCPKG_MANIFEST_FEATURES}")
 
-project(BehaviorToolbox VERSION 0.3.5 LANGUAGES CXX)
+project(BehaviorToolbox VERSION 0.4.0 LANGUAGES CXX)
 
 include(CTest)
 
