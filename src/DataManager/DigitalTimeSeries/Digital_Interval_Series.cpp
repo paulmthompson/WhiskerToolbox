@@ -235,18 +235,17 @@ std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(Ti
 
 std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(TimeFrameIndex start_index,
                                                                               TimeFrameIndex stop_index,
-                                                                              TimeFrame const * source_time_frame,
-                                                                              TimeFrame const * interval_time_frame) const {
-    if (source_time_frame == interval_time_frame) {
+                                                                              TimeFrame const & source_time_frame) const {
+    if (&source_time_frame == _time_frame.get()) {
         return getIntervalsWithIdsInRange(start_index, stop_index);
     }
 
     // If either timeframe is null, fall back to original behavior
-    if (!source_time_frame || !interval_time_frame) {
+    if (!_time_frame.get()) {
         return getIntervalsWithIdsInRange(start_index, stop_index);
     }
 
-    auto [target_start_index, target_stop_index] = _convertTimeFrameRange(start_index, stop_index, source_time_frame, interval_time_frame);
+    auto [target_start_index, target_stop_index] = _convertTimeFrameRange(start_index, stop_index, source_time_frame);
     return getIntervalsWithIdsInRange(target_start_index, target_stop_index);
 }
 
@@ -255,16 +254,15 @@ std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(Ti
 std::pair<TimeFrameIndex, TimeFrameIndex> DigitalIntervalSeries::_convertTimeFrameRange(
         TimeFrameIndex const start_index,
         TimeFrameIndex const stop_index,
-        TimeFrame const * const source_time_frame,
-        TimeFrame const * const target_time_frame) {
+        TimeFrame const & source_time_frame) const {
 
     // Get the time values from the source timeframe
-    auto start_time_value = source_time_frame->getTimeAtIndex(start_index);
-    auto stop_time_value = source_time_frame->getTimeAtIndex(stop_index);
+    auto start_time_value = source_time_frame.getTimeAtIndex(start_index);
+    auto stop_time_value = source_time_frame.getTimeAtIndex(stop_index);
 
     // Convert to indices in the target timeframe
-    auto target_start_index = target_time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
-    auto target_stop_index = target_time_frame->getIndexAtTime(static_cast<float>(stop_time_value));
+    auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
+    auto target_stop_index = _time_frame->getIndexAtTime(static_cast<float>(stop_time_value));
 
     return {target_start_index, target_stop_index};
 }

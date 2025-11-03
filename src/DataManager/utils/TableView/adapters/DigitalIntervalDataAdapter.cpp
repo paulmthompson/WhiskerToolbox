@@ -38,21 +38,21 @@ std::vector<Interval> DigitalIntervalDataAdapter::getIntervalsInRange(TimeFrameI
     // This method handles the time frame conversion internally
     // Using OVERLAPPING mode to get any intervals that overlap with the range
     auto intervals_view = m_digitalIntervalSeries->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-        start, end, target_timeFrame, m_timeFrame.get());
-    
+            start, end, *target_timeFrame);
+
     // Convert the view to a vector
     std::vector<Interval> result;
-    for (const Interval& interval : intervals_view) {
+    for (Interval const & interval: intervals_view) {
         result.push_back(interval);
     }
-    
+
     return result;
 }
 
 std::vector<IntervalWithId> DigitalIntervalDataAdapter::getIntervalsWithIdsInRange(TimeFrameIndex start,
                                                                                    TimeFrameIndex end,
                                                                                    TimeFrame const * target_timeFrame) {
-    return m_digitalIntervalSeries->getIntervalsWithIdsInRange(start, end, target_timeFrame, m_timeFrame.get());
+    return m_digitalIntervalSeries->getIntervalsWithIdsInRange(start, end, *target_timeFrame);
 }
 
 EntityId DigitalIntervalDataAdapter::getEntityIdAt(size_t index) const {

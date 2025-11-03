@@ -122,7 +122,15 @@ set(CMAKE_SUPPORT_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 #e.g. add "compileCommands": "${workspaceFolder}/out/build/Clang/Release/compile_commands.json" to c_cpp_properties.json for Mac config
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-#set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# Disable LTO when sanitizers are enabled to avoid false positive ODR violations
+# Sanitizers register globals in each translation unit, and LTO can expose these as duplicates
+if(NOT enableAddressSanitizer)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    message(STATUS "Link-Time Optimization (LTO): ENABLED")
+else()
+    message(STATUS "Link-Time Optimization (LTO): DISABLED (incompatible with sanitizers)")
+endif()
+
 #=============================
 # Externally Provided Content
 #=============================

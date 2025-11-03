@@ -555,8 +555,7 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
                 TimeFrameIndex(static_cast<int64_t>(start_time)),
                 TimeFrameIndex(static_cast<int64_t>(end_time)),
-                _master_time_frame.get(),
-                time_frame.get());
+                *_master_time_frame);
 
         hexToRGB(display_options->hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;

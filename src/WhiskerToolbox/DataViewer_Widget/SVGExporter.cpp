@@ -283,8 +283,7 @@ void SVGExporter::addDigitalIntervalSeries(
     auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
         TimeFrameIndex(static_cast<int64_t>(start_time)),
         TimeFrameIndex(static_cast<int64_t>(end_time)),
-        gl_widget_->getMasterTimeFrame().get(),
-        time_frame.get());
+        *(gl_widget_->getMasterTimeFrame()));
 
     // Build MVP matrices using same logic as OpenGL rendering
     auto const Model = new_getIntervalModelMat(display_options, *plotting_manager_);
