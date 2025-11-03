@@ -7,6 +7,33 @@
 #include <QFile>
 #include <QPalette>
 #include <QSurfaceFormat>
+#include <QComboBox>
+#include <QEvent>
+#include <QObject>
+
+// Event filter to disable mouse wheel scrolling on combo boxes
+class ComboBoxWheelFilter : public QObject
+{
+public:
+    explicit ComboBoxWheelFilter(QObject* parent = nullptr) : QObject(parent) {}
+
+protected:
+    bool eventFilter(QObject* obj, QEvent* event) override
+    {
+        if (event->type() == QEvent::Wheel) {
+            // Check if the object is a QComboBox or its descendant
+            if (qobject_cast<QComboBox*>(obj)) {
+                QComboBox* combo = qobject_cast<QComboBox*>(obj);
+                // Only block wheel events if the combo box doesn't have focus
+                // This allows intentional scrolling when the user has clicked into it
+                if (!combo->hasFocus()) {
+                    return true; // Filter out the event
+                }
+            }
+        }
+        return QObject::eventFilter(obj, event);
+    }
+};
 
 
 
@@ -22,6 +49,10 @@ int main(int argc, char *argv[])
     QSurfaceFormat::setDefaultFormat(format);
 
     QApplication a(argc, argv);
+
+    // Install global event filter to disable accidental mouse wheel scrolling on combo boxes
+    ComboBoxWheelFilter* wheelFilter = new ComboBoxWheelFilter(&a);
+    a.installEventFilter(wheelFilter);
 
     //a.setStyle("Fusion");
 
