@@ -179,10 +179,9 @@ std::vector<Mask2D> const & MaskData::getAtTime(TimeIndexAndFrame const & time_i
 }
 
 std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time,
-                                                TimeFrame const * source_timeframe,
-                                                TimeFrame const * mask_timeframe) const {
+                                                TimeFrame const & source_timeframe) const {
 
-    TimeFrameIndex const converted = convert_time_index(time, source_timeframe, mask_timeframe);
+    TimeFrameIndex const converted = convert_time_index(time, &source_timeframe, _time_frame.get());
     return getAtTime(converted);
 }
 

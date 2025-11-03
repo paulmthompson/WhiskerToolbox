@@ -1158,9 +1158,6 @@ void Media_Window::_plotMaskData() {
         auto mask = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask->getImageSize();
 
-        auto mask_timeframe_key = _data_manager->getTimeKey(mask_key);
-        auto mask_timeframe = _data_manager->getTime(mask_timeframe_key);
-
         // Check for preview data first
         std::vector<Mask2D> maskData;
         std::vector<Mask2D> maskData2;
@@ -1171,7 +1168,7 @@ void Media_Window::_plotMaskData() {
             maskData2.clear();// No time -1 data for preview
         } else {
             // Use original data
-            maskData = mask->getAtTime(TimeFrameIndex(current_time), video_timeframe.get(), mask_timeframe.get());
+            maskData = mask->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
             maskData2 = mask->getAtTime(TimeFrameIndex(-1));
         }
 
@@ -1315,13 +1312,10 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
         auto mask_data = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask_data->getImageSize();
 
-        auto mask_timeframe_key = _data_manager->getTimeKey(mask_key);
-        auto mask_timeframe = _data_manager->getTime(mask_timeframe_key);
-
         std::cout << "Mask image size: " << image_size.width << "x" << image_size.height << std::endl;
 
         auto const current_time = _data_manager->getCurrentTime();
-        auto maskData = mask_data->getAtTime(TimeFrameIndex(current_time), video_timeframe.get(), mask_timeframe.get());
+        auto maskData = mask_data->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
 
         std::cout << "Mask data size: " << maskData.size() << std::endl;
 
@@ -1391,7 +1385,7 @@ void Media_Window::_plotPointData() {
             xAspect = static_cast<float>(_canvasWidth) / mask_width;
         }
 
-        auto pointData = point->getAtTime(current_time, video_timeframe.get());
+        auto pointData = point->getAtTime(current_time, *video_timeframe);
         auto entityIds = point->getEntityIdsAtTime(current_time);
 
         // Get configurable point size

@@ -43,7 +43,7 @@ std::vector<float> PointComponentAdapter::getDataInRange(TimeFrameIndex start,
                                                          TimeFrame const * target_timeFrame) {
     // Special case: if start == end, we're looking for points at exactly one time frame
     if (start == end) {
-        auto points = m_pointData->getAtTime(start, target_timeFrame);
+        auto points = m_pointData->getAtTime(start, *target_timeFrame);
         std::vector<float> componentValues;
         componentValues.reserve(points.size());
         
@@ -56,7 +56,7 @@ std::vector<float> PointComponentAdapter::getDataInRange(TimeFrameIndex start,
     
     // For ranges with different start and end, use the range view
     auto point_range = m_pointData->GetPointsInRange(TimeFrameInterval(start, end),
-                                                     target_timeFrame);
+                                                     *target_timeFrame);
     
     auto componentValues = std::vector<float>();
 

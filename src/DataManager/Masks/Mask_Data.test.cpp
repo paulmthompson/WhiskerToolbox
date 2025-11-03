@@ -11,6 +11,12 @@
 TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
     MaskData mask_data;
 
+    // Test with same source and target timeframes
+    std::vector<int> times = {5, 10, 15, 20, 25};
+    auto timeframe = std::make_shared<TimeFrame>(times);
+
+    mask_data.setTimeFrame(timeframe);
+
     // Setup some test data
     std::vector<uint32_t> x1 = {1, 2, 3, 1};
     std::vector<uint32_t> y1 = {1, 1, 2, 2};
@@ -167,13 +173,11 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         }
 
         SECTION("Range with timeframe conversion - same timeframes") {
-            // Test with same source and target timeframes
-            std::vector<int> times = {5, 10, 15, 20, 25};
-            auto timeframe = std::make_shared<TimeFrame>(times);
+
             
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : mask_data.GetMasksInRange(interval, timeframe, timeframe)) {
+            for (const auto& pair : mask_data.GetMasksInRange(interval, *timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
                     REQUIRE(pair.masks.size() == 2);
@@ -206,10 +210,12 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
             timeframe_test_data.addAtTime(TimeFrameIndex(3), points);  // At data timeframe index 3 (time=15)
             timeframe_test_data.addAtTime(TimeFrameIndex(4), x2, y2);  // At data timeframe index 4 (time=20)
             
+            timeframe_test_data.setTimeFrame(data_timeframe);
+
             // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             size_t count = 0;
-            for (const auto& pair : timeframe_test_data.GetMasksInRange(video_interval, video_timeframe, data_timeframe)) {
+            for (const auto& pair : timeframe_test_data.GetMasksInRange(video_interval, *video_timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 2);
                     REQUIRE(pair.masks.size() == 1);

@@ -227,7 +227,7 @@ public:
      * @return A vector of Point2D<float> at the converted time
      */
     [[nodiscard]] std::vector<Point2D<float>> const & getAtTime(TimeFrameIndex time,
-                                                                TimeFrame const * source_timeframe) const;
+                                                                TimeFrame const & source_timeframe) const;
 
     /**
      * @brief Get the maximum number of points at any time
@@ -315,21 +315,21 @@ public:
     * @return A view of time-points pairs for times within the converted interval range
     */
     [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval,
-                                        TimeFrame const * source_timeframe) const {
+                                        TimeFrame const & source_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
-        if (source_timeframe == _time_frame.get()) {
+        if (&source_timeframe == _time_frame.get()) {
             return GetPointsInRange(interval);
         }
 
-        // If either timeframe is null, fall back to original behavior
-        if (!source_timeframe || !_time_frame.get()) {
+        // If our timeframe is null, fall back to original behavior
+        if (!_time_frame) {
             return GetPointsInRange(interval);
         }
 
         // Convert the time range from source timeframe to target timeframe
         // 1. Get the time values from the source timeframe
-        auto start_time_value = source_timeframe->getTimeAtIndex(interval.start);
-        auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
+        auto start_time_value = source_timeframe.getTimeAtIndex(interval.start);
+        auto end_time_value = source_timeframe.getTimeAtIndex(interval.end);
 
         // 2. Convert those time values to indices in the point timeframe
         auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);

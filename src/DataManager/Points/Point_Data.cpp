@@ -169,14 +169,9 @@ std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const ti
 }
 
 std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const time,
-                                                         TimeFrame const * source_timeframe) const {
+                                                         TimeFrame const & source_timeframe) const {
 
-    if (!source_timeframe) {
-        std::cerr << "Source timeframe is null" << std::endl;
-        return _empty;
-    }
-
-    TimeFrameIndex const converted = convert_time_index(time, source_timeframe, _time_frame.get());
+    TimeFrameIndex const converted = convert_time_index(time, &source_timeframe, _time_frame.get());
     return getAtTime(converted);
 }
 

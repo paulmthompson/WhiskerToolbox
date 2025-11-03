@@ -165,8 +165,7 @@ public:
      * @return A vector of Mask2D at the converted time
      */
     [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time,
-                                                        TimeFrame const * source_timeframe,
-                                                        TimeFrame const * mask_timeframe) const;
+                                                        TimeFrame const & source_timeframe) const;
 
     /**
      * @brief Get all masks with their associated times as a range
@@ -225,30 +224,28 @@ public:
     *
     * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
     * @param source_timeframe The timeframe that the interval is expressed in
-    * @param target_timeframe The timeframe that this mask data uses
     * @return A view of time-mask pairs for times within the converted interval range
     */
     [[nodiscard]] auto GetMasksInRange(TimeFrameInterval const & interval,
-                                       std::shared_ptr<TimeFrame> source_timeframe,
-                                       std::shared_ptr<TimeFrame> target_timeframe) const {
+                                       TimeFrame const & source_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
-        if (source_timeframe.get() == target_timeframe.get()) {
+        if (&source_timeframe == _time_frame.get()) {
             return GetMasksInRange(interval);
         }
 
         // If either timeframe is null, fall back to original behavior
-        if (!source_timeframe || !target_timeframe) {
+        if (!_time_frame) {
             return GetMasksInRange(interval);
         }
 
         // Convert the time range from source timeframe to target timeframe
         // 1. Get the time values from the source timeframe
-        auto start_time_value = source_timeframe->getTimeAtIndex(interval.start);
-        auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
+        auto start_time_value = source_timeframe.getTimeAtIndex(interval.start);
+        auto end_time_value = source_timeframe.getTimeAtIndex(interval.end);
 
         // 2. Convert those time values to indices in the target timeframe
-        auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
-        auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
+        auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value));
+        auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
 
         // 3. Create converted interval and use the original function
         TimeFrameInterval target_interval{target_start_index, target_end_index};

@@ -171,7 +171,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
 
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (auto const & pair: point_data.GetPointsInRange(interval, timeframe.get())) {
+            for (auto const & pair: point_data.GetPointsInRange(interval, *timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
                     REQUIRE(pair.points.size() == 2);
@@ -210,7 +210,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             size_t count = 0;
             for (auto const & pair: timeframe_test_data.GetPointsInRange(video_interval,
-                                                                         video_timeframe.get())) {
+                                                                         *video_timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 2);
                     REQUIRE(pair.points.size() == 2);
@@ -271,7 +271,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
 
             size_t count = 0;
             for (auto const & pair: timeframe_test_data.GetPointsInRange(video_interval,
-                                                                         video_timeframe.get())) {
+                                                                         *video_timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 2);
                     REQUIRE(pair.points.size() == 2);
@@ -1068,7 +1068,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         point_data.setTimeFrame(timeframe);
 
         // Query with same source and target timeframe
-        auto result = point_data.getAtTime(TimeFrameIndex(10), timeframe.get());
+        auto result = point_data.getAtTime(TimeFrameIndex(10), *timeframe);
 
         REQUIRE(result.size() == 2);
         REQUIRE(result[0].x == Catch::Approx(100.0f));
@@ -1096,7 +1096,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
 
         // Query video frame 1 (time=10) which should map to data index 2 (time=10)
         auto result = test_point_data.getAtTime(TimeFrameIndex(1),
-                                                video_timeframe.get());
+                                                *video_timeframe);
 
         REQUIRE(result.size() == 2);
         REQUIRE(result[0].x == Catch::Approx(100.0f));
@@ -1120,22 +1120,9 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         // Query video frame 1 (time=5) which should map to data timeframe index 1 (time=3, closest to 5)
         // Since we only have data at index 3, this should return empty
         auto result = test_point_data.getAtTime(TimeFrameIndex(1),
-                                                video_timeframe.get());
+                                                *video_timeframe);
 
         // Should return empty since we don't have data at the converted index
         REQUIRE(result.empty());
-    }
-
-    SECTION("Null timeframe handling") {
-        std::vector<int> times = {5, 10, 15, 20, 25};
-        auto valid_timeframe = std::make_shared<TimeFrame>(times);
-
-        // This should still work since the function should handle null pointers gracefully
-        // by falling back to the original behavior
-        auto result = point_data.getAtTime(TimeFrameIndex(10), nullptr);
-
-        // The behavior when timeframes are null might depend on getTimeIndexForSeries implementation
-        // For now, let's check that it doesn't crash and returns some result
-        // The exact behavior would depend on the TimeFrame implementation
     }
 }
