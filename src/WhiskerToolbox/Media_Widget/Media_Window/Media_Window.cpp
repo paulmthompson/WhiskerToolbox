@@ -1004,12 +1004,9 @@ void Media_Window::_plotLineData() {
 
         auto plot_color = plot_color_with_alpha(_line_config.get());
 
-        auto line_timeframe_key = _data_manager->getTimeKey(line_key);
-        auto line_timeframe = _data_manager->getTime(line_timeframe_key);
-
         auto line_data = _data_manager->getData<LineData>(line_key);
-        auto lineData = line_data->getAtTime(TimeFrameIndex(current_time), video_timeframe.get(), line_timeframe.get());
-        auto entityIds = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time), video_timeframe.get(), line_timeframe.get());
+        auto lineData = line_data->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
+        auto entityIds = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time), *video_timeframe);
 
         // Check for line-specific image size scaling
         auto image_size = line_data->getImageSize();

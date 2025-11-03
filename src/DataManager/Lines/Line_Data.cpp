@@ -190,14 +190,10 @@ std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time) const
 }
 
 std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time,
-                                                TimeFrame const * source_timeframe,
-                                                TimeFrame const * line_timeframe) const {
-    // Convert time if needed
-    TimeFrameIndex converted_time = time;
-    if (source_timeframe && line_timeframe && source_timeframe != line_timeframe) {
-        auto time_value = source_timeframe->getTimeAtIndex(time);
-        converted_time = line_timeframe->getIndexAtTime(static_cast<float>(time_value));
-    }
+                                                TimeFrame const & source_timeframe) const {
+    TimeFrameIndex const converted_time = convert_time_index(time,
+                                                             &source_timeframe,
+                                                             _time_frame.get());
 
     return getAtTime(converted_time);
 }
@@ -219,14 +215,11 @@ std::vector<EntityId> const & LineData::getEntityIdsAtTime(TimeFrameIndex const 
 }
 
 std::vector<EntityId> const & LineData::getEntityIdsAtTime(TimeFrameIndex const time,
-                                                           TimeFrame const * source_timeframe,
-                                                           TimeFrame const * line_timeframe) const {
-    // Convert time if needed
-    TimeFrameIndex converted_time = time;
-    if (source_timeframe && line_timeframe && source_timeframe != line_timeframe) {
-        auto time_value = source_timeframe->getTimeAtIndex(time);
-        converted_time = line_timeframe->getIndexAtTime(static_cast<float>(time_value));
-    }
+                                                           TimeFrame const & source_timeframe) const {
+
+    TimeFrameIndex const converted_time = convert_time_index(time,
+                                                             &source_timeframe,
+                                                             _time_frame.get());
 
     return getEntityIdsAtTime(converted_time);
 }
@@ -509,10 +502,10 @@ std::size_t LineData::copyByEntityIds(LineData & target, std::unordered_set<Enti
 std::size_t LineData::moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
     auto result = move_by_entity_ids(_data, target, entity_ids, notify,
                                      [](LineEntry const & entry) -> Line2D const & { return entry.line; });
-    
+
     if (notify && result > 0) {
         notifyObservers();
     }
-    
+
     return result;
 }

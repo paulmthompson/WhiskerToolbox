@@ -199,6 +199,11 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 TEST_CASE("LineData - Range-based access", "[line][data][range]") {
     LineData line_data;
 
+    std::vector<int> times = {5, 10, 15, 20, 25};
+    auto timeframe = std::make_shared<TimeFrame>(times);
+
+    line_data.setTimeFrame(timeframe);
+
     // Setup test data
     std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
     std::vector<float> y1 = {1.0f, 2.0f, 1.0f};
@@ -276,13 +281,11 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
         }
 
         SECTION("Range with timeframe conversion - same timeframes") {
-            // Test with same source and target timeframes
-            std::vector<int> times = {5, 10, 15, 20, 25};
-            auto timeframe = std::make_shared<TimeFrame>(times);
             
+            // Test with same source and target timeframes
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : line_data.GetLinesInRange(interval, timeframe.get(), timeframe.get())) {
+            for (const auto& pair : line_data.GetLinesInRange(interval, *timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
                     REQUIRE(pair.lines.size() == 2);
@@ -315,10 +318,12 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             timeframe_test_data.addAtTime(TimeFrameIndex(3), x2, y2);  // At data timeframe index 3 (time=15)
             timeframe_test_data.addAtTime(TimeFrameIndex(4), x3, y3);  // At data timeframe index 4 (time=20)
             
+            timeframe_test_data.setTimeFrame(data_timeframe);
+
             // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             size_t count = 0;
-            for (const auto& pair : timeframe_test_data.GetLinesInRange(video_interval, video_timeframe.get(), data_timeframe.get())) {
+            for (const auto& pair : timeframe_test_data.GetLinesInRange(video_interval, *video_timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 2);
                     REQUIRE(pair.lines.size() == 1);

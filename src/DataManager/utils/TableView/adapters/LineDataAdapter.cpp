@@ -49,15 +49,14 @@ auto LineDataAdapter::getLinesInRange(TimeFrameIndex start,
     // Fast path: when start == end, avoid constructing a ranges pipeline.
     // Directly fetch the lines at the single time index using timeframe conversion.
     if (start == end) {
-        auto const & lines_ref = m_lineData->getAtTime(start, target_timeFrame, m_timeFrame.get());
+        auto const & lines_ref = m_lineData->getAtTime(start, *target_timeFrame);
         return {lines_ref.begin(), lines_ref.end()};
     }
 
     // Use the LineData's built-in method to get lines in the time range.
     // This method handles the time frame conversion internally via a lazy view.
     auto lines_view = m_lineData->GetLinesInRange(TimeFrameInterval(start, end),
-                                                  target_timeFrame,
-                                                  m_timeFrame.get());
+                                                  *target_timeFrame);
 
     // Materialize the view into a vector
     std::vector<Line2D> result;
@@ -79,12 +78,12 @@ bool LineDataAdapter::hasMultiSamples() const {
 }
 
 auto LineDataAdapter::getEntityCountAt(TimeFrameIndex t) const -> size_t {
-    auto const & lines_ref = m_lineData->getAtTime(t, m_timeFrame.get(), m_timeFrame.get());
+    auto const & lines_ref = m_lineData->getAtTime(t, *m_timeFrame);
     return lines_ref.size();
 }
 
 auto LineDataAdapter::getLineAt(TimeFrameIndex t, int entityIndex) const -> Line2D const * {
-    auto const & lines_ref = m_lineData->getAtTime(t, m_timeFrame.get(), m_timeFrame.get());
+    auto const & lines_ref = m_lineData->getAtTime(t, *m_timeFrame);
     if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= lines_ref.size()) {
         return nullptr;
     }
@@ -99,5 +98,5 @@ EntityId LineDataAdapter::getEntityIdAt(TimeFrameIndex t, int entityIndex) const
 
 std::vector<EntityId> LineDataAdapter::getEntityIdsAtTime(TimeFrameIndex t,
                                                           TimeFrame const * target_timeframe) const {
-    return m_lineData->getEntityIdsAtTime(t, target_timeframe, m_timeFrame.get());
+    return m_lineData->getEntityIdsAtTime(t, *target_timeframe);
 }

@@ -203,12 +203,10 @@ public:
      * 
      * @param time The time index in the source timeframe
      * @param source_timeframe The timeframe that the time index is expressed in
-     * @param line_timeframe The timeframe that this line data uses
      * @return A vector of lines at the converted time
      */
     [[nodiscard]] std::vector<Line2D> const & getAtTime(TimeFrameIndex time,
-                                                        TimeFrame const * source_timeframe,
-                                                        TimeFrame const * line_timeframe) const;
+                                                        TimeFrame const & source_timeframe) const;
 
     /**
      * @brief Get EntityIds aligned with lines at a specific time.
@@ -216,8 +214,7 @@ public:
     [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
 
     [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time,
-                                                                   TimeFrame const * source_timeframe,
-                                                                   TimeFrame const * line_timeframe) const;
+                                                                   TimeFrame const & source_timeframe) const;
 
     /**
      * @brief Get flattened EntityIds for all lines across all times.
@@ -421,30 +418,28 @@ public:
     *
     * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
     * @param source_timeframe The timeframe that the interval is expressed in
-    * @param target_timeframe The timeframe that this line data uses
     * @return A view of time-lines pairs for times within the converted interval range
     */
     [[nodiscard]] auto GetLinesInRange(TimeFrameInterval const & interval,
-                                       TimeFrame const * source_timeframe,
-                                       TimeFrame const * target_timeframe) const {
+                                       TimeFrame const & source_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
-        if (source_timeframe == target_timeframe) {
+        if (&source_timeframe == _time_frame.get()) {
             return GetLinesInRange(interval);
         }
 
         // If either timeframe is null, fall back to original behavior
-        if (!source_timeframe || !target_timeframe) {
+        if (!_time_frame) {
             return GetLinesInRange(interval);
         }
 
         // Convert the time range from source timeframe to target timeframe
         // 1. Get the time values from the source timeframe
-        auto start_time_value = source_timeframe->getTimeAtIndex(interval.start);
-        auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
+        auto start_time_value = source_timeframe.getTimeAtIndex(interval.start);
+        auto end_time_value = source_timeframe.getTimeAtIndex(interval.end);
 
         // 2. Convert those time values to indices in the target timeframe
-        auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
-        auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
+        auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value));
+        auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
 
         // 3. Create converted interval and use the original function
         TimeFrameInterval target_interval{target_start_index, target_end_index};
@@ -461,30 +456,28 @@ public:
     *
     * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
     * @param source_timeframe The timeframe that the interval is expressed in
-    * @param target_timeframe The timeframe that this line data uses
     * @return A zero-copy view of time-line entries pairs for times within the converted interval range
     */
     [[nodiscard]] auto GetLineEntriesInRange(TimeFrameInterval const & interval,
-                                             TimeFrame const * source_timeframe,
-                                             TimeFrame const * target_timeframe) const {
+                                             TimeFrame const & source_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
-        if (source_timeframe == target_timeframe) {
+        if (&source_timeframe == _time_frame.get()) {
             return GetLineEntriesInRange(interval);
         }
 
         // If either timeframe is null, fall back to original behavior
-        if (!source_timeframe || !target_timeframe) {
+        if (!_time_frame) {
             return GetLineEntriesInRange(interval);
         }
 
         // Convert the time range from source timeframe to target timeframe
         // 1. Get the time values from the source timeframe
-        auto start_time_value = source_timeframe->getTimeAtIndex(interval.start);
-        auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
+        auto start_time_value = source_timeframe.getTimeAtIndex(interval.start);
+        auto end_time_value = source_timeframe.getTimeAtIndex(interval.end);
 
         // 2. Convert those time values to indices in the target timeframe
-        auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
-        auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
+        auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value));
+        auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
 
         // 3. Create converted interval and use the original function
         TimeFrameInterval target_interval{target_start_index, target_end_index};
