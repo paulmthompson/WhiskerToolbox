@@ -117,6 +117,10 @@ elseif (WIN32)
   set(USE_CPLEX OFF)
 
   set(BUILD_FLATZINC OFF)
+
+    # Disable all OR-Tools binaries/executables to avoid linking issues
+    set(BUILD_CXX_SAMPLES OFF)
+    set(BUILD_CXX_EXAMPLES OFF)
 endif()
 
 FetchContent_Declare(
@@ -134,8 +138,8 @@ if (ENABLE_UI)
     qt6advanceddocking
     GIT_REPOSITORY https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System
     GIT_TAG 4.3.1
-    CMAKE_ARGS -DBUILD_EXAMPLES=OFF
     )
+    set(BUILD_EXAMPLES OFF CACHE BOOL "Disable Qt Advanced Docking examples" FORCE)
 endif()
 
 FetchContent_Declare(
