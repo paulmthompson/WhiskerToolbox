@@ -26,6 +26,15 @@ jobs:
       - name: Configure CMake with coverage
         run: cmake --preset linux-gcc-debug -DCODE_COVERAGE=ON -DenableAddressSanitizer=ON
 
+      - name: Clean vcpkg build files
+        run: |
+          echo "Disk usage before cleanup:"
+          df -h
+          find ${{ github.workspace }}/out/build/GCC/Debug/vcpkg_installed -type d -name "bld" -exec rm -rf {} + 2>/dev/null || true
+          find ${{ github.workspace }}/out/build/GCC/Debug/vcpkg_installed -type d -name "src" -exec rm -rf {} + 2>/dev/null || true
+          echo "Disk usage after cleanup:"
+          df -h
+
       - name: Build
         run: cmake --build --preset linux-gcc-debug
 
