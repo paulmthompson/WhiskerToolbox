@@ -169,9 +169,14 @@ std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const ti
 }
 
 std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const time,
-                                                         TimeFrame const * source_timeframe,
-                                                         TimeFrame const * target_timeframe) const {
-    TimeFrameIndex const converted = convert_time_index(time, source_timeframe, target_timeframe);
+                                                         TimeFrame const * source_timeframe) const {
+
+    if (!source_timeframe) {
+        std::cerr << "Source timeframe is null" << std::endl;
+        return _empty;
+    }
+
+    TimeFrameIndex const converted = convert_time_index(time, source_timeframe, _time_frame.get());
     return getAtTime(converted);
 }
 
@@ -459,12 +464,12 @@ std::size_t PointData::copyByEntityIds(PointData & target, std::unordered_set<En
 }
 
 std::size_t PointData::moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
-    auto result = move_by_entity_ids(_data, target, entity_ids, notify, 
+    auto result = move_by_entity_ids(_data, target, entity_ids, notify,
                                      [](PointEntry const & entry) -> Point2D<float> const & { return entry.point; });
-    
+
     if (notify && result > 0) {
         notifyObservers();
     }
-    
+
     return result;
 }

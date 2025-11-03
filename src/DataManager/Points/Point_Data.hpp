@@ -3,10 +3,10 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
-#include "Entity/EntityTypes.hpp"
 
 #include <map>
 #include <optional>
@@ -24,9 +24,11 @@ class EntityRegistry;
 struct PointEntry {
     Point2D<float> point;
     EntityId entity_id;
-    
+
     PointEntry() = default;
-    PointEntry(Point2D<float> p, EntityId id) : point(std::move(p)), entity_id(id) {}
+    PointEntry(Point2D<float> p, EntityId id)
+        : point(std::move(p)),
+          entity_id(id) {}
 };
 
 
@@ -41,7 +43,6 @@ struct PointEntry {
  */
 class PointData : public ObserverData {
 public:
-
     // ========== Constructors ==========
     /**
      * @brief Default constructor
@@ -63,7 +64,7 @@ public:
      * @param data Map of TimeFrameIndex to vector of Point2D<float>
      */
     explicit PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const & data);
-    
+
     // ========== Setters ==========
 
     /**
@@ -223,12 +224,10 @@ public:
      * 
      * @param time The time index in the source timeframe
      * @param source_timeframe The timeframe that the time index is expressed in
-     * @param target_timeframe The timeframe that this point data uses
      * @return A vector of Point2D<float> at the converted time
      */
-    [[nodiscard]] std::vector<Point2D<float>> const & getAtTime(TimeFrameIndex time, 
-                                                                TimeFrame const * source_timeframe,
-                                                                TimeFrame const * target_timeframe) const;
+    [[nodiscard]] std::vector<Point2D<float>> const & getAtTime(TimeFrameIndex time,
+                                                                TimeFrame const * source_timeframe) const;
 
     /**
      * @brief Get the maximum number of points at any time
@@ -245,13 +244,13 @@ public:
     [[nodiscard]] auto GetAllPointsAsRange() const {
         struct TimePointsPair {
             TimeFrameIndex time;
-            std::vector<Point2D<float>> points; // Copy for backward compatibility with entry storage
+            std::vector<Point2D<float>> points;// Copy for backward compatibility with entry storage
         };
 
         return _data | std::views::transform([](auto const & pair) {
                    std::vector<Point2D<float>> points;
                    points.reserve(pair.second.size());
-                   for (auto const & entry : pair.second) {
+                   for (auto const & entry: pair.second) {
                        points.push_back(entry.point);
                    }
                    return TimePointsPair{pair.first, std::move(points)};
@@ -288,21 +287,20 @@ public:
     [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval) const {
         struct TimePointsPair {
             TimeFrameIndex time;
-            std::vector<Point2D<float>> points; // Copy for backward compatibility
+            std::vector<Point2D<float>> points;// Copy for backward compatibility
         };
 
-        return _data 
-            | std::views::filter([interval](auto const & pair) {
-                return pair.first >= interval.start && pair.first <= interval.end;
-              })
-            | std::views::transform([](auto const & pair) {
-                std::vector<Point2D<float>> points;
-                points.reserve(pair.second.size());
-                for (auto const & entry : pair.second) {
-                    points.push_back(entry.point);
-                }
-                return TimePointsPair{pair.first, std::move(points)};
-              });
+        return _data | std::views::filter([interval](auto const & pair) {
+                   return pair.first >= interval.start && pair.first <= interval.end;
+               }) |
+               std::views::transform([](auto const & pair) {
+                   std::vector<Point2D<float>> points;
+                   points.reserve(pair.second.size());
+                   for (auto const & entry: pair.second) {
+                       points.push_back(entry.point);
+                   }
+                   return TimePointsPair{pair.first, std::move(points)};
+               });
     }
 
     /**
@@ -314,19 +312,17 @@ public:
     *
     * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
     * @param source_timeframe The timeframe that the interval is expressed in
-    * @param point_timeframe The timeframe that this point data uses
     * @return A view of time-points pairs for times within the converted interval range
     */
     [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval,
-                                        TimeFrame const * source_timeframe,
-                                        TimeFrame const * point_timeframe) const {
+                                        TimeFrame const * source_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
-        if (source_timeframe == point_timeframe) {
+        if (source_timeframe == _time_frame.get()) {
             return GetPointsInRange(interval);
         }
 
         // If either timeframe is null, fall back to original behavior
-        if (!source_timeframe || !point_timeframe) {
+        if (!source_timeframe || !_time_frame.get()) {
             return GetPointsInRange(interval);
         }
 
@@ -336,8 +332,8 @@ public:
         auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
 
         // 2. Convert those time values to indices in the point timeframe
-        auto target_start_index = point_timeframe->getIndexAtTime(static_cast<float>(start_time_value), false);
-        auto target_end_index = point_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
+        auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
+        auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
 
         // 3. Create converted interval and use the original function
         TimeFrameInterval target_interval{target_start_index, target_end_index};
@@ -358,7 +354,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of points actually copied
      */
-    std::size_t copyTo(PointData& target, TimeFrameInterval const & interval, bool notify = true) const;
+    std::size_t copyTo(PointData & target, TimeFrameInterval const & interval, bool notify = true) const;
 
     /**
      * @brief Copy points from this PointData to another PointData for specific times
@@ -371,7 +367,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of points actually copied
      */
-    std::size_t copyTo(PointData& target, std::vector<TimeFrameIndex> const& times, bool notify = true) const;
+    std::size_t copyTo(PointData & target, std::vector<TimeFrameIndex> const & times, bool notify = true) const;
 
     /**
      * @brief Move points from this PointData to another PointData for a time interval
@@ -385,7 +381,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of points actually moved
      */
-    std::size_t moveTo(PointData& target, TimeFrameInterval const & interval, bool notify = true);
+    std::size_t moveTo(PointData & target, TimeFrameInterval const & interval, bool notify = true);
 
     /**
      * @brief Move points from this PointData to another PointData for specific times
@@ -399,7 +395,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of points actually moved
      */
-    std::size_t moveTo(PointData& target, std::vector<TimeFrameIndex> const& times, bool notify = true);
+    std::size_t moveTo(PointData & target, std::vector<TimeFrameIndex> const & times, bool notify = true);
 
     /**
      * @brief Copy points with specific EntityIds to another PointData
@@ -412,7 +408,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of points actually copied
      */
-     std::size_t copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
+    std::size_t copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
 
     /**
      * @brief Move points with specific EntityIds to another PointData
@@ -511,11 +507,11 @@ private:
     mutable std::vector<Point2D<float>> _temp_points{};
     mutable std::vector<EntityId> _temp_entity_ids{};
     ImageSize _image_size;
-    std::shared_ptr<TimeFrame> _time_frame {nullptr};
+    std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
     // Identity management
     std::string _identity_data_key;
-    EntityRegistry * _identity_registry {nullptr};
+    EntityRegistry * _identity_registry{nullptr};
     // Entity IDs are stored within PointEntry alongside points in _data
 };
 

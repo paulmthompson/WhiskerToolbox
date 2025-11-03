@@ -1376,14 +1376,6 @@ void Media_Window::_plotPointData() {
 
         auto point = _data_manager->getData<PointData>(point_key);
 
-        auto point_timeframe_key = _data_manager->getTimeKey(point_key);
-        if (point_timeframe_key.empty()) {
-            std::cerr << "Error: No timeframe found for point data: " << point_key << std::endl;
-            continue;
-        }
-
-        auto point_timeframe = _data_manager->getTime(point_timeframe_key);
-
         auto xAspect = getXAspect();
         auto yAspect = getYAspect();
 
@@ -1399,7 +1391,7 @@ void Media_Window::_plotPointData() {
             xAspect = static_cast<float>(_canvasWidth) / mask_width;
         }
 
-        auto pointData = point->getAtTime(current_time, video_timeframe.get(), point_timeframe.get());
+        auto pointData = point->getAtTime(current_time, video_timeframe.get());
         auto entityIds = point->getEntityIdsAtTime(current_time);
 
         // Get configurable point size
