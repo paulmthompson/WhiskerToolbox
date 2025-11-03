@@ -26,6 +26,8 @@ public:
     void changeScrollBarValue(int new_value, bool relative=false); // Should be friend
 
     int getFrameJumpValue() const;
+    
+    void PlayButton();
 
 protected:
 private:
@@ -51,7 +53,6 @@ private:
 private slots:
     void Slider_Drag(int newPos);
     void Slider_Scroll(int newPos);
-    void PlayButton();
     void RewindButton();
     void FastForwardButton();
     void FrameSpinBoxChanged(int frameNumber);

@@ -570,6 +570,25 @@ bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
     if (event->type() == QEvent::KeyPress) {
         QKeyEvent * keyEvent = static_cast<QKeyEvent *>(event);
         
+        // Handle spacebar for play/pause (unless in text input widget)
+        if (keyEvent->key() == Qt::Key_Space && keyEvent->modifiers() == Qt::NoModifier) {
+            QWidget * focusedWidget = QApplication::focusWidget();
+            
+            // Don't intercept spacebar if we're in a text input widget
+            if (focusedWidget) {
+                if (qobject_cast<QLineEdit *>(focusedWidget) || 
+                    qobject_cast<QTextEdit *>(focusedWidget) || 
+                    qobject_cast<QPlainTextEdit *>(focusedWidget)) {
+                    // Let the text widget handle the space normally
+                    return false;
+                }
+            }
+            
+            // Toggle play/pause
+            _time_scrollbar->PlayButton();
+            return true; // Event handled
+        }
+        
         // Always handle Ctrl+Left/Right for frame navigation regardless of focus
         if (keyEvent->modifiers() & Qt::ControlModifier) {
             if (keyEvent->key() == Qt::Key_Right) {
