@@ -30,8 +30,11 @@ jobs:
         run: |
           echo "Disk usage before cleanup:"
           df -h
-          find ${{ github.workspace }}/out/build/GCC/Debug/vcpkg_installed -type d -name "bld" -exec rm -rf {} + 2>/dev/null || true
-          find ${{ github.workspace }}/out/build/GCC/Debug/vcpkg_installed -type d -name "src" -exec rm -rf {} + 2>/dev/null || true
+          # Clean vcpkg buildtrees (temporary build artifacts)
+          rm -rf ${{ github.workspace }}/out/build/GCC/Debug/vcpkg_installed/vcpkg/blds 2>/dev/null || true
+          rm -rf ${{ github.workspace }}/out/build/GCC/Debug/vcpkg_installed/vcpkg/buildtrees 2>/dev/null || true
+          # Clean vcpkg downloads (source archives)
+          rm -rf ${{ github.workspace }}/out/build/GCC/Debug/vcpkg_installed/vcpkg/downloads 2>/dev/null || true
           echo "Disk usage after cleanup:"
           df -h
 
