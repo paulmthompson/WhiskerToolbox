@@ -87,18 +87,16 @@ std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIn
 
 std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIndex start_index,
                                                                      TimeFrameIndex stop_index,
-                                                                     TimeFrame const * source_time_frame,
-                                                                     TimeFrame const * event_time_frame) const {
-    if (source_time_frame == event_time_frame) {
+                                                                     TimeFrame const & source_time_frame) const {
+    if (&source_time_frame == _time_frame.get()) {
         return getEventsWithIdsInRange(start_index, stop_index);
     }
 
     // If either timeframe is null, fall back to original behavior
-    if (!source_time_frame || !event_time_frame) {
+    if (!_time_frame.get()) {
         return getEventsWithIdsInRange(start_index, stop_index);
     }
 
-    auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, *source_time_frame, *event_time_frame);
+    auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, source_time_frame, *_time_frame);
     return getEventsWithIdsInRange(target_start_index, target_stop_index);
 }
-

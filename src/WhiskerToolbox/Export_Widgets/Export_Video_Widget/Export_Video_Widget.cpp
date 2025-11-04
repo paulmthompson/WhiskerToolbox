@@ -9,10 +9,11 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include "Media_Widget/Media_Window/Media_Window.hpp"
 #include "MediaWidgetManager/MediaWidgetManager.hpp"
+#include "Media_Widget/Media_Window/Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
+#include "ffmpeg_wrapper/videoencoder.h"
 #include "opencv2/opencv.hpp"
 #include <QFileDialog>
 #include <QFont>
@@ -20,13 +21,12 @@
 #include <QPainter>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include "ffmpeg_wrapper/videoencoder.h"
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <regex>
 #include <numbers>
+#include <regex>
 
 Export_Video_Widget::Export_Video_Widget(
         std::shared_ptr<DataManager> data_manager,
@@ -129,7 +129,7 @@ void Export_Video_Widget::_exportVideo() {
         return;
     }
 
-    auto* scene = _getCurrentMediaWindow();
+    auto * scene = _getCurrentMediaWindow();
     if (!scene) {
         std::cout << "No media widget selected for export" << std::endl;
         return;
@@ -174,7 +174,7 @@ void Export_Video_Widget::_exportVideo() {
 
         if (start_num >= end_num) {
             std::cout << "Start frame must be less than end frame" << std::endl;
-            if (auto* scene = _getCurrentMediaWindow()) {
+            if (auto * scene = _getCurrentMediaWindow()) {
                 disconnect(scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
             }
             _video_writer->release();
@@ -203,7 +203,7 @@ void Export_Video_Widget::_exportVideo() {
         }
     }
 
-    if (auto* scene = _getCurrentMediaWindow()) {
+    if (auto * scene = _getCurrentMediaWindow()) {
         disconnect(scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
     }
     _video_writer->release();
@@ -267,7 +267,7 @@ void Export_Video_Widget::_exportVideo() {
             std::string base = filename.substr(0, last_dot);
             video_only_filename = base + "_video_only.mp4";
             audio_filename = base + "_audio.wav";
-            final_filename = filename; // Keep the original filename for the final output
+            final_filename = filename;// Keep the original filename for the final output
         } else {
             video_only_filename = filename + "_video_only.mp4";
             audio_filename = filename + "_audio.wav";
@@ -465,9 +465,9 @@ void Export_Video_Widget::_updateDurationEstimate() {
                                         .arg(_video_sequences.size());
             } else {
                 duration_text = QString("Estimated Duration: %1 seconds (%2 frames, %3 sequences)")
-                .arg(duration_seconds, 0, 'f', 1)
-                        .arg(total_frames)
-                        .arg(_video_sequences.size());
+                                        .arg(duration_seconds, 0, 'f', 1)
+                                        .arg(total_frames)
+                                        .arg(_video_sequences.size());
             }
 
             ui->duration_estimate_label->setText(duration_text);
@@ -508,8 +508,8 @@ void Export_Video_Widget::_updateDurationEstimate() {
                                         .arg(total_frames);
             } else {
                 duration_text = QString("Estimated Duration: %1 seconds (%2 frames)")
-                .arg(duration_seconds, 0, 'f', 1)
-                        .arg(total_frames);
+                                        .arg(duration_seconds, 0, 'f', 1)
+                                        .arg(total_frames);
             }
 
             ui->duration_estimate_label->setText(duration_text);
@@ -707,18 +707,10 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
         TimeFrameIndex start_index(start_frame);
         TimeFrameIndex end_index(end_frame);
 
-        std::vector<EventWithId> events_with_ids;
-        if (series_time_frame.get() == master_time_frame.get()) {
-            // Same time frame - use events directly
-            events_with_ids = series->getEventsWithIdsInRange(start_index, end_index);
-        } else {
-            // Different time frames - let the series handle conversion
-            events_with_ids = series->getEventsWithIdsInRange(
-                    start_index, end_index,
-                    master_time_frame.get(),
-                    series_time_frame.get()
-                    );
-        }
+        auto events_with_ids = series->getEventsWithIdsInRange(
+                start_index,
+                end_index,
+                *master_time_frame);
 
         std::cout << "Processing " << events_with_ids.size() << " events from series " << audio_source.key << std::endl;
 
@@ -784,8 +776,8 @@ void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename,
     }
 
     // WAV file parameters
-    int const num_channels = 1;  // Mono
-    int const bits_per_sample = 24;  // 24-bit audio
+    int const num_channels = 1;    // Mono
+    int const bits_per_sample = 24;// 24-bit audio
     int const byte_rate = sample_rate * num_channels * (bits_per_sample / 8);
     int const block_align = num_channels * (bits_per_sample / 8);
     int const data_size = static_cast<int>(audio_data.size()) * (bits_per_sample / 8);
@@ -804,26 +796,26 @@ void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename,
     };
 
     // Write WAV header
-    stream.write("RIFF", 4);  // RIFF chunk
-    write_int32(36 + data_size);  // RIFF chunk size (file size - 8)
-    stream.write("WAVE", 4);  // WAVE chunk
+    stream.write("RIFF", 4);    // RIFF chunk
+    write_int32(36 + data_size);// RIFF chunk size (file size - 8)
+    stream.write("WAVE", 4);    // WAVE chunk
 
     // Write fmt sub-chunk
-    stream.write("fmt ", 4);  // fmt chunk
-    write_int32(16);  // Size of fmt chunk (16 for PCM)
-    write_int16(1);   // Audio format (1 = PCM)
-    write_int16(num_channels);  // Number of channels
-    write_int32(sample_rate);   // Sample rate
-    write_int32(byte_rate);     // Byte rate
-    write_int16(block_align);   // Block align
-    write_int16(bits_per_sample);  // Bits per sample
+    stream.write("fmt ", 4);     // fmt chunk
+    write_int32(16);             // Size of fmt chunk (16 for PCM)
+    write_int16(1);              // Audio format (1 = PCM)
+    write_int16(num_channels);   // Number of channels
+    write_int32(sample_rate);    // Sample rate
+    write_int32(byte_rate);      // Byte rate
+    write_int16(block_align);    // Block align
+    write_int16(bits_per_sample);// Bits per sample
 
     // Write data sub-chunk
-    stream.write("data", 4);  // data chunk
-    write_int32(data_size);   // data chunk size
+    stream.write("data", 4);// data chunk
+    write_int32(data_size); // data chunk size
 
     // Convert float samples to 24-bit PCM and write
-    for (float sample : audio_data) {
+    for (float sample: audio_data) {
         // Clamp sample to [-1.0, 1.0]
         sample = std::max(-1.0f, std::min(1.0f, sample));
 
@@ -840,7 +832,7 @@ void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename,
     std::cout << "Audio file written successfully: " << audio_filename << std::endl;
 }
 
-Media_Window* Export_Video_Widget::_getCurrentMediaWindow() const {
+Media_Window * Export_Video_Widget::_getCurrentMediaWindow() const {
     if (_selected_media_widget_id.empty()) {
         return nullptr;
     }
@@ -855,7 +847,7 @@ void Export_Video_Widget::_updateMediaWidgetComboBox() {
     ui->media_widget_combobox->clear();
     auto widget_ids = _media_manager->getMediaWidgetIds();
 
-    for (const auto& id : widget_ids) {
+    for (auto const & id: widget_ids) {
         ui->media_widget_combobox->addItem(QString::fromStdString(id), QString::fromStdString(id));
     }
 

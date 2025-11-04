@@ -32,7 +32,7 @@ std::vector<float> DigitalEventDataAdapter::getDataInRange(TimeFrameIndex start,
                                                            TimeFrame const * target_timeFrame) {
     // Use the DigitalEventSeries' built-in method to get events in the time range
     // This method handles the time frame conversion internally
-    auto events_view = m_digitalEventSeries->getEventsInRange(start, end, target_timeFrame, m_timeFrame.get());
+    auto events_view = m_digitalEventSeries->getEventsInRange(start, end, *target_timeFrame);
 
     // Convert the view to a vector
     std::vector<float> result;
@@ -52,7 +52,7 @@ std::vector<EventWithId> DigitalEventDataAdapter::getDataInRangeWithEntityIds(Ti
                                                                               TimeFrameIndex end,
                                                                               TimeFrame const * target_timeFrame) {
 
-    auto events_in_range = m_digitalEventSeries->getEventsWithIdsInRange(start, end, target_timeFrame, m_timeFrame.get());
+    auto events_in_range = m_digitalEventSeries->getEventsWithIdsInRange(start, end, *target_timeFrame);
 
     return events_in_range;
 }

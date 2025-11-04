@@ -56,19 +56,18 @@ public:
 
     [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_index,
                                         TimeFrameIndex stop_index,
-                                        TimeFrame const * source_time_frame,
-                                        TimeFrame const * event_time_frame) const {
-        if (source_time_frame == event_time_frame) {
+                                        TimeFrame const & source_time_frame) const {
+        if (&source_time_frame == _time_frame.get()) {
             return getEventsInRange(start_index, stop_index);
         }
 
         // If either timeframe is null, fall back to original behavior
-        if (!source_time_frame || !event_time_frame) {
+        if (!_time_frame.get()) {
             return getEventsInRange(start_index, stop_index);
         }
 
         // Use helper function for time frame conversion
-        auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, *source_time_frame, *event_time_frame);
+        auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, source_time_frame, *_time_frame);
         return getEventsInRange(target_start_index, target_stop_index);
     };
 
@@ -120,13 +119,11 @@ public:
      * @param start_index Start time index in source timeframe
      * @param stop_index Stop time index in source timeframe
      * @param source_time_frame Source timeframe for the indices
-     * @param event_time_frame Target timeframe for the events
      * @return std::vector<EventWithId> Vector of events with their EntityIDs
      */
     [[nodiscard]] std::vector<EventWithId> getEventsWithIdsInRange(TimeFrameIndex start_index,
                                                                    TimeFrameIndex stop_index,
-                                                                   TimeFrame const * source_time_frame,
-                                                                   TimeFrame const * event_time_frame) const;
+                                                                   TimeFrame const & source_time_frame) const;
 
     // ========== Time Frame ==========
 

@@ -439,8 +439,7 @@ void OpenGLWidget::drawDigitalEventSeries() {
 
         auto visible_events = series->getEventsInRange(TimeFrameIndex(start_time),
                                                        TimeFrameIndex(end_time),
-                                                       _master_time_frame.get(),
-                                                       time_frame.get());
+                                                       *_master_time_frame);
 
         // === MVP MATRIX SETUP ===
 
