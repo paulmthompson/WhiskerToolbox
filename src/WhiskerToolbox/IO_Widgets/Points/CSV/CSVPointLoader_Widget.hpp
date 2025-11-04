@@ -2,8 +2,8 @@
 #define CSV_POINT_LOADER_WIDGET_HPP
 
 #include <QWidget>
-#include <QString>
-#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
+
+struct CSVPointLoaderOptions;
 
 namespace Ui {
 class CSVPointLoader_Widget;
@@ -12,15 +12,15 @@ class CSVPointLoader_Widget;
 class CSVPointLoader_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit CSVPointLoader_Widget(QWidget *parent = nullptr);
+    explicit CSVPointLoader_Widget(QWidget * parent = nullptr);
     ~CSVPointLoader_Widget() override;
 
 signals:
-    // Changed signature to pass CSVPointLoaderOptions struct
-    void loadSingleCSVFileRequested(CSVPointLoaderOptions options);
+
+    void loadSingleCSVFileRequested(CSVPointLoaderOptions const & options);
 
 private:
-    Ui::CSVPointLoader_Widget *ui;
+    Ui::CSVPointLoader_Widget * ui;
 };
 
-#endif // CSV_POINT_LOADER_WIDGET_HPP 
+#endif// CSV_POINT_LOADER_WIDGET_HPP

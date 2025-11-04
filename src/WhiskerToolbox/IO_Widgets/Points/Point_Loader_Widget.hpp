@@ -1,8 +1,7 @@
 #ifndef POINT_LOADER_WIDGET_HPP
 #define POINT_LOADER_WIDGET_HPP
 
-#include "Points/CSV/CSVPointLoader_Widget.hpp"
-#include "Scaling_Widget/Scaling_Widget.hpp"
+
 #include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
 
 #include <QWidget>
@@ -26,7 +25,7 @@ private:
     Ui::Point_Loader_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
 
-    void _loadSingleCSVFile(CSVPointLoaderOptions options);
+    void _loadSingleCSVFile(CSVPointLoaderOptions const & options);
 
 private slots:
     void _onLoaderTypeChanged(int index);

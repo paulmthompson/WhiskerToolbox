@@ -4,7 +4,6 @@
 
 #include "Masks/HDF5/HDF5MaskLoader_Widget.hpp"
 #include "Masks/Image/ImageMaskLoader_Widget.hpp"
-#include "Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QWidget>
 #include <QString>
