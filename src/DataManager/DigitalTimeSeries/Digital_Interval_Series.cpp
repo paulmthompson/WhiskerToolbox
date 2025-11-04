@@ -245,26 +245,8 @@ std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(Ti
         return getIntervalsWithIdsInRange(start_index, stop_index);
     }
 
-    auto [target_start_index, target_stop_index] = _convertTimeFrameRange(start_index, stop_index, source_time_frame);
+    auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, source_time_frame, *_time_frame);
     return getIntervalsWithIdsInRange(target_start_index, target_stop_index);
-}
-
-// ========== Helper Functions for Time Frame Conversion ==========
-
-std::pair<TimeFrameIndex, TimeFrameIndex> DigitalIntervalSeries::_convertTimeFrameRange(
-        TimeFrameIndex const start_index,
-        TimeFrameIndex const stop_index,
-        TimeFrame const & source_time_frame) const {
-
-    // Get the time values from the source timeframe
-    auto start_time_value = source_time_frame.getTimeAtIndex(start_index);
-    auto stop_time_value = source_time_frame.getTimeAtIndex(stop_index);
-
-    // Convert to indices in the target timeframe
-    auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
-    auto target_stop_index = _time_frame->getIndexAtTime(static_cast<float>(stop_time_value));
-
-    return {target_start_index, target_stop_index};
 }
 
 std::pair<int64_t, int64_t> DigitalIntervalSeries::_getTimeRangeFromIndices(

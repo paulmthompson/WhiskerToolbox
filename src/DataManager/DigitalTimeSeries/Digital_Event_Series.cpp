@@ -98,26 +98,7 @@ std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIn
         return getEventsWithIdsInRange(start_index, stop_index);
     }
 
-    auto [target_start_index, target_stop_index] = _convertTimeFrameRange(start_index, stop_index, source_time_frame, event_time_frame);
+    auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, *source_time_frame, *event_time_frame);
     return getEventsWithIdsInRange(target_start_index, target_stop_index);
-}
-
-// ========== Helper Functions for Time Frame Conversion ==========
-
-std::pair<TimeFrameIndex, TimeFrameIndex> DigitalEventSeries::_convertTimeFrameRange(
-        TimeFrameIndex const start_index,
-        TimeFrameIndex const stop_index,
-        TimeFrame const * const source_time_frame,
-        TimeFrame const * const target_time_frame) {
-
-    // Get the time values from the source timeframe
-    auto start_time_value = source_time_frame->getTimeAtIndex(start_index);
-    auto stop_time_value = source_time_frame->getTimeAtIndex(stop_index);
-
-    // Convert to indices in the target timeframe
-    auto target_start_index = target_time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
-    auto target_stop_index = target_time_frame->getIndexAtTime(static_cast<float>(stop_time_value));
-
-    return {target_start_index, target_stop_index};
 }
 

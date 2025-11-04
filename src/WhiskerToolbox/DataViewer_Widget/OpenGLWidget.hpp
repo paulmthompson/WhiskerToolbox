@@ -2,9 +2,8 @@
 #define OPENGLWIDGET_HPP
 
 #include "ShaderManager/ShaderManager.hpp"
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataViewer/XAxis.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>

@@ -111,6 +111,27 @@ TimeFrameIndex getTimeIndexForSeries(TimeFrameIndex source_index,
                               TimeFrame const * source_time_frame,
                               TimeFrame const * destination_time_frame);
 
+/**
+ * @brief Converts a time index range from one TimeFrame to another.
+ *
+ * This function takes a range defined by start and stop indices in the source
+ * timeframe and converts it to the corresponding range in the target timeframe.
+ * The conversion is done by:
+ * 1. Getting the time values at the source indices
+ * 2. Finding the corresponding indices in the target timeframe
+ *
+ * @param start_index The start index in the source timeframe
+ * @param stop_index The stop index in the source timeframe
+ * @param from_time_frame The source timeframe containing the input range
+ * @param to_time_frame The target timeframe for the converted range
+ * @return A pair of TimeFrameIndex representing the converted start and stop indices
+ */
+[[nodiscard]] std::pair<TimeFrameIndex, TimeFrameIndex> convertTimeFrameRange(
+        TimeFrameIndex start_index,
+        TimeFrameIndex stop_index,
+        TimeFrame const & from_time_frame,
+        TimeFrame const & to_time_frame);
+
 // ========== Filename-based TimeFrame Creation ==========
 
 /**

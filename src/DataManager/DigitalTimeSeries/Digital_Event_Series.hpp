@@ -68,7 +68,7 @@ public:
         }
 
         // Use helper function for time frame conversion
-        auto [target_start_index, target_stop_index] = _convertTimeFrameRange(start_index, stop_index, source_time_frame, event_time_frame);
+        auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, *source_time_frame, *event_time_frame);
         return getEventsInRange(target_start_index, target_stop_index);
     };
 
@@ -156,23 +156,6 @@ private:
     std::string _identity_data_key;
     EntityRegistry * _identity_registry{nullptr};
     std::vector<EntityId> _entity_ids;
-
-    // ========== Helper Functions for Time Frame Conversion ==========
-
-    /**
-     * @brief Convert time range from source timeframe to target timeframe
-     * 
-     * @param start_index Start index in source timeframe
-     * @param stop_index Stop index in source timeframe
-     * @param source_time_frame Source timeframe
-     * @param target_time_frame Target timeframe
-     * @return std::pair<TimeFrameIndex, TimeFrameIndex> Converted start and stop indices
-     */
-    [[nodiscard]] static std::pair<TimeFrameIndex, TimeFrameIndex> _convertTimeFrameRange(
-            TimeFrameIndex const start_index,
-            TimeFrameIndex const stop_index,
-            TimeFrame const * const source_time_frame,
-            TimeFrame const * const target_time_frame);
 
 };
 

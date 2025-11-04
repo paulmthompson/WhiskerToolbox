@@ -162,9 +162,10 @@ public:
         }
 
         // Use helper function for time frame conversion
-        auto [target_start_index, target_stop_index] = _convertTimeFrameRange(start_time,
+        auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_time,
                                                                               stop_time,
-                                                                              source_timeframe);
+                                                                              source_timeframe,
+                                                                              *_time_frame);
         return getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
     }
 
@@ -309,21 +310,6 @@ private:
     std::string _identity_data_key;
     EntityRegistry * _identity_registry{nullptr};
     std::vector<EntityId> _entity_ids;
-
-    // ========== Helper Functions for Time Frame Conversion ==========
-
-    /**
-     * @brief Convert time range from source timeframe to target timeframe
-     * 
-     * @param start_index Start index in source timeframe
-     * @param stop_index Stop index in source timeframe
-     * @param source_time_frame Source timeframe
-     * @return std::pair<TimeFrameIndex, TimeFrameIndex> Converted start and stop indices
-     */
-    [[nodiscard]] std::pair<TimeFrameIndex, TimeFrameIndex> _convertTimeFrameRange(
-            TimeFrameIndex const start_index,
-            TimeFrameIndex const stop_index,
-            TimeFrame const & source_time_frame) const;
 
     /**
      * @brief Get time values from TimeFrameIndex range

@@ -72,6 +72,23 @@ TimeFrameIndex getTimeIndexForSeries(TimeFrameIndex source_index,
     }
 }
 
+std::pair<TimeFrameIndex, TimeFrameIndex> convertTimeFrameRange(
+        TimeFrameIndex const start_index,
+        TimeFrameIndex const stop_index,
+        TimeFrame const & from_time_frame,
+        TimeFrame const & to_time_frame) {
+
+    // Get the time values from the source timeframe
+    auto start_time_value = from_time_frame.getTimeAtIndex(start_index);
+    auto stop_time_value = from_time_frame.getTimeAtIndex(stop_index);
+
+    // Convert to indices in the target timeframe
+    auto target_start_index = to_time_frame.getIndexAtTime(static_cast<float>(start_time_value), false);
+    auto target_stop_index = to_time_frame.getIndexAtTime(static_cast<float>(stop_time_value));
+
+    return {target_start_index, target_stop_index};
+}
+
 // ========== Filename-based TimeFrame Creation Implementation ==========
 
 #include <algorithm>
