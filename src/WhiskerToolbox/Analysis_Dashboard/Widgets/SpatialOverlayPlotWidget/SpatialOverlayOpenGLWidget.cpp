@@ -106,83 +106,56 @@ void SpatialOverlayOpenGLWidget::refreshGroupRenderDataAll() {
     requestThrottledUpdate();
 }
 
+// ========== Generic Data Setter Template ==========
+
+template<typename DataType, typename VisualizationType>
+void SpatialOverlayOpenGLWidget::setDataGeneric(
+    std::unordered_map<QString, std::shared_ptr<DataType>> const& data_map,
+    std::unordered_map<QString, std::shared_ptr<DataType>>& data_storage,
+    std::unordered_map<QString, std::unique_ptr<VisualizationType>>& visualization_storage,
+    char const* debug_type_name) {
+    
+    qDebug() << "SpatialOverlayOpenGLWidget::" << debug_type_name << " called with" 
+             << data_map.size() << "datasets";
+
+    data_storage = data_map;
+
+    // Clear existing visualizations
+    visualization_storage.clear();
+
+    // Create new visualizations
+    if (_opengl_resources_initialized) {
+        makeCurrent();
+        for (auto const & [key, data]: data_storage) {
+            if (data) {
+                auto viz = std::make_unique<VisualizationType>(key, data, _group_manager);
+                visualization_storage[key] = std::move(viz);
+            }
+        }
+        doneCurrent();
+    }
+
+    calculateDataBounds();
+    updateViewMatrices();
+
+    requestThrottledUpdate();
+}
+
 // ========== Data ==========
 
 void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
-    qDebug() << "SpatialOverlayOpenGLWidget::setPointData called with" << point_data_map.size() << "datasets";
-
-    _point_data = point_data_map;
-
-    // Clear existing visualizations
-    _point_data_visualizations.clear();
-
-    // Create new visualizations
-    if (_opengl_resources_initialized) {
-        makeCurrent();
-        for (auto const & [key, point_data]: _point_data) {
-            if (point_data) {
-                auto viz = std::make_unique<PointDataVisualization>(key, point_data, _group_manager);
-                _point_data_visualizations[key] = std::move(viz);
-            }
-        }
-        doneCurrent();
-    }
-
-    calculateDataBounds();
-    updateViewMatrices();
-
-    requestThrottledUpdate();
+    setDataGeneric<PointData, PointDataVisualization>(
+        point_data_map, _point_data, _point_data_visualizations, "setPointData");
 }
 
 void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map) {
-    qDebug() << "SpatialOverlayOpenGLWidget::setMaskData called with" << mask_data_map.size() << "datasets";
-
-    _mask_data = mask_data_map;
-
-    // Clear existing visualizations
-    _mask_data_visualizations.clear();
-
-    // Create new visualizations
-    if (_opengl_resources_initialized) {
-        makeCurrent();
-        for (auto const & [key, mask_data]: _mask_data) {
-            if (mask_data) {
-                auto viz = std::make_unique<MaskDataVisualization>(key, mask_data);
-                _mask_data_visualizations[key] = std::move(viz);
-            }
-        }
-        doneCurrent();
-    }
-
-    calculateDataBounds();
-
-    requestThrottledUpdate();
+    setDataGeneric<MaskData, MaskDataVisualization>(
+        mask_data_map, _mask_data, _mask_data_visualizations, "setMaskData");
 }
 
 void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map) {
-    qDebug() << "SpatialOverlayOpenGLWidget::setLineData called with" << line_data_map.size() << "datasets";
-
-    _line_data = line_data_map;
-
-    // Clear existing visualizations
-    _line_data_visualizations.clear();
-
-    // Create new visualizations
-    if (_opengl_resources_initialized) {
-        makeCurrent();
-        for (auto const & [key, line_data]: _line_data) {
-            if (line_data) {
-                auto viz = std::make_unique<LineDataVisualization>(key, line_data, _group_manager);
-                _line_data_visualizations[key] = std::move(viz);
-            }
-        }
-        doneCurrent();
-    }
-
-    calculateDataBounds();
-    updateViewMatrices();
-
-    requestThrottledUpdate();
+    setDataGeneric<LineData, LineDataVisualization>(
+        line_data_map, _line_data, _line_data_visualizations, "setLineData");
 }
 
 void SpatialOverlayOpenGLWidget::setLineWidth(float line_width) {
@@ -433,21 +406,48 @@ std::optional<QString> SpatialOverlayOpenGLWidget::generateTooltipContent(QPoint
     float world_x = world_pos.x();
     float world_y = world_pos.y();
 
-    // Query visualizations for closest data element
-    // This would ideally use the hit testing methods of the visualizations
-    // For now, provide basic coordinate information
+    // Collect tooltip text from all visualizations that have hover data
+    QStringList tooltip_parts;
 
+    // Query point visualizations for tooltip text
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz) {
+            QString viz_tooltip = viz->getTooltipText();
+            if (!viz_tooltip.isEmpty()) {
+                tooltip_parts << viz_tooltip;
+            }
+        }
+    }
+
+    // Query mask visualizations for tooltip text
+    for (auto const & [key, viz]: _mask_data_visualizations) {
+        if (viz) {
+            QString viz_tooltip = viz->getTooltipText();
+            if (!viz_tooltip.isEmpty()) {
+                tooltip_parts << viz_tooltip;
+            }
+        }
+    }
+
+    // Query line visualizations for tooltip text (if they have a getTooltipText method)
+    // for (auto const & [key, viz]: _line_data_visualizations) {
+    //     if (viz) {
+    //         QString viz_tooltip = viz->getTooltipText();
+    //         if (!viz_tooltip.isEmpty()) {
+    //             tooltip_parts << viz_tooltip;
+    //         }
+    //     }
+    // }
+
+    // If we have specific tooltip data from visualizations, use that
+    if (!tooltip_parts.isEmpty()) {
+        return tooltip_parts.join("\n");
+    }
+
+    // Otherwise, provide basic coordinate information
     QString tooltip = QString("Position: (%1, %2)")
                               .arg(world_x, 0, 'f', 3)
                               .arg(world_y, 0, 'f', 3);
-
-    // Add data counts if available
-    if (!_point_data_visualizations.empty() || !_mask_data_visualizations.empty() || !_line_data_visualizations.empty()) {
-        tooltip += QString("\nData: %1 points, %2 masks, %3 lines")
-                           .arg(_point_data_visualizations.size())
-                           .arg(_mask_data_visualizations.size())
-                           .arg(_line_data_visualizations.size());
-    }
 
     return tooltip;
 }
@@ -488,7 +488,7 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     // Call base class implementation first (handles interaction controller and tooltips)
     BasePlotOpenGLWidget::mouseMoveEvent(event);
 
-    // Add hover logic for point enlargement
+    // Add hover logic for point enlargement and mask highlighting
     if (_tooltips_enabled && _opengl_resources_initialized) {
         float tolerance = 10.0f;// 10 pixel tolerance for hover detection
 
@@ -501,7 +501,14 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
             }
         }
 
-        // Request update if hover state changed (to redraw enlarged point)
+        // Handle hover for all mask visualizations
+        for (auto const & [key, viz]: _mask_data_visualizations) {
+            if (viz && viz->handleHover(world_pos)) {
+                hover_changed = true;
+            }
+        }
+
+        // Request update if hover state changed (to redraw enlarged point or mask highlight)
         if (hover_changed) {
             requestThrottledUpdate();
         }

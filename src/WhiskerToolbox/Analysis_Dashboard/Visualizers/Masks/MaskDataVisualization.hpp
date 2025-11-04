@@ -3,7 +3,7 @@
 
 #include "Selection/SelectionHandlers.hpp"
 #include "CoreGeometry/polygon.hpp"
-#include "MaskIdentifier.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "SpatialIndex/RTree.hpp"
 
 #include <QMatrix4x4>
@@ -22,6 +22,7 @@
 #include <vector>
 
 class MaskData;
+class GroupManager;
 class QOpenGLShaderProgram;
 class PolygonSelectionHandler;
 class NoneSelectionHandler;
@@ -34,7 +35,7 @@ class PointSelectionHandler;
  */
 struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     // R-tree for spatial indexing of mask bounding boxes
-    std::unique_ptr<RTree<MaskIdentifier>> spatial_index;
+    std::unique_ptr<RTree<EntityId>> spatial_index;
 
     // Binary image texture data and OpenGL objects
     std::vector<float> binary_image_data;
@@ -44,12 +45,12 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
 
 
     // Selection and hover data
-    std::set<MaskIdentifier> selected_masks;
+    std::set<EntityId> selected_masks;
     std::vector<float> selection_binary_image_data;
     GLuint selection_binary_image_texture = 0;
 
     // Hover state
-    std::vector<RTreeEntry<MaskIdentifier>> current_hover_entries;
+    std::vector<RTreeEntry<EntityId>> current_hover_entries;
 
     // Hover union polygon rendering
     Polygon hover_union_polygon;
@@ -71,7 +72,7 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     // Reference to original data (not owned)
     std::shared_ptr<MaskData> mask_data;
 
-    MaskDataVisualization(QString const & data_key, std::shared_ptr<MaskData> const & mask_data);
+    MaskDataVisualization(QString const & data_key, std::shared_ptr<MaskData> const & mask_data, GroupManager* group_manager = nullptr);
     ~MaskDataVisualization();
 
     /**
@@ -100,7 +101,7 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @brief Set hover masks using R-tree entries directly
      * @param entries Vector of R-tree entries containing masks and their bounding boxes
      */
-    void setHoverEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries);
+    void setHoverEntries(std::vector<RTreeEntry<EntityId>> const & entries);
 
     /**
      * @brief Clear hover state
@@ -120,30 +121,30 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
 
     /**
      * @brief Select multiple masks at once
-     * @param mask_ids Vector of mask identifiers to select
+     * @param entity_ids Vector of entity IDs to select
      */
-    void selectMasks(std::vector<MaskIdentifier> const & mask_ids);
+    void selectMasks(std::vector<EntityId> const & entity_ids);
 
     /**
      * @brief Toggle selection state of a single mask
-     * @param mask_id Identifier of the mask to toggle
+     * @param entity_id Entity ID of the mask to toggle
      * @return True if mask was selected, false if deselected
      */
-    bool toggleMaskSelection(MaskIdentifier const & mask_id);
+    bool toggleMaskSelection(EntityId entity_id);
 
     /**
      * @brief Remove a specific mask from selection if it's currently selected
-     * @param mask_id Identifier of the mask to remove from selection
+     * @param entity_id Entity ID of the mask to remove from selection
      * @return True if mask was removed from selection, false if it wasn't selected
      */
-    bool removeMaskFromSelection(MaskIdentifier const & mask_id);
+    bool removeMaskFromSelection(EntityId entity_id);
 
     /**
      * @brief Remove multiple masks from selection (intersection removal)
-     * @param mask_ids Vector of mask identifiers to potentially remove
+     * @param entity_ids Vector of entity IDs to potentially remove
      * @return Number of masks actually removed from the current selection
      */
-    size_t removeIntersectingMasks(std::vector<MaskIdentifier> const & mask_ids);
+    size_t removeIntersectingMasks(std::vector<EntityId> const & entity_ids);
 
 
     //========== Selection Handlers ==========
@@ -218,19 +219,19 @@ private:
      * @brief Find all masks that contain the given point
      * @param world_x World X coordinate
      * @param world_y World Y coordinate
-     * @return Vector of mask identifiers that contain the point
+     * @return Vector of entity IDs that contain the point
      */
-    std::vector<MaskIdentifier> findMasksContainingPoint(float world_x, float world_y) const;
+    std::vector<EntityId> findMasksContainingPoint(float world_x, float world_y) const;
 
     /**
      * @brief Refine R-tree entries to only those that contain the given point using precise pixel checking
      * @param entries Vector of R-tree entries to refine
      * @param world_x World X coordinate
      * @param world_y World Y coordinate
-     * @return Vector of mask identifiers from entries that contain the point
+     * @return Vector of entity IDs from entries that contain the point
      */
-    std::vector<MaskIdentifier> refineMasksContainingPoint(
-            std::vector<RTreeEntry<MaskIdentifier>> const & entries,
+    std::vector<EntityId> refineMasksContainingPoint(
+            std::vector<RTreeEntry<EntityId>> const & entries,
             float world_x,
             float world_y) const;
 
@@ -239,7 +240,7 @@ private:
      * @param entries Vector of R-tree entries containing masks and their bounding boxes
      * @return Union polygon encompassing all bounding boxes
      */
-    Polygon computeUnionPolygonFromEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) const;
+    Polygon computeUnionPolygonFromEntries(std::vector<RTreeEntry<EntityId>> const & entries) const;
 
     /**
      * @brief Generate polygon vertex data for OpenGL rendering
@@ -255,12 +256,12 @@ private:
      * to see if the point is there. Compare to fast rTree indexing that only
      * considers the bounding box
      * 
-     * @param mask_id Identifier of the mask to check
+     * @param entity_id Entity ID of the mask to check
      * @param pixel_x Pixel X coordinate
      * @param pixel_y Pixel Y coordinate
      * @return True if the mask contains the point
      */
-    bool maskContainsPoint(MaskIdentifier const & mask_id, uint32_t pixel_x, uint32_t pixel_y) const;
+    bool maskContainsPoint(EntityId entity_id, uint32_t pixel_x, uint32_t pixel_y) const;
 
     /**
      * @brief Convert world coordinates to texture coordinates
@@ -280,7 +281,7 @@ private:
     }
 };
 
-static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<MaskIdentifier>> const & entries);
+static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<EntityId>> const & entries);
 
 
 #endif// MASKDATAVISUALIZATION_HPP

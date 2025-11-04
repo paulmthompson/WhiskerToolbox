@@ -287,6 +287,14 @@ public:
     std::unordered_set<EntityId> getSelectedEntityIds() const {
         std::unordered_set<EntityId> out;
 
+         for (auto const * p: m_selected_points) {
+                out.insert(p->data);
+         }
+
+         return out;
+
+        /** 
+
         if constexpr (std::is_same_v<RowIndicatorType, EntityId>) {
             // Direct case: RowIndicatorType is EntityId
             for (auto const * p: m_selected_points) {
@@ -317,6 +325,8 @@ public:
         // If neither case applies, return empty set
 
         return out;
+
+        **/
     }
 
 protected:

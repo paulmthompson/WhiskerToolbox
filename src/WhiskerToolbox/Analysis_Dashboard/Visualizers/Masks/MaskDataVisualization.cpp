@@ -19,12 +19,16 @@
 #include <limits>
 
 MaskDataVisualization::MaskDataVisualization(QString const & data_key,
-                                             std::shared_ptr<MaskData> const & mask_data)
+                                             std::shared_ptr<MaskData> const & mask_data,
+                                             GroupManager* group_manager)
     : key(data_key),
       mask_data(mask_data),
       quad_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       color(1.0f, 0.0f, 0.0f, 1.0f),
       hover_union_polygon(std::vector<Point2D<float>>()) {
+    // Note: group_manager parameter added for API consistency with other visualizations
+    // Currently not used for masks, but may be used in future for group-based mask coloring
+    (void)group_manager;
 
     if (!mask_data) {
         qDebug() << "MaskDataVisualization: Null mask data provided";
@@ -38,7 +42,7 @@ MaskDataVisualization::MaskDataVisualization(QString const & data_key,
     world_min_y = 0.0f;
     world_max_y = static_cast<float>(image_size.height);
 
-    spatial_index = std::make_unique<RTree<MaskIdentifier>>();
+    spatial_index = std::make_unique<RTree<EntityId>>();
 
     // Precompute all visualization data
     populateRTree();
@@ -172,45 +176,45 @@ void MaskDataVisualization::clearSelection() {
     }
 }
 
-void MaskDataVisualization::selectMasks(std::vector<MaskIdentifier> const & mask_ids) {
-    qDebug() << "MaskDataVisualization: Selecting" << mask_ids.size() << "masks";
+void MaskDataVisualization::selectMasks(std::vector<EntityId> const & entity_ids) {
+    qDebug() << "MaskDataVisualization: Selecting" << entity_ids.size() << "masks";
 
-    for (auto const & mask_id: mask_ids) {
-        selected_masks.insert(mask_id);
+    for (auto const & entity_id: entity_ids) {
+        selected_masks.insert(entity_id);
     }
 
     updateSelectionBinaryImageTexture();
     qDebug() << "MaskDataVisualization: Total selected masks:" << selected_masks.size();
 }
 
-bool MaskDataVisualization::toggleMaskSelection(MaskIdentifier const & mask_id) {
-    auto it = selected_masks.find(mask_id);
+bool MaskDataVisualization::toggleMaskSelection(EntityId entity_id) {
+    auto it = selected_masks.find(entity_id);
 
     if (it != selected_masks.end()) {
         // Mask is selected, remove it
         selected_masks.erase(it);
         updateSelectionBinaryImageTexture();
-        qDebug() << "MaskDataVisualization: Deselected mask" << mask_id.timeframe << "," << mask_id.mask_index
+        qDebug() << "MaskDataVisualization: Deselected mask with EntityId" << entity_id
                  << "- Total selected:" << selected_masks.size();
         return false;// Mask was deselected
     } else {
         // Mask is not selected, add it
-        selected_masks.insert(mask_id);
+        selected_masks.insert(entity_id);
         updateSelectionBinaryImageTexture();
-        qDebug() << "MaskDataVisualization: Selected mask" << mask_id.timeframe << "," << mask_id.mask_index
+        qDebug() << "MaskDataVisualization: Selected mask with EntityId" << entity_id
                  << "- Total selected:" << selected_masks.size();
         return true;// Mask was selected
     }
 }
 
-bool MaskDataVisualization::removeMaskFromSelection(MaskIdentifier const & mask_id) {
-    auto it = selected_masks.find(mask_id);
+bool MaskDataVisualization::removeMaskFromSelection(EntityId entity_id) {
+    auto it = selected_masks.find(entity_id);
 
     if (it != selected_masks.end()) {
         // Mask is selected, remove it
         selected_masks.erase(it);
         updateSelectionBinaryImageTexture();
-        qDebug() << "MaskDataVisualization: Removed mask" << mask_id.timeframe << "," << mask_id.mask_index
+        qDebug() << "MaskDataVisualization: Removed mask with EntityId" << entity_id
                  << "from selection - Total selected:" << selected_masks.size();
         return true;// Mask was removed
     }
@@ -218,18 +222,17 @@ bool MaskDataVisualization::removeMaskFromSelection(MaskIdentifier const & mask_
     return false;// Mask wasn't selected
 }
 
-size_t MaskDataVisualization::removeIntersectingMasks(std::vector<MaskIdentifier> const & mask_ids) {
+size_t MaskDataVisualization::removeIntersectingMasks(std::vector<EntityId> const & entity_ids) {
     size_t removed_count = 0;
 
-    // Find intersection between current selection and provided mask_ids
-    for (auto const & mask_id: mask_ids) {
-        auto it = selected_masks.find(mask_id);
+    // Find intersection between current selection and provided entity_ids
+    for (auto const & entity_id: entity_ids) {
+        auto it = selected_masks.find(entity_id);
         if (it != selected_masks.end()) {
             // This mask is in both sets - remove it from selection
             selected_masks.erase(it);
             removed_count++;
-            qDebug() << "MaskDataVisualization: Removed intersecting mask"
-                     << mask_id.timeframe << "," << mask_id.mask_index;
+            qDebug() << "MaskDataVisualization: Removed intersecting mask with EntityId" << entity_id;
         }
     }
 
@@ -242,7 +245,7 @@ size_t MaskDataVisualization::removeIntersectingMasks(std::vector<MaskIdentifier
     return removed_count;
 }
 
-void MaskDataVisualization::setHoverEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) {
+void MaskDataVisualization::setHoverEntries(std::vector<RTreeEntry<EntityId>> const & entries) {
     current_hover_entries = entries;
     updateHoverUnionPolygon();
 }
@@ -254,15 +257,15 @@ void MaskDataVisualization::clearHover() {
     }
 }
 
-std::vector<MaskIdentifier> MaskDataVisualization::findMasksContainingPoint(float world_x, float world_y) const {
-    std::vector<MaskIdentifier> result;
+std::vector<EntityId> MaskDataVisualization::findMasksContainingPoint(float world_x, float world_y) const {
+    std::vector<EntityId> result;
 
     if (!spatial_index) return result;
 
     // Use R-tree to find candidate masks
     qDebug() << "MaskDataVisualization: Finding masks containing point" << world_x << world_y;
     BoundingBox point_bbox(world_x, world_y, world_x, world_y);
-    std::vector<RTreeEntry<MaskIdentifier>> candidates;
+    std::vector<RTreeEntry<EntityId>> candidates;
     spatial_index->query(point_bbox, candidates);
 
     qDebug() << "MaskDataVisualization: Found" << candidates.size() << "candidates from R-tree";
@@ -285,8 +288,8 @@ std::vector<MaskIdentifier> MaskDataVisualization::findMasksContainingPoint(floa
     return result;
 }
 
-std::vector<MaskIdentifier> MaskDataVisualization::refineMasksContainingPoint(std::vector<RTreeEntry<MaskIdentifier>> const & entries, float world_x, float world_y) const {
-    std::vector<MaskIdentifier> result;
+std::vector<EntityId> MaskDataVisualization::refineMasksContainingPoint(std::vector<RTreeEntry<EntityId>> const & entries, float world_x, float world_y) const {
+    std::vector<EntityId> result;
 
     if (!mask_data) return result;
 
@@ -421,10 +424,10 @@ void MaskDataVisualization::updateSelectionBinaryImageTexture() {
     selection_binary_image_data.resize(image_size.width * image_size.height, 0.0f);
 
     // Only include selected masks in the selection binary image
-    for (auto const & mask_id: selected_masks) {
-        auto const & masks = mask_data->getAtTime(TimeFrameIndex(mask_id.timeframe));
-        if (mask_id.mask_index < masks.size()) {
-            auto const & mask = masks[mask_id.mask_index];
+    for (auto const & entity_id: selected_masks) {
+        auto mask_opt = mask_data->getMaskByEntityId(entity_id);
+        if (mask_opt.has_value()) {
+            auto const & mask = mask_opt.value();
 
             for (auto const & point: mask) {
                 if (point.x < image_size.width && point.y < image_size.height) {
@@ -463,6 +466,8 @@ void MaskDataVisualization::populateRTree() {
     qDebug() << "MaskDataVisualization: Populating R-tree with" << mask_data->size() << "time frames";
 
     for (auto const & time_masks_pair: mask_data->getAllAsRange()) {
+        auto const & entity_ids_at_time = mask_data->getEntityIdsAtTime(time_masks_pair.time);
+        
         for (size_t mask_index = 0; mask_index < time_masks_pair.masks.size(); ++mask_index) {
             auto const & mask = time_masks_pair.masks[mask_index];
 
@@ -474,24 +479,30 @@ void MaskDataVisualization::populateRTree() {
             BoundingBox bbox(static_cast<float>(min_point.x), static_cast<float>(min_point.y),
                              static_cast<float>(max_point.x), static_cast<float>(max_point.y));
 
-            MaskIdentifier mask_id(time_masks_pair.time.getValue(), mask_index);
-            spatial_index->insert(bbox, mask_id);
+            // Get the EntityId for this mask
+            EntityId entity_id = 0;
+            if (mask_index < entity_ids_at_time.size()) {
+                entity_id = entity_ids_at_time[mask_index];
+            }
+            
+            spatial_index->insert(bbox, entity_id);
         }
     }
 
     qDebug() << "MaskDataVisualization: R-tree populated with" << spatial_index->size() << "masks";
 }
 
-bool MaskDataVisualization::maskContainsPoint(MaskIdentifier const & mask_id, uint32_t pixel_x, uint32_t pixel_y) const {
+bool MaskDataVisualization::maskContainsPoint(EntityId entity_id, uint32_t pixel_x, uint32_t pixel_y) const {
     if (!mask_data) return false;
 
     //return true;
 
-    auto const & masks = mask_data->getAtTime(TimeFrameIndex(mask_id.timeframe));
+    auto mask_opt = mask_data->getMaskByEntityId(entity_id);
+    if (!mask_opt.has_value()) {
+        return false;
+    }
 
-    if (masks.empty()) return false;
-
-    auto const & mask = masks[mask_id.mask_index];
+    auto const & mask = mask_opt.value();
 
     for (auto const & point: mask) {
         if (point.x == pixel_x && point.y == pixel_y) {
@@ -588,7 +599,7 @@ void MaskDataVisualization::updateHoverUnionPolygon() {
     hover_polygon_array_object.release();
 }
 
-Polygon MaskDataVisualization::computeUnionPolygonFromEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) const {
+Polygon MaskDataVisualization::computeUnionPolygonFromEntries(std::vector<RTreeEntry<EntityId>> const & entries) const {
     // Use the new polygon containment-based algorithm
     return computeUnionPolygonUsingContainment(entries);
 }
@@ -631,7 +642,7 @@ static bool isBoundingBoxContainedInPolygon(BoundingBox const & bbox, Polygon co
  * 6. If not contained, union the box with comparison polygon and update comparison polygon
  * 7. Track number of union operations performed
  */
-static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<MaskIdentifier>> const & entries) {
+static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<EntityId>> const & entries) {
     if (entries.empty()) {
         return Polygon(std::vector<Point2D<float>>{});
     }
@@ -729,19 +740,19 @@ void MaskDataVisualization::applySelection(PointSelectionHandler const & selecti
     Qt::KeyboardModifiers modifiers = selection_handler.getModifiers();
 
     BoundingBox point_bbox(world_pos.x(), world_pos.y(), world_pos.x(), world_pos.y());
-    std::vector<RTreeEntry<MaskIdentifier>> entries;
+    std::vector<RTreeEntry<EntityId>> entries;
     spatial_index->query(point_bbox, entries);
 
     if (entries.empty()) return;
 
-    auto refined_masks = refineMasksContainingPoint(entries, world_pos.x(), world_pos.y());
-    if (refined_masks.empty()) return;
+    auto refined_entity_ids = refineMasksContainingPoint(entries, world_pos.x(), world_pos.y());
+    if (refined_entity_ids.empty()) return;
 
     if (modifiers & Qt::ControlModifier) {
         // Toggle the first mask found
-        toggleMaskSelection(refined_masks[0]);
+        toggleMaskSelection(refined_entity_ids[0]);
     } else if (modifiers & Qt::ShiftModifier) {
-        removeIntersectingMasks(refined_masks);
+        removeIntersectingMasks(refined_entity_ids);
     }
 }
 
@@ -757,7 +768,7 @@ QString MaskDataVisualization::getTooltipText() const {
 
 bool MaskDataVisualization::handleHover(QVector2D const & world_pos) {
     BoundingBox point_bbox(world_pos.x(), world_pos.y(), world_pos.x(), world_pos.y());
-    std::vector<RTreeEntry<MaskIdentifier>> entries;
+    std::vector<RTreeEntry<EntityId>> entries;
     spatial_index->query(point_bbox, entries);
 
     // This comparison is simplified. For a more robust check, we would need to
