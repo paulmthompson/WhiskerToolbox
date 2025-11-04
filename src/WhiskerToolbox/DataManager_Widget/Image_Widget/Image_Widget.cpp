@@ -7,7 +7,9 @@
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "ImageTableModel.hpp"
 
+#include <QModelIndex>
 #include <QTableView>
+
 #include <iostream>
 
 Image_Widget::Image_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)

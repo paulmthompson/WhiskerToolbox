@@ -5,12 +5,8 @@
 #include "Selection/SelectionModes.hpp"
 #include "Entity/EntityTypes.hpp"
 
-
 #include <QGraphicsSceneMouseEvent>
-
-#include <QToolTip>
 #include <QVector3D>
-
 
 class QGraphicsProxyWidget;
 class SpatialOverlayOpenGLWidget;

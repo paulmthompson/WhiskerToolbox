@@ -19,7 +19,6 @@
 #include "IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp"
 #include "IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
-// Media export functions
 #include "MediaExport/media_export.hpp"
 
 #include <QCheckBox>
@@ -33,6 +32,8 @@
 #include <QStackedWidget>
 #include <QString>
 #include <QTableView>
+#include <QModelIndex>
+
 #include <filesystem>
 #include <iostream>
 #include <set>

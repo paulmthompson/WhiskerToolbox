@@ -11,7 +11,6 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 #include <QString>
-#include <QTimer>
 
 #include <functional>
 #include <memory>
@@ -22,6 +21,7 @@ class GroupManager;
 class PlotInteractionController;
 class QKeyEvent;
 class QMouseEvent;
+class QTimer;
 class QWheelEvent;
 class TooltipManager;
 

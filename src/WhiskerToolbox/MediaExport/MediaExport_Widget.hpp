@@ -2,6 +2,7 @@
 #define MEDIA_EXPORT_WIDGET_HPP
 
 #include <QWidget>
+
 #include "media_export.hpp" // For MediaExportOptions struct
 
 namespace Ui {

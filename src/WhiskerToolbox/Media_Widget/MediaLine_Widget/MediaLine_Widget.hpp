@@ -5,10 +5,7 @@
 #include "CoreGeometry/lines.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include <QGroupBox>
 #include <QMap>
-#include <QSlider>
-#include <QSpinBox>
 #include <QWidget>
 
 #include <memory>

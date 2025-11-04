@@ -25,11 +25,14 @@
 #include <QAction>
 #include <QElapsedTimer>
 #include <QFont>
+#include <QGraphicsEllipseItem>
+#include <QGraphicsItem>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsSceneContextMenuEvent>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsTextItem>
 #include <QImage>
+#include <QKeyEvent>
 #include <QMenu>
 #include <QPainter>
 #include <algorithm>

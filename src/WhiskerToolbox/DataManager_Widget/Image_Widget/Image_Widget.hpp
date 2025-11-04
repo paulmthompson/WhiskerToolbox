@@ -1,7 +1,6 @@
 #ifndef IMAGE_WIDGET_HPP
 #define IMAGE_WIDGET_HPP
 
-#include <QModelIndex>
 #include <QWidget>
 
 #include <memory>
@@ -13,6 +12,7 @@ class Image_Widget;
 
 class DataManager;
 class ImageTableModel;
+class QModelIndex;
 
 class Image_Widget : public QWidget {
     Q_OBJECT

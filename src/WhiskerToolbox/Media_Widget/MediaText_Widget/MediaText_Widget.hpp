@@ -1,16 +1,17 @@
 #ifndef MEDIATEXT_WIDGET_HPP
 #define MEDIATEXT_WIDGET_HPP
 
-#include <QAction>
+
 #include <QColor>
-#include <QMenu>
 #include <QString>
-#include <QTableWidget>
-#include <QTableWidgetItem>
 #include <QWidget>
 
 #include <memory>
 #include <vector>
+
+class QAction;
+class QMenu;
+class QTableWidgetItem;
 
 namespace Ui {
 class MediaText_Widget;

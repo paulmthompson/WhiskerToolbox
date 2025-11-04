@@ -1,12 +1,10 @@
 #ifndef MASK_WIDGET_HPP
 #define MASK_WIDGET_HPP
 
-// Remove direct OpenCV dependency - use registry system instead
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
 #include "TimeFrame/TimeFrame.hpp"
 #include "nlohmann/json.hpp"
 
-#include <QModelIndex>
 #include <QWidget>
 
 #include <memory>
@@ -27,6 +25,7 @@ class ImageMaskSaver_Widget;
 class HDF5MaskSaver_Widget;
 class MediaExport_Widget;
 class GroupManager;
+class QModelIndex;
 
 // JSON-based saver options - no need for variant types
 using MaskSaverConfig = nlohmann::json;

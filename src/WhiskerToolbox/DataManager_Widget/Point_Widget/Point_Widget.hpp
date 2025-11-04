@@ -1,13 +1,12 @@
 #ifndef POINT_WIDGET_HPP
 #define POINT_WIDGET_HPP
 
-#include <QWidget>
-
 #include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"         // For CSVPointSaverOptions
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
-#include "MediaExport/MediaExport_Widget.hpp"              // For MediaExport_Widget
 #include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityTypes.hpp"
+
+#include <QWidget>
 
 #include <memory>
 #include <string>

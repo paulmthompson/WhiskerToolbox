@@ -2,9 +2,12 @@
 
 #include "ui_MediaText_Widget.h"
 
+#include <QAction>
 #include <QColorDialog>
 #include <QHeaderView>
+#include <QMenu>
 #include <QMessageBox>
+#include <QTableWidgetItem>
 
 #include <algorithm>
 #include <iostream>

@@ -3,9 +3,7 @@
 
 #include <QString>
 #include <QScrollArea>
-#include <QResizeEvent>
 #include <QShowEvent>
-#include <QTimer>
 
 #include <memory>
 #include <string>
@@ -18,6 +16,7 @@ class DataManager_Widget;
 class DataManager;
 class TimeScrollBar;
 class GroupManager;
+class QResizeEvent;
 
 class DataManager_Widget : public QScrollArea {
     Q_OBJECT

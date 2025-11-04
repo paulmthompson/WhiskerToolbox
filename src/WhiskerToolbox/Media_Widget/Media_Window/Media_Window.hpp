@@ -7,11 +7,7 @@
 #include "CoreGeometry/masks.hpp"
 #include "Entity/EntityTypes.hpp"
 
-#include <QGraphicsEllipseItem>
-#include <QGraphicsItem>
 #include <QGraphicsScene>
-#include <QKeyEvent>
-#include <QMenu>
 #include <QtCore/QtGlobal>
 
 #include <memory>
@@ -24,8 +20,12 @@
 
 class DataManager;
 class TimeFrame;
+class QGraphicsEllipseItem;
+class QGraphicsItem;
 class QGraphicsPixmapItem;
 class QImage;
+class QKeyEvent;
+class QMenu;
 class MediaMask_Widget;
 class MediaText_Widget;
 class Media_Widget;

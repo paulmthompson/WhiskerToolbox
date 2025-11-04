@@ -1,12 +1,13 @@
 #pragma once
 
 #include <QObject>
-#include <QTimer>
 #include <QPoint>
 #include <QString>
 
 #include <functional>
 #include <optional>
+
+class QTimer;
 
 /**
  * @brief Manages tooltip functionality for plot widgets

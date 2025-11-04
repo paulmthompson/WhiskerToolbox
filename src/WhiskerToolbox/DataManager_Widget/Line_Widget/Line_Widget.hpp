@@ -1,17 +1,12 @@
 #ifndef LINE_WIDGET_HPP
 #define LINE_WIDGET_HPP
 
-// Remove direct IO dependencies - use JSON registry pattern
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
-#include "MediaExport/MediaExport_Widget.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "Entity/EntityTypes.hpp"
 
 #include "nlohmann/json.hpp"
-#include <QLineEdit>
-#include <QModelIndex>
-#include <QPushButton>
 #include <QString>
 #include <QWidget>
 
@@ -27,6 +22,7 @@ class CSVLineSaver_Widget;
 class BinaryLineSaver_Widget;
 class QStackedWidget;
 class QComboBox;
+class QModelIndex;
 class QCheckBox;
 class GroupManager;
 

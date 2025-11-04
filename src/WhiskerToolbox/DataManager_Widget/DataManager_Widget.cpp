@@ -33,6 +33,8 @@
 #include <QFileDialog>
 #include <QMenu>
 #include <QAction>
+#include <QTimer>
+#include <QResizeEvent>
 #include <QTableWidgetItem>
 
 DataManager_Widget::DataManager_Widget(

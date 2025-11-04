@@ -13,6 +13,7 @@
 #include <QDebug>
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <QTimer>
 #include <QWheelEvent>
 
 BasePlotOpenGLWidget::BasePlotOpenGLWidget(QWidget * parent)
