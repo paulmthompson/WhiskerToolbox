@@ -125,7 +125,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Disable LTO when sanitizers are enabled to avoid false positive ODR violations
 # Sanitizers register globals in each translation unit, and LTO can expose these as duplicates
 if(NOT enableAddressSanitizer)
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    #set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
     message(STATUS "Link-Time Optimization (LTO): ENABLED")
 else()
     message(STATUS "Link-Time Optimization (LTO): DISABLED (incompatible with sanitizers)")
