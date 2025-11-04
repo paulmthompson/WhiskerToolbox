@@ -1,6 +1,7 @@
 #include "ML_Widget.hpp"
 #include "ui_ML_Widget.h"
 
+#include "ClassBalancingWidget/ClassBalancingWidget.hpp"
 #include "DataManager.hpp"
 #include "DataManager/utils/TableView/TableRegistry.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
@@ -14,15 +15,16 @@
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-
 #include "DataManager/utils/armadillo_wrap/analog_armadillo.hpp"
 #include "MLModelOperation.hpp"
 #include "MLModelRegistry.hpp"
 #include "MLParameterWidgetBase.hpp"
 #include "ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp"
 #include "ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp"
+#include "ModelMetricsWidget/ModelMetricsWidget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Transformations/IdentityTransform.hpp"
+#include "Transformations/ITransformation.hpp"
 #include "Transformations/LagLeadTransform.hpp"
 #include "Transformations/SquaredTransform.hpp"
 

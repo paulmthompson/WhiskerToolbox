@@ -20,7 +20,12 @@
 
 #include "Section.hpp"
 
+#include <QFrame>
+#include <QGridLayout>
 #include <QPropertyAnimation>
+#include <QParallelAnimationGroup>
+#include <QScrollArea>
+#include <QToolButton>
 
 #include <iostream>
 #include <vector>

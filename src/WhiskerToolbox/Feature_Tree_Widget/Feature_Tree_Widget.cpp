@@ -6,6 +6,7 @@
 
 #include <QCheckBox>
 #include <QHeaderView>
+#include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <iostream>
 #include <regex>

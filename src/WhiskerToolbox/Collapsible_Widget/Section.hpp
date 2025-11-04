@@ -21,12 +21,13 @@
 #ifndef SECTION_H
 #define SECTION_H
 
-#include <QFrame>
-#include <QGridLayout>
-#include <QParallelAnimationGroup>
-#include <QScrollArea>
-#include <QToolButton>
 #include <QWidget>
+
+class QFrame;
+class QGridLayout;
+class QParallelAnimationGroup;
+class QScrollArea;
+class QToolButton;
 
 class Section : public QWidget {
     Q_OBJECT

@@ -1,13 +1,9 @@
 #ifndef BEHAVIORTOOLBOX_ML_WIDGET_HPP
 #define BEHAVIORTOOLBOX_ML_WIDGET_HPP
 
-#include "ClassBalancingWidget/ClassBalancingWidget.hpp"
+
 #include "TimeFrame/interval_data.hpp"
 #include "FeatureProcessingWidget/FeatureProcessingWidget.hpp"
-#include "MLModelOperation.hpp"
-#include "MLModelRegistry.hpp"
-#include "ModelMetricsWidget/ModelMetricsWidget.hpp"
-#include "Transformations/ITransformation.hpp"
 #include "Transformations/TransformationsCommon.hpp"
 
 
@@ -21,9 +17,13 @@
 #include <unordered_set>
 #include <vector>
 
-
+class ClassBalancingWidget;
 class DataManager;
 class DigitalIntervalSeries;
+class ITransformation;
+class ModelMetricsWidget;
+class MLModelOperation;
+class MLModelRegistry;
 class TableView;
 class TimeScrollBar;
 

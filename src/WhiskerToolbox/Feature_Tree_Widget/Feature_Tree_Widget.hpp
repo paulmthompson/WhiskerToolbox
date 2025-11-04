@@ -5,7 +5,6 @@
 #include "DataManagerTypes.hpp"
 
 #include <QPoint>
-#include <QTreeWidget>
 #include <QWidget>
 
 #include <functional>

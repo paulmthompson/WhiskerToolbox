@@ -24,15 +24,16 @@
 #include "DigitalEvent/EventViewer_Widget.hpp"
 #include "DigitalInterval/IntervalViewer_Widget.hpp"
 
+#include <QFile>
+#include <QFileDialog>
+#include <QMenu>
+#include <QMessageBox>
 #include <QMetaObject>
 #include <QPointer>
 #include <QTableWidget>
-#include <QWheelEvent>
-#include <QMenu>
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QFile>
 #include <QTextStream>
+#include <QTreeWidget>
+#include <QWheelEvent>
 
 #include <algorithm>
 #include <cmath>
@@ -239,26 +240,26 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     ui->vertical_spacing->setValue(static_cast<double>(ui->openGLWidget->getVerticalSpacing()));
 
     // Configure splitter behavior
-    ui->main_splitter->setStretchFactor(0, 0);  // Properties panel doesn't stretch
-    ui->main_splitter->setStretchFactor(1, 1);  // Plot area stretches
-    
+    ui->main_splitter->setStretchFactor(0, 0);// Properties panel doesn't stretch
+    ui->main_splitter->setStretchFactor(1, 1);// Plot area stretches
+
     // Set initial sizes: properties panel gets enough space for controls, plot area gets the rest
     ui->main_splitter->setSizes({320, 1000});
-    
+
     // Prevent plot area from collapsing, but allow properties panel to collapse
-    ui->main_splitter->setCollapsible(0, true);  // Properties panel can collapse
-    ui->main_splitter->setCollapsible(1, false); // Plot area cannot collapse
-    
+    ui->main_splitter->setCollapsible(0, true); // Properties panel can collapse
+    ui->main_splitter->setCollapsible(1, false);// Plot area cannot collapse
+
     // Connect hide button (on properties panel)
     connect(ui->hide_properties_button, &QPushButton::clicked, this, [this]() {
         _hidePropertiesPanel();
     });
-    
+
     // Connect show button (on plot side) - initially hidden
     connect(ui->show_properties_button, &QPushButton::clicked, this, [this]() {
         _showPropertiesPanel();
     });
-    
+
     // Initially hide the show button since properties are visible
     ui->show_properties_button->hide();
 
@@ -702,17 +703,17 @@ void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float ca
     QString coordinate_text;
     if (series_info.isEmpty()) {
         coordinate_text = QString("Time: %1  Index: %2  Y: %3  Canvas: %4x%5")
-                                  .arg(actual_time, 10)           // Right-aligned, width 10
-                                  .arg(time_index, 10)             // Right-aligned, width 10
-                                  .arg(canvas_y, 8, 'f', 1)       // Right-aligned, width 8, 1 decimal
-                                  .arg(canvas_width, 5)            // Right-aligned, width 5
-                                  .arg(canvas_height, 5);          // Right-aligned, width 5
+                                  .arg(actual_time, 10)    // Right-aligned, width 10
+                                  .arg(time_index, 10)     // Right-aligned, width 10
+                                  .arg(canvas_y, 8, 'f', 1)// Right-aligned, width 8, 1 decimal
+                                  .arg(canvas_width, 5)    // Right-aligned, width 5
+                                  .arg(canvas_height, 5);  // Right-aligned, width 5
     } else {
         // For series info, still use fixed-width for numeric values but allow series info to vary
         coordinate_text = QString("Time: %1  Index: %2  %3  Canvas: %4x%5")
                                   .arg(actual_time, 10)
                                   .arg(time_index, 10)
-                                  .arg(series_info, -30)           // Left-aligned, min width 30
+                                  .arg(series_info, -30)// Left-aligned, min width 30
                                   .arg(canvas_width, 5)
                                   .arg(canvas_height, 5);
     }
@@ -1228,7 +1229,7 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & gr
 
     // Re-apply allocation to visible analog keys and update
     auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
-    for (auto const & key : analog_keys) {
+    for (auto const & key: analog_keys) {
         _applyPlottingManagerAllocation(key);
     }
     ui->openGLWidget->updateCanvas();
@@ -1237,7 +1238,7 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & gr
 void DataViewer_Widget::_clearConfigurationForGroup(QString const & group_name) {
     _plotting_manager->clearAnalogGroupConfiguration(group_name.toStdString());
     auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
-    for (auto const & key : analog_keys) {
+    for (auto const & key: analog_keys) {
         _applyPlottingManagerAllocation(key);
     }
     ui->openGLWidget->updateCanvas();
@@ -1250,13 +1251,22 @@ std::vector<PlottingManager::AnalogGroupChannelPosition> DataViewer_Widget::_par
     bool first = true;
     while (std::getline(ss, line)) {
         if (line.empty()) continue;
-        if (first) { first = false; continue; } // skip header row (electrode name)
+        if (first) {
+            first = false;
+            continue;
+        }// skip header row (electrode name)
         std::istringstream ls(line);
-        int row = 0; int ch = 0; float x = 0.0f; float y = 0.0f;
+        int row = 0;
+        int ch = 0;
+        float x = 0.0f;
+        float y = 0.0f;
         if (!(ls >> row >> ch >> x >> y)) continue;
         // SpikeSorter is 1-based; convert to 0-based for our program
         if (ch > 0) ch -= 1;
-        PlottingManager::AnalogGroupChannelPosition p; p.channel_id = ch; p.x = x; p.y = y;
+        PlottingManager::AnalogGroupChannelPosition p;
+        p.channel_id = ch;
+        p.x = x;
+        p.y = y;
         out.push_back(p);
     }
     return out;
@@ -1270,7 +1280,7 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & gr
     }
     _plotting_manager->loadAnalogSpikeSorterConfiguration(group_name.toStdString(), positions);
     auto analog_keys = _plotting_manager->getVisibleAnalogSeriesKeys();
-    for (auto const & key : analog_keys) {
+    for (auto const & key: analog_keys) {
         _applyPlottingManagerAllocation(key);
     }
     ui->openGLWidget->updateCanvas();
@@ -1484,18 +1494,18 @@ void DataViewer_Widget::cleanupDeletedData() {
 void DataViewer_Widget::_hidePropertiesPanel() {
     // Save current splitter sizes before hiding
     _saved_splitter_sizes = ui->main_splitter->sizes();
-    
+
     // Collapse the properties panel to 0 width
     ui->main_splitter->setSizes({0, ui->main_splitter->sizes()[1]});
-    
+
     // Hide the properties panel and show the reveal button
     ui->properties_container->hide();
     ui->show_properties_button->show();
-    
+
     _properties_panel_collapsed = true;
-    
+
     std::cout << "Properties panel hidden" << std::endl;
-    
+
     // Trigger a canvas update to adjust to new size
     ui->openGLWidget->update();
 }
@@ -1503,7 +1513,7 @@ void DataViewer_Widget::_hidePropertiesPanel() {
 void DataViewer_Widget::_showPropertiesPanel() {
     // Show the properties panel
     ui->properties_container->show();
-    
+
     // Restore saved splitter sizes
     if (!_saved_splitter_sizes.isEmpty()) {
         ui->main_splitter->setSizes(_saved_splitter_sizes);
@@ -1511,14 +1521,14 @@ void DataViewer_Widget::_showPropertiesPanel() {
         // Default sizes if no saved sizes (320px for properties, rest for plot)
         ui->main_splitter->setSizes({320, 1000});
     }
-    
+
     // Hide the reveal button
     ui->show_properties_button->hide();
-    
+
     _properties_panel_collapsed = false;
-    
+
     std::cout << "Properties panel shown" << std::endl;
-    
+
     // Trigger a canvas update to adjust to new size
     ui->openGLWidget->update();
 }
@@ -1528,10 +1538,10 @@ void DataViewer_Widget::_exportToSVG() {
 
     // Get save file path from user
     QString const fileName = QFileDialog::getSaveFileName(
-        this,
-        tr("Export Plot to SVG"),
-        QString(),
-        tr("SVG Files (*.svg);;All Files (*)"));
+            this,
+            tr("Export Plot to SVG"),
+            QString(),
+            tr("SVG Files (*.svg);;All Files (*)"));
 
     if (fileName.isEmpty()) {
         std::cout << "SVG Export cancelled by user" << std::endl;
@@ -1555,9 +1565,9 @@ void DataViewer_Widget::_exportToSVG() {
         QFile file(fileName);
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QMessageBox::critical(
-                this,
-                tr("Export Failed"),
-                tr("Could not open file for writing:\n%1").arg(fileName));
+                    this,
+                    tr("Export Failed"),
+                    tr("Could not open file for writing:\n%1").arg(fileName));
             std::cerr << "Failed to open file: " << fileName.toStdString() << std::endl;
             return;
         }
@@ -1570,18 +1580,18 @@ void DataViewer_Widget::_exportToSVG() {
 
         // Show success message
         QMessageBox::information(
-            this,
-            tr("Export Successful"),
-            tr("Plot exported to:\n%1\n\nCanvas size: %2x%3")
-                .arg(fileName)
-                .arg(exporter.getCanvasWidth())
-                .arg(exporter.getCanvasHeight()));
+                this,
+                tr("Export Successful"),
+                tr("Plot exported to:\n%1\n\nCanvas size: %2x%3")
+                        .arg(fileName)
+                        .arg(exporter.getCanvasWidth())
+                        .arg(exporter.getCanvasHeight()));
 
     } catch (std::exception const & e) {
         QMessageBox::critical(
-            this,
-            tr("Export Failed"),
-            tr("An error occurred during export:\n%1").arg(e.what()));
+                this,
+                tr("Export Failed"),
+                tr("An error occurred during export:\n%1").arg(e.what()));
         std::cerr << "SVG Export failed: " << e.what() << std::endl;
     }
 }

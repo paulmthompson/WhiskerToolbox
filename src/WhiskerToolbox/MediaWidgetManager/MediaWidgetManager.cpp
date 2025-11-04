@@ -13,6 +13,8 @@ MediaWidgetManager::MediaWidgetManager(std::shared_ptr<DataManager> data_manager
     , _data_manager(std::move(data_manager)) {
 }
 
+MediaWidgetManager::~MediaWidgetManager() = default;
+
 void MediaWidgetManager::setGroupManager(GroupManager* group_manager) {
     _group_manager = group_manager;
     
