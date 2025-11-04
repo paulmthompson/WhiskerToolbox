@@ -2,17 +2,18 @@
 #define PARAMETER_FACTORY_HPP
 
 #include "data_transforms.hpp"
-
 #include "DataManager.hpp"
+
+#include <nlohmann/json.hpp>
 
 #include <any>
 #include <functional>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <typeinfo>
 #include <unordered_map>
 
+class DataManager;
 
 /**
  * @brief Function signature for parameter setters

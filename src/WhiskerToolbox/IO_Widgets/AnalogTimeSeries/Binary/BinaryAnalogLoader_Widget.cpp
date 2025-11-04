@@ -1,11 +1,13 @@
 #include "BinaryAnalogLoader_Widget.hpp"
 #include "ui_BinaryAnalogLoader_Widget.h"
 
-#include <QPushButton>
+#include "DataManager/AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp"
+
 #include <QFileDialog>
 #include <QLineEdit>
-#include <QSpinBox>
 #include <QMessageBox>
+#include <QPushButton>
+#include <QSpinBox>
 
 BinaryAnalogLoader_Widget::BinaryAnalogLoader_Widget(QWidget * parent)
     : QWidget(parent),
@@ -23,12 +25,11 @@ BinaryAnalogLoader_Widget::~BinaryAnalogLoader_Widget() {
 
 void BinaryAnalogLoader_Widget::_onBrowseButtonClicked() {
     QString selectedPath = QFileDialog::getOpenFileName(
-        this,
-        "Select Binary File",
-        "",
-        "Binary Files (*.bin *.dat);;All Files (*)"
-    );
-    
+            this,
+            "Select Binary File",
+            "",
+            "Binary Files (*.bin *.dat);;All Files (*)");
+
     if (!selectedPath.isEmpty()) {
         ui->file_path_edit->setText(selectedPath);
     }
@@ -36,16 +37,16 @@ void BinaryAnalogLoader_Widget::_onBrowseButtonClicked() {
 
 void BinaryAnalogLoader_Widget::_onLoadButtonClicked() {
     QString filePath = ui->file_path_edit->text().trimmed();
-    
+
     if (filePath.isEmpty()) {
         QMessageBox::warning(this, "No File Selected", "Please select a binary file to load.");
         return;
     }
-    
+
     BinaryAnalogLoaderOptions options;
     options.filename = filePath.toStdString();
     options.header_size = ui->header_size_spinbox->value();
     options.num_channels = ui->num_channels_spinbox->value();
-    
+
     emit loadBinaryAnalogRequested(options);
-} 
+}

@@ -25,15 +25,10 @@ private:
     Ui::Digital_Interval_Loader_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
 
-    //void _loadSingleHDF5Line(std::string filename, std::string line_suffix = "");
-
 private slots:
-    // void _loadSingleInterval(); // Removed
-    void _onLoaderTypeChanged(int index); // New slot
-    void _handleCSVLoadRequested(CSVIntervalLoaderOptions options); // New slot
-    void _handleBinaryLoadRequested(BinaryIntervalLoaderOptions options); // New slot
-    //void _loadSingleHdf5Line();
-    //void _loadMultiHdf5Line();
+    void _onLoaderTypeChanged(int index); 
+    void _handleCSVLoadRequested(CSVIntervalLoaderOptions options);
+    void _handleBinaryLoadRequested(BinaryIntervalLoaderOptions options); 
 };
 
 

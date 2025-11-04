@@ -1,5 +1,6 @@
 #include "EventInIntervalComputer.h"
 
+#include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IEventSource.h"
 
 #include <algorithm>

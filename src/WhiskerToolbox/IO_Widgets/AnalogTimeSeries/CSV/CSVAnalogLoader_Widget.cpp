@@ -1,6 +1,8 @@
 #include "CSVAnalogLoader_Widget.hpp"
 #include "ui_CSVAnalogLoader_Widget.h"
 
+#include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
+
 #include <QFileDialog>
 #include <QLineEdit>
 #include <QComboBox>

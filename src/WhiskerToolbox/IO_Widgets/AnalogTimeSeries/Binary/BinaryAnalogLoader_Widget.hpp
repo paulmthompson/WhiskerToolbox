@@ -2,8 +2,8 @@
 #define BINARYANALOGLOADER_WIDGET_HPP
 
 #include <QWidget>
-#include <QString>
-#include "DataManager/AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp"
+
+struct BinaryAnalogLoaderOptions;
 
 namespace Ui {
 class BinaryAnalogLoader_Widget;
@@ -16,7 +16,7 @@ public:
     ~BinaryAnalogLoader_Widget() override;
 
 signals:
-    void loadBinaryAnalogRequested(BinaryAnalogLoaderOptions options);
+    void loadBinaryAnalogRequested(BinaryAnalogLoaderOptions const & options);
 
 private slots:
     void _onBrowseButtonClicked();
@@ -26,4 +26,4 @@ private:
     Ui::BinaryAnalogLoader_Widget * ui;
 };
 
-#endif// BINARYANALOGLOADER_WIDGET_HPP 
+#endif// BINARYANALOGLOADER_WIDGET_HPP

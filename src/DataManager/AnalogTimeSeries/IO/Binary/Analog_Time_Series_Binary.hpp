@@ -14,6 +14,6 @@ struct BinaryAnalogLoaderOptions {
     int num_channels = 1;
 };
 
-std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions & opts);
+std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions const & opts);
 
 #endif// ANALOG_TIME_SERIES_LOADER_HPP

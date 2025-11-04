@@ -7,7 +7,7 @@
 #include <iostream>
 
 
-std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions & opts) {
+std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions const & opts) {
 
     std::vector<std::shared_ptr<AnalogTimeSeries>> analog_time_series;
 

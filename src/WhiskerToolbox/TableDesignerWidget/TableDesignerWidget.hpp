@@ -4,11 +4,7 @@
 #include "DataManager/utils/TableView/TableInfo.hpp"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
 
-#include <QComboBox>
-#include <QLabel>
-#include <QLineEdit>
 #include <QStringList>
-#include <QVBoxLayout>
 #include <QWidget>
 
 #include <QMap>
@@ -25,6 +21,7 @@ class IParameterDescriptor;
 class TableViewerWidget;
 class QTimer;
 class QTreeWidgetItem;
+class QVBoxLayout;
 class TableInfoWidget;
 class Section;
 class TableTransformWidget;

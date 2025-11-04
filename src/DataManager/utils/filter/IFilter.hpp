@@ -1,12 +1,8 @@
 #ifndef IFILTER_HPP
 #define IFILTER_HPP
 
-#include "TimeFrame/TimeFrame.hpp"
-
 #include <span>
-#include <vector>
-
-class AnalogTimeSeries;
+#include <string>
 
 /**
  * @brief Abstract interface for all filters

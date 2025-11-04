@@ -2,9 +2,9 @@
 #define CSV_ANALOG_SAVER_WIDGET_HPP
 
 #include <QWidget>
-#include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp" // For CSVAnalogSaverOptions
 
-// Forward declaration
+struct CSVAnalogSaverOptions;
+
 namespace Ui {
 class CSVAnalogSaver_Widget;
 }
@@ -12,19 +12,19 @@ class CSVAnalogSaver_Widget;
 class CSVAnalogSaver_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit CSVAnalogSaver_Widget(QWidget *parent = nullptr);
+    explicit CSVAnalogSaver_Widget(QWidget * parent = nullptr);
     ~CSVAnalogSaver_Widget() override;
 
 signals:
-    void saveAnalogCSVRequested(CSVAnalogSaverOptions options);
+    void saveAnalogCSVRequested(CSVAnalogSaverOptions const & options);
 
 private slots:
     void _onSaveHeaderCheckboxToggled(bool checked);
     void _updatePrecisionExample(int precision);
 
 private:
-    Ui::CSVAnalogSaver_Widget *ui;
+    Ui::CSVAnalogSaver_Widget * ui;
     void _updatePrecisionLabelText(int precision);
 };
 
-#endif // CSV_ANALOG_SAVER_WIDGET_HPP 
+#endif// CSV_ANALOG_SAVER_WIDGET_HPP

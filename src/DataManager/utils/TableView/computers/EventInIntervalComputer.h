@@ -1,16 +1,16 @@
 #ifndef EVENT_IN_INTERVAL_COMPUTER_H
 #define EVENT_IN_INTERVAL_COMPUTER_H
 
-#include "utils/TableView/core/ExecutionPlan.h"
+
 #include "utils/TableView/interfaces/IColumnComputer.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <span>
 #include <string>
 #include <vector>
 
+class ExecutionPlan;
 class IEventSource;
 
 /**

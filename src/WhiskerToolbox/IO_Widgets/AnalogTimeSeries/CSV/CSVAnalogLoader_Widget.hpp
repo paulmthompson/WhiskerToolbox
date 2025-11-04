@@ -2,7 +2,8 @@
 #define CSVANALOGLOADER_WIDGET_HPP
 
 #include <QWidget>
-#include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
+
+struct CSVAnalogLoaderOptions;
 
 namespace Ui {
 class CSVAnalogLoader_Widget;
@@ -16,7 +17,7 @@ public:
     ~CSVAnalogLoader_Widget() override;
 
 signals:
-    void loadAnalogCSVRequested(CSVAnalogLoaderOptions options);
+    void loadAnalogCSVRequested(CSVAnalogLoaderOptions const & options);
 
 private slots:
     void _onBrowseButtonClicked();

@@ -50,7 +50,7 @@ void Analog_Loader_Widget::_onLoaderTypeChanged(int index) {
     }
 }
 
-void Analog_Loader_Widget::_handleAnalogCSVLoadRequested(CSVAnalogLoaderOptions options) {
+void Analog_Loader_Widget::_handleAnalogCSVLoadRequested(CSVAnalogLoaderOptions const & options) {
     auto data_key = ui->data_name_text->text().toStdString();
     if (data_key.empty()) {
         data_key = "analog";
@@ -73,7 +73,7 @@ void Analog_Loader_Widget::_handleAnalogCSVLoadRequested(CSVAnalogLoaderOptions 
     }
 }
 
-void Analog_Loader_Widget::_handleBinaryAnalogLoadRequested(BinaryAnalogLoaderOptions options) {
+void Analog_Loader_Widget::_handleBinaryAnalogLoadRequested(BinaryAnalogLoaderOptions const & options) {
     auto base_data_key = ui->data_name_text->text().toStdString();
     if (base_data_key.empty()) {
         base_data_key = "analog";

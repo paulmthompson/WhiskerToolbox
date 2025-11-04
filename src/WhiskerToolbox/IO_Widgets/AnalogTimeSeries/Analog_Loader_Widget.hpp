@@ -2,13 +2,13 @@
 #define ANALOG_LOADER_WIDGET_HPP
 
 #include <QWidget>
+
 #include <memory>
 #include <string>
 
-#include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
-#include "DataManager/AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp"
-
 class DataManager;
+struct CSVAnalogLoaderOptions;
+struct BinaryAnalogLoaderOptions;
 class CSVAnalogLoader_Widget;
 class BinaryAnalogLoader_Widget;
 
@@ -28,8 +28,8 @@ private:
 
 private slots:
     void _onLoaderTypeChanged(int index);
-    void _handleAnalogCSVLoadRequested(CSVAnalogLoaderOptions options);
-    void _handleBinaryAnalogLoadRequested(BinaryAnalogLoaderOptions options);
+    void _handleAnalogCSVLoadRequested(CSVAnalogLoaderOptions const & options);
+    void _handleBinaryAnalogLoadRequested(BinaryAnalogLoaderOptions const & options);
 };
 
 

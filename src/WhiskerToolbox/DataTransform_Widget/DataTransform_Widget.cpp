@@ -3,33 +3,34 @@
 #include "ui_DataTransform_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/transforms/TransformRegistry.hpp"
-#include "DataManager/transforms/TransformPipeline.hpp"
 #include "DataManager/transforms/ParameterFactory.hpp"
+#include "DataManager/transforms/TransformPipeline.hpp"
+#include "DataManager/transforms/TransformRegistry.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 
+#include "AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp"
+#include "Collapsible_Widget/Section.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalPeak_Widget/AnalogIntervalPeak_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.hpp"
-#include "DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp"
 #include "DataTransform_Widget/DigitalIntervalSeries/BooleanOperation_Widget/BooleanOperation_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp"
-#include "DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp"
-#include "DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.hpp"
-#include "DataTransform_Widget/Lines/Line_Outlier_Detection/LineOutlierDetection_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
+#include "DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineBaseFlip_Widget/LineBaseFlip_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
 #include "DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp"
-#include "DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.hpp"
+#include "DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.hpp"
+#include "DataTransform_Widget/Lines/Line_Outlier_Detection/LineOutlierDetection_Widget.hpp"
+#include "DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.hpp"
@@ -38,21 +39,26 @@
 #include "DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
-#include "AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp"
+#include "DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.hpp"
 #include "Media/WhiskerTracing_Widget/WhiskerTracing_Widget.hpp"
 
 #include <QApplication>
-#include <QGroupBox>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QFileDialog>
+#include <QFont>
+#include <QGroupBox>
+#include <QHBoxLayout>
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QLabel>
 #include <QMessageBox>
-#include <QFont>
-#include <QSplitter>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QResizeEvent>
 #include <QScrollBar>
+#include <QSplitter>
+#include <QTextEdit>
 #include <QTimer>
+#include <QVBoxLayout>
 
 
 DataTransform_Widget::DataTransform_Widget(
@@ -84,10 +90,10 @@ DataTransform_Widget::DataTransform_Widget(
     setFocusPolicy(Qt::NoFocus);
 
     _registry = std::make_unique<TransformRegistry>();
-    
+
     // Initialize pipeline with registry and data manager
     _pipeline = std::make_unique<TransformPipeline>(_data_manager.get(), _registry.get());
-    
+
     // Initialize parameter factory
     ParameterFactory::getInstance().initializeDefaultSetters();
 
@@ -261,7 +267,7 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         return widget;
     };
 
-    _parameterWidgetFactories["Filter"] = [](QWidget * parent)  -> TransformParameter_Widget * {
+    _parameterWidgetFactories["Filter"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new AnalogFilter_Widget(parent);
     };
 
@@ -305,7 +311,7 @@ void DataTransform_Widget::_handleFeatureSelected(QString const & feature) {
         if (scalingWidget) {
             scalingWidget->setCurrentDataKey(feature);
         }
-        
+
         auto booleanWidget = dynamic_cast<BooleanOperation_Widget *>(_currentParameterWidget);
         if (booleanWidget) {
             booleanWidget->setCurrentInputKey(key);
@@ -395,7 +401,7 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
         setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
         int const widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
-        Q_UNUSED(widgetIndex) // Suppress the warning about unused variable
+        Q_UNUSED(widgetIndex)                    // Suppress the warning about unused variable
         _currentParameterWidget = newParamWidget;// Set as active
 
         // If this is a scaling widget, set the current data key
@@ -536,7 +542,7 @@ void DataTransform_Widget::_updateOutputName() {
     }
 }
 
-void DataTransform_Widget::resizeEvent(QResizeEvent* event) {
+void DataTransform_Widget::resizeEvent(QResizeEvent * event) {
     QScrollArea::resizeEvent(event);
 
     // Ensure content widget fills the scroll area completely
@@ -580,82 +586,81 @@ QSize DataTransform_Widget::minimumSizeHint() const {
 void DataTransform_Widget::_setupJsonPipelineUI() {
     // Create the JSON pipeline section
     _jsonPipelineSection = new Section(this, "JSON Pipeline");
-    _jsonPipelineSection->setMinimumHeight(50); // Smaller when collapsed
-    
+    _jsonPipelineSection->setMinimumHeight(50);// Smaller when collapsed
+
     // Create the content layout for the section
     auto jsonLayout = new QVBoxLayout();
-    
+
     // JSON file loading section
     auto jsonButtonLayout = new QHBoxLayout();
     _loadJsonButton = new QPushButton("Load JSON Pipeline...", this);
     _jsonStatusLabel = new QLabel("No JSON pipeline loaded", this);
     _jsonStatusLabel->setStyleSheet("color: gray;");
-    
+
     jsonButtonLayout->addWidget(_loadJsonButton);
     jsonButtonLayout->addWidget(_jsonStatusLabel, 1);
     jsonLayout->addLayout(jsonButtonLayout);
-    
+
     // JSON text editor
     _jsonTextEdit = new QTextEdit(this);
     _jsonTextEdit->setPlaceholderText(
-        "JSON pipeline configuration will appear here...\n\n"
-        "Example:\n"
-        "{\n"
-        "  \"metadata\": {\n"
-        "    \"name\": \"My Pipeline\",\n"
-        "    \"version\": \"1.0\"\n"
-        "  },\n"
-        "  \"steps\": [\n"
-        "    {\n"
-        "      \"step_id\": \"step1\",\n"
-        "      \"transform_name\": \"Line Alignment\",\n"
-        "      \"input_key\": \"whisker_trace\",\n"
-        "      \"output_key\": \"aligned_whisker\",\n"
-        "      \"phase\": 0,\n"
-        "      \"parameters\": {\n"
-        "        \"width\": 25\n"
-        "      }\n"
-        "    }\n"
-        "  ]\n"
-        "}"
-    );
-    
+            "JSON pipeline configuration will appear here...\n\n"
+            "Example:\n"
+            "{\n"
+            "  \"metadata\": {\n"
+            "    \"name\": \"My Pipeline\",\n"
+            "    \"version\": \"1.0\"\n"
+            "  },\n"
+            "  \"steps\": [\n"
+            "    {\n"
+            "      \"step_id\": \"step1\",\n"
+            "      \"transform_name\": \"Line Alignment\",\n"
+            "      \"input_key\": \"whisker_trace\",\n"
+            "      \"output_key\": \"aligned_whisker\",\n"
+            "      \"phase\": 0,\n"
+            "      \"parameters\": {\n"
+            "        \"width\": 25\n"
+            "      }\n"
+            "    }\n"
+            "  ]\n"
+            "}");
+
     // Set monospace font for JSON
     QFont monoFont("Consolas, Monaco, monospace");
     monoFont.setPointSize(9);
     _jsonTextEdit->setFont(monoFont);
     _jsonTextEdit->setMinimumHeight(200);
-    
+
     jsonLayout->addWidget(_jsonTextEdit);
-    
+
     // Pipeline execution section
     auto executeLayout = new QHBoxLayout();
     _executeJsonButton = new QPushButton("Execute Pipeline", this);
     _executeJsonButton->setEnabled(false);
-    
+
     _pipelineProgressBar = new QProgressBar(this);
     _pipelineProgressBar->setVisible(false);
     _pipelineProgressBar->setTextVisible(true);
-    
+
     executeLayout->addWidget(_executeJsonButton);
     executeLayout->addWidget(_pipelineProgressBar, 1);
     jsonLayout->addLayout(executeLayout);
-    
+
     // Set the content layout for the section
     _jsonPipelineSection->setContentLayout(*jsonLayout);
-    
+
     // Add the JSON pipeline section to the main layout
     // Get the scroll area's widget and its layout
-    auto* scrollWidget = widget();
+    auto * scrollWidget = widget();
     if (scrollWidget) {
-        auto* mainLayout = qobject_cast<QVBoxLayout*>(scrollWidget->layout());
+        auto * mainLayout = qobject_cast<QVBoxLayout *>(scrollWidget->layout());
         if (mainLayout) {
             // Insert the JSON pipeline section before the last spacer
             int spacerIndex = mainLayout->count() - 1;
             mainLayout->insertWidget(spacerIndex, _jsonPipelineSection);
         }
     }
-    
+
     // Connect signals
     connect(_loadJsonButton, &QPushButton::clicked, this, &DataTransform_Widget::_loadJsonPipeline);
     connect(_jsonTextEdit, &QTextEdit::textChanged, this, &DataTransform_Widget::_onJsonTextChanged);
@@ -664,37 +669,36 @@ void DataTransform_Widget::_setupJsonPipelineUI() {
 
 void DataTransform_Widget::_loadJsonPipeline() {
     QString fileName = QFileDialog::getOpenFileName(
-        this,
-        "Load JSON Pipeline",
-        "",
-        "JSON Files (*.json);;All Files (*)"
-    );
-    
+            this,
+            "Load JSON Pipeline",
+            "",
+            "JSON Files (*.json);;All Files (*)");
+
     if (!fileName.isEmpty()) {
         _updateJsonDisplay(fileName);
     }
 }
 
-void DataTransform_Widget::_updateJsonDisplay(const QString& jsonFilePath) {
+void DataTransform_Widget::_updateJsonDisplay(QString const & jsonFilePath) {
     QFile file(jsonFilePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QMessageBox::warning(this, "Error", "Could not open file: " + jsonFilePath);
         return;
     }
-    
+
     QTextStream in(&file);
     QString jsonContent = in.readAll();
     file.close();
-    
+
     // Update the text editor
     _jsonTextEdit->setPlainText(jsonContent);
-    
+
     // Update status and file path
     _currentJsonFile = jsonFilePath;
     QFileInfo fileInfo(jsonFilePath);
     _jsonStatusLabel->setText("Loaded: " + fileInfo.fileName());
     _jsonStatusLabel->setStyleSheet("color: green;");
-    
+
     // Validate and update UI
     _validateJsonSyntax();
 }
@@ -711,10 +715,10 @@ void DataTransform_Widget::_validateJsonSyntax() {
         _executeJsonButton->setEnabled(false);
         return;
     }
-    
+
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(jsonText.toUtf8(), &error);
-    
+
     if (error.error != QJsonParseError::NoError) {
         _jsonStatusLabel->setText("JSON Error: " + error.errorString());
         _jsonStatusLabel->setStyleSheet("color: red;");
@@ -724,7 +728,7 @@ void DataTransform_Widget::_validateJsonSyntax() {
         nlohmann::json config;
         try {
             config = nlohmann::json::parse(jsonText.toStdString());
-            
+
             if (_pipeline->loadFromJson(config)) {
                 auto validation_errors = _pipeline->validate();
                 if (validation_errors.empty()) {
@@ -749,7 +753,7 @@ void DataTransform_Widget::_validateJsonSyntax() {
                 _jsonStatusLabel->setStyleSheet("color: red;");
                 _executeJsonButton->setEnabled(false);
             }
-        } catch (std::exception const& e) {
+        } catch (std::exception const & e) {
             _jsonStatusLabel->setText("Pipeline error: " + QString::fromStdString(e.what()));
             _jsonStatusLabel->setStyleSheet("color: red;");
             _executeJsonButton->setEnabled(false);
@@ -762,7 +766,7 @@ void DataTransform_Widget::_executeJsonPipeline() {
         QMessageBox::warning(this, "Error", "No pipeline available");
         return;
     }
-    
+
     // Save scroll position before starting pipeline
     _savedScrollPosition = verticalScrollBar()->value();
     _preventScrolling = true;
@@ -772,23 +776,23 @@ void DataTransform_Widget::_executeJsonPipeline() {
     nlohmann::json config;
     try {
         config = nlohmann::json::parse(jsonText.toStdString());
-    } catch (std::exception const& e) {
+    } catch (std::exception const & e) {
         QMessageBox::warning(this, "JSON Error", "Failed to parse JSON: " + QString::fromStdString(e.what()));
         return;
     }
-    
+
     if (!_pipeline->loadFromJson(config)) {
         QMessageBox::warning(this, "Pipeline Error", "Failed to load pipeline configuration");
         return;
     }
-    
+
     // Setup progress tracking
     _pipelineProgressBar->setVisible(true);
     _pipelineProgressBar->setValue(0);
     _executeJsonButton->setEnabled(false);
-    
+
     // Execute the pipeline with progress callback
-    auto progressCallback = [this](int step_index, std::string const& step_name, int step_progress, int overall_progress) {
+    auto progressCallback = [this](int step_index, std::string const & step_name, int step_progress, int overall_progress) {
         _pipelineProgressBar->setValue(overall_progress);
         if (step_index >= 0) {
             _pipelineProgressBar->setFormat(QString("Step %1 (%2): %3%").arg(step_index).arg(QString::fromStdString(step_name)).arg(step_progress));
@@ -797,44 +801,44 @@ void DataTransform_Widget::_executeJsonPipeline() {
         }
         QApplication::processEvents();
     };
-    
+
     auto result = _pipeline->execute(progressCallback);
-    
+
     // Handle results
     if (result.success) {
         _pipelineProgressBar->setValue(100);
         _pipelineProgressBar->setFormat("Pipeline completed successfully!");
-        
-        QMessageBox::information(this, "Success", 
-            QString("Pipeline completed successfully!\n"
-                   "Steps completed: %1/%2\n"
-                   "Execution time: %3 ms")
-                   .arg(result.steps_completed)
-                   .arg(result.total_steps)
-                   .arg(result.total_execution_time_ms, 0, 'f', 1));
-                   
+
+        QMessageBox::information(this, "Success",
+                                 QString("Pipeline completed successfully!\n"
+                                         "Steps completed: %1/%2\n"
+                                         "Execution time: %3 ms")
+                                         .arg(result.steps_completed)
+                                         .arg(result.total_steps)
+                                         .arg(result.total_execution_time_ms, 0, 'f', 1));
+
         // Refresh the feature table to show new data
         ui->feature_table_widget->populateTable();
     } else {
         _pipelineProgressBar->setFormat("Pipeline failed");
         _pipelineProgressBar->setStyleSheet("QProgressBar::chunk { background-color: red; }");
-        
+
         QString errorDetails;
         for (size_t i = 0; i < result.step_results.size(); ++i) {
-            auto const& step_result = result.step_results[i];
+            auto const & step_result = result.step_results[i];
             if (!step_result.success) {
                 errorDetails += QString("Step %1: %2\n").arg(i).arg(QString::fromStdString(step_result.error_message));
             }
         }
-        
-        QMessageBox::warning(this, "Pipeline Failed", 
-            QString("Pipeline execution failed:\n%1\n\nSteps completed: %2/%3")
-                   .arg(QString::fromStdString(result.error_message))
-                   .arg(result.steps_completed)
-                   .arg(result.total_steps) + 
-                   (errorDetails.isEmpty() ? "" : "\n\nStep details:\n" + errorDetails));
+
+        QMessageBox::warning(this, "Pipeline Failed",
+                             QString("Pipeline execution failed:\n%1\n\nSteps completed: %2/%3")
+                                             .arg(QString::fromStdString(result.error_message))
+                                             .arg(result.steps_completed)
+                                             .arg(result.total_steps) +
+                                     (errorDetails.isEmpty() ? "" : "\n\nStep details:\n" + errorDetails));
     }
-    
+
     _executeJsonButton->setEnabled(true);
 
     // Restore scroll position and re-enable scrolling

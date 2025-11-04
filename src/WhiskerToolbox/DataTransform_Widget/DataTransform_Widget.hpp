@@ -3,16 +3,9 @@
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
 #include "DataManagerTypes.hpp"
-#include "Collapsible_Widget/Section.hpp"
 
 #include <QString>
 #include <QScrollArea>
-#include <QResizeEvent>
-#include <QGroupBox>
-#include <QPushButton>
-#include <QTextEdit>
-#include <QLabel>
-#include <QProgressBar>
 
 #include <map>
 #include <memory>
@@ -23,6 +16,12 @@ class DataTransform_Widget;
 }
 
 class DataManager;
+class QLabel;
+class QProgressBar;
+class QPushButton;
+class QResizeEvent;
+class QTextEdit;
+class Section;
 class TransformOperation;
 class TransformParameter_Widget;
 class TransformRegistry;
