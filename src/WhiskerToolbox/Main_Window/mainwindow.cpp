@@ -136,11 +136,11 @@ void MainWindow::_buildInitialLayout() {
     scrollbar_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
     _m_DockManager->addDockWidget(ads::BottomDockWidgetArea, scrollbar_dock_widget, media_dockArea);
 
-    // Adjust splitter so scrollbar takes minimal space (e.g., 5%)
+    // Adjust splitter so scrollbar takes minimal space (e.g., 12%)
     auto * media_scrollbar_splitter = ads::internal::findParent<ads::CDockSplitter *>(_time_scrollbar);
     if (media_scrollbar_splitter) {
         int const height = media_scrollbar_splitter->height();
-        media_scrollbar_splitter->setSizes({height * 95 / 100, height * 5 / 100});
+        media_scrollbar_splitter->setSizes({height * 88 / 100, height * 12 / 100});
     }
 
     // Add the group management widget to the top right corner
