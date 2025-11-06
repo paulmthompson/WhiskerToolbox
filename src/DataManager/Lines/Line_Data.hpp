@@ -432,18 +432,12 @@ public:
             return GetLinesInRange(interval);
         }
 
-        // Convert the time range from source timeframe to target timeframe
-        // 1. Get the time values from the source timeframe
-        auto start_time_value = source_timeframe.getTimeAtIndex(interval.start);
-        auto end_time_value = source_timeframe.getTimeAtIndex(interval.end);
-
-        // 2. Convert those time values to indices in the target timeframe
-        auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value));
-        auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
-
-        // 3. Create converted interval and use the original function
-        TimeFrameInterval target_interval{target_start_index, target_end_index};
-        return GetLinesInRange(target_interval);
+        auto [target_start_index, target_end_index] = convertTimeFrameRange(interval.start,
+            interval.end,
+            source_timeframe,
+            *_time_frame);
+            
+        return GetLinesInRange(TimeFrameInterval(target_start_index, target_end_index));
     }
 
     /**
@@ -470,18 +464,12 @@ public:
             return GetLineEntriesInRange(interval);
         }
 
-        // Convert the time range from source timeframe to target timeframe
-        // 1. Get the time values from the source timeframe
-        auto start_time_value = source_timeframe.getTimeAtIndex(interval.start);
-        auto end_time_value = source_timeframe.getTimeAtIndex(interval.end);
+        auto [target_start_index, target_end_index] = convertTimeFrameRange(interval.start,
+                                                                            interval.end,
+                                                                            source_timeframe,
+                                                                            *_time_frame);
 
-        // 2. Convert those time values to indices in the target timeframe
-        auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value));
-        auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
-
-        // 3. Create converted interval and use the original function
-        TimeFrameInterval target_interval{target_start_index, target_end_index};
-        return GetLineEntriesInRange(target_interval);
+        return GetLineEntriesInRange(TimeFrameInterval(target_start_index, target_end_index));
     }
 
     // ========== Copy and Move ==========
