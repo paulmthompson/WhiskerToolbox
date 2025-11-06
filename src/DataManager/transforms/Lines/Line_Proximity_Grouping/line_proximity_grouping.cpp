@@ -4,6 +4,7 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "CoreGeometry/line_geometry.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -143,8 +144,7 @@ std::type_index LineProximityGroupingOperation::getTargetInputTypeIndex() const 
 }
 
 bool LineProximityGroupingOperation::canApply(DataTypeVariant const& dataVariant) const {
-    return std::holds_alternative<std::shared_ptr<LineData>>(dataVariant) &&
-           std::get<std::shared_ptr<LineData>>(dataVariant) != nullptr;
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineProximityGroupingOperation::getDefaultParameters() const {

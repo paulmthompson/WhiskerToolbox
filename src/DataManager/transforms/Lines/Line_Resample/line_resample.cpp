@@ -2,6 +2,7 @@
 
 #include "CoreGeometry/line_resampling.hpp"// For the actual resampling
 #include "Lines/Line_Data.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <iostream>// For error messages / cout
 #include <map>     // for std::map
@@ -118,11 +119,7 @@ std::type_index LineResampleOperation::getTargetInputTypeIndex() const {
 }
 
 bool LineResampleOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<LineData>>(dataVariant)) {
-        return false;
-    }
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<LineData>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;// Check if it's a valid, non-null LineData
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineResampleOperation::getDefaultParameters() const {

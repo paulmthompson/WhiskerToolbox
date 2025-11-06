@@ -3,6 +3,7 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "transforms/utils/index_grouping.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <iostream>
 
@@ -91,7 +92,7 @@ std::type_index LineIndexGroupingOperation::getTargetInputTypeIndex() const {
 }
 
 bool LineIndexGroupingOperation::canApply(DataTypeVariant const & dataVariant) const {
-    return std::holds_alternative<std::shared_ptr<LineData>>(dataVariant);
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineIndexGroupingOperation::getDefaultParameters() const {

@@ -2,6 +2,7 @@
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -95,12 +96,7 @@ std::type_index GroupOperation::getTargetInputTypeIndex() const {
 }
 
 bool GroupOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(dataVariant)) {
-        return false;
-    }
-
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<DigitalIntervalSeries>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> GroupOperation::getDefaultParameters() const {

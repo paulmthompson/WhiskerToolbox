@@ -2,6 +2,7 @@
 
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include "CoreGeometry/line_resampling.hpp"
 #include "CoreGeometry/order_line.hpp"
@@ -527,12 +528,7 @@ std::type_index MaskToLineOperation::getTargetInputTypeIndex() const {
 }
 
 bool MaskToLineOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<MaskData>>(dataVariant)) {
-        return false;
-    }
-
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<MaskData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> MaskToLineOperation::getDefaultParameters() const {

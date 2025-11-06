@@ -4,6 +4,7 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -225,7 +226,7 @@ std::type_index LineGroupToIntervalsOperation::getTargetInputTypeIndex() const {
 }
 
 bool LineGroupToIntervalsOperation::canApply(DataTypeVariant const & dataVariant) const {
-    return std::holds_alternative<std::shared_ptr<LineData>>(dataVariant);
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineGroupToIntervalsOperation::getDefaultParameters() const {

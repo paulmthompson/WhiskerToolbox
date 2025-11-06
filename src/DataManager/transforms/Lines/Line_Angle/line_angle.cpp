@@ -3,6 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "CoreGeometry/line_geometry.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
 
 #include <armadillo>
@@ -198,13 +199,7 @@ std::type_index LineAngleOperation::getTargetInputTypeIndex() const {
 }
 
 bool LineAngleOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<LineData>>(dataVariant)) {
-        return false;
-    }
-
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<LineData>>(&dataVariant);
-
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineAngleOperation::getDefaultParameters() const {

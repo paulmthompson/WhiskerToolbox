@@ -3,6 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -188,12 +189,7 @@ std::type_index IntervalThresholdOperation::getTargetInputTypeIndex() const {
 }
 
 bool IntervalThresholdOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(dataVariant)) {
-        return false;
-    }
-
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<AnalogTimeSeries>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<AnalogTimeSeries>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> IntervalThresholdOperation::getDefaultParameters() const {

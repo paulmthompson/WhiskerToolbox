@@ -1,5 +1,6 @@
 #include "analog_filter.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 #include "utils/filter/FilterFactory.hpp"
 #include "utils/filter/FilterImplementations.hpp"
 #include "utils/filter/ZeroPhaseDecorator.hpp"
@@ -104,7 +105,7 @@ std::unique_ptr<TransformParametersBase> AnalogFilterOperation::getDefaultParame
 }
 
 bool AnalogFilterOperation::canApply(DataTypeVariant const & dataVariant) const {
-    return std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(dataVariant);
+    return canApplyToType<AnalogTimeSeries>(dataVariant);
 }
 
 DataTypeVariant AnalogFilterOperation::execute(

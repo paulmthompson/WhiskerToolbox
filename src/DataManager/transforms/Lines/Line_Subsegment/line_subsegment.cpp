@@ -2,6 +2,7 @@
 
 #include "Lines/Line_Data.hpp"
 #include "CoreGeometry/line_geometry.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 #include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
 
@@ -200,12 +201,7 @@ std::type_index LineSubsegmentOperation::getTargetInputTypeIndex() const {
 }
 
 bool LineSubsegmentOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<LineData>>(dataVariant)) {
-        return false;
-    }
-    
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<LineData>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineSubsegmentOperation::getDefaultParameters() const {

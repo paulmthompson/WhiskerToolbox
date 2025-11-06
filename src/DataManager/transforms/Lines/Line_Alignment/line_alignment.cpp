@@ -3,6 +3,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "CoreGeometry/line_geometry.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -443,13 +444,7 @@ std::type_index LineAlignmentOperation::getTargetInputTypeIndex() const {
 }
 
 bool LineAlignmentOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<LineData>>(dataVariant)) {
-        return false;
-    }
-
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<LineData>>(&dataVariant);
-
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineAlignmentOperation::getDefaultParameters() const {

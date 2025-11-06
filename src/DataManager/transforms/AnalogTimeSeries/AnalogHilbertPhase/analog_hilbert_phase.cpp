@@ -1,6 +1,7 @@
 #include "analog_hilbert_phase.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 #include "utils/armadillo_wrap/analog_armadillo.hpp"
 #include "utils/filter/FilterFactory.hpp"
 
@@ -540,12 +541,7 @@ std::type_index HilbertPhaseOperation::getTargetInputTypeIndex() const {
 }
 
 bool HilbertPhaseOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(dataVariant)) {
-        return false;
-    }
-
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<AnalogTimeSeries>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<AnalogTimeSeries>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> HilbertPhaseOperation::getDefaultParameters() const {

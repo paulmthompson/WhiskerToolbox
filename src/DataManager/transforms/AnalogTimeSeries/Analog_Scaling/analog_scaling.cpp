@@ -2,6 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/utils/statistics.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -154,12 +155,7 @@ std::type_index AnalogScalingOperation::getTargetInputTypeIndex() const {
 }
 
 bool AnalogScalingOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(dataVariant)) {
-        return false;
-    }
-    
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<AnalogTimeSeries>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<AnalogTimeSeries>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> AnalogScalingOperation::getDefaultParameters() const {

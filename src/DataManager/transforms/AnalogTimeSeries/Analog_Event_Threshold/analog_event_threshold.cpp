@@ -2,6 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <iostream>
 #include <vector>// std::vector
@@ -115,14 +116,7 @@ std::type_index EventThresholdOperation::getTargetInputTypeIndex() const {
 }
 
 bool EventThresholdOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(dataVariant)) {
-        return false;
-    }
-
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<AnalogTimeSeries>>(&dataVariant);
-
-    // Return true only if get_if succeeded AND the contained shared_ptr is not null.
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<AnalogTimeSeries>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> EventThresholdOperation::getDefaultParameters() const {

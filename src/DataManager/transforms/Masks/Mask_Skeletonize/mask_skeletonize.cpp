@@ -3,6 +3,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "Masks/utils/mask_utils.hpp"
 #include "Masks/utils/skeletonize.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <cmath>        // std::round
@@ -47,12 +48,7 @@ std::type_index MaskSkeletonizeOperation::getTargetInputTypeIndex() const {
 }
 
 bool MaskSkeletonizeOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<MaskData>>(dataVariant)) {
-        return false;
-    }
-    
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<MaskData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> MaskSkeletonizeOperation::getDefaultParameters() const {

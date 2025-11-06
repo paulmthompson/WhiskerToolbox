@@ -12,6 +12,7 @@
 #include "StateEstimation/Filter/Kalman/KalmanFilter.hpp"
 #include "StateEstimation/Filter/Kalman/KalmanMatrixBuilder.hpp"
 #include "StateEstimation/MinCostFlowTracker.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -661,8 +662,7 @@ std::type_index LineKalmanGroupingOperation::getTargetInputTypeIndex() const {
 }
 
 bool LineKalmanGroupingOperation::canApply(DataTypeVariant const & dataVariant) const {
-    return std::holds_alternative<std::shared_ptr<LineData>>(dataVariant) &&
-           std::get<std::shared_ptr<LineData>>(dataVariant) != nullptr;
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineKalmanGroupingOperation::getDefaultParameters() const {

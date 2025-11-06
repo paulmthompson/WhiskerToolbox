@@ -2,6 +2,7 @@
 
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -101,17 +102,7 @@ std::type_index MaskCentroidOperation::getTargetInputTypeIndex() const {
 }
 
 bool MaskCentroidOperation::canApply(DataTypeVariant const & dataVariant) const {
-    // 1. Check if the variant holds the correct alternative type (shared_ptr<MaskData>)
-    if (!std::holds_alternative<std::shared_ptr<MaskData>>(dataVariant)) {
-        return false;
-    }
-
-    // 2. Check if the shared_ptr it holds is actually non-null.
-    //    Use get_if for safe access (returns nullptr if type is wrong, though step 1 checked)
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
-
-    // Return true only if get_if succeeded AND the contained shared_ptr is not null.
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<MaskData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> MaskCentroidOperation::getDefaultParameters() const {

@@ -1,5 +1,6 @@
 #include "line_curvature.hpp"
 
+#include "transforms/utils/variant_type_check.hpp"
 #include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
 
@@ -217,11 +218,7 @@ std::type_index LineCurvatureOperation::getTargetInputTypeIndex() const {
 }
 
 bool LineCurvatureOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<LineData>>(dataVariant)) {
-        return false;
-    }
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<LineData>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;// Check if it's a valid, non-null LineData
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineCurvatureOperation::getDefaultParameters() const {

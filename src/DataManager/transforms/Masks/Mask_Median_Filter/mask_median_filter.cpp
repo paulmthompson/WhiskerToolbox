@@ -3,6 +3,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "Masks/utils/mask_utils.hpp"
 #include "Masks/utils/median_filter.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <iostream>
 
@@ -61,12 +62,7 @@ std::type_index MaskMedianFilterOperation::getTargetInputTypeIndex() const {
 }
 
 bool MaskMedianFilterOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<MaskData>>(dataVariant)) {
-        return false;
-    }
-    
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<MaskData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> MaskMedianFilterOperation::getDefaultParameters() const {

@@ -7,6 +7,7 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "StateEstimation/MaskParticleFilter.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -414,13 +415,7 @@ std::type_index PointParticleFilterOperation::getTargetInputTypeIndex() const {
 }
 
 bool PointParticleFilterOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<PointData>>(dataVariant)) {
-        return false;
-    }
-
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<PointData>>(&dataVariant);
-
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<PointData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> PointParticleFilterOperation::getDefaultParameters() const {

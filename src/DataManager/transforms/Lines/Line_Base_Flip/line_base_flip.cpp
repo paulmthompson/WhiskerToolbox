@@ -2,12 +2,13 @@
 
 #include "Lines/Line_Data.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <cmath>
 
 bool LineBaseFlipTransform::canApply(DataTypeVariant const & dataVariant) const {
-    return std::holds_alternative<std::shared_ptr<LineData>>(dataVariant);
+    return canApplyToType<LineData>(dataVariant);
 }
 
 DataTypeVariant LineBaseFlipTransform::execute(DataTypeVariant const & dataVariant,

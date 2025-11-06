@@ -3,6 +3,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "whiskertracker.hpp"
 #include "producer_consumer_pipeline.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <omp.h>
 
@@ -241,12 +242,7 @@ std::type_index WhiskerTracingOperation::getTargetInputTypeIndex() const {
 }
 
 bool WhiskerTracingOperation::canApply(DataTypeVariant const & dataVariant) const {
-    if (!std::holds_alternative<std::shared_ptr<MediaData>>(dataVariant)) {
-        return false;
-    }
-
-    auto const * ptr_ptr = std::get_if<std::shared_ptr<MediaData>>(&dataVariant);
-    return ptr_ptr && *ptr_ptr;
+    return canApplyToType<MediaData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> WhiskerTracingOperation::getDefaultParameters() const {

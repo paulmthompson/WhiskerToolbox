@@ -13,6 +13,7 @@
 #include "StateEstimation/Filter/Kalman/KalmanFilter.hpp"
 #include "StateEstimation/Filter/Kalman/KalmanMatrixBuilder.hpp"
 #include "StateEstimation/OutlierDetection.hpp"
+#include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -248,7 +249,7 @@ std::type_index LineOutlierDetectionOperation::getTargetInputTypeIndex() const {
 }
 
 bool LineOutlierDetectionOperation::canApply(DataTypeVariant const & dataVariant) const {
-    return std::holds_alternative<std::shared_ptr<LineData>>(dataVariant);
+    return canApplyToType<LineData>(dataVariant);
 }
 
 std::unique_ptr<TransformParametersBase> LineOutlierDetectionOperation::getDefaultParameters() const {
