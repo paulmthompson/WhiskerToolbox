@@ -45,6 +45,28 @@ LineData & LineData::operator=(LineData && other) noexcept {
 
 // ========== Setters ==========
 
+[[nodiscard]] std::optional<LineData::LineModifier> LineData::getMutableLine(EntityId entity_id, bool notify) {
+    // 1. Find the mutable reference, just like you did before
+    auto descriptor = _identity_registry->get(entity_id);
+    if (!descriptor || descriptor->kind != EntityKind::LineEntity || descriptor->data_key != _identity_data_key) {
+        return std::nullopt;
+    }
+
+    auto time_it = _data.find(TimeFrameIndex{descriptor->time_value});
+    if (time_it == _data.end()) {
+        return std::nullopt;
+    }
+
+    size_t local_index = static_cast<size_t>(descriptor->local_index);
+    if (local_index >= time_it->second.size()) {
+        return std::nullopt;
+    }
+
+    Line2D & line = time_it->second[local_index].line;
+
+    return LineModifier(line, [this, notify]() { if (notify) { this->notifyObservers(); } });
+}
+
 bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
     auto it = _data.find(time);
     if (it != _data.end()) {

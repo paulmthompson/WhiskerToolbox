@@ -378,13 +378,12 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
     
     EntityId selected_entity_id = *selected_entities.begin();
     
-    // Get a mutable reference to the line
-    auto line_ref = line_data->getMutableLineByEntityId(selected_entity_id);
+    auto line_ref = line_data->getMutableLine(selected_entity_id, true);
     if (!line_ref.has_value()) {
         std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id << std::endl;
         return;
     }
-    
+
     Line2D& line = line_ref.value().get();
 
     // Check if edge snapping is enabled
@@ -438,10 +437,6 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
         }
     }
 
-    // Notify observers that the data has changed
-    line_data->notifyObservers();
-
-    _scene->UpdateCanvas();
     std::cout << "Added point (" << x_media << ", " << y_media << ") to line "
               << _active_key << " (EntityID: " << selected_entity_id << ")" << std::endl;
 }

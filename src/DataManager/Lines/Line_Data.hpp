@@ -88,6 +88,22 @@ public:
      */
     [[nodiscard]] bool clearAtTime(TimeFrameIndex time, int line_id, bool notify = true);
 
+    using LineModifier = ModificationHandle<Line2D>;
+
+    /**
+     * @brief Get a mutable handle to a line by EntityId.
+     *
+     * This method returns an RAII-style handle. The handle provides
+     * pointer-like access to the Line2D.
+     *
+     * When the handle is destroyed (goes out of scope), the LineData's
+     * observers will be automatically notified.
+     *
+     * @param entity_id The EntityId to look up
+     * @return Optional containing a LineModifier handle if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<LineModifier> getMutableLine(EntityId entity_id, bool notify = true);
+
     /**
      * @brief Add a line at a specific time
      * 
@@ -436,7 +452,7 @@ public:
             interval.end,
             source_timeframe,
             *_time_frame);
-            
+
         return GetLinesInRange(TimeFrameInterval(target_start_index, target_end_index));
     }
 
