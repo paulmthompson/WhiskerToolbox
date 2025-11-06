@@ -215,10 +215,10 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer with per-line row expansion drops
     // Timeframe with 5 timestamps
     std::vector<int> timeValues = {0, 1, 2, 3, 4};
     auto tf = std::make_shared<TimeFrame>(timeValues);
+    dm.setTime(TimeKey("test_time"), tf);
 
     // LineData with varying number of lines per timestamp
     auto lineData = std::make_shared<LineData>();
-    lineData->setTimeFrame(tf);
 
     // t=0: no lines (should be dropped)
     // t=1: one horizontal line from x=0..10
@@ -244,12 +244,11 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer with per-line row expansion drops
         lineData->addAtTime(TimeFrameIndex(4), xs, ys, false);
     }
 
-    lineData->setIdentityContext("ExpLines", dm.getEntityRegistry());
-    lineData->rebuildAllEntityIds();
+    dm.setData<LineData>("ExpLines", lineData, TimeKey("test_time"));
 
     auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"ExpLines"});
     // Register into DataManager so TableView expansion can resolve the line source by name
-    dm.setData<LineData>("ExpLines", lineData, TimeKey("time"));
+
 
     // Timestamps include empty ones; expansion should drop t=0 and t=3
     std::vector<TimeFrameIndex> timestamps = {

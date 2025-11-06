@@ -16,6 +16,10 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
     // Build a minimal table with LineSamplingMultiComputer so we get numeric columns
     DataManager dm;
 
+    // TimeFrame and row selector using timestamps [10,20,30]
+    std::vector<int> timeValues = {10, 20, 30};
+    auto tf = std::make_shared<TimeFrame>(timeValues);
+
     // Prepare LineData with simple lines across timestamps 10,20,30 (2,2,1 entities)
     auto line_data = std::make_shared<LineData>();
     line_data->addAtTime(TimeFrameIndex(10), std::vector<Point2D<float>>{{0, 0}, {1, 1}});
@@ -25,15 +29,9 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
     line_data->addAtTime(TimeFrameIndex(30), std::vector<Point2D<float>>{{8, 8}, {9, 9}});
     line_data->setImageSize({800, 600});
 
-    // Identity context so entity IDs are generated
-    line_data->setIdentityContext("test_lines", dm.getEntityRegistry());
-    line_data->rebuildAllEntityIds();
+    dm.setTime(TimeKey("test_time"), tf);
 
-    dm.setData<LineData>("test_lines", line_data, TimeKey("time"));
-
-    // TimeFrame and row selector using timestamps [10,20,30]
-    std::vector<int> timeValues = {10, 20, 30};
-    auto tf = std::make_shared<TimeFrame>(timeValues);
+    dm.setData<LineData>("test_lines", line_data, TimeKey("test_time"));
 
     auto adapter = std::make_shared<LineDataAdapter>(line_data, tf, "test_lines");
 
