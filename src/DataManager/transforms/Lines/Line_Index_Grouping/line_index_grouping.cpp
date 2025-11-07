@@ -50,20 +50,19 @@ std::shared_ptr<LineData> lineIndexGrouping(std::shared_ptr<LineData> line_data,
     progressCallback(0);
 
     // Get the internal data structure from LineData
-    // GetAllLineEntriesAsRange() provides a zero-copy view of the data
-    auto line_entries_range = line_data->GetAllLineEntriesAsRange();
+    auto line_entries_range = line_data->getAllEntries();
 
     // Build a map structure for the templated function
     std::map<TimeFrameIndex, std::vector<LineEntry>> data_map;
-    for (auto const & pair: line_entries_range) {
+    for (auto const & [time, entries]: line_entries_range) {
         std::vector<LineEntry> entry_vec;
-        entry_vec.reserve(pair.entries.size());
+        entry_vec.reserve(entries.size());
         
-        for (auto const & entry: pair.entries) {
+        for (auto const & entry: entries) {
             entry_vec.push_back(entry);
         }
         
-        data_map[pair.time] = std::move(entry_vec);
+        data_map[time] = std::move(entry_vec);
     }
 
     // Call the templated grouping function

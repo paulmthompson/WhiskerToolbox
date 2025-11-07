@@ -46,8 +46,8 @@ std::shared_ptr<LineData> line_resample(
 
     auto resampled_line_map = std::map<TimeFrameIndex, std::vector<Line2D>>();
     int total_lines = 0;
-    for (auto const & time_lines_pair: line_data->GetAllLinesAsRange()) {
-        total_lines += static_cast<int>(time_lines_pair.lines.size());
+    for (auto const & [time, entries]: line_data->getAllEntries()) {
+        total_lines += static_cast<int>(entries.size());
     }
     if (total_lines == 0) {
         if (progressCallback) {
@@ -62,22 +62,21 @@ std::shared_ptr<LineData> line_resample(
         progressCallback(0);
     }
 
-    for (auto const & time_lines_pair: line_data->GetAllLinesAsRange()) {
-        TimeFrameIndex time = time_lines_pair.time;
+    for (auto const & [time, entries]: line_data->getAllEntries()) {
         std::vector<Line2D> new_lines_at_time;
-        new_lines_at_time.reserve(time_lines_pair.lines.size());
+        new_lines_at_time.reserve(entries.size());
 
-        for (auto const & single_line: time_lines_pair.lines) {
-            if (single_line.empty()) {
+        for (auto const & entry: entries) {
+            if (entry.data.empty()) {
                 new_lines_at_time.push_back(Line2D());// Keep empty lines as empty
             } else {
                 Line2D simplified_line;
                 switch (params.algorithm) {
                     case LineSimplificationAlgorithm::FixedSpacing:
-                        simplified_line = resample_line_points(single_line, params.target_spacing);
+                        simplified_line = resample_line_points(entry.data, params.target_spacing);
                         break;
                     case LineSimplificationAlgorithm::DouglasPeucker:
-                        simplified_line = douglas_peucker_simplify(single_line, params.epsilon);
+                        simplified_line = douglas_peucker_simplify(entry.data, params.epsilon);
                         break;
                 }
                 new_lines_at_time.push_back(simplified_line);

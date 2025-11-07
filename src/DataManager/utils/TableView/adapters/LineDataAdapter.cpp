@@ -26,8 +26,8 @@ auto LineDataAdapter::getTimeFrame() const -> std::shared_ptr<TimeFrame> {
 auto LineDataAdapter::size() const -> size_t {
     // Count total number of lines across all time frames
     size_t totalLines = 0;
-    for (auto const & [time, lines]: m_lineData->GetAllLinesAsRange()) {
-        totalLines += lines.size();
+    for (auto const & [time, entries]: m_lineData->getAllEntries()) {
+        totalLines += entries.size();
     }
     return totalLines;
 }
@@ -36,8 +36,10 @@ auto LineDataAdapter::getLines() -> std::vector<Line2D> {
     std::vector<Line2D> allLines;
 
     // Collect all lines from all time frames
-    for (auto const & [time, lines]: m_lineData->GetAllLinesAsRange()) {
-        allLines.insert(allLines.end(), lines.begin(), lines.end());
+    for (auto const & [time, entries]: m_lineData->getAllEntries()) {
+        for (auto const & entry: entries) {
+            allLines.push_back(entry.data);
+        }
     }
 
     return allLines;
@@ -55,13 +57,15 @@ auto LineDataAdapter::getLinesInRange(TimeFrameIndex start,
 
     // Use the LineData's built-in method to get lines in the time range.
     // This method handles the time frame conversion internally via a lazy view.
-    auto lines_view = m_lineData->GetLinesInRange(TimeFrameInterval(start, end),
+    auto lines_view = m_lineData->GetEntriesInRange(TimeFrameInterval(start, end),
                                                   *target_timeFrame);
 
     // Materialize the view into a vector
     std::vector<Line2D> result;
-    for (auto const & timeLinesPair: lines_view) {
-        result.insert(result.end(), timeLinesPair.lines.begin(), timeLinesPair.lines.end());
+    for (auto const & [time, entries]: lines_view) {
+        for (auto const & entry: entries) {
+            result.push_back(entry.data);
+        }
     }
 
     return result;
@@ -69,8 +73,8 @@ auto LineDataAdapter::getLinesInRange(TimeFrameIndex start,
 
 bool LineDataAdapter::hasMultiSamples() const {
     // Check if any timestamp has more than one line
-    for (auto const & [time, lines]: m_lineData->GetAllLinesAsRange()) {
-        if (lines.size() > 1) {
+    for (auto const & [time, entries]: m_lineData->getAllEntries()) {
+        if (entries.size() > 1) {
             return true;
         }
     }

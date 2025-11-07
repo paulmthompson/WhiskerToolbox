@@ -20,21 +20,20 @@ kj::Array<capnp::word> serializeLineData(LineData const* lineData) {
     auto timeLinesList = lineDataProto.initTimeLines(times.size());
  
     size_t i = 0;
-    for (auto [time, lines] : lineData->GetAllLinesAsRange()) {
+    for (auto [time, entries] : lineData->getAllEntries()) {
         auto timeLine = timeLinesList[i];
         timeLine.setTime(time.getValue());
 
-        auto linesList = timeLine.initLines(lines.size());
+        auto linesList = timeLine.initLines(entries.size());
 
-        for (size_t j = 0; j < lines.size(); j++) {
-            Line2D const& line = lines[j];
+        for (size_t j = 0; j < entries.size(); j++) {
             auto lineBuilder = linesList[j];
-            auto pointsList = lineBuilder.initPoints(line.size());
+            auto pointsList = lineBuilder.initPoints(entries[j].data.size());
 
-            for (size_t k = 0; k < line.size(); k++) {
+            for (size_t k = 0; k < entries[j].data.size(); k++) {
                 auto pointBuilder = pointsList[k];
-                pointBuilder.setX(line[k].x);
-                pointBuilder.setY(line[k].y);
+                pointBuilder.setX(entries[j].data[k].x);
+                pointBuilder.setY(entries[j].data[k].y);
             }
         }
 

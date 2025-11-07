@@ -3,7 +3,6 @@
 
 #include "CoreGeometry/boundingbox.hpp"
 #include "Entity/EntityTypes.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
@@ -33,7 +32,7 @@ class QOpenGLShaderProgram;
 class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;
-
+class LineData;
 
 
 

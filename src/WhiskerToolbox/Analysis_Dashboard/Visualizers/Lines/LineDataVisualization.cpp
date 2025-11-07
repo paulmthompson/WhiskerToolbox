@@ -73,10 +73,9 @@ void LineDataVisualization::buildVertexData() {
 
     uint32_t line_index = 0;
 
-    for (auto const & [time_frame, lines]: m_line_data_ptr->GetAllLinesAsRange()) {
-        auto const & ids_at_time = m_line_data_ptr->getEntityIdsAtTime(time_frame);
-        for (int line_id = 0; line_id < static_cast<int>(lines.size()); ++line_id) {
-            Line2D const & line = lines[line_id];
+    for (auto const & [time, entries]: m_line_data_ptr->getAllEntries()) {
+        for (int line_id = 0; line_id < static_cast<int>(entries.size()); ++line_id) {
+            Line2D const & line = entries[line_id].data;
 
             if (line.size() < 2) {
                 continue;
@@ -84,8 +83,8 @@ void LineDataVisualization::buildVertexData() {
 
             // Record line-level EntityId
             EntityId entity_id = 0;
-            if (line_id < static_cast<int>(ids_at_time.size())) {
-                entity_id = ids_at_time[line_id];
+            if (line_id < static_cast<int>(entries.size())) {
+                entity_id = entries[line_id].entity_id;
             }
             m_line_entity_ids.push_back(entity_id);
 
@@ -648,8 +647,9 @@ BoundingBox LineDataVisualization::calculateBoundsForLineData(LineData const * l
 
     bool has_data = false;
 
-    for (auto const & [time_frame, lines]: line_data->GetAllLinesAsRange()) {
-        for (Line2D const & line: lines) {
+    for (auto const & [time, entries]: line_data->getAllEntries()) {
+        for (auto const & entry: entries) {
+            Line2D const & line = entry.data;
             for (Point2D<float> const & point: line) {
                 if (!has_data) {
                     min_x = max_x = point.x;

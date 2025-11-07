@@ -162,12 +162,12 @@ std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
         reference_y = 0.0f;
     }
 
-    for (auto const & line_and_time: line_data->GetAllLinesAsRange()) {
-        if (line_and_time.lines.empty()) {
+    for (auto const & [time, entries]: line_data->getAllEntries()) {
+        if (entries.empty()) {
             continue;
         }
 
-        Line2D const & line = line_and_time.lines[0];
+        Line2D const & line = entries[0].data;
 
         if (line.size() < 2) {
             continue;
@@ -182,7 +182,7 @@ std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
             angle = calculate_polynomial_angle(line, position, polynomial_order, reference_x, reference_y);
         }
 
-        angles[static_cast<int>(line_and_time.time.getValue())] = angle;
+        angles[static_cast<int>(time.getValue())] = angle;
     }
 
     return std::make_shared<AnalogTimeSeries>(angles);

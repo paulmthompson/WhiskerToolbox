@@ -47,13 +47,13 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
 
         result_line = mask_to_line(mask_data.get(), &params);
         REQUIRE(result_line != nullptr);
-        REQUIRE(result_line->GetAllLinesAsRange().size() > 0);
+        REQUIRE(result_line->getAllEntries().size() > 0);
 
         progress_val = -1;
         call_count = 0;
         result_line = mask_to_line(mask_data.get(), &params, cb);
         REQUIRE(result_line != nullptr);
-        REQUIRE(result_line->GetAllLinesAsRange().size() > 0);
+        REQUIRE(result_line->getAllEntries().size() > 0);
         REQUIRE(progress_val == 100);
         REQUIRE(call_count > 0);
     }
@@ -85,7 +85,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
 
         result_line = mask_to_line(mask_data.get(), &params);
         REQUIRE(result_line != nullptr);
-        REQUIRE(result_line->GetAllLinesAsRange().size() > 0);
+        REQUIRE(result_line->getAllEntries().size() > 0);
     }
 
     SECTION("Smoothing enabled") {
@@ -110,7 +110,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
 
         result_line = mask_to_line(mask_data.get(), &params);
         REQUIRE(result_line != nullptr);
-        REQUIRE(result_line->GetAllLinesAsRange().size() > 0);
+        REQUIRE(result_line->getAllEntries().size() > 0);
     }
 
     SECTION("Multiple time frames") {
@@ -140,7 +140,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
 
         result_line = mask_to_line(mask_data.get(), &params);
         REQUIRE(result_line != nullptr);
-        REQUIRE(result_line->GetAllLinesAsRange().size() == 2); // Should have lines at both time frames
+        REQUIRE(result_line->getAllEntries().size() == 2); // Should have lines at both time frames
     }
 
     SECTION("Progress callback detailed check") {
@@ -203,12 +203,12 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
         params.output_resolution = 5.0f;
 
         result_line = mask_to_line(mask_data.get(), &params);
-        REQUIRE(result_line->GetAllLinesAsRange().size() == 0);
+        REQUIRE(result_line->getAllEntries().size() == 0);
 
         progress_val = -1;
         call_count = 0;
         result_line = mask_to_line(mask_data.get(), &params, cb);
-        REQUIRE(result_line->GetAllLinesAsRange().size() == 0);
+        REQUIRE(result_line->getAllEntries().size() == 0);
         REQUIRE(progress_val == -1);
         REQUIRE(call_count == 0);
     }
@@ -227,13 +227,13 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
 
         result_line = mask_to_line(mask_data.get(), &params);
         REQUIRE(result_line != nullptr);
-        REQUIRE(result_line->GetAllLinesAsRange().size() == 0);
+        REQUIRE(result_line->getAllEntries().size() == 0);
 
         progress_val = -1;
         call_count = 0;
         result_line = mask_to_line(mask_data.get(), &params, cb);
         REQUIRE(result_line != nullptr);
-        REQUIRE(result_line->GetAllLinesAsRange().size() == 0);
+        REQUIRE(result_line->getAllEntries().size() == 0);
         REQUIRE(progress_val == 100);
         REQUIRE(call_count > 0);
     }
@@ -386,7 +386,7 @@ TEST_CASE("Data Transform: Mask To Line - JSON pipeline", "[transforms][mask_to_
     // Verify the results
     auto line_data = dm.getData<LineData>("ConvertedLine");
     REQUIRE(line_data != nullptr);
-    REQUIRE(line_data->GetAllLinesAsRange().size() > 0);
+    REQUIRE(line_data->getAllEntries().size() > 0);
 }
 
 #include "transforms/ParameterFactory.hpp"
@@ -506,7 +506,7 @@ TEST_CASE("Data Transform: Mask To Line - load_data_from_json_config", "[transfo
     // Verify the transformation was executed and results are available
     auto result_line = dm.getData<LineData>("converted_line");
     REQUIRE(result_line != nullptr);
-    REQUIRE(result_line->GetAllLinesAsRange().size() > 0);
+    REQUIRE(result_line->getAllEntries().size() > 0);
     
     // Test another pipeline with different parameters (Nearest to Reference method)
     const char* json_config_reference = 
@@ -556,7 +556,7 @@ TEST_CASE("Data Transform: Mask To Line - load_data_from_json_config", "[transfo
     // Verify the reference point results
     auto result_line_reference = dm.getData<LineData>("converted_line_reference");
     REQUIRE(result_line_reference != nullptr);
-    REQUIRE(result_line_reference->GetAllLinesAsRange().size() > 0);
+    REQUIRE(result_line_reference->getAllEntries().size() > 0);
     
     // Test smoothing pipeline
     const char* json_config_smooth = 
@@ -606,7 +606,7 @@ TEST_CASE("Data Transform: Mask To Line - load_data_from_json_config", "[transfo
     // Verify the smoothing results
     auto result_line_smooth = dm.getData<LineData>("converted_line_smooth");
     REQUIRE(result_line_smooth != nullptr);
-    REQUIRE(result_line_smooth->GetAllLinesAsRange().size() > 0);
+    REQUIRE(result_line_smooth->getAllEntries().size() > 0);
     
     // Cleanup
     try {

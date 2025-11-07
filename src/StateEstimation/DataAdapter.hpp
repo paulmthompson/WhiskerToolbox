@@ -85,9 +85,9 @@ public:
         
         FlattenedItem<DataType> operator*() const {
             auto const& pair = *outer_it_;
-            auto const& entry = pair.entries[inner_idx_];
+            auto const& entry = pair.second[inner_idx_];
             return FlattenedItem<DataType>{
-                .time = pair.time,
+                .time = pair.first,
                 .data = entry.data,
                 .entity_id = entry.entity_id
             };
@@ -98,7 +98,7 @@ public:
             
             // Check if we've exhausted the current frame's entries
             auto const& pair = *outer_it_;
-            if (inner_idx_ >= pair.entries.size()) {
+            if (inner_idx_ >= pair.second.size()) {
                 ++outer_it_;
                 inner_idx_ = 0;
                 skipEmptyFrames();
@@ -132,7 +132,7 @@ public:
         void skipEmptyFrames() {
             while (outer_it_ != outer_end_) {
                 auto const& pair = *outer_it_;
-                if (!pair.entries.empty()) {
+                if (!pair.second.empty()) {
                     break;
                 }
                 ++outer_it_;
@@ -191,7 +191,7 @@ auto flattenLineData(Range&& range) {
     // Deduce types from the range
     using RangeValueType = std::ranges::range_value_t<std::remove_reference_t<Range>>;
     // Assume entries have .line member which is Line2D
-    using EntryType = std::decay_t<decltype(std::declval<RangeValueType>().entries[0])>;
+    using EntryType = std::decay_t<decltype(std::declval<RangeValueType>().second[0])>;
     using DataType = std::decay_t<decltype(std::declval<EntryType>().data)>;
     
     return FlattenedDataAdapter<std::remove_reference_t<Range>, DataType, EntryType>(std::forward<Range>(range));

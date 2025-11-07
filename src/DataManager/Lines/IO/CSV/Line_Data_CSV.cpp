@@ -46,12 +46,12 @@ void save(
     }
 
     // Write the data
-    for (auto const & frame_and_line: line_data->GetAllLinesAsRange()) {
-        for (auto const & line: frame_and_line.lines) {
+    for (auto const & [time, entries]: line_data->getAllEntries()) {
+        for (auto const & entry: entries) {
             std::ostringstream x_values;
             std::ostringstream y_values;
 
-            for (auto const & point: line) {
+            for (auto const & point: entry.data) {
                 x_values << std::fixed << std::setprecision(opts.precision) << point.x << opts.delimiter;
                 y_values << std::fixed << std::setprecision(opts.precision) << point.y << opts.delimiter;
             }
@@ -62,7 +62,7 @@ void save(
             if (!x_str.empty()) x_str.pop_back();
             if (!y_str.empty()) y_str.pop_back();
 
-            file << frame_and_line.time.getValue() << ",\"" << x_str << "\",\"" << y_str << "\"\n";
+            file << time.getValue() << ",\"" << x_str << "\",\"" << y_str << "\"\n";
         }
     }
 
@@ -83,18 +83,18 @@ void save(
     int files_skipped = 0;
 
     // Iterate through all timestamps with data
-    for (auto const & frame_and_line: line_data->GetAllLinesAsRange()) {
+    for (auto const & [time, entries]: line_data->getAllEntries()) {
         // Only save if there are lines at this timestamp
-        if (frame_and_line.lines.empty()) {
+        if (entries.empty()) {
             files_skipped++;
             continue;
         }
 
         // Only save the first line (index 0) as documented
-        Line2D const & first_line = frame_and_line.lines[0];
+        Line2D const & first_line = entries[0].data;
         
         // Generate filename with zero-padded frame number
-        std::string const padded_frame = pad_frame_id(static_cast<int>(frame_and_line.time.getValue()), opts.frame_id_padding);
+        std::string const padded_frame = pad_frame_id(static_cast<int>(time.getValue()), opts.frame_id_padding);
         std::string const filename = opts.parent_dir + "/" + padded_frame + ".csv";
 
         // Check if file exists and handle according to overwrite setting

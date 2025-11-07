@@ -226,16 +226,16 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
         SECTION("Range includes some data") {
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : line_data.GetLinesInRange(interval)) {
+            for (const auto& [time, entries] : line_data.GetEntriesInRange(interval)) {
                 if (count == 0) {
-                    REQUIRE(pair.time.getValue() == 10);
-                    REQUIRE(pair.lines.size() == 2);  // 2 lines at time 10
+                    REQUIRE(time.getValue() == 10);
+                    REQUIRE(entries.size() == 2);  // 2 lines at time 10
                 } else if (count == 1) {
-                    REQUIRE(pair.time.getValue() == 15);
-                    REQUIRE(pair.lines.size() == 1);
+                    REQUIRE(time.getValue() == 15);
+                    REQUIRE(entries.size() == 1);
                 } else if (count == 2) {
-                    REQUIRE(pair.time.getValue() == 20);
-                    REQUIRE(pair.lines.size() == 1);
+                    REQUIRE(time.getValue() == 20);
+                    REQUIRE(entries.size() == 1);
                 }
                 count++;
             }
@@ -245,7 +245,7 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
         SECTION("Range includes all data") {
             TimeFrameInterval interval{TimeFrameIndex(0), TimeFrameIndex(30)};
             size_t count = 0;
-            for (const auto& pair : line_data.GetLinesInRange(interval)) {
+            for (const auto& [time, entries] : line_data.GetEntriesInRange(interval)) {
                 count++;
             }
             REQUIRE(count == 5); // Should include all 5 time points
@@ -254,7 +254,7 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
         SECTION("Range includes no data") {
             TimeFrameInterval interval{TimeFrameIndex(100), TimeFrameIndex(200)};
             size_t count = 0;
-            for (const auto& pair : line_data.GetLinesInRange(interval)) {
+            for (const auto& [time, entries] : line_data.GetEntriesInRange(interval)) {
                 count++;
             }
             REQUIRE(count == 0); // Should be empty
@@ -263,9 +263,9 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
         SECTION("Range with single time point") {
             TimeFrameInterval interval{TimeFrameIndex(15), TimeFrameIndex(15)};
             size_t count = 0;
-            for (const auto& pair : line_data.GetLinesInRange(interval)) {
-                REQUIRE(pair.time.getValue() == 15);
-                REQUIRE(pair.lines.size() == 1);
+            for (const auto& [time, entries] : line_data.GetEntriesInRange(interval)) {
+                REQUIRE(time.getValue() == 15);
+                REQUIRE(entries.size() == 1);
                 count++;
             }
             REQUIRE(count == 1); // Should include only time 15
@@ -274,7 +274,7 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
         SECTION("Range with start > end") {
             TimeFrameInterval interval{TimeFrameIndex(20), TimeFrameIndex(10)};
             size_t count = 0;
-            for (const auto& pair : line_data.GetLinesInRange(interval)) {
+            for (const auto& [time, entries] : line_data.GetEntriesInRange(interval)) {
                 count++;
             }
             REQUIRE(count == 0); // Should be empty when start > end
@@ -285,16 +285,16 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             // Test with same source and target timeframes
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : line_data.GetLinesInRange(interval, *timeframe)) {
+            for (const auto& [time, entries] : line_data.GetEntriesInRange(interval, *timeframe)) {
                 if (count == 0) {
-                    REQUIRE(pair.time.getValue() == 10);
-                    REQUIRE(pair.lines.size() == 2);
+                    REQUIRE(time.getValue() == 10);
+                    REQUIRE(entries.size() == 2);
                 } else if (count == 1) {
-                    REQUIRE(pair.time.getValue() == 15);
-                    REQUIRE(pair.lines.size() == 1);
+                    REQUIRE(time.getValue() == 15);
+                    REQUIRE(entries.size() == 1);
                 } else if (count == 2) {
-                    REQUIRE(pair.time.getValue() == 20);
-                    REQUIRE(pair.lines.size() == 1);
+                    REQUIRE(time.getValue() == 20);
+                    REQUIRE(entries.size() == 1);
                 }
                 count++;
             }
@@ -323,16 +323,16 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             size_t count = 0;
-            for (const auto& pair : timeframe_test_data.GetLinesInRange(video_interval, *video_timeframe)) {
+            for (const auto& [time, entries] : timeframe_test_data.GetEntriesInRange(video_interval, *video_timeframe)) {
                 if (count == 0) {
-                    REQUIRE(pair.time.getValue() == 2);
-                    REQUIRE(pair.lines.size() == 1);
+                    REQUIRE(time.getValue() == 2);
+                    REQUIRE(entries.size() == 1);
                 } else if (count == 1) {
-                    REQUIRE(pair.time.getValue() == 3);
-                    REQUIRE(pair.lines.size() == 1);
+                    REQUIRE(time.getValue() == 3);
+                    REQUIRE(entries.size() == 1);
                 } else if (count == 2) {
-                    REQUIRE(pair.time.getValue() == 4);
-                    REQUIRE(pair.lines.size() == 1);
+                    REQUIRE(time.getValue() == 4);
+                    REQUIRE(entries.size() == 1);
                 }
                 count++;
             }

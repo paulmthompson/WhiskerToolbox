@@ -269,7 +269,7 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
 
     // Get natural iterator from LineData and flatten to individual items
     // This provides zero-copy access to Line2D objects
-    auto line_entries_range = line_data->GetAllLineEntriesAsRange();
+    auto line_entries_range = line_data->getAllEntries();
     auto data_source = StateEstimation::flattenLineData(line_entries_range);
 
     if (params->verbose_output) {

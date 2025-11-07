@@ -18,7 +18,7 @@ TEST_CASE_METHOD(DataManagerTestFixture, "DataManagerTestFixture - Basic Data Po
     SECTION("LineData population") {
         auto line_data = dm.getData<LineData>("test_lines");
         REQUIRE(line_data != nullptr);
-        REQUIRE(line_data->GetAllLinesAsRange().size() > 0);
+        REQUIRE(line_data->getAllEntries().size() > 0);
     }
     
     SECTION("MaskData population") {
@@ -73,7 +73,7 @@ TEST_CASE_METHOD(DataManagerRandomTestFixture, "DataManagerRandomTestFixture - R
     SECTION("Random LineData") {
         auto random_lines = dm.getData<LineData>("random_lines");
         REQUIRE(random_lines != nullptr);
-        REQUIRE(random_lines->GetAllLinesAsRange().size() > 0);
+        REQUIRE(random_lines->getAllEntries().size() > 0);
     }
     
     SECTION("Random AnalogTimeSeries") {

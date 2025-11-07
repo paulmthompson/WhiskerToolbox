@@ -13,10 +13,10 @@ void LineTableModel::setLines(LineData const * lineData) {
     _all_data.clear();
     _line_data_source = lineData;
     if (lineData) {
-        for (auto const & timeLineEntriesPair: lineData->GetAllLineEntriesAsRange()) {
-            auto frame = timeLineEntriesPair.time.getValue();
+        for (auto const & [time, entries]: lineData->getAllEntries()) {
+            auto frame = time.getValue();
             int lineIndex = 0;
-            for (auto const & entry: timeLineEntriesPair.entries) {
+            for (auto const & entry: entries) {
                 QString group_name = "No Group";
                 if (_group_manager) {
                     int group_id = _group_manager->getEntityGroup(entry.entity_id);

@@ -82,7 +82,7 @@ std::shared_ptr<LineData> lineOutlierDetection(std::shared_ptr<LineData> line_da
     }
 
     // Get natural iterator from LineData and flatten to individual items
-    auto line_entries_range = line_data->GetAllLineEntriesAsRange();
+    auto line_entries_range = line_data->getAllEntries();
     auto flattened_data = StateEstimation::flattenLineData(line_entries_range);
 
     // Convert to legacy tuple format for OutlierDetection
