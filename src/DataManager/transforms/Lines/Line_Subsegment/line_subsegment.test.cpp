@@ -25,7 +25,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -68,7 +68,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(200), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(200), x_coords, y_coords);
         
         params.start_position = 0.0f;
         params.end_position = 1.0f;
@@ -95,7 +95,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->addAtTime(TimeFrameIndex(300), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(300), x_coords, y_coords);
         
         params.start_position = 0.3f;
         params.end_position = 0.7f;
@@ -131,7 +131,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->addAtTime(TimeFrameIndex(400), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(400), x_coords, y_coords);
         
         params.start_position = 0.45f;
         params.end_position = 0.55f;
@@ -167,7 +167,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->addAtTime(TimeFrameIndex(500), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(500), x_coords, y_coords);
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -246,7 +246,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {1.0f};
         std::vector<float> y_coords = {2.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -266,7 +266,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
         
         params.start_position = 0.8f;
         params.end_position = 0.2f; // Invalid: start > end
@@ -283,7 +283,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
         
         params.start_position = -0.5f; // Invalid: negative
         params.end_position = 1.5f;    // Invalid: > 1.0
@@ -308,7 +308,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f}; // Only 2 points
         std::vector<float> y_coords = {0.0f, 1.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -330,7 +330,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {1.0f, 1.0f, 1.0f}; // All same point
         std::vector<float> y_coords = {2.0f, 2.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -382,7 +382,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - JSON pipeline", "[transform
     auto line_data = std::make_shared<LineData>();
     std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
     std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-    line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
     line_data->setTimeFrame(time_frame);
     dm.setData("TestLine.line1", line_data, TimeKey("default"));
 
@@ -460,7 +460,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - load_data_from_json_config"
     auto test_line = std::make_shared<LineData>();
     std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
     std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-    test_line->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    test_line->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
     test_line->setTimeFrame(time_frame);
     
     // Store the line data in DataManager with a known key

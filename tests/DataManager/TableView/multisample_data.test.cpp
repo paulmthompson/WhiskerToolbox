@@ -481,8 +481,8 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         auto singleLineData = std::make_shared<LineData>();
         std::vector<float> xs = {0.0f, 10.0f, 20.0f};
         std::vector<float> ys = {0.0f, 5.0f, 10.0f};
-        singleLineData->addAtTime(TimeFrameIndex(10), xs, ys, false);
-        singleLineData->addAtTime(TimeFrameIndex(20), xs, ys, false);
+        singleLineData->emplaceAtTime(TimeFrameIndex(10), xs, ys);
+        singleLineData->emplaceAtTime(TimeFrameIndex(20), xs, ys);
         dm->setData<LineData>("SingleLines", singleLineData, timeKey);
         
         // Create multi-sample PointData
@@ -521,9 +521,9 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         std::vector<float> xs2 = {20.0f, 30.0f};
         std::vector<float> ys2 = {10.0f, 15.0f};
         
-        multiLineData->addAtTime(TimeFrameIndex(10), xs1, ys1, false);
-        multiLineData->addAtTime(TimeFrameIndex(10), xs2, ys2, false);  // Multiple lines at same time
-        multiLineData->addAtTime(TimeFrameIndex(20), xs1, ys1, false);
+        multiLineData->emplaceAtTime(TimeFrameIndex(10), xs1, ys1);
+        multiLineData->emplaceAtTime(TimeFrameIndex(10), xs2, ys2);  // Multiple lines at same time
+        multiLineData->emplaceAtTime(TimeFrameIndex(20), xs1, ys1);
         dm->setData<LineData>("MultiLines", multiLineData, timeKey);
         
         // Create multi-sample PointData

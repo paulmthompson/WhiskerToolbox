@@ -24,10 +24,10 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
     std::vector<float> y3 = {10.0f, 11.0f, 10.0f, 11.0f};
 
     // Add test lines to source data
-    source_data.addAtTime(TimeFrameIndex(10), x1, y1);
-    source_data.addAtTime(TimeFrameIndex(10), x2, y2); // Two lines at same time
-    source_data.addAtTime(TimeFrameIndex(20), x3, y3);
-    source_data.addAtTime(TimeFrameIndex(30), x1, y1); // Reuse line at different time
+    source_data.emplaceAtTime(TimeFrameIndex(10), x1, y1);
+    source_data.emplaceAtTime(TimeFrameIndex(10), x2, y2); // Two lines at same time
+    source_data.emplaceAtTime(TimeFrameIndex(20), x3, y3);
+    source_data.emplaceAtTime(TimeFrameIndex(30), x1, y1); // Reuse line at different time
 
     SECTION("Copy time range - basic functionality") {
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
@@ -67,7 +67,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
     SECTION("Copy to target with existing data") {
         // Add some data to target first
-        target_data.addAtTime(TimeFrameIndex(10), x3, y3);
+        target_data.emplaceAtTime(TimeFrameIndex(10), x3, y3);
         
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
         std::size_t lines_copied = source_data.copyTo(target_data, interval);
@@ -163,7 +163,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         
         // Move with notification enabled (should notify both source and target)
         LineData new_source;
-        new_source.addAtTime(TimeFrameIndex(40), x1, y1);
+        new_source.emplaceAtTime(TimeFrameIndex(40), x1, y1);
         new_source.addObserver([&move_notifications]() { move_notifications++; });
         
         TimeFrameInterval interval4{TimeFrameIndex(40), TimeFrameIndex(40)};
@@ -216,12 +216,12 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
 
     SECTION("GetLinesInRange functionality") {
         // Setup data at multiple time points
-        line_data.addAtTime(TimeFrameIndex(5), x1, y1);       // 1 line
-        line_data.addAtTime(TimeFrameIndex(10), x1, y1);      // 1 line  
-        line_data.addAtTime(TimeFrameIndex(10), x2, y2);      // 2nd line at same time
-        line_data.addAtTime(TimeFrameIndex(15), x3, y3);      // 1 line
-        line_data.addAtTime(TimeFrameIndex(20), x1, y1);      // 1 line
-        line_data.addAtTime(TimeFrameIndex(25), x2, y2);      // 1 line
+        line_data.emplaceAtTime(TimeFrameIndex(5), x1, y1);       // 1 line
+        line_data.emplaceAtTime(TimeFrameIndex(10), x1, y1);      // 1 line  
+        line_data.emplaceAtTime(TimeFrameIndex(10), x2, y2);      // 2nd line at same time
+        line_data.emplaceAtTime(TimeFrameIndex(15), x3, y3);      // 1 line
+        line_data.emplaceAtTime(TimeFrameIndex(20), x1, y1);      // 1 line
+        line_data.emplaceAtTime(TimeFrameIndex(25), x2, y2);      // 1 line
 
         SECTION("Range includes some data") {
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
@@ -314,9 +314,9 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             auto data_timeframe = std::make_shared<TimeFrame>(data_times);
             
             // Add data at target timeframe indices
-            timeframe_test_data.addAtTime(TimeFrameIndex(2), x1, y1);  // At data timeframe index 2 (time=10)
-            timeframe_test_data.addAtTime(TimeFrameIndex(3), x2, y2);  // At data timeframe index 3 (time=15)
-            timeframe_test_data.addAtTime(TimeFrameIndex(4), x3, y3);  // At data timeframe index 4 (time=20)
+            timeframe_test_data.emplaceAtTime(TimeFrameIndex(2), x1, y1);  // At data timeframe index 2 (time=10)
+            timeframe_test_data.emplaceAtTime(TimeFrameIndex(3), x2, y2);  // At data timeframe index 3 (time=15)
+            timeframe_test_data.emplaceAtTime(TimeFrameIndex(4), x3, y3);  // At data timeframe index 4 (time=20)
             
             timeframe_test_data.setTimeFrame(data_timeframe);
 
@@ -354,9 +354,9 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
     std::vector<float> y2 = {4.0f, 5.0f, 6.0f};
     
     // Add some test data
-    line_data.addAtTime(TimeFrameIndex(10), x1, y1);
-    line_data.addAtTime(TimeFrameIndex(10), x2, y2); // Two lines at same time
-    line_data.addAtTime(TimeFrameIndex(20), x1, y1); // Same line at different time
+    line_data.emplaceAtTime(TimeFrameIndex(10), x1, y1);
+    line_data.emplaceAtTime(TimeFrameIndex(10), x2, y2); // Two lines at same time
+    line_data.emplaceAtTime(TimeFrameIndex(20), x1, y1); // Same line at different time
     
     SECTION("Entity lookup without registry returns nullopt") {
         // Without EntityRegistry setup, these should return empty/nullopt
@@ -420,9 +420,9 @@ TEST_CASE("LineData - Entity ID handling in copy/move operations", "[line][data]
     std::vector<float> y2 = {4.0f, 5.0f, 6.0f};
     
     // Add test lines
-    source_data.addAtTime(TimeFrameIndex(10), x1, y1);
-    source_data.addAtTime(TimeFrameIndex(10), x2, y2);
-    source_data.addAtTime(TimeFrameIndex(20), x1, y1);
+    source_data.emplaceAtTime(TimeFrameIndex(10), x1, y1);
+    source_data.emplaceAtTime(TimeFrameIndex(10), x2, y2);
+    source_data.emplaceAtTime(TimeFrameIndex(20), x1, y1);
     
     SECTION("Copy operations create new entity IDs") {
         // Get original entity IDs
@@ -474,10 +474,10 @@ TEST_CASE("LineData - Entity ID handling in copy/move operations", "[line][data]
         LineData source_data;
         
         // Add test lines
-        source_data.addAtTime(TimeFrameIndex(10), x1, y1);
-        source_data.addAtTime(TimeFrameIndex(10), x2, y2);
-        source_data.addAtTime(TimeFrameIndex(30), x1, y1);
-        source_data.addAtTime(TimeFrameIndex(30), x2, y2);
+        source_data.emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        source_data.emplaceAtTime(TimeFrameIndex(10), x2, y2);
+        source_data.emplaceAtTime(TimeFrameIndex(30), x1, y1);
+        source_data.emplaceAtTime(TimeFrameIndex(30), x2, y2);
         
         // Get entity IDs at specific times
         auto entity_ids_10 = source_data.getEntityIdsAtTime(TimeFrameIndex(10));
@@ -516,10 +516,10 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
 
         
         // Add test lines
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->addAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->addAtTime(TimeFrameIndex(30), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
+        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
+        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
         
         // Get entity IDs for testing
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
@@ -559,10 +559,10 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto target_data = data_manager->getData<LineData>("target_data");
         
         // Add test lines
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->addAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->addAtTime(TimeFrameIndex(30), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
+        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
+        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
         
         // Get entity IDs for testing
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
@@ -592,10 +592,10 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto target_data = data_manager->getData<LineData>("target_data");
         
         // Add test lines
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->addAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->addAtTime(TimeFrameIndex(30), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
+        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
+        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
         
         std::vector<EntityId> fake_entity_ids = {99999, 88888};
         std::unordered_set<EntityId> ids_set_fakec(fake_entity_ids.begin(), fake_entity_ids.end());
@@ -630,10 +630,10 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto target_data = data_manager->getData<LineData>("target_data");
         
         // Add test lines
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->addAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->addAtTime(TimeFrameIndex(30), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
+        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
+        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
         
         // Get entity IDs for testing
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
@@ -671,10 +671,10 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto source_data = data_manager->getData<LineData>("source_data");
         auto target_data = data_manager->getData<LineData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->addAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->addAtTime(TimeFrameIndex(30), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
+        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
+        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         auto entity_ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
@@ -705,10 +705,10 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto source_data = data_manager->getData<LineData>("source_data");
         auto target_data = data_manager->getData<LineData>("target_data");
         
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->addAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->addAtTime(TimeFrameIndex(30), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
+        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
+        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         std::vector<EntityId> fake_entity_ids = {99999, 88888};
@@ -732,10 +732,10 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto source_data = data_manager->getData<LineData>("source_data");
         auto target_data = data_manager->getData<LineData>("target_data");
         
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->addAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->addAtTime(TimeFrameIndex(30), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
+        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
+        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         std::unordered_set<EntityId> ids_set_10c2(entity_ids_10.begin(), entity_ids_10.end());
@@ -763,10 +763,10 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto source_data = data_manager->getData<LineData>("source_data");
         auto target_data = data_manager->getData<LineData>("target_data");
         
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->addAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->addAtTime(TimeFrameIndex(30), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
+        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
+        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         // Get original line data before move

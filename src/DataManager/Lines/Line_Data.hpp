@@ -5,6 +5,7 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "Entity/EntityRegistry.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
@@ -17,7 +18,7 @@
 #include <unordered_set>
 #include <vector>
 
-class EntityRegistry;
+
 
 /**
  * @brief Structure holding a Line2D and its associated EntityId
@@ -97,38 +98,43 @@ public:
     [[nodiscard]] std::optional<LineModifier> getMutableLine(EntityId entity_id, bool notify = true);
 
     /**
-     * @brief Add a line at a specific time
-     * 
-     * The line is defined by the x and y coordinates.
-     * 
-     * @param time The time to add the line at
-     * @param x The x coordinates of the line
-     * @param y The y coordinates of the line
-     * @param notify If true, the observers will be notified
-     */
-    void addAtTime(TimeFrameIndex time, std::vector<float> const & x, std::vector<float> const & y, bool notify = true);
-
-    /**
-     * @brief Add a line at a specific time
-     * 
-     * The line is defined by the points.
-     * 
-     * @param time The time to add the line at
-     * @param line The line to add
-     * @param notify If true, the observers will be notified
-     */
-    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & line, bool notify = true);
-
-    /**
-     * @brief Add a line at a specific time
-     * 
-     * The line is defined by the Line2D object.
-     * 
-     * @param time The time to add the line at
-     * @param line The line to add
-     * @param notify If true, the observers will be notified
+     * @brief Add a line at a specific time (by copying).
+     *
+     * This overload is called when you pass an existing lvalue (e.g., a named variable).
+     * It will create a copy of the line.
      */
     void addAtTime(TimeFrameIndex time, Line2D const & line, bool notify = true);
+
+    /**
+     * @brief Add a line at a specific time (by moving).
+     *
+     * This overload is called when you pass an rvalue (e.g., a temporary object
+     * or the result of std::move()). It will move the line's data,
+     * avoiding a copy.
+     */
+    void addAtTime(TimeFrameIndex time, Line2D && line, bool notify = true);
+
+    /**
+     * @brief Construct a data entry in-place at a specific time.
+     *
+     * This method perfectly forwards its arguments to the
+     * constructor of the TData (e.g., Line2D) object.
+     * This is the most efficient way to add new data.
+     *
+     * @tparam TDataArgs The types of arguments for TData's constructor
+     * @param time The time to add the data at
+     * @param args The arguments to forward to TData's constructor
+     */
+    template<typename... TDataArgs>
+    void emplaceAtTime(TimeFrameIndex time, TDataArgs &&... args) {
+        int const local_index = static_cast<int>(_data[time].size());
+        EntityId entity_id = 0;
+        if (_identity_registry) {
+            entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
+        }
+
+        _data[time].emplace_back(entity_id, std::forward<TDataArgs>(args)...);
+    }
 
     /**
      * @brief Add a line entry at a specific time with a specific entity ID
@@ -408,9 +414,9 @@ public:
         }
 
         auto [target_start_index, target_end_index] = convertTimeFrameRange(interval.start,
-            interval.end,
-            source_timeframe,
-            *_time_frame);
+                                                                            interval.end,
+                                                                            source_timeframe,
+                                                                            *_time_frame);
 
         return GetLinesInRange(TimeFrameInterval(target_start_index, target_end_index));
     }

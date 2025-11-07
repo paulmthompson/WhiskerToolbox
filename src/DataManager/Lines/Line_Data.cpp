@@ -94,29 +94,6 @@ bool LineData::clearAtTime(TimeFrameIndex const time, int const line_id, bool no
     return false;
 }
 
-void LineData::addAtTime(TimeFrameIndex const time, std::vector<float> const & x, std::vector<float> const & y, bool notify) {
-    Line2D new_line;
-    for (size_t i = 0; i < std::min(x.size(), y.size()); ++i) {
-        new_line.push_back(Point2D<float>{x[i], y[i]});
-    }
-
-    int const local_index = static_cast<int>(_data[time].size());
-    EntityId entity_id = 0;
-    if (_identity_registry) {
-        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
-    }
-
-    _data[time].emplace_back(entity_id, std::move(new_line));
-
-    if (notify) {
-        notifyObservers();
-    }
-}
-
-void LineData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & line, bool notify) {
-    addAtTime(time, Line2D(line), notify);
-}
-
 void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool notify) {
     int const local_index = static_cast<int>(_data[time].size());
     EntityId entity_id = 0;
@@ -125,6 +102,20 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool no
     }
 
     _data[time].emplace_back(entity_id, line);
+
+    if (notify) {
+        notifyObservers();
+    }
+}
+
+void LineData::addAtTime(TimeFrameIndex const time, Line2D && line, bool notify) {
+    int const local_index = static_cast<int>(_data[time].size());
+    EntityId entity_id = 0;
+    if (_identity_registry) {
+        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
+    }
+
+    _data[time].emplace_back(entity_id, std::move(line));
 
     if (notify) {
         notifyObservers();

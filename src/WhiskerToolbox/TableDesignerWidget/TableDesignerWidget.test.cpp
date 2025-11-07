@@ -201,17 +201,17 @@ private:
         // Create a simple line at t=0
         std::vector<float> xs1 = {0.0f, 10.0f, 20.0f, 30.0f};
         std::vector<float> ys1 = {0.0f, 5.0f, 10.0f, 15.0f};
-        line_data->addAtTime(TimeFrameIndex(0), xs1, ys1, false);
+        line_data->emplaceAtTime(TimeFrameIndex(0), xs1, ys1);
         
         // Create another line at t=10
         std::vector<float> xs2 = {5.0f, 15.0f, 25.0f};
         std::vector<float> ys2 = {2.0f, 8.0f, 12.0f};
-        line_data->addAtTime(TimeFrameIndex(10), xs2, ys2, false);
+        line_data->emplaceAtTime(TimeFrameIndex(10), xs2, ys2);
         
         // Create a third line at t=20
         std::vector<float> xs3 = {10.0f, 20.0f, 30.0f, 40.0f};
         std::vector<float> ys3 = {1.0f, 6.0f, 11.0f, 16.0f};
-        line_data->addAtTime(TimeFrameIndex(20), xs3, ys3, false);
+        line_data->emplaceAtTime(TimeFrameIndex(20), xs3, ys3);
         
         // Set identity context and rebuild entity IDs
         line_data->setIdentityContext("TestLines", m_data_manager->getEntityRegistry());

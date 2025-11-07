@@ -24,7 +24,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Create a horizontal line
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {1.0f, 1.0f, 1.0f, 1.0f};
-        line_data->addAtTime(TimeFrameIndex(10), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(10), x_coords, y_coords);
 
         // Position at 33% (approx. between points 1 and 2)
         auto params = std::make_unique<LineAngleParameters>();
@@ -47,7 +47,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Create a vertical line pointing up
         std::vector<float> x_coords = {1.0f, 1.0f, 1.0f, 1.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(20), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(20), x_coords, y_coords);
 
         // Position at 25% (at point 1)
         auto params = std::make_unique<LineAngleParameters>();
@@ -70,7 +70,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Create a diagonal line (45 degrees)
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(30), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(30), x_coords, y_coords);
 
         // Position at 50% (at point 2)
         auto params = std::make_unique<LineAngleParameters>();
@@ -95,17 +95,17 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Horizontal line at time 40
         std::vector<float> x1 = {0.0f, 1.0f, 2.0f};
         std::vector<float> y1 = {1.0f, 1.0f, 1.0f};
-        line_data->addAtTime(TimeFrameIndex(40), x1, y1);
+        line_data->emplaceAtTime(TimeFrameIndex(40), x1, y1);
 
         // Vertical line at time 50
         std::vector<float> x2 = {1.0f, 1.0f, 1.0f};
         std::vector<float> y2 = {0.0f, 1.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(50), x2, y2);
+        line_data->emplaceAtTime(TimeFrameIndex(50), x2, y2);
 
         // 45-degree line at time 60
         std::vector<float> x3 = {0.0f, 1.0f, 2.0f};
         std::vector<float> y3 = {0.0f, 1.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(60), x3, y3);
+        line_data->emplaceAtTime(TimeFrameIndex(60), x3, y3);
 
         // Position at 50%
         auto params = std::make_unique<LineAngleParameters>();
@@ -137,7 +137,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Create a curve (points on a parabola)
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f};
-        line_data->addAtTime(TimeFrameIndex(70), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(70), x_coords, y_coords);
 
         // Position at 40% with polynomial fitting
         auto params = std::make_unique<LineAngleParameters>();
@@ -164,7 +164,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Create a smooth curve
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f};
         std::vector<float> y_coords = {0.0f, 0.5f, 1.8f, 3.9f, 6.8f, 10.5f, 15.0f, 20.3f};
-        line_data->addAtTime(TimeFrameIndex(80), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(80), x_coords, y_coords);
 
         // Test with different polynomial orders
         auto position = 0.5f; // Middle of the line
@@ -218,7 +218,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Add a simple line
         std::vector<float> x = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y = {0.0f, 0.0f, 0.0f, 0.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x, y);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x, y);
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
@@ -240,7 +240,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Create a 45-degree line
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(110), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(110), x_coords, y_coords);
 
         // Default reference (1,0) - horizontal reference
         auto params1 = std::make_unique<LineAngleParameters>();
@@ -257,7 +257,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Create a 45-degree line
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(120), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(120), x_coords, y_coords);
 
         // Vertical reference (0,1)
         auto params2 = std::make_unique<LineAngleParameters>();
@@ -274,7 +274,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Create a horizontal line
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {1.0f, 1.0f, 1.0f, 1.0f};
-        line_data->addAtTime(TimeFrameIndex(130), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(130), x_coords, y_coords);
 
         // 45-degree reference (1,1)
         auto params3 = std::make_unique<LineAngleParameters>();
@@ -291,7 +291,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // Create a parabolic curve
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f};
-        line_data->addAtTime(TimeFrameIndex(140), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(140), x_coords, y_coords);
 
         // Use default reference (1,0) with polynomial fit
         auto params1 = std::make_unique<LineAngleParameters>();
@@ -329,7 +329,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Add a line with just one point (should skip this line)
         std::vector<float> x = {1.0f};
         std::vector<float> y = {1.0f};
-        line_data->addAtTime(TimeFrameIndex(10), x, y);
+        line_data->emplaceAtTime(TimeFrameIndex(10), x, y);
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
@@ -344,7 +344,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Create a normal line
         std::vector<float> x = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(20), x, y);
+        line_data->emplaceAtTime(TimeFrameIndex(20), x, y);
 
         // Test position below 0
         auto params_low = std::make_unique<LineAngleParameters>();
@@ -374,11 +374,11 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Create two lines at the same timestamp
         std::vector<float> x1 = {0.0f, 1.0f, 2.0f};
         std::vector<float> y1 = {0.0f, 0.0f, 0.0f};  // Horizontal: 0 degrees
-        line_data->addAtTime(TimeFrameIndex(30), x1, y1);
+        line_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
 
         std::vector<float> x2 = {0.0f, 0.0f, 0.0f};
         std::vector<float> y2 = {0.0f, 1.0f, 2.0f};  // Vertical: 90 degrees
-        line_data->addAtTime(TimeFrameIndex(30), x2, y2);
+        line_data->emplaceAtTime(TimeFrameIndex(30), x2, y2);
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
@@ -394,7 +394,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Create a line with fewer points than polynomial order
         std::vector<float> x = {0.0f, 1.0f};
         std::vector<float> y = {0.0f, 1.0f};
-        line_data->addAtTime(TimeFrameIndex(40), x, y);
+        line_data->emplaceAtTime(TimeFrameIndex(40), x, y);
 
         // Try to fit a 3rd order polynomial (requires at least 4 points)
         auto params = std::make_unique<LineAngleParameters>();
@@ -414,7 +414,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Create a vertical line where x values are all the same
         std::vector<float> x = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
         std::vector<float> y = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->addAtTime(TimeFrameIndex(50), x, y);
+        line_data->emplaceAtTime(TimeFrameIndex(50), x, y);
 
         // Try polynomial fit which may be numerically unstable
         auto params = std::make_unique<LineAngleParameters>();
@@ -437,7 +437,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Create a simple line
         std::vector<float> x = {0.0f, 1.0f, 2.0f};
         std::vector<float> y = {0.0f, 1.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(60), x, y);
+        line_data->emplaceAtTime(TimeFrameIndex(60), x, y);
 
         // Call with null parameters
         auto result = line_angle(line_data.get(), nullptr);
@@ -457,7 +457,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
             x.push_back(static_cast<float>(i));
             y.push_back(static_cast<float>(i));  // 45-degree line
         }
-        line_data->addAtTime(TimeFrameIndex(70), x, y);
+        line_data->emplaceAtTime(TimeFrameIndex(70), x, y);
 
         // Test both methods
         auto params_direct = std::make_unique<LineAngleParameters>();
@@ -484,7 +484,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Create a simple line
         std::vector<float> x = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(80), x, y);
+        line_data->emplaceAtTime(TimeFrameIndex(80), x, y);
 
         // Try a zero reference vector (should default to (1,0))
         auto params = std::make_unique<LineAngleParameters>();
@@ -501,7 +501,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Create a simple line
         std::vector<float> x = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y = {0.0f, 0.0f, 0.0f, 0.0f};
-        line_data->addAtTime(TimeFrameIndex(90), x, y);
+        line_data->emplaceAtTime(TimeFrameIndex(90), x, y);
 
         // Use an unnormalized reference vector
         auto params1 = std::make_unique<LineAngleParameters>();
@@ -525,12 +525,12 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Test Line 1: (565, 253), (408, 277)
         std::vector<float> x1 = {565.0f, 408.0f};
         std::vector<float> y1 = {253.0f, 277.0f};
-        line_data->addAtTime(TimeFrameIndex(200), x1, y1);
+        line_data->emplaceAtTime(TimeFrameIndex(200), x1, y1);
 
         // Test Line 2: (567, 252), (434, 265)
         std::vector<float> x2 = {567.0f, 434.0f};
         std::vector<float> y2 = {252.0f, 265.0f};
-        line_data->addAtTime(TimeFrameIndex(210), x2, y2);
+        line_data->emplaceAtTime(TimeFrameIndex(210), x2, y2);
 
         // Test with reference vector (-1, 0) at 80% position
         auto params_80 = std::make_unique<LineAngleParameters>();
@@ -632,7 +632,7 @@ TEST_CASE("Data Transform: Line Angle - JSON pipeline", "[transforms][line_angle
     auto line_data = std::make_shared<LineData>();
     std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
     std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-    line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
     line_data->setTimeFrame(time_frame);
     dm.setData("TestLine.line1", line_data, TimeKey("default"));
 
@@ -694,7 +694,7 @@ TEST_CASE("Data Transform: Line Angle - load_data_from_json_config", "[transform
     auto test_line = std::make_shared<LineData>();
     std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
     std::vector<float> y_coords = {1.0f, 1.0f, 1.0f, 1.0f}; // Horizontal line
-    test_line->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    test_line->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
     test_line->setTimeFrame(time_frame);
     
     // Store the line data in DataManager with a known key

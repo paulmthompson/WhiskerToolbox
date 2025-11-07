@@ -29,7 +29,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
         
         params.position = 0.5f;
         params.method = PointExtractionMethod::Direct;
@@ -56,7 +56,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(200), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(200), x_coords, y_coords);
         
         params.position = 0.0f;
         params.method = PointExtractionMethod::Direct;
@@ -76,7 +76,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(300), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(300), x_coords, y_coords);
         
         params.position = 1.0f;
         params.method = PointExtractionMethod::Direct;
@@ -96,7 +96,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(400), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(400), x_coords, y_coords);
         
         params.position = 0.5f;
         params.method = PointExtractionMethod::Parametric;
@@ -118,12 +118,12 @@ TEST_CASE("Data Transform: Extract Point from Line - Happy Path", "[transforms][
         // Line at time 500
         std::vector<float> x1 = {0.0f, 2.0f, 4.0f};
         std::vector<float> y1 = {0.0f, 2.0f, 4.0f};
-        line_data->addAtTime(TimeFrameIndex(500), x1, y1);
+        line_data->emplaceAtTime(TimeFrameIndex(500), x1, y1);
         
         // Line at time 600
         std::vector<float> x2 = {0.0f, 1.0f, 2.0f};
         std::vector<float> y2 = {0.0f, 0.0f, 0.0f}; // Horizontal line
-        line_data->addAtTime(TimeFrameIndex(600), x2, y2);
+        line_data->emplaceAtTime(TimeFrameIndex(600), x2, y2);
         
         params.position = 0.5f;
         params.method = PointExtractionMethod::Direct;
@@ -149,7 +149,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Happy Path", "[transforms][
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(700), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(700), x_coords, y_coords);
         
         params.position = 0.5f;
         params.method = PointExtractionMethod::Direct;
@@ -227,7 +227,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {};
         std::vector<float> y_coords = {};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
         
         params.position = 0.5f;
         params.method = PointExtractionMethod::Direct;
@@ -242,7 +242,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {1.5f};
         std::vector<float> y_coords = {2.5f};
-        line_data->addAtTime(TimeFrameIndex(200), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(200), x_coords, y_coords);
         
         params.position = 0.5f;
         params.method = PointExtractionMethod::Direct;
@@ -262,7 +262,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(300), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(300), x_coords, y_coords);
         
         params.position = 1.5f; // Out of bounds
         params.method = PointExtractionMethod::Direct;
@@ -282,7 +282,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f};
         std::vector<float> y_coords = {0.0f, 1.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(400), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(400), x_coords, y_coords);
         
         params.position = -0.5f; // Negative
         params.method = PointExtractionMethod::Direct;
@@ -302,7 +302,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Error and Edge Cases", "[tr
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f}; // Only 2 points
         std::vector<float> y_coords = {0.0f, 1.0f};
-        line_data->addAtTime(TimeFrameIndex(500), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(500), x_coords, y_coords);
         
         params.position = 0.5f;
         params.method = PointExtractionMethod::Parametric;
@@ -350,7 +350,7 @@ TEST_CASE("Data Transform: Extract Point from Line - JSON pipeline", "[transform
     auto line_data = std::make_shared<LineData>();
     std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
     std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-    line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
     line_data->setTimeFrame(time_frame);
     dm.setData("TestLine.line1", line_data, TimeKey("default"));
 
@@ -411,7 +411,7 @@ TEST_CASE("Data Transform: Extract Point from Line - load_data_from_json_config"
     auto test_line = std::make_shared<LineData>();
     std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
     std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-    test_line->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    test_line->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
     test_line->setTimeFrame(time_frame);
     
     // Store the line data in DataManager with a known key

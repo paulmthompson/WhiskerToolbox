@@ -30,13 +30,13 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Happy Path", "[transfor
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
         std::vector<float> y_coords = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
 
         // Create reference line data - vertical line at x=2.5
         reference_line_data = std::make_shared<LineData>();
         std::vector<float> ref_x = {2.5f, 2.5f};
         std::vector<float> ref_y = {0.0f, 5.0f};
-        reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+        reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
 
         params.reference_line_data = reference_line_data;
         params.reference_frame = 0;
@@ -67,13 +67,13 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Happy Path", "[transfor
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
         std::vector<float> y_coords = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
 
         // Create reference line data - vertical line at x=2.5
         reference_line_data = std::make_shared<LineData>();
         std::vector<float> ref_x = {2.5f, 2.5f};
         std::vector<float> ref_y = {0.0f, 5.0f};
-        reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+        reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
 
         params.reference_line_data = reference_line_data;
         params.reference_frame = 0;
@@ -104,18 +104,18 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Happy Path", "[transfor
         // Time frame 100 - horizontal line
         std::vector<float> x1 = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y1 = {1.0f, 1.0f, 1.0f, 1.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x1, y1);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x1, y1);
         
         // Time frame 200 - diagonal line
         std::vector<float> x2 = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y2 = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->addAtTime(TimeFrameIndex(200), x2, y2);
+        line_data->emplaceAtTime(TimeFrameIndex(200), x2, y2);
 
         // Create reference line data - vertical line at x=2.0
         reference_line_data = std::make_shared<LineData>();
         std::vector<float> ref_x = {2.0f, 2.0f};
         std::vector<float> ref_y = {0.0f, 5.0f};
-        reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+        reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
 
         params.reference_line_data = reference_line_data;
         params.reference_frame = 0;
@@ -144,13 +144,13 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Happy Path", "[transfor
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {2.0f, 2.0f, 2.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
 
         // Create reference line data - vertical line at x=5.0 (no intersection)
         reference_line_data = std::make_shared<LineData>();
         std::vector<float> ref_x = {5.0f, 5.0f};
         std::vector<float> ref_y = {0.0f, 5.0f};
-        reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+        reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
 
         params.reference_line_data = reference_line_data;
         params.reference_frame = 0;
@@ -190,7 +190,7 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Error and Edge Cases", 
         reference_line_data = std::make_shared<LineData>();
         std::vector<float> ref_x = {1.0f, 1.0f};
         std::vector<float> ref_y = {0.0f, 5.0f};
-        reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+        reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
 
         params.reference_line_data = reference_line_data;
         params.reference_frame = 0;
@@ -213,7 +213,7 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Error and Edge Cases", 
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {2.0f, 2.0f, 2.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
 
         params.reference_line_data = nullptr;
         params.reference_frame = 0;
@@ -229,7 +229,7 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Error and Edge Cases", 
         reference_line_data = std::make_shared<LineData>();
         std::vector<float> ref_x = {1.0f, 1.0f};
         std::vector<float> ref_y = {0.0f, 5.0f};
-        reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+        reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
 
         params.reference_line_data = reference_line_data;
         params.reference_frame = 0;
@@ -252,7 +252,7 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Error and Edge Cases", 
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {2.0f, 2.0f, 2.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
 
         reference_line_data = std::make_shared<LineData>(); // Empty
 
@@ -269,12 +269,12 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Error and Edge Cases", 
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {2.0f, 2.0f, 2.0f, 2.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
 
         reference_line_data = std::make_shared<LineData>();
         std::vector<float> ref_x = {1.0f, 1.0f};
         std::vector<float> ref_y = {0.0f, 5.0f};
-        reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+        reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
 
         params.reference_line_data = reference_line_data;
         params.reference_frame = 999; // Out of bounds
@@ -289,12 +289,12 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Error and Edge Cases", 
         line_data = std::make_shared<LineData>();
         std::vector<float> x_coords = {1.0f}; // Single point
         std::vector<float> y_coords = {2.0f};
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
 
         reference_line_data = std::make_shared<LineData>();
         std::vector<float> ref_x = {1.0f, 1.0f};
         std::vector<float> ref_y = {0.0f, 5.0f};
-        reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+        reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
 
         params.reference_line_data = reference_line_data;
         params.reference_frame = 0;
@@ -314,8 +314,8 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Error and Edge Cases", 
         std::vector<float> ref_x = {0.0f, 1.0f, 2.0f, 3.0f};
         std::vector<float> ref_y = {4.0f, 4.0f, 4.0f, 4.0f}; // Parallel horizontal line
 
-        line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
-        reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
 
         params.reference_line_data = reference_line_data;
         params.reference_frame = 0;
@@ -362,7 +362,7 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - JSON pipeline", "[trans
     auto line_data = std::make_shared<LineData>();
     std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
     std::vector<float> y_coords = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-    line_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
     line_data->setTimeFrame(time_frame);
     dm.setData("TestLine.line1", line_data, TimeKey("default"));
 
@@ -370,7 +370,7 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - JSON pipeline", "[trans
     auto reference_line_data = std::make_shared<LineData>();
     std::vector<float> ref_x = {2.5f, 2.5f};
     std::vector<float> ref_y = {0.0f, 5.0f};
-    reference_line_data->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+    reference_line_data->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
     reference_line_data->setTimeFrame(time_frame);
     dm.setData("ReferenceLine", reference_line_data, TimeKey("default"));
 
@@ -431,14 +431,14 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - load_data_from_json_con
     auto test_line = std::make_shared<LineData>();
     std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
     std::vector<float> y_coords = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-    test_line->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    test_line->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
     test_line->setTimeFrame(time_frame);
     
     // Create reference line data - vertical line at x=2.5
     auto reference_line = std::make_shared<LineData>();
     std::vector<float> ref_x = {2.5f, 2.5f};
     std::vector<float> ref_y = {0.0f, 5.0f};
-    reference_line->addAtTime(TimeFrameIndex(0), ref_x, ref_y);
+    reference_line->emplaceAtTime(TimeFrameIndex(0), ref_x, ref_y);
     reference_line->setTimeFrame(time_frame);
     
     // Store the line data in DataManager with known keys
@@ -588,12 +588,12 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - load_data_from_json_con
     
     // Create multi-frame test data
     auto test_line_multi = std::make_shared<LineData>();
-    test_line_multi->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    test_line_multi->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
     
     // Add diagonal line at time 200
     std::vector<float> x_diag = {0.0f, 1.0f, 2.0f, 3.0f};
     std::vector<float> y_diag = {0.0f, 1.0f, 2.0f, 3.0f};
-    test_line_multi->addAtTime(TimeFrameIndex(200), x_diag, y_diag);
+    test_line_multi->emplaceAtTime(TimeFrameIndex(200), x_diag, y_diag);
     test_line_multi->setTimeFrame(time_frame);
     
     dm.setData("test_line_multi", test_line_multi, TimeKey("default"));

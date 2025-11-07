@@ -20,7 +20,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
         int timestamp = 10;
-        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->emplaceAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point at (5, 5) - should be 5 units away from the line
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
@@ -40,7 +40,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         std::vector<float> line_x = {5.0f, 5.0f};
         std::vector<float> line_y = {0.0f, 10.0f};
         int timestamp = 20;
-        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->emplaceAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create multiple points at different distances from the line
         std::vector<Point2D<float>> points = {
@@ -65,12 +65,12 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         // Timestamp 30: Line from (0,0) to (10,0)
         std::vector<float> line_x1 = {0.0f, 10.0f};
         std::vector<float> line_y1 = {0.0f, 0.0f};
-        line_data->addAtTime(TimeFrameIndex(30), line_x1, line_y1);
+        line_data->emplaceAtTime(TimeFrameIndex(30), line_x1, line_y1);
 
         // Timestamp 40: Line from (0,0) to (0,10)
         std::vector<float> line_x2 = {0.0f, 0.0f};
         std::vector<float> line_y2 = {0.0f, 10.0f};
-        line_data->addAtTime(TimeFrameIndex(40), line_x2, line_y2);
+        line_data->emplaceAtTime(TimeFrameIndex(40), line_x2, line_y2);
 
         // Create points at different timestamps
         // Timestamp 30: Point at (5,2) - should be 2 units away
@@ -115,7 +115,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         std::vector<float> line_x = {0.0f, 100.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
         int timestamp = 60;
-        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->emplaceAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point at (25, 10) in the point's coordinate space
         // After scaling to line coordinates, this should be at (50, 20)
@@ -136,7 +136,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 10.0f};
         int timestamp = 70;
-        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->emplaceAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point at (5, 5) - exactly on the line
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
@@ -171,7 +171,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         // Create only line data
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
-        line_data->addAtTime(TimeFrameIndex(10), line_x, line_y);
+        line_data->emplaceAtTime(TimeFrameIndex(10), line_x, line_y);
 
         // Calculate the minimum distance with no point data
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -184,7 +184,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         // Line at timestamp 20
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
-        line_data->addAtTime(TimeFrameIndex(20), line_x, line_y);
+        line_data->emplaceAtTime(TimeFrameIndex(20), line_x, line_y);
 
         // Point at timestamp 30 (different from line)
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
@@ -202,7 +202,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         std::vector<float> line_x = {5.0f};
         std::vector<float> line_y = {5.0f};
         int timestamp = 40;
-        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->emplaceAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point
         std::vector<Point2D<float>> points = {Point2D<float>{10.0f, 10.0f}};
@@ -224,7 +224,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
         int timestamp = 50;
-        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->emplaceAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
@@ -242,7 +242,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         // Create a line
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
-        line_data->addAtTime(TimeFrameIndex(60), line_x, line_y);
+        line_data->emplaceAtTime(TimeFrameIndex(60), line_x, line_y);
 
         // Setup the operation and parameters
         LineMinPointDistOperation operation;
@@ -287,12 +287,12 @@ TEST_CASE("Data Transform: Line Min Point Dist - JSON pipeline", "[transforms][l
     // Create a horizontal line from (0,0) to (10,0) at timestamp 100
     std::vector<float> line_x = {0.0f, 10.0f};
     std::vector<float> line_y = {0.0f, 0.0f};
-    line_data->addAtTime(TimeFrameIndex(100), line_x, line_y);
+    line_data->emplaceAtTime(TimeFrameIndex(100), line_x, line_y);
     
     // Create a vertical line from (5,0) to (5,10) at timestamp 200
     std::vector<float> line_x2 = {5.0f, 5.0f};
     std::vector<float> line_y2 = {0.0f, 10.0f};
-    line_data->addAtTime(TimeFrameIndex(200), line_x2, line_y2);
+    line_data->emplaceAtTime(TimeFrameIndex(200), line_x2, line_y2);
     
     // Store the line data in DataManager with a known key
     dm.setData("test_line", line_data, TimeKey("default"));
@@ -384,7 +384,7 @@ TEST_CASE("Data Transform: Line Min Point Dist - JSON pipeline", "[transforms][l
     // Create a line from (0,0) to (100,0) in the line's coordinate space
     std::vector<float> line_x_scaled = {0.0f, 100.0f};
     std::vector<float> line_y_scaled = {0.0f, 0.0f};
-    line_data_scaled->addAtTime(TimeFrameIndex(300), line_x_scaled, line_y_scaled);
+    line_data_scaled->emplaceAtTime(TimeFrameIndex(300), line_x_scaled, line_y_scaled);
     
     dm.setData("test_line_scaled", line_data_scaled, TimeKey("default"));
     
@@ -451,7 +451,7 @@ TEST_CASE("Data Transform: Line Min Point Dist - JSON pipeline", "[transforms][l
     // Create a diagonal line from (0,0) to (10,10)
     std::vector<float> line_x_on = {0.0f, 10.0f};
     std::vector<float> line_y_on = {0.0f, 10.0f};
-    line_data_on_line->addAtTime(TimeFrameIndex(400), line_x_on, line_y_on);
+    line_data_on_line->emplaceAtTime(TimeFrameIndex(400), line_x_on, line_y_on);
     
     dm.setData("test_line_on", line_data_on_line, TimeKey("default"));
     

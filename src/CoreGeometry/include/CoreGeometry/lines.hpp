@@ -21,6 +21,12 @@ public:
      */
     Line2D(std::initializer_list<Point2D<float>> points) : points_(points) {}
 
+    Line2D(std::vector<float> const & x, std::vector<float> const & y) : points_(x.size()) {
+        for (size_t i = 0; i < x.size(); i++) {
+            points_[i] = Point2D<float>{x[i], y[i]};
+        }
+    }
+
     /**
      * @brief Construct a Line2D from a variable number of Point2D<float> arguments.
      *

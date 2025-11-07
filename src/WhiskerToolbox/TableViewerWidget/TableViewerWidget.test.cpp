@@ -900,12 +900,12 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - LineSampling
     auto add_h = [&](int t, float x0, float x1, float y) {
         std::vector<float> xs = {x0, x1};
         std::vector<float> ys = {y, y};
-        lines->addAtTime(TimeFrameIndex(t), xs, ys, false);
+        lines->emplaceAtTime(TimeFrameIndex(t), xs, ys);
     };
     auto add_v = [&](int t, float x, float y0, float y1) {
         std::vector<float> xs = {x, x};
         std::vector<float> ys = {y0, y1};
-        lines->addAtTime(TimeFrameIndex(t), xs, ys, false);
+        lines->emplaceAtTime(TimeFrameIndex(t), xs, ys);
     };
     // t=0: 1 line
     add_h(0, 0.0f, 10.0f, 0.0f);

@@ -47,9 +47,9 @@ TEST_CASE("DM - TV - LineTimestampComputer basic integration", "[LineTimestampCo
     {
         std::vector<float> xs = {0.0f, 10.0f};
         std::vector<float> ys = {0.0f, 0.0f};
-        lineData->addAtTime(TimeFrameIndex(0), xs, ys, false);
-        lineData->addAtTime(TimeFrameIndex(1), xs, ys, false);
-        lineData->addAtTime(TimeFrameIndex(2), xs, ys, false);
+        lineData->emplaceAtTime(TimeFrameIndex(0), xs, ys);
+        lineData->emplaceAtTime(TimeFrameIndex(1), xs, ys);
+        lineData->emplaceAtTime(TimeFrameIndex(2), xs, ys);
     }
 
     lineData->setIdentityContext("TestLines", dm.getEntityRegistry());
@@ -102,8 +102,8 @@ TEST_CASE("DM - TV - LineTimestampComputer can be created via registry", "[LineT
     lineData->setTimeFrame(tf);
     std::vector<float> xs = {0.0f, 10.0f};
     std::vector<float> ys = {0.0f, 0.0f};
-    lineData->addAtTime(TimeFrameIndex(0), xs, ys, false);
-    lineData->addAtTime(TimeFrameIndex(1), xs, ys, false);
+    lineData->emplaceAtTime(TimeFrameIndex(0), xs, ys);
+    lineData->emplaceAtTime(TimeFrameIndex(1), xs, ys);
 
     lineData->setIdentityContext("RegLines", dm.getEntityRegistry());
     lineData->rebuildAllEntityIds();
@@ -162,23 +162,23 @@ TEST_CASE("DM - TV - LineTimestampComputer with per-line row expansion", "[LineT
     {
         std::vector<float> xs = {0.0f, 10.0f};
         std::vector<float> ys = {0.0f, 0.0f};
-        lineData->addAtTime(TimeFrameIndex(1), xs, ys, false);
+        lineData->emplaceAtTime(TimeFrameIndex(1), xs, ys);
     }
     // t=2: two lines; l0 horizontal (x 0..10), l1 vertical (y 0..10)
     {
         std::vector<float> xs = {0.0f, 10.0f};
         std::vector<float> ys = {0.0f, 0.0f};
-        lineData->addAtTime(TimeFrameIndex(2), xs, ys, false);
+        lineData->emplaceAtTime(TimeFrameIndex(2), xs, ys);
         std::vector<float> xs2 = {5.0f, 5.0f};
         std::vector<float> ys2 = {0.0f, 10.0f};
-        lineData->addAtTime(TimeFrameIndex(2), xs2, ys2, false);
+        lineData->emplaceAtTime(TimeFrameIndex(2), xs2, ys2);
     }
     // t=3: no lines (should be dropped)
     // t=4: one vertical line (y 0..10 at x=2)
     {
         std::vector<float> xs = {2.0f, 2.0f};
         std::vector<float> ys = {0.0f, 10.0f};
-        lineData->addAtTime(TimeFrameIndex(4), xs, ys, false);
+        lineData->emplaceAtTime(TimeFrameIndex(4), xs, ys);
     }
 
     dm.setTime(TimeKey("test_time"), tf);
@@ -242,7 +242,7 @@ TEST_CASE("DM - TV - LineTimestampComputer expansion with coexisting analog colu
     {
         std::vector<float> xs = {0.0f, 10.0f};
         std::vector<float> ys = {1.0f, 1.0f};
-        lineData->addAtTime(TimeFrameIndex(1), xs, ys, false);
+        lineData->emplaceAtTime(TimeFrameIndex(1), xs, ys);
     }
 
     lineData->setIdentityContext("MixedLines", dm.getEntityRegistry());
@@ -443,7 +443,7 @@ private:
                 xs.push_back(x);
                 ys.push_back(y);
             }
-            whisker_lines->addAtTime(TimeFrameIndex(t), xs, ys, false);
+            whisker_lines->emplaceAtTime(TimeFrameIndex(t), xs, ys);
 
             // Secondary whisker - smaller arc below
             if (t >= 30) {
@@ -455,7 +455,7 @@ private:
                     xs2.push_back(x);
                     ys2.push_back(y);
                 }
-                whisker_lines->addAtTime(TimeFrameIndex(t), xs2, ys2, false);
+                whisker_lines->emplaceAtTime(TimeFrameIndex(t), xs2, ys2);
             }
         }
 
@@ -476,14 +476,14 @@ private:
         {
             std::vector<float> xs = {0.0f, 10.0f, 10.0f, 0.0f, 0.0f};
             std::vector<float> ys = {0.0f, 0.0f, 10.0f, 10.0f, 0.0f};
-            shape_lines->addAtTime(TimeFrameIndex(0), xs, ys, false);
+            shape_lines->emplaceAtTime(TimeFrameIndex(0), xs, ys);
         }
 
         // Triangle at t=20
         {
             std::vector<float> xs = {5.0f, 10.0f, 0.0f, 5.0f};
             std::vector<float> ys = {0.0f, 10.0f, 10.0f, 0.0f};
-            shape_lines->addAtTime(TimeFrameIndex(2), xs, ys, false);
+            shape_lines->emplaceAtTime(TimeFrameIndex(2), xs, ys);
         }
 
         // Circle (octagon approximation) at t=40
@@ -494,7 +494,7 @@ private:
                 xs.push_back(5.0f + 5.0f * std::cos(angle));
                 ys.push_back(5.0f + 5.0f * std::sin(angle));
             }
-            shape_lines->addAtTime(TimeFrameIndex(4), xs, ys, false);
+            shape_lines->emplaceAtTime(TimeFrameIndex(4), xs, ys);
         }
 
         // Multiple shapes at different times - star at t=60, circle at t=80
@@ -507,7 +507,7 @@ private:
                 xs1.push_back(15.0f + radius * std::cos(angle));
                 ys1.push_back(15.0f + radius * std::sin(angle));
             }
-            shape_lines->addAtTime(TimeFrameIndex(6), xs1, ys1, false);
+            shape_lines->emplaceAtTime(TimeFrameIndex(6), xs1, ys1);
 
             // Small circle at t=80
             std::vector<float> xs2, ys2;
@@ -516,7 +516,7 @@ private:
                 xs2.push_back(25.0f + 3.0f * std::cos(angle));
                 ys2.push_back(25.0f + 3.0f * std::sin(angle));
             }
-            shape_lines->addAtTime(TimeFrameIndex(8), xs2, ys2, false);
+            shape_lines->emplaceAtTime(TimeFrameIndex(8), xs2, ys2);
         }
 
         shape_lines->setIdentityContext("GeometricShapes", m_data_manager->getEntityRegistry());
