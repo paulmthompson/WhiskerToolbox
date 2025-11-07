@@ -131,24 +131,6 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool no
     }
 }
 
-void LineData::addPointToLine(TimeFrameIndex const time, int const line_id, Point2D<float> point, bool notify) {
-    if (static_cast<size_t>(line_id) < _data[time].size()) {
-        _data[time][static_cast<size_t>(line_id)].line.push_back(point);
-    } else {
-        std::cerr << "LineData::addPointToLine: line_id out of range" << std::endl;
-        EntityId entity_id = 0;
-        if (_identity_registry) {
-            int const local_index = static_cast<int>(_data[time].size());
-            entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
-        }
-        _data[time].emplace_back(Line2D{point}, entity_id);
-    }
-
-    if (notify) {
-        notifyObservers();
-    }
-}
-
 void LineData::addEntryAtTime(TimeFrameIndex const time, Line2D const & line, EntityId entity_id, bool notify) {
     _data[time].emplace_back(line, entity_id);
     if (notify) {

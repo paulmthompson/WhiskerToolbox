@@ -139,18 +139,6 @@ public:
     void addAtTime(TimeFrameIndex time, Line2D const & line, bool notify = true);
 
     /**
-     * @brief Add a point to a line at a specific time
-     * 
-     * The point is appended to the line.
-     * 
-     * @param time The time to add the point to the line at
-     * @param line_id The id of the line to add the point to
-     * @param point The point to add
-     * @param notify If true, the observers will be notified
-     */
-    void addPointToLine(TimeFrameIndex time, int line_id, Point2D<float> point, bool notify = true);
-
-    /**
      * @brief Add a line entry at a specific time with a specific entity ID
      * 
      * This method is used internally for move operations to preserve entity IDs.
