@@ -88,7 +88,7 @@ public:
             auto const& entry = pair.entries[inner_idx_];
             return FlattenedItem<DataType>{
                 .time = pair.time,
-                .data = entry.line,
+                .data = entry.data,
                 .entity_id = entry.entity_id
             };
         }
@@ -192,7 +192,7 @@ auto flattenLineData(Range&& range) {
     using RangeValueType = std::ranges::range_value_t<std::remove_reference_t<Range>>;
     // Assume entries have .line member which is Line2D
     using EntryType = std::decay_t<decltype(std::declval<RangeValueType>().entries[0])>;
-    using DataType = std::decay_t<decltype(std::declval<EntryType>().line)>;
+    using DataType = std::decay_t<decltype(std::declval<EntryType>().data)>;
     
     return FlattenedDataAdapter<std::remove_reference_t<Range>, DataType, EntryType>(std::forward<Range>(range));
 }

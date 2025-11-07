@@ -15,7 +15,7 @@ LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data) {
     for (auto const & [time, lines]: data) {
         _data[time].reserve(lines.size());
         for (auto const & line: lines) {
-            _data[time].emplace_back(line, 0);// EntityId will be 0 initially
+            _data[time].emplace_back(0, line); // EntityId will be 0 initially
         }
     }
 }
@@ -62,7 +62,7 @@ LineData & LineData::operator=(LineData && other) noexcept {
         return std::nullopt;
     }
 
-    Line2D & line = time_it->second[local_index].line;
+    Line2D & line = time_it->second[local_index].data;
 
     return LineModifier(line, [this, notify]() { if (notify) { this->notifyObservers(); } });
 }
@@ -106,7 +106,7 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<float> const & x
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
     }
 
-    _data[time].emplace_back(std::move(new_line), entity_id);
+    _data[time].emplace_back(entity_id, std::move(new_line));
 
     if (notify) {
         notifyObservers();
@@ -124,7 +124,7 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool no
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
     }
 
-    _data[time].emplace_back(line, entity_id);
+    _data[time].emplace_back(entity_id, line);
 
     if (notify) {
         notifyObservers();
@@ -132,7 +132,7 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool no
 }
 
 void LineData::addEntryAtTime(TimeFrameIndex const time, Line2D const & line, EntityId entity_id, bool notify) {
-    _data[time].emplace_back(line, entity_id);
+    _data[time].emplace_back(entity_id, line);
     if (notify) {
         notifyObservers();
     }
@@ -155,7 +155,7 @@ std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time) const
     _temp_lines.clear();
     _temp_lines.reserve(it->second.size());
     for (auto const & entry: it->second) {
-        _temp_lines.push_back(entry.line);
+        _temp_lines.push_back(entry.data);
     }
 
     return _temp_lines;
@@ -231,7 +231,7 @@ std::optional<Line2D> LineData::getLineByEntityId(EntityId entity_id) const {
         return std::nullopt;
     }
 
-    return time_it->second[static_cast<size_t>(local_index)].line;
+    return time_it->second[static_cast<size_t>(local_index)].data;
 }
 
 std::optional<std::pair<TimeFrameIndex, int>> LineData::getTimeAndIndexByEntityId(EntityId entity_id) const {
@@ -302,7 +302,7 @@ void LineData::changeImageSize(ImageSize const & image_size) {
 
     for (auto & [time, entries]: _data) {
         for (auto & entry: entries) {
-            for (auto & point: entry.line) {
+            for (auto & point: entry.data) {
                 point.x *= scale_x;
                 point.y *= scale_y;
             }
@@ -348,7 +348,7 @@ std::size_t LineData::copyTo(LineData & target, TimeFrameInterval const & interv
     for (auto const & [time, entries]: _data) {
         if (time >= interval.start && time <= interval.end && !entries.empty()) {
             for (auto const & entry: entries) {
-                target.addAtTime(time, entry.line, false);// Don't notify for each operation
+                target.addAtTime(time, entry.data, false);// Don't notify for each operation
                 total_lines_copied++;
             }
         }
@@ -370,7 +370,7 @@ std::size_t LineData::copyTo(LineData & target, std::vector<TimeFrameIndex> cons
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
             for (auto const & entry: it->second) {
-                target.addAtTime(time, entry.line, false);// Don't notify for each operation
+                target.addAtTime(time, entry.data, false);// Don't notify for each operation
                 total_lines_copied++;
             }
         }
@@ -443,12 +443,12 @@ std::size_t LineData::moveTo(LineData & target, std::vector<TimeFrameIndex> cons
 
 std::size_t LineData::copyByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
     return copy_by_entity_ids(_data, target, entity_ids, notify,
-                              [](LineEntry const & entry) -> Line2D const & { return entry.line; });
+                              [](LineEntry const & entry) -> Line2D const & { return entry.data; });
 }
 
 std::size_t LineData::moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
     auto result = move_by_entity_ids(_data, target, entity_ids, notify,
-                                     [](LineEntry const & entry) -> Line2D const & { return entry.line; });
+                                     [](LineEntry const & entry) -> Line2D const & { return entry.data; });
 
     if (notify && result > 0) {
         notifyObservers();

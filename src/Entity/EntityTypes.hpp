@@ -60,6 +60,24 @@ struct EntityTupleKeyHash {
     }
 };
 
+/**
+ * @brief DataEntry
+ * 
+ * DataEntry is a struct that holds a data object and its associated EntityId.
+ * It is used to store data objects in a data manager.
+ */
+template <typename TData>
+struct DataEntry {
+    TData data;
+    EntityId entity_id;
+
+    template <typename... TDataArgs>
+    DataEntry(EntityId id, TDataArgs&&... args)
+        : data(std::forward<TDataArgs>(args)...), 
+          entity_id(id) {}
+};
+
+
 #endif // ENTITYTYPES_HPP
 
 

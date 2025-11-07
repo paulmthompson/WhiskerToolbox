@@ -22,15 +22,7 @@ class EntityRegistry;
 /**
  * @brief Structure holding a Line2D and its associated EntityId
  */
-struct LineEntry {
-    Line2D line;
-    EntityId entity_id;
-
-    LineEntry() = default;
-    LineEntry(Line2D l, EntityId id)
-        : line(std::move(l)),
-          entity_id(id) {}
-};
+using LineEntry = DataEntry<Line2D>;
 
 /*
  * @brief LineData
@@ -274,7 +266,7 @@ public:
         if (it != _data.end()) {
             result.reserve(it->second.size());
             for (auto const & entry: it->second) {
-                result.emplace_back(std::cref(entry.line));
+                result.emplace_back(std::cref(entry.data));
             }
         }
 
@@ -316,7 +308,7 @@ public:
                    std::vector<Line2D> lines;
                    lines.reserve(pair.second.size());
                    for (auto const & entry: pair.second) {
-                       lines.push_back(entry.line);
+                       lines.push_back(entry.data);
                    }
                    return TimeLinesPair{pair.first, std::move(lines)};
                });
@@ -363,7 +355,7 @@ public:
                    std::vector<Line2D> lines;
                    lines.reserve(pair.second.size());
                    for (auto const & entry: pair.second) {
-                       lines.push_back(entry.line);
+                       lines.push_back(entry.data);
                    }
                    return TimeLinesPair{pair.first, std::move(lines)};
                });

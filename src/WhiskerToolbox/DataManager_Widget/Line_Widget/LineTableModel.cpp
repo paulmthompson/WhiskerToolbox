@@ -31,7 +31,7 @@ void LineTableModel::setLines(LineData const * lineData) {
                 LineTableRow row = {
                         .frame = frame,
                         .lineIndex = lineIndex,
-                        .length = static_cast<int>(entry.line.size()),
+                        .length = static_cast<int>(entry.data.size()),
                         .entity_id = entry.entity_id,
                         .group_name = group_name};
                 _all_data.push_back(row);
