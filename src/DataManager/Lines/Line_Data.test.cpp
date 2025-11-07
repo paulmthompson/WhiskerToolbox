@@ -362,18 +362,13 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
         // Without EntityRegistry setup, these should return empty/nullopt
         EntityId fake_entity = 12345;
         
-        auto line_result = line_data.getLineByEntityId(fake_entity);
+        auto line_result = line_data.getDataByEntityId(fake_entity);
         REQUIRE_FALSE(line_result.has_value());
         
-        auto time_result = line_data.getTimeAndIndexByEntityId(fake_entity);
-        REQUIRE_FALSE(time_result.has_value());
-        
         std::vector<EntityId> fake_entities = {fake_entity, 67890};
-        auto lines_result = line_data.getLinesByEntityIds(fake_entities);
+        auto lines_result = line_data.getDataByEntityIds(fake_entities);
         REQUIRE(lines_result.empty());
         
-        auto time_info_result = line_data.getTimeInfoByEntityIds(fake_entities);
-        REQUIRE(time_info_result.empty());
     }
     
     SECTION("Entity ID retrieval methods work") {
@@ -395,16 +390,12 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
         std::vector<EntityId> test_entities = {1, 2, 3};
         
         // These calls should compile and return appropriate empty/nullopt values
-        auto single_line = line_data.getLineByEntityId(test_entity);
-        auto time_and_index = line_data.getTimeAndIndexByEntityId(test_entity);
-        auto multiple_lines = line_data.getLinesByEntityIds(test_entities);
-        auto time_infos = line_data.getTimeInfoByEntityIds(test_entities);
+        auto single_line = line_data.getDataByEntityId(test_entity);
+        auto multiple_lines = line_data.getDataByEntityIds(test_entities);
         
         // Verify return types are as expected (they should be empty/nullopt without registry)
         REQUIRE_FALSE(single_line.has_value());
-        REQUIRE_FALSE(time_and_index.has_value());
         REQUIRE(multiple_lines.empty());
-        REQUIRE(time_infos.empty());
     }
 }
 

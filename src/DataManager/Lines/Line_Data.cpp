@@ -45,8 +45,8 @@ LineData & LineData::operator=(LineData && other) noexcept {
 
 // ========== Setters ==========
 
-[[nodiscard]] std::optional<LineData::LineModifier> LineData::getMutableLine(EntityId entity_id, bool notify) {
-    // 1. Find the mutable reference, just like you did before
+[[nodiscard]] std::optional<LineData::LineModifier> LineData::getMutableData(EntityId entity_id, bool notify) {
+
     auto descriptor = _identity_registry->get(entity_id);
     if (!descriptor || descriptor->kind != EntityKind::LineEntity || descriptor->data_key != _identity_data_key) {
         return std::nullopt;
@@ -79,19 +79,36 @@ bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
     return false;
 }
 
-bool LineData::clearAtTime(TimeFrameIndex const time, int const line_id, bool notify) {
-    auto it = _data.find(time);
-    if (it != _data.end() && static_cast<size_t>(line_id) < it->second.size()) {
-        it->second.erase(it->second.begin() + static_cast<long int>(line_id));
-        if (it->second.empty()) {
-            _data.erase(it);
-        }
-        if (notify) {
-            notifyObservers();
-        }
-        return true;
+bool LineData::clearByEntityId(EntityId entity_id, bool notify) {
+    if (!_identity_registry) {
+        return false;
     }
-    return false;
+
+    auto descriptor = _identity_registry->get(entity_id);
+    if (!descriptor || descriptor->kind != EntityKind::LineEntity || descriptor->data_key != _identity_data_key) {
+        return false;
+    }
+
+    TimeFrameIndex const time{descriptor->time_value};
+    int const local_index = descriptor->local_index;
+
+    auto time_it = _data.find(time);
+    if (time_it == _data.end()) {
+        return false;
+    }
+
+    if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
+        return false;
+    }
+
+    time_it->second.erase(time_it->second.begin() + static_cast<std::ptrdiff_t>(local_index));
+    if (time_it->second.empty()) {
+        _data.erase(time_it);
+    }
+    if (notify) {
+        notifyObservers();
+    }
+    return true;
 }
 
 void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool notify) {
@@ -200,7 +217,7 @@ std::vector<EntityId> LineData::getAllEntityIds() const {
 
 // ========== Entity Lookup Methods ==========
 
-std::optional<Line2D> LineData::getLineByEntityId(EntityId entity_id) const {
+std::optional<Line2D> LineData::getDataByEntityId(EntityId entity_id) const {
     if (!_identity_registry) {
         return std::nullopt;
     }
@@ -225,50 +242,24 @@ std::optional<Line2D> LineData::getLineByEntityId(EntityId entity_id) const {
     return time_it->second[static_cast<size_t>(local_index)].data;
 }
 
-std::optional<std::pair<TimeFrameIndex, int>> LineData::getTimeAndIndexByEntityId(EntityId entity_id) const {
+std::optional<TimeFrameIndex> LineData::getTimeByEntityId(EntityId entity_id) const {
     if (!_identity_registry) {
         return std::nullopt;
     }
 
     auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::LineEntity || descriptor->data_key != _identity_data_key) {
-        return std::nullopt;
-    }
-
-    TimeFrameIndex const time{descriptor->time_value};
-    int const local_index = descriptor->local_index;
-
-    // Verify the time and index are valid
-    auto time_it = _data.find(time);
-    if (time_it == _data.end() || local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-        return std::nullopt;
-    }
-
-    return std::make_pair(time, local_index);
+    return TimeFrameIndex{descriptor->time_value};
 }
 
-std::vector<std::pair<EntityId, Line2D>> LineData::getLinesByEntityIds(std::vector<EntityId> const & entity_ids) const {
+
+std::vector<std::pair<EntityId, Line2D>> LineData::getDataByEntityIds(std::vector<EntityId> const & entity_ids) const {
     std::vector<std::pair<EntityId, Line2D>> results;
     results.reserve(entity_ids.size());
 
     for (EntityId const entity_id: entity_ids) {
-        auto line = getLineByEntityId(entity_id);
+        auto line = getDataByEntityId(entity_id);
         if (line.has_value()) {
             results.emplace_back(entity_id, std::move(line.value()));
-        }
-    }
-
-    return results;
-}
-
-std::vector<std::tuple<EntityId, TimeFrameIndex, int>> LineData::getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const {
-    std::vector<std::tuple<EntityId, TimeFrameIndex, int>> results;
-    results.reserve(entity_ids.size());
-
-    for (EntityId const entity_id: entity_ids) {
-        auto time_info = getTimeAndIndexByEntityId(entity_id);
-        if (time_info.has_value()) {
-            results.emplace_back(entity_id, time_info->first, time_info->second);
         }
     }
 
@@ -335,13 +326,14 @@ std::size_t LineData::copyTo(LineData & target, TimeFrameInterval const & interv
 
     std::size_t total_lines_copied = 0;
 
-    // Iterate through all times in the source data within the interval
-    for (auto const & [time, entries]: _data) {
-        if (time >= interval.start && time <= interval.end && !entries.empty()) {
-            for (auto const & entry: entries) {
-                target.addAtTime(time, entry.data, false);// Don't notify for each operation
-                total_lines_copied++;
-            }
+    // Use lower_bound and upper_bound just like moveTo
+    auto start_it = _data.lower_bound(interval.start);
+    auto end_it = _data.upper_bound(interval.end); // upper_bound is correct for [start, end]
+
+    for (auto it = start_it; it != end_it; ++it) {
+        for (auto const & entry: it->second) {
+            target.addAtTime(it->first, entry.data, false); // Don't notify yet
+            total_lines_copied++;
         }
     }
 

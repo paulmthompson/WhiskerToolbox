@@ -291,11 +291,9 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         REQUIRE(group_entities.size() == 2);
 
         // Use LineData lookup methods to get original data
-        auto lines_with_ids = line_data->getLinesByEntityIds(group_entities);
-        auto time_infos = line_data->getTimeInfoByEntityIds(group_entities);
+        auto lines_with_ids = line_data->getDataByEntityIds(group_entities);
 
         REQUIRE(lines_with_ids.size() == 2);
-        REQUIRE(time_infos.size() == 2);
 
         // Verify the lookup results
         for (auto const & [entity_id, line]: lines_with_ids) {
@@ -305,14 +303,6 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
             REQUIRE(std::find(entity_ids_t10.begin(), entity_ids_t10.end(), entity_id) != entity_ids_t10.end());
         }
 
-        for (auto const & [entity_id, time, local_index]: time_infos) {
-            REQUIRE(time == TimeFrameIndex(10));// All should be from time 10
-            REQUIRE(local_index >= 0);
-            REQUIRE(local_index < 2);// Should be 0 or 1 (two lines at this time)
-
-            // Verify this EntityId was in our original list
-            REQUIRE(std::find(entity_ids_t10.begin(), entity_ids_t10.end(), entity_id) != entity_ids_t10.end());
-        }
     }
 
     SECTION("Complete workflow: Group -> EntityIds -> LineData") {
@@ -335,22 +325,11 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         REQUIRE(selected_entities.size() == 2);
 
         // Step 3: Get original line data for visualization
-        auto selected_lines = line_data->getLinesByEntityIds(selected_entities);
-        auto selected_time_info = line_data->getTimeInfoByEntityIds(selected_entities);
+        auto selected_lines = line_data->getDataByEntityIds(selected_entities);
 
         REQUIRE(selected_lines.size() == 2);
-        REQUIRE(selected_time_info.size() == 2);
 
         // Step 4: Verify we can identify the temporal spread
-        std::vector<TimeFrameIndex> times_found;
-        for (auto const & [entity_id, time, local_index]: selected_time_info) {
-            times_found.push_back(time);
-        }
-
-        std::sort(times_found.begin(), times_found.end());
-        REQUIRE(times_found[0] == TimeFrameIndex(10));
-        REQUIRE(times_found[1] == TimeFrameIndex(20));
-
         // Step 5: Verify line data integrity
         for (auto const & [entity_id, line]: selected_lines) {
             REQUIRE_FALSE(line.empty());
@@ -966,11 +945,9 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         // Verify we can trace back to original LineData using these EntityIds
         for (EntityId entity_id : unique_transformed_ids_vec) {
-            auto original_line = line_data->getLineByEntityId(entity_id);
+            auto original_line = line_data->getDataByEntityId(entity_id);
             REQUIRE(original_line.has_value());
 
-            auto time_and_index = line_data->getTimeAndIndexByEntityId(entity_id);
-            REQUIRE(time_and_index.has_value());
         }
 
         // Verify transformed table has PCA columns

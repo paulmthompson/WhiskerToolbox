@@ -46,7 +46,7 @@ std::pair<GroupId, float> findClosestGroup(Line2D const& target_line,
         
         for (auto entity_id : entities_in_group) {
             // Get the line corresponding to this entity
-            auto line_opt = line_data->getLineByEntityId(entity_id);
+            auto line_opt = line_data->getDataByEntityId(entity_id);
             if (line_opt.has_value()) {
                 float distance = calculateLineDistance(target_line, line_opt.value(), position);
                 if (distance < min_distance) {
@@ -100,7 +100,7 @@ std::shared_ptr<LineData> lineProximityGrouping(std::shared_ptr<LineData> line_d
     for (auto entity_id : ungrouped_entities) {
         progressCallback(static_cast<int>((processed * 100) / total));
         
-        auto line_opt = line_data->getLineByEntityId(entity_id);
+        auto line_opt = line_data->getDataByEntityId(entity_id);
         if (!line_opt.has_value()) {
             ++processed;
             continue;

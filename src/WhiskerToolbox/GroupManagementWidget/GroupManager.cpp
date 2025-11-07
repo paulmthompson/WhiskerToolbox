@@ -494,15 +494,6 @@ void GroupManager::removeEntityFromPointData(PointData * point_data, EntityId en
 void GroupManager::removeEntityFromLineData(LineData * line_data, EntityId entity_id) {
     if (!line_data) return;
 
-    // Find the time and index for this entity
-    auto time_and_index = line_data->getTimeAndIndexByEntityId(entity_id);
-    if (!time_and_index.has_value()) {
-        return;
-    }
-
-    auto const [time, index] = time_and_index.value();
-    
-    // Remove the line at the specific time and index
-    line_data->clearAtTime(time, index, true);
+    line_data->clearByEntityId(entity_id, true);
 }
 

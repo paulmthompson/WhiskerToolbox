@@ -1494,7 +1494,7 @@ TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
         REQUIRE(group_entities.size() == selected_entity_ids.size());
         
         // Now query LineData using the grouped EntityIDs to get the original line data
-        auto lines_from_group = line_data->getLinesByEntityIds(group_entities);
+        auto lines_from_group = line_data->getDataByEntityIds(group_entities);
         REQUIRE(lines_from_group.size() == selected_entity_ids.size());
         
         // Verify that the lines we get back match the data in the corresponding table rows

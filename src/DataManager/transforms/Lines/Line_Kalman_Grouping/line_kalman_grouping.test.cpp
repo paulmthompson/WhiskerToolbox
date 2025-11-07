@@ -95,8 +95,8 @@ protected:
             std::vector<EntityId> sorted_entities = entities_at_frame;
             std::sort(sorted_entities.begin(), sorted_entities.end(),
                       [this](EntityId a, EntityId b) {
-                          auto line_a = line_data->getLineByEntityId(a);
-                          auto line_b = line_data->getLineByEntityId(b);
+                          auto line_a = line_data->getDataByEntityId(a);
+                          auto line_b = line_data->getDataByEntityId(b);
                           if (!line_a || !line_b) return false;
 
                           // Sort by Y coordinate (line 1 has lower Y than line 2)

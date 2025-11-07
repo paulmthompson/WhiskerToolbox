@@ -378,7 +378,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
 
     EntityId selected_entity_id = *selected_entities.begin();
 
-    auto line_ref = line_data->getMutableLine(selected_entity_id, true);
+    auto line_ref = line_data->getMutableData(selected_entity_id, true);
     if (!line_ref.has_value()) {
         std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id << std::endl;
         return;
@@ -464,7 +464,7 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
 
     EntityId selected_entity_id = *selected_entities.begin();
 
-    auto line_ref = line_data->getMutableLine(selected_entity_id, true);
+    auto line_ref = line_data->getMutableData(selected_entity_id, true);
     if (!line_ref.has_value()) {
         std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id << std::endl;
         return;

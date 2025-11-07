@@ -73,7 +73,7 @@ FeatureStatistics analyzeGroundTruthFeatureStatistics(
     for (auto const & [time, group_assignments]: ground_truth) {
         for (auto const & [group_id, entity_id]: group_assignments) {
             // Get the line for this entity
-            auto line = line_data->getLineByEntityId(entity_id);
+            auto line = line_data->getDataByEntityId(entity_id);
             if (!line.has_value()) continue;// Entity not found
 
             // Extract feature
@@ -168,7 +168,7 @@ CrossCorrelationStatistics computeFeatureCrossCorrelation(
 
     for (auto const & [time, group_assignments]: ground_truth) {
         for (auto const & [group_id, entity_id]: group_assignments) {
-            auto line = line_data->getLineByEntityId(entity_id);
+            auto line = line_data->getDataByEntityId(entity_id);
             if (!line.has_value()) continue;
 
             // Extract both features
@@ -285,9 +285,9 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
 
         for (auto entity_id: entities_in_group) {
             // Find which frame this entity belongs to
-            auto time_info = line_data->getTimeAndIndexByEntityId(entity_id);
-            if (time_info.has_value()) {
-                ground_truth[time_info->first][group_id] = entity_id;
+            auto time = line_data->getTimeByEntityId(entity_id);
+            if (time.has_value()) {
+                ground_truth[time.value()][group_id] = entity_id;
             }
         }
     }

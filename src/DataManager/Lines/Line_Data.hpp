@@ -4,8 +4,8 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
-#include "Entity/EntityTypes.hpp"
 #include "Entity/EntityRegistry.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
@@ -17,7 +17,6 @@
 #include <ranges>
 #include <unordered_set>
 #include <vector>
-
 
 
 /**
@@ -72,14 +71,9 @@ public:
      */
     [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
 
-    /**
-     * @brief Clear a line at a specific time
-     * 
-     * @param time The time to clear the line at
-     * @param line_id The id of the line to clear
-     * @param notify If true, the observers will be notified
-     */
-    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, int line_id, bool notify = true);
+
+
+    [[nodiscard]] bool clearByEntityId(EntityId entity_id, bool notify = true);
 
     using LineModifier = ModificationHandle<Line2D>;
 
@@ -95,7 +89,7 @@ public:
      * @param entity_id The EntityId to look up
      * @return Optional containing a LineModifier handle if found, std::nullopt otherwise
      */
-    [[nodiscard]] std::optional<LineModifier> getMutableLine(EntityId entity_id, bool notify = true);
+    [[nodiscard]] std::optional<LineModifier> getMutableData(EntityId entity_id, bool notify = true);
 
     /**
      * @brief Add a line at a specific time (by copying).
@@ -224,18 +218,9 @@ public:
      * @param entity_id The EntityId to look up
      * @return Optional containing the line data if found, std::nullopt otherwise
      */
-    [[nodiscard]] std::optional<Line2D> getLineByEntityId(EntityId entity_id) const;
+    [[nodiscard]] std::optional<Line2D> getDataByEntityId(EntityId entity_id) const;
 
-    /**
-     * @brief Find the time frame and local index for a specific EntityId.
-     * 
-     * Returns the time frame and local line index (within that time frame)
-     * associated with the given EntityId.
-     * 
-     * @param entity_id The EntityId to look up
-     * @return Optional containing {time, local_index} if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<std::pair<TimeFrameIndex, int>> getTimeAndIndexByEntityId(EntityId entity_id) const;
+    [[nodiscard]] std::optional<TimeFrameIndex> getTimeByEntityId(EntityId entity_id) const;
 
     /**
      * @brief Get all lines that match the given EntityIds.
@@ -246,18 +231,7 @@ public:
      * @param entity_ids Vector of EntityIds to look up
      * @return Vector of pairs containing {EntityId, Line2D} for found entities
      */
-    [[nodiscard]] std::vector<std::pair<EntityId, Line2D>> getLinesByEntityIds(std::vector<EntityId> const & entity_ids) const;
-
-    /**
-     * @brief Get time frame information for multiple EntityIds.
-     * 
-     * Returns time frame and local index information for multiple EntityIds,
-     * useful for understanding the temporal distribution of entity groups.
-     * 
-     * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of tuples containing {EntityId, TimeFrameIndex, local_index} for found entities
-     */
-    [[nodiscard]] std::vector<std::tuple<EntityId, TimeFrameIndex, int>> getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
+    [[nodiscard]] std::vector<std::pair<EntityId, Line2D>> getDataByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
     /**
     * @brief Get zero-copy view of Line2D objects at a specific time
@@ -321,26 +295,6 @@ public:
     }
 
     /**
-    * @brief Get all line entries with their associated times as a zero-copy range
-    *
-    * This method provides zero-copy access to the underlying LineEntry data structure,
-    * which contains both Line2D and EntityId information.
-    *
-    * @return A view of time-line entries pairs for all times
-    */
-    [[nodiscard]] auto GetAllLineEntriesAsRange() const {
-        struct TimeLineEntriesPair {
-            TimeFrameIndex time;
-            std::vector<LineEntry> const & entries;
-        };
-
-        return _data | std::views::transform([](auto const & pair) {
-                   return TimeLineEntriesPair{pair.first, pair.second};
-               });
-    }
-
-
-    /**
     * @brief Get lines with their associated times as a range within a TimeFrameInterval
     *
     * Returns a filtered view of time-lines pairs for times within the specified interval [start, end] (inclusive).
@@ -364,29 +318,6 @@ public:
                        lines.push_back(entry.data);
                    }
                    return TimeLinesPair{pair.first, std::move(lines)};
-               });
-    }
-
-    /**
-    * @brief Get line entries with their associated times as a zero-copy range within a TimeFrameInterval
-    *
-    * Returns a filtered view of time-line entries pairs for times within the specified interval [start, end] (inclusive).
-    * This method provides zero-copy access to the underlying LineEntry data structure.
-    *
-    * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
-    * @return A zero-copy view of time-line entries pairs for times within the specified interval
-    */
-    [[nodiscard]] auto GetLineEntriesInRange(TimeFrameInterval const & interval) const {
-        struct TimeLineEntriesPair {
-            TimeFrameIndex time;
-            std::vector<LineEntry> const & entries;
-        };
-
-        return _data | std::views::filter([interval](auto const & pair) {
-                   return pair.first >= interval.start && pair.first <= interval.end;
-               }) |
-               std::views::transform([](auto const & pair) {
-                   return TimeLineEntriesPair{pair.first, pair.second};
                });
     }
 
@@ -422,6 +353,30 @@ public:
     }
 
     /**
+    * @brief Get line entries with their associated times as a zero-copy range within a TimeFrameInterval
+    *
+    * Returns a filtered view of time-line entries pairs for times within the specified interval [start, end] (inclusive).
+    * This method provides zero-copy access to the underlying LineEntry data structure.
+    *
+    * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
+    * @return A zero-copy view of time-line entries pairs for times within the specified interval
+    */
+    [[nodiscard]] auto GetLineEntriesInRange(TimeFrameInterval const & interval) const {
+        struct TimeLineEntriesPair {
+            TimeFrameIndex time;
+            std::vector<LineEntry> const & entries;
+        };
+
+        return _data | std::views::filter([interval](auto const & pair) {
+                   return pair.first >= interval.start && pair.first <= interval.end;
+               }) |
+               std::views::transform([](auto const & pair) {
+                   return TimeLineEntriesPair{pair.first, pair.second};
+               });
+    }
+
+
+    /**
     * @brief Get line entries with their associated times as a zero-copy range within a TimeFrameInterval with timeframe conversion
     *
     * Converts the time range from the source timeframe to the target timeframe (this line data's timeframe)
@@ -452,6 +407,26 @@ public:
 
         return GetLineEntriesInRange(TimeFrameInterval(target_start_index, target_end_index));
     }
+
+    /**
+    * @brief Get all line entries with their associated times as a zero-copy range
+    *
+    * This method provides zero-copy access to the underlying LineEntry data structure,
+    * which contains both Line2D and EntityId information.
+    *
+    * @return A view of time-line entries pairs for all times
+    */
+    [[nodiscard]] auto GetAllLineEntriesAsRange() const {
+        struct TimeLineEntriesPair {
+            TimeFrameIndex time;
+            std::vector<LineEntry> const & entries;
+        };
+
+        return _data | std::views::transform([](auto const & pair) {
+                   return TimeLineEntriesPair{pair.first, pair.second};
+               });
+    }
+
 
     // ========== Copy and Move ==========
 
