@@ -149,38 +149,6 @@ void LineData::addPointToLine(TimeFrameIndex const time, int const line_id, Poin
     }
 }
 
-void LineData::addPointToLineInterpolate(TimeFrameIndex const time, int const line_id, Point2D<float> point, bool notify) {
-    if (static_cast<size_t>(line_id) >= _data[time].size()) {
-        std::cerr << "LineData::addPointToLineInterpolate: line_id out of range" << std::endl;
-        EntityId entity_id = 0;
-        if (_identity_registry) {
-            int const local_index = static_cast<int>(_data[time].size());
-            entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
-        }
-        _data[time].emplace_back(Line2D{}, entity_id);
-    }
-
-    Line2D & line = _data[time][static_cast<size_t>(line_id)].line;
-    if (!line.empty()) {
-        Point2D<float> const last_point = line.back();
-        float const distance = std::sqrt(std::pow(point.x - last_point.x, 2.0f) + std::pow(point.y - last_point.y, 2.0f));
-        int const n = static_cast<int>(distance / 2.0f);
-        for (int i = 1; i <= n; ++i) {
-            float const t = static_cast<float>(i) / static_cast<float>(n + 1);
-            float const interp_x = last_point.x + t * (point.x - last_point.x);
-            float const interp_y = last_point.y + t * (point.y - last_point.y);
-            line.push_back(Point2D<float>{interp_x, interp_y});
-        }
-    }
-    line.push_back(point);
-    // Note: smooth_line function needs to be implemented or included
-    // smooth_line(line);
-
-    if (notify) {
-        notifyObservers();
-    }
-}
-
 void LineData::addEntryAtTime(TimeFrameIndex const time, Line2D const & line, EntityId entity_id, bool notify) {
     _data[time].emplace_back(line, entity_id);
     if (notify) {
