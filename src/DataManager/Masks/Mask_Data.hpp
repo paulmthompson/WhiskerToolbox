@@ -4,6 +4,7 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
+#include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -16,20 +17,7 @@
 #include <unordered_set>
 #include <vector>
 
-class EntityRegistry;
-
-/**
- * @brief Structure holding a Mask2D and its associated EntityId
- */
-struct MaskEntry {
-    Mask2D mask;
-    EntityId entity_id;
-
-    MaskEntry() = default;
-    MaskEntry(Mask2D m, EntityId id)
-        : mask(std::move(m)),
-          entity_id(id) {}
-};
+using MaskEntry = DataEntry<Mask2D>;
 
 
 /**
@@ -57,15 +45,33 @@ public:
 
     [[nodiscard]] bool clearAtTime(TimeIndexAndFrame const & time_index_and_frame, bool notify = true);
 
-    /**
-     * @brief Removes a mask at the specified time and index
-     * 
-     * @param time The timestamp at which to clear the mask
-     * @param index The index of the mask to clear
-     * @param notify If true, observers will be notified of the change
-     */
-    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, size_t index, bool notify = true);
 
+    void addAtTime(TimeFrameIndex time, Mask2D const & mask, bool notify = true);
+
+    void addAtTime(TimeFrameIndex time, Mask2D && mask, bool notify = true);
+
+    /**
+     * @brief Construct a data entry in-place at a specific time.
+     *
+     * This method perfectly forwards its arguments to the
+     * constructor of the TData (e.g., Mask2D) object.
+     * This is the most efficient way to add new data.
+     *
+     * @tparam TDataArgs The types of arguments for TData's constructor
+     * @param time The time to add the data at
+     * @param args The arguments to forward to TData's constructor
+     */
+    template<typename... TDataArgs>
+    void emplaceAtTime(TimeFrameIndex time, TDataArgs &&... args) {
+        int const local_index = static_cast<int>(_data[time].size());
+        EntityId entity_id = 0;
+        if (_identity_registry) {
+            entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::MaskEntity, time, local_index);
+        }
+
+        _data[time].emplace_back(entity_id, std::forward<TDataArgs>(args)...);
+    }
+    
     /**
      * @brief Adds a new mask at the specified time using separate x and y coordinate arrays
     *
@@ -82,21 +88,8 @@ public:
     void addAtTime(TimeFrameIndex time,
                    std::vector<uint32_t> const & x,
                    std::vector<uint32_t> const & y,
-                   bool notify = true);
+                  bool notify = true);
 
-    /**
-    * @brief Adds a new mask at the specified time using a vector of 2D points
-    *
-    * If masks already exist at the specified time, the new mask is added to the collection.
-    * If no masks exist at that time, a new entry is created.
-    *
-    * @param time The timestamp at which to add the mask
-    * @param mask Vector of 2D points defining the mask
-    * @param notify If true, observers will be notified of the change (default: true)
-    */
-    void addAtTime(TimeFrameIndex time,
-                   std::vector<Point2D<uint32_t>> mask,
-                   bool notify = true);
 
     void addAtTime(TimeIndexAndFrame const & time_index_and_frame,
                    std::vector<Point2D<uint32_t>> mask,
@@ -120,6 +113,8 @@ public:
                    std::vector<uint32_t> && x,
                    std::vector<uint32_t> && y,
                    bool notify = true);
+
+    // ========== Setters (Entity-based) ==========               
 
     /**
      * @brief Add a mask entry at a specific time with a specific entity ID
@@ -183,7 +178,7 @@ public:
                    std::vector<Mask2D> masks;
                    masks.reserve(pair.second.size());
                    for (auto const & entry: pair.second) {
-                       masks.push_back(entry.mask);
+                       masks.push_back(entry.data);
                    }
                    return TimeMaskPair{pair.first, std::move(masks)};
                });
@@ -210,7 +205,7 @@ public:
                    std::vector<Mask2D> masks;
                    masks.reserve(pair.second.size());
                    for (auto const & entry: pair.second) {
-                       masks.push_back(entry.mask);
+                       masks.push_back(entry.data);
                    }
                    return TimeMaskPair{pair.first, std::move(masks)};
                });
