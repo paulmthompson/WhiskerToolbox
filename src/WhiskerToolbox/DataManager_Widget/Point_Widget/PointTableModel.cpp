@@ -32,8 +32,8 @@ void PointTableModel::setPoints(PointData const * pointData) {
                 PointTableRow row = {
                     .frame = frame, 
                     .pointIndex = pointIndex, 
-                    .x = entry.point.x,
-                    .y = entry.point.y,
+                    .x = entry.data.x,
+                    .y = entry.data.y,
                     .entity_id = entry.entity_id,
                     .group_name = group_name
                 };

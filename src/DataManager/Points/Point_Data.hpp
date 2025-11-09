@@ -3,6 +3,7 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
+#include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -15,22 +16,8 @@
 #include <vector>
 
 
-class EntityRegistry;
 
-
-/**
- * @brief Structure holding a Point2D<float> and its associated EntityId
- */
-struct PointEntry {
-    Point2D<float> point;
-    EntityId entity_id;
-
-    PointEntry() = default;
-    PointEntry(Point2D<float> p, EntityId id)
-        : point(std::move(p)),
-          entity_id(id) {}
-};
-
+using PointEntry = DataEntry<Point2D<float>>;
 
 /**
  * @brief PointData
@@ -251,7 +238,7 @@ public:
                    std::vector<Point2D<float>> points;
                    points.reserve(pair.second.size());
                    for (auto const & entry: pair.second) {
-                       points.push_back(entry.point);
+                       points.push_back(entry.data);
                    }
                    return TimePointsPair{pair.first, std::move(points)};
                });
@@ -297,7 +284,7 @@ public:
                    std::vector<Point2D<float>> points;
                    points.reserve(pair.second.size());
                    for (auto const & entry: pair.second) {
-                       points.push_back(entry.point);
+                       points.push_back(entry.data);
                    }
                    return TimePointsPair{pair.first, std::move(points)};
                });

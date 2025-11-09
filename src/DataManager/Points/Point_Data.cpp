@@ -11,7 +11,7 @@
 
 PointData::PointData(std::map<TimeFrameIndex, Point2D<float>> const & data) {
     for (auto const & [time, point]: data) {
-        _data[time].emplace_back(point, 0);
+        _data[time].emplace_back(EntityId(0), point);
     }
 }
 
@@ -20,7 +20,7 @@ PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const
         auto & entries = _data[time];
         entries.reserve(points.size());
         for (auto const & p: points) {
-            entries.emplace_back(p, 0);
+            entries.emplace_back(EntityId(0), p);
         }
     }
 }
@@ -63,7 +63,7 @@ void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> c
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, 0);
     }
     _data[time].clear();
-    _data[time].emplace_back(point, entity_id);
+    _data[time].emplace_back(entity_id, point);
     if (notify) {
         notifyObservers();
     }
@@ -78,7 +78,7 @@ void PointData::overwritePointsAtTime(TimeFrameIndex const time, std::vector<Poi
         if (_identity_registry) {
             id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, i);
         }
-        entries.emplace_back(points[static_cast<size_t>(i)], id);
+        entries.emplace_back(id, points[static_cast<size_t>(i)]);
     }
     if (notify) {
         notifyObservers();
@@ -105,7 +105,7 @@ void PointData::overwritePointsAtTimes(
             if (_identity_registry) {
                 id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, j);
             }
-            entries.emplace_back(pts[static_cast<size_t>(j)], id);
+            entries.emplace_back(id, pts[static_cast<size_t>(j)]);
         }
     }
     if (notify) {
@@ -119,7 +119,7 @@ void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point,
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
     }
-    _data[time].emplace_back(point, entity_id);
+    _data[time].emplace_back(entity_id, point);
 
     if (notify) {
         notifyObservers();
@@ -135,7 +135,7 @@ void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<f
         if (_identity_registry) {
             id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, start_index + i);
         }
-        entries.emplace_back(points[static_cast<size_t>(i)], id);
+        entries.emplace_back(id, points[static_cast<size_t>(i)]);
     }
 
     if (notify) {
@@ -147,7 +147,7 @@ void PointData::addEntryAtTime(TimeFrameIndex const time,
                                Point2D<float> const & point,
                                EntityId const entity_id,
                                bool const notify) {
-    _data[time].emplace_back(point, entity_id);
+    _data[time].emplace_back(entity_id, point);
     if (notify) {
         notifyObservers();
     }
@@ -163,7 +163,7 @@ std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const ti
     _temp_points.clear();
     _temp_points.reserve(it->second.size());
     for (auto const & entry: it->second) {
-        _temp_points.push_back(entry.point);
+        _temp_points.push_back(entry.data);
     }
     return _temp_points;
 }
@@ -205,8 +205,8 @@ void PointData::changeImageSize(ImageSize const & image_size) {
     for (auto & [time, entries]: _data) {
         (void) time;
         for (auto & entry: entries) {
-            entry.point.x *= scale_x;
-            entry.point.y *= scale_y;
+            entry.data.x *= scale_x;
+            entry.data.y *= scale_y;
         }
     }
     _image_size = image_size;
@@ -227,7 +227,7 @@ std::size_t PointData::copyTo(PointData & target, TimeFrameInterval const & inte
     for (auto const & [time, entries]: _data) {
         if (time >= interval.start && time <= interval.end && !entries.empty()) {
             for (auto const & entry: entries) {
-                target.addAtTime(time, entry.point, false);
+                target.addAtTime(time, entry.data, false);
                 total_points_copied += 1;
             }
         }
@@ -249,7 +249,7 @@ std::size_t PointData::copyTo(PointData & target, std::vector<TimeFrameIndex> co
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
             for (auto const & entry: it->second) {
-                target.addAtTime(time, entry.point, false);
+                target.addAtTime(time, entry.data, false);
                 total_points_copied += 1;
             }
         }
@@ -277,7 +277,7 @@ std::size_t PointData::moveTo(PointData & target, TimeFrameInterval const & inte
     for (auto const & [time, entries]: _data) {
         if (time >= interval.start && time <= interval.end && !entries.empty()) {
             for (auto const & entry: entries) {
-                target.addAtTime(time, entry.point, false);
+                target.addAtTime(time, entry.data, false);
                 total_points_moved += 1;
             }
             times_to_clear.push_back(time);
@@ -307,7 +307,7 @@ std::size_t PointData::moveTo(PointData & target, std::vector<TimeFrameIndex> co
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
             for (auto const & entry: it->second) {
-                target.addAtTime(time, entry.point, false);
+                target.addAtTime(time, entry.data, false);
                 total_points_moved += 1;
             }
             times_to_clear.push_back(time);
@@ -398,7 +398,7 @@ std::optional<Point2D<float>> PointData::getPointByEntityId(EntityId entity_id) 
         return std::nullopt;
     }
 
-    return time_it->second[static_cast<size_t>(local_index)].point;
+    return time_it->second[static_cast<size_t>(local_index)].data;
 }
 
 std::optional<std::pair<TimeFrameIndex, int>> PointData::getTimeAndIndexByEntityId(EntityId entity_id) const {
@@ -455,12 +455,12 @@ std::vector<std::tuple<EntityId, TimeFrameIndex, int>> PointData::getTimeInfoByE
 
 std::size_t PointData::copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool const notify) {
     return copy_by_entity_ids(_data, target, entity_ids, notify,
-                              [](PointEntry const & entry) -> Point2D<float> const & { return entry.point; });
+                              [](PointEntry const & entry) -> Point2D<float> const & { return entry.data; });
 }
 
 std::size_t PointData::moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
     auto result = move_by_entity_ids(_data, target, entity_ids, notify,
-                                     [](PointEntry const & entry) -> Point2D<float> const & { return entry.point; });
+                                     [](PointEntry const & entry) -> Point2D<float> const & { return entry.data; });
 
     if (notify && result > 0) {
         notifyObservers();

@@ -74,8 +74,8 @@ std::map<TimeFrameIndex, Point2D<float>> extractGroundTruthForGroup(
             if (entities_in_group.find(entry.entity_id) != entities_in_group.end()) {
                 // Apply scaling to convert from point space to mask space
                 Point2D<float> scaled_point{
-                    entry.point.x * scale_x,
-                    entry.point.y * scale_y
+                    entry.data.x * scale_x,
+                    entry.data.y * scale_y
                 };
                 ground_truth[timePointEntriesPair.time] = scaled_point;
                 break;  // Assume one point per group per frame
@@ -372,7 +372,7 @@ std::shared_ptr<PointData> pointParticleFilter(
                     if (timePointEntriesPair.time == time) {
                         for (auto const & entry : timePointEntriesPair.entries) {
                             if (entities_in_group.find(entry.entity_id) != entities_in_group.end()) {
-                                result->addEntryAtTime(time, entry.point, entry.entity_id, false);
+                                result->addEntryAtTime(time, entry.data, entry.entity_id, false);
                                 break;
                             }
                         }
