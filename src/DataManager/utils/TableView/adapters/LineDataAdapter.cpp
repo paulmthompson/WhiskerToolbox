@@ -102,5 +102,7 @@ EntityId LineDataAdapter::getEntityIdAt(TimeFrameIndex t, int entityIndex) const
 
 std::vector<EntityId> LineDataAdapter::getEntityIdsAtTime(TimeFrameIndex t,
                                                           TimeFrame const * target_timeframe) const {
-    return m_lineData->getEntityIdsAtTime(t, *target_timeframe);
+    auto const & ids_view = m_lineData->getEntityIdsAtTime(t, *target_timeframe);
+    std::vector<EntityId> ids(ids_view.begin(), ids_view.end());
+    return ids;
 }

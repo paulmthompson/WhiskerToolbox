@@ -148,76 +148,10 @@ void LineData::addEntryAtTime(TimeFrameIndex const time, Line2D const & line, En
 
 // ========== Getters ==========
 
-std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time) const {
-    // This method needs to return a reference to a vector of Line2D objects
-    // Since we now store LineEntry objects, we need to create a temporary vector
-    // We'll use a member variable to store the converted data to maintain reference stability
-
-    auto it = _data.find(time);
-    if (it == _data.end()) {
-        return _empty;
-    }
-
-    // Use a mutable member variable to store the converted lines
-    // This is not thread-safe but maintains API compatibility
-    _temp_lines.clear();
-    _temp_lines.reserve(it->second.size());
-    for (auto const & entry: it->second) {
-        _temp_lines.push_back(entry.data);
-    }
-
-    return _temp_lines;
-}
-
-std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time,
-                                                TimeFrame const & source_timeframe) const {
-    TimeFrameIndex const converted_time = convert_time_index(time,
-                                                             &source_timeframe,
-                                                             _time_frame.get());
-
-    return getAtTime(converted_time);
-}
-
-std::vector<EntityId> const & LineData::getEntityIdsAtTime(TimeFrameIndex const time) const {
-    // Similar to getAtTime, we need to create a temporary vector
-    auto it = _data.find(time);
-    if (it == _data.end()) {
-        return _empty_entity_ids;
-    }
-
-    _temp_entity_ids.clear();
-    _temp_entity_ids.reserve(it->second.size());
-    for (auto const & entry: it->second) {
-        _temp_entity_ids.push_back(entry.entity_id);
-    }
-
-    return _temp_entity_ids;
-}
-
-std::vector<EntityId> const & LineData::getEntityIdsAtTime(TimeFrameIndex const time,
-                                                           TimeFrame const & source_timeframe) const {
-
-    TimeFrameIndex const converted_time = convert_time_index(time,
-                                                             &source_timeframe,
-                                                             _time_frame.get());
-
-    return getEntityIdsAtTime(converted_time);
-}
-
-std::vector<EntityId> LineData::getAllEntityIds() const {
-    std::vector<EntityId> out;
-    for (auto const & [t, entries]: _data) {
-        (void) t;
-        for (auto const & entry: entries) {
-            out.push_back(entry.entity_id);
-        }
-    }
-    return out;
-}
 
 // ========== Entity Lookup Methods ==========
 
-std::optional<Line2D> LineData::getDataByEntityId(EntityId entity_id) const {
+std::optional<std::reference_wrapper<Line2D const>> LineData::getDataByEntityId(EntityId entity_id) const {
     if (!_identity_registry) {
         return std::nullopt;
     }
@@ -239,7 +173,7 @@ std::optional<Line2D> LineData::getDataByEntityId(EntityId entity_id) const {
         return std::nullopt;
     }
 
-    return time_it->second[static_cast<size_t>(local_index)].data;
+    return std::cref(time_it->second[static_cast<size_t>(local_index)].data);
 }
 
 std::optional<TimeFrameIndex> LineData::getTimeByEntityId(EntityId entity_id) const {
@@ -252,14 +186,14 @@ std::optional<TimeFrameIndex> LineData::getTimeByEntityId(EntityId entity_id) co
 }
 
 
-std::vector<std::pair<EntityId, Line2D>> LineData::getDataByEntityIds(std::vector<EntityId> const & entity_ids) const {
-    std::vector<std::pair<EntityId, Line2D>> results;
+std::vector<std::pair<EntityId, std::reference_wrapper<Line2D const>>> LineData::getDataByEntityIds(std::vector<EntityId> const & entity_ids) const {
+    std::vector<std::pair<EntityId, std::reference_wrapper<Line2D const>>> results;
     results.reserve(entity_ids.size());
 
     for (EntityId const entity_id: entity_ids) {
         auto line = getDataByEntityId(entity_id);
         if (line.has_value()) {
-            results.emplace_back(entity_id, std::move(line.value()));
+            results.emplace_back(entity_id, line.value());
         }
     }
 

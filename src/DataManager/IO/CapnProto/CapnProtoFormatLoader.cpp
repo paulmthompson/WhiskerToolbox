@@ -88,7 +88,9 @@ LoadResult CapnProtoFormatLoader::loadLineDataCapnProto(std::string const& filep
         // First extract the data map from the loaded LineData
         std::map<TimeFrameIndex, std::vector<Line2D>> line_map;
         for (auto const& time : loaded_line_data->getTimesWithData()) {
-            line_map[time] = loaded_line_data->getAtTime(time);
+            auto line_view = loaded_line_data->getAtTime(time);
+            std::vector<Line2D> line_copy(line_view.begin(), line_view.end());
+            line_map[time] = line_copy;
         }
         
         // Create new LineData using factory

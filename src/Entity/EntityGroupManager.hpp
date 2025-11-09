@@ -4,6 +4,7 @@
 #include "Entity/EntityTypes.hpp"
 
 #include <optional>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -101,7 +102,32 @@ public:
      * @param entity_ids The entities to add
      * @return Number of entities successfully added (excludes duplicates and invalid group)
      */
-    std::size_t addEntitiesToGroup(GroupId group_id, std::vector<EntityId> const & entity_ids);
+    std::size_t addEntitiesToGroup(GroupId group_id, std::ranges::range auto const & entity_ids) {
+        auto group_it = m_group_entities.find(group_id);
+        if (group_it == m_group_entities.end()) {
+            return 0;
+        }
+    
+        auto & group_set = group_it->second;
+        // Reserve to reduce rehashing when adding many entities
+        group_set.reserve(group_set.size() + entity_ids.size());
+        m_entity_groups.reserve(m_entity_groups.size() + entity_ids.size());
+    
+        std::size_t added_count = 0;
+        for (EntityId const entity_id: entity_ids) {
+            auto [ignored, inserted] = group_set.insert(entity_id);
+            if (!inserted) {
+                continue;
+            }
+    
+            auto [rev_it, created] = m_entity_groups.try_emplace(entity_id);
+            (void) created;
+            rev_it->second.insert(group_id);
+            ++added_count;
+        }
+    
+        return added_count;
+    }
 
     /**
      * @brief Remove a single entity from a group.

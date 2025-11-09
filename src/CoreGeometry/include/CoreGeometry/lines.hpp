@@ -95,7 +95,7 @@ Line2D create_line(std::vector<float> const & x, std::vector<float> const & y);
 
 void smooth_line(Line2D & line);
 
-std::vector<uint8_t> line_to_image(Line2D & line, int height, int width);
+std::vector<uint8_t> line_to_image(Line2D const & line, int height, int width);
 
 
 

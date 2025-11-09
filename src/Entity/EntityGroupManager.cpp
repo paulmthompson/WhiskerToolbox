@@ -123,6 +123,7 @@ bool EntityGroupManager::addEntityToGroup(GroupId group_id, EntityId entity_id) 
     return true;
 }
 
+/*
 std::size_t EntityGroupManager::addEntitiesToGroup(GroupId group_id, std::vector<EntityId> const & entity_ids) {
     auto group_it = m_group_entities.find(group_id);
     if (group_it == m_group_entities.end()) {
@@ -149,6 +150,7 @@ std::size_t EntityGroupManager::addEntitiesToGroup(GroupId group_id, std::vector
 
     return added_count;
 }
+    */
 
 bool EntityGroupManager::removeEntityFromGroup(GroupId group_id, EntityId entity_id) {
     auto group_it = m_group_entities.find(group_id);

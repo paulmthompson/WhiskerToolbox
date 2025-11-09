@@ -33,7 +33,7 @@ void smooth_line(Line2D & line) {
 }
 
 
-std::vector<uint8_t> line_to_image(Line2D & line, int height, int width) {
+std::vector<uint8_t> line_to_image(Line2D const & line, int height, int width) {
     auto image = std::vector<uint8_t>(static_cast<size_t>(height * width));
 
     for (auto point: line) {

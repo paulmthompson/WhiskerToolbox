@@ -74,15 +74,16 @@ std::shared_ptr<LineData> lineProximityGrouping(std::shared_ptr<LineData> line_d
     
     auto group_manager = params->getGroupManager();
     
-    // Get all entity IDs for the lines  
-    auto all_entity_ids = line_data->getAllEntityIds();
     
     // Find entities that are not in any group
     std::unordered_set<EntityId> ungrouped_entities;
-    for (auto entity_id : all_entity_ids) {
-        auto groups_containing_entity = group_manager->getGroupsContainingEntity(entity_id);
-        if (groups_containing_entity.empty()) {
-            ungrouped_entities.insert(entity_id);
+    for (auto const & [time, entries]: line_data->getAllEntries()) {
+        for (auto const & entry: entries) {
+            auto entity_id = entry.entity_id;
+            auto groups_containing_entity = group_manager->getGroupsContainingEntity(entity_id);
+            if (groups_containing_entity.empty()) {
+                ungrouped_entities.insert(entity_id);
+            }
         }
     }
     

@@ -61,7 +61,7 @@ public:
      */
     explicit LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data);
 
-    // ========== Setters ==========
+    // ========== Setters (Time-based) ==========
 
     /**
      * @brief Clear all lines at a specific time
@@ -70,25 +70,6 @@ public:
      * @param notify If true, the observers will be notified
      */
     [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
-
-
-    [[nodiscard]] bool clearByEntityId(EntityId entity_id, bool notify = true);
-
-    using LineModifier = ModificationHandle<Line2D>;
-
-    /**
-     * @brief Get a mutable handle to a line by EntityId.
-     *
-     * This method returns an RAII-style handle. The handle provides
-     * pointer-like access to the Line2D.
-     *
-     * When the handle is destroyed (goes out of scope), the LineData's
-     * observers will be automatically notified.
-     *
-     * @param entity_id The EntityId to look up
-     * @return Optional containing a LineModifier handle if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<LineModifier> getMutableData(EntityId entity_id, bool notify = true);
 
     /**
      * @brief Add a line at a specific time (by copying).
@@ -129,6 +110,27 @@ public:
         _data[time].emplace_back(entity_id, std::forward<TDataArgs>(args)...);
     }
 
+    // ========== Setters (Entity-based) ==========
+
+
+    using LineModifier = ModificationHandle<Line2D>;
+
+    /**
+     * @brief Get a mutable handle to a line by EntityId.
+     *
+     * This method returns an RAII-style handle. The handle provides
+     * pointer-like access to the Line2D.
+     *
+     * When the handle is destroyed (goes out of scope), the LineData's
+     * observers will be automatically notified.
+     *
+     * @param entity_id The EntityId to look up
+     * @return Optional containing a LineModifier handle if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<LineModifier> getMutableData(EntityId entity_id, bool notify = true);
+
+    [[nodiscard]] bool clearByEntityId(EntityId entity_id, bool notify = true);
+
     /**
      * @brief Add a line entry at a specific time with a specific entity ID
      * 
@@ -159,81 +161,6 @@ public:
     // ========== Getters ==========
 
     /**
-     * @brief Get all times with data
-     * 
-     * Returns a view over the keys of the data map for zero-copy iteration.
-     * 
-     * @return A view of TimeFrameIndex keys
-     */
-    [[nodiscard]] auto getTimesWithData() const {
-        return _data | std::views::keys;
-    }
-
-    /**
-     * @brief Get the lines at a specific time
-     * 
-     * If the time does not exist, an empty vector will be returned.
-     * 
-     * @param time The time to get the lines at
-     * @return A vector of lines
-     */
-    [[nodiscard]] std::vector<Line2D> const & getAtTime(TimeFrameIndex time) const;
-
-    /**
-     * @brief Get the lines at a specific time with timeframe conversion
-     * 
-     * Converts the time index from the source timeframe to the target timeframe (this line data's timeframe)
-     * and returns the lines at the converted time. If the timeframes are the same, no conversion is performed.
-     * If the converted time does not exist, an empty vector will be returned.
-     * 
-     * @param time The time index in the source timeframe
-     * @param source_timeframe The timeframe that the time index is expressed in
-     * @return A vector of lines at the converted time
-     */
-    [[nodiscard]] std::vector<Line2D> const & getAtTime(TimeFrameIndex time,
-                                                        TimeFrame const & source_timeframe) const;
-
-    /**
-     * @brief Get EntityIds aligned with lines at a specific time.
-     */
-    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
-
-    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time,
-                                                                   TimeFrame const & source_timeframe) const;
-
-    /**
-     * @brief Get flattened EntityIds for all lines across all times.
-     */
-    [[nodiscard]] std::vector<EntityId> getAllEntityIds() const;
-
-    // ========== Entity Lookup Methods ==========
-
-    /**
-     * @brief Find the line data associated with a specific EntityId.
-     * 
-     * This method provides reverse lookup from EntityId to the actual line data,
-     * supporting group-based visualization workflows.
-     * 
-     * @param entity_id The EntityId to look up
-     * @return Optional containing the line data if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<Line2D> getDataByEntityId(EntityId entity_id) const;
-
-    [[nodiscard]] std::optional<TimeFrameIndex> getTimeByEntityId(EntityId entity_id) const;
-
-    /**
-     * @brief Get all lines that match the given EntityIds.
-     * 
-     * This method is optimized for batch lookup of multiple EntityIds,
-     * useful for group-based operations.
-     * 
-     * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of pairs containing {EntityId, Line2D} for found entities
-     */
-    [[nodiscard]] std::vector<std::pair<EntityId, Line2D>> getDataByEntityIds(std::vector<EntityId> const & entity_ids) const;
-
-
-    /**
     * @brief Get all line entries with their associated times as a zero-copy range
     *
     * This method provides zero-copy access to the underlying LineEntry data structure,
@@ -252,6 +179,61 @@ public:
                });
     }
 
+
+    /**
+     * @brief Get all times with data
+     * 
+     * Returns a view over the keys of the data map for zero-copy iteration.
+     * 
+     * @return A view of TimeFrameIndex keys
+     */
+    [[nodiscard]] auto getTimesWithData() const {
+        return _data | std::views::keys;
+    }
+
+    // ========== Getters (Time-based) ==========
+
+    /**
+     * @brief Get a zero-copy view of all data entries at a specific time.
+     * @param time The time to get entries for.
+     * @return A std::span over the entries. If time is not found,
+     * returns an empty span.
+     */
+    [[nodiscard]] std::span<DataEntry<Line2D> const> getEntriesAtTime(TimeFrameIndex time) const {
+        auto it = _data.find(time);
+        if (it == _data.end()) {
+            return _empty_entries;
+        }
+        return it->second;
+    }
+
+    /**
+    * @brief Get a zero-copy view of just the data (e.g., Line2D) at a time.
+    *
+    * @param time The time to get the data at
+    * @return A zero-copy view of the data at the time
+    */
+    [[nodiscard]] auto getAtTime(TimeFrameIndex time) const {
+        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Line2D>::data);
+    }
+
+    [[nodiscard]] auto getAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
+        TimeFrameIndex const converted_time = convert_time_index(time,
+                                                                 &source_timeframe,
+                                                                 _time_frame.get());
+        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Line2D>::data);
+    }
+
+    [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time) const {
+        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Line2D>::entity_id);
+    }
+
+    [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
+        TimeFrameIndex const converted_time = convert_time_index(time,
+                                                                 &source_timeframe,
+                                                                 _time_frame.get());
+        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Line2D>::entity_id);
+    }
 
     /**
     * @brief Get line entries with their associated times as a zero-copy range within a TimeFrameInterval
@@ -300,6 +282,33 @@ public:
 
         return GetEntriesInRange(TimeFrameInterval(target_start_index, target_end_index));
     }
+
+
+    // ========== Entity Lookup Methods ==========
+
+    /**
+     * @brief Find the line data associated with a specific EntityId.
+     * 
+     * This method provides reverse lookup from EntityId to the actual line data,
+     * supporting group-based visualization workflows.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing the line data if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<std::reference_wrapper<Line2D const>> getDataByEntityId(EntityId entity_id) const;
+
+    [[nodiscard]] std::optional<TimeFrameIndex> getTimeByEntityId(EntityId entity_id) const;
+
+    /**
+     * @brief Get all lines that match the given EntityIds.
+     * 
+     * This method is optimized for batch lookup of multiple EntityIds,
+     * useful for group-based operations.
+     * 
+     * @param entity_ids Vector of EntityIds to look up
+     * @return Vector of pairs containing {EntityId, Line2D} for found entities
+     */
+    [[nodiscard]] std::vector<std::pair<EntityId, std::reference_wrapper<Line2D const>>> getDataByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
 
     // ========== Copy and Move ==========
@@ -406,16 +415,14 @@ public:
 protected:
 private:
     std::map<TimeFrameIndex, std::vector<LineEntry>> _data;
-    std::vector<Line2D> _empty{};
-    std::vector<EntityId> _empty_entity_ids{};
-    mutable std::vector<Line2D> _temp_lines{};       // For getAtTime compatibility
-    mutable std::vector<EntityId> _temp_entity_ids{};// For getEntityIdsAtTime compatibility
     ImageSize _image_size;
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
     // Identity management
     std::string _identity_data_key;
     EntityRegistry * _identity_registry{nullptr};
+
+    inline static std::vector<DataEntry<Line2D>> const _empty_entries{};
 };
 
 

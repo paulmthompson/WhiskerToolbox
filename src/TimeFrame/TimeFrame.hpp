@@ -180,4 +180,9 @@ struct FilenameTimeFrameOptions {
  */
 std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions const & options);
 
+
+TimeFrameIndex convert_time_index(TimeFrameIndex const time,
+    TimeFrame const * source_timeframe,
+    TimeFrame const * target_timeframe);
+    
 #endif// TIMEFRAME_HPP

@@ -61,8 +61,8 @@ int TimeFrame::checkFrameInbounds(int frame_id) const {
 }
 
 TimeFrameIndex getTimeIndexForSeries(TimeFrameIndex source_index,
-                              TimeFrame const * source_time_frame,
-                              TimeFrame const * destination_time_frame) {
+                                     TimeFrame const * source_time_frame,
+                                     TimeFrame const * destination_time_frame) {
     if (source_time_frame == destination_time_frame) {
         // Frames are the same. The time value can be used directly.
         return source_index;
@@ -101,7 +101,7 @@ std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions
     try {
         // Check if directory exists - be more permissive for WSL/Windows mounted drives
         std::cout << "Checking directory: " << options.folder_path << std::endl;
-        
+
         bool directory_accessible = false;
         try {
             // First try the standard check
@@ -112,14 +112,14 @@ std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions
                 // If that fails, try to iterate the directory as a fallback
                 // This can work even when exists() fails on WSL mounted drives
                 std::filesystem::directory_iterator dir_iter(options.folder_path);
-                directory_accessible = true; // If we get here, directory is accessible
+                directory_accessible = true;// If we get here, directory is accessible
                 std::cout << "Directory verified via directory_iterator (filesystem::exists failed)" << std::endl;
             }
         } catch (std::filesystem::filesystem_error const & e) {
             std::cerr << "Error accessing directory: " << options.folder_path << " - " << e.what() << std::endl;
             return nullptr;
         }
-        
+
         if (!directory_accessible) {
             std::cerr << "Error: Directory is not accessible: " << options.folder_path << std::endl;
             return nullptr;
@@ -137,8 +137,8 @@ std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions
 
             std::string const filename = entry.path().filename().string();
 
-                        // Check file extension
-            if (!options.file_extension.empty() && 
+            // Check file extension
+            if (!options.file_extension.empty() &&
                 !filename.ends_with(options.file_extension)) {
                 continue;
             }
@@ -212,4 +212,18 @@ std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions
         std::cerr << "Error creating TimeFrame from filenames: " << e.what() << std::endl;
         return nullptr;
     }
+}
+
+TimeFrameIndex convert_time_index(TimeFrameIndex const time,
+                                  TimeFrame const * source_timeframe,
+                                  TimeFrame const * target_timeframe) {
+    if (source_timeframe == target_timeframe) {
+        return time;
+    }
+    if (!source_timeframe || !target_timeframe) {
+        return time;
+    }
+    auto const time_value = source_timeframe->getTimeAtIndex(time);
+    auto const target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
+    return target_index;
 }

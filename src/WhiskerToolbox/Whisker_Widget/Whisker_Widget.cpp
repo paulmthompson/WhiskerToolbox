@@ -276,7 +276,7 @@ void Whisker_Widget::_dlAddMemoryButton() {
         std::cout << "Whisker named " << whisker_name << " does not exist" << std::endl;
         return;
     }
-    auto whisker = _data_manager->getData<LineData>(whisker_name)->getAtTime(TimeFrameIndex(current_time));
+    auto const whisker = _data_manager->getData<LineData>(whisker_name)->getAtTime(TimeFrameIndex(current_time));
 
     if (whisker.empty()) {
         std::cout << "No whisker available for " << whisker_name << std::endl;
@@ -471,7 +471,8 @@ void order_whiskers_by_position(
         TimeFrameIndex current_time,
         float similarity_threshold) {
 
-    std::vector<Line2D> whiskers = dm->getData<LineData>("unlabeled_whiskers")->getAtTime(current_time);
+    auto const whiskers_view = dm->getData<LineData>("unlabeled_whiskers")->getAtTime(current_time);
+    std::vector<Line2D> whiskers(whiskers_view.begin(), whiskers_view.end());
 
     std::map<int, Line2D> previous_whiskers;
     for (std::size_t i = 0; i < static_cast<std::size_t>(num_whisker_to_track); i++) {

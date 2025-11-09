@@ -7,6 +7,7 @@
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Lines/Line_Data.hpp"
+#include "fixtures/entity_id.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -83,7 +84,7 @@ protected:
         }
 
         // Get all entity IDs (should be 200 total: 2 per frame * 100 frames)
-        auto all_entity_ids = line_data->getAllEntityIds();
+        auto all_entity_ids = get_all_entity_ids(*line_data);
         REQUIRE(all_entity_ids.size() == 200);
 
         // Store entity IDs for each line and frame for easy access
@@ -92,7 +93,7 @@ protected:
             REQUIRE(entities_at_frame.size() == 2);
 
             // Sort by line position to ensure consistent assignment
-            std::vector<EntityId> sorted_entities = entities_at_frame;
+            std::vector<EntityId> sorted_entities(entities_at_frame.begin(), entities_at_frame.end());
             std::sort(sorted_entities.begin(), sorted_entities.end(),
                       [this](EntityId a, EntityId b) {
                           auto line_a = line_data->getDataByEntityId(a);
@@ -100,8 +101,8 @@ protected:
                           if (!line_a || !line_b) return false;
 
                           // Sort by Y coordinate (line 1 has lower Y than line 2)
-                          float y_a = line_a->empty() ? 0.0f : line_a->front().y;
-                          float y_b = line_b->empty() ? 0.0f : line_b->front().y;
+                          float y_a = line_a->get().empty() ? 0.0f : line_a->get().front().y;
+                          float y_b = line_b->get().empty() ? 0.0f : line_b->get().front().y;
                           return y_a < y_b;
                       });
 
@@ -160,7 +161,7 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         params.verbose_output = false;
 
         // Count ungrouped entities before
-        auto all_entities = line_data->getAllEntityIds();
+        auto all_entities = get_all_entity_ids(*line_data);
         std::unordered_set<EntityId> grouped_before;
         for (auto group_id: {group1_id, group2_id}) {
             auto entities_in_group = group_manager->getEntitiesInGroup(group_id);
@@ -213,7 +214,7 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         params.verbose_output = true;// Enable for debugging
 
         // Debug: Check initial state
-        auto all_entities_before = line_data->getAllEntityIds();
+        auto all_entities_before = get_all_entity_ids(*line_data);
         std::unordered_set<EntityId> grouped_before;
         for (auto group_id: {group1_id, group2_id}) {
             auto entities_in_group = group_manager->getEntitiesInGroup(group_id);
@@ -323,7 +324,7 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Full Algor
         auto result1 = lineKalmanGrouping(line_data, &strict_params);
 
         // With strict parameters, fewer assignments should be made
-        auto all_entities = line_data->getAllEntityIds();
+        auto all_entities = get_all_entity_ids(*line_data);
         std::unordered_set<EntityId> grouped_strict;
         for (auto group_id: {group1_id, group2_id}) {
             auto entities_in_group = group_manager->getEntitiesInGroup(group_id);
@@ -555,7 +556,7 @@ TEST_CASE_METHOD(LineKalmanGroupingTestFixture, "LineKalmanGrouping - Edge Cases
         REQUIRE(result == line_data);
 
         // No assignments should be made since there are no groups to track
-        auto all_entities = line_data->getAllEntityIds();
+        auto all_entities = get_all_entity_ids(*line_data);
         for (auto entity_id: all_entities) {
             auto groups = empty_group_manager->getGroupsContainingEntity(entity_id);
             REQUIRE(groups.empty());

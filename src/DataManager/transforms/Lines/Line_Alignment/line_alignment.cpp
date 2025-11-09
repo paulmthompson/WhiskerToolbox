@@ -10,6 +10,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <ranges>
 #include <vector>
 
 
@@ -349,7 +350,7 @@ Line2D calculate_fwhm_profile_extents(Point2D<float> const & vertex,
 
 // Helper function to process lines with image data of any type
 template<typename T>
-std::vector<Line2D> processLinesWithImageData(std::vector<Line2D> const & lines,
+std::vector<Line2D> processLinesWithImageData(std::ranges::range auto const & lines,
                                                std::vector<T> const & image_data,
                                                ImageSize const & image_size,
                                                int width,

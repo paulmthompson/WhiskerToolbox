@@ -313,7 +313,7 @@ void Line_Widget::_deleteSelectedLine() {
         return;
     }
 
-    std::vector<Line2D> const & lines_at_frame = source_line_data->getAtTime(TimeFrameIndex(row_data.frame));
+    auto const & lines_at_frame = source_line_data->getAtTime(TimeFrameIndex(row_data.frame));
     if (row_data.lineIndex < 0 || static_cast<size_t>(row_data.lineIndex) >= lines_at_frame.size()) {
         std::cerr << "Line_Widget: Line index out of bounds for deletion. Frame: " << row_data.frame
                   << ", Index: " << row_data.lineIndex << std::endl;

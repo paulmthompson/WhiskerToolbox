@@ -73,22 +73,6 @@ template<typename T, typename M>
     return get_at_time(target_index, data, empty);
 }
 
-
-// Convert a time index between timeframes; falls back to original when null/equal
-inline TimeFrameIndex convert_time_index(TimeFrameIndex const time,
-                                         TimeFrame const * source_timeframe,
-                                         TimeFrame const * target_timeframe) {
-    if (source_timeframe == target_timeframe) {
-        return time;
-    }
-    if (!source_timeframe || !target_timeframe) {
-        return time;
-    }
-    auto const time_value = source_timeframe->getTimeAtIndex(time);
-    auto const target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
-    return target_index;
-}
-
 // Fill an output vector by extracting a field from a vector of entries
 template <typename Entry, typename Out, typename Extractor>
 inline void fill_extracted_vector(std::vector<Entry> const & entries,

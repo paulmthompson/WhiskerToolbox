@@ -7,6 +7,7 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "fixtures/entity_id.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -149,7 +150,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         REQUIRE(group_manager->getGroupSize(group_c_id) == 10); // frames 5-9, 20-24
 
         // Verify total entities
-        auto all_entities = line_data->getAllEntityIds();
+        auto all_entities = get_all_entity_ids(*line_data);
         REQUIRE(all_entities.size() == 30); // 5*1 + 5*2 + 5*1 + 5*1 + 5*1
     }
 }

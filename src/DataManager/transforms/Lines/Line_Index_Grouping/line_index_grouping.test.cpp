@@ -8,6 +8,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "fixtures/entity_id.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -85,7 +86,9 @@ protected:
         // Store entity IDs for verification
         for (int frame = 0; frame < 20; ++frame) {
             auto entities_at_frame = line_data->getEntityIdsAtTime(TimeFrameIndex(frame));
-            frame_entities[frame] = entities_at_frame;
+            for (auto entity_id : entities_at_frame) {
+                frame_entities[frame].push_back(entity_id);
+            }
         }
     }
 
@@ -128,7 +131,7 @@ TEST_CASE_METHOD(LineIndexGroupingTestFixture, "Data Transform: LineIndexGroupin
         }
 
         // Total entities should be: 5*3 + 5*5 + 5*4 + 5*2 = 15 + 25 + 20 + 10 = 70
-        auto all_entities = line_data->getAllEntityIds();
+        auto all_entities = get_all_entity_ids(*line_data);
         REQUIRE(all_entities.size() == 70);
     }
 }
@@ -358,7 +361,7 @@ TEST_CASE_METHOD(LineIndexGroupingTestFixture, "Data Transform: LineIndexGroupin
         REQUIRE(all_groups.size() == 1);
 
         // The single entity should be in the group
-        auto all_entities = single_line_data->getAllEntityIds();
+        auto all_entities = get_all_entity_ids(*single_line_data);
         REQUIRE(all_entities.size() == 1);
         
         auto groups = single_group_manager->getGroupsContainingEntity(all_entities[0]);

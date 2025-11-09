@@ -7,6 +7,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "fixtures/entity_id.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/TableRegistry.hpp"
@@ -124,14 +125,14 @@ protected:
         }
 
         // Debug: Verify identity context was set correctly
-        auto before_rebuild = line_data->getAllEntityIds();
+        auto before_rebuild = get_all_entity_ids(*line_data);
         INFO("EntityIds before rebuild: " << before_rebuild.size());
         REQUIRE(before_rebuild.size() == 5);// Should have placeholder 0s
 
         line_data->rebuildAllEntityIds();
 
         // Debug: Check if EntityIds were actually generated
-        auto debug_ids = line_data->getAllEntityIds();
+        auto debug_ids = get_all_entity_ids(*line_data);
         INFO("Total EntityIds after rebuild: " << debug_ids.size());
         for (size_t i = 0; i < debug_ids.size(); ++i) {
             INFO("EntityId[" << i << "] = " << debug_ids[i]);
@@ -168,7 +169,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         REQUIRE(entity_ids_t30.size() == 1);// 1 line at time 30
 
         // Verify all EntityIds are unique and non-zero
-        auto all_entity_ids = line_data->getAllEntityIds();
+        auto all_entity_ids = get_all_entity_ids(*line_data);
         REQUIRE(all_entity_ids.size() == 5);// Total 5 lines
 
         // Debug output to see what EntityIds we're getting
@@ -232,12 +233,18 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         auto mixed_retrieved = group_manager->getEntitiesInGroup(mixed_group);
 
         std::sort(early_entities.begin(), early_entities.end());
-        std::sort(entity_ids_t10.begin(), entity_ids_t10.end());
-        REQUIRE(early_entities == entity_ids_t10);
+
+        std::vector<EntityId> entity_ids_t10_copy(entity_ids_t10.begin(), entity_ids_t10.end());
+        std::sort(entity_ids_t10_copy.begin(), entity_ids_t10_copy.end());
+
+        REQUIRE(early_entities == entity_ids_t10_copy);
 
         std::sort(middle_entities.begin(), middle_entities.end());
-        std::sort(entity_ids_t20.begin(), entity_ids_t20.end());
-        REQUIRE(middle_entities == entity_ids_t20);
+
+        std::vector<EntityId> entity_ids_t20_copy(entity_ids_t20.begin(), entity_ids_t20.end());
+        std::sort(entity_ids_t20_copy.begin(), entity_ids_t20_copy.end());
+
+        REQUIRE(middle_entities == entity_ids_t20_copy);
 
         std::sort(mixed_retrieved.begin(), mixed_retrieved.end());
         std::sort(mixed_entities.begin(), mixed_entities.end());
@@ -297,7 +304,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         // Verify the lookup results
         for (auto const & [entity_id, line]: lines_with_ids) {
-            REQUIRE(line.size() == 3);// All test lines have 3 points
+            REQUIRE(line.get().size() == 3);// All test lines have 3 points
 
             // Verify this EntityId was in our original list
             REQUIRE(std::find(entity_ids_t10.begin(), entity_ids_t10.end(), entity_id) != entity_ids_t10.end());
@@ -331,7 +338,9 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         // Step 4: Verify we can identify the temporal spread
         // Step 5: Verify line data integrity
-        for (auto const & [entity_id, line]: selected_lines) {
+        for (auto const & [entity_id, line_ref]: selected_lines) {
+
+            auto const & line = line_ref.get();
             REQUIRE_FALSE(line.empty());
             REQUIRE(line.size() >= 2);// All our test lines have at least 2 points
 
@@ -352,7 +361,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
     SECTION("Groups persist until DataManager reset") {
         // Create groups and add entities
-        auto entity_ids = line_data->getAllEntityIds();
+        auto entity_ids = get_all_entity_ids(*line_data);
         REQUIRE_FALSE(entity_ids.empty());
 
         GroupId test_group = group_manager->createGroup("Test Group");
@@ -384,7 +393,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         GroupId highlighted_group = group_manager->createGroup("Highlighted Lines");
 
         // Get all entity IDs from line data (simulating what MediaWindow would do)
-        auto all_entity_ids = line_data->getAllEntityIds();
+        auto all_entity_ids = get_all_entity_ids(*line_data);
         REQUIRE(all_entity_ids.size() >= 5);
 
         // Add some entities to groups (simulating user selection/highlighting)
@@ -880,7 +889,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         // Verify EntityIds are valid (non-zero) and come from LineData
         std::set<EntityId> expected_entity_ids;
-        for (EntityId id : line_data->getAllEntityIds()) {
+        for (EntityId id : get_all_entity_ids(*line_data)) {
             expected_entity_ids.insert(id);
         }
         
