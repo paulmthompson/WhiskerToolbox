@@ -64,16 +64,6 @@ public:
     [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
 
     /**
-     * @brief Clear the points at a specific time and index
-     * 
-     * @param time The time to clear the points at
-     * @param index The index of the point to clear
-     * @param notify If true, the observers will be notified
-     * @return True if the point was cleared, false if the time or index did not exist
-     */
-    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, size_t index, bool notify = true);
-
-    /**
      * @brief Add a point at a specific time
      * 
      * This will add a single point at a specific time.
@@ -150,6 +140,17 @@ public:
             std::vector<TimeFrameIndex> const & times,
             std::vector<std::vector<Point2D<float>>> const & points,
             bool notify = true);
+
+    // ========== Setters (Entity-based) ==========
+
+    /**
+     * @brief Clear the points by entity ID
+     * 
+     * @param entity_id The entity ID to clear the points by
+     * @param notify If true, the observers will be notified
+     * @return True if the points were cleared, false if the entity ID did not exist
+     */
+    [[nodiscard]] bool clearByEntityId(EntityId entity_id, bool notify = true);
 
     // ========== Image Size ==========
     /*

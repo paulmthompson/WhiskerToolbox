@@ -39,23 +39,6 @@ bool PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
     return false;
 }
 
-bool PointData::clearAtTime(TimeFrameIndex const time, size_t const index, bool notify) {
-    auto it = _data.find(time);
-    if (it != _data.end()) {
-        if (index >= it->second.size()) {
-            return false;
-        }
-        it->second.erase(it->second.begin() + static_cast<std::ptrdiff_t>(index));
-        if (it->second.empty()) {
-            _data.erase(it);
-        }
-        if (notify) {
-            notifyObservers();
-        }
-        return true;
-    }
-    return false;
-}
 
 void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
     EntityId entity_id = 0;
@@ -151,6 +134,39 @@ void PointData::addEntryAtTime(TimeFrameIndex const time,
     if (notify) {
         notifyObservers();
     }
+}
+
+
+bool PointData::clearByEntityId(EntityId entity_id, bool notify) {
+    if (!_identity_registry) {
+        return false;
+    }
+
+    auto descriptor = _identity_registry->get(entity_id);
+    if (!descriptor || descriptor->kind != EntityKind::PointEntity || descriptor->data_key != _identity_data_key) {
+        return false;
+    }
+
+    TimeFrameIndex const time{descriptor->time_value};
+    int const local_index = descriptor->local_index;
+
+    auto time_it = _data.find(time);
+    if (time_it == _data.end()) {
+        return false;
+    }
+
+    if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
+        return false;
+    }
+
+    time_it->second.erase(time_it->second.begin() + static_cast<std::ptrdiff_t>(local_index));
+    if (time_it->second.empty()) {
+        _data.erase(time_it);
+    }
+    if (notify) {
+        notifyObservers();
+    }
+    return true;
 }
 
 // ========== Getters ==========

@@ -321,7 +321,8 @@ void Line_Widget::_deleteSelectedLine() {
         return;
     }
 
-    bool const clear_success = source_line_data->clearAtTime(TimeFrameIndex(row_data.frame), row_data.lineIndex);
+    bool const clear_success = source_line_data->clearByEntityId(row_data.entity_id, true);
+
     if (!clear_success) {
         std::cerr << "Line_Widget: Failed to clear line at frame " << row_data.frame
                   << ", index " << row_data.lineIndex << std::endl;
