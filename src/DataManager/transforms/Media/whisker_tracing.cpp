@@ -359,7 +359,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const& dataVari
             std::lock_guard<std::mutex> lock(results_mutex);
             for (size_t j = 0; j < batch_results.size(); ++j) {
                 for (auto const& line : batch_results[j]) {
-                    traced_whiskers->addAtTime(TimeFrameIndex(batch_times[j]), line, false);
+                    traced_whiskers->addAtTime(TimeFrameIndex(batch_times[j]), line, NotifyObservers::No);
                 }
             }
         };
@@ -398,7 +398,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const& dataVari
                                                         static_cast<int>(time));
 
                 for (auto const & line: whisker_lines) {
-                    traced_whiskers->addAtTime(TimeFrameIndex(static_cast<int64_t>(time)), line, false);
+                    traced_whiskers->addAtTime(TimeFrameIndex(static_cast<int64_t>(time)), line, NotifyObservers::No);
                 }
             }
 

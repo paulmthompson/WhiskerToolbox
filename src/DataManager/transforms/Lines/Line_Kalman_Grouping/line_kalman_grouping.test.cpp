@@ -79,8 +79,8 @@ protected:
             }
 
             // Add lines to data
-            line_data->addAtTime(TimeFrameIndex(frame), line1, false);
-            line_data->addAtTime(TimeFrameIndex(frame), line2, false);
+            line_data->addAtTime(TimeFrameIndex(frame), line1, NotifyObservers::No);
+            line_data->addAtTime(TimeFrameIndex(frame), line2, NotifyObservers::No);
         }
 
         // Get all entity IDs (should be 200 total: 2 per frame * 100 frames)
@@ -613,7 +613,7 @@ TEST_CASE("LineKalmanGrouping - Transform Operation Interface", "[LineKalmanGrou
         Line2D test_line;
         test_line.push_back({0.0f, 0.0f});
         test_line.push_back({10.0f, 0.0f});
-        test_line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+        test_line_data->addAtTime(TimeFrameIndex(0), test_line, NotifyObservers::No);
 
         // Create parameters without group manager
         LineKalmanGroupingParameters params; // No group manager set (defaults to nullptr)

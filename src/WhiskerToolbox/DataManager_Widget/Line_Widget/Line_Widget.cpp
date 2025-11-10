@@ -23,18 +23,18 @@
 #include <QComboBox>
 #include <QDir>
 #include <QFileDialog>
-#include <QModelIndex>
 #include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
+#include <QModelIndex>
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QTableView>
 
 #include <filesystem>
 #include <iostream>
-#include <unordered_set>
 #include <set>
+#include <unordered_set>
 
 Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
@@ -246,7 +246,9 @@ void Line_Widget::_moveLineToTarget(std::string const & target_key) {
 
     // Use the moveLinesByEntityIds method to move only the selected lines
     std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
-    std::size_t const total_lines_moved = source_line_data->moveByEntityIds(*target_line_data, selected_entity_ids_set, true);
+    std::size_t const total_lines_moved = source_line_data->moveByEntityIds(*target_line_data,
+                                                                            selected_entity_ids_set,
+                                                                            NotifyObservers::Yes);
 
     if (total_lines_moved > 0) {
         // Update the table view to reflect changes
@@ -283,7 +285,9 @@ void Line_Widget::_copyLineToTarget(std::string const & target_key) {
 
     // Use the copyLinesByEntityIds method to copy only the selected lines
     std::unordered_set<EntityId> const selected_entity_ids_set2(selected_entity_ids.begin(), selected_entity_ids.end());
-    std::size_t const total_lines_copied = source_line_data->copyByEntityIds(*target_line_data, selected_entity_ids_set2, true);
+    std::size_t const total_lines_copied = source_line_data->copyByEntityIds(*target_line_data,
+                                                                             selected_entity_ids_set2,
+                                                                             NotifyObservers::Yes);
 
     if (total_lines_copied > 0) {
         std::cout << "Line_Widget: Successfully copied " << total_lines_copied
@@ -321,7 +325,7 @@ void Line_Widget::_deleteSelectedLine() {
         return;
     }
 
-    bool const clear_success = source_line_data->clearByEntityId(row_data.entity_id, true);
+    bool const clear_success = source_line_data->clearByEntityId(row_data.entity_id, NotifyObservers::Yes);
 
     if (!clear_success) {
         std::cerr << "Line_Widget: Failed to clear line at frame " << row_data.frame

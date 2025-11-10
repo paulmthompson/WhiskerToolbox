@@ -25,7 +25,7 @@ TEST_CASE("DM - TV - LineDataAdapter getLinesInRange with identical start/end in
     TimeFrameIndex const t_present{3};
     TimeFrameIndex const t_absent{2};
 
-    lineData->addAtTime(t_present, Line2D(linePoints));
+    lineData->addAtTime(t_present, Line2D(linePoints), NotifyObservers::No);
     lineData->setTimeFrame(timeFrame);
 
     auto adapter = std::make_shared<LineDataAdapter>(lineData, timeFrame, "TestLines");

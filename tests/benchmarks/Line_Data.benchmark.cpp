@@ -15,7 +15,7 @@ static LineData create_test_data(size_t num_times, size_t num_lines_per_time, si
             for (size_t p = 0; p < num_points_per_line; ++p) {
                 line.push_back({static_cast<float>(p), static_cast<float>(p)});
             }
-            line_data.addAtTime(TimeFrameIndex(static_cast<int64_t>(t)), line);
+            line_data.addAtTime(TimeFrameIndex(static_cast<int64_t>(t)), line, NotifyObservers::No);
         }
     }
     return std::move(line_data);
@@ -28,51 +28,69 @@ TEST_CASE("Benchmark LineData Copy and Move", "[!benchmark]") {
 
     BENCHMARK("Copy small LineData") {
         LineData target;
-        line_data_small_template.copyTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)});
+        line_data_small_template.copyTo(target,
+                                        TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)},
+                                        NotifyObservers::No);
         return target;
     };
 
-    BENCHMARK_ADVANCED("Move small LineData") (Catch::Benchmark::Chronometer meter) {
+    BENCHMARK_ADVANCED("Move small LineData")(Catch::Benchmark::Chronometer meter) {
         LineData source;
-        line_data_small_template.copyTo(source, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)});
+        line_data_small_template.copyTo(source,
+                                        TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)},
+                                        NotifyObservers::No);
         LineData target;
 
         meter.measure([&] {
-            source.moveTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)});
+            source.moveTo(target,
+                          TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(9)},
+                          NotifyObservers::No);
         });
         return target;
     };
 
     BENCHMARK("Copy medium LineData") {
         LineData target;
-        line_data_medium_template.copyTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)});
+        line_data_medium_template.copyTo(target,
+                                         TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)},
+                                         NotifyObservers::No);
         return target;
     };
 
-    BENCHMARK_ADVANCED("Move medium LineData") (Catch::Benchmark::Chronometer meter) {
+    BENCHMARK_ADVANCED("Move medium LineData")(Catch::Benchmark::Chronometer meter) {
         LineData source;
-        line_data_medium_template.copyTo(source, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)});
+        line_data_medium_template.copyTo(source,
+                                         TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)},
+                                         NotifyObservers::No);
         LineData target;
 
         meter.measure([&] {
-            source.moveTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)});
+            source.moveTo(target,
+                          TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(99)},
+                          NotifyObservers::No);
         });
         return target;
     };
 
     BENCHMARK("Copy large LineData") {
         LineData target;
-        line_data_large_template.copyTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)});
+        line_data_large_template.copyTo(target,
+                                        TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)},
+                                        NotifyObservers::No);
         return target;
     };
 
-    BENCHMARK_ADVANCED("Move large LineData") (Catch::Benchmark::Chronometer meter) {
+    BENCHMARK_ADVANCED("Move large LineData")(Catch::Benchmark::Chronometer meter) {
         LineData source;
-        line_data_large_template.copyTo(source, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)});
+        line_data_large_template.copyTo(source,
+                                        TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)},
+                                        NotifyObservers::No);
         LineData target;
 
         meter.measure([&] {
-            source.moveTo(target, TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)});
+            source.moveTo(target,
+                          TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(999)},
+                          NotifyObservers::No);
         });
         return target;
     };

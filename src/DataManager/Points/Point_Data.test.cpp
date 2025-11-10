@@ -39,7 +39,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
         REQUIRE(points_at_10[1].y == Catch::Approx(4.0f));
 
         // Add points at a different time
-        point_data.addPointsAtTime(TimeFrameIndex(20), more_points);
+        point_data.addAtTime(TimeFrameIndex(20), more_points);
         auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
         REQUIRE(points_at_20.size() == 1);
         REQUIRE(points_at_20[0].x == Catch::Approx(5.0f));
@@ -48,17 +48,19 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
 
     SECTION("Overwriting points at time") {
         // Add initial points
-        point_data.addPointsAtTime(TimeFrameIndex(10), points);
+        point_data.addAtTime(TimeFrameIndex(10), points);
 
         // Overwrite with a single point
-        point_data.overwritePointAtTime(TimeFrameIndex(10), p3);
+        point_data.clearAtTime(TimeFrameIndex(10));
+        point_data.addAtTime(TimeFrameIndex(10), p3);
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 1);
         REQUIRE(points_at_10[0].x == Catch::Approx(5.0f));
         REQUIRE(points_at_10[0].y == Catch::Approx(6.0f));
 
         // Overwrite with multiple points
-        point_data.overwritePointsAtTime(TimeFrameIndex(10), points);
+        point_data.clearAtTime(TimeFrameIndex(10), false);
+        point_data.addAtTime(TimeFrameIndex(10), points);
         points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 2);
         REQUIRE(points_at_10[0].x == Catch::Approx(1.0f));
@@ -66,8 +68,8 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
     }
 
     SECTION("Clearing points at time") {
-        point_data.addPointsAtTime(TimeFrameIndex(10), points);
-        point_data.addPointsAtTime(TimeFrameIndex(20), more_points);
+        point_data.addAtTime(TimeFrameIndex(10), points);
+        point_data.addAtTime(TimeFrameIndex(20), more_points);
 
         static_cast<void>(point_data.clearAtTime(TimeFrameIndex(10)));
 
@@ -79,8 +81,8 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
     }
 
     SECTION("GetAllPointsAsRange functionality") {
-        point_data.addPointsAtTime(TimeFrameIndex(10), points);
-        point_data.addPointsAtTime(TimeFrameIndex(20), more_points);
+        point_data.addAtTime(TimeFrameIndex(10), points);
+        point_data.addAtTime(TimeFrameIndex(20), more_points);
 
         size_t count = 0;
         int64_t first_time = 0;
@@ -104,11 +106,11 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
 
     SECTION("GetPointsInRange functionality") {
         // Setup data at multiple time points
-        point_data.addPointsAtTime(TimeFrameIndex(5), points);      // 2 points
-        point_data.addPointsAtTime(TimeFrameIndex(10), points);     // 2 points
-        point_data.addPointsAtTime(TimeFrameIndex(15), more_points);// 1 point
-        point_data.addPointsAtTime(TimeFrameIndex(20), more_points);// 1 point
-        point_data.addPointsAtTime(TimeFrameIndex(25), points);     // 2 points
+        point_data.addAtTime(TimeFrameIndex(5), points);      // 2 points
+        point_data.addAtTime(TimeFrameIndex(10), points);     // 2 points
+        point_data.addAtTime(TimeFrameIndex(15), more_points);// 1 point
+        point_data.addAtTime(TimeFrameIndex(20), more_points);// 1 point
+        point_data.addAtTime(TimeFrameIndex(25), points);     // 2 points
 
         SECTION("Range includes some data") {
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
@@ -200,9 +202,9 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
             auto data_timeframe = std::make_shared<TimeFrame>(data_times);
 
             // Add data at target timeframe indices
-            timeframe_test_data.addPointsAtTime(TimeFrameIndex(2), points);     // At data timeframe index 2 (time=10)
-            timeframe_test_data.addPointsAtTime(TimeFrameIndex(3), more_points);// At data timeframe index 3 (time=15)
-            timeframe_test_data.addPointsAtTime(TimeFrameIndex(4), points);     // At data timeframe index 4 (time=20)
+            timeframe_test_data.addAtTime(TimeFrameIndex(2), points);     // At data timeframe index 2 (time=10)
+            timeframe_test_data.addAtTime(TimeFrameIndex(3), more_points);// At data timeframe index 3 (time=15)
+            timeframe_test_data.addAtTime(TimeFrameIndex(4), points);     // At data timeframe index 4 (time=20)
 
             timeframe_test_data.setTimeFrame(data_timeframe);
 
@@ -260,9 +262,9 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
             auto data_timeframe = std::make_shared<TimeFrame>(data_times);
 
             // Add data at target timeframe indices
-            timeframe_test_data.addPointsAtTime(TimeFrameIndex(2), points);     // At data timeframe index 2 (time=10)
-            timeframe_test_data.addPointsAtTime(TimeFrameIndex(3), more_points);// At data timeframe index 3 (time=15)
-            timeframe_test_data.addPointsAtTime(TimeFrameIndex(4), points);     // At data timeframe index 4 (time=20)
+            timeframe_test_data.addAtTime(TimeFrameIndex(2), points);     // At data timeframe index 2 (time=10)
+            timeframe_test_data.addAtTime(TimeFrameIndex(3), more_points);// At data timeframe index 3 (time=15)
+            timeframe_test_data.addAtTime(TimeFrameIndex(4), points);     // At data timeframe index 4 (time=20)
 
 
             timeframe_test_data.setTimeFrame(data_timeframe);
@@ -301,7 +303,10 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
         std::vector<TimeFrameIndex> times = {TimeFrameIndex(10), TimeFrameIndex(20)};
         std::vector<std::vector<Point2D<float>>> points_vec = {points, more_points};
 
-        point_data.overwritePointsAtTimes(times, points_vec);
+        point_data.clearAtTime(TimeFrameIndex(10), false);
+        point_data.clearAtTime(TimeFrameIndex(20), false);
+        point_data.addAtTime(TimeFrameIndex(10), points_vec[0]);
+        point_data.addAtTime(TimeFrameIndex(20), points_vec[1]);
 
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
@@ -311,8 +316,8 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
     }
 
     SECTION("Getting times with points") {
-        point_data.addPointsAtTime(TimeFrameIndex(10), points);
-        point_data.addPointsAtTime(TimeFrameIndex(20), more_points);
+        point_data.addAtTime(TimeFrameIndex(10), points);
+        point_data.addAtTime(TimeFrameIndex(20), more_points);
 
         auto times = point_data.getTimesWithData();
 
@@ -326,8 +331,8 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
     }
 
     SECTION("Getting max points") {
-        point_data.addPointsAtTime(TimeFrameIndex(10), points);     // 2 points
-        point_data.addPointsAtTime(TimeFrameIndex(20), more_points);// 1 point
+        point_data.addAtTime(TimeFrameIndex(10), points);     // 2 points
+        point_data.addAtTime(TimeFrameIndex(20), more_points);// 1 point
 
         auto max_points = point_data.getMaxPoints();
         REQUIRE(max_points == 2);
@@ -694,42 +699,6 @@ TEST_CASE("DM - PointData - Edge cases and error handling", "[points][data][erro
         REQUIRE(count == 0);
     }
 
-    SECTION("Adding empty points vector") {
-        std::vector<Point2D<float>> empty_points;
-        point_data.addPointsAtTime(TimeFrameIndex(10), empty_points);
-
-        auto points = point_data.getAtTime(TimeFrameIndex(10));
-        REQUIRE(points.empty());
-
-        // Verify the time was created
-        bool found = false;
-        for (auto const & pair: point_data.GetAllPointsAsRange()) {
-            if (pair.time.getValue() == 10) {
-                found = true;
-                break;
-            }
-        }
-        REQUIRE(found);
-    }
-
-    SECTION("Overwriting points at times with mismatched vectors") {
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
-        std::vector<std::vector<Point2D<float>>> points = {
-                {{1.0f, 2.0f}},
-                {{3.0f, 4.0f}}};// Only 2 elements
-
-        // This should not modify the data
-        point_data.overwritePointsAtTimes(times, points);
-
-        auto range = point_data.GetAllPointsAsRange();
-        size_t count = 0;
-        for (auto const & pair: range) {
-            count++;
-        }
-
-        // No points should be added since we had a size mismatch
-        REQUIRE(count == 0);
-    }
 
     SECTION("Multiple operations sequence") {
         Point2D<float> p1{1.0f, 2.0f};
@@ -771,10 +740,10 @@ TEST_CASE("DM - PointData - Copy and Move operations", "[points][data][copy][mov
     std::vector<Point2D<float>> points_20 = {{7.0f, 8.0f}, {9.0f, 10.0f}, {11.0f, 12.0f}};
     std::vector<Point2D<float>> points_25 = {{13.0f, 14.0f}};
 
-    source_data.addPointsAtTime(TimeFrameIndex(10), points_10);
-    source_data.addPointsAtTime(TimeFrameIndex(15), points_15);
-    source_data.addPointsAtTime(TimeFrameIndex(20), points_20);
-    source_data.addPointsAtTime(TimeFrameIndex(25), points_25);
+    source_data.addAtTime(TimeFrameIndex(10), points_10);
+    source_data.addAtTime(TimeFrameIndex(15), points_15);
+    source_data.addAtTime(TimeFrameIndex(20), points_20);
+    source_data.addAtTime(TimeFrameIndex(25), points_25);
 
     SECTION("copyTo - time range operations") {
         SECTION("Copy entire range") {
@@ -967,7 +936,7 @@ TEST_CASE("DM - PointData - Copy and Move operations", "[points][data][copy][mov
     SECTION("Copy/Move to target with existing data") {
         // Add some existing data to target
         std::vector<Point2D<float>> existing_points = {{100.0f, 200.0f}};
-        target_data.addPointsAtTime(TimeFrameIndex(10), existing_points);
+        target_data.addAtTime(TimeFrameIndex(10), existing_points);
 
         SECTION("Copy to existing time adds points") {
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
@@ -997,7 +966,7 @@ TEST_CASE("DM - PointData - Image scaling", "[points][data][scaling]") {
 
     // Setup test data with known coordinates
     std::vector<Point2D<float>> points = {{100.0f, 200.0f}, {300.0f, 400.0f}};
-    point_data.addPointsAtTime(TimeFrameIndex(10), points);
+    point_data.addAtTime(TimeFrameIndex(10), points);
 
     SECTION("Scaling from known size") {
         // Set initial image size
@@ -1057,8 +1026,8 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
 
     // Setup test data
     std::vector<Point2D<float>> points = {{100.0f, 200.0f}, {300.0f, 400.0f}};
-    point_data.addPointsAtTime(TimeFrameIndex(10), points);
-    point_data.addPointsAtTime(TimeFrameIndex(20), points);
+    point_data.addAtTime(TimeFrameIndex(10), points);
+    point_data.addAtTime(TimeFrameIndex(20), points);
 
     SECTION("Same timeframe returns original data") {
         // Create a single timeframe
@@ -1089,8 +1058,8 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
 
         // Video frame 1 (time=10) should map to data_timeframe index 2 (time=10)
         // Video frame 2 (time=20) should map to data_timeframe index 4 (time=20)
-        test_point_data.addPointsAtTime(TimeFrameIndex(2), points);// At data timeframe index 2 (time=10)
-        test_point_data.addPointsAtTime(TimeFrameIndex(4), points);// At data timeframe index 4 (time=20)
+        test_point_data.addAtTime(TimeFrameIndex(2), points);// At data timeframe index 2 (time=10)
+        test_point_data.addAtTime(TimeFrameIndex(4), points);// At data timeframe index 4 (time=20)
 
         test_point_data.setTimeFrame(data_timeframe);
 
@@ -1113,7 +1082,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
 
         // Create a separate point data instance for this test
         PointData test_point_data;
-        test_point_data.addPointsAtTime(TimeFrameIndex(3), points);// At data timeframe index 3 (time=15)
+        test_point_data.addAtTime(TimeFrameIndex(3), points);// At data timeframe index 3 (time=15)
 
         test_point_data.setTimeFrame(data_timeframe);
 

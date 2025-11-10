@@ -255,7 +255,7 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
         for (auto const& time : line_data_ptr->getTimesWithData()) {
             auto const& lines = line_data_ptr->getAtTime(time);
             for (auto const& line : lines) {
-                data_manager_line_data->addAtTime(time, line, false);
+                data_manager_line_data->addAtTime(time, line, NotifyObservers::No);
             }
         }
         
@@ -427,7 +427,7 @@ void Line_Loader_Widget::_loadCSVData(std::map<TimeFrameIndex, std::vector<Line2
     int total_lines = 0;
     for (auto const & [time, lines] : data_map) {
         for (auto const & line : lines) {
-            line_data_ptr->addAtTime(time, line, false); // Don't notify for each line
+            line_data_ptr->addAtTime(time, line, NotifyObservers::No); // Don't notify for each line
             total_lines++;
         }
     }

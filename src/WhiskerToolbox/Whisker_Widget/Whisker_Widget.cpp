@@ -7,11 +7,11 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/transforms/Media/whisker_tracing.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"
 #include "whiskertracker.hpp"
-#include "DataManager/transforms/Media/whisker_tracing.hpp"
 
 #include "qevent.h"
 #include <QElapsedTimer>
@@ -107,7 +107,6 @@ Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->mask_key_combo, &QComboBox::currentTextChanged, this, [this](QString const & txt) {
         _selected_mask_key = txt.toStdString();
     });
-
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -121,7 +120,7 @@ void Whisker_Widget::openWidget() {
 
     // Populate the whisker pad combo box with available PointData
 
-    _data_manager->addObserver([this](){
+    _data_manager->addObserver([this]() {
         _populateWhiskerPadCombo();
         _populateMaskCombo();
     });
@@ -136,7 +135,7 @@ void Whisker_Widget::_populateMaskCombo() {
     ui->mask_key_combo->clear();
 
     auto mask_keys = _data_manager->getKeys<MaskData>();
-    for (auto const & key : mask_keys) {
+    for (auto const & key: mask_keys) {
         ui->mask_key_combo->addItem(QString::fromStdString(key));
     }
 
@@ -243,7 +242,6 @@ void Whisker_Widget::_traceButton() {
 
             num_to_trace += 1;
             std::cout << num_to_trace << std::endl;
-
         }
     }
 }
@@ -260,7 +258,7 @@ void Whisker_Widget::_dlAddMemoryButton() {
 
     if (!_data_manager->getData<MaskData>("SAM_output")) {
         _data_manager->setData<MaskData>("SAM_output", TimeKey("time"));
-        _data_manager->getData<MaskData>("SAM_output")->setImageSize({.width=256, .height=256});
+        _data_manager->getData<MaskData>("SAM_output")->setImageSize({.width = 256, .height = 256});
     }
 
     auto media = _data_manager->getData<MediaData>("media");
@@ -426,7 +424,7 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
 
     for (auto & [time, whiskers_in_frame]: whiskers_from_janelia) {
         for (auto & w: whiskers_in_frame) {
-            _data_manager->getData<LineData>("unlabeled_whiskers")->addAtTime(TimeFrameIndex(time), convert_to_Line2D(w));
+            _data_manager->getData<LineData>("unlabeled_whiskers")->addAtTime(TimeFrameIndex(time), convert_to_Line2D(w), NotifyObservers::No);
         }
     }
 }
@@ -514,56 +512,18 @@ void order_whiskers_by_position(
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] != -1) {
             std::string const whisker_name = whisker_group_name + "_" + std::to_string(assigned_ids[i]);
-            dm->getData<LineData>(whisker_name)->clearAtTime(current_time);
-            dm->getData<LineData>(whisker_name)->addAtTime(current_time, whiskers[i]);
+            dm->getData<LineData>(whisker_name)->clearAtTime(current_time, NotifyObservers::No);
+            dm->getData<LineData>(whisker_name)->addAtTime(current_time, whiskers[i], NotifyObservers::Yes);
         }
     }
-    /*
-    int next_id = 0;
+
+    dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_time, NotifyObservers::No);
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] == -1) {
-            while (std::find(assigned_ids.begin(), assigned_ids.end(), next_id) != assigned_ids.end()) {
-                ++next_id;
-            }
-            if (next_id >= num_whisker_to_track) {
-                continue;
-            }
-            std::string whisker_name = whisker_group_name + "_" + std::to_string(next_id);
-            dm->getData<LineData>(whisker_name)->clearAtTime(current_time);
-            dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
-            assigned_ids[i] = next_id;
-        }
-    }
-    */
-
-    dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_time);
-    for (std::size_t i = 0; i < whiskers.size(); ++i) {
-        if (assigned_ids[i] == -1) {
-            dm->getData<LineData>("unlabeled_whiskers")->addAtTime(current_time, whiskers[i]);
+            dm->getData<LineData>("unlabeled_whiskers")->addAtTime(current_time, whiskers[i], NotifyObservers::Yes);
         }
     }
 
-    /*
-    for (std::size_t i = 0; i < static_cast<std::size_t>(num_whisker_to_track); i++) {
-
-        if (i >= whiskers.size()) {
-            break;
-        }
-
-        std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
-
-        dm->getData<LineData>(whisker_name)->clearAtTime(current_time);
-        dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
-    }
-
-    dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_time);
-
-    std::cout << "The size of remaining whiskers is " << whiskers.size() << std::endl;
-
-    for (std::size_t i = static_cast<std::size_t>(num_whisker_to_track); i < whiskers.size(); i++) {
-        dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
-    }
-*/
 }
 
 /**
@@ -583,15 +543,17 @@ void add_whiskers_to_data_manager(
         TimeFrameIndex current_time,
         float similarity_threshold) {
 
-    dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_time);
+    dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_time, NotifyObservers::No);
 
     for (auto & w: whiskers) {
-        dm->getData<LineData>("unlabeled_whiskers")->addAtTime(current_time, w);
+        dm->getData<LineData>("unlabeled_whiskers")->addAtTime(current_time, w, NotifyObservers::No);
     }
 
     if (num_whisker_to_track > 0) {
         order_whiskers_by_position(dm, whisker_group_name, num_whisker_to_track, current_time, similarity_threshold);
     }
+
+    dm->getData<LineData>("unlabeled_whiskers")->notifyObservers();
 }
 
 void clip_whisker(Line2D & line, int clip_length) {
@@ -609,7 +571,7 @@ void Whisker_Widget::_populateWhiskerPadCombo() {
 
     // Add all existing PointData keys
     auto point_data_keys = _data_manager->getKeys<PointData>();
-    for (const auto& key : point_data_keys) {
+    for (auto const & key: point_data_keys) {
         ui->whisker_pad_combo->addItem(QString::fromStdString(key));
     }
 
@@ -681,7 +643,7 @@ void Whisker_Widget::_updateWhiskerPadLabel() {
     }
 
     int frame = ui->whisker_pad_frame_spinbox->value();
-            auto points_at_frame = point_data->getAtTime(TimeFrameIndex(frame));
+    auto points_at_frame = point_data->getAtTime(TimeFrameIndex(frame));
 
     if (points_at_frame.empty()) {
         ui->whisker_pad_pos_label->setText("(no data)");
@@ -692,8 +654,8 @@ void Whisker_Widget::_updateWhiskerPadLabel() {
         _current_whisker_pad_point = whisker_pad_point;
 
         std::string const whisker_pad_label =
-            "(" + std::to_string(static_cast<int>(whisker_pad_point.x)) + "," +
-            std::to_string(static_cast<int>(whisker_pad_point.y)) + ")";
+                "(" + std::to_string(static_cast<int>(whisker_pad_point.x)) + "," +
+                std::to_string(static_cast<int>(whisker_pad_point.y)) + ")";
         ui->whisker_pad_pos_label->setText(QString::fromStdString(whisker_pad_label));
 
         // Update the whisker tracker and DL model with the new position
@@ -741,7 +703,7 @@ void Whisker_Widget::_createNewWhiskerPad() {
     _updateWhiskerPadFromSelection();
 }
 
-void Whisker_Widget::_onWhiskerPadComboChanged(const QString& text) {
+void Whisker_Widget::_onWhiskerPadComboChanged(QString const & text) {
     std::cout << "Whisker pad selection changed to: " << text.toStdString() << std::endl;
     _updateWhiskerPadFromSelection();
 }

@@ -378,7 +378,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
 
     EntityId selected_entity_id = *selected_entities.begin();
 
-    auto line_ref = line_data->getMutableData(selected_entity_id, true);
+    auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
         std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id << std::endl;
         return;
@@ -464,7 +464,7 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
 
     EntityId selected_entity_id = *selected_entities.begin();
 
-    auto line_ref = line_data->getMutableData(selected_entity_id, true);
+    auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
         std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id << std::endl;
         return;
@@ -1140,7 +1140,7 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
     Line2D selected_line = lines[selected_line_index];
 
     // Add to target
-    target_line_data->addAtTime(current_time, selected_line);
+    target_line_data->addAtTime(current_time, selected_line, NotifyObservers::No);
 
     // Remove from source by rebuilding the vector without the selected line
     std::vector<Line2D> remaining_lines;
@@ -1151,13 +1151,14 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
     }
 
     // Clear and rebuild source lines
-    source_line_data->clearAtTime(TimeFrameIndex(current_time));
+    source_line_data->clearAtTime(TimeFrameIndex(current_time), NotifyObservers::No);
     for (auto const & line: remaining_lines) {
-        source_line_data->addAtTime(current_time, line);
+        source_line_data->addAtTime(current_time, line, NotifyObservers::No);
     }
 
     // Clear selection since the line was moved
     _scene->clearAllSelections();
+    source_line_data->notifyObservers();
 
     std::cout << "Moved line from " << _active_key << " to " << target_key << std::endl;
 }
@@ -1186,7 +1187,9 @@ void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
 
     // Get the selected line and copy it to target
     Line2D selected_line = lines[selected_line_index];
-    target_line_data->addAtTime(current_time, selected_line);
+    target_line_data->addAtTime(current_time, selected_line, NotifyObservers::No);
+
+    target_line_data->notifyObservers();
 
     std::cout << "Copied line from " << _active_key << " to " << target_key << std::endl;
 }
@@ -1262,7 +1265,7 @@ void MediaLine_Widget::_applyLineToAllFrames() {
     // Apply the line to all frames
     int frames_processed = 0;
     for (auto const & frame_time: frame_times) {
-        line_data->addAtTime(frame_time, line_to_apply, false);// Don't notify for each frame
+        line_data->addAtTime(frame_time, line_to_apply, NotifyObservers::No);// Don't notify for each frame
         frames_processed++;
     }
 

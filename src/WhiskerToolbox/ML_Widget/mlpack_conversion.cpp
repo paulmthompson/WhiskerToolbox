@@ -99,24 +99,23 @@ void updatePointDataFromMlpackMatrix(
         std::vector<std::size_t> & timestamps,
         PointData * pointData) {
 
-    std::vector<std::vector<Point2D<float>>> points;
+    // Timestamp length should be same asmatrix n_cols * 2.
+
+    if (timestamps.size() != matrix.n_cols * 2) {
+        std::cerr << "Error: Timestamp length should be same as matrix n_cols * 2." << std::endl;
+        return;
+    }
+
 
     for (std::size_t col = 0; col < matrix.n_cols; ++col) {
-        points.emplace_back();
         for (std::size_t row = 0; row < matrix.n_cols; row += 2) {
             if (matrix(row, col) != 0.0 || matrix(row + 1, col) != 0.0) {
-                points.back().emplace_back(Point2D<float>{
-                                                          static_cast<float>(matrix(row, col)),
-                                                          static_cast<float>(matrix(row + 1, col))});
+                pointData->addAtTime(TimeFrameIndex(timestamps[col]),
+                                     Point2D<float>{static_cast<float>(matrix(row, col)),
+                                                    static_cast<float>(matrix(row + 1, col))});
             }
         }
     }
-    std::vector<TimeFrameIndex> times;
-    times.reserve(timestamps.size());
-    for (auto timestamp : timestamps) {
-        times.push_back(TimeFrameIndex(static_cast<int>(timestamp)));
-    }
-    pointData->overwritePointsAtTimes(times, points);
 }
 
 ////////////////////////////////////////////////////////
@@ -180,24 +179,24 @@ inline void updateTensorDataFromMlpackMatrix(
 
     for (std::size_t i = 0; i < timestamps.size(); ++i) {
         auto col = copyMatrixRowToVector<double>(matrix.col(i));
-        
+
         // Convert double vector to float vector for the backend-agnostic interface
         std::vector<float> float_data;
         float_data.reserve(col.size());
-        for (double val : col) {
+        for (double val: col) {
             float_data.push_back(static_cast<float>(val));
         }
-        
+
         tensor_data.overwriteTensorAtTime(TimeFrameIndex(timestamps[i]), float_data, feature_shape);
     }
 }
 
 bool balance_training_data_by_subsampling(
-        arma::Mat<double> const& features,
-        arma::Row<size_t> const& labels,
-        arma::Mat<double>& balanced_features,
-        arma::Row<size_t>& balanced_labels,
-        double max_ratio) { // Default max_ratio to 1.0
+        arma::Mat<double> const & features,
+        arma::Row<size_t> const & labels,
+        arma::Mat<double> & balanced_features,
+        arma::Row<size_t> & balanced_labels,
+        double max_ratio) {// Default max_ratio to 1.0
 
     std::cout << "Entering balancing training_data_by_subsampling function" << std::endl;
 
@@ -221,7 +220,7 @@ bool balance_training_data_by_subsampling(
     }
 
     std::cout << "Class sizes: " << std::endl;
-    for (auto const& [label_val, count] : class_counts) {
+    for (auto const & [label_val, count]: class_counts) {
         std::cout << "Class " << label_val << " has " << count << " samples." << std::endl;
     }
 
@@ -234,7 +233,7 @@ bool balance_training_data_by_subsampling(
 
     size_t min_class_count = std::numeric_limits<size_t>::max();
     size_t actual_max_class_count = 0;
-    for (auto const& [label_val, count] : class_counts) {
+    for (auto const & [label_val, count]: class_counts) {
         if (count < min_class_count) min_class_count = count;
         if (count > actual_max_class_count) actual_max_class_count = count;
     }
@@ -243,12 +242,12 @@ bool balance_training_data_by_subsampling(
         std::cerr << "Warning: At least one class has zero samples in the original data. It will be ignored for balancing." << std::endl;
         // Try to find a non-zero min_class_count if other classes exist
         size_t temp_min_count = std::numeric_limits<size_t>::max();
-        for (auto const& [label_val, count] : class_counts) {
+        for (auto const & [label_val, count]: class_counts) {
             if (count > 0 && count < temp_min_count) temp_min_count = count;
         }
         if (temp_min_count == std::numeric_limits<size_t>::max()) {
             std::cerr << "Error: All classes effectively have zero samples for balancing." << std::endl;
-            balanced_features = features; // Or empty, depending on desired behavior
+            balanced_features = features;// Or empty, depending on desired behavior
             balanced_labels.clear();
             return false;
         }
@@ -259,9 +258,9 @@ bool balance_training_data_by_subsampling(
 
     // If actual_max_class_count is significantly larger than min_class_count, print warning.
     // Using max_ratio in the condition to make it more relevant.
-    if (actual_max_class_count > min_class_count * max_ratio && actual_max_class_count > min_class_count * 2.0) { // Heuristic for significant imbalance
+    if (actual_max_class_count > min_class_count * max_ratio && actual_max_class_count > min_class_count * 2.0) {// Heuristic for significant imbalance
         std::cout << "Warning: Training data is imbalanced. Original Max/Min ratio: "
-                  << (min_class_count > 0 ? (double)actual_max_class_count / min_class_count : 0)
+                  << (min_class_count > 0 ? (double) actual_max_class_count / min_class_count : 0)
                   << ". Requested Max Ratio: " << max_ratio << std::endl;
     }
 
@@ -272,18 +271,18 @@ bool balance_training_data_by_subsampling(
     }
 
     //Shuffle each entry in class indices
-    for (auto& indices : class_indices) {
+    for (auto & indices: class_indices) {
         std::shuffle(indices.begin(), indices.end(), std::random_device());
     }
 
     // Subsample each class to have equal number of samples as the smallest class
-    for (auto& indices : class_indices) {
-        indices.resize(static_cast<size_t>(std::round(min_class_count*max_ratio)));
+    for (auto & indices: class_indices) {
+        indices.resize(static_cast<size_t>(std::round(min_class_count * max_ratio)));
     }
 
     //Combine the indices
     std::vector<size_t> combined_indices;
-    for (auto& indices : class_indices) {
+    for (auto & indices: class_indices) {
         combined_indices.insert(combined_indices.end(), indices.begin(), indices.end());
     }
 
@@ -293,7 +292,7 @@ bool balance_training_data_by_subsampling(
         std::cerr << "No data remains after attempting to balance. Check class counts and ratio." << std::endl;
         balanced_features.clear();
         balanced_labels.clear();
-        return false; // Or true, if empty is an acceptable outcome of balancing
+        return false;// Or true, if empty is an acceptable outcome of balancing
     }
 
     // Create balanced features and labels

@@ -1,6 +1,7 @@
 #ifndef MAP_TIMESERIES_HPP
 #define MAP_TIMESERIES_HPP
 
+#include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <map>
@@ -8,6 +9,8 @@
 #include <algorithm>
 #include <ranges>
 #include <unordered_set>
+
+class LineData;
 
 template<typename T>
 [[nodiscard]] bool clear_at_time(TimeFrameIndex const time, T & data) {
@@ -99,7 +102,11 @@ inline std::size_t move_by_entity_ids(SourceDataMap & source_data,
         for (size_t i = 0; i < entries.size(); ++i) {
             auto const & entry = entries[i];
             if (entity_ids_set.contains(entry.entity_id)) {
-                target.addEntryAtTime(time, extract_data(entry), entry.entity_id, false);
+                if constexpr (std::is_same_v<TargetType, LineData>) {
+                    target.addEntryAtTime(time, extract_data(entry), entry.entity_id, NotifyObservers::No);
+                } else {
+                    target.addEntryAtTime(time, extract_data(entry), entry.entity_id, false);
+                }
                 entries_to_remove.emplace_back(time, i);
                 total_moved++;
             }
@@ -141,7 +148,11 @@ inline std::size_t copy_by_entity_ids(SourceDataMap const & source_data,
     for (auto const & [time, entries] : source_data) {
         for (auto const & entry : entries) {
             if (entity_ids_set.contains(entry.entity_id)) {
-                target.addAtTime(time, extract_data(entry), false);
+                if constexpr (std::is_same_v<TargetType, LineData>) {
+                    target.addAtTime(time, extract_data(entry), NotifyObservers::No);
+                } else {
+                    target.addAtTime(time, extract_data(entry), false);
+                }
                 total_copied++;
             }
         }

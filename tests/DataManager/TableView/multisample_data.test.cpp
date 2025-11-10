@@ -56,7 +56,7 @@ private:
                 {static_cast<float>(t), 0.0f},
                 {static_cast<float>(t + 1), 1.0f}
             };
-            singleSampleLines->addAtTime(TimeFrameIndex(t), Line2D(points));
+            singleSampleLines->addAtTime(TimeFrameIndex(t), Line2D(points), NotifyObservers::No);
         }
         m_dataManager.setData<LineData>("SingleSampleLines", singleSampleLines, TimeKey("test_time"));
 
@@ -67,7 +67,7 @@ private:
         // t=0: one line
         {
             std::vector<Point2D<float>> points = {{0.0f, 0.0f}, {1.0f, 1.0f}};
-            multiSampleLines->addAtTime(TimeFrameIndex(0), Line2D(points));
+            multiSampleLines->addAtTime(TimeFrameIndex(0), Line2D(points), NotifyObservers::No);
         }
         
         // t=1: three lines (multi-sample)
@@ -75,29 +75,29 @@ private:
             std::vector<Point2D<float>> points1 = {{1.0f, 0.0f}, {2.0f, 1.0f}};
             std::vector<Point2D<float>> points2 = {{1.0f, 1.0f}, {2.0f, 2.0f}};
             std::vector<Point2D<float>> points3 = {{1.0f, 2.0f}, {2.0f, 3.0f}};
-            multiSampleLines->addAtTime(TimeFrameIndex(1), Line2D(points1));
-            multiSampleLines->addAtTime(TimeFrameIndex(1), Line2D(points2));
-            multiSampleLines->addAtTime(TimeFrameIndex(1), Line2D(points3));
+            multiSampleLines->addAtTime(TimeFrameIndex(1), Line2D(points1), NotifyObservers::No);
+            multiSampleLines->addAtTime(TimeFrameIndex(1), Line2D(points2), NotifyObservers::No);
+            multiSampleLines->addAtTime(TimeFrameIndex(1), Line2D(points3), NotifyObservers::No);
         }
         
         // t=2: one line
         {
             std::vector<Point2D<float>> points = {{2.0f, 0.0f}, {3.0f, 1.0f}};
-            multiSampleLines->addAtTime(TimeFrameIndex(2), Line2D(points));
+            multiSampleLines->addAtTime(TimeFrameIndex(2), Line2D(points), NotifyObservers::No);
         }
         
         // t=3: two lines (multi-sample)
         {
             std::vector<Point2D<float>> points1 = {{3.0f, 0.0f}, {4.0f, 1.0f}};
             std::vector<Point2D<float>> points2 = {{3.0f, 1.0f}, {4.0f, 2.0f}};
-            multiSampleLines->addAtTime(TimeFrameIndex(3), Line2D(points1));
-            multiSampleLines->addAtTime(TimeFrameIndex(3), Line2D(points2));
+            multiSampleLines->addAtTime(TimeFrameIndex(3), Line2D(points1), NotifyObservers::No);
+            multiSampleLines->addAtTime(TimeFrameIndex(3), Line2D(points2), NotifyObservers::No);
         }
         
         // t=4: one line
         {
             std::vector<Point2D<float>> points = {{4.0f, 0.0f}, {5.0f, 1.0f}};
-            multiSampleLines->addAtTime(TimeFrameIndex(4), Line2D(points));
+            multiSampleLines->addAtTime(TimeFrameIndex(4), Line2D(points), NotifyObservers::No);
         }
         
         m_dataManager.setData<LineData>("MultiSampleLines", multiSampleLines, TimeKey("test_time"));
@@ -110,8 +110,8 @@ private:
         {
             std::vector<Point2D<float>> points1 = {{0.0f, 10.0f}, {1.0f, 11.0f}};
             std::vector<Point2D<float>> points2 = {{0.0f, 12.0f}, {1.0f, 13.0f}};
-            conflictMultiSampleLines->addAtTime(TimeFrameIndex(0), Line2D(points1));
-            conflictMultiSampleLines->addAtTime(TimeFrameIndex(0), Line2D(points2));
+            conflictMultiSampleLines->addAtTime(TimeFrameIndex(0), Line2D(points1), NotifyObservers::No);
+            conflictMultiSampleLines->addAtTime(TimeFrameIndex(0), Line2D(points2), NotifyObservers::No);
         }
         
         // t=1,2,3,4: one line each
@@ -120,7 +120,7 @@ private:
                 {static_cast<float>(t), 10.0f},
                 {static_cast<float>(t + 1), 11.0f}
             };
-            conflictMultiSampleLines->addAtTime(TimeFrameIndex(t), Line2D(points));
+            conflictMultiSampleLines->addAtTime(TimeFrameIndex(t), Line2D(points), NotifyObservers::No);
         }
         
         m_dataManager.setData<LineData>("ConflictMultiSampleLines", conflictMultiSampleLines, TimeKey("test_time"));

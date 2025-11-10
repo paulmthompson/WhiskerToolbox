@@ -67,7 +67,7 @@ public:
             if (is_outlier_frame) {
                 // Create outlier for group 1 (way off trajectory)
                 Line2D outlier1 = createLine(x1 + 100.0f, y1 + 100.0f, 150.0f);
-                line_data->addAtTime(TimeFrameIndex(frame), outlier1, false);
+                line_data->addAtTime(TimeFrameIndex(frame), outlier1, NotifyObservers::No);
                 EntityId outlier_entity1 = line_data->getEntityIdsAtTime(TimeFrameIndex(frame)).back();
                 group_manager->addEntityToGroup(group1_id, outlier_entity1);
                 group1_entities[frame] = outlier_entity1;
@@ -77,7 +77,7 @@ public:
                 auto const line1 = createLine(x1 + static_cast<float>(noise(gen)),
                                               y1 + static_cast<float>(noise(gen)),
                                               50.0f + static_cast<float>(noise(gen)));
-                line_data->addAtTime(TimeFrameIndex(frame), line1, false);
+                line_data->addAtTime(TimeFrameIndex(frame), line1, NotifyObservers::No);
                 auto const entity1 = line_data->getEntityIdsAtTime(TimeFrameIndex(frame)).back();
                 group_manager->addEntityToGroup(group1_id, entity1);
                 group1_entities[frame] = entity1;
@@ -90,7 +90,7 @@ public:
             if (is_outlier_frame) {
                 // Create outlier for group 2 (way off trajectory)
                 Line2D outlier2 = createLine(x2 - 100.0f, y2 - 100.0f, 20.0f);
-                line_data->addAtTime(TimeFrameIndex(frame), outlier2, false);
+                line_data->addAtTime(TimeFrameIndex(frame), outlier2, NotifyObservers::No);
                 EntityId outlier_entity2 = line_data->getEntityIdsAtTime(TimeFrameIndex(frame)).back();
                 group_manager->addEntityToGroup(group2_id, outlier_entity2);
                 group2_entities[frame] = outlier_entity2;
@@ -100,7 +100,7 @@ public:
                 auto const line2 = createLine(x2 + static_cast<float>(noise(gen)),
                                               y2 + static_cast<float>(noise(gen)),
                                               60.0f + static_cast<float>(noise(gen)));
-                line_data->addAtTime(TimeFrameIndex(frame), line2, false);
+                line_data->addAtTime(TimeFrameIndex(frame), line2, NotifyObservers::No);
                 auto const entity2 = line_data->getEntityIdsAtTime(TimeFrameIndex(frame)).back();
                 group_manager->addEntityToGroup(group2_id, entity2);
                 group2_entities[frame] = entity2;

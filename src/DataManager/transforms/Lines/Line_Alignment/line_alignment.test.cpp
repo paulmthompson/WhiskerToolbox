@@ -648,7 +648,7 @@ TEST_CASE("Data Transform: Line Alignment - JSON pipeline", "[transforms][line_a
 
     auto test_line_data = std::make_shared<LineData>();
     test_line_data->setTimeFrame(time_frame);
-    test_line_data->addAtTime(TimeFrameIndex(0), test_line);
+    test_line_data->addAtTime(TimeFrameIndex(0), test_line, NotifyObservers::No);
 
     // Store the line data in DataManager with a known key
     dm.setData("test_line", test_line_data, TimeKey("default"));
@@ -884,7 +884,7 @@ TEST_CASE("Data Transform: Line Alignment - Line alignment with 8-bit and 32-bit
         test_line.push_back(Point2D<float>{50.0f, 55.0f});// Should move to y=60
         test_line.push_back(Point2D<float>{70.0f, 45.0f});// Should move to y=60
 
-        line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+        line_data->addAtTime(TimeFrameIndex(0), test_line, NotifyObservers::No);
 
         // Test the line alignment function
         auto aligned_line_data = line_alignment(
@@ -935,7 +935,7 @@ TEST_CASE("Data Transform: Line Alignment - Line alignment with 8-bit and 32-bit
         test_line.push_back(Point2D<float>{50.0f, 55.0f});// Should move to y=60
         test_line.push_back(Point2D<float>{70.0f, 45.0f});// Should move to y=60
 
-        line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+        line_data->addAtTime(TimeFrameIndex(0), test_line, NotifyObservers::No);
 
         // Test the line alignment function
         auto aligned_line_data = line_alignment(
@@ -990,7 +990,7 @@ TEST_CASE("Data Transform: Line Alignment - Line alignment with 8-bit and 32-bit
         test_line.push_back(Point2D<float>{50.0f, 55.0f});
         test_line.push_back(Point2D<float>{70.0f, 45.0f});
 
-        line_data->addAtTime(TimeFrameIndex(0), test_line, false);
+        line_data->addAtTime(TimeFrameIndex(0), test_line, NotifyObservers::No);
 
         // Test alignment with 8-bit data
         auto aligned_line_data_8bit = line_alignment(

@@ -67,17 +67,19 @@ public:
      * @brief Clear all lines at a specific time
      * 
      * @param time The time to clear the lines at
-     * @param notify If true, the observers will be notified
+     * @param notify Whether to notify observers after the operation
      */
-    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
+    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, NotifyObservers notify);
 
     /**
      * @brief Add a line at a specific time (by copying).
      *
      * This overload is called when you pass an existing lvalue (e.g., a named variable).
      * It will create a copy of the line.
+     * 
+     * @param notify Whether to notify observers after the operation
      */
-    void addAtTime(TimeFrameIndex time, Line2D const & line, bool notify = true);
+    void addAtTime(TimeFrameIndex time, Line2D const & line, NotifyObservers notify);
 
     /**
      * @brief Add a line at a specific time (by moving).
@@ -85,8 +87,10 @@ public:
      * This overload is called when you pass an rvalue (e.g., a temporary object
      * or the result of std::move()). It will move the line's data,
      * avoiding a copy.
+     * 
+     * @param notify Whether to notify observers after the operation
      */
-    void addAtTime(TimeFrameIndex time, Line2D && line, bool notify = true);
+    void addAtTime(TimeFrameIndex time, Line2D && line, NotifyObservers notify);
 
     /**
      * @brief Construct a data entry in-place at a specific time.
@@ -110,6 +114,21 @@ public:
         _data[time].emplace_back(entity_id, std::forward<TDataArgs>(args)...);
     }
 
+    /**
+     * @brief Add a batch of lines at a specific time by copying them.
+     *
+     * Appends the lines to any already existing at that time.
+     */
+    void addAtTime(TimeFrameIndex time, std::vector<Line2D> const & lines_to_add);
+
+    /**
+     * @brief Add a batch of lines at a specific time by moving them.
+     *
+     * Appends the lines to any already existing at that time.
+     * The input vector will be left in a state with "empty" lines.
+     */
+    void addAtTime(TimeFrameIndex time, std::vector<Line2D> && lines_to_add);
+
     // ========== Setters (Entity-based) ==========
 
 
@@ -122,14 +141,22 @@ public:
      * pointer-like access to the Line2D.
      *
      * When the handle is destroyed (goes out of scope), the LineData's
-     * observers will be automatically notified.
+     * observers will be automatically notified if requested.
      *
      * @param entity_id The EntityId to look up
+     * @param notify Whether to notify observers when the handle is destroyed
      * @return Optional containing a LineModifier handle if found, std::nullopt otherwise
      */
-    [[nodiscard]] std::optional<LineModifier> getMutableData(EntityId entity_id, bool notify = true);
+    [[nodiscard]] std::optional<LineModifier> getMutableData(EntityId entity_id, NotifyObservers notify);
 
-    [[nodiscard]] bool clearByEntityId(EntityId entity_id, bool notify = true);
+    /**
+     * @brief Clear a line by its EntityId
+     * 
+     * @param entity_id The EntityId of the line to clear
+     * @param notify Whether to notify observers after the operation
+     * @return true if the line was found and cleared, false otherwise
+     */
+    [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify);
 
     /**
      * @brief Add a line entry at a specific time with a specific entity ID
@@ -139,9 +166,9 @@ public:
      * @param time The time to add the line at
      * @param line The line to add
      * @param entity_id The entity ID to assign to the line
-     * @param notify If true, the observers will be notified
+     * @param notify Whether to notify observers after the operation
      */
-    void addEntryAtTime(TimeFrameIndex time, Line2D const & line, EntityId entity_id, bool notify = true);
+    void addEntryAtTime(TimeFrameIndex time, Line2D const & line, EntityId entity_id, NotifyObservers notify);
 
     // ========== Image Size ==========
 
@@ -322,10 +349,10 @@ public:
      * 
      * @param target The target LineData to copy lines to
      * @param interval The time interval to copy lines from (inclusive)
-     * @param notify If true, the target will notify its observers after the operation
+     * @param notify Whether to notify the target's observers after the operation
      * @return The number of lines actually copied
      */
-    std::size_t copyTo(LineData & target, TimeFrameInterval const & interval, bool notify = true) const;
+    std::size_t copyTo(LineData & target, TimeFrameInterval const & interval, NotifyObservers notify) const;
 
     /**
      * @brief Copy lines from this LineData to another LineData for specific times
@@ -335,10 +362,10 @@ public:
      * 
      * @param target The target LineData to copy lines to
      * @param times Vector of specific times to copy (does not need to be sorted)
-     * @param notify If true, the target will notify its observers after the operation
+     * @param notify Whether to notify the target's observers after the operation
      * @return The number of lines actually copied
      */
-    std::size_t copyTo(LineData & target, std::vector<TimeFrameIndex> const & times, bool notify = true) const;
+    std::size_t copyTo(LineData & target, std::vector<TimeFrameIndex> const & times, NotifyObservers notify) const;
 
     /**
      * @brief Move lines from this LineData to another LineData for a time interval
@@ -349,10 +376,10 @@ public:
      * 
      * @param target The target LineData to move lines to
      * @param interval The time interval to move lines from (inclusive)
-     * @param notify If true, both source and target will notify their observers after the operation
+     * @param notify Whether to notify both source and target observers after the operation
      * @return The number of lines actually moved
      */
-    std::size_t moveTo(LineData & target, TimeFrameInterval const & interval, bool notify = true);
+    std::size_t moveTo(LineData & target, TimeFrameInterval const & interval, NotifyObservers notify);
 
     /**
      * @brief Move lines from this LineData to another LineData for specific times
@@ -363,10 +390,10 @@ public:
      * 
      * @param target The target LineData to move lines to
      * @param times Vector of specific times to move (does not need to be sorted)
-     * @param notify If true, both source and target will notify their observers after the operation
+     * @param notify Whether to notify both source and target observers after the operation
      * @return The number of lines actually moved
      */
-    std::size_t moveTo(LineData & target, std::vector<TimeFrameIndex> const & times, bool notify = true);
+    std::size_t moveTo(LineData & target, std::vector<TimeFrameIndex> const & times, NotifyObservers notify);
 
     /**
      * @brief Copy lines with specific EntityIds to another LineData
@@ -376,10 +403,10 @@ public:
      * 
      * @param target The target LineData to copy lines to
      * @param entity_ids Vector of EntityIds to copy
-     * @param notify If true, the target will notify its observers after the operation
+     * @param notify Whether to notify the target's observers after the operation
      * @return The number of lines actually copied
      */
-    std::size_t copyByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
+    std::size_t copyByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
     /**
      * @brief Move lines with specific EntityIds to another LineData
@@ -389,10 +416,10 @@ public:
      * 
      * @param target The target LineData to move lines to
      * @param entity_ids Vector of EntityIds to move
-     * @param notify If true, both source and target will notify their observers after the operation
+     * @param notify Whether to notify both source and target observers after the operation
      * @return The number of lines actually moved
      */
-    std::size_t moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
+    std::size_t moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
     // ========== Time Frame ==========
     /**

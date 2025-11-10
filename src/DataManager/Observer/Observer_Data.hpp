@@ -5,6 +5,17 @@
 #include <optional>
 #include <unordered_map>
 
+/**
+ * @brief Strong type for specifying observer notification behavior
+ *
+ * This enum class makes the intent explicit when calling methods that modify
+ * observer data. Users must explicitly choose whether to notify observers.
+ */
+enum class NotifyObservers {
+    Yes,  ///< Notify observers after the operation
+    No    ///< Do not notify observers after the operation
+};
+
 class ObserverData {
 
 public:

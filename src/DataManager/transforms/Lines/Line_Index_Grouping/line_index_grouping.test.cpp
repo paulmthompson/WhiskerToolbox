@@ -79,7 +79,7 @@ protected:
                     line.push_back({x_start + i * 2.0f, y_pos});
                 }
                 
-                line_data->addAtTime(TimeFrameIndex(frame), line, false);
+                line_data->addAtTime(TimeFrameIndex(frame), line, NotifyObservers::No);
             }
         }
 
@@ -348,7 +348,7 @@ TEST_CASE_METHOD(LineIndexGroupingTestFixture, "Data Transform: LineIndexGroupin
         Line2D line;
         line.push_back({0.0f, 0.0f});
         line.push_back({10.0f, 10.0f});
-        single_line_data->addAtTime(TimeFrameIndex(0), line, false);
+        single_line_data->addAtTime(TimeFrameIndex(0), line, NotifyObservers::No);
 
         auto single_group_manager = std::make_unique<EntityGroupManager>();
         LineIndexGroupingParameters params(single_group_manager.get());
@@ -455,7 +455,7 @@ TEST_CASE("Data Transform: LineIndexGrouping - Transform Operation Interface", "
                 for (int i = 0; i < 5; ++i) {
                     line.push_back({static_cast<float>(i * 10), static_cast<float>(line_idx * 20)});
                 }
-                test_line_data->addAtTime(TimeFrameIndex(frame), line, false);
+                test_line_data->addAtTime(TimeFrameIndex(frame), line, NotifyObservers::No);
             }
         }
 
@@ -517,7 +517,7 @@ TEST_CASE("Data Transform: LineIndexGrouping - Comprehensive Scenarios", "[LineI
                 for (int i = 0; i < 5; ++i) {
                     line.push_back({static_cast<float>(i * 5), static_cast<float>(line_idx * 10)});
                 }
-                uniform_data->addAtTime(TimeFrameIndex(frame), line, false);
+                uniform_data->addAtTime(TimeFrameIndex(frame), line, NotifyObservers::No);
             }
         }
 
@@ -558,7 +558,7 @@ TEST_CASE("Data Transform: LineIndexGrouping - Comprehensive Scenarios", "[LineI
                 for (int i = 0; i < 5; ++i) {
                     line.push_back({static_cast<float>(i), static_cast<float>(line_idx)});
                 }
-                increasing_data->addAtTime(TimeFrameIndex(frame), line, false);
+                increasing_data->addAtTime(TimeFrameIndex(frame), line, NotifyObservers::No);
             }
         }
 

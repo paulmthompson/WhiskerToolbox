@@ -33,7 +33,7 @@ TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
         original_line.push_back(Point2D<float>{10.0f, 0.0f}); // End point
 
         // Add line to frame 0
-        line_data->addAtTime(TimeFrameIndex(0), original_line);
+        line_data->addAtTime(TimeFrameIndex(0), original_line, NotifyObservers::No);
 
         // Set reference point closer to the end (10,0) than the base (0,0)
         Point2D<float> reference_point{12.0f, 0.0f};
@@ -68,7 +68,7 @@ TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
         original_line.push_back(Point2D<float>{10.0f, 0.0f}); // End point
 
         // Add line to frame 0
-        line_data->addAtTime(TimeFrameIndex(0), original_line);
+        line_data->addAtTime(TimeFrameIndex(0), original_line, NotifyObservers::No);
 
         // Set reference point closer to the base (0,0) than the end (10,0)
         Point2D<float> reference_point{-2.0f, 0.0f};
@@ -101,7 +101,7 @@ TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
         single_point_line.push_back(Point2D<float>{5.0f, 5.0f});
 
         // Add line to frame 0
-        line_data->addAtTime(TimeFrameIndex(0), single_point_line);
+        line_data->addAtTime(TimeFrameIndex(0), single_point_line, NotifyObservers::No);
 
         Point2D<float> reference_point{0.0f, 0.0f};
         LineBaseFlipParameters params(reference_point);
@@ -132,8 +132,8 @@ TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
         line2.push_back(Point2D<float>{10.0f, 10.0f});
 
         // Add lines to different frames
-        line_data->addAtTime(TimeFrameIndex(0), line1);
-        line_data->addAtTime(TimeFrameIndex(1), line2);
+        line_data->addAtTime(TimeFrameIndex(0), line1, NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(1), line2, NotifyObservers::No);
 
         // Reference point closer to end points
         Point2D<float> reference_point{12.0f, 5.0f};

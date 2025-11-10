@@ -34,7 +34,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
     SECTION("Copy time range - basic functionality") {
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
-        std::size_t lines_copied = source_data.copyTo(target_data, interval);
+        std::size_t lines_copied = source_data.copyTo(target_data, interval, NotifyObservers::No);
 
         REQUIRE(lines_copied == 3);// 2 lines at time 10 + 1 line at time 20
 
@@ -58,7 +58,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
     SECTION("Copy specific times") {
         std::vector<TimeFrameIndex> times_to_copy = {TimeFrameIndex(10), TimeFrameIndex(30)};
-        std::size_t lines_copied = source_data.copyTo(target_data, times_to_copy);
+        std::size_t lines_copied = source_data.copyTo(target_data, times_to_copy, NotifyObservers::No);
 
         REQUIRE(lines_copied == 3);// 2 lines at time 10 + 1 line at time 30
 
@@ -73,7 +73,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         target_data.emplaceAtTime(TimeFrameIndex(10), x3, y3);
 
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
-        std::size_t lines_copied = source_data.copyTo(target_data, interval);
+        std::size_t lines_copied = source_data.copyTo(target_data, interval, NotifyObservers::No);
 
         REQUIRE(lines_copied == 2);                                    // 2 lines from source
         REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 3);// 1 existing + 2 copied
@@ -81,7 +81,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
     SECTION("Move time range - basic functionality") {
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
-        std::size_t lines_moved = source_data.moveTo(target_data, interval);
+        std::size_t lines_moved = source_data.moveTo(target_data, interval, NotifyObservers::No);
 
         REQUIRE(lines_moved == 3);// 2 lines at time 10 + 1 line at time 20
 
@@ -98,7 +98,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
     SECTION("Move specific times") {
         std::vector<TimeFrameIndex> times_to_move = {TimeFrameIndex(20), TimeFrameIndex(30)};
-        std::size_t lines_moved = source_data.moveTo(target_data, times_to_move);
+        std::size_t lines_moved = source_data.moveTo(target_data, times_to_move, NotifyObservers::No);
 
         REQUIRE(lines_moved == 2);// 1 line at time 20 + 1 line at time 30
 
@@ -115,7 +115,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
     SECTION("Copy empty time range") {
         TimeFrameInterval interval{TimeFrameIndex(100), TimeFrameIndex(200)};
-        std::size_t lines_copied = source_data.copyTo(target_data, interval);
+        std::size_t lines_copied = source_data.copyTo(target_data, interval, NotifyObservers::No);
 
         REQUIRE(lines_copied == 0);
         REQUIRE(target_data.getTimesWithData().empty());
@@ -123,7 +123,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
     SECTION("Copy with invalid time range") {
         TimeFrameInterval interval{TimeFrameIndex(30), TimeFrameIndex(10)};// end < start
-        std::size_t lines_copied = source_data.copyTo(target_data, interval);
+        std::size_t lines_copied = source_data.copyTo(target_data, interval, NotifyObservers::No);
 
         REQUIRE(lines_copied == 0);
         REQUIRE(target_data.getTimesWithData().empty());
@@ -131,7 +131,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
     SECTION("Move empty times") {
         std::vector<TimeFrameIndex> empty_times = {TimeFrameIndex(100), TimeFrameIndex(200)};
-        std::size_t lines_moved = source_data.moveTo(target_data, empty_times);
+        std::size_t lines_moved = source_data.moveTo(target_data, empty_times, NotifyObservers::No);
 
         REQUIRE(lines_moved == 0);
 
@@ -151,17 +151,17 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
         // Copy with notification disabled
         TimeFrameInterval interval1{TimeFrameIndex(10), TimeFrameIndex(10)};
-        source_data.copyTo(target_data, interval1, false);
+        source_data.copyTo(target_data, interval1, NotifyObservers::No);
         REQUIRE(copy_notifications == 0);
 
         // Copy with notification enabled
         TimeFrameInterval interval2{TimeFrameIndex(20), TimeFrameIndex(20)};
-        source_data.copyTo(target_data, interval2, true);
+        source_data.copyTo(target_data, interval2, NotifyObservers::Yes);
         REQUIRE(copy_notifications == 1);
 
         // Move with notification disabled
         TimeFrameInterval interval3{TimeFrameIndex(30), TimeFrameIndex(30)};
-        source_data.moveTo(target_data, interval3, false);
+        source_data.moveTo(target_data, interval3, NotifyObservers::No);
         REQUIRE(move_notifications == 0);
 
         // Move with notification enabled (should notify both source and target)
@@ -170,14 +170,14 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         new_source.addObserver([&move_notifications]() { move_notifications++; });
 
         TimeFrameInterval interval4{TimeFrameIndex(40), TimeFrameIndex(40)};
-        new_source.moveTo(target_data, interval4, true);
+        new_source.moveTo(target_data, interval4, NotifyObservers::Yes);
         REQUIRE(move_notifications == 1);// Source notified
         REQUIRE(copy_notifications == 2);// Target notified
     }
 
     SECTION("Copy preserves line data integrity") {
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
-        source_data.copyTo(target_data, interval);
+        source_data.copyTo(target_data, interval, NotifyObservers::No);
 
         auto source_lines = source_data.getAtTime(TimeFrameIndex(10));
         auto target_lines = target_data.getAtTime(TimeFrameIndex(10));
@@ -193,7 +193,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         }
 
         // Modify target data and ensure source is unaffected
-        target_data.clearAtTime(TimeFrameIndex(10));
+        target_data.clearAtTime(TimeFrameIndex(10), NotifyObservers::No);
         REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).size() == 2);// Source unchanged
         REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 0);// Target cleared
     }
@@ -421,7 +421,7 @@ TEST_CASE("LineData - Entity ID handling in copy/move operations", "[line][data]
 
         // Copy data
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
-        source_data.copyTo(target_data, interval);
+        source_data.copyTo(target_data, interval, NotifyObservers::No);
 
         // Get new entity IDs from target
         auto target_entity_ids = get_all_entity_ids(target_data);
@@ -439,7 +439,7 @@ TEST_CASE("LineData - Entity ID handling in copy/move operations", "[line][data]
 
         // Move data
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
-        source_data.moveTo(target_data, interval);
+        source_data.moveTo(target_data, interval, NotifyObservers::No);
 
         // Get new entity IDs from target
         auto target_entity_ids = get_all_entity_ids(target_data);
@@ -514,7 +514,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
 
         // Copy lines from time 10 (2 lines)
         std::unordered_set<EntityId> ids_set_10c(entity_ids_10.begin(), entity_ids_10.end());
-        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_10c);
+        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_10c, NotifyObservers::No);
 
         REQUIRE(lines_copied == 2);
 
@@ -560,7 +560,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         // Copy one line from time 10 and one from time 20
         std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
         std::unordered_set<EntityId> ids_set_mixedc(mixed_entity_ids.begin(), mixed_entity_ids.end());
-        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_mixedc);
+        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_mixedc, NotifyObservers::No);
 
         REQUIRE(lines_copied == 2);
 
@@ -586,7 +586,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
 
         std::vector<EntityId> fake_entity_ids = {99999, 88888};
         std::unordered_set<EntityId> ids_set_fakec(fake_entity_ids.begin(), fake_entity_ids.end());
-        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_fakec);
+        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_fakec, NotifyObservers::No);
 
         REQUIRE(lines_copied == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -602,7 +602,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
 
         std::vector<EntityId> empty_entity_ids;
         std::unordered_set<EntityId> ids_set_emptyc(empty_entity_ids.begin(), empty_entity_ids.end());
-        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_emptyc);
+        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_emptyc, NotifyObservers::No);
 
         REQUIRE(lines_copied == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -629,7 +629,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
 
         // Move lines from time 10 (2 lines)
         std::unordered_set<EntityId> const ids_set_10(entity_ids_10.begin(), entity_ids_10.end());
-        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_10);
+        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_10, NotifyObservers::No);
 
         REQUIRE(lines_moved == 2);
 
@@ -673,7 +673,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         // Move one line from time 10 and one from time 20
         std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
         std::unordered_set<EntityId> const ids_set_mixed(mixed_entity_ids.begin(), mixed_entity_ids.end());
-        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_mixed);
+        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_mixed, NotifyObservers::No);
 
         REQUIRE(lines_moved == 2);
 
@@ -704,7 +704,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         std::vector<EntityId> fake_entity_ids = {99999, 88888};
         std::unordered_set<EntityId> const ids_set_fake(fake_entity_ids.begin(), fake_entity_ids.end());
-        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_fake);
+        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_fake, NotifyObservers::No);
 
         REQUIRE(lines_moved == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -730,7 +730,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         std::unordered_set<EntityId> ids_set_10c2(entity_ids_10.begin(), entity_ids_10.end());
-        source_data->copyByEntityIds(*target_data, ids_set_10c2);
+        source_data->copyByEntityIds(*target_data, ids_set_10c2, NotifyObservers::No);
 
         auto source_lines = source_data->getAtTime(TimeFrameIndex(10));
         auto target_lines = target_data->getAtTime(TimeFrameIndex(10));
@@ -769,7 +769,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         REQUIRE(original_lines.size() == 2);
 
         std::unordered_set<EntityId> const ids_set_10b(entity_ids_10.begin(), entity_ids_10.end());
-        source_data->moveByEntityIds(*target_data, ids_set_10b);
+        source_data->moveByEntityIds(*target_data, ids_set_10b, NotifyObservers::No);
 
         auto target_lines = target_data->getAtTime(TimeFrameIndex(10));
         REQUIRE(target_lines.size() == 2);

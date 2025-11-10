@@ -87,11 +87,11 @@ protected:
                 {150.0f, 155.0f}};
 
         // Add lines to LineData (this will NOT generate EntityIds yet since context isn't set)
-        line_data->addAtTime(TimeFrameIndex(10), line1_t1);
-        line_data->addAtTime(TimeFrameIndex(10), line2_t1);
-        line_data->addAtTime(TimeFrameIndex(20), line1_t2);
-        line_data->addAtTime(TimeFrameIndex(20), line2_t2);
-        line_data->addAtTime(TimeFrameIndex(30), line1_t3);
+        line_data->addAtTime(TimeFrameIndex(10), line1_t1, NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(10), line2_t1, NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(20), line1_t2, NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(20), line2_t2, NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(30), line1_t3, NotifyObservers::No);
 
         // Set image size
         line_data->setImageSize({800, 600});

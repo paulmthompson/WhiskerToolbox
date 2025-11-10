@@ -59,28 +59,28 @@ protected:
         // Create test data
         // Frames 0-4: Group A only
         for (int frame = 0; frame < 5; ++frame) {
-            line_data->addAtTime(TimeFrameIndex(frame), create_line(10.0f), false);
+            line_data->addAtTime(TimeFrameIndex(frame), create_line(10.0f), NotifyObservers::No);
         }
 
         // Frames 5-9: Group B and Group C
         for (int frame = 5; frame < 10; ++frame) {
-            line_data->addAtTime(TimeFrameIndex(frame), create_line(20.0f), false); // Group B
-            line_data->addAtTime(TimeFrameIndex(frame), create_line(30.0f), false); // Group C
+            line_data->addAtTime(TimeFrameIndex(frame), create_line(20.0f), NotifyObservers::No); // Group B
+            line_data->addAtTime(TimeFrameIndex(frame), create_line(30.0f), NotifyObservers::No); // Group C
         }
 
         // Frames 10-14: Group A only
         for (int frame = 10; frame < 15; ++frame) {
-            line_data->addAtTime(TimeFrameIndex(frame), create_line(10.0f), false);
+            line_data->addAtTime(TimeFrameIndex(frame), create_line(10.0f), NotifyObservers::No);
         }
 
         // Frames 15-19: Group B only
         for (int frame = 15; frame < 20; ++frame) {
-            line_data->addAtTime(TimeFrameIndex(frame), create_line(20.0f), false);
+            line_data->addAtTime(TimeFrameIndex(frame), create_line(20.0f), NotifyObservers::No);
         }
 
         // Frames 20-24: Group C only
         for (int frame = 20; frame < 25; ++frame) {
-            line_data->addAtTime(TimeFrameIndex(frame), create_line(30.0f), false);
+            line_data->addAtTime(TimeFrameIndex(frame), create_line(30.0f), NotifyObservers::No);
         }
 
         // Now assign entities to groups

@@ -48,9 +48,9 @@ TEST_CASE_METHOD(DataManagerTestFixture, "Data Transform: LineProximityGrouping 
         std::vector<Point2D<float>> line2 = {{5.0f, 5.0f}, {15.0f, 5.0f}};
         std::vector<Point2D<float>> line3 = {{100.0f, 100.0f}, {110.0f, 100.0f}}; // Far away
         
-        line_data->addAtTime(TimeFrameIndex(1), line1);
-        line_data->addAtTime(TimeFrameIndex(1), line2);
-        line_data->addAtTime(TimeFrameIndex(1), line3);
+        line_data->addAtTime(TimeFrameIndex(1), line1, NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(1), line2, NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(1), line3, NotifyObservers::No);
         
         // Set up entity context
         line_data->setIdentityContext("test_lines", dm.getEntityRegistry());

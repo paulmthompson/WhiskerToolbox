@@ -71,7 +71,7 @@ DataTypeVariant LineBaseFlipTransform::execute(DataTypeVariant const & dataVaria
 
             // Add processed line to output
             if (!processed_line.empty()) {
-                output_line_data->addAtTime(time, processed_line, false);
+                output_line_data->addAtTime(time, processed_line, NotifyObservers::No);
             }
         }
 

@@ -86,9 +86,11 @@ private:
 
         // Add some test LineData
         auto line_data = std::make_shared<LineData>();
-        line_data->addAtTime(TimeFrameIndex(0), Line2D(std::vector<Point2D<float>>{
-                                                        Point2D<float>{0.0f, 0.0f},
-                                                        Point2D<float>{100.0f, 100.0f}}));
+        line_data->addAtTime(TimeFrameIndex(0),
+                             Line2D(std::vector<Point2D<float>>{
+                                     Point2D<float>{0.0f, 0.0f},
+                                     Point2D<float>{100.0f, 100.0f}}),
+                             NotifyObservers::No);
         m_data_manager->setData<LineData>("test_lines", line_data, time_key);
 
         // Add some test AnalogTimeSeries

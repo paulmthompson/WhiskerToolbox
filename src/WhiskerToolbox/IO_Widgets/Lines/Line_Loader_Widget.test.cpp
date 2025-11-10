@@ -112,9 +112,9 @@ std::shared_ptr<LineData> createExampleLineData() {
     };
     Line2D line3(line3_points);
 
-    line_data->addAtTime(TimeFrameIndex(0), line1, false);
-    line_data->addAtTime(TimeFrameIndex(0), line2, false);
-    line_data->addAtTime(TimeFrameIndex(1), line3, false);
+    line_data->addAtTime(TimeFrameIndex(0), line1, NotifyObservers::No);
+    line_data->addAtTime(TimeFrameIndex(0), line2, NotifyObservers::No);
+    line_data->addAtTime(TimeFrameIndex(1), line3, NotifyObservers::No);
 
     line_data->setImageSize(ImageSize(800, 600));
     return line_data;

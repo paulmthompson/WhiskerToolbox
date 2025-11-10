@@ -106,9 +106,9 @@ private:
         };
         
         // Add points to different time frames
-        point_data->overwritePointsAtTime(TimeFrameIndex(1), points_frame_1);
-        point_data->overwritePointsAtTime(TimeFrameIndex(2), points_frame_2);
-        point_data->overwritePointsAtTime(TimeFrameIndex(3), points_frame_3);
+        point_data->addAtTime(TimeFrameIndex(1), points_frame_1);
+        point_data->addAtTime(TimeFrameIndex(2), points_frame_2);
+        point_data->addAtTime(TimeFrameIndex(3), points_frame_3);
         
         // Set image size for the point data
         point_data->setImageSize(ImageSize(800, 600));
@@ -151,9 +151,9 @@ private:
         Line2D line1_2(line1_frame_2);
         
         // Add lines to different time frames
-        line_data->addAtTime(TimeFrameIndex(1), line1_1);
-        line_data->addAtTime(TimeFrameIndex(1), line2_1);
-        line_data->addAtTime(TimeFrameIndex(2), line1_2);
+        line_data->addAtTime(TimeFrameIndex(1), line1_1, NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(1), line2_1, NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(2), line1_2, NotifyObservers::No);
         
         // Set image size for the line data
         line_data->setImageSize(ImageSize(800, 600));
@@ -370,7 +370,7 @@ private:
                 points.emplace_back(coord_dist(*m_random_engine), coord_dist(*m_random_engine));
             }
             
-            point_data->overwritePointsAtTime(TimeFrameIndex(frame), points);
+            point_data->addAtTime(TimeFrameIndex(frame), points);
         }
         
         point_data->setImageSize(ImageSize(800, 600));
@@ -394,7 +394,7 @@ private:
             }
             
             Line2D line(line_points);
-            line_data->addAtTime(TimeFrameIndex(frame), line);
+            line_data->addAtTime(TimeFrameIndex(frame), line, NotifyObservers::No);
         }
         
         line_data->setImageSize(ImageSize(800, 600));

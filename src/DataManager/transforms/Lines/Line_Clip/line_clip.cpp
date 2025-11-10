@@ -171,7 +171,7 @@ std::shared_ptr<LineData> clip_lines(
             
             // Add clipped line to result (only if it has at least 2 points)
             if (clipped_line.size() >= 2) {
-                result_line_data->addAtTime(time, clipped_line, false);
+                result_line_data->addAtTime(time, clipped_line, NotifyObservers::No);
             }
         }
         

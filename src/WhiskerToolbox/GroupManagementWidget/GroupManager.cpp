@@ -485,6 +485,6 @@ void GroupManager::removeEntityFromPointData(PointData * point_data, EntityId en
 void GroupManager::removeEntityFromLineData(LineData * line_data, EntityId entity_id) {
     if (!line_data) return;
 
-    line_data->clearByEntityId(entity_id, true);
+    line_data->clearByEntityId(entity_id, NotifyObservers::Yes);
 }
 

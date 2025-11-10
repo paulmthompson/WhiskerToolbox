@@ -67,9 +67,9 @@ protected:
         Line2D line3(line3_points);
         
         // Add lines to LineData at different time frames
-        original_line_data->addAtTime(TimeFrameIndex(0), line1, false);
-        original_line_data->addAtTime(TimeFrameIndex(0), line2, false);
-        original_line_data->addAtTime(TimeFrameIndex(1), line3, false);
+        original_line_data->addAtTime(TimeFrameIndex(0), line1, NotifyObservers::No);
+        original_line_data->addAtTime(TimeFrameIndex(0), line2, NotifyObservers::No);
+        original_line_data->addAtTime(TimeFrameIndex(1), line3, NotifyObservers::No);
         
         // Set image size
         original_line_data->setImageSize(ImageSize(800, 600));

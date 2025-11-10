@@ -52,7 +52,7 @@ public:
      */
     explicit PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const & data);
 
-    // ========== Setters ==========
+    // ========== Setters (Time-based) ==========
 
     /**
      * @brief Clear the points at a specific time
@@ -79,21 +79,6 @@ public:
     void addAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
 
     /**
-     * @brief Add multiple points at a specific time
-     * 
-     * This will add multiple points at a specific time.
-     * 
-     * If the time does not exist, it will be created.
-     * 
-     * If the time already exists, the points will be added to the existing points.
-     * 
-     * @param time The time to add the points at
-     * @param points The points to add
-     * @param notify If true, the observers will be notified
-     */
-    void addPointsAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & points, bool notify = true);
-
-    /**
      * @brief Add a point entry at a specific time with a specific entity ID
      *
      * This method is used internally for move operations to preserve entity IDs.
@@ -104,6 +89,22 @@ public:
      * @param notify If true, the observers will be notified
      */
     void addEntryAtTime(TimeFrameIndex time, Point2D<float> const & point, EntityId entity_id, bool notify = true);
+
+
+    /**
+     * @brief Add a batch of points at a specific time by copying them.
+     *
+     * Appends the points to any already existing at that time.
+     */
+    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & points_to_add);
+
+    /**
+     * @brief Add a batch of points at a specific time by moving them.
+     *
+     * Appends the points to any already existing at that time.
+     * The input vector will be left in a state with "empty" points.
+     */
+    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> && points_to_add);
 
     /**
      * @brief Overwrite a point at a specific time
@@ -116,32 +117,12 @@ public:
      */
     void overwritePointAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
 
-    /**
-     * @brief Overwrite multiple points at a specific time
-     * 
-     * This will overwrite multiple points at a specific time.
-     * 
-     * @param time The time to overwrite the points at
-     * @param points The points to overwrite
-     * @param notify If true, the observers will be notified
-     */
-    void overwritePointsAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & points, bool notify = true);
-
-    /**
-     * @brief Overwrite multiple points at multiple times
-     * 
-     * This will overwrite multiple points at multiple times.
-     * 
-     * @param times The times to overwrite the points at
-     * @param points The points to overwrite
-     * @param notify If true, the observers will be notified
-     */
-    void overwritePointsAtTimes(
-            std::vector<TimeFrameIndex> const & times,
-            std::vector<std::vector<Point2D<float>>> const & points,
-            bool notify = true);
 
     // ========== Setters (Entity-based) ==========
+
+    using PointModifier = ModificationHandle<Point2D<float>>;
+
+    [[nodiscard]] std::optional<PointModifier> getMutableData(EntityId entity_id, bool notify = true);
 
     /**
      * @brief Clear the points by entity ID

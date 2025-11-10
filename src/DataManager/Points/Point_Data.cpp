@@ -27,6 +27,30 @@ PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const
 
 // ========== Setters ==========
 
+
+[[nodiscard]] std::optional<PointData::PointModifier> PointData::getMutableData(EntityId entity_id, bool notify) {
+
+    auto descriptor = _identity_registry->get(entity_id);
+    if (!descriptor || descriptor->kind != EntityKind::PointEntity || descriptor->data_key != _identity_data_key) {
+        return std::nullopt;
+    }
+
+    auto time_it = _data.find(TimeFrameIndex{descriptor->time_value});
+    if (time_it == _data.end()) {
+        return std::nullopt;
+    }
+
+    size_t local_index = static_cast<size_t>(descriptor->local_index);
+    if (local_index >= time_it->second.size()) {
+        return std::nullopt;
+    }
+
+    Point2D<float> & point = time_it->second[local_index].data;
+
+    return PointModifier(point, [this, notify]() { if (notify) { this->notifyObservers(); } });
+}
+
+
 bool PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
     auto it = _data.find(time);
     if (it != _data.end()) {
@@ -52,47 +76,59 @@ void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> c
     }
 }
 
-void PointData::overwritePointsAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & points, bool notify) {
-    auto & entries = _data[time];
-    entries.clear();
-    entries.reserve(points.size());
-    for (int i = 0; i < static_cast<int>(points.size()); ++i) {
-        EntityId id = 0;
-        if (_identity_registry) {
-            id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, i);
-        }
-        entries.emplace_back(id, points[static_cast<size_t>(i)]);
-    }
-    if (notify) {
-        notifyObservers();
-    }
-}
-
-void PointData::overwritePointsAtTimes(
-        std::vector<TimeFrameIndex> const & times,
-        std::vector<std::vector<Point2D<float>>> const & points,
-        bool notify) {
-    if (times.size() != points.size()) {
-        std::cout << "overwritePointsAtTimes: times and points must be the same size" << std::endl;
+void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & points_to_add) {
+    if (points_to_add.empty()) {
         return;
     }
 
-    for (std::size_t i = 0; i < times.size(); i++) {
-        auto const & pts = points[i];
-        auto const time = times[i];
-        auto & entries = _data[time];
-        entries.clear();
-        entries.reserve(pts.size());
-        for (int j = 0; j < static_cast<int>(pts.size()); ++j) {
-            EntityId id = 0;
-            if (_identity_registry) {
-                id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, j);
-            }
-            entries.emplace_back(id, pts[static_cast<size_t>(j)]);
+    // 1. Get (or create) the vector of entries for this time
+    // This is our single map lookup.
+    auto & entry_vec = _data[time];
+
+    // 2. Reserve space once for high performance
+    size_t const old_size = entry_vec.size();
+    entry_vec.reserve(old_size + points_to_add.size());
+
+    // 3. Loop and emplace new entries
+    for (size_t i = 0; i < points_to_add.size(); ++i) {
+        int const local_index = static_cast<int>(old_size + i);
+        EntityId entity_id = 0;
+        if (_identity_registry) {
+            entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
         }
+
+        // Calls DataEntry(entity_id, points_to_add[i])
+        // This will invoke the Point2D<float> copy constructor
+        entry_vec.emplace_back(entity_id, points_to_add[i]);
     }
-    if (notify) {
-        notifyObservers();
+
+    // Note: Following our "manual notify" pattern,
+    // the caller is responsible for calling notifyObservers().
+}
+
+void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> && points_to_add) {
+    if (points_to_add.empty()) {
+        return;
+    }
+
+    // 1. Get (or create) the vector of entries for this time
+    auto & entry_vec = _data[time];
+
+    // 2. Reserve space once
+    size_t const old_size = entry_vec.size();
+    entry_vec.reserve(old_size + points_to_add.size());
+
+    // 3. Loop and emplace new entries
+    for (size_t i = 0; i < points_to_add.size(); ++i) {
+        int const local_index = static_cast<int>(old_size + i);
+        EntityId entity_id = 0;
+        if (_identity_registry) {
+            entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
+        }
+
+        // Calls DataEntry(entity_id, std::move(lines_to_add[i]))
+        // This will invoke the Line2D MOVE constructor
+        entry_vec.emplace_back(entity_id, std::move(points_to_add[i]));
     }
 }
 
@@ -103,23 +139,6 @@ void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point,
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
     }
     _data[time].emplace_back(entity_id, point);
-
-    if (notify) {
-        notifyObservers();
-    }
-}
-
-void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & points, bool notify) {
-    auto & entries = _data[time];
-    int const start_index = static_cast<int>(entries.size());
-    entries.reserve(entries.size() + points.size());
-    for (int i = 0; i < static_cast<int>(points.size()); ++i) {
-        EntityId id = 0;
-        if (_identity_registry) {
-            id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, start_index + i);
-        }
-        entries.emplace_back(id, points[static_cast<size_t>(i)]);
-    }
 
     if (notify) {
         notifyObservers();

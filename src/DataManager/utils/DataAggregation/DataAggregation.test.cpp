@@ -576,8 +576,8 @@ TEST_CASE("DataAggregation - Point data transformations", "[data_aggregation][po
         std::vector<Point2D<float>> points_at_time_1 = {{10.0f, 20.0f}, {30.0f, 40.0f}};
         std::vector<Point2D<float>> points_at_time_2 = {{50.0f, 60.0f}, {70.0f, 80.0f}};
         
-        point_data->addPointsAtTime(TimeFrameIndex(1), points_at_time_1, false);
-        point_data->addPointsAtTime(TimeFrameIndex(2), points_at_time_2, false);
+        point_data->addAtTime(TimeFrameIndex(1), points_at_time_1);
+        point_data->addAtTime(TimeFrameIndex(2), points_at_time_2);
         
         std::vector<Interval> row_intervals = {
             {1, 2}  // Should include all four points

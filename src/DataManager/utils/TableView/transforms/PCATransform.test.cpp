@@ -22,11 +22,11 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
 
     // Prepare LineData with simple lines across timestamps 10,20,30 (2,2,1 entities)
     auto line_data = std::make_shared<LineData>();
-    line_data->addAtTime(TimeFrameIndex(10), std::vector<Point2D<float>>{{0, 0}, {1, 1}});
-    line_data->addAtTime(TimeFrameIndex(10), std::vector<Point2D<float>>{{2, 2}, {3, 3}});
-    line_data->addAtTime(TimeFrameIndex(20), std::vector<Point2D<float>>{{4, 4}, {5, 5}});
-    line_data->addAtTime(TimeFrameIndex(20), std::vector<Point2D<float>>{{6, 6}, {7, 7}});
-    line_data->addAtTime(TimeFrameIndex(30), std::vector<Point2D<float>>{{8, 8}, {9, 9}});
+    line_data->addAtTime(TimeFrameIndex(10), std::vector<Point2D<float>>{{0, 0}, {1, 1}}, NotifyObservers::No);
+    line_data->addAtTime(TimeFrameIndex(10), std::vector<Point2D<float>>{{2, 2}, {3, 3}}, NotifyObservers::No);
+    line_data->addAtTime(TimeFrameIndex(20), std::vector<Point2D<float>>{{4, 4}, {5, 5}}, NotifyObservers::No);
+    line_data->addAtTime(TimeFrameIndex(20), std::vector<Point2D<float>>{{6, 6}, {7, 7}}, NotifyObservers::No);
+    line_data->addAtTime(TimeFrameIndex(30), std::vector<Point2D<float>>{{8, 8}, {9, 9}}, NotifyObservers::No);
     line_data->setImageSize({800, 600});
 
     dm.setTime(TimeKey("test_time"), tf);

@@ -94,15 +94,19 @@ private:
 
         // Add some test LineData
         auto line_data = std::make_shared<LineData>();
-        line_data->addAtTime(TimeFrameIndex(0), Line2D(std::vector<Point2D<float>>{
-                                                        Point2D<float>{0.0f, 0.0f},
-                                                        Point2D<float>{100.0f, 100.0f}}));
+        line_data->addAtTime(TimeFrameIndex(0),
+                             Line2D(std::vector<Point2D<float>>{
+                                     Point2D<float>{0.0f, 0.0f},
+                                     Point2D<float>{100.0f, 100.0f}}),
+                             NotifyObservers::No);
         m_data_manager->setData<LineData>("test_lines_1", line_data, time_key);
 
         auto line_data2 = std::make_shared<LineData>();
-        line_data2->addAtTime(TimeFrameIndex(0), Line2D(std::vector<Point2D<float>>{
-                                                         Point2D<float>{50.0f, 50.0f},
-                                                         Point2D<float>{150.0f, 150.0f}}));
+        line_data2->addAtTime(TimeFrameIndex(0),
+                              Line2D(std::vector<Point2D<float>>{
+                                      Point2D<float>{50.0f, 50.0f},
+                                      Point2D<float>{150.0f, 150.0f}}),
+                              NotifyObservers::No);
         m_data_manager->setData<LineData>("test_lines_2", line_data2, time_key);
 
         // Add some test AnalogTimeSeries
@@ -220,7 +224,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
         // First, let's just enable a single leaf item to test basic state preservation
         auto * pointDataItem = findItemByText(tree, "points");
         REQUIRE(pointDataItem != nullptr);
-        
+
         // Expand to access children
         pointDataItem->setExpanded(true);
         QApplication::processEvents();
@@ -236,7 +240,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
             }
         }
         REQUIRE(testPointsGroup != nullptr);
-        
+
         // Enable just one individual feature first
         QTreeWidgetItem * testPoints1Item = nullptr;
         for (int i = 0; i < testPointsGroup->childCount(); ++i) {
@@ -245,7 +249,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
                 testPoints1Item = child;
                 child->setCheckState(1, Qt::Checked);
                 enabledFeatures.push_back("test_points_1");
-                
+
                 // The issue is that setCheckState doesn't automatically emit itemChanged in the test environment
                 // Let's manually emit the signal to trigger the widget's _itemChanged slot
                 emit tree->itemChanged(child, 1);
@@ -281,7 +285,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
             }
         }
         REQUIRE(newTestPointsGroup != nullptr);
-        
+
         // Check that test_points_1 is still enabled
         bool foundEnabledChild = false;
         for (int i = 0; i < newTestPointsGroup->childCount(); ++i) {
@@ -532,7 +536,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - No emissio
     std::vector<float> values = {10.0f, 20.0f, 30.0f};
     auto new_analog_data = std::make_shared<AnalogTimeSeries>(values, values.size());
     TimeKey time_key("time");
-    dm.setTime(time_key, std::make_shared<TimeFrame>()); // ensure time exists
+    dm.setTime(time_key, std::make_shared<TimeFrame>());// ensure time exists
     dm.setData<AnalogTimeSeries>("probe_analog_1", new_analog_data, time_key);
 
     QApplication::processEvents();
@@ -631,7 +635,10 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - Group togg
     QTreeWidgetItem * nameGroup = nullptr;
     for (int i = 0; i < analogTop->childCount(); ++i) {
         QTreeWidgetItem * child = analogTop->child(i);
-        if (child->childCount() > 0) { nameGroup = child; break; }
+        if (child->childCount() > 0) {
+            nameGroup = child;
+            break;
+        }
     }
     REQUIRE(nameGroup != nullptr);
 

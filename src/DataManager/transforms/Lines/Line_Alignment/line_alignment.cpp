@@ -610,7 +610,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
 
         // Add the aligned lines to the new LineData
         for (auto const & aligned_line: aligned_lines) {
-            aligned_line_data->addAtTime(time, aligned_line, false);
+            aligned_line_data->addAtTime(time, aligned_line, NotifyObservers::No);
         }
 
         processed_time_points++;
