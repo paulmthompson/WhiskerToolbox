@@ -804,7 +804,7 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
             std::string data_key, data_type;
             EntityId entity_id = _findEntityAtPosition(event->scenePos(), data_key, data_type);
             
-            if (entity_id != 0) {
+            if (entity_id != EntityId(0)) {
                 // Use group-based selection for all entity types
                 // Check if Ctrl is held for multi-selection
                 if (event->modifiers() & Qt::ControlModifier) {
@@ -1033,7 +1033,7 @@ void Media_Window::_plotLineData() {
 
         for (int line_idx = 0; line_idx < static_cast<int>(line_count); ++line_idx) {
             auto const & single_line = lineData[line_idx];
-            EntityId entity_id = static_cast<size_t>(line_idx) < entityIds.size() ? entityIds[line_idx] : 0;
+            EntityId entity_id = static_cast<size_t>(line_idx) < entityIds.size() ? entityIds[line_idx] : EntityId(0);
 
             if (single_line.empty()) {
                 continue;
@@ -1976,7 +1976,7 @@ QColor Media_Window::_getGroupAwareColor(EntityId entity_id, QColor const & defa
         return QColor(255, 255, 0); // Bright yellow for selected entities
     }
     
-    if (!_group_manager || entity_id == 0) {
+    if (!_group_manager || entity_id == EntityId(0)) {
         return default_color;
     }
     
@@ -1984,7 +1984,7 @@ QColor Media_Window::_getGroupAwareColor(EntityId entity_id, QColor const & defa
 }
 
 bool Media_Window::_isEntityGroupVisible(EntityId entity_id) const {
-    if (!_group_manager || entity_id == 0) {
+    if (!_group_manager || entity_id == EntityId(0)) {
         return true; // Entities not in a group or without group manager are always visible
     }
     
@@ -1997,7 +1997,7 @@ QRgb Media_Window::_getGroupAwareColorRgb(EntityId entity_id, QRgb default_color
         return qRgba(255, 255, 0, 255); // Bright yellow for selected entities
     }
     
-    if (!_group_manager || entity_id == 0) {
+    if (!_group_manager || entity_id == EntityId(0)) {
         return default_color;
     }
     
@@ -2061,7 +2061,7 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
     for (auto const & [key, config] : _line_configs) {
         if (config->is_visible) {
             EntityId entity_id = _findLineAtPosition(scene_pos, key);
-            if (entity_id != 0) {
+            if (entity_id != EntityId(0)) {
                 data_key = key;
                 data_type = "line";
                 return entity_id;
@@ -2073,7 +2073,7 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
     for (auto const & [key, config] : _point_configs) {
         if (config->is_visible) {
             EntityId entity_id = _findPointAtPosition(scene_pos, key);
-            if (entity_id != 0) {
+            if (entity_id != EntityId(0)) {
                 data_key = key;
                 data_type = "point";
                 return entity_id;
@@ -2085,7 +2085,7 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
     for (auto const & [key, config] : _mask_configs) {
         if (config->is_visible) {
             EntityId entity_id = _findMaskAtPosition(scene_pos, key);
-            if (entity_id != 0) {
+            if (entity_id != EntityId(0)) {
                 data_key = key;
                 data_type = "mask";
                 return entity_id;
@@ -2093,13 +2093,13 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
         }
     }
 
-    return 0; // No entity found
+    return EntityId(0); // No entity found
 }
 
 EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::string const & line_key) {
     auto line_data = _data_manager->getData<LineData>(line_key);
     if (!line_data) {
-        return 0;
+        return EntityId(0);
     }
 
     auto current_time = _data_manager->getCurrentTime();
@@ -2107,7 +2107,7 @@ EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::strin
     auto const & entity_ids = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time));
 
     if (lines.size() != entity_ids.size()) {
-        return 0;
+        return EntityId(0);
     }
 
     float const threshold = 10.0f; // pixels
@@ -2140,13 +2140,13 @@ EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::strin
         }
     }
 
-    return 0;
+    return EntityId(0);
 }
 
 EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::string const & point_key) {
     auto point_data = _data_manager->getData<PointData>(point_key);
     if (!point_data) {
-        return 0;
+        return EntityId(0);
     }
 
     auto current_time = _data_manager->getCurrentTime();
@@ -2154,7 +2154,7 @@ EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::stri
     auto const & entity_ids = point_data->getEntityIdsAtTime(TimeFrameIndex(current_time));
 
     if (points.size() != entity_ids.size()) {
-        return 0;
+        return EntityId(0);
     }
 
     float const threshold = 15.0f; // pixels
@@ -2176,13 +2176,13 @@ EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::stri
         }
     }
 
-    return 0;
+    return EntityId(0);
 }
 
 EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::string const & mask_key) {
     auto mask_data = _data_manager->getData<MaskData>(mask_key);
     if (!mask_data) {
-        return 0;
+        return EntityId(0);
     }
 
     auto current_time = _data_manager->getCurrentTime();
@@ -2204,12 +2204,12 @@ EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::strin
                 std::abs(static_cast<float>(point.y) - y_media) < 5.0f) {
                 // Return a synthetic EntityId based on position and mask index
                 // This is temporary until MaskData supports proper EntityIds
-                return static_cast<EntityId>(1000000 + current_time * 1000 + i);
+                return EntityId(1000000 + current_time * 1000 + i);
             }
         }
     }
 
-    return 0;
+    return EntityId(0);
 }
 
 void Media_Window::_createContextMenu() {

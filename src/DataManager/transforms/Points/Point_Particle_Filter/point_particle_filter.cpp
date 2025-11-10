@@ -387,7 +387,7 @@ std::shared_ptr<PointData> pointParticleFilter(
                                      inv_scale_x, inv_scale_y);
             
             // Find an entity ID from this group to use for all tracked points
-            EntityId representative_entity_id = 0;
+            EntityId representative_entity_id = EntityId(0);
             if (!entities_vec.empty()) {
                 representative_entity_id = entities_vec.front();
             }

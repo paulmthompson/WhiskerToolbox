@@ -509,7 +509,7 @@ std::vector<EntityId> TableView::getRowEntityIds(size_t row_index) const {
             // Use the column's getCellEntityIds method
             auto cell_entities = column->getCellEntityIds(row_index);
             for (EntityId entity_id : cell_entities) {
-                if (entity_id != 0) {
+                if (entity_id != EntityId(0)) {
                     entity_set.insert(entity_id);
                 }
             }

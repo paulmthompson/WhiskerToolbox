@@ -107,7 +107,7 @@ void MediaPoint_Widget::_handlePointClickWithModifiers(qreal x_media, qreal y_me
     // Check if Ctrl is held for point movement
     if (modifiers & Qt::ControlModifier) {
         // Ctrl+click: move selected point if one is selected
-        if (_selected_point_id != 0) {
+        if (_selected_point_id != EntityId(0)) {
             _moveSelectedPoint(x_media, y_media);
         }
         return;
@@ -115,7 +115,7 @@ void MediaPoint_Widget::_handlePointClickWithModifiers(qreal x_media, qreal y_me
     
     // Regular click: select nearby point if exists
     EntityId nearby_point = _findNearestPoint(x_media, y_media, _selection_threshold);
-    if (nearby_point != 0) {
+    if (nearby_point != EntityId(0)) {
         _selectPoint(nearby_point);
     } else {
         _clearPointSelection();
@@ -124,11 +124,11 @@ void MediaPoint_Widget::_handlePointClickWithModifiers(qreal x_media, qreal y_me
 
 EntityId MediaPoint_Widget::_findNearestPoint(qreal x_media, qreal y_media, float max_distance) {
     if (_active_key.empty())
-        return 0;
+        return EntityId(0);
     
     auto point_data = _data_manager->getData<PointData>(_active_key);
     if (!point_data)
-        return 0;
+        return EntityId(0);
     
     auto current_time = _data_manager->getCurrentTime();
     
@@ -146,7 +146,7 @@ EntityId MediaPoint_Widget::_findNearestPoint(qreal x_media, qreal y_media, floa
     
     auto points = point_data->getAtTime(TimeFrameIndex(current_time));
     if (points.empty())
-        return 0;
+        return EntityId(0);
     float min_distance = max_distance;
     int closest_point_index = -1;
     for (const auto& point : points) {
@@ -168,7 +168,7 @@ EntityId MediaPoint_Widget::_findNearestPoint(qreal x_media, qreal y_media, floa
         }
     }
     
-    return 0;
+    return EntityId(0);
 }
 
 void MediaPoint_Widget::_selectPoint(EntityId point_id) {
@@ -176,12 +176,12 @@ void MediaPoint_Widget::_selectPoint(EntityId point_id) {
     
     // Use Media_Window's selection system for visual feedback
     _scene->selectEntity(point_id, _active_key, "point");
-    std::cout << "Selected point with ID: " << point_id << std::endl;
+    std::cout << "Selected point with ID: " << point_id.id << std::endl;
 }
 
 void MediaPoint_Widget::_clearPointSelection() {
-    if (_selected_point_id != 0) {
-        _selected_point_id = 0;
+    if (_selected_point_id != EntityId(0)) {
+        _selected_point_id = EntityId(0);
         _scene->clearAllSelections(); // Clear all selections in scene
         _scene->UpdateCanvas(); // Refresh to remove selection highlight
         std::cout << "Cleared point selection" << std::endl;
@@ -189,7 +189,7 @@ void MediaPoint_Widget::_clearPointSelection() {
 }
 
 void MediaPoint_Widget::_moveSelectedPoint(qreal x_media, qreal y_media) {
-    if (_selected_point_id == 0 || _active_key.empty())
+    if (_selected_point_id == EntityId(0) || _active_key.empty())
         return;
     
     auto current_time = _data_manager->getCurrentTime();

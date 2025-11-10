@@ -39,9 +39,9 @@ struct ArcChain {
 struct GroundTruthSegment {
     GroupId group_id;
     TimeFrameIndex start_frame = TimeFrameIndex(0);
-    EntityId start_entity;
+    EntityId start_entity = EntityId(0);
     TimeFrameIndex end_frame = TimeFrameIndex(0);
-    EntityId end_entity;
+    EntityId end_entity = EntityId(0);
 };
 
 using GroundTruthMap = std::map<TimeFrameIndex, std::map<GroupId, EntityId>>;

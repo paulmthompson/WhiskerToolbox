@@ -71,7 +71,7 @@ public:
      */
     [[nodiscard]] virtual auto getEntityIdAt(size_t index) const -> EntityId {
         (void) index;
-        return 0;
+        return EntityId(0);
     }
 
 protected:

@@ -35,7 +35,7 @@ void PointDataVisualization::populateData() {
         for (size_t i = 0; i < time_points_pair.points.size(); ++i) {
             auto const & point = time_points_pair.points[i];
 
-            EntityId eid = 0;
+            EntityId eid = EntityId(0);
             if (i < frame_entity_ids.size()) {
                 eid = frame_entity_ids[i];
             }

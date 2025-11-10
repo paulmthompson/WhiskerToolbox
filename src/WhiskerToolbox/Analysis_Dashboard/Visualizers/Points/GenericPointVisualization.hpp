@@ -787,7 +787,7 @@ QString GenericPointVisualization<RowIndicatorType>::getTooltipText() const {
 
     return QString("Dataset: %1\nRow: %2\nPosition: (%3, %4)")
             .arg(m_key)
-            .arg(QString::number(m_current_hover_point->data))
+            .arg(QString::number(m_current_hover_point->data.id))
             .arg(m_current_hover_point->x, 0, 'f', 2)
             .arg(m_current_hover_point->y, 0, 'f', 2);
 }

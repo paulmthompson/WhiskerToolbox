@@ -106,7 +106,7 @@ public:
     template<typename... TDataArgs>
     void emplaceAtTime(TimeFrameIndex time, TDataArgs &&... args) {
         int const local_index = static_cast<int>(_data[time].size());
-        EntityId entity_id = 0;
+        EntityId entity_id = EntityId(0);
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
         }

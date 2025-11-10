@@ -96,7 +96,7 @@ auto LineDataAdapter::getLineAt(TimeFrameIndex t, int entityIndex) const -> Line
 
 EntityId LineDataAdapter::getEntityIdAt(TimeFrameIndex t, int entityIndex) const {
     auto const & ids = m_lineData->getEntityIdsAtTime(t);
-    if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= ids.size()) return 0;
+    if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= ids.size()) return EntityId(0);
     return ids[static_cast<size_t>(entityIndex)];
 }
 

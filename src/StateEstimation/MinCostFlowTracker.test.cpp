@@ -32,9 +32,9 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - findAnchorMetaNodeIndices find
     // Meta 1: frames 13,14 entity ids 2000,2001
     // Meta 2: frames 15,16,17 entity ids 3000,3001,3002
     std::vector<MetaNode> meta_nodes;
-    meta_nodes.push_back(makeMetaNode({{10, 1000}, {11, 1001}, {12, 1002}}));
-    meta_nodes.push_back(makeMetaNode({{13, 2000}, {14, 2001}}));
-    meta_nodes.push_back(makeMetaNode({{15, 3000}, {16, 3001}, {17, 3002}}));
+    meta_nodes.push_back(makeMetaNode({{10, EntityId(1000)}, {11, EntityId(1001)}, {12, EntityId(1002)}}));
+    meta_nodes.push_back(makeMetaNode({{13, EntityId(2000)}, {14, EntityId(2001)}}));
+    meta_nodes.push_back(makeMetaNode({{15, EntityId(3000)}, {16, EntityId(3001)}, {17, EntityId(3002)}}));
 
     // Start anchor at (frame 11, entity 1001) inside meta 0
     // End anchor at (frame 16, entity 3001) inside meta 2
@@ -49,11 +49,11 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - findAnchorPositionsInMetaNodes
     // Single meta-node containing both anchors
     // frames: 20,21,22,23; entity ids 5000,5001,5002,5003
     std::vector<MetaNode> meta_nodes;
-    meta_nodes.push_back(makeMetaNode({{20, 5000}, {21, 5001}, {22, 5002}, {23, 5003}}));
+    meta_nodes.push_back(makeMetaNode({{20, EntityId(5000)}, {21, EntityId(5001)}, {22, EntityId(5002)}, {23, EntityId(5003)}}));
 
     auto opt = findAnchorPositionsInMetaNodes(meta_nodes,
-                                              TimeFrameIndex(21), static_cast<EntityId>(5001),
-                                              TimeFrameIndex(23), static_cast<EntityId>(5003));
+                                              TimeFrameIndex(21), EntityId(5001),
+                                              TimeFrameIndex(23), EntityId(5003));
     REQUIRE(opt.has_value());
     auto const & [start_meta, start_member, end_meta, end_member] = *opt;
     REQUIRE(start_meta == 0);
@@ -64,17 +64,17 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - findAnchorPositionsInMetaNodes
 
 TEST_CASE("StateEstimation - MinCostFlowTracker - findAnchorPositionsInMetaNodes returns nullopt when either anchor is missing", "[MinCostFlowTracker][anchors]") {
     std::vector<MetaNode> meta_nodes;
-    meta_nodes.push_back(makeMetaNode({{30, 7000}, {31, 7001}}));
-    meta_nodes.push_back(makeMetaNode({{32, 8000}}));
+    meta_nodes.push_back(makeMetaNode({{30, EntityId(7000)}, {31, EntityId(7001)}}));
+    meta_nodes.push_back(makeMetaNode({{32, EntityId(8000)}}));
 
     // Missing end anchor
-    auto opt1 = findAnchorPositionsInMetaNodes(meta_nodes, TimeFrameIndex(31), static_cast<EntityId>(7001),
-                                               TimeFrameIndex(40), static_cast<EntityId>(9000));
+    auto opt1 = findAnchorPositionsInMetaNodes(meta_nodes, TimeFrameIndex(31), EntityId(7001),
+                                               TimeFrameIndex(40), EntityId(9000));
     REQUIRE_FALSE(opt1.has_value());
 
     // Missing start anchor
-    auto opt2 = findAnchorPositionsInMetaNodes(meta_nodes, TimeFrameIndex(29), static_cast<EntityId>(6000),
-                                               TimeFrameIndex(32), static_cast<EntityId>(8000));
+    auto opt2 = findAnchorPositionsInMetaNodes(meta_nodes, TimeFrameIndex(29), EntityId(6000),
+                                               TimeFrameIndex(32), EntityId(8000));
     REQUIRE_FALSE(opt2.has_value());
 }
 
@@ -83,16 +83,16 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - sliceMetaNodesToSegment trims 
     // frames 10..20 with unique ids 1000..1010
     std::vector<MetaNode> meta_nodes;
     std::vector<std::pair<long long, EntityId>> fe;
-    for (long long f = 10; f <= 20; ++f) fe.push_back({f, static_cast<EntityId>(1000 + (f - 10))});
+    for (long long f = 10; f <= 20; ++f) fe.push_back({f, EntityId(1000 + (f - 10))});
     meta_nodes.push_back(makeMetaNode(fe));
 
     // anchors at 12 and 18
     GroundTruthSegment seg;
     seg.group_id = static_cast<GroupId>(1);
     seg.start_frame = TimeFrameIndex(12);
-    seg.start_entity = static_cast<EntityId>(1002);
+    seg.start_entity = EntityId(1002);
     seg.end_frame = TimeFrameIndex(18);
-    seg.end_entity = static_cast<EntityId>(1008);
+    seg.end_entity = EntityId(1008);
 
     auto trimmed = sliceMetaNodesToSegment(meta_nodes, seg);
     REQUIRE(trimmed.size() == 1);
@@ -105,16 +105,16 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - sliceMetaNodesToSegment trims 
     // Start meta spans before start anchor, end meta spans after end anchor
     // Interior node lies strictly within segment and should be kept entirely
     std::vector<MetaNode> meta_nodes;
-    meta_nodes.push_back(makeMetaNode({{5, 1000}, {6, 1001}, {7, 1002}, {8, 1003}}));      // start meta
-    meta_nodes.push_back(makeMetaNode({{9, 2000}, {10, 2001}}));                             // interior
-    meta_nodes.push_back(makeMetaNode({{11, 3000}, {12, 3001}, {13, 3002}}));                // end meta
+    meta_nodes.push_back(makeMetaNode({{5, EntityId(1000)}, {6, EntityId(1001)}, {7, EntityId(1002)}, {8, EntityId(1003)}}));      // start meta
+    meta_nodes.push_back(makeMetaNode({{9, EntityId(2000)}, {10, EntityId(2001)}}));                             // interior
+    meta_nodes.push_back(makeMetaNode({{11, EntityId(3000)}, {12, EntityId(3001)}, {13, EntityId(3002)}}));                // end meta
 
     GroundTruthSegment seg;
     seg.group_id = static_cast<GroupId>(1);
     seg.start_frame = TimeFrameIndex(7);
-    seg.start_entity = static_cast<EntityId>(1002);
+    seg.start_entity = EntityId(1002);
     seg.end_frame = TimeFrameIndex(12);
-    seg.end_entity = static_cast<EntityId>(3001);
+    seg.end_entity = EntityId(3001);
 
     auto trimmed = sliceMetaNodesToSegment(meta_nodes, seg);
     // Expect 3 nodes: trimmed start [7,8], interior [9,10], trimmed end [11,12]
@@ -136,18 +136,18 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - sliceMetaNodesToSegment trims 
 TEST_CASE("StateEstimation - MinCostFlowTracker - sliceMetaNodesToSegment excludes crossing nodes without anchors", "[MinCostFlowTracker][slice]") {
     // Build nodes such that one crosses a boundary but does not contain anchors
     std::vector<MetaNode> meta_nodes;
-    meta_nodes.push_back(makeMetaNode({{5, 1000}, {6, 1001}, {7, 1002}}));                  // start meta (anchor at 7)
-    meta_nodes.push_back(makeMetaNode({{8, 2100}, {9, 2101}, {10, 2102}}));                 // interior
-    meta_nodes.push_back(makeMetaNode({{11, 2200}, {12, 2201}}));                           // interior
-    meta_nodes.push_back(makeMetaNode({{12, 2300}, {13, 2301}}));                           // crosses end boundary but will not be included
-    meta_nodes.push_back(makeMetaNode({{12, 3000}, {13, 3001}, {14, 3002}}));               // end meta (anchor at 13)
+    meta_nodes.push_back(makeMetaNode({{5, EntityId(1000)}, {6, EntityId(1001)}, {7, EntityId(1002)}}));                  // start meta (anchor at 7)
+    meta_nodes.push_back(makeMetaNode({{8, EntityId(2100)}, {9, EntityId(2101)}, {10, EntityId(2102)}}));                 // interior
+    meta_nodes.push_back(makeMetaNode({{11, EntityId(2200)}, {12, EntityId(2201)}}));                           // interior
+    meta_nodes.push_back(makeMetaNode({{12, EntityId(2300)}, {13, EntityId(2301)}}));                           // crosses end boundary but will not be included
+    meta_nodes.push_back(makeMetaNode({{12, EntityId(3000)}, {13, EntityId(3001)}, {14, EntityId(3002)}}));               // end meta (anchor at 13)
 
     GroundTruthSegment seg;
     seg.group_id = static_cast<GroupId>(2);
     seg.start_frame = TimeFrameIndex(7);
-    seg.start_entity = static_cast<EntityId>(1002);
+    seg.start_entity = EntityId(1002);
     seg.end_frame = TimeFrameIndex(13);
-    seg.end_entity = static_cast<EntityId>(3001);
+    seg.end_entity = EntityId(3001);
 
     auto trimmed = sliceMetaNodesToSegment(meta_nodes, seg);
     // Expected nodes: trimmed start [7], interior [8,9,10], interior [11,12], trimmed end [13]
@@ -175,28 +175,28 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - sliceMetaNodesToSegment with m
     }
 
     // Start meta node S with the start anchor at frame 10
-    meta_nodes.push_back(makeMetaNode({{8, 1100}, {9, 1101}, {10, 1102}, {11, 1103}}));
+    meta_nodes.push_back(makeMetaNode({{8, EntityId(1100)}, {9, EntityId(1101)}, {10, EntityId(1102)}, {11, EntityId(1103)}}));
 
     // Interior nodes entirely within (10,16)
-    meta_nodes.push_back(makeMetaNode({{12, 2100}, {13, 2101}}));
-    meta_nodes.push_back(makeMetaNode({{14, 2200}}));
+    meta_nodes.push_back(makeMetaNode({{12, EntityId(2100)}, {13, EntityId(2101)}}));
+    meta_nodes.push_back(makeMetaNode({{14, EntityId(2200)}}));
 
     // Another long node L2 spanning the segment and beyond, no anchors
     {
         std::vector<std::pair<long long, EntityId>> fe;
-        for (long long f = 9; f <= 18; ++f) fe.push_back({f, static_cast<EntityId>(9100 + (f - 9))});
+        for (long long f = 9; f <= 18; ++f) fe.push_back({f, EntityId(9100 + (f - 9))});
         meta_nodes.push_back(makeMetaNode(fe));
     }
 
     // End meta node E with the end anchor at frame 16
-    meta_nodes.push_back(makeMetaNode({{15, 3100}, {16, 3101}, {17, 3102}}));
+    meta_nodes.push_back(makeMetaNode({{15, EntityId(3100)}, {16, EntityId(3101)}, {17, EntityId(3102)}}));
 
     GroundTruthSegment seg;
     seg.group_id = static_cast<GroupId>(3);
     seg.start_frame = TimeFrameIndex(10);
-    seg.start_entity = static_cast<EntityId>(1102);
+    seg.start_entity = EntityId(1102);
     seg.end_frame = TimeFrameIndex(16);
-    seg.end_entity = static_cast<EntityId>(3101);
+    seg.end_entity = EntityId(3101);
 
     auto trimmed = sliceMetaNodesToSegment(meta_nodes, seg);
 
@@ -228,34 +228,34 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - anchors on a long spanning nod
     // Long node L1 spanning before start and after end, but without anchors
     {
         std::vector<std::pair<long long, EntityId>> fe;
-        for (long long f = 7; f <= 16; ++f) fe.push_back({f, static_cast<EntityId>(9000 + (f - 7))});
+        for (long long f = 7; f <= 16; ++f) fe.push_back({f, EntityId(9000 + (f - 7))});
         meta_nodes.push_back(makeMetaNode(fe));
     }
 
     // Start meta node S (will not be used as the anchor in this test)
-    meta_nodes.push_back(makeMetaNode({{8, 1100}, {9, 1101}, {10, 1102}, {11, 1103}}));
+    meta_nodes.push_back(makeMetaNode({{8, EntityId(1100)}, {9, EntityId(1101)}, {10, EntityId(1102)}, {11, EntityId(1103)}}));
 
     // Interior nodes entirely within (10,16)
-    meta_nodes.push_back(makeMetaNode({{12, 2100}, {13, 2101}}));
-    meta_nodes.push_back(makeMetaNode({{14, 2200}}));
+    meta_nodes.push_back(makeMetaNode({{12, EntityId(2100)}, {13, EntityId(2101)}}));
+    meta_nodes.push_back(makeMetaNode({{14, EntityId(2200)}}));
 
     // Long node L2 spanning the segment and beyond; this one contains both anchors
     {
         std::vector<std::pair<long long, EntityId>> fe;
-        for (long long f = 9; f <= 18; ++f) fe.push_back({f, static_cast<EntityId>(9100 + (f - 9))});
+        for (long long f = 9; f <= 18; ++f) fe.push_back({f, EntityId(9100 + (f - 9))});
         meta_nodes.push_back(makeMetaNode(fe));
     }
 
     // End meta node E (not used as anchor)
-    meta_nodes.push_back(makeMetaNode({{15, 3100}, {16, 3101}, {17, 3102}}));
+    meta_nodes.push_back(makeMetaNode({{15, EntityId(3100)}, {16, EntityId(3101)}, {17, EntityId(3102)}}));
 
     // Anchors are on L2 at frames 10 and 16
     GroundTruthSegment seg;
     seg.group_id = static_cast<GroupId>(4);
     seg.start_frame = TimeFrameIndex(10);
-    seg.start_entity = static_cast<EntityId>(9101); // 9100 + (10-9)
+    seg.start_entity = EntityId(9101); // 9100 + (10-9)
     seg.end_frame = TimeFrameIndex(16);
-    seg.end_entity = static_cast<EntityId>(9107);   // 9100 + (16-9)
+    seg.end_entity = EntityId(9107);   // 9100 + (16-9)
 
     auto trimmed = sliceMetaNodesToSegment(meta_nodes, seg);
 
@@ -269,16 +269,16 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - anchors on a long spanning nod
 TEST_CASE("StateEstimation - MinCostFlowTracker - fallback path concatenates start and end trimmed nodes", "[MinCostFlowTracker][fallback]") {
     // Create trimmed meta-nodes for a segment where solver would fail; verify fallback concatenation
     std::vector<MetaNode> meta_nodes;
-    meta_nodes.push_back(makeMetaNode({{10, 1100}, {11, 1101}, {12, 1102}})); // start node (anchor at 11)
-    meta_nodes.push_back(makeMetaNode({{12, 2100}, {13, 2101}}));              // interior
-    meta_nodes.push_back(makeMetaNode({{14, 3100}, {15, 3101}}));              // end node (anchor at 15)
+    meta_nodes.push_back(makeMetaNode({{10, EntityId(1100)}, {11, EntityId(1101)}, {12, EntityId(1102)}})); // start node (anchor at 11)
+    meta_nodes.push_back(makeMetaNode({{12, EntityId(2100)}, {13, EntityId(2101)}}));              // interior
+    meta_nodes.push_back(makeMetaNode({{14, EntityId(3100)}, {15, EntityId(3101)}}));              // end node (anchor at 15)
 
     GroundTruthSegment seg;
     seg.group_id = static_cast<GroupId>(5);
     seg.start_frame = TimeFrameIndex(11);
-    seg.start_entity = static_cast<EntityId>(1101);
+    seg.start_entity = EntityId(1101);
     seg.end_frame = TimeFrameIndex(15);
-    seg.end_entity = static_cast<EntityId>(3101);
+    seg.end_entity = EntityId(3101);
 
     // Trim to segment
     auto trimmed = sliceMetaNodesToSegment(meta_nodes, seg);
@@ -306,38 +306,38 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - fallback across consecutive se
     // Start node for segment 1: many frames up to 99 with unique entity ids; ensures frame 99 is present
     {
         std::vector<std::pair<long long, EntityId>> fe;
-        for (long long f = 1; f <= 99; ++f) fe.push_back({f, static_cast<EntityId>(100 + f)}); // eid = 100+f; frame 99 -> eid 199
+        for (long long f = 1; f <= 99; ++f) fe.push_back({f, EntityId(100 + f)}); // eid = 100+f; frame 99 -> eid 199
         meta_nodes.push_back(makeMetaNode(fe));
     }
 
     // Interior nodes within (1,100)
-    meta_nodes.push_back(makeMetaNode({{50, 1500}, {51, 1501}}));
+    meta_nodes.push_back(makeMetaNode({{50, EntityId(1500)}, {51, EntityId(1501)}}));
 
     // Boundary node at 100 which is also start anchor for segment 2
-    meta_nodes.push_back(makeMetaNode({{100, 20100}, {101, 20101}}));
+    meta_nodes.push_back(makeMetaNode({{100, EntityId(20100)}, {101, EntityId(20101)}}));
 
     // Interior nodes for segment 2
-    meta_nodes.push_back(makeMetaNode({{150, 25100}}));
-    meta_nodes.push_back(makeMetaNode({{180, 28100}}));
+    meta_nodes.push_back(makeMetaNode({{150, EntityId(25100)}}));
+    meta_nodes.push_back(makeMetaNode({{180, EntityId(28100)}}));
 
     // End node for segment 2 at 200
-    meta_nodes.push_back(makeMetaNode({{200, 20200}, {201, 20201}}));
+    meta_nodes.push_back(makeMetaNode({{200, EntityId(20200)}, {201, EntityId(20201)}}));
 
     // Segment 1 anchors
     GroundTruthSegment seg1;
     seg1.group_id = static_cast<GroupId>(6);
     seg1.start_frame = TimeFrameIndex(1);
-    seg1.start_entity = static_cast<EntityId>(101);
+    seg1.start_entity = EntityId(101);
     seg1.end_frame = TimeFrameIndex(100);
-    seg1.end_entity = static_cast<EntityId>(20100);
+    seg1.end_entity = EntityId(20100);
 
     // Segment 2 anchors
     GroundTruthSegment seg2;
     seg2.group_id = static_cast<GroupId>(6);
     seg2.start_frame = TimeFrameIndex(100);
-    seg2.start_entity = static_cast<EntityId>(20100);
+    seg2.start_entity = EntityId(20100);
     seg2.end_frame = TimeFrameIndex(200);
-    seg2.end_entity = static_cast<EntityId>(20200);
+    seg2.end_entity = EntityId(20200);
 
     // Trim both segments
     auto trimmed1 = sliceMetaNodesToSegment(meta_nodes, seg1);
@@ -373,7 +373,7 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - fallback across consecutive se
 
     // Specifically ensure frame 99 is present with the expected entity id from the spliced start node
     bool found99 = false;
-    EntityId eid99 = 0;
+    EntityId eid99 = EntityId(0);
     for (auto const & n : fb1) {
         if (n.frame == TimeFrameIndex(99)) {
             found99 = true;
@@ -382,7 +382,7 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - fallback across consecutive se
         }
     }
     REQUIRE(found99);
-    REQUIRE(eid99 == static_cast<EntityId>(199));
+    REQUIRE(eid99 == EntityId(199));
 }
 
 TEST_CASE("StateEstimation - MinCostFlowTracker - overlapping long tracklets with anchors at 1,100,200 include all entities in fallback", "[MinCostFlowTracker][fallback]") {
@@ -393,28 +393,28 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - overlapping long tracklets wit
 
     {
         std::vector<std::pair<long long, EntityId>> fe;
-        for (long long f = 1; f <= 150; ++f) fe.push_back({f, static_cast<EntityId>(10000 + f)});
+        for (long long f = 1; f <= 150; ++f) fe.push_back({f, EntityId(10000 + f)});
         meta_nodes.push_back(makeMetaNode(fe));
     }
     {
         std::vector<std::pair<long long, EntityId>> fe;
-        for (long long f = 180; f <= 200; ++f) fe.push_back({f, static_cast<EntityId>(20000 + f)});
+        for (long long f = 180; f <= 200; ++f) fe.push_back({f, EntityId(20000 + f)});
         meta_nodes.push_back(makeMetaNode(fe));
     }
 
     GroundTruthSegment seg1;
     seg1.group_id = static_cast<GroupId>(7);
     seg1.start_frame = TimeFrameIndex(1);
-    seg1.start_entity = static_cast<EntityId>(10001);
+    seg1.start_entity = EntityId(10001);
     seg1.end_frame = TimeFrameIndex(100);
-    seg1.end_entity = static_cast<EntityId>(10100); // from node A
+    seg1.end_entity = EntityId(10100); // from node A
 
     GroundTruthSegment seg2;
     seg2.group_id = static_cast<GroupId>(7);
     seg2.start_frame = TimeFrameIndex(100);
-    seg2.start_entity = static_cast<EntityId>(10100); // from node A
+    seg2.start_entity = EntityId(10100); // from node A
     seg2.end_frame = TimeFrameIndex(200);
-    seg2.end_entity = static_cast<EntityId>(20200);
+    seg2.end_entity = EntityId(20200);
 
     auto trimmed1 = sliceMetaNodesToSegment(meta_nodes, seg1);
     auto trimmed2 = sliceMetaNodesToSegment(meta_nodes, seg2);
@@ -454,10 +454,10 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - overlapping long tracklets wit
     REQUIRE(find_entity(180).has_value());
     REQUIRE(find_entity(200).has_value());
 
-    REQUIRE(find_entity(1).value() == static_cast<EntityId>(10001));
-    REQUIRE(find_entity(99).value() == static_cast<EntityId>(10099));
-    REQUIRE(find_entity(100).value() == static_cast<EntityId>(10100));
-    REQUIRE(find_entity(150).value() == static_cast<EntityId>(10150)); 
-    REQUIRE(find_entity(180).value() == static_cast<EntityId>(20180));
-    REQUIRE(find_entity(200).value() == static_cast<EntityId>(20200));
+    REQUIRE(find_entity(1).value() == EntityId(10001));
+    REQUIRE(find_entity(99).value() == EntityId(10099));
+    REQUIRE(find_entity(100).value() == EntityId(10100));
+    REQUIRE(find_entity(150).value() == EntityId(10150)); 
+    REQUIRE(find_entity(180).value() == EntityId(20180));
+    REQUIRE(find_entity(200).value() == EntityId(20200));
 }

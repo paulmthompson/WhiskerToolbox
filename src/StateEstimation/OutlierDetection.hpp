@@ -182,7 +182,7 @@ public:
                     std::cout << "    Outlier at frame " << pair.first.getValue() 
                               << ": Mahalanobis distance = " << pair.second
                               << ", chi-squared = " << chi_squared
-                              << " (entity " << outlier_entity_id << ")" << std::endl;
+                              << " (entity " << outlier_entity_id.id << ")" << std::endl;
                 }
             }
         }

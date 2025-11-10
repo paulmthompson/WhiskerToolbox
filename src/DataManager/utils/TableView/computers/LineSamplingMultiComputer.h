@@ -97,7 +97,7 @@ public:
                         results[static_cast<size_t>(2 * p)][r] = 0.0;
                         results[static_cast<size_t>(2 * p + 1)][r] = 0.0;
                     }
-                    entityIds.push_back(0);
+                    entityIds.push_back(EntityId(0));
                     continue;
                 }
                 lineFallback = lines.front();

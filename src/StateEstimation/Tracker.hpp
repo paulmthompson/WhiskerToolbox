@@ -365,7 +365,10 @@ private:
                         // For forward prediction record, use the initialized state as the prediction at this anchor
                         anchor_predicted = init_state;
                         if (_logger) {
-                            _logger->debug("frame {} anchor init: group={} entity={}", f.getValue(), static_cast<unsigned long long>(group_id), static_cast<unsigned long long>(entity_id));
+                            _logger->debug("frame {} anchor init: group={} entity={}", 
+                                f.getValue(), 
+                                static_cast<unsigned long long>(group_id), 
+                                static_cast<unsigned long long>(entity_id.id));
                         }
                     } else {
                         // Predict before fusing the anchor; this is what we will validate against the anchor
@@ -393,8 +396,8 @@ private:
                                     _logger->warn("frame {} anchor MISMATCH: group={} prediction would pick {} but ground truth is {}",
                                                   f.getValue(),
                                                   static_cast<unsigned long long>(group_id),
-                                                  static_cast<unsigned long long>(predicted_pick),
-                                                  static_cast<unsigned long long>(entity_id));
+                                                  static_cast<unsigned long long>(predicted_pick.id),
+                                                  static_cast<unsigned long long>(entity_id.id));
                                 }
                                 // Store this inconsistency to trigger re-iteration
                                 _anchor_mismatches[f].insert(group_id);
@@ -411,7 +414,7 @@ private:
                                 _logger->debug("frame {} anchor REINITIALIZED due to mismatch: group={} entity={}", 
                                               f.getValue(), 
                                               static_cast<unsigned long long>(group_id), 
-                                              static_cast<unsigned long long>(entity_id));
+                                              static_cast<unsigned long long>(entity_id.id));
                             }
                         } else {
                             // Normal update when prediction matches ground truth
@@ -419,7 +422,10 @@ private:
                             track->_filter->update(pred, m);
                         }
                         if (_logger) {
-                            _logger->debug("frame {} anchor update: group={} entity={}", f.getValue(), static_cast<unsigned long long>(group_id), static_cast<unsigned long long>(entity_id));
+                            _logger->debug("frame {} anchor update: group={} entity={}", 
+                                f.getValue(), 
+                                static_cast<unsigned long long>(group_id), 
+                                static_cast<unsigned long long>(entity_id.id));
                         }
                     }
 
@@ -550,7 +556,7 @@ private:
                         _logger->debug("frame {} snapped: group={} <- entity={} (planned)",
                                        f.getValue(),
                                        static_cast<unsigned long long>(preds[pidx].group_id),
-                                       static_cast<unsigned long long>(planned_entity));
+                                       static_cast<unsigned long long>(planned_entity.id));
                     }
                 }
 
@@ -612,7 +618,7 @@ private:
                         _logger->debug("frame {} assign: group={} <- entity={} (obs_idx={} pred_idx={})",
                                        f.getValue(),
                                        static_cast<unsigned long long>(chosen_pred.group_id),
-                                       static_cast<unsigned long long>(chosen_obs.entity_id),
+                                       static_cast<unsigned long long>(chosen_obs.entity_id.id),
                                        static_cast<unsigned long long>(obs_idx),
                                        static_cast<unsigned long long>(pred_idx));
                     }
@@ -730,8 +736,8 @@ private:
                         _logger->debug("frame {} inconsistency: group={} forward-assigned {} but smoothed-prediction picks {}",
                                        frame.getValue(),
                                        static_cast<unsigned long long>(group_id),
-                                       static_cast<unsigned long long>(*forward_assigned),
-                                       static_cast<unsigned long long>(smoothed_picked));
+                                       static_cast<unsigned long long>((*forward_assigned).id),
+                                       static_cast<unsigned long long>(smoothed_picked.id));
                     }
                 }
             }
@@ -774,15 +780,15 @@ private:
                         _logger->debug("anchor check frame {}: group={} predicted->{} != truth {}",
                                        frame.getValue(),
                                        static_cast<unsigned long long>(group_id),
-                                       static_cast<unsigned long long>(picked),
-                                       static_cast<unsigned long long>(true_entity));
+                                       static_cast<unsigned long long>(picked.id),
+                                       static_cast<unsigned long long>(true_entity.id));
                     }
                 } else {
                     if (_logger) {
                         _logger->debug("anchor check frame {}: group={} predicted matches {}",
                                        frame.getValue(),
                                        static_cast<unsigned long long>(group_id),
-                                       static_cast<unsigned long long>(true_entity));
+                                       static_cast<unsigned long long>(true_entity.id));
                     }
                 }
                 
@@ -803,8 +809,8 @@ private:
                                 _logger->debug("anchor check frame {}: group={} SMOOTHED-prediction from prev frame->{} != truth {}",
                                                frame.getValue(),
                                                static_cast<unsigned long long>(group_id),
-                                               static_cast<unsigned long long>(smoothed_picked),
-                                               static_cast<unsigned long long>(true_entity));
+                                               static_cast<unsigned long long>(smoothed_picked.id),
+                                               static_cast<unsigned long long>(true_entity.id));
                             }
                         }
                     }

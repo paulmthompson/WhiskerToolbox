@@ -71,7 +71,7 @@ TEST_CASE("GroupManager - Assign and Remove Entities", "[groupmanager][entities]
     GroupId gid = static_cast<GroupId>(g);
 
     SECTION("Assign unique entities") {
-        std::unordered_set<EntityId> ids = {1, 2, 3, 4, 5};
+        std::unordered_set<EntityId> ids = {EntityId(1), EntityId(2), EntityId(3), EntityId(4), EntityId(5)};
         REQUIRE(gm.assignEntitiesToGroup(g, ids));
 
         REQUIRE(gm.getGroupMemberCount(g) == 5);
@@ -83,17 +83,17 @@ TEST_CASE("GroupManager - Assign and Remove Entities", "[groupmanager][entities]
     }
 
     SECTION("Remove subset of entities") {
-        std::unordered_set<EntityId> ids = {10, 20, 30, 40, 50};
+        std::unordered_set<EntityId> ids = {EntityId(10), EntityId(20), EntityId(30), EntityId(40), EntityId(50)};
         REQUIRE(gm.assignEntitiesToGroup(g, ids));
         REQUIRE(gm.getGroupMemberCount(g) == 5);
 
-        std::unordered_set<EntityId> to_remove = {20, 40};
+        std::unordered_set<EntityId> to_remove = {EntityId(20), EntityId(40)};
         REQUIRE(gm.removeEntitiesFromGroup(g, to_remove));
         REQUIRE(gm.getGroupMemberCount(g) == 3);
         REQUIRE(egm.getGroupSize(gid) == 3);
 
         // Removing non-members should return false (no changes)
-        std::unordered_set<EntityId> not_in_group = {99, 100};
+        std::unordered_set<EntityId> not_in_group = {EntityId(99), EntityId(100)};
         REQUIRE_FALSE(gm.removeEntitiesFromGroup(g, not_in_group));
         REQUIRE(gm.getGroupMemberCount(g) == 3);
     }
@@ -103,21 +103,21 @@ TEST_CASE("GroupManager - Assign and Remove Entities", "[groupmanager][entities]
         GroupId gid2 = static_cast<GroupId>(g2);
 
         // Entity 7 belongs to both groups; 8 only to g
-        std::unordered_set<EntityId> ids_g = {7, 8};
-        std::unordered_set<EntityId> ids_g2 = {7};
+        std::unordered_set<EntityId> ids_g = {EntityId(7), EntityId(8)};
+        std::unordered_set<EntityId> ids_g2 = {EntityId(7)};
         REQUIRE(gm.assignEntitiesToGroup(g, ids_g));
         REQUIRE(gm.assignEntitiesToGroup(g2, ids_g2));
 
-        REQUIRE(egm.isEntityInGroup(gid, 7));
-        REQUIRE(egm.isEntityInGroup(gid2, 7));
-        REQUIRE(egm.isEntityInGroup(gid, 8));
+        REQUIRE(egm.isEntityInGroup(gid, EntityId(7)));
+        REQUIRE(egm.isEntityInGroup(gid2, EntityId(7)));
+        REQUIRE(egm.isEntityInGroup(gid, EntityId(8)));
 
         // Ungroup entity 7 from all groups; 8 remains in g
-        gm.ungroupEntities({7});
+        gm.ungroupEntities({EntityId(7)});
 
-        REQUIRE_FALSE(egm.isEntityInGroup(gid, 7));
-        REQUIRE_FALSE(egm.isEntityInGroup(gid2, 7));
-        REQUIRE(egm.isEntityInGroup(gid, 8));
+        REQUIRE_FALSE(egm.isEntityInGroup(gid, EntityId(7)));
+        REQUIRE_FALSE(egm.isEntityInGroup(gid2, EntityId(7)));
+        REQUIRE(egm.isEntityInGroup(gid, EntityId(8)));
     }
 }
 
@@ -150,30 +150,30 @@ TEST_CASE("GroupManager - Group Visibility", "[groupmanager][visibility]") {
     }
 
     SECTION("Entity group visibility check") {
-        std::unordered_set<EntityId> ids = {1, 2, 3};
+        std::unordered_set<EntityId> ids = {EntityId(1), EntityId(2), EntityId(3)};
         REQUIRE(gm.assignEntitiesToGroup(g, ids));
         
         // Group is visible by default
-        REQUIRE(gm.isEntityGroupVisible(1) == true);
-        REQUIRE(gm.isEntityGroupVisible(2) == true);
-        REQUIRE(gm.isEntityGroupVisible(3) == true);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(1)) == true);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(2)) == true);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(3)) == true);
         
         // Hide the group
         REQUIRE(gm.setGroupVisibility(g, false));
-        REQUIRE(gm.isEntityGroupVisible(1) == false);
-        REQUIRE(gm.isEntityGroupVisible(2) == false);
-        REQUIRE(gm.isEntityGroupVisible(3) == false);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(1)) == false);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(2)) == false);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(3)) == false);
         
         // Show the group again
         REQUIRE(gm.setGroupVisibility(g, true));
-        REQUIRE(gm.isEntityGroupVisible(1) == true);
-        REQUIRE(gm.isEntityGroupVisible(2) == true);
-        REQUIRE(gm.isEntityGroupVisible(3) == true);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(1)) == true);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(2)) == true);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(3)) == true);
     }
 
     SECTION("Entities not in groups are always visible") {
         // Entity 999 is not in any group
-        REQUIRE(gm.isEntityGroupVisible(999) == true);
+        REQUIRE(gm.isEntityGroupVisible(EntityId(999)) == true);
     }
 
     SECTION("Set visibility on non-existent group fails") {
@@ -195,8 +195,8 @@ TEST_CASE("GroupManager - Group Merge", "[groupmanager][merge]") {
 
     SECTION("Merge two groups") {
         // Add entities to both groups
-        std::unordered_set<EntityId> ids1 = {1, 2, 3};
-        std::unordered_set<EntityId> ids2 = {4, 5, 6};
+        std::unordered_set<EntityId> ids1 = {EntityId(1), EntityId(2), EntityId(3)};
+        std::unordered_set<EntityId> ids2 = {EntityId(4), EntityId(5), EntityId(6)};
         REQUIRE(gm.assignEntitiesToGroup(g1, ids1));
         REQUIRE(gm.assignEntitiesToGroup(g2, ids2));
         
@@ -216,19 +216,19 @@ TEST_CASE("GroupManager - Group Merge", "[groupmanager][merge]") {
         REQUIRE(gm.getGroupMemberCount(g2) == 0);
         
         // Verify entities are in the merged group
-        REQUIRE(egm.isEntityInGroup(gid1, 1));
-        REQUIRE(egm.isEntityInGroup(gid1, 2));
-        REQUIRE(egm.isEntityInGroup(gid1, 3));
-        REQUIRE(egm.isEntityInGroup(gid1, 4));
-        REQUIRE(egm.isEntityInGroup(gid1, 5));
-        REQUIRE(egm.isEntityInGroup(gid1, 6));
+        REQUIRE(egm.isEntityInGroup(gid1, EntityId(1)));
+        REQUIRE(egm.isEntityInGroup(gid1, EntityId(2)));
+        REQUIRE(egm.isEntityInGroup(gid1, EntityId(3)));
+        REQUIRE(egm.isEntityInGroup(gid1, EntityId(4)));
+        REQUIRE(egm.isEntityInGroup(gid1, EntityId(5)));
+        REQUIRE(egm.isEntityInGroup(gid1, EntityId(6)));
     }
 
     SECTION("Merge multiple groups") {
         // Add entities to all three groups
-        std::unordered_set<EntityId> ids1 = {1, 2};
-        std::unordered_set<EntityId> ids2 = {3, 4};
-        std::unordered_set<EntityId> ids3 = {5, 6};
+        std::unordered_set<EntityId> ids1 = {EntityId(1), EntityId(2)};
+        std::unordered_set<EntityId> ids2 = {EntityId(3), EntityId(4)};
+        std::unordered_set<EntityId> ids3 = {EntityId(5), EntityId(6)};
         REQUIRE(gm.assignEntitiesToGroup(g1, ids1));
         REQUIRE(gm.assignEntitiesToGroup(g2, ids2));
         REQUIRE(gm.assignEntitiesToGroup(g3, ids3));
@@ -248,7 +248,7 @@ TEST_CASE("GroupManager - Group Merge", "[groupmanager][merge]") {
 
     SECTION("Merge into non-existent group fails") {
         std::vector<int> source_groups = {g2};
-        REQUIRE_FALSE(gm.mergeGroups(999, source_groups));
+        REQUIRE_FALSE(gm.mergeGroups(99, source_groups));
     }
 
     SECTION("Merge non-existent group fails") {
@@ -280,7 +280,7 @@ TEST_CASE("GroupManager - Signals emit once per logical change", "[groupmanager]
 
     SECTION("assignEntitiesToGroup emits once on first add, none on re-add") {
         QSignalSpy modSpy(&gm, &GroupManager::groupModified);
-        std::unordered_set<EntityId> ids = {101, 102};
+        std::unordered_set<EntityId> ids = {EntityId(101), EntityId(102)};
         REQUIRE(gm.assignEntitiesToGroup(g, ids) == true);
         REQUIRE(modSpy.count() == 1);
         // Re-assign same entities -> no change
@@ -289,13 +289,13 @@ TEST_CASE("GroupManager - Signals emit once per logical change", "[groupmanager]
     }
 
     SECTION("removeEntitiesFromGroup emits once when removing present members only") {
-        std::unordered_set<EntityId> ids = {201, 202, 203};
+        std::unordered_set<EntityId> ids = {EntityId(201), EntityId(202), EntityId(203)};
         REQUIRE(gm.assignEntitiesToGroup(g, ids));
         QSignalSpy modSpy(&gm, &GroupManager::groupModified);
-        REQUIRE(gm.removeEntitiesFromGroup(g, std::unordered_set<EntityId>{202}) == true);
+        REQUIRE(gm.removeEntitiesFromGroup(g, std::unordered_set<EntityId>{EntityId(202)}) == true);
         REQUIRE(modSpy.count() == 1);
         // Removing non-members -> no emission
-        REQUIRE(gm.removeEntitiesFromGroup(g, std::unordered_set<EntityId>{999, 1000}) == false);
+        REQUIRE(gm.removeEntitiesFromGroup(g, std::unordered_set<EntityId>{EntityId(999), EntityId(1000)}) == false);
         REQUIRE(modSpy.count() == 1);
     }
 }

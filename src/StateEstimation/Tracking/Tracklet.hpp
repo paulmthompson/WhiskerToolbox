@@ -11,7 +11,7 @@ namespace StateEstimation {
 
 struct NodeInfo {
         TimeFrameIndex frame = TimeFrameIndex(0);
-        EntityId entity_id = 0;
+        EntityId entity_id = EntityId(0);
 
         bool operator<(NodeInfo const & other) const {
             if (frame != other.frame) return frame < other.frame;
@@ -33,8 +33,8 @@ struct NodeInfo {
         FilterState end_state;        // filter state after updating on last observation
         TimeFrameIndex start_frame = TimeFrameIndex(0);
         TimeFrameIndex end_frame = TimeFrameIndex(0);
-        EntityId start_entity = 0;
-        EntityId end_entity = 0;
+        EntityId start_entity = EntityId(0);
+        EntityId end_entity = EntityId(0);
     };
 
     

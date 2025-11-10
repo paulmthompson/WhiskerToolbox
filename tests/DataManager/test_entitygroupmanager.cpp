@@ -105,8 +105,8 @@ protected:
 
         // Debug: Test EntityRegistry directly
         EntityId test_id = entity_registry->ensureId("test", EntityKind::LineEntity, TimeFrameIndex(10), 0);
-        INFO("Direct EntityRegistry test ID: " << test_id);
-        REQUIRE(test_id != 0);
+        INFO("Direct EntityRegistry test ID: " << test_id.id);
+        REQUIRE(test_id != EntityId(0));
 
         // NOW set up identity context and rebuild EntityIds
         line_data->setIdentityContext("test_lines", entity_registry);
@@ -121,7 +121,7 @@ protected:
         INFO("EntityIds at time 30 before rebuild: " << ids_t30_before.size());
 
         for (size_t i = 0; i < ids_t10_before.size(); ++i) {
-            INFO("T10[" << i << "] = " << ids_t10_before[i]);
+            INFO("T10[" << i << "] = " << ids_t10_before[i].id);
         }
 
         // Debug: Verify identity context was set correctly
@@ -135,7 +135,7 @@ protected:
         auto debug_ids = get_all_entity_ids(*line_data);
         INFO("Total EntityIds after rebuild: " << debug_ids.size());
         for (size_t i = 0; i < debug_ids.size(); ++i) {
-            INFO("EntityId[" << i << "] = " << debug_ids[i]);
+            INFO("EntityId[" << i << "] = " << debug_ids[i].id);
         }
 
         // Store reference for tests
@@ -174,11 +174,11 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         // Debug output to see what EntityIds we're getting
         for (size_t i = 0; i < all_entity_ids.size(); ++i) {
-            INFO("EntityId[" << i << "] = " << all_entity_ids[i]);
+            INFO("EntityId[" << i << "] = " << all_entity_ids[i].id);
         }
 
         for (EntityId id: all_entity_ids) {
-            REQUIRE(id != 0);// Should be valid EntityIds
+            REQUIRE(id != EntityId(0));// Should be valid EntityIds
         }
 
         // Verify no duplicate EntityIds
@@ -422,7 +422,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
                 EntityId entity_id = entity_ids_at_time[i];
                 Line2D const & line = lines_at_time[i];
 
-                INFO("Checking entity " << entity_id << " at time " << time.getValue() << ", line index " << i);
+                INFO("Checking entity " << entity_id.id << " at time " << time.getValue() << ", line index " << i);
 
                 // Check if this entity is in the selected group
                 bool is_selected = group_manager->isEntityInGroup(selected_group, entity_id);
@@ -434,17 +434,17 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
                 auto groups_containing_entity = group_manager->getGroupsContainingEntity(entity_id);
 
                 if (is_selected) {
-                    INFO("Entity " << entity_id << " is SELECTED (should render differently)");
+                    INFO("Entity " << entity_id.id << " is SELECTED (should render differently)");
                     REQUIRE(std::find(groups_containing_entity.begin(), groups_containing_entity.end(), selected_group) != groups_containing_entity.end());
                 }
 
                 if (is_highlighted) {
-                    INFO("Entity " << entity_id << " is HIGHLIGHTED (should render differently)");
+                    INFO("Entity " << entity_id.id << " is HIGHLIGHTED (should render differently)");
                     REQUIRE(std::find(groups_containing_entity.begin(), groups_containing_entity.end(), highlighted_group) != groups_containing_entity.end());
                 }
 
                 if (!is_selected && !is_highlighted) {
-                    INFO("Entity " << entity_id << " is NORMAL (default rendering)");
+                    INFO("Entity " << entity_id.id << " is NORMAL (default rendering)");
                     REQUIRE(groups_containing_entity.empty());
                 }
 
@@ -575,7 +575,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         // Verify all EntityIds are non-zero
         for (EntityId id: all_entity_ids) {
-            REQUIRE(id != 0);
+            REQUIRE(id != EntityId(0));
         }
 
         // Test entity lookup methods
@@ -636,15 +636,15 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
             // Log rendering decision
             if (is_selected) {
-                INFO("Point (" << point.x << ", " << point.y << ") EntityId:" << entity_id
+                INFO("Point (" << point.x << ", " << point.y << ") EntityId:" << entity_id.id
                                << " is SELECTED (special selection rendering)");
                 REQUIRE(i == 2);// Should be the third point (index 2)
             } else if (is_highlighted) {
-                INFO("Point (" << point.x << ", " << point.y << ") EntityId:" << entity_id
+                INFO("Point (" << point.x << ", " << point.y << ") EntityId:" << entity_id.id
                                << " is HIGHLIGHTED (special highlight rendering)");
                 REQUIRE(i == 0);// Should be the first point (index 0)
             } else {
-                INFO("Point (" << point.x << ", " << point.y << ") EntityId:" << entity_id
+                INFO("Point (" << point.x << ", " << point.y << ") EntityId:" << entity_id.id
                                << " is NORMAL (default rendering)");
                 REQUIRE_FALSE(is_selected);
                 REQUIRE_FALSE(is_highlighted);
@@ -700,7 +700,7 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
         REQUIRE(all_entity_ids.size() == 5);
 
         for (EntityId entity_id: all_entity_ids) {
-            REQUIRE(entity_id != 0);// All should be valid, non-zero EntityIds
+            REQUIRE(entity_id != EntityId(0));// All should be valid, non-zero EntityIds
         }
 
         // Test entity lookup functionality
@@ -894,7 +894,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         }
         
         for (EntityId id : original_entity_ids) {
-            REQUIRE(id != 0);
+            REQUIRE(id != EntityId(0));
             REQUIRE(expected_entity_ids.count(id) > 0); // Should be from LineData
         }
 

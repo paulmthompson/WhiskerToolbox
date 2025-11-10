@@ -113,7 +113,7 @@ PointTableRow PointTableModel::getRowData(int row) const {
     }
     // Return a default/invalid PointTableRow or throw an exception
     // For simplicity, returning a default-constructed one here, but error handling might be better.
-    return PointTableRow{-1, -1, 0.0f, 0.0f, 0, "Invalid"};
+    return PointTableRow{-1, -1, 0.0f, 0.0f, EntityId(0), "Invalid"};
 }
 
 void PointTableModel::setGroupManager(GroupManager * group_manager) {

@@ -8,7 +8,49 @@
 /**
  * @brief Opaque identifier for a discrete entity (point, line, event, interval) for the current session.
  */
-using EntityId = std::uint64_t;
+struct EntityId {
+    EntityId() = default;
+
+    explicit EntityId(uint64_t value)
+        : id{value} {}
+
+    uint64_t id;
+
+    bool operator==(EntityId const & other) const {
+        return id == other.id;
+    }
+
+    bool operator!=(EntityId const & other) const {
+        return id != other.id;
+    }
+
+    bool operator<(EntityId const & other) const {
+        return id < other.id;
+    }
+
+    bool operator>(EntityId const & other) const {
+        return id > other.id;
+    }
+
+    bool operator<=(EntityId const & other) const {
+        return id <= other.id;
+    }
+    bool operator>=(EntityId const & other) const {
+        return id >= other.id;
+    }
+};
+
+/**
+ * @brief Hash function specialization for EntityId to enable use in unordered containers.
+ */
+namespace std {
+template <>
+struct hash<EntityId> {
+    std::size_t operator()(EntityId const & e) const noexcept {
+        return std::hash<uint64_t>{}(e.id);
+    }
+};
+} // namespace std
 
 /**
  * @brief Kinds of discrete entities that can be identified by an EntityId.

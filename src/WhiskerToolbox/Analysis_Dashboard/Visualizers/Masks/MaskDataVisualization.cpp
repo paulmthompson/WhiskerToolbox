@@ -194,14 +194,14 @@ bool MaskDataVisualization::toggleMaskSelection(EntityId entity_id) {
         // Mask is selected, remove it
         selected_masks.erase(it);
         updateSelectionBinaryImageTexture();
-        qDebug() << "MaskDataVisualization: Deselected mask with EntityId" << entity_id
+        qDebug() << "MaskDataVisualization: Deselected mask with EntityId" << entity_id.id
                  << "- Total selected:" << selected_masks.size();
         return false;// Mask was deselected
     } else {
         // Mask is not selected, add it
         selected_masks.insert(entity_id);
         updateSelectionBinaryImageTexture();
-        qDebug() << "MaskDataVisualization: Selected mask with EntityId" << entity_id
+        qDebug() << "MaskDataVisualization: Selected mask with EntityId" << entity_id.id
                  << "- Total selected:" << selected_masks.size();
         return true;// Mask was selected
     }
@@ -214,7 +214,7 @@ bool MaskDataVisualization::removeMaskFromSelection(EntityId entity_id) {
         // Mask is selected, remove it
         selected_masks.erase(it);
         updateSelectionBinaryImageTexture();
-        qDebug() << "MaskDataVisualization: Removed mask with EntityId" << entity_id
+        qDebug() << "MaskDataVisualization: Removed mask with EntityId" << entity_id.id
                  << "from selection - Total selected:" << selected_masks.size();
         return true;// Mask was removed
     }
@@ -232,7 +232,7 @@ size_t MaskDataVisualization::removeIntersectingMasks(std::vector<EntityId> cons
             // This mask is in both sets - remove it from selection
             selected_masks.erase(it);
             removed_count++;
-            qDebug() << "MaskDataVisualization: Removed intersecting mask with EntityId" << entity_id;
+            qDebug() << "MaskDataVisualization: Removed intersecting mask with EntityId" << entity_id.id;
         }
     }
 
@@ -480,7 +480,7 @@ void MaskDataVisualization::populateRTree() {
                              static_cast<float>(max_point.x), static_cast<float>(max_point.y));
 
             // Get the EntityId for this mask
-            EntityId entity_id = 0;
+            auto entity_id = EntityId(0);
             if (mask_index < entity_ids_at_time.size()) {
                 entity_id = entity_ids_at_time[mask_index];
             }

@@ -78,7 +78,6 @@ struct TrackerDiagnostics {
 template<typename DataType>
 class MinCostFlowTracker {
 public:
-
     /**
      * @brief Construct a new MinCostFlowTracker
      *
@@ -253,7 +252,9 @@ public:
             for (auto const & [frame, group_entities]: ground_truth) {
                 _logger->debug("  Frame {}:", frame.getValue());
                 for (auto const & [group_id, entity_id]: group_entities) {
-                    _logger->debug("    Group {}: Entity {}", static_cast<unsigned long long>(group_id), static_cast<unsigned long long>(entity_id));
+                    _logger->debug("    Group {}: Entity {}",
+                                   static_cast<unsigned long long>(group_id),
+                                   static_cast<unsigned long long>(entity_id.id));
                 }
             }
         }
@@ -310,7 +311,7 @@ private:
     struct ActiveChain {
         size_t meta_node_idx;// Index in meta_nodes vector
         TimeFrameIndex curr_frame;
-        EntityId curr_entity;
+        EntityId curr_entity = EntityId(0);
         DataType const * curr_data;
         std::unique_ptr<IFilter> filter;// Cloned filter for this chain
         FilterState predicted;          // Cached prediction for next frame
@@ -321,7 +322,7 @@ private:
         ActiveChain()
             : meta_node_idx(0),
               curr_frame(TimeFrameIndex(0)),
-              curr_entity(0),
+              curr_entity(EntityId(0)),
               curr_data(nullptr) {}
     };
 
@@ -347,8 +348,8 @@ private:
         if (_logger) {
             _logger->debug("Solving single segment flow over meta: group={} start=({}, {}) end=({}, {})",
                            static_cast<unsigned long long>(group_id),
-                           segment.start_frame.getValue(), segment.start_entity,
-                           segment.end_frame.getValue(), segment.end_entity);
+                           segment.start_frame.getValue(), segment.start_entity.id,
+                           segment.end_frame.getValue(), segment.end_entity.id);
         }
 
         // Fast path: check if a single meta-node spans the segment exactly
@@ -368,8 +369,8 @@ private:
             if (_logger) {
                 _logger->error("Segment anchors not found in trimmed meta-nodes: group={} start=({}, {}) end=({}, {})",
                                static_cast<unsigned long long>(group_id),
-                               segment.start_frame.getValue(), segment.start_entity,
-                               segment.end_frame.getValue(), segment.end_entity);
+                               segment.start_frame.getValue(), segment.start_entity.id,
+                               segment.end_frame.getValue(), segment.end_entity.id);
             }
             return {};
         }
@@ -455,7 +456,7 @@ private:
             int end_idx_res = -1;
             for (int i = 0; i < static_cast<int>(resolved.size()); ++i) {
                 auto const & mn = resolved[static_cast<size_t>(i)];
-                for (auto const & m : mn.members) {
+                for (auto const & m: mn.members) {
                     if (start_idx_res == -1 && m.frame == segment.start_frame && m.entity_id == segment.start_entity) {
                         start_idx_res = i;
                     }
@@ -529,8 +530,8 @@ private:
                     if (_logger) {
                         _logger->warn("No trimmed meta-nodes for segment: group={} start=({}, {}) end=({}, {})",
                                       static_cast<unsigned long long>(gid),
-                                      seg.start_frame.getValue(), seg.start_entity,
-                                      seg.end_frame.getValue(), seg.end_entity);
+                                      seg.start_frame.getValue(), seg.start_entity.id,
+                                      seg.end_frame.getValue(), seg.end_entity.id);
                     }
                     continue;
                 }
@@ -538,8 +539,8 @@ private:
                 if (_logger) {
                     _logger->debug("Solving segment: group={} start=({}, {}) end=({}, {})",
                                    static_cast<unsigned long long>(gid),
-                                   seg.start_frame.getValue(), seg.start_entity,
-                                   seg.end_frame.getValue(), seg.end_entity);
+                                   seg.start_frame.getValue(), seg.start_entity.id,
+                                   seg.end_frame.getValue(), seg.end_entity.id);
                 }
 
                 Path segment_path = solve_single_segment_flow_over_meta(trimmed, frame_lookup, gid, seg);
@@ -652,7 +653,7 @@ private:
                                            chain_idx, f.getValue(),
                                            initial_state.state_mean(0), initial_state.state_mean(1),
                                            initial_state.state_mean(2), initial_state.state_mean(3),
-                                           chain.curr_entity);
+                                           chain.curr_entity.id);
                         }
                         for (int step = 0; step < gap_frames; ++step) {
                             chain.predicted = chain.filter->predict();
@@ -785,7 +786,7 @@ private:
 
                             if (_logger) {
                                 _logger->debug("  N-scan for chain {} (curr_entity={}, curr_frame={})",
-                                               chain_idx, chain.curr_entity, chain.curr_frame.getValue());
+                                               chain_idx, chain.curr_entity.id, chain.curr_frame.getValue());
                             }
 
                             // Collect viable candidates with their costs using lookahead cost
@@ -813,7 +814,7 @@ private:
                             } else if (allowable_depth == 1) {
                                 // One-step fallback: pick best single candidate not used
                                 double best_c = std::numeric_limits<double>::infinity();
-                                EntityId best_eid = 0;
+                                auto best_eid = EntityId(0);
                                 for (auto const & tup: viable_candidates) {
                                     EntityId eid = std::get<0>(tup);
                                     auto key = std::make_pair(static_cast<long long>(f.getValue()), eid);
@@ -824,7 +825,7 @@ private:
                                         best_eid = eid;
                                     }
                                 }
-                                if (best_eid != 0 && (best_c < _lookahead_threshold || !std::isfinite(_lookahead_threshold))) {
+                                if (best_eid != EntityId(0) && (best_c < _lookahead_threshold || !std::isfinite(_lookahead_threshold))) {
                                     std::vector<NodeInfo> single{{f, best_eid}};
                                     n_scan_results[chain_idx] = {single, best_c};
                                 }
@@ -856,7 +857,9 @@ private:
                             for (auto const & [obs_key, claiming_chains]: obs_to_chains) {
                                 if (claiming_chains.size() > 1) {
                                     _logger->debug("  Frame {}, entity {}: {} chains want it",
-                                                   obs_key.first, obs_key.second, claiming_chains.size());
+                                                   obs_key.first, 
+                                                   obs_key.second.id, 
+                                                   claiming_chains.size());
                                 }
                             }
                         }
@@ -868,7 +871,9 @@ private:
                                 // Conflict! Keep chain with lowest cost, reject others
                                 if (_logger) {
                                     _logger->debug("N-scan conflict at frame {}, entity {}: {} chains competing",
-                                                   obs_key.first, obs_key.second, claiming_chains.size());
+                                                   obs_key.first, 
+                                                   obs_key.second.id, 
+                                                   claiming_chains.size());
                                     for (size_t chain_idx: claiming_chains) {
                                         _logger->debug("  Chain {} has cost {:.2f}", chain_idx, n_scan_results[chain_idx].second);
                                     }
@@ -949,12 +954,12 @@ private:
                                     used.insert(std::make_pair(static_cast<long long>(single.front().frame.getValue()), single.front().entity_id));
                                     if (_logger) {
                                         _logger->debug("  Fallback N-scan accepted for chain {}: cost={:.2f}, eid={}",
-                                                       chain_idx, alt_cost, single.front().entity_id);
+                                                       chain_idx, alt_cost, single.front().entity_id.id);
                                     }
                                 } else if (allowable_depth == 1) {
                                     // One-step fallback here too
                                     double best_c = std::numeric_limits<double>::infinity();
-                                    EntityId best_eid = 0;
+                                    auto best_eid = EntityId(0);
                                     for (auto const & tup: viable_candidates_alt) {
                                         EntityId eid = std::get<0>(tup);
                                         auto key = std::make_pair(static_cast<long long>(f.getValue()), eid);
@@ -965,13 +970,13 @@ private:
                                             best_eid = eid;
                                         }
                                     }
-                                    if (best_eid != 0 && (best_c < _lookahead_threshold || !std::isfinite(_lookahead_threshold))) {
+                                    if (best_eid != EntityId(0) && (best_c < _lookahead_threshold || !std::isfinite(_lookahead_threshold))) {
                                         std::vector<NodeInfo> single{{f, best_eid}};
                                         n_scan_results[chain_idx] = {single, best_c};
                                         used.insert(std::make_pair(static_cast<long long>(f.getValue()), best_eid));
                                         if (_logger) {
                                             _logger->debug("  Fallback single-step accepted for chain {}: eid={}, cost={:.2f}",
-                                                           chain_idx, best_eid, best_c);
+                                                           chain_idx, best_eid.id, best_c);
                                         }
                                     }
                                 }
@@ -1057,7 +1062,7 @@ private:
                             if (_logger) {
                                 double cost_unscaled = static_cast<double>(cost_matrix[chain_idx][assigned_cand_idx]) / cost_scaling_factor;
                                 _logger->debug("  Chain {} (entity {}) → entity {} (cost={:.3f}, threshold={:.3f})",
-                                               chain_idx, chain.curr_entity, best_entity, cost_unscaled, _cheap_assignment_threshold);
+                                               chain_idx, chain.curr_entity.id, best_entity.id, cost_unscaled, _cheap_assignment_threshold);
                             }
 
                             // Guard: if N-scan (or another chain) already committed this obs at current frame,
@@ -1109,7 +1114,7 @@ private:
                             // Chain terminates -> emit meta-node
                             if (_logger) {
                                 _logger->debug("  Chain {} (entity {}) terminated at frame {} - emit meta-node",
-                                               chain_idx, chain.curr_entity, chain.curr_frame.getValue());
+                                               chain_idx, chain.curr_entity.id, chain.curr_frame.getValue());
                             }
                             MetaNode term;
                             term.start_frame = chain.members.front().frame;
@@ -1175,13 +1180,13 @@ private:
                                    " with entities: ", this_frame_entities.size());
 
                     for (auto const & entity: this_frame_entities) {
-                        _logger->error("  Entity {}", entity);
+                        _logger->error("  Entity {}", entity.id);
                     }
 
                     // Is it in used?
                     for (auto const & entity: this_frame_entities) {
                         if (used.count(std::make_pair(static_cast<long long>(f.getValue()), entity))) {
-                            _logger->error("  Entity {} is in used", entity);
+                            _logger->error("  Entity {} is in used", entity.id);
                         }
                     }
 
@@ -1189,7 +1194,7 @@ private:
                     for (auto const & entity: this_frame_entities) {
                         for (auto const & chain: active_chains) {
                             if (chain.curr_entity == entity) {
-                                _logger->error("  Entity {} is in active_chains", entity);
+                                _logger->error("  Entity {} is in active_chains", entity.id);
                                 break;
                             }
                         }
@@ -1221,8 +1226,8 @@ private:
                                node.start_frame.getValue(),
                                node.end_frame.getValue(),
                                node.end_frame.getValue() - node.start_frame.getValue() + 1,
-                               node.start_entity,
-                               node.end_entity,
+                               node.start_entity.id,
+                               node.end_entity.id,
                                node.members.size());
             }
             meta_nodes.push_back(std::move(node));
@@ -1382,7 +1387,7 @@ private:
 
                 if (_logger && cost < _cheap_assignment_threshold) {
                     _logger->debug("        → entity {}: obs=[{:.2f},{:.2f}], cost={:.3f}",
-                                   cand_entity_id, measurement(0), measurement(1), cost);
+                                   cand_entity_id.id, measurement(0), measurement(1), cost);
                 }
 
                 // Prune if exceeds lookahead threshold
@@ -1460,7 +1465,7 @@ private:
 
                 if (_logger) {
                     _logger->debug("    Init hyp for entity {}: chain.predicted=[{:.2f},{:.2f},{:.2f},{:.2f}], cloned_filter=[{:.2f},{:.2f},{:.2f},{:.2f}], obs=[{:.2f},{:.2f}], cost={:.3f}",
-                                   cand_entity,
+                                   cand_entity.id,
                                    chain.predicted.state_mean(0), chain.predicted.state_mean(1),
                                    chain.predicted.state_mean(2), chain.predicted.state_mean(3),
                                    cloned_state.state_mean(0), cloned_state.state_mean(1),

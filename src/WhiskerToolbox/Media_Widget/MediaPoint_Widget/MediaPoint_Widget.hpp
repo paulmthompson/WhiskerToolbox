@@ -33,7 +33,7 @@ private:
     bool _selection_enabled = false;
     
     // Point selection state
-    EntityId _selected_point_id = 0;
+    EntityId _selected_point_id = EntityId(0);
     float _selection_threshold = 10.0f; // pixels
     
     // Helper methods for point interaction

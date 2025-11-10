@@ -35,7 +35,7 @@ public:
      * @brief Optional: get the EntityId for an entity at timestamp and local index, if available.
      * Implementors that don't support EntityIds may return 0.
      */
-    [[nodiscard]] virtual auto getEntityIdAt(TimeFrameIndex t, int entityIndex) const -> EntityId { (void)t; (void)entityIndex; return 0; }
+    [[nodiscard]] virtual auto getEntityIdAt(TimeFrameIndex t, int entityIndex) const -> EntityId { (void)t; (void)entityIndex; return  EntityId(0); }
 };
 
 #endif // IENTITY_PROVIDER_H

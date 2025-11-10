@@ -273,7 +273,7 @@ public:
 
             // Check if intervals overlap in time
             if (intervalStartTime <= endTime && startTime <= intervalEndTime) {
-                result.push_back(IntervalWithId(interval, 0));
+                result.push_back(IntervalWithId(interval, EntityId(0)));
             }
         }
 
@@ -1595,13 +1595,13 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         // Debug: Print source EntityIDs
         INFO("Source EntityIDs from StimulusIntervals:");
         for (size_t i = 0; i < source_stimulus_entity_ids.size(); ++i) {
-            INFO("  Source EntityID[" << i << "] = " << source_stimulus_entity_ids[i]);
+            INFO("  Source EntityID[" << i << "] = " << source_stimulus_entity_ids[i].id);
         }
 
         // Debug: Print table EntityIDs
         INFO("Table EntityIDs from IntervalOverlapComputer:");
         for (auto const & entity_id: table_entity_ids) {
-            INFO("  Table EntityID = " << entity_id);
+            INFO("  Table EntityID = " << entity_id.id);
         }
 
         // Verify that extracted EntityIDs are a subset of source EntityIDs
@@ -1611,12 +1611,12 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
                                    source_stimulus_entity_ids.end(),
                                    table_entity_id) != source_stimulus_entity_ids.end();
             REQUIRE(found);
-            INFO("✓ Table EntityID " << table_entity_id << " found in source data");
+            INFO("✓ Table EntityID " << table_entity_id.id << " found in source data");
         }
 
         // Verify all EntityIDs are valid (non-zero)
         for (auto const & entity_id: table_entity_ids) {
-            REQUIRE(entity_id != 0);
+            REQUIRE(entity_id != EntityId(0));
         }
 
         // Verify cell-level EntityIDs match column-level EntityIDs

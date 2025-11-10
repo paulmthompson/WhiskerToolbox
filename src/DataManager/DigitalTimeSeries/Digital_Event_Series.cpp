@@ -59,7 +59,7 @@ void DigitalEventSeries::_sortEvents() {
 
 void DigitalEventSeries::rebuildAllEntityIds() {
     if (!_identity_registry) {
-        _entity_ids.assign(_data.size(), 0);
+        _entity_ids.assign(_data.size(), EntityId(0));
         return;
     }
     _entity_ids.clear();
@@ -78,7 +78,7 @@ std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIn
 
     for (size_t i = 0; i < _data.size(); ++i) {
         if (_data[i] >= static_cast<float>(start_time.getValue()) && _data[i] <= static_cast<float>(stop_time.getValue())) {
-            EntityId const entity_id = (i < _entity_ids.size()) ? _entity_ids[i] : 0;
+            EntityId const entity_id = (i < _entity_ids.size()) ? _entity_ids[i] : EntityId(0);
             result.emplace_back(_data[i], entity_id);
         }
     }

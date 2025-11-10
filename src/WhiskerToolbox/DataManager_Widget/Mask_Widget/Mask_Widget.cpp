@@ -169,7 +169,7 @@ std::vector<EntityId> Mask_Widget::_getSelectedEntityIds() {
     for (auto const & index: selectedIndexes) {
         if (index.isValid()) {
             MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
-            if (row_data.entity_id != 0) { // Valid entity ID
+            if (row_data.entity_id != EntityId(0)) { // Valid entity ID
                 entity_ids.push_back(row_data.entity_id);
             }
         }
@@ -315,7 +315,7 @@ void Mask_Widget::_deleteSelectedMasks() {
     for (auto const & index: selectedIndexes) {
         if (index.isValid()) {
             MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
-            if (row_data.frame != -1 && row_data.entity_id != 0) {
+            if (row_data.frame != -1 && row_data.entity_id != EntityId(0)) {
                 bool const success = mask_data_ptr->clearByEntityId(row_data.entity_id, false);
                 if (success) {
                     total_masks_deleted++;
@@ -835,7 +835,7 @@ void Mask_Widget::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
         QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
         for (auto const & index : selectedIndexes) {
             MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
-            if (row_data.entity_id != 0) {
+            if (row_data.entity_id != EntityId(0)) {
                 int current_group = _group_manager->getEntityGroup(row_data.entity_id);
                 if (current_group != -1) {
                     current_groups.insert(current_group);
@@ -876,7 +876,7 @@ void Mask_Widget::_moveSelectedMasksToGroup(int group_id) {
     std::unordered_set<EntityId> entity_ids;
     for (auto const & index : selectedIndexes) {
         MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
-        if (row_data.entity_id != 0) { // Valid entity ID
+        if (row_data.entity_id != EntityId(0)) { // Valid entity ID
             entity_ids.insert(row_data.entity_id);
         }
     }
@@ -910,7 +910,7 @@ void Mask_Widget::_removeSelectedMasksFromGroup() {
     std::unordered_set<EntityId> entity_ids;
     for (auto const & index : selectedIndexes) {
         MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
-        if (row_data.entity_id != 0) { // Valid entity ID
+        if (row_data.entity_id != EntityId(0)) { // Valid entity ID
             entity_ids.insert(row_data.entity_id);
         }
     }

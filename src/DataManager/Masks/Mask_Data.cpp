@@ -67,7 +67,7 @@ bool MaskData::clearByEntityId(EntityId entity_id, bool notify) {
 
 void MaskData::addAtTime(TimeFrameIndex const time, Mask2D const & mask, bool notify) {
     int const local_index = static_cast<int>(_data[time].size());
-    EntityId entity_id = 0;
+    auto entity_id = EntityId(0);
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::MaskEntity, time, local_index);
     }
@@ -81,7 +81,7 @@ void MaskData::addAtTime(TimeFrameIndex const time, Mask2D const & mask, bool no
 
 void MaskData::addAtTime(TimeFrameIndex const time, Mask2D && mask, bool notify) {
     int const local_index = static_cast<int>(_data[time].size());
-    EntityId entity_id = 0;
+    auto entity_id = EntityId(0);
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::MaskEntity, time, local_index);
     }
@@ -99,7 +99,7 @@ void MaskData::addAtTime(TimeFrameIndex const time,
                          bool notify) {
     auto new_mask = create_mask(x, y);
     int const local_index = static_cast<int>(_data[time].size());
-    EntityId entity_id = 0;
+    auto entity_id = EntityId(0);
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::MaskEntity, time, local_index);
     }
@@ -127,7 +127,7 @@ void MaskData::addAtTime(TimeIndexAndFrame const & time_index_and_frame,
     auto time_index = _time_frame->getIndexAtTime(static_cast<float>(time));
 
     int const local_index = static_cast<int>(_data[time_index].size());
-    EntityId entity_id = 0;
+    auto entity_id = EntityId(0);
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::MaskEntity, time_index, local_index);
     }
@@ -149,7 +149,7 @@ void MaskData::addAtTime(TimeFrameIndex const time,
     }
 
     int const local_index = static_cast<int>(_data[time].size());
-    EntityId entity_id = 0;
+    auto entity_id = EntityId(0);
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::MaskEntity, time, local_index);
     }
@@ -257,7 +257,7 @@ void MaskData::rebuildAllEntityIds() {
         for (auto & [t, entries]: _data) {
             (void) t;
             for (auto & entry: entries) {
-                entry.entity_id = 0;
+                entry.entity_id = EntityId(0);
             }
         }
         return;

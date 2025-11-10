@@ -95,7 +95,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     QVector2D m_canvas_size;// Canvas size for coordinate normalization
 
     // Hover state for this LineData
-    EntityId m_current_hover_line = 0;
+    EntityId m_current_hover_line = EntityId(0);
     bool m_has_hover_line = false;
     uint32_t m_cached_hover_line_index = 0;    // Cached index to avoid linear search
     GLint m_cached_hover_uniform_location = -1;// Cached uniform location to avoid repeated queries

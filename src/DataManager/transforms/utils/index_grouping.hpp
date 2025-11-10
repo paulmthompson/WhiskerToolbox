@@ -78,7 +78,7 @@ inline std::size_t groupByIndex(DataMap const & data_map,
     for (auto const & [time, entries]: data_map) {
         for (std::size_t i = 0; i < entries.size(); ++i) {
             EntityId entity_id = entries[i].entity_id;
-            if (entity_id != 0) {// Skip invalid entities
+            if (entity_id != EntityId(0)) {// Skip invalid entities
                 group_manager->addEntityToGroup(group_ids[i], entity_id);
             }
         }

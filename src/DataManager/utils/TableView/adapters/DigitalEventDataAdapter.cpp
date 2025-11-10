@@ -45,7 +45,7 @@ std::vector<float> DigitalEventDataAdapter::getDataInRange(TimeFrameIndex start,
 
 EntityId DigitalEventDataAdapter::getEntityIdAt(size_t index) const {
     auto const & ids = m_digitalEventSeries->getEntityIds();
-    return (index < ids.size()) ? ids[index] : 0;
+    return (index < ids.size()) ? ids[index] : EntityId(0);
 }
 
 std::vector<EventWithId> DigitalEventDataAdapter::getDataInRangeWithEntityIds(TimeFrameIndex start,

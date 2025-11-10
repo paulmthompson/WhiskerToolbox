@@ -15,7 +15,7 @@ LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data) {
     for (auto const & [time, lines]: data) {
         _data[time].reserve(lines.size());
         for (auto const & line: lines) {
-            _data[time].emplace_back(0, line);// EntityId will be 0 initially
+            _data[time].emplace_back(EntityId(0), line);// EntityId will be 0 initially
         }
     }
 }
@@ -113,7 +113,7 @@ bool LineData::clearByEntityId(EntityId entity_id, NotifyObservers notify) {
 
 void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, NotifyObservers notify) {
     int const local_index = static_cast<int>(_data[time].size());
-    EntityId entity_id = 0;
+    auto entity_id = EntityId(0);
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
     }
@@ -127,7 +127,7 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, NotifyO
 
 void LineData::addAtTime(TimeFrameIndex const time, Line2D && line, NotifyObservers notify) {
     int const local_index = static_cast<int>(_data[time].size());
-    EntityId entity_id = 0;
+    auto entity_id = EntityId(0);
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
     }
@@ -162,7 +162,7 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<Line2D> const & 
     // 3. Loop and emplace new entries
     for (size_t i = 0; i < lines_to_add.size(); ++i) {
         int const local_index = static_cast<int>(old_size + i);
-        EntityId entity_id = 0;
+        auto entity_id = EntityId(0);
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
         }
@@ -191,7 +191,7 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<Line2D> && lines
     // 3. Loop and emplace new entries
     for (size_t i = 0; i < lines_to_add.size(); ++i) {
         int const local_index = static_cast<int>(old_size + i);
-        EntityId entity_id = 0;
+        auto entity_id = EntityId(0);
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, time, local_index);
         }
@@ -291,7 +291,7 @@ void LineData::rebuildAllEntityIds() {
     if (!_identity_registry) {
         for (auto & [t, entries]: _data) {
             for (auto & entry: entries) {
-                entry.entity_id = 0;
+                entry.entity_id = EntityId(0);
             }
         }
         return;

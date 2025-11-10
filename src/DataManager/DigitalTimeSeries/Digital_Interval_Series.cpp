@@ -135,7 +135,7 @@ void DigitalIntervalSeries::_sortData() {
 
 void DigitalIntervalSeries::rebuildAllEntityIds() {
     if (!_identity_registry) {
-        _entity_ids.assign(_data.size(), 0);
+        _entity_ids.assign(_data.size(), EntityId(0));
         return;
     }
     _entity_ids.clear();
@@ -226,7 +226,7 @@ std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(Ti
         Interval const & interval = _data[i];
         // Check if interval overlaps with the range (using overlapping logic)
         if (interval.start <= stop_time.getValue() && interval.end >= start_time.getValue()) {
-            EntityId const entity_id = (i < _entity_ids.size()) ? _entity_ids[i] : 0;
+            EntityId const entity_id = (i < _entity_ids.size()) ? _entity_ids[i] : EntityId(0);
             result.emplace_back(interval, entity_id);
         }
     }

@@ -115,7 +115,7 @@ MaskTableRow MaskTableModel::getRowData(int row) const {
     }
     // Return a default/invalid MaskTableRow or throw an exception
     // For simplicity, returning a default-constructed one here, but error handling might be better.
-    return MaskTableRow{-1, -1, -1, 0, "Invalid"};
+    return MaskTableRow{-1, -1, -1, EntityId(0), "Invalid"};
 }
 
 void MaskTableModel::setGroupManager(GroupManager * group_manager) {

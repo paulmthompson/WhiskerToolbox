@@ -312,10 +312,10 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
                 std::string data_key, data_type;
                 EntityId entity_id = _scene->findEntityAtPosition(scene_pos, data_key, data_type);
 
-                if (entity_id != 0 && data_type == "line" && data_key == _active_key) {
+                if (entity_id != EntityId(0) && data_type == "line" && data_key == _active_key) {
                     // Use the group-based selection system for consistency
                     _scene->selectEntity(entity_id, data_key, data_type);
-                    std::cout << "Selected line entity " << entity_id << " in group system" << std::endl;
+                    std::cout << "Selected line entity " << entity_id.id << " in group system" << std::endl;
                 } else {
                     // Clear selections if no line found
                     _scene->clearAllSelections();
@@ -380,7 +380,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
 
     auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
-        std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id << std::endl;
+        std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id.id << std::endl;
         return;
     }
 
@@ -438,7 +438,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
     }
 
     std::cout << "Added point (" << x_media << ", " << y_media << ") to line "
-              << _active_key << " (EntityID: " << selected_entity_id << ")" << std::endl;
+              << _active_key << " (EntityID: " << selected_entity_id.id << ")" << std::endl;
 }
 
 void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time) {
@@ -466,7 +466,7 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
 
     auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
-        std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id << std::endl;
+        std::cout << "Could not get mutable reference to line with EntityID " << selected_entity_id.id << std::endl;
         return;
     }
 
@@ -502,7 +502,7 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
 
     _scene->UpdateCanvas();
     std::cout << "Erased points near (" << x_media << ", " << y_media << ") from line "
-              << _active_key << " (EntityID: " << selected_entity_id << ")" << std::endl;
+              << _active_key << " (EntityID: " << selected_entity_id.id << ")" << std::endl;
 }
 
 void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {
@@ -1321,8 +1321,8 @@ int MediaLine_Widget::_getSelectedLineIndexFromGroupSystem() const {
     // For now, just return the first selected entity as the line index
     // EntityId for lines corresponds to their index in the line data
     EntityId first_selected = *selected_entities.begin();
-    std::cout << "Debug: First selected entity ID: " << first_selected << std::endl;
-    return static_cast<int>(first_selected);
+    std::cout << "Debug: First selected entity ID: " << first_selected.id << std::endl;
+    return static_cast<int>(first_selected.id);
 }
 
 void MediaLine_Widget::_updateTemporaryLineFromWidget() {

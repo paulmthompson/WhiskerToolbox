@@ -5,18 +5,18 @@
 #include <sstream>
 
 #include "Assignment/HungarianAssigner.hpp"
+#include "Cost/CostFunctions.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Features/IFeatureExtractor.hpp"
 #include "Filter/Kalman/KalmanFilter.hpp"
 #include "Filter/Kalman/KalmanFilterT.hpp"
 #include "MinCostFlowTracker.hpp"
+#include "OutlierDetection.hpp"
 #include "StateEstimator.hpp"
+#include "TestFixture.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Tracker.hpp"
-#include "TestFixture.hpp"
-#include "Cost/CostFunctions.hpp"
-#include "OutlierDetection.hpp"
 #include "Tracking/AnchorUtils.hpp"
 
 // --- Test-Specific Mocks and Implementations ---
@@ -86,13 +86,13 @@ TEST_CASE("StateEstimator - tracking and smoothing", "[StateEstimator][Smoothing
     double dt = 1.0;
     Eigen::Matrix<double, 4, 4> F;
     F << 1, 0, dt, 0,
-         0, 1, 0, dt,
-         0, 0, 1, 0,
-         0, 0, 0, 1;
+            0, 1, 0, dt,
+            0, 0, 1, 0,
+            0, 0, 0, 1;
 
     Eigen::Matrix<double, 2, 4> H;
     H << 1, 0, 0, 0,
-         0, 1, 0, 0;
+            0, 1, 0, 0;
 
     Eigen::Matrix<double, 4, 4> Q;
     Q.setIdentity();
@@ -123,14 +123,14 @@ TEST_CASE("StateEstimator - tracking and smoothing", "[StateEstimator][Smoothing
 
         data_source.emplace_back(line1, (EntityId) i, TimeFrameIndex(i));
         data_source.emplace_back(line2, (EntityId) (i + 100), TimeFrameIndex(i));
-        
+
         // Add all entities to their groups
         group_manager.addEntityToGroup(group1, (EntityId) i);
         group_manager.addEntityToGroup(group2, (EntityId) (i + 100));
     }
 
     // 2. --- EXECUTION ---
-    SmoothedGroupResults results = estimator.smoothGroups(data_source, group_manager, 
+    SmoothedGroupResults results = estimator.smoothGroups(data_source, group_manager,
                                                           TimeFrameIndex(0), TimeFrameIndex(10));
 
     // 3. --- ASSERTIONS ---
@@ -172,13 +172,13 @@ TEST_CASE("StateEstimator smoothing and outlier detection", "[StateEstimator]") 
     double dt = 1.0;
     Eigen::Matrix<double, 4, 4> F;
     F << 1, 0, dt, 0,
-         0, 1, 0, dt,
-         0, 0, 1, 0,
-         0, 0, 0, 1;
+            0, 1, 0, dt,
+            0, 0, 1, 0,
+            0, 0, 0, 1;
 
     Eigen::Matrix<double, 2, 4> H;
     H << 1, 0, 0, 0,
-         0, 1, 0, 0;
+            0, 1, 0, 0;
 
     Eigen::Matrix<double, 4, 4> Q;
     Q.setIdentity();
@@ -218,47 +218,47 @@ TEST_CASE("StateEstimator smoothing and outlier detection", "[StateEstimator]") 
     // Create two tracks moving in opposite directions
     // Group 1: Moving right (x increases) - but skip frame 5 initially
     for (int i = 0; i <= 10; ++i) {
-        if (i == 5) continue;  // Skip frame 5, we'll add an outlier there
-        EntityId entity_id = 1000 + i;
+        if (i == 5) continue;// Skip frame 5, we'll add an outlier there
+        EntityId entity_id = EntityId(1000 + i);
         data_source.emplace_back(makeA(i, 10.0 + i * 2.0, 10.0), entity_id, TimeFrameIndex(i));
         group_manager.addEntityToGroup(group1, entity_id);
     }
 
     // Group 2: Moving left (x decreases)
     for (int i = 0; i <= 10; ++i) {
-        EntityId entity_id = 2000 + i;
+        EntityId entity_id = EntityId(2000 + i);
         data_source.emplace_back(makeB(i, 50.0 - i * 2.0, 10.0), entity_id, TimeFrameIndex(i));
         group_manager.addEntityToGroup(group2, entity_id);
     }
 
     // Add an outlier at frame 5 for group 1 (large deviation from expected trajectory)
-    EntityId outlier_id = 1005;
-    data_source.emplace_back(makeA(5, 100.0, 10.0), outlier_id, TimeFrameIndex(5));  // x=100 instead of ~20
+    EntityId outlier_id = EntityId(1005);
+    data_source.emplace_back(makeA(5, 100.0, 10.0), outlier_id, TimeFrameIndex(5));// x=100 instead of ~20
     group_manager.addEntityToGroup(group1, outlier_id);
 
     // 3. --- TEST SMOOTHING ---
-    auto smoothed_results = estimator.smoothGroups(data_source, group_manager, 
+    auto smoothed_results = estimator.smoothGroups(data_source, group_manager,
                                                    TimeFrameIndex(0), TimeFrameIndex(10));
 
-    REQUIRE(smoothed_results.size() == 2);  // Two groups
+    REQUIRE(smoothed_results.size() == 2);// Two groups
     REQUIRE(smoothed_results.count(group1) > 0);
     REQUIRE(smoothed_results.count(group2) > 0);
 
     // Check that we got smoothed states for both groups
     auto const & group1_states = smoothed_results.at(group1);
     auto const & group2_states = smoothed_results.at(group2);
-    
+
     REQUIRE(group1_states.size() > 0);
     REQUIRE(group2_states.size() > 0);
 
     // 4. --- TEST OUTLIER DETECTION ---
     auto outlier_results = estimator.detectOutliers(data_source, group_manager,
                                                     TimeFrameIndex(0), TimeFrameIndex(10),
-                                                    2.0);  // 2-sigma threshold
+                                                    2.0);// 2-sigma threshold
 
     // Should detect the outlier we added
     REQUIRE(outlier_results.outliers.size() > 0);
-    
+
     // Check that statistics were computed
     REQUIRE(outlier_results.mean_innovation.count(group1) > 0);
     REQUIRE(outlier_results.std_innovation.count(group1) > 0);
@@ -266,7 +266,7 @@ TEST_CASE("StateEstimator smoothing and outlier detection", "[StateEstimator]") 
 
     // The outlier should be in the results
     bool found_outlier = false;
-    for (auto const & outlier : outlier_results.outliers) {
+    for (auto const & outlier: outlier_results.outliers) {
         if (outlier.entity_id == outlier_id) {
             found_outlier = true;
             REQUIRE(outlier.group_id == group1);
@@ -284,13 +284,13 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
     double dt = 1.0;
     Eigen::MatrixXd F(4, 4);
     F << 1, 0, dt, 0,
-         0, 1, 0, dt,
-         0, 0, 1, 0,
-         0, 0, 0, 1;
+            0, 1, 0, dt,
+            0, 0, 1, 0,
+            0, 0, 0, 1;
 
     Eigen::MatrixXd H(2, 4);
     H << 1, 0, 0, 0,
-         0, 1, 0, 0;
+            0, 1, 0, 0;
 
     Eigen::MatrixXd Q(4, 4);
     Q.setIdentity();
@@ -298,7 +298,7 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
 
     Eigen::MatrixXd R(2, 2);
     R.setIdentity();
-    R *= 0.5;  // Reduced measurement noise to make outliers more obvious
+    R *= 0.5;// Reduced measurement noise to make outliers more obvious
 
     auto kalman_filter = std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R);
     auto feature_extractor = std::make_unique<LineCentroidExtractor>();
@@ -323,25 +323,25 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
     // Track 1: Moving smoothly from (0,0) to (30,30) with THREE large error jumps
     std::vector<EntityId> track1_outlier_ids;
     for (int i = 0; i <= 30; ++i) {
-        EntityId eid = 1000 + i;
+        EntityId eid = EntityId(1000 + i);
         double x = i * 1.0;
         double y = i * 1.0;
-        
+
         // Inject VERY large jumps representing calculation errors
         if (i == 8) {
-            x += 35.0;  // Very large error in x
-            y += 30.0;  // Very large error in y
+            x += 35.0;// Very large error in x
+            y += 30.0;// Very large error in y
             track1_outlier_ids.push_back(eid);
         } else if (i == 16) {
-            x -= 32.0;  // Very large negative error
+            x -= 32.0;// Very large negative error
             y += 28.0;
             track1_outlier_ids.push_back(eid);
         } else if (i == 24) {
-            x += 40.0;  // Another very large error
+            x += 40.0;// Another very large error
             y -= 25.0;
             track1_outlier_ids.push_back(eid);
         }
-        
+
         TestLine2D line = makeLine(i, x, y, eid);
         data_source.emplace_back(line, eid, TimeFrameIndex(i));
         group_manager.addEntityToGroup(track1, eid);
@@ -350,19 +350,19 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
     // Track 2: Moving from (50,10) to (50,40) with TWO outliers
     std::vector<EntityId> track2_outlier_ids;
     for (int i = 0; i <= 30; ++i) {
-        EntityId eid = 2000 + i;
+        EntityId eid = EntityId(2000 + i);
         double x = 50.0;
         double y = 10.0 + i * 1.0;
-        
+
         // Inject very large errors
         if (i == 10) {
-            x += 45.0;  // Huge horizontal error
+            x += 45.0;// Huge horizontal error
             track2_outlier_ids.push_back(eid);
         } else if (i == 22) {
-            y += 35.0;  // Huge vertical error
+            y += 35.0;// Huge vertical error
             track2_outlier_ids.push_back(eid);
         }
-        
+
         TestLine2D line = makeLine(i, x, y, eid);
         data_source.emplace_back(line, eid, TimeFrameIndex(i));
         group_manager.addEntityToGroup(track2, eid);
@@ -371,9 +371,9 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
     // 3. --- TEST OUTLIER DETECTION WITH 3-SIGMA THRESHOLD ---
     INFO("Testing with 3-sigma threshold (should catch major outliers)");
     auto results_3sigma = estimator.detectOutliers(
-        data_source, group_manager,
-        TimeFrameIndex(0), TimeFrameIndex(30),
-        3.0  // 3-sigma threshold
+            data_source, group_manager,
+            TimeFrameIndex(0), TimeFrameIndex(30),
+            3.0// 3-sigma threshold
     );
 
     // Print statistics for debugging
@@ -386,7 +386,7 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
         INFO("Track2 mean innovation: " << results_3sigma.mean_innovation[track2]);
         INFO("Track2 std deviation: " << results_3sigma.std_innovation[track2]);
     }
-    
+
     // Verify statistics were computed for both tracks
     REQUIRE(results_3sigma.mean_innovation.count(track1) > 0);
     REQUIRE(results_3sigma.std_innovation.count(track1) > 0);
@@ -395,68 +395,68 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
 
     // Collect detected outlier IDs and print info
     std::set<EntityId> detected_3sigma;
-    for (auto const & outlier : results_3sigma.outliers) {
+    for (auto const & outlier: results_3sigma.outliers) {
         detected_3sigma.insert(outlier.entity_id);
-        
+
         // Verify each outlier exceeds its threshold
         REQUIRE(outlier.innovation_magnitude > outlier.threshold_used);
-        INFO("Outlier EntityID: " << outlier.entity_id 
-             << " at frame " << outlier.frame.getValue()
-             << " with magnitude " << outlier.innovation_magnitude
-             << " (threshold: " << outlier.threshold_used << ")");
+        INFO("Outlier EntityID: " << outlier.entity_id.id
+                                  << " at frame " << outlier.frame.getValue()
+                                  << " with magnitude " << outlier.innovation_magnitude
+                                  << " (threshold: " << outlier.threshold_used << ")");
     }
 
     // We injected 5 major outliers, but 3-sigma is conservative
     // so we require at least 3 to be detected (the largest ones)
     REQUIRE(results_3sigma.outliers.size() >= 3);
-    
+
     // Count how many of our injected outliers were found
     int track1_found = 0;
-    for (EntityId eid : track1_outlier_ids) {
+    for (EntityId eid: track1_outlier_ids) {
         if (detected_3sigma.count(eid) > 0) {
             track1_found++;
-            INFO("Track1 outlier EntityID " << eid << " was detected");
+            INFO("Track1 outlier EntityID " << eid.id << " was detected");
         } else {
-            INFO("Track1 outlier EntityID " << eid << " was NOT detected");
+            INFO("Track1 outlier EntityID " << eid.id << " was NOT detected");
         }
     }
     int track2_found = 0;
-    for (EntityId eid : track2_outlier_ids) {
+    for (EntityId eid: track2_outlier_ids) {
         if (detected_3sigma.count(eid) > 0) {
             track2_found++;
-            INFO("Track2 outlier EntityID " << eid << " was detected");
+            INFO("Track2 outlier EntityID " << eid.id << " was detected");
         } else {
-            INFO("Track2 outlier EntityID " << eid << " was NOT detected");
+            INFO("Track2 outlier EntityID " << eid.id << " was NOT detected");
         }
     }
-    
+
     // With 3-sigma, we should find at least 2 of our 5 injected outliers
     REQUIRE((track1_found + track2_found) >= 2);
 
     // 4. --- TEST WITH TIGHTER 2-SIGMA THRESHOLD ---
     INFO("Testing with 2-sigma threshold (should catch more outliers)");
     auto results_2sigma = estimator.detectOutliers(
-        data_source, group_manager,
-        TimeFrameIndex(0), TimeFrameIndex(30),
-        2.0  // Tighter threshold
+            data_source, group_manager,
+            TimeFrameIndex(0), TimeFrameIndex(30),
+            2.0// Tighter threshold
     );
 
     INFO("2-sigma results: " << results_2sigma.outliers.size() << " outliers detected");
-    
+
     // Tighter threshold should detect at least as many outliers
     REQUIRE(results_2sigma.outliers.size() >= results_3sigma.outliers.size());
 
     std::set<EntityId> detected_2sigma;
-    for (auto const & outlier : results_2sigma.outliers) {
+    for (auto const & outlier: results_2sigma.outliers) {
         detected_2sigma.insert(outlier.entity_id);
-        INFO("2-sigma Outlier EntityID: " << outlier.entity_id 
-             << " at frame " << outlier.frame.getValue()
-             << " magnitude: " << outlier.innovation_magnitude);
+        INFO("2-sigma Outlier EntityID: " << outlier.entity_id.id
+                                          << " at frame " << outlier.frame.getValue()
+                                          << " magnitude: " << outlier.innovation_magnitude);
     }
 
     // All 3-sigma outliers should also be in 2-sigma results
-    for (EntityId eid : detected_3sigma) {
-        INFO("EntityID " << eid << " from 3-sigma should also be in 2-sigma");
+    for (EntityId eid: detected_3sigma) {
+        INFO("EntityID " << eid.id << " from 3-sigma should also be in 2-sigma");
         REQUIRE(detected_2sigma.count(eid) > 0);
     }
 
@@ -468,10 +468,10 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
 
     // Should find at least 4 of our 5 injected outliers with 2-sigma
     int total_2sigma_found = 0;
-    for (EntityId eid : track1_outlier_ids) {
+    for (EntityId eid: track1_outlier_ids) {
         if (detected_2sigma.count(eid) > 0) total_2sigma_found++;
     }
-    for (EntityId eid : track2_outlier_ids) {
+    for (EntityId eid: track2_outlier_ids) {
         if (detected_2sigma.count(eid) > 0) total_2sigma_found++;
     }
     INFO("2-sigma found " << total_2sigma_found << " of 5 injected outliers");
@@ -480,32 +480,32 @@ TEST_CASE("StateEstimator - multiple outliers with large jumps", "[StateEstimato
     // 5. --- TEST WITH EVEN TIGHTER 1.5-SIGMA THRESHOLD ---
     INFO("Testing with 1.5-sigma threshold (should catch even more)");
     auto results_1_5sigma = estimator.detectOutliers(
-        data_source, group_manager,
-        TimeFrameIndex(0), TimeFrameIndex(30),
-        1.5  // Even tighter threshold
+            data_source, group_manager,
+            TimeFrameIndex(0), TimeFrameIndex(30),
+            1.5// Even tighter threshold
     );
 
     INFO("1.5-sigma results: " << results_1_5sigma.outliers.size() << " outliers detected");
-    
+
     // Should find at least as many as 2-sigma
     REQUIRE(results_1_5sigma.outliers.size() >= results_2sigma.outliers.size());
 
     std::set<EntityId> detected_1_5sigma;
-    for (auto const & outlier : results_1_5sigma.outliers) {
+    for (auto const & outlier: results_1_5sigma.outliers) {
         detected_1_5sigma.insert(outlier.entity_id);
     }
-    
+
     // Should find ALL 5 of our injected outliers with 1.5-sigma
     int total_1_5sigma_found = 0;
-    for (EntityId eid : track1_outlier_ids) {
+    for (EntityId eid: track1_outlier_ids) {
         if (detected_1_5sigma.count(eid) > 0) total_1_5sigma_found++;
     }
-    for (EntityId eid : track2_outlier_ids) {
+    for (EntityId eid: track2_outlier_ids) {
         if (detected_1_5sigma.count(eid) > 0) total_1_5sigma_found++;
     }
     INFO("1.5-sigma found " << total_1_5sigma_found << " of 5 injected outliers");
     REQUIRE(total_1_5sigma_found == 5);
-    
+
     // Verify the hierarchy: 1.5-sigma >= 2-sigma >= 3-sigma
     REQUIRE(results_1_5sigma.outliers.size() >= results_2sigma.outliers.size());
     REQUIRE(results_2sigma.outliers.size() >= results_3sigma.outliers.size());
@@ -521,12 +521,11 @@ TEST_CASE("StateEstimator - outlier detection with varying error magnitudes", "[
     Eigen::MatrixXd H(2, 4);
     H << 1, 0, 0, 0, 0, 1, 0, 0;
     Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(4, 4) * 0.05;
-    Eigen::MatrixXd R = Eigen::MatrixXd::Identity(2, 2) * 0.3;  // Lower noise for better sensitivity
+    Eigen::MatrixXd R = Eigen::MatrixXd::Identity(2, 2) * 0.3;// Lower noise for better sensitivity
 
     StateEstimator<TestLine2D> estimator(
-        std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R),
-        std::make_unique<LineCentroidExtractor>()
-    );
+            std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R),
+            std::make_unique<LineCentroidExtractor>());
 
     // Create track with small, medium, and large errors
     std::vector<std::tuple<TestLine2D, EntityId, TimeFrameIndex>> data_source;
@@ -534,44 +533,43 @@ TEST_CASE("StateEstimator - outlier detection with varying error magnitudes", "[
     GroupId group = group_manager.createGroup("VaryingErrors");
 
     std::map<std::string, std::vector<EntityId>> error_categories = {
-        {"small", {}},
-        {"medium", {}},
-        {"large", {}}
-    };
+            {"small", {}},
+            {"medium", {}},
+            {"large", {}}};
 
     // Create a smooth trajectory with injected errors of varying magnitude
     for (int i = 0; i <= 40; ++i) {
-        EntityId eid = 3000 + i;
+        EntityId eid = EntityId(3000 + i);
         double x = i * 1.0;
         double y = i * 0.5;
-        
+
         // Inject errors of different magnitudes - make them more distinct
         if (i == 10) {
-            x += 8.0;  // Small-ish error
+            x += 8.0;// Small-ish error
             error_categories["small"].push_back(eid);
         } else if (i == 20) {
-            x += 20.0;  // Medium error
+            x += 20.0;// Medium error
             error_categories["medium"].push_back(eid);
         } else if (i == 30) {
-            x += 40.0;  // Large error
+            x += 40.0;// Large error
             error_categories["large"].push_back(eid);
         }
-        
+
         TestLine2D line;
         line.id = eid;
         line.p1 = Eigen::Vector2d(x - 0.5, y);
         line.p2 = Eigen::Vector2d(x + 0.5, y);
-        
+
         data_source.emplace_back(line, eid, TimeFrameIndex(i));
         group_manager.addEntityToGroup(group, eid);
     }
 
     // Test multiple thresholds and verify detection hierarchy
-    auto results_3sigma = estimator.detectOutliers(data_source, group_manager, 
+    auto results_3sigma = estimator.detectOutliers(data_source, group_manager,
                                                    TimeFrameIndex(0), TimeFrameIndex(40), 3.0);
-    auto results_2sigma = estimator.detectOutliers(data_source, group_manager, 
+    auto results_2sigma = estimator.detectOutliers(data_source, group_manager,
                                                    TimeFrameIndex(0), TimeFrameIndex(40), 2.0);
-    auto results_1sigma = estimator.detectOutliers(data_source, group_manager, 
+    auto results_1sigma = estimator.detectOutliers(data_source, group_manager,
                                                    TimeFrameIndex(0), TimeFrameIndex(40), 1.0);
 
     INFO("3-sigma found " << results_3sigma.outliers.size() << " outliers");
@@ -580,56 +578,56 @@ TEST_CASE("StateEstimator - outlier detection with varying error magnitudes", "[
 
     // Get detected IDs for each threshold
     std::set<EntityId> ids_3sigma, ids_2sigma, ids_1sigma;
-    for (auto const & o : results_3sigma.outliers) {
+    for (auto const & o: results_3sigma.outliers) {
         ids_3sigma.insert(o.entity_id);
-        INFO("3-sigma detected EntityID " << o.entity_id << " at frame " << o.frame.getValue());
+        INFO("3-sigma detected EntityID " << o.entity_id.id << " at frame " << o.frame.getValue());
     }
-    for (auto const & o : results_2sigma.outliers) {
+    for (auto const & o: results_2sigma.outliers) {
         ids_2sigma.insert(o.entity_id);
-        INFO("2-sigma detected EntityID " << o.entity_id << " at frame " << o.frame.getValue());
+        INFO("2-sigma detected EntityID " << o.entity_id.id << " at frame " << o.frame.getValue());
     }
-    for (auto const & o : results_1sigma.outliers) {
+    for (auto const & o: results_1sigma.outliers) {
         ids_1sigma.insert(o.entity_id);
     }
 
     // 3-sigma should catch at least the large error
     REQUIRE(results_3sigma.outliers.size() >= 1);
-    
+
     // 2-sigma should catch more (large + medium)
     REQUIRE(results_2sigma.outliers.size() >= results_3sigma.outliers.size());
     REQUIRE(results_2sigma.outliers.size() >= 2);
-    
+
     // 1-sigma should catch all errors
     REQUIRE(results_1sigma.outliers.size() >= results_2sigma.outliers.size());
     REQUIRE(results_1sigma.outliers.size() >= 3);
-    
+
     // Large error should be in all results
-    for (EntityId eid : error_categories["large"]) {
-        INFO("Checking large error EntityID " << eid);
+    for (EntityId eid: error_categories["large"]) {
+        INFO("Checking large error EntityID " << eid.id);
         REQUIRE(ids_3sigma.count(eid) > 0);
         REQUIRE(ids_2sigma.count(eid) > 0);
         REQUIRE(ids_1sigma.count(eid) > 0);
     }
-    
+
     // Medium error should be in 2-sigma and 1-sigma
-    for (EntityId eid : error_categories["medium"]) {
-        INFO("Checking medium error EntityID " << eid);
+    for (EntityId eid: error_categories["medium"]) {
+        INFO("Checking medium error EntityID " << eid.id);
         REQUIRE(ids_2sigma.count(eid) > 0);
         REQUIRE(ids_1sigma.count(eid) > 0);
     }
-    
+
     // Small error should be in 1-sigma
-    for (EntityId eid : error_categories["small"]) {
-        INFO("Checking small error EntityID " << eid);
+    for (EntityId eid: error_categories["small"]) {
+        INFO("Checking small error EntityID " << eid.id);
         REQUIRE(ids_1sigma.count(eid) > 0);
     }
-    
+
     // Verify proper subset relationship: 3σ ⊆ 2σ ⊆ 1σ
-    for (EntityId eid : ids_3sigma) {
+    for (EntityId eid: ids_3sigma) {
         REQUIRE(ids_2sigma.count(eid) > 0);
         REQUIRE(ids_1sigma.count(eid) > 0);
     }
-    for (EntityId eid : ids_2sigma) {
+    for (EntityId eid: ids_2sigma) {
         REQUIRE(ids_1sigma.count(eid) > 0);
     }
 }
@@ -653,9 +651,7 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
 
     auto kalman_filter = std::make_unique<KalmanFilterT<4, 2>>(F, H, Q, R);
     auto feature_extractor = std::make_unique<LineCentroidExtractor>();
-    auto index_map = KalmanMatrixBuilder::buildStateIndexMap({
-        feature_extractor->getMetadata()
-    });
+    auto index_map = KalmanMatrixBuilder::buildStateIndexMap({feature_extractor->getMetadata()});
 
     // Instantiate the new MinCostFlowTracker
     // No max_gap_frames needed - filter uncertainty naturally handles long gaps
@@ -669,49 +665,49 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
     GroupId group2 = group_manager.createGroup("Group 2");
 
     auto makeA = [](int frame, double x, double y) {
-        return TestLine2D{(EntityId)(1000 + frame), {x, y}, {x, y}};
+        return TestLine2D{EntityId(1000 + frame), {x, y}, {x, y}};
     };
     auto makeB = [](int frame, double x, double y) {
-        return TestLine2D{(EntityId)(2000 + frame), {x, y}, {x, y}};
+        return TestLine2D{EntityId(2000 + frame), {x, y}, {x, y}};
     };
 
     // Frame 0: Ground truth anchors
-    data_source.emplace_back(makeA(0, 10.0, 10.0), (EntityId)1000, TimeFrameIndex(0));
-    data_source.emplace_back(makeB(0, 90.0, 10.0), (EntityId)2000, TimeFrameIndex(0));
+    data_source.emplace_back(makeA(0, 10.0, 10.0), EntityId(1000), TimeFrameIndex(0));
+    data_source.emplace_back(makeB(0, 90.0, 10.0), EntityId(2000), TimeFrameIndex(0));
 
     GroundTruthMap ground_truth;
-    ground_truth[TimeFrameIndex(0)] = {{group1, (EntityId)1000}, {group2, (EntityId)2000}};
+    ground_truth[TimeFrameIndex(0)] = {{group1, EntityId(1000)}, {group2, EntityId(2000)}};
 
     // Pre-add anchor entities to groups (required for MCF)
-    group_manager.addEntityToGroup(group1, (EntityId)1000);
-    group_manager.addEntityToGroup(group2, (EntityId)2000);
+    group_manager.addEntityToGroup(group1, EntityId(1000));
+    group_manager.addEntityToGroup(group2, EntityId(2000));
 
     // Frames 1-2: Lines move toward each other
-    data_source.emplace_back(makeA(1, 15.0, 10.0), (EntityId)1001, TimeFrameIndex(1));
-    data_source.emplace_back(makeB(1, 85.0, 10.0), (EntityId)2001, TimeFrameIndex(1));
-    data_source.emplace_back(makeA(2, 20.0, 10.0), (EntityId)1002, TimeFrameIndex(2));
-    data_source.emplace_back(makeB(2, 80.0, 10.0), (EntityId)2002, TimeFrameIndex(2));
+    data_source.emplace_back(makeA(1, 15.0, 10.0), EntityId(1001), TimeFrameIndex(1));
+    data_source.emplace_back(makeB(1, 85.0, 10.0), EntityId(2001), TimeFrameIndex(1));
+    data_source.emplace_back(makeA(2, 20.0, 10.0), EntityId(1002), TimeFrameIndex(2));
+    data_source.emplace_back(makeB(2, 80.0, 10.0), EntityId(2002), TimeFrameIndex(2));
 
     // Frames 3-7: BLACKOUT
 
     // Frame 8: Post-blackout, ambiguous observations
-    data_source.emplace_back(makeA(8, 52.0, 10.0), (EntityId)1008, TimeFrameIndex(8));
-    data_source.emplace_back(makeB(8, 48.0, 10.0), (EntityId)2008, TimeFrameIndex(8));
+    data_source.emplace_back(makeA(8, 52.0, 10.0), EntityId(1008), TimeFrameIndex(8));
+    data_source.emplace_back(makeB(8, 48.0, 10.0), EntityId(2008), TimeFrameIndex(8));
 
     // Frames 9-10: Lines continue moving
-    data_source.emplace_back(makeA(9, 54.0, 10.0), (EntityId)1009, TimeFrameIndex(9));
-    data_source.emplace_back(makeB(9, 47.0, 10.0), (EntityId)2009, TimeFrameIndex(9));
-    data_source.emplace_back(makeA(10, 56.0, 10.0), (EntityId)1010, TimeFrameIndex(10));
-    data_source.emplace_back(makeB(10, 46.0, 10.0), (EntityId)2010, TimeFrameIndex(10));
+    data_source.emplace_back(makeA(9, 54.0, 10.0), EntityId(1009), TimeFrameIndex(9));
+    data_source.emplace_back(makeB(9, 47.0, 10.0), EntityId(2009), TimeFrameIndex(9));
+    data_source.emplace_back(makeA(10, 56.0, 10.0), EntityId(1010), TimeFrameIndex(10));
+    data_source.emplace_back(makeB(10, 46.0, 10.0), EntityId(2010), TimeFrameIndex(10));
 
     // Frame 11: Final ground truth anchor
-    data_source.emplace_back(makeA(11, 58.0, 10.0), (EntityId)1011, TimeFrameIndex(11));
-    data_source.emplace_back(makeB(11, 45.0, 10.0), (EntityId)2011, TimeFrameIndex(11));
-    ground_truth[TimeFrameIndex(11)] = {{group1, (EntityId)1011}, {group2, (EntityId)2011}};
+    data_source.emplace_back(makeA(11, 58.0, 10.0), EntityId(1011), TimeFrameIndex(11));
+    data_source.emplace_back(makeB(11, 45.0, 10.0), EntityId(2011), TimeFrameIndex(11));
+    ground_truth[TimeFrameIndex(11)] = {{group1, EntityId(1011)}, {group2, EntityId(2011)}};
 
     // Pre-add ending anchor entities to groups (required for MCF)
-    group_manager.addEntityToGroup(group1, (EntityId)1011);
-    group_manager.addEntityToGroup(group2, (EntityId)2011);
+    group_manager.addEntityToGroup(group1, EntityId(1011));
+    group_manager.addEntityToGroup(group2, EntityId(2011));
 
     // 2. --- EXECUTION ---
     // Switch N-scan lookahead to a dynamics-aware cost to resolve blackout ambiguity
@@ -721,12 +717,12 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
     auto transition_cost = createDynamicsAwareCostFunction(H, R, index_map, dt, 1.0, 0.25, 0.05);
     tracker.setTransitionCostFunction(transition_cost);
     tracker.setLookaheadThreshold(std::numeric_limits<double>::infinity());
-    tracker.process(data_source, 
-        group_manager, 
-        ground_truth, 
-        TimeFrameIndex(0), 
-        TimeFrameIndex(11),
-        [](int) { /* no progress reporting */ });
+    tracker.process(data_source,
+                    group_manager,
+                    ground_truth,
+                    TimeFrameIndex(0),
+                    TimeFrameIndex(11),
+                    [](int) { /* no progress reporting */ });
 
     // 3. --- ASSERTIONS ---
     REQUIRE(group_manager.hasGroup(group1));
@@ -735,13 +731,37 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
     // The MinCostFlowTracker should assign entities, but may swap at frame 8 (post-blackout ambiguity).
     // The algorithm generalizes better by allowing this swap rather than overfitting.
     // We accept either: correct assignment OR swapped assignment at frame 8
-    std::vector<EntityId> expected_g1_correct = {1000, 1001, 1002, 1008, 1009, 1010, 1011};
-    std::vector<EntityId> expected_g2_correct = {2000, 2001, 2002, 2008, 2009, 2010, 2011};
-    
+    std::vector<EntityId> expected_g1_correct = {EntityId(1000),
+                                                 EntityId(1001),
+                                                 EntityId(1002),
+                                                 EntityId(1008),
+                                                 EntityId(1009),
+                                                 EntityId(1010),
+                                                 EntityId(1011)};
+    std::vector<EntityId> expected_g2_correct = {EntityId(2000),
+                                                 EntityId(2001),
+                                                 EntityId(2002),
+                                                 EntityId(2008),
+                                                 EntityId(2009),
+                                                 EntityId(2010),
+                                                 EntityId(2011)};
+
     // When swapped, entity 2008 goes to group1 and 1008 goes to group2
     // Note: sorted order puts 2008 AFTER 1011 since 2008 > 1011 numerically
-    std::vector<EntityId> expected_g1_swapped = {1000, 1001, 1002, 1009, 1010, 1011, 2008};
-    std::vector<EntityId> expected_g2_swapped = {1008, 2000, 2001, 2002, 2009, 2010, 2011};
+    std::vector<EntityId> expected_g1_swapped = {EntityId(1000),
+                                                 EntityId(1001),
+                                                 EntityId(1002),
+                                                 EntityId(1009),
+                                                 EntityId(1010),
+                                                 EntityId(1011),
+                                                 EntityId(2008)};
+    std::vector<EntityId> expected_g2_swapped = {EntityId(1008),
+                                                 EntityId(2000),
+                                                 EntityId(2001),
+                                                 EntityId(2002),
+                                                 EntityId(2009),
+                                                 EntityId(2010),
+                                                 EntityId(2011)};
 
     auto group1_entities = group_manager.getEntitiesInGroup(group1);
     auto group2_entities = group_manager.getEntitiesInGroup(group2);
@@ -751,27 +771,27 @@ TEST_CASE("StateEstimation - MinCostFlowTracker - blackout crossing", "[MinCostF
     // Check if we got either the correct assignment or the swapped assignment
     bool correct_assignment = (group1_entities == expected_g1_correct && group2_entities == expected_g2_correct);
     bool swapped_assignment = (group1_entities == expected_g1_swapped && group2_entities == expected_g2_swapped);
-    
+
     // If neither matches, print detailed debug info
     if (!correct_assignment && !swapped_assignment) {
         std::cout << "\n=== DEBUG: Actual entity assignments ===" << std::endl;
         std::cout << "Group1 (" << group1_entities.size() << " entities): ";
-        for (auto id : group1_entities) std::cout << id << " ";
+        for (auto id: group1_entities) std::cout << id.id << " ";
         std::cout << std::endl;
-        
+
         std::cout << "Group2 (" << group2_entities.size() << " entities): ";
-        for (auto id : group2_entities) std::cout << id << " ";
+        for (auto id: group2_entities) std::cout << id.id << " ";
         std::cout << std::endl;
-        
+
         std::cout << "\nExpected group1 (correct): ";
-        for (auto id : expected_g1_correct) std::cout << id << " ";
+        for (auto id: expected_g1_correct) std::cout << id.id << " ";
         std::cout << std::endl;
-        
+
         std::cout << "Expected group1 (swapped): ";
-        for (auto id : expected_g1_swapped) std::cout << id << " ";
+        for (auto id: expected_g1_swapped) std::cout << id.id << " ";
         std::cout << std::endl;
     }
-    
+
     REQUIRE((correct_assignment || swapped_assignment));
 }
 
@@ -783,43 +803,43 @@ TEST_CASE("StateEstimator - cross-correlated features with MinCostFlow", "[State
 
     // --- SETUP with SIMPLE test first (no cross-correlation yet) ---
     double dt = 1.0;
-    
+
     // 6D state: [x, y, vx, vy, length, length_vel]
     Eigen::MatrixXd F(6, 6);
     F.setIdentity();
-    F(0, 2) = dt;  // x += vx * dt
-    F(1, 3) = dt;  // y += vy * dt
-    F(4, 5) = dt;  // length += length_vel * dt
+    F(0, 2) = dt;// x += vx * dt
+    F(1, 3) = dt;// y += vy * dt
+    F(4, 5) = dt;// length += length_vel * dt
 
     // Measure position and length
     Eigen::MatrixXd H(3, 6);
     H.setZero();
-    H(0, 0) = 1;  // measure x
-    H(1, 1) = 1;  // measure y
-    H(2, 4) = 1;  // measure length
+    H(0, 0) = 1;// measure x
+    H(1, 1) = 1;// measure y
+    H(2, 4) = 1;// measure length
 
     // Process noise WITH moderate cross-correlation
     Eigen::MatrixXd Q(6, 6);
     Q.setIdentity();
-    Q.block<2, 2>(0, 0) *= 10.0;  // position noise
-    Q.block<2, 2>(2, 2) *= 1.0;   // velocity noise
-    Q.block<2, 2>(4, 4) *= 0.01;  // static feature noise
-    
+    Q.block<2, 2>(0, 0) *= 10.0;// position noise
+    Q.block<2, 2>(2, 2) *= 1.0; // velocity noise
+    Q.block<2, 2>(4, 4) *= 0.01;// static feature noise
+
     // Add cross-correlation between position and length (moderate strength)
     // This mimics camera clipping scenario where position and length are correlated
-    double correlation = 0.5;  // Moderate correlation (was 0.7)
+    double correlation = 0.5;// Moderate correlation (was 0.7)
     double pos_std = std::sqrt(10.0);
     double len_std = std::sqrt(0.01);
     double cov = correlation * pos_std * len_std;
-    Q(0, 4) = cov;  // x-length correlation
+    Q(0, 4) = cov;// x-length correlation
     Q(4, 0) = cov;
-    Q(1, 4) = cov;  // y-length correlation
+    Q(1, 4) = cov;// y-length correlation
     Q(4, 1) = cov;
 
     Eigen::MatrixXd R(3, 3);
     R.setIdentity();
-    R.block<2, 2>(0, 0) *= 5.0;   // position measurement noise
-    R(2, 2) = 10.0;                // length measurement noise
+    R.block<2, 2>(0, 0) *= 5.0;// position measurement noise
+    R(2, 2) = 10.0;            // length measurement noise
 
     // Create a feature extractor that returns 3D measurements
     class LineWithLengthExtractor : public IFeatureExtractor<TestLine2D> {
@@ -851,18 +871,18 @@ TEST_CASE("StateEstimator - cross-correlated features with MinCostFlow", "[State
             // Initial covariance WITH moderate cross-correlation
             Eigen::MatrixXd p(6, 6);
             p.setIdentity();
-            p.block<2, 2>(0, 0) *= 50.0;  // position uncertainty
-            p.block<2, 2>(2, 2) *= 10.0;   // velocity uncertainty
-            p.block<2, 2>(4, 4) *= 25.0;   // length uncertainty
-            
+            p.block<2, 2>(0, 0) *= 50.0;// position uncertainty
+            p.block<2, 2>(2, 2) *= 10.0;// velocity uncertainty
+            p.block<2, 2>(4, 4) *= 25.0;// length uncertainty
+
             // Add moderate cross-correlation in initial state
-            double init_correlation = 0.6;  // Moderate correlation (was 0.8)
+            double init_correlation = 0.6;// Moderate correlation (was 0.8)
             double init_pos_std = std::sqrt(50.0);
             double init_len_std = std::sqrt(25.0);
             double init_cov = init_correlation * init_pos_std * init_len_std;
-            p(0, 4) = init_cov;  // x-length correlation
+            p(0, 4) = init_cov;// x-length correlation
             p(4, 0) = init_cov;
-            p(1, 4) = init_cov;  // y-length correlation
+            p(1, 4) = init_cov;// y-length correlation
             p(4, 1) = init_cov;
 
             return {initialState, p};
@@ -875,11 +895,10 @@ TEST_CASE("StateEstimator - cross-correlated features with MinCostFlow", "[State
         FeatureMetadata getMetadata() const override {
             // Return metadata for the complete 6D state: [x, y, vx, vy, length, length_vel]
             return FeatureMetadata{
-                .name = "kalman_features",
-                .measurement_size = 3,  // measures [x, y, length]
-                .state_size = 6,        // state [x, y, vx, vy, length, length_vel]
-                .temporal_type = FeatureTemporalType::CUSTOM
-            };
+                    .name = "kalman_features",
+                    .measurement_size = 3,// measures [x, y, length]
+                    .state_size = 6,      // state [x, y, vx, vy, length, length_vel]
+                    .temporal_type = FeatureTemporalType::CUSTOM};
         }
     };
 
@@ -887,7 +906,7 @@ TEST_CASE("StateEstimator - cross-correlated features with MinCostFlow", "[State
     auto feature_extractor = std::make_unique<LineWithLengthExtractor>();
 
     MinCostFlowTracker<TestLine2D> tracker(std::move(kalman_filter), std::move(feature_extractor), H, R);
-    
+
     // Enable debug logging to see what's happening
     tracker.enableDebugLogging("cross_correlated_features_test.log");
 
@@ -898,48 +917,48 @@ TEST_CASE("StateEstimator - cross-correlated features with MinCostFlow", "[State
 
     // Create lines where length correlates with position (camera clipping scenario)
     auto makeLine = [](int frame, double x, double y, double length) {
-        Eigen::Vector2d p1(x - length/2, y);
-        Eigen::Vector2d p2(x + length/2, y);
-        return TestLine2D{(EntityId)(1000 + frame), p1, p2};
+        Eigen::Vector2d p1(x - length / 2, y);
+        Eigen::Vector2d p2(x + length / 2, y);
+        return TestLine2D{EntityId(1000 + frame), p1, p2};
     };
 
     // Simulate camera edge effect: as line moves right, it gets clipped shorter
     for (int i = 0; i < 20; ++i) {
         double x = 10.0 + i * 5.0;
         double y = 50.0;
-        double length = 100.0 - i * 2.0;  // Length decreases as x increases
-        data_source.emplace_back(makeLine(i, x, y, length), (EntityId)(1000 + i), TimeFrameIndex(i));
+        double length = 100.0 - i * 2.0;// Length decreases as x increases
+        data_source.emplace_back(makeLine(i, x, y, length), EntityId(1000 + i), TimeFrameIndex(i));
     }
 
     // Ground truth anchors - add them to the group manager
     GroundTruthMap ground_truth;
-    ground_truth[TimeFrameIndex(0)] = {{group1, (EntityId)1000}};
-    ground_truth[TimeFrameIndex(19)] = {{group1, (EntityId)1019}};
-    
+    ground_truth[TimeFrameIndex(0)] = {{group1, EntityId(1000)}};
+    ground_truth[TimeFrameIndex(19)] = {{group1, EntityId(1019)}};
+
     // Pre-add anchor entities to groups (required for MCF)
-    group_manager.addEntityToGroup(group1, (EntityId)1000);
-    group_manager.addEntityToGroup(group1, (EntityId)1019);
+    group_manager.addEntityToGroup(group1, EntityId(1000));
+    group_manager.addEntityToGroup(group1, EntityId(1019));
 
     // --- EXECUTION ---
     // This should not crash or produce NaN/Inf costs
-    REQUIRE_NOTHROW(tracker.process(data_source, 
-        group_manager, 
-        ground_truth, 
-        TimeFrameIndex(0), 
-        TimeFrameIndex(19),
-        [](int) { /* no progress reporting */ }));
+    REQUIRE_NOTHROW(tracker.process(data_source,
+                                    group_manager,
+                                    ground_truth,
+                                    TimeFrameIndex(0),
+                                    TimeFrameIndex(19),
+                                    [](int) { /* no progress reporting */ }));
 
     // --- ASSERTIONS ---
     auto group1_entities = group_manager.getEntitiesInGroup(group1);
-    
+
     // Check that all entities were successfully tracked
     INFO("Successfully tracked " << group1_entities.size() << " entities with cross-correlated features");
     REQUIRE(group1_entities.size() == 20);
-    
+
     // Verify continuity - all consecutive entity IDs should be present
     std::sort(group1_entities.begin(), group1_entities.end());
     for (size_t i = 0; i < group1_entities.size(); ++i) {
-        REQUIRE(group1_entities[i] == (EntityId)(1000 + i));
+        REQUIRE(group1_entities[i] == EntityId(1000 + i));
     }
 }
 
@@ -951,9 +970,9 @@ TEST_CASE("Mahalanobis distance with ill-conditioned covariance", "[StateEstimat
 
     SECTION("Well-conditioned covariance produces valid distances") {
         Eigen::MatrixXd H = Eigen::MatrixXd::Identity(3, 6);
-        H(0, 0) = 1;  // x
-        H(1, 1) = 1;  // y
-        H(2, 4) = 1;  // length
+        H(0, 0) = 1;// x
+        H(1, 1) = 1;// y
+        H(2, 4) = 1;// length
 
         Eigen::MatrixXd R(3, 3);
         R.setIdentity();
@@ -968,24 +987,24 @@ TEST_CASE("Mahalanobis distance with ill-conditioned covariance", "[StateEstimat
 
         // Compute innovation covariance
         Eigen::MatrixXd innovation_cov = H * predicted_state.state_covariance * H.transpose() + R;
-        
+
         // Check that matrix is invertible
         Eigen::FullPivLU<Eigen::MatrixXd> lu(innovation_cov);
         REQUIRE(lu.isInvertible());
-        
+
         // Compute Mahalanobis distance
         Eigen::VectorXd innovation = observation - H * predicted_state.state_mean;
         double dist_sq = innovation.transpose() * innovation_cov.inverse() * innovation;
-        
+
         REQUIRE(std::isfinite(dist_sq));
         REQUIRE(dist_sq >= 0.0);
     }
 
     SECTION("Highly correlated covariance may produce ill-conditioned matrix") {
         Eigen::MatrixXd H = Eigen::MatrixXd::Identity(3, 6);
-        H(0, 0) = 1;  // x
-        H(1, 1) = 1;  // y
-        H(2, 4) = 1;  // length
+        H(0, 0) = 1;// x
+        H(1, 1) = 1;// y
+        H(2, 4) = 1;// length
 
         Eigen::MatrixXd R(3, 3);
         R.setIdentity();
@@ -993,12 +1012,12 @@ TEST_CASE("Mahalanobis distance with ill-conditioned covariance", "[StateEstimat
 
         FilterState predicted_state;
         predicted_state.state_mean = Eigen::VectorXd::Zero(6);
-        
+
         // Create covariance with very strong correlation (near-singular)
         Eigen::MatrixXd P(6, 6);
         P.setIdentity();
         P *= 100.0;
-        
+
         // Add extremely strong correlation between x and length (0.999)
         double correlation = 0.999;
         double pos_std = std::sqrt(100.0);
@@ -1014,39 +1033,39 @@ TEST_CASE("Mahalanobis distance with ill-conditioned covariance", "[StateEstimat
 
         // Compute innovation covariance
         Eigen::MatrixXd innovation_cov = H * predicted_state.state_covariance * H.transpose() + R;
-        
+
         // Check condition number
         Eigen::JacobiSVD<Eigen::MatrixXd> svd(innovation_cov);
-        double condition_number = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size()-1);
-        
+        double condition_number = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
+
         INFO("Condition number: " << condition_number);
-        
+
         // High correlation can lead to poor conditioning
         if (condition_number > 1e10) {
             WARN("Innovation covariance is ill-conditioned (condition number: " << condition_number << ")");
         }
-        
+
         // Try to compute Mahalanobis distance
         Eigen::VectorXd innovation = observation - H * predicted_state.state_mean;
-        
+
         // Using direct inverse may fail or produce nonsensical results
         double dist_sq_direct = innovation.transpose() * innovation_cov.inverse() * innovation;
-        
+
         INFO("Mahalanobis distance (direct inverse): " << std::sqrt(dist_sq_direct));
-        
+
         // Check if result is valid
         bool direct_valid = std::isfinite(dist_sq_direct) && dist_sq_direct >= 0.0;
-        
+
         if (!direct_valid) {
             WARN("Direct matrix inverse produced invalid result with highly correlated features");
         }
-        
+
         // Better approach: use pseudo-inverse or LLT decomposition
         Eigen::LLT<Eigen::MatrixXd> llt(innovation_cov);
         if (llt.info() == Eigen::Success) {
             Eigen::VectorXd solved = llt.solve(innovation);
             double dist_sq_llt = innovation.transpose() * solved;
-            
+
             INFO("Mahalanobis distance (LLT solve): " << std::sqrt(dist_sq_llt));
             REQUIRE(std::isfinite(dist_sq_llt));
             REQUIRE(dist_sq_llt >= 0.0);
@@ -1058,43 +1077,43 @@ TEST_CASE("Mahalanobis distance with ill-conditioned covariance", "[StateEstimat
     SECTION("Singular covariance from perfect correlation") {
         // This represents the extreme case where features are perfectly linearly dependent
         Eigen::MatrixXd H = Eigen::MatrixXd::Identity(2, 4);
-        H(0, 0) = 1;  // x
-        H(1, 2) = 1;  // feature perfectly correlated with x
+        H(0, 0) = 1;// x
+        H(1, 2) = 1;// feature perfectly correlated with x
 
         Eigen::MatrixXd R(2, 2);
         R.setIdentity();
-        R *= 1e-6;  // Very small measurement noise
+        R *= 1e-6;// Very small measurement noise
 
         FilterState predicted_state;
         predicted_state.state_mean = Eigen::VectorXd::Zero(4);
-        
+
         // Create covariance where features are perfectly correlated
         Eigen::MatrixXd P(4, 4);
         P.setIdentity();
         P *= 100.0;
-        
+
         // Perfect correlation: cov = std1 * std2
-        P(0, 2) = 100.0;  // Perfect correlation
+        P(0, 2) = 100.0;// Perfect correlation
         P(2, 0) = 100.0;
 
         predicted_state.state_covariance = P;
 
         Eigen::VectorXd observation(2);
-        observation << 1.0, 1.0;  // Consistent with perfect correlation
+        observation << 1.0, 1.0;// Consistent with perfect correlation
 
         // Compute innovation covariance
         Eigen::MatrixXd innovation_cov = H * predicted_state.state_covariance * H.transpose() + R;
-        
+
         // Check if matrix is singular
         Eigen::FullPivLU<Eigen::MatrixXd> lu(innovation_cov);
         double determinant = innovation_cov.determinant();
-        
+
         INFO("Determinant: " << determinant);
         INFO("Is invertible: " << lu.isInvertible());
-        
+
         if (!lu.isInvertible() || std::abs(determinant) < 1e-10) {
             WARN("Innovation covariance is singular or near-singular with perfect correlation");
-            
+
             // Direct inverse will fail catastrophically
             // This is what causes MCF to produce "no optimal path" errors
         }
@@ -1166,24 +1185,24 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
     // Create observations with unique IDs per frame per track
     for (int f = 0; f <= num_frames; ++f) {
         // Track 1
-        EntityId id1 = static_cast<EntityId>(1000 + f);
-        ObsPoint2D p1{ id1, gt0[f].p.x, gt0[f].p.y };
+        EntityId id1 = EntityId(1000 + f);
+        ObsPoint2D p1{id1, gt0[f].p.x, gt0[f].p.y};
         data_source.emplace_back(p1, id1, TimeFrameIndex(f));
         // Track 2
-        EntityId id2 = static_cast<EntityId>(2000 + f);
-        ObsPoint2D p2{ id2, gt1[f].p.x, gt1[f].p.y };
+        EntityId id2 = EntityId(2000 + f);
+        ObsPoint2D p2{id2, gt1[f].p.x, gt1[f].p.y};
         data_source.emplace_back(p2, id2, TimeFrameIndex(f));
     }
 
     // Set anchors at first and last frames
-    ground_truth[TimeFrameIndex(0)] = {{g1, (EntityId)1000}, {g2, (EntityId)2000}};
-    ground_truth[TimeFrameIndex(num_frames)] = {{g1, (EntityId)(1000 + num_frames)}, {g2, (EntityId)(2000 + num_frames)}};
+    ground_truth[TimeFrameIndex(0)] = {{g1, EntityId(1000)}, {g2, EntityId(2000)}};
+    ground_truth[TimeFrameIndex(num_frames)] = {{g1, EntityId(1000 + num_frames)}, {g2, EntityId(2000 + num_frames)}};
 
     // Pre-add anchor entities to groups (required for MCF)
-    group_manager.addEntityToGroup(g1, (EntityId)1000);
-    group_manager.addEntityToGroup(g1, (EntityId)(1000 + num_frames));
-    group_manager.addEntityToGroup(g2, (EntityId)2000);
-    group_manager.addEntityToGroup(g2, (EntityId)(2000 + num_frames));
+    group_manager.addEntityToGroup(g1, (EntityId) 1000);
+    group_manager.addEntityToGroup(g1, (EntityId) (1000 + num_frames));
+    group_manager.addEntityToGroup(g2, (EntityId) 2000);
+    group_manager.addEntityToGroup(g2, (EntityId) (2000 + num_frames));
 
     // Kalman filter matrices (CV model)
     Eigen::Matrix<double, 4, 4> F;
@@ -1226,18 +1245,18 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
 
 
     // Process
-    tracker.process(data_source, 
-        group_manager, 
-        ground_truth, 
-        TimeFrameIndex(0), 
-        TimeFrameIndex(num_frames),
-        [](int) { /* no progress reporting */ });
+    tracker.process(data_source,
+                    group_manager,
+                    ground_truth,
+                    TimeFrameIndex(0),
+                    TimeFrameIndex(num_frames),
+                    [](int) { /* no progress reporting */ });
 
     // Assertions: ensure both groups contain the expected entity IDs in order
     std::vector<EntityId> expected_g1, expected_g2;
     for (int f = 0; f <= num_frames; ++f) {
-        expected_g1.push_back((EntityId)(1000 + f));
-        expected_g2.push_back((EntityId)(2000 + f));
+        expected_g1.push_back((EntityId) (1000 + f));
+        expected_g2.push_back((EntityId) (2000 + f));
     }
 
     auto got_g1 = group_manager.getEntitiesInGroup(g1);
@@ -1251,27 +1270,38 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
         std::set<EntityId> gset(got_g1.begin(), got_g1.end());
         std::vector<EntityId> missing;
         std::vector<EntityId> extra;
-        for (auto id : expected_g1) if (!gset.count(id)) missing.push_back(id);
-        for (auto id : got_g1) if (!exp.count(id)) extra.push_back(id);
+        for (auto id: expected_g1)
+            if (!gset.count(id)) missing.push_back(id);
+        for (auto id: got_g1)
+            if (!exp.count(id)) extra.push_back(id);
         size_t first_mismatch = std::min(expected_g1.size(), got_g1.size());
         for (size_t i = 0; i < std::min(expected_g1.size(), got_g1.size()); ++i) {
-            if (expected_g1[i] != got_g1[i]) { first_mismatch = i; break; }
+            if (expected_g1[i] != got_g1[i]) {
+                first_mismatch = i;
+                break;
+            }
         }
         std::ostringstream msg;
         msg << "Group1 mismatch: size expected=" << expected_g1.size() << " got=" << got_g1.size()
             << "; missing=" << missing.size() << ", extra=" << extra.size();
         if (!missing.empty()) {
             msg << "; missing(first10)=";
-            for (size_t i = 0; i < std::min<size_t>(10, missing.size()); ++i) { if (i) msg << ","; msg << missing[i]; }
+            for (size_t i = 0; i < std::min<size_t>(10, missing.size()); ++i) {
+                if (i) msg << ",";
+                msg << missing[i].id;
+            }
         }
         if (!extra.empty()) {
             msg << "; extra(first10)=";
-            for (size_t i = 0; i < std::min<size_t>(10, extra.size()); ++i) { if (i) msg << ","; msg << extra[i]; }
+            for (size_t i = 0; i < std::min<size_t>(10, extra.size()); ++i) {
+                if (i) msg << ",";
+                msg << extra[i].id;
+            }
         }
         if (first_mismatch < std::min(expected_g1.size(), got_g1.size())) {
             msg << "; firstIdx=" << first_mismatch
-                << " exp=" << expected_g1[first_mismatch]
-                << " got=" << got_g1[first_mismatch];
+                << " exp=" << expected_g1[first_mismatch].id
+                << " got=" << got_g1[first_mismatch].id;
         }
         // Dump a small GT window around the mismatch for both tracks
         int const win = 3;
@@ -1284,14 +1314,14 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
             auto const & s0 = gt0[i];
             msg << " [i=" << i
                 << ", expId=" << (1000 + i)
-                << ", gotId=" << (i < static_cast<int>(got_g1.size()) ? got_g1[i] : (EntityId) -1)
+                << ", gotId=" << (i < static_cast<int>(got_g1.size()) ? got_g1[i].id : EntityId(0).id)
                 << ", gt0=(" << s0.p.x << "," << s0.p.y << ") v=(" << s0.v.vx << "," << s0.v.vy << ")]";
         }
         for (int i = start; i <= end; ++i) {
             auto const & s1 = gt1[i];
             msg << " [i=" << i
                 << ", expId=" << (2000 + i)
-                << ", gotId=" << (i < static_cast<int>(got_g2.size()) ? got_g2[i] : (EntityId) -1)
+                << ", gotId=" << (i < static_cast<int>(got_g2.size()) ? got_g2[i].id : EntityId(0).id)
                 << ", gt1=(" << s1.p.x << "," << s1.p.y << ") v=(" << s1.v.vx << "," << s1.v.vy << ")]";
         }
         FAIL(msg.str());
@@ -1301,27 +1331,38 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
         std::set<EntityId> gset(got_g2.begin(), got_g2.end());
         std::vector<EntityId> missing;
         std::vector<EntityId> extra;
-        for (auto id : expected_g2) if (!gset.count(id)) missing.push_back(id);
-        for (auto id : got_g2) if (!exp.count(id)) extra.push_back(id);
+        for (auto id: expected_g2)
+            if (!gset.count(id)) missing.push_back(id);
+        for (auto id: got_g2)
+            if (!exp.count(id)) extra.push_back(id);
         size_t first_mismatch = std::min(expected_g2.size(), got_g2.size());
         for (size_t i = 0; i < std::min(expected_g2.size(), got_g2.size()); ++i) {
-            if (expected_g2[i] != got_g2[i]) { first_mismatch = i; break; }
+            if (expected_g2[i] != got_g2[i]) {
+                first_mismatch = i;
+                break;
+            }
         }
         std::ostringstream msg;
         msg << "Group2 mismatch: size expected=" << expected_g2.size() << " got=" << got_g2.size()
             << "; missing=" << missing.size() << ", extra=" << extra.size();
         if (!missing.empty()) {
             msg << "; missing(first10)=";
-            for (size_t i = 0; i < std::min<size_t>(10, missing.size()); ++i) { if (i) msg << ","; msg << missing[i]; }
+            for (size_t i = 0; i < std::min<size_t>(10, missing.size()); ++i) {
+                if (i) msg << ",";
+                msg << missing[i].id;
+            }
         }
         if (!extra.empty()) {
             msg << "; extra(first10)=";
-            for (size_t i = 0; i < std::min<size_t>(10, extra.size()); ++i) { if (i) msg << ","; msg << extra[i]; }
+            for (size_t i = 0; i < std::min<size_t>(10, extra.size()); ++i) {
+                if (i) msg << ",";
+                msg << extra[i].id;
+            }
         }
         if (first_mismatch < std::min(expected_g2.size(), got_g2.size())) {
             msg << "; firstIdx=" << first_mismatch
-                << " exp=" << expected_g2[first_mismatch]
-                << " got=" << got_g2[first_mismatch];
+                << " exp=" << expected_g2[first_mismatch].id
+                << " got=" << got_g2[first_mismatch].id;
         }
         int const win = 3;
         int start = static_cast<int>(first_mismatch) - win;
@@ -1333,7 +1374,7 @@ TEST_CASE("MinCostFlowTracker - bouncing balls fixture tracking", "[MinCostFlowT
             auto const & s1 = gt1[i];
             msg << " [i=" << i
                 << ", expId=" << (2000 + i)
-                << ", gotId=" << (i < static_cast<int>(got_g2.size()) ? got_g2[i] : (EntityId) -1)
+                << ", gotId=" << (i < static_cast<int>(got_g2.size()) ? got_g2[i].id : EntityId(0).id)
                 << ", gt1=(" << s1.p.x << "," << s1.p.y << ") v=(" << s1.v.vx << "," << s1.v.vy << ")]";
         }
         FAIL(msg.str());
@@ -1363,18 +1404,18 @@ TEST_CASE("OutlierDetection with LineLengthExtractor", "[OutlierDetection]") {
     struct TestLine {
         std::vector<std::pair<double, double>> points;
         size_t size() const { return points.size(); }
-        const std::pair<double, double>& operator[](size_t i) const { return points[i]; }
+        std::pair<double, double> const & operator[](size_t i) const { return points[i]; }
     };
 
     class TestLineLengthExtractor : public IFeatureExtractor<TestLine> {
     public:
-        Eigen::VectorXd getFilterFeatures(const TestLine& line) const override {
+        Eigen::VectorXd getFilterFeatures(TestLine const & line) const override {
             double length = 0.0;
             if (line.size() >= 2) {
                 for (size_t i = 1; i < line.size(); ++i) {
-                    double dx = line[i].first - line[i-1].first;
-                    double dy = line[i].second - line[i-1].second;
-                    length += std::sqrt(dx*dx + dy*dy);
+                    double dx = line[i].first - line[i - 1].first;
+                    double dy = line[i].second - line[i - 1].second;
+                    length += std::sqrt(dx * dx + dy * dy);
                 }
             }
             Eigen::VectorXd features(1);
@@ -1382,7 +1423,7 @@ TEST_CASE("OutlierDetection with LineLengthExtractor", "[OutlierDetection]") {
             return features;
         }
 
-        FeatureCache getAllFeatures(const TestLine& line) const override {
+        FeatureCache getAllFeatures(TestLine const & line) const override {
             FeatureCache cache;
             cache[getFilterFeatureName()] = getFilterFeatures(line);
             return cache;
@@ -1390,7 +1431,7 @@ TEST_CASE("OutlierDetection with LineLengthExtractor", "[OutlierDetection]") {
 
         std::string getFilterFeatureName() const override { return "line_length"; }
 
-        FilterState getInitialState(const TestLine& line) const override {
+        FilterState getInitialState(TestLine const & line) const override {
             Eigen::VectorXd state(1);
             state << getFilterFeatures(line);
             Eigen::MatrixXd cov(1, 1);
@@ -1425,11 +1466,11 @@ TEST_CASE("OutlierDetection with LineLengthExtractor", "[OutlierDetection]") {
     // Create a series of lines with consistent length, and one outlier
     for (int i = 0; i <= 10; ++i) {
         TestLine line;
-        double length = (i == 5) ? 100.0 : 10.0; // Outlier at frame 5
-        line.points.push_back({(double)i, 0.0});
-        line.points.push_back({(double)i, length});
-        
-        EntityId entity_id = (EntityId)i;
+        double length = (i == 5) ? 100.0 : 10.0;// Outlier at frame 5
+        line.points.push_back({(double) i, 0.0});
+        line.points.push_back({(double) i, length});
+
+        EntityId entity_id = (EntityId) i;
         data_source.emplace_back(line, entity_id, TimeFrameIndex(i));
         group_manager.addEntityToGroup(group1, entity_id);
     }
@@ -1439,8 +1480,8 @@ TEST_CASE("OutlierDetection with LineLengthExtractor", "[OutlierDetection]") {
 
     // 3. --- ASSERTIONS ---
     GroupId outlier_group_id = 0;
-    for(auto const& descriptor : group_manager.getAllGroupDescriptors()){
-        if(descriptor.name == "outlier"){
+    for (auto const & descriptor: group_manager.getAllGroupDescriptors()) {
+        if (descriptor.name == "outlier") {
             outlier_group_id = descriptor.id;
             break;
         }
@@ -1448,14 +1489,14 @@ TEST_CASE("OutlierDetection with LineLengthExtractor", "[OutlierDetection]") {
     REQUIRE(outlier_group_id != 0);
 
     auto outlier_entities = group_manager.getEntitiesInGroup(outlier_group_id);
-    
+
     // Debug: print what we got
     if (outlier_entities.size() != 1) {
         std::cout << "\n=== DEBUG: Outlier Detection ===" << std::endl;
         std::cout << "Expected 1 outlier (entity 5 with length 100)" << std::endl;
         std::cout << "Got " << outlier_entities.size() << " outliers:" << std::endl;
-        for (auto eid : outlier_entities) {
-            std::cout << "  Entity " << eid << std::endl;
+        for (auto eid: outlier_entities) {
+            std::cout << "  Entity " << eid.id << std::endl;
         }
         std::cout << "\nData summary:" << std::endl;
         for (int i = 0; i <= 10; ++i) {
@@ -1463,7 +1504,7 @@ TEST_CASE("OutlierDetection with LineLengthExtractor", "[OutlierDetection]") {
             std::cout << "  Frame " << i << ": entity " << i << ", length = " << length << std::endl;
         }
     }
-    
+
     REQUIRE(outlier_entities.size() == 1);
-    REQUIRE(outlier_entities[0] == (EntityId)5);
+    REQUIRE(outlier_entities[0] == EntityId(5));
 }

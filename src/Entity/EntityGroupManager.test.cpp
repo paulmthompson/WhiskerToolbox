@@ -99,9 +99,9 @@ TEST_CASE("EntityGroupManager - Entity Management", "[entity][group][manager][en
     GroupId group1 = manager.createGroup("Group 1");
     GroupId group2 = manager.createGroup("Group 2");
     
-    EntityId entity1 = 100;
-    EntityId entity2 = 200;
-    EntityId entity3 = 300;
+    EntityId entity1 = EntityId(100);
+    EntityId entity2 = EntityId(200);
+    EntityId entity3 = EntityId(300);
     
     SECTION("Add single entities to groups") {
         REQUIRE(manager.addEntityToGroup(group1, entity1));
@@ -153,7 +153,7 @@ TEST_CASE("EntityGroupManager - Entity Management", "[entity][group][manager][en
         
         // Try removing non-existent entity
         REQUIRE_FALSE(manager.removeEntityFromGroup(group1, entity2));
-        REQUIRE_FALSE(manager.removeEntityFromGroup(group1, 999));
+        REQUIRE_FALSE(manager.removeEntityFromGroup(group1, EntityId(999)));
         
         // Try removing from non-existent group
         REQUIRE_FALSE(manager.removeEntityFromGroup(999, entity1));
@@ -164,7 +164,7 @@ TEST_CASE("EntityGroupManager - Entity Management", "[entity][group][manager][en
         std::vector<EntityId> entities = {entity1, entity2, entity3};
         manager.addEntitiesToGroup(group1, entities);
         
-        std::vector<EntityId> to_remove = {entity1, entity3, 999}; // Include non-existent entity
+        std::vector<EntityId> to_remove = {entity1, entity3, EntityId(999)}; // Include non-existent entity
         size_t removed = manager.removeEntitiesFromGroup(group1, to_remove);
         REQUIRE(removed == 2); // Only entity1 and entity3 should be removed
         
@@ -218,9 +218,9 @@ TEST_CASE("EntityGroupManager - Cross-references", "[entity][group][manager][rev
     GroupId group2 = manager.createGroup("Group 2");
     GroupId group3 = manager.createGroup("Group 3");
     
-    EntityId entity1 = 100;
-    EntityId entity2 = 200;
-    EntityId entity3 = 300;
+    EntityId entity1 = EntityId(100);
+    EntityId entity2 = EntityId(200);
+    EntityId entity3 = EntityId(300);
     
     SECTION("Entity to groups mapping") {
         // Add entity1 to multiple groups
@@ -283,9 +283,9 @@ TEST_CASE("EntityGroupManager - Statistics and Utilities", "[entity][group][mana
         GroupId group1 = manager.createGroup("Group 1");
         GroupId group2 = manager.createGroup("Group 2");
         
-        EntityId entity1 = 100;
-        EntityId entity2 = 200;
-        EntityId entity3 = 300;
+        EntityId entity1 = EntityId(100);
+        EntityId entity2 = EntityId(200);
+        EntityId entity3 = EntityId(300);
         
         REQUIRE(manager.getGroupCount() == 2);
         REQUIRE(manager.getTotalEntityCount() == 0);
@@ -319,8 +319,8 @@ TEST_CASE("EntityGroupManager - Statistics and Utilities", "[entity][group][mana
         // Setup some data
         GroupId group1 = manager.createGroup("Group 1");
         GroupId group2 = manager.createGroup("Group 2");
-        manager.addEntityToGroup(group1, 100);
-        manager.addEntityToGroup(group2, 200);
+        manager.addEntityToGroup(group1, EntityId(100));
+        manager.addEntityToGroup(group2, EntityId(200));
         
         REQUIRE(manager.getGroupCount() == 2);
         REQUIRE(manager.getTotalEntityCount() == 2);
@@ -347,8 +347,8 @@ TEST_CASE("EntityGroupManager - Performance Scenarios", "[entity][group][manager
         // Create large vector of entity IDs
         std::vector<EntityId> entities;
         entities.reserve(10000);
-        for (EntityId i = 1; i <= 10000; ++i) {
-            entities.push_back(i);
+        for (int i = 1; i <= 10000; ++i) {
+            entities.push_back(EntityId(i));
         }
         
         // Batch add
@@ -368,7 +368,7 @@ TEST_CASE("EntityGroupManager - Performance Scenarios", "[entity][group][manager
         
         // All remaining should be >= 5001
         for (EntityId entity : remaining) {
-            REQUIRE(entity >= 5001);
+            REQUIRE(entity >= EntityId(5001));
         }
     }
     
@@ -382,10 +382,10 @@ TEST_CASE("EntityGroupManager - Performance Scenarios", "[entity][group][manager
         }
         
         // Add entities to multiple groups (each entity in ~10 groups on average)
-        for (EntityId entity = 1; entity <= num_entities; ++entity) {
+        for (int entity = 1; entity <= num_entities; ++entity) {
             for (size_t group_idx = 0; group_idx < num_groups; group_idx += 10) {
                 if (group_idx + (entity % 10) < num_groups) {
-                    manager.addEntityToGroup(groups[group_idx + (entity % 10)], entity);
+                    manager.addEntityToGroup(groups[group_idx + (entity % 10)], EntityId(entity));
                 }
             }
         }
@@ -394,7 +394,7 @@ TEST_CASE("EntityGroupManager - Performance Scenarios", "[entity][group][manager
         REQUIRE(manager.getTotalEntityCount() == num_entities);
         
         // Verify cross-references work efficiently
-        EntityId test_entity = 500;
+        EntityId test_entity = EntityId(500);
         auto groups_for_entity = manager.getGroupsContainingEntity(test_entity);
         REQUIRE_FALSE(groups_for_entity.empty());
         REQUIRE(groups_for_entity.size() <= 10); // Should be in ~10 groups

@@ -1418,8 +1418,8 @@ TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
         
         // Verify all EntityIDs are valid (non-zero)
         for (EntityId id : column_entity_ids) {
-            REQUIRE(id != 0);
-            INFO("Column EntityID: " << id);
+            REQUIRE(id != EntityId(0));
+            INFO("Column EntityID: " << id.id);
         }
         
         // Verify that all LineSamplingMultiComputer columns have the same EntityIDs
@@ -1477,8 +1477,8 @@ TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
         
         // Verify all selected EntityIDs are valid
         for (EntityId id : selected_entity_ids) {
-            REQUIRE(id != 0);
-            INFO("Selected EntityID: " << id);
+            REQUIRE(id != EntityId(0));
+            INFO("Selected EntityID: " << id.id);
         }
         
         // Create a group in EntityGroupManager with these EntityIDs
@@ -1516,7 +1516,7 @@ TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
             }
             
             if (!found) {
-                FAIL("Unexpected EntityID in group: " << entity_id);
+                FAIL("Unexpected EntityID in group: " << entity_id.id);
             }
             
             // Get the sampled points from the table for this row
@@ -1531,7 +1531,7 @@ TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
             Point2D<float> actual_end = original_line.back();
             
             // Verify that the table data matches the original line data
-            INFO("Checking EntityID " << entity_id << " at table row " << table_row_index);
+            INFO("Checking EntityID " << entity_id.id << " at table row " << table_row_index);
             INFO("Table start: (" << table_x_start << ", " << table_y_start << ")");
             INFO("Actual start: (" << actual_start.x << ", " << actual_start.y << ")");
             INFO("Table end: (" << table_x_end << ", " << table_y_end << ")");

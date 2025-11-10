@@ -49,12 +49,12 @@ TEST_CASE("EntityTypes - EntityDescriptor with different kinds", "[entitytypes][
 }
 
 TEST_CASE("EntityTypes - EntityId is uint64_t", "[entitytypes][entityid]") {
-    EntityId id = 0;
+    EntityId id = EntityId(0);
     REQUIRE(std::is_same_v<EntityId, std::uint64_t>);
     
-    id = 12345;
-    REQUIRE(id == 12345);
+    id = EntityId(12345);
+    REQUIRE(id == EntityId(12345));
     
-    id = std::numeric_limits<std::uint64_t>::max();
-    REQUIRE(id == std::numeric_limits<std::uint64_t>::max());
+    id = EntityId(std::numeric_limits<std::uint64_t>::max());
+    REQUIRE(id == EntityId(std::numeric_limits<std::uint64_t>::max()));
 }

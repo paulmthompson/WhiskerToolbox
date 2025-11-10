@@ -429,7 +429,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         source_data->addAtTime(TimeFrameIndex(20), p3);
         source_data->addAtTime(TimeFrameIndex(30), p4);
 
-        std::vector<EntityId> fake_entity_ids = {99999, 88888};
+        std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> ids_set_fakec(fake_entity_ids.begin(), fake_entity_ids.end());
         std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_fakec);
 
@@ -525,7 +525,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         source_data->addAtTime(TimeFrameIndex(20), p3);
         source_data->addAtTime(TimeFrameIndex(30), p4);
 
-        std::vector<EntityId> fake_entity_ids = {99999, 88888};
+        std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> const ids_set_fake(fake_entity_ids.begin(), fake_entity_ids.end());
         std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_fake);
 

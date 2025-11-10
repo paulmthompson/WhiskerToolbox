@@ -84,7 +84,7 @@ public:
             // Convert event to time value using our timeframe
             // For simplicity, assume events are already time values
             if (event >= startTime && event <= endTime) {
-                result.push_back(EventWithId(event, 0));
+                result.push_back(EventWithId(event, EntityId(0)));
             }
         }
         
@@ -1636,13 +1636,13 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         // Debug: Print source EntityIDs
         INFO("Source EntityIDs from Neuron1Spikes:");
         for (size_t i = 0; i < source_neuron1_entity_ids.size(); ++i) {
-            INFO("  Source EntityID[" << i << "] = " << source_neuron1_entity_ids[i]);
+            INFO("  Source EntityID[" << i << "] = " << source_neuron1_entity_ids[i].id);
         }
         
         // Debug: Print table EntityIDs
         INFO("Table EntityIDs from EventInIntervalComputer:");
         for (const auto& entity_id : table_entity_ids) {
-            INFO("  Table EntityID = " << entity_id);
+            INFO("  Table EntityID = " << entity_id.id);
         }
         
         // Verify that extracted EntityIDs are a subset of source EntityIDs
@@ -1652,12 +1652,12 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
                                  source_neuron1_entity_ids.end(), 
                                  table_entity_id) != source_neuron1_entity_ids.end();
             REQUIRE(found);
-            INFO("✓ Table EntityID " << table_entity_id << " found in source data");
+            INFO("✓ Table EntityID " << table_entity_id.id << " found in source data");
         }
         
         // Verify all EntityIDs are valid (non-zero)
         for (const auto& entity_id : table_entity_ids) {
-            REQUIRE(entity_id != 0);
+            REQUIRE(entity_id != EntityId(0));
         }
         
         // Verify cell-level EntityIDs match column-level EntityIDs
@@ -1693,8 +1693,8 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
                             // Note: This is a simplified check. The actual mapping might be more complex
                             // due to time frame conversions and filtering
                             INFO("Event " << event_value << " at row " << row << " has EntityID " 
-                                 << entity_id << ", source index " << src_idx << " has EntityID " 
-                                 << source_neuron1_entity_ids[src_idx]);
+                                 << entity_id.id << ", source index " << src_idx << " has EntityID " 
+                                 << source_neuron1_entity_ids[src_idx].id);
                             event_found = true;
                             break;
                         }
@@ -1702,7 +1702,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
                 }
                 // We expect to find the event in the source, but the exact EntityID mapping
                 // depends on the implementation details of time frame conversion
-                INFO("Event " << event_value << " processed with EntityID " << entity_id);
+                INFO("Event " << event_value << " processed with EntityID " << entity_id.id);
             }
         }
         
@@ -1769,7 +1769,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         
         // Verify all EntityIDs are valid
         for (const auto& entity_id : row_entity_ids) {
-            REQUIRE(entity_id != 0);
+            REQUIRE(entity_id != EntityId(0));
         }
         
         std::cout << "✓ Gather_Center operation EntityID test passed" << std::endl;

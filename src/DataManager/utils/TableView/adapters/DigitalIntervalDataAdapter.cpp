@@ -57,5 +57,5 @@ std::vector<IntervalWithId> DigitalIntervalDataAdapter::getIntervalsWithIdsInRan
 
 EntityId DigitalIntervalDataAdapter::getEntityIdAt(size_t index) const {
     auto const & ids = m_digitalIntervalSeries->getEntityIds();
-    return (index < ids.size()) ? ids[index] : 0;
+    return (index < ids.size()) ? ids[index] : EntityId(0);
 }

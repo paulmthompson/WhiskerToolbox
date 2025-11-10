@@ -65,7 +65,7 @@ bool PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
 
 
 void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
-    EntityId entity_id = 0;
+    auto entity_id = EntityId(0);
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, 0);
     }
@@ -92,7 +92,7 @@ void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>>
     // 3. Loop and emplace new entries
     for (size_t i = 0; i < points_to_add.size(); ++i) {
         int const local_index = static_cast<int>(old_size + i);
-        EntityId entity_id = 0;
+        auto entity_id = EntityId(0);
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
         }
@@ -121,7 +121,7 @@ void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>>
     // 3. Loop and emplace new entries
     for (size_t i = 0; i < points_to_add.size(); ++i) {
         int const local_index = static_cast<int>(old_size + i);
-        EntityId entity_id = 0;
+        auto entity_id = EntityId(0);
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
         }
@@ -134,7 +134,7 @@ void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>>
 
 void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
     int const local_index = static_cast<int>(_data[time].size());
-    EntityId entity_id = 0;
+    auto entity_id = EntityId(0);
     if (_identity_registry) {
         entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
     }
@@ -258,7 +258,7 @@ void PointData::rebuildAllEntityIds() {
         for (auto & [t, entries]: _data) {
             (void) t;
             for (auto & entry: entries) {
-                entry.entity_id = 0;
+                entry.entity_id = EntityId(0);
             }
         }
         return;

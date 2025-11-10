@@ -106,7 +106,7 @@ LineTableRow LineTableModel::getRowData(int row) const {
     }
     // Return a default/invalid LineTableRow or throw an exception
     // For simplicity, returning a default-constructed one here, but error handling might be better.
-    return LineTableRow{-1, -1, -1, 0, "Invalid"};
+    return LineTableRow{-1, -1, -1, EntityId(0), "Invalid"};
 }
 
 void LineTableModel::setGroupManager(GroupManager * group_manager) {

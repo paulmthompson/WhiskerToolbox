@@ -175,12 +175,12 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
 
     SECTION("Entity lookup without registry returns nullopt") {
         // Without EntityRegistry setup, these should return empty/nullopt
-        EntityId fake_entity = 12345;
+        EntityId fake_entity = EntityId(12345);
 
         auto line_result = line_data.getDataByEntityId(fake_entity);
         REQUIRE_FALSE(line_result.has_value());
 
-        std::vector<EntityId> fake_entities = {fake_entity, 67890};
+        std::vector<EntityId> fake_entities = {fake_entity, EntityId(67890)};
         auto lines_result = line_data.getDataByEntityIds(fake_entities);
         REQUIRE(lines_result.empty());
     }
@@ -197,8 +197,8 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
 
     SECTION("API structure validates correctly") {
         // Test that the methods exist and have correct return types
-        EntityId test_entity = 1;
-        std::vector<EntityId> test_entities = {1, 2, 3};
+        EntityId test_entity = EntityId(1);
+        std::vector<EntityId> test_entities = {EntityId(1), EntityId(2), EntityId(3)};
 
         // These calls should compile and return appropriate empty/nullopt values
         auto single_line = line_data.getDataByEntityId(test_entity);
@@ -316,7 +316,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
         source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
 
-        std::vector<EntityId> fake_entity_ids = {99999, 88888};
+        std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> ids_set_fakec(fake_entity_ids.begin(), fake_entity_ids.end());
         std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_fakec, NotifyObservers::No);
 
@@ -434,7 +434,7 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
         source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        std::vector<EntityId> fake_entity_ids = {99999, 88888};
+        std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> const ids_set_fake(fake_entity_ids.begin(), fake_entity_ids.end());
         std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_fake, NotifyObservers::No);
 

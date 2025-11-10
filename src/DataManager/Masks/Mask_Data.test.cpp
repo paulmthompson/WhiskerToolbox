@@ -299,7 +299,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto target_data = data_manager->getData<MaskData>("target_data");
 
         source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        std::vector<EntityId> fake_ids = {99999, 88888};
+        std::vector<EntityId> fake_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> ids_set_fakec(fake_ids.begin(), fake_ids.end());
         std::size_t copied = source_data->copyByEntityIds(*target_data, ids_set_fakec);
         REQUIRE(copied == 0);
@@ -357,7 +357,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto target_data = data_manager->getData<MaskData>("target_data");
 
         source_data->addAtTime(TimeFrameIndex(10), x1, y1);
-        std::vector<EntityId> fake_ids = {99999, 88888};
+        std::vector<EntityId> fake_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> const ids_set_fake(fake_ids.begin(), fake_ids.end());
         std::size_t moved = source_data->moveByEntityIds(*target_data, ids_set_fake);
         REQUIRE(moved == 0);

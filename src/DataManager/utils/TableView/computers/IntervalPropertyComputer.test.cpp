@@ -312,7 +312,7 @@ public:
 
             // Check if intervals overlap in time
             if (intervalStartTime <= endTime && startTime <= intervalEndTime) {
-                result.push_back(IntervalWithId(interval, 0));
+                result.push_back(IntervalWithId(interval, EntityId(0)));
             }
         }
 
@@ -912,8 +912,8 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
 
         // Verify all EntityIDs are valid (non-zero)
         for (EntityId id: start_entity_ids) {
-            REQUIRE(id != 0);
-            INFO("Start Column EntityID: " << id);
+            REQUIRE(id != EntityId(0));
+            INFO("Start Column EntityID: " << id.id);
         }
 
         // Verify that both columns have the same EntityIDs (they come from the same intervals)
@@ -934,7 +934,7 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
 
             INFO("Row " << i << ": Start=" << start_values[i]
                         << ", Duration=" << duration_values[i]
-                        << ", EntityID=" << start_entity_ids[i]);
+                        << ", EntityID=" << start_entity_ids[i].id);
         }
 
         // Test EntityID round-trip: Compare TableView EntityIDs with original source EntityIDs
@@ -951,16 +951,16 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
         // Debug: Print source EntityIDs to see if they're valid
         INFO("Source EntityIDs from DigitalIntervalSeries:");
         for (size_t i = 0; i < source_entity_ids.size(); ++i) {
-            INFO("  Source EntityID[" << i << "] = " << source_entity_ids[i]);
-            REQUIRE(source_entity_ids[i] != 0);// Verify source EntityIDs are valid
+            INFO("  Source EntityID[" << i << "] = " << source_entity_ids[i].id);
+            REQUIRE(source_entity_ids[i] != EntityId(0));// Verify source EntityIDs are valid
         }
 
         // Verify that TableView EntityIDs match the source EntityIDs
         REQUIRE(start_entity_ids.size() == source_entity_ids.size());
         for (size_t i = 0; i < source_entity_ids.size(); ++i) {
             REQUIRE(start_entity_ids[i] == source_entity_ids[i]);
-            INFO("EntityID " << i << ": Source=" << source_entity_ids[i]
-                             << ", TableView=" << start_entity_ids[i] << " ✓");
+            INFO("EntityID " << i << ": Source=" << source_entity_ids[i].id
+                             << ", TableView=" << start_entity_ids[i].id << " ✓");
         }
 
         INFO("✓ EntityID round-trip successful: " << start_entity_ids.size() << " EntityIDs match source data");
@@ -978,7 +978,7 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
             REQUIRE(row_start_ids[0] == start_entity_ids[row_idx]);
             REQUIRE(row_duration_ids[0] == start_entity_ids[row_idx]);
 
-            INFO("Row " << row_idx << " individual EntityID check: " << row_start_ids[0]);
+            INFO("Row " << row_idx << " individual EntityID check: " << row_start_ids[0].id);
         }
 
         INFO("✓ All IntervalPropertyComputer EntityID extraction tests passed");

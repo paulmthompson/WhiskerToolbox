@@ -139,7 +139,7 @@ public:
                         destinationTimeFrame.get());
                     if (columnIntervalsWithIds.empty()) {
                         results.push_back(static_cast<T>(-1));
-                        entity_ids.push_back(0);
+                        entity_ids.push_back(EntityId(0));
                         continue;
                     }
                     // Need to convert to their time coordinates
@@ -166,7 +166,7 @@ public:
                         }
                     } else {
                         results.push_back(static_cast<T>(-1));
-                        entity_ids.push_back(0);
+                        entity_ids.push_back(EntityId(0));
                     }
                 }
 

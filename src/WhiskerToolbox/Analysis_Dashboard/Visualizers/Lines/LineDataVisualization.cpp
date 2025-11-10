@@ -82,7 +82,7 @@ void LineDataVisualization::buildVertexData() {
             }
 
             // Record line-level EntityId
-            EntityId entity_id = 0;
+            EntityId entity_id = EntityId(0);
             if (line_id < static_cast<int>(entries.size())) {
                 entity_id = entries[line_id].entity_id;
             }
@@ -126,7 +126,7 @@ void LineDataVisualization::buildVertexData() {
     m_entity_id_to_index.clear();
     for (size_t i = 0; i < m_line_entity_ids.size(); ++i) {
         EntityId entity_id = m_line_entity_ids[i];
-        if (entity_id != 0) {  // Only map non-zero entity IDs
+        if (entity_id != EntityId(0)) {// Only map non-zero entity IDs
             m_entity_id_to_index[entity_id] = i;
         }
     }
@@ -292,9 +292,9 @@ void LineDataVisualization::initializeOpenGLResources() {
 #ifndef __APPLE__
     // Load compute shader through ShaderManager for proper context management (OpenGL 4.3+ only)
     if (!shader_manager.getProgram("line_intersection_compute")) {
-        bool success = shader_manager.loadComputeProgram("line_intersection_compute", 
-                                                        ":/shaders/line_intersection.comp", 
-                                                        ShaderSourceType::Resource);
+        bool success = shader_manager.loadComputeProgram("line_intersection_compute",
+                                                         ":/shaders/line_intersection.comp",
+                                                         ShaderSourceType::Resource);
         if (!success) {
             qDebug() << "Failed to load line_intersection_compute shader!";
             m_line_intersection_compute_shader = nullptr;
@@ -406,7 +406,7 @@ void LineDataVisualization::updateOpenGLBuffers() {
 
     // Initialize visibility mask (all visible initially, except those in hidden_lines set)
     m_visibility_mask.assign(m_line_entity_ids.size(), 1);// Default to visible
-    _updateVisibilityMask();                               // Apply any existing hidden lines
+    _updateVisibilityMask();                              // Apply any existing hidden lines
 
 #ifndef __APPLE__
     // Update line segments buffer for compute shader (OpenGL 4.3+ only)
@@ -761,7 +761,7 @@ QString LineDataVisualization::getTooltipText() const {
 
     return QString("Dataset: %1\nEntityId: %2")
             .arg(m_key)
-            .arg(m_current_hover_line);
+            .arg(m_current_hover_line.id);
 }
 
 void LineDataVisualization::_renderSelection(QMatrix4x4 const & mvp_matrix, float line_width) {
@@ -858,7 +858,7 @@ void LineDataVisualization::_updateLineSegmentsBuffer() {
 
     qDebug() << "LineDataVisualization: Updated line segments buffer with" << m_segments_data.size() / 5 << "segments";
 }
-#endif // __APPLE__
+#endif// __APPLE__
 
 void LineDataVisualization::_updateSelectionMask() {
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -998,21 +998,21 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
     // Check if compute shader needs to be (re)created for this context
     if (!m_line_intersection_compute_shader) {
         qDebug() << "LineDataVisualization: Compute shader is null, attempting to get/create it via ShaderManager";
-        
+
         ShaderManager & shader_manager = ShaderManager::instance();
         auto * compute_program = shader_manager.getProgram("line_intersection_compute");
         if (!compute_program) {
             qDebug() << "LineDataVisualization: Compute program not found in ShaderManager, loading it";
-            bool success = shader_manager.loadComputeProgram("line_intersection_compute", 
-                                                            ":/shaders/line_intersection.comp", 
-                                                            ShaderSourceType::Resource);
+            bool success = shader_manager.loadComputeProgram("line_intersection_compute",
+                                                             ":/shaders/line_intersection.comp",
+                                                             ShaderSourceType::Resource);
             if (!success) {
                 qDebug() << "Failed to load line_intersection_compute shader via ShaderManager!";
                 return {};
             }
             compute_program = shader_manager.getProgram("line_intersection_compute");
         }
-        
+
         if (compute_program) {
             m_line_intersection_compute_shader = compute_program->getNativeProgram();
             qDebug() << "Successfully got/loaded line_intersection_compute shader via ShaderManager";
@@ -1021,7 +1021,7 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
             return {};
         }
     }
-    
+
     if (m_vertex_data.empty()) {
         qDebug() << "LineDataVisualization: No vertex data available";
         return {};
@@ -1056,20 +1056,20 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
     m_intersection_count_buffer.release();
 
     // Bind compute shader and set uniforms
-    float tolerance = std::max(line_width * 0.01f, 0.05f);  // Minimum tolerance of 0.05 in NDC space
+    float tolerance = std::max(line_width * 0.01f, 0.05f);// Minimum tolerance of 0.05 in NDC space
     m_line_intersection_compute_shader->bind();
     m_line_intersection_compute_shader->setUniformValue("u_query_line_start", query_start);
     m_line_intersection_compute_shader->setUniformValue("u_query_line_end", query_end);
     m_line_intersection_compute_shader->setUniformValue("u_line_width", tolerance);// Scale down for NDC space
     m_line_intersection_compute_shader->setUniformValue("u_mvp_matrix", mvp_matrix);
     m_line_intersection_compute_shader->setUniformValue("u_canvas_size", m_canvas_size);
-    
+
     // Provide explicit sizes to shader to avoid driver-dependent SSBO length behavior
     uint32_t total_segments = static_cast<uint32_t>(m_segments_data.size() / 5);
     m_line_intersection_compute_shader->setUniformValue("u_total_segments", total_segments);
     m_line_intersection_compute_shader->setUniformValue("u_visibility_count", static_cast<GLuint>(m_visibility_mask.size()));
     m_line_intersection_compute_shader->setUniformValue("u_results_capacity", static_cast<GLuint>(100000));
-    
+
     qDebug() << "LineDataVisualization: Using tolerance:" << tolerance << "(line_width:" << line_width << ")";
     qDebug() << "LineDataVisualization: Canvas size:" << m_canvas_size.x() << "x" << m_canvas_size.y();
     qDebug() << "LineDataVisualization: MVP matrix:";
@@ -1103,9 +1103,9 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
     uint32_t num_segments = static_cast<uint32_t>(m_segments_data.size() / 5);// 5 floats per segment (x1,y1,x2,y2,line_id)
 
     // Query hardware limits
-    GLint max_work_groups_x = 65535; // Safe default per spec minimum
+    GLint max_work_groups_x = 65535;// Safe default per spec minimum
     GLint queried = 0;
-    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_COUNT, &queried); // Not the correct query; we'll prefer glGetIntegeri_v below
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_COUNT, &queried);// Not the correct query; we'll prefer glGetIntegeri_v below
     // Prefer indexed query if available
     GLint max_count_x = 0;
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &max_count_x);
@@ -1114,25 +1114,25 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
     }
 
     // local_size_x is 64 per shader
-    const uint32_t local_size_x = 64u;
+    uint32_t const local_size_x = 64u;
     uint64_t max_invocations_per_dispatch = static_cast<uint64_t>(max_work_groups_x) * static_cast<uint64_t>(local_size_x);
     if (max_invocations_per_dispatch == 0) {
-        max_invocations_per_dispatch = 65535ull * local_size_x; // fallback
+        max_invocations_per_dispatch = 65535ull * local_size_x;// fallback
     }
 
     qDebug() << "LineDataVisualization: Dispatching compute shader with" << num_segments << "segments in batches, max workgroups x per dispatch:" << max_work_groups_x;
     qDebug() << "LineDataVisualization: segments_data size:" << m_segments_data.size() << "floats";
-    
+
     // Debug: show first few line segments to check coordinates
     qDebug() << "LineDataVisualization: First few line segments (world coords):";
     for (size_t i = 0; i < std::min(m_segments_data.size(), size_t(25)); i += 5) {
         if (i + 4 < m_segments_data.size()) {
             float x1 = m_segments_data[i];
-            float y1 = m_segments_data[i + 1]; 
+            float y1 = m_segments_data[i + 1];
             float x2 = m_segments_data[i + 2];
             float y2 = m_segments_data[i + 3];
-            uint32_t line_id = *reinterpret_cast<const uint32_t*>(&m_segments_data[i + 4]);
-            qDebug() << "  Segment" << (i/5) << ": (" << x1 << "," << y1 << ") to (" << x2 << "," << y2 << ") line_id:" << line_id;
+            uint32_t line_id = *reinterpret_cast<uint32_t const *>(&m_segments_data[i + 4]);
+            qDebug() << "  Segment" << (i / 5) << ": (" << x1 << "," << y1 << ") to (" << x2 << "," << y2 << ") line_id:" << line_id;
         }
     }
 
@@ -1187,7 +1187,7 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
             if (line_id > 0 && line_id <= m_line_entity_ids.size() && unique_line_ids.find(line_id) == unique_line_ids.end()) {
                 unique_line_ids.insert(line_id);
                 EntityId entity_id = m_line_entity_ids[line_id - 1];// Convert from 1-based to 0-based indexing
-                if (entity_id != 0) {  // Only add valid EntityIds
+                if (entity_id != EntityId(0)) {                     // Only add valid EntityIds
                     intersecting_lines.push_back(entity_id);
                 }
             }
@@ -1199,7 +1199,7 @@ std::vector<EntityId> LineDataVisualization::getAllLinesIntersectingLine(
 
     qDebug() << "LineDataVisualization: Returning" << intersecting_lines.size() << "unique intersecting lines";
     return intersecting_lines;
-#endif // __APPLE__
+#endif// __APPLE__
 }
 
 std::optional<EntityId> LineDataVisualization::getLineAtScreenPosition(
@@ -1229,7 +1229,8 @@ bool LineDataVisualization::handleHover(QPoint const & screen_pos, QSize const &
     if (!intersecting_lines.empty()) {
         EntityId entity_id = intersecting_lines[0];// Take the first intersecting line
         if (!m_has_hover_line || m_current_hover_line != entity_id) {
-            qDebug() << "LineDataVisualization::handleHover: Setting hover line to EntityId" << entity_id;
+            qDebug() << "LineDataVisualization::handleHover: Setting hover line to EntityId"
+                     << entity_id.id;
             setHoverLine(entity_id);
             hover_changed = true;
         }

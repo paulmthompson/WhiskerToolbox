@@ -70,7 +70,7 @@ public:
             if (this_time_entityIds.empty()) {
                 // No lines at this timestamp, return -1
                 results.push_back(-1);
-                entityIds.push_back(0);
+                entityIds.push_back(EntityId(0));
             } else {
                 // Lines exist at this timestamp
                 // Prefer direct entity access if entity index is present

@@ -81,7 +81,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
     REQUIRE(table->rowCount() == 1);
 
     // Assign entities using GroupManager API
-    std::unordered_set<EntityId> ids = {1, 2, 3};
+    std::unordered_set<EntityId> ids = {EntityId(1), EntityId(2), EntityId(3)};
     REQUIRE(gm.assignEntitiesToGroup(g, ids));
 
     // Force UI refresh of member counts via a groupModified signal
@@ -96,7 +96,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
     REQUIRE(members_item->text().toInt() == 3);
 
     // Remove a subset
-    std::unordered_set<EntityId> rem = {2};
+    std::unordered_set<EntityId> rem = {EntityId(2)};
     REQUIRE(gm.removeEntitiesFromGroup(g, rem));
 
     // Trigger another UI update through group rename
@@ -129,7 +129,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
     REQUIRE(members_item->text().toInt() == 0);
 
     // Add two entities and expect UI to refresh via groupModified
-    std::unordered_set<EntityId> ids = {11, 22};
+    std::unordered_set<EntityId> ids = {EntityId(11), EntityId(22)};
     REQUIRE(gm.assignEntitiesToGroup(g, ids));
     QCoreApplication::processEvents();
     row = findRowForGroupId(table, g);
@@ -138,7 +138,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Member
     REQUIRE(members_item->text().toInt() == 2);
 
     // Remove one entity and expect decrement
-    std::unordered_set<EntityId> rem = {11};
+    std::unordered_set<EntityId> rem = {EntityId(11)};
     REQUIRE(gm.removeEntitiesFromGroup(g, rem));
     QCoreApplication::processEvents();
     row = findRowForGroupId(table, g);
@@ -200,7 +200,7 @@ TEST_CASE_METHOD(GroupManagementWidgetQtFixture, "GroupManagementWidget - Observ
     REQUIRE(table->rowCount() == 1);
 
     // Add some entities to the anchor group
-    std::unordered_set<EntityId> ids = {101, 102, 103};
+    std::unordered_set<EntityId> ids = {EntityId(101), EntityId(102), EntityId(103)};
     REQUIRE(gm.assignEntitiesToGroup(g_anchor, ids));
 
     // Trigger bulk notification (as the transform would) - should NOT duplicate existing rows

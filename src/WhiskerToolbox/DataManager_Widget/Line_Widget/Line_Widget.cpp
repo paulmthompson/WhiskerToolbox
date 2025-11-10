@@ -213,7 +213,7 @@ std::vector<EntityId> Line_Widget::_getSelectedEntityIds() {
     for (auto const & index: selectedIndexes) {
         if (index.isValid()) {
             LineTableRow const row_data = _line_table_model->getRowData(index.row());
-            if (row_data.entity_id != 0) {// Valid entity ID
+            if (row_data.entity_id != EntityId(0)) {// Valid entity ID
                 entity_ids.push_back(row_data.entity_id);
             }
         }
@@ -815,7 +815,7 @@ void Line_Widget::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
         QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
         for (auto const & index: selectedIndexes) {
             LineTableRow const row_data = _line_table_model->getRowData(index.row());
-            if (row_data.entity_id != 0) {
+            if (row_data.entity_id != EntityId(0)) {
                 int current_group = _group_manager->getEntityGroup(row_data.entity_id);
                 if (current_group != -1) {
                     current_groups.insert(current_group);
@@ -856,7 +856,7 @@ void Line_Widget::_moveSelectedLinesToGroup(int group_id) {
     std::unordered_set<EntityId> entity_ids;
     for (auto const & index: selectedIndexes) {
         LineTableRow const row_data = _line_table_model->getRowData(index.row());
-        if (row_data.entity_id != 0) {// Valid entity ID
+        if (row_data.entity_id != EntityId(0)) {// Valid entity ID
             entity_ids.insert(row_data.entity_id);
         }
     }
@@ -890,7 +890,7 @@ void Line_Widget::_removeSelectedLinesFromGroup() {
     std::unordered_set<EntityId> entity_ids;
     for (auto const & index: selectedIndexes) {
         LineTableRow const row_data = _line_table_model->getRowData(index.row());
-        if (row_data.entity_id != 0) {// Valid entity ID
+        if (row_data.entity_id != EntityId(0)) {// Valid entity ID
             entity_ids.insert(row_data.entity_id);
         }
     }
