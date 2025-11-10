@@ -316,7 +316,7 @@ void Mask_Widget::_deleteSelectedMasks() {
         if (index.isValid()) {
             MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
             if (row_data.frame != -1 && row_data.entity_id != EntityId(0)) {
-                bool const success = mask_data_ptr->clearByEntityId(row_data.entity_id, false);
+                bool const success = mask_data_ptr->clearByEntityId(row_data.entity_id, NotifyObservers::No);
                 if (success) {
                     total_masks_deleted++;
                 }

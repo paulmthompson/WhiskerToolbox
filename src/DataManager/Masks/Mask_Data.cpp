@@ -12,11 +12,11 @@
 
 // ========== Setters ==========
 
-bool MaskData::clearAtTime(TimeFrameIndex const time, bool notify) {
+bool MaskData::_clearAtTime(TimeFrameIndex const time, NotifyObservers notify) {
     auto it = _data.find(time);
     if (it != _data.end()) {
         _data.erase(it);
-        if (notify) {
+        if (notify == NotifyObservers::Yes) {
             notifyObservers();
         }
         return true;
@@ -24,15 +24,15 @@ bool MaskData::clearAtTime(TimeFrameIndex const time, bool notify) {
     return false;
 }
 
-bool MaskData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, bool notify) {
+bool MaskData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, NotifyObservers notify) {
 
     TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
-        time_index_and_frame.time_frame.get(),
-        _time_frame.get());
-    return clearAtTime(converted_time, notify);
+                                                             time_index_and_frame.time_frame,
+                                                             _time_frame.get());
+    return _clearAtTime(converted_time, notify);
 }
 
-bool MaskData::clearByEntityId(EntityId entity_id, bool notify) {
+bool MaskData::clearByEntityId(EntityId entity_id, NotifyObservers notify) {
     if (!_identity_registry) {
         return false;
     }
@@ -58,7 +58,7 @@ bool MaskData::clearByEntityId(EntityId entity_id, bool notify) {
     if (time_it->second.empty()) {
         _data.erase(time_it);
     }
-    if (notify) {
+    if (notify == NotifyObservers::Yes) {
         notifyObservers();
     }
     return true;
@@ -114,7 +114,7 @@ void MaskData::addAtTime(TimeFrameIndex const time,
 void MaskData::addAtTime(TimeIndexAndFrame const & time_index_and_frame,
                          std::vector<Point2D<uint32_t>> mask,
                          bool notify) {
-    if (time_index_and_frame.time_frame.get() == _time_frame.get()) {
+    if (time_index_and_frame.time_frame == _time_frame.get()) {
         addAtTime(time_index_and_frame.index, std::move(mask), notify);
         return;
     }
@@ -188,7 +188,7 @@ std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const
 
 std::vector<Mask2D> const & MaskData::getAtTime(TimeIndexAndFrame const & time_index_and_frame) const {
     auto converted = convert_time_index(time_index_and_frame.index,
-                                        time_index_and_frame.time_frame.get(),
+                                        time_index_and_frame.time_frame,
                                         _time_frame.get());
     return getAtTime(converted);
 }
@@ -239,11 +239,11 @@ std::size_t MaskData::copyByEntityIds(MaskData & target, std::unordered_set<Enti
 std::size_t MaskData::moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
     auto result = move_by_entity_ids(_data, target, entity_ids, notify,
                                      [](MaskEntry const & entry) -> Mask2D const & { return entry.data; });
-    
+
     if (notify && result > 0) {
         notifyObservers();
     }
-    
+
     return result;
 }
 

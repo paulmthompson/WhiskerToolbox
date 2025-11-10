@@ -1,12 +1,12 @@
 #include "Masks/Mask_Data.hpp"
-#include "TimeFrame/interval_data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-#include "Entity/EntityRegistry.hpp"
 #include "DataManager.hpp"
+#include "Entity/EntityRegistry.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-#include <vector>
 #include <algorithm>
+#include <vector>
 
 TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
     MaskData mask_data;
@@ -28,8 +28,7 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
             {10, 10},
             {11, 10},
             {11, 11},
-            {10, 11}
-    };
+            {10, 11}};
 
     SECTION("Adding masks at time") {
         // Add first mask at time 0
@@ -62,7 +61,8 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         mask_data.addAtTime(TimeFrameIndex(0), x2, y2);
         mask_data.addAtTime(TimeFrameIndex(10), points);
 
-        static_cast<void>(mask_data.clearAtTime(TimeFrameIndex(0)));
+        static_cast<void>(mask_data.clearAtTime(TimeIndexAndFrame(0, timeframe.get()),
+                                                NotifyObservers::No));
 
         auto masks_at_0 = mask_data.getAtTime(TimeFrameIndex(0));
         auto masks_at_10 = mask_data.getAtTime(TimeFrameIndex(10));
@@ -84,7 +84,7 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         TimeFrameIndex first_time = TimeFrameIndex(-1);
         size_t first_size = 0;
 
-        for (auto const& pair : range) {
+        for (auto const & pair: range) {
             if (count == 0) {
                 first_time = pair.time;
                 first_size = pair.masks.size();
@@ -92,10 +92,10 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
             count++;
         }
 
-        REQUIRE(count == 2);  // 2 different times: 0 and 10
+        REQUIRE(count == 2);// 2 different times: 0 and 10
         REQUIRE(first_time == TimeFrameIndex(0));
-        REQUIRE(first_size == 2);  // 2 masks at time 0
-    }   
+        REQUIRE(first_size == 2);// 2 masks at time 0
+    }
 
     SECTION("Setting and getting image size") {
         ImageSize size{640, 480};
@@ -108,20 +108,20 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
 
     SECTION("GetMasksInRange functionality") {
         // Setup data at multiple time points
-        mask_data.addAtTime(TimeFrameIndex(5), x1, y1);       // 1 mask
-        mask_data.addAtTime(TimeFrameIndex(10), x1, y1);      // 1 mask  
-        mask_data.addAtTime(TimeFrameIndex(10), x2, y2);      // 2nd mask at same time
-        mask_data.addAtTime(TimeFrameIndex(15), points);      // 1 mask
-        mask_data.addAtTime(TimeFrameIndex(20), points);      // 1 mask
-        mask_data.addAtTime(TimeFrameIndex(25), x1, y1);      // 1 mask
+        mask_data.addAtTime(TimeFrameIndex(5), x1, y1); // 1 mask
+        mask_data.addAtTime(TimeFrameIndex(10), x1, y1);// 1 mask
+        mask_data.addAtTime(TimeFrameIndex(10), x2, y2);// 2nd mask at same time
+        mask_data.addAtTime(TimeFrameIndex(15), points);// 1 mask
+        mask_data.addAtTime(TimeFrameIndex(20), points);// 1 mask
+        mask_data.addAtTime(TimeFrameIndex(25), x1, y1);// 1 mask
 
         SECTION("Range includes some data") {
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : mask_data.GetMasksInRange(interval)) {
+            for (auto const & pair: mask_data.GetMasksInRange(interval)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
-                    REQUIRE(pair.masks.size() == 2);  // 2 masks at time 10
+                    REQUIRE(pair.masks.size() == 2);// 2 masks at time 10
                 } else if (count == 1) {
                     REQUIRE(pair.time.getValue() == 15);
                     REQUIRE(pair.masks.size() == 1);
@@ -131,53 +131,53 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
                 }
                 count++;
             }
-            REQUIRE(count == 3); // Should include times 10, 15, 20
+            REQUIRE(count == 3);// Should include times 10, 15, 20
         }
 
         SECTION("Range includes all data") {
             TimeFrameInterval interval{TimeFrameIndex(0), TimeFrameIndex(30)};
             size_t count = 0;
-            for (const auto& pair : mask_data.GetMasksInRange(interval)) {
+            for (auto const & pair: mask_data.GetMasksInRange(interval)) {
                 count++;
             }
-            REQUIRE(count == 5); // Should include all 5 time points
+            REQUIRE(count == 5);// Should include all 5 time points
         }
 
         SECTION("Range includes no data") {
             TimeFrameInterval interval{TimeFrameIndex(100), TimeFrameIndex(200)};
             size_t count = 0;
-            for (const auto& pair : mask_data.GetMasksInRange(interval)) {
+            for (auto const & pair: mask_data.GetMasksInRange(interval)) {
                 count++;
             }
-            REQUIRE(count == 0); // Should be empty
+            REQUIRE(count == 0);// Should be empty
         }
 
         SECTION("Range with single time point") {
             TimeFrameInterval interval{TimeFrameIndex(15), TimeFrameIndex(15)};
             size_t count = 0;
-            for (const auto& pair : mask_data.GetMasksInRange(interval)) {
+            for (auto const & pair: mask_data.GetMasksInRange(interval)) {
                 REQUIRE(pair.time.getValue() == 15);
                 REQUIRE(pair.masks.size() == 1);
                 count++;
             }
-            REQUIRE(count == 1); // Should include only time 15
+            REQUIRE(count == 1);// Should include only time 15
         }
 
         SECTION("Range with start > end") {
             TimeFrameInterval interval{TimeFrameIndex(20), TimeFrameIndex(10)};
             size_t count = 0;
-            for (const auto& pair : mask_data.GetMasksInRange(interval)) {
+            for (auto const & pair: mask_data.GetMasksInRange(interval)) {
                 count++;
             }
-            REQUIRE(count == 0); // Should be empty when start > end
+            REQUIRE(count == 0);// Should be empty when start > end
         }
 
         SECTION("Range with timeframe conversion - same timeframes") {
 
-            
+
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : mask_data.GetMasksInRange(interval, *timeframe)) {
+            for (auto const & pair: mask_data.GetMasksInRange(interval, *timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
                     REQUIRE(pair.masks.size() == 2);
@@ -190,32 +190,32 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
                 }
                 count++;
             }
-            REQUIRE(count == 3); // Should include times 10, 15, 20
+            REQUIRE(count == 3);// Should include times 10, 15, 20
         }
 
         SECTION("Range with timeframe conversion - different timeframes") {
             // Create a separate mask data instance for timeframe conversion test
             MaskData timeframe_test_data;
-            
+
             // Create source timeframe (video frames)
-            std::vector<int> video_times = {0, 10, 20, 30, 40};  
+            std::vector<int> video_times = {0, 10, 20, 30, 40};
             auto video_timeframe = std::make_shared<TimeFrame>(video_times);
-            
+
             // Create target timeframe (data sampling)
-            std::vector<int> data_times = {0, 5, 10, 15, 20, 25, 30, 35, 40}; 
+            std::vector<int> data_times = {0, 5, 10, 15, 20, 25, 30, 35, 40};
             auto data_timeframe = std::make_shared<TimeFrame>(data_times);
-            
+
             // Add data at target timeframe indices
-            timeframe_test_data.addAtTime(TimeFrameIndex(2), x1, y1);  // At data timeframe index 2 (time=10)
-            timeframe_test_data.addAtTime(TimeFrameIndex(3), points);  // At data timeframe index 3 (time=15)
-            timeframe_test_data.addAtTime(TimeFrameIndex(4), x2, y2);  // At data timeframe index 4 (time=20)
-            
+            timeframe_test_data.addAtTime(TimeFrameIndex(2), x1, y1);// At data timeframe index 2 (time=10)
+            timeframe_test_data.addAtTime(TimeFrameIndex(3), points);// At data timeframe index 3 (time=15)
+            timeframe_test_data.addAtTime(TimeFrameIndex(4), x2, y2);// At data timeframe index 4 (time=20)
+
             timeframe_test_data.setTimeFrame(data_timeframe);
 
             // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             size_t count = 0;
-            for (const auto& pair : timeframe_test_data.GetMasksInRange(video_interval, *video_timeframe)) {
+            for (auto const & pair: timeframe_test_data.GetMasksInRange(video_interval, *video_timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 2);
                     REQUIRE(pair.masks.size() == 1);
@@ -228,7 +228,7 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
                 }
                 count++;
             }
-            REQUIRE(count == 3); // Should include converted times 2, 3, 4
+            REQUIRE(count == 3);// Should include converted times 2, 3, 4
         }
     }
 }
@@ -380,20 +380,20 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
 
     SECTION("Notification on clearAtTime") {
         // First add a mask
-        mask_data.addAtTime(TimeFrameIndex(0), x1, y1, false);  // Don't notify
+        mask_data.addAtTime(TimeFrameIndex(0), x1, y1, false);// Don't notify
         REQUIRE(notification_count == 0);
 
         // Clear with notification
-        REQUIRE(mask_data.clearAtTime(TimeFrameIndex(0)));
+        REQUIRE(mask_data.clearAtTime(TimeIndexAndFrame(0, nullptr), NotifyObservers::Yes));
         REQUIRE(notification_count == 1);
 
         // Clear with notification disabled (should return false - nothing to clear)
-        REQUIRE_FALSE(mask_data.clearAtTime(TimeFrameIndex(0), false));
-        REQUIRE(notification_count == 1);  // Still 1, not incremented
+        REQUIRE_FALSE(mask_data.clearAtTime(TimeIndexAndFrame(0, nullptr), NotifyObservers::No));
+        REQUIRE(notification_count == 1);// Still 1, not incremented
 
         // Clear non-existent time (shouldn't notify)
-        REQUIRE_FALSE(mask_data.clearAtTime(TimeFrameIndex(42)));
-        REQUIRE(notification_count == 1);  // Still 1, not incremented
+        REQUIRE_FALSE(mask_data.clearAtTime(TimeIndexAndFrame(42, nullptr), NotifyObservers::No));
+        REQUIRE(notification_count == 1);// Still 1, not incremented
     }
 
     SECTION("Notification on addAtTime") {
@@ -403,7 +403,7 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
 
         // Add with notification disabled
         mask_data.addAtTime(TimeFrameIndex(0), x1, y1, false);
-        REQUIRE(notification_count == 1);  // Still 1, not incremented
+        REQUIRE(notification_count == 1);// Still 1, not incremented
 
         // Add using point vector with notification
         std::vector<Point2D<uint32_t>> points = {{1, 1}, {2, 2}};
@@ -412,7 +412,7 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
 
         // Add using point vector with notification disabled
         mask_data.addAtTime(TimeFrameIndex(1), points, false);
-        REQUIRE(notification_count == 2);  // Still 2, not incremented
+        REQUIRE(notification_count == 2);// Still 2, not incremented
     }
 
     SECTION("Multiple operations with single notification") {
@@ -450,7 +450,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
 
     SECTION("Clearing masks at non-existent time") {
         // Should not create an entry with empty vector
-        REQUIRE_FALSE(mask_data.clearAtTime(TimeFrameIndex(42)));
+        REQUIRE_FALSE(mask_data.clearAtTime(TimeIndexAndFrame(42, nullptr), NotifyObservers::No));
 
         auto masks = mask_data.getAtTime(TimeFrameIndex(42));
         REQUIRE(masks.empty());
@@ -459,7 +459,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
         auto range = mask_data.getAllAsRange();
         bool found = false;
 
-        for (auto const& pair : range) {
+        for (auto const & pair: range) {
             if (pair.time == TimeFrameIndex(42)) {
                 found = true;
                 break;
@@ -475,7 +475,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
 
         // Count items in range
         size_t count = 0;
-        for (auto const& pair : range) {
+        for (auto const & pair: range) {
             count++;
         }
 
@@ -487,7 +487,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
         std::vector<Point2D<uint32_t>> points = {{1, 1}, {2, 2}};
 
         mask_data.addAtTime(TimeFrameIndex(5), points);
-        REQUIRE(mask_data.clearAtTime(TimeFrameIndex(5)));
+        REQUIRE(mask_data.clearAtTime(TimeIndexAndFrame(5, nullptr), NotifyObservers::No));
         mask_data.addAtTime(TimeFrameIndex(5), points);
 
         auto masks = mask_data.getAtTime(TimeFrameIndex(5));

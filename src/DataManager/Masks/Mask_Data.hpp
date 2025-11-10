@@ -33,27 +33,12 @@ public:
     // ========== Constructors ==========
     MaskData() = default;
 
-    // ========== Setters ==========
+    // ========== Setters (Time-based) ==========
 
-    /**
-    * @brief Removes all masks at the specified time
-    *
-    * @param time The timestamp at which to clear masks
-    * @param notify If true, observers will be notified of the change
-    * @return True if masks existed at the specified time and were cleared, false otherwise
-    */
-    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
+    [[nodiscard]] bool clearAtTime(TimeIndexAndFrame const & time_index_and_frame,
+                                   NotifyObservers notify);
 
-    [[nodiscard]] bool clearAtTime(TimeIndexAndFrame const & time_index_and_frame, bool notify = true);
 
-    /**
-     * @brief Removes a mask with a specific EntityId
-     *
-     * @param entity_id The EntityId of the mask to remove
-     * @param notify If true, observers will be notified of the change
-     * @return True if the mask was found and removed, false otherwise
-     */
-    [[nodiscard]] bool clearByEntityId(EntityId entity_id, bool notify = true);
 
 
     void addAtTime(TimeFrameIndex time, Mask2D const & mask, bool notify = true);
@@ -81,7 +66,7 @@ public:
 
         _data[time].emplace_back(entity_id, std::forward<TDataArgs>(args)...);
     }
-    
+
     /**
      * @brief Adds a new mask at the specified time using separate x and y coordinate arrays
     *
@@ -98,7 +83,7 @@ public:
     void addAtTime(TimeFrameIndex time,
                    std::vector<uint32_t> const & x,
                    std::vector<uint32_t> const & y,
-                  bool notify = true);
+                   bool notify = true);
 
 
     void addAtTime(TimeIndexAndFrame const & time_index_and_frame,
@@ -124,7 +109,16 @@ public:
                    std::vector<uint32_t> && y,
                    bool notify = true);
 
-    // ========== Setters (Entity-based) ==========               
+    // ========== Setters (Entity-based) ==========
+
+    /**
+     * @brief Removes a mask with a specific EntityId
+     *
+     * @param entity_id The EntityId of the mask to remove
+     * @param notify If true, observers will be notified of the change
+     * @return True if the mask was found and removed, false otherwise
+     */
+    [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify);
 
     /**
      * @brief Add a mask entry at a specific time with a specific entity ID
@@ -417,6 +411,16 @@ private:
     // Identity management
     std::string _identity_data_key;
     EntityRegistry * _identity_registry{nullptr};
+
+
+    /**
+    * @brief Removes all masks at the specified time
+    *
+    * @param time The timestamp at which to clear masks
+    * @param notify If true, observers will be notified of the change
+    * @return True if masks existed at the specified time and were cleared, false otherwise
+    */
+    [[nodiscard]] bool _clearAtTime(TimeFrameIndex time, NotifyObservers notify);
 };
 
 

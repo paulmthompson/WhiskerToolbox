@@ -227,7 +227,10 @@ void Grabcut_Widget::_saveMask(){
     auto mask_data = _data_manager->getData<MaskData>(mask_name);
     mask_data->setImageSize({_width,_height});
 
-    mask_data->clearAtTime(TimeFrameIndex(_frame_index));
+    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
+
+    mask_data->clearAtTime(current_index_and_frame,
+                           NotifyObservers::No);
     mask_data->addAtTime(TimeFrameIndex(_frame_index), pts);
     this->close();
 }

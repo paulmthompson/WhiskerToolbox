@@ -86,7 +86,13 @@ private:
 //TimeFrameIndex and TimeFrame struct
 struct TimeIndexAndFrame {
     TimeFrameIndex index;
-    std::shared_ptr<TimeFrame> time_frame;
+    TimeFrame const * const time_frame;
+
+    TimeIndexAndFrame(int64_t index_value, TimeFrame const * time_frame_ptr)
+        : index(TimeFrameIndex(index_value)), time_frame(time_frame_ptr) {}
+
+    TimeIndexAndFrame(TimeFrameIndex time_frame_index, TimeFrame const * time_frame_ptr)
+        : index(time_frame_index), time_frame(time_frame_ptr) {}
 };
 
 
