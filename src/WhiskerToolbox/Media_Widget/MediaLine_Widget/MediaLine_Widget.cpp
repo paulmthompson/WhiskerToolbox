@@ -356,9 +356,9 @@ void MediaLine_Widget::_mouseMoved(qreal x, qreal y) {
 }
 
 void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIndex current_time) {
-    // Check if we have a selected line from the group system
-    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
-    if (selected_line_index < 0) {
+    // Get the EntityID for the selected line from the group system
+    auto selected_entities = _scene->getSelectedEntities();
+    if (selected_entities.empty()) {
         std::cout << "No line selected - cannot add points" << std::endl;
         return;
     }
@@ -366,13 +366,6 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
     auto line_data = _data_manager->getData<LineData>(_active_key);
     if (!line_data) {
         std::cout << "No line data for active key" << std::endl;
-        return;
-    }
-
-    // Get the EntityID for the selected line
-    auto selected_entities = _scene->getSelectedEntities();
-    if (selected_entities.empty()) {
-        std::cout << "No selected entities" << std::endl;
         return;
     }
 
@@ -442,9 +435,9 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
 }
 
 void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time) {
-    // Check if we have a selected line from the group system
-    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
-    if (selected_line_index < 0) {
+    // Get the EntityID for the selected line from the group system
+    auto selected_entities = _scene->getSelectedEntities();
+    if (selected_entities.empty()) {
         std::cout << "No line selected - cannot erase points" << std::endl;
         return;
     }
@@ -452,13 +445,6 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
     auto line_data = _data_manager->getData<LineData>(_active_key);
     if (!line_data) {
         std::cout << "No line data for active key" << std::endl;
-        return;
-    }
-
-    // Get the EntityID for the selected line
-    auto selected_entities = _scene->getSelectedEntities();
-    if (selected_entities.empty()) {
-        std::cout << "No selected entities" << std::endl;
         return;
     }
 
@@ -645,8 +631,8 @@ void MediaLine_Widget::LoadFrame(int frame_id) {
     if (!_active_key.empty()) {
         auto line_data = _data_manager->getData<LineData>(_active_key);
         if (line_data) {
-            auto lines = line_data->getAtTime(TimeFrameIndex(frame_id));
-            int num_lines = static_cast<int>(lines.size());
+            auto entries = line_data->getEntriesAtTime(TimeFrameIndex(frame_id));
+            int num_lines = static_cast<int>(entries.size());
 
             std::cout << "Frame " << frame_id << ": " << num_lines << " lines in " << _active_key << std::endl;
         }
@@ -941,17 +927,24 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
 
 void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
     // Only handle right-clicks in Select mode and when a line is selected
-    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
-    if (_selection_mode != Selection_Mode::Select || selected_line_index < 0 || _active_key.empty()) {
+    if (_selection_mode != Selection_Mode::Select || _active_key.empty()) {
         return;
     }
+
+    // Get the EntityID for the selected line from the group system
+    auto selected_entities = _scene->getSelectedEntities();
+    if (selected_entities.empty()) {
+        return;
+    }
+
+    EntityId selected_entity_id = *selected_entities.begin();
 
     auto x_media = static_cast<float>(x_canvas);
     auto y_media = static_cast<float>(y_canvas);
 
     // Check if the right-click is near the selected line
-    int nearest_line = _findNearestLine(x_media, y_media);
-    if (nearest_line == selected_line_index) {
+    auto nearest_entity_id = _findNearestLine(x_media, y_media);
+    if (nearest_entity_id.has_value() && nearest_entity_id.value() == selected_entity_id) {
         // Show context menu at the click position
         QPoint global_pos = QCursor::pos();
         _showLineContextMenu(global_pos);
@@ -991,29 +984,30 @@ float MediaLine_Widget::_calculateDistanceToLineSegment(Point2D<float> const & p
     return calc_distance(point, closest_point);
 }
 
-int MediaLine_Widget::_findNearestLine(float x, float y) {
+std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
     if (_active_key.empty()) {
-        return -1;
+        return std::nullopt;
     }
 
     auto line_data = _data_manager->getData<LineData>(_active_key);
     if (!line_data) {
-        return -1;
+        return std::nullopt;
     }
 
     auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-    auto lines = line_data->getAtTime(current_time);
+    auto entries = line_data->getEntriesAtTime(current_time);
 
-    if (lines.empty()) {
-        return -1;
+    if (entries.empty()) {
+        return std::nullopt;
     }
 
     Point2D<float> click_point{x, y};
-    int nearest_line_index = -1;
+    std::optional<EntityId> nearest_entity_id = std::nullopt;
     float min_distance = _line_selection_threshold + 1;// Initialize beyond threshold
 
-    for (int line_idx = 0; line_idx < static_cast<int>(lines.size()); ++line_idx) {
-        auto const & line = lines[line_idx];
+    for (auto const & entry: entries) {
+        auto const & line = entry.data;
+        auto const entity_id = entry.entity_id;
 
         if (line.empty()) {
             continue;
@@ -1041,12 +1035,12 @@ int MediaLine_Widget::_findNearestLine(float x, float y) {
 
         if (line_distance < min_distance) {
             min_distance = line_distance;
-            nearest_line_index = line_idx;
-            std::cout << "  -> New closest line!" << std::endl;
+            nearest_entity_id = entity_id;
+            std::cout << "  -> New closest line with EntityID: " << entity_id.id << std::endl;
         }
     }
 
-    return (min_distance <= _line_selection_threshold) ? nearest_line_index : -1;
+    return (min_distance <= _line_selection_threshold) ? nearest_entity_id : std::nullopt;
 }
 
 void MediaLine_Widget::_selectLine(int line_index) {
@@ -1115,10 +1109,17 @@ std::vector<std::string> MediaLine_Widget::_getAvailableLineDataKeys() {
 }
 
 void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
-    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
-    if (selected_line_index < 0 || _active_key.empty()) {
+    if (_active_key.empty()) {
         return;
     }
+
+    // Get the EntityID for the selected line from the group system
+    auto selected_entities = _scene->getSelectedEntities();
+    if (selected_entities.empty()) {
+        return;
+    }
+
+    EntityId selected_entity_id = *selected_entities.begin();
 
     auto source_line_data = _data_manager->getData<LineData>(_active_key);
     auto target_line_data = _data_manager->getData<LineData>(target_key);
@@ -1128,46 +1129,46 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
         return;
     }
 
-    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-    auto lines = source_line_data->getAtTime(current_time);
-
-    if (selected_line_index >= static_cast<int>(lines.size())) {
-        std::cerr << "Selected line index out of bounds" << std::endl;
+    // Get the selected line data by EntityID
+    auto selected_line_opt = source_line_data->getDataByEntityId(selected_entity_id);
+    if (!selected_line_opt.has_value()) {
+        std::cerr << "Could not find line with EntityID " << selected_entity_id.id << std::endl;
         return;
     }
 
-    // Get the selected line
-    Line2D selected_line = lines[selected_line_index];
+    Line2D selected_line = selected_line_opt.value().get();
+
+    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
 
     // Add to target
     target_line_data->addAtTime(current_time, selected_line, NotifyObservers::No);
 
-    // Remove from source by rebuilding the vector without the selected line
-    std::vector<Line2D> remaining_lines;
-    for (int i = 0; i < static_cast<int>(lines.size()); ++i) {
-        if (i != selected_line_index) {
-            remaining_lines.push_back(lines[i]);
-        }
-    }
-
-    // Clear and rebuild source lines
-    source_line_data->clearAtTime(TimeFrameIndex(current_time), NotifyObservers::No);
-    for (auto const & line: remaining_lines) {
-        source_line_data->addAtTime(current_time, line, NotifyObservers::No);
+    // Remove from source using clearByEntityId
+    if (!source_line_data->clearByEntityId(selected_entity_id, NotifyObservers::No)) {
+        std::cerr << "Could not clear line with EntityID " << selected_entity_id.id << std::endl;
+        return;
     }
 
     // Clear selection since the line was moved
     _scene->clearAllSelections();
     source_line_data->notifyObservers();
+    target_line_data->notifyObservers();
 
-    std::cout << "Moved line from " << _active_key << " to " << target_key << std::endl;
+    std::cout << "Moved line with EntityID " << selected_entity_id.id << " from " << _active_key << " to " << target_key << std::endl;
 }
 
 void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
-    int selected_line_index = _getSelectedLineIndexFromGroupSystem();
-    if (selected_line_index < 0 || _active_key.empty()) {
+    if (_active_key.empty()) {
         return;
     }
+
+    // Get the EntityID for the selected line from the group system
+    auto selected_entities = _scene->getSelectedEntities();
+    if (selected_entities.empty()) {
+        return;
+    }
+
+    EntityId selected_entity_id = *selected_entities.begin();
 
     auto source_line_data = _data_manager->getData<LineData>(_active_key);
     auto target_line_data = _data_manager->getData<LineData>(target_key);
@@ -1177,21 +1178,20 @@ void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
         return;
     }
 
-    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-    auto lines = source_line_data->getAtTime(current_time);
-
-    if (selected_line_index >= static_cast<int>(lines.size())) {
-        std::cerr << "Selected line index out of bounds" << std::endl;
+    // Get the selected line data by EntityID
+    auto selected_line_opt = source_line_data->getDataByEntityId(selected_entity_id);
+    if (!selected_line_opt.has_value()) {
+        std::cerr << "Could not find line with EntityID " << selected_entity_id.id << std::endl;
         return;
     }
 
-    // Get the selected line and copy it to target
-    Line2D selected_line = lines[selected_line_index];
+    Line2D selected_line = selected_line_opt.value().get();
+
+    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
+
+    // Copy to target
     target_line_data->addAtTime(current_time, selected_line, NotifyObservers::No);
-
     target_line_data->notifyObservers();
-
-    std::cout << "Copied line from " << _active_key << " to " << target_key << std::endl;
 }
 
 void MediaLine_Widget::_addPointToDrawAllFrames(float x_media, float y_media) {
@@ -1306,23 +1306,22 @@ std::vector<TimeFrameIndex> MediaLine_Widget::_getAllFrameTimes() {
     return frame_times;
 }
 
-int MediaLine_Widget::_getSelectedLineIndexFromGroupSystem() const {
+std::optional<EntityId> MediaLine_Widget::_getSelectedEntityIdFromGroupSystem() const {
     // Get the selected entities from the group system
     auto selected_entities = _scene->getSelectedEntities();
 
     std::cout << "Debug: Selected entities count: " << selected_entities.size() << std::endl;
 
-    // If no entities are selected, return -1
+    // If no entities are selected, return nullopt
     if (selected_entities.empty()) {
         std::cout << "Debug: No entities selected" << std::endl;
-        return -1;
+        return std::nullopt;
     }
 
-    // For now, just return the first selected entity as the line index
-    // EntityId for lines corresponds to their index in the line data
+    // Return the first selected entity ID
     EntityId first_selected = *selected_entities.begin();
     std::cout << "Debug: First selected entity ID: " << first_selected.id << std::endl;
-    return static_cast<int>(first_selected.id);
+    return first_selected;
 }
 
 void MediaLine_Widget::_updateTemporaryLineFromWidget() {

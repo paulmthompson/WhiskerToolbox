@@ -3,12 +3,14 @@
 
 
 #include "CoreGeometry/lines.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QMap>
 #include <QWidget>
 
 #include <memory>
+#include <optional>
 #include <opencv2/opencv.hpp>
 #include <string>
 
@@ -91,7 +93,7 @@ private:
     std::pair<float, float> _findNearestEdge(float x, float y);
 
     // Line selection methods
-    int _findNearestLine(float x, float y);
+    std::optional<EntityId> _findNearestLine(float x, float y);
     void _selectLine(int line_index);
     void _clearLineSelection();
 
@@ -134,8 +136,8 @@ private slots:
     void _setEraserRadius(int radius);
     void _toggleShowHoverCircle(bool checked);
     
-    // Helper method to get selected line index from group-based selection system
-    int _getSelectedLineIndexFromGroupSystem() const;
+    // Helper method to get selected EntityId from group-based selection system
+    std::optional<EntityId> _getSelectedEntityIdFromGroupSystem() const;
 };
 
 #endif// MEDIALINE_WIDGET_HPP

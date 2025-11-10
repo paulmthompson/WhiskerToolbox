@@ -14,7 +14,9 @@ EntityId EntityRegistry::ensureId(std::string const & data_key,
         return it->second;
     }
 
-    EntityId const id = EntityId(m_next_id.id + 1);
+    // Allocate a fresh, unique EntityId and increment the counter
+    EntityId const id = m_next_id;
+    m_next_id = EntityId(m_next_id.id + 1);
     m_tuple_to_id.emplace(key, id);
     m_id_to_descriptor.emplace(id, EntityDescriptor{data_key, kind, time.getValue(), local_index});
     return id;

@@ -2102,42 +2102,64 @@ EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::strin
         return EntityId(0);
     }
 
-    auto current_time = _data_manager->getCurrentTime();
-    auto const & lines = line_data->getAtTime(TimeFrameIndex(current_time));
-    auto const & entity_ids = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time));
+    // Use the same timeframe conversion as rendering to ensure indices match
+    auto const current_time = _data_manager->getCurrentTime();
+    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
+    auto const & lines = line_data->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
+    auto const & entity_ids = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time), *video_timeframe);
 
     if (lines.size() != entity_ids.size()) {
         return EntityId(0);
     }
 
+    // Match scaling used in _plotLineData for this line dataset
+    float xAspect = getXAspect();
+    float yAspect = getYAspect();
+    auto const image_size = line_data->getImageSize();
+    if (image_size.height != -1) {
+        auto const line_height = static_cast<float>(image_size.height);
+        yAspect = static_cast<float>(_canvasHeight) / line_height;
+    }
+    if (image_size.width != -1) {
+        auto const line_width = static_cast<float>(image_size.width);
+        xAspect = static_cast<float>(_canvasWidth) / line_width;
+    }
+
     float const threshold = 10.0f; // pixels
 
-    for (size_t i = 0; i < lines.size(); ++i) {
+    // Find the nearest line (minimum distance) rather than returning on first hit
+    float best_dist = std::numeric_limits<float>::max();
+    std::size_t best_index = static_cast<std::size_t>(-1);
+
+    for (std::size_t i = 0; i < lines.size(); ++i) {
         auto const & line = lines[i];
-        
-        // Check distance from each line segment
-        for (size_t j = 0; j < line.size(); j++) {
-            if (j + 1 >= line.size()) continue;
-            
+        if (line.size() < 2) {
+            continue;
+        }
+
+        for (std::size_t j = 0; j + 1 < line.size(); ++j) {
             auto const & p1 = line[j];
             auto const & p2 = line[j + 1];
-            
-            // Convert line points to scene coordinates
-            float x1_scene = p1.x * getXAspect();
-            float y1_scene = p1.y * getYAspect();
-            float x2_scene = p2.x * getXAspect();
-            float y2_scene = p2.y * getYAspect();
-            
-            // Calculate distance from click point to line segment
-            float dist = _calculateDistanceToLineSegment(
-                scene_pos.x(), scene_pos.y(),
-                x1_scene, y1_scene, x2_scene, y2_scene
-            );
-            
-            if (dist <= threshold) {
-                return entity_ids[i];
+
+            // Convert line points to scene coordinates (same as rendering)
+            float const x1_scene = p1.x * xAspect;
+            float const y1_scene = p1.y * yAspect;
+            float const x2_scene = p2.x * xAspect;
+            float const y2_scene = p2.y * yAspect;
+
+            float const dist = _calculateDistanceToLineSegment(
+                    scene_pos.x(), scene_pos.y(),
+                    x1_scene, y1_scene, x2_scene, y2_scene);
+
+            if (dist < best_dist) {
+                best_dist = dist;
+                best_index = i;
             }
         }
+    }
+
+    if (best_index != static_cast<std::size_t>(-1) && best_dist <= threshold) {
+        return entity_ids[best_index];
     }
 
     return EntityId(0);
