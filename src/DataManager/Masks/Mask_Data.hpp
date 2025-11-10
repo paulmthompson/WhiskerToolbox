@@ -14,6 +14,7 @@
 #include <map>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <unordered_set>
 #include <vector>
 
@@ -44,6 +45,15 @@ public:
     [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
 
     [[nodiscard]] bool clearAtTime(TimeIndexAndFrame const & time_index_and_frame, bool notify = true);
+
+    /**
+     * @brief Removes a mask with a specific EntityId
+     *
+     * @param entity_id The EntityId of the mask to remove
+     * @param notify If true, observers will be notified of the change
+     * @return True if the mask was found and removed, false otherwise
+     */
+    [[nodiscard]] bool clearByEntityId(EntityId entity_id, bool notify = true);
 
 
     void addAtTime(TimeFrameIndex time, Mask2D const & mask, bool notify = true);
@@ -164,6 +174,24 @@ public:
                                                         TimeFrame const & source_timeframe) const;
 
     /**
+     * @brief Get all mask entries with their associated times as a zero-copy range
+     *
+     * This method provides zero-copy access to the underlying MaskEntry data structure,
+     * which contains both Mask2D and EntityId information.
+     *
+     * @return A view of time-mask entries pairs for all times
+     */
+    [[nodiscard]] auto getAllEntries() const {
+        return _data | std::views::transform([](auto const & pair) {
+                   // pair.second is a std::vector<MaskEntry>&
+                   // We create a non-owning span pointing to its data
+                   return std::make_pair(
+                           pair.first,
+                           std::span<MaskEntry const>{pair.second});
+               });
+    }
+
+    /**
      * @brief Get all masks with their associated times as a range
      *
      * @return A view of time-mask pairs for all times
@@ -274,61 +302,6 @@ public:
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
     // ========== Copy and Move ==========
-
-    /**
-     * @brief Copy masks from this MaskData to another MaskData for a time interval
-     * 
-     * Copies all masks within the specified time interval [start, end] (inclusive)
-     * to the target MaskData. If masks already exist at target times, the copied masks
-     * are added to the existing masks.
-     * 
-     * @param target The target MaskData to copy masks to
-     * @param interval The time interval to copy masks from (inclusive)
-     * @param notify If true, the target will notify its observers after the operation
-     * @return The number of masks actually copied
-     */
-    std::size_t copyTo(MaskData & target, TimeFrameInterval const & interval, bool notify = true) const;
-
-    /**
-     * @brief Copy masks from this MaskData to another MaskData for specific times
-     * 
-     * Copies all masks at the specified times to the target MaskData.
-     * If masks already exist at target times, the copied masks are added to the existing masks.
-     * 
-     * @param target The target MaskData to copy masks to
-     * @param times Vector of specific times to copy (does not need to be sorted)
-     * @param notify If true, the target will notify its observers after the operation
-     * @return The number of masks actually copied
-     */
-    std::size_t copyTo(MaskData & target, std::vector<TimeFrameIndex> const & times, bool notify = true) const;
-
-    /**
-     * @brief Move masks from this MaskData to another MaskData for a time interval
-     * 
-     * Moves all masks within the specified time interval [start, end] (inclusive)
-     * to the target MaskData. Masks are copied to target then removed from source.
-     * If masks already exist at target times, the moved masks are added to the existing masks.
-     * 
-     * @param target The target MaskData to move masks to
-     * @param interval The time interval to move masks from (inclusive)
-     * @param notify If true, both source and target will notify their observers after the operation
-     * @return The number of masks actually moved
-     */
-    std::size_t moveTo(MaskData & target, TimeFrameInterval const & interval, bool notify = true);
-
-    /**
-     * @brief Move masks from this MaskData to another MaskData for specific times
-     * 
-     * Moves all masks at the specified times to the target MaskData.
-     * Masks are copied to target then removed from source.
-     * If masks already exist at target times, the moved masks are added to the existing masks.
-     * 
-     * @param target The target MaskData to move masks to
-     * @param times Vector of specific times to move (does not need to be sorted)
-     * @param notify If true, both source and target will notify their observers after the operation
-     * @return The number of masks actually moved
-     */
-    std::size_t moveTo(MaskData & target, std::vector<TimeFrameIndex> const & times, bool notify = true);
 
     /**
      * @brief Copy masks with specific EntityIds to another MaskData

@@ -14,37 +14,31 @@ void MaskTableModel::setMasks(MaskData const * maskData) {
     _all_data.clear();
     _mask_data_source = maskData;
     if (maskData) {
-        for (auto const & timeMaskPair: maskData->getAllAsRange()) {
-            auto frame = timeMaskPair.time.getValue();
-            int totalPoints = 0;
-            EntityId const entity_id = 0; // Default to 0 for masks without entity ID
-            QString group_name = "No Group";
-            
-            // For masks, we need to get the entity ID from the mask data
-            // Since masks don't have individual entity IDs like lines, we'll use a default approach
-            // This might need to be adjusted based on how masks are associated with entities
-            
-            if (_group_manager && entity_id != 0) {
-                int const group_id = _group_manager->getEntityGroup(entity_id);
-                if (group_id != -1) {
-                    auto group = _group_manager->getGroup(group_id);
-                    if (group.has_value()) {
-                        group_name = group->name;
+        for (auto const & [time, entries]: maskData->getAllEntries()) {
+            auto frame = time.getValue();
+            int maskIndex = 0;
+            for (auto const & entry: entries) {
+                QString group_name = "No Group";
+                if (_group_manager) {
+                    int const group_id = _group_manager->getEntityGroup(entry.entity_id);
+                    if (group_id != -1) {
+                        auto group = _group_manager->getGroup(group_id);
+                        if (group.has_value()) {
+                            group_name = group->name;
+                        }
                     }
                 }
+
+                MaskTableRow const row = {
+                    .frame = frame,
+                    .maskIndex = maskIndex,
+                    .totalPointsInFrame = static_cast<int>(entry.data.size()),
+                    .entity_id = entry.entity_id,
+                    .group_name = group_name
+                };
+                _all_data.push_back(row);
+                maskIndex++;
             }
-            
-            for (auto const & mask: timeMaskPair.masks) {
-                totalPoints += static_cast<int>(mask.size());
-            }
-            
-            MaskTableRow const row = {
-                .frame = frame,
-                .totalPointsInFrame = totalPoints,
-                .entity_id = entity_id,
-                .group_name = group_name
-            };
-            _all_data.push_back(row);
         }
     }
     _applyGroupFilter();
@@ -58,7 +52,7 @@ int MaskTableModel::rowCount(QModelIndex const & parent) const {
 
 int MaskTableModel::columnCount(QModelIndex const & parent) const {
     Q_UNUSED(parent);
-    return 3;// Frame, Total Points, Group
+    return 4;// Frame, Mask Index, Total Points, Group
 }
 
 QVariant MaskTableModel::data(QModelIndex const & index, int role) const {
@@ -66,18 +60,20 @@ QVariant MaskTableModel::data(QModelIndex const & index, int role) const {
         return QVariant{};
     }
 
-    if (index.row() >= _display_data.size() || index.row() < 0) {
+    if (index.row() < 0 || static_cast<size_t>(index.row()) >= _display_data.size()) {
         return QVariant{};
     }
 
-    MaskTableRow const & rowData = _display_data.at(index.row());
+    MaskTableRow const & rowData = _display_data.at(static_cast<size_t>(index.row()));
 
     switch (index.column()) {
         case 0:
             return QVariant::fromValue(rowData.frame);
         case 1:
-            return QVariant::fromValue(rowData.totalPointsInFrame);
+            return QVariant::fromValue(rowData.maskIndex);
         case 2:
+            return QVariant::fromValue(rowData.totalPointsInFrame);
+        case 3:
             return QVariant::fromValue(rowData.group_name);
         default:
             return QVariant{};
@@ -94,8 +90,10 @@ QVariant MaskTableModel::headerData(int section, Qt::Orientation orientation, in
             case 0:
                 return QString("Frame");
             case 1:
-                return QString("Total Points in Frame");
+                return QString("Mask Index");
             case 2:
+                return QString("Total Points");
+            case 3:
                 return QString("Group");
             default:
                 return QVariant{};
@@ -106,18 +104,18 @@ QVariant MaskTableModel::headerData(int section, Qt::Orientation orientation, in
 
 int MaskTableModel::getFrameForRow(int row) const {
     if (row >= 0 && static_cast<size_t>(row) < _display_data.size()) {
-        return static_cast<int>(_display_data[row].frame);
+        return static_cast<int>(_display_data[static_cast<size_t>(row)].frame);
     }
     return -1;// Invalid row
 }
 
 MaskTableRow MaskTableModel::getRowData(int row) const {
-    if (row >= 0 && row < _display_data.size()) {
-        return _display_data[row];
+    if (row >= 0 && static_cast<size_t>(row) < _display_data.size()) {
+        return _display_data[static_cast<size_t>(row)];
     }
     // Return a default/invalid MaskTableRow or throw an exception
     // For simplicity, returning a default-constructed one here, but error handling might be better.
-    return MaskTableRow{-1, -1, 0, "Invalid"};
+    return MaskTableRow{-1, -1, -1, 0, "Invalid"};
 }
 
 void MaskTableModel::setGroupManager(GroupManager * group_manager) {

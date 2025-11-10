@@ -2,9 +2,10 @@
 #define MASK_WIDGET_HPP
 
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
+#include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "nlohmann/json.hpp"
 
+#include "nlohmann/json.hpp"
 #include <QWidget>
 
 #include <memory>
@@ -63,6 +64,13 @@ private:
     std::vector<TimeFrameIndex> _getSelectedFrames();
 
     /**
+     * @brief Get EntityIds from selected table rows
+     * 
+     * @return Vector of EntityIds corresponding to selected rows
+     */
+    std::vector<EntityId> _getSelectedEntityIds();
+
+    /**
      * @brief Move selected masks to the specified target key
      * 
      * @param target_key The key to move masks to
@@ -92,8 +100,8 @@ private:
 
     enum SaverType { HDF5,
                      IMAGE };
-    void _initiateSaveProcess(QString const& format, MaskSaverConfig const& config);
-    bool _performRegistrySave(QString const& format, MaskSaverConfig const& config);
+    void _initiateSaveProcess(QString const & format, MaskSaverConfig const & config);
+    bool _performRegistrySave(QString const & format, MaskSaverConfig const & config);
 
 private slots:
     void _loadSamModel();

@@ -37,6 +37,7 @@
 #include <filesystem>
 #include <iostream>
 #include <set>
+#include <unordered_set>
 
 Mask_Widget::Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
@@ -161,6 +162,22 @@ std::vector<TimeFrameIndex> Mask_Widget::_getSelectedFrames() {
     return selected_frames;
 }
 
+std::vector<EntityId> Mask_Widget::_getSelectedEntityIds() {
+    QModelIndexList const selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    std::vector<EntityId> entity_ids;
+
+    for (auto const & index: selectedIndexes) {
+        if (index.isValid()) {
+            MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
+            if (row_data.entity_id != 0) { // Valid entity ID
+                entity_ids.push_back(row_data.entity_id);
+            }
+        }
+    }
+
+    return entity_ids;
+}
+
 void Mask_Widget::_showContextMenu(QPoint const & position) {
     QModelIndex const index = ui->tableView->indexAt(position);
     if (!index.isValid()) {
@@ -202,8 +219,8 @@ void Mask_Widget::_showContextMenu(QPoint const & position) {
 }
 
 void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
-    auto selected_frames = _getSelectedFrames();
-    if (selected_frames.empty()) {
+    auto selected_entity_ids = _getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
         std::cout << "Mask_Widget: No masks selected to move." << std::endl;
         return;
     }
@@ -220,73 +237,29 @@ void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
         return;
     }
 
-    std::cout << "Mask_Widget: Moving masks from " << selected_frames.size()
-              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+    std::cout << "Mask_Widget: Moving " << selected_entity_ids.size()
+              << " selected masks from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    // Check if image sizes differ and we need to resize masks
-    ImageSize const source_size = source_mask_data->getImageSize();
-    ImageSize const target_size = target_mask_data->getImageSize();
-    bool const need_resize = (source_size.width != target_size.width || source_size.height != target_size.height);
-
-    if (need_resize && (source_size.width <= 0 || source_size.height <= 0 ||
-                        target_size.width <= 0 || target_size.height <= 0)) {
-        std::cerr << "Mask_Widget: Cannot resize masks - invalid source (" << source_size.width
-                  << "x" << source_size.height << ") or target (" << target_size.width
-                  << "x" << target_size.height << ") image size." << std::endl;
-        return;
-    }
-
-    std::size_t total_masks_moved = 0;
-
-    if (need_resize) {
-        std::cout << "Mask_Widget: Resizing masks from " << source_size.width << "x" << source_size.height
-                  << " to " << target_size.width << "x" << target_size.height << std::endl;
-
-        // Manual copy with resize, then delete from source
-        for (auto frame: selected_frames) {
-            auto const & masks_at_frame = source_mask_data->getAtTime(frame);
-            if (!masks_at_frame.empty()) {
-                for (auto const & mask: masks_at_frame) {
-                    // Resize the mask to target dimensions
-                    Mask2D resized_mask = resize_mask(mask, source_size, target_size);
-                    if (!resized_mask.empty()) {
-                        target_mask_data->addAtTime(frame, std::move(resized_mask), false);
-                        total_masks_moved++;
-                    }
-                }
-                // Clear the frame from source after copying all masks
-                (void)source_mask_data->clearAtTime(frame, false);
-            }
-        }
-
-        // Notify observers for both source and target
-        if (total_masks_moved > 0) {
-            source_mask_data->notifyObservers();
-            target_mask_data->notifyObservers();
-        }
-    } else {
-        // Use the existing moveTo method when no resizing is needed
-        total_masks_moved = source_mask_data->moveTo(*target_mask_data, selected_frames, true);
-    }
+    // Use the moveByEntityIds method to move only the selected masks
+    std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_masks_moved = source_mask_data->moveByEntityIds(*target_mask_data,
+                                                                            selected_entity_ids_set,
+                                                                            true);
 
     if (total_masks_moved > 0) {
         // Update the table view to reflect changes
         updateTable();
 
         std::cout << "Mask_Widget: Successfully moved " << total_masks_moved
-                  << " masks from " << selected_frames.size() << " frames." << std::endl;
-        if (need_resize) {
-            std::cout << "Mask_Widget: Masks were resized from " << source_size.width << "x" << source_size.height
-                      << " to " << target_size.width << "x" << target_size.height << std::endl;
-        }
+                  << " selected masks." << std::endl;
     } else {
-        std::cout << "Mask_Widget: No masks found in any of the selected frames to move." << std::endl;
+        std::cout << "Mask_Widget: No masks found with the selected EntityIds to move." << std::endl;
     }
 }
 
 void Mask_Widget::_copyMasksToTarget(std::string const & target_key) {
-    auto selected_frames = _getSelectedFrames();
-    if (selected_frames.empty()) {
+    auto selected_entity_ids = _getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
         std::cout << "Mask_Widget: No masks selected to copy." << std::endl;
         return;
     }
@@ -303,67 +276,26 @@ void Mask_Widget::_copyMasksToTarget(std::string const & target_key) {
         return;
     }
 
-    std::cout << "Mask_Widget: Copying masks from " << selected_frames.size()
-              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+    std::cout << "Mask_Widget: Copying " << selected_entity_ids.size()
+              << " selected masks from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    // Check if image sizes differ and we need to resize masks
-    ImageSize const source_size = source_mask_data->getImageSize();
-    ImageSize const target_size = target_mask_data->getImageSize();
-    bool const need_resize = (source_size.width != target_size.width || source_size.height != target_size.height);
-
-    if (need_resize && (source_size.width <= 0 || source_size.height <= 0 ||
-                        target_size.width <= 0 || target_size.height <= 0)) {
-        std::cerr << "Mask_Widget: Cannot resize masks - invalid source (" << source_size.width
-                  << "x" << source_size.height << ") or target (" << target_size.width
-                  << "x" << target_size.height << ") image size." << std::endl;
-        return;
-    }
-
-    std::size_t total_masks_copied = 0;
-
-    if (need_resize) {
-        std::cout << "Mask_Widget: Resizing masks from " << source_size.width << "x" << source_size.height
-                  << " to " << target_size.width << "x" << target_size.height << std::endl;
-
-        // Manual copy with resize
-        for (auto frame: selected_frames) {
-            auto const & masks_at_frame = source_mask_data->getAtTime(frame);
-            if (!masks_at_frame.empty()) {
-                for (auto const & mask: masks_at_frame) {
-                    // Resize the mask to target dimensions
-                    Mask2D resized_mask = resize_mask(mask, source_size, target_size);
-                    if (!resized_mask.empty()) {
-                        target_mask_data->addAtTime(frame, std::move(resized_mask), false);
-                        total_masks_copied++;
-                    }
-                }
-            }
-        }
-
-        // Notify observers for target
-        if (total_masks_copied > 0) {
-            target_mask_data->notifyObservers();
-        }
-    } else {
-        // Use the existing copyTo method when no resizing is needed
-        total_masks_copied = source_mask_data->copyTo(*target_mask_data, selected_frames, true);
-    }
+    // Use the copyByEntityIds method to copy only the selected masks
+    std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_masks_copied = source_mask_data->copyByEntityIds(*target_mask_data,
+                                                                              selected_entity_ids_set,
+                                                                              true);
 
     if (total_masks_copied > 0) {
         std::cout << "Mask_Widget: Successfully copied " << total_masks_copied
-                  << " masks from " << selected_frames.size() << " frames." << std::endl;
-        if (need_resize) {
-            std::cout << "Mask_Widget: Masks were resized from " << source_size.width << "x" << source_size.height
-                      << " to " << target_size.width << "x" << target_size.height << std::endl;
-        }
+                  << " selected masks." << std::endl;
     } else {
-        std::cout << "Mask_Widget: No masks found in any of the selected frames to copy." << std::endl;
+        std::cout << "Mask_Widget: No masks found with the selected EntityIds to copy." << std::endl;
     }
 }
 
 void Mask_Widget::_deleteSelectedMasks() {
-    auto selected_frames = _getSelectedFrames();
-    if (selected_frames.empty()) {
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    if (selectedIndexes.isEmpty()) {
         std::cout << "Mask_Widget: No masks selected to delete." << std::endl;
         return;
     }
@@ -374,38 +306,35 @@ void Mask_Widget::_deleteSelectedMasks() {
         return;
     }
 
-    std::cout << "Mask_Widget: Deleting masks from " << selected_frames.size()
-              << " frames in '" << _active_key << "'..." << std::endl;
+    std::cout << "Mask_Widget: Deleting " << selectedIndexes.size()
+              << " selected masks from '" << _active_key << "'..." << std::endl;
 
-    std::size_t frames_with_masks = 0;
-    std::size_t total_masks_deleted = 0;
+    int total_masks_deleted = 0;
 
-    // Count masks before deletion and batch operations to minimize observer notifications
-    for (auto frame: selected_frames) {
-        auto masks_at_frame = mask_data_ptr->getAtTime(frame);
-        if (!masks_at_frame.empty()) {
-            frames_with_masks++;
-            total_masks_deleted += masks_at_frame.size();
-            (void)mask_data_ptr->clearAtTime(frame, false);
+    // Delete each selected mask individually
+    for (auto const & index: selectedIndexes) {
+        if (index.isValid()) {
+            MaskTableRow const row_data = _mask_table_model->getRowData(index.row());
+            if (row_data.frame != -1 && row_data.entity_id != 0) {
+                bool const success = mask_data_ptr->clearByEntityId(row_data.entity_id, false);
+                if (success) {
+                    total_masks_deleted++;
+                }
+            }
         }
     }
 
     // Notify observers only once at the end
-    if (frames_with_masks > 0) {
+    if (total_masks_deleted > 0) {
         mask_data_ptr->notifyObservers();
 
         // Update the table view to reflect changes
         updateTable();
 
         std::cout << "Mask_Widget: Successfully deleted " << total_masks_deleted
-                  << " masks from " << frames_with_masks << " frames." << std::endl;
-        if (frames_with_masks < selected_frames.size()) {
-            std::size_t const frames_without_masks = selected_frames.size() - frames_with_masks;
-            std::cout << "Mask_Widget: Note: " << frames_without_masks
-                      << " selected frames contained no masks to delete." << std::endl;
-        }
+                  << " selected masks." << std::endl;
     } else {
-        std::cout << "Mask_Widget: No masks found in any of the selected frames to delete." << std::endl;
+        std::cout << "Mask_Widget: No masks found to delete from the selected rows." << std::endl;
     }
 }
 

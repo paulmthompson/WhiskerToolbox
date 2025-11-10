@@ -341,61 +341,6 @@ public:
     // ========== Copy and Move ==========
 
     /**
-     * @brief Copy lines from this LineData to another LineData for a time interval
-     * 
-     * Copies all lines within the specified time interval [start, end] (inclusive)
-     * to the target LineData. If lines already exist at target times, the copied lines
-     * are added to the existing lines.
-     * 
-     * @param target The target LineData to copy lines to
-     * @param interval The time interval to copy lines from (inclusive)
-     * @param notify Whether to notify the target's observers after the operation
-     * @return The number of lines actually copied
-     */
-    std::size_t copyTo(LineData & target, TimeFrameInterval const & interval, NotifyObservers notify) const;
-
-    /**
-     * @brief Copy lines from this LineData to another LineData for specific times
-     * 
-     * Copies all lines at the specified times to the target LineData.
-     * If lines already exist at target times, the copied lines are added to the existing lines.
-     * 
-     * @param target The target LineData to copy lines to
-     * @param times Vector of specific times to copy (does not need to be sorted)
-     * @param notify Whether to notify the target's observers after the operation
-     * @return The number of lines actually copied
-     */
-    std::size_t copyTo(LineData & target, std::vector<TimeFrameIndex> const & times, NotifyObservers notify) const;
-
-    /**
-     * @brief Move lines from this LineData to another LineData for a time interval
-     * 
-     * Moves all lines within the specified time interval [start, end] (inclusive)
-     * to the target LineData. Lines are copied to target then removed from source.
-     * If lines already exist at target times, the moved lines are added to the existing lines.
-     * 
-     * @param target The target LineData to move lines to
-     * @param interval The time interval to move lines from (inclusive)
-     * @param notify Whether to notify both source and target observers after the operation
-     * @return The number of lines actually moved
-     */
-    std::size_t moveTo(LineData & target, TimeFrameInterval const & interval, NotifyObservers notify);
-
-    /**
-     * @brief Move lines from this LineData to another LineData for specific times
-     * 
-     * Moves all lines at the specified times to the target LineData.
-     * Lines are copied to target then removed from source.
-     * If lines already exist at target times, the moved lines are added to the existing lines.
-     * 
-     * @param target The target LineData to move lines to
-     * @param times Vector of specific times to move (does not need to be sorted)
-     * @param notify Whether to notify both source and target observers after the operation
-     * @return The number of lines actually moved
-     */
-    std::size_t moveTo(LineData & target, std::vector<TimeFrameIndex> const & times, NotifyObservers notify);
-
-    /**
      * @brief Copy lines with specific EntityIds to another LineData
      * 
      * Copies all lines that match the given EntityIds to the target LineData.

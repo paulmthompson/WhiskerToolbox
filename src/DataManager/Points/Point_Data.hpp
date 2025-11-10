@@ -312,61 +312,6 @@ public:
     // ======= Move and Copy ==========
 
     /**
-     * @brief Copy points from this PointData to another PointData for a time interval
-     * 
-     * Copies all points within the specified time interval [start, end] (inclusive)
-     * to the target PointData. If points already exist at target times, the copied points
-     * are added to the existing points.
-     * 
-     * @param target The target PointData to copy points to
-     * @param interval The time interval to copy points from (inclusive)
-     * @param notify If true, the target will notify its observers after the operation
-     * @return The number of points actually copied
-     */
-    std::size_t copyTo(PointData & target, TimeFrameInterval const & interval, bool notify = true) const;
-
-    /**
-     * @brief Copy points from this PointData to another PointData for specific times
-     * 
-     * Copies all points at the specified times to the target PointData.
-     * If points already exist at target times, the copied points are added to the existing points.
-     * 
-     * @param target The target PointData to copy points to
-     * @param times Vector of specific times to copy (does not need to be sorted)
-     * @param notify If true, the target will notify its observers after the operation
-     * @return The number of points actually copied
-     */
-    std::size_t copyTo(PointData & target, std::vector<TimeFrameIndex> const & times, bool notify = true) const;
-
-    /**
-     * @brief Move points from this PointData to another PointData for a time interval
-     * 
-     * Moves all points within the specified time interval [start, end] (inclusive)
-     * to the target PointData. Points are copied to target then removed from source.
-     * If points already exist at target times, the moved points are added to the existing points.
-     * 
-     * @param target The target PointData to move points to
-     * @param interval The time interval to move points from (inclusive)
-     * @param notify If true, both source and target will notify their observers after the operation
-     * @return The number of points actually moved
-     */
-    std::size_t moveTo(PointData & target, TimeFrameInterval const & interval, bool notify = true);
-
-    /**
-     * @brief Move points from this PointData to another PointData for specific times
-     * 
-     * Moves all points at the specified times to the target PointData.
-     * Points are copied to target then removed from source.
-     * If points already exist at target times, the moved points are added to the existing points.
-     * 
-     * @param target The target PointData to move points to
-     * @param times Vector of specific times to move (does not need to be sorted)
-     * @param notify If true, both source and target will notify their observers after the operation
-     * @return The number of points actually moved
-     */
-    std::size_t moveTo(PointData & target, std::vector<TimeFrameIndex> const & times, bool notify = true);
-
-    /**
      * @brief Copy points with specific EntityIds to another PointData
      *
      * Copies all points that match the given EntityIds to the target PointData.

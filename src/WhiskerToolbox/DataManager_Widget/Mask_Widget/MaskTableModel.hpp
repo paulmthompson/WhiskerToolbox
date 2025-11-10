@@ -14,7 +14,8 @@ class GroupManager;
 
 struct MaskTableRow {
     int64_t frame;
-    int totalPointsInFrame; // Sum of points in all Mask2D objects at this frame
+    int maskIndex; // Index of the mask within that frame
+    int totalPointsInFrame; // Number of points in this mask
     EntityId entity_id; // EntityId for group lookup
     QString group_name; // Name of the group this mask belongs to
 };
