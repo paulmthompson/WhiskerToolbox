@@ -192,27 +192,24 @@ void MediaPoint_Widget::_moveSelectedPoint(qreal x_media, qreal y_media) {
     if (_selected_point_id == EntityId(0) || _active_key.empty())
         return;
     
-    auto current_time = _data_manager->getCurrentTime();
-    
-    // Handle timeframe conversion if necessary
-    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
-    auto point_timeframe_key = _data_manager->getTimeKey(_active_key);
-    
-    if (!point_timeframe_key.empty()) {
-        auto point_timeframe = _data_manager->getTime(point_timeframe_key);
-        if (video_timeframe.get() != point_timeframe.get()) {
-            current_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
-            current_time = point_timeframe->getIndexAtTime(current_time).getValue();
-        }
+    auto point_data = _data_manager->getData<PointData>(_active_key);
+    if (!point_data) {
+        return;
     }
-    
-    auto point = _data_manager->getData<PointData>(_active_key);
-    if (point) {
-        point->overwritePointAtTime(TimeFrameIndex(current_time), 
-                                    Point2D<float>(static_cast<float>(x_media), static_cast<float>(y_media)));
-        _scene->UpdateCanvas();
-        std::cout << "Moved point to: (" << x_media << ", " << y_media << ")" << std::endl;
+
+    // Modify the selected point via EntityId using the PointData modification handle
+    auto point_handle_opt = point_data->getMutableData(_selected_point_id, true);
+    if (!point_handle_opt.has_value()) {
+        std::cout << "Could not get mutable reference to point with EntityID " << _selected_point_id.id << std::endl;
+        return;
     }
+
+    Point2D<float> & point_ref = point_handle_opt.value().get();
+    point_ref.x = static_cast<float>(x_media);
+    point_ref.y = static_cast<float>(y_media);
+
+    _scene->UpdateCanvas();
+    std::cout << "Moved point (EntityID: " << _selected_point_id.id << ") to: (" << x_media << ", " << y_media << ")" << std::endl;
 }
 
 void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
