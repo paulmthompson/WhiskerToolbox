@@ -248,7 +248,7 @@ public:
         TimeFrameIndex const converted_time = convert_time_index(time,
                                                                  &source_timeframe,
                                                                  _time_frame.get());
-        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Line2D>::data);
+        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<Line2D>::data);
     }
 
     [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time) const {
@@ -259,7 +259,7 @@ public:
         TimeFrameIndex const converted_time = convert_time_index(time,
                                                                  &source_timeframe,
                                                                  _time_frame.get());
-        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Line2D>::entity_id);
+        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<Line2D>::entity_id);
     }
 
     /**
