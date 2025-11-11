@@ -2,12 +2,12 @@
 #include "ui_Point_Widget.h"
 
 #include "DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
+#include "DataManager/Points/Point_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
+#include "IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
 #include "MediaExport/media_export.hpp"
-#include "IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "PointTableModel.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
@@ -27,8 +27,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <unordered_set>
 #include <set>
+#include <unordered_set>
 #include <variant>
 
 Point_Widget::Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
@@ -64,14 +64,14 @@ Point_Widget::Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * 
     // Setup collapsible export section
     ui->export_section->autoSetContentLayout();
     ui->export_section->setTitle("Export Options");
-    ui->export_section->toggle(false); // Start collapsed
+    ui->export_section->toggle(false);// Start collapsed
 
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
     ui->media_export_options_widget->setVisible(ui->export_media_frames_checkbox->isChecked());
-    
+
     // Populate media combo box
     _populateMediaComboBox();
-    
+
     // Set up callback to refresh media combo box when data changes
     if (_data_manager) {
         _data_manager->addObserver([this]() {
@@ -156,11 +156,11 @@ void Point_Widget::_showContextMenu(QPoint const & position) {
     // Add group management options
     context_menu.addSeparator();
     QMenu * group_menu = context_menu.addMenu("Group Management");
-    
+
     // Add "Move to Group" submenu
     QMenu * move_to_group_menu = group_menu->addMenu("Move to Group");
     _populateGroupSubmenu(move_to_group_menu, true);
-    
+
     // Add "Remove from Group" action
     QAction * remove_from_group_action = group_menu->addAction("Remove from Group");
     connect(remove_from_group_action, &QAction::triggered, this, &Point_Widget::_removeSelectedPointsFromGroup);
@@ -197,7 +197,7 @@ std::vector<EntityId> Point_Widget::_getSelectedEntityIds() {
     for (auto const & index: selectedIndexes) {
         if (index.isValid()) {
             PointTableRow const row_data = _point_table_model->getRowData(index.row());
-            if (row_data.entity_id != EntityId(0)) { // Valid entity ID
+            if (row_data.entity_id != EntityId(0)) {// Valid entity ID
                 entity_ids.push_back(row_data.entity_id);
             }
         }
@@ -230,7 +230,7 @@ void Point_Widget::_movePointsToTarget(std::string const & target_key) {
 
     // Use the moveByEntityIds method to move only the selected points
     std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
-    std::size_t const total_points_moved = source_point_data->moveByEntityIds(*target_point_data, selected_entity_ids_set, true);
+    std::size_t const total_points_moved = source_point_data->moveByEntityIds(*target_point_data, selected_entity_ids_set, NotifyObservers::Yes);
 
     if (total_points_moved > 0) {
         // Update the table view to reflect changes
@@ -267,7 +267,9 @@ void Point_Widget::_copyPointsToTarget(std::string const & target_key) {
 
     // Use the copyPointsByEntityIds method to copy only the selected points
     std::unordered_set<EntityId> const selected_entity_ids_set2(selected_entity_ids.begin(), selected_entity_ids.end());
-    std::size_t const total_points_copied = source_point_data->copyByEntityIds(*target_point_data, selected_entity_ids_set2, true);
+    std::size_t const total_points_copied = source_point_data->copyByEntityIds(*target_point_data,
+                                                                               selected_entity_ids_set2,
+                                                                               NotifyObservers::Yes);
 
     if (total_points_copied > 0) {
         std::cout << "Point_Widget: Successfully copied " << total_points_copied
@@ -392,9 +394,7 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
                 try {
                     std::filesystem::create_directories(options.image_save_dir);
                 } catch (std::exception const & e) {
-                    QMessageBox::critical(this, "Export Error", QString("Failed to create output directory: %1\n%2")
-                                                                   .arg(QString::fromStdString(options.image_save_dir))
-                                                                   .arg(QString::fromStdString(e.what())));
+                    QMessageBox::critical(this, "Export Error", QString("Failed to create output directory: %1\n%2").arg(QString::fromStdString(options.image_save_dir)).arg(QString::fromStdString(e.what())));
                     return;
                 }
 
@@ -407,9 +407,9 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
                 QMessageBox::information(this,
                                          "Media Export",
                                          QString("Exported %1 media frames to: %2/%3")
-                                             .arg(frames_exported)
-                                             .arg(QString::fromStdString(options.image_save_dir))
-                                             .arg(QString::fromStdString(options.image_folder)));
+                                                 .arg(frames_exported)
+                                                 .arg(QString::fromStdString(options.image_save_dir))
+                                                 .arg(QString::fromStdString(options.image_folder)));
             }
         } else {
             QMessageBox::information(this, "No Frames", "No points found in data, so no media frames to export.");
@@ -471,26 +471,29 @@ void Point_Widget::_onApplyImageSizeClicked() {
 
     // Get current image size
     ImageSize current_size = point_data->getImageSize();
-    
+
     // If no current size is set, just set the new size without scaling
     if (current_size.width == -1 || current_size.height == -1) {
         point_data->setImageSize({new_width, new_height});
         _updateImageSizeDisplay();
-        QMessageBox::information(this, "Image Size Set", 
-            QString("Image size set to %1 × %2 (no scaling applied as no previous size was set).")
-                .arg(new_width).arg(new_height));
+        QMessageBox::information(this, "Image Size Set",
+                                 QString("Image size set to %1 × %2 (no scaling applied as no previous size was set).")
+                                         .arg(new_width)
+                                         .arg(new_height));
         return;
     }
 
     // Ask user if they want to scale existing data
-    int ret = QMessageBox::question(this, "Scale Existing Data", 
-        QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4?\n\n"
-               "Click 'Yes' to scale all point data proportionally.\n"
-               "Click 'No' to just change the image size without scaling.\n"
-               "Click 'Cancel' to abort the operation.")
-            .arg(current_size.width).arg(current_size.height)
-            .arg(new_width).arg(new_height),
-        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+    int ret = QMessageBox::question(this, "Scale Existing Data",
+                                    QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4?\n\n"
+                                            "Click 'Yes' to scale all point data proportionally.\n"
+                                            "Click 'No' to just change the image size without scaling.\n"
+                                            "Click 'Cancel' to abort the operation.")
+                                            .arg(current_size.width)
+                                            .arg(current_size.height)
+                                            .arg(new_width)
+                                            .arg(new_height),
+                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
     if (ret == QMessageBox::Cancel) {
         return;
@@ -499,15 +502,17 @@ void Point_Widget::_onApplyImageSizeClicked() {
     if (ret == QMessageBox::Yes) {
         // Scale the data
         point_data->changeImageSize({new_width, new_height});
-        QMessageBox::information(this, "Image Size Changed", 
-            QString("Image size changed to %1 × %2 and all point data has been scaled proportionally.")
-                .arg(new_width).arg(new_height));
+        QMessageBox::information(this, "Image Size Changed",
+                                 QString("Image size changed to %1 × %2 and all point data has been scaled proportionally.")
+                                         .arg(new_width)
+                                         .arg(new_height));
     } else {
         // Just set the new size without scaling
         point_data->setImageSize({new_width, new_height});
-        QMessageBox::information(this, "Image Size Set", 
-            QString("Image size set to %1 × %2 (existing point data was not scaled).")
-                .arg(new_width).arg(new_height));
+        QMessageBox::information(this, "Image Size Set",
+                                 QString("Image size set to %1 × %2 (existing point data was not scaled).")
+                                         .arg(new_width)
+                                         .arg(new_height));
     }
 
     _updateImageSizeDisplay();
@@ -535,7 +540,7 @@ void Point_Widget::_updateImageSizeDisplay() {
 
     ImageSize current_size = point_data->getImageSize();
     std::cout << "Point_Widget::_updateImageSizeDisplay: Current size: " << current_size.width << " x " << current_size.height << std::endl;
-    
+
     if (current_size.width == -1 || current_size.height == -1) {
         ui->image_width_edit->setText("");
         ui->image_height_edit->setText("");
@@ -571,8 +576,8 @@ void Point_Widget::_onCopyImageSizeClicked() {
 
     ImageSize media_size = media_data->getImageSize();
     if (media_size.width == -1 || media_size.height == -1) {
-        QMessageBox::warning(this, "No Image Size", 
-            QString("The selected media '%1' does not have an image size set.").arg(selected_media_key));
+        QMessageBox::warning(this, "No Image Size",
+                             QString("The selected media '%1' does not have an image size set.").arg(selected_media_key));
         return;
     }
 
@@ -584,26 +589,31 @@ void Point_Widget::_onCopyImageSizeClicked() {
 
     // Get current image size
     ImageSize current_size = point_data->getImageSize();
-    
+
     // If no current size is set, just set the new size without scaling
     if (current_size.width == -1 || current_size.height == -1) {
         point_data->setImageSize(media_size);
         _updateImageSizeDisplay();
-        QMessageBox::information(this, "Image Size Set", 
-            QString("Image size set to %1 × %2 (copied from '%3').")
-                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+        QMessageBox::information(this, "Image Size Set",
+                                 QString("Image size set to %1 × %2 (copied from '%3').")
+                                         .arg(media_size.width)
+                                         .arg(media_size.height)
+                                         .arg(selected_media_key));
         return;
     }
 
     // Ask user if they want to scale existing data
-    int ret = QMessageBox::question(this, "Scale Existing Data", 
-        QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4 (from '%5')?\n\n"
-               "Click 'Yes' to scale all point data proportionally.\n"
-               "Click 'No' to just change the image size without scaling.\n"
-               "Click 'Cancel' to abort the operation.")
-            .arg(current_size.width).arg(current_size.height)
-            .arg(media_size.width).arg(media_size.height).arg(selected_media_key),
-        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+    int ret = QMessageBox::question(this, "Scale Existing Data",
+                                    QString("Current image size is %1 × %2. Do you want to scale all existing point data to the new size %3 × %4 (from '%5')?\n\n"
+                                            "Click 'Yes' to scale all point data proportionally.\n"
+                                            "Click 'No' to just change the image size without scaling.\n"
+                                            "Click 'Cancel' to abort the operation.")
+                                            .arg(current_size.width)
+                                            .arg(current_size.height)
+                                            .arg(media_size.width)
+                                            .arg(media_size.height)
+                                            .arg(selected_media_key),
+                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
     if (ret == QMessageBox::Cancel) {
         return;
@@ -612,15 +622,19 @@ void Point_Widget::_onCopyImageSizeClicked() {
     if (ret == QMessageBox::Yes) {
         // Scale the data
         point_data->changeImageSize(media_size);
-        QMessageBox::information(this, "Image Size Changed", 
-            QString("Image size changed to %1 × %2 (copied from '%3') and all point data has been scaled proportionally.")
-                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+        QMessageBox::information(this, "Image Size Changed",
+                                 QString("Image size changed to %1 × %2 (copied from '%3') and all point data has been scaled proportionally.")
+                                         .arg(media_size.width)
+                                         .arg(media_size.height)
+                                         .arg(selected_media_key));
     } else {
         // Just set the new size without scaling
         point_data->setImageSize(media_size);
-        QMessageBox::information(this, "Image Size Set", 
-            QString("Image size set to %1 × %2 (copied from '%3', existing point data was not scaled).")
-                .arg(media_size.width).arg(media_size.height).arg(selected_media_key));
+        QMessageBox::information(this, "Image Size Set",
+                                 QString("Image size set to %1 × %2 (copied from '%3', existing point data was not scaled).")
+                                         .arg(media_size.width)
+                                         .arg(media_size.height)
+                                         .arg(selected_media_key));
     }
 
     _updateImageSizeDisplay();
@@ -628,14 +642,14 @@ void Point_Widget::_onCopyImageSizeClicked() {
 
 void Point_Widget::_populateMediaComboBox() {
     ui->copy_from_media_combo->clear();
-    
+
     if (!_data_manager) {
         return;
     }
 
     // Get all MediaData keys
     auto media_keys = _data_manager->getKeys<MediaData>();
-    
+
     if (media_keys.empty()) {
         ui->copy_from_media_combo->addItem("No media data available");
         ui->copy_from_media_combo->setEnabled(false);
@@ -643,11 +657,11 @@ void Point_Widget::_populateMediaComboBox() {
     }
 
     ui->copy_from_media_combo->setEnabled(true);
-    
-    for (const auto& key : media_keys) {
+
+    for (auto const & key: media_keys) {
         ui->copy_from_media_combo->addItem(QString::fromStdString(key));
     }
-    
+
     std::cout << "Point_Widget::_populateMediaComboBox: Found " << media_keys.size() << " media keys" << std::endl;
 }
 
@@ -655,7 +669,7 @@ void Point_Widget::setGroupManager(GroupManager * group_manager) {
     _group_manager = group_manager;
     _point_table_model->setGroupManager(group_manager);
     _populateGroupFilterCombo();
-    
+
     // Connect to group manager signals to update when groups change
     if (_group_manager) {
         connect(_group_manager, &GroupManager::groupCreated,
@@ -671,7 +685,7 @@ void Point_Widget::_onGroupFilterChanged(int index) {
     if (!_group_manager) {
         return;
     }
-    
+
     if (index == 0) {
         // "All Groups" selected
         _point_table_model->clearGroupFilter();
@@ -689,16 +703,16 @@ void Point_Widget::_onGroupFilterChanged(int index) {
 void Point_Widget::_onGroupChanged() {
     // Store current selection
     int current_index = ui->groupFilterCombo->currentIndex();
-    
+
     // Update the group filter combo box when groups change
     _populateGroupFilterCombo();
-    
+
     // If the previously selected group no longer exists, reset to "All Groups"
     if (current_index > 0 && current_index >= ui->groupFilterCombo->count()) {
-        ui->groupFilterCombo->setCurrentIndex(0); // "All Groups"
+        ui->groupFilterCombo->setCurrentIndex(0);// "All Groups"
         _point_table_model->clearGroupFilter();
     }
-    
+
     // Refresh the table to update group names
     if (!_active_key.empty()) {
         updateTable();
@@ -708,11 +722,11 @@ void Point_Widget::_onGroupChanged() {
 void Point_Widget::_populateGroupFilterCombo() {
     ui->groupFilterCombo->clear();
     ui->groupFilterCombo->addItem("All Groups");
-    
+
     if (!_group_manager) {
         return;
     }
-    
+
     auto groups = _group_manager->getGroups();
     for (auto it = groups.begin(); it != groups.end(); ++it) {
         ui->groupFilterCombo->addItem(it.value().name);
@@ -723,12 +737,12 @@ void Point_Widget::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
     if (!_group_manager) {
         return;
     }
-    
+
     // Get current groups of selected entities to exclude them from the move list
     std::set<int> current_groups;
     if (for_moving) {
         QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
-        for (auto const & index : selectedIndexes) {
+        for (auto const & index: selectedIndexes) {
             PointTableRow const row_data = _point_table_model->getRowData(index.row());
             if (row_data.entity_id != EntityId(0)) {
                 int current_group = _group_manager->getEntityGroup(row_data.entity_id);
@@ -738,17 +752,17 @@ void Point_Widget::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
             }
         }
     }
-    
+
     auto groups = _group_manager->getGroups();
     for (auto it = groups.begin(); it != groups.end(); ++it) {
         int group_id = it.key();
         QString group_name = it.value().name;
-        
+
         // Skip current groups when moving
         if (for_moving && current_groups.find(group_id) != current_groups.end()) {
             continue;
         }
-        
+
         QAction * action = menu->addAction(group_name);
         connect(action, &QAction::triggered, this, [this, group_id]() {
             _moveSelectedPointsToGroup(group_id);
@@ -760,32 +774,32 @@ void Point_Widget::_moveSelectedPointsToGroup(int group_id) {
     if (!_group_manager) {
         return;
     }
-    
+
     // Get selected rows
     QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
     if (selectedIndexes.isEmpty()) {
         return;
     }
-    
+
     // Collect EntityIds from selected rows
     std::unordered_set<EntityId> entity_ids;
-    for (auto const & index : selectedIndexes) {
+    for (auto const & index: selectedIndexes) {
         PointTableRow const row_data = _point_table_model->getRowData(index.row());
-        if (row_data.entity_id != EntityId(0)) { // Valid entity ID
+        if (row_data.entity_id != EntityId(0)) {// Valid entity ID
             entity_ids.insert(row_data.entity_id);
         }
     }
-    
+
     if (entity_ids.empty()) {
         return;
     }
-    
+
     // First, remove entities from their current groups
     _group_manager->ungroupEntities(entity_ids);
-    
+
     // Then, assign entities to the specified group
     _group_manager->assignEntitiesToGroup(group_id, entity_ids);
-    
+
     // Refresh the table to show updated group information
     updateTable();
 }
@@ -794,29 +808,29 @@ void Point_Widget::_removeSelectedPointsFromGroup() {
     if (!_group_manager) {
         return;
     }
-    
+
     // Get selected rows
     QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
     if (selectedIndexes.isEmpty()) {
         return;
     }
-    
+
     // Collect EntityIds from selected rows
     std::unordered_set<EntityId> entity_ids;
-    for (auto const & index : selectedIndexes) {
+    for (auto const & index: selectedIndexes) {
         PointTableRow const row_data = _point_table_model->getRowData(index.row());
-        if (row_data.entity_id != EntityId(0)) { // Valid entity ID
+        if (row_data.entity_id != EntityId(0)) {// Valid entity ID
             entity_ids.insert(row_data.entity_id);
         }
     }
-    
+
     if (entity_ids.empty()) {
         return;
     }
-    
+
     // Remove entities from all groups
     _group_manager->ungroupEntities(entity_ids);
-    
+
     // Refresh the table to show updated group information
     updateTable();
 }

@@ -131,7 +131,7 @@ public:
      * @param entity_id The entity ID to assign to the mask
      * @param notify If true, the observers will be notified
      */
-    void addEntryAtTime(TimeFrameIndex time, Mask2D const & mask, EntityId entity_id, bool notify = true);
+    void addEntryAtTime(TimeFrameIndex time, Mask2D const & mask, EntityId entity_id, NotifyObservers notify);
 
 
     // ========== Getters ==========
@@ -309,7 +309,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of masks actually copied
      */
-    std::size_t copyByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
+    std::size_t copyByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
     /**
      * @brief Move masks with specific EntityIds to another MaskData
@@ -322,7 +322,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of masks actually moved
      */
-    std::size_t moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
+    std::size_t moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
     // ========== Entity Lookup Methods ==========
 

@@ -27,11 +27,9 @@ inline std::size_t move_by_entity_ids(SourceDataMap & source_data,
         for (size_t i = 0; i < entries.size(); ++i) {
             auto const & entry = entries[i];
             if (entity_ids_set.contains(entry.entity_id)) {
-                if constexpr (std::is_same_v<TargetType, LineData>) {
-                    target.addEntryAtTime(time, extract_data(entry), entry.entity_id, NotifyObservers::No);
-                } else {
-                    target.addEntryAtTime(time, extract_data(entry), entry.entity_id, false);
-                }
+
+                target.addEntryAtTime(time, extract_data(entry), entry.entity_id, NotifyObservers::No);
+
                 entries_to_remove.emplace_back(time, i);
                 total_moved++;
             }

@@ -371,7 +371,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
 
         // Copy points from time 10 (2 points)
         std::unordered_set<EntityId> ids_set_10c(entity_ids_10.begin(), entity_ids_10.end());
-        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_10c);
+        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_10c, NotifyObservers::No);
 
         REQUIRE(points_copied == 2);
 
@@ -412,7 +412,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
 
         std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
         std::unordered_set<EntityId> ids_set_mixedc(mixed_entity_ids.begin(), mixed_entity_ids.end());
-        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_mixedc);
+        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_mixedc, NotifyObservers::No);
 
         REQUIRE(points_copied == 2);
         REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 1);
@@ -434,7 +434,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
 
         std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> ids_set_fakec(fake_entity_ids.begin(), fake_entity_ids.end());
-        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_fakec);
+        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_fakec, NotifyObservers::No);
 
         REQUIRE(points_copied == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -449,7 +449,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
 
         std::vector<EntityId> empty_entity_ids;
         std::unordered_set<EntityId> ids_set_emptyc(empty_entity_ids.begin(), empty_entity_ids.end());
-        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_emptyc);
+        std::size_t points_copied = source_data->copyByEntityIds(*target_data, ids_set_emptyc, NotifyObservers::No);
 
         REQUIRE(points_copied == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -473,7 +473,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         // Materialize the view into a concrete vector BEFORE the move operation
         std::vector<EntityId> entity_ids_10_vec(entity_ids_10_view.begin(), entity_ids_10_view.end());
         std::unordered_set<EntityId> const ids_set_10(entity_ids_10_vec.begin(), entity_ids_10_vec.end());
-        std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_10);
+        std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_10, NotifyObservers::No);
 
         REQUIRE(points_moved == 2);
         REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 0);
@@ -511,7 +511,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
 
         std::vector<EntityId> mixed_entity_ids = {entity_ids_10_vec[0], entity_ids_20_vec[0]};
         std::unordered_set<EntityId> const ids_set_mixed(mixed_entity_ids.begin(), mixed_entity_ids.end());
-        std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_mixed);
+        std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_mixed, NotifyObservers::No);
 
         REQUIRE(points_moved == 2);
         REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 1);
@@ -537,7 +537,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
 
         std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> const ids_set_fake(fake_entity_ids.begin(), fake_entity_ids.end());
-        std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_fake);
+        std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_fake, NotifyObservers::No);
 
         REQUIRE(points_moved == 0);
         REQUIRE(target_data->getTimesWithData().empty());
@@ -561,7 +561,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         std::unordered_set<EntityId> ids_set_10c2(entity_ids_10.begin(), entity_ids_10.end());
-        source_data->copyByEntityIds(*target_data, ids_set_10c2);
+        source_data->copyByEntityIds(*target_data, ids_set_10c2, NotifyObservers::No);
 
         auto source_points = source_data->getAtTime(TimeFrameIndex(10));
         auto target_points = target_data->getAtTime(TimeFrameIndex(10));
@@ -594,7 +594,7 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         std::vector<Point2D<float>> original_points_vec(original_points_view.begin(), original_points_view.end());
 
         std::unordered_set<EntityId> const ids_set_10b(entity_ids_10_vec.begin(), entity_ids_10_vec.end());
-        source_data->moveByEntityIds(*target_data, ids_set_10b);
+        source_data->moveByEntityIds(*target_data, ids_set_10b, NotifyObservers::No);
 
         auto target_points = target_data->getAtTime(TimeFrameIndex(10));
         REQUIRE(target_points.size() == 2);

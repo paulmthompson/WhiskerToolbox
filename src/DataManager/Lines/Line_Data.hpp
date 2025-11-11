@@ -369,8 +369,6 @@ public:
     std::size_t moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
 private:
-    inline static std::vector<DataEntry<Line2D>> const _empty_entries{};
-
 
     /**
      * @brief Clear all lines at a specific time

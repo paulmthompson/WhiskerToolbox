@@ -88,7 +88,7 @@ public:
      * @param entity_id The entity ID to assign to the point
      * @param notify If true, the observers will be notified
      */
-    void addEntryAtTime(TimeFrameIndex time, Point2D<float> const & point, EntityId entity_id, bool notify = true);
+    void addEntryAtTime(TimeFrameIndex time, Point2D<float> const & point, EntityId entity_id, NotifyObservers notify);
 
 
     /**
@@ -371,7 +371,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of points actually copied
      */
-    std::size_t copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
+    std::size_t copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
     /**
      * @brief Move points with specific EntityIds to another PointData
@@ -384,13 +384,13 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of points actually moved
      */
-    std::size_t moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
+    std::size_t moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
 private:
     mutable std::vector<Point2D<float>> _temp_points{};
     mutable std::vector<EntityId> _temp_entity_ids{};
 
-    inline static std::vector<DataEntry<Point2D<float>>> const _empty_entries{};
+
 };
 
 #endif// POINT_DATA_HPP

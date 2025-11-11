@@ -210,6 +210,8 @@ protected:
     
     /// Pointer to EntityRegistry for automatic EntityId management
     EntityRegistry * _identity_registry{nullptr};
+
+    inline static std::vector<DataEntry<TData>> const _empty_entries{};
 };
 
 #endif // RAGGED_TIME_SERIES_HPP

@@ -164,9 +164,9 @@ void MaskData::addAtTime(TimeFrameIndex const time,
 void MaskData::addEntryAtTime(TimeFrameIndex const time,
                               Mask2D const & mask,
                               EntityId const entity_id,
-                              bool const notify) {
+                              NotifyObservers notify) {
     _data[time].emplace_back(entity_id, mask);
-    if (notify) {
+    if (notify == NotifyObservers::Yes) {
         notifyObservers();
     }
 }
@@ -231,16 +231,18 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
 // ========== Copy and Move ==========
 
 
-std::size_t MaskData::copyByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool const notify) {
-    return copy_by_entity_ids(_data, target, entity_ids, notify,
+std::size_t MaskData::copyByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
+    bool const should_notify = (notify == NotifyObservers::Yes);
+    return copy_by_entity_ids(_data, target, entity_ids, should_notify,
                               [](MaskEntry const & entry) -> Mask2D const & { return entry.data; });
 }
 
-std::size_t MaskData::moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
-    auto result = move_by_entity_ids(_data, target, entity_ids, notify,
+std::size_t MaskData::moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
+    bool const should_notify = (notify == NotifyObservers::Yes);
+    auto result = move_by_entity_ids(_data, target, entity_ids, should_notify,
                                      [](MaskEntry const & entry) -> Mask2D const & { return entry.data; });
 
-    if (notify && result > 0) {
+    if (notify == NotifyObservers::Yes && result > 0) {
         notifyObservers();
     }
 

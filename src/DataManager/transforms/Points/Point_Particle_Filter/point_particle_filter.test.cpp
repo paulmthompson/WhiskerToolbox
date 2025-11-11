@@ -587,8 +587,8 @@ TEST_CASE("PointParticleFilter: Matching image sizes (no scaling)", "[PointParti
     // Add points at frame 0 and 10
     auto entity0 = EntityId(1);
     auto entity10 = EntityId(2);
-    point_data->addEntryAtTime(TimeFrameIndex(0), Point2D<float>{50.0f, 50.0f}, entity0, false);
-    point_data->addEntryAtTime(TimeFrameIndex(10), Point2D<float>{60.0f, 60.0f}, entity10, false);
+    point_data->addEntryAtTime(TimeFrameIndex(0), Point2D<float>{50.0f, 50.0f}, entity0, NotifyObservers::No);
+    point_data->addEntryAtTime(TimeFrameIndex(10), Point2D<float>{60.0f, 60.0f}, entity10, NotifyObservers::No);
     
     // Add entities to group
     group_manager.addEntityToGroup(group1, entity0);

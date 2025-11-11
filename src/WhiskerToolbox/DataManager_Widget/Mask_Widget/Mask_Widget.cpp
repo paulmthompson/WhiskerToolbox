@@ -244,7 +244,7 @@ void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
     std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
     std::size_t const total_masks_moved = source_mask_data->moveByEntityIds(*target_mask_data,
                                                                             selected_entity_ids_set,
-                                                                            true);
+                                                                            NotifyObservers::Yes);
 
     if (total_masks_moved > 0) {
         // Update the table view to reflect changes
@@ -283,7 +283,7 @@ void Mask_Widget::_copyMasksToTarget(std::string const & target_key) {
     std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
     std::size_t const total_masks_copied = source_mask_data->copyByEntityIds(*target_mask_data,
                                                                               selected_entity_ids_set,
-                                                                              true);
+                                                                              NotifyObservers::Yes);
 
     if (total_masks_copied > 0) {
         std::cout << "Mask_Widget: Successfully copied " << total_masks_copied

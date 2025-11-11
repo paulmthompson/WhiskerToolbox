@@ -148,9 +148,9 @@ void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point,
 void PointData::addEntryAtTime(TimeFrameIndex const time,
                                Point2D<float> const & point,
                                EntityId const entity_id,
-                               bool const notify) {
+                               NotifyObservers notify) {
     _data[time].emplace_back(entity_id, point);
-    if (notify) {
+    if (notify == NotifyObservers::Yes) {
         notifyObservers();
     }
 }
@@ -281,16 +281,18 @@ std::vector<std::pair<EntityId, std::reference_wrapper<Point2D<float> const>>> P
 
 // ======== Copy/Move by EntityIds =========
 
-std::size_t PointData::copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool const notify) {
-    return copy_by_entity_ids(_data, target, entity_ids, notify,
+std::size_t PointData::copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
+    bool const should_notify = (notify == NotifyObservers::Yes);
+    return copy_by_entity_ids(_data, target, entity_ids, should_notify,
                               [](PointEntry const & entry) -> Point2D<float> const & { return entry.data; });
 }
 
-std::size_t PointData::moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify) {
-    auto result = move_by_entity_ids(_data, target, entity_ids, notify,
+std::size_t PointData::moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
+    bool const should_notify = (notify == NotifyObservers::Yes);
+    auto result = move_by_entity_ids(_data, target, entity_ids, should_notify,
                                      [](PointEntry const & entry) -> Point2D<float> const & { return entry.data; });
 
-    if (notify && result > 0) {
+    if (notify == NotifyObservers::Yes && result > 0) {
         notifyObservers();
     }
 
