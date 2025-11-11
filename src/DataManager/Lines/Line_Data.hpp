@@ -63,13 +63,9 @@ public:
 
     // ========== Setters (Time-based) ==========
 
-    /**
-     * @brief Clear all lines at a specific time
-     * 
-     * @param time The time to clear the lines at
-     * @param notify Whether to notify observers after the operation
-     */
-    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, NotifyObservers notify);
+
+    [[nodiscard]] bool clearAtTime(TimeIndexAndFrame const & time_index_and_frame,
+        NotifyObservers notify);
 
     /**
      * @brief Add a line at a specific time (by copying).
@@ -81,6 +77,8 @@ public:
      */
     void addAtTime(TimeFrameIndex time, Line2D const & line, NotifyObservers notify);
 
+    void addAtTime(TimeIndexAndFrame const & time_index_and_frame, Line2D const & line, NotifyObservers notify);
+
     /**
      * @brief Add a line at a specific time (by moving).
      *
@@ -90,7 +88,10 @@ public:
      * 
      * @param notify Whether to notify observers after the operation
      */
+
     void addAtTime(TimeFrameIndex time, Line2D && line, NotifyObservers notify);
+    
+    void addAtTime(TimeIndexAndFrame const & time_index_and_frame, Line2D && line, NotifyObservers notify);
 
     /**
      * @brief Construct a data entry in-place at a specific time.
@@ -395,6 +396,15 @@ private:
     EntityRegistry * _identity_registry{nullptr};
 
     inline static std::vector<DataEntry<Line2D>> const _empty_entries{};
+
+
+    /**
+     * @brief Clear all lines at a specific time
+     * 
+     * @param time The time to clear the lines at
+     * @param notify Whether to notify observers after the operation
+     */
+    [[nodiscard]] bool _clearAtTime(TimeFrameIndex time, NotifyObservers notify);
 };
 
 

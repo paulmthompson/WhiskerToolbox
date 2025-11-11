@@ -67,7 +67,7 @@ LineData & LineData::operator=(LineData && other) noexcept {
     return LineModifier(line, [this, notify]() { if (notify == NotifyObservers::Yes) { this->notifyObservers(); } });
 }
 
-bool LineData::clearAtTime(TimeFrameIndex const time, NotifyObservers notify) {
+bool LineData::_clearAtTime(TimeFrameIndex const time, NotifyObservers notify) {
     auto it = _data.find(time);
     if (it != _data.end()) {
         _data.erase(it);
@@ -77,6 +77,14 @@ bool LineData::clearAtTime(TimeFrameIndex const time, NotifyObservers notify) {
         return true;
     }
     return false;
+}
+
+bool LineData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, NotifyObservers notify) {
+
+    TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
+                                                             time_index_and_frame.time_frame,
+                                                             _time_frame.get());
+    return _clearAtTime(converted_time, notify);
 }
 
 bool LineData::clearByEntityId(EntityId entity_id, NotifyObservers notify) {
@@ -125,6 +133,13 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, NotifyO
     }
 }
 
+void LineData::addAtTime(TimeIndexAndFrame const & time_index_and_frame, Line2D const & line, NotifyObservers notify) {
+    TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
+                                                             time_index_and_frame.time_frame,
+                                                             _time_frame.get());
+    addAtTime(converted_time, line, notify);
+}
+
 void LineData::addAtTime(TimeFrameIndex const time, Line2D && line, NotifyObservers notify) {
     int const local_index = static_cast<int>(_data[time].size());
     auto entity_id = EntityId(0);
@@ -137,6 +152,13 @@ void LineData::addAtTime(TimeFrameIndex const time, Line2D && line, NotifyObserv
     if (notify == NotifyObservers::Yes) {
         notifyObservers();
     }
+}
+
+void LineData::addAtTime(TimeIndexAndFrame const & time_index_and_frame, Line2D && line, NotifyObservers notify) {
+    TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
+                                                             time_index_and_frame.time_frame,
+                                                             _time_frame.get());
+    addAtTime(converted_time, std::move(line), notify);
 }
 
 void LineData::addEntryAtTime(TimeFrameIndex const time, Line2D const & line, EntityId entity_id, NotifyObservers notify) {

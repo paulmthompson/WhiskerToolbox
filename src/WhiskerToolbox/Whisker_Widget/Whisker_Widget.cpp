@@ -469,6 +469,8 @@ void order_whiskers_by_position(
         TimeFrameIndex current_time,
         float similarity_threshold) {
 
+    auto current_index_and_frame = TimeIndexAndFrame(current_time, dm->getTime(TimeKey("time")).get());
+
     auto const whiskers_view = dm->getData<LineData>("unlabeled_whiskers")->getAtTime(current_time);
     std::vector<Line2D> whiskers(whiskers_view.begin(), whiskers_view.end());
 
@@ -512,12 +514,12 @@ void order_whiskers_by_position(
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] != -1) {
             std::string const whisker_name = whisker_group_name + "_" + std::to_string(assigned_ids[i]);
-            dm->getData<LineData>(whisker_name)->clearAtTime(current_time, NotifyObservers::No);
+            dm->getData<LineData>(whisker_name)->clearAtTime(current_index_and_frame, NotifyObservers::No);
             dm->getData<LineData>(whisker_name)->addAtTime(current_time, whiskers[i], NotifyObservers::Yes);
         }
     }
 
-    dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_time, NotifyObservers::No);
+    dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_index_and_frame, NotifyObservers::No);
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] == -1) {
             dm->getData<LineData>("unlabeled_whiskers")->addAtTime(current_time, whiskers[i], NotifyObservers::Yes);
@@ -543,7 +545,9 @@ void add_whiskers_to_data_manager(
         TimeFrameIndex current_time,
         float similarity_threshold) {
 
-    dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_time, NotifyObservers::No);
+    auto current_index_and_frame = TimeIndexAndFrame(current_time, dm->getTime(TimeKey("time")).get());
+
+    dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_index_and_frame, NotifyObservers::No);
 
     for (auto & w: whiskers) {
         dm->getData<LineData>("unlabeled_whiskers")->addAtTime(current_time, w, NotifyObservers::No);
