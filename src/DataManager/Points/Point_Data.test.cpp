@@ -467,10 +467,12 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         source_data->addAtTime(TimeFrameIndex(20), p3);
         source_data->addAtTime(TimeFrameIndex(30), p4);
 
-        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        REQUIRE(entity_ids_10.size() == 2);
-
-        std::unordered_set<EntityId> const ids_set_10(entity_ids_10.begin(), entity_ids_10.end());
+        auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_10_view.size() == 2);
+        
+        // Materialize the view into a concrete vector BEFORE the move operation
+        std::vector<EntityId> entity_ids_10_vec(entity_ids_10_view.begin(), entity_ids_10_view.end());
+        std::unordered_set<EntityId> const ids_set_10(entity_ids_10_vec.begin(), entity_ids_10_vec.end());
         std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_10);
 
         REQUIRE(points_moved == 2);
@@ -482,10 +484,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 0);
         REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
 
+        // Verify target has the original entity IDs (preserved during move)
         auto target_entity_ids = get_all_entity_ids(*target_data);
         REQUIRE(target_entity_ids.size() == 2);
-        std::vector<EntityId> entity_ids_10_vec(entity_ids_10.begin(), entity_ids_10.end());
-        REQUIRE(target_entity_ids != entity_ids_10_vec);
+        REQUIRE(target_entity_ids == entity_ids_10_vec);
     }
 
     SECTION("Move points by EntityID - mixed times") {
@@ -500,10 +502,14 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         source_data->addAtTime(TimeFrameIndex(20), p3);
         source_data->addAtTime(TimeFrameIndex(30), p4);
 
-        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        auto entity_ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto entity_ids_20_view = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        
+        // Materialize the views into concrete vectors
+        std::vector<EntityId> entity_ids_10_vec(entity_ids_10_view.begin(), entity_ids_10_view.end());
+        std::vector<EntityId> entity_ids_20_vec(entity_ids_20_view.begin(), entity_ids_20_view.end());
 
-        std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
+        std::vector<EntityId> mixed_entity_ids = {entity_ids_10_vec[0], entity_ids_20_vec[0]};
         std::unordered_set<EntityId> const ids_set_mixed(mixed_entity_ids.begin(), mixed_entity_ids.end());
         std::size_t points_moved = source_data->moveByEntityIds(*target_data, ids_set_mixed);
 
@@ -579,18 +585,22 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         source_data->addAtTime(TimeFrameIndex(20), p3);
         source_data->addAtTime(TimeFrameIndex(30), p4);
 
-        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        auto original_points = source_data->getAtTime(TimeFrameIndex(10));
-        REQUIRE(original_points.size() == 2);
+        auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto original_points_view = source_data->getAtTime(TimeFrameIndex(10));
+        REQUIRE(original_points_view.size() == 2);
+        
+        // Materialize views into concrete containers BEFORE the move operation
+        std::vector<EntityId> entity_ids_10_vec(entity_ids_10_view.begin(), entity_ids_10_view.end());
+        std::vector<Point2D<float>> original_points_vec(original_points_view.begin(), original_points_view.end());
 
-        std::unordered_set<EntityId> const ids_set_10b(entity_ids_10.begin(), entity_ids_10.end());
+        std::unordered_set<EntityId> const ids_set_10b(entity_ids_10_vec.begin(), entity_ids_10_vec.end());
         source_data->moveByEntityIds(*target_data, ids_set_10b);
 
         auto target_points = target_data->getAtTime(TimeFrameIndex(10));
         REQUIRE(target_points.size() == 2);
 
         // Verify each original point is present in target (order may differ)
-        for (auto const & sp: original_points) {
+        for (auto const & sp: original_points_vec) {
             bool found = false;
             for (auto const & tp: target_points) {
                 if (sp.x == tp.x && sp.y == tp.y) {

@@ -9,6 +9,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "utils/RaggedTimeSeries.hpp"
 
 #include <cstddef>
 #include <functional>
@@ -31,7 +32,7 @@ using LineEntry = DataEntry<Line2D>;
  * Line data implies that the elements in the line have an order
  * Compare to MaskData where the elements in the mask have no order
  */
-class LineData : public ObserverData {
+class LineData : public RaggedTimeSeries<Line2D> {
 public:
     // ========== Constructors ==========
     /**
@@ -367,34 +368,7 @@ public:
      */
     std::size_t moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
-    // ========== Time Frame ==========
-    /**
-     * @brief Set the time frame
-     * 
-     * @param time_frame The time frame to set
-     */
-    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
-
-    /**
-     * @brief Set identity context for automatic EntityId maintenance.
-     */
-    void setIdentityContext(std::string const & data_key, EntityRegistry * registry);
-
-    /**
-     * @brief Rebuild EntityIds for all lines using the current identity context.
-     */
-    void rebuildAllEntityIds();
-
-protected:
 private:
-    std::map<TimeFrameIndex, std::vector<LineEntry>> _data;
-    ImageSize _image_size;
-    std::shared_ptr<TimeFrame> _time_frame{nullptr};
-
-    // Identity management
-    std::string _identity_data_key;
-    EntityRegistry * _identity_registry{nullptr};
-
     inline static std::vector<DataEntry<Line2D>> const _empty_entries{};
 
 

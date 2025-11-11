@@ -48,9 +48,8 @@ TEST_CASE("EntityTypes - EntityDescriptor with different kinds", "[entitytypes][
     }
 }
 
-TEST_CASE("EntityTypes - EntityId is uint64_t", "[entitytypes][entityid]") {
+TEST_CASE("EntityTypes - EntityId is EntityId Strong type", "[entitytypes][entityid]") {
     EntityId id = EntityId(0);
-    REQUIRE(std::is_same_v<EntityId, std::uint64_t>);
     
     id = EntityId(12345);
     REQUIRE(id == EntityId(12345));

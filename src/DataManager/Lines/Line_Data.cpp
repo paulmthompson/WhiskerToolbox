@@ -20,26 +20,13 @@ LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data) {
     }
 }
 
+// Move constructor
 LineData::LineData(LineData && other) noexcept
-    : ObserverData(std::move(other)),
-      _data(std::move(other._data)),
-      _image_size(other._image_size),
-      _time_frame(std::move(other._time_frame)),
-      _identity_data_key(std::move(other._identity_data_key)),
-      _identity_registry(other._identity_registry) {
-    other._identity_registry = nullptr;
-}
+    : RaggedTimeSeries<Line2D>(std::move(other)) {};
 
+// Move assignment operator
 LineData & LineData::operator=(LineData && other) noexcept {
-    if (this != &other) {
-        ObserverData::operator=(std::move(other));
-        _data = std::move(other._data);
-        _image_size = other._image_size;
-        _time_frame = std::move(other._time_frame);
-        _identity_data_key = std::move(other._identity_data_key);
-        _identity_registry = other._identity_registry;
-        other._identity_registry = nullptr;
-    }
+    RaggedTimeSeries<Line2D>::operator=(std::move(other));
     return *this;
 }
 
@@ -302,28 +289,6 @@ void LineData::changeImageSize(ImageSize const & image_size) {
         }
     }
     _image_size = image_size;
-}
-
-void LineData::setIdentityContext(std::string const & data_key, EntityRegistry * registry) {
-    _identity_data_key = data_key;
-    _identity_registry = registry;
-}
-
-void LineData::rebuildAllEntityIds() {
-    if (!_identity_registry) {
-        for (auto & [t, entries]: _data) {
-            for (auto & entry: entries) {
-                entry.entity_id = EntityId(0);
-            }
-        }
-        return;
-    }
-
-    for (auto & [t, entries]: _data) {
-        for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
-            entries[static_cast<size_t>(i)].entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::LineEntity, t, i);
-        }
-    }
 }
 
 // ========== Copy and Move ==========

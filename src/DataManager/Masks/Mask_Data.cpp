@@ -247,28 +247,6 @@ std::size_t MaskData::moveByEntityIds(MaskData & target, std::unordered_set<Enti
     return result;
 }
 
-void MaskData::setIdentityContext(std::string const & data_key, EntityRegistry * registry) {
-    _identity_data_key = data_key;
-    _identity_registry = registry;
-}
-
-void MaskData::rebuildAllEntityIds() {
-    if (!_identity_registry) {
-        for (auto & [t, entries]: _data) {
-            (void) t;
-            for (auto & entry: entries) {
-                entry.entity_id = EntityId(0);
-            }
-        }
-        return;
-    }
-    for (auto & [t, entries]: _data) {
-        for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
-            entries[static_cast<size_t>(i)].entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, t, i);
-        }
-    }
-}
-
 std::vector<EntityId> const & MaskData::getEntityIdsAtTime(TimeFrameIndex time) const {
     auto it = _data.find(time);
     if (it == _data.end()) {

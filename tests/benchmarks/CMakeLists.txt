@@ -17,6 +17,7 @@ target_link_libraries(benchmark_line_data
     PRIVATE
     Catch2::Catch2WithMain
     DataManager
+    LineData
 )
 
 target_include_directories(benchmark_line_data

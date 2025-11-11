@@ -9,6 +9,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "utils/RaggedTimeSeries.hpp"
 
 #include <cstddef>
 #include <map>
@@ -28,7 +29,7 @@ using MaskEntry = DataEntry<Mask2D>;
  * Compare to LineData where the collection of 2D points has an order
  *
  */
-class MaskData : public ObserverData {
+class MaskData : public RaggedTimeSeries<Mask2D> {
 public:
     // ========== Constructors ==========
     MaskData() = default;
@@ -323,24 +324,7 @@ public:
      */
     std::size_t moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
 
-
-    // ========== Time Frame ==========
-    /**
-     * @brief Set the time frame
-     * 
-     * @param time_frame The time frame to set
-     */
-    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
-
-    /**
-     * @brief Set identity context for automatic EntityId maintenance.
-     */
-    void setIdentityContext(std::string const & data_key, EntityRegistry * registry);
-
-    /**
-     * @brief Rebuild EntityIds for all masks using the current identity context.
-     */
-    void rebuildAllEntityIds();
+    // ========== Entity Lookup Methods ==========
 
     /**
      * @brief Get EntityIds aligned with masks at a specific time.
@@ -351,8 +335,6 @@ public:
      * @brief Get flattened EntityIds for all masks across all times.
      */
     [[nodiscard]] std::vector<EntityId> getAllEntityIds() const;
-
-    // ========== Entity Lookup Methods ==========
 
     /**
      * @brief Find the mask data associated with a specific EntityId.
@@ -398,19 +380,11 @@ public:
      */
     [[nodiscard]] std::vector<std::tuple<EntityId, TimeFrameIndex, int>> getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
-protected:
 private:
-    std::map<TimeFrameIndex, std::vector<MaskEntry>> _data;
     std::vector<Mask2D> _empty{};
     std::vector<EntityId> _empty_entity_ids{};
     mutable std::vector<Mask2D> _temp_masks{};
     mutable std::vector<EntityId> _temp_entity_ids{};
-    ImageSize _image_size;
-    std::shared_ptr<TimeFrame> _time_frame{nullptr};
-
-    // Identity management
-    std::string _identity_data_key;
-    EntityRegistry * _identity_registry{nullptr};
 
 
     /**

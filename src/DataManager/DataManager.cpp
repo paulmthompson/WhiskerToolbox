@@ -146,7 +146,12 @@ DataManager::DataManager() {
     }
 }
 
-DataManager::~DataManager() = default;
+DataManager::~DataManager() {
+    // Clear the EntityRegistry to prevent memory leaks
+    if (_entity_registry) {
+        _entity_registry->clear();
+    }
+}
 
 void DataManager::reset() {
     std::cout << "DataManager: Resetting to initial state..." << std::endl;

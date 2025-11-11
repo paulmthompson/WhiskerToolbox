@@ -8,6 +8,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "utils/RaggedTimeSeries.hpp"
 
 #include <map>
 #include <optional>
@@ -27,7 +28,7 @@ using PointEntry = DataEntry<Point2D<float>>;
  *
  * For example, keypoints for multiple body points could be a PointData object
  */
-class PointData : public ObserverData {
+class PointData : public RaggedTimeSeries<Point2D<float>> {
 public:
     // ========== Constructors ==========
     /**
@@ -385,40 +386,9 @@ public:
      */
     std::size_t moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, bool notify = true);
 
-    // ========== Time Frame ==========
-
-    /**
-     * @brief Set the time frame
-     * 
-     * @param time_frame The time frame to set
-     */
-    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
-
-    /**
-     * @brief Set identity context for automatic EntityId maintenance.
-     * @pre registry != nullptr
-     */
-    void setIdentityContext(std::string const & data_key, EntityRegistry * registry);
-
-    /**
-     * @brief Rebuild EntityIds for all points using the current identity context.
-     * @pre Identity context has been set via setIdentityContext
-     */
-    void rebuildAllEntityIds();
-
-protected:
 private:
-    std::map<TimeFrameIndex, std::vector<PointEntry>> _data;
-    std::vector<Point2D<float>> _empty{};
-    std::vector<EntityId> _empty_entity_ids{};
     mutable std::vector<Point2D<float>> _temp_points{};
     mutable std::vector<EntityId> _temp_entity_ids{};
-    ImageSize _image_size;
-    std::shared_ptr<TimeFrame> _time_frame{nullptr};
-
-    // Identity management
-    std::string _identity_data_key;
-    EntityRegistry * _identity_registry{nullptr};
 
     inline static std::vector<DataEntry<Point2D<float>>> const _empty_entries{};
 };

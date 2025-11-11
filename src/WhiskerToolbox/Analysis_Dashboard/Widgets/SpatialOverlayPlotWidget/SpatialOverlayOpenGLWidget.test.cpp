@@ -2,6 +2,7 @@
 
 #include <QSignalSpy>
 #include <QTest>
+#include <QMetaType>
 
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp"
 #include "Selection/SelectionModes.hpp"
@@ -9,9 +10,13 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Entity/EntityGroupManager.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+
+// Register EntityId with Qt's meta-type system so it can be used in signals/QVariant
+Q_DECLARE_METATYPE(EntityId)
 
 #include <QComboBox>
 #include <QDoubleSpinBox>
@@ -117,15 +122,18 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     widget.setFocus(Qt::OtherFocusReason);
     processEvents();
 
+    auto data_manager = std::make_shared<DataManager>();
+
+    auto time_vals = std::vector<int>{0, 5, 10, 15, 20};;
+    auto time_frame = std::make_shared<TimeFrame>(time_vals);
+    data_manager->setTime(TimeKey("test_time"), time_frame);
+
     // Points in a known frame with non-zero Y span
     auto point_data = std::make_shared<PointData>();
     std::vector<Point2D<float>> frame_points = {Point2D<float>{150.0f, 150.0f}, Point2D<float>{180.0f, 200.0f}};
     point_data->addAtTime(TimeFrameIndex(5), frame_points);
 
-    auto data_manager = std::make_shared<DataManager>();
-    data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
-    point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
-    point_data->rebuildAllEntityIds();
+    data_manager->setData<PointData>("test_points", point_data, TimeKey("test_time"));
 
     std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
 
@@ -147,10 +155,12 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     QVariantList args = jump_spy.takeFirst(); // EntityId, data_key
     REQUIRE(args.size() == 2);
 
-    std::cout << "EntityId: " << args.at(0).toLongLong() << std::endl;
+    // Extract EntityId from QVariant - Qt stores the EntityId struct, so we need to extract it properly
+    EntityId entity_id = args.at(0).value<EntityId>();
+    std::cout << "EntityId: " << entity_id.id << std::endl;
 
     //Get EntityId from data_manager
-    auto time_index = point_data->getTimeByEntityId(EntityId(args.at(0).toLongLong()));
+    auto time_index = point_data->getTimeByEntityId(entity_id);
     REQUIRE(time_index.has_value());
     auto frame_index = time_index.value().getValue();
 
