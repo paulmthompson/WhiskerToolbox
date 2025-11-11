@@ -1168,8 +1168,10 @@ void Media_Window::_plotMaskData() {
             maskData2.clear();// No time -1 data for preview
         } else {
             // Use original data
-            maskData = mask->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
-            maskData2 = mask->getAtTime(TimeFrameIndex(-1));
+            auto mask_data_view = mask->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
+            maskData = std::vector<Mask2D>(mask_data_view.begin(), mask_data_view.end());
+            auto mask_data_view2 = mask->getAtTime(TimeFrameIndex(-1));
+            maskData2 = std::vector<Mask2D>(mask_data_view2.begin(), mask_data_view2.end());
         }
 
         _plotSingleMaskData(maskData, image_size, plot_color, _mask_config.get());

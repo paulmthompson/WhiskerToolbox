@@ -318,6 +318,129 @@ public:
         return results;
     }
 
+    // ========== Data Access Methods ==========
+
+    /**
+     * @brief Get all times with data
+     * 
+     * Returns a view over the keys of the data map for zero-copy iteration.
+     * 
+     * @return A view of TimeFrameIndex keys
+     */
+    [[nodiscard]] auto getTimesWithData() const {
+        return _data | std::views::keys;
+    }
+
+    /**
+     * @brief Get all data entries with their associated times as a zero-copy range
+     *
+     * This method provides zero-copy access to the underlying DataEntry<TData> data structure,
+     * which contains both the data (Line2D, Mask2D, Point2D<float>) and EntityId information.
+     *
+     * @return A view of time-entries pairs for all times, where entries are spans
+     */
+    [[nodiscard]] auto getAllEntries() const {
+        return _data | std::views::transform([](auto const & pair) {
+                   // pair.second is a std::vector<DataEntry<TData>>&
+                   // We create a non-owning span pointing to its data
+                   return std::make_pair(
+                           pair.first,
+                           std::span<DataEntry<TData> const>{pair.second});
+               });
+    }
+
+    // ========== Time-based Getters ==========
+
+    /**
+     * @brief Get a zero-copy view of all data entries at a specific time.
+     * @param time The time to get entries for.
+     * @return A std::span over the entries. If time is not found,
+     * returns an empty span.
+     */
+    [[nodiscard]] std::span<DataEntry<TData> const> getEntriesAtTime(TimeFrameIndex time) const {
+        auto it = _data.find(time);
+        if (it == _data.end()) {
+            return _empty_entries;
+        }
+        return it->second;
+    }
+
+    [[nodiscard]] auto getAtTime(TimeFrameIndex time) const {
+        return getEntriesAtTime(time) | std::views::transform(&DataEntry<TData>::data);
+    }
+
+    [[nodiscard]] auto getAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
+        TimeFrameIndex const converted_time = convert_time_index(time,
+                                                                 &source_timeframe,
+                                                                 _time_frame.get());
+        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<TData>::data);
+    }
+
+    [[nodiscard]] auto getAtTime(TimeIndexAndFrame const & time_index_and_frame) const {
+        TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
+                                                                 time_index_and_frame.time_frame,
+                                                                 _time_frame.get());
+        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<TData>::data);
+    }
+
+    [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time) const {
+        return getEntriesAtTime(time) | std::views::transform(&DataEntry<TData>::entity_id);
+    }
+
+    [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
+        TimeFrameIndex const converted_time = convert_time_index(time,
+                                                                 &source_timeframe,
+                                                                 _time_frame.get());
+        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<TData>::entity_id);
+    }
+
+    /**
+     * @brief Get data entries with their associated times as a zero-copy range within a TimeFrameInterval
+     *
+     * Returns a filtered view of time-data entries pairs for times within the specified interval [start, end] (inclusive).
+     * This method provides zero-copy access to the underlying DataEntry<TData> data structure.
+     *
+     * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
+     * @return A zero-copy view of time-data entries pairs for times within the specified interval
+     */
+    [[nodiscard]] auto GetEntriesInRange(TimeFrameInterval const & interval) const {
+        return getAllEntries() | std::views::filter([interval](auto const & pair) {
+                   return pair.first >= interval.start && pair.first <= interval.end;
+               });
+    }
+
+    /**
+     * @brief Get data entries with their associated times as a zero-copy range within a TimeFrameInterval with timeframe conversion
+     *
+     * Converts the time range from the source timeframe to the target timeframe (this data's timeframe)
+     * and returns a filtered view of time-data entries pairs for times within the converted interval range.
+     * If the timeframes are the same, no conversion is performed.
+     * This method provides zero-copy access to the underlying DataEntry<TData> data structure.
+     *
+     * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
+     * @param source_timeframe The timeframe that the interval is expressed in
+     * @return A zero-copy view of time-data entries pairs for times within the converted interval range
+     */
+    [[nodiscard]] auto GetEntriesInRange(TimeFrameInterval const & interval,
+                                         TimeFrame const & source_timeframe) const {
+        // If the timeframes are the same object, no conversion is needed
+        if (&source_timeframe == _time_frame.get()) {
+            return GetEntriesInRange(interval);
+        }
+
+        // If either timeframe is null, fall back to original behavior
+        if (!_time_frame) {
+            return GetEntriesInRange(interval);
+        }
+
+        auto [target_start_index, target_end_index] = convertTimeFrameRange(interval.start,
+                                                                            interval.end,
+                                                                            source_timeframe,
+                                                                            *_time_frame);
+
+        return GetEntriesInRange(TimeFrameInterval(target_start_index, target_end_index));
+    }
+
 
 protected:
     /**

@@ -25,8 +25,8 @@ std::shared_ptr<TimeFrame> PointDataAdapter::getTimeFrame() const {
 
 size_t PointDataAdapter::size() const {
     size_t totalPoints = 0;
-    for (auto const & [time, points] : m_pointData->GetAllPointsAsRange()) {
-        totalPoints += points.size();
+    for (auto const & [time, entries] : m_pointData->getAllEntries()) {
+        totalPoints += entries.size();
     }
     return totalPoints;
 }
@@ -35,9 +35,9 @@ std::vector<Point2D<float>> PointDataAdapter::getPoints() {
     std::vector<Point2D<float>> allPoints;
     allPoints.reserve(size());
     
-    for (auto const & [time, points] : m_pointData->GetAllPointsAsRange()) {
-        for (auto const & point : points) {
-            allPoints.emplace_back(point.x, point.y);
+    for (auto const & [time, entries] : m_pointData->getAllEntries()) {
+        for (auto const & entry : entries) {
+            allPoints.emplace_back(entry.data.x, entry.data.y);
         }
     }
     
@@ -47,36 +47,30 @@ std::vector<Point2D<float>> PointDataAdapter::getPoints() {
 std::vector<Point2D<float>> PointDataAdapter::getPointsInRange(TimeFrameIndex start,
                                                          TimeFrameIndex end,
                                                          TimeFrame const * target_timeFrame) {
-    std::vector<Point2D<float>> rangePoints;
-
-    // Get the source TimeFrame
-    auto const * sourceTimeFrame = m_timeFrame.get();
-    
-    // Convert target range to source range if needed
-    TimeFrameIndex sourceStart = start;
-    TimeFrameIndex sourceEnd = end;
-    
-    if (target_timeFrame && sourceTimeFrame && target_timeFrame != sourceTimeFrame) {
-        // Convert time range from target to source timeframe
-        // This is a simplified conversion - in practice you might need more sophisticated mapping
-        sourceStart = start;
-        sourceEnd = end;
+    if (start == end) {
+        auto const & points_ref = m_pointData->getAtTime(start, *target_timeFrame);
+        return {points_ref.begin(), points_ref.end()};
     }
+
+    // Use the LineData's built-in method to get lines in the time range.
+    // This method handles the time frame conversion internally via a lazy view.
+    auto points_view = m_pointData->GetEntriesInRange(TimeFrameInterval(start, end),
+                                                  *target_timeFrame);
     
-    for (auto const & [time, points] : m_pointData->GetAllPointsAsRange()) {
-        if (time >= sourceStart && time <= sourceEnd) {
-            for (auto const & point : points) {
-                rangePoints.emplace_back(point.x, point.y);
-            }
+    // Materialize the view into a vector
+    std::vector<Point2D<float>> result;
+    for (auto const & [time, entries]: points_view) {
+        for (auto const & entry: entries) {
+            result.push_back(entry.data);
         }
     }
-    
-    return rangePoints;
+
+    return result;
 }
 
 bool PointDataAdapter::hasMultiSamples() const {
-    for (auto const & [time, points] : m_pointData->GetAllPointsAsRange()) {
-        if (points.size() > 1) {
+    for (auto const & [time, entries] : m_pointData->getAllEntries()) {
+        if (entries.size() > 1) {
             return true;
         }
     }
@@ -84,28 +78,16 @@ bool PointDataAdapter::hasMultiSamples() const {
 }
 
 size_t PointDataAdapter::getEntityCountAt(TimeFrameIndex t) const {
-    for (auto const & [time, points] : m_pointData->GetAllPointsAsRange()) {
-        if (time == t) {
-            return points.size();
-        }
-    }
-    return 0;
+    auto const & points_ref = m_pointData->getAtTime(t, *m_timeFrame);
+    return points_ref.size();
 }
 
 Point2D<float> const* PointDataAdapter::getPointAt(TimeFrameIndex t, int entityIndex) const {
-    for (auto const & [time, points] : m_pointData->GetAllPointsAsRange()) {
-        if (time == t) {
-            if (entityIndex >= 0 && static_cast<size_t>(entityIndex) < points.size()) {
-                // Convert from internal point format to Point2D
-                static thread_local Point2D<float> convertedPoint;
-                convertedPoint.x = points[static_cast<size_t>(entityIndex)].x;
-                convertedPoint.y = points[static_cast<size_t>(entityIndex)].y;
-                return &convertedPoint;
-            }
-            break;
-        }
+    auto const & points_ref = m_pointData->getAtTime(t, *m_timeFrame);
+    if (entityIndex < 0 || static_cast<size_t>(entityIndex) >= points_ref.size()) {
+        return nullptr;
     }
-    return nullptr;
+    return &points_ref[static_cast<size_t>(entityIndex)];
 }
 
 EntityId PointDataAdapter::getEntityIdAt(TimeFrameIndex, int entityIndex) const {

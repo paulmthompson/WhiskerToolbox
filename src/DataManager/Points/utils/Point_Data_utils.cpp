@@ -16,12 +16,12 @@ BoundingBox calculateBoundsForPointData(PointData const * point_data) {
 
     bool has_points = false;
 
-    for (auto const & time_points_pair: point_data->GetAllPointsAsRange()) {
-        for (auto const & point: time_points_pair.points) {
-            min_x = std::min(min_x, point.x);
-            max_x = std::max(max_x, point.x);
-            min_y = std::min(min_y, point.y);
-            max_y = std::max(max_y, point.y);
+    for (auto const & [time, entries]: point_data->getAllEntries()) {
+        for (auto const & entry: entries) {
+            min_x = std::min(min_x, entry.data.x);
+            max_x = std::max(max_x, entry.data.x);
+            min_y = std::min(min_y, entry.data.y);
+            max_y = std::max(max_y, entry.data.y);
             has_points = true;
         }
     }

@@ -161,35 +161,6 @@ void MaskData::addAtTime(TimeFrameIndex const time,
 }
 
 
-// ========== Getters ==========
-
-std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const {
-    auto it = _data.find(time);
-    if (it == _data.end()) {
-        return _empty;
-    }
-    _temp_masks.clear();
-    _temp_masks.reserve(it->second.size());
-    for (auto const & entry: it->second) {
-        _temp_masks.push_back(entry.data);
-    }
-    return _temp_masks;
-}
-
-std::vector<Mask2D> const & MaskData::getAtTime(TimeIndexAndFrame const & time_index_and_frame) const {
-    auto converted = convert_time_index(time_index_and_frame.index,
-                                        time_index_and_frame.time_frame,
-                                        _time_frame.get());
-    return getAtTime(converted);
-}
-
-std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time,
-                                                TimeFrame const & source_timeframe) const {
-
-    TimeFrameIndex const converted = convert_time_index(time, &source_timeframe, _time_frame.get());
-    return getAtTime(converted);
-}
-
 // ========== Image Size ==========
 
 void MaskData::changeImageSize(ImageSize const & image_size) {
@@ -216,17 +187,4 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
         }
     }
     _image_size = image_size;
-}
-
-std::vector<EntityId> const & MaskData::getEntityIdsAtTime(TimeFrameIndex time) const {
-    auto it = _data.find(time);
-    if (it == _data.end()) {
-        return _empty_entity_ids;
-    }
-    _temp_entity_ids.clear();
-    _temp_entity_ids.reserve(it->second.size());
-    for (auto const & entry: it->second) {
-        _temp_entity_ids.push_back(entry.entity_id);
-    }
-    return _temp_entity_ids;
 }

@@ -132,10 +132,10 @@ void save(PointData const * point_data, CSVPointSaverOptions const & opts)
         fout << opts.header << opts.line_delim;
     }
 
-    for (auto const& timePointsPair : point_data->GetAllPointsAsRange()) {
-        fout << timePointsPair.time.getValue();
-        for (size_t i = 0; i < timePointsPair.points.size(); ++i) {
-            fout << opts.delimiter << timePointsPair.points[i].x << opts.delimiter << timePointsPair.points[i].y;
+    for (auto const& [time, entries] : point_data->getAllEntries()) {
+        fout << time.getValue();
+        for (size_t i = 0; i < entries.size(); ++i) {
+            fout << opts.delimiter << entries[i].data.x << opts.delimiter << entries[i].data.y;
         }
         fout << opts.line_delim;
     }

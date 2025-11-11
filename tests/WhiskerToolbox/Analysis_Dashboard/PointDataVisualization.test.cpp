@@ -21,7 +21,7 @@ TEST_CASE_METHOD(PointVisualizationTestFixture, "PointDataVisualization - Basic 
     // Test that the visualization can be created successfully
     SECTION("Constructor with data") {
         // Verify that the visualization was created with the correct data
-        REQUIRE(point_data->GetAllPointsAsRange().size() > 0);
+        REQUIRE(point_data->getAllEntries().size() > 0);
     }
     
     SECTION("Constructor with group manager") {
@@ -46,8 +46,8 @@ TEST_CASE_METHOD(PointVisualizationTestFixture, "PointDataVisualization - Data P
         
         // Should have 3 floats per point (x, y, group_id)
         size_t expected_points = 0;
-        for (auto const& time_points_pair : point_data->GetAllPointsAsRange()) {
-            expected_points += time_points_pair.points.size();
+        for (auto const& [time, entries] : point_data->getAllEntries()) {
+            expected_points += entries.size();
         }
         
         REQUIRE(visualization.m_vertex_data.size() == expected_points * 3);

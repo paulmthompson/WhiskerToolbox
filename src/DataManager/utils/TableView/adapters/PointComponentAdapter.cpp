@@ -30,8 +30,8 @@ size_t PointComponentAdapter::size() const {
     if (!m_isMaterialized) {
         // Calculate size without materializing
         size_t totalPoints = 0;
-        for (auto const & [time, points]: m_pointData->GetAllPointsAsRange()) {
-            totalPoints += points.size();
+        for (auto const & [time, entries]: m_pointData->getAllEntries()) {
+            totalPoints += entries.size();
         }
         return totalPoints;
     }
@@ -46,39 +46,39 @@ std::vector<float> PointComponentAdapter::getDataInRange(TimeFrameIndex start,
         auto points = m_pointData->getAtTime(start, *target_timeFrame);
         std::vector<float> componentValues;
         componentValues.reserve(points.size());
-        
+
         for (auto const & point: points) {
             float componentValue = (m_component == Component::X) ? point.x : point.y;
             componentValues.push_back(componentValue);
         }
         return componentValues;
     }
-    
+
     // For ranges with different start and end, use the range view
-    auto point_range = m_pointData->GetPointsInRange(TimeFrameInterval(start, end),
-                                                     *target_timeFrame);
-    
+    auto points_view = m_pointData->GetEntriesInRange(TimeFrameInterval(start, end),
+                                                  *target_timeFrame);
+
     auto componentValues = std::vector<float>();
 
-    for (auto const & time_point_pair: point_range) {
+    for (auto const & [time, entries]: points_view) {
         // Check if there are points at this time
-        if (time_point_pair.points.empty()) {
+        if (entries.empty()) {
             continue;
         }
-        
+
         // Add all points at this time frame
-        for (auto const & point: time_point_pair.points) {
-            float componentValue = (m_component == Component::X) ? point.x : point.y;
+        for (auto const & entry: entries) {
+            float componentValue = (m_component == Component::X) ? entry.data.x : entry.data.y;
             componentValues.push_back(componentValue);
         }
     }
-    
+
     return componentValues;
 }
 
 bool PointComponentAdapter::hasMultiSamples() const {
-    for (auto const & [time, points] : m_pointData->GetAllPointsAsRange()) {
-        if (points.size() > 1) {
+    for (auto const & [time, entries] : m_pointData->getAllEntries()) {
+        if (entries.size() > 1) {
             return true;
         }
     }
@@ -97,8 +97,13 @@ void PointComponentAdapter::materializeData() {
     // Collect all points in time order and extract the specified component
     std::vector<std::pair<TimeFrameIndex, std::vector<Point2D<float>> const *>> timePointPairs;
 
-    for (auto const & [time, points]: m_pointData->GetAllPointsAsRange()) {
-        timePointPairs.emplace_back(time, &points);
+    for (auto const & [time, entries]: m_pointData->getAllEntries()) {
+        auto points_vec = std::vector<Point2D<float>>();
+        points_vec.reserve(entries.size());
+        for (auto const & entry: entries) {
+            points_vec.push_back(entry.data);
+        }
+        timePointPairs.emplace_back(time, &points_vec);
     }
 
     // Sort by time to ensure consistent ordering

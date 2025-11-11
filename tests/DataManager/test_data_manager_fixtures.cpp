@@ -12,7 +12,7 @@ TEST_CASE_METHOD(DataManagerTestFixture, "DataManagerTestFixture - Basic Data Po
     SECTION("PointData population") {
         auto point_data = dm.getData<PointData>("test_points");
         REQUIRE(point_data != nullptr);
-        REQUIRE(point_data->GetAllPointsAsRange().size() > 0);
+        REQUIRE(point_data->getAllEntries().size() > 0);
     }
     
     SECTION("LineData population") {
@@ -67,7 +67,7 @@ TEST_CASE_METHOD(DataManagerRandomTestFixture, "DataManagerRandomTestFixture - R
     SECTION("Random PointData") {
         auto random_points = dm.getData<PointData>("random_points");
         REQUIRE(random_points != nullptr);
-        REQUIRE(random_points->GetAllPointsAsRange().size() > 0);
+        REQUIRE(random_points->getAllEntries().size() > 0);
     }
     
     SECTION("Random LineData") {

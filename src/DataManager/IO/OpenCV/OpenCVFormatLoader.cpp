@@ -111,7 +111,8 @@ LoadResult OpenCVFormatLoader::loadMaskDataImage(std::string const& filepath,
         // First extract the data from the loaded MaskData
         std::map<TimeFrameIndex, std::vector<Mask2D>> mask_map;
         for (auto const& time : loaded_mask_data->getTimesWithData()) {
-            mask_map[time] = loaded_mask_data->getAtTime(time);
+            auto mask_view = loaded_mask_data->getAtTime(time);
+            mask_map[time] = std::vector<Mask2D>(mask_view.begin(), mask_view.end());
         }
         
         // Create new MaskData using factory

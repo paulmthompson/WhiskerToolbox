@@ -257,7 +257,8 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         source_data->addAtTime(TimeFrameIndex(10), x2, y2);
         source_data->addAtTime(TimeFrameIndex(20), points);
 
-        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        std::vector<EntityId> entity_ids_10(entity_ids_10_view.begin(), entity_ids_10_view.end());
         REQUIRE(entity_ids_10.size() == 2);
 
         std::unordered_set<EntityId> ids_set_10c(entity_ids_10.begin(), entity_ids_10.end());
@@ -316,7 +317,8 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
 
         source_data->addAtTime(TimeFrameIndex(10), x1, y1);
         source_data->addAtTime(TimeFrameIndex(10), x2, y2);
-        auto ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        std::vector<EntityId> ids_10(ids_10_view.begin(), ids_10_view.end());
         REQUIRE(ids_10.size() == 2);
 
         std::unordered_set<EntityId> const ids_set_10(ids_10.begin(), ids_10.end());

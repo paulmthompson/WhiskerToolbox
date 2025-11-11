@@ -40,8 +40,6 @@ public:
                                    NotifyObservers notify);
 
 
-
-
     void addAtTime(TimeFrameIndex time, Mask2D const & mask, bool notify = true);
 
     void addAtTime(TimeFrameIndex time, Mask2D && mask, bool notify = true);
@@ -122,57 +120,7 @@ public:
     [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify);
 
 
-    // ========== Getters ==========
-
-    /**
-     * @brief Get all times with data
-     * 
-     * Returns a view over the keys of the data map for zero-copy iteration.
-     * 
-     * @return A view of TimeFrameIndex keys
-     */
-    [[nodiscard]] auto getTimesWithData() const {
-        return _data | std::views::keys;
-    }
-
-    /**
-     * @brief Get the masks at a specific time
-     * 
-     * @param time The time to get the masks at
-     * @return A vector of Mask2D
-     */
-    [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time) const;
-
-    [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeIndexAndFrame const & time_index_and_frame) const;
-
-    /**
-     * @brief Get the masks at a specific time with timeframe conversion
-     * 
-     * @param time The time to get the masks at
-     * @param source_timeframe The timeframe that the time index is expressed in
-     * @param mask_timeframe The timeframe that this mask data uses
-     * @return A vector of Mask2D at the converted time
-     */
-    [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time,
-                                                        TimeFrame const & source_timeframe) const;
-
-    /**
-     * @brief Get all mask entries with their associated times as a zero-copy range
-     *
-     * This method provides zero-copy access to the underlying MaskEntry data structure,
-     * which contains both Mask2D and EntityId information.
-     *
-     * @return A view of time-mask entries pairs for all times
-     */
-    [[nodiscard]] auto getAllEntries() const {
-        return _data | std::views::transform([](auto const & pair) {
-                   // pair.second is a std::vector<MaskEntry>&
-                   // We create a non-owning span pointing to its data
-                   return std::make_pair(
-                           pair.first,
-                           std::span<MaskEntry const>{pair.second});
-               });
-    }
+    // ========== Getters (Time-based) ==========
 
     /**
      * @brief Get all masks with their associated times as a range
@@ -261,11 +209,6 @@ public:
 
     [[nodiscard]] size_t size() const { return _data.size(); };
 
-    /**
-     * @brief Get EntityIds aligned with masks at a specific time.
-     */
-    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
-
 
     // ========== Image Size ==========
     /**
@@ -279,23 +222,12 @@ public:
     void changeImageSize(ImageSize const & image_size);
 
     /**
-     * @brief Get the image size
-     * 
-     * @return The image size
-     */
-    [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
-
-    /**
      * @brief Set the image size
      */
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
 private:
-    std::vector<Mask2D> _empty{};
-    std::vector<EntityId> _empty_entity_ids{};
     mutable std::vector<Mask2D> _temp_masks{};
-    mutable std::vector<EntityId> _temp_entity_ids{};
-
 
     /**
     * @brief Removes all masks at the specified time

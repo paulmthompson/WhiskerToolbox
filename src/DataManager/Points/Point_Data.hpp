@@ -127,13 +127,6 @@ public:
     */
 
     /**
-     * @brief Get the image size
-     * 
-     * @return The image size
-     */
-    [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
-
-    /**
      * @brief Set the image size
      * 
      * @param image_size The image size
@@ -150,82 +143,7 @@ public:
      */
     void changeImageSize(ImageSize const & image_size);
 
-    // ========== Getters ==========
-
-    /**
-    * @brief Get all point entries with their associated times as a zero-copy range
-    *
-    * This method provides zero-copy access to the underlying PointEntry data structure,
-    * which contains both Point2D<float> and EntityId information.
-    *
-    * @return A view of time-point entries pairs for all times
-    */
-    [[nodiscard]] auto getAllEntries() const {
-        return _data | std::views::transform([](auto const & pair) {
-                   // pair.second is a std::vector<DataEntry<TData>>&
-                   // We create a non-owning span pointing to its data
-                   return std::make_pair(
-                           pair.first,
-                           std::span<PointEntry const>{pair.second}// <-- The key part
-                   );
-               });
-    }
-
-    /**
-     * @brief Get all times with data
-     * 
-     * Returns a view over the keys of the data map for zero-copy iteration.
-     * 
-     * @return A view of TimeFrameIndex keys
-     */
-    [[nodiscard]] auto getTimesWithData() const {
-        return _data | std::views::keys;
-    }
-
     // ========== Getters (Time-based) ==========
-
-    /**
-     * @brief Get a zero-copy view of all data entries at a specific time.
-     * @param time The time to get entries for.
-     * @return A std::span over the entries. If time is not found,
-     * returns an empty span.
-     */
-    [[nodiscard]] std::span<DataEntry<Point2D<float>> const> getEntriesAtTime(TimeFrameIndex time) const {
-        auto it = _data.find(time);
-        if (it == _data.end()) {
-            return _empty_entries;
-        }
-        return it->second;
-    }
-
-    /**
-    * @brief Get a zero-copy view of just the data (e.g., Line2D) at a time.
-    *
-    * @param time The time to get the data at
-    * @return A zero-copy view of the data at the time
-    */
-    [[nodiscard]] auto getAtTime(TimeFrameIndex time) const {
-        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Point2D<float>>::data);
-    }
-
-    [[nodiscard]] auto getAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
-        TimeFrameIndex const converted_time = convert_time_index(time,
-                                                                 &source_timeframe,
-                                                                 _time_frame.get());
-        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<Point2D<float>>::data);
-    }
-
-    [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time) const {
-        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Point2D<float>>::entity_id);
-    }
-
-    [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
-        TimeFrameIndex const converted_time = convert_time_index(time,
-                                                                 &source_timeframe,
-                                                                 _time_frame.get());
-        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<Point2D<float>>::entity_id);
-    }
-
 
     /**
      * @brief Get the maximum number of points at any time
@@ -234,96 +152,7 @@ public:
      */
     [[nodiscard]] std::size_t getMaxPoints() const;
 
-    /**
-    * @brief Get all points with their associated times as a range
-    *
-    * @return A view of time-points pairs for all times
-    */
-    [[nodiscard]] auto GetAllPointsAsRange() const {
-        struct TimePointsPair {
-            TimeFrameIndex time;
-            std::vector<Point2D<float>> points;// Copy for backward compatibility with entry storage
-        };
-
-        return _data | std::views::transform([](auto const & pair) {
-                   std::vector<Point2D<float>> points;
-                   points.reserve(pair.second.size());
-                   for (auto const & entry: pair.second) {
-                       points.push_back(entry.data);
-                   }
-                   return TimePointsPair{pair.first, std::move(points)};
-               });
-    }
-
-
-    /**
-    * @brief Get points with their associated times as a range within a TimeFrameInterval
-    *
-    * Returns a filtered view of time-points pairs for times within the specified interval [start, end] (inclusive).
-    *
-    * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
-    * @return A view of time-points pairs for times within the specified interval
-    */
-    [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval) const {
-        struct TimePointsPair {
-            TimeFrameIndex time;
-            std::vector<Point2D<float>> points;// Copy for backward compatibility
-        };
-
-        return _data | std::views::filter([interval](auto const & pair) {
-                   return pair.first >= interval.start && pair.first <= interval.end;
-               }) |
-               std::views::transform([](auto const & pair) {
-                   std::vector<Point2D<float>> points;
-                   points.reserve(pair.second.size());
-                   for (auto const & entry: pair.second) {
-                       points.push_back(entry.data);
-                   }
-                   return TimePointsPair{pair.first, std::move(points)};
-               });
-    }
-
-    /**
-    * @brief Get points with their associated times as a range within a TimeFrameInterval with timeframe conversion
-    *
-    * Converts the time range from the source timeframe to the target timeframe (this point data's timeframe)
-    * and returns a filtered view of time-points pairs for times within the converted interval range.
-    * If the timeframes are the same, no conversion is performed.
-    *
-    * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
-    * @param source_timeframe The timeframe that the interval is expressed in
-    * @return A view of time-points pairs for times within the converted interval range
-    */
-    [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval,
-                                        TimeFrame const & source_timeframe) const {
-        // If the timeframes are the same object, no conversion is needed
-        if (&source_timeframe == _time_frame.get()) {
-            return GetPointsInRange(interval);
-        }
-
-        // If our timeframe is null, fall back to original behavior
-        if (!_time_frame) {
-            return GetPointsInRange(interval);
-        }
-
-        // Convert the time range from source timeframe to target timeframe
-        // 1. Get the time values from the source timeframe
-        auto start_time_value = source_timeframe.getTimeAtIndex(interval.start);
-        auto end_time_value = source_timeframe.getTimeAtIndex(interval.end);
-
-        // 2. Convert those time values to indices in the point timeframe
-        auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
-        auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
-
-        // 3. Create converted interval and use the original function
-        TimeFrameInterval target_interval{target_start_index, target_end_index};
-        return GetPointsInRange(target_interval);
-    }
-
 private:
-    mutable std::vector<Point2D<float>> _temp_points{};
-    mutable std::vector<EntityId> _temp_entity_ids{};
-
 
 };
 

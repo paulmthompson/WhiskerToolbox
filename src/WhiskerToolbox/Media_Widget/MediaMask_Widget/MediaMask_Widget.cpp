@@ -401,7 +401,7 @@ void MediaMask_Widget::_storeOriginalMaskData() {
     auto current_time = _data_manager->getCurrentTime();
     auto const & masks_at_time = mask_data->getAtTime(TimeFrameIndex(current_time));
 
-    _original_mask_data[_active_key] = masks_at_time;
+    _original_mask_data[_active_key] = std::vector<Mask2D>(masks_at_time.begin(), masks_at_time.end());
 }
 
 void MediaMask_Widget::_restoreOriginalMaskData() {
