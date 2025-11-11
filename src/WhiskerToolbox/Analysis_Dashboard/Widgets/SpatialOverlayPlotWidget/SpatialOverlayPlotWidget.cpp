@@ -174,9 +174,9 @@ void SpatialOverlayPlotWidget::handleFrameJumpRequest(EntityId entity_id, QStrin
     //Get point data from entityID
     auto point_data = _parameters.data_manager->getData<PointData>(data_key.toStdString());
     if (point_data) {
-        auto point = point_data->getTimeAndIndexByEntityId(entity_id);
-        if (point) {
-            emit frameJumpRequested(point->first.getValue(), data_key.toStdString());
+        auto time_index = point_data->getTimeByEntityId(entity_id);
+        if (time_index.has_value()) {
+            emit frameJumpRequested(time_index.value().getValue(), data_key.toStdString());
         }
     }
 }

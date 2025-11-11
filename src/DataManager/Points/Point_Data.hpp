@@ -16,7 +16,6 @@
 #include <vector>
 
 
-
 using PointEntry = DataEntry<Point2D<float>>;
 
 /**
@@ -163,6 +162,26 @@ public:
     void changeImageSize(ImageSize const & image_size);
 
     // ========== Getters ==========
+
+    /**
+    * @brief Get all point entries with their associated times as a zero-copy range
+    *
+    * This method provides zero-copy access to the underlying PointEntry data structure,
+    * which contains both Point2D<float> and EntityId information.
+    *
+    * @return A view of time-point entries pairs for all times
+    */
+    [[nodiscard]] auto getAllEntries() const {
+        return _data | std::views::transform([](auto const & pair) {
+                   // pair.second is a std::vector<DataEntry<TData>>&
+                   // We create a non-owning span pointing to its data
+                   return std::make_pair(
+                           pair.first,
+                           std::span<PointEntry const>{pair.second}// <-- The key part
+                   );
+               });
+    }
+
     /**
      * @brief Get all times with data
      * 
@@ -174,29 +193,50 @@ public:
         return _data | std::views::keys;
     }
 
-    /**
-     * @brief Get the points at a specific time
-     * 
-     * If the time does not exist, an empty vector will be returned.
-     * 
-     * @param time The time to get the points at
-     * @return A vector of Point2D<float>
-     */
-    [[nodiscard]] std::vector<Point2D<float>> const & getAtTime(TimeFrameIndex time) const;
+    // ========== Getters (Time-based) ==========
 
     /**
-     * @brief Get the points at a specific time with timeframe conversion
-     * 
-     * Converts the time index from the source timeframe to the target timeframe (this point data's timeframe)
-     * and returns the points at the converted time. If the timeframes are the same, no conversion is performed.
-     * If the converted time does not exist, an empty vector will be returned.
-     * 
-     * @param time The time index in the source timeframe
-     * @param source_timeframe The timeframe that the time index is expressed in
-     * @return A vector of Point2D<float> at the converted time
+     * @brief Get a zero-copy view of all data entries at a specific time.
+     * @param time The time to get entries for.
+     * @return A std::span over the entries. If time is not found,
+     * returns an empty span.
      */
-    [[nodiscard]] std::vector<Point2D<float>> const & getAtTime(TimeFrameIndex time,
-                                                                TimeFrame const & source_timeframe) const;
+    [[nodiscard]] std::span<DataEntry<Point2D<float>> const> getEntriesAtTime(TimeFrameIndex time) const {
+        auto it = _data.find(time);
+        if (it == _data.end()) {
+            return _empty_entries;
+        }
+        return it->second;
+    }
+
+    /**
+    * @brief Get a zero-copy view of just the data (e.g., Line2D) at a time.
+    *
+    * @param time The time to get the data at
+    * @return A zero-copy view of the data at the time
+    */
+    [[nodiscard]] auto getAtTime(TimeFrameIndex time) const {
+        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Point2D<float>>::data);
+    }
+
+    [[nodiscard]] auto getAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
+        TimeFrameIndex const converted_time = convert_time_index(time,
+                                                                 &source_timeframe,
+                                                                 _time_frame.get());
+        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<Point2D<float>>::data);
+    }
+
+    [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time) const {
+        return getEntriesAtTime(time) | std::views::transform(&DataEntry<Point2D<float>>::entity_id);
+    }
+
+    [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
+        TimeFrameIndex const converted_time = convert_time_index(time,
+                                                                 &source_timeframe,
+                                                                 _time_frame.get());
+        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<Point2D<float>>::entity_id);
+    }
+
 
     /**
      * @brief Get the maximum number of points at any time
@@ -226,24 +266,6 @@ public:
                });
     }
 
-    /**
-    * @brief Get all point entries with their associated times as a zero-copy range
-    *
-    * This method provides zero-copy access to the underlying PointEntry data structure,
-    * which contains both Point2D<float> and EntityId information.
-    *
-    * @return A view of time-point entries pairs for all times
-    */
-    [[nodiscard]] auto GetAllPointEntriesAsRange() const {
-        struct TimePointEntriesPair {
-            TimeFrameIndex time;
-            std::vector<PointEntry> const & entries;
-        };
-
-        return _data | std::views::transform([](auto const & pair) {
-                   return TimePointEntriesPair{pair.first, pair.second};
-               });
-    }
 
     /**
     * @brief Get points with their associated times as a range within a TimeFrameInterval
@@ -309,6 +331,32 @@ public:
         return GetPointsInRange(target_interval);
     }
 
+    // ========== Entity Lookup Methods ==========
+
+    /**
+     * @brief Find the point data associated with a specific EntityId.
+     * 
+     * This method provides reverse lookup from EntityId to the actual point data,
+     * supporting group-based visualization workflows.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing the point data if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<std::reference_wrapper<Point2D<float> const>> getDataByEntityId(EntityId entity_id) const;
+
+    [[nodiscard]] std::optional<TimeFrameIndex> getTimeByEntityId(EntityId entity_id) const;
+
+    /**
+     * @brief Get all points that match the given EntityIds.
+     * 
+     * This method is optimized for batch lookup of multiple EntityIds,
+     * useful for group-based operations.
+     * 
+     * @param entity_ids Vector of EntityIds to look up
+     * @return Vector of pairs containing {EntityId, Point2D<float>} for found entities
+     */
+    [[nodiscard]] std::vector<std::pair<EntityId, std::reference_wrapper<Point2D<float> const>>> getDataByEntityIds(std::vector<EntityId> const & entity_ids) const;
+
     // ======= Move and Copy ==========
 
     /**
@@ -358,61 +406,6 @@ public:
      */
     void rebuildAllEntityIds();
 
-    /**
-     * @brief Get EntityIds aligned with points at a specific time.
-     */
-    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
-
-    /**
-     * @brief Get flattened EntityIds for all points across all times.
-     */
-    [[nodiscard]] std::vector<EntityId> getAllEntityIds() const;
-
-    // ========== Entity Lookup Methods ==========
-
-    /**
-     * @brief Find the point data associated with a specific EntityId.
-     * 
-     * This method provides reverse lookup from EntityId to the actual point data,
-     * supporting group-based visualization workflows.
-     * 
-     * @param entity_id The EntityId to look up
-     * @return Optional containing the point data if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<Point2D<float>> getPointByEntityId(EntityId entity_id) const;
-
-    /**
-     * @brief Find the time frame and local index for a specific EntityId.
-     * 
-     * Returns the time frame and local point index (within that time frame)
-     * associated with the given EntityId.
-     * 
-     * @param entity_id The EntityId to look up
-     * @return Optional containing {time, local_index} if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<std::pair<TimeFrameIndex, int>> getTimeAndIndexByEntityId(EntityId entity_id) const;
-
-    /**
-     * @brief Get all points that match the given EntityIds.
-     * 
-     * This method is optimized for batch lookup of multiple EntityIds,
-     * useful for group-based operations.
-     * 
-     * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of pairs containing {EntityId, Point2D<float>} for found entities
-     */
-    [[nodiscard]] std::vector<std::pair<EntityId, Point2D<float>>> getPointsByEntityIds(std::vector<EntityId> const & entity_ids) const;
-
-    /**
-     * @brief Get time frame information for multiple EntityIds.
-     * 
-     * Returns time frame and local index information for a batch of EntityIds.
-     * 
-     * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of tuples containing {EntityId, time, local_index} for found entities
-     */
-    [[nodiscard]] std::vector<std::tuple<EntityId, TimeFrameIndex, int>> getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
-
 protected:
 private:
     std::map<TimeFrameIndex, std::vector<PointEntry>> _data;
@@ -426,7 +419,8 @@ private:
     // Identity management
     std::string _identity_data_key;
     EntityRegistry * _identity_registry{nullptr};
-    // Entity IDs are stored within PointEntry alongside points in _data
+
+    inline static std::vector<DataEntry<Point2D<float>>> const _empty_entries{};
 };
 
 #endif// POINT_DATA_HPP

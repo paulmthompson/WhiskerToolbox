@@ -14,10 +14,10 @@ void PointTableModel::setPoints(PointData const * pointData) {
     _all_data.clear();
     _point_data_source = pointData;
     if (pointData) {
-        for (auto const & timePointEntriesPair: pointData->GetAllPointEntriesAsRange()) {
-            auto frame = timePointEntriesPair.time.getValue();
+        for (auto const & [time, entries]: pointData->getAllEntries()) {
+            auto frame = time.getValue();
             int pointIndex = 0;
-            for (auto const & entry: timePointEntriesPair.entries) {
+            for (auto const & entry: entries) {
                 QString group_name = "No Group";
                 if (_group_manager) {
                     int group_id = _group_manager->getEntityGroup(entry.entity_id);

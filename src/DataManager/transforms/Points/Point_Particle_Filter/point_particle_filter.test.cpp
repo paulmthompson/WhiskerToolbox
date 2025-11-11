@@ -66,9 +66,9 @@ TEST_CASE("PointParticleFilter: Basic straight line tracking", "[PointParticleFi
     point_data->addAtTime(TimeFrameIndex(10), end_point);
     
     // Get entity IDs and assign to group
-    auto all_entries = point_data->GetAllPointEntriesAsRange();
-    for (auto const & entry_pair : all_entries) {
-        for (auto const & entry : entry_pair.entries) {
+    auto all_entries = point_data->getAllEntries();
+    for (auto const & [time, entries] : all_entries) {
+        for (auto const & entry : entries) {
             group_manager->addEntityToGroup(group_id, entry.entity_id);
         }
     }
@@ -134,8 +134,8 @@ TEST_CASE("PointParticleFilter: Tracking with gaps in masks", "[PointParticleFil
     point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.0f, 150.0f});
     
     // Assign to group
-    for (auto const & entry_pair : point_data->GetAllPointEntriesAsRange()) {
-        for (auto const & entry : entry_pair.entries) {
+    for (auto const & [time, entries] : point_data->getAllEntries()) {
+        for (auto const & entry : entries) {
             group_manager->addEntityToGroup(group_id, entry.entity_id);
         }
     }
@@ -196,10 +196,10 @@ TEST_CASE("PointParticleFilter: Multiple groups tracked independently", "[PointP
     point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{150.0f, 100.0f});
     
     // Assign entities to groups
-    auto all_entries = point_data->GetAllPointEntriesAsRange();
+    auto all_entries = point_data->getAllEntries();
     std::vector<EntityId> entity_ids;
-    for (auto const & entry_pair : all_entries) {
-        for (auto const & entry : entry_pair.entries) {
+    for (auto const & [time, entries] : all_entries) {
+        for (auto const & entry : entries) {
             entity_ids.push_back(entry.entity_id);
         }
     }
@@ -255,8 +255,8 @@ TEST_CASE("PointParticleFilter: Single ground truth point (no tracking)", "[Poin
     // Only one ground truth point
     point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f});
     
-    for (auto const & entry_pair : point_data->GetAllPointEntriesAsRange()) {
-        for (auto const & entry : entry_pair.entries) {
+    for (auto const & [time, entries] : point_data->getAllEntries()) {
+        for (auto const & entry : entries) {
             group_manager->addEntityToGroup(group_id, entry.entity_id);
         }
     }
@@ -312,8 +312,8 @@ TEST_CASE("PointParticleFilter: Curved trajectory", "[PointParticleFilter]") {
     point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{150.0f, 100.0f});
     point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.0f, 150.0f});
     
-    for (auto const & entry_pair : point_data->GetAllPointEntriesAsRange()) {
-        for (auto const & entry : entry_pair.entries) {
+    for (auto const & [time, entries] : point_data->getAllEntries()) {
+        for (auto const & entry : entries) {
             group_manager->addEntityToGroup(group_id, entry.entity_id);
         }
     }
@@ -418,8 +418,8 @@ TEST_CASE("PointParticleFilterOperation: Execute with valid data", "[PointPartic
     point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f});
     point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{120.0f, 100.0f});
     
-    for (auto const & entry_pair : point_data->GetAllPointEntriesAsRange()) {
-        for (auto const & entry : entry_pair.entries) {
+    for (auto const & [time, entries] : point_data->getAllEntries()) {
+        for (auto const & entry : entries) {
             group_manager->addEntityToGroup(group_id, entry.entity_id);
         }
     }
@@ -532,8 +532,8 @@ TEST_CASE("PointParticleFilter: Progress callback is called", "[PointParticleFil
     point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f});
     point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{120.0f, 100.0f});
     
-    for (auto const & entry_pair : point_data->GetAllPointEntriesAsRange()) {
-        for (auto const & entry : entry_pair.entries) {
+    for (auto const & [time, entries] : point_data->getAllEntries()) {
+        for (auto const & entry : entries) {
             group_manager->addEntityToGroup(group_id, entry.entity_id);
         }
     }

@@ -52,7 +52,8 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
         REQUIRE(times.size() == 1);
         REQUIRE(*times.begin() == TimeFrameIndex(20));
 
-        auto const & points = result->getAtTime(TimeFrameIndex(20));
+        auto const & points_view = result->getAtTime(TimeFrameIndex(20));
+        std::vector<Point2D<float>> points(points_view.begin(), points_view.end());
         REQUIRE(points.size() == 2);// Two masks = two centroids
 
         // Sort points by x coordinate for consistent testing
@@ -174,7 +175,8 @@ TEST_CASE("Mask centroid calculation - Edge cases and error handling", "[mask][c
 
         auto result = calculate_mask_centroid(mask_data.get());
 
-        auto const & points = result->getAtTime(TimeFrameIndex(30));
+        auto const & points_view = result->getAtTime(TimeFrameIndex(30));
+        std::vector<Point2D<float>> points(points_view.begin(), points_view.end());
         REQUIRE(points.size() == 2);
 
         // Sort points by x coordinate for consistent testing
@@ -371,7 +373,8 @@ TEST_CASE("Data Transform: Mask Centroid - JSON pipeline", "[transforms][mask_ce
     REQUIRE_THAT(points200[0].y, Catch::Matchers::WithinAbs(2.0f, 0.001f));
     
     // Check timestamp 300: Two centroids from two masks
-    auto const & points300 = result_centroids->getAtTime(TimeFrameIndex(300));
+    auto const & points300_view = result_centroids->getAtTime(TimeFrameIndex(300));
+    std::vector<Point2D<float>> points300(points300_view.begin(), points300_view.end());
     REQUIRE(points300.size() == 2);
     
     // Sort points by x coordinate for consistent testing

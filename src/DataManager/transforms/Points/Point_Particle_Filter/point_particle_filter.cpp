@@ -67,9 +67,9 @@ std::map<TimeFrameIndex, Point2D<float>> extractGroundTruthForGroup(
     std::unordered_set<EntityId> entities_in_group(entities_vec.begin(), entities_vec.end());
     
     // Iterate through all times with data using the range API
-    for (auto const & timePointEntriesPair : point_data->GetAllPointEntriesAsRange()) {
+    for (auto const & [time, entries] : point_data->getAllEntries()) {
         // Find points belonging to this group
-        for (auto const & entry : timePointEntriesPair.entries) {
+        for (auto const & entry : entries) {
             // Check if this entity belongs to the target group
             if (entities_in_group.find(entry.entity_id) != entities_in_group.end()) {
                 // Apply scaling to convert from point space to mask space
@@ -77,7 +77,7 @@ std::map<TimeFrameIndex, Point2D<float>> extractGroundTruthForGroup(
                     entry.data.x * scale_x,
                     entry.data.y * scale_y
                 };
-                ground_truth[timePointEntriesPair.time] = scaled_point;
+                ground_truth[time] = scaled_point;
                 break;  // Assume one point per group per frame
             }
         }
@@ -368,15 +368,15 @@ std::shared_ptr<PointData> pointParticleFilter(
         if (ground_truth.size() < 2) {
             // Not enough ground truth - just copy what we have
             for (auto const & [time, point] : ground_truth) {
-                for (auto const & timePointEntriesPair : point_data->GetAllPointEntriesAsRange()) {
-                    if (timePointEntriesPair.time == time) {
-                        for (auto const & entry : timePointEntriesPair.entries) {
+                for (auto const & [point_time, entries] : point_data->getAllEntries()) {
+                    if (point_time == time) {
+                        for (auto const & entry : entries) {
                             if (entities_in_group.find(entry.entity_id) != entities_in_group.end()) {
                                 result->addEntryAtTime(time, entry.data, entry.entity_id, false);
-                                break;
+                                break;  // Assume one point per group per frame
                             }
                         }
-                        break;
+                        break;  // Assume one point per group per frame
                     }
                 }
             }

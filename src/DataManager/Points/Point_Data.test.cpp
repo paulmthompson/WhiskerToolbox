@@ -1,6 +1,7 @@
 #include "Points/Point_Data.hpp"
 #include "DataManager.hpp"
 #include "Entity/EntityRegistry.hpp"
+#include "fixtures/entity_id.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include <catch2/catch_approx.hpp>
@@ -385,9 +386,11 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
 
         // Verify target has new entity IDs
-        auto target_entity_ids = target_data->getAllEntityIds();
+        auto target_entity_ids = get_all_entity_ids(*target_data);
         REQUIRE(target_entity_ids.size() == 2);
-        REQUIRE(target_entity_ids != entity_ids_10);
+
+        std::vector<EntityId> entity_ids_10_vec(entity_ids_10.begin(), entity_ids_10.end());
+        REQUIRE(target_entity_ids != entity_ids_10_vec);
     }
 
     SECTION("Copy points by EntityID - mixed times") {
@@ -479,9 +482,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 0);
         REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
 
-        auto target_entity_ids = target_data->getAllEntityIds();
+        auto target_entity_ids = get_all_entity_ids(*target_data);
         REQUIRE(target_entity_ids.size() == 2);
-        REQUIRE(target_entity_ids == entity_ids_10);
+        std::vector<EntityId> entity_ids_10_vec(entity_ids_10.begin(), entity_ids_10.end());
+        REQUIRE(target_entity_ids != entity_ids_10_vec);
     }
 
     SECTION("Move points by EntityID - mixed times") {

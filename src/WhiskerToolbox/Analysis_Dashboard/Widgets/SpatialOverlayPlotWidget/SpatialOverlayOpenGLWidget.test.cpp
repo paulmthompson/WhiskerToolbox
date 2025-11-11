@@ -150,10 +150,9 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     std::cout << "EntityId: " << args.at(0).toLongLong() << std::endl;
 
     //Get EntityId from data_manager
-    auto time_and_index = point_data->getTimeAndIndexByEntityId(EntityId(args.at(0).toLongLong()));
-    REQUIRE(time_and_index.has_value());
-    auto frame_index = time_and_index->first.getValue();
-    auto index = time_and_index->second;
+    auto time_index = point_data->getTimeByEntityId(EntityId(args.at(0).toLongLong()));
+    REQUIRE(time_index.has_value());
+    auto frame_index = time_index.value().getValue();
 
     //auto frame_index = args.at(0).toLongLong();
     auto key = args.at(1).toString();

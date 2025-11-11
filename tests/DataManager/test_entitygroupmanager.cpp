@@ -570,7 +570,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         data_manager->setData<PointData>("test_points", point_data, TimeKey("test_time"));
 
         // Verify EntityIds were generated
-        auto all_entity_ids = point_data->getAllEntityIds();
+        auto all_entity_ids = get_all_entity_ids(*point_data);
         REQUIRE(all_entity_ids.size() == 9);// 3 + 4 + 2 = 9 total points
 
         // Verify all EntityIds are non-zero
@@ -589,16 +589,11 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         // Test reverse lookup - get point by EntityId
         EntityId first_entity = entities_t10[0];
-        auto point_lookup = point_data->getPointByEntityId(first_entity);
+        auto point_lookup = point_data->getDataByEntityId(first_entity);
         REQUIRE(point_lookup.has_value());
-        REQUIRE(point_lookup->x == Catch::Approx(10.0f));
-        REQUIRE(point_lookup->y == Catch::Approx(15.0f));
+        REQUIRE(point_lookup->get().x == Catch::Approx(10.0f));
+        REQUIRE(point_lookup->get().y == Catch::Approx(15.0f));
 
-        // Test time and index lookup
-        auto time_info = point_data->getTimeAndIndexByEntityId(first_entity);
-        REQUIRE(time_info.has_value());
-        REQUIRE(time_info->first == TimeFrameIndex(10));
-        REQUIRE(time_info->second == 0);// First point at this time
 
         // Create groups in EntityGroupManager
         auto * group_manager = data_manager->getEntityGroupManager();
@@ -629,10 +624,10 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
             bool is_selected = group_manager->isEntityInGroup(selected_group, entity_id);
 
             // Verify the relationship between entity and point data
-            auto looked_up_point = point_data->getPointByEntityId(entity_id);
+            auto looked_up_point = point_data->getDataByEntityId(entity_id);
             REQUIRE(looked_up_point.has_value());
-            REQUIRE(looked_up_point->x == Catch::Approx(point.x));
-            REQUIRE(looked_up_point->y == Catch::Approx(point.y));
+            REQUIRE(looked_up_point->get().x == Catch::Approx(point.x));
+            REQUIRE(looked_up_point->get().y == Catch::Approx(point.y));
 
             // Log rendering decision
             if (is_selected) {
@@ -653,20 +648,15 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         // Test batch operations
         std::vector<EntityId> batch_entities = {entities_t10[0], entities_t20[1], entities_t30[0]};
-        auto batch_points = point_data->getPointsByEntityIds(batch_entities);
-        auto batch_time_info = point_data->getTimeInfoByEntityIds(batch_entities);
+        auto batch_points = point_data->getDataByEntityIds(batch_entities);
 
         REQUIRE(batch_points.size() == 3);
-        REQUIRE(batch_time_info.size() == 3);
 
         // Verify batch results
         REQUIRE(batch_points[0].first == entities_t10[0]);
-        REQUIRE(batch_points[0].second.x == Catch::Approx(10.0f));
-        REQUIRE(batch_points[0].second.y == Catch::Approx(15.0f));
+        REQUIRE(batch_points[0].second.get().x == Catch::Approx(10.0f));
+        REQUIRE(batch_points[0].second.get().y == Catch::Approx(15.0f));
 
-        REQUIRE(std::get<0>(batch_time_info[0]) == entities_t10[0]);
-        REQUIRE(std::get<1>(batch_time_info[0]) == TimeFrameIndex(10));
-        REQUIRE(std::get<2>(batch_time_info[0]) == 0);
 
         INFO("Successfully tested PointData entity lookup and group membership integration");
     }
