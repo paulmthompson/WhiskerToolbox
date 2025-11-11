@@ -186,7 +186,14 @@ struct FilenameTimeFrameOptions {
  */
 std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions const & options);
 
-
+/**
+ * @brief Convert a time index from one TimeFrame to another.
+ *
+ * @param time The time index to convert.
+ * @param source_timeframe The source TimeFrame.
+ * @param target_timeframe The target TimeFrame.
+ * @return The converted time index.
+ */
 TimeFrameIndex convert_time_index(TimeFrameIndex const time,
     TimeFrame const * source_timeframe,
     TimeFrame const * target_timeframe);
