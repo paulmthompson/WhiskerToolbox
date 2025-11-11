@@ -172,11 +172,9 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
     std::cout << "Saving mask images to directory: " << opts.parent_dir << std::endl;
 
     // Iterate through all masks with their timestamps
-    for (auto const & time_mask_pair: mask_data->getAllAsRange()) {
-        auto time = time_mask_pair.time;
-        std::vector<Mask2D> const & masks = time_mask_pair.masks;
+    for (auto const & [time, entries]: mask_data->getAllEntries()) {
 
-        if (masks.empty()) {
+        if (entries.empty()) {
             files_skipped++;
             continue;
         }
@@ -187,9 +185,9 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
 
         // Resize each mask and draw it on the output image
         ImageSize dest_size{opts.image_width, opts.image_height};
-        for (Mask2D const & mask: masks) {
+        for (auto const & mask: entries) {
             // Resize the mask using our new resize function
-            Mask2D resized_mask = resize_mask(mask, mask_data_size, dest_size);
+            Mask2D resized_mask = resize_mask(mask.data, mask_data_size, dest_size);
 
             // Draw the resized mask on the output image
             for (Point2D<uint32_t> const & point: resized_mask) {

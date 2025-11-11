@@ -355,16 +355,14 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
     std::vector<long long> smoothing_times;
 
     size_t processed_masks = 0;
-    for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
-        auto time = mask_time_pair.time;
-        auto const & masks = mask_time_pair.masks;
+    for (auto const & [time, entries]: mask_data->getAllEntries()) {
 
-        if (masks.empty()) {
+        if (entries.empty()) {
             continue;
         }
 
         // For now, just process the first mask at each time
-        auto const & mask = masks[0];
+        auto const & mask = entries[0].data;
 
         if (mask.empty()) {
             continue;

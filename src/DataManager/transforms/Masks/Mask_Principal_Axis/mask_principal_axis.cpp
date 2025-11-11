@@ -186,9 +186,9 @@ std::shared_ptr<LineData> calculate_mask_principal_axis(
 
     // Count total masks to process for progress calculation
     size_t total_masks = 0;
-    for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
-        if (!mask_time_pair.masks.empty()) {
-            total_masks += mask_time_pair.masks.size();
+    for (auto const & [time, entries]: mask_data->getAllEntries()) {
+        if (!entries.empty()) {
+            total_masks += entries.size();
         }
     }
 
@@ -202,38 +202,36 @@ std::shared_ptr<LineData> calculate_mask_principal_axis(
     size_t processed_masks = 0;
 
     // Process each timestamp
-    for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
-        auto time = mask_time_pair.time;
-        auto const & masks = mask_time_pair.masks;
+    for (auto const & [time, entries]: mask_data->getAllEntries()) {
 
         // Calculate principal axis for each mask at this timestamp
-        for (auto const & mask: masks) {
-            if (mask.size() < 2) {
+        for (auto const & mask: entries) {
+            if (mask.data.size() < 2) {
                 processed_masks++;
                 continue;// Need at least 2 points for meaningful principal axis
             }
 
             // Calculate centroid
             double sum_x = 0.0, sum_y = 0.0;
-            for (auto const & point: mask) {
+            for (auto const & point: mask.data) {
                 sum_x += static_cast<double>(point.x);
                 sum_y += static_cast<double>(point.y);
             }
-            float centroid_x = static_cast<float>(sum_x / static_cast<double>(mask.size()));
-            float centroid_y = static_cast<float>(sum_y / static_cast<double>(mask.size()));
+            float centroid_x = static_cast<float>(sum_x / static_cast<double>(mask.data.size()));
+            float centroid_y = static_cast<float>(sum_y / static_cast<double>(mask.data.size()));
 
             // Calculate covariance matrix
             double cxx = 0.0, cxy = 0.0, cyy = 0.0;
-            for (auto const & point: mask) {
-                double dx = static_cast<double>(point.x) - sum_x / static_cast<double>(mask.size());
-                double dy = static_cast<double>(point.y) - sum_y / static_cast<double>(mask.size());
+            for (auto const & point: mask.data) {
+                double dx = static_cast<double>(point.x) - sum_x / static_cast<double>(mask.data.size());
+                double dy = static_cast<double>(point.y) - sum_y / static_cast<double>(mask.data.size());
                 cxx += dx * dx;
                 cxy += dx * dy;
                 cyy += dy * dy;
             }
 
             // Normalize by (n-1) for sample covariance
-            double n = static_cast<double>(mask.size());
+            double n = static_cast<double>(mask.data.size());
             if (n > 1) {
                 cxx /= (n - 1.0);
                 cxy /= (n - 1.0);
@@ -261,7 +259,7 @@ std::shared_ptr<LineData> calculate_mask_principal_axis(
             }
 
             // Get bounding box of the mask
-            auto bbox = get_bounding_box(mask);
+            auto bbox = get_bounding_box(mask.data);
 
             // Extend line to bounding box
             auto line_points = extend_line_to_bbox(

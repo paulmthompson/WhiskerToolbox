@@ -24,7 +24,7 @@ TEST_CASE_METHOD(DataManagerTestFixture, "DataManagerTestFixture - Basic Data Po
     SECTION("MaskData population") {
         auto mask_data = dm.getData<MaskData>("test_masks");
         REQUIRE(mask_data != nullptr);
-        REQUIRE(mask_data->getAllAsRange().size() > 0);
+        REQUIRE(mask_data->getAllEntries().size() > 0);
     }
     
     SECTION("AnalogTimeSeries population") {

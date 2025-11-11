@@ -32,9 +32,9 @@ std::shared_ptr<PointData> calculate_mask_centroid(
 
     // Count total masks to process for progress calculation
     size_t total_masks = 0;
-    for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
-        if (!mask_time_pair.masks.empty()) {
-            total_masks += mask_time_pair.masks.size();
+    for (auto const & [time, masks]: mask_data->getAllEntries()) {
+        if (!masks.empty()) {
+            total_masks += masks.size();
         }
     }
 
@@ -48,13 +48,11 @@ std::shared_ptr<PointData> calculate_mask_centroid(
     size_t processed_masks = 0;
 
     // Process each timestamp
-    for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
-        auto time = mask_time_pair.time;
-        auto const & masks = mask_time_pair.masks;
+    for (auto const & [time, entries]: mask_data->getAllEntries()) {
 
         // Process each mask at this timestamp
-        for (auto const & mask: masks) {
-            if (mask.empty()) {
+        for (auto const & mask: entries) {
+            if (mask.data.empty()) {
                 continue;
             }
 
@@ -62,14 +60,14 @@ std::shared_ptr<PointData> calculate_mask_centroid(
             float centroid_y = 0.0f;
 
             // Calculate centroid
-            for (auto const & point: mask) {
+            for (auto const & point: mask.data) {
                 centroid_x += static_cast<float>(point.x);
                 centroid_y += static_cast<float>(point.y);
             }
 
             // Average the coordinates
-            centroid_x /= static_cast<float>(mask.size());
-            centroid_y /= static_cast<float>(mask.size());
+            centroid_x /= static_cast<float>(mask.data.size());
+            centroid_y /= static_cast<float>(mask.data.size());
 
             // Add centroid point to result
             result_point_data->addAtTime(time, {centroid_x, centroid_y}, false);

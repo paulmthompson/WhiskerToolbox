@@ -35,9 +35,9 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
     
     // Count total masks to process for progress calculation
     size_t total_masks = 0;
-    for (auto const & mask_time_pair : mask_data->getAllAsRange()) {
-        if (!mask_time_pair.masks.empty()) {
-            total_masks += mask_time_pair.masks.size();
+    for (auto const & [time, entries] : mask_data->getAllEntries()) {
+        if (!entries.empty()) {
+            total_masks += entries.size();
         }
     }
     
@@ -50,12 +50,10 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
     
     size_t processed_masks = 0;
     
-    for (auto const & mask_time_pair : mask_data->getAllAsRange()) {
-        auto time = mask_time_pair.time;
-        auto const & masks = mask_time_pair.masks;
+    for (auto const & [time, entries] : mask_data->getAllEntries()) {
         
-        for (auto const & mask : masks) {
-            if (mask.empty()) {
+        for (auto const & mask : entries) {
+            if (mask.data.empty()) {
                 if (preserve_empty_masks) {
                     result_mask_data->addAtTime(time, std::vector<Point2D<uint32_t>>{}, false);
                 }
@@ -64,7 +62,7 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
             }
             
             // Convert mask to binary image
-            Image binary_image = mask_to_binary_image(mask, image_size);
+            Image binary_image = mask_to_binary_image(mask.data, image_size);
             
             // Apply the binary processing algorithm
             Image processed_image = binary_processor(binary_image);

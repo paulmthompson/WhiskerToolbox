@@ -375,9 +375,9 @@ void MaskDataVisualization::createBinaryImageTexture() {
     binary_image_data.resize(image_size.width * image_size.height, 0.0f);
 
     // Aggregate all masks into the binary image
-    for (auto const & time_masks_pair: mask_data->getAllAsRange()) {
-        for (auto const & mask: time_masks_pair.masks) {
-            for (auto const & point: mask) {
+    for (auto const & [time, entries]: mask_data->getAllEntries()) {
+        for (auto const & entry: entries) {
+            for (auto const & point: entry.data) {
                 if (point.x < image_size.width && point.y < image_size.height) {
                     size_t index = point.y * image_size.width + point.x;
                     binary_image_data[index] += 1.0f;
@@ -465,11 +465,11 @@ void MaskDataVisualization::populateRTree() {
 
     qDebug() << "MaskDataVisualization: Populating R-tree with" << mask_data->size() << "time frames";
 
-    for (auto const & time_masks_pair: mask_data->getAllAsRange()) {
-        auto const & entity_ids_at_time = mask_data->getEntityIdsAtTime(time_masks_pair.time);
+    for (auto const & [time, entries]: mask_data->getAllEntries()) {
         
-        for (size_t mask_index = 0; mask_index < time_masks_pair.masks.size(); ++mask_index) {
-            auto const & mask = time_masks_pair.masks[mask_index];
+        for (auto const & entry : entries) {
+            auto const & mask = entry.data;
+            auto const entity_id = entry.entity_id;
 
             if (mask.empty()) continue;
 
@@ -478,12 +478,6 @@ void MaskDataVisualization::populateRTree() {
 
             BoundingBox bbox(static_cast<float>(min_point.x), static_cast<float>(min_point.y),
                              static_cast<float>(max_point.x), static_cast<float>(max_point.y));
-
-            // Get the EntityId for this mask
-            auto entity_id = EntityId(0);
-            if (mask_index < entity_ids_at_time.size()) {
-                entity_id = entity_ids_at_time[mask_index];
-            }
             
             spatial_index->insert(bbox, entity_id);
         }
