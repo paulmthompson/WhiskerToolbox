@@ -145,16 +145,6 @@ void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point,
     }
 }
 
-void PointData::addEntryAtTime(TimeFrameIndex const time,
-                               Point2D<float> const & point,
-                               EntityId const entity_id,
-                               NotifyObservers notify) {
-    _data[time].emplace_back(entity_id, point);
-    if (notify == NotifyObservers::Yes) {
-        notifyObservers();
-    }
-}
-
 
 bool PointData::clearByEntityId(EntityId entity_id, bool notify) {
     if (!_identity_registry) {
@@ -226,75 +216,4 @@ void PointData::changeImageSize(ImageSize const & image_size) {
         }
     }
     _image_size = image_size;
-}
-
-
-// ========== Entity Lookup Methods ==========
-
-std::optional<std::reference_wrapper<Point2D<float> const>> PointData::getDataByEntityId(EntityId entity_id) const {
-    if (!_identity_registry) {
-        return std::nullopt;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::LineEntity || descriptor->data_key != _identity_data_key) {
-        return std::nullopt;
-    }
-
-    TimeFrameIndex const time{descriptor->time_value};
-    int const local_index = descriptor->local_index;
-
-    auto time_it = _data.find(time);
-    if (time_it == _data.end()) {
-        return std::nullopt;
-    }
-
-    if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-        return std::nullopt;
-    }
-
-    return std::cref(time_it->second[static_cast<size_t>(local_index)].data);
-}
-
-std::optional<TimeFrameIndex> PointData::getTimeByEntityId(EntityId entity_id) const {
-    if (!_identity_registry) {
-        return std::nullopt;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    return TimeFrameIndex{descriptor->time_value};
-}
-
-std::vector<std::pair<EntityId, std::reference_wrapper<Point2D<float> const>>> PointData::getDataByEntityIds(std::vector<EntityId> const & entity_ids) const {
-    std::vector<std::pair<EntityId, std::reference_wrapper<Point2D<float> const>>> results;
-    results.reserve(entity_ids.size());
-
-    for (EntityId const entity_id: entity_ids) {
-        auto point = getDataByEntityId(entity_id);
-        if (point.has_value()) {
-            results.emplace_back(entity_id, point.value());
-        }
-    }
-
-    return results;
-}
-
-// ======== Copy/Move by EntityIds =========
-
-std::size_t PointData::copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
-    bool const should_notify = (notify == NotifyObservers::Yes);
-    return copy_by_entity_ids(_data, target, entity_ids, should_notify,
-                              [](PointEntry const & entry) -> Point2D<float> const & { return entry.data; });
-}
-
-std::size_t PointData::moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
-    bool const should_notify = (notify == NotifyObservers::Yes);
-    auto result = move_by_entity_ids(_data, target, entity_ids, should_notify,
-                                     [](PointEntry const & entry) -> Point2D<float> const & { return entry.data; });
-
-    if (notify == NotifyObservers::Yes && result > 0) {
-        notifyObservers();
-    }
-
-    return result;
 }

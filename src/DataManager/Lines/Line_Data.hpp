@@ -160,18 +160,6 @@ public:
      */
     [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify);
 
-    /**
-     * @brief Add a line entry at a specific time with a specific entity ID
-     * 
-     * This method is used internally for move operations to preserve entity IDs.
-     * 
-     * @param time The time to add the line at
-     * @param line The line to add
-     * @param entity_id The entity ID to assign to the line
-     * @param notify Whether to notify observers after the operation
-     */
-    void addEntryAtTime(TimeFrameIndex time, Line2D const & line, EntityId entity_id, NotifyObservers notify);
-
     // ========== Image Size ==========
 
     /**
@@ -312,61 +300,6 @@ public:
         return GetEntriesInRange(TimeFrameInterval(target_start_index, target_end_index));
     }
 
-
-    // ========== Entity Lookup Methods ==========
-
-    /**
-     * @brief Find the line data associated with a specific EntityId.
-     * 
-     * This method provides reverse lookup from EntityId to the actual line data,
-     * supporting group-based visualization workflows.
-     * 
-     * @param entity_id The EntityId to look up
-     * @return Optional containing the line data if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<std::reference_wrapper<Line2D const>> getDataByEntityId(EntityId entity_id) const;
-
-    [[nodiscard]] std::optional<TimeFrameIndex> getTimeByEntityId(EntityId entity_id) const;
-
-    /**
-     * @brief Get all lines that match the given EntityIds.
-     * 
-     * This method is optimized for batch lookup of multiple EntityIds,
-     * useful for group-based operations.
-     * 
-     * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of pairs containing {EntityId, Line2D} for found entities
-     */
-    [[nodiscard]] std::vector<std::pair<EntityId, std::reference_wrapper<Line2D const>>> getDataByEntityIds(std::vector<EntityId> const & entity_ids) const;
-
-
-    // ========== Copy and Move ==========
-
-    /**
-     * @brief Copy lines with specific EntityIds to another LineData
-     * 
-     * Copies all lines that match the given EntityIds to the target LineData.
-     * The copied lines will get new EntityIds in the target.
-     * 
-     * @param target The target LineData to copy lines to
-     * @param entity_ids Vector of EntityIds to copy
-     * @param notify Whether to notify the target's observers after the operation
-     * @return The number of lines actually copied
-     */
-    std::size_t copyByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
-
-    /**
-     * @brief Move lines with specific EntityIds to another LineData
-     * 
-     * Moves all lines that match the given EntityIds to the target LineData.
-     * The moved lines will get new EntityIds in the target and be removed from source.
-     * 
-     * @param target The target LineData to move lines to
-     * @param entity_ids Vector of EntityIds to move
-     * @param notify Whether to notify both source and target observers after the operation
-     * @return The number of lines actually moved
-     */
-    std::size_t moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
 private:
 

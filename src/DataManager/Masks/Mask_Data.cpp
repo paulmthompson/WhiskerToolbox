@@ -161,16 +161,6 @@ void MaskData::addAtTime(TimeFrameIndex const time,
 }
 
 
-void MaskData::addEntryAtTime(TimeFrameIndex const time,
-                              Mask2D const & mask,
-                              EntityId const entity_id,
-                              NotifyObservers notify) {
-    _data[time].emplace_back(entity_id, mask);
-    if (notify == NotifyObservers::Yes) {
-        notifyObservers();
-    }
-}
-
 // ========== Getters ==========
 
 std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const {
@@ -228,27 +218,6 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
     _image_size = image_size;
 }
 
-// ========== Copy and Move ==========
-
-
-std::size_t MaskData::copyByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
-    bool const should_notify = (notify == NotifyObservers::Yes);
-    return copy_by_entity_ids(_data, target, entity_ids, should_notify,
-                              [](MaskEntry const & entry) -> Mask2D const & { return entry.data; });
-}
-
-std::size_t MaskData::moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
-    bool const should_notify = (notify == NotifyObservers::Yes);
-    auto result = move_by_entity_ids(_data, target, entity_ids, should_notify,
-                                     [](MaskEntry const & entry) -> Mask2D const & { return entry.data; });
-
-    if (notify == NotifyObservers::Yes && result > 0) {
-        notifyObservers();
-    }
-
-    return result;
-}
-
 std::vector<EntityId> const & MaskData::getEntityIdsAtTime(TimeFrameIndex time) const {
     auto it = _data.find(time);
     if (it == _data.end()) {
@@ -260,92 +229,4 @@ std::vector<EntityId> const & MaskData::getEntityIdsAtTime(TimeFrameIndex time) 
         _temp_entity_ids.push_back(entry.entity_id);
     }
     return _temp_entity_ids;
-}
-
-std::vector<EntityId> MaskData::getAllEntityIds() const {
-    std::vector<EntityId> out;
-    for (auto const & [t, entries]: _data) {
-        (void) t;
-        for (auto const & entry: entries) {
-            out.push_back(entry.entity_id);
-        }
-    }
-    return out;
-}
-
-// ========== Entity Lookup Methods ==========
-
-std::optional<Mask2D> MaskData::getMaskByEntityId(EntityId entity_id) const {
-    if (!_identity_registry) {
-        return std::nullopt;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::IntervalEntity || descriptor->data_key != _identity_data_key) {
-        return std::nullopt;
-    }
-
-    TimeFrameIndex const time{descriptor->time_value};
-    int const local_index = descriptor->local_index;
-
-    auto time_it = _data.find(time);
-    if (time_it == _data.end()) {
-        return std::nullopt;
-    }
-
-    if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-        return std::nullopt;
-    }
-
-    return time_it->second[static_cast<size_t>(local_index)].data;
-}
-
-std::optional<std::pair<TimeFrameIndex, int>> MaskData::getTimeAndIndexByEntityId(EntityId entity_id) const {
-    if (!_identity_registry) {
-        return std::nullopt;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::IntervalEntity || descriptor->data_key != _identity_data_key) {
-        return std::nullopt;
-    }
-
-    TimeFrameIndex const time{descriptor->time_value};
-    int const local_index = descriptor->local_index;
-
-    // Verify the time and index are valid
-    auto time_it = _data.find(time);
-    if (time_it == _data.end() || local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-        return std::nullopt;
-    }
-
-    return std::make_pair(time, local_index);
-}
-
-std::vector<std::pair<EntityId, Mask2D>> MaskData::getMasksByEntityIds(std::vector<EntityId> const & entity_ids) const {
-    std::vector<std::pair<EntityId, Mask2D>> results;
-    results.reserve(entity_ids.size());
-
-    for (EntityId const entity_id: entity_ids) {
-        auto mask = getMaskByEntityId(entity_id);
-        if (mask.has_value()) {
-            results.emplace_back(entity_id, std::move(mask.value()));
-        }
-    }
-
-    return results;
-}
-
-std::vector<std::tuple<EntityId, TimeFrameIndex, int>> MaskData::getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const {
-    std::vector<std::tuple<EntityId, TimeFrameIndex, int>> results;
-    results.reserve(entity_ids.size());
-
-    for (EntityId const entity_id: entity_ids) {
-        auto time_info = getTimeAndIndexByEntityId(entity_id);
-        if (time_info.has_value()) {
-            results.emplace_back(entity_id, time_info->first, time_info->second);
-        }
-    }
-
-    return results;
 }

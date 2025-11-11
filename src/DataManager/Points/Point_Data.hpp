@@ -78,18 +78,6 @@ public:
      */
     void addAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
 
-    /**
-     * @brief Add a point entry at a specific time with a specific entity ID
-     *
-     * This method is used internally for move operations to preserve entity IDs.
-     *
-     * @param time The time to add the point at
-     * @param point The point to add
-     * @param entity_id The entity ID to assign to the point
-     * @param notify If true, the observers will be notified
-     */
-    void addEntryAtTime(TimeFrameIndex time, Point2D<float> const & point, EntityId entity_id, NotifyObservers notify);
-
 
     /**
      * @brief Add a batch of points at a specific time by copying them.
@@ -331,60 +319,6 @@ public:
         TimeFrameInterval target_interval{target_start_index, target_end_index};
         return GetPointsInRange(target_interval);
     }
-
-    // ========== Entity Lookup Methods ==========
-
-    /**
-     * @brief Find the point data associated with a specific EntityId.
-     * 
-     * This method provides reverse lookup from EntityId to the actual point data,
-     * supporting group-based visualization workflows.
-     * 
-     * @param entity_id The EntityId to look up
-     * @return Optional containing the point data if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<std::reference_wrapper<Point2D<float> const>> getDataByEntityId(EntityId entity_id) const;
-
-    [[nodiscard]] std::optional<TimeFrameIndex> getTimeByEntityId(EntityId entity_id) const;
-
-    /**
-     * @brief Get all points that match the given EntityIds.
-     * 
-     * This method is optimized for batch lookup of multiple EntityIds,
-     * useful for group-based operations.
-     * 
-     * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of pairs containing {EntityId, Point2D<float>} for found entities
-     */
-    [[nodiscard]] std::vector<std::pair<EntityId, std::reference_wrapper<Point2D<float> const>>> getDataByEntityIds(std::vector<EntityId> const & entity_ids) const;
-
-    // ======= Move and Copy ==========
-
-    /**
-     * @brief Copy points with specific EntityIds to another PointData
-     *
-     * Copies all points that match the given EntityIds to the target PointData.
-     * The copied points will get new EntityIds in the target.
-     *
-     * @param target The target PointData to copy points to
-     * @param entity_ids Vector of EntityIds to copy
-     * @param notify If true, the target will notify its observers after the operation
-     * @return The number of points actually copied
-     */
-    std::size_t copyByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
-
-    /**
-     * @brief Move points with specific EntityIds to another PointData
-     *
-     * Moves all points that match the given EntityIds to the target PointData.
-     * The moved points will get the same EntityIds in the target and be removed from source.
-     *
-     * @param target The target PointData to move points to
-     * @param entity_ids Vector of EntityIds to move
-     * @param notify If true, both source and target will notify their observers after the operation
-     * @return The number of points actually moved
-     */
-    std::size_t moveByEntityIds(PointData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
 
 private:
     mutable std::vector<Point2D<float>> _temp_points{};

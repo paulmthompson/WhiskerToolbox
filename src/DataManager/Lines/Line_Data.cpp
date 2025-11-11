@@ -148,13 +148,6 @@ void LineData::addAtTime(TimeIndexAndFrame const & time_index_and_frame, Line2D 
     addAtTime(converted_time, std::move(line), notify);
 }
 
-void LineData::addEntryAtTime(TimeFrameIndex const time, Line2D const & line, EntityId entity_id, NotifyObservers notify) {
-    _data[time].emplace_back(entity_id, line);
-    if (notify == NotifyObservers::Yes) {
-        notifyObservers();
-    }
-}
-
 void LineData::addAtTime(TimeFrameIndex const time, std::vector<Line2D> const & lines_to_add) {
     if (lines_to_add.empty()) {
         return;
@@ -213,57 +206,6 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<Line2D> && lines
 // ========== Getters ==========
 
 
-// ========== Entity Lookup Methods ==========
-
-std::optional<std::reference_wrapper<Line2D const>> LineData::getDataByEntityId(EntityId entity_id) const {
-    if (!_identity_registry) {
-        return std::nullopt;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::LineEntity || descriptor->data_key != _identity_data_key) {
-        return std::nullopt;
-    }
-
-    TimeFrameIndex const time{descriptor->time_value};
-    int const local_index = descriptor->local_index;
-
-    auto time_it = _data.find(time);
-    if (time_it == _data.end()) {
-        return std::nullopt;
-    }
-
-    if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-        return std::nullopt;
-    }
-
-    return std::cref(time_it->second[static_cast<size_t>(local_index)].data);
-}
-
-std::optional<TimeFrameIndex> LineData::getTimeByEntityId(EntityId entity_id) const {
-    if (!_identity_registry) {
-        return std::nullopt;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    return TimeFrameIndex{descriptor->time_value};
-}
-
-
-std::vector<std::pair<EntityId, std::reference_wrapper<Line2D const>>> LineData::getDataByEntityIds(std::vector<EntityId> const & entity_ids) const {
-    std::vector<std::pair<EntityId, std::reference_wrapper<Line2D const>>> results;
-    results.reserve(entity_ids.size());
-
-    for (EntityId const entity_id: entity_ids) {
-        auto line = getDataByEntityId(entity_id);
-        if (line.has_value()) {
-            results.emplace_back(entity_id, line.value());
-        }
-    }
-
-    return results;
-}
-
 // ========== Image Size ==========
 
 void LineData::changeImageSize(ImageSize const & image_size) {
@@ -289,24 +231,4 @@ void LineData::changeImageSize(ImageSize const & image_size) {
         }
     }
     _image_size = image_size;
-}
-
-// ========== Copy and Move ==========
-
-std::size_t LineData::copyByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
-    bool const should_notify = (notify == NotifyObservers::Yes);
-    return copy_by_entity_ids(_data, target, entity_ids, should_notify,
-                              [](LineEntry const & entry) -> Line2D const & { return entry.data; });
-}
-
-std::size_t LineData::moveByEntityIds(LineData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify) {
-    bool const should_notify = (notify == NotifyObservers::Yes);
-    auto result = move_by_entity_ids(_data, target, entity_ids, should_notify,
-                                     [](LineEntry const & entry) -> Line2D const & { return entry.data; });
-
-    if (notify == NotifyObservers::Yes && result > 0) {
-        notifyObservers();
-    }
-
-    return result;
 }

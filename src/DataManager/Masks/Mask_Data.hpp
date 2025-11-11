@@ -121,18 +121,6 @@ public:
      */
     [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify);
 
-    /**
-     * @brief Add a mask entry at a specific time with a specific entity ID
-     *
-     * This method is used internally for move operations to preserve entity IDs.
-     *
-     * @param time The time to add the mask at
-     * @param mask The mask to add
-     * @param entity_id The entity ID to assign to the mask
-     * @param notify If true, the observers will be notified
-     */
-    void addEntryAtTime(TimeFrameIndex time, Mask2D const & mask, EntityId entity_id, NotifyObservers notify);
-
 
     // ========== Getters ==========
 
@@ -273,6 +261,12 @@ public:
 
     [[nodiscard]] size_t size() const { return _data.size(); };
 
+    /**
+     * @brief Get EntityIds aligned with masks at a specific time.
+     */
+    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
+
+
     // ========== Image Size ==========
     /**
      * @brief Change the size of the canvas the mask belongs to
@@ -295,90 +289,6 @@ public:
      * @brief Set the image size
      */
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
-
-    // ========== Copy and Move ==========
-
-    /**
-     * @brief Copy masks with specific EntityIds to another MaskData
-     *
-     * Copies all masks that match the given EntityIds to the target MaskData.
-     * The copied masks will get new EntityIds in the target.
-     *
-     * @param target The target MaskData to copy masks to
-     * @param entity_ids Vector of EntityIds to copy
-     * @param notify If true, the target will notify its observers after the operation
-     * @return The number of masks actually copied
-     */
-    std::size_t copyByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
-
-    /**
-     * @brief Move masks with specific EntityIds to another MaskData
-     *
-     * Moves all masks that match the given EntityIds to the target MaskData.
-     * The moved masks will keep the same EntityIds in the target and be removed from source.
-     *
-     * @param target The target MaskData to move masks to
-     * @param entity_ids Vector of EntityIds to move
-     * @param notify If true, both source and target will notify their observers after the operation
-     * @return The number of masks actually moved
-     */
-    std::size_t moveByEntityIds(MaskData & target, std::unordered_set<EntityId> const & entity_ids, NotifyObservers notify);
-
-    // ========== Entity Lookup Methods ==========
-
-    /**
-     * @brief Get EntityIds aligned with masks at a specific time.
-     */
-    [[nodiscard]] std::vector<EntityId> const & getEntityIdsAtTime(TimeFrameIndex time) const;
-
-    /**
-     * @brief Get flattened EntityIds for all masks across all times.
-     */
-    [[nodiscard]] std::vector<EntityId> getAllEntityIds() const;
-
-    /**
-     * @brief Find the mask data associated with a specific EntityId.
-     * 
-     * This method provides reverse lookup from EntityId to the actual mask data,
-     * supporting group-based visualization workflows.
-     * 
-     * @param entity_id The EntityId to look up
-     * @return Optional containing the mask data if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<Mask2D> getMaskByEntityId(EntityId entity_id) const;
-
-    /**
-     * @brief Find the time frame and local index for a specific EntityId.
-     * 
-     * Returns the time frame and local mask index (within that time frame)
-     * associated with the given EntityId.
-     * 
-     * @param entity_id The EntityId to look up
-     * @return Optional containing {time, local_index} if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<std::pair<TimeFrameIndex, int>> getTimeAndIndexByEntityId(EntityId entity_id) const;
-
-    /**
-     * @brief Get all masks that match the given EntityIds.
-     * 
-     * This method is optimized for batch lookup of multiple EntityIds,
-     * useful for group-based operations.
-     * 
-     * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of pairs containing {EntityId, Mask2D} for found entities
-     */
-    [[nodiscard]] std::vector<std::pair<EntityId, Mask2D>> getMasksByEntityIds(std::vector<EntityId> const & entity_ids) const;
-
-    /**
-     * @brief Get time frame information for multiple EntityIds.
-     * 
-     * Returns time frame and local index information for multiple EntityIds,
-     * useful for understanding the temporal distribution of entity groups.
-     * 
-     * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of tuples containing {EntityId, TimeFrameIndex, local_index} for found entities
-     */
-    [[nodiscard]] std::vector<std::tuple<EntityId, TimeFrameIndex, int>> getTimeInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
 private:
     std::vector<Mask2D> _empty{};

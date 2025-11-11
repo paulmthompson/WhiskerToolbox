@@ -9,11 +9,15 @@
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "utils/map_timeseries.hpp"
 
+#include <algorithm>
 #include <map>
 #include <memory>
+#include <ranges>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 /**
@@ -162,6 +166,158 @@ public:
             }
         }
     }
+
+    // ========== Common Entity-based Operations ==========
+
+    /**
+     * @brief Add a data entry at a specific time with a specific entity ID
+     *
+     * This method is used internally for move operations to preserve entity IDs.
+     * It directly adds an entry without generating a new EntityId.
+     *
+     * @param time The time to add the data at
+     * @param data The data to add
+     * @param entity_id The entity ID to assign to the entry
+     * @param notify If true, observers will be notified of the change
+     */
+    void addEntryAtTime(TimeFrameIndex time, TData const & data, EntityId entity_id, NotifyObservers notify) {
+        _data[time].emplace_back(entity_id, data);
+        if (notify == NotifyObservers::Yes) {
+            notifyObservers();
+        }
+    }
+
+    /**
+     * @brief Copy entries with specific EntityIds to another RaggedTimeSeries
+     *
+     * Copies all entries that match the given EntityIds to the target.
+     * The copied entries will get new EntityIds in the target based on the target's
+     * identity context. Uses the copy_by_entity_ids helper function which properly
+     * handles the differences in addAtTime APIs across derived classes.
+     *
+     * @tparam DerivedTarget The derived class type (LineData, MaskData, or PointData)
+     * @param target The target to copy entries to
+     * @param entity_ids Set of EntityIds to copy
+     * @param notify If true, the target will notify its observers after the operation
+     * @return The number of entries actually copied
+     */
+    template<typename DerivedTarget>
+    std::size_t copyByEntityIds(DerivedTarget & target, 
+                                std::unordered_set<EntityId> const & entity_ids, 
+                                NotifyObservers notify) {
+        bool const should_notify = (notify == NotifyObservers::Yes);
+        return copy_by_entity_ids(_data, target, entity_ids, should_notify,
+                                  [](DataEntry<TData> const & entry) -> TData const & { return entry.data; });
+    }
+
+    /**
+     * @brief Move entries with specific EntityIds to another RaggedTimeSeries
+     *
+     * Moves all entries that match the given EntityIds to the target.
+     * The moved entries will keep the same EntityIds in the target and be removed from source.
+     * Uses the move_by_entity_ids helper function.
+     *
+     * @tparam DerivedTarget The derived class type (LineData, MaskData, or PointData)
+     * @param target The target to move entries to
+     * @param entity_ids Set of EntityIds to move
+     * @param notify If true, both source and target will notify their observers after the operation
+     * @return The number of entries actually moved
+     */
+    template<typename DerivedTarget>
+    std::size_t moveByEntityIds(DerivedTarget & target, 
+                                std::unordered_set<EntityId> const & entity_ids, 
+                                NotifyObservers notify) {
+        bool const should_notify = (notify == NotifyObservers::Yes);
+        auto result = move_by_entity_ids(_data, target, entity_ids, should_notify,
+                                         [](DataEntry<TData> const & entry) -> TData const & { return entry.data; });
+
+        if (notify == NotifyObservers::Yes && result > 0) {
+            notifyObservers();
+        }
+
+        return result;
+    }
+
+    // ========== Entity Lookup Methods ==========
+
+    /**
+     * @brief Find the data associated with a specific EntityId.
+     * 
+     * This method provides reverse lookup from EntityId to the actual data,
+     * supporting group-based visualization workflows.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing a const reference to the data if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<std::reference_wrapper<TData const>> getDataByEntityId(EntityId entity_id) const {
+        if (!_identity_registry) {
+            return std::nullopt;
+        }
+
+        auto descriptor = _identity_registry->get(entity_id);
+        if (!descriptor || descriptor->kind != getEntityKind() || descriptor->data_key != _identity_data_key) {
+            return std::nullopt;
+        }
+
+        TimeFrameIndex const time{descriptor->time_value};
+        int const local_index = descriptor->local_index;
+
+        auto time_it = _data.find(time);
+        if (time_it == _data.end()) {
+            return std::nullopt;
+        }
+
+        if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
+            return std::nullopt;
+        }
+
+        return std::cref(time_it->second[static_cast<size_t>(local_index)].data);
+    }
+
+    /**
+     * @brief Find the time frame index for a specific EntityId.
+     * 
+     * Returns the time frame associated with the given EntityId.
+     * 
+     * @param entity_id The EntityId to look up
+     * @return Optional containing the TimeFrameIndex if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<TimeFrameIndex> getTimeByEntityId(EntityId entity_id) const {
+        if (!_identity_registry) {
+            return std::nullopt;
+        }
+
+        auto descriptor = _identity_registry->get(entity_id);
+        if (!descriptor) {
+            return std::nullopt;
+        }
+        
+        return TimeFrameIndex{descriptor->time_value};
+    }
+
+    /**
+     * @brief Get all data that match the given EntityIds.
+     * 
+     * This method is optimized for batch lookup of multiple EntityIds,
+     * useful for group-based operations.
+     * 
+     * @param entity_ids Vector of EntityIds to look up
+     * @return Vector of pairs containing {EntityId, const reference to data} for found entities
+     */
+    [[nodiscard]] std::vector<std::pair<EntityId, std::reference_wrapper<TData const>>> getDataByEntityIds(std::vector<EntityId> const & entity_ids) const {
+        std::vector<std::pair<EntityId, std::reference_wrapper<TData const>>> results;
+        results.reserve(entity_ids.size());
+
+        for (EntityId const entity_id: entity_ids) {
+            auto data = getDataByEntityId(entity_id);
+            if (data.has_value()) {
+                results.emplace_back(entity_id, data.value());
+            }
+        }
+
+        return results;
+    }
+
 
 protected:
     /**

@@ -425,9 +425,9 @@ void MaskDataVisualization::updateSelectionBinaryImageTexture() {
 
     // Only include selected masks in the selection binary image
     for (auto const & entity_id: selected_masks) {
-        auto mask_opt = mask_data->getMaskByEntityId(entity_id);
+        auto mask_opt = mask_data->getDataByEntityId(entity_id);
         if (mask_opt.has_value()) {
-            auto const & mask = mask_opt.value();
+            auto const & mask = mask_opt.value().get();
 
             for (auto const & point: mask) {
                 if (point.x < image_size.width && point.y < image_size.height) {
@@ -497,12 +497,12 @@ bool MaskDataVisualization::maskContainsPoint(EntityId entity_id, uint32_t pixel
 
     //return true;
 
-    auto mask_opt = mask_data->getMaskByEntityId(entity_id);
+    auto mask_opt = mask_data->getDataByEntityId(entity_id);
     if (!mask_opt.has_value()) {
         return false;
     }
 
-    auto const & mask = mask_opt.value();
+    auto const & mask = mask_opt.value().get();
 
     for (auto const & point: mask) {
         if (point.x == pixel_x && point.y == pixel_y) {

@@ -1,6 +1,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "DataManager.hpp"
 #include "Entity/EntityRegistry.hpp"
+#include "fixtures/entity_id.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -263,7 +264,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         std::size_t copied = source_data->copyByEntityIds(*target_data, ids_set_10c, NotifyObservers::No);
         REQUIRE(copied == 2);
         REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 2);
-        auto target_entity_ids = target_data->getAllEntityIds();
+        auto target_entity_ids = get_all_entity_ids(*target_data);
         REQUIRE(target_entity_ids.size() == 2);
         REQUIRE(target_entity_ids != entity_ids_10);
     }
@@ -323,7 +324,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         REQUIRE(moved == 2);
         REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 0);
         REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 2);
-        auto target_entity_ids = target_data->getAllEntityIds();
+        auto target_entity_ids = get_all_entity_ids(*target_data);
         REQUIRE(target_entity_ids == ids_10);
     }
 
