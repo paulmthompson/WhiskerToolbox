@@ -52,7 +52,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
         point_data.addAtTime(TimeFrameIndex(10), points);
 
         // Overwrite with a single point
-        point_data.clearAtTime(TimeFrameIndex(10));
+        point_data.clearAtTime(TimeIndexAndFrame{10, timeframe.get()}, NotifyObservers::No);
         point_data.addAtTime(TimeFrameIndex(10), p3);
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 1);
@@ -60,7 +60,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
         REQUIRE(points_at_10[0].y == Catch::Approx(6.0f));
 
         // Overwrite with multiple points
-        point_data.clearAtTime(TimeFrameIndex(10), false);
+        point_data.clearAtTime(TimeIndexAndFrame{10, timeframe.get()}, NotifyObservers::No);
         point_data.addAtTime(TimeFrameIndex(10), points);
         points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 2);
@@ -72,7 +72,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
         point_data.addAtTime(TimeFrameIndex(10), points);
         point_data.addAtTime(TimeFrameIndex(20), more_points);
 
-        static_cast<void>(point_data.clearAtTime(TimeFrameIndex(10)));
+        static_cast<void>(point_data.clearAtTime(TimeIndexAndFrame{10, timeframe.get()}, NotifyObservers::No));
 
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
@@ -94,8 +94,8 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
         std::vector<TimeFrameIndex> times = {TimeFrameIndex(10), TimeFrameIndex(20)};
         std::vector<std::vector<Point2D<float>>> points_vec = {points, more_points};
 
-        point_data.clearAtTime(TimeFrameIndex(10), false);
-        point_data.clearAtTime(TimeFrameIndex(20), false);
+        point_data.clearAtTime(TimeIndexAndFrame{10, timeframe.get()}, NotifyObservers::No);
+        point_data.clearAtTime(TimeIndexAndFrame{20, timeframe.get()}, NotifyObservers::No);
         point_data.addAtTime(TimeFrameIndex(10), points_vec[0]);
         point_data.addAtTime(TimeFrameIndex(20), points_vec[1]);
 
@@ -416,7 +416,7 @@ TEST_CASE("DM - PointData - Edge cases and error handling", "[points][data][erro
 
         // Add, clear, add again to test internal state consistency
         point_data.addAtTime(TimeFrameIndex(5), p1);
-        static_cast<void>(point_data.clearAtTime(TimeFrameIndex(5)));
+        static_cast<void>(point_data.clearAtTime(TimeIndexAndFrame{5, nullptr}, NotifyObservers::No));
         point_data.addAtTime(TimeFrameIndex(5), p1);
 
         auto points = point_data.getAtTime(TimeFrameIndex(5));

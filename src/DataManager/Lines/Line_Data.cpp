@@ -32,26 +32,6 @@ LineData & LineData::operator=(LineData && other) noexcept {
 
 // ========== Setters ==========
 
-bool LineData::_clearAtTime(TimeFrameIndex const time, NotifyObservers notify) {
-    auto it = _data.find(time);
-    if (it != _data.end()) {
-        _data.erase(it);
-        if (notify == NotifyObservers::Yes) {
-            notifyObservers();
-        }
-        return true;
-    }
-    return false;
-}
-
-bool LineData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, NotifyObservers notify) {
-
-    TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
-                                                             time_index_and_frame.time_frame,
-                                                             _time_frame.get());
-    return _clearAtTime(converted_time, notify);
-}
-
 void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, NotifyObservers notify) {
     int const local_index = static_cast<int>(_data[time].size());
     auto entity_id = EntityId(0);
@@ -149,8 +129,6 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<Line2D> && lines
         entry_vec.emplace_back(entity_id, std::move(lines_to_add[i]));
     }
 }
-// ========== Getters ==========
-
 
 // ========== Image Size ==========
 

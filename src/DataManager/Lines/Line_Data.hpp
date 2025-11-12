@@ -64,10 +64,6 @@ public:
 
     // ========== Setters (Time-based) ==========
 
-
-    [[nodiscard]] bool clearAtTime(TimeIndexAndFrame const & time_index_and_frame,
-        NotifyObservers notify);
-
     /**
      * @brief Add a line at a specific time (by copying).
      *
@@ -131,10 +127,6 @@ public:
      */
     void addAtTime(TimeFrameIndex time, std::vector<Line2D> && lines_to_add);
 
-    // ========== Setters (Entity-based) ==========
-
-    using LineModifier = ModificationHandle<Line2D>;
-
     // ========== Image Size ==========
 
     /**
@@ -146,21 +138,7 @@ public:
      * @param image_size
      */
     void changeImageSize(ImageSize const & image_size);
-
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
-
-    // ========== Getters (Time-based) ==========
-
-
-private:
-
-    /**
-     * @brief Clear all lines at a specific time
-     * 
-     * @param time The time to clear the lines at
-     * @param notify Whether to notify observers after the operation
-     */
-    [[nodiscard]] bool _clearAtTime(TimeFrameIndex time, NotifyObservers notify);
 };
 
 

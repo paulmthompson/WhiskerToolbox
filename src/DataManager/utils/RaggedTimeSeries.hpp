@@ -412,6 +412,23 @@ public:
         return true;
     }
 
+    /**
+     * @brief Clear all data at a specific time with timeframe conversion
+     * 
+     * Removes all data entries at the specified time. If the time is from a different
+     * timeframe, it will be converted to this data's timeframe first.
+     * 
+     * @param time_index_and_frame The time and timeframe to clear at
+     * @param notify Whether to notify observers after the operation
+     * @return true if data was found and cleared, false otherwise
+     */
+    [[nodiscard]] bool clearAtTime(TimeIndexAndFrame const & time_index_and_frame, NotifyObservers notify) {
+        TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
+                                                                 time_index_and_frame.time_frame,
+                                                                 _time_frame.get());
+        return _clearAtTime(converted_time, notify);
+    }
+
     // ========== Data Access Methods ==========
 
     /**
@@ -565,6 +582,29 @@ protected:
                          "TData must be Line2D, Mask2D, or Point2D<float>");
             return EntityKind::LineEntity; // Never reached, but needed for compilation
         }
+    }
+
+    /**
+     * @brief Clear all data at a specific time (internal helper)
+     * 
+     * This is the implementation method that directly clears data at a given time
+     * without any timeframe conversion. It's used by the public clearAtTime method
+     * and can be used by derived classes.
+     * 
+     * @param time The time to clear data at
+     * @param notify Whether to notify observers after the operation
+     * @return true if data was found and cleared, false otherwise
+     */
+    [[nodiscard]] bool _clearAtTime(TimeFrameIndex time, NotifyObservers notify) {
+        auto it = _data.find(time);
+        if (it != _data.end()) {
+            _data.erase(it);
+            if (notify == NotifyObservers::Yes) {
+                notifyObservers();
+            }
+            return true;
+        }
+        return false;
     }
 
     // ========== Protected Member Variables ==========

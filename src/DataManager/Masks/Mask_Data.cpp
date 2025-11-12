@@ -12,26 +12,6 @@
 
 // ========== Setters ==========
 
-bool MaskData::_clearAtTime(TimeFrameIndex const time, NotifyObservers notify) {
-    auto it = _data.find(time);
-    if (it != _data.end()) {
-        _data.erase(it);
-        if (notify == NotifyObservers::Yes) {
-            notifyObservers();
-        }
-        return true;
-    }
-    return false;
-}
-
-bool MaskData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, NotifyObservers notify) {
-
-    TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
-                                                             time_index_and_frame.time_frame,
-                                                             _time_frame.get());
-    return _clearAtTime(converted_time, notify);
-}
-
 void MaskData::addAtTime(TimeFrameIndex const time, Mask2D const & mask, bool notify) {
     int const local_index = static_cast<int>(_data[time].size());
     auto entity_id = EntityId(0);

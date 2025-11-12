@@ -55,15 +55,6 @@ public:
     // ========== Setters (Time-based) ==========
 
     /**
-     * @brief Clear the points at a specific time
-     * 
-     * @param time The time to clear the points at
-     * @param notify If true, the observers will be notified
-     * @return True if the points were cleared, false if the time did not exist
-     */
-    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
-
-    /**
      * @brief Add a point at a specific time
      * 
      * This will add a single point at a specific time.
@@ -104,11 +95,6 @@ public:
      * @param notify If true, the observers will be notified
      */
     void overwritePointAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
-
-
-    // ========== Setters (Entity-based) ==========
-
-    using PointModifier = ModificationHandle<Point2D<float>>;
 
     // ========== Image Size ==========
     /*

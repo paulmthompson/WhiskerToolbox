@@ -36,10 +36,6 @@ public:
 
     // ========== Setters (Time-based) ==========
 
-    [[nodiscard]] bool clearAtTime(TimeIndexAndFrame const & time_index_and_frame,
-                                   NotifyObservers notify);
-
-
     void addAtTime(TimeFrameIndex time, Mask2D const & mask, bool notify = true);
 
     void addAtTime(TimeFrameIndex time, Mask2D && mask, bool notify = true);
@@ -108,10 +104,6 @@ public:
                    std::vector<uint32_t> && y,
                    bool notify = true);
 
-    // ========== Setters (Entity-based) ==========
-
-    using MaskModifier = ModificationHandle<Mask2D>;
-
     // ========== Getters (Time-based) ==========
 
     [[nodiscard]] size_t size() const { return _data.size(); };
@@ -132,17 +124,6 @@ public:
      * @brief Set the image size
      */
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
-
-private:
-
-    /**
-    * @brief Removes all masks at the specified time
-    *
-    * @param time The timestamp at which to clear masks
-    * @param notify If true, observers will be notified of the change
-    * @return True if masks existed at the specified time and were cleared, false otherwise
-    */
-    [[nodiscard]] bool _clearAtTime(TimeFrameIndex time, NotifyObservers notify);
 };
 
 

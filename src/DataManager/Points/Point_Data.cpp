@@ -27,19 +27,6 @@ PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const
 
 // ========== Setters ==========
 
-bool PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
-    auto it = _data.find(time);
-    if (it != _data.end()) {
-        _data.erase(it);
-        if (notify) {
-            notifyObservers();
-        }
-        return true;
-    }
-    return false;
-}
-
-
 void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
     auto entity_id = EntityId(0);
     if (_identity_registry) {
