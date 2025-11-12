@@ -19,7 +19,7 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
         // Create a simple mask (3 points forming a triangle)
         std::vector<uint32_t> x_coords = {0, 3, 0};
         std::vector<uint32_t> y_coords = {0, 0, 3};
-        mask_data->addAtTime(TimeFrameIndex(10), x_coords, y_coords, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(10), Mask2D(x_coords, y_coords), NotifyObservers::No);
 
         auto result = calculate_mask_centroid(mask_data.get());
 
@@ -39,12 +39,12 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
         // First mask (simple square)
         std::vector<uint32_t> x1 = {0, 1, 0, 1};
         std::vector<uint32_t> y1 = {0, 0, 1, 1};
-        mask_data->addAtTime(TimeFrameIndex(20), x1, y1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(x1, y1), NotifyObservers::No);
 
         // Second mask (offset square)
         std::vector<uint32_t> x2 = {4, 5, 4, 5};
         std::vector<uint32_t> y2 = {4, 4, 5, 5};
-        mask_data->addAtTime(TimeFrameIndex(20), x2, y2, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(x2, y2), NotifyObservers::No);
 
         auto result = calculate_mask_centroid(mask_data.get());
 
@@ -74,12 +74,12 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
         // Timestamp 30: One mask (line of 3 points)
         std::vector<uint32_t> x1 = {0, 2, 4};
         std::vector<uint32_t> y1 = {0, 0, 0};
-        mask_data->addAtTime(TimeFrameIndex(30), x1, y1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(30), Mask2D(x1, y1), NotifyObservers::No);
 
         // Timestamp 40: One mask (vertical line)
         std::vector<uint32_t> x2 = {1, 1, 1};
         std::vector<uint32_t> y2 = {0, 3, 6};
-        mask_data->addAtTime(TimeFrameIndex(40), x2, y2, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(40), Mask2D(x2, y2), NotifyObservers::No);
 
         auto result = calculate_mask_centroid(mask_data.get());
 
@@ -107,7 +107,7 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
         // Add some mask data
         std::vector<uint32_t> x = {100, 200, 300};
         std::vector<uint32_t> y = {100, 150, 200};
-        mask_data->addAtTime(TimeFrameIndex(100), x, y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x, y), NotifyObservers::No);
 
         auto result = calculate_mask_centroid(mask_data.get());
 
@@ -130,7 +130,7 @@ TEST_CASE("Mask centroid calculation - Edge cases and error handling", "[mask][c
         // Add an empty mask (should be handled gracefully)
         std::vector<uint32_t> empty_x;
         std::vector<uint32_t> empty_y;
-        mask_data->addAtTime(TimeFrameIndex(10), empty_x, empty_y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(10), Mask2D(empty_x, empty_y), NotifyObservers::No);
 
         auto result = calculate_mask_centroid(mask_data.get());
 
@@ -142,12 +142,12 @@ TEST_CASE("Mask centroid calculation - Edge cases and error handling", "[mask][c
         // Add an empty mask
         std::vector<uint32_t> empty_x;
         std::vector<uint32_t> empty_y;
-        mask_data->addAtTime(TimeFrameIndex(20), empty_x, empty_y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(empty_x, empty_y), NotifyObservers::No);
 
         // Add a non-empty mask at the same timestamp
         std::vector<uint32_t> x = {2, 4};
         std::vector<uint32_t> y = {1, 3};
-        mask_data->addAtTime(TimeFrameIndex(20), x, y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(x, y), NotifyObservers::No);
 
         auto result = calculate_mask_centroid(mask_data.get());
 
@@ -167,11 +167,11 @@ TEST_CASE("Mask centroid calculation - Edge cases and error handling", "[mask][c
         // Each mask has only one point
         std::vector<uint32_t> x1 = {5};
         std::vector<uint32_t> y1 = {7};
-        mask_data->addAtTime(TimeFrameIndex(30), x1, y1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(30), Mask2D(x1, y1), NotifyObservers::No);
 
         std::vector<uint32_t> x2 = {10};
         std::vector<uint32_t> y2 = {15};
-        mask_data->addAtTime(TimeFrameIndex(30), x2, y2, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(30), Mask2D(x2, y2), NotifyObservers::No);
         auto result = calculate_mask_centroid(mask_data.get());
 
         auto const & points_view = result->getAtTime(TimeFrameIndex(30));
@@ -196,7 +196,7 @@ TEST_CASE("Mask centroid calculation - Edge cases and error handling", "[mask][c
         // Test with large coordinate values to ensure no overflow
         std::vector<uint32_t> x = {1000000, 1000001, 1000002};
         std::vector<uint32_t> y = {2000000, 2000001, 2000002};
-        mask_data->addAtTime(TimeFrameIndex(40), x, y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(40), Mask2D(x, y), NotifyObservers::No);
 
         auto result = calculate_mask_centroid(mask_data.get());
 
@@ -249,7 +249,7 @@ TEST_CASE("MaskCentroidOperation - Operation interface", "[mask][centroid][opera
         // Add test data
         std::vector<uint32_t> x = {0, 2, 4};
         std::vector<uint32_t> y = {0, 0, 0};
-        mask_data->addAtTime(TimeFrameIndex(50), x, y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(50), Mask2D(x, y), NotifyObservers::No);
 
         DataTypeVariant input_variant = mask_data;
         auto params = operation.getDefaultParameters();
@@ -293,21 +293,21 @@ TEST_CASE("Data Transform: Mask Centroid - JSON pipeline", "[transforms][mask_ce
     // Timestamp 100: Triangle mask
     std::vector<uint32_t> x1 = {0, 3, 0};
     std::vector<uint32_t> y1 = {0, 0, 3};
-    test_mask->addAtTime(TimeFrameIndex(100), x1, y1, NotifyObservers::No);
+    test_mask->addAtTime(TimeFrameIndex(100), Mask2D(x1, y1), NotifyObservers::No);
     
     // Timestamp 200: Square mask
     std::vector<uint32_t> x2 = {1, 3, 1, 3};
     std::vector<uint32_t> y2 = {1, 1, 3, 3};
-    test_mask->addAtTime(TimeFrameIndex(200), x2, y2, NotifyObservers::No);
+    test_mask->addAtTime(TimeFrameIndex(200), Mask2D(x2, y2), NotifyObservers::No);
     
     // Timestamp 300: Multiple masks
     std::vector<uint32_t> x3a = {0, 2, 0, 2};
     std::vector<uint32_t> y3a = {0, 0, 2, 2};
-    test_mask->addAtTime(TimeFrameIndex(300), x3a, y3a, NotifyObservers::No);
+    test_mask->addAtTime(TimeFrameIndex(300), Mask2D(x3a, y3a), NotifyObservers::No);
     
     std::vector<uint32_t> x3b = {5, 7, 5, 7};
     std::vector<uint32_t> y3b = {5, 5, 7, 7};
-    test_mask->addAtTime(TimeFrameIndex(300), x3b, y3b, NotifyObservers::No);
+    test_mask->addAtTime(TimeFrameIndex(300), Mask2D(x3b, y3b), NotifyObservers::No);
     // Store the mask data in DataManager with a known key
     dm.setData("test_masks", test_mask, TimeKey("default"));
     

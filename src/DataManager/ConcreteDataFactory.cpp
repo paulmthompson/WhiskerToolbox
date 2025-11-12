@@ -51,7 +51,9 @@ LoadedDataVariant ConcreteDataFactory::createMaskDataFromRaw(MaskDataRaw const &
     // Add each mask to the MaskData
     for (auto const & [time, masks]: converted_data) {
         for (auto const & mask: masks) {
-            mask_data->addAtTime(time, Mask2D(mask), NotifyObservers::No);
+            mask_data->addAtTime(TimeFrameIndex(time.getValue()),
+                                 std::move(Mask2D(mask)),
+                                 NotifyObservers::No);
         }
     }
 

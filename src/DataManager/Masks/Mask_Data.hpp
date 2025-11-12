@@ -34,55 +34,6 @@ public:
     // ========== Constructors ==========
     MaskData() = default;
 
-    // ========== Setters (Time-based) ==========
-
-    void addAtTime(TimeFrameIndex time, Mask2D const & mask, NotifyObservers notify);
-
-    void addAtTime(TimeIndexAndFrame const & time_index_and_frame, Mask2D const & mask, NotifyObservers notify);
-
-    void addAtTime(TimeFrameIndex time, Mask2D && mask, NotifyObservers notify);
-
-    /**
-     * @brief Construct a data entry in-place at a specific time.
-     *
-     * This method perfectly forwards its arguments to the
-     * constructor of the TData (e.g., Mask2D) object.
-     * This is the most efficient way to add new data.
-     *
-     * @tparam TDataArgs The types of arguments for TData's constructor
-     * @param time The time to add the data at
-     * @param args The arguments to forward to TData's constructor
-     */
-    template<typename... TDataArgs>
-    void emplaceAtTime(TimeFrameIndex time, TDataArgs &&... args) {
-        int const local_index = static_cast<int>(_data[time].size());
-        EntityId entity_id = EntityId(0);
-        if (_identity_registry) {
-            entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::MaskEntity, time, local_index);
-        }
-
-        _data[time].emplace_back(entity_id, std::forward<TDataArgs>(args)...);
-    }
-
-    /**
-     * @brief Adds a new mask at the specified time using separate x and y coordinate arrays
-    *
-    * If masks already exist at the specified time, the new mask is added to the collection.
-    * If no masks exist at that time, a new entry is created.
-    *
-    * @param time The timestamp at which to add the mask
-    * @param x Vector of x-coordinates defining the mask points
-    * @param y Vector of y-coordinates defining the mask points
-    * @param notify If true, observers will be notified of the change (default: true)
-    *
-    * @note x and y vectors must be the same length, representing coordinate pairs
-    */
-    void addAtTime(TimeFrameIndex time,
-                   std::vector<uint32_t> const & x,
-                   std::vector<uint32_t> const & y,
-                   NotifyObservers notify);
-
-
     // ========== Getters (Time-based) ==========
 
     [[nodiscard]] size_t size() const { return _data.size(); };

@@ -38,7 +38,7 @@ TEST_CASE("Data Transform: Mask Skeletonize - Happy Path", "[transforms][mask_sk
             }
         }
         
-        mask_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x_coords, y_coords), NotifyObservers::No);
 
         result_skeletonized = skeletonize_mask(mask_data.get(), &params);
         REQUIRE(result_skeletonized != nullptr);
@@ -110,7 +110,7 @@ TEST_CASE("Data Transform: Mask Skeletonize - Error and Edge Cases", "[transform
         // Create a single point mask
         std::vector<uint32_t> x_coords = {5};
         std::vector<uint32_t> y_coords = {5};
-        mask_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x_coords, y_coords), NotifyObservers::No);
 
         result_skeletonized = skeletonize_mask(mask_data.get(), &params);
         REQUIRE(result_skeletonized != nullptr);
@@ -137,7 +137,7 @@ TEST_CASE("Data Transform: Mask Skeletonize - Error and Edge Cases", "[transform
                 }
             }
             
-            mask_data->addAtTime(TimeFrameIndex(time), x_coords, y_coords, NotifyObservers::No);
+            mask_data->addAtTime(TimeFrameIndex(time), Mask2D(x_coords, y_coords), NotifyObservers::No);
         }
 
         result_skeletonized = skeletonize_mask(mask_data.get(), &params);
@@ -194,7 +194,7 @@ TEST_CASE("Data Transform: Mask Skeletonize - JSON pipeline", "[transforms][mask
         }
     }
 
-    mask_data->addAtTime(TimeFrameIndex(100), x_coords, y_coords, NotifyObservers::No);
+    mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x_coords, y_coords), NotifyObservers::No);
 
     mask_data->setTimeFrame(time_frame);
     dm.setData("TestMask", mask_data, TimeKey("default"));
@@ -274,7 +274,7 @@ TEST_CASE("Data Transform: Mask Skeletonize - load_data_from_json_config", "[tra
         }
     }
 
-    test_mask->addAtTime(TimeFrameIndex(100), x_coords, y_coords, NotifyObservers::No);
+    test_mask->addAtTime(TimeFrameIndex(100), Mask2D(x_coords, y_coords), NotifyObservers::No);
 
     test_mask->setTimeFrame(time_frame);
     

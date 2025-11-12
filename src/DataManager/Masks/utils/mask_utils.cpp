@@ -55,7 +55,7 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
         for (auto const & mask : entries) {
             if (mask.data.empty()) {
                 if (preserve_empty_masks) {
-                    result_mask_data->addAtTime(time, Mask2D{}, NotifyObservers::No);
+                    result_mask_data->emplaceAtTime(TimeFrameIndex(time.getValue()), Mask2D());
                 }
                 processed_masks++;
                 continue;

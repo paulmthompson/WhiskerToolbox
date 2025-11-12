@@ -31,7 +31,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // Create a simple mask (3 points)
         std::vector<uint32_t> x_coords = {1, 2, 3};
         std::vector<uint32_t> y_coords = {1, 2, 3};
-        mask_data->addAtTime(TimeFrameIndex(10), x_coords, y_coords, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(10), Mask2D(x_coords, y_coords), NotifyObservers::No);
 
         auto result = area(mask_data.get());
 
@@ -48,12 +48,12 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // First mask (3 points)
         std::vector<uint32_t> x1 = {1, 2, 3};
         std::vector<uint32_t> y1 = {1, 2, 3};
-        mask_data->addAtTime(TimeFrameIndex(20), x1, y1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(x1, y1), NotifyObservers::No);
 
         // Second mask (5 points)
         std::vector<uint32_t> x2 = {4, 5, 6, 7, 8};
         std::vector<uint32_t> y2 = {4, 5, 6, 7, 8};
-        mask_data->addAtTime(TimeFrameIndex(20), x2, y2, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(x2, y2), NotifyObservers::No);
 
         auto result = area(mask_data.get());
 
@@ -70,16 +70,16 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // Timestamp 30: One mask with 2 points
         std::vector<uint32_t> x1 = {1, 2};
         std::vector<uint32_t> y1 = {1, 2};
-        mask_data->addAtTime(TimeFrameIndex(30), x1, y1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(30), Mask2D(x1, y1), NotifyObservers::No);
 
         // Timestamp 40: Two masks with 3 and 4 points
         std::vector<uint32_t> x2 = {1, 2, 3};
         std::vector<uint32_t> y2 = {1, 2, 3};
-        mask_data->addAtTime(TimeFrameIndex(40), x2, y2, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(40), Mask2D(x2, y2), NotifyObservers::No);
 
         std::vector<uint32_t> x3 = {4, 5, 6, 7};
         std::vector<uint32_t> y3 = {4, 5, 6, 7};
-        mask_data->addAtTime(TimeFrameIndex(40), x3, y3, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(40), Mask2D(x3, y3), NotifyObservers::No);
         auto result = area(mask_data.get());
 
         auto const & values = result->getAnalogTimeSeries();
@@ -101,7 +101,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // Add some mask data
         std::vector<uint32_t> x = {1, 2, 3, 4};
         std::vector<uint32_t> y = {1, 2, 3, 4};
-        mask_data->addAtTime(TimeFrameIndex(100), x, y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x, y), NotifyObservers::No);
 
         auto result = area(mask_data.get());
 
@@ -125,7 +125,7 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
         // Add an empty mask (should be handled gracefully)
         std::vector<uint32_t> empty_x;
         std::vector<uint32_t> empty_y;
-        mask_data->addAtTime(TimeFrameIndex(10), empty_x, empty_y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(10), Mask2D(empty_x, empty_y), NotifyObservers::No);
 
         auto result = area(mask_data.get());
 
@@ -138,12 +138,12 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
         // Add an empty mask
         std::vector<uint32_t> empty_x;
         std::vector<uint32_t> empty_y;
-        mask_data->addAtTime(TimeFrameIndex(20), empty_x, empty_y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(empty_x, empty_y), NotifyObservers::No);
 
         // Add a non-empty mask at the same timestamp
         std::vector<uint32_t> x = {1, 2, 3};
         std::vector<uint32_t> y = {1, 2, 3};
-        mask_data->addAtTime(TimeFrameIndex(20), x, y, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(x, y), NotifyObservers::No);
 
         auto result = area(mask_data.get());
 
@@ -157,7 +157,7 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
         for (int i = 0; i < 10; i++) {
             std::vector<uint32_t> x(i+1, 1);
             std::vector<uint32_t> y(i+1, 1);
-            mask_data->addAtTime(TimeFrameIndex(30), x, y, NotifyObservers::No);
+            mask_data->addAtTime(TimeFrameIndex(30), Mask2D(x, y), NotifyObservers::No);
         }
 
         auto result = area(mask_data.get());
@@ -190,11 +190,11 @@ TEST_CASE("Data Transform: Mask Area - JSON pipeline", "[transforms][mask_area][
     // Add masks at different timestamps
     std::vector<uint32_t> x1 = {1, 2, 3};
     std::vector<uint32_t> y1 = {1, 2, 3};
-    mask_data->addAtTime(TimeFrameIndex(100), x1, y1, NotifyObservers::No);
+    mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x1, y1), NotifyObservers::No);
 
     std::vector<uint32_t> x2 = {4, 5, 6, 7};
     std::vector<uint32_t> y2 = {4, 5, 6, 7};
-    mask_data->addAtTime(TimeFrameIndex(200), x2, y2, NotifyObservers::No);
+    mask_data->addAtTime(TimeFrameIndex(200), Mask2D(x2, y2), NotifyObservers::No);
     dm.setData("TestMaskData", mask_data, TimeKey("default"));
 
     TransformPipeline pipeline(&dm, &registry);
@@ -234,14 +234,14 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
     // Add multiple masks at different timestamps
     std::vector<uint32_t> x1 = {1, 2, 3};
     std::vector<uint32_t> y1 = {1, 2, 3};
-    test_mask_data->addAtTime(TimeFrameIndex(100), x1, y1, NotifyObservers::No);
+    test_mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x1, y1), NotifyObservers::No);
 
     std::vector<uint32_t> x2 = {4, 5, 6, 7, 8};
     std::vector<uint32_t> y2 = {4, 5, 6, 7, 8};
-    test_mask_data->addAtTime(TimeFrameIndex(200), x2, y2, NotifyObservers::No);
+    test_mask_data->addAtTime(TimeFrameIndex(200), Mask2D(x2, y2), NotifyObservers::No);
     std::vector<uint32_t> x3 = {9, 10};
     std::vector<uint32_t> y3 = {9, 10};
-    test_mask_data->addAtTime(TimeFrameIndex(300), x3, y3, NotifyObservers::No);
+    test_mask_data->addAtTime(TimeFrameIndex(300), Mask2D(x3, y3), NotifyObservers::No);
 
     // Store the mask data in DataManager with a known key
     dm.setData("test_mask_data", test_mask_data, TimeKey("default"));
@@ -358,11 +358,11 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
     // Add two masks at the same timestamp
     std::vector<uint32_t> x1_multi = {1, 2};
     std::vector<uint32_t> y1_multi = {1, 2};
-    multi_mask_data->addAtTime(TimeFrameIndex(500), x1_multi, y1_multi, NotifyObservers::No);
+    multi_mask_data->addAtTime(TimeFrameIndex(500), Mask2D(x1_multi, y1_multi), NotifyObservers::No);
     
     std::vector<uint32_t> x2_multi = {3, 4, 5};
     std::vector<uint32_t> y2_multi = {3, 4, 5};
-    multi_mask_data->addAtTime(TimeFrameIndex(500), x2_multi, y2_multi, NotifyObservers::No);
+    multi_mask_data->addAtTime(TimeFrameIndex(500), Mask2D(x2_multi, y2_multi), NotifyObservers::No);
     dm.setData("multi_mask_data", multi_mask_data, TimeKey("default"));
     
     const char* json_config_multi = 

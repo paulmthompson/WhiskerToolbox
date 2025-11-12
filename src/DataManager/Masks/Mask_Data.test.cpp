@@ -33,7 +33,7 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
 
     SECTION("Adding masks at time") {
         // Add first mask at time 0
-        mask_data.addAtTime(TimeFrameIndex(0), x1, y1, NotifyObservers::No);
+        mask_data.addAtTime(TimeFrameIndex(0), Mask2D(x1, y1), NotifyObservers::No);
 
         auto masks_at_0 = mask_data.getAtTime(TimeFrameIndex(0));
         REQUIRE(masks_at_0.size() == 1);
@@ -42,7 +42,7 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         REQUIRE(masks_at_0[0][0].y == 1);
 
         // Add second mask at time 0
-        mask_data.addAtTime(TimeFrameIndex(0), x2, y2, NotifyObservers::No);
+        mask_data.addAtTime(TimeFrameIndex(0), Mask2D(x2, y2), NotifyObservers::No);
         masks_at_0 = mask_data.getAtTime(TimeFrameIndex(0));
         REQUIRE(masks_at_0.size() == 2);
         REQUIRE(masks_at_0[1].size() == 4);
@@ -58,8 +58,8 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
 
     SECTION("Clearing masks at time") {
         // Add masks and then clear them
-        mask_data.addAtTime(TimeFrameIndex(0), x1, y1, NotifyObservers::No);
-        mask_data.addAtTime(TimeFrameIndex(0), x2, y2, NotifyObservers::No);
+        mask_data.addAtTime(TimeFrameIndex(0), Mask2D(x1, y1), NotifyObservers::No);
+        mask_data.addAtTime(TimeFrameIndex(0), Mask2D(x2, y2), NotifyObservers::No);
         mask_data.addAtTime(TimeFrameIndex(10), points, NotifyObservers::No);
 
         static_cast<void>(mask_data.clearAtTime(TimeIndexAndFrame(0, timeframe.get()),
@@ -101,8 +101,8 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto source_data = data_manager->getData<MaskData>("source_data");
         auto target_data = data_manager->getData<MaskData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1, NotifyObservers::No);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), Mask2D(x1, y1), NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), Mask2D(x2, y2), NotifyObservers::No);
         source_data->addAtTime(TimeFrameIndex(20), points, NotifyObservers::No);
 
         auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
@@ -125,7 +125,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto source_data = data_manager->getData<MaskData>("source_data");
         auto target_data = data_manager->getData<MaskData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), Mask2D(x1, y1), NotifyObservers::No);
         source_data->addAtTime(TimeFrameIndex(20), points, NotifyObservers::No);
 
         auto ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
@@ -148,7 +148,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto source_data = data_manager->getData<MaskData>("source_data");
         auto target_data = data_manager->getData<MaskData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), Mask2D(x1, y1), NotifyObservers::No);
         std::vector<EntityId> fake_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> ids_set_fakec(fake_ids.begin(), fake_ids.end());
         std::size_t copied = source_data->copyByEntityIds(*target_data, ids_set_fakec, NotifyObservers::No);
@@ -163,8 +163,8 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto source_data = data_manager->getData<MaskData>("source_data");
         auto target_data = data_manager->getData<MaskData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1, NotifyObservers::No);
-        source_data->addAtTime(TimeFrameIndex(10), x2, y2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), Mask2D(x1, y1), NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), Mask2D(x2, y2), NotifyObservers::No);
         auto ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         std::vector<EntityId> ids_10(ids_10_view.begin(), ids_10_view.end());
         REQUIRE(ids_10.size() == 2);
@@ -185,7 +185,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto source_data = data_manager->getData<MaskData>("source_data");
         auto target_data = data_manager->getData<MaskData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), Mask2D(x1, y1), NotifyObservers::No);
         source_data->addAtTime(TimeFrameIndex(20), points, NotifyObservers::No);
 
         auto ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
@@ -207,7 +207,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
         auto source_data = data_manager->getData<MaskData>("source_data");
         auto target_data = data_manager->getData<MaskData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), x1, y1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), Mask2D(x1, y1), NotifyObservers::No);
         std::vector<EntityId> fake_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> const ids_set_fake(fake_ids.begin(), fake_ids.end());
         std::size_t moved = source_data->moveByEntityIds(*target_data, ids_set_fake, NotifyObservers::No);
@@ -231,7 +231,7 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
 
     SECTION("Notification on clearAtTime") {
         // First add a mask
-        mask_data.addAtTime(TimeFrameIndex(0), x1, y1, NotifyObservers::No);// Don't notify
+        mask_data.addAtTime(TimeFrameIndex(0), Mask2D(x1, y1), NotifyObservers::No);// Don't notify
         REQUIRE(notification_count == 0);
 
         // Clear with notification
@@ -249,11 +249,11 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
 
     SECTION("Notification on addAtTime") {
         // Add with notification
-        mask_data.addAtTime(TimeFrameIndex(0), x1, y1, NotifyObservers::Yes);
+        mask_data.addAtTime(TimeFrameIndex(0), Mask2D(x1, y1), NotifyObservers::Yes);
         REQUIRE(notification_count == 1);
 
         // Add with notification disabled
-        mask_data.addAtTime(TimeFrameIndex(0), x1, y1, NotifyObservers::No);
+        mask_data.addAtTime(TimeFrameIndex(0), Mask2D(x1, y1), NotifyObservers::No);
         REQUIRE(notification_count == 1);// Still 1, not incremented
 
         // Add using point vector with notification
@@ -268,8 +268,8 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
 
     SECTION("Multiple operations with single notification") {
         // Perform multiple operations without notifying
-        mask_data.addAtTime(TimeFrameIndex(0), x1, y1, NotifyObservers::No);
-        mask_data.addAtTime(TimeFrameIndex(1), x1, y1, NotifyObservers::No);
+        mask_data.addAtTime(TimeFrameIndex(0), Mask2D(x1, y1), NotifyObservers::No);
+        mask_data.addAtTime(TimeFrameIndex(1), Mask2D(x1, y1), NotifyObservers::No);
 
         REQUIRE(notification_count == 0);
 
@@ -292,7 +292,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
         std::vector<uint32_t> empty_y;
 
         // This shouldn't crash
-        mask_data.addAtTime(TimeFrameIndex(0), empty_x, empty_y, NotifyObservers::No);
+        mask_data.addAtTime(TimeFrameIndex(0), Mask2D(empty_x, empty_y), NotifyObservers::No);
 
         auto masks = mask_data.getAtTime(TimeFrameIndex(0));
         REQUIRE(masks.size() == 1);

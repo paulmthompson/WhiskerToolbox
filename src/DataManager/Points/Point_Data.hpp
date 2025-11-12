@@ -52,39 +52,6 @@ public:
      */
     explicit PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const & data);
 
-    // ========== Setters (Time-based) ==========
-
-    /**
-     * @brief Add a point at a specific time
-     * 
-     * This will add a single point at a specific time.
-     * 
-     * If the time does not exist, it will be created.
-     * 
-     * If the time already exists, the point will be added to the existing points.
-     * 
-     * @param time The time to add the point at
-     * @param point The point to add
-     * @param notify If true, the observers will be notified
-     */
-    void addAtTime(TimeFrameIndex time, Point2D<float> const & point, NotifyObservers notify);
-
-
-    /**
-     * @brief Add a batch of points at a specific time by copying them.
-     *
-     * Appends the points to any already existing at that time.
-     */
-    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & points_to_add, NotifyObservers notify);
-
-    /**
-     * @brief Add a batch of points at a specific time by moving them.
-     *
-     * Appends the points to any already existing at that time.
-     * The input vector will be left in a state with "empty" points.
-     */
-    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> && points_to_add, NotifyObservers notify);
-
     // ========== Image Size ==========
     /*
     Image size is used to store the size of the image that the points belong to.

@@ -429,6 +429,186 @@ public:
         return _clearAtTime(converted_time, notify);
     }
 
+    // ========== Add Data Methods ==========
+
+    /**
+     * @brief Add data at a specific time (by copying).
+     *
+     * This overload is called when you pass an existing lvalue (e.g., a named variable).
+     * It will create a copy of the data.
+     * 
+     * @param time The time to add the data at
+     * @param data The data to add (will be copied)
+     * @param notify Whether to notify observers after the operation
+     */
+    void addAtTime(TimeFrameIndex time, TData const & data, NotifyObservers notify) {
+        int const local_index = static_cast<int>(_data[time].size());
+        EntityId entity_id = EntityId(0);
+        if (_identity_registry) {
+            entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
+        }
+
+        _data[time].emplace_back(entity_id, data);
+
+        if (notify == NotifyObservers::Yes) {
+            notifyObservers();
+        }
+    }
+
+    /**
+     * @brief Add data at a specific time with timeframe conversion (by copying).
+     * 
+     * @param time_index_and_frame The time and timeframe to add at
+     * @param data The data to add (will be copied)
+     * @param notify Whether to notify observers after the operation
+     */
+    void addAtTime(TimeIndexAndFrame const & time_index_and_frame, TData const & data, NotifyObservers notify) {
+        TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
+                                                                 time_index_and_frame.time_frame,
+                                                                 _time_frame.get());
+        addAtTime(converted_time, data, notify);
+    }
+
+    /**
+     * @brief Add data at a specific time (by moving).
+     *
+     * This overload is called when you pass an rvalue (e.g., a temporary object
+     * or the result of std::move()). It will move the data, avoiding a copy.
+     * 
+     * @param time The time to add the data at
+     * @param data The data to add (will be moved)
+     * @param notify Whether to notify observers after the operation
+     */
+    void addAtTime(TimeFrameIndex time, TData && data, NotifyObservers notify) {
+        int const local_index = static_cast<int>(_data[time].size());
+        EntityId entity_id = EntityId(0);
+        if (_identity_registry) {
+            entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
+        }
+
+        _data[time].emplace_back(entity_id, std::move(data));
+
+        if (notify == NotifyObservers::Yes) {
+            notifyObservers();
+        }
+    }
+
+    /**
+     * @brief Add data at a specific time with timeframe conversion (by moving).
+     * 
+     * @param time_index_and_frame The time and timeframe to add at
+     * @param data The data to add (will be moved)
+     * @param notify Whether to notify observers after the operation
+     */
+    void addAtTime(TimeIndexAndFrame const & time_index_and_frame, TData && data, NotifyObservers notify) {
+        TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
+                                                                 time_index_and_frame.time_frame,
+                                                                 _time_frame.get());
+        addAtTime(converted_time, std::move(data), notify);
+    }
+
+    /**
+     * @brief Construct a data entry in-place at a specific time.
+     *
+     * This method perfectly forwards its arguments to the
+     * constructor of the TData (e.g., Line2D, Mask2D, Point2D<float>) object.
+     * This is the most efficient way to add new data.
+     *
+     * @tparam TDataArgs The types of arguments for TData's constructor
+     * @param time The time to add the data at
+     * @param args The arguments to forward to TData's constructor
+     */
+    template<typename... TDataArgs>
+    void emplaceAtTime(TimeFrameIndex time, TDataArgs &&... args) {
+        int const local_index = static_cast<int>(_data[time].size());
+        EntityId entity_id = EntityId(0);
+        if (_identity_registry) {
+            entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
+        }
+
+        _data[time].emplace_back(entity_id, std::forward<TDataArgs>(args)...);
+    }
+
+    /**
+     * @brief Add a batch of data at a specific time by copying them.
+     *
+     * Appends the data entries to any already existing at that time.
+     * 
+     * @param time The time to add the data at
+     * @param data_to_add Vector of data to add (will be copied)
+     * @param notify Whether to notify observers after the operation
+     */
+    void addAtTime(TimeFrameIndex time, std::vector<TData> const & data_to_add, NotifyObservers notify) {
+        if (data_to_add.empty()) {
+            return;
+        }
+
+        // 1. Get (or create) the vector of entries for this time
+        // This is our single map lookup.
+        auto & entry_vec = _data[time];
+
+        // 2. Reserve space once for high performance
+        size_t const old_size = entry_vec.size();
+        entry_vec.reserve(old_size + data_to_add.size());
+
+        // 3. Loop and emplace new entries
+        for (size_t i = 0; i < data_to_add.size(); ++i) {
+            int const local_index = static_cast<int>(old_size + i);
+            EntityId entity_id = EntityId(0);
+            if (_identity_registry) {
+                entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
+            }
+
+            // Calls DataEntry(entity_id, data_to_add[i])
+            // This will invoke the TData copy constructor
+            entry_vec.emplace_back(entity_id, data_to_add[i]);
+        }
+
+        if (notify == NotifyObservers::Yes) {
+            notifyObservers();
+        }
+    }
+
+    /**
+     * @brief Add a batch of data at a specific time by moving them.
+     *
+     * Appends the data entries to any already existing at that time.
+     * The input vector will be left in a state with "empty" data entries.
+     * 
+     * @param time The time to add the data at
+     * @param data_to_add Vector of data to add (will be moved)
+     * @param notify Whether to notify observers after the operation
+     */
+    void addAtTime(TimeFrameIndex time, std::vector<TData> && data_to_add, NotifyObservers notify) {
+        if (data_to_add.empty()) {
+            return;
+        }
+
+        // 1. Get (or create) the vector of entries for this time
+        auto & entry_vec = _data[time];
+
+        // 2. Reserve space once
+        size_t const old_size = entry_vec.size();
+        entry_vec.reserve(old_size + data_to_add.size());
+
+        // 3. Loop and emplace new entries
+        for (size_t i = 0; i < data_to_add.size(); ++i) {
+            int const local_index = static_cast<int>(old_size + i);
+            EntityId entity_id = EntityId(0);
+            if (_identity_registry) {
+                entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
+            }
+
+            // Calls DataEntry(entity_id, std::move(data_to_add[i]))
+            // This will invoke the TData MOVE constructor
+            entry_vec.emplace_back(entity_id, std::move(data_to_add[i]));
+        }
+
+        if (notify == NotifyObservers::Yes) {
+            notifyObservers();
+        }
+    }
+
     // ========== Data Access Methods ==========
 
     /**
