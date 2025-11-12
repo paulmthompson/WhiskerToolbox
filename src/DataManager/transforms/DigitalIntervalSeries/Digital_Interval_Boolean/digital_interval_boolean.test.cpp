@@ -896,9 +896,7 @@ TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config
     std::vector<Interval> other_intervals = {{5, 15}, {25, 35}};
     
     auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-    input_dis->setTimeFrame(time_frame);
     auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
-    other_dis->setTimeFrame(time_frame);
     
     // Store the interval data in DataManager with known keys
     dm.setData("input_intervals", input_dis, TimeKey("default"));
@@ -916,9 +914,9 @@ TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config
         "        },\n"
         "        \"steps\": [\n"
         "            {\n"
-        "                \"step_id\": \"1\",\n"
+        "                \"step_id\": \"analysis\",\n"
         "                \"transform_name\": \"Boolean Operation\",\n"
-        "                \"phase\": \"analysis\",\n"
+        "                \"phase\": \"1\",\n"
         "                \"input_key\": \"input_intervals\",\n"
         "                \"output_key\": \"and_result\",\n"
         "                \"parameters\": {\n"
@@ -929,7 +927,7 @@ TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config
         "            {\n"
         "                \"step_id\": \"2\",\n"
         "                \"transform_name\": \"Boolean Operation\",\n"
-        "                \"phase\": \"analysis\",\n"
+        "                \"phase\": \"2\",\n"
         "                \"input_key\": \"input_intervals\",\n"
         "                \"output_key\": \"or_result\",\n"
         "                \"parameters\": {\n"
@@ -940,7 +938,7 @@ TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config
         "            {\n"
         "                \"step_id\": \"3\",\n"
         "                \"transform_name\": \"Boolean Operation\",\n"
-        "                \"phase\": \"analysis\",\n"
+        "                \"phase\": \"3\",\n"
         "                \"input_key\": \"input_intervals\",\n"
         "                \"output_key\": \"xor_result\",\n"
         "                \"parameters\": {\n"
@@ -951,7 +949,7 @@ TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config
         "            {\n"
         "                \"step_id\": \"4\",\n"
         "                \"transform_name\": \"Boolean Operation\",\n"
-        "                \"phase\": \"analysis\",\n"
+        "                \"phase\": \"4\",\n"
         "                \"input_key\": \"input_intervals\",\n"
         "                \"output_key\": \"not_result\",\n"
         "                \"parameters\": {\n"
@@ -961,7 +959,7 @@ TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config
         "            {\n"
         "                \"step_id\": \"5\",\n"
         "                \"transform_name\": \"Boolean Operation\",\n"
-        "                \"phase\": \"analysis\",\n"
+        "                \"phase\": \"5\",\n"
         "                \"input_key\": \"input_intervals\",\n"
         "                \"output_key\": \"and_not_result\",\n"
         "                \"parameters\": {\n"

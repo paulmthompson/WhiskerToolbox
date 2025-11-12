@@ -1,12 +1,15 @@
 #include "EntityRegistry.hpp"
 
 #include <cassert>
+#include <mutex>
 
 EntityId EntityRegistry::ensureId(std::string const & data_key,
                                   EntityKind kind,
                                   TimeFrameIndex const & time,
                                   int local_index) {
     assert(local_index >= 0);
+
+    std::lock_guard<std::mutex> lock(m_mutex);
 
     EntityTupleKey const key{data_key, kind, time.getValue(), local_index};
     auto it = m_tuple_to_id.find(key);
@@ -23,6 +26,8 @@ EntityId EntityRegistry::ensureId(std::string const & data_key,
 }
 
 std::optional<EntityDescriptor> EntityRegistry::get(EntityId id) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
     auto it = m_id_to_descriptor.find(id);
     if (it == m_id_to_descriptor.end()) {
         return std::nullopt;
@@ -31,6 +36,8 @@ std::optional<EntityDescriptor> EntityRegistry::get(EntityId id) const {
 }
 
 void EntityRegistry::clear() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
     m_tuple_to_id.clear();
     m_id_to_descriptor.clear();
     m_next_id = EntityId(1);  // Reset to 1, not 0, since 0 is sentinel value

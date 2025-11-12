@@ -147,7 +147,10 @@ DataManager::DataManager() {
 }
 
 DataManager::~DataManager() {
-    // Clear the EntityRegistry to prevent memory leaks
+    // Clear data objects first to release their references to EntityRegistry
+    _data.clear();
+    
+    // Then clear the EntityRegistry to prevent memory leaks
     if (_entity_registry) {
         _entity_registry->clear();
     }
