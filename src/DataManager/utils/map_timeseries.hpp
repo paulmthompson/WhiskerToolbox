@@ -12,6 +12,7 @@
 #include <vector>
 
 class LineData;
+class PointData;
 
 // Template function for moving entries by EntityIds (unordered_set variant for O(1) lookups)
 template<typename SourceDataMap, typename TargetType, typename DataExtractor>
@@ -72,6 +73,8 @@ inline std::size_t copy_by_entity_ids(SourceDataMap const & source_data,
         for (auto const & entry: entries) {
             if (entity_ids_set.contains(entry.entity_id)) {
                 if constexpr (std::is_same_v<TargetType, LineData>) {
+                    target.addAtTime(time, extract_data(entry), NotifyObservers::No);
+                } else if constexpr (std::is_same_v<TargetType, PointData>) {
                     target.addAtTime(time, extract_data(entry), NotifyObservers::No);
                 } else {
                     target.addAtTime(time, extract_data(entry), false);

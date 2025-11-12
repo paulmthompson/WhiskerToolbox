@@ -67,7 +67,7 @@ public:
      * @param point The point to add
      * @param notify If true, the observers will be notified
      */
-    void addAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
+    void addAtTime(TimeFrameIndex time, Point2D<float> const & point, NotifyObservers notify);
 
 
     /**
@@ -75,7 +75,7 @@ public:
      *
      * Appends the points to any already existing at that time.
      */
-    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & points_to_add);
+    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & points_to_add, NotifyObservers notify);
 
     /**
      * @brief Add a batch of points at a specific time by moving them.
@@ -83,18 +83,7 @@ public:
      * Appends the points to any already existing at that time.
      * The input vector will be left in a state with "empty" points.
      */
-    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> && points_to_add);
-
-    /**
-     * @brief Overwrite a point at a specific time
-     * 
-     * This will overwrite a point at a specific time.
-     * 
-     * @param time The time to overwrite the point at
-     * @param point The point to overwrite
-     * @param notify If true, the observers will be notified
-     */
-    void overwritePointAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
+    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> && points_to_add, NotifyObservers notify);
 
     // ========== Image Size ==========
     /*

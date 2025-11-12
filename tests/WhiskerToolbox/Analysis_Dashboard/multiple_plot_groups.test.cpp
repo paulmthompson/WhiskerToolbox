@@ -88,8 +88,8 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Multiple SpatialOver
 
     // Seed PointData with two distinct frames for unique EntityIds
     auto point_data = std::make_shared<PointData>();
-    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f, 100.f}});
-    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f, 150.f}});
+    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f, 100.f}}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f, 150.f}}, NotifyObservers::No);
     data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
 
     // Docking organizer environment
@@ -210,8 +210,8 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlay - onG
 
     // Data setup with entity ids
     auto point_data = std::make_shared<PointData>();
-    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f, 100.f}});
-    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f, 150.f}});
+    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f, 100.f}}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f, 150.f}}, NotifyObservers::No);
     data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
 
     ads::CDockManager dockManager;

@@ -679,7 +679,7 @@ void Whisker_Widget::_createNewWhiskerPad() {
         std::cout << "Created new PointData: " << new_key << std::endl;
 
         // Create a new point at frame one with value 0,0
-        _data_manager->getData<PointData>(new_key)->addAtTime(TimeFrameIndex(0), {0.0f, 0.0f});
+        _data_manager->getData<PointData>(new_key)->addAtTime(TimeFrameIndex(0), {0.0f, 0.0f}, NotifyObservers::No);
 
         // Repopulate the combo box to include the new entry
         _populateWhiskerPadCombo();

@@ -541,9 +541,9 @@ TEST_CASE("DataAggregation - Point data transformations", "[data_aggregation][po
         auto point_data = std::make_shared<PointData>();
         
         // Add points at different times within the interval
-        point_data->addAtTime(TimeFrameIndex(1), {10.0f, 20.0f}, false);  // Time 1: (10, 20)
-        point_data->addAtTime(TimeFrameIndex(2), {30.0f, 40.0f}, false);  // Time 2: (30, 40)
-        point_data->addAtTime(TimeFrameIndex(3), {50.0f, 60.0f}, false);  // Time 3: (50, 60)
+        point_data->addAtTime(TimeFrameIndex(1), {10.0f, 20.0f}, NotifyObservers::No);  // Time 1: (10, 20)
+        point_data->addAtTime(TimeFrameIndex(2), {30.0f, 40.0f}, NotifyObservers::No);  // Time 2: (30, 40)
+        point_data->addAtTime(TimeFrameIndex(3), {50.0f, 60.0f}, NotifyObservers::No);  // Time 3: (50, 60)
         
         std::vector<Interval> row_intervals = {
             {1, 3}  // Should include all three points
@@ -576,8 +576,8 @@ TEST_CASE("DataAggregation - Point data transformations", "[data_aggregation][po
         std::vector<Point2D<float>> points_at_time_1 = {{10.0f, 20.0f}, {30.0f, 40.0f}};
         std::vector<Point2D<float>> points_at_time_2 = {{50.0f, 60.0f}, {70.0f, 80.0f}};
         
-        point_data->addAtTime(TimeFrameIndex(1), points_at_time_1);
-        point_data->addAtTime(TimeFrameIndex(2), points_at_time_2);
+        point_data->addAtTime(TimeFrameIndex(1), points_at_time_1, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(2), points_at_time_2, NotifyObservers::No);
         
         std::vector<Interval> row_intervals = {
             {1, 2}  // Should include all four points
@@ -616,9 +616,9 @@ TEST_CASE("DataAggregation - Point data transformations", "[data_aggregation][po
         
         // Create point reference data
         auto point_data = std::make_shared<PointData>();
-        point_data->addAtTime(TimeFrameIndex(1), {100.0f, 200.0f}, false);
-        point_data->addAtTime(TimeFrameIndex(2), {300.0f, 400.0f}, false);
-        point_data->addAtTime(TimeFrameIndex(3), {500.0f, 600.0f}, false);
+        point_data->addAtTime(TimeFrameIndex(1), {100.0f, 200.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(2), {300.0f, 400.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(3), {500.0f, 600.0f}, NotifyObservers::No);
         
         std::vector<Interval> row_intervals = {
             {1, 3}  // Will overlap with ref_intervals[0], include analog values, and include 3 points
@@ -684,7 +684,7 @@ TEST_CASE("DataAggregation - Point data transformations", "[data_aggregation][po
         SECTION("No points in interval") {
             auto point_data = std::make_shared<PointData>();
             // Add points outside the interval
-            point_data->addAtTime(TimeFrameIndex(10), {100.0f, 200.0f}, false);
+            point_data->addAtTime(TimeFrameIndex(10), {100.0f, 200.0f}, NotifyObservers::No);
             
             std::map<std::string, std::shared_ptr<PointData>> reference_points = {
                 {"empty_interval", point_data}

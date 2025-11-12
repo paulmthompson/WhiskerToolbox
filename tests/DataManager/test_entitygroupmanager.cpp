@@ -550,13 +550,13 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
 
         // Add points to PointData
         for (auto const & point: points_t10) {
-            point_data->addAtTime(TimeFrameIndex(10), point);
+            point_data->addAtTime(TimeFrameIndex(10), point, NotifyObservers::No);
         }
         for (auto const & point: points_t20) {
-            point_data->addAtTime(TimeFrameIndex(20), point);
+            point_data->addAtTime(TimeFrameIndex(20), point, NotifyObservers::No);
         }
         for (auto const & point: points_t30) {
-            point_data->addAtTime(TimeFrameIndex(30), point);
+            point_data->addAtTime(TimeFrameIndex(30), point, NotifyObservers::No);
         }
 
         // Set image size

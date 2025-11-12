@@ -106,9 +106,9 @@ private:
         };
         
         // Add points to different time frames
-        point_data->addAtTime(TimeFrameIndex(1), points_frame_1);
-        point_data->addAtTime(TimeFrameIndex(2), points_frame_2);
-        point_data->addAtTime(TimeFrameIndex(3), points_frame_3);
+        point_data->addAtTime(TimeFrameIndex(1), points_frame_1, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(2), points_frame_2, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(3), points_frame_3, NotifyObservers::No);
         
         // Set image size for the point data
         point_data->setImageSize(ImageSize(800, 600));
@@ -370,7 +370,7 @@ private:
                 points.emplace_back(coord_dist(*m_random_engine), coord_dist(*m_random_engine));
             }
             
-            point_data->addAtTime(TimeFrameIndex(frame), points);
+            point_data->addAtTime(TimeFrameIndex(frame), points, NotifyObservers::No);
         }
         
         point_data->setImageSize(ImageSize(800, 600));

@@ -62,8 +62,8 @@ TEST_CASE("PointParticleFilter: Basic straight line tracking", "[PointParticleFi
     Point2D<float> start_point{50.0f, 50.0f};
     Point2D<float> end_point{150.0f, 50.0f};
     
-    point_data->addAtTime(TimeFrameIndex(0), start_point);
-    point_data->addAtTime(TimeFrameIndex(10), end_point);
+    point_data->addAtTime(TimeFrameIndex(0), start_point, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(10), end_point, NotifyObservers::No);
     
     // Get entity IDs and assign to group
     auto all_entries = point_data->getAllEntries();
@@ -130,8 +130,8 @@ TEST_CASE("PointParticleFilter: Tracking with gaps in masks", "[PointParticleFil
     auto group_id = group_manager->createGroup("Test Group", "Test description");
     
     // Ground truth at frames 0 and 10
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f});
-    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.0f, 150.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.0f, 150.0f}, NotifyObservers::No);
     
     // Assign to group
     for (auto const & [time, entries] : point_data->getAllEntries()) {
@@ -188,12 +188,12 @@ TEST_CASE("PointParticleFilter: Multiple groups tracked independently", "[PointP
     auto group2 = group_manager->createGroup("Group 2", "Second group");
     
     // Add ground truth for group 1 (left trajectory)
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{50.0f, 50.0f});
-    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{50.0f, 100.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{50.0f, 50.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{50.0f, 100.0f}, NotifyObservers::No);
     
     // Add ground truth for group 2 (right trajectory)
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{150.0f, 50.0f});
-    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{150.0f, 100.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{150.0f, 50.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{150.0f, 100.0f}, NotifyObservers::No);
     
     // Assign entities to groups
     auto all_entries = point_data->getAllEntries();
@@ -253,7 +253,7 @@ TEST_CASE("PointParticleFilter: Single ground truth point (no tracking)", "[Poin
     auto group_id = group_manager->createGroup("Test Group", "Test description");
     
     // Only one ground truth point
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f}, NotifyObservers::No);
     
     for (auto const & [time, entries] : point_data->getAllEntries()) {
         for (auto const & entry : entries) {
@@ -309,8 +309,8 @@ TEST_CASE("PointParticleFilter: Curved trajectory", "[PointParticleFilter]") {
     auto group_id = group_manager->createGroup("Test Group", "Test description");
     
     // Ground truth following a quarter circle
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{150.0f, 100.0f});
-    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.0f, 150.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{150.0f, 100.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.0f, 150.0f}, NotifyObservers::No);
     
     for (auto const & [time, entries] : point_data->getAllEntries()) {
         for (auto const & entry : entries) {
@@ -415,8 +415,8 @@ TEST_CASE("PointParticleFilterOperation: Execute with valid data", "[PointPartic
     auto group_id = group_manager->createGroup("Test Group", "Test description");
     
     // Add simple ground truth
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f});
-    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{120.0f, 100.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{120.0f, 100.0f}, NotifyObservers::No);
     
     for (auto const & [time, entries] : point_data->getAllEntries()) {
         for (auto const & entry : entries) {
@@ -529,8 +529,8 @@ TEST_CASE("PointParticleFilter: Progress callback is called", "[PointParticleFil
     auto group_manager = std::make_shared<EntityGroupManager>();
     auto group_id = group_manager->createGroup("Test Group", "Test description");
     
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f});
-    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{120.0f, 100.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{120.0f, 100.0f}, NotifyObservers::No);
     
     for (auto const & [time, entries] : point_data->getAllEntries()) {
         for (auto const & entry : entries) {
@@ -651,8 +651,8 @@ TEST_CASE("PointParticleFilter: Mismatched image sizes (requires scaling)", "[Po
     GroupId group1 = group_manager->createGroup("Test Group 1", "First test group");
     
     // Add points in 100x100 space
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{25.0f, 25.0f});
-    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{75.0f, 75.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{25.0f, 25.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{75.0f, 75.0f}, NotifyObservers::No);
     
     // Get entity IDs and add to group
     auto entities_t0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
@@ -733,8 +733,8 @@ TEST_CASE("PointParticleFilter: Non-uniform scaling (different x and y scales)",
     GroupId group1 = group_manager->createGroup("Test Group 1", "First test group");
     
     // Add points in 100x200 space - vertical trajectory
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{50.0f, 50.0f});
-    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{50.0f, 150.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{50.0f, 50.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{50.0f, 150.0f}, NotifyObservers::No);
     
     // Get entity IDs and add to group
     auto entities_t0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
@@ -810,8 +810,8 @@ TEST_CASE("PointParticleFilter: Diagonal line with minimal motion (anti-walking 
     
     // Ground truth: label northeast corner at frame 0 and frame 20
     // The point barely moves (only 2 pixels total over 20 frames)
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{180.0f, 180.0f});
-    point_data->addAtTime(TimeFrameIndex(20), Point2D<float>{182.0f, 182.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{180.0f, 180.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(20), Point2D<float>{182.0f, 182.0f}, NotifyObservers::No);
     
     auto entities_t0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
     auto entities_t20 = point_data->getEntityIdsAtTime(TimeFrameIndex(20));
@@ -1009,9 +1009,9 @@ TEST_CASE("PointParticleFilter: No predictions on labeled frames", "[PointPartic
     GroupId group1 = group_manager->createGroup("Test Group 1", "Label handling test");
     
     // Add ground truth labels at frames 0, 5, and 10
-    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f});
-    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{150.0f, 150.0f});
-    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{200.0f, 200.0f});
+    point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{150.0f, 150.0f}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{200.0f, 200.0f}, NotifyObservers::No);
     
     auto entities_t0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
     auto entities_t5 = point_data->getEntityIdsAtTime(TimeFrameIndex(5));

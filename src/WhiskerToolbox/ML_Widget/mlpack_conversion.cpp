@@ -112,7 +112,8 @@ void updatePointDataFromMlpackMatrix(
             if (matrix(row, col) != 0.0 || matrix(row + 1, col) != 0.0) {
                 pointData->addAtTime(TimeFrameIndex(timestamps[col]),
                                      Point2D<float>{static_cast<float>(matrix(row, col)),
-                                                    static_cast<float>(matrix(row + 1, col))});
+                                                    static_cast<float>(matrix(row + 1, col))},
+                                     NotifyObservers::No);
             }
         }
     }

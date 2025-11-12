@@ -25,7 +25,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
 
     SECTION("Adding and retrieving points at time") {
         // Add a single point at time 10
-        point_data.addAtTime(TimeFrameIndex(10), p1);
+        point_data.addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
 
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 1);
@@ -33,14 +33,14 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
         REQUIRE(points_at_10[0].y == Catch::Approx(2.0f));
 
         // Add another point at the same time
-        point_data.addAtTime(TimeFrameIndex(10), p2);
+        point_data.addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
         points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 2);
         REQUIRE(points_at_10[1].x == Catch::Approx(3.0f));
         REQUIRE(points_at_10[1].y == Catch::Approx(4.0f));
 
         // Add points at a different time
-        point_data.addAtTime(TimeFrameIndex(20), more_points);
+        point_data.addAtTime(TimeFrameIndex(20), more_points, NotifyObservers::No);
         auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
         REQUIRE(points_at_20.size() == 1);
         REQUIRE(points_at_20[0].x == Catch::Approx(5.0f));
@@ -49,11 +49,11 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
 
     SECTION("Overwriting points at time") {
         // Add initial points
-        point_data.addAtTime(TimeFrameIndex(10), points);
+        point_data.addAtTime(TimeFrameIndex(10), points, NotifyObservers::No);
 
         // Overwrite with a single point
         point_data.clearAtTime(TimeIndexAndFrame{10, timeframe.get()}, NotifyObservers::No);
-        point_data.addAtTime(TimeFrameIndex(10), p3);
+        point_data.addAtTime(TimeFrameIndex(10), p3, NotifyObservers::No);
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 1);
         REQUIRE(points_at_10[0].x == Catch::Approx(5.0f));
@@ -61,7 +61,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
 
         // Overwrite with multiple points
         point_data.clearAtTime(TimeIndexAndFrame{10, timeframe.get()}, NotifyObservers::No);
-        point_data.addAtTime(TimeFrameIndex(10), points);
+        point_data.addAtTime(TimeFrameIndex(10), points, NotifyObservers::No);
         points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 2);
         REQUIRE(points_at_10[0].x == Catch::Approx(1.0f));
@@ -69,8 +69,8 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
     }
 
     SECTION("Clearing points at time") {
-        point_data.addAtTime(TimeFrameIndex(10), points);
-        point_data.addAtTime(TimeFrameIndex(20), more_points);
+        point_data.addAtTime(TimeFrameIndex(10), points, NotifyObservers::No);
+        point_data.addAtTime(TimeFrameIndex(20), more_points, NotifyObservers::No);
 
         static_cast<void>(point_data.clearAtTime(TimeIndexAndFrame{10, timeframe.get()}, NotifyObservers::No));
 
@@ -96,8 +96,8 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
 
         point_data.clearAtTime(TimeIndexAndFrame{10, timeframe.get()}, NotifyObservers::No);
         point_data.clearAtTime(TimeIndexAndFrame{20, timeframe.get()}, NotifyObservers::No);
-        point_data.addAtTime(TimeFrameIndex(10), points_vec[0]);
-        point_data.addAtTime(TimeFrameIndex(20), points_vec[1]);
+        point_data.addAtTime(TimeFrameIndex(10), points_vec[0], NotifyObservers::No);
+        point_data.addAtTime(TimeFrameIndex(20), points_vec[1], NotifyObservers::No);
 
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
@@ -107,8 +107,8 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
     }
 
     SECTION("Getting times with points") {
-        point_data.addAtTime(TimeFrameIndex(10), points);
-        point_data.addAtTime(TimeFrameIndex(20), more_points);
+        point_data.addAtTime(TimeFrameIndex(10), points, NotifyObservers::No);
+        point_data.addAtTime(TimeFrameIndex(20), more_points, NotifyObservers::No);
 
         auto times = point_data.getTimesWithData();
 
@@ -122,8 +122,8 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
     }
 
     SECTION("Getting max points") {
-        point_data.addAtTime(TimeFrameIndex(10), points);     // 2 points
-        point_data.addAtTime(TimeFrameIndex(20), more_points);// 1 point
+        point_data.addAtTime(TimeFrameIndex(10), points, NotifyObservers::No);     // 2 points
+        point_data.addAtTime(TimeFrameIndex(20), more_points, NotifyObservers::No);// 1 point
 
         auto max_points = point_data.getMaxPoints();
         REQUIRE(max_points == 2);
@@ -150,10 +150,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto target_data = data_manager->getData<PointData>("target_data");
 
         // Add test points
-        source_data->addAtTime(TimeFrameIndex(10), p1);
-        source_data->addAtTime(TimeFrameIndex(10), p2);
-        source_data->addAtTime(TimeFrameIndex(20), p3);
-        source_data->addAtTime(TimeFrameIndex(30), p4);
+        source_data->addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(20), p3, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(30), p4, NotifyObservers::No);
 
         // Get entity IDs for testing
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
@@ -190,10 +190,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto source_data = data_manager->getData<PointData>("source_data");
         auto target_data = data_manager->getData<PointData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), p1);
-        source_data->addAtTime(TimeFrameIndex(10), p2);
-        source_data->addAtTime(TimeFrameIndex(20), p3);
-        source_data->addAtTime(TimeFrameIndex(30), p4);
+        source_data->addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(20), p3, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(30), p4, NotifyObservers::No);
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         auto entity_ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
@@ -217,10 +217,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto source_data = data_manager->getData<PointData>("source_data");
         auto target_data = data_manager->getData<PointData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), p1);
-        source_data->addAtTime(TimeFrameIndex(10), p2);
-        source_data->addAtTime(TimeFrameIndex(20), p3);
-        source_data->addAtTime(TimeFrameIndex(30), p4);
+        source_data->addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(20), p3, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(30), p4, NotifyObservers::No);
 
         std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> ids_set_fakec(fake_entity_ids.begin(), fake_entity_ids.end());
@@ -252,10 +252,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto source_data = data_manager->getData<PointData>("source_data");
         auto target_data = data_manager->getData<PointData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), p1);
-        source_data->addAtTime(TimeFrameIndex(10), p2);
-        source_data->addAtTime(TimeFrameIndex(20), p3);
-        source_data->addAtTime(TimeFrameIndex(30), p4);
+        source_data->addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(20), p3, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(30), p4, NotifyObservers::No);
 
         auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         REQUIRE(entity_ids_10_view.size() == 2);
@@ -287,10 +287,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto source_data = data_manager->getData<PointData>("source_data");
         auto target_data = data_manager->getData<PointData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), p1);
-        source_data->addAtTime(TimeFrameIndex(10), p2);
-        source_data->addAtTime(TimeFrameIndex(20), p3);
-        source_data->addAtTime(TimeFrameIndex(30), p4);
+        source_data->addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(20), p3, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(30), p4, NotifyObservers::No);
 
         auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         auto entity_ids_20_view = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
@@ -320,10 +320,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto source_data = data_manager->getData<PointData>("source_data");
         auto target_data = data_manager->getData<PointData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), p1);
-        source_data->addAtTime(TimeFrameIndex(10), p2);
-        source_data->addAtTime(TimeFrameIndex(20), p3);
-        source_data->addAtTime(TimeFrameIndex(30), p4);
+        source_data->addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(20), p3, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(30), p4, NotifyObservers::No);
 
         std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
         std::unordered_set<EntityId> const ids_set_fake(fake_entity_ids.begin(), fake_entity_ids.end());
@@ -344,10 +344,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto source_data = data_manager->getData<PointData>("source_data");
         auto target_data = data_manager->getData<PointData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), p1);
-        source_data->addAtTime(TimeFrameIndex(10), p2);
-        source_data->addAtTime(TimeFrameIndex(20), p3);
-        source_data->addAtTime(TimeFrameIndex(30), p4);
+        source_data->addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(20), p3, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(30), p4, NotifyObservers::No);
 
         auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         std::unordered_set<EntityId> ids_set_10c2(entity_ids_10.begin(), entity_ids_10.end());
@@ -370,10 +370,10 @@ TEST_CASE("PointData - Copy and Move by EntityID", "[points][data][entity][copy]
         auto source_data = data_manager->getData<PointData>("source_data");
         auto target_data = data_manager->getData<PointData>("target_data");
 
-        source_data->addAtTime(TimeFrameIndex(10), p1);
-        source_data->addAtTime(TimeFrameIndex(10), p2);
-        source_data->addAtTime(TimeFrameIndex(20), p3);
-        source_data->addAtTime(TimeFrameIndex(30), p4);
+        source_data->addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(20), p3, NotifyObservers::No);
+        source_data->addAtTime(TimeFrameIndex(30), p4, NotifyObservers::No);
 
         auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
         auto original_points_view = source_data->getAtTime(TimeFrameIndex(10));
@@ -415,9 +415,9 @@ TEST_CASE("DM - PointData - Edge cases and error handling", "[points][data][erro
         Point2D<float> p1{1.0f, 2.0f};
 
         // Add, clear, add again to test internal state consistency
-        point_data.addAtTime(TimeFrameIndex(5), p1);
+        point_data.addAtTime(TimeFrameIndex(5), p1, NotifyObservers::No);
         static_cast<void>(point_data.clearAtTime(TimeIndexAndFrame{5, nullptr}, NotifyObservers::No));
-        point_data.addAtTime(TimeFrameIndex(5), p1);
+        point_data.addAtTime(TimeFrameIndex(5), p1, NotifyObservers::No);
 
         auto points = point_data.getAtTime(TimeFrameIndex(5));
         REQUIRE(points.size() == 1);
@@ -446,7 +446,7 @@ TEST_CASE("DM - PointData - Image scaling", "[points][data][scaling]") {
 
     // Setup test data with known coordinates
     std::vector<Point2D<float>> points = {{100.0f, 200.0f}, {300.0f, 400.0f}};
-    point_data.addAtTime(TimeFrameIndex(10), points);
+    point_data.addAtTime(TimeFrameIndex(10), points, NotifyObservers::No);
 
     SECTION("Scaling from known size") {
         // Set initial image size
@@ -506,8 +506,8 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
 
     // Setup test data
     std::vector<Point2D<float>> points = {{100.0f, 200.0f}, {300.0f, 400.0f}};
-    point_data.addAtTime(TimeFrameIndex(10), points);
-    point_data.addAtTime(TimeFrameIndex(20), points);
+    point_data.addAtTime(TimeFrameIndex(10), points, NotifyObservers::No);
+    point_data.addAtTime(TimeFrameIndex(20), points, NotifyObservers::No);
 
     SECTION("Same timeframe returns original data") {
         // Create a single timeframe
@@ -538,8 +538,8 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
 
         // Video frame 1 (time=10) should map to data_timeframe index 2 (time=10)
         // Video frame 2 (time=20) should map to data_timeframe index 4 (time=20)
-        test_point_data.addAtTime(TimeFrameIndex(2), points);// At data timeframe index 2 (time=10)
-        test_point_data.addAtTime(TimeFrameIndex(4), points);// At data timeframe index 4 (time=20)
+        test_point_data.addAtTime(TimeFrameIndex(2), points, NotifyObservers::No);// At data timeframe index 2 (time=10)
+        test_point_data.addAtTime(TimeFrameIndex(4), points, NotifyObservers::No);// At data timeframe index 4 (time=20)
 
         test_point_data.setTimeFrame(data_timeframe);
 
@@ -562,7 +562,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
 
         // Create a separate point data instance for this test
         PointData test_point_data;
-        test_point_data.addAtTime(TimeFrameIndex(3), points);// At data timeframe index 3 (time=15)
+        test_point_data.addAtTime(TimeFrameIndex(3), points, NotifyObservers::No);// At data timeframe index 3 (time=15)
 
         test_point_data.setTimeFrame(data_timeframe);
 

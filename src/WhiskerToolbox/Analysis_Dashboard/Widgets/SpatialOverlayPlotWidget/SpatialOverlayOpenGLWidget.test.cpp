@@ -74,7 +74,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     // Create simple point dataset with two points at known positions (ensure non-zero Y span)
     auto point_data = std::make_shared<PointData>();
     std::vector<Point2D<float>> frame_points = {Point2D<float>{100.0f, 100.0f}, Point2D<float>{200.0f, 150.0f}};
-    point_data->addAtTime(TimeFrameIndex(0), frame_points);
+    point_data->addAtTime(TimeFrameIndex(0), frame_points, NotifyObservers::No);
 
     std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
     widget.setPointData(map);
@@ -131,7 +131,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     // Points in a known frame with non-zero Y span
     auto point_data = std::make_shared<PointData>();
     std::vector<Point2D<float>> frame_points = {Point2D<float>{150.0f, 150.0f}, Point2D<float>{180.0f, 200.0f}};
-    point_data->addAtTime(TimeFrameIndex(5), frame_points);
+    point_data->addAtTime(TimeFrameIndex(5), frame_points, NotifyObservers::No);
 
     data_manager->setData<PointData>("test_points", point_data, TimeKey("test_time"));
 
@@ -180,7 +180,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     // Two points to be enclosed by a polygon
     auto point_data = std::make_shared<PointData>();
     std::vector<Point2D<float>> frame_points = {Point2D<float>{100.0f, 100.0f}, Point2D<float>{200.0f, 150.0f}};
-    point_data->addAtTime(TimeFrameIndex(0), frame_points);
+    point_data->addAtTime(TimeFrameIndex(0), frame_points, NotifyObservers::No);
 
     std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
     widget.setPointData(map);
@@ -407,8 +407,8 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
     auto point_data = std::make_shared<PointData>();
     std::vector<Point2D<float>> frame_points1 = {Point2D<float>{100.0f, 100.0f}}; // frame 1
     std::vector<Point2D<float>> frame_points2 = {Point2D<float>{200.0f, 150.0f}}; // frame 2
-    point_data->addAtTime(TimeFrameIndex(1), frame_points1);
-    point_data->addAtTime(TimeFrameIndex(2), frame_points2);
+    point_data->addAtTime(TimeFrameIndex(1), frame_points1, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(2), frame_points2, NotifyObservers::No);
     
     // Create a DataManager and register the PointData to set up EntityIds properly
     auto data_manager = std::make_shared<DataManager>();
@@ -610,8 +610,8 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(GraphicsSc
 
     // Set test data
     auto point_data = std::make_shared<PointData>();
-    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}});
-    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}});
+    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}}, NotifyObservers::No);
 
     std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
     gl->setPointData(map);
@@ -676,8 +676,8 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Organizer(Docking) -
     REQUIRE(gl != nullptr);
 
     auto point_data = std::make_shared<PointData>();
-    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}});
-    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}});
+    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{100.f,100.f}}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{200.f,150.f}}, NotifyObservers::No);
     std::unordered_map<QString, std::shared_ptr<PointData>> map{{QString("test_points"), point_data}};
     gl->setPointData(map);
     REQUIRE(waitForValidProjection(*gl));

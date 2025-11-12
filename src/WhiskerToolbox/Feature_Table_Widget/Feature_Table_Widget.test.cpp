@@ -76,12 +76,12 @@ private:
 
         // Add some test PointData
         auto point_data1 = std::make_shared<PointData>();
-        point_data1->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 200.0f});
-        point_data1->addAtTime(TimeFrameIndex(0), Point2D<float>{150.0f, 250.0f});
+        point_data1->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 200.0f}, NotifyObservers::No);
+        point_data1->addAtTime(TimeFrameIndex(0), Point2D<float>{150.0f, 250.0f}, NotifyObservers::No);
         m_data_manager->setData<PointData>("test_points_1", point_data1, time_key);
 
         auto point_data2 = std::make_shared<PointData>();
-        point_data2->addAtTime(TimeFrameIndex(0), Point2D<float>{300.0f, 400.0f});
+        point_data2->addAtTime(TimeFrameIndex(0), Point2D<float>{300.0f, 400.0f}, NotifyObservers::No);
         m_data_manager->setData<PointData>("test_points_2", point_data2, time_key);
 
         // Add some test LineData
@@ -182,7 +182,7 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - State Pr
 
         // Add a new feature to trigger table rebuild
         auto new_point_data = std::make_shared<PointData>();
-        new_point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{500.0f, 600.0f});
+        new_point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{500.0f, 600.0f}, NotifyObservers::No);
         TimeKey time_key("time");
         dm.setData<PointData>("test_points_new", new_point_data, time_key);
 

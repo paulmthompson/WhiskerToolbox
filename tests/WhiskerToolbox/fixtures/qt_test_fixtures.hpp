@@ -248,9 +248,9 @@ protected:
             {65.0f, 75.0f}
         };
         
-        point_data->addAtTime(TimeFrameIndex(1), points_frame_1);
-        point_data->addAtTime(TimeFrameIndex(2), points_frame_2);
-        point_data->addAtTime(TimeFrameIndex(3), points_frame_3);
+        point_data->addAtTime(TimeFrameIndex(1), points_frame_1, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(2), points_frame_2, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(3), points_frame_3, NotifyObservers::No);
         
         return point_data;
     }

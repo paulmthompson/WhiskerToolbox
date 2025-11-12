@@ -27,19 +27,20 @@ PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const
 
 // ========== Setters ==========
 
-void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
+void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const & point, NotifyObservers notify) {
+    int const local_index = static_cast<int>(_data[time].size());
     auto entity_id = EntityId(0);
     if (_identity_registry) {
-        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, 0);
+        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
     }
-    _data[time].clear();
     _data[time].emplace_back(entity_id, point);
-    if (notify) {
+
+    if (notify == NotifyObservers::Yes) {
         notifyObservers();
     }
 }
 
-void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & points_to_add) {
+void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & points_to_add, NotifyObservers notify) {
     if (points_to_add.empty()) {
         return;
     }
@@ -59,17 +60,15 @@ void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>>
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
         }
-
-        // Calls DataEntry(entity_id, points_to_add[i])
-        // This will invoke the Point2D<float> copy constructor
         entry_vec.emplace_back(entity_id, points_to_add[i]);
     }
 
-    // Note: Following our "manual notify" pattern,
-    // the caller is responsible for calling notifyObservers().
+    if (notify == NotifyObservers::Yes) {
+        notifyObservers();
+    }
 }
 
-void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> && points_to_add) {
+void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> && points_to_add, NotifyObservers notify) {
     if (points_to_add.empty()) {
         return;
     }
@@ -88,22 +87,9 @@ void PointData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>>
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
         }
-
-        // Calls DataEntry(entity_id, std::move(lines_to_add[i]))
-        // This will invoke the Line2D MOVE constructor
         entry_vec.emplace_back(entity_id, std::move(points_to_add[i]));
     }
-}
-
-void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
-    int const local_index = static_cast<int>(_data[time].size());
-    auto entity_id = EntityId(0);
-    if (_identity_registry) {
-        entity_id = _identity_registry->ensureId(_identity_data_key, EntityKind::PointEntity, time, local_index);
-    }
-    _data[time].emplace_back(entity_id, point);
-
-    if (notify) {
+    if (notify == NotifyObservers::Yes) {
         notifyObservers();
     }
 }

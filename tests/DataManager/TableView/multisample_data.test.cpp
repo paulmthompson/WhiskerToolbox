@@ -431,9 +431,9 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
     SECTION("Single-sample PointData should allow PointComponentAdapter") {
         // Create single-sample point data (one point per timestamp)
         auto singlePointData = std::make_shared<PointData>();
-        singlePointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, false);
-        singlePointData->addAtTime(TimeFrameIndex(20), {15.0f, 20.0f}, false);
-        singlePointData->addAtTime(TimeFrameIndex(30), {25.0f, 30.0f}, false);
+        singlePointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, NotifyObservers::No);
+        singlePointData->addAtTime(TimeFrameIndex(20), {15.0f, 20.0f}, NotifyObservers::No);
+        singlePointData->addAtTime(TimeFrameIndex(30), {25.0f, 30.0f}, NotifyObservers::No);
         
         dm->setData<PointData>("SinglePoints", singlePointData, timeKey);
         
@@ -455,11 +455,11 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         auto multiPointData = std::make_shared<PointData>();
         
         // Add multiple points at timestamp 10
-        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, false);
-        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, false);
+        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, NotifyObservers::No);
+        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, NotifyObservers::No);
         
         // Single point at timestamp 20
-        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, false);
+        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, NotifyObservers::No);
         
         dm->setData<PointData>("MultiPoints", multiPointData, timeKey);
         
@@ -487,9 +487,9 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         
         // Create multi-sample PointData
         auto multiPointData = std::make_shared<PointData>();
-        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, false);
-        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, false);
-        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, false);
+        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, NotifyObservers::No);
+        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, NotifyObservers::No);
+        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, NotifyObservers::No);
         dm->setData<PointData>("MultiPoints", multiPointData, timeKey);
         
         // This should work - only PointData has multi-samples
@@ -528,9 +528,9 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         
         // Create multi-sample PointData
         auto multiPointData = std::make_shared<PointData>();
-        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, false);
-        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, false);  // Multiple points at same time
-        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, false);
+        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, NotifyObservers::No);
+        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, NotifyObservers::No);  // Multiple points at same time
+        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, NotifyObservers::No);
         dm->setData<PointData>("MultiPoints", multiPointData, timeKey);
         
         // Validation should catch this and reject

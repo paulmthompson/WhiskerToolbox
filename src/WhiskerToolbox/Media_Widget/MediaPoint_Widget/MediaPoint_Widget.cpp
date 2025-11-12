@@ -238,9 +238,9 @@ void MediaPoint_Widget::_addPointAtCurrentTime(qreal x_media, qreal y_media) {
     auto point_data = _data_manager->getData<PointData>(_active_key);
     if (point_data) {
         Point2D<float> new_point(static_cast<float>(x_media), static_cast<float>(y_media));
-        point_data->addAtTime(TimeFrameIndex(current_time), new_point);
-        _scene->UpdateCanvas();
+        point_data->addAtTime(TimeFrameIndex(current_time), new_point, NotifyObservers::No);
         std::cout << "Added new point at: (" << x_media << ", " << y_media << ") at time " << current_time << std::endl;
+        point_data->notifyObservers();
     }
 }
 

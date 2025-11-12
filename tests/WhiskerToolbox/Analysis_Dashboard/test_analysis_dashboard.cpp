@@ -621,9 +621,9 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Properties panel switches 
     // Seed DataManager with PointData (test_points)
     auto point_data = std::make_shared<PointData>();
     // Three frames of simple points
-    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{10.0f, 10.0f}, {20.0f, 20.0f}});
-    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{30.0f, 30.0f}});
-    point_data->addAtTime(TimeFrameIndex(3), std::vector<Point2D<float>>{{40.0f, 10.0f}, {50.0f, 15.0f}});
+    point_data->addAtTime(TimeFrameIndex(1), std::vector<Point2D<float>>{{10.0f, 10.0f}, {20.0f, 20.0f}}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(2), std::vector<Point2D<float>>{{30.0f, 30.0f}}, NotifyObservers::No);
+    point_data->addAtTime(TimeFrameIndex(3), std::vector<Point2D<float>>{{40.0f, 10.0f}, {50.0f, 15.0f}}, NotifyObservers::No);
     point_data->setImageSize(ImageSize(800, 600));
     data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
 

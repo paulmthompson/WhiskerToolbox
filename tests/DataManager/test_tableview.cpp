@@ -50,7 +50,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         for (size_t frameIdx = 0; frameIdx < pointFrames.size(); ++frameIdx) {
             TimeFrameIndex timeIndex(static_cast<int64_t>(frameIdx));
             for (const auto& point : pointFrames[frameIdx]) {
-                pointData->addAtTime(timeIndex,point);
+                pointData->addAtTime(timeIndex,point, NotifyObservers::No);
             }
         }
         
@@ -151,7 +151,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         for (size_t frameIdx = 0; frameIdx < pointFrames.size(); ++frameIdx) {
             TimeFrameIndex timeIndex(static_cast<int64_t>(frameIdx));
             for (const auto& point : pointFrames[frameIdx]) {
-                pointData->addAtTime(timeIndex, point);
+                pointData->addAtTime(timeIndex, point, NotifyObservers::No);
             }
         }
         
@@ -248,7 +248,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
 
         for (size_t i = 0; i < points.size(); ++i) {
             TimeFrameIndex timeIndex(static_cast<int64_t>(i));
-            pointData->addAtTime(timeIndex, points[i]);
+            pointData->addAtTime(timeIndex, points[i], NotifyObservers::No);
         }
         
         dataManager.setData<PointData>("TestPoints", pointData, TimeKey("test_time"));
@@ -327,7 +327,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         auto pointData = std::make_shared<PointData>();
         for (size_t i = 0; i < points.size(); ++i) {
             TimeFrameIndex timeIndex(static_cast<int64_t>(i));
-            pointData->addAtTime(timeIndex, points[i]);
+            pointData->addAtTime(timeIndex, points[i], NotifyObservers::No);
         }
         
         dataManager.setData<PointData>("TestPoints", pointData, TimeKey("test_time"));
@@ -431,7 +431,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         auto pointData = std::make_shared<PointData>();
         for (size_t i = 0; i < points.size(); ++i) {
             TimeFrameIndex timeIndex(static_cast<int64_t>(i));
-            pointData->addAtTime(timeIndex, points[i]);
+            pointData->addAtTime(timeIndex, points[i], NotifyObservers::No);
         }
         
         dataManager.setData<PointData>("TestPoints", pointData, TimeKey("test_time"));
@@ -493,7 +493,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         dataManager.setTime(TimeKey("test_time"), timeFrame);
         
         auto pointData = std::make_shared<PointData>();
-        pointData->addAtTime(TimeFrameIndex(0), points[0]);
+        pointData->addAtTime(TimeFrameIndex(0), points[0], NotifyObservers::No);
         dataManager.setData<PointData>("TestPoints", pointData, TimeKey("test_time"));
         
         auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
@@ -527,18 +527,18 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
 
         // Create PointData with multiple time frames
         auto pointData = std::make_shared<PointData>();
-        pointData->addAtTime(TimeFrameIndex(0), Point2D<float>(1.0f, 2.0f));
-        pointData->addAtTime(TimeFrameIndex(1), Point2D<float>(3.0f, 4.0f));
-        pointData->addAtTime(TimeFrameIndex(2), Point2D<float>(5.0f, 6.0f));
-        pointData->addAtTime(TimeFrameIndex(3), Point2D<float>(7.0f, 8.0f));
+        pointData->addAtTime(TimeFrameIndex(0), Point2D<float>(1.0f, 2.0f), NotifyObservers::No);
+        pointData->addAtTime(TimeFrameIndex(1), Point2D<float>(3.0f, 4.0f), NotifyObservers::No);
+        pointData->addAtTime(TimeFrameIndex(2), Point2D<float>(5.0f, 6.0f), NotifyObservers::No);
+        pointData->addAtTime(TimeFrameIndex(3), Point2D<float>(7.0f, 8.0f), NotifyObservers::No);
 
         // Add the point data to the DataManager
         dataManager.setData<PointData>("TestPoints", pointData, TimeKey("test_time"));
 
         // Add another PointData with a different time frame
         auto pointData2 = std::make_shared<PointData>();
-        pointData2->addAtTime(TimeFrameIndex(0), Point2D<float>(9.0f, 10.0f));
-        pointData2->addAtTime(TimeFrameIndex(1), Point2D<float>(11.0f, 12.0f));
+        pointData2->addAtTime(TimeFrameIndex(0), Point2D<float>(9.0f, 10.0f), NotifyObservers::No);
+        pointData2->addAtTime(TimeFrameIndex(1), Point2D<float>(11.0f, 12.0f), NotifyObservers::No);
         dataManager.setData<PointData>("TestPoints2", pointData2, TimeKey("test_time2"));
 
         // Create DataManagerExtension

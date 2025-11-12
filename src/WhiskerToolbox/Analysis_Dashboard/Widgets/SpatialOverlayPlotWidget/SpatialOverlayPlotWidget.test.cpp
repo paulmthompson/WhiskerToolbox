@@ -21,7 +21,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayPlotWi
 
     auto point_data = std::make_shared<PointData>();
     std::vector<Point2D<float>> frame_points = {Point2D<float>{100.0f, 100.0f}, Point2D<float>{200.0f, 150.0f}};
-    point_data->addAtTime(TimeFrameIndex(0), frame_points);
+    point_data->addAtTime(TimeFrameIndex(0), frame_points, NotifyObservers::No);
 
     dm->setData<PointData>("test_points", point_data, TimeKey("time"));
 
