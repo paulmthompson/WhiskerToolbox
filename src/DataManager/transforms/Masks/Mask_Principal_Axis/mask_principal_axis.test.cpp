@@ -29,7 +29,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
         // Single point mask - should be skipped
         std::vector<uint32_t> x_coords = {5};
         std::vector<uint32_t> y_coords = {5};
-        mask_data->addAtTime(TimeFrameIndex(10), x_coords, y_coords);
+        mask_data->addAtTime(TimeFrameIndex(10), x_coords, y_coords, NotifyObservers::No);
 
         auto result = calculate_mask_principal_axis(mask_data.get());
 
@@ -41,7 +41,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
         // Create a horizontal line of points
         std::vector<uint32_t> x_coords = {0, 1, 2, 3, 4, 5};
         std::vector<uint32_t> y_coords = {2, 2, 2, 2, 2, 2};
-        mask_data->addAtTime(TimeFrameIndex(20), x_coords, y_coords);
+        mask_data->addAtTime(TimeFrameIndex(20), x_coords, y_coords, NotifyObservers::No);
 
         auto params = std::make_unique<MaskPrincipalAxisParameters>();
         params->axis_type = PrincipalAxisType::Major;
@@ -70,7 +70,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
         // Create a vertical line of points
         std::vector<uint32_t> x_coords = {3, 3, 3, 3, 3, 3};
         std::vector<uint32_t> y_coords = {0, 1, 2, 3, 4, 5};
-        mask_data->addAtTime(TimeFrameIndex(30), x_coords, y_coords);
+        mask_data->addAtTime(TimeFrameIndex(30), x_coords, y_coords, NotifyObservers::No);
 
         auto params = std::make_unique<MaskPrincipalAxisParameters>();
         params->axis_type = PrincipalAxisType::Major;
@@ -94,7 +94,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
         // Create a diagonal line of points (45 degrees)
         std::vector<uint32_t> x_coords = {0, 1, 2, 3, 4};
         std::vector<uint32_t> y_coords = {0, 1, 2, 3, 4};
-        mask_data->addAtTime(TimeFrameIndex(40), x_coords, y_coords);
+        mask_data->addAtTime(TimeFrameIndex(40), x_coords, y_coords, NotifyObservers::No);
 
         auto params = std::make_unique<MaskPrincipalAxisParameters>();
         params->axis_type = PrincipalAxisType::Major;
@@ -124,7 +124,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
                 y_coords.push_back(y);
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(50), x_coords, y_coords);
+        mask_data->addAtTime(TimeFrameIndex(50), x_coords, y_coords, NotifyObservers::No);
 
         // Test major axis
         auto major_params = std::make_unique<MaskPrincipalAxisParameters>();
@@ -164,12 +164,12 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
         // First mask - horizontal line
         std::vector<uint32_t> x1 = {0, 1, 2, 3};
         std::vector<uint32_t> y1 = {1, 1, 1, 1};
-        mask_data->addAtTime(TimeFrameIndex(60), x1, y1);
+        mask_data->addAtTime(TimeFrameIndex(60), x1, y1, NotifyObservers::No);
 
         // Second mask - vertical line
         std::vector<uint32_t> x2 = {5, 5, 5, 5};
         std::vector<uint32_t> y2 = {0, 1, 2, 3};
-        mask_data->addAtTime(TimeFrameIndex(60), x2, y2);
+        mask_data->addAtTime(TimeFrameIndex(60), x2, y2, NotifyObservers::No);
 
         auto result = calculate_mask_principal_axis(mask_data.get());
 
@@ -185,7 +185,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
         // Add some mask data
         std::vector<uint32_t> x = {100, 200, 300};
         std::vector<uint32_t> y = {100, 100, 100};
-        mask_data->addAtTime(TimeFrameIndex(100), x, y);
+        mask_data->addAtTime(TimeFrameIndex(100), x, y, NotifyObservers::No);
 
         auto result = calculate_mask_principal_axis(mask_data.get());
 
@@ -202,7 +202,7 @@ TEST_CASE("Mask principal axis calculation - Edge cases", "[mask][principal_axis
         // Two identical points - should be handled gracefully
         std::vector<uint32_t> x_coords = {5, 5};
         std::vector<uint32_t> y_coords = {5, 5};
-        mask_data->addAtTime(TimeFrameIndex(10), x_coords, y_coords);
+        mask_data->addAtTime(TimeFrameIndex(10), x_coords, y_coords, NotifyObservers::No);
 
         auto result = calculate_mask_principal_axis(mask_data.get());
 
@@ -227,7 +227,7 @@ TEST_CASE("Mask principal axis calculation - Edge cases", "[mask][principal_axis
             y_coords.push_back(static_cast<uint32_t>(y));
         }
 
-        mask_data->addAtTime(TimeFrameIndex(20), x_coords, y_coords);
+        mask_data->addAtTime(TimeFrameIndex(20), x_coords, y_coords, NotifyObservers::No);
 
         auto result = calculate_mask_principal_axis(mask_data.get());
 
@@ -243,7 +243,7 @@ TEST_CASE("Mask principal axis calculation - Edge cases", "[mask][principal_axis
         // Test with large coordinate values
         std::vector<uint32_t> x = {1000000, 1000001, 1000002};
         std::vector<uint32_t> y = {2000000, 2000000, 2000000};
-        mask_data->addAtTime(TimeFrameIndex(30), x, y);
+        mask_data->addAtTime(TimeFrameIndex(30), x, y, NotifyObservers::No);
 
         auto result = calculate_mask_principal_axis(mask_data.get());
 
@@ -296,7 +296,7 @@ TEST_CASE("MaskPrincipalAxisOperation - Operation interface", "[mask][principal_
         // Add test data - horizontal line
         std::vector<uint32_t> x = {0, 1, 2, 3, 4};
         std::vector<uint32_t> y = {2, 2, 2, 2, 2};
-        mask_data->addAtTime(TimeFrameIndex(50), x, y);
+        mask_data->addAtTime(TimeFrameIndex(50), x, y, NotifyObservers::No);
 
         DataTypeVariant input_variant = mask_data;
 
@@ -321,7 +321,7 @@ TEST_CASE("MaskPrincipalAxisOperation - Operation interface", "[mask][principal_
         // Add test data - vertical line
         std::vector<uint32_t> x = {3, 3, 3, 3, 3};
         std::vector<uint32_t> y = {0, 1, 2, 3, 4};
-        mask_data->addAtTime(TimeFrameIndex(60), x, y);
+        mask_data->addAtTime(TimeFrameIndex(60), x, y, NotifyObservers::No);
 
         DataTypeVariant input_variant = mask_data;
 
@@ -356,17 +356,17 @@ TEST_CASE("Data Transform: Mask Principal Axis - JSON pipeline", "[mask][princip
     // Add horizontal line mask at time 100
     std::vector<uint32_t> x_coords = {0, 1, 2, 3, 4, 5};
     std::vector<uint32_t> y_coords = {2, 2, 2, 2, 2, 2};
-    test_mask->addAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    test_mask->addAtTime(TimeFrameIndex(100), x_coords, y_coords, NotifyObservers::No);
     
     // Add vertical line mask at time 200
     std::vector<uint32_t> x_coords_vert = {3, 3, 3, 3, 3, 3};
     std::vector<uint32_t> y_coords_vert = {0, 1, 2, 3, 4, 5};
-    test_mask->addAtTime(TimeFrameIndex(200), x_coords_vert, y_coords_vert);
+    test_mask->addAtTime(TimeFrameIndex(200), x_coords_vert, y_coords_vert, NotifyObservers::No);
     
     // Add diagonal line mask at time 300
     std::vector<uint32_t> x_coords_diag = {0, 1, 2, 3, 4};
     std::vector<uint32_t> y_coords_diag = {0, 1, 2, 3, 4};
-    test_mask->addAtTime(TimeFrameIndex(300), x_coords_diag, y_coords_diag);
+    test_mask->addAtTime(TimeFrameIndex(300), x_coords_diag, y_coords_diag, NotifyObservers::No);
     
     // Store the mask data in DataManager with a known key
     dm.setData("test_mask", test_mask, TimeKey("default"));
@@ -490,7 +490,7 @@ TEST_CASE("Data Transform: Mask Principal Axis - JSON pipeline", "[mask][princip
             y_rect.push_back(y);
         }
     }
-    rectangle_mask->addAtTime(TimeFrameIndex(400), x_rect, y_rect);
+    rectangle_mask->addAtTime(TimeFrameIndex(400), x_rect, y_rect, NotifyObservers::No);
     
     dm.setData("rectangle_mask", rectangle_mask, TimeKey("default"));
     

@@ -53,7 +53,7 @@ LoadedDataVariant ConcreteDataFactory::createMaskDataFromRaw(MaskDataRaw const& 
     // Add each mask to the MaskData
     for (auto const& [time, masks] : converted_data) {
         for (auto const& mask : masks) {
-            mask_data->addAtTime(time, mask, false);
+            mask_data->addAtTime(time, mask, NotifyObservers::No);
         }
     }
     

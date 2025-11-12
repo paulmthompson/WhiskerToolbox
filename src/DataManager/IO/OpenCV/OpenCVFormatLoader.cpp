@@ -125,7 +125,7 @@ LoadResult OpenCVFormatLoader::loadMaskDataImage(std::string const& filepath,
             // Copy masks to the new object
             for (auto const& [time, masks] : mask_map) {
                 for (auto const& mask : masks) {
-                    new_mask_data->addAtTime(time, mask, false);
+                    new_mask_data->addAtTime(time, mask, NotifyObservers::No);
                 }
             }
             

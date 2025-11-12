@@ -385,7 +385,8 @@ void Mask_Widget::selectPoint(float const x, float const y) {
         return;
     }
 
-    active_mask_data->addAtTime(TimeFrameIndex(current_time), mask);
+    active_mask_data->addAtTime(TimeFrameIndex(current_time), mask, NotifyObservers::No);
+    active_mask_data->notifyObservers();
 }
 
 void Mask_Widget::_loadSamModel() {

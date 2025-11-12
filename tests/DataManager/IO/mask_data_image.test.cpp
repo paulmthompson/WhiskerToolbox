@@ -71,10 +71,10 @@ protected:
         }
         
         // Add masks to MaskData at different time frames
-        original_mask_data->addAtTime(TimeFrameIndex(0), mask1_points, false);
-        original_mask_data->addAtTime(TimeFrameIndex(1), mask2_points, false);
-        original_mask_data->addAtTime(TimeFrameIndex(2), mask3_points, false);
-        
+        original_mask_data->addAtTime(TimeFrameIndex(0), mask1_points, NotifyObservers::No);
+        original_mask_data->addAtTime(TimeFrameIndex(1), mask2_points, NotifyObservers::No);
+        original_mask_data->addAtTime(TimeFrameIndex(2), mask3_points, NotifyObservers::No);
+
         // Set image size
         original_mask_data->setImageSize(ImageSize(320, 280));
     }

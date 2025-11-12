@@ -34,7 +34,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
         };
         
         mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points);
+        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
         mask_data->setImageSize(ImageSize{100, 100});
         
         params.method = LinePointSelectionMethod::Skeletonize;
@@ -70,7 +70,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
         };
         
         mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points);
+        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
         mask_data->setImageSize(ImageSize{100, 100});
         
         params.method = LinePointSelectionMethod::NearestToReference;
@@ -97,7 +97,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
         };
         
         mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points);
+        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
         mask_data->setImageSize(ImageSize{100, 100});
         
         params.method = LinePointSelectionMethod::Skeletonize;
@@ -126,8 +126,8 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
         };
         
         mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points_1);
-        mask_data->addAtTime(TimeFrameIndex(200), mask_points_2);
+        mask_data->addAtTime(TimeFrameIndex(100), mask_points_1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(200), mask_points_2, NotifyObservers::No);
         mask_data->setImageSize(ImageSize{100, 100});
         
         params.method = LinePointSelectionMethod::Skeletonize;
@@ -152,7 +152,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
         };
         
         mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points);
+        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
         mask_data->setImageSize(ImageSize{100, 100});
         
         params.method = LinePointSelectionMethod::Skeletonize;
@@ -242,7 +242,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
         std::vector<Point2D<uint32_t>> mask_points = {{10, 10}};
         
         mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points);
+        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
         mask_data->setImageSize(ImageSize{100, 100});
         
         params.method = LinePointSelectionMethod::Skeletonize;
@@ -264,7 +264,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
         };
         
         mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points);
+        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
         mask_data->setImageSize(ImageSize{100, 100});
         
         params.method = LinePointSelectionMethod::Skeletonize;
@@ -287,7 +287,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
         };
         
         mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points);
+        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
         mask_data->setImageSize(ImageSize{100, 100});
         
         params.method = LinePointSelectionMethod::Skeletonize;
@@ -311,7 +311,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
         };
         
         mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points);
+        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
         mask_data->setImageSize(ImageSize{100, 100});
         
         params.method = LinePointSelectionMethod::Skeletonize;
@@ -374,7 +374,7 @@ TEST_CASE("Data Transform: Mask To Line - JSON pipeline", "[transforms][mask_to_
     };
     
     auto mask_data = std::make_shared<MaskData>();
-    mask_data->addAtTime(TimeFrameIndex(100), mask_points);
+    mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
     mask_data->setImageSize(ImageSize{100, 100});
     mask_data->setTimeFrame(time_frame);
     dm.setData("TestMask", mask_data, TimeKey("default"));
@@ -447,7 +447,7 @@ TEST_CASE("Data Transform: Mask To Line - load_data_from_json_config", "[transfo
     };
     
     auto test_mask = std::make_shared<MaskData>();
-    test_mask->addAtTime(TimeFrameIndex(100), mask_points);
+    test_mask->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
     test_mask->setImageSize(ImageSize{100, 100});
     test_mask->setTimeFrame(time_frame);
     

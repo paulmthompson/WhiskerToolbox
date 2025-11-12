@@ -231,7 +231,8 @@ void Grabcut_Widget::_saveMask(){
 
     mask_data->clearAtTime(current_index_and_frame,
                            NotifyObservers::No);
-    mask_data->addAtTime(TimeFrameIndex(_frame_index), pts);
+    mask_data->addAtTime(TimeFrameIndex(_frame_index), pts, NotifyObservers::No);
+    mask_data->notifyObservers();
     this->close();
 }
 

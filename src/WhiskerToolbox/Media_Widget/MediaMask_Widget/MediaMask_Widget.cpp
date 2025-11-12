@@ -368,7 +368,7 @@ void MediaMask_Widget::_applyDilationPermanently() {
     // Add the dilated masks
     for (auto const & dilated_mask: preview_masks) {
         if (!dilated_mask.empty()) {
-            mask_data->addAtTime(current_index_and_frame, dilated_mask, false);
+            mask_data->addAtTime(current_index_and_frame, dilated_mask, NotifyObservers::No);
         }
     }
 
@@ -500,7 +500,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
         // Clear all masks at this time
         mask_data->clearAtTime(current_index_and_frame,
                                NotifyObservers::No);
-        mask_data->addAtTime(current_index_and_frame, std::move(primary_mask), false);
+        mask_data->addAtTime(current_index_and_frame, std::move(primary_mask), NotifyObservers::No);
 
         // Notify observers
         mask_data->notifyObservers();
@@ -600,7 +600,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
 
         // Add the filtered mask back if it still has points OR if empty masks are allowed
         if (!filtered_mask.empty() || _allow_empty_mask) {
-            mask_data->addAtTime(current_index_and_frame, std::move(filtered_mask), false);
+            mask_data->addAtTime(current_index_and_frame, std::move(filtered_mask), NotifyObservers::No);
         }
 
         // Notify observers

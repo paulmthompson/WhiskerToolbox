@@ -38,10 +38,10 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         };
         
         // Add all components to the same time
-        mask_data->addAtTime(TimeFrameIndex(0), large_component, false);
-        mask_data->addAtTime(TimeFrameIndex(0), small_component1, false);
-        mask_data->addAtTime(TimeFrameIndex(0), small_component2, false);
-        
+        mask_data->addAtTime(TimeFrameIndex(0), large_component, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), small_component1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), small_component2, NotifyObservers::No);
+
         // Set threshold to 5 - should keep the 9-pixel component, remove the 1 and 2-pixel components
         auto params = std::make_unique<MaskConnectedComponentParameters>();
         params->threshold = 5;
@@ -87,11 +87,11 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         std::vector<Point2D<uint32_t>> component1 = {{1, 1}};
         std::vector<Point2D<uint32_t>> component2 = {{3, 3}};
         std::vector<Point2D<uint32_t>> component3 = {{0, 4}, {1, 4}};  // 2-pixel component
-        
-        mask_data->addAtTime(TimeFrameIndex(10), component1, false);
-        mask_data->addAtTime(TimeFrameIndex(10), component2, false);
-        mask_data->addAtTime(TimeFrameIndex(10), component3, false);
-        
+
+        mask_data->addAtTime(TimeFrameIndex(10), component1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(10), component2, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(10), component3, NotifyObservers::No);
+
         auto params = std::make_unique<MaskConnectedComponentParameters>();
         params->threshold = 1;
         
@@ -119,10 +119,10 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         // Create some medium-sized components
         std::vector<Point2D<uint32_t>> component1 = {{0, 0}, {1, 0}, {0, 1}};  // 3 pixels
         std::vector<Point2D<uint32_t>> component2 = {{5, 5}, {6, 5}};  // 2 pixels
-        
-        mask_data->addAtTime(TimeFrameIndex(5), component1, false);
-        mask_data->addAtTime(TimeFrameIndex(5), component2, false);
-        
+
+        mask_data->addAtTime(TimeFrameIndex(5), component1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(5), component2, NotifyObservers::No);
+
         // Set threshold higher than any component
         auto params = std::make_unique<MaskConnectedComponentParameters>();
         params->threshold = 10;
@@ -170,11 +170,11 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         std::vector<Point2D<uint32_t>> medium_comp = {
             {3, 3}, {4, 3}, {3, 4}, {4, 4}, {3, 5}  // 5 pixels
         };
-        
-        mask_data->addAtTime(TimeFrameIndex(0), large_comp, false);
-        mask_data->addAtTime(TimeFrameIndex(1), small_comp, false);
-        mask_data->addAtTime(TimeFrameIndex(2), medium_comp, false);
-        
+
+        mask_data->addAtTime(TimeFrameIndex(0), large_comp, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(1), small_comp, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(2), medium_comp, NotifyObservers::No);
+
         auto params = std::make_unique<MaskConnectedComponentParameters>();
         params->threshold = 4;
         
@@ -250,10 +250,10 @@ TEST_CASE("MaskConnectedComponentOperation interface", "[mask_connected_componen
         std::vector<Point2D<uint32_t>> small_comp = {
             {5, 5}  // 1 pixel
         };
-        
-        mask_data->addAtTime(TimeFrameIndex(0), large_comp, false);
-        mask_data->addAtTime(TimeFrameIndex(0), small_comp, false);
-        
+
+        mask_data->addAtTime(TimeFrameIndex(0), large_comp, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), small_comp, NotifyObservers::No);
+
         MaskConnectedComponentOperation op;
         DataTypeVariant input_variant = mask_data;
         
@@ -302,10 +302,10 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
     };
     
     // Add all components to the mask
-    test_mask->addAtTime(TimeFrameIndex(0), large_component, false);
-    test_mask->addAtTime(TimeFrameIndex(0), small_component1, false);
-    test_mask->addAtTime(TimeFrameIndex(0), medium_component, false);
-    
+    test_mask->addAtTime(TimeFrameIndex(0), large_component, NotifyObservers::No);
+    test_mask->addAtTime(TimeFrameIndex(0), small_component1, NotifyObservers::No);
+    test_mask->addAtTime(TimeFrameIndex(0), medium_component, NotifyObservers::No);
+
     // Store the mask data in DataManager with a known key
     dm.setData("test_mask", test_mask, TimeKey("default"));
     

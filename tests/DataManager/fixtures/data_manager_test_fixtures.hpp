@@ -206,10 +206,10 @@ private:
         };
         
         // Add masks to different time frames
-        mask_data->addAtTime(TimeFrameIndex(1), mask1_frame_1);
-        mask_data->addAtTime(TimeFrameIndex(1), mask2_frame_1);
-        mask_data->addAtTime(TimeFrameIndex(2), mask1_frame_2);
-        
+        mask_data->addAtTime(TimeFrameIndex(1), mask1_frame_1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(1), mask2_frame_1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(2), mask1_frame_2, NotifyObservers::No);
+
         // Set image size for the mask data
         mask_data->setImageSize(ImageSize(800, 600));
         

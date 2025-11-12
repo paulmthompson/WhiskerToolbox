@@ -302,7 +302,8 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize cons
 
     auto const current_time = _data_manager->getCurrentTime();
 
-    _data_manager->getData<MaskData>("SAM_output")->addAtTime(TimeFrameIndex(current_time), mask_output);
+    _data_manager->getData<MaskData>("SAM_output")->addAtTime(TimeFrameIndex(current_time), mask_output, NotifyObservers::No);
+    _data_manager->getData<MaskData>("SAM_output")->notifyObservers();
 
 
     /*

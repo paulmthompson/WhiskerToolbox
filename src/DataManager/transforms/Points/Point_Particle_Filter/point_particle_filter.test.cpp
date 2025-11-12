@@ -76,7 +76,7 @@ TEST_CASE("PointParticleFilter: Basic straight line tracking", "[PointParticleFi
     // Create masks for each frame (horizontal corridor)
     for (int i = 0; i <= 10; ++i) {
         auto mask = generateRectangleMask(40, 160, 45, 55);
-        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask));
+        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask), NotifyObservers::No);
     }
     
     // Run particle filter
@@ -143,7 +143,7 @@ TEST_CASE("PointParticleFilter: Tracking with gaps in masks", "[PointParticleFil
     // Add masks with some gaps (frames 0, 2, 4, 6, 8, 10)
     for (int i = 0; i <= 10; i += 2) {
         auto mask = generateCircleMask(100, 100 + i * 5, 30);
-        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask));
+        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask), NotifyObservers::No);
     }
     
     auto result = pointParticleFilter(
@@ -214,7 +214,7 @@ TEST_CASE("PointParticleFilter: Multiple groups tracked independently", "[PointP
     // Create masks covering both areas
     for (int i = 0; i <= 5; ++i) {
         auto mask = generateRectangleMask(30, 170, 40, 110);
-        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask));
+        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask), NotifyObservers::No);
     }
     
     auto result = pointParticleFilter(
@@ -263,7 +263,7 @@ TEST_CASE("PointParticleFilter: Single ground truth point (no tracking)", "[Poin
     
     // Add mask
     auto mask = generateCircleMask(100, 100, 30);
-    mask_data->addAtTime(TimeFrameIndex(0), std::move(mask));
+    mask_data->addAtTime(TimeFrameIndex(0), std::move(mask), NotifyObservers::No);
     
     auto result = pointParticleFilter(
         point_data.get(),
@@ -321,7 +321,7 @@ TEST_CASE("PointParticleFilter: Curved trajectory", "[PointParticleFilter]") {
     // Create circular masks centered at (100, 100) with radius 50
     for (int i = 0; i <= 10; ++i) {
         auto mask = generateCircleMask(100, 100, 55);
-        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask));
+        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask), NotifyObservers::No);
     }
     
     auto result = pointParticleFilter(
@@ -427,7 +427,7 @@ TEST_CASE("PointParticleFilterOperation: Execute with valid data", "[PointPartic
     // Add masks
     for (int i = 0; i <= 5; ++i) {
         auto mask = generateRectangleMask(90, 130, 90, 110);
-        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask));
+        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask), NotifyObservers::No);
     }
     
     // Create parameters
@@ -540,7 +540,7 @@ TEST_CASE("PointParticleFilter: Progress callback is called", "[PointParticleFil
     
     for (int i = 0; i <= 5; ++i) {
         auto mask = generateCircleMask(100 + i * 4, 100, 20);
-        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask));
+        mask_data->addAtTime(TimeFrameIndex(i), std::move(mask), NotifyObservers::No);
     }
     
     // Track progress callback calls
@@ -600,7 +600,7 @@ TEST_CASE("PointParticleFilter: Matching image sizes (no scaling)", "[PointParti
         for (int i = 45; i <= 65; ++i) {
             mask.push_back(Point2D<uint32_t>{static_cast<uint32_t>(i), static_cast<uint32_t>(i)});
         }
-        mask_data->addAtTime(TimeFrameIndex(t), mask);
+        mask_data->addAtTime(TimeFrameIndex(t), mask, NotifyObservers::No);
     }
     
     // Run filter
@@ -671,7 +671,7 @@ TEST_CASE("PointParticleFilter: Mismatched image sizes (requires scaling)", "[Po
         for (int i = 40; i <= 160; ++i) {
             mask.push_back(Point2D<uint32_t>{static_cast<uint32_t>(i), static_cast<uint32_t>(i)});
         }
-        mask_data->addAtTime(TimeFrameIndex(t), mask);
+        mask_data->addAtTime(TimeFrameIndex(t), mask, NotifyObservers::No);
     }
     
     // Run filter
@@ -755,7 +755,7 @@ TEST_CASE("PointParticleFilter: Non-uniform scaling (different x and y scales)",
                 mask.push_back(Point2D<uint32_t>{static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(t), mask);
+        mask_data->addAtTime(TimeFrameIndex(t), mask, NotifyObservers::No);
     }
     
     // Run filter
@@ -837,7 +837,7 @@ TEST_CASE("PointParticleFilter: Diagonal line with minimal motion (anti-walking 
                 }
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(t), mask);
+        mask_data->addAtTime(TimeFrameIndex(t), mask, NotifyObservers::No);
     }
     
     SECTION("Without velocity model (prone to walking)") {
@@ -1029,7 +1029,7 @@ TEST_CASE("PointParticleFilter: No predictions on labeled frames", "[PointPartic
     for (int t = 0; t <= 10; ++t) {
         float center = 100.0f + static_cast<float>(t) * 10.0f;
         mask_data->addAtTime(TimeFrameIndex(t), generateCircleMask(
-            static_cast<uint32_t>(center), static_cast<uint32_t>(center), 30));
+            static_cast<uint32_t>(center), static_cast<uint32_t>(center), 30), NotifyObservers::No);
     }
     
     // Run particle filter

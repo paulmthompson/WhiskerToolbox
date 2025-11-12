@@ -120,7 +120,9 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
 
         // Add mask to data if we have points
         if (!mask_points.empty()) {
-            mask_data->addAtTime(TimeFrameIndex(static_cast<size_t>(frame_number)), std::move(mask_points), false);
+            mask_data->addAtTime(TimeFrameIndex(static_cast<size_t>(frame_number)),
+                                 std::move(mask_points),
+                                 NotifyObservers::No);
             files_loaded++;
         } else {
             std::cout << "Warning: No mask pixels found in image: " << filename << std::endl;

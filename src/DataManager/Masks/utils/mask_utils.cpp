@@ -55,7 +55,7 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
         for (auto const & mask : entries) {
             if (mask.data.empty()) {
                 if (preserve_empty_masks) {
-                    result_mask_data->addAtTime(time, std::vector<Point2D<uint32_t>>{}, false);
+                    result_mask_data->addAtTime(time, std::vector<Point2D<uint32_t>>{}, NotifyObservers::No);
                 }
                 processed_masks++;
                 continue;
@@ -72,7 +72,7 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
             
             // Add the processed mask to result (only if it has points)
             if (!processed_points.empty()) {
-                result_mask_data->addAtTime(time, processed_points, false);
+                result_mask_data->addAtTime(time, processed_points, NotifyObservers::No);
             }
             
             processed_masks++;

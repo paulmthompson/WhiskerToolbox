@@ -36,9 +36,9 @@ public:
 
     // ========== Setters (Time-based) ==========
 
-    void addAtTime(TimeFrameIndex time, Mask2D const & mask, bool notify = true);
+    void addAtTime(TimeFrameIndex time, Mask2D const & mask, NotifyObservers notify);
 
-    void addAtTime(TimeFrameIndex time, Mask2D && mask, bool notify = true);
+    void addAtTime(TimeFrameIndex time, Mask2D && mask, NotifyObservers notify);
 
     /**
      * @brief Construct a data entry in-place at a specific time.
@@ -78,12 +78,12 @@ public:
     void addAtTime(TimeFrameIndex time,
                    std::vector<uint32_t> const & x,
                    std::vector<uint32_t> const & y,
-                   bool notify = true);
+                   NotifyObservers notify);
 
 
     void addAtTime(TimeIndexAndFrame const & time_index_and_frame,
                    std::vector<Point2D<uint32_t>> mask,
-                   bool notify = true);
+                   NotifyObservers notify);
 
     /**
      * @brief Adds a new mask at the specified time using separate x and y coordinate arrays (move version)
@@ -102,7 +102,7 @@ public:
     void addAtTime(TimeFrameIndex time,
                    std::vector<uint32_t> && x,
                    std::vector<uint32_t> && y,
-                   bool notify = true);
+                   NotifyObservers notify);
 
     // ========== Getters (Time-based) ==========
 
