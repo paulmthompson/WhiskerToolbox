@@ -223,7 +223,7 @@ void Grabcut_Widget::_saveMask(){
             }
         }
     }
-    auto pts = ImageProcessing::create_mask(mask);
+    auto pts = Mask2D(ImageProcessing::create_mask(mask));
     auto mask_data = _data_manager->getData<MaskData>(mask_name);
     mask_data->setImageSize({_width,_height});
 

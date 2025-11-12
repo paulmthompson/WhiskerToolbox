@@ -23,7 +23,7 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
             }
         }
         
-        mask_data->addAtTime(TimeFrameIndex(0), hollow_rect, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), Mask2D(hollow_rect), NotifyObservers::No);
         
         MaskHoleFillingParameters params;
         auto result = fill_mask_holes(mask_data.get(), &params);
@@ -60,7 +60,7 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
             }
         }
 
-        mask_data->addAtTime(TimeFrameIndex(1), solid_square, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(1), Mask2D(solid_square), NotifyObservers::No);
 
         MaskHoleFillingParameters params;
         auto result = fill_mask_holes(mask_data.get(), &params);
@@ -88,7 +88,7 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
                 }
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(2), hollow_rect, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(2), Mask2D(hollow_rect), NotifyObservers::No);
         
         // Second mask: small solid 2x2 square
         std::vector<Point2D<uint32_t>> solid_square;
@@ -97,7 +97,7 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
                 solid_square.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(2), solid_square, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(2), Mask2D(solid_square), NotifyObservers::No);
         
         MaskHoleFillingParameters params;
         auto result = fill_mask_holes(mask_data.get(), &params);
@@ -181,7 +181,7 @@ TEST_CASE("MaskHoleFillingOperation interface tests", "[mask_hole_filling][opera
                 }
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(0), donut, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), Mask2D(donut), NotifyObservers::No);
         
         DataTypeVariant input_variant = mask_data;
         MaskHoleFillingParameters params;
@@ -233,7 +233,7 @@ TEST_CASE("Data Transform: Mask Hole Filling - JSON pipeline", "[transforms][mas
             }
         }
     }
-    test_mask->addAtTime(TimeFrameIndex(0), hollow_rect, NotifyObservers::No);
+    test_mask->addAtTime(TimeFrameIndex(0), Mask2D(hollow_rect), NotifyObservers::No);
     
     // Store the mask data in DataManager with a known key
     dm.setData("test_mask", test_mask, TimeKey("default"));
@@ -312,7 +312,7 @@ TEST_CASE("Data Transform: Mask Hole Filling - JSON pipeline", "[transforms][mas
             }
         }
     }
-    test_mask_multi->addAtTime(TimeFrameIndex(0), hollow_rect_small, NotifyObservers::No);
+    test_mask_multi->addAtTime(TimeFrameIndex(0), Mask2D(hollow_rect_small), NotifyObservers::No);
     
     // Second mask: small solid 2x2 square
     std::vector<Point2D<uint32_t>> solid_square;
@@ -321,7 +321,7 @@ TEST_CASE("Data Transform: Mask Hole Filling - JSON pipeline", "[transforms][mas
             solid_square.emplace_back(col, row);
         }
     }
-    test_mask_multi->addAtTime(TimeFrameIndex(0), solid_square, NotifyObservers::No);
+    test_mask_multi->addAtTime(TimeFrameIndex(0), Mask2D(solid_square), NotifyObservers::No);
     
     dm.setData("test_mask_multi", test_mask_multi, TimeKey("default"));
     

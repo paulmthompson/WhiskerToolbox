@@ -405,7 +405,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
 
             // Time ordering step for this method
             auto order_start = std::chrono::high_resolution_clock::now();
-            line_points = order_line(mask, reference_point, input_point_subsample_factor);
+            line_points = order_line(mask.points(), reference_point, input_point_subsample_factor);
             auto order_end = std::chrono::high_resolution_clock::now();
             order_line_times.push_back(
                     std::chrono::duration_cast<std::chrono::microseconds>(

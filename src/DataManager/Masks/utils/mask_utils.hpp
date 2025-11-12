@@ -42,15 +42,15 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
  * @param image_size The dimensions of the output image
  * @return Image Binary image where mask points are set to 1, others to 0
  */
-Image mask_to_binary_image(std::vector<Point2D<uint32_t>> const & mask, ImageSize image_size);
+Image mask_to_binary_image(Mask2D const & mask, ImageSize image_size);
 
 /**
  * @brief Converts a binary image back to mask points
  * 
  * @param binary_image The binary image to convert
- * @return std::vector<Point2D<uint32_t>> Vector of points where image value > 0
+ * @return Mask2D Mask containing points where image value > 0
  */
-std::vector<Point2D<uint32_t>> binary_image_to_mask(Image const & binary_image);
+Mask2D binary_image_to_mask(Image const & binary_image);
 
 /**
  * @brief Resize a mask from one image size to another using nearest neighbor interpolation

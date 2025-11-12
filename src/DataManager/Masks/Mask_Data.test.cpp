@@ -25,7 +25,7 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
     std::vector<uint32_t> x2 = {4, 5, 6, 4};
     std::vector<uint32_t> y2 = {3, 3, 4, 4};
 
-    std::vector<Point2D<uint32_t>> points = {
+    Mask2D points = {
             {10, 10},
             {11, 10},
             {11, 11},
@@ -88,7 +88,7 @@ TEST_CASE("MaskData - Copy and Move by EntityID", "[mask][data][entity][copy][mo
     std::vector<uint32_t> y1 = {1, 1, 2, 2};
     std::vector<uint32_t> x2 = {4, 5, 6, 4};
     std::vector<uint32_t> y2 = {3, 3, 4, 4};
-    std::vector<Point2D<uint32_t>> points = {{10, 10}, {11, 10}, {11, 11}};
+    Mask2D points = {{10, 10}, {11, 10}, {11, 11}};
 
     auto data_manager = std::make_unique<DataManager>();
     auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 10, 20, 30});
@@ -257,7 +257,7 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
         REQUIRE(notification_count == 1);// Still 1, not incremented
 
         // Add using point vector with notification
-        std::vector<Point2D<uint32_t>> points = {{1, 1}, {2, 2}};
+        Mask2D points = {{1, 1}, {2, 2}};
         mask_data.addAtTime(TimeFrameIndex(1), points, NotifyObservers::Yes);
         REQUIRE(notification_count == 2);
 
@@ -301,7 +301,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
 
     SECTION("Multiple operations sequence") {
         // Add, clear, add again to test internal state consistency
-        std::vector<Point2D<uint32_t>> points = {{1, 1}, {2, 2}};
+        Mask2D points = {{1, 1}, {2, 2}};
 
         mask_data.addAtTime(TimeFrameIndex(5), points, NotifyObservers::No);
         REQUIRE(mask_data.clearAtTime(TimeIndexAndFrame(5, nullptr), NotifyObservers::No));

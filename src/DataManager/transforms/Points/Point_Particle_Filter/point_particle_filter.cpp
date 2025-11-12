@@ -132,10 +132,10 @@ std::vector<Point2D<float>> trackSegment(
             // No mask at this time - use empty mask (tracker will handle it)
             masks.emplace_back();
         } else {
-            // Flatten all masks at this time into one
+            // Flatten all masks at this time into one (removing duplicates)
             Mask2D combined_mask;
             for (auto const & m : mask_at_t) {
-                combined_mask.insert(combined_mask.end(), m.begin(), m.end());
+                combined_mask = combine_masks(combined_mask, m);
             }
             masks.push_back(std::move(combined_mask));
         }

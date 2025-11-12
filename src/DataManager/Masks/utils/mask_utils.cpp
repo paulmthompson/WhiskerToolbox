@@ -55,7 +55,7 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
         for (auto const & mask : entries) {
             if (mask.data.empty()) {
                 if (preserve_empty_masks) {
-                    result_mask_data->addAtTime(time, std::vector<Point2D<uint32_t>>{}, NotifyObservers::No);
+                    result_mask_data->addAtTime(time, Mask2D{}, NotifyObservers::No);
                 }
                 processed_masks++;
                 continue;
@@ -68,11 +68,11 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
             Image processed_image = binary_processor(binary_image);
             
             // Convert processed image back to mask points
-            std::vector<Point2D<uint32_t>> processed_points = binary_image_to_mask(processed_image);
+            Mask2D processed_mask = binary_image_to_mask(processed_image);
             
             // Add the processed mask to result (only if it has points)
-            if (!processed_points.empty()) {
-                result_mask_data->addAtTime(time, processed_points, NotifyObservers::No);
+            if (!processed_mask.empty()) {
+                result_mask_data->addAtTime(time, processed_mask, NotifyObservers::No);
             }
             
             processed_masks++;
@@ -89,7 +89,7 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
     return result_mask_data;
 }
 
-Image mask_to_binary_image(std::vector<Point2D<uint32_t>> const & mask, ImageSize image_size) {
+Image mask_to_binary_image(Mask2D const & mask, ImageSize image_size) {
     std::vector<uint8_t> image_data(image_size.width * image_size.height, 0);
     
     // Set mask points to 1 in the binary image
@@ -107,7 +107,7 @@ Image mask_to_binary_image(std::vector<Point2D<uint32_t>> const & mask, ImageSiz
     return Image(std::move(image_data), image_size);
 }
 
-std::vector<Point2D<uint32_t>> binary_image_to_mask(Image const & binary_image) {
+Mask2D binary_image_to_mask(Image const & binary_image) {
     std::vector<Point2D<uint32_t>> mask_points;
     
     for (int y = 0; y < binary_image.size.height; ++y) {
@@ -118,7 +118,7 @@ std::vector<Point2D<uint32_t>> binary_image_to_mask(Image const & binary_image) 
         }
     }
     
-    return mask_points;
+    return Mask2D(mask_points);
 } 
 
 Mask2D resize_mask(Mask2D const & mask, ImageSize const & source_size, ImageSize const & dest_size) {

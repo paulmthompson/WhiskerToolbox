@@ -1956,7 +1956,7 @@ std::vector<Mask2D> Media_Window::getPreviewMaskData(std::string const & mask_ke
 }
 
 void Media_Window::setPreviewMaskData(std::string const & mask_key,
-                                      std::vector<std::vector<Point2D<uint32_t>>> const & preview_data,
+                                      std::vector<Mask2D> const & preview_data,
                                       bool active) {
     if (active) {
         _preview_mask_data[mask_key] = preview_data;

@@ -207,7 +207,7 @@ public:
      * @param active Whether preview is active
      */
     void setPreviewMaskData(std::string const & mask_key,
-                            std::vector<std::vector<Point2D<uint32_t>>> const & preview_data,
+                            std::vector<Mask2D> const & preview_data,
                             bool active);
 
 protected:
@@ -261,7 +261,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<TensorDisplayOptions>> _tensor_configs;
 
     // Preview data storage for masks
-    std::unordered_map<std::string, std::vector<std::vector<Point2D<uint32_t>>>> _preview_mask_data;
+    std::unordered_map<std::string, std::vector<Mask2D>> _preview_mask_data;
     bool _mask_preview_active{false};
 
     // Text overlay support

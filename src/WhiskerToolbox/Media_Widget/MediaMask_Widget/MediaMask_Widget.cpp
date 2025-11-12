@@ -329,13 +329,13 @@ void MediaMask_Widget::_applyMaskDilation(MaskDilationOptions const & options) {
     auto const & original_masks = _original_mask_data[_active_key];
 
     // Apply dilation to each mask at current time
-    std::vector<std::vector<Point2D<uint32_t>>> dilated_masks;
+    std::vector<Mask2D> dilated_masks;
     auto image_size = mask_data->getImageSize();
 
     for (auto const & single_mask: original_masks) {
         if (!single_mask.empty()) {
-            auto dilated_mask = ImageProcessing::dilate_mask(single_mask, image_size, options);
-            dilated_masks.push_back(dilated_mask);
+            auto dilated_mask = ImageProcessing::dilate_mask(single_mask.points(), image_size, options);
+            dilated_masks.push_back(Mask2D(std::move(dilated_mask)));
         }
     }
 
@@ -472,7 +472,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     // Get or create the primary mask (index 0)
     std::vector<Point2D<uint32_t>> primary_mask;
     if (!existing_masks.empty()) {
-        primary_mask = existing_masks[0];// Copy the existing mask at index 0
+        primary_mask = existing_masks[0].points();// Copy the existing mask at index 0
     }
     // If no masks exist, primary_mask starts empty
 
@@ -500,7 +500,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
         // Clear all masks at this time
         mask_data->clearAtTime(current_index_and_frame,
                                NotifyObservers::No);
-        mask_data->addAtTime(current_index_and_frame, std::move(primary_mask), NotifyObservers::No);
+        mask_data->addAtTime(current_index_and_frame, Mask2D(std::move(primary_mask)), NotifyObservers::No);
 
         // Notify observers
         mask_data->notifyObservers();
@@ -600,7 +600,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
 
         // Add the filtered mask back if it still has points OR if empty masks are allowed
         if (!filtered_mask.empty() || _allow_empty_mask) {
-            mask_data->addAtTime(current_index_and_frame, std::move(filtered_mask), NotifyObservers::No);
+            mask_data->addAtTime(current_index_and_frame, Mask2D(std::move(filtered_mask)), NotifyObservers::No);
         }
 
         // Notify observers

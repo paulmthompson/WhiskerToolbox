@@ -38,6 +38,8 @@ public:
 
     void addAtTime(TimeFrameIndex time, Mask2D const & mask, NotifyObservers notify);
 
+    void addAtTime(TimeIndexAndFrame const & time_index_and_frame, Mask2D const & mask, NotifyObservers notify);
+
     void addAtTime(TimeFrameIndex time, Mask2D && mask, NotifyObservers notify);
 
     /**
@@ -80,29 +82,6 @@ public:
                    std::vector<uint32_t> const & y,
                    NotifyObservers notify);
 
-
-    void addAtTime(TimeIndexAndFrame const & time_index_and_frame,
-                   std::vector<Point2D<uint32_t>> mask,
-                   NotifyObservers notify);
-
-    /**
-     * @brief Adds a new mask at the specified time using separate x and y coordinate arrays (move version)
-    *
-    * This overload avoids copying the input vectors by moving them.
-    * If masks already exist at the specified time, the new mask is added to the collection.
-    * If no masks exist at that time, a new entry is created.
-    *
-    * @param time The timestamp at which to add the mask
-    * @param x Vector of x-coordinates defining the mask points (will be moved)
-    * @param y Vector of y-coordinates defining the mask points (will be moved)
-    * @param notify If true, observers will be notified of the change (default: true)
-    *
-    * @note x and y vectors must be the same length, representing coordinate pairs
-    */
-    void addAtTime(TimeFrameIndex time,
-                   std::vector<uint32_t> && x,
-                   std::vector<uint32_t> && y,
-                   NotifyObservers notify);
 
     // ========== Getters (Time-based) ==========
 

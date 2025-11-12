@@ -33,7 +33,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
         solid_square.emplace_back(9, 9); // Bottom-right corner
         solid_square.emplace_back(1, 8); // Isolated pixel
         
-        mask_data->addAtTime(TimeFrameIndex(0), solid_square, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), Mask2D(solid_square), NotifyObservers::No);
         
         MaskMedianFilterParameters params;
         params.window_size = 3;
@@ -78,7 +78,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
         pattern.emplace_back(0, 10);
         pattern.emplace_back(10, 0);
 
-        mask_data->addAtTime(TimeFrameIndex(1), pattern, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(1), Mask2D(pattern), NotifyObservers::No);
 
         // Test different window sizes
         MaskMedianFilterParameters params_3x3;
@@ -114,7 +114,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
             }
         }
         
-        mask_data->addAtTime(TimeFrameIndex(2), large_square, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(2), Mask2D(large_square), NotifyObservers::No);
         
         MaskMedianFilterParameters params;
         params.window_size = 3;
@@ -149,7 +149,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
                 square1.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(3), square1, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(3), Mask2D(square1), NotifyObservers::No);
         
         // Second mask: solid 3x3 square on right
         std::vector<Point2D<uint32_t>> square2;
@@ -158,14 +158,14 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
                 square2.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(3), square2, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(3), Mask2D(square2), NotifyObservers::No);
         
         // Third mask: noise pixels
         std::vector<Point2D<uint32_t>> noise;
         noise.emplace_back(0, 0);
         noise.emplace_back(14, 9);
         noise.emplace_back(7, 1);
-        mask_data->addAtTime(TimeFrameIndex(3), noise, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(3), Mask2D(noise), NotifyObservers::No);
         
         MaskMedianFilterParameters params;
         params.window_size = 3;
@@ -223,7 +223,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
                 square.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(0), square, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), Mask2D(square), NotifyObservers::No);
         
         // Test invalid even window size (should use default)
         MaskMedianFilterParameters params_even;
@@ -301,7 +301,7 @@ TEST_CASE("MaskMedianFilterOperation interface tests", "[mask_median_filter][ope
         pattern.emplace_back(0, 0);
         pattern.emplace_back(9, 9);
 
-        mask_data->addAtTime(TimeFrameIndex(0), pattern, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), Mask2D(pattern), NotifyObservers::No);
 
         DataTypeVariant input_variant = mask_data;
         MaskMedianFilterParameters params;
@@ -335,7 +335,7 @@ TEST_CASE("MaskMedianFilterOperation interface tests", "[mask_median_filter][ope
                 simple_mask.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(TimeFrameIndex(0), simple_mask, NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), Mask2D(simple_mask), NotifyObservers::No);
         
         DataTypeVariant input_variant = mask_data;
         
@@ -391,7 +391,7 @@ TEST_CASE("Data Transform: Median Filter - JSON pipeline", "[transforms][mask_me
     solid_square.emplace_back(9, 9); // Bottom-right corner
     solid_square.emplace_back(1, 8); // Isolated pixel
 
-    mask_data->addAtTime(TimeFrameIndex(0), solid_square, NotifyObservers::No);
+    mask_data->addAtTime(TimeFrameIndex(0), Mask2D(solid_square), NotifyObservers::No);
     dm.setData("TestMask", mask_data, TimeKey("default"));
 
     TransformPipeline pipeline(&dm, &registry);
@@ -448,7 +448,7 @@ TEST_CASE("Data Transform: Median Filter - load_data_from_json_config", "[transf
     pattern.emplace_back(0, 11);
     pattern.emplace_back(11, 0);
 
-    mask_data->addAtTime(TimeFrameIndex(0), pattern, NotifyObservers::No);
+    mask_data->addAtTime(TimeFrameIndex(0), Mask2D(pattern), NotifyObservers::No);
 
     // Store the mask data in DataManager with a known key
     dm.setData("test_mask", mask_data, TimeKey("default"));

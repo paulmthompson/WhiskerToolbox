@@ -7,11 +7,108 @@
 #include <cstdint>
 #include <vector>
 
-using Mask2D = std::vector<Point2D<uint32_t>>;
+class Mask2D {
+public:
+    Mask2D() = default;
+    
+    /**
+     * @brief Construct a Mask2D from a vector of Point2D<uint32_t>.
+     *
+     * @pre None.
+     * @post The mask contains the provided points.
+     */
+    explicit Mask2D(std::vector<Point2D<uint32_t>> points) : points_(std::move(points)) {}
+    
+    /**
+     * @brief Construct a Mask2D from an initializer list of Point2D<uint32_t>.
+     *
+     * @pre None.
+     * @post The mask contains the provided points in the same order.
+     */
+    Mask2D(std::initializer_list<Point2D<uint32_t>> points) : points_(points) {}
+    
+    /**
+     * @brief Construct a Mask2D from separate x and y coordinate vectors (uint32_t).
+     *
+     * @pre x and y vectors must have the same size.
+     * @post The mask contains points created from the x and y coordinates.
+     */
+    Mask2D(std::vector<uint32_t> const & x, std::vector<uint32_t> const & y);
+    
+    /**
+     * @brief Construct a Mask2D from separate x and y coordinate vectors (float).
+     *
+     * Float coordinates are rounded to nearest integers and clamped to non-negative values.
+     *
+     * @pre x and y vectors must have the same size.
+     * @post The mask contains points created from the rounded x and y coordinates.
+     */
+    Mask2D(std::vector<float> const & x, std::vector<float> const & y);
 
-Mask2D create_mask(std::vector<uint32_t> const & x, std::vector<uint32_t> const & y);
+    size_t size() const {
+        return points_.size();
+    }
 
-Mask2D create_mask(std::vector<float> const & x, std::vector<float> const & y);
+    Point2D<uint32_t> front() const {
+        return points_.front();
+    }
+
+    bool empty() const {
+        return points_.empty();
+    }
+
+    void push_back(Point2D<uint32_t> const & point) {
+        points_.push_back(point);
+    }
+
+    void reserve(size_t capacity) {
+        points_.reserve(capacity);
+    }
+
+    Point2D<uint32_t> back() const {
+        return points_.back();
+    }
+    
+    Point2D<uint32_t> operator[](size_t index) const {
+        return points_[index];
+    }
+
+    std::vector<Point2D<uint32_t>>::iterator begin() {
+        return points_.begin();
+    }
+
+    std::vector<Point2D<uint32_t>>::iterator end() {
+        return points_.end();
+    }
+    
+    std::vector<Point2D<uint32_t>>::const_iterator begin() const {
+        return points_.begin();
+    }
+    
+    std::vector<Point2D<uint32_t>>::const_iterator end() const {
+        return points_.end();
+    }
+
+    void erase(std::vector<Point2D<uint32_t>>::iterator it) {
+        points_.erase(it);
+    }
+
+    void erase(std::vector<Point2D<uint32_t>>::iterator first, std::vector<Point2D<uint32_t>>::iterator last) {
+        points_.erase(first, last);
+    }
+
+    /**
+     * @brief Get a const reference to the underlying vector of points
+     *
+     * @return const reference to the vector of points
+     */
+    std::vector<Point2D<uint32_t>> const & points() const {
+        return points_;
+    }
+
+private:
+    std::vector<Point2D<uint32_t>> points_;
+};
 
 
 std::pair<Point2D<uint32_t>, Point2D<uint32_t>> get_bounding_box(Mask2D const & mask);

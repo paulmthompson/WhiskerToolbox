@@ -23,17 +23,17 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         mask_data->setImageSize({10, 10});
         
         // Create a mask with a large component (9 pixels) and small components (1-2 pixels each)
-        std::vector<Point2D<uint32_t>> large_component = {
+        Mask2D large_component = {
             {1, 1}, {2, 1}, {3, 1},  // Row 1
             {1, 2}, {2, 2}, {3, 2},  // Row 2  
             {1, 3}, {2, 3}, {3, 3}   // Row 3 (3x3 square)
         };
         
-        std::vector<Point2D<uint32_t>> small_component1 = {
+        Mask2D small_component1 = {
             {7, 1}  // Single pixel
         };
         
-        std::vector<Point2D<uint32_t>> small_component2 = {
+        Mask2D small_component2 = {
             {7, 7}, {8, 7}  // Two adjacent pixels
         };
         
@@ -84,9 +84,9 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         mask_data->setImageSize({5, 5});
         
         // Create several small components
-        std::vector<Point2D<uint32_t>> component1 = {{1, 1}};
-        std::vector<Point2D<uint32_t>> component2 = {{3, 3}};
-        std::vector<Point2D<uint32_t>> component3 = {{0, 4}, {1, 4}};  // 2-pixel component
+        Mask2D component1 = {{1, 1}};
+        Mask2D component2 = {{3, 3}};
+        Mask2D component3 = {{0, 4}, {1, 4}};  // 2-pixel component
 
         mask_data->addAtTime(TimeFrameIndex(10), component1, NotifyObservers::No);
         mask_data->addAtTime(TimeFrameIndex(10), component2, NotifyObservers::No);
@@ -117,8 +117,8 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         mask_data->setImageSize({10, 10});
         
         // Create some medium-sized components
-        std::vector<Point2D<uint32_t>> component1 = {{0, 0}, {1, 0}, {0, 1}};  // 3 pixels
-        std::vector<Point2D<uint32_t>> component2 = {{5, 5}, {6, 5}};  // 2 pixels
+        Mask2D component1 = {{0, 0}, {1, 0}, {0, 1}};  // 3 pixels
+        Mask2D component2 = {{5, 5}, {6, 5}};  // 2 pixels
 
         mask_data->addAtTime(TimeFrameIndex(5), component1, NotifyObservers::No);
         mask_data->addAtTime(TimeFrameIndex(5), component2, NotifyObservers::No);
@@ -157,17 +157,17 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         mask_data->setImageSize({8, 8});
         
         // Time 0: Large component (should be preserved)
-        std::vector<Point2D<uint32_t>> large_comp = {
+        Mask2D large_comp = {
             {0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}  // 6 pixels
         };
         
         // Time 1: Small component (should be removed)
-        std::vector<Point2D<uint32_t>> small_comp = {
+        Mask2D small_comp = {
             {5, 5}, {5, 6}  // 2 pixels
         };
         
         // Time 2: Medium component (should be preserved)
-        std::vector<Point2D<uint32_t>> medium_comp = {
+        Mask2D medium_comp = {
             {3, 3}, {4, 3}, {3, 4}, {4, 4}, {3, 5}  // 5 pixels
         };
 
@@ -241,13 +241,13 @@ TEST_CASE("MaskConnectedComponentOperation interface", "[mask_connected_componen
         mask_data->setImageSize({6, 6});
         
         // Add a component larger than default threshold
-        std::vector<Point2D<uint32_t>> large_comp = {
+        Mask2D large_comp = {
             {0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1},
             {0, 2}, {1, 2}, {2, 2}, {3, 0}, {3, 1}, {3, 2}  // 12 pixels
         };
         
         // Add a small component 
-        std::vector<Point2D<uint32_t>> small_comp = {
+        Mask2D small_comp = {
             {5, 5}  // 1 pixel
         };
 
@@ -285,19 +285,19 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
     test_mask->setTimeFrame(time_frame);
     
     // Large component (9 pixels) - should be preserved
-    std::vector<Point2D<uint32_t>> large_component = {
+    Mask2D large_component = {
         {1, 1}, {2, 1}, {3, 1},  // Row 1
         {1, 2}, {2, 2}, {3, 2},  // Row 2  
         {1, 3}, {2, 3}, {3, 3}   // Row 3 (3x3 square)
     };
     
     // Small component (1 pixel) - should be removed
-    std::vector<Point2D<uint32_t>> small_component1 = {
+    Mask2D small_component1 = {
         {7, 1}  // Single pixel
     };
     
     // Medium component (4 pixels) - should be preserved
-    std::vector<Point2D<uint32_t>> medium_component = {
+    Mask2D medium_component = {
         {5, 5}, {6, 5}, {5, 6}, {6, 6}  // 2x2 square
     };
     

@@ -25,7 +25,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
 
     SECTION("Skeletonize method - simple mask") {
         // Create a simple rectangular mask
-        std::vector<Point2D<uint32_t>> mask_points = {
+        Mask2D mask_points = {
             {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
             {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
             {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12},
@@ -60,7 +60,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
 
     SECTION("Nearest to Reference method - simple mask") {
         // Create a simple L-shaped mask
-        std::vector<Point2D<uint32_t>> mask_points = {
+        Mask2D mask_points = {
             {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
             {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
             {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12},
@@ -90,7 +90,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
 
     SECTION("Smoothing enabled") {
         // Create a simple mask
-        std::vector<Point2D<uint32_t>> mask_points = {
+        Mask2D mask_points = {
             {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
             {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
             {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12}
@@ -115,12 +115,12 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
 
     SECTION("Multiple time frames") {
         // Create masks at multiple time frames
-        std::vector<Point2D<uint32_t>> mask_points_1 = {
+        Mask2D mask_points_1 = {
             {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
             {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11}
         };
         
-        std::vector<Point2D<uint32_t>> mask_points_2 = {
+        Mask2D mask_points_2 = {
             {20, 20}, {21, 20}, {22, 20}, {23, 20}, {24, 20},
             {20, 21}, {21, 21}, {22, 21}, {23, 21}, {24, 21}
         };
@@ -145,7 +145,7 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
 
     SECTION("Progress callback detailed check") {
         // Create a simple mask
-        std::vector<Point2D<uint32_t>> mask_points = {
+        Mask2D mask_points = {
             {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
             {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
             {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12}
@@ -239,7 +239,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
     }
 
     SECTION("Very small mask (single point)") {
-        std::vector<Point2D<uint32_t>> mask_points = {{10, 10}};
+        Mask2D mask_points = {{10, 10}};
         
         mask_data = std::make_shared<MaskData>();
         mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
@@ -259,7 +259,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
     }
 
     SECTION("High polynomial order with few points") {
-        std::vector<Point2D<uint32_t>> mask_points = {
+        Mask2D mask_points = {
             {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10}
         };
         
@@ -281,7 +281,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
     }
 
     SECTION("Zero error threshold") {
-        std::vector<Point2D<uint32_t>> mask_points = {
+        Mask2D mask_points = {
             {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
             {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11}
         };
@@ -304,7 +304,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
     }
 
     SECTION("High subsample factor") {
-        std::vector<Point2D<uint32_t>> mask_points = {
+        Mask2D mask_points = {
             {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
             {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
             {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12}
@@ -365,7 +365,7 @@ TEST_CASE("Data Transform: Mask To Line - JSON pipeline", "[transforms][mask_to_
     dm.setTime(TimeKey("default"), time_frame);
 
     // Create test mask data
-    std::vector<Point2D<uint32_t>> mask_points = {
+    Mask2D mask_points = {
         {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
         {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
         {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12},
@@ -438,7 +438,7 @@ TEST_CASE("Data Transform: Mask To Line - load_data_from_json_config", "[transfo
     dm.setTime(TimeKey("default"), time_frame);
     
     // Create test mask data in code
-    std::vector<Point2D<uint32_t>> mask_points = {
+    Mask2D mask_points = {
         {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
         {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
         {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12},

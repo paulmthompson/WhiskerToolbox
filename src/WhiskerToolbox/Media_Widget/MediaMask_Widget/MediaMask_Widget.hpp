@@ -1,7 +1,7 @@
 #ifndef MEDIAMASK_WIDGET_HPP
 #define MEDIAMASK_WIDGET_HPP
 
-#include "CoreGeometry/points.hpp"
+#include "CoreGeometry/masks.hpp"
 #include "ImageProcessing/ProcessingOptions.hpp"
 #include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 
@@ -64,7 +64,7 @@ private:
     Selection_Mode _selection_mode{Selection_Mode::None};
 
     // Preview state tracking
-    std::unordered_map<std::string, std::vector<std::vector<Point2D<uint32_t>>>> _original_mask_data;
+    std::unordered_map<std::string, std::vector<Mask2D>> _original_mask_data;
     bool _preview_active{false};
 
     // Brush drag state

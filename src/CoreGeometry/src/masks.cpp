@@ -5,29 +5,23 @@
 #include <map>
 #include <set>
 
-Mask2D create_mask(std::vector<uint32_t> const & x, std::vector<uint32_t> const & y) {
-    auto new_mask = Mask2D{};
-    new_mask.reserve(x.size());// Reserve space to avoid reallocations
+Mask2D::Mask2D(std::vector<uint32_t> const & x, std::vector<uint32_t> const & y) {
+    points_.reserve(x.size());// Reserve space to avoid reallocations
 
     for (std::size_t i = 0; i < x.size(); i++) {
-        new_mask.push_back({x[i], y[i]});
+        points_.push_back({x[i], y[i]});
     }
-
-    return new_mask;
 }
 
-Mask2D create_mask(std::vector<float> const & x, std::vector<float> const & y) {
-    auto new_mask = Mask2D{};
-    new_mask.reserve(x.size());// Reserve space to avoid reallocations
+Mask2D::Mask2D(std::vector<float> const & x, std::vector<float> const & y) {
+    points_.reserve(x.size());// Reserve space to avoid reallocations
 
     for (std::size_t i = 0; i < x.size(); i++) {
         // Round coordinates to nearest integers and ensure non-negative
         uint32_t rounded_x = static_cast<uint32_t>(std::max(0.0f, std::round(x[i])));
         uint32_t rounded_y = static_cast<uint32_t>(std::max(0.0f, std::round(y[i])));
-        new_mask.push_back({rounded_x, rounded_y});
+        points_.push_back({rounded_x, rounded_y});
     }
-
-    return new_mask;
 }
 
 std::pair<Point2D<uint32_t>, Point2D<uint32_t>> get_bounding_box(Mask2D const & mask) {

@@ -58,13 +58,13 @@ TEST_CASE("CoreGeometry - Mask2D - Mask utility functions", "[masks][utilities]"
     }
 }
 
-TEST_CASE("CoreGeometry - Mask2D - create_mask utility function", "[masks][create]") {
+TEST_CASE("CoreGeometry - Mask2D - constructor from vectors", "[masks][create]") {
 
-    SECTION("create_mask from vectors") {
+    SECTION("Mask2D constructor from float vectors") {
         std::vector<float> x = {1.0f, 2.0f, 3.0f};
         std::vector<float> y = {4.0f, 5.0f, 6.0f};
 
-        auto mask = create_mask(x, y);
+        auto mask = Mask2D(x, y);
 
         REQUIRE(mask.size() == 3);
         REQUIRE(mask[0].x == 1);
@@ -75,11 +75,11 @@ TEST_CASE("CoreGeometry - Mask2D - create_mask utility function", "[masks][creat
         REQUIRE(mask[2].y == 6);
     }
 
-    SECTION("create_mask with move semantics") {
+    SECTION("Mask2D constructor with move semantics") {
         std::vector<float> x = {10.0f, 20.0f};
         std::vector<float> y = {30.0f, 40.0f};
 
-        auto mask = create_mask(std::move(x), std::move(y));
+        auto mask = Mask2D(std::move(x), std::move(y));
 
         REQUIRE(mask.size() == 2);
         REQUIRE(mask[0].x == 10);
@@ -88,11 +88,11 @@ TEST_CASE("CoreGeometry - Mask2D - create_mask utility function", "[masks][creat
         REQUIRE(mask[1].y == 40);
     }
 
-    SECTION("create_mask with rounding") {
+    SECTION("Mask2D constructor with rounding") {
         std::vector<float> x = {1.4f, 2.6f, 3.1f};
         std::vector<float> y = {4.7f, 5.2f, 6.9f};
 
-        auto mask = create_mask(x, y);
+        auto mask = Mask2D(x, y);
 
         REQUIRE(mask.size() == 3);
         REQUIRE(mask[0].x == 1);// 1.4 rounds to 1
@@ -103,11 +103,11 @@ TEST_CASE("CoreGeometry - Mask2D - create_mask utility function", "[masks][creat
         REQUIRE(mask[2].y == 7);// 6.9 rounds to 7
     }
 
-    SECTION("create_mask with negative values") {
+    SECTION("Mask2D constructor with negative values") {
         std::vector<float> x = {-1.0f, 2.0f, 3.0f};
         std::vector<float> y = {4.0f, -5.0f, 6.0f};
 
-        auto mask = create_mask(x, y);
+        auto mask = Mask2D(x, y);
 
         REQUIRE(mask.size() == 3);
         REQUIRE(mask[0].x == 0);// -1.0 clamped to 0
@@ -115,6 +115,31 @@ TEST_CASE("CoreGeometry - Mask2D - create_mask utility function", "[masks][creat
         REQUIRE(mask[1].x == 2);
         REQUIRE(mask[1].y == 0);// -5.0 clamped to 0
         REQUIRE(mask[2].x == 3);
+        REQUIRE(mask[2].y == 6);
+    }
+
+    SECTION("Mask2D constructor from vector of points") {
+        std::vector<Point2D<uint32_t>> points = {{1, 2}, {3, 4}, {5, 6}};
+        auto mask = Mask2D(points);
+
+        REQUIRE(mask.size() == 3);
+        REQUIRE(mask[0].x == 1);
+        REQUIRE(mask[0].y == 2);
+        REQUIRE(mask[1].x == 3);
+        REQUIRE(mask[1].y == 4);
+        REQUIRE(mask[2].x == 5);
+        REQUIRE(mask[2].y == 6);
+    }
+
+    SECTION("Mask2D constructor from initializer list") {
+        auto mask = Mask2D{{1, 2}, {3, 4}, {5, 6}};
+
+        REQUIRE(mask.size() == 3);
+        REQUIRE(mask[0].x == 1);
+        REQUIRE(mask[0].y == 2);
+        REQUIRE(mask[1].x == 3);
+        REQUIRE(mask[1].y == 4);
+        REQUIRE(mask[2].x == 5);
         REQUIRE(mask[2].y == 6);
     }
 }

@@ -265,8 +265,8 @@ TEST_CASE("CorrelatedMaskPointTracker: Track two points on line", "[CorrelatedMa
     for (size_t i = 0; i < num_frames; ++i) {
         Mask2D mask = generateCircleMask(traj1[i], 20.0f);
         auto mask2 = generateCircleMask(traj2[i], 20.0f);
-        mask.insert(mask.end(), mask2.begin(), mask2.end());
-        masks.push_back(mask);
+        auto combined_mask = combine_masks(mask, mask2);
+        masks.push_back(combined_mask);
     }
     
     std::vector<Point2D<uint32_t>> start_points = {start1, start2};
@@ -310,8 +310,8 @@ TEST_CASE("CorrelatedMaskPointTracker: Independent vs correlated", "[CorrelatedM
     for (size_t i = 0; i < num_frames; ++i) {
         Mask2D mask = generateCircleMask(traj1[i], 25.0f);
         auto mask2 = generateCircleMask(traj2[i], 25.0f);
-        mask.insert(mask.end(), mask2.begin(), mask2.end());
-        masks.push_back(mask);
+        auto combined_mask = combine_masks(mask, mask2);
+        masks.push_back(combined_mask);
     }
     
     std::vector<Point2D<uint32_t>> start_points = {start1, start2};
@@ -373,9 +373,9 @@ TEST_CASE("CorrelatedMaskPointTracker: Three point tracking", "[CorrelatedMaskPo
         Mask2D mask = generateCircleMask(traj1[i], 20.0f);
         auto mask2 = generateCircleMask(traj2[i], 20.0f);
         auto mask3 = generateCircleMask(traj3[i], 20.0f);
-        mask.insert(mask.end(), mask2.begin(), mask2.end());
-        mask.insert(mask.end(), mask3.begin(), mask3.end());
-        masks.push_back(mask);
+        auto combined_mask = combine_masks(mask, mask2);
+        combined_mask = combine_masks(combined_mask, mask3);
+        masks.push_back(combined_mask);
     }
     
     std::vector<Point2D<uint32_t>> start_points = {start1, start2, start3};

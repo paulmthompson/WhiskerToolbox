@@ -169,7 +169,7 @@ private:
         auto mask_data = std::make_shared<MaskData>();
         
         // Create test masks at different time frames
-        std::vector<Point2D<uint32_t>> mask1_frame_1 = {
+        Mask2D mask1_frame_1 = {
             {100, 100},
             {101, 100},
             {102, 100},
@@ -181,7 +181,7 @@ private:
             {102, 102}
         };
         
-        std::vector<Point2D<uint32_t>> mask2_frame_1 = {
+        Mask2D mask2_frame_1 = {
             {200, 200},
             {201, 200},
             {202, 200},
@@ -190,7 +190,7 @@ private:
             {202, 201}
         };
         
-        std::vector<Point2D<uint32_t>> mask1_frame_2 = {
+        Mask2D mask1_frame_2 = {
             {300, 300},
             {301, 300},
             {302, 300},

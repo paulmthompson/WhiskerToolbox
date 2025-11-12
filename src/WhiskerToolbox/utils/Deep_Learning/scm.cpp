@@ -113,7 +113,7 @@ Mask2D SCM::process_frame(std::vector<uint8_t>& image, ImageSize const image_siz
     if (_memory.empty())
     {
         std::cout << "Currently no frames in memory. Please select some" << std::endl;
-        return std::vector<Point2D<uint32_t>>{};
+        return Mask2D{};
     }
 
     auto image_tensor = convert_image_vec_to_tensor(image, image_size);
@@ -135,7 +135,7 @@ Mask2D SCM::process_frame(std::vector<uint8_t>& image, ImageSize const image_siz
     auto mask = extract_line_pixels(vec, {.width=256, .height=256});
     //auto output_line = convert_mask_to_line(vec, {_x, _y});
 
-    return mask;
+    return Mask2D(std::move(mask));
 
 }
 
