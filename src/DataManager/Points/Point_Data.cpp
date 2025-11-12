@@ -27,30 +27,6 @@ PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const
 
 // ========== Setters ==========
 
-
-[[nodiscard]] std::optional<PointData::PointModifier> PointData::getMutableData(EntityId entity_id, bool notify) {
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::PointEntity || descriptor->data_key != _identity_data_key) {
-        return std::nullopt;
-    }
-
-    auto time_it = _data.find(TimeFrameIndex{descriptor->time_value});
-    if (time_it == _data.end()) {
-        return std::nullopt;
-    }
-
-    size_t local_index = static_cast<size_t>(descriptor->local_index);
-    if (local_index >= time_it->second.size()) {
-        return std::nullopt;
-    }
-
-    Point2D<float> & point = time_it->second[local_index].data;
-
-    return PointModifier(point, [this, notify]() { if (notify) { this->notifyObservers(); } });
-}
-
-
 bool PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
     auto it = _data.find(time);
     if (it != _data.end()) {
@@ -143,39 +119,6 @@ void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point,
     if (notify) {
         notifyObservers();
     }
-}
-
-
-bool PointData::clearByEntityId(EntityId entity_id, bool notify) {
-    if (!_identity_registry) {
-        return false;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::PointEntity || descriptor->data_key != _identity_data_key) {
-        return false;
-    }
-
-    TimeFrameIndex const time{descriptor->time_value};
-    int const local_index = descriptor->local_index;
-
-    auto time_it = _data.find(time);
-    if (time_it == _data.end()) {
-        return false;
-    }
-
-    if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-        return false;
-    }
-
-    time_it->second.erase(time_it->second.begin() + static_cast<std::ptrdiff_t>(local_index));
-    if (time_it->second.empty()) {
-        _data.erase(time_it);
-    }
-    if (notify) {
-        notifyObservers();
-    }
-    return true;
 }
 
 // ========== Getters ==========

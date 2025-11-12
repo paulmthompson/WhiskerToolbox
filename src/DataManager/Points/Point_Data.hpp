@@ -110,17 +110,6 @@ public:
 
     using PointModifier = ModificationHandle<Point2D<float>>;
 
-    [[nodiscard]] std::optional<PointModifier> getMutableData(EntityId entity_id, bool notify = true);
-
-    /**
-     * @brief Clear the points by entity ID
-     * 
-     * @param entity_id The entity ID to clear the points by
-     * @param notify If true, the observers will be notified
-     * @return True if the points were cleared, false if the entity ID did not exist
-     */
-    [[nodiscard]] bool clearByEntityId(EntityId entity_id, bool notify = true);
-
     // ========== Image Size ==========
     /*
     Image size is used to store the size of the image that the points belong to.
@@ -151,9 +140,6 @@ public:
      * @return The maximum number of points
      */
     [[nodiscard]] std::size_t getMaxPoints() const;
-
-private:
-
 };
 
 #endif// POINT_DATA_HPP

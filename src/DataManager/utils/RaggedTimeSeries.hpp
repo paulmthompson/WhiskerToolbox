@@ -318,6 +318,100 @@ public:
         return results;
     }
 
+    // ========== Mutable Data Access ==========
+
+    /**
+     * @brief Type alias for modification handle
+     * 
+     * This provides a unified type for RAII-style modification handles.
+     * Derived classes can use this or define their own aliases for convenience.
+     */
+    using DataModifier = ModificationHandle<TData>;
+
+    /**
+     * @brief Get a mutable handle to data by EntityId.
+     *
+     * This method returns an RAII-style handle. The handle provides
+     * pointer-like access to the underlying TData (Line2D, Mask2D, Point2D<float>).
+     *
+     * When the handle is destroyed (goes out of scope), the observers will be
+     * automatically notified if requested.
+     *
+     * @param entity_id The EntityId to look up
+     * @param notify Whether to notify observers when the handle is destroyed
+     * @return Optional containing a DataModifier handle if found, std::nullopt otherwise
+     */
+    [[nodiscard]] std::optional<DataModifier> getMutableData(EntityId entity_id, NotifyObservers notify) {
+        if (!_identity_registry) {
+            return std::nullopt;
+        }
+
+        auto descriptor = _identity_registry->get(entity_id);
+        if (!descriptor || descriptor->kind != getEntityKind() || descriptor->data_key != _identity_data_key) {
+            return std::nullopt;
+        }
+
+        auto time_it = _data.find(TimeFrameIndex{descriptor->time_value});
+        if (time_it == _data.end()) {
+            return std::nullopt;
+        }
+
+        size_t local_index = static_cast<size_t>(descriptor->local_index);
+        if (local_index >= time_it->second.size()) {
+            return std::nullopt;
+        }
+
+        TData & data_ref = time_it->second[local_index].data;
+
+        return DataModifier(data_ref, [this, notify]() { 
+            if (notify == NotifyObservers::Yes) { 
+                this->notifyObservers(); 
+            } 
+        });
+    }
+
+    /**
+     * @brief Clear data by its EntityId
+     * 
+     * Removes the data entry associated with the given EntityId from the time series.
+     * If this results in an empty time frame, the time frame is also removed.
+     * 
+     * @param entity_id The EntityId of the data to clear
+     * @param notify Whether to notify observers after the operation
+     * @return true if the data was found and cleared, false otherwise
+     */
+    [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify) {
+        if (!_identity_registry) {
+            return false;
+        }
+
+        auto descriptor = _identity_registry->get(entity_id);
+        if (!descriptor || descriptor->kind != getEntityKind() || descriptor->data_key != _identity_data_key) {
+            return false;
+        }
+
+        TimeFrameIndex const time{descriptor->time_value};
+        int const local_index = descriptor->local_index;
+
+        auto time_it = _data.find(time);
+        if (time_it == _data.end()) {
+            return false;
+        }
+
+        if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
+            return false;
+        }
+
+        time_it->second.erase(time_it->second.begin() + static_cast<std::ptrdiff_t>(local_index));
+        if (time_it->second.empty()) {
+            _data.erase(time_it);
+        }
+        if (notify == NotifyObservers::Yes) {
+            notifyObservers();
+        }
+        return true;
+    }
+
     // ========== Data Access Methods ==========
 
     /**

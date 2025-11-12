@@ -302,7 +302,7 @@ void Point_Widget::_deleteSelectedPoints() {
         if (index.isValid()) {
             PointTableRow const row_data = _point_table_model->getRowData(index.row());
             if (row_data.frame != -1 && row_data.pointIndex >= 0) {
-                bool const success = point_data_ptr->clearByEntityId(row_data.entity_id, false);
+                bool const success = point_data_ptr->clearByEntityId(row_data.entity_id, NotifyObservers::No);
                 if (success) {
                     total_points_deleted++;
                 }

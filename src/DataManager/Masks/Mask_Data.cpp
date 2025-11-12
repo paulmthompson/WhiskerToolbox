@@ -32,39 +32,6 @@ bool MaskData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, Notif
     return _clearAtTime(converted_time, notify);
 }
 
-bool MaskData::clearByEntityId(EntityId entity_id, NotifyObservers notify) {
-    if (!_identity_registry) {
-        return false;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::MaskEntity || descriptor->data_key != _identity_data_key) {
-        return false;
-    }
-
-    TimeFrameIndex const time{descriptor->time_value};
-    int const local_index = descriptor->local_index;
-
-    auto time_it = _data.find(time);
-    if (time_it == _data.end()) {
-        return false;
-    }
-
-    if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-        return false;
-    }
-
-    time_it->second.erase(time_it->second.begin() + static_cast<std::ptrdiff_t>(local_index));
-    if (time_it->second.empty()) {
-        _data.erase(time_it);
-    }
-    if (notify == NotifyObservers::Yes) {
-        notifyObservers();
-    }
-    return true;
-}
-
-
 void MaskData::addAtTime(TimeFrameIndex const time, Mask2D const & mask, bool notify) {
     int const local_index = static_cast<int>(_data[time].size());
     auto entity_id = EntityId(0);
@@ -159,7 +126,6 @@ void MaskData::addAtTime(TimeFrameIndex const time,
         notifyObservers();
     }
 }
-
 
 // ========== Image Size ==========
 

@@ -32,28 +32,6 @@ LineData & LineData::operator=(LineData && other) noexcept {
 
 // ========== Setters ==========
 
-[[nodiscard]] std::optional<LineData::LineModifier> LineData::getMutableData(EntityId entity_id, NotifyObservers notify) {
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::LineEntity || descriptor->data_key != _identity_data_key) {
-        return std::nullopt;
-    }
-
-    auto time_it = _data.find(TimeFrameIndex{descriptor->time_value});
-    if (time_it == _data.end()) {
-        return std::nullopt;
-    }
-
-    size_t local_index = static_cast<size_t>(descriptor->local_index);
-    if (local_index >= time_it->second.size()) {
-        return std::nullopt;
-    }
-
-    Line2D & line = time_it->second[local_index].data;
-
-    return LineModifier(line, [this, notify]() { if (notify == NotifyObservers::Yes) { this->notifyObservers(); } });
-}
-
 bool LineData::_clearAtTime(TimeFrameIndex const time, NotifyObservers notify) {
     auto it = _data.find(time);
     if (it != _data.end()) {
@@ -72,38 +50,6 @@ bool LineData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, Notif
                                                              time_index_and_frame.time_frame,
                                                              _time_frame.get());
     return _clearAtTime(converted_time, notify);
-}
-
-bool LineData::clearByEntityId(EntityId entity_id, NotifyObservers notify) {
-    if (!_identity_registry) {
-        return false;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::LineEntity || descriptor->data_key != _identity_data_key) {
-        return false;
-    }
-
-    TimeFrameIndex const time{descriptor->time_value};
-    int const local_index = descriptor->local_index;
-
-    auto time_it = _data.find(time);
-    if (time_it == _data.end()) {
-        return false;
-    }
-
-    if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-        return false;
-    }
-
-    time_it->second.erase(time_it->second.begin() + static_cast<std::ptrdiff_t>(local_index));
-    if (time_it->second.empty()) {
-        _data.erase(time_it);
-    }
-    if (notify == NotifyObservers::Yes) {
-        notifyObservers();
-    }
-    return true;
 }
 
 void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, NotifyObservers notify) {

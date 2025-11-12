@@ -110,15 +110,7 @@ public:
 
     // ========== Setters (Entity-based) ==========
 
-    /**
-     * @brief Removes a mask with a specific EntityId
-     *
-     * @param entity_id The EntityId of the mask to remove
-     * @param notify If true, observers will be notified of the change
-     * @return True if the mask was found and removed, false otherwise
-     */
-    [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify);
-
+    using MaskModifier = ModificationHandle<Mask2D>;
 
     // ========== Getters (Time-based) ==========
 
@@ -142,7 +134,6 @@ public:
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
 private:
-    mutable std::vector<Mask2D> _temp_masks{};
 
     /**
     * @brief Removes all masks at the specified time

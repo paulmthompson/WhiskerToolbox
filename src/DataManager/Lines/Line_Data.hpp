@@ -133,32 +133,7 @@ public:
 
     // ========== Setters (Entity-based) ==========
 
-
     using LineModifier = ModificationHandle<Line2D>;
-
-    /**
-     * @brief Get a mutable handle to a line by EntityId.
-     *
-     * This method returns an RAII-style handle. The handle provides
-     * pointer-like access to the Line2D.
-     *
-     * When the handle is destroyed (goes out of scope), the LineData's
-     * observers will be automatically notified if requested.
-     *
-     * @param entity_id The EntityId to look up
-     * @param notify Whether to notify observers when the handle is destroyed
-     * @return Optional containing a LineModifier handle if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<LineModifier> getMutableData(EntityId entity_id, NotifyObservers notify);
-
-    /**
-     * @brief Clear a line by its EntityId
-     * 
-     * @param entity_id The EntityId of the line to clear
-     * @param notify Whether to notify observers after the operation
-     * @return true if the line was found and cleared, false otherwise
-     */
-    [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify);
 
     // ========== Image Size ==========
 

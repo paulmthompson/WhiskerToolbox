@@ -198,7 +198,7 @@ void MediaPoint_Widget::_moveSelectedPoint(qreal x_media, qreal y_media) {
     }
 
     // Modify the selected point via EntityId using the PointData modification handle
-    auto point_handle_opt = point_data->getMutableData(_selected_point_id, true);
+    auto point_handle_opt = point_data->getMutableData(_selected_point_id, NotifyObservers::Yes);
     if (!point_handle_opt.has_value()) {
         std::cout << "Could not get mutable reference to point with EntityID " << _selected_point_id.id << std::endl;
         return;
