@@ -46,31 +46,6 @@ public:
 
     virtual ~RaggedTimeSeries() = default;
 
-    // Move constructor
-    RaggedTimeSeries(RaggedTimeSeries && other) noexcept
-        : ObserverData(std::move(other)),
-          _data(std::move(other._data)),
-          _image_size(other._image_size),
-          _time_frame(std::move(other._time_frame)),
-          _identity_data_key(std::move(other._identity_data_key)),
-          _identity_registry(other._identity_registry) {
-        other._identity_registry = nullptr;
-    }
-
-    // Move assignment operator
-    RaggedTimeSeries & operator=(RaggedTimeSeries && other) noexcept {
-        if (this != &other) {
-            ObserverData::operator=(std::move(other));
-            _data = std::move(other._data);
-            _image_size = other._image_size;
-            _time_frame = std::move(other._time_frame);
-            _identity_data_key = std::move(other._identity_data_key);
-            _identity_registry = other._identity_registry;
-            other._identity_registry = nullptr;
-        }
-        return *this;
-    }
-
     // Delete copy constructor and copy assignment
     RaggedTimeSeries(RaggedTimeSeries const &) = delete;
     RaggedTimeSeries & operator=(RaggedTimeSeries const &) = delete;

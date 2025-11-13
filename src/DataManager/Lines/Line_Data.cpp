@@ -20,16 +20,6 @@ LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data) {
     }
 }
 
-// Move constructor
-LineData::LineData(LineData && other) noexcept
-    : RaggedTimeSeries<Line2D>(std::move(other)) {};
-
-// Move assignment operator
-LineData & LineData::operator=(LineData && other) noexcept {
-    RaggedTimeSeries<Line2D>::operator=(std::move(other));
-    return *this;
-}
-
 // ========== Image Size ==========
 
 void LineData::changeImageSize(ImageSize const & image_size) {
