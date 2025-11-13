@@ -64,8 +64,6 @@ set(DATAMANAGER_SOURCES
         utils/polynomial/parametric_polynomial_utils.cpp
         utils/polynomial/parametric_polynomial_utils.hpp
         utils/string_manip.hpp
-        utils/DataAggregation/DataAggregation.hpp
-        utils/DataAggregation/DataAggregation.cpp
         utils/filter/FilterFactory.hpp
         utils/filter/FilterFactory.cpp
         utils/filter/FilterImplementations.hpp
