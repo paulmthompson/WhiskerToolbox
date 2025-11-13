@@ -17,6 +17,9 @@ jobs:
     permissions:
       contents: read
 
+    env:
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,6 +29,9 @@ jobs:
         with:
           buildfolder: out/build/Clang/Release
           compiler: clang
+    
+      - name: Set Environment Variable for vcpkg
+        run: echo "VCPKG_BINARY_SOURCES=clear;files,/home/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg_cache,readwrite" >> $GITHUB_ENV
 
       - name: Configure CMake without coverage
         run: cmake --preset linux-clang-release
