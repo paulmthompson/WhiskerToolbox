@@ -21,6 +21,8 @@ option(ENABLE_UI "Enable UI" ON)
 
 option(ENABLE_BENCHMARK "Enable benchmark support" OFF)
 
+option(ENABLE_DETAILED_TEST_DISCOVERY "Enable detailed test discovery output" OFF)
+
 # Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")
 if(ENABLE_CAPNPROTO)

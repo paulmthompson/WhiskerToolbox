@@ -44,6 +44,13 @@ set_target_properties(test_io_widgets PROPERTIES
     AUTORCC ON
 )
 
-catch_discover_tests(test_io_widgets PROPERTIES 
-    ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
-)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_io_widgets PROPERTIES 
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_io_widgets_all
+        COMMAND test_io_widgets
+        )
+    set_property(TEST test_io_widgets_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+endif()

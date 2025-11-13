@@ -143,16 +143,21 @@ if (APPLE)
 
 endif()
 
-if (WIN32)
-    catch_discover_tests(test_data_manager
-            DL_PATHS
-            "$ENV{PATH}"
-            "${CMAKE_BINARY_DIR}"
-    )
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_data_manager
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_data_manager)
+    endif()
 else()
-    catch_discover_tests(test_data_manager)
+    add_test(NAME test_data_manager_all
+        COMMAND test_data_manager
+        )
 endif()
-
 #[[
 Copy Test Files
 ]]#

@@ -40,6 +40,13 @@ set_target_properties(test_group_management_widget PROPERTIES
     AUTORCC ON
 )
 
-catch_discover_tests(test_group_management_widget PROPERTIES 
-    ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
-)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_group_management_widget PROPERTIES 
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_group_management_widget_all
+        COMMAND test_group_management_widget
+        )
+    set_property(TEST test_group_management_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+endif()

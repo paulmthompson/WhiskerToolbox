@@ -69,6 +69,13 @@ target_include_directories(AnalysisDashboardTests PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Analysis_Dashboard>"
 )
 
-catch_discover_tests(AnalysisDashboardTests PROPERTIES 
-        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
-)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(AnalysisDashboardTests PROPERTIES 
+            ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME AnalysisDashboardTests_all
+        COMMAND AnalysisDashboardTests
+        )
+    set_property(TEST AnalysisDashboardTests_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+endif()

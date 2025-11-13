@@ -40,6 +40,13 @@ set_target_properties(test_feature_table_widget PROPERTIES
     AUTORCC ON
 )
 
-catch_discover_tests(test_feature_table_widget PROPERTIES 
-    ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
-)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_feature_table_widget PROPERTIES 
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_feature_table_widget_all
+        COMMAND test_feature_table_widget
+        )
+    set_property(TEST test_feature_table_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+endif()
