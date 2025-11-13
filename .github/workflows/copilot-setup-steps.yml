@@ -17,9 +17,6 @@ jobs:
     permissions:
       contents: read
 
-    env:
-      VCPKG_BINARY_SOURCES: clear;files,/home/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg_cache,readwrite
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
