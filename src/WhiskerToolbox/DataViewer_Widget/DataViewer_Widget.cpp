@@ -570,13 +570,10 @@ void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
 
 void DataViewer_Widget::_handleXAxisSamplesChanged(int value) {
     // Use setRangeWidth for spinbox changes (absolute value)
-    std::cout << "Spinbox requested range width: " << value << std::endl;
     int64_t const actual_range = ui->openGLWidget->setRangeWidth(static_cast<int64_t>(value));
-    std::cout << "Actual range width achieved: " << actual_range << std::endl;
 
     // Update the spinbox with the actual range width achieved (in case it was clamped)
     if (actual_range != value) {
-        std::cout << "Range was clamped, updating spinbox to: " << actual_range << std::endl;
         updateXAxisSamples(static_cast<int>(actual_range));
     }
 }
@@ -631,7 +628,11 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
         rangeFactor = static_cast<float>(current_range) * 0.1f;// 10% of current range width
 
         // Clamp range factor to reasonable bounds
-        rangeFactor = std::max(1.0f, std::min(rangeFactor, static_cast<float>(_time_frame->getTotalFrameCount()) / 100.0f));
+        // Using /20.0f instead of /100.0f to allow better zooming on short videos
+        // Minimum should be at least 1% of total frames to avoid getting stuck at small ranges
+        float const min_range_factor = std::max(1.0f, static_cast<float>(_time_frame->getTotalFrameCount()) / 100.0f);
+        float const max_range_factor = static_cast<float>(_time_frame->getTotalFrameCount()) / 20.0f;
+        rangeFactor = std::max(min_range_factor, std::min(rangeFactor, max_range_factor));
     } else {
         // Fixed scaling (original behavior)
         rangeFactor = static_cast<float>(_time_frame->getTotalFrameCount()) / 10000.0f;

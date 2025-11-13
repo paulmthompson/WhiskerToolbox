@@ -1477,3 +1477,258 @@ TEST_CASE_METHOD(DataViewerWidgetMultiEventTestFixture, "DataViewer_Widget - Two
         REQUIRE(eff_model_height > 0.0f);
     }
 }
+
+/**
+ * @brief Test fixture for short video scrolling regression test
+ * 
+ * Simulates the bug with 704-frame videos where X axis gets stuck at 2 samples
+ * after extreme zoom operations.
+ */
+class DataViewerWidgetShortVideoTestFixture {
+protected:
+    DataViewerWidgetShortVideoTestFixture() {
+        // Create Qt application if one doesn't exist
+        if (!QApplication::instance()) {
+            static int argc = 1;
+            static char * argv[] = {const_cast<char *>("test")};
+            m_app = std::make_unique<QApplication>(argc, argv);
+        }
+
+        // Initialize DataManager
+        m_data_manager = std::make_shared<DataManager>();
+
+        // Create a mock TimeScrollBar
+        m_time_scrollbar = std::make_unique<TimeScrollBar>();
+        m_time_scrollbar->setDataManager(m_data_manager);
+
+        // Create short video data (704 frames like the bug report)
+        populateWithShortVideoData();
+
+        // Create the DataViewer_Widget
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, m_time_scrollbar.get(), nullptr);
+    }
+
+    ~DataViewerWidgetShortVideoTestFixture() = default;
+
+    DataViewer_Widget & getWidget() { return *m_widget; }
+    DataManager & getDataManager() { return *m_data_manager; }
+    std::vector<std::string> getTestDataKeys() const { return m_test_data_keys; }
+
+private:
+    void populateWithShortVideoData() {
+        // Create 704-frame time vector (short video)
+        constexpr size_t video_length = 704;
+        std::vector<int> t(video_length);
+        std::iota(std::begin(t), std::end(t), 0);
+
+        auto new_timeframe = std::make_shared<TimeFrame>(t);
+        auto time_key = TimeKey("master");
+
+        m_data_manager->removeTime(TimeKey("master"));
+        m_data_manager->setTime(TimeKey("master"), new_timeframe);
+
+        // Add test analog data with 704 samples
+        std::vector<float> analog_values(video_length);
+        for (size_t i = 0; i < video_length; ++i) {
+            analog_values[i] = std::sin(static_cast<float>(i) * 0.1f) * 10.0f;
+        }
+        auto analog_data = std::make_shared<AnalogTimeSeries>(analog_values, video_length);
+        m_data_manager->setData<AnalogTimeSeries>("test_analog_704", analog_data, time_key);
+        m_test_data_keys.push_back("test_analog_704");
+    }
+
+    std::unique_ptr<QApplication> m_app;
+    std::shared_ptr<DataManager> m_data_manager;
+    std::unique_ptr<TimeScrollBar> m_time_scrollbar;
+    std::unique_ptr<DataViewer_Widget> m_widget;
+    std::vector<std::string> m_test_data_keys;
+};
+
+TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Short video extreme scrolling regression", "[DataViewer_Widget][XAxis][Regression][ShortVideo]") {
+    // This test simulates the reported bug where scrolling out too far on a 704-frame video
+    // causes the X axis to get stuck at 2 samples
+    
+    auto & widget = getWidget();
+    auto & dm = getDataManager();
+    
+    // Open the widget
+    widget.openWidget();
+    QApplication::processEvents();
+    
+    // Add the test analog series
+    auto const keys = getTestDataKeys();
+    REQUIRE(keys.size() == 1);
+    
+    bool invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_addFeatureToModel",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(keys[0])),
+            Q_ARG(bool, true));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+    
+    // Plot the feature
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_plotSelectedFeature",
+            Qt::DirectConnection,
+            Q_ARG(std::string, keys[0]));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+    
+    // Locate the OpenGLWidget to query XAxis
+    auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
+    REQUIRE(glw != nullptr);
+    
+    // Set initial time to middle of video
+    int const initial_time = 352;
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_updatePlot",
+            Qt::DirectConnection,
+            Q_ARG(int, initial_time));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+    
+    INFO("Testing short video (704 frames) extreme zoom regression");
+    
+    // Cycle 1: Start with a reasonable range (100 samples)
+    INFO("Cycle 1: Set range to 100 samples");
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleXAxisSamplesChanged",
+            Qt::DirectConnection,
+            Q_ARG(int, 100));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+    
+    auto x_axis = glw->getXAxis();
+    int64_t range_1 = x_axis.getEnd() - x_axis.getStart();
+    INFO("Cycle 1: Achieved range = " << range_1);
+    REQUIRE(range_1 > 0);
+    REQUIRE(range_1 <= 704);
+    
+    // Cycle 2: Zoom out to full range
+    INFO("Cycle 2: Zoom to full range (704 samples)");
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleXAxisSamplesChanged",
+            Qt::DirectConnection,
+            Q_ARG(int, 704));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+    
+    x_axis = glw->getXAxis();
+    int64_t range_2 = x_axis.getEnd() - x_axis.getStart();
+    INFO("Cycle 2: Achieved range = " << range_2);
+    REQUIRE(range_2 > 0);
+    REQUIRE(range_2 <= 704);
+    
+    // Cycle 3: Zoom way in (10 samples)
+    INFO("Cycle 3: Zoom to 10 samples");
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleXAxisSamplesChanged",
+            Qt::DirectConnection,
+            Q_ARG(int, 10));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+    
+    x_axis = glw->getXAxis();
+    int64_t range_3 = x_axis.getEnd() - x_axis.getStart();
+    INFO("Cycle 3: Achieved range = " << range_3);
+    REQUIRE(range_3 > 0);
+    REQUIRE(range_3 <= 704);
+    
+    // Cycle 4: Zoom to 2 samples (the reported stuck state)
+    INFO("Cycle 4: Zoom to 2 samples (bug trigger)");
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleXAxisSamplesChanged",
+            Qt::DirectConnection,
+            Q_ARG(int, 2));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+    
+    x_axis = glw->getXAxis();
+    int64_t range_4 = x_axis.getEnd() - x_axis.getStart();
+    INFO("Cycle 4: Achieved range = " << range_4);
+    REQUIRE(range_4 > 0);
+    REQUIRE(range_4 <= 704);
+    
+    // Cycle 5: THE KEY TEST - try to zoom back out from 2 samples
+    INFO("Cycle 5: Attempt to zoom out from 2 samples to 200 samples");
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleXAxisSamplesChanged",
+            Qt::DirectConnection,
+            Q_ARG(int, 200));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+    
+    x_axis = glw->getXAxis();
+    int64_t range_5 = x_axis.getEnd() - x_axis.getStart();
+    INFO("Cycle 5: After requesting 200 samples, achieved range = " << range_5);
+    
+    // This is the regression test: we should be able to zoom out
+    REQUIRE(range_5 >= 150);  // Should be close to 200 (allow some clamping)
+    REQUIRE(range_5 > 2);     // Should definitely not be stuck at 2!
+    
+    // Cycle 6: Multiple rapid extreme zoom cycles
+    INFO("Cycle 6: Rapid extreme zoom cycles");
+    std::vector<int> test_ranges = {704, 50, 400, 10, 500, 5, 704, 2, 350, 100};
+    
+    for (size_t i = 0; i < test_ranges.size(); ++i) {
+        int requested_range = test_ranges[i];
+        
+        invoked = QMetaObject::invokeMethod(
+                &widget,
+                "_handleXAxisSamplesChanged",
+                Qt::DirectConnection,
+                Q_ARG(int, requested_range));
+        REQUIRE(invoked);
+        QApplication::processEvents();
+        
+        x_axis = glw->getXAxis();
+        int64_t achieved_range = x_axis.getEnd() - x_axis.getStart();
+        
+        INFO("Rapid cycle " << i << ": requested=" << requested_range << ", achieved=" << achieved_range);
+        
+        // Basic validity checks
+        REQUIRE(achieved_range > 0);
+        REQUIRE(achieved_range <= 704);
+        REQUIRE(x_axis.getStart() >= 0);
+        REQUIRE(x_axis.getEnd() <= 704);  // XAxis uses half-open range [start, end), so end can be 704
+        REQUIRE(x_axis.getStart() < x_axis.getEnd());
+        
+        // The range should be reasonably close to what we requested
+        // (allow up to 20% difference for boundary clamping)
+        if (requested_range <= 704) {
+            float const ratio = static_cast<float>(achieved_range) / static_cast<float>(requested_range);
+            INFO("  Ratio of achieved/requested: " << ratio);
+            REQUIRE(ratio >= 0.8f);  // At least 80% of requested
+            REQUIRE(ratio <= 1.2f);  // Not more than 120% of requested
+        }
+    }
+    
+    // Cycle 7: Final verification - zoom to full range after all the abuse
+    INFO("Cycle 7: Final verification - full range after stress test");
+    invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_handleXAxisSamplesChanged",
+            Qt::DirectConnection,
+            Q_ARG(int, 704));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+    
+    x_axis = glw->getXAxis();
+    int64_t final_range = x_axis.getEnd() - x_axis.getStart();
+    INFO("Cycle 7: Final range = " << final_range);
+    
+    REQUIRE(final_range >= 650);  // Should be close to full 704
+    REQUIRE(final_range <= 704);
+    
+    widget.close();
+}
+

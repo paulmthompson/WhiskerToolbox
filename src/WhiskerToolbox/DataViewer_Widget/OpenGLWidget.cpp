@@ -20,6 +20,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShader>
 #include <QPainter>
+#include <QPointer>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 //#include <glm/gtx/transform.hpp>
@@ -58,7 +59,7 @@ I will also only select the data that is present
 OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
     setMouseTracking(true);// Enable mouse tracking for hover events
-    
+
     // Initialize tooltip timer
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
@@ -69,6 +70,11 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
 }
 
 OpenGLWidget::~OpenGLWidget() {
+    // Disconnect the context destruction signal BEFORE cleanup to prevent lambda from accessing destroyed object
+    if (_ctxAboutToBeDestroyedConn) {
+        disconnect(_ctxAboutToBeDestroyedConn);
+        _ctxAboutToBeDestroyedConn = QMetaObject::Connection();
+    }
     cleanup();
 }
 
@@ -120,15 +126,15 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (_is_dragging_interval) {
         // Update interval drag
         updateIntervalDrag(event->pos());
-        cancelTooltipTimer(); // Cancel tooltip during drag
-        return;// Don't do other mouse move processing while dragging
+        cancelTooltipTimer();// Cancel tooltip during drag
+        return;              // Don't do other mouse move processing while dragging
     }
 
     if (_is_creating_new_interval) {
         // Update new interval creation
         updateNewIntervalCreation(event->pos());
-        cancelTooltipTimer(); // Cancel tooltip during interval creation
-        return;// Don't do other mouse move processing while creating
+        cancelTooltipTimer();// Cancel tooltip during interval creation
+        return;              // Don't do other mouse move processing while creating
     }
 
     if (_isPanning) {
@@ -143,14 +149,14 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         _verticalPanOffset += normalizedDeltaY;
 
         _lastMousePos = event->pos();
-        update();// Request redraw
-        cancelTooltipTimer(); // Cancel tooltip during panning
+        update();            // Request redraw
+        cancelTooltipTimer();// Cancel tooltip during panning
     } else {
         // Check for cursor changes when hovering near interval edges
         auto edge_info = findIntervalEdgeAtPosition(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
         if (edge_info.has_value()) {
             setCursor(Qt::SizeHorCursor);
-            cancelTooltipTimer(); // Don't show tooltip when hovering over interval edges
+            cancelTooltipTimer();// Don't show tooltip when hovering over interval edges
         } else {
             setCursor(Qt::ArrowCursor);
             // Start tooltip timer for series info
@@ -286,8 +292,13 @@ void OpenGLWidget::initializeGL() {
         if (_ctxAboutToBeDestroyedConn) {
             disconnect(_ctxAboutToBeDestroyedConn);
         }
-        _ctxAboutToBeDestroyedConn = connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, [this]() {
-            cleanup();
+        // Use QPointer for safer object lifetime tracking
+        QPointer<OpenGLWidget> self(this);
+        _ctxAboutToBeDestroyedConn = connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, [self]() {
+            // Only call cleanup if the widget still exists
+            if (self) {
+                self->cleanup();
+            }
         });
     }
 
@@ -503,7 +514,7 @@ void OpenGLWidget::drawDigitalEventSeries() {
             // Provide local [-1, 1] vertical endpoints; Model handles placement/scale
             std::array<GLfloat, 8> vertices = {
                     xCanvasPos, -1.0f, 0.0f, 1.0f,
-                    xCanvasPos,  1.0f, 0.0f, 1.0f};
+                    xCanvasPos, 1.0f, 0.0f, 1.0f};
 
             glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
@@ -804,7 +815,8 @@ void OpenGLWidget::drawAnalogSeries() {
         glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
         glUniform1f(m_alphaLoc, 1.0f);
 
-        auto analog_range = series->getTimeValueSpanInTimeFrameIndexRange(series_start_index, series_end_index);
+        auto analog_range = series->getTimeValueSpanInTimeFrameIndexRange(series_start_index,
+                                                                          series_end_index);
 
         if (analog_range.values.empty()) {
             // Instead of returning early (which stops rendering ALL series),
@@ -1060,7 +1072,9 @@ void OpenGLWidget::addAnalogTimeSeries(
     } else {
         display_options->enable_gap_detection = true;
         display_options->gap_handling = AnalogGapHandling::DetectGaps;
-        display_options->gap_threshold = time_frame->getTotalFrameCount() / 1000;
+        // Set gap threshold to 0.1% of total frames, with a minimum floor of 2 to work with integer time frames
+        float const calculated_threshold = static_cast<float>(time_frame->getTotalFrameCount()) / 1000.0f;
+        display_options->gap_threshold = std::max(2.0f, calculated_threshold);
     }
 
     _analog_series[key] = AnalogSeriesData{
@@ -2061,13 +2075,13 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
     // Convert canvas Y to normalized device coordinates (NDC)
     // In OpenGL, Y is inverted: top of window is -1, bottom is +1 in our view
     float const ndc_y = -1.0f + 2.0f * (static_cast<float>(height()) - canvas_y) / static_cast<float>(height());
-    
+
     // Apply vertical pan offset to get the actual Y position in the coordinate system
     float const adjusted_y = ndc_y - _verticalPanOffset;
 
     // Check analog series first (in stacked mode)
     int analog_index = 0;
-    for (auto const & [key, analog_data] : _analog_series) {
+    for (auto const & [key, analog_data]: _analog_series) {
         if (!analog_data.display_options->is_visible) {
             continue;
         }
@@ -2090,7 +2104,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
 
     // Check digital event series (only those in stacked mode)
     int event_index = 0;
-    for (auto const & [key, event_data] : _digital_event_series) {
+    for (auto const & [key, event_data]: _digital_event_series) {
         if (!event_data.display_options->is_visible) {
             continue;
         }
@@ -2125,23 +2139,23 @@ void OpenGLWidget::showSeriesInfoTooltip(QPoint const & pos) {
 
     // Find which series is under the cursor
     auto series_info = findSeriesAtPosition(canvas_x, canvas_y);
-    
+
     if (series_info.has_value()) {
         auto const & [series_type, series_key] = series_info.value();
-        
+
         // Build tooltip text
         QString tooltip_text;
         if (series_type == "Analog") {
             // Get the analog value at this Y coordinate
             float const analog_value = canvasYToAnalogValue(canvas_y, series_key);
             tooltip_text = QString("<b>Analog Series</b><br>Key: %1<br>Value: %2")
-                .arg(QString::fromStdString(series_key))
-                .arg(analog_value, 0, 'f', 3);
+                                   .arg(QString::fromStdString(series_key))
+                                   .arg(analog_value, 0, 'f', 3);
         } else if (series_type == "Event") {
             tooltip_text = QString("<b>Event Series</b><br>Key: %1")
-                .arg(QString::fromStdString(series_key));
+                                   .arg(QString::fromStdString(series_key));
         }
-        
+
         // Show tooltip at cursor position
         QToolTip::showText(mapToGlobal(pos), tooltip_text, this);
     } else {

@@ -50,7 +50,7 @@ public:
     int64_t setCenterAndZoomWithFeedback(int64_t center, int64_t range_width) {
         int64_t const halfRange = range_width / 2;
         int64_t const original_start = center - halfRange;
-        int64_t const original_end = center + halfRange;
+        int64_t const original_end = center + halfRange + (range_width % 2);  // Add 1 if range_width is odd
         
         _start = original_start;
         _end = original_end;
@@ -73,7 +73,10 @@ public:
     [[nodiscard]] int64_t getEnd() const { return _end; }
     [[nodiscard]] int64_t getMin() const { return _min; }
     [[nodiscard]] int64_t getMax() const { return _max; }
-    void setMax(int64_t max) { _max = max; }
+    void setMax(int64_t max) {
+        std::cout << "XAxis::setMax called: old_max=" << _max << ", new_max=" << max << std::endl;
+        _max = max;
+    }
 
 private:
     void clampVisibleRange() {

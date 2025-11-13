@@ -30,7 +30,7 @@ AnalogViewer_Widget::AnalogViewer_Widget(std::shared_ptr<DataManager> data_manag
     // Connect gap handling controls
     connect(ui->gap_mode_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &AnalogViewer_Widget::_setGapHandlingMode);
-    connect(ui->gap_threshold_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+    connect(ui->gap_threshold_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &AnalogViewer_Widget::_setGapThreshold);
 }
 
@@ -56,13 +56,13 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
             
             // Set gap handling controls
             ui->gap_mode_combo->setCurrentIndex(static_cast<int>(config.value()->gap_handling));
-            ui->gap_threshold_spinbox->setValue(static_cast<double>(config.value()->gap_threshold));
+            ui->gap_threshold_spinbox->setValue(static_cast<int>(config.value()->gap_threshold));
         } else {
             _updateColorDisplay("#0000FF"); // Default blue
             ui->scale_spinbox->setValue(1.0); // Default scale
             ui->line_thickness_spinbox->setValue(1); // Default line thickness
             ui->gap_mode_combo->setCurrentIndex(0); // Default to AlwaysConnect
-            ui->gap_threshold_spinbox->setValue(5.0); // Default threshold
+            ui->gap_threshold_spinbox->setValue(5); // Default threshold (5 frames)
         }
     }
     
@@ -161,7 +161,7 @@ void AnalogViewer_Widget::_setGapHandlingMode(int mode_index) {
     }
 }
 
-void AnalogViewer_Widget::_setGapThreshold(double threshold) {
+void AnalogViewer_Widget::_setGapThreshold(int threshold) {
     if (!_active_key.empty()) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {

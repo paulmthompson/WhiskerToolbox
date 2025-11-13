@@ -643,6 +643,209 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         REQUIRE(point_50000_recovery.x <= 1.1f);
     }
     
+    SECTION("Short video extreme scrolling simulation (704 frames)") {
+        // Simulate the bug reported with short videos (704 frames)
+        // Test multiple extreme zoom in/out cycles to see if range gets stuck
+        
+        constexpr int64_t video_length = 704;
+        constexpr int64_t data_min = 0;
+        constexpr int64_t data_max = video_length - 1;
+        
+        // Create XAxis for short video
+        XAxis x_axis(0, 100, data_min, data_max);
+        
+        // Create test data
+        std::vector<TimeFrameIndex> time_vector;
+        for (int64_t i = 0; i < video_length; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto test_data = generateGaussianDataIntegration(static_cast<size_t>(video_length), 0.0f, 10.0f, 42);
+        auto time_series = std::make_shared<AnalogTimeSeries>(test_data, time_vector);
+        
+        PlottingManager manager;
+        int series_index = manager.addAnalogSeries();
+        
+        NewAnalogTimeSeriesDisplayOptions display_options;
+        float allocated_center, allocated_height;
+        manager.calculateAnalogSeriesAllocation(series_index, allocated_center, allocated_height);
+        display_options.allocated_y_center = allocated_center;
+        display_options.allocated_height = allocated_height;
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
+        
+        INFO("Testing short video (704 frames) extreme zoom cycles");
+        
+        // Cycle 1: Zoom out to full range
+        INFO("Cycle 1: Zoom to full range");
+        int64_t center = video_length / 2;
+        int64_t range_width = video_length;
+        int64_t actual_range = x_axis.setCenterAndZoomWithFeedback(center, range_width);
+        
+        REQUIRE(actual_range > 0);
+        REQUIRE(actual_range <= video_length);
+        REQUIRE(x_axis.getStart() >= data_min);
+        REQUIRE(x_axis.getEnd() <= data_max);
+        
+        // Verify MVP matrices are valid at full range
+        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
+        glm::mat4 projection_full = new_getAnalogProjectionMat(
+            TimeFrameIndex(x_axis.getStart()), 
+            TimeFrameIndex(x_axis.getEnd()), 
+            -400.0f, 400.0f, 
+            manager);
+        
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                REQUIRE(std::isfinite(projection_full[i][j]));
+            }
+        }
+        
+        // Cycle 2: Zoom way in to very small range (simulating extreme zoom)
+        INFO("Cycle 2: Zoom to tiny range (10 samples)");
+        range_width = 10;
+        actual_range = x_axis.setCenterAndZoomWithFeedback(center, range_width);
+        
+        REQUIRE(actual_range > 0);
+        REQUIRE(x_axis.getStart() >= data_min);
+        REQUIRE(x_axis.getEnd() <= data_max);
+        
+        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
+        glm::mat4 projection_tiny = new_getAnalogProjectionMat(
+            TimeFrameIndex(x_axis.getStart()), 
+            TimeFrameIndex(x_axis.getEnd()), 
+            -400.0f, 400.0f, 
+            manager);
+        
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                REQUIRE(std::isfinite(projection_tiny[i][j]));
+            }
+        }
+        
+        // Cycle 3: Zoom back out to full range
+        INFO("Cycle 3: Zoom back to full range");
+        range_width = video_length;
+        actual_range = x_axis.setCenterAndZoomWithFeedback(center, range_width);
+        
+        REQUIRE(actual_range > 0);
+        REQUIRE(actual_range <= video_length);
+        
+        // Cycle 4: Extreme zoom (try to go to 2 samples like the bug)
+        INFO("Cycle 4: Zoom to 2 samples");
+        range_width = 2;
+        actual_range = x_axis.setCenterAndZoomWithFeedback(center, range_width);
+        
+        REQUIRE(actual_range > 0);
+        REQUIRE(x_axis.getStart() >= data_min);
+        REQUIRE(x_axis.getEnd() <= data_max);
+        
+        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
+        glm::mat4 projection_2samples = new_getAnalogProjectionMat(
+            TimeFrameIndex(x_axis.getStart()), 
+            TimeFrameIndex(x_axis.getEnd()), 
+            -400.0f, 400.0f, 
+            manager);
+        
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                REQUIRE(std::isfinite(projection_2samples[i][j]));
+            }
+        }
+        
+        // Cycle 5: Try to zoom back out after being stuck at 2
+        INFO("Cycle 5: Attempt to zoom out from 2 samples to 100 samples");
+        range_width = 100;
+        actual_range = x_axis.setCenterAndZoomWithFeedback(center, range_width);
+        
+        INFO("After requesting 100 samples, actual range achieved: " << actual_range);
+        
+        // This is the key test: after being at 2 samples, can we zoom out?
+        REQUIRE(actual_range >= 90);  // Should be close to requested 100 (allow some clamping)
+        REQUIRE(actual_range > 2);     // Should definitely be more than 2!
+        
+        // Cycle 6: Multiple rapid zoom cycles
+        INFO("Cycle 6: Rapid zoom cycles");
+        std::vector<int64_t> test_ranges = {704, 50, 200, 10, 500, 5, 704, 2, 350};
+        
+        for (size_t i = 0; i < test_ranges.size(); ++i) {
+            range_width = test_ranges[i];
+            actual_range = x_axis.setCenterAndZoomWithFeedback(center, range_width);
+            
+            INFO("Rapid cycle " << i << ": requested=" << range_width << ", actual=" << actual_range);
+            
+            REQUIRE(actual_range > 0);
+            REQUIRE(x_axis.getStart() >= data_min);
+            REQUIRE(x_axis.getEnd() <= data_max);
+            REQUIRE(x_axis.getStart() < x_axis.getEnd());
+            
+            // Verify MVP matrices remain valid throughout rapid changes
+            manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
+            glm::mat4 projection = new_getAnalogProjectionMat(
+                TimeFrameIndex(x_axis.getStart()), 
+                TimeFrameIndex(x_axis.getEnd()), 
+                -400.0f, 400.0f, 
+                manager);
+            
+            for (int row = 0; row < 4; ++row) {
+                for (int col = 0; col < 4; ++col) {
+                    REQUIRE(std::isfinite(projection[row][col]));
+                }
+            }
+        }
+        
+        // Final test: Verify we can still zoom to any valid range after all the abuse
+        INFO("Final test: Verify full zoom capability after stress test");
+        range_width = video_length / 2;  // Half the video
+        actual_range = x_axis.setCenterAndZoomWithFeedback(center, range_width);
+        
+        REQUIRE(actual_range >= video_length / 2 - 10);  // Allow small clamping tolerance
+        REQUIRE(actual_range <= video_length / 2 + 10);
+    }
+    
+    SECTION("XAxis clamping boundary conditions (704 frames)") {
+        // Test specific scenarios where XAxis might get stuck at small ranges
+        constexpr int64_t video_length = 704;
+        XAxis x_axis(0, 100, 0, video_length);
+        
+        INFO("Test 1: Zoom to 2 samples at various positions");
+        
+        // Test at start of video
+        int64_t actual = x_axis.setCenterAndZoomWithFeedback(10, 2);
+        INFO("  Position 10, range 2: start=" << x_axis.getStart() << ", end=" << x_axis.getEnd() << ", actual=" << actual);
+        REQUIRE(actual == 2);
+        REQUIRE(x_axis.getStart() >= 0);
+        REQUIRE(x_axis.getEnd() <= video_length);
+        
+        // Test at middle
+        actual = x_axis.setCenterAndZoomWithFeedback(352, 2);
+        INFO("  Position 352, range 2: start=" << x_axis.getStart() << ", end=" << x_axis.getEnd() << ", actual=" << actual);
+        REQUIRE(actual == 2);
+        
+        // Test at end
+        actual = x_axis.setCenterAndZoomWithFeedback(700, 2);
+        INFO("  Position 700, range 2: start=" << x_axis.getStart() << ", end=" << x_axis.getEnd() << ", actual=" << actual);
+        REQUIRE(actual == 2);
+        REQUIRE(x_axis.getStart() >= 0);
+        REQUIRE(x_axis.getEnd() <= video_length);
+        
+        INFO("Test 2: From stuck at 2 samples (pos 700), try to zoom out to 100");
+        actual = x_axis.setCenterAndZoomWithFeedback(700, 100);
+        INFO("  Requested 100, got actual=" << actual << ", range=[" << x_axis.getStart() << ", " << x_axis.getEnd() << "]");
+        REQUIRE(actual >= 90);  // Should get close to 100
+        REQUIRE(actual > 2);    // Should definitely not be stuck at 2!
+        
+        INFO("Test 3: Extreme case - stuck at 2 samples at absolute end");
+        x_axis.setCenterAndZoomWithFeedback(703, 2);  // As far right as possible
+        INFO("  After setting to pos 703, range 2: start=" << x_axis.getStart() << ", end=" << x_axis.getEnd());
+        
+        actual = x_axis.setCenterAndZoomWithFeedback(703, 200);
+        INFO("  From pos 703, requested 200, got actual=" << actual << ", range=[" << x_axis.getStart() << ", " << x_axis.getEnd() << "]");
+        REQUIRE(actual >= 190);
+        REQUIRE(actual <= 210);
+        
+        INFO("Test 4: Check if _max is still correct after operations");
+        REQUIRE(x_axis.getMax() == video_length);
+    }
+    
     SECTION("XAxis integration with PlottingManager") {
         // Test the integration between XAxis class and PlottingManager
         // This simulates how the OpenGLWidget would use both systems

@@ -26,20 +26,20 @@ signals:
 
 private slots:
     void _openColorDialog();
-    void _setAnalogColor(const QString& hex_color);
+    void _setAnalogColor(QString const & hex_color);
     void _setAnalogAlpha(int alpha);
     void _setAnalogScaleFactor(double scale_factor);
     void _setLineThickness(int thickness);
     void _setGapHandlingMode(int mode_index);
-    void _setGapThreshold(double threshold);
+    void _setGapThreshold(int threshold);
 
 private:
     void _updateColorDisplay(QString const & hex_color);
-    
+
     Ui::AnalogViewer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     OpenGLWidget * _opengl_widget;
     std::string _active_key;
 };
 
-#endif// ANALOGVIEWER_WIDGET_HPP 
+#endif// ANALOGVIEWER_WIDGET_HPP
