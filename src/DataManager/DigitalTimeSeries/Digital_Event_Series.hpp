@@ -64,30 +64,10 @@ public:
         return getEventsInRange(target_start_index, target_stop_index);
     };
 
-    template<typename TransformFunc>
-    auto getEventsInRange(float start_time, float stop_time, TransformFunc time_transform) const {
-        return _data | std::views::filter([start_time, stop_time, time_transform](float time) {
-                   auto transformed_time = time_transform(time);
-                   return transformed_time >= start_time && transformed_time <= stop_time;
-               });
-    }
-
     std::vector<float> getEventsAsVector(float start_time, float stop_time) const {
         std::vector<float> result;
         for (float time: _data) {
             if (time >= start_time && time <= stop_time) {
-                result.push_back(time);
-            }
-        }
-        return result;
-    }
-
-    template<typename TransformFunc>
-    std::vector<float> getEventsAsVector(float start_time, float stop_time, TransformFunc time_transform) const {
-        std::vector<float> result;
-        for (float time: _data) {
-            auto transformed_time = time_transform(time);
-            if (transformed_time >= start_time && transformed_time <= stop_time) {
                 result.push_back(time);
             }
         }
