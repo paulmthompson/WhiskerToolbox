@@ -1,12 +1,12 @@
 #include "TableView.h"
 
 #include "utils/TableView/adapters/DataManagerExtension.h"
-#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/columns/Column.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/IEventSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/ILineSource.h"
-#include "utils/TableView/interfaces/IPointSource.h"
+#include "Points/Point_Data.hpp"
 #include "utils/TableView/interfaces/IRowSelector.h"
 
 
@@ -192,7 +192,7 @@ ExecutionPlan makePlanFromLine(std::shared_ptr<ILineSource> const & lineSource,
 }
 
 // Point source -> plan (treat similar to event/interval/timestamp)
-ExecutionPlan makePlanFromPoint(std::shared_ptr<IPointSource> const & /*point*/,
+ExecutionPlan makePlanFromPoint(std::shared_ptr<PointData> const & /*point*/,
                                 IRowSelector const & selector) {
     return visitSelector(
         selector,
@@ -447,7 +447,7 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
                 [&](std::shared_ptr<ILineSource> const & l) {
                     return makePlanFromLine(l, *m_rowSelector, m_columns, *m_dataManager);
                 },
-                [&](std::shared_ptr<IPointSource> const & p) {
+                [&](std::shared_ptr<PointData> const & p) {
                     return makePlanFromPoint(p, *m_rowSelector);
                 }
             },

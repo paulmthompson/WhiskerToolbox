@@ -69,19 +69,10 @@ public:
 
 
 private:
-    /**
-     * @brief Materializes the analog data if not already done.
-     * 
-     * Converts the float data from AnalogTimeSeries to double format
-     * for the IAnalogSource interface.
-     */
-    void materializeData();
 
     std::shared_ptr<AnalogTimeSeries> m_analogData;
     std::shared_ptr<TimeFrame> m_timeFrame;
     std::string m_name;
-    std::vector<double> m_materializedData;
-    bool m_isMaterialized = false;
 };
 
 #endif// ANALOG_DATA_ADAPTER_H

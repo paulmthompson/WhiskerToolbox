@@ -5,7 +5,7 @@
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/interfaces/ILineSource.h"
-#include "utils/TableView/interfaces/IPointSource.h"
+#include "Points/Point_Data.hpp"
 
 #include <stdexcept>
 #include <set>
@@ -93,8 +93,8 @@ void TableViewBuilder::validateMultiSampleSources() {
             }
             
             // Check if this dependency is a point source
-            auto pointSource = m_dataManager->getPointSource(dep);
-            if (pointSource && pointSource->hasMultiSamples()) {
+            auto pointData = m_dataManager->getPointData(dep);
+            if (pointData && pointData->getMaxPoints() > 1) {
                 multiSampleSources.insert(dep);
             }
         }
@@ -107,8 +107,8 @@ void TableViewBuilder::validateMultiSampleSources() {
                 multiSampleSources.insert(sourceDep);
             }
             
-            auto pointSource = m_dataManager->getPointSource(sourceDep);
-            if (pointSource && pointSource->hasMultiSamples()) {
+            auto pointData = m_dataManager->getPointData(sourceDep);
+            if (pointData && pointData->getMaxPoints() > 1) {
                 multiSampleSources.insert(sourceDep);
             }
         }

@@ -20,6 +20,7 @@
 #include "utils/TableView/computers/LineTimestampComputer.h"
 #include "utils/TableView/core/TableView.h"
 #include "utils/TableView/core/TableViewBuilder.h"
+#include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/ILineSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/pipeline/TablePipeline.hpp"

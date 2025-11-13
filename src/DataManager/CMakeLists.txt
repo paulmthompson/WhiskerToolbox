@@ -94,7 +94,6 @@ set(DATAMANAGER_SOURCES
         utils/TableView/interfaces/IEventSource.h
         utils/TableView/interfaces/IIntervalSource.h
         utils/TableView/interfaces/ILineSource.h
-        utils/TableView/interfaces/IPointSource.h
         utils/TableView/interfaces/IRowSelector.h
         utils/TableView/interfaces/IRowSelector.cpp
         utils/TableView/interfaces/IColumnComputer.h
@@ -109,10 +108,6 @@ set(DATAMANAGER_SOURCES
         utils/TableView/adapters/DigitalIntervalDataAdapter.cpp
         utils/TableView/adapters/LineDataAdapter.h
         utils/TableView/adapters/LineDataAdapter.cpp
-        utils/TableView/adapters/PointComponentAdapter.h
-        utils/TableView/adapters/PointComponentAdapter.cpp
-        utils/TableView/adapters/PointDataAdapter.h
-        utils/TableView/adapters/PointDataAdapter.cpp
         utils/TableView/adapters/DataManagerExtension.h
         utils/TableView/adapters/DataManagerExtension.cpp
 

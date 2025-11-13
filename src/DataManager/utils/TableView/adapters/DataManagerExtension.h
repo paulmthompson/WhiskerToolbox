@@ -1,8 +1,6 @@
 #ifndef DATA_MANAGER_EXTENSION_H
 #define DATA_MANAGER_EXTENSION_H
 
-#include "utils/TableView/adapters/PointComponentAdapter.h"
-
 #include <map>
 #include <memory>
 #include <optional>
@@ -19,9 +17,8 @@ class IAnalogSource;
 class IEventSource;
 class IIntervalSource;
 class ILineSource;
-class IPointSource;
 class LineDataAdapter;
-class PointDataAdapter;
+class PointData;
 
 
 /**
@@ -39,7 +36,7 @@ public:
             std::shared_ptr<IEventSource>,
             std::shared_ptr<IIntervalSource>,
             std::shared_ptr<ILineSource>,
-            std::shared_ptr<IPointSource>>;
+            std::shared_ptr<PointData>>;
 
     /**
      * @brief Constructs a DataManagerExtension.
@@ -48,14 +45,15 @@ public:
     explicit DataManagerExtension(DataManager & dataManager);
 
     /**
-     * @brief Unified access point for all data sources.
+     * @brief Unified access point for analog data sources.
      * 
-     * This factory method can handle:
+     * This factory method handles:
      * - Physical data: "LFP" -> AnalogTimeSeries via AnalogDataAdapter
-     * - Virtual data: "MyPoints.x" or "MyPoints.y" -> PointData components via PointComponentAdapter
      * 
-     * @param name The name of the data source. Can be a direct name for physical data
-     *             or "DataName.component" for virtual sources (e.g., "Spikes.x").
+     * Note: Point component extraction (.x/.y) has been removed. Use PointData directly
+     * with dedicated computers for component extraction.
+     * 
+     * @param name The name of the analog data source.
      * @return Shared pointer to IAnalogSource, or nullptr if not found.
      */
     auto getAnalogSource(std::string const & name) -> std::shared_ptr<IAnalogSource>;
@@ -102,15 +100,14 @@ public:
     auto getLineSource(std::string const & name) -> std::shared_ptr<ILineSource>;
 
     /**
-     * @brief Gets a point source by name.
+     * @brief Gets point data by name.
      * 
-     * This method provides access to IPointSource implementations for
-     * point data such as PointData.
+     * This method provides direct access to PointData objects.
      * 
-     * @param name The name of the point source.
-     * @return Shared pointer to IPointSource, or nullptr if not found.
+     * @param name The name of the point data.
+     * @return Shared pointer to PointData, or nullptr if not found.
      */
-    auto getPointSource(std::string const & name) -> std::shared_ptr<IPointSource>;
+    auto getPointData(std::string const & name) -> std::shared_ptr<PointData>;
 
     /**
      * @brief Resolve a source name to a concrete adapter variant.
@@ -150,27 +147,11 @@ private:
     auto createLineDataAdapter(std::string const & name) -> std::shared_ptr<ILineSource>;
 
     /**
-     * @brief Creates a PointDataAdapter for the given name.
+     * @brief Creates and retrieves PointData for the given name.
      * @param name The name of the PointData.
-     * @return Shared pointer to the adapter, or nullptr if not found.
+     * @return Shared pointer to PointData, or nullptr if not found.
      */
-    auto createPointDataAdapter(std::string const & name) -> std::shared_ptr<IPointSource>;
-
-    /**
-     * @brief Creates a PointComponentAdapter for the given name and component.
-     * @param pointDataName The name of the PointData.
-     * @param component The component type (X or Y).
-     * @return Shared pointer to the adapter, or nullptr if not found.
-     */
-    auto createPointComponentAdapter(std::string const & pointDataName,
-                                     PointComponentAdapter::Component component) -> std::shared_ptr<IAnalogSource>;
-
-    /**
-     * @brief Parses a virtual source name to extract data name and component.
-     * @param name The virtual source name (e.g., "MyPoints.x").
-     * @return Pair of (data_name, component) if valid, empty pair otherwise.
-     */
-    auto parseVirtualSourceName(std::string const & name) -> std::pair<std::string, PointComponentAdapter::Component>;
+    auto createPointData(std::string const & name) -> std::shared_ptr<PointData>;
 
     DataManager & m_dataManager;
 
@@ -179,10 +160,7 @@ private:
     mutable std::map<std::string, std::shared_ptr<IEventSource>> m_eventSourceCache;
     mutable std::map<std::string, std::shared_ptr<IIntervalSource>> m_intervalSourceCache;
     mutable std::map<std::string, std::shared_ptr<ILineSource>> m_lineSourceCache;
-    mutable std::map<std::string, std::shared_ptr<IPointSource>> m_pointSourceCache;
-
-    // Regex for parsing virtual source names
-    static std::regex const s_virtualSourceRegex;
+    mutable std::map<std::string, std::shared_ptr<PointData>> m_pointDataCache;
 };
 
 #endif// DATA_MANAGER_EXTENSION_H

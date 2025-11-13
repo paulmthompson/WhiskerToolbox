@@ -34,22 +34,3 @@ std::vector<float> AnalogDataAdapter::getDataInRange(TimeFrameIndex start,
     auto data_span = m_analogData->getDataInTimeFrameIndexRange(start, end, target_timeFrame);
     return std::vector<float>(data_span.begin(), data_span.end());
 }
-
-void AnalogDataAdapter::materializeData() {
-    if (m_isMaterialized) {
-        return;
-    }
-
-    // Get the float data from AnalogTimeSeries
-    auto const & floatData = m_analogData->getAnalogTimeSeries();
-
-    // Convert to double
-    m_materializedData.clear();
-    m_materializedData.reserve(floatData.size());
-
-    for (float value: floatData) {
-        m_materializedData.push_back(static_cast<double>(value));
-    }
-
-    m_isMaterialized = true;
-}

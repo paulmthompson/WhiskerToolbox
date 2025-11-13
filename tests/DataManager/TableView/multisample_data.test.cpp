@@ -9,9 +9,7 @@
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/adapters/LineDataAdapter.h"
-#include "utils/TableView/adapters/PointDataAdapter.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
-#include "utils/TableView/interfaces/IPointSource.h"
 #include "utils/TableView/computers/LineSamplingMultiComputer.h"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
@@ -428,7 +426,7 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
     auto timeKey = TimeKey("test_time");
     dm->setTime(timeKey, timeFrame);
 
-    SECTION("Single-sample PointData should allow PointComponentAdapter") {
+    SECTION("Single-sample PointData works with TableView") {
         // Create single-sample point data (one point per timestamp)
         auto singlePointData = std::make_shared<PointData>();
         singlePointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, NotifyObservers::No);
@@ -437,20 +435,13 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         
         dm->setData<PointData>("SinglePoints", singlePointData, timeKey);
         
-        // Should be able to create PointComponentAdapter for x and y
-        auto xSource = dme->getAnalogSource("SinglePoints.x");
-        auto ySource = dme->getAnalogSource("SinglePoints.y");
-        
-        REQUIRE(xSource != nullptr);
-        REQUIRE(ySource != nullptr);
-        
-        // Should report no multi-samples
-        auto pointAdapter = dme->getPointSource("SinglePoints");
-        REQUIRE(pointAdapter != nullptr);
-        REQUIRE_FALSE(pointAdapter->hasMultiSamples());
+        // Should be able to get PointData directly
+        auto pointData = dme->getPointData("SinglePoints");
+        REQUIRE(pointData != nullptr);
+        REQUIRE(pointData->getMaxPoints() == 1);
     }
     
-    SECTION("Multi-sample PointData should reject PointComponentAdapter") {
+    SECTION("Multi-sample PointData is accessible") {
         // Create multi-sample point data (multiple points per timestamp)
         auto multiPointData = std::make_shared<PointData>();
         
@@ -463,17 +454,10 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         
         dm->setData<PointData>("MultiPoints", multiPointData, timeKey);
         
-        // Should NOT be able to create PointComponentAdapter
-        auto xSource = dme->getAnalogSource("MultiPoints.x");
-        auto ySource = dme->getAnalogSource("MultiPoints.y");
-        
-        REQUIRE(xSource == nullptr);
-        REQUIRE(ySource == nullptr);
-        
-        // But should be able to create PointDataAdapter
-        auto pointAdapter = dme->getPointSource("MultiPoints");
-        REQUIRE(pointAdapter != nullptr);
-        REQUIRE(pointAdapter->hasMultiSamples());
+        // Should be able to get PointData directly
+        auto pointData = dme->getPointData("MultiPoints");
+        REQUIRE(pointData != nullptr);
+        REQUIRE(pointData->getMaxPoints() > 1);
     }
     
     SECTION("Mixed line and point sources - only one multi-sample allowed") {

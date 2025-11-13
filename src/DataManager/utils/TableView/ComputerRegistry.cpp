@@ -3,7 +3,6 @@
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "adapters/LineDataAdapter.h"
-#include "adapters/PointComponentAdapter.h"
 #include "computers/AnalogSliceGathererComputer.h"
 #include "computers/AnalogTimestampOffsetsMultiComputer.h"
 #include "computers/EventInIntervalComputer.h"
@@ -964,55 +963,8 @@ void ComputerRegistry::registerBuiltInComputers() {
 void ComputerRegistry::registerBuiltInAdapters() {
     //std::cout << "Registering built-in adapters..." << std::endl;
 
-    // PointComponentAdapter - X Component
-    {
-        AdapterInfo info("Point X Component",
-                         "Extract X component from PointData as analog source",
-                         typeid(PointData),
-                         typeid(std::shared_ptr<IAnalogSource>));
-
-        AdapterFactory factory = [](std::shared_ptr<void> const & sourceData,
-                                    std::shared_ptr<TimeFrame> const & timeFrame,
-                                    std::string const & name,
-                                    std::map<std::string, std::string> const &) -> DataSourceVariant {
-            if (auto pointData = std::static_pointer_cast<PointData>(sourceData)) {
-                auto adapter = std::make_shared<PointComponentAdapter>(
-                        pointData,
-                        PointComponentAdapter::Component::X,
-                        timeFrame,
-                        name + "_X");
-                return DataSourceVariant{std::static_pointer_cast<IAnalogSource>(adapter)};
-            }
-            return DataSourceVariant{};
-        };
-
-        registerAdapter(std::move(info), std::move(factory));
-    }
-
-    // PointComponentAdapter - Y Component
-    {
-        AdapterInfo info("Point Y Component",
-                         "Extract Y component from PointData as analog source",
-                         typeid(PointData),
-                         typeid(std::shared_ptr<IAnalogSource>));
-
-        AdapterFactory factory = [](std::shared_ptr<void> const & sourceData,
-                                    std::shared_ptr<TimeFrame> const & timeFrame,
-                                    std::string const & name,
-                                    std::map<std::string, std::string> const &) -> DataSourceVariant {
-            if (auto pointData = std::static_pointer_cast<PointData>(sourceData)) {
-                auto adapter = std::make_shared<PointComponentAdapter>(
-                        pointData,
-                        PointComponentAdapter::Component::Y,
-                        timeFrame,
-                        name + "_Y");
-                return DataSourceVariant{std::static_pointer_cast<IAnalogSource>(adapter)};
-            }
-            return DataSourceVariant{};
-        };
-
-        registerAdapter(std::move(info), std::move(factory));
-    }
+    // Note: PointComponentAdapter has been removed.
+    // Point X/Y component extraction should now be done via dedicated computers.
 
     // LineDataAdapter - LineData -> ILineSource
     {
