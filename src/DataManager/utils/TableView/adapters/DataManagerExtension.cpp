@@ -1,13 +1,12 @@
 #include "DataManagerExtension.h"
 
 #include "DataManager.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Points/Point_Data.hpp"
 #include "utils/TableView/adapters/AnalogDataAdapter.h"
-#include "utils/TableView/adapters/DigitalEventDataAdapter.h"
 #include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
 #include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/IEventSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/ILineSource.h"
 
@@ -58,19 +57,17 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(std
     }
 }
 
-std::shared_ptr<IEventSource> DataManagerExtension::createDigitalEventDataAdapter(std::string const & name) {
+std::shared_ptr<DigitalEventSeries> DataManagerExtension::createDigitalEventSeries(std::string const & name) {
     try {
         auto digitalEventSeries = m_dataManager.getData<DigitalEventSeries>(name);
         if (!digitalEventSeries) {
             return nullptr;
         }
 
-        auto timeFrame_key = m_dataManager.getTimeKey(name);
-        auto timeFrame = m_dataManager.getTime(timeFrame_key);
-
-        return std::make_shared<DigitalEventDataAdapter>(digitalEventSeries, timeFrame, name);
+        // DigitalEventSeries already has TimeFrame and EntityID information, no adapter needed
+        return digitalEventSeries;
     } catch (std::exception const & e) {
-        std::cerr << "Error creating DigitalEventDataAdapter for '" << name << "': " << e.what() << std::endl;
+        std::cerr << "Error retrieving DigitalEventSeries for '" << name << "': " << e.what() << std::endl;
         return nullptr;
     }
 }
@@ -124,15 +121,15 @@ std::shared_ptr<PointData> DataManagerExtension::createPointData(std::string con
     }
 }
 
-std::shared_ptr<IEventSource> DataManagerExtension::getEventSource(std::string const & name) {
+std::shared_ptr<DigitalEventSeries> DataManagerExtension::getEventSource(std::string const & name) {
     // Check cache first
     auto it = m_eventSourceCache.find(name);
     if (it != m_eventSourceCache.end()) {
         return it->second;
     }
 
-    // Create a new event source adapter
-    auto eventSource = createDigitalEventDataAdapter(name);
+    // Create/retrieve digital event series
+    auto eventSource = createDigitalEventSeries(name);
     if (eventSource) {
         m_eventSourceCache[name] = eventSource;
     } else {

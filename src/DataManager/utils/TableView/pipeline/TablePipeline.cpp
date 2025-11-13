@@ -1,13 +1,13 @@
 #include "TablePipeline.hpp"
 
 #include "DataManager.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/core/TableViewBuilder.h"
-#include "utils/TableView/interfaces/IEventSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/transforms/PCATransform.hpp"
@@ -489,9 +489,10 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
                 if (source_timeframe && source_timeframe->getTotalFrameCount() > 0) {
                     TimeFrameIndex start_idx(0);
                     TimeFrameIndex end_idx(source_timeframe->getTotalFrameCount() - 1);
-                    auto event_times = event_source->getDataInRange(start_idx, end_idx, source_timeframe.get());
+                    auto event_times = event_source->getEventsInRange(start_idx,
+                                                                      end_idx,
+                                                                      *source_timeframe);
 
-                    timestamps.reserve(event_times.size());
                     for (auto time: event_times) {
                         timestamps.emplace_back(static_cast<int64_t>(time));
                     }

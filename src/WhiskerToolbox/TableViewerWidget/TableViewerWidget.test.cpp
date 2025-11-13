@@ -19,7 +19,6 @@
 #include "DataManager/utils/TableView/core/ExecutionPlan.h"
 #include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/utils/TableView/core/TableViewBuilder.h"
-#include "DataManager/utils/TableView/interfaces/IEventSource.h"
 #include "DataManager/utils/TableView/interfaces/IIntervalSource.h"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 

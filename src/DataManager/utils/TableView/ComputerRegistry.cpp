@@ -1,5 +1,6 @@
 #include "ComputerRegistry.hpp"
 
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "adapters/LineDataAdapter.h"
@@ -14,7 +15,6 @@
 #include "computers/LineTimestampComputer.h"
 #include "computers/TimestampInIntervalComputer.h"
 #include "computers/TimestampValueComputer.h"
-#include "interfaces/IEventSource.h"
 #include "interfaces/ILineSource.h"
 
 #include <iostream>
@@ -467,12 +467,12 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(bool),
                           "bool",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IEventSource>));
+                          typeid(std::shared_ptr<DigitalEventSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
                                      std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto eventSrc = std::get_if<std::shared_ptr<IEventSource>>(&source)) {
-                auto computer = std::make_unique<EventInIntervalComputer<bool>>(*eventSrc, EventOperation::Presence, (*eventSrc)->getName());
+            if (auto eventSrc = std::get_if<std::shared_ptr<DigitalEventSeries>>(&source)) {
+                auto computer = std::make_unique<EventInIntervalComputer<bool>>(*eventSrc, EventOperation::Presence, "DigitalEventSeries");
                 return std::make_unique<ComputerWrapper<bool>>(std::move(computer));
             }
             return nullptr;
@@ -488,12 +488,12 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(int),
                           "int",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IEventSource>));
+                          typeid(std::shared_ptr<DigitalEventSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
                                      std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto eventSrc = std::get_if<std::shared_ptr<IEventSource>>(&source)) {
-                auto computer = std::make_unique<EventInIntervalComputer<int>>(*eventSrc, EventOperation::Count, (*eventSrc)->getName());
+            if (auto eventSrc = std::get_if<std::shared_ptr<DigitalEventSeries>>(&source)) {
+                auto computer = std::make_unique<EventInIntervalComputer<int>>(*eventSrc, EventOperation::Count, "DigitalEventSeries");
                 return std::make_unique<ComputerWrapper<int>>(std::move(computer));
             }
             return nullptr;
@@ -581,12 +581,12 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(float),
                           "float",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IEventSource>),
+                          typeid(std::shared_ptr<DigitalEventSeries>),
                           std::move(paramDescriptors));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
                                      std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
-            if (auto eventSrc = std::get_if<std::shared_ptr<IEventSource>>(&source)) {
+            if (auto eventSrc = std::get_if<std::shared_ptr<DigitalEventSeries>>(&source)) {
                 // Parse the mode parameter
                 EventOperation operation = EventOperation::Gather;// default
                 auto mode_it = parameters.find("mode");
@@ -599,7 +599,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                 }
 
                 auto computer = std::make_unique<EventInIntervalComputer<std::vector<float>>>(
-                        *eventSrc, operation, (*eventSrc)->getName());
+                        *eventSrc, operation, "DigitalEventSeries");
                 return std::make_unique<ComputerWrapper<std::vector<float>>>(std::move(computer));
             }
             return nullptr;

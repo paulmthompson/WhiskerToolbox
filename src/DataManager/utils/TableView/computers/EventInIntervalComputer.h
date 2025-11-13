@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
+class DigitalEventSeries;
 class ExecutionPlan;
-class IEventSource;
 
 /**
  * @brief Enumeration of operations that can be performed on events within intervals.
@@ -26,11 +26,11 @@ enum class EventOperation : std::uint8_t {
 /**
  * @brief Templated computer for processing events within time intervals.
  * 
- * Source type: IEventSource
+ * Source type: DigitalEventSeries
  * Selector type: Interval
  * Output type: T
  * 
- * This computer analyzes event data from an IEventSource and performs statistical operations
+ * This computer analyzes event data from a DigitalEventSeries and performs statistical operations
  * on events that fall within specified time intervals. It supports different analysis modes
  * through the EventOperation enum, each requiring a specific template parameter type.
  * 
@@ -101,7 +101,7 @@ public:
      * @post The computer is ready to process events from the specified source
      * @post getSourceDependency() returns @p sourceName
      */
-    EventInIntervalComputer(std::shared_ptr<IEventSource> source,
+    EventInIntervalComputer(std::shared_ptr<DigitalEventSeries> source,
                             EventOperation operation,
                             std::string sourceName)
         : m_source(std::move(source)),
@@ -165,7 +165,7 @@ public:
     }
 
 private:
-    std::shared_ptr<IEventSource> m_source;
+    std::shared_ptr<DigitalEventSeries> m_source;
     EventOperation m_operation;
     std::string m_sourceName;
 

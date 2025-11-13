@@ -3,7 +3,6 @@
 
 #include "EventInIntervalComputer.h"
 #include "utils/TableView/core/ExecutionPlan.h"
-#include "utils/TableView/interfaces/IEventSource.h"
 #include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -27,75 +26,6 @@
 #include <cstdint>
 #include <numeric>
 #include <nlohmann/json.hpp>
-
-// Mock implementation of IEventSource for testing
-class MockEventSource : public IEventSource {
-public:
-    MockEventSource(std::string name, 
-                    std::shared_ptr<TimeFrame> timeFrame,
-                    std::vector<float> events)
-        : m_name(std::move(name)), 
-          m_timeFrame(std::move(timeFrame)), 
-          m_events(std::move(events)) {
-        // Ensure events are sorted
-        std::sort(m_events.begin(), m_events.end());
-    }
-
-    [[nodiscard]] auto getName() const -> std::string const & override {
-        return m_name;
-    }
-
-    [[nodiscard]] auto getTimeFrame() const -> std::shared_ptr<TimeFrame> override {
-        return m_timeFrame;
-    }
-
-    [[nodiscard]] auto size() const -> size_t override {
-        return m_events.size();
-    }
-
-    auto getDataInRange(TimeFrameIndex start, TimeFrameIndex end, 
-                       TimeFrame const * target_timeFrame) -> std::vector<float> override {
-        std::vector<float> result;
-        
-        // Convert TimeFrameIndex to time values for comparison
-        auto startTime = target_timeFrame->getTimeAtIndex(start);
-        auto endTime = target_timeFrame->getTimeAtIndex(end);
-        
-        for (const auto& event : m_events) {
-            // Convert event to time value using our timeframe
-            // For simplicity, assume events are already time values
-            if (event >= startTime && event <= endTime) {
-                result.push_back(event);
-            }
-        }
-        
-        return result;
-    }
-
-    auto getDataInRangeWithEntityIds(TimeFrameIndex start, TimeFrameIndex end, 
-                                    TimeFrame const * target_timeFrame) -> std::vector<EventWithId> override {
-        std::vector<EventWithId> result;
-        
-        // Convert TimeFrameIndex to time values for comparison
-        auto startTime = target_timeFrame->getTimeAtIndex(start);
-        auto endTime = target_timeFrame->getTimeAtIndex(end);
-        
-        for (const auto& event : m_events) {
-            // Convert event to time value using our timeframe
-            // For simplicity, assume events are already time values
-            if (event >= startTime && event <= endTime) {
-                result.push_back(EventWithId(event, EntityId(0)));
-            }
-        }
-        
-        return result;
-    }
-
-private:
-    std::string m_name;
-    std::shared_ptr<TimeFrame> m_timeFrame;
-    std::vector<float> m_events;
-};
 
 /**
  * @brief Base test fixture for EventInIntervalComputer with realistic event data
@@ -328,17 +258,19 @@ private:
 
 TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInIntervalComputer]") {
     
+    DataManager dm;
+
     SECTION("Presence operation - detect events in intervals") {
         // Create time frame
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create event data (events at times 1, 3, 5, 7, 9)
         std::vector<float> events = {1.0f, 3.0f, 5.0f, 7.0f, 9.0f};
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "TestEvents", timeFrame, events);
-        
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
         // Create intervals for testing
         std::vector<TimeFrameInterval> intervals = {
             TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)), // Time 0-2: contains event at 1
@@ -375,12 +307,14 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
         // Create time frame
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create event data with multiple events in some intervals
         std::vector<float> events = {1.0f, 1.5f, 3.0f, 5.0f, 5.5f, 5.8f, 7.0f, 9.0f};
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "TestEvents", timeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
         
         // Create intervals for testing
         std::vector<TimeFrameInterval> intervals = {
@@ -416,12 +350,13 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
         // Create time frame
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create event data
         std::vector<float> events = {1.0f, 2.5f, 3.0f, 5.0f, 5.5f, 7.0f, 9.0f};
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "TestEvents", timeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
         
         // Create intervals for testing
         std::vector<TimeFrameInterval> intervals = {
@@ -466,16 +401,18 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
 
 TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalComputer][EdgeCases]") {
     
+    DataManager dm;
+
     SECTION("Empty event source") {
         // Create time frame
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         // Create empty event data
         std::vector<float> events;
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "EmptyEvents", timeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("EmptyEvents", eventSource, TimeKey("test_time"));
         
         // Create intervals for testing
         std::vector<TimeFrameInterval> intervals = {
@@ -523,12 +460,13 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
         // Create time frame
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create single event data
         std::vector<float> events = {2.5f};
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "SingleEvent", timeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("SingleEvent", eventSource, TimeKey("test_time"));
         
         // Create intervals for testing
         std::vector<TimeFrameInterval> intervals = {
@@ -568,12 +506,13 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
         // Create time frame
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create event data
         std::vector<float> events = {1.0f, 2.0f, 3.0f, 4.0f};
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "TestEvents", timeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
         
         // Create zero-length intervals
         std::vector<TimeFrameInterval> intervals = {
@@ -600,14 +539,17 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
 
 TEST_CASE("DM - TV - EventInIntervalComputer Error Handling", "[EventInIntervalComputer][Error]") {
     
+    DataManager dm;
+
     SECTION("Wrong operation type for template specialization") {
         // Create minimal setup
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         std::vector<float> events = {1.0f, 2.0f, 3.0f};
-        auto eventSource = std::make_shared<MockEventSource>(
-            "TestEvents", timeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
         
         std::vector<TimeFrameInterval> intervals = {
             TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2))
@@ -641,14 +583,18 @@ TEST_CASE("DM - TV - EventInIntervalComputer Error Handling", "[EventInIntervalC
 
 TEST_CASE("DM - TV - EventInIntervalComputer Dependency Tracking", "[EventInIntervalComputer][Dependencies]") {
     
+
+    DataManager dm;
+
     SECTION("getSourceDependency returns correct source name") {
         // Create minimal setup
         std::vector<int> timeValues = {0, 1, 2};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         std::vector<float> events = {1.0f};
-        auto eventSource = std::make_shared<MockEventSource>(
-            "TestSource", timeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("TestSource", eventSource, TimeKey("test_time"));
         
         // Create computer
         EventInIntervalComputer<bool> computer(eventSource, 
@@ -850,21 +796,21 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         REQUIRE(presence_info->outputType == typeid(bool));
         REQUIRE(presence_info->outputTypeName == "bool");
         REQUIRE(presence_info->requiredRowSelector == RowSelectorType::IntervalBased);
-        REQUIRE(presence_info->requiredSourceType == typeid(std::shared_ptr<IEventSource>));
+        REQUIRE(presence_info->requiredSourceType == typeid(std::shared_ptr<DigitalEventSeries>));
         
         // Verify computer info details for Count
         REQUIRE(count_info->name == "Event Count");
         REQUIRE(count_info->outputType == typeid(int));
         REQUIRE(count_info->outputTypeName == "int");
         REQUIRE(count_info->requiredRowSelector == RowSelectorType::IntervalBased);
-        REQUIRE(count_info->requiredSourceType == typeid(std::shared_ptr<IEventSource>));
+        REQUIRE(count_info->requiredSourceType == typeid(std::shared_ptr<DigitalEventSeries>));
         
         // Verify computer info details for Gather
         REQUIRE(gather_info->name == "Event Gather");
         REQUIRE(gather_info->outputType == typeid(std::vector<float>));
         REQUIRE(gather_info->outputTypeName == "std::vector<float>");
         REQUIRE(gather_info->requiredRowSelector == RowSelectorType::IntervalBased);
-        REQUIRE(gather_info->requiredSourceType == typeid(std::shared_ptr<IEventSource>));
+        REQUIRE(gather_info->requiredSourceType == typeid(std::shared_ptr<DigitalEventSeries>));
     }
     
     SECTION("Create EventInIntervalComputer via ComputerRegistry") {
@@ -1235,6 +1181,8 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
 
 TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInIntervalComputer][Complex]") {
     
+    DataManager dm;
+
     SECTION("Large number of events and intervals") {
         // Create time frame
         std::vector<int> timeValues;
@@ -1242,6 +1190,7 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
             timeValues.push_back(i);
         }
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create many events
         std::vector<float> events;
@@ -1249,8 +1198,8 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
             events.push_back(i);
         }
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "ManyEvents", timeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("ManyEvents", eventSource, TimeKey("test_time"));
         
         // Create many intervals
         std::vector<TimeFrameInterval> intervals;
@@ -1298,12 +1247,13 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
         // Create time frame
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create events exactly at interval boundaries
         std::vector<float> events = {0.0f, 2.0f, 4.0f, 6.0f, 8.0f, 10.0f};
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "BoundaryEvents", timeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("BoundaryEvents", eventSource, TimeKey("test_time"));
         
         // Create intervals that start and end at event times
         std::vector<TimeFrameInterval> intervals = {
@@ -1338,17 +1288,19 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
         // Row time frame: coarser scale (0, 10, 20, 30, 40, 50)
         std::vector<int> rowTimeValues = {0, 10, 20, 30, 40, 50};
         auto rowTimeFrame = std::make_shared<TimeFrame>(rowTimeValues);
+        dm.setTime(TimeKey("test_time"), rowTimeFrame, true);
         
         // Event time frame: finer scale (0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30)
         std::vector<int> eventTimeValues = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
         auto eventTimeFrame = std::make_shared<TimeFrame>(eventTimeValues);
+        dm.setTime(TimeKey("event_time"), eventTimeFrame, true);
         
-        // Create events using the event time frame scale
-        // Events at times: 2, 6, 12, 18, 24, 28 (actual time values)
-        std::vector<float> events = {2.0f, 6.0f, 12.0f, 18.0f, 24.0f, 28.0f};
+        // Create events - the values represent indices that will be looked up in the event timeframe
+        // Values between 0-15 map to timeframe positions, giving actual times from the eventTimeValues array
+        std::vector<float> events = {1.0f, 3.0f, 6.0f, 9.0f, 12.0f, 14.0f};
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "DifferentTimeFrameEvents", eventTimeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("DifferentTimeFrameEvents", eventSource, TimeKey("event_time"));
         
         // Create intervals using the row time frame scale
         std::vector<TimeFrameInterval> intervals = {
@@ -1398,53 +1350,60 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
         
         REQUIRE(gatherResults.size() == 5);
         
-        // Check first interval (0-10)
+        // Check first interval (0-10) - contains indices 1,3 which map to times 2,6
         REQUIRE(gatherResults[0].size() == 2);
-        REQUIRE(gatherResults[0][0] == Catch::Approx(2.0f).epsilon(0.001f));
-        REQUIRE(gatherResults[0][1] == Catch::Approx(6.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[0][0] == Catch::Approx(1.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[0][1] == Catch::Approx(3.0f).epsilon(0.001f));
         
-        // Check second interval (10-20)
+        // Check second interval (10-20) - contains indices 6,9 which map to times 12,18
         REQUIRE(gatherResults[1].size() == 2);
-        REQUIRE(gatherResults[1][0] == Catch::Approx(12.0f).epsilon(0.001f));
-        REQUIRE(gatherResults[1][1] == Catch::Approx(18.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[1][0] == Catch::Approx(6.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[1][1] == Catch::Approx(9.0f).epsilon(0.001f));
         
-        // Check third interval (20-30)
+        // Check third interval (20-30) - contains indices 12,14 which map to times 24,28
         REQUIRE(gatherResults[2].size() == 2);
-        REQUIRE(gatherResults[2][0] == Catch::Approx(24.0f).epsilon(0.001f));
-        REQUIRE(gatherResults[2][1] == Catch::Approx(28.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[2][0] == Catch::Approx(12.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[2][1] == Catch::Approx(14.0f).epsilon(0.001f));
         
         // Check fourth interval (30-40) - should be empty
         REQUIRE(gatherResults[3].size() == 0);
         
-        // Check fifth interval (0-20) - should contain first 4 events
+        // Check fifth interval (0-20) - should contain first 4 events (indices 1,3,6,9)
         REQUIRE(gatherResults[4].size() == 4);
-        REQUIRE(gatherResults[4][0] == Catch::Approx(2.0f).epsilon(0.001f));
-        REQUIRE(gatherResults[4][1] == Catch::Approx(6.0f).epsilon(0.001f));
-        REQUIRE(gatherResults[4][2] == Catch::Approx(12.0f).epsilon(0.001f));
-        REQUIRE(gatherResults[4][3] == Catch::Approx(18.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[4][0] == Catch::Approx(1.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[4][1] == Catch::Approx(3.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[4][2] == Catch::Approx(6.0f).epsilon(0.001f));
+        REQUIRE(gatherResults[4][3] == Catch::Approx(9.0f).epsilon(0.001f));
     }
     
-    SECTION("Non-aligned time frames with fractional events") {
+    SECTION("Non-aligned time frames with events at indices") {
         // Create row time frame with irregular intervals
         std::vector<int> rowTimeValues = {0, 5, 13, 27, 45};
         auto rowTimeFrame = std::make_shared<TimeFrame>(rowTimeValues);
+        dm.setTime(TimeKey("test_time"), rowTimeFrame, true);
         
         // Create event time frame with different scale
         std::vector<int> eventTimeValues = {0, 3, 7, 11, 15, 19, 23, 31, 39, 47};
         auto eventTimeFrame = std::make_shared<TimeFrame>(eventTimeValues);
+        dm.setTime(TimeKey("event_time"), eventTimeFrame, true);
         
-        // Create events with fractional times that fall between time frame points
-        std::vector<float> events = {1.5f, 4.2f, 8.7f, 14.1f, 20.8f, 25.3f, 35.6f, 42.9f};
+        // Create events using INDICES into event time frame
+        // eventTimeValues: {0, 3, 7, 11, 15, 19, 23, 31, 39, 47}
+        // Index 0->time 0, 1->3, 2->7, 3->11, 4->15, 5->19, 6->23, 7->31, 8->39, 9->47
+        // We want events at times approximately: 3, 7, 11, 15, 19, 23, 31, 39
+        std::vector<float> events = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
         
-        auto eventSource = std::make_shared<MockEventSource>(
-            "NonAlignedEvents", eventTimeFrame, events);
+        auto eventSource = std::make_shared<DigitalEventSeries>(events);
+        dm.setData<DigitalEventSeries>("NonAlignedEvents", eventSource, TimeKey("event_time"));
         
         // Create intervals using the row time frame
+        // When converting from row time to event time frame, each row interval gets mapped
+        // Row 0-5 maps to event indices that represent times 0-5 in event frame
         std::vector<TimeFrameInterval> intervals = {
-            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1)), // Row time 0-5: should contain events at 1.5, 4.2
-            TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(2)), // Row time 5-13: should contain events at 8.7
-            TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(3)), // Row time 13-27: should contain events at 14.1, 20.8, 25.3
-            TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(4))  // Row time 27-45: should contain events at 35.6, 42.9
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1)), // Row time 0-5: maps to event frame ~index 0-1
+            TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(2)), // Row time 5-13: maps to event frame ~index 1-3
+            TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(3)), // Row time 13-27: maps to event frame ~index 3-6
+            TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(4))  // Row time 27-45: maps to event frame ~index 6-8
         };
         
         ExecutionPlan plan(intervals, rowTimeFrame);
@@ -1457,10 +1416,10 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
         auto [countResults, countEntity_ids] = countComputer.compute(plan);
         
         REQUIRE(countResults.size() == 4);
-        REQUIRE(countResults[0] == 2);  // Interval 0-5: events at 1.5, 4.2
-        REQUIRE(countResults[1] == 1);  // Interval 5-13: event at 8.7
-        REQUIRE(countResults[2] == 3);  // Interval 13-27: events at 14.1, 20.8, 25.3
-        REQUIRE(countResults[3] == 2);  // Interval 27-45: events at 35.6, 42.9
+        REQUIRE(countResults[0] == 1);  // Interval 0-5: contains event at index 1.0 (time 3)
+        REQUIRE(countResults[1] == 2);  // Interval 5-13: contains events at indices 2.0, 3.0 (times 7, 11)
+        REQUIRE(countResults[2] == 3);  // Interval 13-27: contains events at indices 4.0, 5.0, 6.0 (times 15, 19, 23)
+        REQUIRE(countResults[3] == 2);  // Interval 27-45: contains events at indices 7.0, 8.0 (times 31, 39)
         
         // Test Presence operation
         EventInIntervalComputer<bool> presenceComputer(eventSource, 

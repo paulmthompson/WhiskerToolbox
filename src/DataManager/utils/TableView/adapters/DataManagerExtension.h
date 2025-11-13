@@ -11,10 +11,9 @@
 
 class AnalogDataAdapter;
 class DataManager;
-class DigitalEventDataAdapter;
+class DigitalEventSeries;
 class DigitalIntervalDataAdapter;
 class IAnalogSource;
-class IEventSource;
 class IIntervalSource;
 class ILineSource;
 class LineDataAdapter;
@@ -33,7 +32,7 @@ public:
     // Variant handle for strongly-typed source adapters resolved from a name
     using SourceHandle = std::variant<
             std::shared_ptr<IAnalogSource>,
-            std::shared_ptr<IEventSource>,
+            std::shared_ptr<DigitalEventSeries>,
             std::shared_ptr<IIntervalSource>,
             std::shared_ptr<ILineSource>,
             std::shared_ptr<PointData>>;
@@ -67,15 +66,14 @@ public:
     void clearCache();
 
     /**
-     * @brief Gets an event source by name.
+     * @brief Gets digital event data by name.
      * 
-     * This method provides access to IEventSource implementations for
-     * discrete event data such as digital event series.
+     * This method provides direct access to DigitalEventSeries objects.
      * 
-     * @param name The name of the event source.
-     * @return Shared pointer to IEventSource, or nullptr if not found.
+     * @param name The name of the event data.
+     * @return Shared pointer to DigitalEventSeries, or nullptr if not found.
      */
-    auto getEventSource(std::string const & name) -> std::shared_ptr<IEventSource>;
+    auto getEventSource(std::string const & name) -> std::shared_ptr<DigitalEventSeries>;
 
     /**
      * @brief Gets an interval source by name.
@@ -126,11 +124,11 @@ private:
     auto createAnalogDataAdapter(std::string const & name) -> std::shared_ptr<IAnalogSource>;
 
     /**
-     * @brief Creates a DigitalEventDataAdapter for the given name.
+     * @brief Creates and retrieves DigitalEventSeries for the given name.
      * @param name The name of the DigitalEventSeries data.
-     * @return Shared pointer to the adapter, or nullptr if not found.
+     * @return Shared pointer to DigitalEventSeries, or nullptr if not found.
      */
-    auto createDigitalEventDataAdapter(std::string const & name) -> std::shared_ptr<IEventSource>;
+    auto createDigitalEventSeries(std::string const & name) -> std::shared_ptr<DigitalEventSeries>;
 
     /**
      * @brief Creates a DigitalIntervalDataAdapter for the given name.
@@ -157,7 +155,7 @@ private:
 
     // Cache for adapter objects to ensure reuse and correct lifetime
     mutable std::map<std::string, std::shared_ptr<IAnalogSource>> m_dataSourceCache;
-    mutable std::map<std::string, std::shared_ptr<IEventSource>> m_eventSourceCache;
+    mutable std::map<std::string, std::shared_ptr<DigitalEventSeries>> m_eventSourceCache;
     mutable std::map<std::string, std::shared_ptr<IIntervalSource>> m_intervalSourceCache;
     mutable std::map<std::string, std::shared_ptr<ILineSource>> m_lineSourceCache;
     mutable std::map<std::string, std::shared_ptr<PointData>> m_pointDataCache;

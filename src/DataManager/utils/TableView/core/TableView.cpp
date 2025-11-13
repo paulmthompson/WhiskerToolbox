@@ -2,8 +2,8 @@
 
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/columns/Column.h"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/IEventSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/ILineSource.h"
 #include "Points/Point_Data.hpp"
@@ -92,7 +92,7 @@ ExecutionPlan makePlanFromInterval(std::shared_ptr<IIntervalSource> const & /*in
 }
 
 // Event source -> plan
-ExecutionPlan makePlanFromEvent(std::shared_ptr<IEventSource> const & /*event*/,
+ExecutionPlan makePlanFromEvent(std::shared_ptr<DigitalEventSeries> const & /*event*/,
                                 IRowSelector const & selector) {
     return visitSelector(
         selector,
@@ -438,7 +438,7 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
                 [&](std::shared_ptr<IAnalogSource> const & a) {
                     return makePlanFromAnalog(a, *m_rowSelector);
                 },
-                [&](std::shared_ptr<IEventSource> const & e) {
+                [&](std::shared_ptr<DigitalEventSeries> const & e) {
                     return makePlanFromEvent(e, *m_rowSelector);
                 },
                 [&](std::shared_ptr<IIntervalSource> const & i) {

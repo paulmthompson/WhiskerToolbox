@@ -5,8 +5,8 @@
 #include <memory>
 #include <variant>
 
+class DigitalEventSeries;
 class IAnalogSource;
-class IEventSource;
 class IIntervalSource;
 class ILineSource;
 
@@ -27,7 +27,7 @@ enum class RowSelectorType : std::uint8_t {
  */
 using DataSourceVariant = std::variant<
     std::shared_ptr<IAnalogSource>,
-    std::shared_ptr<IEventSource>,
+    std::shared_ptr<DigitalEventSeries>,
     std::shared_ptr<IIntervalSource>,
     std::shared_ptr<ILineSource>
 >;

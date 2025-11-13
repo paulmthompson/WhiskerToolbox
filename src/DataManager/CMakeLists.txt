@@ -91,7 +91,6 @@ set(DATAMANAGER_SOURCES
         utils/TableView/pipeline/TablePipeline.cpp
 
         utils/TableView/interfaces/IAnalogSource.h
-        utils/TableView/interfaces/IEventSource.h
         utils/TableView/interfaces/IIntervalSource.h
         utils/TableView/interfaces/ILineSource.h
         utils/TableView/interfaces/IRowSelector.h
@@ -102,8 +101,6 @@ set(DATAMANAGER_SOURCES
 
         utils/TableView/adapters/AnalogDataAdapter.h
         utils/TableView/adapters/AnalogDataAdapter.cpp
-        utils/TableView/adapters/DigitalEventDataAdapter.h
-        utils/TableView/adapters/DigitalEventDataAdapter.cpp
         utils/TableView/adapters/DigitalIntervalDataAdapter.h
         utils/TableView/adapters/DigitalIntervalDataAdapter.cpp
         utils/TableView/adapters/LineDataAdapter.h
