@@ -330,7 +330,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
     progressCallback(0);
 
     // Count total masks to process for progress calculation
-    size_t const total_masks = mask_data->size();
+    size_t const total_masks = mask_data->getTimeCount();
 
     if (total_masks == 0) {
         progressCallback(100);

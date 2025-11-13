@@ -25,18 +25,6 @@ PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const
     }
 }
 
-// ========== Getters ==========
-
-
-std::size_t PointData::getMaxPoints() const {
-    std::size_t max_points = 0;
-    for (auto const & [time, entries]: _data) {
-        (void) time;
-        max_points = std::max(max_points, entries.size());
-    }
-    return max_points;
-}
-
 // ========== Image Size ==========
 
 void PointData::changeImageSize(ImageSize const & image_size) {

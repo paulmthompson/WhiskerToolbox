@@ -73,15 +73,6 @@ public:
      * @param image_size
      */
     void changeImageSize(ImageSize const & image_size);
-
-    // ========== Getters (Time-based) ==========
-
-    /**
-     * @brief Get the maximum number of points at any time
-     * 
-     * @return The maximum number of points
-     */
-    [[nodiscard]] std::size_t getMaxPoints() const;
 };
 
 #endif// POINT_DATA_HPP

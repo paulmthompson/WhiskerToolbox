@@ -1081,7 +1081,7 @@ arma::Mat<double> ML_Widget::_zScoreNormalizeFeatures(arma::Mat<double> const & 
         if (data_type == DM_DataType::Points) {
             auto point_data = _data_manager->getData<PointData>(base_key);
             if (point_data) {
-                feature_rows = point_data->getMaxPoints() * 2;// x,y coordinates
+                feature_rows = point_data->getMaxEntriesAtAnyTime() * 2;// x,y coordinates
             }
         } else if (data_type == DM_DataType::Tensor) {
             auto tensor_data = _data_manager->getData<TensorData>(base_key);

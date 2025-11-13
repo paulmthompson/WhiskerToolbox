@@ -67,7 +67,7 @@ arma::Mat<double> convertToMlpackMatrix(
         std::vector<std::size_t> const & timestamps) {
 
     size_t const numCols = timestamps.size();
-    size_t const numRows = pointData->getMaxPoints() * 2;
+    size_t const numRows = pointData->getMaxEntriesAtAnyTime() * 2;
 
     arma::Mat<double> result(numRows, numCols, arma::fill::zeros);
 

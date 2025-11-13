@@ -438,7 +438,7 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         // Should be able to get PointData directly
         auto pointData = dme->getPointData("SinglePoints");
         REQUIRE(pointData != nullptr);
-        REQUIRE(pointData->getMaxPoints() == 1);
+        REQUIRE(pointData->getMaxEntriesAtAnyTime() == 1);
     }
     
     SECTION("Multi-sample PointData is accessible") {
@@ -457,7 +457,7 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         // Should be able to get PointData directly
         auto pointData = dme->getPointData("MultiPoints");
         REQUIRE(pointData != nullptr);
-        REQUIRE(pointData->getMaxPoints() > 1);
+        REQUIRE(pointData->getMaxEntriesAtAnyTime() > 1);
     }
     
     SECTION("Mixed line and point sources - only one multi-sample allowed") {

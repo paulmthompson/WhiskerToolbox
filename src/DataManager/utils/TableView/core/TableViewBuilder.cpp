@@ -94,7 +94,7 @@ void TableViewBuilder::validateMultiSampleSources() {
             
             // Check if this dependency is a point source
             auto pointData = m_dataManager->getPointData(dep);
-            if (pointData && pointData->getMaxPoints() > 1) {
+            if (pointData && pointData->getMaxEntriesAtAnyTime() > 1) {
                 multiSampleSources.insert(dep);
             }
         }
@@ -108,7 +108,7 @@ void TableViewBuilder::validateMultiSampleSources() {
             }
             
             auto pointData = m_dataManager->getPointData(sourceDep);
-            if (pointData && pointData->getMaxPoints() > 1) {
+            if (pointData && pointData->getMaxEntriesAtAnyTime() > 1) {
                 multiSampleSources.insert(sourceDep);
             }
         }

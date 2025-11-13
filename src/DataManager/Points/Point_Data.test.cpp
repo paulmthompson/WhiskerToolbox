@@ -125,7 +125,7 @@ TEST_CASE("DM - PointData - Core functionality", "[points][data][core]") {
         point_data.addAtTime(TimeFrameIndex(10), points, NotifyObservers::No);     // 2 points
         point_data.addAtTime(TimeFrameIndex(20), more_points, NotifyObservers::No);// 1 point
 
-        auto max_points = point_data.getMaxPoints();
+        auto max_points = point_data.getMaxEntriesAtAnyTime();
         REQUIRE(max_points == 2);
     }
 }

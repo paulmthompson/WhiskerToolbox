@@ -20,7 +20,7 @@
 
 MaskDataVisualization::MaskDataVisualization(QString const & data_key,
                                              std::shared_ptr<MaskData> const & mask_data,
-                                             GroupManager* group_manager)
+                                             GroupManager * group_manager)
     : key(data_key),
       mask_data(mask_data),
       quad_vertex_buffer(QOpenGLBuffer::VertexBuffer),
@@ -28,7 +28,7 @@ MaskDataVisualization::MaskDataVisualization(QString const & data_key,
       hover_union_polygon(std::vector<Point2D<float>>()) {
     // Note: group_manager parameter added for API consistency with other visualizations
     // Currently not used for masks, but may be used in future for group-based mask coloring
-    (void)group_manager;
+    (void) group_manager;
 
     if (!mask_data) {
         qDebug() << "MaskDataVisualization: Null mask data provided";
@@ -369,7 +369,9 @@ BoundingBox MaskDataVisualization::calculateBounds() const {
 void MaskDataVisualization::createBinaryImageTexture() {
     if (!mask_data) return;
 
-    qDebug() << "MaskDataVisualization: Creating binary image texture with" << mask_data->size() << "time frames";
+    qDebug() << "MaskDataVisualization: Creating binary image texture with"
+             << mask_data->getTotalEntryCount()
+             << "time frames";
 
     auto image_size = mask_data->getImageSize();
     binary_image_data.resize(image_size.width * image_size.height, 0.0f);
@@ -463,11 +465,13 @@ void MaskDataVisualization::updateSelectionBinaryImageTexture() {
 void MaskDataVisualization::populateRTree() {
     if (!mask_data || !spatial_index) return;
 
-    qDebug() << "MaskDataVisualization: Populating R-tree with" << mask_data->size() << "time frames";
+    qDebug() << "MaskDataVisualization: Populating R-tree with"
+             << mask_data->getTotalEntryCount()
+             << "time frames";
 
     for (auto const & [time, entries]: mask_data->getAllEntries()) {
-        
-        for (auto const & entry : entries) {
+
+        for (auto const & entry: entries) {
             auto const & mask = entry.data;
             auto const entity_id = entry.entity_id;
 
@@ -478,7 +482,7 @@ void MaskDataVisualization::populateRTree() {
 
             BoundingBox bbox(static_cast<float>(min_point.x), static_cast<float>(min_point.y),
                              static_cast<float>(max_point.x), static_cast<float>(max_point.y));
-            
+
             spatial_index->insert(bbox, entity_id);
         }
     }

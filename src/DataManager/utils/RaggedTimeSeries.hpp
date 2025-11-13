@@ -587,6 +587,49 @@ public:
     // ========== Data Access Methods ==========
 
     /**
+     * @brief Get the number of distinct time frames with data
+     * 
+     * @return The count of time frames containing at least one entry
+     */
+    [[nodiscard]] std::size_t getTimeCount() const {
+        return _data.size();
+    }
+
+    /**
+     * @brief Get the maximum number of entries at any single time frame
+     * 
+     * Scans all time frames and returns the size of the largest vector of entries.
+     * This represents the maximum "width" of the ragged array structure.
+     * 
+     * @return The maximum number of entries at any time, or 0 if no data exists
+     */
+    [[nodiscard]] std::size_t getMaxEntriesAtAnyTime() const {
+        std::size_t max_entries = 0;
+        for (auto const & [time, entries]: _data) {
+            (void) time;
+            max_entries = std::max(max_entries, entries.size());
+        }
+        return max_entries;
+    }
+
+    /**
+     * @brief Get the total number of entries across all time frames
+     * 
+     * Sums the number of entries at each time frame to get the total count
+     * of all data entries in this time series.
+     * 
+     * @return The total count of all entries
+     */
+    [[nodiscard]] std::size_t getTotalEntryCount() const {
+        std::size_t total = 0;
+        for (auto const & [time, entries]: _data) {
+            (void) time;
+            total += entries.size();
+        }
+        return total;
+    }
+
+    /**
      * @brief Get all times with data
      * 
      * Returns a view over the keys of the data map for zero-copy iteration.

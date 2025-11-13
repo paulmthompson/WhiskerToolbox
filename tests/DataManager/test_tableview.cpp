@@ -50,7 +50,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         auto retrievedPointData = dataManagerExtension->getPointData("TestPoints");
         
         REQUIRE(retrievedPointData != nullptr);
-        REQUIRE(retrievedPointData->getMaxPoints() == 1);
+        REQUIRE(retrievedPointData->getMaxEntriesAtAnyTime() == 1);
         
         // Verify we can access the point data
         auto entries = retrievedPointData->getAllEntries();

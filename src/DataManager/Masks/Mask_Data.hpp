@@ -34,11 +34,6 @@ public:
     // ========== Constructors ==========
     MaskData() = default;
 
-    // ========== Getters (Time-based) ==========
-
-    [[nodiscard]] size_t size() const { return _data.size(); };
-
-
     // ========== Image Size ==========
     /**
      * @brief Change the size of the canvas the mask belongs to
