@@ -14,8 +14,11 @@ jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     env:
-      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
+      VCPKG_BINARY_SOURCES: clear;files,/home/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg_cache,readwrite
 
     steps:
       - name: Checkout repository
