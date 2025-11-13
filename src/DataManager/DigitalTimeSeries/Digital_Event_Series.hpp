@@ -28,7 +28,6 @@ public:
     DigitalEventSeries() = default;
     explicit DigitalEventSeries(std::vector<float> event_vector);
 
-    void setData(std::vector<float> event_vector);
     [[nodiscard]] std::vector<float> const & getEventSeries() const;
 
     void addEvent(float event_time);
@@ -40,12 +39,6 @@ public:
     void clear() {
         _data.clear();
         notifyObservers();
-    }
-
-    [[nodiscard]] auto getEventsInRange(float start_time, float stop_time) const {
-        return _data | std::views::filter([start_time, stop_time](float time) {
-                   return time >= start_time && time <= stop_time;
-               });
     }
 
     [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {

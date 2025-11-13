@@ -62,8 +62,7 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load_into_DigitalEventSeries(st
             auto events = Loader::extractEvents(digital_data, transition);
             std::cout << "Loaded " << events.size() << " events " << std::endl;
 
-            digital_event_series.push_back(std::make_shared<DigitalEventSeries>());
-            digital_event_series.back()->setData(events);
+            digital_event_series.push_back(std::make_shared<DigitalEventSeries>(events));
             break;
         }
         case EventDataType::csv: {
@@ -99,7 +98,7 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load_into_DigitalEventSeries(st
                     auto events = series->getEventSeries();  // This returns const&, so we need to copy
                     std::vector<float> scaled_events = events;  // Make a copy
                     scale_events(scaled_events, scale, scale_divide);
-                    series->setData(scaled_events);  // Set the scaled data back
+                    series = std::make_shared<DigitalEventSeries>(scaled_events);
                 }
             }
             

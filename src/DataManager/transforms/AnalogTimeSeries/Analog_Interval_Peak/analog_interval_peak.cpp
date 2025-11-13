@@ -23,25 +23,23 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
         IntervalPeakParams const & intervalPeakParams,
         ProgressCallback progressCallback) {
 
-    auto event_series = std::make_shared<DigitalEventSeries>();
-
     // Input validation
     if (!analog_time_series) {
         std::cerr << "find_interval_peaks: Input AnalogTimeSeries is null" << std::endl;
         if (progressCallback) progressCallback(100);
-        return event_series;
+        return std::make_shared<DigitalEventSeries>();
     }
 
     if (!intervalPeakParams.interval_series) {
         std::cerr << "find_interval_peaks: Interval series is null" << std::endl;
         if (progressCallback) progressCallback(100);
-        return event_series;
+        return std::make_shared<DigitalEventSeries>();
     }
 
     auto const & intervals = intervalPeakParams.interval_series->getDigitalIntervalSeries();
     if (intervals.empty()) {
         if (progressCallback) progressCallback(100);
-        return event_series;
+        return std::make_shared<DigitalEventSeries>();
     }
 
     if (progressCallback) progressCallback(5);
@@ -77,7 +75,7 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
     auto const & values = analog_time_series->getAnalogTimeSeries();
     if (values.empty()) {
         if (progressCallback) progressCallback(100);
-        return event_series;
+        return std::make_shared<DigitalEventSeries>();
     }
 
     if (progressCallback) progressCallback(15);
@@ -135,7 +133,7 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
     }
 
     // Create the event series
-    event_series->setData(peak_events);
+    auto event_series = std::make_shared<DigitalEventSeries>(peak_events);
 
     if (progressCallback) progressCallback(100);
 

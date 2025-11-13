@@ -22,23 +22,6 @@ TEST_CASE("Digital Event Series - Constructor", "[DataManager]") {
     REQUIRE(data[2] == 3.0f);
 }
 
-TEST_CASE("Digital Event Series - Set Data", "[DataManager]") {
-    DigitalEventSeries des;
-
-    // Set data with unsorted events
-    std::vector<float> events = {5.0f, 2.0f, 8.0f, 1.0f, 4.0f};
-    des.setData(events);
-
-    // Verify that setData sorts the events
-    auto data = des.getEventSeries();
-    REQUIRE(data.size() == 5);
-    REQUIRE(data[0] == 1.0f);
-    REQUIRE(data[1] == 2.0f);
-    REQUIRE(data[2] == 4.0f);
-    REQUIRE(data[3] == 5.0f);
-    REQUIRE(data[4] == 8.0f);
-}
-
 TEST_CASE("Digital Event Series - Add Event", "[DataManager]") {
     DigitalEventSeries des;
 
@@ -165,7 +148,7 @@ TEST_CASE("DigitalEventSeries - Range-based access (C++20)", "[DataManager]") {
 
     SECTION("getEventsInRange returns correct view") {
         // Get events between 2.0 and 7.5 inclusive
-        auto range = des.getEventsInRange(2.0f, 7.5f);
+        auto range = des.getEventsInRange(TimeFrameIndex(2), TimeFrameIndex(8));
 
         // Count elements in the range
         size_t count = 0;
@@ -211,7 +194,7 @@ TEST_CASE("DigitalEventSeries - Range edge cases", "[DataManager]") {
     }
 
     SECTION("Range outside all events (before)") {
-        auto range = des.getEventsInRange(-5.0f, 0.5f);
+        auto range = des.getEventsInRange(TimeFrameIndex(-5), TimeFrameIndex(0));
         bool is_empty = std::ranges::empty(range);
         REQUIRE(is_empty);
 
@@ -239,7 +222,7 @@ TEST_CASE("DigitalEventSeries - Range edge cases", "[DataManager]") {
 TEST_CASE("DigitalEventSeries - Range with empty series", "[DataManager]") {
     DigitalEventSeries des;
 
-    auto range = des.getEventsInRange(1.0f, 10.0f);
+    auto range = des.getEventsInRange(TimeFrameIndex(1), TimeFrameIndex(10));
     bool is_empty = std::ranges::empty(range);
     REQUIRE(is_empty);
 

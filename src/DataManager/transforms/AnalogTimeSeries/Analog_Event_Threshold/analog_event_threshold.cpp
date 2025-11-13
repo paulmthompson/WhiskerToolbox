@@ -34,11 +34,10 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
         AnalogTimeSeries const * analog_time_series,
         ThresholdParams const & thresholdParams,
         ProgressCallback progressCallback) {
-    auto event_series = std::make_shared<DigitalEventSeries>();
 
     if (!analog_time_series) {
         std::cerr << "Error: analog_time_series is null." << std::endl;
-        return event_series;
+        return std::make_shared<DigitalEventSeries>();
     }
 
     float const threshold = static_cast<float>(thresholdParams.thresholdValue);
@@ -51,7 +50,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
         if (progressCallback) {
             progressCallback(100);// No data to process, so 100% complete.
         }
-        return event_series;
+        return std::make_shared<DigitalEventSeries>();
     }
 
     double last_ts = -thresholdParams.lockoutTime - 1.0;// Initialize to allow first event
@@ -76,7 +75,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
             if (progressCallback) {
                 progressCallback(100);// Error case, consider it done.
             }
-            return event_series;// Return empty series on error
+            return std::make_shared<DigitalEventSeries>();// Return empty series on error
         }
 
         if (event_detected) {
@@ -98,7 +97,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
         }
     }
 
-    event_series->setData(events);
+    auto event_series = std::make_shared<DigitalEventSeries>(events);
     if (progressCallback) {
         progressCallback(100);// Ensure 100% is reported at the end.
     }

@@ -6,17 +6,8 @@
 #include <algorithm>// std::sort
 
 DigitalEventSeries::DigitalEventSeries(std::vector<float> event_vector) {
-    setData(std::move(event_vector));
-}
-
-void DigitalEventSeries::setData(std::vector<float> event_vector) {
     _data = std::move(event_vector);
     _sortEvents();
-    notifyObservers();
-    // Rebuild IDs if identity context present
-    if (_identity_registry) {
-        rebuildAllEntityIds();
-    }
 }
 
 std::vector<float> const & DigitalEventSeries::getEventSeries() const {
