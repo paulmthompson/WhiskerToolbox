@@ -1,34 +1,37 @@
 #ifndef INTERVAL_PROPERTY_COMPUTER_H
 #define INTERVAL_PROPERTY_COMPUTER_H
 
-#include "utils/TableView/interfaces/IColumnComputer.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
-#include "utils/TableView/core/ExecutionPlan.h"
-#include "utils/TableView/columns/IColumn.h"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/core/ExecutionPlan.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
+
 
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
 
+class DigitalIntervalSeries;
+
 /**
  * @brief Enumeration of operations that can be performed on interval properties.
  */
 enum class IntervalProperty : std::uint8_t {
-    Start,     ///< Returns the start time/index of the interval
-    End,       ///< Returns the end time/index of the interval
-    Duration   ///< Returns the duration (end - start) of the interval
+    Start,  ///< Returns the start time/index of the interval
+    End,    ///< Returns the end time/index of the interval
+    Duration///< Returns the duration (end - start) of the interval
 };
 
 /**
  * @brief Templated computer for extracting properties from time intervals.
  * 
- * Source type: IIntervalSource
+ * Source type: DigitalIntervalSeries
  * Selector type: Interval
  * Output type: T
  * 
- * This computer works with IIntervalSource data and can extract different properties
+ * This computer works with DigitalIntervalSeries data and can extract different properties
  * from intervals that are used as row selectors. The template parameter T
  * determines the return type based on the property being extracted:
  * - IntervalProperty::Start requires T = int64_t or float
@@ -44,36 +47,39 @@ public:
      * @param property The property to extract from intervals.
      * @param sourceName The name of the data source (for dependency tracking).
      */
-    IntervalPropertyComputer(std::shared_ptr<IIntervalSource> source, 
-                            IntervalProperty property,
-                            std::string sourceName)
-        : m_source(std::move(source)), m_property(property), m_sourceName(std::move(sourceName)) {}
+    IntervalPropertyComputer(std::shared_ptr<DigitalIntervalSeries> source,
+                             IntervalProperty property,
+                             std::string sourceName)
+        : m_source(std::move(source)),
+          m_property(property),
+          m_sourceName(std::move(sourceName)) {}
 
     /**
      * @brief Computes the result for all intervals in the execution plan.
      * @param plan The execution plan containing interval boundaries.
      * @return Vector of computed results for each interval.
      */
-    [[nodiscard]] std::pair<std::vector<T>, ColumnEntityIds> compute(const ExecutionPlan& plan) const override {
+    [[nodiscard]] std::pair<std::vector<T>, ColumnEntityIds> compute(ExecutionPlan const & plan) const override {
         if (!plan.hasIntervals()) {
             throw std::runtime_error("IntervalPropertyComputer requires an ExecutionPlan with intervals");
         }
-        
+
         auto intervals = plan.getIntervals();
         auto destinationTimeFrame = plan.getTimeFrame();
-        
+
         // Validate that row intervals are a subset of source intervals
         _validateRowIntervalsAreSubset(intervals, destinationTimeFrame.get());
-        
+
         std::vector<T> results;
         results.reserve(intervals.size());
         std::vector<EntityId> entity_ids;
         entity_ids.reserve(intervals.size());
-        
-        for (const auto& interval : intervals) {
 
-            auto intervals_with_ids = m_source->getIntervalsWithIdsInRange(interval.start, 
-                interval.end, destinationTimeFrame.get());
+        for (auto const & interval: intervals) {
+
+            auto intervals_with_ids = m_source->getIntervalsWithIdsInRange(interval.start,
+                                                                           interval.end,
+                                                                           *destinationTimeFrame);
 
             auto this_interval = intervals_with_ids.back();
             entity_ids.push_back(this_interval.entity_id);
@@ -92,7 +98,7 @@ public:
                     throw std::runtime_error("Unknown IntervalProperty");
             }
         }
-        
+
         return {results, entity_ids};
     }
 
@@ -109,7 +115,7 @@ public:
     }
 
 private:
-    std::shared_ptr<IIntervalSource> m_source;
+    std::shared_ptr<DigitalIntervalSeries> m_source;
     IntervalProperty m_property;
     std::string m_sourceName;
 
@@ -119,10 +125,9 @@ private:
      * @param destinationTimeFrame The destination timeframe for comparison.
      * @throws std::runtime_error if row intervals are not a subset of source intervals.
      */
-    void _validateRowIntervalsAreSubset(const std::vector<TimeFrameInterval>& rowIntervals, 
-                                       const TimeFrame* destinationTimeFrame) const;
+    void _validateRowIntervalsAreSubset(std::vector<TimeFrameInterval> const & rowIntervals,
+                                        TimeFrame const * destinationTimeFrame) const;
 };
 
 
-
-#endif // INTERVAL_PROPERTY_COMPUTER_H
+#endif// INTERVAL_PROPERTY_COMPUTER_H

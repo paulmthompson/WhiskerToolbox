@@ -507,12 +507,18 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(double),
                           "double",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IIntervalSource>));
+                          typeid(std::shared_ptr<DigitalIntervalSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
-                auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::Start, (*intervalSrc)->getName());
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
+                auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::Start, source_name);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
             }
             return nullptr;
@@ -528,12 +534,18 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(double),
                           "double",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IIntervalSource>));
+                          typeid(std::shared_ptr<DigitalIntervalSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
-                auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::End, (*intervalSrc)->getName());
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
+                auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::End, source_name);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
             }
             return nullptr;
@@ -549,12 +561,18 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(double),
                           "double",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IIntervalSource>));
+                          typeid(std::shared_ptr<DigitalIntervalSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
-                auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::Duration, (*intervalSrc)->getName());
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
+                auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::Duration, source_name);
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
             }
             return nullptr;
@@ -714,12 +732,18 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(bool),
                           "bool",
                           RowSelectorType::Timestamp,
-                          typeid(std::shared_ptr<IIntervalSource>));
+                          typeid(std::shared_ptr<DigitalIntervalSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
-                auto comp = std::make_unique<TimestampInIntervalComputer>(*intervalSrc, (*intervalSrc)->getName());
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
+                auto comp = std::make_unique<TimestampInIntervalComputer>(*intervalSrc, source_name);
                 return std::make_unique<ComputerWrapper<bool>>(std::move(comp));
             }
             return nullptr;
@@ -846,13 +870,19 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(int64_t),
                           "int64_t",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IIntervalSource>));
+                          typeid(std::shared_ptr<DigitalIntervalSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
                 auto computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
-                        *intervalSrc, IntervalOverlapOperation::AssignID, (*intervalSrc)->getName());
+                        *intervalSrc, IntervalOverlapOperation::AssignID, source_name);
                 return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
             }
             return nullptr;
@@ -868,13 +898,19 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(int64_t),
                           "int64_t",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IIntervalSource>));
+                          typeid(std::shared_ptr<DigitalIntervalSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
                 auto computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
-                        *intervalSrc, IntervalOverlapOperation::CountOverlaps, (*intervalSrc)->getName());
+                        *intervalSrc, IntervalOverlapOperation::CountOverlaps, source_name);
                 return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
             }
             return nullptr;
@@ -890,13 +926,19 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(int64_t),
                           "int64_t",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IIntervalSource>));
+                          typeid(std::shared_ptr<DigitalIntervalSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
                 auto computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
-                        *intervalSrc, IntervalOverlapOperation::AssignID_Start, (*intervalSrc)->getName());
+                        *intervalSrc, IntervalOverlapOperation::AssignID_Start, source_name);
                 return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
             }
             return nullptr;
@@ -912,13 +954,19 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(int64_t),
                           "int64_t",
                           RowSelectorType::IntervalBased,
-                          typeid(std::shared_ptr<IIntervalSource>));
+                          typeid(std::shared_ptr<DigitalIntervalSeries>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
                 auto computer = std::make_unique<IntervalOverlapComputer<int64_t>>(
-                        *intervalSrc, IntervalOverlapOperation::AssignID_End, (*intervalSrc)->getName());
+                        *intervalSrc, IntervalOverlapOperation::AssignID_End, source_name);
                 return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
             }
             return nullptr;

@@ -12,9 +12,8 @@
 class AnalogDataAdapter;
 class DataManager;
 class DigitalEventSeries;
-class DigitalIntervalDataAdapter;
+class DigitalIntervalSeries;
 class IAnalogSource;
-class IIntervalSource;
 class LineData;
 class PointData;
 
@@ -32,7 +31,7 @@ public:
     using SourceHandle = std::variant<
             std::shared_ptr<IAnalogSource>,
             std::shared_ptr<DigitalEventSeries>,
-            std::shared_ptr<IIntervalSource>,
+            std::shared_ptr<DigitalIntervalSeries>,
             std::shared_ptr<LineData>,
             std::shared_ptr<PointData>>;
 
@@ -77,13 +76,12 @@ public:
     /**
      * @brief Gets an interval source by name.
      * 
-     * This method provides access to IIntervalSource implementations for
-     * interval data such as digital interval series.
+     * This method provides direct access to DigitalIntervalSeries objects.
      * 
      * @param name The name of the interval source.
-     * @return Shared pointer to IIntervalSource, or nullptr if not found.
+     * @return Shared pointer to DigitalIntervalSeries, or nullptr if not found.
      */
-    auto getIntervalSource(std::string const & name) -> std::shared_ptr<IIntervalSource>;
+    auto getIntervalSource(std::string const & name) -> std::shared_ptr<DigitalIntervalSeries>;
 
     /**
      * @brief Gets line data by name.
@@ -129,11 +127,11 @@ private:
     auto createDigitalEventSeries(std::string const & name) -> std::shared_ptr<DigitalEventSeries>;
 
     /**
-     * @brief Creates a DigitalIntervalDataAdapter for the given name.
+     * @brief Creates and retrieves DigitalIntervalSeries for the given name.
      * @param name The name of the DigitalIntervalSeries data.
-     * @return Shared pointer to the adapter, or nullptr if not found.
+     * @return Shared pointer to DigitalIntervalSeries, or nullptr if not found.
      */
-    auto createDigitalIntervalDataAdapter(std::string const & name) -> std::shared_ptr<IIntervalSource>;
+    auto createDigitalIntervalSeries(std::string const & name) -> std::shared_ptr<DigitalIntervalSeries>;
 
     /**
      * @brief Retrieves LineData for the given name.
@@ -154,7 +152,7 @@ private:
     // Cache for adapter objects to ensure reuse and correct lifetime
     mutable std::map<std::string, std::shared_ptr<IAnalogSource>> m_dataSourceCache;
     mutable std::map<std::string, std::shared_ptr<DigitalEventSeries>> m_eventSourceCache;
-    mutable std::map<std::string, std::shared_ptr<IIntervalSource>> m_intervalSourceCache;
+    mutable std::map<std::string, std::shared_ptr<DigitalIntervalSeries>> m_intervalSourceCache;
     mutable std::map<std::string, std::shared_ptr<LineData>> m_lineSourceCache;
     mutable std::map<std::string, std::shared_ptr<PointData>> m_pointDataCache;
 };

@@ -5,7 +5,6 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
 #include "Points/Point_Data.hpp"
 #include "utils/TableView/interfaces/IRowSelector.h"
 
@@ -68,7 +67,7 @@ ExecutionPlan makePlanFromAnalog(std::shared_ptr<IAnalogSource> const & /*analog
 }
 
 // Interval source -> plan
-ExecutionPlan makePlanFromInterval(std::shared_ptr<IIntervalSource> const & /*interval*/,
+ExecutionPlan makePlanFromInterval(std::shared_ptr<DigitalIntervalSeries> const & /*interval*/,
                                    IRowSelector const & selector) {
     return visitSelector(
         selector,
@@ -444,7 +443,7 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
                 [&](std::shared_ptr<DigitalEventSeries> const & e) {
                     return makePlanFromEvent(e, *m_rowSelector);
                 },
-                [&](std::shared_ptr<IIntervalSource> const & i) {
+                [&](std::shared_ptr<DigitalIntervalSeries> const & i) {
                     return makePlanFromInterval(i, *m_rowSelector);
                 },
                 [&](std::shared_ptr<LineData> const & l) {

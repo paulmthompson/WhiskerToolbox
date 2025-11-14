@@ -1,9 +1,9 @@
 #ifndef INTERVAL_OVERLAP_COMPUTER_H
 #define INTERVAL_OVERLAP_COMPUTER_H
 
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IColumnComputer.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
 
 #include <cstdint>
 #include <memory>
@@ -14,10 +14,10 @@
  * @brief Enumeration of operations that can be performed on interval overlaps.
  */
 enum class IntervalOverlapOperation : std::uint8_t {
-    AssignID,       ///< Assigns the index of the column interval that contains/overlaps with the row interval
-    CountOverlaps,   ///< Counts the number of column intervals that overlap with each row interval
-    AssignID_Start,  ///< Finds the start index of the column interval that contains/overlaps with the row interval
-    AssignID_End     ///< Finds the end index of the column interval that contains/overlaps with the row interval
+    AssignID,      ///< Assigns the index of the column interval that contains/overlaps with the row interval
+    CountOverlaps, ///< Counts the number of column intervals that overlap with each row interval
+    AssignID_Start,///< Finds the start index of the column interval that contains/overlaps with the row interval
+    AssignID_End   ///< Finds the end index of the column interval that contains/overlaps with the row interval
 };
 
 /**
@@ -37,9 +37,9 @@ enum class IntervalOverlapOperation : std::uint8_t {
 * @return True if intervals overlap, false otherwise.
 */
 [[nodiscard]] bool intervalsOverlapInAbsoluteTime(TimeFrameInterval const & rowInterval,
-                                                 Interval const & columnInterval,
-                                                 TimeFrame const * sourceTimeFrame,
-                                                 TimeFrame const * destinationTimeFrame);
+                                                  Interval const & columnInterval,
+                                                  TimeFrame const * sourceTimeFrame,
+                                                  TimeFrame const * destinationTimeFrame);
 
 /**
 * @brief Finds the index of the column interval that contains the given row interval.
@@ -48,7 +48,18 @@ enum class IntervalOverlapOperation : std::uint8_t {
 * @return Index of the containing column interval, or -1 if none found.
 */
 [[nodiscard]] int64_t findContainingInterval(TimeFrameInterval const & rowInterval,
-                                             std::vector<Interval> const & columnIntervals);
+                                             std::ranges::range auto const & columnIntervals) {
+    for (size_t i = 0; i < columnIntervals.size(); ++i) {
+        auto const & colInterval = columnIntervals[i];
+
+        // Check if column interval contains the row interval
+        // Column interval contains row interval if: colInterval.start <= rowInterval.start && rowInterval.end <= colInterval.end
+        if (colInterval.start <= rowInterval.start.getValue() && rowInterval.end.getValue() <= colInterval.end) {
+            return static_cast<int64_t>(i);
+        }
+    }
+    return -1;// No containing interval found
+}
 
 /**
 * @brief Counts the number of column intervals that overlap with the given row interval.
@@ -59,9 +70,19 @@ enum class IntervalOverlapOperation : std::uint8_t {
 * @return Number of overlapping column intervals.
 */
 [[nodiscard]] int64_t countOverlappingIntervals(TimeFrameInterval const & rowInterval,
-                                                std::vector<Interval> const & columnIntervals,
+                                                std::ranges::range auto & columnIntervals,
                                                 TimeFrame const * sourceTimeFrame,
-                                                TimeFrame const * destinationTimeFrame);
+                                                TimeFrame const * destinationTimeFrame) {
+    int64_t count = 0;
+
+    for (auto & colInterval: columnIntervals) {
+        if (intervalsOverlapInAbsoluteTime(rowInterval, colInterval, sourceTimeFrame, destinationTimeFrame)) {
+            ++count;
+        }
+    }
+
+    return count;
+}
 
 /**
 * @brief Counts the number of column intervals that overlap with the given row interval and returns their EntityIDs.
@@ -72,9 +93,22 @@ enum class IntervalOverlapOperation : std::uint8_t {
 * @return Pair of count and vector of EntityIDs of overlapping intervals.
 */
 [[nodiscard]] std::pair<int64_t, std::vector<EntityId>> countOverlappingIntervalsWithIds(TimeFrameInterval const & rowInterval,
-                                                                                         std::vector<IntervalWithId> const & columnIntervalsWithIds,
+                                                                                         std::ranges::range auto const & columnIntervalsWithIds,
                                                                                          TimeFrame const * sourceTimeFrame,
-                                                                                         TimeFrame const * destinationTimeFrame);
+                                                                                         TimeFrame const * destinationTimeFrame) {
+    int64_t count = 0;
+    std::vector<EntityId> overlappingEntityIds;
+
+    for (auto const & colIntervalWithId: columnIntervalsWithIds) {
+        if (intervalsOverlapInAbsoluteTime(rowInterval, colIntervalWithId.interval, sourceTimeFrame, destinationTimeFrame)) {
+            ++count;
+            overlappingEntityIds.push_back(colIntervalWithId.entity_id);
+        }
+    }
+
+    return {count, overlappingEntityIds};
+}
+
 
 /**
  * @brief Templated computer for analyzing overlaps between row intervals and column intervals.
@@ -102,7 +136,7 @@ public:
      * @param operation The operation to perform on interval overlaps.
      * @param sourceName The name of the data source (for dependency tracking).
      */
-    IntervalOverlapComputer(std::shared_ptr<IIntervalSource> source,
+    IntervalOverlapComputer(std::shared_ptr<DigitalIntervalSeries> source,
                             IntervalOverlapOperation operation,
                             std::string sourceName)
         : m_source(std::move(source)),
@@ -125,52 +159,52 @@ public:
 
         std::vector<T> results;
         results.reserve(rowIntervals.size());
-       
+
         //entity_ids.reserve(rowIntervals.size());
         if (m_operation == IntervalOverlapOperation::AssignID ||
             m_operation == IntervalOverlapOperation::AssignID_Start ||
             m_operation == IntervalOverlapOperation::AssignID_End) {
 
-                std::vector<EntityId> entity_ids;
-                for (auto const & rowInterval: rowIntervals) {
-                    auto columnIntervalsWithIds = m_source->getIntervalsWithIdsInRange(
-                        TimeFrameIndex(0), 
-                        rowInterval.end, 
-                        destinationTimeFrame.get());
-                    if (columnIntervalsWithIds.empty()) {
-                        results.push_back(static_cast<T>(-1));
-                        entity_ids.push_back(EntityId(0));
-                        continue;
-                    }
-                    // Need to convert to their time coordinates
-                    auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervalsWithIds.back().interval.start));
-                    auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervalsWithIds.back().interval.end));
-                    auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
-                    auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
-
-                    if (source_start <= destination_end && destination_start <= source_end) {
-
-                        if (m_operation == IntervalOverlapOperation::AssignID_Start) {
-                            // Convert into row time frame
-                            auto source_start_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_start));
-                            results.push_back(static_cast<T>(source_start_index.getValue()));
-                            entity_ids.push_back(columnIntervalsWithIds.back().entity_id);
-                        } else if (m_operation == IntervalOverlapOperation::AssignID_End) {
-                            // Convert into row time frame
-                            auto source_end_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_end));
-                            results.push_back(static_cast<T>(source_end_index.getValue()));
-                            entity_ids.push_back(columnIntervalsWithIds.back().entity_id);
-                        } else {
-                            results.push_back(static_cast<T>(columnIntervalsWithIds.size() - 1));
-                            entity_ids.push_back(columnIntervalsWithIds.back().entity_id);
-                        }
-                    } else {
-                        results.push_back(static_cast<T>(-1));
-                        entity_ids.push_back(EntityId(0));
-                    }
+            std::vector<EntityId> entity_ids;
+            for (auto const & rowInterval: rowIntervals) {
+                auto columnIntervalsWithIds = m_source->getIntervalsWithIdsInRange(
+                        TimeFrameIndex(0),
+                        rowInterval.end,
+                        *destinationTimeFrame);
+                if (columnIntervalsWithIds.empty()) {
+                    results.push_back(static_cast<T>(-1));
+                    entity_ids.push_back(EntityId(0));
+                    continue;
                 }
+                // Need to convert to their time coordinates
+                auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervalsWithIds.back().interval.start));
+                auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervalsWithIds.back().interval.end));
+                auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
+                auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
 
-            return {results, entity_ids}; // std::vector<EntityId>
+                if (source_start <= destination_end && destination_start <= source_end) {
+
+                    if (m_operation == IntervalOverlapOperation::AssignID_Start) {
+                        // Convert into row time frame
+                        auto source_start_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_start));
+                        results.push_back(static_cast<T>(source_start_index.getValue()));
+                        entity_ids.push_back(columnIntervalsWithIds.back().entity_id);
+                    } else if (m_operation == IntervalOverlapOperation::AssignID_End) {
+                        // Convert into row time frame
+                        auto source_end_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_end));
+                        results.push_back(static_cast<T>(source_end_index.getValue()));
+                        entity_ids.push_back(columnIntervalsWithIds.back().entity_id);
+                    } else {
+                        results.push_back(static_cast<T>(columnIntervalsWithIds.size() - 1));
+                        entity_ids.push_back(columnIntervalsWithIds.back().entity_id);
+                    }
+                } else {
+                    results.push_back(static_cast<T>(-1));
+                    entity_ids.push_back(EntityId(0));
+                }
+            }
+
+            return {results, entity_ids};// std::vector<EntityId>
 
         } else if (m_operation == IntervalOverlapOperation::CountOverlaps) {
 
@@ -178,22 +212,22 @@ public:
 
             for (auto const & rowInterval: rowIntervals) {
                 auto columnIntervalsWithIds = m_source->getIntervalsWithIdsInRange(
-                    rowInterval.start, 
-                    rowInterval.end, 
-                    destinationTimeFrame.get());
+                        rowInterval.start,
+                        rowInterval.end,
+                        *destinationTimeFrame);
 
-                auto [count, overlappingEntityIds] = countOverlappingIntervalsWithIds(rowInterval, 
-                    columnIntervalsWithIds, 
-                    sourceTimeFrame.get(), 
-                    destinationTimeFrame.get());
+                auto [count, overlappingEntityIds] = countOverlappingIntervalsWithIds(rowInterval,
+                                                                                      columnIntervalsWithIds,
+                                                                                      sourceTimeFrame.get(),
+                                                                                      destinationTimeFrame.get());
 
                 results.push_back(static_cast<T>(count));
                 entity_ids.push_back(overlappingEntityIds);
             }
 
-            return {results, entity_ids}; // std::vector<std::vector<EntityId>>
+            return {results, entity_ids};// std::vector<std::vector<EntityId>>
         }
-        
+
         // This should never be reached, but provide a default return
         return {results, std::vector<EntityId>()};
     }
@@ -207,10 +241,10 @@ public:
             case IntervalOverlapOperation::AssignID:
             case IntervalOverlapOperation::AssignID_Start:
             case IntervalOverlapOperation::AssignID_End:
-                return EntityIdStructure::Simple;  // One EntityID per row (the assigned interval)
+                return EntityIdStructure::Simple;// One EntityID per row (the assigned interval)
                 break;
             case IntervalOverlapOperation::CountOverlaps:
-                return EntityIdStructure::Complex; // Multiple EntityIDs per row (all overlapping intervals)
+                return EntityIdStructure::Complex;// Multiple EntityIDs per row (all overlapping intervals)
                 break;
             default:
                 return EntityIdStructure::None;
@@ -218,7 +252,7 @@ public:
     }
 
 private:
-    std::shared_ptr<IIntervalSource> m_source;
+    std::shared_ptr<DigitalIntervalSeries> m_source;
     IntervalOverlapOperation m_operation;
     std::string m_sourceName;
 };

@@ -2,13 +2,13 @@
 
 #include "DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/ComputerRegistryTypes.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/core/TableViewBuilder.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/transforms/PCATransform.hpp"
 
@@ -379,7 +379,7 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
             auto intervals = interval_source->getIntervalsInRange(
                     TimeFrameIndex(0),
                     TimeFrameIndex(source_timeframe->getTotalFrameCount() - 1),
-                    source_timeframe.get());
+                    *source_timeframe);
 
             if (intervals.empty()) {
                 std::cerr << "TablePipeline: No intervals found in source: " << source_key << std::endl;
@@ -388,7 +388,6 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
 
             // Convert Interval objects to TimeFrameInterval objects
             std::vector<TimeFrameInterval> time_frame_intervals;
-            time_frame_intervals.reserve(intervals.size());
             for (auto const & interval: intervals) {
                 time_frame_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
             }

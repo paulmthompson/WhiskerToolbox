@@ -6,7 +6,6 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "utils/TableView/core/ExecutionPlan.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
 
 // Additional includes for extended testing
 #include "DataManager.hpp"
@@ -210,82 +209,6 @@ private:
     std::shared_ptr<DataManagerExtension> m_data_manager_extension;// Lazy-initialized
 };
 
-// Mock implementation of IIntervalSource for testing
-class MockIntervalSource : public IIntervalSource {
-public:
-    MockIntervalSource(std::string name,
-                       std::shared_ptr<TimeFrame> timeFrame,
-                       std::vector<Interval> intervals)
-        : m_name(std::move(name)),
-          m_timeFrame(std::move(timeFrame)),
-          m_intervals(std::move(intervals)) {}
-
-    [[nodiscard]] auto getName() const -> std::string const & override {
-        return m_name;
-    }
-
-    [[nodiscard]] auto getTimeFrame() const -> std::shared_ptr<TimeFrame> override {
-        return m_timeFrame;
-    }
-
-    [[nodiscard]] auto size() const -> size_t override {
-        return m_intervals.size();
-    }
-
-    auto getIntervals() -> std::vector<Interval> override {
-        return m_intervals;
-    }
-
-    auto getIntervalsInRange(TimeFrameIndex start, TimeFrameIndex end,
-                             TimeFrame const * target_timeFrame) -> std::vector<Interval> override {
-        std::vector<Interval> result;
-
-        // Convert TimeFrameIndex to time values for comparison
-        auto startTime = target_timeFrame->getTimeAtIndex(start);
-        auto endTime = target_timeFrame->getTimeAtIndex(end);
-
-        for (auto const & interval: m_intervals) {
-            // Convert interval indices to time values using our timeframe
-            auto intervalStartTime = m_timeFrame->getTimeAtIndex(TimeFrameIndex(interval.start));
-            auto intervalEndTime = m_timeFrame->getTimeAtIndex(TimeFrameIndex(interval.end));
-
-            // Check if intervals overlap in time
-            if (intervalStartTime <= endTime && startTime <= intervalEndTime) {
-                result.push_back(interval);
-            }
-        }
-
-        return result;
-    }
-
-    auto getIntervalsWithIdsInRange(TimeFrameIndex start, TimeFrameIndex end,
-                                    TimeFrame const * target_timeFrame) -> std::vector<IntervalWithId> override {
-        std::vector<IntervalWithId> result;
-
-        // Convert TimeFrameIndex to time values for comparison
-        auto startTime = target_timeFrame->getTimeAtIndex(start);
-        auto endTime = target_timeFrame->getTimeAtIndex(end);
-
-        for (auto const & interval: m_intervals) {
-            // Convert interval indices to time values using our timeframe
-            auto intervalStartTime = m_timeFrame->getTimeAtIndex(TimeFrameIndex(interval.start));
-            auto intervalEndTime = m_timeFrame->getTimeAtIndex(TimeFrameIndex(interval.end));
-
-            // Check if intervals overlap in time
-            if (intervalStartTime <= endTime && startTime <= intervalEndTime) {
-                result.push_back(IntervalWithId(interval, EntityId(0)));
-            }
-        }
-
-        return result;
-    }
-
-private:
-    std::string m_name;
-    std::shared_ptr<TimeFrame> m_timeFrame;
-    std::vector<Interval> m_intervals;
-};
-
 TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOverlapComputer]") {
 
     SECTION("AssignID operation - basic overlap detection") {
@@ -303,8 +226,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                 {7, 9} // Interval 2: time 7-9
         };
 
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestIntervals", colTimeFrame, columnIntervals);
+        auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
+        intervalSource->setTimeFrame(colTimeFrame);
 
         // Create row intervals (from execution plan)
         std::vector<TimeFrameInterval> rowIntervals = {
@@ -348,8 +271,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                 {6, 8} // Interval 3: time 6-8 (overlaps with interval 2)
         };
 
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestIntervals", colTimeFrame, columnIntervals);
+        auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
+        intervalSource->setTimeFrame(colTimeFrame);
 
         // Create row intervals
         std::vector<TimeFrameInterval> rowIntervals = {
@@ -386,8 +309,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
 
         // Create empty column intervals
         std::vector<Interval> columnIntervals;
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "EmptyIntervals", timeFrame, columnIntervals);
+        auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
+        intervalSource->setTimeFrame(timeFrame);
 
         // Create row intervals
         std::vector<TimeFrameInterval> rowIntervals = {
@@ -429,8 +352,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                 {1, 3}// Single interval: time 1-3
         };
 
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "SingleInterval", timeFrame, columnIntervals);
+        auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
+        intervalSource->setTimeFrame(timeFrame);
 
         // Create various row intervals
         std::vector<TimeFrameInterval> rowIntervals = {
@@ -467,8 +390,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
                 {1, 3} // Interval 1 (identical to interval 0)
         };
 
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "IdenticalIntervals", timeFrame, columnIntervals);
+        auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
+        intervalSource->setTimeFrame(timeFrame);
 
         // Create row interval that matches exactly
         std::vector<TimeFrameInterval> rowIntervals = {
@@ -497,8 +420,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Error Handling", "[IntervalOverlapC
 
         // Create column intervals
         std::vector<Interval> columnIntervals = {{1, 3}};
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestIntervals", timeFrame, columnIntervals);
+        auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
+        intervalSource->setTimeFrame(timeFrame);
 
         // Create execution plan with indices instead of intervals
         std::vector<TimeFrameIndex> indices = {TimeFrameIndex(0), TimeFrameIndex(1)};
@@ -523,8 +446,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Template Types", "[IntervalOverlapC
 
         // Create column intervals
         std::vector<Interval> columnIntervals = {{1, 3}};
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestIntervals", timeFrame, columnIntervals);
+        auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
+        intervalSource->setTimeFrame(timeFrame);
 
         // Create row intervals
         std::vector<TimeFrameInterval> rowIntervals = {
@@ -560,8 +483,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Dependency Tracking", "[IntervalOve
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         std::vector<Interval> columnIntervals = {{0, 1}};
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "TestSource", timeFrame, columnIntervals);
+        auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
+        intervalSource->setTimeFrame(timeFrame);
 
         // Create computer
         IntervalOverlapComputer<int64_t> computer(intervalSource,
@@ -591,8 +514,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Complex Scenarios", "[IntervalOverl
                 {8, 10}// Interval 3: time 40-50
         };
 
-        auto intervalSource = std::make_shared<MockIntervalSource>(
-                "ComplexIntervals", colTimeFrame, columnIntervals);
+        auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
+        intervalSource->setTimeFrame(colTimeFrame);
 
         // Create row intervals
         std::vector<TimeFrameInterval> rowIntervals = {
@@ -712,15 +635,15 @@ TEST_CASE_METHOD(IntervalOverlapTestFixture, "DM - TV - IntervalOverlapComputer 
         // Create row selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-                TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
-
-        REQUIRE(behavior_intervals.size() == 4);// 4 behavior periods
+                TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
 
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
             row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
         }
+
+        REQUIRE(row_intervals.size() == 4);
 
         auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
 
@@ -850,13 +773,13 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         REQUIRE(assign_id_info->outputType == typeid(int64_t));
         REQUIRE(assign_id_info->outputTypeName == "int64_t");
         REQUIRE(assign_id_info->requiredRowSelector == RowSelectorType::IntervalBased);
-        REQUIRE(assign_id_info->requiredSourceType == typeid(std::shared_ptr<IIntervalSource>));
+        REQUIRE(assign_id_info->requiredSourceType == typeid(std::shared_ptr<DigitalIntervalSeries>));
 
         REQUIRE(count_info->name == "Interval Overlap Count");
         REQUIRE(count_info->outputType == typeid(int64_t));
         REQUIRE(count_info->outputTypeName == "int64_t");
         REQUIRE(count_info->requiredRowSelector == RowSelectorType::IntervalBased);
-        REQUIRE(count_info->requiredSourceType == typeid(std::shared_ptr<IIntervalSource>));
+        REQUIRE(count_info->requiredSourceType == typeid(std::shared_ptr<DigitalIntervalSeries>));
     }
 
     SECTION("Create IntervalOverlapComputer via ComputerRegistry") {
@@ -1324,15 +1247,15 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         // Create row selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-                TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
-
-        REQUIRE(behavior_intervals.size() == 4);// 4 behavior periods
+                TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
 
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
             row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
         }
+
+        REQUIRE(row_intervals.size() == 4);
 
         auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
 
@@ -1394,7 +1317,7 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         // Create row selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-                TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+                TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
 
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
@@ -1462,7 +1385,7 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         // Create row selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-                TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+                TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
 
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
@@ -1538,14 +1461,12 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         // Get original source EntityIDs
         auto stimulus_time_frame = dm.getTime(TimeKey("stimulus_time"));
         auto original_stimulus_intervals = stimulus_source->getIntervalsInRange(
-                TimeFrameIndex(0), TimeFrameIndex(20), stimulus_time_frame.get());
-
-        std::cout << "Source data has " << original_stimulus_intervals.size() << " stimulus intervals" << std::endl;
+                TimeFrameIndex(0), TimeFrameIndex(20), *stimulus_time_frame);
 
         // Create row selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-                TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+                TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
 
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {

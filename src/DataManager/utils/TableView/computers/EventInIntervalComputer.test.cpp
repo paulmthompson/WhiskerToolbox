@@ -13,7 +13,6 @@
 #include "utils/TableView/core/TableView.h"
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/pipeline/TablePipeline.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -627,16 +626,16 @@ TEST_CASE_METHOD(EventInIntervalTestFixture, "DM - TV - EventInIntervalComputer 
         
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
-        
-        REQUIRE(behavior_intervals.size() == 4); // 4 behavior periods
-        
+            TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
+         
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (const auto& interval : behavior_intervals) {
             row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
         }
         
+        REQUIRE(row_intervals.size() == 4);
+
         auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
         
         // Create TableView builder
@@ -1452,15 +1451,16 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         // Get the behavior intervals to use as row selector
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
-        
-        REQUIRE(behavior_intervals.size() == 4); // 4 behavior periods
+            TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
+    
         
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (const auto& interval : behavior_intervals) {
             row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
         }
+
+        REQUIRE(row_intervals.size() == 4);
         
         auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
         
@@ -1549,7 +1549,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         // Create row selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-            TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+            TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
         
         std::vector<TimeFrameInterval> row_intervals;
         for (const auto& interval : behavior_intervals) {

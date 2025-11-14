@@ -19,7 +19,6 @@
 #include "DataManager/utils/TableView/core/ExecutionPlan.h"
 #include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/utils/TableView/core/TableViewBuilder.h"
-#include "DataManager/utils/TableView/interfaces/IIntervalSource.h"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 
 // Analog data
@@ -107,7 +106,7 @@ protected:
         // Create row selector from behavior intervals
         auto behavior_time_frame = m_data_manager->getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-                TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+                TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
 
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
@@ -202,7 +201,7 @@ protected:
 
         auto behavior_time_frame = m_data_manager->getTime(TimeKey("behavior_time"));
         auto behavior_intervals = behavior_source->getIntervalsInRange(
-                TimeFrameIndex(0), TimeFrameIndex(100), behavior_time_frame.get());
+                TimeFrameIndex(0), TimeFrameIndex(100), *behavior_time_frame);
 
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {

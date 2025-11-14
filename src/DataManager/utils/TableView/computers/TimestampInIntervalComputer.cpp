@@ -1,6 +1,7 @@
 #include "TimestampInIntervalComputer.h"
 
 #include "TimeFrame/interval_data.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include <stdexcept>
 
@@ -33,7 +34,7 @@ std::pair<std::vector<bool>, ColumnEntityIds> TimestampInIntervalComputer::compu
     // Query intervals per timestamp using adapter timeframe conversion
     for (size_t i = 0; i < times.size(); ++i) {
         TimeFrameIndex t = times[i];
-        auto intervals = m_source->getIntervalsInRange(t, t, tf.get());
+        auto intervals = m_source->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(t, t, *tf);
         bool inside = false;
         for (auto const & iv : intervals) {
             if (is_contained(iv, t.getValue())) { inside = true; break; }

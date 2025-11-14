@@ -2,12 +2,11 @@
 
 #include "DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "utils/TableView/adapters/AnalogDataAdapter.h"
-#include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
 
 
 #include <iostream>
@@ -71,19 +70,17 @@ std::shared_ptr<DigitalEventSeries> DataManagerExtension::createDigitalEventSeri
     }
 }
 
-std::shared_ptr<IIntervalSource> DataManagerExtension::createDigitalIntervalDataAdapter(std::string const & name) {
+std::shared_ptr<DigitalIntervalSeries> DataManagerExtension::createDigitalIntervalSeries(std::string const & name) {
     try {
         auto digitalIntervalSeries = m_dataManager.getData<DigitalIntervalSeries>(name);
         if (!digitalIntervalSeries) {
             return nullptr;
         }
 
-        auto timeFrame_key = m_dataManager.getTimeKey(name);
-        auto timeFrame = m_dataManager.getTime(timeFrame_key);
-
-        return std::make_shared<DigitalIntervalDataAdapter>(digitalIntervalSeries, timeFrame, name);
+        // DigitalIntervalSeries already has TimeFrame and EntityID information, no adapter needed
+        return digitalIntervalSeries;
     } catch (std::exception const & e) {
-        std::cerr << "Error creating DigitalIntervalDataAdapter for '" << name << "': " << e.what() << std::endl;
+        std::cerr << "Error retrieving DigitalIntervalSeries for '" << name << "': " << e.what() << std::endl;
         return nullptr;
     }
 }
@@ -134,15 +131,15 @@ std::shared_ptr<DigitalEventSeries> DataManagerExtension::getEventSource(std::st
     return eventSource;
 }
 
-std::shared_ptr<IIntervalSource> DataManagerExtension::getIntervalSource(std::string const & name) {
+std::shared_ptr<DigitalIntervalSeries> DataManagerExtension::getIntervalSource(std::string const & name) {
     // Check cache first
     auto it = m_intervalSourceCache.find(name);
     if (it != m_intervalSourceCache.end()) {
         return it->second;
     }
 
-    // Create a new interval source adapter
-    auto intervalSource = createDigitalIntervalDataAdapter(name);
+    // Create/retrieve digital interval series
+    auto intervalSource = createDigitalIntervalSeries(name);
     if (intervalSource) {
         m_intervalSourceCache[name] = intervalSource;
     } else {

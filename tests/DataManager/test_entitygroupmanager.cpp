@@ -11,7 +11,6 @@
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/TableRegistry.hpp"
-#include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
 #include "utils/TableView/computers/LineSamplingMultiComputer.h"
 #include "utils/TableView/computers/IntervalOverlapComputer.h"
 #include "utils/TableView/core/TableViewBuilder.h"

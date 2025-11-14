@@ -5,7 +5,6 @@
 #include "AnalogSliceGathererComputer.h"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/IIntervalSource.h"
 #include "TimeFrame/TimeFrame.hpp"
 
 // Additional includes for extended testing
@@ -500,15 +499,15 @@ TEST_CASE_METHOD(AnalogSliceGathererTestFixture, "DM - TV - AnalogSliceGathererC
         REQUIRE(behavior_interval_source != nullptr);
         
         auto behavior_intervals = behavior_interval_source->getIntervalsInRange(
-            TimeFrameIndex(0), TimeFrameIndex(50), behavior_time_frame.get());
-        
-        REQUIRE(behavior_intervals.size() == 3); // 3 behavior periods
+            TimeFrameIndex(0), TimeFrameIndex(50), *behavior_time_frame);
         
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (const auto& interval : behavior_intervals) {
             row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
         }
+
+        REQUIRE(row_intervals.size() == 3);
         
         auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
         
