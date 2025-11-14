@@ -121,7 +121,6 @@ private slots:
     void openDataManager();
     void openGroupManagement();
     void openVideoExportWidget();
-    void openSpreadsheetExportWidget();
     void openDataTransforms();
     void openTerminalWidget();
     void openAnalysisDashboard();

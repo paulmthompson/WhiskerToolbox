@@ -6,10 +6,6 @@ set(IO_WIDGET_SOURCES
         Scaling_Widget/Scaling_Widget.hpp
         Scaling_Widget/Scaling_Widget.ui
 
-        DataAggregation/DataAggregationExporter_Widget.cpp
-        DataAggregation/DataAggregationExporter_Widget.hpp
-        DataAggregation/DataAggregationExporter_Widget.ui
-
         AnalogTimeSeries/Analog_Loader_Widget.hpp
         AnalogTimeSeries/Analog_Loader_Widget.cpp
         AnalogTimeSeries/Analog_Loader_Widget.ui
