@@ -41,7 +41,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
     }
 
     float const threshold = static_cast<float>(thresholdParams.thresholdValue);
-    std::vector<float> events;
+    std::vector<TimeFrameIndex> events;
 
     auto const & values = analog_time_series->getAnalogTimeSeries();
     auto const & time_storage = analog_time_series->getTimeStorage();
@@ -86,7 +86,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
 
             // Check if the event is not too close to the last one
             if (static_cast<double>(timestamp.getValue()) - last_ts >= thresholdParams.lockoutTime) {
-                events.push_back(static_cast<float>(timestamp.getValue()));
+                events.push_back(timestamp);
                 last_ts = static_cast<double>(timestamp.getValue());
             }
         }

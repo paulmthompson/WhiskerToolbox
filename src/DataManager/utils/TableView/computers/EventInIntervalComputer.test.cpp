@@ -116,16 +116,16 @@ private:
         // Note: spike_time timeframe has 51 values [0, 2, 4, 6, ..., 100]
         // Events store INDICES into this timeframe, not absolute time values
         // So spike event "5" means timeframe[5] = 10 (absolute time)
-        std::vector<float> neuron1_spikes = {
+        std::vector<TimeFrameIndex> neuron1_spikes = {
             1.0f,   // index 1 → time 2
             6.0f,   // index 6 → time 12
             7.0f,   // index 7 → time 14
-            11.0f,  // index 11 → time 22
-            16.0f,  // index 16 → time 32
-            26.0f,  // index 26 → time 52
-            27.0f,  // index 27 → time 54
-            34.0f,  // index 34 → time 68
-            41.0f,  // index 41 → time 82
+            TimeFrameIndex(11),  // index 11 → time 22
+            TimeFrameIndex(16),  // index 16 → time 32
+            TimeFrameIndex(26),  // index 26 → time 52
+            TimeFrameIndex(27),  // index 27 → time 54
+            TimeFrameIndex(34),  // index 34 → time 68
+            TimeFrameIndex(41),  // index 41 → time 82
             45.0f   // index 45 → time 90
         };
         auto neuron1_series = std::make_shared<DigitalEventSeries>(neuron1_spikes);
@@ -137,7 +137,7 @@ private:
         
         // Create spike train for Neuron2 - dense spikes
         // All values are indices into the spike timeframe
-        std::vector<float> neuron2_spikes = {
+        std::vector<TimeFrameIndex> neuron2_spikes = {
             0.0f,   // index 0 → time 0
             1.0f,   // index 1 → time 2
             2.0f,   // index 2 → time 4
@@ -145,19 +145,19 @@ private:
             6.0f,   // index 6 → time 12
             8.0f,   // index 8 → time 16
             9.0f,   // index 9 → time 18
-            15.0f,  // index 15 → time 30
-            16.0f,  // index 16 → time 32
-            18.0f,  // index 18 → time 36
-            25.0f,  // index 25 → time 50
-            26.0f,  // index 26 → time 52
-            28.0f,  // index 28 → time 56
-            29.0f,  // index 29 → time 58
-            33.0f,  // index 33 → time 66
-            34.0f,  // index 34 → time 68
-            40.0f,  // index 40 → time 80
-            41.0f,  // index 41 → time 82
-            42.0f,  // index 42 → time 84
-            45.0f,  // index 45 → time 90
+            TimeFrameIndex(15),  // index 15 → time 30
+            TimeFrameIndex(16),  // index 16 → time 32
+            TimeFrameIndex(18),  // index 18 → time 36
+            TimeFrameIndex(25),  // index 25 → time 50
+            TimeFrameIndex(26),  // index 26 → time 52
+            TimeFrameIndex(28),  // index 28 → time 56
+            TimeFrameIndex(29),  // index 29 → time 58
+            TimeFrameIndex(33),  // index 33 → time 66
+            TimeFrameIndex(34),  // index 34 → time 68
+            TimeFrameIndex(40),  // index 40 → time 80
+            TimeFrameIndex(41),  // index 41 → time 82
+            TimeFrameIndex(42),  // index 42 → time 84
+            TimeFrameIndex(45),  // index 45 → time 90
             46.0f   // index 46 → time 92
         };
         auto neuron2_series = std::make_shared<DigitalEventSeries>(neuron2_spikes);

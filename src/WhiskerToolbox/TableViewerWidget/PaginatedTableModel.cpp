@@ -169,7 +169,7 @@ std::unique_ptr<IRowSelector> PaginatedTableModel::createRowSelectorFromSource(Q
             // Convert events to TimeFrameIndex
             std::vector<TimeFrameIndex> timestamps;
             for (auto const & event: events) {
-                timestamps.push_back(TimeFrameIndex(static_cast<int64_t>(event)));
+                timestamps.push_back(event);
             }
 
             return std::make_unique<TimestampSelector>(std::move(timestamps), timeframe_obj);
