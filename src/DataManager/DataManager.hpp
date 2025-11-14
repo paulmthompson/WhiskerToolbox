@@ -252,8 +252,11 @@ public:
 
     template<typename T>
     std::shared_ptr<T> getData(std::string const & key) {
-        if (_data.find(key) != _data.end()) {
-            return std::get<std::shared_ptr<T>>(_data[key]);
+        auto it = _data.find(key);
+        if (it != _data.end()) {
+            if (std::holds_alternative<std::shared_ptr<T>>(it->second)) {
+                return std::get<std::shared_ptr<T>>(it->second);
+            }
         }
         return nullptr;
     }
