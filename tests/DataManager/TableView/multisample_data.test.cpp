@@ -8,7 +8,6 @@
 #include "utils/TableView/core/TableView.h"
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/adapters/DataManagerExtension.h"
-#include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/computers/LineSamplingMultiComputer.h"
 #include "CoreGeometry/lines.hpp"
@@ -124,35 +123,6 @@ private:
         m_dataManager.setData<LineData>("ConflictMultiSampleLines", conflictMultiSampleLines, TimeKey("test_time"));
     }
 };
-
-TEST_CASE_METHOD(MultiSampleLineDataFixture, "LineDataAdapter hasMultiSamples detection", "[LineDataAdapter][MultiSample][Detection]") {
-    auto& dm = getDataManager();
-    auto timeFrame = dm.getTime(TimeKey("test_time"));
-    
-    // Test single-sample line data
-    auto singleSampleData = dm.getData<LineData>("SingleSampleLines");
-    auto singleAdapter = std::make_shared<LineDataAdapter>(singleSampleData, timeFrame, "SingleSampleLines");
-    
-    SECTION("Single-sample data should not have multi-samples") {
-        REQUIRE_FALSE(singleAdapter->hasMultiSamples());
-    }
-    
-    // Test multi-sample line data
-    auto multiSampleData = dm.getData<LineData>("MultiSampleLines");
-    auto multiAdapter = std::make_shared<LineDataAdapter>(multiSampleData, timeFrame, "MultiSampleLines");
-    
-    SECTION("Multi-sample data should have multi-samples") {
-        REQUIRE(multiAdapter->hasMultiSamples());
-    }
-    
-    // Test conflict multi-sample line data
-    auto conflictData = dm.getData<LineData>("ConflictMultiSampleLines");
-    auto conflictAdapter = std::make_shared<LineDataAdapter>(conflictData, timeFrame, "ConflictMultiSampleLines");
-    
-    SECTION("Conflict data should have multi-samples") {
-        REQUIRE(conflictAdapter->hasMultiSamples());
-    }
-}
 
 TEST_CASE_METHOD(MultiSampleLineDataFixture, "TableViewBuilder allows single multi-sample source", "[TableViewBuilder][MultiSample][SingleSource]") {
     auto& dm = getDataManager();

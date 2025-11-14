@@ -1,9 +1,8 @@
 #ifndef LINE_TIMESTAMP_COMPUTER_H
 #define LINE_TIMESTAMP_COMPUTER_H
 
+#include "Lines/Line_Data.hpp"
 #include "utils/TableView/interfaces/IColumnComputer.h"
-#include "utils/TableView/interfaces/IEntityProvider.h"
-#include "utils/TableView/interfaces/ILineSource.h"
 
 #include <memory>
 #include <string>
@@ -11,7 +10,7 @@
 /**
  * @brief Computer that extracts timestamps from line data.
  *
- * Source type: ILineSource
+ * Source type: LineData
  * Selector type: Timestamp
  * Output type: int64_t
  * 
@@ -21,7 +20,7 @@
  */
 class LineTimestampComputer : public IColumnComputer<int64_t> {
 public:
-    LineTimestampComputer(std::shared_ptr<ILineSource> lineSource,
+    LineTimestampComputer(std::shared_ptr<LineData> lineSource,
                           std::string sourceName,
                           std::shared_ptr<TimeFrame> sourceTimeFrame)
         : m_lineSource(std::move(lineSource)),
@@ -64,7 +63,8 @@ public:
 
         for (size_t r = 0; r < rowCount; ++r) {
             TimeFrameIndex const tfIndex = indices[r];
-            auto const this_time_entityIds = m_lineSource->getEntityIdsAtTime(tfIndex, targetTF);
+            auto entity_ids_view = m_lineSource->getEntityIdsAtTime(tfIndex, *targetTF);
+            std::vector<EntityId> this_time_entityIds(entity_ids_view.begin(), entity_ids_view.end());
 
             // Check if lines exist at this timestamp
             if (this_time_entityIds.empty()) {
@@ -102,7 +102,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ILineSource> m_lineSource;
+    std::shared_ptr<LineData> m_lineSource;
     std::string m_sourceName;
     std::shared_ptr<TimeFrame> m_sourceTimeFrame;
 };

@@ -3,7 +3,6 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
-#include "adapters/LineDataAdapter.h"
 #include "computers/AnalogSliceGathererComputer.h"
 #include "computers/AnalogTimestampOffsetsMultiComputer.h"
 #include "computers/EventInIntervalComputer.h"
@@ -15,7 +14,6 @@
 #include "computers/LineTimestampComputer.h"
 #include "computers/TimestampInIntervalComputer.h"
 #include "computers/TimestampValueComputer.h"
-#include "interfaces/ILineSource.h"
 
 #include <iostream>
 #include <optional>
@@ -641,7 +639,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(double),
                           "double",
                           RowSelectorType::Timestamp,
-                          typeid(std::shared_ptr<IAnalogSource>),
+                          typeid(std::shared_ptr<LineData>),
                           std::move(paramDescriptors));
         info.isMultiOutput = true;
         info.makeOutputSuffixes = [](std::map<std::string, std::string> const & parameters) {
@@ -743,7 +741,7 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(double),
                           "double",
                           RowSelectorType::Timestamp,
-                          typeid(std::shared_ptr<ILineSource>),
+                          typeid(std::shared_ptr<LineData>),
                           std::move(paramDescriptors));
         info.isMultiOutput = true;
         info.makeOutputSuffixes = [](std::map<std::string, std::string> const & parameters) {
@@ -766,13 +764,19 @@ void ComputerRegistry::registerBuiltInComputers() {
 
         MultiComputerFactory factory = [](DataSourceVariant const & source,
                                           std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
-            if (auto lineSrc = std::get_if<std::shared_ptr<ILineSource>>(&source)) {
+            if (auto lineSrc = std::get_if<std::shared_ptr<LineData>>(&source)) {
                 int segments = 2;
                 auto it = parameters.find("segments");
                 if (it != parameters.end()) {
                     segments = std::max(1, std::stoi(it->second));
                 }
-                auto comp = std::make_unique<LineSamplingMultiComputer>(*lineSrc, (*lineSrc)->getName(), (*lineSrc)->getTimeFrame(), segments);
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
+                auto comp = std::make_unique<LineSamplingMultiComputer>(*lineSrc, source_name, (*lineSrc)->getTimeFrame(), segments);
                 return std::make_unique<MultiComputerWrapper<double>>(std::move(comp));
             }
             return nullptr;
@@ -788,13 +792,19 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(int64_t),
                           "int64_t",
                           RowSelectorType::Timestamp,
-                          typeid(std::shared_ptr<ILineSource>));
+                          typeid(std::shared_ptr<LineData>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto lineSrc = std::get_if<std::shared_ptr<ILineSource>>(&source)) {
-                auto computer = std::make_unique<LineTimestampComputer>(*lineSrc, (*lineSrc)->getName(), (*lineSrc)->getTimeFrame());
-                return std::make_unique<ComputerWrapper<int64_t>>(std::move(computer));
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto lineSrc = std::get_if<std::shared_ptr<LineData>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
+                auto comp = std::make_unique<LineTimestampComputer>(*lineSrc, source_name, (*lineSrc)->getTimeFrame());
+                return std::make_unique<ComputerWrapper<int64_t>>(std::move(comp));
             }
             return nullptr;
         };
@@ -809,13 +819,19 @@ void ComputerRegistry::registerBuiltInComputers() {
                           typeid(float),
                           "float",
                           RowSelectorType::Timestamp,
-                          typeid(std::shared_ptr<ILineSource>));
+                          typeid(std::shared_ptr<LineData>));
 
         ComputerFactory factory = [](DataSourceVariant const & source,
-                                     std::map<std::string, std::string> const &) -> std::unique_ptr<IComputerBase> {
-            if (auto lineSrc = std::get_if<std::shared_ptr<ILineSource>>(&source)) {
-                auto computer = std::make_unique<LineLengthComputer>(*lineSrc, (*lineSrc)->getName(), (*lineSrc)->getTimeFrame());
-                return std::make_unique<ComputerWrapper<float>>(std::move(computer));
+                                     std::map<std::string, std::string> const & parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto lineSrc = std::get_if<std::shared_ptr<LineData>>(&source)) {
+                // Extract source name from parameters (passed by TablePipeline)
+                std::string source_name;
+                auto name_it = parameters.find("__source_name__");
+                if (name_it != parameters.end()) {
+                    source_name = name_it->second;
+                }
+                auto comp = std::make_unique<LineLengthComputer>(*lineSrc, source_name, (*lineSrc)->getTimeFrame());
+                return std::make_unique<ComputerWrapper<float>>(std::move(comp));
             }
             return nullptr;
         };
@@ -966,26 +982,8 @@ void ComputerRegistry::registerBuiltInAdapters() {
     // Note: PointComponentAdapter has been removed.
     // Point X/Y component extraction should now be done via dedicated computers.
 
-    // LineDataAdapter - LineData -> ILineSource
-    {
-        AdapterInfo info("Line Data",
-                         "Expose LineData as ILineSource",
-                         typeid(LineData),
-                         typeid(std::shared_ptr<ILineSource>));
-
-        AdapterFactory factory = [](std::shared_ptr<void> const & sourceData,
-                                    std::shared_ptr<TimeFrame> const & timeFrame,
-                                    std::string const & name,
-                                    std::map<std::string, std::string> const &) -> DataSourceVariant {
-            if (auto ld = std::static_pointer_cast<LineData>(sourceData)) {
-                auto adapter = std::make_shared<LineDataAdapter>(ld, timeFrame, name);
-                return DataSourceVariant{std::static_pointer_cast<ILineSource>(adapter)};
-            }
-            return DataSourceVariant{};
-        };
-
-        registerAdapter(std::move(info), std::move(factory));
-    }
+    // Note: LineDataAdapter has been removed.
+    // LineData is now used directly without an adapter layer.
 
     //std::cout << "Finished registering built-in adapters." << std::endl;
 }

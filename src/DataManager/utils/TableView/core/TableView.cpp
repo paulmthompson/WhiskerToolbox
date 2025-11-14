@@ -3,9 +3,9 @@
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/columns/Column.h"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "Lines/Line_Data.hpp"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
-#include "utils/TableView/interfaces/ILineSource.h"
 #include "Points/Point_Data.hpp"
 #include "utils/TableView/interfaces/IRowSelector.h"
 
@@ -116,7 +116,7 @@ ExecutionPlan makePlanFromEvent(std::shared_ptr<DigitalEventSeries> const & /*ev
 }
 
 // Line source -> plan (needs columns and dm for entity expansion decision + ids)
-ExecutionPlan makePlanFromLine(std::shared_ptr<ILineSource> const & lineSource,
+ExecutionPlan makePlanFromLine(std::shared_ptr<LineData> const & lineSource,
                                IRowSelector const & selector,
                                std::vector<std::shared_ptr<IColumn>> const & columns,
                                DataManagerExtension & dm) {
@@ -152,7 +152,8 @@ ExecutionPlan makePlanFromLine(std::shared_ptr<ILineSource> const & lineSource,
 
             size_t cursor = 0;
             for (auto const & t : timestamps) {
-                auto const count = lineSource->getEntityCountAt(t);
+                auto lines_view = lineSource->getAtTime(t, *timeFrame);
+                auto const count = std::ranges::distance(lines_view);
                 if (count == 0) {
                     if (anyNonLineColumn) {
                         spans.emplace(t, std::make_pair(cursor, static_cast<size_t>(1)));
@@ -170,7 +171,9 @@ ExecutionPlan makePlanFromLine(std::shared_ptr<ILineSource> const & lineSource,
 
             plan.setRows(std::move(rows));
             plan.setTimeToRowSpan(std::move(spans));
-            plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
+            // LineData doesn't store its name, so we'd need to pass it separately
+            // For now, use empty string or a placeholder
+            plan.setSourceId(0); // Will be set by caller if needed
             plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
             return plan;
         },
@@ -184,7 +187,7 @@ ExecutionPlan makePlanFromLine(std::shared_ptr<ILineSource> const & lineSource,
             }
             std::cout << "WARNING: IndexSelector is not supported for line data" << std::endl;
             auto plan = ExecutionPlan(std::move(timeFrameIndices), nullptr);
-            plan.setSourceId(DataSourceNameInterner::instance().intern(lineSource->getName()));
+            plan.setSourceId(0); // Will be set by caller if needed
             plan.setSourceKind(ExecutionPlan::DataSourceKind::Line);
             return plan;
         }
@@ -444,7 +447,7 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
                 [&](std::shared_ptr<IIntervalSource> const & i) {
                     return makePlanFromInterval(i, *m_rowSelector);
                 },
-                [&](std::shared_ptr<ILineSource> const & l) {
+                [&](std::shared_ptr<LineData> const & l) {
                     return makePlanFromLine(l, *m_rowSelector, m_columns, *m_dataManager);
                 },
                 [&](std::shared_ptr<PointData> const & p) {

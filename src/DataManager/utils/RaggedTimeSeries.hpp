@@ -674,6 +674,21 @@ public:
         return it->second;
     }
 
+    /**
+     * @brief Get a zero-copy view of all data entries at a specific time.
+     * @param time The time to get entries for.
+     * @return A std::span over the entries. If time is not found,
+     * returns an empty span.
+     */
+    [[nodiscard]] std::span<DataEntry<TData> const> getEntriesAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
+        
+        TimeFrameIndex const converted_time = convert_time_index(time,
+                                                                 &source_timeframe,
+                                                                 _time_frame.get());
+        return getEntriesAtTime(converted_time);
+    }
+
+
     [[nodiscard]] auto getAtTime(TimeFrameIndex time) const {
         return getEntriesAtTime(time) | std::views::transform(&DataEntry<TData>::data);
     }

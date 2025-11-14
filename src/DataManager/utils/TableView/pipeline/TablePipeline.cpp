@@ -557,7 +557,11 @@ std::unique_ptr<IComputerBase> TablePipeline::createColumnComputer(nlohmann::jso
 
     // Resolve data source
     DataSourceVariant data_source;
+    std::string data_source_name;
     if (column_json.contains("data_source")) {
+        if (column_json["data_source"].is_string()) {
+            data_source_name = column_json["data_source"];
+        }
         data_source = resolveDataSource(column_json["data_source"]);
     }
 
@@ -571,6 +575,11 @@ std::unique_ptr<IComputerBase> TablePipeline::createColumnComputer(nlohmann::jso
                 parameters[key] = value.dump();
             }
         }
+    }
+    
+    // Add data source name as a special parameter for factories that need it
+    if (!data_source_name.empty()) {
+        parameters["__source_name__"] = data_source_name;
     }
 
     // Check if this is a multi-output computer

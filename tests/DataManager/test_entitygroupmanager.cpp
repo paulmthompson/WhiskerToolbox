@@ -11,12 +11,10 @@
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/TableRegistry.hpp"
-#include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
 #include "utils/TableView/computers/LineSamplingMultiComputer.h"
 #include "utils/TableView/computers/IntervalOverlapComputer.h"
 #include "utils/TableView/core/TableViewBuilder.h"
-#include "utils/TableView/interfaces/ILineSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/transforms/PCATransform.hpp"
 
@@ -837,13 +835,10 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
                 TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
         auto row_selector = std::make_unique<TimestampSelector>(timestamps, timeFrame);
 
-        // Create LineDataAdapter
-        auto line_adapter = std::make_shared<LineDataAdapter>(line_data, timeFrame, "test_lines");
-
         // Create LineSamplingMultiComputer - this will provide EntityIDs from LineData
         int segments = 3;// This creates 8 columns: x@0.000, y@0.000, x@0.333, y@0.333, x@0.667, y@0.667, x@1.000, y@1.000
         auto line_computer = std::make_unique<LineSamplingMultiComputer>(
-                std::static_pointer_cast<ILineSource>(line_adapter),
+                line_data,
                 "test_lines",
                 timeFrame,
                 segments);

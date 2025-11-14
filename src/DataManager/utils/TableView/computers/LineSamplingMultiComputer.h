@@ -2,9 +2,9 @@
 #define LINE_SAMPLING_MULTI_COMPUTER_H
 
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
-#include "utils/TableView/interfaces/ILineSource.h"
-#include "utils/TableView/interfaces/IEntityProvider.h"
+#include "Lines/Line_Data.hpp"
 #include "CoreGeometry/line_geometry.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <memory>
 #include <string>
@@ -13,7 +13,7 @@
 /**
  * @brief Multi-output computer that samples x and y at equally spaced positions along a line.
  *
- * Source type: ILineSource
+ * Source type: LineData
  * Selector type: Timestamp
  * Output type: double
  * 
@@ -24,7 +24,7 @@
  */
 class LineSamplingMultiComputer : public IMultiColumnComputer<double> {
 public:
-    LineSamplingMultiComputer(std::shared_ptr<ILineSource> lineSource,
+    LineSamplingMultiComputer(std::shared_ptr<LineData> lineSource,
                               std::string sourceName,
                               std::shared_ptr<TimeFrame> sourceTimeFrame,
                               int segments)
@@ -79,33 +79,30 @@ public:
         auto targetTF = plan.getTimeFrame().get();
 
         std::vector<EntityId> entityIds;
+        entityIds.reserve(rowCount);
 
         for (size_t r = 0; r < rowCount; ++r) {
             TimeFrameIndex const tfIndex = indices[r];
-            auto const this_time_entityIds = m_lineSource->getEntityIdsAtTime(tfIndex, targetTF);
-            // Prefer direct entity access if entity index is present
-            Line2D const* linePtr = nullptr;
-            if (entityIdx[r].has_value()) {
-                linePtr = m_lineSource->getLineAt(tfIndex, *entityIdx[r]);
-                entityIds.push_back(this_time_entityIds[*entityIdx[r]]);
-            }
-            Line2D lineFallback;
-            if (!linePtr) {
-                auto lines = m_lineSource->getLinesInRange(tfIndex, tfIndex, targetTF);
-                if (lines.empty()) {
-                    for (int p = 0; p < positions; ++p) {
-                        results[static_cast<size_t>(2 * p)][r] = 0.0;
-                        results[static_cast<size_t>(2 * p + 1)][r] = 0.0;
-                    }
-                    entityIds.push_back(EntityId(0));
-                    continue;
+            
+            // Get all entries (Line2D + EntityId pairs) at this time
+            auto entries = m_lineSource->getEntriesAtTime(tfIndex, *targetTF);
+            
+            if (entries.empty()) {
+                // No lines at this timestamp - fill with zeros
+                for (int p = 0; p < positions; ++p) {
+                    results[static_cast<size_t>(2 * p)][r] = 0.0;
+                    results[static_cast<size_t>(2 * p + 1)][r] = 0.0;
                 }
-                lineFallback = lines.front();
-                linePtr = &lineFallback;
-                entityIds.push_back(this_time_entityIds[0]);
+                entityIds.push_back(EntityId(0));
+                continue;
             }
 
-            Line2D const & line = *linePtr;
+            // Select the appropriate entry based on entity index
+            int const entry_index = entityIdx[r].value_or(0);
+            auto const & entry = entries[static_cast<size_t>(std::min(entry_index, static_cast<int>(entries.size()) - 1))];
+            
+            Line2D const & line = entry.data;
+            entityIds.push_back(entry.entity_id);
             for (int p = 0; p < positions; ++p) {
                 auto optPoint = point_at_fractional_position(line, fractions[static_cast<size_t>(p)], true);
                 if (optPoint.has_value()) {
@@ -149,7 +146,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ILineSource> m_lineSource;
+    std::shared_ptr<LineData> m_lineSource;
     std::string m_sourceName;
     std::shared_ptr<TimeFrame> m_sourceTimeFrame;
     int m_segments;

@@ -16,12 +16,10 @@
 #include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
-#include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/computers/LineSamplingMultiComputer.h"
 #include "utils/TableView/core/TableView.h"
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/ILineSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/pipeline/TablePipeline.hpp"
 
@@ -39,10 +37,10 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer basic integration", "[LineSamplin
     // Create a TimeFrame with 3 timestamps
     std::vector<int> timeValues = {0, 1, 2};
     auto tf = std::make_shared<TimeFrame>(timeValues);
+    dm.setTime(TimeKey("test_time"), tf);
 
     // Create LineData and add one simple line at each timestamp
     auto lineData = std::make_shared<LineData>();
-    lineData->setTimeFrame(tf);
 
     // simple polyline: (0,0) -> (10,0)
     {
@@ -53,12 +51,7 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer basic integration", "[LineSamplin
         lineData->emplaceAtTime(TimeFrameIndex(2), xs, ys);
     }
 
-    lineData->setIdentityContext("TestLines", dm.getEntityRegistry());
-    lineData->rebuildAllEntityIds();
-
-    // Install into DataManager under a key (emulate registry storage)
-    // The DataManager API in this project typically uses typed storage;
-    // if there is no direct setter, we can directly adapt via LineDataAdapter below.
+    dm.setData<LineData>("TestLines", lineData, TimeKey("test_time"));
 
     // Create DataManagerExtension
     DataManagerExtension dme(dm);
@@ -67,13 +60,10 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer basic integration", "[LineSamplin
     std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2)};
     auto rowSelector = std::make_unique<TimestampSelector>(timestamps, tf);
 
-    // Build LineDataAdapter directly (bypassing DataManager registry) and wrap as ILineSource
-    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"TestLines"});
-
     // Directly construct the multi-output computer (interface-level test)
     int segments = 2;// positions: 0.0, 0.5, 1.0 => 6 outputs (x,y per position)
     auto multi = std::make_unique<LineSamplingMultiComputer>(
-        std::static_pointer_cast<ILineSource>(lineAdapter),
+        lineData,
         std::string{"TestLines"},
         tf,
             segments);
@@ -138,42 +128,36 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer can be created via registry", "[L
 
     std::vector<int> timeValues = {0, 1};
     auto tf = std::make_shared<TimeFrame>(timeValues);
+    dm.setTime(TimeKey("test_time"), tf);
 
     auto lineData = std::make_shared<LineData>();
-    lineData->setTimeFrame(tf);
     std::vector<float> xs = {0.0f, 10.0f};
     std::vector<float> ys = {0.0f, 0.0f};
     lineData->emplaceAtTime(TimeFrameIndex(0), xs, ys);
     lineData->emplaceAtTime(TimeFrameIndex(1), xs, ys);
 
-    lineData->setIdentityContext("RegLines", dm.getEntityRegistry());
-    lineData->rebuildAllEntityIds();
+    dm.setData<LineData>("RegLines", lineData, TimeKey("test_time"));
 
-    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"RegLines"});
+    // Get the line data back from DataManager (now has EntityIds set up)
+    auto lineDataFromDM = dm.getData<LineData>("RegLines");
 
-    // Create DataSourceVariant via registry adapter to ensure consistent type usage
-    ComputerRegistry registry;
-    auto adapted = registry.createAdapter(
-        "Line Data",
-        std::static_pointer_cast<void>(lineData),
-        tf,
-        std::string{"RegLines"},
-            {});
+    // Create DataSourceVariant directly with LineData
+    DataSourceVariant variant = lineDataFromDM;
+
     // Diagnostics
     {
+        ComputerRegistry registry;
         auto adapter_names = registry.getAllAdapterNames();
         std::cout << "Registered adapters (" << adapter_names.size() << ")" << std::endl;
         for (auto const & n: adapter_names) {
             std::cout << "  Adapter: " << n << std::endl;
         }
-        std::cout << "Adapted variant index: " << adapted.index() << std::endl;
+        std::cout << "Variant index: " << variant.index() << std::endl;
     }
-    // Fallback to direct adapter if registry adapter not found (should not happen after registration)
-    DataSourceVariant variant = adapted.index() != std::variant_npos ? adapted
-                               : DataSourceVariant{std::static_pointer_cast<ILineSource>(lineAdapter)};
 
     // More diagnostics: list available computers
     {
+        ComputerRegistry registry;
         auto comps = registry.getAvailableComputers(RowSelectorType::Timestamp, variant);
         std::cout << "Available computers for Timestamp + variant(" << variant.index() << ") = " << comps.size() << std::endl;
         for (auto const & ci: comps) {
@@ -192,7 +176,8 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer can be created via registry", "[L
     }
 
     // Create via registry
-    std::map<std::string, std::string> params{{"segments", "2"}};
+    ComputerRegistry registry;
+    std::map<std::string, std::string> params{{"segments", "2"}, {"__source_name__", "RegLines"}};
     auto multi = registry.createTypedMultiComputer<double>("Line Sample XY", variant, params);
     REQUIRE(multi != nullptr);
 
@@ -247,9 +232,8 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer with per-line row expansion drops
 
     dm.setData<LineData>("ExpLines", lineData, TimeKey("test_time"));
 
-    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"ExpLines"});
-    // Register into DataManager so TableView expansion can resolve the line source by name
-
+    // Get the line data back from DataManager (now has EntityIds set up)
+    auto lineDataFromDM = dm.getData<LineData>("ExpLines");
 
     // Timestamps include empty ones; expansion should drop t=0 and t=3
     std::vector<TimeFrameIndex> timestamps = {
@@ -262,7 +246,7 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer with per-line row expansion drops
     builder.setRowSelector(std::move(rowSelector));
 
     auto multi = std::make_unique<LineSamplingMultiComputer>(
-        std::static_pointer_cast<ILineSource>(lineAdapter),
+        lineDataFromDM,
         std::string{"ExpLines"},
         tf,
             2// positions 0.0, 0.5, 1.0
@@ -311,15 +295,11 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer expansion with coexisting analog 
 
     // LineData: only at t=1
     auto lineData = std::make_shared<LineData>();
-    lineData->setTimeFrame(tf);
     {
         std::vector<float> xs = {0.0f, 10.0f};
         std::vector<float> ys = {1.0f, 1.0f};
         lineData->emplaceAtTime(TimeFrameIndex(1), xs, ys);
     }
-
-    lineData->setIdentityContext("MixedLines", dm.getEntityRegistry());
-    lineData->rebuildAllEntityIds();
 
     dm.setData<LineData>("MixedLines", lineData, TimeKey("test_time"));
 
@@ -338,9 +318,9 @@ TEST_CASE("DM - TV - LineSamplingMultiComputer expansion with coexisting analog 
     builder.setRowSelector(std::move(rowSelector));
 
     // Multi-line columns (expanding)
-    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"MixedLines"});
+    auto lineDataFromDM = dm.getData<LineData>("MixedLines");
     auto multi = std::make_unique<LineSamplingMultiComputer>(
-        std::static_pointer_cast<ILineSource>(lineAdapter),
+        lineDataFromDM,
         std::string{"MixedLines"},
         tf,
             2);
@@ -499,9 +479,6 @@ private:
             }
         }
 
-        whisker_lines->setIdentityContext("WhiskerTraces", m_data_manager->getEntityRegistry());
-        whisker_lines->rebuildAllEntityIds();
-
         m_data_manager->setData<LineData>("WhiskerTraces", whisker_lines, TimeKey("whisker_time"));
     }
 
@@ -558,9 +535,6 @@ private:
             }
             shape_lines->emplaceAtTime(TimeFrameIndex(8), xs2, ys2);
         }
-
-        shape_lines->setIdentityContext("GeometricShapes", m_data_manager->getEntityRegistry());
-        shape_lines->rebuildAllEntityIds();
 
         m_data_manager->setData<LineData>("GeometricShapes", shape_lines, TimeKey("shape_time"));
     }
@@ -833,7 +807,7 @@ TEST_CASE_METHOD(LineSamplingTableRegistryTestFixture, "DM - TV - LineSamplingMu
         REQUIRE(line_sample_info->outputType == typeid(double));
         REQUIRE(line_sample_info->outputTypeName == "double");
         REQUIRE(line_sample_info->requiredRowSelector == RowSelectorType::Timestamp);
-        REQUIRE(line_sample_info->requiredSourceType == typeid(std::shared_ptr<ILineSource>));
+        REQUIRE(line_sample_info->requiredSourceType == typeid(std::shared_ptr<LineData>));
         REQUIRE(line_sample_info->isMultiOutput == true);
 
         // Verify parameter information
@@ -853,8 +827,8 @@ TEST_CASE_METHOD(LineSamplingTableRegistryTestFixture, "DM - TV - LineSamplingMu
         REQUIRE(whisker_source != nullptr);
 
         // Create computer via registry with different segment parameters
-        std::map<std::string, std::string> params_2seg{{"segments", "2"}};
-        std::map<std::string, std::string> params_5seg{{"segments", "5"}};
+        std::map<std::string, std::string> params_2seg{{"segments", "2"}, {"__source_name__", "WhiskerTraces"}};
+        std::map<std::string, std::string> params_5seg{{"segments", "5"}, {"__source_name__", "WhiskerTraces"}};
 
         auto computer_2seg = registry.createTypedMultiComputer<double>(
                 "Line Sample XY", whisker_source, params_2seg);
@@ -864,10 +838,8 @@ TEST_CASE_METHOD(LineSamplingTableRegistryTestFixture, "DM - TV - LineSamplingMu
         REQUIRE(computer_2seg != nullptr);
         REQUIRE(computer_5seg != nullptr);
 
-        // Test that the created computers work correctly
-        auto whisker_time_frame = dm.getTime(TimeKey("whisker_time"));
-
         // Create a simple test
+        auto whisker_time_frame = dm.getTime(TimeKey("whisker_time"));
         std::vector<TimeFrameIndex> test_timestamps = {TimeFrameIndex(30)};
         auto row_selector_2seg = std::make_unique<TimestampSelector>(test_timestamps, whisker_time_frame);
         auto row_selector_5seg = std::make_unique<TimestampSelector>(test_timestamps, whisker_time_frame);
@@ -920,7 +892,7 @@ TEST_CASE_METHOD(LineSamplingTableRegistryTestFixture, "DM - TV - LineSamplingMu
         REQUIRE(whisker_source != nullptr);
 
         // Create computer via registry
-        std::map<std::string, std::string> params{{"segments", "3"}};
+        std::map<std::string, std::string> params{{"segments", "3"}, {"__source_name__", "WhiskerTraces"}};
         auto registry_computer = registry.createTypedMultiComputer<double>(
                 "Line Sample XY", whisker_source, params);
 
@@ -1298,12 +1270,8 @@ public:
         
         // Create LineData with test lines
         line_data = std::make_shared<LineData>();
-        line_data->setTimeFrame(time_frame);
 
         setupTestLines();
-
-        line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
-        line_data->rebuildAllEntityIds();
         
         // Register LineData with DataManager for entity expansion to work
         data_manager->setData<LineData>("test_lines", line_data, TimeKey("test_time"));
@@ -1361,12 +1329,12 @@ TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
         // Create DataManagerExtension for TableView integration
         auto dme = std::make_shared<DataManagerExtension>(*data_manager);
         
-        // Create LineDataAdapter from our test data
-        auto line_adapter = std::make_shared<LineDataAdapter>(line_data, time_frame, "test_lines");
+        // Get the line data from DataManager (now has EntityIds set up)
+        auto lineDataFromDM = data_manager->getData<LineData>("test_lines");
         
         // Create LineSamplingMultiComputer with 2 segments (3 sample points: 0.0, 0.5, 1.0)
         auto multi_computer = std::make_unique<LineSamplingMultiComputer>(
-            std::static_pointer_cast<ILineSource>(line_adapter),
+            lineDataFromDM,
             "test_lines",
             time_frame,
             2  // 2 segments = 3 sample points

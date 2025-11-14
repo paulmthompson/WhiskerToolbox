@@ -4,7 +4,7 @@
 #include "utils/TableView/interfaces/IColumnComputer.h"
 #include "utils/TableView/interfaces/IMultiColumnComputer.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
-#include "utils/TableView/interfaces/ILineSource.h"
+#include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 
 #include <stdexcept>
@@ -88,7 +88,7 @@ void TableViewBuilder::validateMultiSampleSources() {
         for (auto const & dep : dependencies) {
             // Check if this dependency is a line source
             auto lineSource = m_dataManager->getLineSource(dep);
-            if (lineSource && lineSource->hasMultiSamples()) {
+            if (lineSource && lineSource->getMaxEntriesAtAnyTime() > 1) {
                 multiSampleSources.insert(dep);
             }
             
@@ -103,7 +103,7 @@ void TableViewBuilder::validateMultiSampleSources() {
         auto sourceDep = column->getSourceDependency();
         if (!sourceDep.empty()) {
             auto lineSource = m_dataManager->getLineSource(sourceDep);
-            if (lineSource && lineSource->hasMultiSamples()) {
+            if (lineSource && lineSource->getMaxEntriesAtAnyTime() > 1) {
                 multiSampleSources.insert(sourceDep);
             }
             

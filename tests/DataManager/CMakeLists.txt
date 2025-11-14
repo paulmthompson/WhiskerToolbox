@@ -47,7 +47,6 @@ add_executable(test_data_manager
         
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/transforms/PCATransform.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TableView/adapters/LineDataAdapter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/utils/filter/NewFilterInterface.test.cpp
 
         # Integration tests in tests/DataManager/TableView/

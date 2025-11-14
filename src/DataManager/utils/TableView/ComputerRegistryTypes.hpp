@@ -8,7 +8,7 @@
 class DigitalEventSeries;
 class IAnalogSource;
 class IIntervalSource;
-class ILineSource;
+class LineData;
 
 /**
  * @brief Enumeration of supported row selector types for matching computers.
@@ -29,7 +29,7 @@ using DataSourceVariant = std::variant<
     std::shared_ptr<IAnalogSource>,
     std::shared_ptr<DigitalEventSeries>,
     std::shared_ptr<IIntervalSource>,
-    std::shared_ptr<ILineSource>
+    std::shared_ptr<LineData>
 >;
 
 #endif // COMPUTERREGISTRYTYPES_HPP

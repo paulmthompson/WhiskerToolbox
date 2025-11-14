@@ -2,9 +2,8 @@
 #define LINE_LENGTH_COMPUTER_H
 
 #include "CoreGeometry/line_geometry.hpp"
+#include "Lines/Line_Data.hpp"
 #include "utils/TableView/interfaces/IColumnComputer.h"
-#include "utils/TableView/interfaces/IEntityProvider.h"
-#include "utils/TableView/interfaces/ILineSource.h"
 
 #include <memory>
 #include <string>
@@ -12,7 +11,7 @@
 /**
  * @brief Computer that calculates the cumulative length of line data.
  *
- * Source type: ILineSource
+ * Source type: LineData
  * Selector type: Timestamp
  * Output type: float
  * 
@@ -22,7 +21,7 @@
  */
 class LineLengthComputer : public IColumnComputer<float> {
 public:
-    LineLengthComputer(std::shared_ptr<ILineSource> lineSource,
+    LineLengthComputer(std::shared_ptr<LineData> lineSource,
                        std::string sourceName,
                        std::shared_ptr<TimeFrame> sourceTimeFrame)
         : m_lineSource(std::move(lineSource)),
@@ -65,7 +64,8 @@ public:
 
         for (size_t r = 0; r < rowCount; ++r) {
             TimeFrameIndex const tfIndex = indices[r];
-            auto const this_time_entityIds = m_lineSource->getEntityIdsAtTime(tfIndex, targetTF);
+            auto entity_ids_view = m_lineSource->getEntityIdsAtTime(tfIndex, *targetTF);
+            std::vector<EntityId> this_time_entityIds(entity_ids_view.begin(), entity_ids_view.end());
 
             // Check if lines exist at this timestamp
             if (this_time_entityIds.empty()) {
@@ -80,9 +80,10 @@ public:
                     entityIds.push_back(this_time_entityIds[entity_index]);
 
                     // Get the specific line at this entity index
-                    auto const line = m_lineSource->getLineAt(tfIndex, entity_index);
-                    if (line) {
-                        results.push_back(calc_length(*line));
+                    auto lines_view = m_lineSource->getAtTime(tfIndex, *targetTF);
+                    std::vector<Line2D> lines(lines_view.begin(), lines_view.end());
+                    if (entity_index < static_cast<int>(lines.size())) {
+                        results.push_back(calc_length(lines[entity_index]));
                     } else {
                         results.push_back(0.0f);
                     }
@@ -91,9 +92,10 @@ public:
                     entityIds.push_back(this_time_entityIds[0]);
 
                     // Get the first line at this timestamp
-                    auto const line = m_lineSource->getLineAt(tfIndex, 0);
-                    if (line) {
-                        results.push_back(calc_length(*line));
+                    auto lines_view = m_lineSource->getAtTime(tfIndex, *targetTF);
+                    std::vector<Line2D> lines(lines_view.begin(), lines_view.end());
+                    if (!lines.empty()) {
+                        results.push_back(calc_length(lines[0]));
                     } else {
                         results.push_back(0.0f);
                     }
@@ -117,7 +119,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ILineSource> m_lineSource;
+    std::shared_ptr<LineData> m_lineSource;
     std::string m_sourceName;
     std::shared_ptr<TimeFrame> m_sourceTimeFrame;
 };

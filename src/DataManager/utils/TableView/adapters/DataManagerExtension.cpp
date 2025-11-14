@@ -2,13 +2,12 @@
 
 #include "DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "utils/TableView/adapters/AnalogDataAdapter.h"
 #include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
-#include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
-#include "utils/TableView/interfaces/ILineSource.h"
 
 
 #include <iostream>
@@ -89,19 +88,16 @@ std::shared_ptr<IIntervalSource> DataManagerExtension::createDigitalIntervalData
     }
 }
 
-std::shared_ptr<ILineSource> DataManagerExtension::createLineDataAdapter(std::string const & name) {
+std::shared_ptr<LineData> DataManagerExtension::createLineData(std::string const & name) {
     try {
         auto lineData = m_dataManager.getData<LineData>(name);
         if (!lineData) {
             return nullptr;
         }
 
-        auto timeFrame_key = m_dataManager.getTimeKey(name);
-        auto timeFrame = m_dataManager.getTime(timeFrame_key);
-
-        return std::make_shared<LineDataAdapter>(lineData, timeFrame, name);
+        return lineData;
     } catch (std::exception const & e) {
-        std::cerr << "Error creating LineDataAdapter for '" << name << "': " << e.what() << std::endl;
+        std::cerr << "Error retrieving LineData for '" << name << "': " << e.what() << std::endl;
         return nullptr;
     }
 }
@@ -155,19 +151,19 @@ std::shared_ptr<IIntervalSource> DataManagerExtension::getIntervalSource(std::st
     return intervalSource;
 }
 
-std::shared_ptr<ILineSource> DataManagerExtension::getLineSource(std::string const & name) {
+std::shared_ptr<LineData> DataManagerExtension::getLineSource(std::string const & name) {
     // Check cache first
     auto it = m_lineSourceCache.find(name);
     if (it != m_lineSourceCache.end()) {
         return it->second;
     }
 
-    // Create a new line source adapter
-    auto lineSource = createLineDataAdapter(name);
+    // Create/retrieve line data
+    auto lineSource = createLineData(name);
     if (lineSource) {
         m_lineSourceCache[name] = lineSource;
     } else {
-        std::cerr << "Line source '" << name << "' not found." << std::endl;
+        std::cerr << "Line data '" << name << "' not found." << std::endl;
     }
     return lineSource;
 }

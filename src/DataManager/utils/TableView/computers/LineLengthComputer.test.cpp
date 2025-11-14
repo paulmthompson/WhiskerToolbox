@@ -16,12 +16,10 @@
 #include "utils/TableView/ComputerRegistry.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
-#include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/computers/LineLengthComputer.h"
 #include "utils/TableView/core/TableView.h"
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
-#include "utils/TableView/interfaces/ILineSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/pipeline/TablePipeline.hpp"
 
@@ -39,10 +37,10 @@ TEST_CASE("DM - TV - LineLengthComputer basic integration", "[LineLengthComputer
     // Create a TimeFrame with 3 timestamps
     std::vector<int> timeValues = {0, 1, 2};
     auto tf = std::make_shared<TimeFrame>(timeValues);
+    dm.setTime(TimeKey("test_time"), tf);
 
     // Create LineData and add one simple line at each timestamp
     auto lineData = std::make_shared<LineData>();
-    lineData->setTimeFrame(tf);
 
     // simple polyline: (0,0) -> (10,0) -> (10,10) -> (0,10) (perimeter = 30)
     {
@@ -63,8 +61,7 @@ TEST_CASE("DM - TV - LineLengthComputer basic integration", "[LineLengthComputer
         lineData->emplaceAtTime(TimeFrameIndex(2), xs, ys);
     }
 
-    lineData->setIdentityContext("TestLines", dm.getEntityRegistry());
-    lineData->rebuildAllEntityIds();
+    dm.setData<LineData>("TestLines", lineData, TimeKey("test_time"));
 
     // Create DataManagerExtension
     DataManagerExtension dme(dm);
@@ -73,14 +70,10 @@ TEST_CASE("DM - TV - LineLengthComputer basic integration", "[LineLengthComputer
     std::vector<TimeFrameIndex> timestamps = {TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2)};
     auto rowSelector = std::make_unique<TimestampSelector>(timestamps, tf);
 
-    // Build LineDataAdapter directly and wrap as ILineSource
-    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"TestLines"});
-
     // Directly construct the length computer
-    auto lengthComputer = std::make_unique<LineLengthComputer>(
-            std::static_pointer_cast<ILineSource>(lineAdapter),
-            std::string{"TestLines"},
-            tf);
+    auto lengthComputer = std::make_unique<LineLengthComputer>(lineData,
+                                                               std::string{"TestLines"},
+                                                               tf);
 
     // Build the table with addColumn
     auto dme_ptr = std::make_shared<DataManagerExtension>(dme);
@@ -108,9 +101,9 @@ TEST_CASE("DM - TV - LineLengthComputer can be created via registry", "[LineLeng
 
     std::vector<int> timeValues = {0, 1};
     auto tf = std::make_shared<TimeFrame>(timeValues);
+    dm.setTime(TimeKey("test_time"), tf);
 
     auto lineData = std::make_shared<LineData>();
-    lineData->setTimeFrame(tf);
     // Line 1: (0,0) -> (3,4) (length = 5)
     {
         std::vector<float> xs = {0.0f, 3.0f};
@@ -124,26 +117,18 @@ TEST_CASE("DM - TV - LineLengthComputer can be created via registry", "[LineLeng
         lineData->emplaceAtTime(TimeFrameIndex(1), xs, ys);
     }
 
-    lineData->setIdentityContext("RegLines", dm.getEntityRegistry());
-    lineData->rebuildAllEntityIds();
+    dm.setData<LineData>("RegLines", lineData, TimeKey("test_time"));
 
-    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"RegLines"});
+    // Get the line data back from DataManager (now has EntityIds set up)
+    auto lineDataFromDM = dm.getData<LineData>("RegLines");
 
-    // Create DataSourceVariant via registry adapter to ensure consistent type usage
-    ComputerRegistry registry;
-    auto adapted = registry.createAdapter(
-            "Line Data",
-            std::static_pointer_cast<void>(lineData),
-            tf,
-            std::string{"RegLines"},
-            {});
-
-    // Fallback to direct adapter if registry adapter not found
-    DataSourceVariant variant = adapted.index() != std::variant_npos ? adapted
-                                                                     : DataSourceVariant{std::static_pointer_cast<ILineSource>(lineAdapter)};
+    // Create DataSourceVariant directly with LineData
+    DataSourceVariant variant = lineDataFromDM;
 
     // Create via registry
-    auto lengthComputer = registry.createTypedComputer<float>("Line Length", variant);
+    ComputerRegistry registry;
+    std::map<std::string, std::string> params{{"__source_name__", "RegLines"}};
+    auto lengthComputer = registry.createTypedComputer<float>("Line Length", variant, params);
     REQUIRE(lengthComputer != nullptr);
 
     // Build with builder
@@ -205,8 +190,8 @@ TEST_CASE("DM - TV - LineLengthComputer with per-line row expansion", "[LineLeng
     // Register into DataManager so TableView expansion can resolve the line source by name
     dm.setData<LineData>("ExpLines", lineData, TimeKey("test_time"));
 
-
-    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"ExpLines"});
+    // Get the line data back from DataManager (now has EntityIds set up)
+    auto lineDataFromDM = dm.getData<LineData>("ExpLines");
 
     // Timestamps include empty ones; expansion should drop t=0 and t=3
     std::vector<TimeFrameIndex> timestamps = {
@@ -219,7 +204,7 @@ TEST_CASE("DM - TV - LineLengthComputer with per-line row expansion", "[LineLeng
     builder.setRowSelector(std::move(rowSelector));
 
     auto lengthComputer = std::make_unique<LineLengthComputer>(
-            std::static_pointer_cast<ILineSource>(lineAdapter),
+            lineDataFromDM,
             std::string{"ExpLines"},
             tf);
     builder.addColumn<float>("Length", std::move(lengthComputer));
@@ -258,15 +243,11 @@ TEST_CASE("DM - TV - LineLengthComputer expansion with coexisting analog column"
 
     // LineData: only at t=1
     auto lineData = std::make_shared<LineData>();
-    lineData->setTimeFrame(tf);
     {
         std::vector<float> xs = {0.0f, 10.0f};
         std::vector<float> ys = {1.0f, 1.0f};
         lineData->emplaceAtTime(TimeFrameIndex(1), xs, ys);
     }
-
-    lineData->setIdentityContext("MixedLines", dm.getEntityRegistry());
-    lineData->rebuildAllEntityIds();
 
     dm.setData<LineData>("MixedLines", lineData, TimeKey("test_time"));
 
@@ -285,9 +266,9 @@ TEST_CASE("DM - TV - LineLengthComputer expansion with coexisting analog column"
     builder.setRowSelector(std::move(rowSelector));
 
     // Line length column (expanding)
-    auto lineAdapter = std::make_shared<LineDataAdapter>(lineData, tf, std::string{"MixedLines"});
+    auto lineDataFromDM = dm.getData<LineData>("MixedLines");
     auto lengthComputer = std::make_unique<LineLengthComputer>(
-            std::static_pointer_cast<ILineSource>(lineAdapter),
+            lineDataFromDM,
             std::string{"MixedLines"},
             tf);
     builder.addColumn<float>("LineLength", std::move(lengthComputer));
@@ -665,7 +646,7 @@ TEST_CASE_METHOD(LineLengthTestFixture, "DM - TV - LineLengthComputer via Comput
         REQUIRE(line_length_info->outputType == typeid(float));
         REQUIRE(line_length_info->outputTypeName == "float");
         REQUIRE(line_length_info->requiredRowSelector == RowSelectorType::Timestamp);
-        REQUIRE(line_length_info->requiredSourceType == typeid(std::shared_ptr<ILineSource>));
+        REQUIRE(line_length_info->requiredSourceType == typeid(std::shared_ptr<LineData>));
         REQUIRE(line_length_info->isMultiOutput == false);
     }
 
@@ -679,8 +660,9 @@ TEST_CASE_METHOD(LineLengthTestFixture, "DM - TV - LineLengthComputer via Comput
         REQUIRE(whisker_source != nullptr);
 
         // Create computer via registry
+        std::map<std::string, std::string> params{{"__source_name__", "WhiskerTraces"}};
         auto computer = registry.createTypedComputer<float>(
-                "Line Length", whisker_source);
+                "Line Length", whisker_source, params);
 
         REQUIRE(computer != nullptr);
 
@@ -721,8 +703,9 @@ TEST_CASE_METHOD(LineLengthTestFixture, "DM - TV - LineLengthComputer via Comput
         REQUIRE(whisker_source != nullptr);
 
         // Create computer via registry
+        std::map<std::string, std::string> params{{"__source_name__", "WhiskerTraces"}};
         auto registry_computer = registry.createTypedComputer<float>(
-                "Line Length", whisker_source);
+                "Line Length", whisker_source, params);
 
         // Create computer directly
         auto whisker_time_frame = dm.getTime(TimeKey("whisker_time"));

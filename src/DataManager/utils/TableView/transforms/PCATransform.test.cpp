@@ -4,7 +4,6 @@
 #include "Lines/Line_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
-#include "utils/TableView/adapters/LineDataAdapter.h"
 #include "utils/TableView/computers/LineSamplingMultiComputer.h"
 #include "utils/TableView/core/TableViewBuilder.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
@@ -19,6 +18,7 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
     // TimeFrame and row selector using timestamps [10,20,30]
     std::vector<int> timeValues = {10, 20, 30};
     auto tf = std::make_shared<TimeFrame>(timeValues);
+    dm.setTime(TimeKey("test_time"), tf);
 
     // Prepare LineData with simple lines across timestamps 10,20,30 (2,2,1 entities)
     auto line_data = std::make_shared<LineData>();
@@ -29,11 +29,7 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
     line_data->addAtTime(TimeFrameIndex(30), std::vector<Point2D<float>>{{8, 8}, {9, 9}}, NotifyObservers::No);
     line_data->setImageSize({800, 600});
 
-    dm.setTime(TimeKey("test_time"), tf);
-
     dm.setData<LineData>("test_lines", line_data, TimeKey("test_time"));
-
-    auto adapter = std::make_shared<LineDataAdapter>(line_data, tf, "test_lines");
 
     // Build base table: entity-expanded to 5 rows
     auto dme = std::make_shared<DataManagerExtension>(dm);
@@ -45,7 +41,7 @@ TEST_CASE("PCATransform preserves EntityIds with IndexSelector rows sized to kep
 
     // Use 2 segments -> 3 sample points -> 6 columns
     auto lsmc = std::make_unique<LineSamplingMultiComputer>(
-            std::static_pointer_cast<ILineSource>(adapter),
+            line_data,
             "test_lines",
             tf,
             2);

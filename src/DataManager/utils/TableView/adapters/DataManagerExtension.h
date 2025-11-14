@@ -15,8 +15,7 @@ class DigitalEventSeries;
 class DigitalIntervalDataAdapter;
 class IAnalogSource;
 class IIntervalSource;
-class ILineSource;
-class LineDataAdapter;
+class LineData;
 class PointData;
 
 
@@ -34,7 +33,7 @@ public:
             std::shared_ptr<IAnalogSource>,
             std::shared_ptr<DigitalEventSeries>,
             std::shared_ptr<IIntervalSource>,
-            std::shared_ptr<ILineSource>,
+            std::shared_ptr<LineData>,
             std::shared_ptr<PointData>>;
 
     /**
@@ -87,15 +86,14 @@ public:
     auto getIntervalSource(std::string const & name) -> std::shared_ptr<IIntervalSource>;
 
     /**
-     * @brief Gets a line source by name.
+     * @brief Gets line data by name.
      * 
-     * This method provides access to ILineSource implementations for
-     * line data such as LineData.
+     * This method provides direct access to LineData objects.
      * 
-     * @param name The name of the line source.
-     * @return Shared pointer to ILineSource, or nullptr if not found.
+     * @param name The name of the line data.
+     * @return Shared pointer to LineData, or nullptr if not found.
      */
-    auto getLineSource(std::string const & name) -> std::shared_ptr<ILineSource>;
+    auto getLineSource(std::string const & name) -> std::shared_ptr<LineData>;
 
     /**
      * @brief Gets point data by name.
@@ -138,11 +136,11 @@ private:
     auto createDigitalIntervalDataAdapter(std::string const & name) -> std::shared_ptr<IIntervalSource>;
 
     /**
-     * @brief Creates a LineDataAdapter for the given name.
+     * @brief Retrieves LineData for the given name.
      * @param name The name of the LineData.
-     * @return Shared pointer to the adapter, or nullptr if not found.
+     * @return Shared pointer to LineData, or nullptr if not found.
      */
-    auto createLineDataAdapter(std::string const & name) -> std::shared_ptr<ILineSource>;
+    auto createLineData(std::string const & name) -> std::shared_ptr<LineData>;
 
     /**
      * @brief Creates and retrieves PointData for the given name.
@@ -157,7 +155,7 @@ private:
     mutable std::map<std::string, std::shared_ptr<IAnalogSource>> m_dataSourceCache;
     mutable std::map<std::string, std::shared_ptr<DigitalEventSeries>> m_eventSourceCache;
     mutable std::map<std::string, std::shared_ptr<IIntervalSource>> m_intervalSourceCache;
-    mutable std::map<std::string, std::shared_ptr<ILineSource>> m_lineSourceCache;
+    mutable std::map<std::string, std::shared_ptr<LineData>> m_lineSourceCache;
     mutable std::map<std::string, std::shared_ptr<PointData>> m_pointDataCache;
 };
 
