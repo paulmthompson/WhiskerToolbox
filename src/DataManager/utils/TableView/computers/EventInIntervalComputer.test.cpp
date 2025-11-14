@@ -1642,7 +1642,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
                 // Find this event in the source data
                 bool event_found = false;
                 for (size_t src_idx = 0; src_idx < source_events.size(); ++src_idx) {
-                    if (std::abs(source_events[src_idx] - event_value) < 1e-6f) {
+                    if (std::abs(source_events[src_idx].getValue() - static_cast<int64_t>(event_value)) < 1) {
                         // Found the event, verify the EntityID matches
                         if (src_idx < source_neuron1_entity_ids.size()) {
                             // Note: This is a simplified check. The actual mapping might be more complex

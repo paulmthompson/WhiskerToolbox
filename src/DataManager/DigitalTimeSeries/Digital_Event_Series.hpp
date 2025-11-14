@@ -26,13 +26,13 @@ class EntityRegistry;
 class DigitalEventSeries : public ObserverData {
 public:
     DigitalEventSeries() = default;
-    explicit DigitalEventSeries(std::vector<float> event_vector);
+    explicit DigitalEventSeries(std::vector<TimeFrameIndex> event_vector);
 
-    [[nodiscard]] std::vector<float> const & getEventSeries() const;
+    [[nodiscard]] std::vector<TimeFrameIndex> const & getEventSeries() const;
 
-    void addEvent(float event_time);
+    void addEvent(TimeFrameIndex event_time);
 
-    bool removeEvent(float event_time);
+    bool removeEvent(TimeFrameIndex event_time);
 
     [[nodiscard]] size_t size() const { return _data.size(); }
 
@@ -42,8 +42,8 @@ public:
     }
 
     [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
-        return _data | std::views::filter([start_time, stop_time](float time) {
-                   return time >= static_cast<float>(start_time.getValue()) && time <= static_cast<float>(stop_time.getValue());
+        return _data | std::views::filter([start_time, stop_time](TimeFrameIndex time) {
+                   return time >= start_time && time <= stop_time;
                });
     }
 
@@ -64,9 +64,9 @@ public:
         return getEventsInRange(target_start_index, target_stop_index);
     };
 
-    std::vector<float> getEventsAsVector(float start_time, float stop_time) const {
-        std::vector<float> result;
-        for (float time: _data) {
+    std::vector<TimeFrameIndex> getEventsAsVector(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
+        std::vector<TimeFrameIndex> result;
+        for (TimeFrameIndex time: _data) {
             if (time >= start_time && time <= stop_time) {
                 result.push_back(time);
             }
@@ -123,7 +123,7 @@ public:
     [[nodiscard]] std::vector<EntityId> const & getEntityIds() const { return _entity_ids; }
 
 private:
-    std::vector<float> _data{};
+    std::vector<TimeFrameIndex> _data{};
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
     // Sort the events in ascending order

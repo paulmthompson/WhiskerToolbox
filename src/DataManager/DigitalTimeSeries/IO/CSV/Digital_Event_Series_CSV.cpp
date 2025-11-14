@@ -23,10 +23,10 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
     bool first_line = true;
     
     // Map to store events by identifier (for multi-column case)
-    std::map<std::string, std::vector<float>> events_by_identifier;
+    std::map<std::string, std::vector<TimeFrameIndex>> events_by_identifier;
     
     // Vector to store events (for single column case)
-    std::vector<float> single_events;
+    std::vector<TimeFrameIndex> single_events;
     
     bool has_identifier_column = (options.identifier_column >= 0);
 
@@ -64,7 +64,8 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
 
         try {
             // Parse event timestamp
-            float event_time = std::stof(tokens[static_cast<size_t>(options.event_column)]);
+            float event_time_float = std::stof(tokens[static_cast<size_t>(options.event_column)]);
+            TimeFrameIndex event_time(static_cast<int64_t>(event_time_float));
             
             if (has_identifier_column) {
                 // Multi-column case: group by identifier
@@ -138,13 +139,13 @@ void save(DigitalEventSeries const * event_data, CSVEventSaverOptions const & op
         fout << opts.header << opts.line_delim;
     }
 
-    std::vector<float> const & events = event_data->getEventSeries();
+    std::vector<TimeFrameIndex> const & events = event_data->getEventSeries();
 
     // Set precision for floating point output
     fout << std::fixed << std::setprecision(opts.precision);
 
     for (auto const & event_time : events) {
-        fout << event_time << opts.line_delim;
+        fout << event_time.getValue() << opts.line_delim;
         if (fout.fail()) {
             std::cerr << "Error: Failed while writing data to file: " << full_path << std::endl;
             fout.close();
