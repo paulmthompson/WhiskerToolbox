@@ -621,7 +621,7 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get the interval source from the DataManager
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
 
         REQUIRE(behavior_source != nullptr);
 
@@ -710,7 +710,7 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get neural events from high-resolution timeframe
-        auto neural_source = dme->getIntervalSource("NeuralEvents");
+        auto neural_source = dm.getData<DigitalIntervalSeries>("NeuralEvents");
         REQUIRE(neural_source != nullptr);
 
         auto neural_time_frame = dm.getTime(TimeKey("high_res_time"));
@@ -779,7 +779,7 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get behavior intervals from our test fixture
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
         REQUIRE(behavior_source != nullptr);
 
         // Create row selector for behavior intervals
@@ -955,7 +955,7 @@ TEST_CASE_METHOD(IntervalPropertyTableRegistryTestFixture, "DM - TV - IntervalPr
         auto & registry = getTableRegistry().getComputerRegistry();
 
         // Get behavior source for testing
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
         REQUIRE(behavior_source != nullptr);
 
         // Create computers via registry
@@ -1021,7 +1021,7 @@ TEST_CASE_METHOD(IntervalPropertyTableRegistryTestFixture, "DM - TV - IntervalPr
         auto dme = std::make_shared<DataManagerExtension>(dm);
         auto & registry = getTableRegistry().getComputerRegistry();
 
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
         REQUIRE(behavior_source != nullptr);
 
         // Create computer via registry

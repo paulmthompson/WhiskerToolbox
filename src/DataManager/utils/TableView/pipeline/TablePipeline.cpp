@@ -362,7 +362,7 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
             std::string source_key = row_selector_json["source"];
 
             // Get the interval source from the DataManagerExtension
-            auto interval_source = data_manager_extension_->getIntervalSource(source_key);
+            auto interval_source = data_manager_->getData<DigitalIntervalSeries>(source_key);
             if (!interval_source) {
                 std::cerr << "TablePipeline: Cannot resolve interval source: " << source_key << std::endl;
                 return nullptr;
@@ -482,7 +482,7 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
             std::string source_key = row_selector_json["source"];
 
             // Try to get timestamps from a DigitalEventSeries
-            if (auto event_source = data_manager_extension_->getEventSource(source_key)) {
+            if (auto event_source = data_manager_->getData<DigitalEventSeries>(source_key)) {
                 // Get all event times using the source's timeframe
                 auto source_timeframe = event_source->getTimeFrame();
                 if (source_timeframe && source_timeframe->getTotalFrameCount() > 0) {
@@ -605,13 +605,13 @@ DataSourceVariant TablePipeline::resolveDataSource(nlohmann::json const & data_s
         if (auto analog_source = data_manager_extension_->getAnalogSource(key)) {
             return analog_source;
         }
-        if (auto event_source = data_manager_extension_->getEventSource(key)) {
+        if (auto event_source = data_manager_->getData<DigitalEventSeries>(key)) {
             return event_source;
         }
-        if (auto interval_source = data_manager_extension_->getIntervalSource(key)) {
+        if (auto interval_source = data_manager_->getData<DigitalIntervalSeries>(key)) {
             return interval_source;
         }
-        if (auto line_source = data_manager_extension_->getLineSource(key)) {
+        if (auto line_source = data_manager_->getData<LineData>(key)) {
             return line_source;
         }
 

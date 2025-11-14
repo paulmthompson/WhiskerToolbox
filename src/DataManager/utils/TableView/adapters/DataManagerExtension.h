@@ -55,9 +55,6 @@ public:
     auto getAnalogSource(std::string const & name) -> std::shared_ptr<IAnalogSource>;
 
     std::shared_ptr<LineData> getLineSource(std::string const & name);
-    std::shared_ptr<PointData> getPointSource(std::string const & name);
-    std::shared_ptr<DigitalEventSeries> getEventSource(std::string const & name);
-    std::shared_ptr<DigitalIntervalSeries> getIntervalSource(std::string const & name);
 
     /**
      * @brief Clears the adapter cache.
@@ -87,10 +84,6 @@ private:
      * @return Shared pointer to the adapter, or nullptr if not found.
      */
     auto createAnalogDataAdapter(std::string const & name) -> std::shared_ptr<IAnalogSource>;
-
-
-    template<typename T>
-    std::shared_ptr<T> createDataOfType(std::string const & name);
 
     DataManager & m_dataManager;
 

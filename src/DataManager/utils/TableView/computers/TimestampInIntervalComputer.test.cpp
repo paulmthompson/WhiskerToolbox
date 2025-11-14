@@ -411,7 +411,7 @@ TEST_CASE_METHOD(TimestampInIntervalTestFixture, "DM - TV - TimestampInIntervalC
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get the interval source from the DataManager
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
         REQUIRE(behavior_source != nullptr);
 
         // Create timestamps to test around the behavior periods
@@ -466,8 +466,8 @@ TEST_CASE_METHOD(TimestampInIntervalTestFixture, "DM - TV - TimestampInIntervalC
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get sources from different timeframes
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");  // behavior_time frame
-        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");// stimulus_time frame
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");  // behavior_time frame
+        auto stimulus_source = dm.getData<DigitalIntervalSeries>("StimulusIntervals");// stimulus_time frame
 
         REQUIRE(behavior_source != nullptr);
         REQUIRE(stimulus_source != nullptr);
@@ -546,7 +546,7 @@ TEST_CASE_METHOD(TimestampTableRegistryTestFixture, "DM - TV - TimestampInInterv
         auto & registry = getTableRegistry().getComputerRegistry();
 
         // Get interval source for testing
-        auto simple_source = dme->getIntervalSource("SimpleIntervals");
+        auto simple_source = dm.getData<DigitalIntervalSeries>("SimpleIntervals");
         REQUIRE(simple_source != nullptr);
 
         // Create computer via registry
@@ -606,7 +606,7 @@ TEST_CASE_METHOD(TimestampTableRegistryTestFixture, "DM - TV - TimestampInInterv
         auto dme = std::make_shared<DataManagerExtension>(dm);
         auto & registry = getTableRegistry().getComputerRegistry();
 
-        auto simple_source = dme->getIntervalSource("SimpleIntervals");
+        auto simple_source = dm.getData<DigitalIntervalSeries>("SimpleIntervals");
         REQUIRE(simple_source != nullptr);
 
         // Create computer via registry
@@ -907,7 +907,7 @@ TEST_CASE("TimestampInIntervalComputer basic integration", "[TimestampInInterval
     auto selector = std::make_unique<TimestampSelector>(ts, tf);
 
     // Build computer directly
-    auto src = dme->getIntervalSource("Intervals");
+    auto src = dm.getData<DigitalIntervalSeries>("Intervals");
     REQUIRE(src != nullptr);
     auto comp = std::make_unique<TimestampInIntervalComputer>(src, "Intervals");
 
@@ -938,7 +938,7 @@ TEST_CASE("TimestampInIntervalComputer via registry", "[TimestampInIntervalCompu
     dm.setData<DigitalIntervalSeries>("DInt", dis, TimeKey("cam"));
 
     auto dme = std::make_shared<DataManagerExtension>(dm);
-    auto src = dme->getIntervalSource("DInt");
+    auto src = dm.getData<DigitalIntervalSeries>("DInt");
     REQUIRE(src != nullptr);
 
     ComputerRegistry registry;

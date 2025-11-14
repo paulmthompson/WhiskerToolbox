@@ -626,8 +626,8 @@ TEST_CASE_METHOD(IntervalOverlapTestFixture, "DM - TV - IntervalOverlapComputer 
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get the interval sources from the DataManager
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
+        auto stimulus_source = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
 
         REQUIRE(behavior_source != nullptr);
         REQUIRE(stimulus_source != nullptr);
@@ -698,8 +698,8 @@ TEST_CASE_METHOD(IntervalOverlapTestFixture, "DM - TV - IntervalOverlapComputer 
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get sources from different timeframes
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");  // behavior_time frame
-        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");// stimulus_time frame
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");  // behavior_time frame
+        auto stimulus_source = dm.getData<DigitalIntervalSeries>("StimulusIntervals");// stimulus_time frame
 
         REQUIRE(behavior_source != nullptr);
         REQUIRE(stimulus_source != nullptr);
@@ -788,7 +788,7 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         auto & registry = getTableRegistry().getComputerRegistry();
 
         // Get stimulus source for testing
-        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        auto stimulus_source = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
         REQUIRE(stimulus_source != nullptr);
 
         // Create computers via registry
@@ -847,7 +847,7 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         auto dme = std::make_shared<DataManagerExtension>(dm);
         auto & registry = getTableRegistry().getComputerRegistry();
 
-        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        auto stimulus_source = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
         REQUIRE(stimulus_source != nullptr);
 
         // Create computer via registry
@@ -1238,8 +1238,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get the interval sources from the DataManager
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
+        auto stimulus_source = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
 
         REQUIRE(behavior_source != nullptr);
         REQUIRE(stimulus_source != nullptr);
@@ -1308,8 +1308,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         auto & dm = getDataManager();
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
+        auto stimulus_source = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
 
         REQUIRE(behavior_source != nullptr);
         REQUIRE(stimulus_source != nullptr);
@@ -1379,8 +1379,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         auto & dm = getDataManager();
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
+        auto stimulus_source = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
 
         // Create row selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
@@ -1452,8 +1452,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         auto & dm = getDataManager();
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        auto stimulus_source = dme->getIntervalSource("StimulusIntervals");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
+        auto stimulus_source = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
 
         REQUIRE(behavior_source != nullptr);
         REQUIRE(stimulus_source != nullptr);

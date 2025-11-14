@@ -562,7 +562,7 @@ std::unique_ptr<IColumnComputer<double>> DataAggregationExporter_Widget::_create
              column.transformation_type == "duration") {
         
         // Get interval source
-        auto source = _data_manager_extension->getIntervalSource(column.data_key);
+        auto source = _data_manager->getData<DigitalIntervalSeries>(column.data_key);
         if (!source) {
             throw std::runtime_error("Could not get interval source for: " + column.data_key);
         }
@@ -581,7 +581,7 @@ std::unique_ptr<IColumnComputer<double>> DataAggregationExporter_Widget::_create
              column.transformation_type == "interval_id_start" ||
              column.transformation_type == "interval_id_end") {
         // Get interval source for reference data
-        auto source = _data_manager_extension->getIntervalSource(column.reference_data_key);
+        auto source = _data_manager->getData<DigitalIntervalSeries>(column.reference_data_key);
         if (!source) {
             throw std::runtime_error("Could not get interval source for: " + column.reference_data_key);
         }

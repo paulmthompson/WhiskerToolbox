@@ -92,12 +92,13 @@ protected:
      * @return Shared pointer to a TableView with test data
      */
     std::shared_ptr<TableView> createSampleTableView() {
+        auto & dm = getDataManager();
         auto dme = getDataManagerExtension();
 
         // Get test data sources
-        auto neuron1_source = dme->getEventSource("Neuron1Spikes");
-        auto neuron2_source = dme->getEventSource("Neuron2Spikes");
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto neuron1_source = dm.getData<DigitalEventSeries>("Neuron1Spikes");
+        auto neuron2_source = dm.getData<DigitalEventSeries>("Neuron2Spikes");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
 
         if (!neuron1_source || !neuron2_source || !behavior_source) {
             return nullptr;
@@ -193,7 +194,7 @@ protected:
      */
     std::unique_ptr<IRowSelector> createSampleRowSelector() {
         auto dme = getDataManagerExtension();
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto behavior_source = m_data_manager->getData<DigitalIntervalSeries>("BehaviorPeriods");
 
         if (!behavior_source) {
             return nullptr;
@@ -372,6 +373,7 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Basic Functi
 
 TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Display boolean column (Event Presence)", "[TableViewerWidget][BoolDisplay]") {
     auto dme = getDataManagerExtension();
+    auto & dm = getDataManager();
     REQUIRE(dme != nullptr);
 
     // Row selector: behavior periods from fixture (4 rows)
@@ -379,7 +381,7 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Display bool
     REQUIRE(row_selector != nullptr);
 
     // Event source: Neuron1Spikes (from fixture)
-    auto n1 = dme->getEventSource("Neuron1Spikes");
+    auto n1 = dm.getData<DigitalEventSeries>("Neuron1Spikes");
     REQUIRE(n1 != nullptr);
 
     // Build table with a single boolean presence column
@@ -627,8 +629,8 @@ TEST_CASE_METHOD(TableViewerWidgetTestFixture, "TableViewerWidget - Table Regist
         builder.setRowSelector(std::move(row_selector));
 
         // Get neuron sources
-        auto neuron1_source = dme->getEventSource("Neuron1Spikes");
-        auto neuron2_source = dme->getEventSource("Neuron2Spikes");
+        auto neuron1_source = dm.getData<DigitalEventSeries>("Neuron1Spikes");
+        auto neuron2_source = dm.getData<DigitalEventSeries>("Neuron2Spikes");
         REQUIRE(neuron1_source != nullptr);
         REQUIRE(neuron2_source != nullptr);
 

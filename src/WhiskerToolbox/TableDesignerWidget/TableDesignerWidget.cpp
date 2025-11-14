@@ -1225,7 +1225,7 @@ TableDesignerWidget::createDataSourceVariant(QString const & data_source_string,
         // Event-based computers in the registry operate with interval rows
         row_selector_type = RowSelectorType::IntervalBased;
 
-        if (auto event_source = data_manager_extension->getEventSource(source_name.toStdString())) {
+        if (auto event_source = _data_manager->getData<DigitalEventSeries>(source_name.toStdString())) {
             result = event_source;
         }
 
@@ -1233,7 +1233,7 @@ TableDesignerWidget::createDataSourceVariant(QString const & data_source_string,
         QString source_name = data_source_string.mid(11);// Remove "Intervals: " prefix
         row_selector_type = RowSelectorType::IntervalBased;
 
-        if (auto interval_source = data_manager_extension->getIntervalSource(source_name.toStdString())) {
+        if (auto interval_source = _data_manager->getData<DigitalIntervalSeries>(source_name.toStdString())) {
             result = interval_source;
         }
     } else if (data_source_string.startsWith("analog:")) {
@@ -1262,13 +1262,13 @@ TableDesignerWidget::createColumnDataSourceVariant(QString const & data_source_s
 
     if (data_source_string.startsWith("Events: ")) {
         QString source_name = data_source_string.mid(8);// Remove "Events: " prefix
-        if (auto event_source = data_manager_extension->getEventSource(source_name.toStdString())) {
+        if (auto event_source = _data_manager->getData<DigitalEventSeries>(source_name.toStdString())) {
             result = event_source;
         }
 
     } else if (data_source_string.startsWith("Intervals: ")) {
         QString source_name = data_source_string.mid(11);// Remove "Intervals: " prefix
-        if (auto interval_source = data_manager_extension->getIntervalSource(source_name.toStdString())) {
+        if (auto interval_source = _data_manager->getData<DigitalIntervalSeries>(source_name.toStdString())) {
             result = interval_source;
         }
 

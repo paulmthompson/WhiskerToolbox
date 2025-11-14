@@ -494,7 +494,7 @@ TEST_CASE_METHOD(AnalogSliceGathererTestFixture, "DM - TV - AnalogSliceGathererC
         
         // Create row selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
-        auto behavior_interval_source = dme->getIntervalSource("BehaviorPeriods");
+        auto behavior_interval_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
         
         REQUIRE(behavior_interval_source != nullptr);
         
@@ -550,7 +550,7 @@ TEST_CASE_METHOD(AnalogSliceGathererTestFixture, "DM - TV - AnalogSliceGathererC
         
         // Get sources from different timeframes
         auto triangular_source = dme->getAnalogSource("TriangularWave");  // analog_time frame (101 points)
-        auto behavior_interval_source = dme->getIntervalSource("BehaviorPeriods"); // behavior_time frame (51 points)
+        auto behavior_interval_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods"); // behavior_time frame (51 points)
         
         REQUIRE(triangular_source != nullptr);
         REQUIRE(behavior_interval_source != nullptr);

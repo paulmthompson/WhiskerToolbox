@@ -612,16 +612,16 @@ TEST_CASE_METHOD(EventInIntervalTestFixture, "DM - TV - EventInIntervalComputer 
         auto dme = std::make_shared<DataManagerExtension>(dm);
         
         // Get the event sources from the DataManager
-        auto neuron1_source = dme->getEventSource("Neuron1Spikes");
-        auto neuron2_source = dme->getEventSource("Neuron2Spikes");
-        auto neuron3_source = dme->getEventSource("Neuron3Spikes");
+        auto neuron1_source = dm.getData<DigitalEventSeries>("Neuron1Spikes");
+        auto neuron2_source = dm.getData<DigitalEventSeries>("Neuron2Spikes");
+        auto neuron3_source = dm.getData<DigitalEventSeries>("Neuron3Spikes");
         
         REQUIRE(neuron1_source != nullptr);
         REQUIRE(neuron2_source != nullptr);
         REQUIRE(neuron3_source != nullptr);
         
         // Get the behavior intervals to use as row selector
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
         REQUIRE(behavior_source != nullptr);
         
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
@@ -715,8 +715,8 @@ TEST_CASE_METHOD(EventInIntervalTestFixture, "DM - TV - EventInIntervalComputer 
         auto dme = std::make_shared<DataManagerExtension>(dm);
         
         // Get sources from different timeframes
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");  // behavior_time frame
-        auto neuron_source = dme->getEventSource("Neuron1Spikes");        // spike_time frame
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");  // behavior_time frame
+        auto neuron_source = dm.getData<DigitalEventSeries>("Neuron1Spikes");        // spike_time frame
         
         REQUIRE(behavior_source != nullptr);
         REQUIRE(neuron_source != nullptr);
@@ -818,7 +818,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         auto& registry = getTableRegistry().getComputerRegistry();
         
         // Get neuron source for testing
-        auto neuron_source = dme->getEventSource("Neuron1Spikes");
+        auto neuron_source = dm.getData<DigitalEventSeries>("Neuron1Spikes");
         REQUIRE(neuron_source != nullptr);
         
         // Create computers via registry
@@ -903,7 +903,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         auto dme = std::make_shared<DataManagerExtension>(dm);
         auto& registry = getTableRegistry().getComputerRegistry();
         
-        auto neuron_source = dme->getEventSource("Neuron2Spikes");
+        auto neuron_source = dm.getData<DigitalEventSeries>("Neuron2Spikes");
         REQUIRE(neuron_source != nullptr);
         
         // Create computer via registry
@@ -1442,8 +1442,8 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         auto dme = std::make_shared<DataManagerExtension>(dm);
         
         // Get the event sources from the DataManager
-        auto neuron1_source = dme->getEventSource("Neuron1Spikes");
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto neuron1_source = dm.getData<DigitalEventSeries>("Neuron1Spikes");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
         
         REQUIRE(neuron1_source != nullptr);
         REQUIRE(behavior_source != nullptr);
@@ -1533,17 +1533,13 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         auto& dm = getDataManager();
         auto dme = std::make_shared<DataManagerExtension>(dm);
         
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        auto neuron1_source = dme->getEventSource("Neuron1Spikes");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
+        auto neuron1_source = dm.getData<DigitalEventSeries>("Neuron1Spikes");
         
         REQUIRE(behavior_source != nullptr);
         REQUIRE(neuron1_source != nullptr);
         
-        // Get original source EntityIDs from the DigitalEventSeries
-        auto neuron1_data = dm.getData<DigitalEventSeries>("Neuron1Spikes");
-        REQUIRE(neuron1_data != nullptr);
-        
-        auto source_neuron1_entity_ids = neuron1_data->getEntityIds();
+        auto source_neuron1_entity_ids = neuron1_source->getEntityIds();
         std::cout << "Source neuron1 data has " << source_neuron1_entity_ids.size() << " EntityIDs" << std::endl;
         
         // Create row selector from behavior intervals
@@ -1627,7 +1623,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         
         // Additional verification: check EntityID-to-event mapping
         auto event_data = table.getColumnValues<std::vector<float>>("Neuron1_Events");
-        auto source_events = neuron1_data->getEventSeries();
+        auto source_events = neuron1_source->getEventSeries();
         
         std::cout << "Source has " << source_events.size() << " events total" << std::endl;
         
@@ -1676,8 +1672,8 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         auto& dm = getDataManager();
         auto dme = std::make_shared<DataManagerExtension>(dm);
         
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        auto neuron2_source = dme->getEventSource("Neuron2Spikes");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
+        auto neuron2_source = dm.getData<DigitalEventSeries>("Neuron2Spikes");
         
         REQUIRE(behavior_source != nullptr);
         REQUIRE(neuron2_source != nullptr);
@@ -1741,8 +1737,8 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         auto& dm = getDataManager();
         auto dme = std::make_shared<DataManagerExtension>(dm);
         
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
-        auto neuron1_source = dme->getEventSource("Neuron1Spikes");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
+        auto neuron1_source = dm.getData<DigitalEventSeries>("Neuron1Spikes");
         
         // Create simple test intervals
         std::vector<TimeFrameInterval> test_intervals = {

@@ -499,7 +499,7 @@ TEST_CASE_METHOD(IntervalReductionTestFixture, "DM - TV - IntervalReductionCompu
 
         // Create interval selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
-        auto behavior_source = dme->getIntervalSource("BehaviorPeriods");
+        auto behavior_source = dm.getData<DigitalIntervalSeries>("BehaviorPeriods");
         REQUIRE(behavior_source != nullptr);
 
         auto behavior_intervals = behavior_source->getIntervalsInRange(

@@ -137,7 +137,7 @@ TEST_CASE_METHOD(MultiSampleLineDataFixture, "TableViewBuilder allows single mul
         TableViewBuilder builder(dme);
         builder.setRowSelector(std::move(rowSelector));
         
-        auto singleSource = dme->getLineSource("SingleSampleLines");
+        auto singleSource = dm.getData<LineData>("SingleSampleLines");
         auto computer = std::make_unique<LineSamplingMultiComputer>(
             singleSource, "SingleSampleLines", timeFrame, 1);
         
@@ -149,7 +149,7 @@ TEST_CASE_METHOD(MultiSampleLineDataFixture, "TableViewBuilder allows single mul
         TableViewBuilder builder(dme);
         builder.setRowSelector(std::move(rowSelector));
         
-        auto multiSource = dme->getLineSource("MultiSampleLines");
+        auto multiSource = dm.getData<LineData>("MultiSampleLines");
         auto computer = std::make_unique<LineSamplingMultiComputer>(
             multiSource, "MultiSampleLines", timeFrame, 1);
         
@@ -177,14 +177,14 @@ TEST_CASE_METHOD(MultiSampleLineDataFixture, "TableViewBuilder rejects multiple 
     builder.setRowSelector(std::move(rowSelector));
     
     // Add first multi-sample source
-    auto multiSource1 = dme->getLineSource("MultiSampleLines");
+    auto multiSource1 = dm.getData<LineData>("MultiSampleLines");
     auto computer1 = std::make_unique<LineSamplingMultiComputer>(
         multiSource1, "MultiSampleLines", timeFrame, 1);
     
     REQUIRE_NOTHROW(builder.addColumns<double>("MultiLine1", std::move(computer1)));
     
     // Add second multi-sample source - this should cause build() to fail
-    auto multiSource2 = dme->getLineSource("ConflictMultiSampleLines");
+    auto multiSource2 = dm.getData<LineData>("ConflictMultiSampleLines");
     auto computer2 = std::make_unique<LineSamplingMultiComputer>(
         multiSource2, "ConflictMultiSampleLines", timeFrame, 1);
     
@@ -219,14 +219,14 @@ TEST_CASE_METHOD(MultiSampleLineDataFixture, "TableViewBuilder allows mixed sing
     builder.setRowSelector(std::move(rowSelector));
     
     // Add single-sample source
-    auto singleSource = dme->getLineSource("SingleSampleLines");
+    auto singleSource = dm.getData<LineData>("SingleSampleLines");
     auto computer1 = std::make_unique<LineSamplingMultiComputer>(
         singleSource, "SingleSampleLines", timeFrame, 1);
     
     REQUIRE_NOTHROW(builder.addColumns<double>("SingleLine", std::move(computer1)));
     
     // Add multi-sample source
-    auto multiSource = dme->getLineSource("MultiSampleLines");
+    auto multiSource = dm.getData<LineData>("MultiSampleLines");
     auto computer2 = std::make_unique<LineSamplingMultiComputer>(
         multiSource, "MultiSampleLines", timeFrame, 1);
     
@@ -262,7 +262,7 @@ TEST_CASE_METHOD(MultiSampleLineDataFixture, "Multi-sample expansion generates c
     TableViewBuilder builder(dme);
     builder.setRowSelector(std::move(rowSelector));
     
-    auto multiSource = dme->getLineSource("MultiSampleLines");
+    auto multiSource = dm.getData<LineData>("MultiSampleLines");
     auto computer = std::make_unique<LineSamplingMultiComputer>(
         multiSource, "MultiSampleLines", timeFrame, 1);
     
@@ -319,12 +319,12 @@ TEST_CASE_METHOD(MultiSampleLineDataFixture, "Error messages are informative for
     builder.setRowSelector(std::move(rowSelector));
     
     // Add multiple multi-sample sources
-    auto multiSource1 = dme->getLineSource("MultiSampleLines");
+    auto multiSource1 = dm.getData<LineData>("MultiSampleLines");
     auto computer1 = std::make_unique<LineSamplingMultiComputer>(
         multiSource1, "MultiSampleLines", timeFrame, 1);
     builder.addColumns<double>("MultiLine1", std::move(computer1));
     
-    auto multiSource2 = dme->getLineSource("ConflictMultiSampleLines");
+    auto multiSource2 = dm.getData<LineData>("ConflictMultiSampleLines");
     auto computer2 = std::make_unique<LineSamplingMultiComputer>(
         multiSource2, "ConflictMultiSampleLines", timeFrame, 1);
     builder.addColumns<double>("MultiLine2", std::move(computer2));
@@ -363,7 +363,7 @@ TEST_CASE_METHOD(MultiSampleLineDataFixture, "Table view construction with no mu
     builder.setRowSelector(std::move(rowSelector));
     
     // Add only single-sample sources
-    auto singleSource = dme->getLineSource("SingleSampleLines");
+    auto singleSource = dm.getData<LineData>("SingleSampleLines");
     auto computer = std::make_unique<LineSamplingMultiComputer>(
         singleSource, "SingleSampleLines", timeFrame, 1);
     
@@ -395,40 +395,7 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
     auto timeFrame = std::make_shared<TimeFrame>(timeSamples);
     auto timeKey = TimeKey("test_time");
     dm->setTime(timeKey, timeFrame);
-
-    SECTION("Single-sample PointData works with TableView") {
-        // Create single-sample point data (one point per timestamp)
-        auto singlePointData = std::make_shared<PointData>();
-        singlePointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, NotifyObservers::No);
-        singlePointData->addAtTime(TimeFrameIndex(20), {15.0f, 20.0f}, NotifyObservers::No);
-        singlePointData->addAtTime(TimeFrameIndex(30), {25.0f, 30.0f}, NotifyObservers::No);
-        
-        dm->setData<PointData>("SinglePoints", singlePointData, timeKey);
-        
-        // Should be able to get PointData directly
-        auto pointData = dme->getPointSource("SinglePoints");
-        REQUIRE(pointData != nullptr);
-        REQUIRE(pointData->getMaxEntriesAtAnyTime() == 1);
-    }
     
-    SECTION("Multi-sample PointData is accessible") {
-        // Create multi-sample point data (multiple points per timestamp)
-        auto multiPointData = std::make_shared<PointData>();
-        
-        // Add multiple points at timestamp 10
-        multiPointData->addAtTime(TimeFrameIndex(10), {5.0f, 10.0f}, NotifyObservers::No);
-        multiPointData->addAtTime(TimeFrameIndex(10), {15.0f, 20.0f}, NotifyObservers::No);
-        
-        // Single point at timestamp 20
-        multiPointData->addAtTime(TimeFrameIndex(20), {25.0f, 30.0f}, NotifyObservers::No);
-        
-        dm->setData<PointData>("MultiPoints", multiPointData, timeKey);
-        
-        // Should be able to get PointData directly
-        auto pointData = dme->getPointSource("MultiPoints");
-        REQUIRE(pointData != nullptr);
-        REQUIRE(pointData->getMaxEntriesAtAnyTime() > 1);
-    }
     
     SECTION("Mixed line and point sources - only one multi-sample allowed") {
         // Create single-sample LineData
@@ -454,7 +421,7 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         builder.setRowSelector(std::move(rowSelector));
 
         // Add line source (single-sample)
-        auto lineSource = dme->getLineSource("SingleLines");
+        auto lineSource = dm->getData<LineData>("SingleLines");
         auto lineComputer = std::make_unique<LineSamplingMultiComputer>(
             lineSource, "SingleLines", timeFrame, 1);
         REQUIRE_NOTHROW(builder.addColumns<double>("LineData", std::move(lineComputer)));
@@ -495,7 +462,7 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         builder.setRowSelector(std::move(rowSelector));
 
         // Add line source (multi-sample)
-        auto lineSource = dme->getLineSource("MultiLines");
+        auto lineSource = dm->getData<LineData>("MultiLines");
         auto lineComputer = std::make_unique<LineSamplingMultiComputer>(
             lineSource, "MultiLines", timeFrame, 1);
         REQUIRE_NOTHROW(builder.addColumns<double>("LineData", std::move(lineComputer)));

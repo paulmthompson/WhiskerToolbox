@@ -24,49 +24,6 @@
 #include <random>
 #include <vector>
 
-
-TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
-
-    // NOTE: Tests for X/Y component extraction have been removed.
-    // PointComponentAdapter was removed in favor of using PointData directly.
-    // If X/Y component extraction is needed, create dedicated computers.
-
-    SECTION("Extract X and Y components using interval reduction") {
-        // Test that we can access PointData directly without adapters
-        DataManager dataManager;
-
-        std::vector<int> timeValues = {0, 1, 2};
-        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
-        dataManager.setTime(TimeKey("test_time"), timeFrame);
-
-        auto pointData = std::make_shared<PointData>();
-        pointData->addAtTime(TimeFrameIndex(0), {1.0f, 2.0f}, NotifyObservers::No);
-        pointData->addAtTime(TimeFrameIndex(1), {3.0f, 4.0f}, NotifyObservers::No);
-        pointData->addAtTime(TimeFrameIndex(2), {5.0f, 6.0f}, NotifyObservers::No);
-
-        dataManager.setData<PointData>("TestPoints", pointData, TimeKey("test_time"));
-
-        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
-        auto retrievedPointData = dataManagerExtension->getPointSource("TestPoints");
-
-        REQUIRE(retrievedPointData != nullptr);
-        REQUIRE(retrievedPointData->getMaxEntriesAtAnyTime() == 1);
-
-        // Verify we can access the point data
-        auto entries = retrievedPointData->getAllEntries();
-        REQUIRE(entries.size() == 3);
-    }
-
-    SECTION("Test lazy evaluation and caching") {
-        DataManager dataManager;
-        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
-
-        // Test with non-existent point data
-        auto nonExistentData = dataManagerExtension->getPointSource("NonExistent");
-        REQUIRE(nonExistentData == nullptr);
-    }
-}
-
 TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSliceGathererComputer]") {
 
     // NOTE: Tests for analog slice gathering from point data have been removed.
@@ -236,7 +193,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
 
         // Create row selector from the first interval series
-        auto rowIntervalSource = dataManagerExtension->getIntervalSource("RowIntervals");
+        auto rowIntervalSource = dataManager.getData<DigitalIntervalSeries>("RowIntervals");
         REQUIRE(rowIntervalSource != nullptr);
 
         // Get the intervals from the row source to create the row selector
@@ -257,7 +214,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         builder.setRowSelector(std::move(rowSelector));
 
         // Get interval source for column data
-        auto columnIntervalSource = dataManagerExtension->getIntervalSource("ColumnIntervals");
+        auto columnIntervalSource = dataManager.getData<DigitalIntervalSeries>("ColumnIntervals");
         REQUIRE(columnIntervalSource != nullptr);
 
         // Add columns using IntervalOverlapComputer
@@ -372,7 +329,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
 
         // Create row selector from the row interval series
-        auto rowIntervalSource = dataManagerExtension->getIntervalSource("RowIntervals");
+        auto rowIntervalSource = dataManager.getData<DigitalIntervalSeries>("RowIntervals");
         REQUIRE(rowIntervalSource != nullptr);
 
         // Get the intervals from the row source
@@ -396,7 +353,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         builder.setRowSelector(std::move(rowSelector));
 
         // Get interval source for column data
-        auto columnIntervalSource = dataManagerExtension->getIntervalSource("ColumnIntervals");
+        auto columnIntervalSource = dataManager.getData<DigitalIntervalSeries>("ColumnIntervals");
         REQUIRE(columnIntervalSource != nullptr);
 
         // Add columns using IntervalOverlapComputer

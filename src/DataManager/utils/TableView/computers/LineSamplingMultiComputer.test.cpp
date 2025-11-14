@@ -620,7 +620,7 @@ TEST_CASE_METHOD(LineSamplingTestFixture, "DM - TV - LineSamplingMultiComputer w
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get the line source from the DataManager
-        auto whisker_source = dme->getLineSource("WhiskerTraces");
+        auto whisker_source = dm.getData<LineData>("WhiskerTraces");
 
         REQUIRE(whisker_source != nullptr);
 
@@ -688,7 +688,7 @@ TEST_CASE_METHOD(LineSamplingTestFixture, "DM - TV - LineSamplingMultiComputer w
         auto dme = std::make_shared<DataManagerExtension>(dm);
 
         // Get the shape source
-        auto shape_source = dme->getLineSource("GeometricShapes");
+        auto shape_source = dm.getData<LineData>("GeometricShapes");
         REQUIRE(shape_source != nullptr);
 
         // Create row selector for shape timestamps
@@ -823,7 +823,7 @@ TEST_CASE_METHOD(LineSamplingTableRegistryTestFixture, "DM - TV - LineSamplingMu
         auto & registry = getTableRegistry().getComputerRegistry();
 
         // Get whisker source for testing
-        auto whisker_source = dme->getLineSource("WhiskerTraces");
+        auto whisker_source = dm.getData<LineData>("WhiskerTraces");
         REQUIRE(whisker_source != nullptr);
 
         // Create computer via registry with different segment parameters
@@ -888,7 +888,7 @@ TEST_CASE_METHOD(LineSamplingTableRegistryTestFixture, "DM - TV - LineSamplingMu
         auto dme = std::make_shared<DataManagerExtension>(dm);
         auto & registry = getTableRegistry().getComputerRegistry();
 
-        auto whisker_source = dme->getLineSource("WhiskerTraces");
+        auto whisker_source = dm.getData<LineData>("WhiskerTraces");
         REQUIRE(whisker_source != nullptr);
 
         // Create computer via registry

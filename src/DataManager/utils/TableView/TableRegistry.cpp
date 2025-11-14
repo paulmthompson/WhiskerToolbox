@@ -290,14 +290,14 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
             }
         } else if (column_source.starts_with("events:")) {
             std::string source_name = column_source.substr(7);// Remove "events:" prefix
-            auto event_source = _data_manager_extension->getEventSource(source_name);
+            auto event_source = _data_manager.getData<DigitalEventSeries>(source_name);
             if (event_source) {
                 data_source_variant = event_source;
                 valid_source = true;
             }
         } else if (column_source.starts_with("intervals:")) {
             std::string source_name = column_source.substr(10);// Remove "intervals:" prefix
-            auto interval_source = _data_manager_extension->getIntervalSource(source_name);
+            auto interval_source = _data_manager.getData<DigitalIntervalSeries>(source_name);
             if (interval_source) {
                 data_source_variant = interval_source;
                 valid_source = true;
@@ -318,7 +318,7 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
             }
         } else if (column_source.starts_with("lines:")) {
             std::string source_name = column_source.substr(6);// Remove "lines:" prefix
-            auto line_source = _data_manager_extension->getLineSource(source_name);
+            auto line_source = _data_manager.getData<LineData>(source_name);
             if (line_source) {
                 data_source_variant = line_source;
                 valid_source = true;
@@ -326,16 +326,16 @@ bool TableRegistry::addColumnToBuilder(TableViewBuilder & builder, ColumnInfo co
         } else {
             // Fallback: try to infer source kind when no prefix is provided
             // Prefer events -> intervals -> analog -> lines
-            if (auto ev = _data_manager_extension->getEventSource(column_source)) {
+            if (auto ev = _data_manager.getData<DigitalEventSeries>(column_source)) {
                 data_source_variant = ev;
                 valid_source = true;
-            } else if (auto iv = _data_manager_extension->getIntervalSource(column_source)) {
+            } else if (auto iv = _data_manager.getData<DigitalIntervalSeries>(column_source)) {
                 data_source_variant = iv;
                 valid_source = true;
             } else if (auto an = _data_manager_extension->getAnalogSource(column_source)) {
                 data_source_variant = an;
                 valid_source = true;
-            } else if (auto ln = _data_manager_extension->getLineSource(column_source)) {
+            } else if (auto ln = _data_manager.getData<LineData>(column_source)) {
                 data_source_variant = ln;
                 valid_source = true;
             }

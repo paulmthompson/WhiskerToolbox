@@ -51,30 +51,8 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(std
     }
 }
 
-template<typename T>
-std::shared_ptr<T> DataManagerExtension::createDataOfType(std::string const & name) {
-    auto data = m_dataManager.getDataVariant(name);
-    if (!data.has_value()) {
-        return nullptr;
-    }
-    if (auto typedData = std::get_if<std::shared_ptr<T>>(&data.value())) {
-        return *typedData;
-    } else {
-        return nullptr;
-    }
-}
-
 std::shared_ptr<LineData> DataManagerExtension::getLineSource(std::string const & name) {
-    return createDataOfType<LineData>(name);
-}
-std::shared_ptr<PointData> DataManagerExtension::getPointSource(std::string const & name) {
-    return createDataOfType<PointData>(name);
-}
-std::shared_ptr<DigitalEventSeries> DataManagerExtension::getEventSource(std::string const & name) {
-    return createDataOfType<DigitalEventSeries>(name);
-}
-std::shared_ptr<DigitalIntervalSeries> DataManagerExtension::getIntervalSource(std::string const & name) {
-    return createDataOfType<DigitalIntervalSeries>(name);
+    return m_dataManager.getData<LineData>(name);
 }
 
 std::optional<DataTypeVariant> DataManagerExtension::getDataVariant(std::string const & name) {
@@ -86,16 +64,16 @@ std::optional<DataManagerExtension::SourceHandle> DataManagerExtension::resolveS
     if (auto a = getAnalogSource(name)) {
         return a;
     }
-    if (auto i = createDataOfType<DigitalIntervalSeries>(name)) {
+    if (auto i = m_dataManager.getData<DigitalIntervalSeries>(name)) {
         return i;
     }
-    if (auto e = createDataOfType<DigitalEventSeries>(name)) {
+    if (auto e = m_dataManager.getData<DigitalEventSeries>(name)) {
         return e;
     }
-    if (auto l = createDataOfType<LineData>(name)) {
+    if (auto l = m_dataManager.getData<LineData>(name)) {
         return l;
     }
-    if (auto p = createDataOfType<PointData>(name)) {
+    if (auto p = m_dataManager.getData<PointData>(name)) {
         return p;
     }
     return std::nullopt;
