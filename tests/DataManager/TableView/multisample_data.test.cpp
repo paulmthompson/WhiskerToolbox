@@ -406,7 +406,7 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         dm->setData<PointData>("SinglePoints", singlePointData, timeKey);
         
         // Should be able to get PointData directly
-        auto pointData = dme->getPointData("SinglePoints");
+        auto pointData = dme->getPointSource("SinglePoints");
         REQUIRE(pointData != nullptr);
         REQUIRE(pointData->getMaxEntriesAtAnyTime() == 1);
     }
@@ -425,7 +425,7 @@ TEST_CASE("TableView PointData Multi-Sample Validation", "[TableView][MultiSampl
         dm->setData<PointData>("MultiPoints", multiPointData, timeKey);
         
         // Should be able to get PointData directly
-        auto pointData = dme->getPointData("MultiPoints");
+        auto pointData = dme->getPointSource("MultiPoints");
         REQUIRE(pointData != nullptr);
         REQUIRE(pointData->getMaxEntriesAtAnyTime() > 1);
     }

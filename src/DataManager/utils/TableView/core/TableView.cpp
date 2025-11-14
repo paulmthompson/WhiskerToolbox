@@ -137,7 +137,8 @@ ExecutionPlan makePlanFromLine(std::shared_ptr<LineData> const & lineSource,
             for (auto const & col : columns) {
                 try {
                     auto const & dep = col->getSourceDependency();
-                    if (!dm.getLineSource(dep)) {
+                    auto dep_data = dm.resolveSource(dep);
+                    if (!std::holds_alternative<std::shared_ptr<LineData>>(dep_data.value())) {
                         anyNonLineColumn = true;
                         break;
                     }

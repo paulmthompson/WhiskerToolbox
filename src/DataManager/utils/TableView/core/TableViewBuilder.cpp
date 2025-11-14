@@ -87,29 +87,41 @@ void TableViewBuilder::validateMultiSampleSources() {
         
         for (auto const & dep : dependencies) {
             // Check if this dependency is a line source
-            auto lineSource = m_dataManager->getLineSource(dep);
-            if (lineSource && lineSource->getMaxEntriesAtAnyTime() > 1) {
-                multiSampleSources.insert(dep);
+            auto data_var = m_dataManager->getDataVariant(dep);
+            if (!data_var.has_value()) {
+                continue;
             }
-            
-            // Check if this dependency is a point source
-            auto pointData = m_dataManager->getPointData(dep);
-            if (pointData && pointData->getMaxEntriesAtAnyTime() > 1) {
-                multiSampleSources.insert(dep);
+            if (std::holds_alternative<std::shared_ptr<LineData>>(data_var.value())) {
+                auto lineSource = std::get<std::shared_ptr<LineData>>(data_var.value());
+                if (lineSource && lineSource->getMaxEntriesAtAnyTime() > 1) {
+                    multiSampleSources.insert(dep);
+                }
+            } else if (std::holds_alternative<std::shared_ptr<PointData>>(data_var.value())) {
+                auto pointData = std::get<std::shared_ptr<PointData>>(data_var.value());
+                if (pointData && pointData->getMaxEntriesAtAnyTime() > 1) {
+                    multiSampleSources.insert(dep);
+                }
             }
         }
         
         // Also check the source dependency if it exists
         auto sourceDep = column->getSourceDependency();
         if (!sourceDep.empty()) {
-            auto lineSource = m_dataManager->getLineSource(sourceDep);
-            if (lineSource && lineSource->getMaxEntriesAtAnyTime() > 1) {
-                multiSampleSources.insert(sourceDep);
-            }
             
-            auto pointData = m_dataManager->getPointData(sourceDep);
-            if (pointData && pointData->getMaxEntriesAtAnyTime() > 1) {
-                multiSampleSources.insert(sourceDep);
+            auto data_var = m_dataManager->getDataVariant(sourceDep);
+            if (!data_var.has_value()) {
+                continue;
+            }
+            if (std::holds_alternative<std::shared_ptr<LineData>>(data_var.value())) {
+                auto lineSource = std::get<std::shared_ptr<LineData>>(data_var.value());
+                if (lineSource && lineSource->getMaxEntriesAtAnyTime() > 1) {
+                    multiSampleSources.insert(sourceDep);
+                }
+            } else if (std::holds_alternative<std::shared_ptr<PointData>>(data_var.value())) {
+                auto pointData = std::get<std::shared_ptr<PointData>>(data_var.value());
+                if (pointData && pointData->getMaxEntriesAtAnyTime() > 1) {
+                    multiSampleSources.insert(sourceDep);
+                }
             }
         }
     }

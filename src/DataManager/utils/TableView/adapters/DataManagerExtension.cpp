@@ -32,10 +32,6 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::getAnalogSource(std::string
 
 void DataManagerExtension::clearCache() {
     m_dataSourceCache.clear();
-    m_eventSourceCache.clear();
-    m_intervalSourceCache.clear();
-    m_lineSourceCache.clear();
-    m_pointDataCache.clear();
 }
 
 std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(std::string const & name) {
@@ -55,131 +51,34 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(std
     }
 }
 
-std::shared_ptr<DigitalEventSeries> DataManagerExtension::createDigitalEventSeries(std::string const & name) {
-    try {
-        auto digitalEventSeries = m_dataManager.getData<DigitalEventSeries>(name);
-        if (!digitalEventSeries) {
-            return nullptr;
-        }
-
-        // DigitalEventSeries already has TimeFrame and EntityID information, no adapter needed
-        return digitalEventSeries;
-    } catch (std::exception const & e) {
-        std::cerr << "Error retrieving DigitalEventSeries for '" << name << "': " << e.what() << std::endl;
+template<typename T>
+std::shared_ptr<T> DataManagerExtension::createDataOfType(std::string const & name) {
+    auto data = m_dataManager.getDataVariant(name);
+    if (!data.has_value()) {
         return nullptr;
     }
-}
-
-std::shared_ptr<DigitalIntervalSeries> DataManagerExtension::createDigitalIntervalSeries(std::string const & name) {
-    try {
-        auto digitalIntervalSeries = m_dataManager.getData<DigitalIntervalSeries>(name);
-        if (!digitalIntervalSeries) {
-            return nullptr;
-        }
-
-        // DigitalIntervalSeries already has TimeFrame and EntityID information, no adapter needed
-        return digitalIntervalSeries;
-    } catch (std::exception const & e) {
-        std::cerr << "Error retrieving DigitalIntervalSeries for '" << name << "': " << e.what() << std::endl;
-        return nullptr;
-    }
-}
-
-std::shared_ptr<LineData> DataManagerExtension::createLineData(std::string const & name) {
-    try {
-        auto lineData = m_dataManager.getData<LineData>(name);
-        if (!lineData) {
-            return nullptr;
-        }
-
-        return lineData;
-    } catch (std::exception const & e) {
-        std::cerr << "Error retrieving LineData for '" << name << "': " << e.what() << std::endl;
-        return nullptr;
-    }
-}
-
-std::shared_ptr<PointData> DataManagerExtension::createPointData(std::string const & name) {
-    try {
-        auto pointData = m_dataManager.getData<PointData>(name);
-        if (!pointData) {
-            return nullptr;
-        }
-
-        // PointData already has TimeFrame and EntityID information, no adapter needed
-        return pointData;
-    } catch (std::exception const & e) {
-        std::cerr << "Error retrieving PointData for '" << name << "': " << e.what() << std::endl;
-        return nullptr;
-    }
-}
-
-std::shared_ptr<DigitalEventSeries> DataManagerExtension::getEventSource(std::string const & name) {
-    // Check cache first
-    auto it = m_eventSourceCache.find(name);
-    if (it != m_eventSourceCache.end()) {
-        return it->second;
-    }
-
-    // Create/retrieve digital event series
-    auto eventSource = createDigitalEventSeries(name);
-    if (eventSource) {
-        m_eventSourceCache[name] = eventSource;
+    if (auto typedData = std::get_if<std::shared_ptr<T>>(&data.value())) {
+        return *typedData;
     } else {
-        std::cerr << "Event source '" << name << "' not found." << std::endl;
+        return nullptr;
     }
-    return eventSource;
-}
-
-std::shared_ptr<DigitalIntervalSeries> DataManagerExtension::getIntervalSource(std::string const & name) {
-    // Check cache first
-    auto it = m_intervalSourceCache.find(name);
-    if (it != m_intervalSourceCache.end()) {
-        return it->second;
-    }
-
-    // Create/retrieve digital interval series
-    auto intervalSource = createDigitalIntervalSeries(name);
-    if (intervalSource) {
-        m_intervalSourceCache[name] = intervalSource;
-    } else {
-        std::cerr << "Interval source '" << name << "' not found." << std::endl;
-    }
-    return intervalSource;
 }
 
 std::shared_ptr<LineData> DataManagerExtension::getLineSource(std::string const & name) {
-    // Check cache first
-    auto it = m_lineSourceCache.find(name);
-    if (it != m_lineSourceCache.end()) {
-        return it->second;
-    }
-
-    // Create/retrieve line data
-    auto lineSource = createLineData(name);
-    if (lineSource) {
-        m_lineSourceCache[name] = lineSource;
-    } else {
-        std::cerr << "Line data '" << name << "' not found." << std::endl;
-    }
-    return lineSource;
+    return createDataOfType<LineData>(name);
+}
+std::shared_ptr<PointData> DataManagerExtension::getPointSource(std::string const & name) {
+    return createDataOfType<PointData>(name);
+}
+std::shared_ptr<DigitalEventSeries> DataManagerExtension::getEventSource(std::string const & name) {
+    return createDataOfType<DigitalEventSeries>(name);
+}
+std::shared_ptr<DigitalIntervalSeries> DataManagerExtension::getIntervalSource(std::string const & name) {
+    return createDataOfType<DigitalIntervalSeries>(name);
 }
 
-std::shared_ptr<PointData> DataManagerExtension::getPointData(std::string const & name) {
-    // Check cache first
-    auto it = m_pointDataCache.find(name);
-    if (it != m_pointDataCache.end()) {
-        return it->second;
-    }
-
-    // Create/retrieve point data
-    auto pointData = createPointData(name);
-    if (pointData) {
-        m_pointDataCache[name] = pointData;
-    } else {
-        std::cerr << "Point data '" << name << "' not found." << std::endl;
-    }
-    return pointData;
+std::optional<DataTypeVariant> DataManagerExtension::getDataVariant(std::string const & name) {
+    return m_dataManager.getDataVariant(name);
 }
 
 std::optional<DataManagerExtension::SourceHandle> DataManagerExtension::resolveSource(std::string const & name) {
@@ -187,16 +86,16 @@ std::optional<DataManagerExtension::SourceHandle> DataManagerExtension::resolveS
     if (auto a = getAnalogSource(name)) {
         return a;
     }
-    if (auto i = getIntervalSource(name)) {
+    if (auto i = createDataOfType<DigitalIntervalSeries>(name)) {
         return i;
     }
-    if (auto e = getEventSource(name)) {
+    if (auto e = createDataOfType<DigitalEventSeries>(name)) {
         return e;
     }
-    if (auto l = getLineSource(name)) {
+    if (auto l = createDataOfType<LineData>(name)) {
         return l;
     }
-    if (auto p = getPointData(name)) {
+    if (auto p = createDataOfType<PointData>(name)) {
         return p;
     }
     return std::nullopt;

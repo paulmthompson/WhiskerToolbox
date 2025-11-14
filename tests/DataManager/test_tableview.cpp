@@ -47,7 +47,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         dataManager.setData<PointData>("TestPoints", pointData, TimeKey("test_time"));
 
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
-        auto retrievedPointData = dataManagerExtension->getPointData("TestPoints");
+        auto retrievedPointData = dataManagerExtension->getPointSource("TestPoints");
 
         REQUIRE(retrievedPointData != nullptr);
         REQUIRE(retrievedPointData->getMaxEntriesAtAnyTime() == 1);
@@ -62,7 +62,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
 
         // Test with non-existent point data
-        auto nonExistentData = dataManagerExtension->getPointData("NonExistent");
+        auto nonExistentData = dataManagerExtension->getPointSource("NonExistent");
         REQUIRE(nonExistentData == nullptr);
     }
 }

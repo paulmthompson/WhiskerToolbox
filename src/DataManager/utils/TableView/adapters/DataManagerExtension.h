@@ -1,6 +1,8 @@
 #ifndef DATA_MANAGER_EXTENSION_H
 #define DATA_MANAGER_EXTENSION_H
 
+#include "DataManagerTypes.hpp"
+
 #include <map>
 #include <memory>
 #include <optional>
@@ -11,11 +13,8 @@
 
 class AnalogDataAdapter;
 class DataManager;
-class DigitalEventSeries;
-class DigitalIntervalSeries;
 class IAnalogSource;
-class LineData;
-class PointData;
+
 
 
 /**
@@ -55,53 +54,21 @@ public:
      */
     auto getAnalogSource(std::string const & name) -> std::shared_ptr<IAnalogSource>;
 
+    std::shared_ptr<LineData> getLineSource(std::string const & name);
+    std::shared_ptr<PointData> getPointSource(std::string const & name);
+    std::shared_ptr<DigitalEventSeries> getEventSource(std::string const & name);
+    std::shared_ptr<DigitalIntervalSeries> getIntervalSource(std::string const & name);
+
     /**
      * @brief Clears the adapter cache.
      * 
-     * This method clears all cached IAnalogSource adapters. Should be called
-     * when the underlying data changes to ensure fresh adapters are created.
+     * This method clears cached IAnalogSource adapters. Should be called
+     * when the underlying analog data changes to ensure fresh adapters are created.
+     * 
+     * Note: Other data types (DigitalEventSeries, DigitalIntervalSeries, LineData, PointData)
+     * are accessed directly from DataManager without caching.
      */
     void clearCache();
-
-    /**
-     * @brief Gets digital event data by name.
-     * 
-     * This method provides direct access to DigitalEventSeries objects.
-     * 
-     * @param name The name of the event data.
-     * @return Shared pointer to DigitalEventSeries, or nullptr if not found.
-     */
-    auto getEventSource(std::string const & name) -> std::shared_ptr<DigitalEventSeries>;
-
-    /**
-     * @brief Gets an interval source by name.
-     * 
-     * This method provides direct access to DigitalIntervalSeries objects.
-     * 
-     * @param name The name of the interval source.
-     * @return Shared pointer to DigitalIntervalSeries, or nullptr if not found.
-     */
-    auto getIntervalSource(std::string const & name) -> std::shared_ptr<DigitalIntervalSeries>;
-
-    /**
-     * @brief Gets line data by name.
-     * 
-     * This method provides direct access to LineData objects.
-     * 
-     * @param name The name of the line data.
-     * @return Shared pointer to LineData, or nullptr if not found.
-     */
-    auto getLineSource(std::string const & name) -> std::shared_ptr<LineData>;
-
-    /**
-     * @brief Gets point data by name.
-     * 
-     * This method provides direct access to PointData objects.
-     * 
-     * @param name The name of the point data.
-     * @return Shared pointer to PointData, or nullptr if not found.
-     */
-    auto getPointData(std::string const & name) -> std::shared_ptr<PointData>;
 
     /**
      * @brief Resolve a source name to a concrete adapter variant.
@@ -111,6 +78,8 @@ public:
      */
     auto resolveSource(std::string const & name) -> std::optional<SourceHandle>;
 
+    std::optional<DataTypeVariant> getDataVariant(std::string const & name);
+
 private:
     /**
      * @brief Creates an AnalogDataAdapter for the given name.
@@ -119,42 +88,14 @@ private:
      */
     auto createAnalogDataAdapter(std::string const & name) -> std::shared_ptr<IAnalogSource>;
 
-    /**
-     * @brief Creates and retrieves DigitalEventSeries for the given name.
-     * @param name The name of the DigitalEventSeries data.
-     * @return Shared pointer to DigitalEventSeries, or nullptr if not found.
-     */
-    auto createDigitalEventSeries(std::string const & name) -> std::shared_ptr<DigitalEventSeries>;
 
-    /**
-     * @brief Creates and retrieves DigitalIntervalSeries for the given name.
-     * @param name The name of the DigitalIntervalSeries data.
-     * @return Shared pointer to DigitalIntervalSeries, or nullptr if not found.
-     */
-    auto createDigitalIntervalSeries(std::string const & name) -> std::shared_ptr<DigitalIntervalSeries>;
-
-    /**
-     * @brief Retrieves LineData for the given name.
-     * @param name The name of the LineData.
-     * @return Shared pointer to LineData, or nullptr if not found.
-     */
-    auto createLineData(std::string const & name) -> std::shared_ptr<LineData>;
-
-    /**
-     * @brief Creates and retrieves PointData for the given name.
-     * @param name The name of the PointData.
-     * @return Shared pointer to PointData, or nullptr if not found.
-     */
-    auto createPointData(std::string const & name) -> std::shared_ptr<PointData>;
+    template<typename T>
+    std::shared_ptr<T> createDataOfType(std::string const & name);
 
     DataManager & m_dataManager;
 
-    // Cache for adapter objects to ensure reuse and correct lifetime
+    // Cache for analog adapter objects to ensure reuse and correct lifetime
     mutable std::map<std::string, std::shared_ptr<IAnalogSource>> m_dataSourceCache;
-    mutable std::map<std::string, std::shared_ptr<DigitalEventSeries>> m_eventSourceCache;
-    mutable std::map<std::string, std::shared_ptr<DigitalIntervalSeries>> m_intervalSourceCache;
-    mutable std::map<std::string, std::shared_ptr<LineData>> m_lineSourceCache;
-    mutable std::map<std::string, std::shared_ptr<PointData>> m_pointDataCache;
 };
 
 #endif// DATA_MANAGER_EXTENSION_H
