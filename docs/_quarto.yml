@@ -45,6 +45,7 @@ website:
         - developer/index.qmd
         - developer/building.qmd
         - developer/code_quality.qmd
+        - developer/copilot.qmd
         - developer/contributing_code.qmd
         - developer/data_manager.qmd 
         - developer/file_io.qmd
