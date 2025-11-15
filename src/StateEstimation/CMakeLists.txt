@@ -80,7 +80,9 @@ if(ENABLE_ORTOOLS)
 endif()
 target_link_libraries(StateEstimation PUBLIC spdlog::spdlog_header_only)
 
-target_compile_definitions(StateEstimation PUBLIC ENABLE_ORTOOLS)
+if (ENABLE_ORTOOLS)
+    target_compile_definitions(StateEstimation PUBLIC ENABLE_ORTOOLS)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(StateEstimation PRIVATE ${CLANG_OPTIONS})
