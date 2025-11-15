@@ -23,6 +23,8 @@ option(ENABLE_BENCHMARK "Enable benchmark support" OFF)
 
 option(ENABLE_DETAILED_TEST_DISCOVERY "Enable detailed test discovery output" OFF)
 
+option(ENABLE_ORTOOLS "Enable OR-Tools support for min-cost flow tracking" ON)
+
 # Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")
 if(ENABLE_CAPNPROTO)
@@ -64,6 +66,12 @@ if(TENSOR_BACKEND_LIBTORCH)
     message(STATUS "Tensor backend: LibTorch (deep learning enabled)")
 else()
     message(STATUS "Tensor backend: Armadillo (lightweight, no deep learning)")
+endif()
+
+if(ENABLE_ORTOOLS)
+    message(STATUS "OR-Tools support: ENABLED")
+else()
+    message(STATUS "OR-Tools support: DISABLED")
 endif()
 
 message(STATUS "VCPKG_MANIFEST_FEATURES: ${VCPKG_MANIFEST_FEATURES}")

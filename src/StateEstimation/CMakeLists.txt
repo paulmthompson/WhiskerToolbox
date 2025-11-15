@@ -34,14 +34,19 @@ set(STATE_ESTIMATION_SOURCES
     Tracker.cpp
     Common.hpp
     DataSource.hpp
-    MinCostFlowTracker.hpp
-    MinCostFlowTracker.cpp
-    MinCostFlowSolver.hpp
-    MinCostFlowSolver.cpp
     MaskParticleFilter.hpp
     MaskParticleFilter.cpp
     MaskDataAdapter.hpp
 )
+
+if(ENABLE_ORTOOLS)
+    list(APPEND STATE_ESTIMATION_SOURCES
+        MinCostFlowTracker.hpp
+        MinCostFlowTracker.cpp
+        MinCostFlowSolver.hpp
+        MinCostFlowSolver.cpp
+    )
+endif()
 
 # Optional demo/example files (not included in library)
 set(STATE_ESTIMATION_EXAMPLES
@@ -57,9 +62,11 @@ target_include_directories(StateEstimation PUBLIC
     "$<BUILD_INTERFACE:${pf_SOURCE_DIR}>"
 )
 
-target_include_directories(StateEstimation PRIVATE
-    "$<BUILD_INTERFACE:${ortools_SOURCE_DIR}>"  # For ortools includes
-)
+if(ENABLE_ORTOOLS)
+    target_include_directories(StateEstimation PRIVATE
+        "$<BUILD_INTERFACE:${ortools_SOURCE_DIR}>"  # For ortools includes
+    )
+endif()
 
 
 
@@ -70,9 +77,14 @@ target_link_libraries(StateEstimation PUBLIC
 )
 
 target_link_libraries(StateEstimation PRIVATE Eigen3::Eigen)
-target_link_libraries(StateEstimation PRIVATE ortools::ortools)
+if(ENABLE_ORTOOLS)
+    target_link_libraries(StateEstimation PRIVATE ortools::ortools)
+endif()
 target_link_libraries(StateEstimation PUBLIC spdlog::spdlog_header_only)
 
+if(ENABLE_ORTOOLS)
+    target_compile_definitions(StateEstimation PUBLIC ENABLE_ORTOOLS)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(StateEstimation PRIVATE ${CLANG_OPTIONS})

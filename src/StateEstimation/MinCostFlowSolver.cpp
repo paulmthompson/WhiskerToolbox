@@ -1,16 +1,23 @@
 #include "MinCostFlowSolver.hpp"
 
+#ifdef ENABLE_ORTOOLS
 #include "ortools/graph/min_cost_flow.h"
+#endif
 
+#include <iostream>
 #include <unordered_map>
 
 namespace StateEstimation {
 
 std::optional<std::vector<int>>
-solveMinCostSingleUnitPath(int num_nodes,
-                           int source_node,
-                           int sink_node,
-                           std::vector<ArcSpec> const & arcs) {
+solveMinCostSingleUnitPath([[maybe_unused]] int num_nodes,
+                           [[maybe_unused]] int source_node,
+                           [[maybe_unused]] int sink_node,
+                           [[maybe_unused]] std::vector<ArcSpec> const & arcs) {
+#ifndef ENABLE_ORTOOLS
+    std::cout << "Min-cost flow tracking is not supported: OR-Tools was disabled at compile time" << std::endl;
+    return std::nullopt;
+#else
     operations_research::SimpleMinCostFlow min_cost_flow;
 
     for (ArcSpec const & a : arcs) {
@@ -67,6 +74,7 @@ solveMinCostSingleUnitPath(int num_nodes,
         return std::nullopt;
     }
     return sequence;
+#endif
 }
 
 } // namespace StateEstimation

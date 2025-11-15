@@ -14,113 +14,115 @@ if(ENABLE_FFMPEG)
 endif()
 
 
-if (LINUX)
-    find_package(absl REQUIRED)
-    find_package(Protobuf REQUIRED)
-    
-    FetchContent_Declare(
-        ortools
-        GIT_REPOSITORY https://github.com/google/or-tools.git
-        GIT_TAG        stable
-)
-    set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
-    set(BUILD_DEPS OFF)
+if(ENABLE_ORTOOLS)
+    if (LINUX)
+        find_package(absl REQUIRED)
+        find_package(Protobuf REQUIRED)
+        
+        FetchContent_Declare(
+            ortools
+            GIT_REPOSITORY https://github.com/google/or-tools.git
+            GIT_TAG        stable
+        )
+        set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
+        set(BUILD_DEPS OFF)
 
-    set(BUILD_re2 ON)
-    set(BUILD_Protobuf OFF)
-    set(BUILD_absl OFF)
-    
-    set(USE_SCIP OFF)
-    set(BUILD_soplex OFF)
-    set(BUILD_SCIP OFF)
-    set(USE_COINOR OFF)
-    set(USE_HIGHS OFF)
-    set(USE_PDLP OFF)
-    set(USE_GLPK OFF)
-    set(USE_CPLEX OFF)
-
-
-    set(BUILD_SAMPLES OFF)
-    set(BUILD_EXAMPLES OFF)
-    set(BUILD_TESTING OFF)
-
-    set(BUILD_FLATZINC OFF)
-    # Keep MATH_OPT enabled as other components depend on it
-    # set(BUILD_MATH_OPT OFF)
-    
-    # Disable all OR-Tools binaries/executables to avoid linking issues
-    set(BUILD_CXX_SAMPLES OFF)
-    set(BUILD_CXX_EXAMPLES OFF)
-elseif (APPLE)
-    find_package(absl REQUIRED)
-    find_package(Protobuf REQUIRED)
-    
-    FetchContent_Declare(
-        ortools
-        GIT_REPOSITORY https://github.com/google/or-tools.git
-        GIT_TAG        stable
-)
-    set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
-    set(BUILD_DEPS OFF)
-
-    set(BUILD_re2 ON)
-    set(BUILD_Protobuf OFF)
-    set(BUILD_absl OFF)
-    
-    set(USE_SCIP OFF)
-    set(BUILD_soplex OFF)
-    set(BUILD_SCIP OFF)
-    set(USE_COINOR OFF)
-    set(USE_HIGHS OFF)
-    set(USE_PDLP OFF)
-    set(USE_GLPK OFF)
-    set(USE_CPLEX OFF)
+        set(BUILD_re2 ON)
+        set(BUILD_Protobuf OFF)
+        set(BUILD_absl OFF)
+        
+        set(USE_SCIP OFF)
+        set(BUILD_soplex OFF)
+        set(BUILD_SCIP OFF)
+        set(USE_COINOR OFF)
+        set(USE_HIGHS OFF)
+        set(USE_PDLP OFF)
+        set(USE_GLPK OFF)
+        set(USE_CPLEX OFF)
 
 
-    set(BUILD_SAMPLES OFF)
-    set(BUILD_EXAMPLES OFF)
-    set(BUILD_TESTING OFF)
+        set(BUILD_SAMPLES OFF)
+        set(BUILD_EXAMPLES OFF)
+        set(BUILD_TESTING OFF)
 
-    set(BUILD_FLATZINC OFF)
-    
-    # Disable all OR-Tools binaries/executables to avoid linking issues
-    set(BUILD_CXX_SAMPLES OFF)
-    set(BUILD_CXX_EXAMPLES OFF)
-elseif (WIN32)
+        set(BUILD_FLATZINC OFF)
+        # Keep MATH_OPT enabled as other components depend on it
+        # set(BUILD_MATH_OPT OFF)
+        
+        # Disable all OR-Tools binaries/executables to avoid linking issues
+        set(BUILD_CXX_SAMPLES OFF)
+        set(BUILD_CXX_EXAMPLES OFF)
+    elseif (APPLE)
+        find_package(absl REQUIRED)
+        find_package(Protobuf REQUIRED)
+        
+        FetchContent_Declare(
+            ortools
+            GIT_REPOSITORY https://github.com/google/or-tools.git
+            GIT_TAG        stable
+        )
+        set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
+        set(BUILD_DEPS OFF)
 
-  find_package(absl REQUIRED)
-  find_package(Protobuf REQUIRED)
-  find_package(Boost COMPONENTS serialization multiprecision)
+        set(BUILD_re2 ON)
+        set(BUILD_Protobuf OFF)
+        set(BUILD_absl OFF)
+        
+        set(USE_SCIP OFF)
+        set(BUILD_soplex OFF)
+        set(BUILD_SCIP OFF)
+        set(USE_COINOR OFF)
+        set(USE_HIGHS OFF)
+        set(USE_PDLP OFF)
+        set(USE_GLPK OFF)
+        set(USE_CPLEX OFF)
 
-  FetchContent_Declare(
-      ortools
-      GIT_REPOSITORY https://github.com/google/or-tools.git
-      GIT_TAG        stable
-)
-  set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
-  set(BUILD_DEPS OFF)
+
+        set(BUILD_SAMPLES OFF)
+        set(BUILD_EXAMPLES OFF)
+        set(BUILD_TESTING OFF)
+
+        set(BUILD_FLATZINC OFF)
+        
+        # Disable all OR-Tools binaries/executables to avoid linking issues
+        set(BUILD_CXX_SAMPLES OFF)
+        set(BUILD_CXX_EXAMPLES OFF)
+    elseif (WIN32)
+
+      find_package(absl REQUIRED)
+      find_package(Protobuf REQUIRED)
+      find_package(Boost COMPONENTS serialization multiprecision)
+
+      FetchContent_Declare(
+          ortools
+          GIT_REPOSITORY https://github.com/google/or-tools.git
+          GIT_TAG        stable
+        )
+      set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
+      set(BUILD_DEPS OFF)
 
 
-  set(BUILD_re2 ON)
-  set(BUILD_Protobuf OFF)
-  set(BUILD_absl OFF)
+      set(BUILD_re2 ON)
+      set(BUILD_Protobuf OFF)
+      set(BUILD_absl OFF)
 
-  set(BUILD_BZip2 ON)
+      set(BUILD_BZip2 ON)
 
-  set(USE_SCIP OFF)
-  set(BUILD_soplex OFF)
-  set(BUILD_SCIP OFF)
-  set(USE_COINOR OFF)
-  set(USE_HIGHS OFF)
-  set(USE_PDLP OFF)
-  set(USE_GLPK OFF)
-  set(USE_CPLEX OFF)
+      set(USE_SCIP OFF)
+      set(BUILD_soplex OFF)
+      set(BUILD_SCIP OFF)
+      set(USE_COINOR OFF)
+      set(USE_HIGHS OFF)
+      set(USE_PDLP OFF)
+      set(USE_GLPK OFF)
+      set(USE_CPLEX OFF)
 
-  set(BUILD_FLATZINC OFF)
+      set(BUILD_FLATZINC OFF)
 
-    # Disable all OR-Tools binaries/executables to avoid linking issues
-    set(BUILD_CXX_SAMPLES OFF)
-    set(BUILD_CXX_EXAMPLES OFF)
+        # Disable all OR-Tools binaries/executables to avoid linking issues
+      set(BUILD_CXX_SAMPLES OFF)
+      set(BUILD_CXX_EXAMPLES OFF)
+    endif()
 endif()
 
 FetchContent_Declare(
@@ -195,7 +197,12 @@ elseif (WIN32)
 endif()
 
 #We should use make available
-set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir" "ortools" "pf")
+
+set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir" "pf")
+
+if(ENABLE_ORTOOLS)
+    list(APPEND FETCHCONTENT_TARGETS "ortools")
+endif()
 
 if(ENABLE_FFMPEG)
     list(APPEND FETCHCONTENT_TARGETS "ffmpeg_wrapper")
@@ -206,7 +213,7 @@ if(ENABLE_UI)
 endif()
 
 # Create explicit Abseil log template instantiations for Clang 18 BEFORE building OR-Tools
-if(LINUX AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(ENABLE_ORTOOLS AND LINUX AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_library(absl_log_instantiations STATIC
         ${CMAKE_CURRENT_SOURCE_DIR}/absl_log_instantiations.cpp
     )
@@ -222,14 +229,17 @@ if(LINUX AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     endif()
 endif()
 
-# Force OR-Tools to build in Release mode to avoid stack protection issues with abseil
-set(ortools_BUILD_TYPE_SAVED ${CMAKE_BUILD_TYPE})
-set(CMAKE_BUILD_TYPE Release)
-FetchContent_MakeAvailable(ortools)
-set(CMAKE_BUILD_TYPE ${ortools_BUILD_TYPE_SAVED})
+if(ENABLE_ORTOOLS)
+    # Force OR-Tools to build in Release mode to avoid stack protection issues with abseil
+    set(ortools_BUILD_TYPE_SAVED ${CMAKE_BUILD_TYPE})
+    set(CMAKE_BUILD_TYPE Release)
+    FetchContent_MakeAvailable(ortools)
+    set(CMAKE_BUILD_TYPE ${ortools_BUILD_TYPE_SAVED})
 
-# Make available the rest of the targets
-list(REMOVE_ITEM FETCHCONTENT_TARGETS "ortools")
+    # Make available the rest of the targets
+    list(REMOVE_ITEM FETCHCONTENT_TARGETS "ortools")
+endif()
+
 if(FETCHCONTENT_TARGETS)
     FetchContent_MakeAvailable(${FETCHCONTENT_TARGETS})
 endif()
