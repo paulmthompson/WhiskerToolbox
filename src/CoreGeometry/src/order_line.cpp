@@ -15,17 +15,17 @@ std::pair<size_t, size_t> find_line_endpoints(const std::vector<Point2D<float>>&
     }
     
     // Step 1: Pick an arbitrary starting point (e.g., the first point)
-    size_t start_idx = 0;
-    
+    size_t const start_idx = 0;
+
     // Step 2: Find the point farthest from the starting point
     size_t first_endpoint_idx = 0;
     float max_dist = -1.0f;
     
     for (size_t i = 0; i < points.size(); ++i) {
-        float dx = points[i].x - points[start_idx].x;
-        float dy = points[i].y - points[start_idx].y;
-        float dist = dx * dx + dy * dy;
-        
+        float const dx = points[i].x - points[start_idx].x;
+        float const dy = points[i].y - points[start_idx].y;
+        float const dist = dx * dx + dy * dy;
+
         if (dist > max_dist) {
             max_dist = dist;
             first_endpoint_idx = i;
@@ -37,10 +37,10 @@ std::pair<size_t, size_t> find_line_endpoints(const std::vector<Point2D<float>>&
     max_dist = -1.0f;
     
     for (size_t i = 0; i < points.size(); ++i) {
-        float dx = points[i].x - points[first_endpoint_idx].x;
-        float dy = points[i].y - points[first_endpoint_idx].y;
-        float dist = dx * dx + dy * dy;
-        
+        float const dx = points[i].x - points[first_endpoint_idx].x;
+        float const dy = points[i].y - points[first_endpoint_idx].y;
+        float const dist = dx * dx + dy * dy;
+
         if (dist > max_dist) {
             max_dist = dist;
             second_endpoint_idx = i;
@@ -105,15 +105,14 @@ Line2D order_line(
     auto [first_endpoint_idx, second_endpoint_idx] = find_line_endpoints(line_pixels);
     
     // Calculate the distance from the origin to both endpoints to determine orientation
-    float dist_origin_to_first = std::pow(line_pixels[first_endpoint_idx].x - origin.x, 2) +
-                                 std::pow(line_pixels[first_endpoint_idx].y - origin.y, 2);
-    float dist_origin_to_second = std::pow(line_pixels[second_endpoint_idx].x - origin.x, 2) +
-                                  std::pow(line_pixels[second_endpoint_idx].y - origin.y, 2);
-    
+    float const dist_origin_to_first = std::pow(line_pixels[first_endpoint_idx].x - origin.x, 2) +
+                                       std::pow(line_pixels[first_endpoint_idx].y - origin.y, 2);
+    float const dist_origin_to_second = std::pow(line_pixels[second_endpoint_idx].x - origin.x, 2) +
+                                        std::pow(line_pixels[second_endpoint_idx].y - origin.y, 2);
+
     // Start ordering from the endpoint farthest from the origin
-    size_t start_point_idx = (dist_origin_to_first > dist_origin_to_second) ? 
-                            first_endpoint_idx : second_endpoint_idx;
-    
+    size_t const start_point_idx = (dist_origin_to_first > dist_origin_to_second) ? first_endpoint_idx : second_endpoint_idx;
+
     const size_t num_points = line_pixels.size();
     
     // Precompute all pairwise distances between points
@@ -121,10 +120,10 @@ Line2D order_line(
     
     for (size_t i = 0; i < num_points; ++i) {
         for (size_t j = i + 1; j < num_points; ++j) {
-            float dx = line_pixels[i].x - line_pixels[j].x;
-            float dy = line_pixels[i].y - line_pixels[j].y;
-            float dist = dx * dx + dy * dy;
-            
+            float const dx = line_pixels[i].x - line_pixels[j].x;
+            float const dy = line_pixels[i].y - line_pixels[j].y;
+            float const dist = dx * dx + dy * dy;
+
             distance_matrix[i][j] = dist;
             distance_matrix[j][i] = dist;
         }
@@ -155,8 +154,8 @@ Line2D order_line(
         // Find the nearest unvisited neighbor using precomputed distances
         for (size_t i = 0; i < num_points; ++i) {
             if (!visited[i]) {
-                float dist = distance_matrix[current_index][i];
-                
+                float const dist = distance_matrix[current_index][i];
+
                 if (dist < nearest_dist) {
                     nearest_dist = dist;
                     nearest_neighbor_index = i;
@@ -183,11 +182,11 @@ Line2D order_line(
     bool should_flip = false;
     
     if (!ordered_pixels.empty()) {
-        float dist_first_to_origin = std::pow(ordered_pixels.front().x - origin.x, 2) +
-                                     std::pow(ordered_pixels.front().y - origin.y, 2);
-        float dist_last_to_origin = std::pow(ordered_pixels.back().x - origin.x, 2) +
-                                    std::pow(ordered_pixels.back().y - origin.y, 2);
-                                   
+        float const dist_first_to_origin = std::pow(ordered_pixels.front().x - origin.x, 2) +
+                                           std::pow(ordered_pixels.front().y - origin.y, 2);
+        float const dist_last_to_origin = std::pow(ordered_pixels.back().x - origin.x, 2) +
+                                          std::pow(ordered_pixels.back().y - origin.y, 2);
+
         should_flip = dist_first_to_origin > dist_last_to_origin;
         
         if (should_flip) {

@@ -80,17 +80,17 @@ std::optional<Point2D<float>> point_at_distance(
     }
 
     // Interpolate between points
-    size_t prev_index = index - 1;
-    float segment_start_dist = distances[prev_index];
-    float segment_end_dist = distances[index];
-    float segment_length = segment_end_dist - segment_start_dist;
+    size_t const prev_index = index - 1;
+    float const segment_start_dist = distances[prev_index];
+    float const segment_end_dist = distances[index];
+    float const segment_length = segment_end_dist - segment_start_dist;
 
     if (segment_length < 1e-6f) {
         // Segment is too short for meaningful interpolation
         return line[prev_index];
     }
 
-    float t = (target_distance - segment_start_dist) / segment_length;
+    float const t = (target_distance - segment_start_dist) / segment_length;
 
     return interpolate_point(line[prev_index], line[index], t);
 }
@@ -107,13 +107,13 @@ std::optional<Point2D<float>> point_at_fractional_position(
     // Clamp position to valid range
     position = std::max(0.0f, std::min(1.0f, position));
 
-    float total_length = calc_length(line);
+    float const total_length = calc_length(line);
     if (total_length < 1e-6f) {
         // Line has no length (all points are the same)
         return line[0];
     }
 
-    float target_distance = position * total_length;
+    float const target_distance = position * total_length;
     return point_at_distance(line, target_distance, use_interpolation);
 }
 
@@ -141,15 +141,15 @@ std::vector<Point2D<float>> extract_line_subsegment_by_distance(
     }
 
     std::vector<float> distances = calc_cumulative_length_vector(line);
-    float total_length = distances.back();
+    float const total_length = distances.back();
 
     if (total_length < 1e-6f) {
         // Line has no length
         return {line[0]};
     }
 
-    float start_distance = start_position * total_length;
-    float end_distance = end_position * total_length;
+    float const start_distance = start_position * total_length;
+    float const end_distance = end_position * total_length;
 
     std::vector<Point2D<float>> subsegment;
 
@@ -225,7 +225,7 @@ Point2D<float> get_position_at_percentage(Line2D const & line, float percentage)
 
     float total_length = 0.0f;
     for (size_t i = 1; i < line.size(); ++i) {
-        float segment_length = calc_distance(line[i], line[i-1]);
+        float const segment_length = calc_distance(line[i], line[i - 1]);
         total_length += segment_length;
         cumulative_distances.push_back(total_length);
     }
@@ -235,21 +235,21 @@ Point2D<float> get_position_at_percentage(Line2D const & line, float percentage)
     }
 
     // Find target distance
-    float target_distance = percentage * total_length;
+    float const target_distance = percentage * total_length;
 
     // Find the segment containing the target distance
     for (size_t i = 1; i < cumulative_distances.size(); ++i) {
         if (target_distance <= cumulative_distances[i]) {
             // Interpolate within this segment
-            float segment_start_distance = cumulative_distances[i-1];
-            float segment_end_distance = cumulative_distances[i];
-            float segment_length = segment_end_distance - segment_start_distance;
+            float const segment_start_distance = cumulative_distances[i - 1];
+            float const segment_end_distance = cumulative_distances[i];
+            float const segment_length = segment_end_distance - segment_start_distance;
 
             if (segment_length == 0.0f) {
                 return line[i-1];
             }
 
-            float t = (target_distance - segment_start_distance) / segment_length;
+            float const t = (target_distance - segment_start_distance) / segment_length;
 
             return interpolate_point(line[i-1], line[i], t);
         }
@@ -280,7 +280,7 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
 
     float total_distance = 0.0f;
     for (size_t i = 1; i < line.size(); ++i) {
-        float segment_distance = calc_distance(line[i], line[i-1]);
+        float const segment_distance = calc_distance(line[i], line[i - 1]);
         total_distance += segment_distance;
         cumulative_distances.push_back(total_distance);
     }
@@ -290,15 +290,15 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
     }
 
     // Calculate target distances
-    float start_distance = start_percentage * total_distance;
-    float end_distance = end_percentage * total_distance;
+    float const start_distance = start_percentage * total_distance;
+    float const end_distance = end_percentage * total_distance;
 
     Line2D segment;
     bool started = false;
 
     for (size_t i = 0; i < line.size() - 1; ++i) {
-        float current_distance = cumulative_distances[i];
-        float next_distance = cumulative_distances[i + 1];
+        float const current_distance = cumulative_distances[i];
+        float const next_distance = cumulative_distances[i + 1];
 
         // Check if this segment contains the start point
         if (!started && start_distance >= current_distance && start_distance <= next_distance) {
@@ -308,7 +308,7 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
                 segment.push_back(line[i]);
             } else {
                 // Interpolate start point
-                float t = (start_distance - current_distance) / (next_distance - current_distance);
+                float const t = (start_distance - current_distance) / (next_distance - current_distance);
                 segment.push_back(interpolate_point(line[i], line[i+1], t));
             }
         }
@@ -322,7 +322,7 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
                 }
             } else {
                 // Interpolate end point
-                float t = (end_distance - current_distance) / (next_distance - current_distance);
+                float const t = (end_distance - current_distance) / (next_distance - current_distance);
                 segment.push_back(interpolate_point(line[i], line[i+1], t));
             }
             break; // We've reached the end
@@ -344,16 +344,15 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
 
     if (vertex_index == 0) {
         // First vertex - use the segment from vertex 0 to vertex 1
-        Point2D<float> segment = {
-            line[1].x - line[0].x,
-            line[1].y - line[0].y
-        };
-        
+        Point2D<float> const segment = {
+                line[1].x - line[0].x,
+                line[1].y - line[0].y};
+
         // Calculate perpendicular: rotate 90 degrees counterclockwise
         Point2D<float> perp = {-segment.y, segment.x};
         
         // Normalize
-        float length = std::sqrt(perp.x * perp.x + perp.y * perp.y);
+        float const length = std::sqrt(perp.x * perp.x + perp.y * perp.y);
         if (length > 0.0f) {
             perp.x /= length;
             perp.y /= length;
@@ -362,16 +361,15 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
         return perp;
     } else if (vertex_index == line.size() - 1) {
         // Last vertex - use the segment from vertex n-2 to vertex n-1
-        Point2D<float> segment = {
-            line[vertex_index].x - line[vertex_index - 1].x,
-            line[vertex_index].y - line[vertex_index - 1].y
-        };
-        
+        Point2D<float> const segment = {
+                line[vertex_index].x - line[vertex_index - 1].x,
+                line[vertex_index].y - line[vertex_index - 1].y};
+
         // Calculate perpendicular: rotate 90 degrees counterclockwise
         Point2D<float> perp = {-segment.y, segment.x};
         
         // Normalize
-        float length = std::sqrt(perp.x * perp.x + perp.y * perp.y);
+        float const length = std::sqrt(perp.x * perp.x + perp.y * perp.y);
         if (length > 0.0f) {
             perp.x /= length;
             perp.y /= length;
@@ -382,25 +380,23 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
         // Internal vertex - average perpendiculars from both adjacent segments
         
         // Segment from previous vertex to current vertex
-        Point2D<float> segment1 = {
-            line[vertex_index].x - line[vertex_index - 1].x,
-            line[vertex_index].y - line[vertex_index - 1].y
-        };
-        
+        Point2D<float> const segment1 = {
+                line[vertex_index].x - line[vertex_index - 1].x,
+                line[vertex_index].y - line[vertex_index - 1].y};
+
         // Segment from current vertex to next vertex
-        Point2D<float> segment2 = {
-            line[vertex_index + 1].x - line[vertex_index].x,
-            line[vertex_index + 1].y - line[vertex_index].y
-        };
-        
+        Point2D<float> const segment2 = {
+                line[vertex_index + 1].x - line[vertex_index].x,
+                line[vertex_index + 1].y - line[vertex_index].y};
+
         // Calculate perpendiculars
         Point2D<float> perp1 = {-segment1.y, segment1.x};
         Point2D<float> perp2 = {-segment2.y, segment2.x};
         
         // Normalize both perpendiculars
-        float length1 = std::sqrt(perp1.x * perp1.x + perp1.y * perp1.y);
-        float length2 = std::sqrt(perp2.x * perp2.x + perp2.y * perp2.y);
-        
+        float const length1 = std::sqrt(perp1.x * perp1.x + perp1.y * perp1.y);
+        float const length2 = std::sqrt(perp2.x * perp2.x + perp2.y * perp2.y);
+
         if (length1 > 0.0f) {
             perp1.x /= length1;
             perp1.y /= length1;
@@ -418,7 +414,7 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
         };
         
         // Normalize the average
-        float avg_length = std::sqrt(avg_perp.x * avg_perp.x + avg_perp.y * avg_perp.y);
+        float const avg_length = std::sqrt(avg_perp.x * avg_perp.x + avg_perp.y * avg_perp.y);
         if (avg_length > 0.0f) {
             avg_perp.x /= avg_length;
             avg_perp.y /= avg_length;

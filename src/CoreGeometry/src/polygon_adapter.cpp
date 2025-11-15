@@ -76,8 +76,8 @@ Polygon PolygonAdapter::fromMartinezPolygon(const cbop::Polygon& martinez_polygo
         }
         
         // Create a rectangular polygon from the bounding box
-        BoundingBox bbox(static_cast<float>(min_x), static_cast<float>(min_y), 
-                        static_cast<float>(max_x), static_cast<float>(max_y));
+        BoundingBox const bbox(static_cast<float>(min_x), static_cast<float>(min_y),
+                               static_cast<float>(max_x), static_cast<float>(max_y));
         return Polygon(bbox);
     }
 }
@@ -101,8 +101,8 @@ Polygon PolygonAdapter::performBooleanOperation(const Polygon& poly1, const Poly
     
     try {
         // Convert to Martinez-Rueda format
-        cbop::Polygon martinez_poly1 = toMartinezPolygon(poly1);
-        cbop::Polygon martinez_poly2 = toMartinezPolygon(poly2);
+        cbop::Polygon const martinez_poly1 = toMartinezPolygon(poly1);
+        cbop::Polygon const martinez_poly2 = toMartinezPolygon(poly2);
         cbop::Polygon result_polygon;
         
         // Perform the boolean operation

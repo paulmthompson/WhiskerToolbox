@@ -35,8 +35,8 @@ Line2D resample_line_points(
         while (dist_to_next_in_segment <= segment_length - current_segment_traversed_distance) {
             auto interpolation_factor = (current_segment_traversed_distance + dist_to_next_in_segment) / segment_length;
 
-            float new_x = p1.x + segment_dx * interpolation_factor;
-            float new_y = p1.y + segment_dy * interpolation_factor;
+            float const new_x = p1.x + segment_dx * interpolation_factor;
+            float const new_y = p1.y + segment_dy * interpolation_factor;
             // Avoid duplicate points if possible by checking distance to last added point
             if (resampled_points.empty() ||
                 (std::abs(new_x - resampled_points.back().x) > 1e-3f || std::abs(new_y - resampled_points.back().y) > 1e-3f)) {
@@ -90,18 +90,18 @@ static float perpendicular_distance(
 
     if (std::abs(line_end.x - line_start.x) < 1e-6f && std::abs(line_end.y - line_start.y) < 1e-6f) {
         // Line segment is actually a point, calculate distance to that point
-        float dx = point.x - line_start.x;
-        float dy = point.y - line_start.y;
+        float const dx = point.x - line_start.x;
+        float const dy = point.y - line_start.y;
         return std::sqrt(dx * dx + dy * dy);
     }
 
     // Calculate the perpendicular distance from point to line segment
-    float A = line_end.y - line_start.y;
-    float B = line_start.x - line_end.x;
+    float const A = line_end.y - line_start.y;
+    float const B = line_start.x - line_end.x;
     float C = line_end.x * line_start.y - line_start.x * line_end.y;
 
-    float numerator = std::abs(A * point.x + B * point.y + C);
-    float denominator = std::sqrt(A * A + B * B);
+    float const numerator = std::abs(A * point.x + B * point.y + C);
+    float const denominator = std::sqrt(A * A + B * B);
 
     return numerator / denominator;
 }

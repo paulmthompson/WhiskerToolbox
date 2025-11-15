@@ -18,8 +18,8 @@ Mask2D::Mask2D(std::vector<float> const & x, std::vector<float> const & y) {
 
     for (std::size_t i = 0; i < x.size(); i++) {
         // Round coordinates to nearest integers and ensure non-negative
-        uint32_t rounded_x = static_cast<uint32_t>(std::max(0.0f, std::round(x[i])));
-        uint32_t rounded_y = static_cast<uint32_t>(std::max(0.0f, std::round(y[i])));
+        uint32_t const rounded_x = static_cast<uint32_t>(std::max(0.0f, std::round(x[i])));
+        uint32_t const rounded_y = static_cast<uint32_t>(std::max(0.0f, std::round(y[i])));
         points_.push_back({rounded_x, rounded_y});
     }
 }
@@ -133,22 +133,22 @@ std::vector<Point2D<uint32_t>> generate_ellipse_pixels(float center_x, float cen
     std::vector<Point2D<uint32_t>> ellipse_pixels;
 
     // Round center coordinates for calculation
-    int rounded_center_x = static_cast<int>(std::round(center_x));
-    int rounded_center_y = static_cast<int>(std::round(center_y));
+    int const rounded_center_x = static_cast<int>(std::round(center_x));
+    int const rounded_center_y = static_cast<int>(std::round(center_y));
 
     // Generate all pixels within the elliptical region (circle when radius_x == radius_y)
-    int max_radius = static_cast<int>(std::max(radius_x, radius_y)) + 1;
+    int const max_radius = static_cast<int>(std::max(radius_x, radius_y)) + 1;
     for (int dx = -max_radius; dx <= max_radius; ++dx) {
         for (int dy = -max_radius; dy <= max_radius; ++dy) {
             // Check if point is within elliptical radius using ellipse equation
             // (dx/radius_x)^2 + (dy/radius_y)^2 <= 1
-            float normalized_dx = static_cast<float>(dx) / radius_x;
-            float normalized_dy = static_cast<float>(dy) / radius_y;
-            float ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
+            float const normalized_dx = static_cast<float>(dx) / radius_x;
+            float const normalized_dy = static_cast<float>(dy) / radius_y;
+            float const ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
 
             if (ellipse_distance <= 1.0f) {
-                int x = rounded_center_x + dx;
-                int y = rounded_center_y + dy;
+                int const x = rounded_center_x + dx;
+                int const y = rounded_center_y + dy;
 
                 // Only add pixels that are within valid bounds (non-negative)
                 if (x >= 0 && y >= 0) {
@@ -168,7 +168,7 @@ Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
 
     // Add all pixels from mask1
     for (auto const & point: mask1) {
-        std::pair<uint32_t, uint32_t> pixel_key = {point.x, point.y};
+        std::pair<uint32_t, uint32_t> const pixel_key = {point.x, point.y};
 
         if (unique_pixels.find(pixel_key) == unique_pixels.end()) {
             unique_pixels.insert(pixel_key);
@@ -178,7 +178,7 @@ Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
 
     // Add pixels from mask2 that aren't already present
     for (auto const & point: mask2) {
-        std::pair<uint32_t, uint32_t> pixel_key = {point.x, point.y};
+        std::pair<uint32_t, uint32_t> const pixel_key = {point.x, point.y};
 
         if (unique_pixels.find(pixel_key) == unique_pixels.end()) {
             unique_pixels.insert(pixel_key);
@@ -199,7 +199,7 @@ Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2) {
     // Keep only pixels from mask1 that are NOT in mask2
     Mask2D result_mask;
     for (auto const & point: mask1) {
-        std::pair<uint32_t, uint32_t> pixel_key = {point.x, point.y};
+        std::pair<uint32_t, uint32_t> const pixel_key = {point.x, point.y};
 
         if (mask2_pixels.find(pixel_key) == mask2_pixels.end()) {
             result_mask.push_back(point);
@@ -233,8 +233,8 @@ Mask2D generate_outline_mask(Mask2D const & mask, int thickness, uint32_t image_
             for (int dy = -thickness; dy <= thickness; ++dy) {
                 if (dx == 0 && dy == 0) continue;// Skip the center pixel itself
 
-                int32_t neighbor_x = static_cast<int32_t>(point.x) + dx;
-                int32_t neighbor_y = static_cast<int32_t>(point.y) + dy;
+                int32_t const neighbor_x = static_cast<int32_t>(point.x) + dx;
+                int32_t const neighbor_y = static_cast<int32_t>(point.y) + dy;
 
                 // Check bounds
                 if (neighbor_x < 0 || neighbor_y < 0) {
