@@ -19,7 +19,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<DigitalEventSeries> result_events;
     ThresholdParams params;
-    std::vector<float> expected_events;
+    std::vector<TimeFrameIndex> expected_events;
     volatile int progress_val = -1; // Volatile to prevent optimization issues in test
     volatile int call_count = 0;    // Volatile for the same reason
     ProgressCallback cb = [&](int p) {
@@ -36,7 +36,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
         params.lockoutTime = 0.0;
 
         result_events = event_threshold(ats.get(), params);
-        expected_events = {200.0f, 400.0f, 500.0f};
+        expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
 
         progress_val = -1;
@@ -56,7 +56,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
         params.lockoutTime = 150.0;
 
         result_events = event_threshold(ats.get(), params);
-        expected_events = {200.0f, 500.0f};
+        expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
 
         progress_val = -1;
@@ -76,7 +76,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
         params.lockoutTime = 0.0;
 
         result_events = event_threshold(ats.get(), params);
-        expected_events = {200.0f, 400.0f, 500.0f};
+        expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
     }
 
@@ -89,7 +89,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
         params.lockoutTime = 150.0;
 
         result_events = event_threshold(ats.get(), params);
-        expected_events = {200.0f, 500.0f};
+        expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
     }
 
@@ -102,7 +102,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
         params.lockoutTime = 0.0;
 
         result_events = event_threshold(ats.get(), params);
-        expected_events = {200.0f, 400.0f, 500.0f};
+        expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
     }
 
@@ -115,7 +115,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
         params.lockoutTime = 150.0;
 
         result_events = event_threshold(ats.get(), params);
-        expected_events = {200.0f, 500.0f};
+        expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
     }
 
@@ -140,7 +140,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
         params.lockoutTime = 0.0;
 
         result_events = event_threshold(ats.get(), params);
-        expected_events = {100.0f, 200.0f, 300.0f, 400.0f, 500.0f};
+        expected_events = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
     }
 
@@ -238,7 +238,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
         params.lockoutTime = 500.0;
 
         result_events = event_threshold(ats.get(), params);
-        std::vector<float> expected_events = {100.0f};
+        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(100)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
     }
 
@@ -251,13 +251,13 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
         params.lockoutTime = 0.0;
 
         result_events = event_threshold(ats.get(), params);
-        std::vector<float> expected_events_pos = {300.0f};
+        std::vector<TimeFrameIndex> expected_events_pos = {TimeFrameIndex(300)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events_pos));
 
         params.direction = ThresholdParams::ThresholdDirection::NEGATIVE;
         params.thresholdValue = 0.5;
         result_events = event_threshold(ats.get(), params);
-        std::vector<float> expected_events_neg = {};
+        std::vector<TimeFrameIndex> expected_events_neg = {};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events_neg));
     }
 
@@ -270,7 +270,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
         params.lockoutTime = 5.0;
 
         result_events = event_threshold(ats.get(), params);
-        std::vector<float> expected_events = {0.0f, 20.0f};
+        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(0), TimeFrameIndex(20)};
         REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
     }
 
@@ -341,7 +341,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - JSON pipeline", "[transforms
     auto event_series = dm.getData<DigitalEventSeries>("DetectedEvents");
     REQUIRE(event_series != nullptr);
 
-    std::vector<float> expected_events = {200.0f, 400.0f, 500.0f};
+    std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
     REQUIRE_THAT(event_series->getEventSeries(), Catch::Matchers::Equals(expected_events));
 }
 
@@ -442,7 +442,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - load_data_from_json_config",
     REQUIRE(result_events != nullptr);
     
     // Verify the threshold detection results
-    std::vector<float> expected_events = {200.0f, 400.0f, 500.0f}; // Values > 1.0 threshold
+    std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)}; // Values > 1.0 threshold
     REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
     
     // Test another pipeline with different parameters (lockout time)
@@ -488,7 +488,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - load_data_from_json_config",
     auto result_events_lockout = dm.getData<DigitalEventSeries>("detected_events_lockout");
     REQUIRE(result_events_lockout != nullptr);
     
-    std::vector<float> expected_events_lockout = {200.0f, 400.0f}; // 500 filtered due to lockout from 400
+    std::vector<TimeFrameIndex> expected_events_lockout = {TimeFrameIndex(200), TimeFrameIndex(400)}; // 500 filtered due to lockout from 400
     REQUIRE_THAT(result_events_lockout->getEventSeries(), Catch::Matchers::Equals(expected_events_lockout));
     
     // Test absolute threshold detection
@@ -534,7 +534,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - load_data_from_json_config",
     auto result_events_absolute = dm.getData<DigitalEventSeries>("detected_events_absolute");
     REQUIRE(result_events_absolute != nullptr);
     
-    std::vector<float> expected_events_absolute = {200.0f, 400.0f}; // Only 1.5 and 2.5 exceed |1.3|
+    std::vector<TimeFrameIndex> expected_events_absolute = {TimeFrameIndex(200), TimeFrameIndex(400)}; // Only 1.5 and 2.5 exceed |1.3|
     REQUIRE_THAT(result_events_absolute->getEventSeries(), Catch::Matchers::Equals(expected_events_absolute));
     
     // Cleanup

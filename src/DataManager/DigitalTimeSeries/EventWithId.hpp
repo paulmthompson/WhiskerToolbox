@@ -2,12 +2,13 @@
 #define BEHAVIORTOOLBOX_EVENT_WITH_ID_HPP
 
 #include "Entity/EntityTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 struct EventWithId {
-    float event_time;
+    TimeFrameIndex event_time;
     EntityId entity_id;
 
-    EventWithId(float time, EntityId id)
+    EventWithId(TimeFrameIndex time, EntityId id)
         : event_time(time),
           entity_id(id) {}
 };

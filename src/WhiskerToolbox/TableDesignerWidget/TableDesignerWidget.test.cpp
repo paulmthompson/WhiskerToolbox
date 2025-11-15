@@ -140,17 +140,41 @@ private:
      */
     void createSpikeEvents() {
         // Create spike train for Neuron1
-        std::vector<float> neuron1_spikes = {
-            1.0f, 6.0f, 7.0f, 11.0f, 16.0f, 26.0f, 27.0f, 34.0f, 41.0f, 45.0f
-        };
+        std::vector<TimeFrameIndex> neuron1_spikes = {TimeFrameIndex(1),
+                                                      TimeFrameIndex(6),
+                                                      TimeFrameIndex(7),
+                                                      TimeFrameIndex(11),
+                                                      TimeFrameIndex(16),
+                                                      TimeFrameIndex(26),
+                                                      TimeFrameIndex(27),
+                                                      TimeFrameIndex(34),
+                                                      TimeFrameIndex(41),
+                                                      TimeFrameIndex(45)};
         auto neuron1_series = std::make_shared<DigitalEventSeries>(neuron1_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron1Spikes", neuron1_series, TimeKey("spike_time"));
         
         // Create spike train for Neuron2
-        std::vector<float> neuron2_spikes = {
-            0.0f, 1.0f, 2.0f, 5.0f, 6.0f, 8.0f, 9.0f, 15.0f, 16.0f, 18.0f,
-            25.0f, 26.0f, 28.0f, 29.0f, 33.0f, 34.0f, 40.0f, 41.0f, 42.0f, 45.0f, 46.0f
-        };
+        std::vector<TimeFrameIndex> neuron2_spikes = {TimeFrameIndex(0),
+                                                      TimeFrameIndex(1),
+                                                      TimeFrameIndex(2),
+                                                      TimeFrameIndex(5),
+                                                      TimeFrameIndex(6),
+                                                      TimeFrameIndex(8),
+                                                      TimeFrameIndex(9),
+                                                      TimeFrameIndex(15),
+                                                      TimeFrameIndex(16),
+                                                      TimeFrameIndex(18),
+                                                      TimeFrameIndex(25),
+                                                      TimeFrameIndex(26),
+                                                      TimeFrameIndex(28),
+                                                      TimeFrameIndex(29),
+                                                      TimeFrameIndex(33),
+                                                      TimeFrameIndex(34),
+                                                      TimeFrameIndex(40),
+                                                      TimeFrameIndex(41),
+                                                      TimeFrameIndex(42),
+                                                      TimeFrameIndex(45),
+                                                      TimeFrameIndex(46)};
         auto neuron2_series = std::make_shared<DigitalEventSeries>(neuron2_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron2Spikes", neuron2_series, TimeKey("spike_time"));
     }
@@ -1105,7 +1129,7 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Observes
 
     // Add a new event key to DataManager and ensure tree updates
     auto & dm = getDataManager();
-    std::vector<float> spikes = {1.0f, 2.0f, 3.0f};
+    std::vector<TimeFrameIndex> spikes = {TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3)};
     auto series = std::make_shared<DigitalEventSeries>(spikes);
     dm.setData<DigitalEventSeries>("NewSpikes", series, TimeKey("spike_time"));
 

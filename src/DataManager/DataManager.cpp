@@ -773,7 +773,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                     std::vector<int> events_int;
                     events_int.reserve(events.size());
                     for (auto e: events) {
-                        events_int.push_back(static_cast<int>(e));
+                        events_int.push_back(static_cast<int>(e.getValue()));
                     }
                     std::cout << "Loaded " << events_int.size() << " events for " << name << std::endl;
 

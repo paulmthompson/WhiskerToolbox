@@ -81,7 +81,7 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
     if (progressCallback) progressCallback(15);
 
     // Find peaks in each search range
-    std::vector<float> peak_events;
+    std::vector<TimeFrameIndex> peak_events;
     size_t const total_ranges = search_ranges.size();
 
     for (size_t range_idx = 0; range_idx < total_ranges; ++range_idx) {
@@ -123,7 +123,7 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
         TimeFrameIndex const peak_time_index = **time_iter;
 
         // Add event at the peak timestamp (in interval series coordinate system)
-        peak_events.push_back(static_cast<float>(peak_time_index.getValue()));
+        peak_events.push_back(peak_time_index);
 
         // Report progress
         if (progressCallback && total_ranges > 0) {

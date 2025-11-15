@@ -259,8 +259,9 @@ private:
      */
     void createTestDigitalEventSeries() {
         // Create event times
-        std::vector<float> event_times = {
-            1.0f, 3.0f, 5.0f, 7.0f, 9.0f, 11.0f, 13.0f, 15.0f, 17.0f, 19.0f
+        std::vector<TimeFrameIndex> event_times = {
+            TimeFrameIndex(1), TimeFrameIndex(3), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(9), 
+            TimeFrameIndex(11), TimeFrameIndex(13), TimeFrameIndex(15), TimeFrameIndex(17), TimeFrameIndex(19)
         };
         
         // Create DigitalEventSeries
@@ -270,8 +271,9 @@ private:
         m_data_manager->setData<DigitalEventSeries>("test_events", event_series, TimeKey("time"));
         
         // Create a second event series with different timing
-        std::vector<float> event_times_2 = {
-            0.5f, 1.5f, 2.5f, 3.5f, 4.5f, 5.5f, 6.5f, 7.5f, 8.5f, 9.5f
+        std::vector<TimeFrameIndex> event_times_2 = {
+            TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(4), 
+            TimeFrameIndex(5), TimeFrameIndex(6), TimeFrameIndex(7), TimeFrameIndex(8), TimeFrameIndex(9)
         };
         
         auto event_series_2 = std::make_shared<DigitalEventSeries>(event_times_2);
@@ -423,10 +425,10 @@ private:
      */
     void createRandomDigitalEventSeries() {
         std::uniform_real_distribution<float> time_dist(0.0f, 100.0f);
-        std::vector<float> event_times;
+        std::vector<TimeFrameIndex> event_times;
         
         for (int i = 0; i < 20; ++i) {
-            event_times.push_back(time_dist(*m_random_engine));
+            event_times.push_back(TimeFrameIndex(static_cast<int64_t>(time_dist(*m_random_engine))));
         }
         
         auto event_series = std::make_shared<DigitalEventSeries>(event_times);

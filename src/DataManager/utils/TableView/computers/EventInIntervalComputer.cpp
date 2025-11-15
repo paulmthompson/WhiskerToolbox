@@ -200,7 +200,7 @@ std::pair<std::vector<std::vector<float>>, ColumnEntityIds> EventInIntervalCompu
                                                                  *destinationTimeFrame);
 
         for (auto const & event_with_id: events_with_ids) {
-            results.back().push_back(event_with_id.event_time);
+            results.back().push_back(static_cast<float>(event_with_id.event_time.getValue()));
             entity_ids.back().push_back(event_with_id.entity_id);
         }
 

@@ -504,10 +504,10 @@ void OpenGLWidget::drawDigitalEventSeries() {
             float xCanvasPos;
             if (time_frame.get() == _master_time_frame.get()) {
                 // Same time frame - event is already in correct coordinates
-                xCanvasPos = event;
+                xCanvasPos = static_cast<float>(event.getValue());
             } else {
                 // Different time frames - convert event index to time, then to master time frame
-                float event_time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(static_cast<int>(event))));
+                float event_time = static_cast<float>(time_frame->getTimeAtIndex(event));
                 xCanvasPos = event_time;// This should work if both time frames use the same time units
             }
 

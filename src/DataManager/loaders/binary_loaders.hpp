@@ -1,6 +1,8 @@
 #ifndef BINARY_LOADERS_HPP
 #define BINARY_LOADERS_HPP
 
+#include "TimeFrame/TimeFrame.hpp"
+
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -144,7 +146,7 @@ std::vector<int> extractDigitalData(std::vector<T> const & data, int channel) {
     return digital_data;
 }
 
-inline std::vector<float> extractEvents(std::vector<int> const & digital_data, std::string const & transition) {
+inline std::vector<TimeFrameIndex> extractEvents(std::vector<int> const & digital_data, std::string const & transition) {
 
     // Check if transition is valid
     if (transition != "rising" && transition != "falling") {
@@ -152,12 +154,12 @@ inline std::vector<float> extractEvents(std::vector<int> const & digital_data, s
     }
 
     std::cout << "Checking " << digital_data.size() << " timestamps for events" << std::endl;
-    std::vector<float> events;
+    std::vector<TimeFrameIndex> events;
     for (std::size_t i = 1; i < digital_data.size(); i++) {
         if (
                 ((digital_data[i] == 1) && (digital_data[i - 1] == 0) && (transition == "rising")) ||
                 ((digital_data[i] == 0) && (digital_data[i - 1] == 1) && (transition == "falling"))) {
-            events.push_back(static_cast<float>(i));
+            events.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
         }
     }
     return events;

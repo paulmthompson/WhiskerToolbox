@@ -101,9 +101,9 @@ private:
 
         // Add test DigitalEventSeries
         auto event_data = std::make_shared<DigitalEventSeries>();
-        event_data->addEvent(1000);
-        event_data->addEvent(2000);
-        event_data->addEvent(3000);
+        event_data->addEvent(TimeFrameIndex(1000));
+        event_data->addEvent(TimeFrameIndex(2000));
+        event_data->addEvent(TimeFrameIndex(3000));
         m_data_manager->setData<DigitalEventSeries>("test_events", event_data, time_key);
         m_test_data_keys.push_back("test_events");
 
@@ -1131,9 +1131,9 @@ private:
         for (int i = 0; i < count; ++i) {
             auto series = std::make_shared<DigitalEventSeries>();
             // Add a few events within the visible range
-            series->addEvent(1000);
-            series->addEvent(2000);
-            series->addEvent(3000);
+            series->addEvent(TimeFrameIndex(1000));
+            series->addEvent(TimeFrameIndex(2000));
+            series->addEvent(TimeFrameIndex(3000));
 
             std::string key = std::string("event_") + std::to_string(i + 1);
             m_data_manager->setData<DigitalEventSeries>(key, series, m_time_key);
@@ -1255,9 +1255,9 @@ protected:
         // 2 event series
         for (int i = 0; i < 2; ++i) {
             auto series = std::make_shared<DigitalEventSeries>();
-            series->addEvent(1000);
-            series->addEvent(2000);
-            series->addEvent(3000);
+            series->addEvent(TimeFrameIndex(1000));
+            series->addEvent(TimeFrameIndex(2000));
+            series->addEvent(TimeFrameIndex(3000));
             std::string key = std::string("event_") + std::to_string(i + 1);
             m_event_keys.push_back(key);
             m_data_manager->setData<DigitalEventSeries>(key, series, m_time_key);

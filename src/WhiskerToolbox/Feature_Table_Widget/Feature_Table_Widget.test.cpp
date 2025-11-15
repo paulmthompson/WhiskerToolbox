@@ -101,9 +101,9 @@ private:
 
         // Add some test DigitalEventSeries
         auto event_data = std::make_shared<DigitalEventSeries>();
-        event_data->addEvent(1000);
-        event_data->addEvent(2000);
-        event_data->addEvent(3000);
+        event_data->addEvent(TimeFrameIndex(1000));
+        event_data->addEvent(TimeFrameIndex(2000));
+        event_data->addEvent(TimeFrameIndex(3000));
         m_data_manager->setData<DigitalEventSeries>("test_events", event_data, time_key);
     }
 
@@ -331,7 +331,7 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - No emiss
 
     // Trigger another rebuild by adding digital events
     auto ev = std::make_shared<DigitalEventSeries>();
-    ev->addEvent(1000);
+    ev->addEvent(TimeFrameIndex(1000));
     dm.setData<DigitalEventSeries>("probe_table_events_1", ev, time_key);
     QApplication::processEvents();
 

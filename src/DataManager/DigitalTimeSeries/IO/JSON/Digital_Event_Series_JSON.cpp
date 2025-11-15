@@ -11,15 +11,15 @@ EventDataType stringToEventDataType(std::string const & data_type_str) {
     return EventDataType::Unknown;
 }
 
-void scale_events(std::vector<float> & events, float const scale, bool const scale_divide)
+void scale_events(std::vector<TimeFrameIndex> & events, float const scale, bool const scale_divide)
 {
     if (scale_divide) {
         for (auto & e: events) {
-            e /= scale;
+            e = TimeFrameIndex(static_cast<int64_t>(e.getValue() / scale));
         }
     } else {
         for (auto & e: events) {
-            e *= scale;
+            e = TimeFrameIndex(static_cast<int64_t>(e.getValue() * scale));
         }
     }
 }
@@ -96,7 +96,7 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load_into_DigitalEventSeries(st
             if (scale != 1.0f) {
                 for (auto & series : loaded_series) {
                     auto events = series->getEventSeries();  // This returns const&, so we need to copy
-                    std::vector<float> scaled_events = events;  // Make a copy
+                    std::vector<TimeFrameIndex> scaled_events = events;  // Make a copy
                     scale_events(scaled_events, scale, scale_divide);
                     series = std::make_shared<DigitalEventSeries>(scaled_events);
                 }

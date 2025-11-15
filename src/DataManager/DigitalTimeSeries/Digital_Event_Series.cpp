@@ -5,16 +5,16 @@
 
 #include <algorithm>// std::sort
 
-DigitalEventSeries::DigitalEventSeries(std::vector<float> event_vector) {
+DigitalEventSeries::DigitalEventSeries(std::vector<TimeFrameIndex> event_vector) {
     _data = std::move(event_vector);
     _sortEvents();
 }
 
-std::vector<float> const & DigitalEventSeries::getEventSeries() const {
+std::vector<TimeFrameIndex> const & DigitalEventSeries::getEventSeries() const {
     return _data;
 }
 
-void DigitalEventSeries::addEvent(float const event_time) {
+void DigitalEventSeries::addEvent(TimeFrameIndex const event_time) {
 
     if (std::ranges::find(_data, event_time) != _data.end()) {
         return;
@@ -31,7 +31,7 @@ void DigitalEventSeries::addEvent(float const event_time) {
     }
 }
 
-bool DigitalEventSeries::removeEvent(float const event_time) {
+bool DigitalEventSeries::removeEvent(TimeFrameIndex const event_time) {
     auto it = std::ranges::find(_data, event_time);
     if (it != _data.end()) {
         _data.erase(it);
@@ -68,7 +68,7 @@ std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIn
     //result.reserve(_data.size());// Reserve space for potential worst case
 
     for (size_t i = 0; i < _data.size(); ++i) {
-        if (_data[i] >= static_cast<float>(start_time.getValue()) && _data[i] <= static_cast<float>(stop_time.getValue())) {
+        if (_data[i] >= start_time && _data[i] <= stop_time) {
             EntityId const entity_id = (i < _entity_ids.size()) ? _entity_ids[i] : EntityId(0);
             result.emplace_back(_data[i], entity_id);
         }

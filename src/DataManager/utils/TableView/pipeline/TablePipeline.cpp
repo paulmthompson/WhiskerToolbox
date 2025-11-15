@@ -493,7 +493,7 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
                                                                       *source_timeframe);
 
                     for (auto time: event_times) {
-                        timestamps.emplace_back(static_cast<int64_t>(time));
+                        timestamps.emplace_back(static_cast<int64_t>(time.getValue()));
                     }
                     timeFrame = source_timeframe;
                 } else {
