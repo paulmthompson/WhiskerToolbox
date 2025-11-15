@@ -16,6 +16,7 @@
 #include "Media_Widget/Media_Widget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
+#include "GroupContextMenu/GroupContextMenuHandler.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -299,6 +300,11 @@ void Media_Window::setGroupManager(GroupManager * group_manager) {
     }
     
     _group_manager = group_manager;
+    
+    // Update the group menu handler with the new group manager
+    if (_group_menu_handler) {
+        _group_menu_handler->setGroupManager(group_manager);
+    }
     
     // Connect to new group manager signals if available
     if (_group_manager) {
@@ -941,7 +947,11 @@ void Media_Window::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
         return;
     }
 
-    _updateContextMenuActions();
+    // Update group menu state via handler
+    if (_group_menu_handler) {
+        _group_menu_handler->updateMenuState(_context_menu);
+    }
+    
     _showContextMenu(event->screenPos());
 }
 
@@ -2239,73 +2249,39 @@ EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::strin
 void Media_Window::_createContextMenu() {
     _context_menu = new QMenu();
     
-    // Create actions
-    auto * create_group_action = new QAction("Create New Group", this);
-    auto * ungroup_action = new QAction("Ungroup Selected", this);
+    // Create the group context menu handler
+    _group_menu_handler = std::make_unique<GroupContextMenuHandler>(this);
+    
+    // Setup callbacks for the group handler
+    GroupContextMenuCallbacks callbacks;
+    callbacks.getSelectedEntities = [this]() {
+        return _selected_entities;
+    };
+    callbacks.clearSelection = [this]() {
+        clearAllSelections();
+    };
+    callbacks.hasSelection = [this]() {
+        return !_selected_entities.empty();
+    };
+    callbacks.onGroupOperationCompleted = [this]() {
+        // Trigger a redraw after group operations
+        UpdateCanvas();
+    };
+    
+    _group_menu_handler->setCallbacks(callbacks);
+    
+    // Setup the group menu section
+    _group_menu_handler->setupGroupMenuSection(_context_menu, true);
+    
+    // Add clear selection action
     auto * clear_selection_action = new QAction("Clear Selection", this);
-    
-    // Add actions to menu
-    _context_menu->addAction(create_group_action);
-    _context_menu->addSeparator();
-    _context_menu->addAction(ungroup_action);
-    _context_menu->addSeparator();
     _context_menu->addAction(clear_selection_action);
-    
-    // Connect actions
-    connect(create_group_action, &QAction::triggered, this, &Media_Window::onCreateNewGroup);
-    connect(ungroup_action, &QAction::triggered, this, &Media_Window::onUngroupSelected);
     connect(clear_selection_action, &QAction::triggered, this, &Media_Window::onClearSelection);
 }
 
 void Media_Window::_showContextMenu(QPoint const & global_pos) {
     if (_context_menu) {
         _context_menu->popup(global_pos);
-    }
-}
-
-void Media_Window::_updateContextMenuActions() {
-    if (!_context_menu || !_group_manager) {
-        return;
-    }
-
-    // Clear all dynamic actions by removing actions after the static ones
-    // The static menu structure is: Create New Group, Separator, Ungroup Selected, Separator, Clear Selection
-    // Everything after the second separator should be removed
-    auto actions = _context_menu->actions();
-    int separator_count = 0;
-    QList<QAction*> actions_to_remove;
-    
-    for (QAction* action : actions) {
-        if (action->isSeparator()) {
-            separator_count++;
-            if (separator_count > 2) {
-                actions_to_remove.append(action);
-            }
-        } else if (separator_count >= 2) {
-            // This is a dynamic action after the second separator
-            actions_to_remove.append(action);
-        }
-    }
-    
-    // Remove and delete the dynamic actions
-    for (QAction* action : actions_to_remove) {
-        _context_menu->removeAction(action);
-        action->deleteLater(); // Use deleteLater() for safer cleanup
-    }
-
-    // Add dynamic group assignment actions
-    auto groups = _group_manager->getGroupsForContextMenu();
-    if (!groups.empty()) {
-        _context_menu->addSeparator();
-        
-        for (auto const & [group_id, group_name] : groups) {
-            auto * assign_action = new QAction(QString("Assign to %1").arg(group_name), this);
-            _context_menu->addAction(assign_action);
-            
-            connect(assign_action, &QAction::triggered, this, [this, group_id]() {
-                onAssignToGroup(group_id);
-            });
-        }
     }
 }
 
@@ -2330,36 +2306,6 @@ float Media_Window::_calculateDistanceToLineSegment(float px, float py, float x1
     float dist_y = py - projection_y;
     
     return std::sqrt(dist_x * dist_x + dist_y * dist_y);
-}
-
-// Context menu slot implementations
-void Media_Window::onCreateNewGroup() {
-    if (!_group_manager || _selected_entities.empty()) {
-        return;
-    }
-    
-    int group_id = _group_manager->createGroupWithEntities(_selected_entities);
-    if (group_id != -1) {
-        clearAllSelections();
-    }
-}
-
-void Media_Window::onAssignToGroup(int group_id) {
-    if (!_group_manager || _selected_entities.empty()) {
-        return;
-    }
-    
-    _group_manager->assignEntitiesToGroup(group_id, _selected_entities);
-    clearAllSelections();
-}
-
-void Media_Window::onUngroupSelected() {
-    if (!_group_manager || _selected_entities.empty()) {
-        return;
-    }
-    
-    _group_manager->ungroupEntities(_selected_entities);
-    clearAllSelections();
 }
 
 void Media_Window::onClearSelection() {
@@ -2389,8 +2335,10 @@ void Media_Window::keyPressEvent(QKeyEvent * event) {
             std::advance(it, group_number - 1);
             int group_id = it->first;
 
-            // Assign selected entities to the group
-            onAssignToGroup(group_id);
+            // Assign selected entities to the group using group manager directly
+            _group_manager->assignEntitiesToGroup(group_id, _selected_entities);
+            clearAllSelections();
+            UpdateCanvas();
             event->accept();
             return;
         }

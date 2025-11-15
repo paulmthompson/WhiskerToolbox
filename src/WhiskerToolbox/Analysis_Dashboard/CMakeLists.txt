@@ -151,6 +151,7 @@ target_link_libraries(Analysis_Dashboard PRIVATE ShaderManager)
 target_link_libraries(Analysis_Dashboard PRIVATE Feature_Table_Widget)
 target_link_libraries(Analysis_Dashboard PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(Analysis_Dashboard PRIVATE GroupManagementWidget)
+target_link_libraries(Analysis_Dashboard PRIVATE GroupContextMenu)
 
 # Include directories
 target_include_directories(Analysis_Dashboard PUBLIC

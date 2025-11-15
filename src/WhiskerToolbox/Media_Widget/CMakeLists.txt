@@ -112,6 +112,7 @@ target_link_libraries(Media_Widget PRIVATE DataManager)
 target_link_libraries(Media_Widget PRIVATE ColorPicker_Widget)
 target_link_libraries(Media_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(Media_Widget PRIVATE GroupManagementWidget)
+target_link_libraries(Media_Widget PRIVATE GroupContextMenu)
 target_link_libraries(Media_Widget PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 
 target_include_directories(Media_Widget PUBLIC

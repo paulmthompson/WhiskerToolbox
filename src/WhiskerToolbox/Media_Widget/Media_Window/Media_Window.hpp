@@ -33,6 +33,7 @@ class GroupManager;
 class LineData;
 class PointData;
 class MaskData;
+class GroupContextMenuHandler;
 
 struct TextOverlay;
 
@@ -273,6 +274,7 @@ private:
     std::string _selected_data_type; // Type of selected data ("line", "point", "mask")
     bool _group_selection_enabled = true; // Allow group-based selection to be disabled
     QMenu * _context_menu = nullptr;
+    std::unique_ptr<GroupContextMenuHandler> _group_menu_handler;
 
     QImage::Format _getQImageFormat(std::string const & media_key);
     QImage _combineMultipleMedia();
@@ -323,7 +325,6 @@ private:
     EntityId _findMaskAtPosition(QPointF const & scene_pos, std::string const & mask_key);
     void _createContextMenu();
     void _showContextMenu(QPoint const & global_pos);
-    void _updateContextMenuActions();
     float _calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2);
 
 public slots:
@@ -337,9 +338,6 @@ private slots:
     void onGroupChanged();
 
     // Context menu actions
-    void onCreateNewGroup();
-    void onAssignToGroup(int group_id);
-    void onUngroupSelected();
     void onClearSelection();
 
 signals:

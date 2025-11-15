@@ -2,6 +2,7 @@
 #include "Selection/SelectionHandlers.hpp"
 #include "Widgets/Common/GenericViewAdapter.hpp"
 #include "Widgets/Common/PlotInteractionController.hpp"
+#include "GroupContextMenu/GroupContextMenuHandler.hpp"
 
 #include "Visualizers/Lines/LineDataVisualization.hpp"
 #include "Visualizers/Masks/MaskDataVisualization.hpp"
@@ -60,6 +61,11 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
 }
 
 void SpatialOverlayOpenGLWidget::doSetGroupManager(GroupManager * group_manager) {
+    // Update the group menu handler with the new group manager
+    if (_group_menu_handler) {
+        _group_menu_handler->setGroupManager(group_manager);
+    }
+    
     // Update visualization instances with new manager
     for (auto & kv: _point_data_visualizations) {
         if (kv.second) {
@@ -102,7 +108,6 @@ void SpatialOverlayOpenGLWidget::refreshGroupRenderDataAll() {
         doneCurrent();
     }
 
-    updateDynamicGroupActions();
     requestThrottledUpdate();
 }
 
@@ -196,11 +201,7 @@ void SpatialOverlayOpenGLWidget::applyTimeRangeFilter(int start_frame, int end_f
 // ========== Selection ==========
 
 void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
-    auto old_mode = _selection_mode;
     BasePlotOpenGLWidget::setSelectionMode(mode);
-    if (old_mode != mode) {
-        updateContextMenuState();
-    }
 }
 
 void SpatialOverlayOpenGLWidget::onSelectionChanged(size_t total_selected) {
@@ -706,13 +707,49 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
 void SpatialOverlayOpenGLWidget::initializeContextMenu() {
     _context_menu = std::make_unique<QMenu>(nullptr);
 
-    // Create actions
-    _action_create_new_group = new QAction("Create New Group", this);
-    connect(_action_create_new_group, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup);
+    // Create the group context menu handler
+    _group_menu_handler = std::make_unique<GroupContextMenuHandler>(this);
+    
+    // Setup callbacks for the group handler
+    GroupContextMenuCallbacks callbacks;
+    callbacks.getSelectedEntities = [this]() {
+        std::unordered_set<EntityId> selected_entities;
+        // Collect all selected entities from all visualizations
+        for (auto const & [key, viz]: _point_data_visualizations) {
+            if (viz) {
+                // For points, m_selected_points contains pointers to QuadTreePoint objects
+                // The QuadTreePoint's data member IS the EntityId
+                for (auto const * point_ptr : viz->m_selected_points) {
+                    if (point_ptr) {
+                        selected_entities.insert(point_ptr->data);
+                    }
+                }
+            }
+        }
+        for (auto const & [key, viz]: _line_data_visualizations) {
+            if (viz) {
+                // For lines, m_selected_lines is already a set of EntityIds
+                selected_entities.insert(viz->m_selected_lines.begin(), viz->m_selected_lines.end());
+            }
+        }
+        return selected_entities;
+    };
+    callbacks.clearSelection = [this]() {
+        clearSelection();
+    };
+    callbacks.hasSelection = [this]() {
+        return getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines() > 0;
+    };
+    callbacks.onGroupOperationCompleted = [this]() {
+        refreshGroupRenderDataAll();
+    };
+    
+    _group_menu_handler->setCallbacks(callbacks);
+    
+    // Setup the group menu section
+    _group_menu_handler->setupGroupMenuSection(_context_menu.get(), true);
 
-    _action_ungroup_selected = new QAction("Ungroup Selected", this);
-    connect(_action_ungroup_selected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::ungroupSelectedPoints);
-
+    // Create non-group actions
     _action_hide_selected = new QAction("Hide Selected", this);
     connect(_action_hide_selected, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
 
@@ -722,15 +759,7 @@ void SpatialOverlayOpenGLWidget::initializeContextMenu() {
     _action_show_all_datasets = new QAction("Show All (All Datasets)", this);
     connect(_action_show_all_datasets, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
 
-    // Create assign to group submenu
-    _assign_group_menu = _context_menu->addMenu("Assign to Group");
-    _assign_group_menu->addAction(_action_create_new_group);
-    _assign_group_menu->addSeparator();
-    // Dynamic group actions will be added by updateDynamicGroupActions()
-
-    // Add other menu items
-    _context_menu->addAction(_action_ungroup_selected);
-    _context_menu->addSeparator();
+    // Add non-group menu items
     _context_menu->addAction(_action_hide_selected);
 
     // Show All submenu
@@ -746,49 +775,17 @@ void SpatialOverlayOpenGLWidget::initializeContextMenu() {
 
 void SpatialOverlayOpenGLWidget::contextMenuEvent(QContextMenuEvent * event) {
     if (_context_menu) {
-        updateContextMenuState();
+        // Update group menu state via handler
+        if (_group_menu_handler) {
+            _group_menu_handler->updateMenuState(_context_menu.get());
+        }
+        
+        // Update non-group action states
+        size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
+        bool has_selection = total_selected > 0;
+        _action_hide_selected->setEnabled(has_selection);
+        
         _context_menu->popup(event->globalPos());
     }
 }
 
-void SpatialOverlayOpenGLWidget::updateContextMenuState() {
-    size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
-    bool has_selection = total_selected > 0;
-    bool has_group_manager = _group_manager != nullptr;
-
-    // Update group-related actions
-    _assign_group_menu->menuAction()->setVisible(has_selection && has_group_manager);
-    _action_ungroup_selected->setVisible(has_selection && has_group_manager);
-
-    // Update other actions
-    _action_hide_selected->setEnabled(has_selection);
-
-    // Update dynamic group actions if we have a group manager
-    if (has_group_manager && has_selection) {
-        updateDynamicGroupActions();
-    }
-}
-
-void SpatialOverlayOpenGLWidget::updateDynamicGroupActions() {
-    // Clear existing dynamic actions
-    for (QAction * action: _dynamic_group_actions) {
-        _assign_group_menu->removeAction(action);
-        action->deleteLater();
-    }
-    _dynamic_group_actions.clear();
-
-    if (!_group_manager) {
-        return;
-    }
-
-    auto const & groups = _group_manager->getGroups();
-    for (auto it = groups.begin(); it != groups.end(); ++it) {
-        auto const & group = it.value();
-        QAction * groupAction = _assign_group_menu->addAction(group.name);
-        int group_id = group.id;
-        connect(groupAction, &QAction::triggered, this, [this, group_id]() {
-            assignSelectedPointsToGroup(group_id);
-        });
-        _dynamic_group_actions.append(groupAction);
-    }
-}

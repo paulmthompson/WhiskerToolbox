@@ -17,6 +17,7 @@ struct PointDataVisualization;
 struct MaskDataVisualization;
 struct LineDataVisualization;
 class GroupManager;
+class GroupContextMenuHandler;
 
 
 class SpatialOverlayOpenGLWidget : public BasePlotOpenGLWidget {
@@ -122,19 +123,14 @@ private:
 
     // Context menu
     std::unique_ptr<QMenu> _context_menu;
-    QMenu * _assign_group_menu = nullptr;
-    QAction * _action_create_new_group = nullptr;
-    QAction * _action_ungroup_selected = nullptr;
+    std::unique_ptr<GroupContextMenuHandler> _group_menu_handler;
     QAction * _action_hide_selected = nullptr;
     QAction * _action_show_all_current = nullptr;
     QAction * _action_show_all_datasets = nullptr;
-    QList<QAction *> _dynamic_group_actions;
 
     void initializeVisualizations();
     void updateVisualizationData();
     void initializeContextMenu();
-    void updateContextMenuState();
-    void updateDynamicGroupActions();
     void makeSelection();
 
     // Template method hooks - required implementations

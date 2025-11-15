@@ -456,60 +456,24 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlayOpenGL
                 auto * mainMenu = qobject_cast<QMenu *>(topLevelWidget);
                 if (!mainMenu) continue;
 
-                QAction * assignToGroupAction = nullptr;
-                for (QAction * action : mainMenu->actions()) {
-                    if (action && action->menu() && action->text().contains("Assign to Group", Qt::CaseInsensitive)) {
-                        assignToGroupAction = action;
-                        break;
-                    }
-                }
-                if (!assignToGroupAction) continue;
-
-                // Open the submenu by hovering/clicking on the parent action
-                QRect assignRect = mainMenu->actionGeometry(assignToGroupAction);
-                //if (!assignRect.isValid()) continue;
-
-                QPoint assignCenter = assignRect.center();
-                QTest::mouseMove(mainMenu, assignCenter);
-                QTest::qWait(50);
-                // Some styles require a click to open submenu in tests
-                if (!assignToGroupAction->menu() || !assignToGroupAction->menu()->isVisible()) {
-                    QTest::mouseClick(mainMenu, Qt::LeftButton, Qt::NoModifier, assignCenter);
-                }
-
-                // Wait for submenu to become visible
-                QMenu * subMenu = assignToGroupAction->menu();
-                /*
-                int subWaited = 0;
-                while (subMenu && !subMenu->isVisible() && subWaited <= 500) {
-                    QTest::qWait(25);
-                    subWaited += 25;
-                }
-                if (!subMenu || !subMenu->isVisible()) {
-                    continue;
-                }
-                */
-
-                std::cout << "Submenu visible: " << subMenu->title().toStdString() << std::endl;
-
-                // Find the "Create New Group" action in the submenu
+                // With the new GroupContextMenuHandler, "Create New Group" is a top-level action
                 QAction * createNewGroupAction = nullptr;
-                for (QAction * subAction : subMenu->actions()) {
-                    if (subAction && subAction->text().contains("Create New Group", Qt::CaseInsensitive)) {
-                        createNewGroupAction = subAction;
+                for (QAction * action : mainMenu->actions()) {
+                    if (action && action->text().contains("Create New Group", Qt::CaseInsensitive)) {
+                        createNewGroupAction = action;
                         break;
                     }
                 }
                 if (!createNewGroupAction) continue;
 
-                QRect createRect = subMenu->actionGeometry(createNewGroupAction);
-                if (!createRect.isValid()) continue;
+                std::cout << "Found Create New Group action" << std::endl;
+                QRect actionRect = mainMenu->actionGeometry(createNewGroupAction);
+                if (!actionRect.isValid()) continue;
 
-                // Move and click on the submenu action's rectangle
-                QPoint createCenter = createRect.center();
-                QTest::mouseMove(subMenu, createCenter);
+                QPoint actionCenter = actionRect.center();
+                QTest::mouseMove(mainMenu, actionCenter);
                 QTest::qWait(25);
-                QTest::mouseClick(subMenu, Qt::LeftButton, Qt::NoModifier, createCenter);
+                QTest::mouseClick(mainMenu, Qt::LeftButton, Qt::NoModifier, actionCenter);
 
                 return true;
             }
