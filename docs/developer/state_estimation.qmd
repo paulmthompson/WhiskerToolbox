@@ -53,17 +53,17 @@ The overall goal is to design interfaces that are modular enough to accommodate 
 
 ### Filter Types
 
-| Filter Type                       | Completion Status |
-| --------------------------------- | ----------------- |
-| Standard Kalman Filter            | Implemented       |
-| Extended Kalman Filter (EKF)      | Planned           |
-| Unscented Kalman Filter (UKF)     | Planned           |
-| Bootstrap Particle Filter         | Implemented       |
-| Sequential Importance Resampling  | Planned           |
+| Filter Type                      | Completion Status |
+|----------------------------------|-------------------|
+| Standard Kalman Filter           | Implemented       |
+| Extended Kalman Filter (EKF)     | Planned           |
+| Unscented Kalman Filter (UKF)    | Planned           |
+| Bootstrap Particle Filter        | Implemented       |
+| Sequential Importance Resampling | Planned           |
 
 ### Smoothing Types
 
-| Smoothing Type                  | Completion Status |
-| ------------------------------- | ----------------- |
-| Rauch-Tung-Striebel (RTS)       | Implemented       |
-| Particle Filter Smoother        | Planned           |
+| Smoothing Type            | Completion Status |
+|---------------------------|-------------------|
+| Rauch-Tung-Striebel (RTS) | Implemented       |
+| Particle Filter Smoother  | Planned           |

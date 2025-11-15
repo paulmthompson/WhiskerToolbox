@@ -9,7 +9,7 @@ The below table has all of the transformations currently available in the Data T
 
 | Transform Name | Has .test.cpp? | JSON-based Test? | Parameters in ParameterFactory? | User Docs Exist? | Has benchmark.cpp? | Benchmark Results |
 |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-| Calculate Mask Centroid | Yes | Yes | Yes | Yes |  |  |
+| Calculate Mask Centroid | Yes | Yes | Yes | Yes | No |  |
 | Convert Mask to Line | Yes | Yes | Yes | No | No |  |
 | Skeletonize Mask | Yes | Yes | Yes | Yes | No |  |
 | Remove Small Connected Components | Yes | Yes | Yes | Yes | No |  |

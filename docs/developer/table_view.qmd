@@ -13,6 +13,20 @@ The columns may represent simple double or floating-point values, but also could
 
 The transformations done on data for a column need not necessarily come from the Data Manager, but also could come from other columns in the `TableView`. For instance, if we compute some kind of transformation and hold it in a column, we could then choose to z-score it.
 
+| Column Computer Name | Description | Test? | Documentation? | Benchmarking? |
+|----|----|----|----|----|
+| Analog Slice Gatherer | Gets analog data within intervals | Yes |  |  |
+| Analog Timestamp Offsets | column where rows are offset by some value from timestamp selector | Yes |  |  |
+| Event In Interval |  | Yes |  |  |
+| Interval Overlap |  | Yes |  |  |
+| Interval Property |  | Yes |  |  |
+| Interval Reduction |  | Yes |  |  |
+| Line Sampling |  | Yes |  |  |
+| Standardize |  | No |  |  |
+| Timestamp In Interval |  | Yes |  |  |
+| Timestamp Value |  | Yes |  |  |
+|  |  |  |  |  |
+
 ## Rows
 
 The other difference from transformations comes from the concept of a row in the `TableView` structure. A row in the `TableView` could be a timestamp, just like how data is stored in the Manager, but also could be something that is an aggregator. For instance, a digital interview interval in the Data Manager can serve as a row. In this scheme, a double value in a column may not correspond to some value at an instant time, but rather one that is the average over an interval that corresponds to the row. It also could be the minimum value, the maximum value, or it could represent something like a standard deviation.
