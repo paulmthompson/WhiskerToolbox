@@ -2,6 +2,8 @@
 #define EVENTTABLEMODEL_HPP
 
 
+#include "TimeFrame/TimeFrame.hpp"
+
 #include <QAbstractTableModel>
 
 #include <vector>
@@ -13,13 +15,13 @@ public:
     explicit EventTableModel(QObject * parent = nullptr)
         : QAbstractTableModel(parent) {}
 
-    void setEvents(std::vector<float> const & events) {
+    void setEvents(std::vector<TimeFrameIndex> const & events) {
         beginResetModel();
         _events = events;
         endResetModel();
     }
 
-    [[nodiscard]] float getEvent(int row) const {
+    [[nodiscard]] TimeFrameIndex getEvent(int row) const {
         return _events[row];
     }
 
@@ -66,7 +68,7 @@ public:
 
     bool setData(QModelIndex const & index, QVariant const & value, int role) override {
         if (index.isValid() && role == Qt::EditRole && index.column() == 0) {
-            _events[index.row()] = value.toFloat();
+            _events[index.row()] = TimeFrameIndex(static_cast<int64_t>(value.toInt()));
             emit dataChanged(index, index, {role});
             return true;
         }
@@ -74,7 +76,7 @@ public:
     }
 
 private:
-    std::vector<float> _events;
+    std::vector<TimeFrameIndex> _events;
 };
 
 #endif// EVENTTABLEMODEL_HPP

@@ -717,8 +717,8 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
         // Generate click sounds for each event
         for (auto const & event_with_id: events_with_ids) {
             // Event time represents a TimeFrameIndex in the series' time frame
-            float event_time_in_series_frame = event_with_id.event_time;
-            TimeFrameIndex event_index_in_series(static_cast<int64_t>(event_time_in_series_frame));
+            auto event_time_in_series_frame = event_with_id.event_time;
+            TimeFrameIndex event_index_in_series = event_time_in_series_frame;
 
             // Convert event index from series time frame to master/video time frame index
             TimeFrameIndex event_index_in_master{0};

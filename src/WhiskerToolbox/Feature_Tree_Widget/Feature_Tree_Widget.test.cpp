@@ -117,9 +117,9 @@ private:
 
         // Add some test DigitalEventSeries
         auto event_data = std::make_shared<DigitalEventSeries>();
-        event_data->addEvent(1000);
-        event_data->addEvent(2000);
-        event_data->addEvent(3000);
+        event_data->addEvent(TimeFrameIndex(1000));
+        event_data->addEvent(TimeFrameIndex(2000));
+        event_data->addEvent(TimeFrameIndex(3000));
         m_data_manager->setData<DigitalEventSeries>("test_events", event_data, time_key);
     }
 
@@ -384,7 +384,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
 
         // Add a new feature to trigger tree rebuild
         auto new_event_data = std::make_shared<DigitalEventSeries>();
-        new_event_data->addEvent(5000);
+        new_event_data->addEvent(TimeFrameIndex(5000));
         TimeKey time_key("time");
         dm.setData<DigitalEventSeries>("test_events_new", new_event_data, time_key);
 
@@ -550,7 +550,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - No emissio
 
     // Trigger another rebuild by adding digital event data
     auto event_data = std::make_shared<DigitalEventSeries>();
-    event_data->addEvent(1000);
+    event_data->addEvent(TimeFrameIndex(1000));
     dm.setData<DigitalEventSeries>("probe_events_1", event_data, time_key);
 
     QApplication::processEvents();

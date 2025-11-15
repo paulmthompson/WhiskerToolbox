@@ -78,7 +78,7 @@ void DigitalEventSeries_Widget::_changeDataTable(QModelIndex const & topLeft,
     auto event_series = events->getEventSeries();
 
     for (int row = topLeft.row(); row <= bottomRight.row(); ++row) {
-        float newTime = _event_table_model->getEvent(row);
+        auto newTime = _event_table_model->getEvent(row);
         if (static_cast<size_t>(row) < event_series.size()) {
             events->removeEvent(event_series[row]);
             events->addEvent(newTime);
@@ -113,7 +113,7 @@ void DigitalEventSeries_Widget::_addEventButton() {
 
     if (!events) return;
 
-    events->addEvent(static_cast<float>(current_time));
+    events->addEvent(TimeFrameIndex(current_time));
 
     std::cout << "Number of events is " << events->size() << std::endl;
 
@@ -127,7 +127,7 @@ void DigitalEventSeries_Widget::_removeEventButton() {
 
     if (!events) return;
 
-    bool removed = events->removeEvent(static_cast<float>(current_time));
+    bool removed = events->removeEvent(TimeFrameIndex(current_time));
     static_cast<void>(removed);
 
     _calculateEvents();
@@ -138,9 +138,9 @@ void DigitalEventSeries_Widget::_handleCellClicked(QModelIndex const & index) {
         return;
     }
 
-    float const frameNumber = _event_table_model->getEvent(index.row());
+    auto const frameNumber = _event_table_model->getEvent(index.row());
 
-    emit frameSelected(static_cast<int>(frameNumber));
+    emit frameSelected(static_cast<int>(frameNumber.getValue()));
 }
 
 void DigitalEventSeries_Widget::_onExportTypeChanged(int index) {
