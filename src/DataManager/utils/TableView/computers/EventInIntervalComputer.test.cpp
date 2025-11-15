@@ -117,16 +117,16 @@ private:
         // Events store INDICES into this timeframe, not absolute time values
         // So spike event "5" means timeframe[5] = 10 (absolute time)
         std::vector<TimeFrameIndex> neuron1_spikes = {
-            1.0f,   // index 1 → time 2
-            6.0f,   // index 6 → time 12
-            7.0f,   // index 7 → time 14
+            TimeFrameIndex(1),   // index 1 → time 2
+            TimeFrameIndex(6),   // index 6 → time 12
+            TimeFrameIndex(7),   // index 7 → time 14
             TimeFrameIndex(11),  // index 11 → time 22
             TimeFrameIndex(16),  // index 16 → time 32
             TimeFrameIndex(26),  // index 26 → time 52
             TimeFrameIndex(27),  // index 27 → time 54
             TimeFrameIndex(34),  // index 34 → time 68
             TimeFrameIndex(41),  // index 41 → time 82
-            45.0f   // index 45 → time 90
+            TimeFrameIndex(45)   // index 45 → time 90
         };
         auto neuron1_series = std::make_shared<DigitalEventSeries>(neuron1_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron1Spikes", neuron1_series, TimeKey("spike_time"));
@@ -138,13 +138,13 @@ private:
         // Create spike train for Neuron2 - dense spikes
         // All values are indices into the spike timeframe
         std::vector<TimeFrameIndex> neuron2_spikes = {
-            0.0f,   // index 0 → time 0
-            1.0f,   // index 1 → time 2
-            2.0f,   // index 2 → time 4
-            5.0f,   // index 5 → time 10
-            6.0f,   // index 6 → time 12
-            8.0f,   // index 8 → time 16
-            9.0f,   // index 9 → time 18
+            TimeFrameIndex(0),   // index 0 → time 0
+            TimeFrameIndex(1),   // index 1 → time 2
+            TimeFrameIndex(2),   // index 2 → time 4
+            TimeFrameIndex(5),   // index 5 → time 10
+            TimeFrameIndex(6),   // index 6 → time 12
+            TimeFrameIndex(8),   // index 8 → time 16
+            TimeFrameIndex(9),   // index 9 → time 18
             TimeFrameIndex(15),  // index 15 → time 30
             TimeFrameIndex(16),  // index 16 → time 32
             TimeFrameIndex(18),  // index 18 → time 36
@@ -158,7 +158,7 @@ private:
             TimeFrameIndex(41),  // index 41 → time 82
             TimeFrameIndex(42),  // index 42 → time 84
             TimeFrameIndex(45),  // index 45 → time 90
-            46.0f   // index 46 → time 92
+            TimeFrameIndex(46)   // index 46 → time 92
         };
         auto neuron2_series = std::make_shared<DigitalEventSeries>(neuron2_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron2Spikes", neuron2_series, TimeKey("spike_time"));
@@ -169,9 +169,9 @@ private:
         
         // Create spike train for Neuron3 - rhythmic spikes every 16 time units
         // Starting at time 4 (index 2), then time 12 (index 6), time 20 (index 10), etc.
-        std::vector<float> neuron3_spikes;
+        std::vector<TimeFrameIndex> neuron3_spikes;
         for (int i = 2; i <= 48; i += 4) {  // indices 2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46
-            neuron3_spikes.push_back(static_cast<float>(i));
+            neuron3_spikes.push_back(TimeFrameIndex(i));
         }
         auto neuron3_series = std::make_shared<DigitalEventSeries>(neuron3_spikes);
         m_data_manager->setData<DigitalEventSeries>("Neuron3Spikes", neuron3_series, TimeKey("spike_time"));
@@ -261,12 +261,12 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
 
     SECTION("Presence operation - detect events in intervals") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        std::vector<int> timeValues = {};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create event data (events at times 1, 3, 5, 7, 9)
-        std::vector<float> events = {1.0f, 3.0f, 5.0f, 7.0f, 9.0f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(3), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(9)};
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
@@ -304,13 +304,13 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
     
     SECTION("Count operation - count events in intervals") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        std::vector<int> timeValues = {};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create event data with multiple events in some intervals
-        std::vector<float> events = {1.0f, 1.5f, 3.0f, 5.0f, 5.5f, 5.8f, 7.0f, 9.0f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(1), TimeFrameIndex(3), TimeFrameIndex(5), TimeFrameIndex(5), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(9)};
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
@@ -347,12 +347,12 @@ TEST_CASE("DM - TV - EventInIntervalComputer Basic Functionality", "[EventInInte
     
     SECTION("Gather operation - collect events in intervals") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        std::vector<int> timeValues = {};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create event data
-        std::vector<float> events = {1.0f, 2.5f, 3.0f, 5.0f, 5.5f, 7.0f, 9.0f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(5), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(9)};
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
@@ -404,11 +404,11 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
 
     SECTION("Empty event source") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
+        std::vector<int> timeValues = {};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         // Create empty event data
-        std::vector<float> events;
+        std::vector<TimeFrameIndex> events;
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("EmptyEvents", eventSource, TimeKey("test_time"));
@@ -457,12 +457,12 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
     
     SECTION("Single event scenarios") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
+        std::vector<int> timeValues = {};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create single event data
-        std::vector<float> events = {2.5f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(2)};
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("SingleEvent", eventSource, TimeKey("test_time"));
@@ -503,12 +503,12 @@ TEST_CASE("DM - TV - EventInIntervalComputer Edge Cases", "[EventInIntervalCompu
     
     SECTION("Zero-length intervals") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
+        std::vector<int> timeValues = {};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create event data
-        std::vector<float> events = {1.0f, 2.0f, 3.0f, 4.0f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(4)};
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
@@ -542,11 +542,11 @@ TEST_CASE("DM - TV - EventInIntervalComputer Error Handling", "[EventInIntervalC
 
     SECTION("Wrong operation type for template specialization") {
         // Create minimal setup
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
+        std::vector<int> timeValues = {};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
-        std::vector<float> events = {1.0f, 2.0f, 3.0f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3)};
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("TestEvents", eventSource, TimeKey("test_time"));
         
@@ -587,11 +587,11 @@ TEST_CASE("DM - TV - EventInIntervalComputer Dependency Tracking", "[EventInInte
 
     SECTION("getSourceDependency returns correct source name") {
         // Create minimal setup
-        std::vector<int> timeValues = {0, 1, 2};
+        std::vector<int> timeValues = {};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
-        std::vector<float> events = {1.0f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1)};
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("TestSource", eventSource, TimeKey("test_time"));
         
@@ -1192,9 +1192,9 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create many events
-        std::vector<float> events;
-        for (float i = 0.5f; i < 100.0f; i += 2.0f) {
-            events.push_back(i);
+        std::vector<TimeFrameIndex> events;
+        for (int i = 0; i < 100; i += 2) {
+            events.push_back(TimeFrameIndex(i));
         }
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
@@ -1244,12 +1244,12 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
     
     SECTION("Events at interval boundaries") {
         // Create time frame
-        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        std::vector<int> timeValues = {};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
         dm.setTime(TimeKey("test_time"), timeFrame, true);
         
         // Create events exactly at interval boundaries
-        std::vector<float> events = {0.0f, 2.0f, 4.0f, 6.0f, 8.0f, 10.0f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(0), TimeFrameIndex(2), TimeFrameIndex(4), TimeFrameIndex(6), TimeFrameIndex(8), TimeFrameIndex(10)};
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("BoundaryEvents", eventSource, TimeKey("test_time"));
@@ -1285,18 +1285,18 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
     SECTION("Different time frames for rows and events") {
         // Create different time frames with different scales
         // Row time frame: coarser scale (0, 10, 20, 30, 40, 50)
-        std::vector<int> rowTimeValues = {0, 10, 20, 30, 40, 50};
+        std::vector<int> rowTimeValues = {};
         auto rowTimeFrame = std::make_shared<TimeFrame>(rowTimeValues);
         dm.setTime(TimeKey("test_time"), rowTimeFrame, true);
         
         // Event time frame: finer scale (0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30)
-        std::vector<int> eventTimeValues = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
+        std::vector<int> eventTimeValues = {};
         auto eventTimeFrame = std::make_shared<TimeFrame>(eventTimeValues);
         dm.setTime(TimeKey("event_time"), eventTimeFrame, true);
         
         // Create events - the values represent indices that will be looked up in the event timeframe
         // Values between 0-15 map to timeframe positions, giving actual times from the eventTimeValues array
-        std::vector<float> events = {1.0f, 3.0f, 6.0f, 9.0f, 12.0f, 14.0f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(3), TimeFrameIndex(6), TimeFrameIndex(9), TimeFrameIndex(12), TimeFrameIndex(14)};
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("DifferentTimeFrameEvents", eventSource, TimeKey("event_time"));
@@ -1377,20 +1377,20 @@ TEST_CASE("DM - TV - EventInIntervalComputer Complex Scenarios", "[EventInInterv
     
     SECTION("Non-aligned time frames with events at indices") {
         // Create row time frame with irregular intervals
-        std::vector<int> rowTimeValues = {0, 5, 13, 27, 45};
+        std::vector<int> rowTimeValues = {};
         auto rowTimeFrame = std::make_shared<TimeFrame>(rowTimeValues);
         dm.setTime(TimeKey("test_time"), rowTimeFrame, true);
         
         // Create event time frame with different scale
-        std::vector<int> eventTimeValues = {0, 3, 7, 11, 15, 19, 23, 31, 39, 47};
+        std::vector<int> eventTimeValues = {};
         auto eventTimeFrame = std::make_shared<TimeFrame>(eventTimeValues);
         dm.setTime(TimeKey("event_time"), eventTimeFrame, true);
         
         // Create events using INDICES into event time frame
-        // eventTimeValues: {0, 3, 7, 11, 15, 19, 23, 31, 39, 47}
+        // eventTimeValues: {}
         // Index 0->time 0, 1->3, 2->7, 3->11, 4->15, 5->19, 6->23, 7->31, 8->39, 9->47
         // We want events at times approximately: 3, 7, 11, 15, 19, 23, 31, 39
-        std::vector<float> events = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+        std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(4), TimeFrameIndex(5), TimeFrameIndex(6), TimeFrameIndex(7), TimeFrameIndex(8)};
         
         auto eventSource = std::make_shared<DigitalEventSeries>(events);
         dm.setData<DigitalEventSeries>("NonAlignedEvents", eventSource, TimeKey("event_time"));
