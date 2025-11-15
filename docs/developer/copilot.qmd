@@ -1,0 +1,392 @@
+---
+title: "C++ Development Tools Reference"
+format: html
+---
+
+This document serves as a reference for the C++ development tools available in the WhiskerToolbox development environment. These tools help with code quality, performance analysis, and debugging.
+
+## IWYU (Include What You Use)
+
+**Version:** 0.21 (based on Ubuntu clang version 17.0.6)
+
+**Purpose:** IWYU analyzes C++ source files to ensure that they directly include all headers they use and do not include unnecessary headers. This helps reduce compilation times and maintain clean dependencies.
+
+**Location:** `/usr/bin/include-what-you-use`
+
+**Command Line Usage:**
+
+Basic usage on a single file (requires compiler flags):
+```bash
+include-what-you-use -I/path/to/includes src/file.cpp
+```
+
+Using with compile_commands.json (recommended):
+```bash
+# Extract compilation command for a specific file from compile_commands.json
+# and pass those flags to IWYU
+include-what-you-use -Xiwyu --verbose=3 $(jq -r '.[] | select(.file | contains("main.cpp")) | .arguments[]' out/build/Clang/Release/compile_commands.json | grep -v "^clang" | tr '\n' ' ')
+```
+
+Common IWYU options:
+- `-Xiwyu --verbose=3`: Increase verbosity
+- `-Xiwyu --check_also=<glob>`: Check additional files matching pattern
+- `-Xiwyu --mapping_file=<file>`: Use custom mapping file
+- `-Xiwyu --no_default_mappings`: Disable default mappings
+
+**Validation:**
+```bash
+# Verified IWYU is installed and accessible
+include-what-you-use --version
+# Output: include-what-you-use 0.21 based on Ubuntu clang version 17.0.6
+```
+
+**Use Cases:**
+- Reduce compilation times by removing unnecessary includes
+- Identify missing direct includes
+- Maintain clean header dependencies
+- Prevent header inclusion bloat
+
+---
+
+## cppcheck
+
+**Version:** 2.13.0
+
+**Purpose:** Static analysis tool for C/C++ code that detects bugs, undefined behavior, dangerous coding constructs, and stylistic issues without executing the program.
+
+**Location:** `/usr/bin/cppcheck`
+
+**Command Line Usage:**
+
+Analyze a single file:
+```bash
+cppcheck --enable=warning,performance --suppress=missingIncludeSystem src/file.cpp
+```
+
+Analyze entire source directory:
+```bash
+cppcheck --enable=all --suppress=missingIncludeSystem --project=compile_commands.json
+```
+
+Analyze with specific checks:
+```bash
+# Enable specific check categories
+cppcheck --enable=warning,performance,portability,information src/
+
+# Full analysis (slower but more thorough)
+cppcheck --enable=all --inconclusive src/
+```
+
+Common options:
+- `--enable=<checks>`: Enable specific checks (all, warning, style, performance, portability, information)
+- `--suppress=<id>`: Suppress specific warnings
+- `--project=<file>`: Use compilation database
+- `--inconclusive`: Show inconclusive results
+- `--quiet`: Only show errors
+- `--verbose`: Show verbose output
+
+**Validation:**
+```bash
+# Verified cppcheck is installed
+cppcheck --version
+# Output: Cppcheck 2.13.0
+
+# Test on project file
+cppcheck --enable=warning,performance --suppress=missingIncludeSystem src/WhiskerToolbox/main.cpp
+# Successfully executed and reported issues
+```
+
+**Use Cases:**
+- Static bug detection (null pointer dereferences, memory leaks, etc.)
+- Code quality checks
+- Performance issue detection
+- Portability checks
+- Pre-commit hook integration
+
+---
+
+## Infer
+
+**Version:** 1.2.0
+
+**Purpose:** Static analyzer developed by Facebook/Meta for detecting bugs in C, C++, Java, and Objective-C code. Focuses on serious issues like null pointer dereferences, memory leaks, and concurrency bugs.
+
+**Location:** `/usr/local/bin/infer`
+
+**Command Line Usage:**
+
+Analyze using compilation database:
+```bash
+infer run --compilation-database out/build/Clang/Release/compile_commands.json
+```
+
+Analyze with specific build command:
+```bash
+infer run -- cmake --build out/build/Clang/Release
+```
+
+View results:
+```bash
+# View analysis results
+infer explore
+
+# Generate report
+infer report --issues-txt report.txt
+```
+
+Common options:
+- `--compilation-database <file>`: Use compile_commands.json
+- `--report-console-limit <n>`: Limit console output
+- `--project-root <dir>`: Set project root directory
+- `--keep-going`: Continue analysis despite errors
+- `--results-dir <dir>`: Specify output directory (default: infer-out)
+
+**Validation:**
+```bash
+# Verified infer is installed
+infer --version
+# Output: Infer version v1.2.0
+
+# Test analysis (note: full analysis takes time)
+infer run --compilation-database out/build/Clang/Release/compile_commands.json --report-console-limit 5
+# Successfully started analysis of 671 translation units
+```
+
+**Use Cases:**
+- Find null pointer dereferences
+- Detect memory leaks and resource leaks
+- Identify race conditions
+- Find logic errors
+- CI/CD integration for automated bug detection
+
+---
+
+## Hotspot
+
+**Version:** 1.3.0
+
+**Purpose:** GUI for Linux perf profiler. Visualizes performance data collected by perf, making it easy to identify performance bottlenecks, hot functions, and call graphs.
+
+**Location:** `/usr/bin/hotspot`
+
+**Command Line Usage:**
+
+Launch GUI with existing perf data:
+```bash
+hotspot perf.data
+```
+
+Record and analyze:
+```bash
+# First, record performance data with perf
+perf record -g ./out/build/Clang/Release/WhiskerToolbox
+
+# Then analyze with hotspot
+hotspot perf.data
+```
+
+With custom sysroot and debug paths:
+```bash
+hotspot --sysroot /path/to/sysroot --debugPaths /usr/lib/debug perf.data
+```
+
+Common options:
+- `--sysroot <path>`: Path to sysroot for finding libraries
+- `--kallsyms <path>`: Path to kallsyms file for kernel symbols
+- `--debugPaths <paths>`: Colon-separated debug info paths
+- `--extraLibPaths <paths>`: Additional library paths
+- `--appPath <path>`: Application executable path
+
+**Validation:**
+```bash
+# Verified hotspot is installed
+hotspot --version
+# Output: hotspot 1.3.0
+```
+
+**Use Cases:**
+- Visualize CPU profiling data
+- Identify performance hotspots
+- Analyze call graphs
+- Compare performance across runs
+- Flame graph visualization
+- Top-down and bottom-up analysis
+
+**Note:** Hotspot is a GUI application and requires an X server or display to run.
+
+---
+
+## Heaptrack
+
+**Version:** 1.6.80
+
+**Purpose:** Heap memory profiler for Linux that tracks all memory allocations in an application. Helps identify memory leaks, excessive allocations, and memory usage patterns.
+
+**Location:** `/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/heaptrack/build/bin/heaptrack`
+
+**Command Line Usage:**
+
+Profile an application:
+```bash
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/heaptrack/build/bin/heaptrack ./out/build/Clang/Release/WhiskerToolbox [args...]
+```
+
+Attach to running process:
+```bash
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/heaptrack/build/bin/heaptrack -p <PID>
+```
+
+Analyze recorded data:
+```bash
+# Print text report
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/heaptrack/build/bin/heaptrack_print heaptrack.APP.PID.gz
+
+# Launch GUI (if available)
+heaptrack_gui heaptrack.APP.PID.gz
+```
+
+Common options:
+- `-p, --pid <PID>`: Attach to running process
+- `-r, --raw`: Record raw data only (faster)
+- `-d, --debug`: Run with GDB debugger
+- `--use-inject`: Use symbol interception mechanism
+- `--asan`: Enable for ASAN-built binaries
+- `--record-only`: Record and interpret, don't analyze
+- `-q, --quiet`: Suppress output except errors
+
+**Validation:**
+```bash
+# Verified heaptrack is installed
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/heaptrack/build/bin/heaptrack --version
+# Output: heaptrack 1.6.80
+```
+
+**Use Cases:**
+- Find memory leaks
+- Identify excessive allocations
+- Track peak memory usage
+- Analyze allocation patterns
+- Optimize memory consumption
+- Debug memory issues in production
+
+**Note:** Heaptrack uses LD_PRELOAD to intercept allocation functions. Results are saved in .gz files.
+
+---
+
+## ClangBuildAnalyzer
+
+**Version:** 1.6.0
+
+**Purpose:** Tool to analyze and visualize Clang build times. Helps identify slow compilation units, expensive headers, and optimize build performance.
+
+**Location:** `/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/ClangBuildAnalyzer/build/ClangBuildAnalyzer`
+
+**Command Line Usage:**
+
+The workflow involves three steps:
+
+1. **Start tracing before build:**
+```bash
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/ClangBuildAnalyzer/build/ClangBuildAnalyzer --start out/build/Clang/Release
+```
+
+2. **Build with time-trace enabled:**
+```bash
+cmake --build out/build/Clang/Release -- -ftime-trace
+```
+
+3. **Analyze the results:**
+```bash
+# Stop tracing and capture data
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/ClangBuildAnalyzer/build/ClangBuildAnalyzer --stop out/build/Clang/Release build_trace.bin
+
+# Generate analysis report
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/ClangBuildAnalyzer/build/ClangBuildAnalyzer --analyze build_trace.bin
+```
+
+Alternative all-in-one command:
+```bash
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/ClangBuildAnalyzer/build/ClangBuildAnalyzer --all out/build/Clang/Release build_trace.bin
+```
+
+**Validation:**
+```bash
+# Verified ClangBuildAnalyzer is built and accessible
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/ClangBuildAnalyzer/build/ClangBuildAnalyzer
+# Output: ClangBuildAnalyzer 1.6.0, USAGE: one of...
+```
+
+**Use Cases:**
+- Identify slowest compilation units
+- Find expensive headers to optimize or forward-declare
+- Analyze template instantiation costs
+- Optimize build times
+- Track build performance over time
+- Understand what's slowing down incremental builds
+
+**Requirements:**
+- Clang compiler with `-ftime-trace` support
+- Must run --start before building
+- Build must include `-ftime-trace` flag
+
+---
+
+## Summary
+
+| Tool | Purpose | Type | Output |
+|------|---------|------|--------|
+| **IWYU** | Include dependency analysis | Static analysis | Terminal |
+| **cppcheck** | Bug & quality static analysis | Static analysis | Terminal |
+| **Infer** | Advanced bug detection | Static analysis | Terminal + HTML |
+| **Hotspot** | CPU profiling visualization | Runtime profiling | GUI |
+| **Heaptrack** | Memory profiling | Runtime profiling | Terminal + GUI |
+| **ClangBuildAnalyzer** | Build time analysis | Build tool | Terminal |
+
+## Quick Reference
+
+**For code quality before commit:**
+```bash
+cppcheck --enable=warning,performance --suppress=missingIncludeSystem src/
+```
+
+**For deep static analysis:**
+```bash
+infer run --compilation-database out/build/Clang/Release/compile_commands.json
+```
+
+**For include optimization:**
+```bash
+include-what-you-use src/file.cpp [compiler flags]
+```
+
+**For CPU performance profiling:**
+```bash
+perf record -g ./out/build/Clang/Release/WhiskerToolbox
+hotspot perf.data
+```
+
+**For memory profiling:**
+```bash
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/heaptrack/build/bin/heaptrack ./out/build/Clang/Release/WhiskerToolbox
+```
+
+**For build time optimization:**
+```bash
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/ClangBuildAnalyzer/build/ClangBuildAnalyzer --start out/build/Clang/Release
+cmake --build out/build/Clang/Release -- -ftime-trace
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/ClangBuildAnalyzer/build/ClangBuildAnalyzer --all out/build/Clang/Release trace.bin
+/home/runner/work/WhiskerToolbox/WhiskerToolbox/tools/ClangBuildAnalyzer/build/ClangBuildAnalyzer --analyze trace.bin
+```
+
+## Build Location
+
+The project uses the **linux-clang-release** CMake preset with build artifacts located at:
+```
+out/build/Clang/Release
+```
+
+This directory contains:
+- `compile_commands.json` - Compilation database for analysis tools
+- `WhiskerToolbox` - Main executable
+- Various shared libraries (.so files)
+- Build artifacts and intermediate files
