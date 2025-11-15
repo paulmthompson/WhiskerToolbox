@@ -24,6 +24,11 @@ if("${CLANG_OPTIONS}" STREQUAL "")
             -Rpass-analysis=loop-vectorize
             -fPIC
     )
+    
+    if(ENABLE_TIME_TRACE)
+        list(APPEND CLANG_OPTIONS -ftime-trace)
+        message(STATUS "Clang time trace: ENABLED (use -ftime-trace)")
+    endif()
 endif()
 
 if("${MSVC_WARNINGS}" STREQUAL "")

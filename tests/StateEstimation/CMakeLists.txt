@@ -20,7 +20,6 @@ set(STATE_ESTIMATION_TEST_SOURCES
      ${CMAKE_SOURCE_DIR}/src/StateEstimation/Features/FeatureVector.test.cpp
      ${CMAKE_SOURCE_DIR}/src/StateEstimation/Assignment/AssignmentProblem.test.cpp
      ${CMAKE_SOURCE_DIR}/src/StateEstimation/Features/LineFeatureExtractor.test.cpp
-     ${CMAKE_SOURCE_DIR}/src/StateEstimation/Filter/Kalman/KalmanFilter.test.cpp
      ${CMAKE_SOURCE_DIR}/src/StateEstimation/Cost/CostFunctions.test.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/test_composite_feature_extractor.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/MaskParticleFilter.test.cpp
@@ -31,6 +30,7 @@ set(STATE_ESTIMATION_TEST_SOURCES
 if(ENABLE_ORTOOLS)
     list(APPEND STATE_ESTIMATION_TEST_SOURCES
         ${CMAKE_SOURCE_DIR}/src/StateEstimation/MinCostFlowTracker.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/StateEstimation/Filter/Kalman/KalmanFilter.test.cpp
     )
 endif()
 

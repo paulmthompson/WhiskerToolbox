@@ -25,6 +25,8 @@ option(ENABLE_DETAILED_TEST_DISCOVERY "Enable detailed test discovery output" OF
 
 option(ENABLE_ORTOOLS "Enable OR-Tools support for min-cost flow tracking" ON)
 
+option(ENABLE_TIME_TRACE "Enable Clang -ftime-trace for build time profiling" OFF)
+
 # Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")
 if(ENABLE_CAPNPROTO)

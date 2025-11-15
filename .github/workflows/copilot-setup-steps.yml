@@ -57,12 +57,20 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release .. && \
           make -j$(nproc) && \
           cd ../../../
-    
+
+      - name: Install ClangBuildAnalyzer
+        run: |
+          cd ./tools && \
+          git clone https://github.com/aras-p/ClangBuildAnalyzer.git && \
+          cd ClangBuildAnalyzer && \
+          make -f projects/make/Makefile && \
+          cd ../..
+
       - name: Set Environment Variable for vcpkg
         run: echo "VCPKG_BINARY_SOURCES=clear;files,/home/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg_cache,readwrite" >> $GITHUB_ENV
 
       - name: Configure CMake without coverage
-        run: cmake --preset linux-clang-release -DENABLE_ORTOOLS=OFF
+        run: cmake --preset linux-clang-release -DENABLE_ORTOOLS=OFF -DENABLE_TIME_TRACE=ON
 
       - name: Build
         run: cmake --build --preset linux-clang-release
