@@ -39,14 +39,12 @@ set(STATE_ESTIMATION_SOURCES
     MaskDataAdapter.hpp
 )
 
-if(ENABLE_ORTOOLS)
-    list(APPEND STATE_ESTIMATION_SOURCES
-        MinCostFlowTracker.hpp
-        MinCostFlowTracker.cpp
-        MinCostFlowSolver.hpp
-        MinCostFlowSolver.cpp
-    )
-endif()
+list(APPEND STATE_ESTIMATION_SOURCES
+    MinCostFlowTracker.hpp
+    MinCostFlowTracker.cpp
+    MinCostFlowSolver.hpp
+    MinCostFlowSolver.cpp
+)
 
 # Optional demo/example files (not included in library)
 set(STATE_ESTIMATION_EXAMPLES
@@ -82,9 +80,7 @@ if(ENABLE_ORTOOLS)
 endif()
 target_link_libraries(StateEstimation PUBLIC spdlog::spdlog_header_only)
 
-if(ENABLE_ORTOOLS)
-    target_compile_definitions(StateEstimation PUBLIC ENABLE_ORTOOLS)
-endif()
+target_compile_definitions(StateEstimation PUBLIC ENABLE_ORTOOLS)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(StateEstimation PRIVATE ${CLANG_OPTIONS})
