@@ -29,6 +29,32 @@ jobs:
         with:
           buildfolder: out/build/Clang/Release
           compiler: clang
+
+      - name: Make tools directory
+        run: mkdir -p ./tools
+
+      - name: Install code-checker dependencies
+        run: sudo apt-get update && sudo apt-get install -y cppcheck hotspot iwyu
+
+      - name: Install Infer static analyzer
+        run: |
+          cd ./tools && \
+          VERSION=1.2.0; \
+          curl -SL "https://github.com/facebook/infer/releases/download/v$VERSION/infer-linux-x86_64-v$VERSION.tar.xz" \
+          | sudo tar -C /opt -xJ && \
+          sudo ln -s "/opt/infer-linux-x86_64-v$VERSION/bin/infer" /usr/local/bin/infer && \
+          cd ..
+
+      - name: Install heaptrack
+        run: |
+          cd ./tools && \
+          git clone https://github.com/KDE/heaptrack.git && \
+          cd heaptrack && \
+          mkdir build && \
+          cd build && \
+          cmake -DCMAKE_BUILD_TYPE=Release .. && \
+          make -j$(nproc) && \
+          cd ../../../
     
       - name: Set Environment Variable for vcpkg
         run: echo "VCPKG_BINARY_SOURCES=clear;files,/home/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg_cache,readwrite" >> $GITHUB_ENV
