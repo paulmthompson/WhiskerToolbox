@@ -17,5 +17,11 @@ vcpkg_installed
 vcpkg
 vcpkg_cache
 
+# Tools directory is ignored except for specific fuzzing scripts
 tools
+!tools/run_all_fuzzers.sh
 ninja-build/ninja
+
+# Fuzzing artifacts
+tests/fuzz/crash-*
+tests/fuzz/**/crash-*

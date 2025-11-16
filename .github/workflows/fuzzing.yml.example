@@ -1,0 +1,125 @@
+# Example GitHub Actions workflow for fuzzing
+# This is a template - add it to .github/workflows/ to enable fuzzing in CI
+
+name: Fuzzing
+
+on:
+  # Run fuzzing on a schedule (e.g., nightly)
+  schedule:
+    - cron: '0 2 * * *'  # Run at 2 AM UTC daily
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Fuzzing duration per target (seconds)'
+        required: false
+        default: '300'
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang ninja-build
+      
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=$PWD/vcpkg" >> $GITHUB_ENV
+      
+      - name: Configure with fuzzing
+        run: |
+          cmake --preset linux-clang-debug \
+            -DENABLE_FUZZING=ON \
+            -DENABLE_UI=OFF \
+            -DENABLE_FFMPEG=OFF \
+            -DTENSOR_BACKEND_LIBTORCH=OFF \
+            -DENABLE_ORTOOLS=OFF \
+            -DENABLE_OPENCV=OFF
+      
+      - name: Build fuzz targets
+        run: |
+          cmake --build --preset linux-clang-debug \
+            --target fuzz_analog_csv fuzz_point_csv fuzz_point_json \
+            -j$(nproc)
+      
+      - name: Run fuzz tests (short)
+        run: |
+          # Quick smoke test via CTest
+          cd out/build/Clang/Debug
+          ctest -R fuzz --output-on-failure || true
+      
+      - name: Run fuzz tests (longer)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          DURATION=${{ github.event.inputs.duration || '300' }}
+          ./tools/run_all_fuzzers.sh $DURATION
+      
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzzing-crashes
+          path: |
+            out/build/Clang/Debug/crash-*
+            tests/fuzz/crash-*
+          if-no-files-found: ignore
+      
+      - name: Upload corpus
+        if: success() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzzing-corpus
+          path: tests/fuzz/corpus/
+          if-no-files-found: ignore
+
+# Optional: Add fuzzing as a PR check (short duration)
+  pr-fuzz-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang ninja-build
+      
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=$PWD/vcpkg" >> $GITHUB_ENV
+      
+      - name: Configure with fuzzing
+        run: |
+          cmake --preset linux-clang-debug \
+            -DENABLE_FUZZING=ON \
+            -DENABLE_UI=OFF \
+            -DENABLE_FFMPEG=OFF \
+            -DTENSOR_BACKEND_LIBTORCH=OFF \
+            -DENABLE_ORTOOLS=OFF \
+            -DENABLE_OPENCV=OFF
+      
+      - name: Build fuzz targets
+        run: |
+          cmake --build --preset linux-clang-debug \
+            --target fuzz_analog_csv fuzz_point_csv fuzz_point_json \
+            -j$(nproc)
+      
+      - name: Quick fuzz test
+        run: |
+          cd out/build/Clang/Debug
+          ctest -R fuzz --output-on-failure
