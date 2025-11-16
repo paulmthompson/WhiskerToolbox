@@ -9,7 +9,9 @@ if (WIN32)
 endif()
 
 find_package(Eigen3 CONFIG REQUIRED)
-find_package(Boost COMPONENTS random serialization)
+if (ENABLE_ORTOOLS)
+    find_package(Boost COMPONENTS random serialization REQUIRED)
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -41,12 +43,10 @@ Catch2::Catch2WithMain
 NEURALYZER_GEOMETRY
 StateEstimation
 Eigen3::Eigen
-Boost::random
-Boost::serialization
 )
 
 if(ENABLE_ORTOOLS)
-    target_link_libraries(test_StateEstimation PRIVATE ortools::ortools)
+    target_link_libraries(test_StateEstimation PRIVATE ortools::ortools Boost::random Boost::serialization)
 endif()
 
 target_include_directories(test_StateEstimation PRIVATE

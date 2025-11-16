@@ -4,6 +4,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "loaders/binary_loaders.hpp"
 
+#include <algorithm>
 #include <iostream>
 
 
