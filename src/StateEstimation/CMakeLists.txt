@@ -37,16 +37,12 @@ set(STATE_ESTIMATION_SOURCES
     MaskParticleFilter.hpp
     MaskParticleFilter.cpp
     MaskDataAdapter.hpp
-)
 
-if(ENABLE_ORTOOLS)
-    list(APPEND STATE_ESTIMATION_SOURCES
-        MinCostFlowTracker.hpp
-        MinCostFlowTracker.cpp
-        MinCostFlowSolver.hpp
-        MinCostFlowSolver.cpp
-    )
-endif()
+    MinCostFlowTracker.hpp
+    MinCostFlowTracker.cpp
+    MinCostFlowSolver.hpp
+    MinCostFlowSolver.cpp
+)
 
 # Optional demo/example files (not included in library)
 set(STATE_ESTIMATION_EXAMPLES
