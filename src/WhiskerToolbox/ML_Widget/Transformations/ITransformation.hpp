@@ -1,12 +1,11 @@
 #ifndef ITRANSFORMATION_HPP
 #define ITRANSFORMATION_HPP
 
-#include "DataManager/DataManagerTypes.hpp"//DM_DataType
+#include "DataManager/DataManagerFwd.hpp"//DM_DataType
 #include "TransformationsCommon.hpp"
 
 #include <armadillo>
 
-#include <memory>
 #include <string>
 #include <vector>
 

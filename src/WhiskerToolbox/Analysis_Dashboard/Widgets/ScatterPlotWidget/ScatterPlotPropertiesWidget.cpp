@@ -4,7 +4,6 @@
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/DataManagerTypes.hpp"
 #include "DataManager/utils/TableView/TableRegistry.hpp"
 #include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"

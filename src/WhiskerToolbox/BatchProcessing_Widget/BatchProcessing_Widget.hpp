@@ -1,7 +1,7 @@
 #ifndef BATCHPROCESSING_WIDGET_HPP
 #define BATCHPROCESSING_WIDGET_HPP
 
-#include "DataManager/DataManagerTypes.hpp"
+#include "DataManager/DataManagerTypes.hpp" // DataInfo
 
 #include <QFileSystemModel>
 #include <QJsonDocument>

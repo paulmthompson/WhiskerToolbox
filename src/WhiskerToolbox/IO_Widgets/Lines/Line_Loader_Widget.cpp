@@ -6,7 +6,6 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/IO/LoaderRegistry.hpp"
 #include "DataManager/ConcreteDataFactory.hpp"
-#include "DataManager/DataManagerTypes.hpp"
 #include "Lines/HDF5/HDF5LineLoader_Widget.hpp"
 #include "Lines/CSV/CSVLineLoader_Widget.hpp"
 #include "Lines/LMDB/LMDBLineLoader_Widget.hpp"

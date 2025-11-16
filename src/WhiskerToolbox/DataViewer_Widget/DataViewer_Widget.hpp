@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QPoint>
 
-#include "DataManager/DataManagerTypes.hpp"
+#include "DataManager/DataManagerFwd.hpp"
 #include "DataViewer/PlottingManager/PlottingManager.hpp"
 
 #include <memory>

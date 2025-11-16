@@ -1,7 +1,7 @@
 #ifndef FEATURE_TABLE_WIDGET_HPP
 #define FEATURE_TABLE_WIDGET_HPP
 
-#include "DataManagerTypes.hpp"
+#include "DataManagerFwd.hpp"
 
 #include <QString>
 #include <QStringList>

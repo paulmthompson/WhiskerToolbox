@@ -1,14 +1,16 @@
 #ifndef WHISKERTOOLBOX_MEDIA_DATA_FACTORY_HPP
 #define WHISKERTOOLBOX_MEDIA_DATA_FACTORY_HPP
 
+#include "DataManagerFwd.hpp"
 #include "Media/Media_Data.hpp"
-#include "DataManagerTypes.hpp"
-#include <memory>
-#include <map>
+
+#include <nlohmann/json.hpp>
+
 #include <functional>
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <nlohmann/json.hpp>
 
 /**
  * @brief Factory for creating MediaData subclasses
@@ -20,7 +22,7 @@
 class MediaDataFactory {
 public:
     using MediaCreatorFunc = std::function<std::shared_ptr<MediaData>()>;
-    using MediaLoaderFunc = std::function<std::shared_ptr<MediaData>(std::string const&, nlohmann::json const&)>;
+    using MediaLoaderFunc = std::function<std::shared_ptr<MediaData>(std::string const &, nlohmann::json const &)>;
 
     /**
      * @brief Register a media type creator function
@@ -50,7 +52,7 @@ public:
      * @param config JSON configuration for loading
      * @return Shared pointer to the loaded MediaData, or nullptr if type not registered
      */
-    static std::shared_ptr<MediaData> loadMediaData(DM_DataType dm_type, std::string const& file_path, nlohmann::json const& config);
+    static std::shared_ptr<MediaData> loadMediaData(DM_DataType dm_type, std::string const & file_path, nlohmann::json const & config);
 
     /**
      * @brief Check if a media type is registered/available
@@ -79,8 +81,8 @@ public:
     static std::vector<DM_DataType> getRegisteredLoaderTypes();
 
 private:
-    static std::map<MediaData::MediaType, MediaCreatorFunc>& getCreatorRegistry();
-    static std::map<DM_DataType, MediaLoaderFunc>& getLoaderRegistry();
+    static std::map<MediaData::MediaType, MediaCreatorFunc> & getCreatorRegistry();
+    static std::map<DM_DataType, MediaLoaderFunc> & getLoaderRegistry();
 };
 
 /**
@@ -112,4 +114,4 @@ public:
 #define REGISTER_MEDIA_LOADER(dm_type, loader_func) \
     static MediaLoaderRegistrar<DM_DataType::dm_type> dm_type##_loader_registrar(loader_func);
 
-#endif // WHISKERTOOLBOX_MEDIA_DATA_FACTORY_HPP
+#endif// WHISKERTOOLBOX_MEDIA_DATA_FACTORY_HPP

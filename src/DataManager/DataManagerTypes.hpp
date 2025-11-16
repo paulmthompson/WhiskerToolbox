@@ -1,34 +1,15 @@
 #ifndef DATAMANAGERTYPES_HPP
 #define DATAMANAGERTYPES_HPP
 
+
+#include "DataManager/DataManagerFwd.hpp"
 #include "IO/interface/IOTypes.hpp"
+
 #include <memory>
 #include <string>
 #include <variant>
 #include <vector>
 
-class AnalogTimeSeries;
-class DigitalEventSeries;
-class DigitalIntervalSeries;
-class LineData;
-class MaskData;
-class MediaData;
-class PointData;
-class TensorData;
-
-enum class DM_DataType {
-    Video,
-    Images,
-    Points,
-    Mask,
-    Line,
-    Analog,
-    DigitalEvent,
-    DigitalInterval,
-    Tensor,
-    Time,
-    Unknown
-};
 
 /**
  * @brief Convert from DM_DataType to IODataType
