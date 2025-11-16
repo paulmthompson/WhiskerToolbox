@@ -29,9 +29,6 @@
         },
         {
             "name": "spdlog"
-        },
-        {
-            "name": "pybind11"
         }
     ],
     "features": {

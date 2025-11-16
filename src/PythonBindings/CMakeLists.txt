@@ -1,7 +1,22 @@
-find_package(pybind11 CONFIG REQUIRED)
-
-# Find Python
+# Find Python first
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
+
+# Try to find pybind11 via CONFIG, fall back to pip-installed version
+find_package(pybind11 CONFIG QUIET)
+if(NOT pybind11_FOUND)
+    # Use pip-installed pybind11
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -m pybind11 --cmakedir
+        OUTPUT_VARIABLE pybind11_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(pybind11_DIR)
+        find_package(pybind11 CONFIG REQUIRED PATHS ${pybind11_DIR} NO_DEFAULT_PATH)
+    else()
+        message(FATAL_ERROR "pybind11 not found. Please install via pip: pip install pybind11")
+    endif()
+endif()
 
 # Create the Python module
 pybind11_add_module(whiskertoolbox

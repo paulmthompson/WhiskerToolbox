@@ -72,10 +72,9 @@ void bind_transforms(py::module_ &m) {
         m, "TransformOperation", 
         "Base class for transform operations")
         .def("get_name", &TransformOperation::getName,
-             "Get the name of the transform")
-        .def("can_apply", &TransformOperation::canApply,
-             py::arg("data_variant"),
-             "Check if this transform can be applied to the given data");
+             "Get the name of the transform");
+    // Note: canApply method uses DataTypeVariant which includes many types
+    // not bound here, so we skip exposing it to Python
 
     // Bind BooleanParams
     py::class_<BooleanParams, TransformParametersBase>(m, "BooleanParams",
