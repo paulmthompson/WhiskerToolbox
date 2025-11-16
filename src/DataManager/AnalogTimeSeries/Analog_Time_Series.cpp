@@ -10,23 +10,23 @@
 
 // ========== Constructors ==========
 
-AnalogTimeSeries::AnalogTimeSeries()
+AnalogTimeSeriesInMemory:AnalogTimeSeriesInMemory()
     : _data(),
       _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {}
 
-AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map)
+AnalogTimeSeriesInMemory:AnalogTimeSeriesInMemory(std::map<int, float> analog_map)
     : _data(),
       _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {
     setData(std::move(analog_map));
 }
 
-AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector)
+AnalogTimeSeriesInMemory:AnalogTimeSeriesInMemory(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector)
     : _data(),
       _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {
     setData(std::move(analog_vector), std::move(time_vector));
 }
 
-AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples)
+AnalogTimeSeriesInMemory:AnalogTimeSeriesInMemory(std::vector<float> analog_vector, size_t num_samples)
     : _data(),
       _time_storage(DenseTimeRange(TimeFrameIndex(0), num_samples)) {
     if (analog_vector.size() != num_samples) {
@@ -36,13 +36,13 @@ AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, size_t num_
     setData(std::move(analog_vector));
 }
 
-void AnalogTimeSeries::setData(std::vector<float> analog_vector) {
+void AnalogTimeSeriesInMemory::setData(std::vector<float> analog_vector) {
     _data = std::move(analog_vector);
     // Use dense time storage for consecutive indices starting from 0
     _time_storage = DenseTimeRange(TimeFrameIndex(0), _data.size());
 }
 
-void AnalogTimeSeries::setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) {
+void AnalogTimeSeriesInMemory::setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) {
     if (analog_vector.size() != time_vector.size()) {
         std::cerr << "Error: size of analog vector and time vector are not the same!" << std::endl;
         return;
@@ -69,7 +69,7 @@ void AnalogTimeSeries::setData(std::vector<float> analog_vector, std::vector<Tim
     }
 }
 
-void AnalogTimeSeries::setData(std::map<int, float> analog_map) {
+void AnalogTimeSeriesInMemory::setData(std::map<int, float> analog_map) {
     _data.clear();
     _data = std::vector<float>();
     auto time_storage = std::vector<TimeFrameIndex>();
@@ -82,7 +82,7 @@ void AnalogTimeSeries::setData(std::map<int, float> analog_map) {
 
 // ========== Overwriting Data ==========
 
-void AnalogTimeSeries::overwriteAtTimeIndexes(std::vector<float> & analog_data, std::vector<TimeFrameIndex> & time_indices) {
+void AnalogTimeSeriesInMemory::overwriteAtTimeIndexes(std::vector<float> & analog_data, std::vector<TimeFrameIndex> & time_indices) {
     if (analog_data.size() != time_indices.size()) {
         std::cerr << "Analog data and time indices vectors must be the same size" << std::endl;
         return;
@@ -101,7 +101,7 @@ void AnalogTimeSeries::overwriteAtTimeIndexes(std::vector<float> & analog_data, 
     }
 }
 
-void AnalogTimeSeries::overwriteAtDataArrayIndexes(std::vector<float> & analog_data, std::vector<DataArrayIndex> & data_indices) {
+void AnalogTimeSeriesInMemory::overwriteAtDataArrayIndexes(std::vector<float> & analog_data, std::vector<DataArrayIndex> & data_indices) {
     if (analog_data.size() != data_indices.size()) {
         std::cerr << "Analog data and data indices vectors must be the same size" << std::endl;
         return;
@@ -118,7 +118,7 @@ void AnalogTimeSeries::overwriteAtDataArrayIndexes(std::vector<float> & analog_d
 
 // ========== Getting Data ==========
 
-std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
+std::span<float const> AnalogTimeSeriesInMemory::getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
     // Find the start and end indices using our boundary-finding methods
     auto start_index_opt = findDataArrayIndexGreaterOrEqual(start_time);
     auto end_index_opt = findDataArrayIndexLessOrEqual(end_time);
@@ -146,7 +146,7 @@ std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
 }
 
 
-[[nodiscard]] std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameIndex start_time,
+[[nodiscard]] std::span<float const> AnalogTimeSeriesInMemory::getDataInTimeFrameIndexRange(TimeFrameIndex start_time,
                                                                                     TimeFrameIndex end_time,
                                                                                     TimeFrame const * source_timeFrame) const {
     if (source_timeFrame == _time_frame.get()) {
@@ -174,7 +174,7 @@ std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
 
 // ========== TimeFrame Support ==========
 
-std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const {
+std::optional<DataArrayIndex> AnalogTimeSeriesInMemory::findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const {
     return std::visit([time_index](auto const & time_storage) -> std::optional<DataArrayIndex> {
         if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
             // For dense storage, check if the TimeFrameIndex falls within our range
@@ -200,7 +200,7 @@ std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexForTimeFrameIn
                       _time_storage);
 }
 
-std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const {
+std::optional<DataArrayIndex> AnalogTimeSeriesInMemory::findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const {
     return std::visit([target_time](auto const & time_storage) -> std::optional<DataArrayIndex> {
         if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
             // For dense storage, calculate the position if target_time falls within our range
@@ -227,7 +227,7 @@ std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexGreaterOrEqual
                       _time_storage);
 }
 
-std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const {
+std::optional<DataArrayIndex> AnalogTimeSeriesInMemory::findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const {
     return std::visit([target_time](auto const & time_storage) -> std::optional<DataArrayIndex> {
         if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
             // For dense storage, calculate the position if target_time falls within our range
@@ -257,7 +257,7 @@ std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexLessOrEqual(Ti
 
 // ========== Time-Value Range Access Implementation ==========
 
-AnalogTimeSeries::TimeValueRangeIterator::TimeValueRangeIterator(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index, bool is_end)
+AnalogTimeSeriesInMemory::TimeValueRangeIterator::TimeValueRangeIterator(AnalogTimeSeriesInMemory const * series, DataArrayIndex start_index, DataArrayIndex end_index, bool is_end)
     : _series(series),
       _current_index(is_end ? end_index : start_index),
       _end_index(end_index),
@@ -267,7 +267,7 @@ AnalogTimeSeries::TimeValueRangeIterator::TimeValueRangeIterator(AnalogTimeSerie
     }
 }
 
-AnalogTimeSeries::TimeValueRangeIterator::reference AnalogTimeSeries::TimeValueRangeIterator::operator*() const {
+AnalogTimeSeriesInMemory::TimeValueRangeIterator::reference AnalogTimeSeriesInMemory::TimeValueRangeIterator::operator*() const {
     if (_is_end || _current_index.getValue() >= _end_index.getValue()) {
         throw std::out_of_range("TimeValueRangeIterator: attempt to dereference end iterator");
     }
@@ -275,11 +275,11 @@ AnalogTimeSeries::TimeValueRangeIterator::reference AnalogTimeSeries::TimeValueR
     return _current_point;
 }
 
-AnalogTimeSeries::TimeValueRangeIterator::pointer AnalogTimeSeries::TimeValueRangeIterator::operator->() const {
+AnalogTimeSeriesInMemory::TimeValueRangeIterator::pointer AnalogTimeSeriesInMemory::TimeValueRangeIterator::operator->() const {
     return &(operator*());
 }
 
-AnalogTimeSeries::TimeValueRangeIterator & AnalogTimeSeries::TimeValueRangeIterator::operator++() {
+AnalogTimeSeriesInMemory::TimeValueRangeIterator & AnalogTimeSeriesInMemory::TimeValueRangeIterator::operator++() {
     if (_is_end || _current_index.getValue() >= _end_index.getValue()) {
         _is_end = true;
         return *this;
@@ -294,23 +294,23 @@ AnalogTimeSeries::TimeValueRangeIterator & AnalogTimeSeries::TimeValueRangeItera
     return *this;
 }
 
-AnalogTimeSeries::TimeValueRangeIterator AnalogTimeSeries::TimeValueRangeIterator::operator++(int) {
+AnalogTimeSeriesInMemory::TimeValueRangeIterator AnalogTimeSeriesInMemory::TimeValueRangeIterator::operator++(int) {
     auto temp = *this;
     ++(*this);
     return temp;
 }
 
-bool AnalogTimeSeries::TimeValueRangeIterator::operator==(TimeValueRangeIterator const & other) const {
+bool AnalogTimeSeriesInMemory::TimeValueRangeIterator::operator==(TimeValueRangeIterator const & other) const {
     return _series == other._series &&
            _current_index.getValue() == other._current_index.getValue() &&
            _is_end == other._is_end;
 }
 
-bool AnalogTimeSeries::TimeValueRangeIterator::operator!=(TimeValueRangeIterator const & other) const {
+bool AnalogTimeSeriesInMemory::TimeValueRangeIterator::operator!=(TimeValueRangeIterator const & other) const {
     return !(*this == other);
 }
 
-void AnalogTimeSeries::TimeValueRangeIterator::_updateCurrentPoint() const {
+void AnalogTimeSeriesInMemory::TimeValueRangeIterator::_updateCurrentPoint() const {
     if (_is_end || _current_index.getValue() >= _end_index.getValue()) {
         return;
     }
@@ -320,34 +320,34 @@ void AnalogTimeSeries::TimeValueRangeIterator::_updateCurrentPoint() const {
             _series->getDataAtDataArrayIndex(_current_index));
 }
 
-AnalogTimeSeries::TimeValueRangeView::TimeValueRangeView(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index)
+AnalogTimeSeriesInMemory::TimeValueRangeView::TimeValueRangeView(AnalogTimeSeriesInMemory const * series, DataArrayIndex start_index, DataArrayIndex end_index)
     : _series(series),
       _start_index(start_index),
       _end_index(end_index) {}
 
-AnalogTimeSeries::TimeValueRangeIterator AnalogTimeSeries::TimeValueRangeView::begin() const {
+AnalogTimeSeriesInMemory::TimeValueRangeIterator AnalogTimeSeriesInMemory::TimeValueRangeView::begin() const {
     return {_series, _start_index, _end_index, false};
 }
 
-AnalogTimeSeries::TimeValueRangeIterator AnalogTimeSeries::TimeValueRangeView::end() const {
+AnalogTimeSeriesInMemory::TimeValueRangeIterator AnalogTimeSeriesInMemory::TimeValueRangeView::end() const {
     return {_series, _start_index, _end_index, true};
 }
 
-size_t AnalogTimeSeries::TimeValueRangeView::size() const {
+size_t AnalogTimeSeriesInMemory::TimeValueRangeView::size() const {
     if (_start_index.getValue() >= _end_index.getValue()) {
         return 0;
     }
     return _end_index.getValue() - _start_index.getValue();
 }
 
-bool AnalogTimeSeries::TimeValueRangeView::empty() const {
+bool AnalogTimeSeriesInMemory::TimeValueRangeView::empty() const {
     return size() == 0;
 }
 
 // Dense and Sparse time index iterators for TimeIndexRange
 namespace {
 // Dense time index iterator implementation
-class DenseTimeIndexIterator : public AnalogTimeSeries::TimeIndexIterator {
+class DenseTimeIndexIterator : public AnalogTimeSeriesInMemory::TimeIndexIterator {
 public:
     DenseTimeIndexIterator(TimeFrameIndex start_time, DataArrayIndex current_offset, DataArrayIndex end_offset, bool is_end)
         : _start_time(start_time),
@@ -410,7 +410,7 @@ private:
 };
 
 // Sparse time index iterator implementation
-class SparseTimeIndexIterator : public AnalogTimeSeries::TimeIndexIterator {
+class SparseTimeIndexIterator : public AnalogTimeSeriesInMemory::TimeIndexIterator {
 public:
     SparseTimeIndexIterator(std::vector<TimeFrameIndex> const * time_indices, DataArrayIndex current_index, DataArrayIndex end_index, bool is_end)
         : _time_indices(time_indices),
@@ -465,12 +465,12 @@ private:
 };
 }// namespace
 
-AnalogTimeSeries::TimeIndexRange::TimeIndexRange(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index)
+AnalogTimeSeriesInMemory::TimeIndexRange::TimeIndexRange(AnalogTimeSeriesInMemory const * series, DataArrayIndex start_index, DataArrayIndex end_index)
     : _series(series),
       _start_index(start_index),
       _end_index(end_index) {}
 
-std::unique_ptr<AnalogTimeSeries::TimeIndexIterator> AnalogTimeSeries::TimeIndexRange::begin() const {
+std::unique_ptr<AnalogTimeSeriesInMemory::TimeIndexIterator> AnalogTimeSeriesInMemory::TimeIndexRange::begin() const {
     return std::visit([this](auto const & time_storage) -> std::unique_ptr<TimeIndexIterator> {
         if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
             // Dense storage - create iterator based on start time and offset
@@ -491,7 +491,7 @@ std::unique_ptr<AnalogTimeSeries::TimeIndexIterator> AnalogTimeSeries::TimeIndex
                       _series->getTimeStorage());
 }
 
-std::unique_ptr<AnalogTimeSeries::TimeIndexIterator> AnalogTimeSeries::TimeIndexRange::end() const {
+std::unique_ptr<AnalogTimeSeriesInMemory::TimeIndexIterator> AnalogTimeSeriesInMemory::TimeIndexRange::end() const {
     return std::visit([this](auto const & time_storage) -> std::unique_ptr<TimeIndexIterator> {
         if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
             // Dense storage - create end iterator
@@ -512,22 +512,22 @@ std::unique_ptr<AnalogTimeSeries::TimeIndexIterator> AnalogTimeSeries::TimeIndex
                       _series->getTimeStorage());
 }
 
-size_t AnalogTimeSeries::TimeIndexRange::size() const {
+size_t AnalogTimeSeriesInMemory::TimeIndexRange::size() const {
     if (_start_index.getValue() >= _end_index.getValue()) {
         return 0;
     }
     return _end_index.getValue() - _start_index.getValue();
 }
 
-bool AnalogTimeSeries::TimeIndexRange::empty() const {
+bool AnalogTimeSeriesInMemory::TimeIndexRange::empty() const {
     return size() == 0;
 }
 
-AnalogTimeSeries::TimeValueSpanPair::TimeValueSpanPair(std::span<float const> data_span, AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index)
+AnalogTimeSeriesInMemory::TimeValueSpanPair::TimeValueSpanPair(std::span<float const> data_span, AnalogTimeSeriesInMemory const * series, DataArrayIndex start_index, DataArrayIndex end_index)
     : values(data_span),
       time_indices(series, start_index, end_index) {}
 
-AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
+AnalogTimeSeriesInMemory::TimeValueRangeView AnalogTimeSeriesInMemory::getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
     // Use existing boundary-finding logic
     auto start_index_opt = findDataArrayIndexGreaterOrEqual(start_time);
     auto end_index_opt = findDataArrayIndexLessOrEqual(end_time);
@@ -551,7 +551,7 @@ AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getTimeValueRangeInTimeFr
     return {this, DataArrayIndex(start_idx), DataArrayIndex(end_idx + 1)};
 }
 
-AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
+AnalogTimeSeriesInMemory::TimeValueSpanPair AnalogTimeSeriesInMemory::getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
     // Use existing getDataInTimeFrameIndexRange for the span
     auto data_span = getDataInTimeFrameIndexRange(start_time, end_time);
 
@@ -578,7 +578,7 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
     return {data_span, this, DataArrayIndex(start_idx), DataArrayIndex(end_idx + 1)};
 }
 
-AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFrameIndexRange(
+AnalogTimeSeriesInMemory::TimeValueSpanPair AnalogTimeSeriesInMemory::getTimeValueSpanInTimeFrameIndexRange(
         TimeFrameIndex start_time,
         TimeFrameIndex end_time,
         TimeFrame const * source_timeFrame) const {

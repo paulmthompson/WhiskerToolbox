@@ -1,6 +1,7 @@
 
 
 set(analog_subdirectory_sources
+    IAnalog_Time_Series.hpp
     Analog_Time_Series.hpp
     Analog_Time_Series.cpp
     IO/Binary/Analog_Time_Series_Binary.hpp

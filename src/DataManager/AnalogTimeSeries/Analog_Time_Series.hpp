@@ -1,7 +1,7 @@
 #ifndef ANALOG_TIME_SERIES_HPP
 #define ANALOG_TIME_SERIES_HPP
 
-#include "Observer/Observer_Data.hpp"
+#include "IAnalog_Time_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -16,60 +16,64 @@
 #include <vector>
 
 /**
- * @brief The AnalogTimeSeries class
+ * @brief In-memory implementation of analog time series
  *
- * Analog time series is used for storing continuous data
- * The data may be sampled at irregular intervals as long as the time vector is provided
+ * This is an in-memory implementation of the IAnalogTimeSeries interface.
+ * Analog time series is used for storing continuous data in memory.
+ * The data may be sampled at irregular intervals as long as the time vector is provided.
  *
+ * This implementation uses optimized storage strategies:
+ * - Dense storage for consecutive time indices (memory efficient)
+ * - Sparse storage for irregular time indices
  */
-class AnalogTimeSeries : public ObserverData {
+class AnalogTimeSeriesInMemory : public IAnalogTimeSeries {
 public:
     // ========== Constructors ==========
     /**
      * @brief Default constructor
      * 
-     * This constructor creates an empty AnalogTimeSeries with no data
+     * This constructor creates an empty AnalogTimeSeriesInMemory with no data
      */
-    AnalogTimeSeries();
+    AnalogTimeSeriesInMemory();
 
     /**
-     * @brief Constructor for AnalogTimeSeries from a vector of floats and a vector of TimeFrameIndex values
+     * @brief Constructor for AnalogTimeSeriesInMemory from a vector of floats and a vector of TimeFrameIndex values
      * 
      * Use this constructor when the data is sampled at irregular intervals
      * 
      * @param analog_vector Vector of floats
      * @param time_vector Vector of TimeFrameIndex values
-     * @see AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples) 
+     * @see AnalogTimeSeriesInMemory(std::vector<float> analog_vector, size_t num_samples) 
      * for a constructor that takes a vector of floats that are consecutive samples
-     * @see AnalogTimeSeries(std::map<int, float> analog_map) 
+     * @see AnalogTimeSeriesInMemory(std::map<int, float> analog_map) 
      * for a constructor that takes a map of int to float
      */
-    explicit AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
+    explicit AnalogTimeSeriesInMemory(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
 
     /**
-     * @brief Constructor for AnalogTimeSeries from a map of int to float
+     * @brief Constructor for AnalogTimeSeriesInMemory from a map of int to float
      * 
      * The key in the map is assumed to the be TimeFrameIndex for each sample
      * 
      * @param analog_map Map of int to float
-     * @see AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) 
+     * @see AnalogTimeSeriesInMemory(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) 
      * for a constructor that takes a vector of floats and a vector of TimeFrameIndex values
-     * @see AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples) 
+     * @see AnalogTimeSeriesInMemory(std::vector<float> analog_vector, size_t num_samples) 
      * for a constructor that takes a vector of floats that are consecutive samples
      */
-    explicit AnalogTimeSeries(std::map<int, float> analog_map);
+    explicit AnalogTimeSeriesInMemory(std::map<int, float> analog_map);
 
     /**
-     * @brief Constructor for AnalogTimeSeries from a vector of floats and a number of samples
+     * @brief Constructor for AnalogTimeSeriesInMemory from a vector of floats and a number of samples
      * 
      * Use this constructor when the data is sampled at regular intervals increasing by 1
      * 
      * @param analog_vector Vector of floats
      * @param num_samples Number of samples
-     * @see AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) 
+     * @see AnalogTimeSeriesInMemory(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) 
      * for constructors that support irregular sampling
      */
-    explicit AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples);
+    explicit AnalogTimeSeriesInMemory(std::vector<float> analog_vector, size_t num_samples);
 
     // ========== Overwriting Data ==========
 
@@ -83,7 +87,7 @@ public:
      * @param analog_data Vector of new analog values
      * @param time_indices Vector of TimeFrameIndex values where data should be overwritten
      */
-    void overwriteAtTimeIndexes(std::vector<float> & analog_data, std::vector<TimeFrameIndex> & time_indices);
+    void overwriteAtTimeIndexes(std::vector<float> & analog_data, std::vector<TimeFrameIndex> & time_indices) override;
 
     /**
      * @brief Overwrite data at specific DataArrayIndex positions
@@ -94,7 +98,7 @@ public:
      * @param analog_data Vector of new analog values
      * @param data_indices Vector of DataArrayIndex positions where data should be overwritten
      */
-    void overwriteAtDataArrayIndexes(std::vector<float> & analog_data, std::vector<DataArrayIndex> & data_indices);
+    void overwriteAtDataArrayIndexes(std::vector<float> & analog_data, std::vector<DataArrayIndex> & data_indices) override;
 
     // ========== Getting Data ==========
 
@@ -108,9 +112,9 @@ public:
      * @param i The DataArrayIndex to get the data value at
      * @return The data value at the specified DataArrayIndex
      */
-    [[nodiscard]] float getDataAtDataArrayIndex(DataArrayIndex i) const { return _data[i.getValue()]; };
+    [[nodiscard]] float getDataAtDataArrayIndex(DataArrayIndex i) const override { return _data[i.getValue()]; };
 
-    [[nodiscard]] size_t getNumSamples() const { return _data.size(); };
+    [[nodiscard]] size_t getNumSamples() const override { return _data.size(); };
 
     /**
      * @brief Get a const reference to the analog data vector
@@ -126,7 +130,7 @@ public:
      * @see getTimeSeries() for accessing the corresponding time indices
      * @see getDataInRange() for accessing data within a specific time range
      */
-    [[nodiscard]] std::vector<float> const & getAnalogTimeSeries() const { return _data; };
+    [[nodiscard]] std::vector<float> const & getAnalogTimeSeries() const override { return _data; };
 
     /**
      * @brief Get a span (view) of data values within a TimeFrameIndex range
@@ -144,10 +148,10 @@ public:
      * @return std::span<const float> view over the data in the specified range
      * 
      * @note Returns an empty span if no data points fall within the specified range
-     * @note The span is valid as long as the AnalogTimeSeries object exists and is not modified
+     * @note The span is valid as long as the AnalogTimeSeriesInMemory object exists and is not modified
      * @see findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic
      */
-    [[nodiscard]] std::span<float const> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+    [[nodiscard]] std::span<float const> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const override;
 
     /**
      * @brief Get a span (view) of data values within a TimeFrameIndex range, with timeframe conversion
@@ -172,7 +176,7 @@ public:
     [[nodiscard]] std::span<float const> getDataInTimeFrameIndexRange(TimeFrameIndex start_time,
                                                                       TimeFrameIndex end_time,
                                                                       TimeFrame const * source_timeFrame
-                                                                      ) const;
+                                                                      ) const override;
 
 
     /**
@@ -185,7 +189,7 @@ public:
      * @param time_index The TimeFrameIndex to search for
      * @return std::optional<DataArrayIndex> containing the corresponding DataArrayIndex, or std::nullopt if not found
      */
-    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const;
+    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const override;
 
     /**
      * @brief Find the DataArrayIndex for the smallest TimeFrameIndex >= target_time
@@ -196,7 +200,7 @@ public:
      * @param target_time The target TimeFrameIndex
      * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the first TimeFrameIndex >= target_time, or std::nullopt if no such index exists
      */
-    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const;
+    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const override;
 
     /**
      * @brief Find the DataArrayIndex for the largest TimeFrameIndex <= target_time
@@ -207,7 +211,7 @@ public:
      * @param target_time The target TimeFrameIndex
      * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the last TimeFrameIndex <= target_time, or std::nullopt if no such index exists
      */
-    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
+    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const override;
 
 
     // ========== Time-Value Range Access ==========
@@ -236,7 +240,7 @@ public:
         using pointer = TimeValuePoint const *;
         using reference = TimeValuePoint const &;
 
-        TimeValueRangeIterator(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index, bool is_end = false);
+        TimeValueRangeIterator(AnalogTimeSeriesInMemory const * series, DataArrayIndex start_index, DataArrayIndex end_index, bool is_end = false);
 
         reference operator*() const;
         pointer operator->() const;
@@ -246,7 +250,7 @@ public:
         bool operator!=(TimeValueRangeIterator const & other) const;
 
     private:
-        AnalogTimeSeries const * _series;
+        AnalogTimeSeriesInMemory const * _series;
         DataArrayIndex _current_index;
         DataArrayIndex _end_index;
         mutable TimeValuePoint _current_point;// mutable for lazy evaluation in operator*
@@ -260,7 +264,7 @@ public:
      */
     class TimeValueRangeView {
     public:
-        TimeValueRangeView(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index);
+        TimeValueRangeView(AnalogTimeSeriesInMemory const * series, DataArrayIndex start_index, DataArrayIndex end_index);
 
         [[nodiscard]] TimeValueRangeIterator begin() const;
         [[nodiscard]] TimeValueRangeIterator end() const;
@@ -268,7 +272,7 @@ public:
         [[nodiscard]] bool empty() const;
 
     private:
-        AnalogTimeSeries const * _series;
+        AnalogTimeSeriesInMemory const * _series;
         DataArrayIndex _start_index;
         DataArrayIndex _end_index;
     };
@@ -297,7 +301,7 @@ public:
      */
     class TimeIndexRange {
     public:
-        TimeIndexRange(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index);
+        TimeIndexRange(AnalogTimeSeriesInMemory const * series, DataArrayIndex start_index, DataArrayIndex end_index);
 
         [[nodiscard]] std::unique_ptr<TimeIndexIterator> begin() const;
         [[nodiscard]] std::unique_ptr<TimeIndexIterator> end() const;
@@ -305,7 +309,7 @@ public:
         [[nodiscard]] bool empty() const;
 
     private:
-        AnalogTimeSeries const * _series;
+        AnalogTimeSeriesInMemory const * _series;
         DataArrayIndex _start_index;
         DataArrayIndex _end_index;
     };
@@ -317,7 +321,7 @@ public:
         std::span<float const> values;
         TimeIndexRange time_indices;
 
-        TimeValueSpanPair(std::span<float const> data_span, AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index);
+        TimeValueSpanPair(std::span<float const> data_span, AnalogTimeSeriesInMemory const * series, DataArrayIndex start_index, DataArrayIndex end_index);
     };
 
     /**
@@ -334,7 +338,7 @@ public:
      * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
      * @see getTimeValueSpanInTimeFrameIndexRange() for zero-copy alternative
      */
-    [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+    [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const override;
 
     /**
      * @brief Get time-value pairs as span and time iterator for zero-copy access
@@ -350,7 +354,7 @@ public:
      * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
      * @see getTimeValueRangeInTimeFrameIndexRange() for convenient range-based alternative
      */
-    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const override;
 
     /**
      * @brief Get time-value pairs with timeframe conversion
@@ -369,7 +373,7 @@ public:
      */
     [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, 
                                                                           TimeFrameIndex end_time,
-                                                                          TimeFrame const * source_timeFrame) const;
+                                                                          TimeFrame const * source_timeFrame) const override;
 
 
     /**
@@ -378,7 +382,7 @@ public:
      * @param i The DataArrayIndex to get the TimeFrameIndex for
      * @return The TimeFrameIndex that corresponds to the given DataArrayIndex
      */
-    [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
+    [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const override {
         return std::visit([i](auto const & time_storage) -> TimeFrameIndex {
             return time_storage.getTimeFrameIndexAtDataArrayIndex(i);
         },
@@ -402,7 +406,7 @@ public:
      * @see getDataInRange() for accessing time-value pairs within a specific range
      * @see getTimeAtIndex() for single index lookups
      */
-    [[nodiscard]] std::vector<TimeFrameIndex> getTimeSeries() const {
+    [[nodiscard]] std::vector<TimeFrameIndex> getTimeSeries() const override {
         return std::visit([](auto const & time_storage) -> std::vector<TimeFrameIndex> {
             if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
                 // Generate vector for dense storage
@@ -488,7 +492,7 @@ public:
      * 
      * @param time_frame The time frame to set
      */
-    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) override { _time_frame = time_frame; }
 
 protected:
 private:
@@ -500,5 +504,13 @@ private:
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
     void setData(std::map<int, float> analog_map);
 };
+
+/**
+ * @brief Type alias for backward compatibility
+ * 
+ * AnalogTimeSeries now refers to the in-memory implementation.
+ * This maintains backward compatibility with all existing code.
+ */
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 
 #endif// ANALOG_TIME_SERIES_HPP
