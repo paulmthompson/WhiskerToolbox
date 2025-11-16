@@ -23,3 +23,8 @@ if (ENABLE_UI)
 endif()
 
 add_subdirectory(benchmarks)
+
+# Fuzzing tests (only if enabled)
+if(ENABLE_FUZZING)
+    add_subdirectory(fuzz)
+endif()

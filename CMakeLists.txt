@@ -110,6 +110,7 @@ include(CompilerWarnings)
 include(set_rpath)
 include(iwyu)
 include(DataManagerUtils)
+include(Fuzzing)
 
 #only have coverage option on linux
 if (LINUX)
