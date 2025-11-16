@@ -5,6 +5,7 @@
 set(LINEDATA_SOURCES
     Line_Data.hpp
     Line_Data.cpp
+    Ragged_Line_Data.hpp
     IO/CSV/Line_Data_CSV.hpp
     IO/CSV/Line_Data_CSV.cpp
     IO/JSON/Line_Data_JSON.hpp
