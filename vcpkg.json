@@ -76,6 +76,17 @@
                 },
                 {
                     "name": "opencv4"
+                },
+                {
+                    "name": "protobuf"
+                },
+                {
+                    "name": "abseil",
+                    "features": [
+                        {
+                            "name": "cxx17"
+                        }
+                    ]
                 }
             ]
         },
