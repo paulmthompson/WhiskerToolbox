@@ -620,12 +620,6 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                     for (auto const & [bodypart, point_data]: multi_point_data) {
                         std::string const bodypart_name = name + "_" + bodypart;
 
-                        // Attach identity context and generate EntityIds
-                        if (point_data) {
-                            point_data->setIdentityContext(bodypart_name, dm->getEntityRegistry());
-                            point_data->rebuildAllEntityIds();
-                        }
-
                         dm->setData<PointData>(bodypart_name, point_data, TimeKey("time"));
                         // Use empty color string to let Media_Window auto-assign colors
                         data_info_list.push_back({bodypart_name, "PointData", ""});
@@ -633,12 +627,6 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 } else {
                     // Regular point data loading
                     auto point_data = load_into_PointData(file_path, item);
-
-                    // Attach identity context and generate EntityIds
-                    if (point_data) {
-                        point_data->setIdentityContext(name, dm->getEntityRegistry());
-                        point_data->rebuildAllEntityIds();
-                    }
 
                     dm->setData<PointData>(name, point_data, TimeKey("time"));
 
@@ -674,12 +662,6 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 // Legacy loading fallback
                 auto line_data = load_into_LineData(file_path, item);
 
-                // Attach identity context and generate EntityIds
-                if (line_data) {
-                    line_data->setIdentityContext(name, dm->getEntityRegistry());
-                    line_data->rebuildAllEntityIds();
-                }
-
                 dm->setData<LineData>(name, line_data, TimeKey("time"));
 
                 std::string const color = item.value("color", "0000FF");
@@ -712,12 +694,6 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 for (size_t channel = 0; channel < digital_event_series.size(); channel++) {
                     std::string const channel_name = name + "_" + std::to_string(channel);
 
-                    // Attach identity context and generate EntityIds
-                    if (digital_event_series[channel]) {
-                        digital_event_series[channel]->setIdentityContext(channel_name, dm->getEntityRegistry());
-                        digital_event_series[channel]->rebuildAllEntityIds();
-                    }
-
                     dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel], TimeKey("time"));
 
                     if (item.contains("clock")) {
@@ -731,10 +707,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::DigitalInterval: {
 
                 auto digital_interval_series = load_into_DigitalIntervalSeries(file_path, item);
-                if (digital_interval_series) {
-                    digital_interval_series->setIdentityContext(name, dm->getEntityRegistry());
-                    digital_interval_series->rebuildAllEntityIds();
-                }
+
                 dm->setData<DigitalIntervalSeries>(name, digital_interval_series, TimeKey("time"));
 
                 break;
