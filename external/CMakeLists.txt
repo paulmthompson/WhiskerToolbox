@@ -156,12 +156,6 @@ FetchContent_Declare(
     GIT_TAG 1.9.5
 )
 
-FetchContent_Declare(
-    pf
-    GIT_REPOSITORY https://github.com/paulmthompson/pf
-    GIT_TAG 9d017ac42c5662c5764d553fc7f8300def24ca78
-)
-
 set(CUDA OFF)
 
 if (LINUX)
@@ -198,7 +192,7 @@ endif()
 
 #We should use make available
 
-set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir" "pf")
+set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir")
 
 if(ENABLE_ORTOOLS)
     list(APPEND FETCHCONTENT_TARGETS "ortools")
@@ -268,4 +262,3 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${torch_SOURCE_DIR}/share/cmake/Torc
 set(npy_SOURCE_DIR ${npy_SOURCE_DIR} PARENT_SCOPE)
 set(iir_SOURCE_DIR ${iir_SOURCE_DIR} PARENT_SCOPE)
 set(ortools_SOURCE_DIR ${ortools_SOURCE_DIR} PARENT_SCOPE)
-set(pf_SOURCE_DIR ${pf_SOURCE_DIR} PARENT_SCOPE)

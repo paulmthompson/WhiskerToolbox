@@ -59,7 +59,6 @@ target_include_directories(StateEstimation PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>  # For Entity/ and TimeFrame/ includes
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-    "$<BUILD_INTERFACE:${pf_SOURCE_DIR}>"
 )
 
 if(ENABLE_ORTOOLS)
