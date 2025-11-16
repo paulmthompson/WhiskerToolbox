@@ -161,9 +161,9 @@ private:
 
     struct RelationshipKeyHash {
         std::size_t operator()(RelationshipKey const & k) const noexcept {
-            std::size_t h1 = std::hash<EntityId>{}(k.from_entity);
-            std::size_t h2 = std::hash<EntityId>{}(k.to_entity);
-            std::size_t h3 = std::hash<std::uint8_t>{}(static_cast<std::uint8_t>(k.type));
+            std::size_t const h1 = std::hash<EntityId>{}(k.from_entity);
+            std::size_t const h2 = std::hash<EntityId>{}(k.to_entity);
+            std::size_t const h3 = std::hash<std::uint8_t>{}(static_cast<std::uint8_t>(k.type));
             
             // Combine hashes using a well-known hash combination technique
             std::size_t seed = h1;

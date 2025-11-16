@@ -6,7 +6,7 @@ bool EntityRelationshipManager::addRelationship(EntityId from_entity,
                                                 EntityId to_entity,
                                                 RelationshipType type,
                                                 std::string const & label) {
-    RelationshipKey key{from_entity, to_entity, type};
+    RelationshipKey const key{from_entity, to_entity, type};
     
     // Check if relationship already exists
     auto forward_it = m_forward_relationships.find(from_entity);
@@ -35,7 +35,7 @@ bool EntityRelationshipManager::addRelationship(EntityId from_entity,
 bool EntityRelationshipManager::removeRelationship(EntityId from_entity,
                                                    EntityId to_entity,
                                                    RelationshipType type) {
-    RelationshipKey key{from_entity, to_entity, type};
+    RelationshipKey const key{from_entity, to_entity, type};
     
     // Remove from forward lookup
     auto forward_it = m_forward_relationships.find(from_entity);
@@ -126,7 +126,7 @@ bool EntityRelationshipManager::hasRelationship(EntityId from_entity,
         return false;
     }
     
-    RelationshipKey key{from_entity, to_entity, type};
+    RelationshipKey const key{from_entity, to_entity, type};
     return forward_it->second.find(key) != forward_it->second.end();
 }
 
