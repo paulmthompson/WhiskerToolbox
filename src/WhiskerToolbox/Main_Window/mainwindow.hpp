@@ -124,6 +124,7 @@ private slots:
     void openDataTransforms();
     void openTerminalWidget();
     void openAnalysisDashboard();
+    void openTimeScrollBar();
     void openTestWidget();
     void openTableDesignerWidget();
 };

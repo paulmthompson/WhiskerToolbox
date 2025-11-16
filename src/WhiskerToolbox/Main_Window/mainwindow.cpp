@@ -131,7 +131,7 @@ void MainWindow::_buildInitialLayout() {
     // Add time scrollbar below media widget
     auto scrollbar_dock_widget = new ads::CDockWidget(QString::fromStdString("scrollbar"));
     scrollbar_dock_widget->setWidget(_time_scrollbar);
-    scrollbar_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, false);
+    scrollbar_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
     scrollbar_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
     _m_DockManager->addDockWidget(ads::BottomDockWidgetArea, scrollbar_dock_widget, media_dockArea);
 
@@ -219,6 +219,7 @@ void MainWindow::_createActions() {
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
     connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
     connect(ui->actionAnalysis_Dashboard, &QAction::triggered, this, &MainWindow::openAnalysisDashboard);
+    connect(ui->actionTime_Scroll_Bar, &QAction::triggered, this, &MainWindow::openTimeScrollBar);
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
 
@@ -867,6 +868,16 @@ void MainWindow::openAnalysisDashboard() {
     ptr->openWidget();
 
     showDockWidget(key);
+}
+
+void MainWindow::openTimeScrollBar() {
+    // Find and show the existing time scroll bar dock widget
+    auto dock_widget = findDockWidget("scrollbar");
+    if (dock_widget) {
+        dock_widget->show();
+        dock_widget->raise();
+        dock_widget->setAsCurrentTab();
+    }
 }
 
 void MainWindow::openTableDesignerWidget() {
