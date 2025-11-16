@@ -1,0 +1,14 @@
+# Fuzzing crash artifacts - these should not be committed
+crash-*
+
+# Fuzzing timeout artifacts
+timeout-*
+
+# Fuzzing slow unit artifacts
+slow-unit-*
+
+# Fuzzing OOM artifacts
+oom-*
+
+# Fuzzing leak artifacts
+leak-*

@@ -25,6 +25,7 @@ FUZZ_TARGETS=(
     "fuzz_analog_csv"
     "fuzz_point_csv"
     "fuzz_point_json"
+    "fuzz_line_csv"
 )
 
 BIN_DIR="${BUILD_DIR}/bin"
