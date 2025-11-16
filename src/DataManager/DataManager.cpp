@@ -80,12 +80,6 @@ bool tryRegistryThenLegacyLoad(
                         if (std::holds_alternative<std::shared_ptr<LineData>>(result.data)) {
                             auto line_data = std::get<std::shared_ptr<LineData>>(result.data);
 
-                            // Set up identity context
-                            if (line_data) {
-                                line_data->setIdentityContext(name, dm->getEntityRegistry());
-                                line_data->rebuildAllEntityIds();
-                            }
-
                             dm->setData<LineData>(name, line_data, TimeKey("time"));
 
                             std::string const color = item.value("color", "0000FF");
