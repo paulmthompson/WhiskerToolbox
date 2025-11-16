@@ -1,7 +1,10 @@
 #ifndef DATAMANAGERFWD_HPP
 #define DATAMANAGERFWD_HPP
 
-class AnalogTimeSeries;
+class IAnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
+
 class DigitalEventSeries;
 class DigitalIntervalSeries;
 class LineData;

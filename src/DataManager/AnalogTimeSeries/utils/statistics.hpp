@@ -13,7 +13,8 @@
 #include <span>
 #include <vector>
 
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 
 // ========== Mean ==========
 

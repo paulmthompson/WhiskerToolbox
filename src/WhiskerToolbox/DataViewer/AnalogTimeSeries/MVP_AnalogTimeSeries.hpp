@@ -7,7 +7,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 struct PlottingManager;
 
 /**

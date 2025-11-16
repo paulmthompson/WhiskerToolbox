@@ -14,7 +14,8 @@
 #include <typeindex>
 #include <vector>
 
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 
 /**
  * @brief Enumeration of supported filter families

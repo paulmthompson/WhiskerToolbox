@@ -6,7 +6,8 @@
 #include <memory>
 #include <vector>
 
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 
 /**
  * @brief Adapter that exposes AnalogTimeSeries as an IAnalogSource.

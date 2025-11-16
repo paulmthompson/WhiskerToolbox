@@ -5,7 +5,8 @@
 #include <string>
 #include <vector>
 
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 
 struct BinaryAnalogLoaderOptions {
     std::string filename;

@@ -29,7 +29,8 @@
 #include <vector>
 
 
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 struct NewAnalogTimeSeriesDisplayOptions;
 class DigitalEventSeries;
 struct NewDigitalEventSeriesDisplayOptions;

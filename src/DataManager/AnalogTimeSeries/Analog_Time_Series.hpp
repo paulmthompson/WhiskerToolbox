@@ -338,7 +338,7 @@ public:
      * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
      * @see getTimeValueSpanInTimeFrameIndexRange() for zero-copy alternative
      */
-    [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const override;
+    [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
 
     /**
      * @brief Get time-value pairs as span and time iterator for zero-copy access
@@ -354,7 +354,7 @@ public:
      * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
      * @see getTimeValueRangeInTimeFrameIndexRange() for convenient range-based alternative
      */
-    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const override;
+    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
 
     /**
      * @brief Get time-value pairs with timeframe conversion
@@ -373,7 +373,7 @@ public:
      */
     [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, 
                                                                           TimeFrameIndex end_time,
-                                                                          TimeFrame const * source_timeFrame) const override;
+                                                                          TimeFrame const * source_timeFrame) const;
 
 
     /**

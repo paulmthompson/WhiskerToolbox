@@ -169,85 +169,6 @@ public:
      */
     [[nodiscard]] virtual std::optional<DataArrayIndex> findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const = 0;
 
-    // ========== Time-Value Range Access ==========
-
-    /**
-     * @brief Data structure representing a single time-value point
-     */
-    struct TimeValuePoint {
-        TimeFrameIndex time_frame_index{TimeFrameIndex(0)};
-        float value{0.0f};
-
-        TimeValuePoint() = default;
-        TimeValuePoint(TimeFrameIndex time_idx, float val)
-            : time_frame_index(time_idx),
-              value(val) {}
-    };
-
-    // Forward declarations for nested types
-    class TimeValueRangeIterator;
-    class TimeValueRangeView;
-    class TimeIndexIterator;
-    class TimeIndexRange;
-    struct TimeValueSpanPair;
-
-    /**
-     * @brief Get time-value pairs as a range for convenient iteration
-     * 
-     * Returns a range view that can be used with range-based for loops to iterate over
-     * time-value pairs within the specified TimeFrameIndex range. This is the high-level,
-     * convenient interface.
-     * 
-     * @param start_time The start TimeFrameIndex (inclusive boundary)
-     * @param end_time The end TimeFrameIndex (inclusive boundary)
-     * @return TimeValueRangeView that supports range-based for loops
-     * 
-     * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
-     * @see getTimeValueSpanInTimeFrameIndexRange() for zero-copy alternative
-     */
-    [[nodiscard]] virtual TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const = 0;
-
-    /**
-     * @brief Get time-value pairs as span and time iterator for zero-copy access
-     * 
-     * Returns a structure containing a zero-copy span over the data values and a
-     * time iterator for the corresponding TimeFrameIndex values. This is the 
-     * performance-optimized interface.
-     * 
-     * @param start_time The start TimeFrameIndex (inclusive boundary)
-     * @param end_time The end TimeFrameIndex (inclusive boundary)
-     * @return TimeValueSpanPair with zero-copy data access
-     * 
-     * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
-     * @see getTimeValueRangeInTimeFrameIndexRange() for convenient range-based alternative
-     */
-    [[nodiscard]] virtual TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const = 0;
-
-    /**
-     * @brief Get time-value pairs with timeframe conversion
-     * 
-     * Similar to getTimeValueSpanInTimeFrameIndexRange, but accepts a source timeframe
-     * to convert the start and end time indices from the source coordinate system to
-     * the analog time series coordinate system.
-     * 
-     * @param start_time The start TimeFrameIndex in source timeframe coordinates
-     * @param end_time The end TimeFrameIndex in source timeframe coordinates
-     * @param source_timeFrame The timeframe that start_time and end_time are expressed in
-     * @return TimeValueSpanPair with zero-copy data access
-     * 
-     * @note If source_timeFrame equals the analog series' timeframe, or if either is null,
-     *       falls back to the non-converting version
-     */
-    [[nodiscard]] virtual TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, 
-                                                                                  TimeFrameIndex end_time,
-                                                                                  TimeFrame const * source_timeFrame) const = 0;
-
-    /**
-     * @brief Get the TimeFrameIndex that corresponds to a given DataArrayIndex
-     * 
-     * @param i The DataArrayIndex to get the TimeFrameIndex for
-     * @return The TimeFrameIndex that corresponds to the given DataArrayIndex
-     */
     [[nodiscard]] virtual TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const = 0;
 
     /**
@@ -264,7 +185,6 @@ public:
      *       For sparse storage, this returns a copy of the internal vector.
      * 
      * @see getAnalogTimeSeries() for accessing the corresponding data values
-     * @see getTimeValueRangeInTimeFrameIndexRange() for accessing time-value pairs within a specific range
      * @see getTimeFrameIndexAtDataArrayIndex() for single index lookups
      */
     [[nodiscard]] virtual std::vector<TimeFrameIndex> getTimeSeries() const = 0;

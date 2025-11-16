@@ -7,7 +7,8 @@
 #include <string>   // std::string
 #include <typeindex>// std::type_index
 
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
 

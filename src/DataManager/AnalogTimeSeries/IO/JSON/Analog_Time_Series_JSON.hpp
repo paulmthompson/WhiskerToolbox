@@ -13,7 +13,8 @@ enum class AnalogDataType {
     Unknown
 };
 
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 
 AnalogDataType stringToAnalogDataType(std::string const & data_type_str);
 

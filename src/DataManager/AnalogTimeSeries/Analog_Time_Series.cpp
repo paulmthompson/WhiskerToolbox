@@ -10,23 +10,23 @@
 
 // ========== Constructors ==========
 
-AnalogTimeSeriesInMemory:AnalogTimeSeriesInMemory()
+AnalogTimeSeriesInMemory::AnalogTimeSeriesInMemory()
     : _data(),
       _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {}
 
-AnalogTimeSeriesInMemory:AnalogTimeSeriesInMemory(std::map<int, float> analog_map)
+AnalogTimeSeriesInMemory::AnalogTimeSeriesInMemory(std::map<int, float> analog_map)
     : _data(),
       _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {
     setData(std::move(analog_map));
 }
 
-AnalogTimeSeriesInMemory:AnalogTimeSeriesInMemory(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector)
+AnalogTimeSeriesInMemory::AnalogTimeSeriesInMemory(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector)
     : _data(),
       _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {
     setData(std::move(analog_vector), std::move(time_vector));
 }
 
-AnalogTimeSeriesInMemory:AnalogTimeSeriesInMemory(std::vector<float> analog_vector, size_t num_samples)
+AnalogTimeSeriesInMemory::AnalogTimeSeriesInMemory(std::vector<float> analog_vector, size_t num_samples)
     : _data(),
       _time_storage(DenseTimeRange(TimeFrameIndex(0), num_samples)) {
     if (analog_vector.size() != num_samples) {

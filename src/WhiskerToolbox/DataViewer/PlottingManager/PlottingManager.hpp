@@ -10,7 +10,8 @@
 #include <vector>
 
 // Forward declarations for DataManager types
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
 class TimeFrame;

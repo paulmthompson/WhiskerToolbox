@@ -7,7 +7,8 @@
 #include <armadillo>
 
 
-class AnalogTimeSeries;
+class AnalogTimeSeriesInMemory;
+using AnalogTimeSeries = AnalogTimeSeriesInMemory;
 
 /**
  * Convert an AnalogTimeSeries to an mlpack row vector
