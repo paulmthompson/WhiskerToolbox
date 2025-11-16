@@ -871,13 +871,8 @@ void MainWindow::openAnalysisDashboard() {
 }
 
 void MainWindow::openTimeScrollBar() {
-    // Find and show the existing time scroll bar dock widget
-    auto dock_widget = findDockWidget("scrollbar");
-    if (dock_widget) {
-        dock_widget->show();
-        dock_widget->raise();
-        dock_widget->setAsCurrentTab();
-    }
+    // Toggle visibility of the time scroll bar dock widget
+    showDockWidget("scrollbar");
 }
 
 void MainWindow::openTableDesignerWidget() {
