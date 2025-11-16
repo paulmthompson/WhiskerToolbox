@@ -3,8 +3,12 @@
 
 #include "TimeFrame/TimeFrame.hpp"
 
+// Uncomment to enable profiling timers in this file
+// #define BINARY_LOADERS_ENABLE_PROFILING
+
+#ifdef BINARY_LOADERS_ENABLE_PROFILING
 #include <chrono>
-#include <filesystem>
+#endif
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -31,7 +35,9 @@ struct BinaryAnalogOptions {
 template<typename T>
 inline std::vector<T> readBinaryFile(BinaryAnalogOptions const & options) {
 
+#ifdef BINARY_LOADERS_ENABLE_PROFILING
     auto t1 = std::chrono::steady_clock::now();
+#endif
 
     std::ifstream file(options.file_path, std::ios::binary | std::ios::ate);// seeks to end
 
@@ -50,11 +56,11 @@ inline std::vector<T> readBinaryFile(BinaryAnalogOptions const & options) {
     file.seekg(static_cast<std::ios::off_type>(options.header_size_bytes), std::ios::beg);
     file.read(reinterpret_cast<char *>(data.data()), static_cast<std::streamsize>(data_size_bytes));
 
+#ifdef BINARY_LOADERS_ENABLE_PROFILING
     auto t2 = std::chrono::steady_clock::now();
-
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-
     std::cout << "Total time to load " << options.file_path << ": " << elapsed.count() << std::endl;
+#endif
 
     return data;
 }
@@ -62,7 +68,9 @@ inline std::vector<T> readBinaryFile(BinaryAnalogOptions const & options) {
 template<typename T>
 inline std::vector<std::vector<T>> readBinaryFileMultiChannel(BinaryAnalogOptions const & options) {
 
+#ifdef BINARY_LOADERS_ENABLE_PROFILING
     auto t1 = std::chrono::steady_clock::now();
+#endif
 
     if (options.num_channels <= 0) {
         std::cout << "Channels cannot be less than 1" << std::endl;
@@ -112,11 +120,12 @@ inline std::vector<std::vector<T>> readBinaryFileMultiChannel(BinaryAnalogOption
         current_time_index++;
     }
 
+#ifdef BINARY_LOADERS_ENABLE_PROFILING
     auto t2 = std::chrono::steady_clock::now();
-
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-
     std::cout << "Total time to load " << elapsed.count() << std::endl;
+#endif
+
     return data;
 }
 

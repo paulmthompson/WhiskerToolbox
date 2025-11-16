@@ -18,7 +18,8 @@
             "name": "libffi",
             "platform": "osx"
         },
-        {   "name": "nlohmann-json"
+        {
+            "name": "nlohmann-json"
         },
         {
             "name": "openblas"
@@ -28,29 +29,7 @@
         },
         {
             "name": "spdlog"
-        },
-        {
-            "name": "boost-multiprecision"
-        
-        },
-        {
-            "name": "boost-serialization"
-        },
-        {
-            "name": "boost-random"
-        },
-        {
-            "name": "protobuf"
-        },
-        {
-            "name": "abseil",
-            "features": [
-                {
-                    "name": "cxx17"
-                }
-            ]
         }
-
     ],
     "features": {
         "capnproto": {
@@ -64,7 +43,9 @@
             "dependencies": [
                 {
                     "name": "hdf5",
-                    "features": ["cpp"]
+                    "features": [
+                        "cpp"
+                    ]
                 },
                 "highfive"
             ]
@@ -95,6 +76,31 @@
                 },
                 {
                     "name": "opencv4"
+                }
+            ]
+        },
+        "ortools": {
+            "description": "Google OR-Tools for optimization problems",
+            "dependencies": [
+                {
+                    "name": "boost-multiprecision"
+                },
+                {
+                    "name": "boost-serialization"
+                },
+                {
+                    "name": "boost-random"
+                },
+                {
+                    "name": "protobuf"
+                },
+                {
+                    "name": "abseil",
+                    "features": [
+                        {
+                            "name": "cxx17"
+                        }
+                    ]
                 }
             ]
         }
@@ -148,7 +154,8 @@
             "name": "mlpack",
             "version": "4.5.1"
         },
-        {   "name": "nlohmann-json",
+        {
+            "name": "nlohmann-json",
             "version": "3.11.3"
         },
         {
@@ -163,6 +170,5 @@
             "name": "protobuf",
             "version": "5.29.3"
         }
-        ]
-
+    ]
 }

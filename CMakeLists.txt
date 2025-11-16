@@ -72,6 +72,7 @@ endif()
 
 if(ENABLE_ORTOOLS)
     message(STATUS "OR-Tools support: ENABLED")
+    list(APPEND VCPKG_MANIFEST_FEATURES "ortools")
 else()
     message(STATUS "OR-Tools support: DISABLED")
 endif()
