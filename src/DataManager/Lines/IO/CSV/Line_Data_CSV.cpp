@@ -4,6 +4,7 @@
 #include "utils/string_manip.hpp"
 
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -141,13 +142,31 @@ void save(
 
 std::vector<float> parse_string_to_float_vector(std::string const & str, std::string const & delimiter) {
     std::vector<float> result;
+    
+    // Reserve space to avoid reallocations - estimate based on string length
+    // Assume average of 6 chars per number (including delimiter)
+    result.reserve(str.length() / 6 + 1);
 
-    std::stringstream ss(str);
-    std::string item;
-
-    char delim_char = delimiter.empty() ? ',' : delimiter[0];
-    while (std::getline(ss, item, delim_char)) {
-        result.push_back(std::stof(item));
+    char const delim_char = delimiter.empty() ? ',' : delimiter[0];
+    char const * start = str.c_str();
+    char const * end = start + str.length();
+    char * parse_end;
+    
+    // Use strtof directly instead of creating string_view or substring
+    while (start < end) {
+        float value = std::strtof(start, &parse_end);
+        if (parse_end == start) {
+            // No conversion happened, skip character
+            ++start;
+            continue;
+        }
+        result.push_back(value);
+        start = parse_end;
+        
+        // Skip delimiter
+        if (start < end && *start == delim_char) {
+            ++start;
+        }
     }
     return result;
 }
@@ -160,30 +179,67 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
         throw std::runtime_error("Could not open file: " + opts.filepath);
     }
 
+    // Use larger buffer for better I/O performance
+    constexpr size_t buffer_size = 1024 * 1024; // 1MB buffer
+    std::vector<char> buffer(buffer_size);
+    file.rdbuf()->pubsetbuf(buffer.data(), static_cast<std::streamsize>(buffer_size));
+
     std::string line;
+    line.reserve(4096); // Reserve space for typical line length
     int loaded_lines = 0;
+    bool is_first_line = true;
     
     while (std::getline(file, line)) {
-        std::istringstream ss(line);
-        std::string frame_num_str, x_str, y_str;
-
-        // Get frame number (first column)
-        std::getline(ss, frame_num_str, opts.delimiter[0]);
-
         // Skip header if present
-        if (opts.has_header && frame_num_str == opts.header_identifier) {
+        if (is_first_line && opts.has_header) {
+            is_first_line = false;
+            if (line.find(opts.header_identifier) != std::string::npos) {
+                continue;
+            }
+        }
+        is_first_line = false;
+
+        // Parse line manually to avoid multiple string copies
+        size_t pos = 0;
+        size_t comma_pos = line.find(opts.delimiter[0], pos);
+        if (comma_pos == std::string::npos) {
             continue;
         }
-
-        // Get X coordinates (second column, enclosed in quotes)
-        std::getline(ss, x_str, '"');
-        std::getline(ss, x_str, '"');
-
-        // Get Y coordinates (third column, enclosed in quotes)
-        std::getline(ss, y_str, '"');
-        std::getline(ss, y_str, '"');
-
-        int const frame_num = std::stoi(frame_num_str);
+        
+        // Parse frame number
+        int const frame_num = std::stoi(line.substr(pos, comma_pos - pos));
+        pos = comma_pos + 1;
+        
+        // Find first quote for X coordinates
+        size_t quote1 = line.find('"', pos);
+        if (quote1 == std::string::npos) {
+            continue;
+        }
+        size_t quote2 = line.find('"', quote1 + 1);
+        if (quote2 == std::string::npos) {
+            continue;
+        }
+        
+        // Extract X coordinates string (avoiding copy by using pointer arithmetic)
+        size_t x_start = quote1 + 1;
+        size_t x_len = quote2 - x_start;
+        
+        // Find quotes for Y coordinates
+        size_t quote3 = line.find('"', quote2 + 1);
+        if (quote3 == std::string::npos) {
+            continue;
+        }
+        size_t quote4 = line.find('"', quote3 + 1);
+        if (quote4 == std::string::npos) {
+            continue;
+        }
+        
+        size_t y_start = quote3 + 1;
+        size_t y_len = quote4 - y_start;
+        
+        // Parse coordinates directly from the line string to avoid copies
+        std::string x_str = line.substr(x_start, x_len);
+        std::string y_str = line.substr(y_start, y_len);
 
         std::vector<float> const x_values = parse_string_to_float_vector(x_str, opts.coordinate_delimiter);
         std::vector<float> const y_values = parse_string_to_float_vector(y_str, opts.coordinate_delimiter);
@@ -193,10 +249,7 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
             continue;
         }
 
-        if (data_map.find(TimeFrameIndex(frame_num)) == data_map.end()) {
-            data_map[TimeFrameIndex(frame_num)] = std::vector<Line2D>();
-        }
-
+        // Use emplace or operator[] to avoid extra lookup
         data_map[TimeFrameIndex(frame_num)].emplace_back(create_line(x_values, y_values));
         loaded_lines += 1;
     }
@@ -291,7 +344,9 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
         }
 
         std::vector<Point2D<float>> line_points;
+        line_points.reserve(100); // Reserve space for typical line
         std::string line;
+        line.reserve(256); // Reserve space for typical line length
         bool first_line = true;
 
         while (std::getline(file, line)) {
@@ -302,31 +357,47 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
             }
             first_line = false;
 
-            // Parse the line
-            std::stringstream ss(line);
-            std::vector<std::string> columns;
-            std::string column;
-
-            // Split by delimiter
-            while (std::getline(ss, column, opts.delimiter[0])) {
-                columns.push_back(column);
+            // Parse the line manually instead of using stringstream
+            size_t pos = 0;
+            int col_idx = 0;
+            float x = 0.0f, y = 0.0f;
+            bool x_found = false, y_found = false;
+            
+            char const delim = opts.delimiter[0];
+            while (pos < line.length()) {
+                size_t next_pos = line.find(delim, pos);
+                if (next_pos == std::string::npos) {
+                    next_pos = line.length();
+                }
+                
+                // Parse the column value if it's one we need
+                if (col_idx == opts.x_column || col_idx == opts.y_column) {
+                    try {
+                        float value = std::stof(line.substr(pos, next_pos - pos));
+                        if (col_idx == opts.x_column) {
+                            x = value;
+                            x_found = true;
+                        } else {
+                            y = value;
+                            y_found = true;
+                        }
+                    } catch (std::exception const & e) {
+                        std::cerr << "Warning: Could not parse coordinate from line: " << line << " (file: " << filename << ")" << std::endl;
+                        break;
+                    }
+                }
+                
+                pos = next_pos + 1;
+                col_idx++;
+                
+                // Early exit if we've found both columns
+                if (x_found && y_found) {
+                    break;
+                }
             }
-
-            // Check if we have enough columns
-            int max_column = std::max(opts.x_column, opts.y_column);
-            if (columns.size() <= static_cast<size_t>(max_column)) {
-                std::cerr << "Warning: Not enough columns in line: " << line << " (file: " << filename << ")" << std::endl;
-                continue;
-            }
-
-            // Parse X and Y coordinates
-            try {
-                float x = std::stof(columns[static_cast<size_t>(opts.x_column)]);
-                float y = std::stof(columns[static_cast<size_t>(opts.y_column)]);
+            
+            if (x_found && y_found) {
                 line_points.push_back(Point2D<float>{x, y});
-            } catch (std::exception const & e) {
-                std::cerr << "Warning: Could not parse coordinates from line: " << line << " (file: " << filename << ")" << std::endl;
-                continue;
             }
         }
 
@@ -334,9 +405,6 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
 
         // Add the line to the data map if we have points
         if (!line_points.empty()) {
-            if (data_map.find(TimeFrameIndex(frame_number)) == data_map.end()) {
-                data_map[TimeFrameIndex(frame_number)] = std::vector<Line2D>();
-            }
             data_map[TimeFrameIndex(frame_number)].push_back(line_points);
             files_loaded++;
         } else {
