@@ -67,6 +67,15 @@ MainWindow::MainWindow(QWidget * parent)
 {
     ui->setupUi(this);
 
+    // Configure dock manager BEFORE creating it
+    // Using native title bars for floating widgets (works smoothly on all platforms)
+    // On Linux, native title bars allow proper window dragging
+    // Re-docking is handled in showDockWidget() - closed floating widgets
+    // are automatically re-docked when reopened via the modules menu
+    ads::CDockManager::setConfigFlags(ads::CDockManager::DefaultOpaqueConfig 
+                                     | ads::CDockManager::OpaqueSplitterResize
+                                     | ads::CDockManager::DragPreviewIsDynamic);
+
     _m_DockManager = new ads::CDockManager(this);
 
     //This is necessary to accept keyboard events
@@ -124,14 +133,14 @@ void MainWindow::_buildInitialLayout() {
     // Add media widget to top
     auto media_dock_widget = new ads::CDockWidget(QString::fromStdString("media"));
     media_dock_widget->setWidget(_media_widget);
-    media_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+    // Don't delete on close, but allow all other default features (floatable, movable, closable, pinnable)
     media_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
     auto media_dockArea = _m_DockManager->addDockWidget(ads::TopDockWidgetArea, media_dock_widget);
 
     // Add time scrollbar below media widget
     auto scrollbar_dock_widget = new ads::CDockWidget(QString::fromStdString("scrollbar"));
     scrollbar_dock_widget->setWidget(_time_scrollbar);
-    scrollbar_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+    // Don't delete on close, but allow all other default features (floatable, movable, closable, pinnable)
     scrollbar_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
     _m_DockManager->addDockWidget(ads::BottomDockWidgetArea, scrollbar_dock_widget, media_dockArea);
 
@@ -151,8 +160,7 @@ void MainWindow::_buildInitialLayout() {
     group_dock_widget = new ads::CDockWidget(QString::fromStdString("group_management"));
     group_dock_widget->setWidget(_group_management_widget);
         
-    // Configure the dock widget to hide when closed (not delete)
-    group_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+    // Don't delete on close, but allow all other default features
     group_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
         
     _m_DockManager->addDockWidget(ads::RightDockWidgetArea, group_dock_widget);
@@ -171,8 +179,7 @@ void MainWindow::_buildInitialLayout() {
     auto data_manager_dock_widget = new ads::CDockWidget(QString::fromStdString("data_manager"));
     data_manager_dock_widget->setWidget(_data_manager_widget);
         
-    // Configure the dock widget to hide when closed (not delete)
-    data_manager_dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+    // Don't delete on close, but allow all other default features
     data_manager_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
         
     // Add underneath the group management widget
@@ -428,7 +435,31 @@ void MainWindow::registerDockWidget(std::string const & key, QWidget * widget, a
 }
 
 void MainWindow::showDockWidget(std::string const & key) {
-    _m_DockManager->findDockWidget(QString::fromStdString(key))->toggleView();
+    auto* dockWidget = _m_DockManager->findDockWidget(QString::fromStdString(key));
+    if (!dockWidget) {
+        return;
+    }
+    
+    // If the widget is not visible and is in a floating container, dock it back
+    // This provides better UX on Linux where native title bars are used
+    if (!dockWidget->isVisible()) {
+        auto* dockContainer = dockWidget->dockContainer();
+        // Check if it's in a floating container (not the main dock manager)
+        if (dockContainer && dockContainer->isFloating()) {
+            // Determine the appropriate dock area based on widget type
+            ads::DockWidgetArea dockArea = ads::RightDockWidgetArea; // default
+            
+            // Time scrollbar should go to the bottom
+            if (key == "scrollbar") {
+                dockArea = ads::BottomDockWidgetArea;
+            }
+            
+            // Move the widget back to the main dock area before showing
+            _m_DockManager->addDockWidget(dockArea, dockWidget);
+        }
+    }
+    
+    dockWidget->toggleView();
 }
 
 ads::CDockWidget * MainWindow::findDockWidget(std::string const & key) const {
