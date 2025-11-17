@@ -11,23 +11,25 @@
 // ========== Constructors ==========
 
 AnalogTimeSeries::AnalogTimeSeries()
-    : _data(),
-      _time_storage(TimeIndexStorageFactory::createDenseFromZero(0)) {}
+    : _data_storage(VectorAnalogDataStorage(std::vector<float>())),
+      _time_storage(TimeIndexStorageFactory::createDenseFromZero(0)) {
+    _cacheOptimizationPointers();
+}
 
 AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map)
-    : _data(),
+    : _data_storage(VectorAnalogDataStorage(std::vector<float>())),
       _time_storage(TimeIndexStorageFactory::createDenseFromZero(0)) {
     setData(std::move(analog_map));
 }
 
 AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector)
-    : _data(),
+    : _data_storage(VectorAnalogDataStorage(std::vector<float>())),
       _time_storage(TimeIndexStorageFactory::createDenseFromZero(0)) {
     setData(std::move(analog_vector), std::move(time_vector));
 }
 
 AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples)
-    : _data(),
+    : _data_storage(VectorAnalogDataStorage(std::vector<float>())),
       _time_storage(TimeIndexStorageFactory::createDenseFromZero(num_samples)) {
     if (analog_vector.size() != num_samples) {
         std::cerr << "Error: size of analog vector and number of samples are not the same!" << std::endl;
@@ -37,9 +39,10 @@ AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, size_t num_
 }
 
 void AnalogTimeSeries::setData(std::vector<float> analog_vector) {
-    _data = std::move(analog_vector);
-    // Use dense time storage for consecutive indices starting from 0
-    _time_storage = TimeIndexStorageFactory::createDenseFromZero(_data.size());
+    size_t size = analog_vector.size();
+    _data_storage = DataStorageWrapper(VectorAnalogDataStorage(std::move(analog_vector)));
+    _time_storage = TimeIndexStorageFactory::createDenseFromZero(size);
+    _cacheOptimizationPointers();
 }
 
 void AnalogTimeSeries::setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) {
@@ -48,19 +51,25 @@ void AnalogTimeSeries::setData(std::vector<float> analog_vector, std::vector<Tim
         return;
     }
 
-    _data = std::move(analog_vector);
+    _data_storage = DataStorageWrapper(VectorAnalogDataStorage(std::move(analog_vector)));
     _time_storage = TimeIndexStorageFactory::createFromTimeIndices(std::move(time_vector));
+    _cacheOptimizationPointers();
 }
 
 void AnalogTimeSeries::setData(std::map<int, float> analog_map) {
-    _data.clear();
-    _data = std::vector<float>();
-    auto time_storage = std::vector<TimeFrameIndex>();
+    std::vector<float> data_vec;
+    std::vector<TimeFrameIndex> time_vec;
+    data_vec.reserve(analog_map.size());
+    time_vec.reserve(analog_map.size());
+    
     for (auto & [key, value]: analog_map) {
-        time_storage.push_back(TimeFrameIndex(key));
-        _data.push_back(value);
+        time_vec.push_back(TimeFrameIndex(key));
+        data_vec.push_back(value);
     }
-    _time_storage = std::make_shared<SparseTimeIndexStorage>(std::move(time_storage));
+    
+    _data_storage = DataStorageWrapper(VectorAnalogDataStorage(std::move(data_vec)));
+    _time_storage = std::make_shared<SparseTimeIndexStorage>(std::move(time_vec));
+    _cacheOptimizationPointers();
 }
 
 // ========== Getting Data ==========
@@ -85,11 +94,8 @@ std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
         return std::span<float const>();
     }
 
-    // Calculate the size of the range (inclusive of both endpoints)
-    size_t range_size = end_idx - start_idx + 1;
-
-    // Return span from start_idx with range_size elements
-    return std::span<float const>(_data.data() + start_idx, range_size);
+    // Use storage's getSpanRange for efficient access
+    return _data_storage.getSpanRange(start_idx, end_idx + 1);
 }
 
 
@@ -151,7 +157,8 @@ AnalogTimeSeries::TimeValueRangeIterator::TimeValueRangeIterator(AnalogTimeSerie
     : _series(series),
       _current_index(is_end ? end_index : start_index),
       _end_index(end_index),
-      _is_end(is_end) {
+      _is_end(is_end),
+      _contiguous_data_ptr(series->_contiguous_data_ptr) {
     if (!_is_end && _current_index.getValue() < _end_index.getValue()) {
         _updateCurrentPoint();
     }
@@ -205,9 +212,18 @@ void AnalogTimeSeries::TimeValueRangeIterator::_updateCurrentPoint() const {
         return;
     }
 
+    // Fast path: direct pointer access for contiguous data (no virtual call)
+    float value;
+    if (_contiguous_data_ptr != nullptr) {
+        value = _contiguous_data_ptr[_current_index.getValue()];
+    } else {
+        // Slow path: go through storage wrapper (virtual dispatch)
+        value = _series->_getDataAtDataArrayIndex(_current_index);
+    }
+
     _current_point = TimeValuePoint(
             _series->_getTimeFrameIndexAtDataArrayIndex(_current_index),
-            _series->_getDataAtDataArrayIndex(_current_index));
+            value);
 }
 
 AnalogTimeSeries::TimeValueRangeView::TimeValueRangeView(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index)
@@ -344,5 +360,5 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
 
 AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getAllSamples() const {
     // Return a range view over all samples (from index 0 to size)
-    return {this, DataArrayIndex(0), DataArrayIndex(_data.size())};
+    return {this, DataArrayIndex(0), DataArrayIndex(_data_storage.size())};
 }

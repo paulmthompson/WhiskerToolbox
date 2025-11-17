@@ -1,0 +1,176 @@
+#ifndef ANALOG_DATA_STORAGE_HPP
+#define ANALOG_DATA_STORAGE_HPP
+
+#include <cstddef>
+#include <memory>
+#include <span>
+#include <type_traits>
+#include <vector>
+
+/**
+ * @brief Storage type enumeration for runtime type identification
+ */
+enum class AnalogStorageType {
+    Vector,
+    MemoryMapped,
+    Custom
+};
+
+/**
+ * @brief CRTP base class for analog data storage strategies
+ * 
+ * Uses Curiously Recurring Template Pattern to eliminate virtual function overhead
+ * while maintaining a polymorphic interface. Derived classes implement the actual
+ * storage strategy (contiguous vector, memory-mapped file, etc.).
+ * 
+ * @tparam Derived The concrete storage implementation type
+ */
+template<typename Derived>
+class AnalogDataStorageBase {
+public:
+    /**
+     * @brief Get the value at a specific index using CRTP dispatch
+     * 
+     * Zero-overhead call to derived implementation. The compiler fully inlines
+     * this when the type is known at compile time.
+     * 
+     * @param index The index to access
+     * @return float value at the given index
+     */
+    [[nodiscard]] float getValueAt(size_t index) const {
+        return static_cast<Derived const*>(this)->getValueAtImpl(index);
+    }
+    
+    /**
+     * @brief Get the number of samples using CRTP dispatch
+     * 
+     * @return size_t number of samples in storage
+     */
+    [[nodiscard]] size_t size() const {
+        return static_cast<Derived const*>(this)->sizeImpl();
+    }
+    
+    /**
+     * @brief Get a span over all data (if contiguous) using CRTP dispatch
+     * 
+     * Returns a non-empty span only if data is stored contiguously in memory.
+     * For non-contiguous storage (e.g., strided memory-mapped files), returns empty span.
+     * 
+     * @return std::span<float const> view over contiguous data, or empty span
+     */
+    [[nodiscard]] std::span<float const> getSpan() const {
+        return static_cast<Derived const*>(this)->getSpanImpl();
+    }
+    
+    /**
+     * @brief Get a span over a range of data (if contiguous)
+     * 
+     * @param start Starting index (inclusive)
+     * @param end Ending index (exclusive)
+     * @return std::span<float const> view over the range, or empty span if not contiguous
+     */
+    [[nodiscard]] std::span<float const> getSpanRange(size_t start, size_t end) const {
+        return static_cast<Derived const*>(this)->getSpanRangeImpl(start, end);
+    }
+    
+    /**
+     * @brief Check if data is stored contiguously in memory
+     * 
+     * @return true if data is contiguous (allows span access and pointer arithmetic)
+     * @return false if data is non-contiguous (requires indexed access)
+     */
+    [[nodiscard]] bool isContiguous() const {
+        return static_cast<Derived const*>(this)->isContiguousImpl();
+    }
+    
+    /**
+     * @brief Get the storage type identifier
+     * 
+     * Pure virtual to require implementation. Used for runtime type identification
+     * when storage is accessed through type-erased interface.
+     * 
+     * @return AnalogStorageType identifying the concrete storage type
+     */
+    [[nodiscard]] virtual AnalogStorageType getStorageType() const = 0;
+    
+protected:
+    // Protected destructor prevents polymorphic deletion through base pointer
+    ~AnalogDataStorageBase() = default;
+};
+
+/**
+ * @brief Contiguous vector-based analog data storage using CRTP
+ * 
+ * High-performance implementation for in-memory contiguous data.
+ * Provides zero-overhead access when type is known at compile time,
+ * and efficient span-based operations for contiguous data access.
+ */
+class VectorAnalogDataStorage : public AnalogDataStorageBase<VectorAnalogDataStorage> {
+public:
+    /**
+     * @brief Construct storage from a vector of float values
+     * 
+     * @param data Vector of analog data values (moved into storage)
+     */
+    explicit VectorAnalogDataStorage(std::vector<float> data)
+        : _data(std::move(data)) {}
+    
+    // CRTP implementation methods (called by base class)
+    
+    [[nodiscard]] float getValueAtImpl(size_t index) const {
+        return _data[index];
+    }
+    
+    [[nodiscard]] size_t sizeImpl() const {
+        return _data.size();
+    }
+    
+    [[nodiscard]] std::span<float const> getSpanImpl() const {
+        return _data;
+    }
+    
+    [[nodiscard]] std::span<float const> getSpanRangeImpl(size_t start, size_t end) const {
+        if (start >= end || end > _data.size()) {
+            return {};
+        }
+        return std::span<float const>(_data.data() + start, end - start);
+    }
+    
+    [[nodiscard]] bool isContiguousImpl() const {
+        return true;
+    }
+    
+    [[nodiscard]] AnalogStorageType getStorageType() const override {
+        return AnalogStorageType::Vector;
+    }
+    
+    // Direct access methods for specific optimizations
+    
+    /**
+     * @brief Get direct access to underlying vector
+     * 
+     * Use with caution - bypasses abstraction. Useful for specific algorithms
+     * that need to work with std::vector directly.
+     * 
+     * @return const reference to the underlying std::vector<float>
+     */
+    [[nodiscard]] std::vector<float> const& getVector() const {
+        return _data;
+    }
+    
+    /**
+     * @brief Get raw pointer to contiguous data
+     * 
+     * Enables maximum performance for pointer-based algorithms.
+     * 
+     * @return const pointer to first element
+     */
+    [[nodiscard]] float const* data() const {
+        return _data.data();
+    }
+    
+private:
+    std::vector<float> _data;
+};
+
+#endif // ANALOG_DATA_STORAGE_HPP

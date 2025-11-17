@@ -29,7 +29,7 @@ AnalogStatistics calculate_analog_statistics(AnalogTimeSeries const * analog_tim
     stats.max_val = calculate_max(*analog_time_series);
     
     // Calculate median and quartiles
-    std::vector<float> sorted_data = data;
+    std::vector<float> sorted_data(data.begin(), data.end());
     std::sort(sorted_data.begin(), sorted_data.end());
     
     size_t n = sorted_data.size();
@@ -72,7 +72,7 @@ std::shared_ptr<AnalogTimeSeries> scale_analog_time_series(
         return std::make_shared<AnalogTimeSeries>();
     }
     
-    std::vector<float> scaled_data = original_data;
+    std::vector<float> scaled_data(original_data.begin(), original_data.end());
     AnalogStatistics stats = calculate_analog_statistics(analog_time_series);
     
     switch (params.method) {

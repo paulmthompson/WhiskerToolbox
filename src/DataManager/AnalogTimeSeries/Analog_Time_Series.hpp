@@ -1,6 +1,7 @@
 #ifndef ANALOG_TIME_SERIES_HPP
 #define ANALOG_TIME_SERIES_HPP
 
+#include "AnalogDataStorage.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -9,6 +10,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <span>
@@ -73,23 +75,24 @@ public:
 
     // ========== Getting Data ==========
 
-    [[nodiscard]] size_t getNumSamples() const { return _data.size(); };
+    [[nodiscard]] size_t getNumSamples() const { return _data_storage.size(); };
 
     /**
-     * @brief Get a const reference to the analog data vector
+     * @brief Get a span over the analog data values
      * 
-     * Returns a const reference to the internal vector containing the analog time series data values.
-     * This method provides efficient read-only access to the data without copying.
+     * Returns a span providing a view over the analog time series data values.
+     * This method provides efficient read-only access to contiguous data without copying.
+     * For non-contiguous storage (e.g., memory-mapped with stride), returns empty span.
      * 
-     * @return const reference to std::vector<float> containing the analog data values
+     * @return std::span<float const> view over the analog data values, or empty span if not contiguous
      * 
-     * @note This method returns by const reference for performance - no data copying occurs.
-     *       Use this when you need to iterate over or access the raw data values efficiently.
+     * @note For contiguous storage (vector), this provides zero-copy access.
+     *       For non-contiguous storage, use getAllSamples() iterator instead.
      * 
      * @see getTimeSeries() for accessing the corresponding time indices
-     * @see getDataInRange() for accessing data within a specific time range
+     * @see getAllSamples() for time-value pair iteration that works with any storage
      */
-    [[nodiscard]] std::vector<float> const & getAnalogTimeSeries() const { return _data; };
+    [[nodiscard]] std::span<float const> getAnalogTimeSeries() const { return _data_storage.getSpan(); };
 
     /**
      * @brief Get a span (view) of data values within a TimeFrameIndex range
@@ -153,7 +156,10 @@ public:
     };
 
     /**
-     * @brief Iterator for time-value ranges that handles both dense and sparse storage efficiently
+     * @brief Iterator for time-value ranges with optimized fast path for contiguous data
+     * 
+     * Uses cached pointer for direct access to contiguous storage (vector),
+     * falling back to virtual dispatch for non-contiguous storage (mmap).
      */
     class TimeValueRangeIterator {
     public:
@@ -178,6 +184,9 @@ public:
         DataArrayIndex _end_index;
         mutable TimeValuePoint _current_point;// mutable for lazy evaluation in operator*
         bool _is_end;
+        
+        // Fast path: cached pointer for contiguous data (null if not contiguous)
+        float const* _contiguous_data_ptr{nullptr};
 
         void _updateCurrentPoint() const;
     };
@@ -344,25 +353,133 @@ public:
 
 protected:
 private:
-    std::vector<float> _data;
+    /**
+     * @brief Type-erased wrapper for analog data storage
+     * 
+     * Provides uniform interface to different storage backends (vector, mmap, etc.)
+     * while enabling compile-time optimizations through template instantiation.
+     */
+    class DataStorageWrapper {
+    public:
+        template<typename DataStorageImpl>
+        explicit DataStorageWrapper(DataStorageImpl storage)
+            : _impl(std::make_unique<StorageModel<DataStorageImpl>>(std::move(storage))) {}
+        
+        [[nodiscard]] size_t size() const { return _impl->size(); }
+        
+        [[nodiscard]] float getValueAt(size_t index) const {
+            return _impl->getValueAt(index);
+        }
+        
+        [[nodiscard]] std::span<float const> getSpan() const {
+            return _impl->getSpan();
+        }
+        
+        [[nodiscard]] std::span<float const> getSpanRange(size_t start, size_t end) const {
+            return _impl->getSpanRange(start, end);
+        }
+        
+        [[nodiscard]] bool isContiguous() const {
+            return _impl->isContiguous();
+        }
+        
+        [[nodiscard]] float const* tryGetContiguousPointer() const {
+            return _impl->tryGetContiguousPointer();
+        }
+        
+        [[nodiscard]] AnalogStorageType getStorageType() const {
+            return _impl->getStorageType();
+        }
+        
+    private:
+        struct StorageConcept {
+            virtual ~StorageConcept() = default;
+            virtual size_t size() const = 0;
+            virtual float getValueAt(size_t index) const = 0;
+            virtual std::span<float const> getSpan() const = 0;
+            virtual std::span<float const> getSpanRange(size_t start, size_t end) const = 0;
+            virtual bool isContiguous() const = 0;
+            virtual float const* tryGetContiguousPointer() const = 0;
+            virtual AnalogStorageType getStorageType() const = 0;
+        };
+        
+        template<typename DataStorageImpl>
+        struct StorageModel : StorageConcept {
+            DataStorageImpl _storage;
+            
+            explicit StorageModel(DataStorageImpl storage)
+                : _storage(std::move(storage)) {}
+            
+            size_t size() const override {
+                return _storage.size();
+            }
+            
+            float getValueAt(size_t index) const override {
+                return _storage.getValueAt(index);
+            }
+            
+            std::span<float const> getSpan() const override {
+                return _storage.getSpan();
+            }
+            
+            std::span<float const> getSpanRange(size_t start, size_t end) const override {
+                return _storage.getSpanRange(start, end);
+            }
+            
+            bool isContiguous() const override {
+                return _storage.isContiguous();
+            }
+            
+            float const* tryGetContiguousPointer() const override {
+                if constexpr (std::is_same_v<DataStorageImpl, VectorAnalogDataStorage>) {
+                    return _storage.data();
+                }
+                return nullptr;
+            }
+            
+            AnalogStorageType getStorageType() const override {
+                return _storage.getStorageType();
+            }
+        };
+        
+        std::unique_ptr<StorageConcept> _impl;
+    };
+
+    DataStorageWrapper _data_storage;
     std::shared_ptr<TimeIndexStorage> _time_storage;
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
+    
+    // Cached optimization pointer for fast path access
+    float const* _contiguous_data_ptr{nullptr};
 
     void setData(std::vector<float> analog_vector);
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
     void setData(std::map<int, float> analog_map);
+    
+    /**
+     * @brief Cache optimization pointers after construction
+     * 
+     * Attempts to extract direct pointer to contiguous data for fast path access.
+     * Called in constructors and setData methods.
+     */
+    void _cacheOptimizationPointers() {
+        _contiguous_data_ptr = _data_storage.tryGetContiguousPointer();
+    }
 
     /**
      * @brief Get the data value at a specific DataArrayIndex (internal use only)
      * 
-     * This does not consider time information so DataArrayIndex 1 and 2 may represent 
-     * values that are irregularly spaced. Use this if you are processing data
-     * where the time information is not important (e.g. statistical calculations)
+     * Uses fast path (cached pointer) when available, falls back to virtual dispatch.
      * 
      * @param i The DataArrayIndex to get the data value at
      * @return The data value at the specified DataArrayIndex
      */
-    [[nodiscard]] float _getDataAtDataArrayIndex(DataArrayIndex i) const { return _data[i.getValue()]; };
+    [[nodiscard]] float _getDataAtDataArrayIndex(DataArrayIndex i) const {
+        if (_contiguous_data_ptr) {
+            return _contiguous_data_ptr[i.getValue()];
+        }
+        return _data_storage.getValueAt(i.getValue());
+    }
 
     /**
      * @brief Get the TimeFrameIndex that corresponds to a given DataArrayIndex (internal use only)

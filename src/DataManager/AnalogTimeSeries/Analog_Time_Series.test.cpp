@@ -25,7 +25,7 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
         REQUIRE(stored_data.size() == 5);
         REQUIRE(time_data.size() == 5);
 
-        REQUIRE(stored_data == data);
+        REQUIRE(std::vector<float>(stored_data.begin(), stored_data.end()) == data);
         REQUIRE(time_data == times);
     }
 
@@ -45,7 +45,7 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
         REQUIRE(stored_data.size() == 5);
         REQUIRE(time_data.size() == 5);
 
-        REQUIRE(stored_data == std::vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
+        REQUIRE(std::vector<float>(stored_data.begin(), stored_data.end()) == std::vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
         REQUIRE(time_data == std::vector<TimeFrameIndex>{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)});
     }
 

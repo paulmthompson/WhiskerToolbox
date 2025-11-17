@@ -854,12 +854,12 @@ void OpenGLWidget::drawAnalogSeries() {
             // Draw multiple line segments, breaking at gaps
             // Set line thickness before drawing segments
             glLineWidth(static_cast<float>(display_options->line_thickness));
-            _drawAnalogSeriesWithGapDetection(data, time_frame, analog_range,
+            _drawAnalogSeriesWithGapDetection(time_frame, analog_range,
                                               display_options->gap_threshold);
 
         } else if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
             // Draw individual markers instead of lines
-            _drawAnalogSeriesAsMarkers(data, time_frame, analog_range);
+            _drawAnalogSeriesAsMarkers(time_frame, analog_range);
         }
 
 
@@ -871,8 +871,7 @@ void OpenGLWidget::drawAnalogSeries() {
     glUseProgram(0);
 }
 
-void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & data,
-                                                     std::shared_ptr<TimeFrame> const & time_frame,
+void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::shared_ptr<TimeFrame> const & time_frame,
                                                      AnalogTimeSeries::TimeValueSpanPair analog_range,
                                                      float gap_threshold) {
 
@@ -929,8 +928,7 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & 
     }
 }
 
-void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::vector<float> const & data,
-                                              std::shared_ptr<TimeFrame> const & time_frame,
+void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::shared_ptr<TimeFrame> const & time_frame,
                                               AnalogTimeSeries::TimeValueSpanPair analog_range) {
     m_vertices.clear();
 

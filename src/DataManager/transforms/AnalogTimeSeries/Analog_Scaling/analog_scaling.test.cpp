@@ -34,12 +34,14 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
 
         result_scaled = scale_analog_time_series(ats.get(), params);
         std::vector<float> expected_values = {2.5f, 5.0f, 7.5f, 10.0f, 12.5f};
-        REQUIRE_THAT(result_scaled->getAnalogTimeSeries(), Catch::Matchers::Equals(expected_values));
+        auto scaled_span = result_scaled->getAnalogTimeSeries();
+        REQUIRE_THAT(std::vector<float>(scaled_span.begin(), scaled_span.end()), Catch::Matchers::Equals(expected_values));
 
         progress_val = -1;
         call_count = 0;
         result_scaled = scale_analog_time_series(ats.get(), params);
-        REQUIRE_THAT(result_scaled->getAnalogTimeSeries(), Catch::Matchers::Equals(expected_values));
+        auto scaled_span_2 = result_scaled->getAnalogTimeSeries();
+        REQUIRE_THAT(std::vector<float>(scaled_span_2.begin(), scaled_span_2.end()), Catch::Matchers::Equals(expected_values));
     }
 
     SECTION("ZScore scaling") {
@@ -69,8 +71,9 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
         params.max_target = 1.0;
 
         result_scaled = scale_analog_time_series(ats.get(), params);
+        auto scaled_span = result_scaled->getAnalogTimeSeries();
         std::vector<float> expected_values = {0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
-        REQUIRE_THAT(result_scaled->getAnalogTimeSeries(), Catch::Matchers::Equals(expected_values));
+        REQUIRE_THAT(std::vector<float>(scaled_span.begin(), scaled_span.end()), Catch::Matchers::Equals(expected_values));
     }
 
     SECTION("Centering scaling") {
@@ -80,8 +83,9 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
         params.method = ScalingMethod::Centering;
 
         result_scaled = scale_analog_time_series(ats.get(), params);
+        auto scaled_span = result_scaled->getAnalogTimeSeries();
         std::vector<float> expected_values = {-2.0f, -1.0f, 0.0f, 1.0f, 2.0f};
-        REQUIRE_THAT(result_scaled->getAnalogTimeSeries(), Catch::Matchers::Equals(expected_values));
+        REQUIRE_THAT(std::vector<float>(scaled_span.begin(), scaled_span.end()), Catch::Matchers::Equals(expected_values));
     }
 
     SECTION("UnitVariance scaling") {
@@ -132,7 +136,8 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
         // Median = 3.0, Q1 = 2.0, Q3 = 4.0, IQR = 2.0
         // Robust scaling: (x - median) / IQR
         std::vector<float> expected_values = {-1.0f, -0.5f, 0.0f, 0.5f, 1.0f};
-        REQUIRE_THAT(result_scaled->getAnalogTimeSeries(), Catch::Matchers::Equals(expected_values));
+        auto scaled_span = result_scaled->getAnalogTimeSeries();
+        REQUIRE_THAT(std::vector<float>(scaled_span.begin(), scaled_span.end()), Catch::Matchers::Equals(expected_values));
     }
 }
 
@@ -176,7 +181,8 @@ TEST_CASE("Data Transform: Scale and Normalize - Error and Edge Cases", "[transf
         REQUIRE(result_scaled != nullptr);
         // With zero std dev, values should remain unchanged
         std::vector<float> expected_values = {3.0f, 3.0f, 3.0f, 3.0f, 3.0f};
-        REQUIRE_THAT(result_scaled->getAnalogTimeSeries(), Catch::Matchers::Equals(expected_values));
+        auto scaled_span = result_scaled->getAnalogTimeSeries();
+        REQUIRE_THAT(std::vector<float>(scaled_span.begin(), scaled_span.end()), Catch::Matchers::Equals(expected_values));
     }
 
     SECTION("Negative values") {
@@ -189,7 +195,8 @@ TEST_CASE("Data Transform: Scale and Normalize - Error and Edge Cases", "[transf
 
         result_scaled = scale_analog_time_series(ats.get(), params);
         std::vector<float> expected_values = {0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
-        REQUIRE_THAT(result_scaled->getAnalogTimeSeries(), Catch::Matchers::Equals(expected_values));
+        auto scaled_span = result_scaled->getAnalogTimeSeries();
+        REQUIRE_THAT(std::vector<float>(scaled_span.begin(), scaled_span.end()), Catch::Matchers::Equals(expected_values));
     }
 }
 
@@ -417,7 +424,8 @@ TEST_CASE("Data Transform: Scale and Normalize - load_data_from_json_config", "[
     REQUIRE(result_scaled_minmax != nullptr);
     
     std::vector<float> expected_values_minmax = {0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
-    REQUIRE_THAT(result_scaled_minmax->getAnalogTimeSeries(), Catch::Matchers::Equals(expected_values_minmax));
+    auto scaled_span_minmax = result_scaled_minmax->getAnalogTimeSeries();
+    REQUIRE_THAT(std::vector<float>(scaled_span_minmax.begin(), scaled_span_minmax.end()), Catch::Matchers::Equals(expected_values_minmax));
     
     // Test FixedGain scaling
     const char* json_config_fixedgain = 
@@ -467,7 +475,8 @@ TEST_CASE("Data Transform: Scale and Normalize - load_data_from_json_config", "[
     REQUIRE(result_scaled_fixedgain != nullptr);
     
     std::vector<float> expected_values_fixedgain = {2.5f, 5.0f, 7.5f, 10.0f, 12.5f};
-    REQUIRE_THAT(result_scaled_fixedgain->getAnalogTimeSeries(), Catch::Matchers::Equals(expected_values_fixedgain));
+    auto scaled_span_fixedgain = result_scaled_fixedgain->getAnalogTimeSeries();
+    REQUIRE_THAT(std::vector<float>(scaled_span_fixedgain.begin(), scaled_span_fixedgain.end()), Catch::Matchers::Equals(expected_values_fixedgain));
     
     // Cleanup
     try {
