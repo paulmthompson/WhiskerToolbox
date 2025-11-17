@@ -1,6 +1,7 @@
 #include "TimeIndexStorage.hpp"
 
 #include <algorithm>
+#include <string>
 #include <stdexcept>
 
 // ========== Iterator Implementations ==========
