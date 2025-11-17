@@ -83,6 +83,7 @@
     <addaction name="actionData_Transforms"/>
     <addaction name="actionTerminal_Output"/>
     <addaction name="actionAnalysis_Dashboard"/>
+    <addaction name="actionTime_Scroll_Bar"/>
     <addaction name="actionTest_Widget"/>
    </widget>
    <addaction name="menuFile"/>
@@ -249,6 +250,11 @@
   <action name="actionTable_Designer">
    <property name="text">
     <string>Table Designer</string>
+   </property>
+  </action>
+  <action name="actionTime_Scroll_Bar">
+   <property name="text">
+    <string>Time Scroll Bar</string>
    </property>
   </action>
   <action name="actionTest_Widget">
