@@ -9,6 +9,51 @@
 #include <stdexcept>
 #include <vector>
 
+// Forward declaration
+class TimeIndexIterator;
+
+/**
+ * @brief Abstract iterator for iterating over TimeFrameIndex values in a range
+ * 
+ * This iterator provides a uniform interface for iterating over time indices
+ * regardless of the underlying storage strategy (dense, sparse, strided, etc.)
+ */
+class TimeIndexIterator {
+public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = TimeFrameIndex;
+    using difference_type = std::ptrdiff_t;
+    using pointer = TimeFrameIndex const *;
+    using reference = TimeFrameIndex const &;
+
+    virtual ~TimeIndexIterator() = default;
+
+    /**
+     * @brief Dereference the iterator to get the current TimeFrameIndex
+     */
+    [[nodiscard]] virtual reference operator*() const = 0;
+
+    /**
+     * @brief Pre-increment operator
+     */
+    virtual TimeIndexIterator & operator++() = 0;
+
+    /**
+     * @brief Equality comparison
+     */
+    [[nodiscard]] virtual bool operator==(TimeIndexIterator const & other) const = 0;
+
+    /**
+     * @brief Inequality comparison
+     */
+    [[nodiscard]] virtual bool operator!=(TimeIndexIterator const & other) const = 0;
+
+    /**
+     * @brief Clone this iterator (needed for type erasure)
+     */
+    [[nodiscard]] virtual std::unique_ptr<TimeIndexIterator> clone() const = 0;
+};
+
 /**
  * @brief Abstract base class for time index storage strategies
  * 
@@ -78,6 +123,19 @@ public:
      * @return A new shared_ptr to a copy of this storage
      */
     [[nodiscard]] virtual std::shared_ptr<TimeIndexStorage> clone() const = 0;
+
+    /**
+     * @brief Create an iterator for a range of array positions
+     * 
+     * @param start_position The starting array position (inclusive)
+     * @param end_position The ending array position (exclusive)
+     * @param is_end Whether to create an end iterator
+     * @return A unique_ptr to a TimeIndexIterator
+     */
+    [[nodiscard]] virtual std::unique_ptr<TimeIndexIterator> createIterator(
+        size_t start_position, 
+        size_t end_position, 
+        bool is_end = false) const = 0;
 };
 
 /**
@@ -105,6 +163,7 @@ public:
     [[nodiscard]] std::optional<size_t> findArrayPositionLessOrEqual(TimeFrameIndex target_time) const override;
     [[nodiscard]] std::vector<TimeFrameIndex> getAllTimeIndices() const override;
     [[nodiscard]] std::shared_ptr<TimeIndexStorage> clone() const override;
+    [[nodiscard]] std::unique_ptr<TimeIndexIterator> createIterator(size_t start_position, size_t end_position, bool is_end = false) const override;
 
     // Accessors for the underlying representation
     [[nodiscard]] TimeFrameIndex getStartIndex() const { return _start_index; }
@@ -139,6 +198,7 @@ public:
     [[nodiscard]] std::optional<size_t> findArrayPositionLessOrEqual(TimeFrameIndex target_time) const override;
     [[nodiscard]] std::vector<TimeFrameIndex> getAllTimeIndices() const override;
     [[nodiscard]] std::shared_ptr<TimeIndexStorage> clone() const override;
+    [[nodiscard]] std::unique_ptr<TimeIndexIterator> createIterator(size_t start_position, size_t end_position, bool is_end = false) const override;
 
     // Accessor for the underlying vector
     [[nodiscard]] std::vector<TimeFrameIndex> const & getTimeIndices() const { return _time_indices; }

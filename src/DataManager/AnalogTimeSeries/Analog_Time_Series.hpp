@@ -274,33 +274,16 @@ public:
     };
 
     /**
-     * @brief Abstract base class for time index iteration over ranges
-     */
-    class TimeIndexIterator {
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using value_type = TimeFrameIndex;
-        using difference_type = std::ptrdiff_t;
-        using pointer = TimeFrameIndex const *;
-        using reference = TimeFrameIndex const &;
-
-        virtual ~TimeIndexIterator() = default;
-        virtual reference operator*() const = 0;
-        virtual TimeIndexIterator & operator++() = 0;
-        virtual bool operator==(TimeIndexIterator const & other) const = 0;
-        virtual bool operator!=(TimeIndexIterator const & other) const = 0;
-        [[nodiscard]] virtual std::unique_ptr<TimeIndexIterator> clone() const = 0;
-    };
-
-    /**
      * @brief Time index range abstraction that handles both dense and sparse storage
+     * 
+     * Uses TimeIndexIterator from TimeIndexStorage for iteration
      */
     class TimeIndexRange {
     public:
         TimeIndexRange(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index);
 
-        [[nodiscard]] std::unique_ptr<TimeIndexIterator> begin() const;
-        [[nodiscard]] std::unique_ptr<TimeIndexIterator> end() const;
+        [[nodiscard]] std::unique_ptr<::TimeIndexIterator> begin() const;
+        [[nodiscard]] std::unique_ptr<::TimeIndexIterator> end() const;
         [[nodiscard]] size_t size() const;
         [[nodiscard]] bool empty() const;
 

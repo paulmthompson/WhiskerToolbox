@@ -270,180 +270,19 @@ bool AnalogTimeSeries::TimeValueRangeView::empty() const {
     return size() == 0;
 }
 
-// Dense and Sparse time index iterators for TimeIndexRange
-namespace {
-// Dense time index iterator implementation
-class DenseTimeIndexIterator : public AnalogTimeSeries::TimeIndexIterator {
-public:
-    DenseTimeIndexIterator(TimeFrameIndex start_time, DataArrayIndex current_offset, DataArrayIndex end_offset, bool is_end)
-        : _start_time(start_time),
-          _current_offset(current_offset),
-          _end_offset(end_offset),
-          _current_value(TimeFrameIndex(0)),
-          _is_end(is_end) {
-        if (!_is_end) {
-            _current_value = TimeFrameIndex(_start_time.getValue() + static_cast<int64_t>(_current_offset.getValue()));
-        }
-    }
-
-    reference operator*() const override {
-        if (_is_end || _current_offset.getValue() >= _end_offset.getValue()) {
-            throw std::out_of_range("DenseTimeIndexIterator: attempt to dereference end iterator");
-        }
-        return _current_value;
-    }
-
-    TimeIndexIterator & operator++() override {
-        if (_is_end || _current_offset.getValue() >= _end_offset.getValue()) {
-            _is_end = true;
-            return *this;
-        }
-
-        _current_offset = DataArrayIndex(_current_offset.getValue() + 1);
-
-        if (_current_offset.getValue() >= _end_offset.getValue()) {
-            _is_end = true;
-        } else {
-            _current_value = TimeFrameIndex(_start_time.getValue() + static_cast<int64_t>(_current_offset.getValue()));
-        }
-
-        return *this;
-    }
-
-    bool operator==(TimeIndexIterator const & other) const override {
-        auto const * other_dense = dynamic_cast<DenseTimeIndexIterator const *>(&other);
-        if (!other_dense) return false;
-
-        return _start_time.getValue() == other_dense->_start_time.getValue() &&
-               _current_offset.getValue() == other_dense->_current_offset.getValue() &&
-               _is_end == other_dense->_is_end;
-    }
-
-    bool operator!=(TimeIndexIterator const & other) const override {
-        return !(*this == other);
-    }
-
-    std::unique_ptr<TimeIndexIterator> clone() const override {
-        return std::make_unique<DenseTimeIndexIterator>(_start_time, _current_offset, _end_offset, _is_end);
-    }
-
-private:
-    TimeFrameIndex _start_time;
-    DataArrayIndex _current_offset;
-    DataArrayIndex _end_offset;
-    mutable TimeFrameIndex _current_value;
-    bool _is_end;
-};
-
-// Sparse time index iterator implementation
-class SparseTimeIndexIterator : public AnalogTimeSeries::TimeIndexIterator {
-public:
-    SparseTimeIndexIterator(std::vector<TimeFrameIndex> const * time_indices, DataArrayIndex current_index, DataArrayIndex end_index, bool is_end)
-        : _time_indices(time_indices),
-          _current_index(current_index),
-          _end_index(end_index),
-          _is_end(is_end) {}
-
-    reference operator*() const override {
-        if (_is_end || _current_index.getValue() >= _end_index.getValue()) {
-            throw std::out_of_range("SparseTimeIndexIterator: attempt to dereference end iterator");
-        }
-        return (*_time_indices)[_current_index.getValue()];
-    }
-
-    TimeIndexIterator & operator++() override {
-        if (_is_end || _current_index.getValue() >= _end_index.getValue()) {
-            _is_end = true;
-            return *this;
-        }
-
-        _current_index = DataArrayIndex(_current_index.getValue() + 1);
-
-        if (_current_index.getValue() >= _end_index.getValue()) {
-            _is_end = true;
-        }
-
-        return *this;
-    }
-
-    bool operator==(TimeIndexIterator const & other) const override {
-        auto const * other_sparse = dynamic_cast<SparseTimeIndexIterator const *>(&other);
-        if (!other_sparse) return false;
-
-        return _time_indices == other_sparse->_time_indices &&
-               _current_index.getValue() == other_sparse->_current_index.getValue() &&
-               _is_end == other_sparse->_is_end;
-    }
-
-    bool operator!=(TimeIndexIterator const & other) const override {
-        return !(*this == other);
-    }
-
-    [[nodiscard]] std::unique_ptr<TimeIndexIterator> clone() const override {
-        return std::make_unique<SparseTimeIndexIterator>(_time_indices, _current_index, _end_index, _is_end);
-    }
-
-private:
-    std::vector<TimeFrameIndex> const * _time_indices;
-    DataArrayIndex _current_index;
-    DataArrayIndex _end_index;
-    bool _is_end;
-};
-}// namespace
+// ========== TimeIndexRange Implementation ==========
 
 AnalogTimeSeries::TimeIndexRange::TimeIndexRange(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index)
     : _series(series),
       _start_index(start_index),
       _end_index(end_index) {}
 
-std::unique_ptr<AnalogTimeSeries::TimeIndexIterator> AnalogTimeSeries::TimeIndexRange::begin() const {
-    auto storage = _series->getTimeStorage();
-    
-    // Try to downcast to DenseTimeIndexStorage
-    if (auto dense = std::dynamic_pointer_cast<DenseTimeIndexStorage const>(storage)) {
-        return std::make_unique<DenseTimeIndexIterator>(
-                dense->getStartIndex(),
-                _start_index,
-                _end_index,
-                false);
-    }
-    
-    // Try to downcast to SparseTimeIndexStorage
-    if (auto sparse = std::dynamic_pointer_cast<SparseTimeIndexStorage const>(storage)) {
-        return std::make_unique<SparseTimeIndexIterator>(
-                &sparse->getTimeIndices(),
-                _start_index,
-                _end_index,
-                false);
-    }
-    
-    // Fallback: this shouldn't happen with current implementations
-    throw std::runtime_error("Unknown TimeIndexStorage type");
+std::unique_ptr<::TimeIndexIterator> AnalogTimeSeries::TimeIndexRange::begin() const {
+    return _series->getTimeStorage()->createIterator(_start_index.getValue(), _end_index.getValue(), false);
 }
 
-std::unique_ptr<AnalogTimeSeries::TimeIndexIterator> AnalogTimeSeries::TimeIndexRange::end() const {
-    auto storage = _series->getTimeStorage();
-    
-    // Try to downcast to DenseTimeIndexStorage
-    if (auto dense = std::dynamic_pointer_cast<DenseTimeIndexStorage const>(storage)) {
-        return std::make_unique<DenseTimeIndexIterator>(
-                dense->getStartIndex(),
-                _start_index,
-                _end_index,
-                true);
-    }
-    
-    // Try to downcast to SparseTimeIndexStorage
-    if (auto sparse = std::dynamic_pointer_cast<SparseTimeIndexStorage const>(storage)) {
-        return std::make_unique<SparseTimeIndexIterator>(
-                &sparse->getTimeIndices(),
-                _start_index,
-                _end_index,
-                true);
-    }
-    
-    // Fallback: this shouldn't happen with current implementations
-    throw std::runtime_error("Unknown TimeIndexStorage type");
+std::unique_ptr<::TimeIndexIterator> AnalogTimeSeries::TimeIndexRange::end() const {
+    return _series->getTimeStorage()->createIterator(_start_index.getValue(), _end_index.getValue(), true);
 }
 
 size_t AnalogTimeSeries::TimeIndexRange::size() const {

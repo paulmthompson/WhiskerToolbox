@@ -3,6 +3,128 @@
 #include <algorithm>
 #include <stdexcept>
 
+// ========== Iterator Implementations ==========
+
+namespace {
+// Dense time index iterator implementation
+class DenseTimeIndexIteratorImpl : public TimeIndexIterator {
+public:
+    DenseTimeIndexIteratorImpl(TimeFrameIndex start_time, size_t current_offset, size_t end_offset, bool is_end)
+        : _start_time(start_time),
+          _current_offset(current_offset),
+          _end_offset(end_offset),
+          _current_value(TimeFrameIndex(0)),
+          _is_end(is_end) {
+        if (!_is_end) {
+            _current_value = TimeFrameIndex(_start_time.getValue() + static_cast<int64_t>(_current_offset));
+        }
+    }
+
+    reference operator*() const override {
+        if (_is_end || _current_offset >= _end_offset) {
+            throw std::out_of_range("DenseTimeIndexIterator: attempt to dereference end iterator");
+        }
+        return _current_value;
+    }
+
+    TimeIndexIterator & operator++() override {
+        if (_is_end || _current_offset >= _end_offset) {
+            _is_end = true;
+            return *this;
+        }
+
+        ++_current_offset;
+
+        if (_current_offset >= _end_offset) {
+            _is_end = true;
+        } else {
+            _current_value = TimeFrameIndex(_start_time.getValue() + static_cast<int64_t>(_current_offset));
+        }
+
+        return *this;
+    }
+
+    bool operator==(TimeIndexIterator const & other) const override {
+        auto const * other_dense = dynamic_cast<DenseTimeIndexIteratorImpl const *>(&other);
+        if (!other_dense) return false;
+
+        return _start_time.getValue() == other_dense->_start_time.getValue() &&
+               _current_offset == other_dense->_current_offset &&
+               _is_end == other_dense->_is_end;
+    }
+
+    bool operator!=(TimeIndexIterator const & other) const override {
+        return !(*this == other);
+    }
+
+    std::unique_ptr<TimeIndexIterator> clone() const override {
+        return std::make_unique<DenseTimeIndexIteratorImpl>(_start_time, _current_offset, _end_offset, _is_end);
+    }
+
+private:
+    TimeFrameIndex _start_time;
+    size_t _current_offset;
+    size_t _end_offset;
+    mutable TimeFrameIndex _current_value;
+    bool _is_end;
+};
+
+// Sparse time index iterator implementation
+class SparseTimeIndexIteratorImpl : public TimeIndexIterator {
+public:
+    SparseTimeIndexIteratorImpl(std::vector<TimeFrameIndex> const * time_indices, size_t current_index, size_t end_index, bool is_end)
+        : _time_indices(time_indices),
+          _current_index(current_index),
+          _end_index(end_index),
+          _is_end(is_end) {}
+
+    reference operator*() const override {
+        if (_is_end || _current_index >= _end_index) {
+            throw std::out_of_range("SparseTimeIndexIterator: attempt to dereference end iterator");
+        }
+        return (*_time_indices)[_current_index];
+    }
+
+    TimeIndexIterator & operator++() override {
+        if (_is_end || _current_index >= _end_index) {
+            _is_end = true;
+            return *this;
+        }
+
+        ++_current_index;
+
+        if (_current_index >= _end_index) {
+            _is_end = true;
+        }
+
+        return *this;
+    }
+
+    bool operator==(TimeIndexIterator const & other) const override {
+        auto const * other_sparse = dynamic_cast<SparseTimeIndexIteratorImpl const *>(&other);
+        if (!other_sparse) return false;
+
+        return _time_indices == other_sparse->_time_indices &&
+               _current_index == other_sparse->_current_index &&
+               _is_end == other_sparse->_is_end;
+    }
+
+    bool operator!=(TimeIndexIterator const & other) const override {
+        return !(*this == other);
+    }
+
+    std::unique_ptr<TimeIndexIterator> clone() const override {
+        return std::make_unique<SparseTimeIndexIteratorImpl>(_time_indices, _current_index, _end_index, _is_end);
+    }
+
+private:
+    std::vector<TimeFrameIndex> const * _time_indices;
+    size_t _current_index;
+    size_t _end_index;
+    bool _is_end;
+};
+}// namespace
+
 // ========== DenseTimeIndexStorage Implementation ==========
 
 DenseTimeIndexStorage::DenseTimeIndexStorage(TimeFrameIndex start_index, size_t count)
@@ -74,6 +196,10 @@ std::shared_ptr<TimeIndexStorage> DenseTimeIndexStorage::clone() const {
     return std::make_shared<DenseTimeIndexStorage>(_start_index, _count);
 }
 
+std::unique_ptr<TimeIndexIterator> DenseTimeIndexStorage::createIterator(size_t start_position, size_t end_position, bool is_end) const {
+    return std::make_unique<DenseTimeIndexIteratorImpl>(_start_index, start_position, end_position, is_end);
+}
+
 // ========== SparseTimeIndexStorage Implementation ==========
 
 SparseTimeIndexStorage::SparseTimeIndexStorage(std::vector<TimeFrameIndex> time_indices)
@@ -125,6 +251,10 @@ std::vector<TimeFrameIndex> SparseTimeIndexStorage::getAllTimeIndices() const {
 
 std::shared_ptr<TimeIndexStorage> SparseTimeIndexStorage::clone() const {
     return std::make_shared<SparseTimeIndexStorage>(_time_indices);
+}
+
+std::unique_ptr<TimeIndexIterator> SparseTimeIndexStorage::createIterator(size_t start_position, size_t end_position, bool is_end) const {
+    return std::make_unique<SparseTimeIndexIteratorImpl>(&_time_indices, start_position, end_position, is_end);
 }
 
 // ========== Factory Functions ==========
