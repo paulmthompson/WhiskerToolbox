@@ -12,6 +12,7 @@
 #include "Media_Widget/Media_Window/Media_Window.hpp"
 #include "SelectionWidgets/LineAddSelectionWidget.hpp"
 #include "SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp"
+#include "SelectionWidgets/LineDrawSelectionWidget.hpp"
 #include "SelectionWidgets/LineEraseSelectionWidget.hpp"
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
 #include "SelectionWidgets/LineSelectSelectionWidget.hpp"
@@ -39,6 +40,7 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     _selection_modes["(None)"] = Selection_Mode::None;
     _selection_modes["Select Line"] = Selection_Mode::Select;
     _selection_modes["Draw Across All Frames"] = Selection_Mode::DrawAllFrames;
+    _selection_modes["Draw Line"] = Selection_Mode::Draw;
 
     ui->selection_mode_combo->addItems(QStringList(_selection_modes.keys()));
 
@@ -149,6 +151,22 @@ void MediaLine_Widget::_setupSelectionModePages() {
             this, &MediaLine_Widget::_applyLineToAllFrames);
     connect(_drawAllFramesSelectionWidget, &line_widget::LineDrawAllFramesSelectionWidget::linePointsUpdated,
             this, &MediaLine_Widget::_updateTemporaryLineFromWidget);
+
+    _drawSelectionWidget = new line_widget::LineDrawSelectionWidget();
+    ui->mode_stacked_widget->addWidget(_drawSelectionWidget);
+
+    connect(_drawSelectionWidget, &line_widget::LineDrawSelectionWidget::lineDrawingStarted,
+            this, [this]() {
+                std::cout << "Line drawing started for single frame mode" << std::endl;
+            });
+    connect(_drawSelectionWidget, &line_widget::LineDrawSelectionWidget::lineDrawingCompleted,
+            this, [this]() {
+                std::cout << "Line drawing completed for single frame mode" << std::endl;
+            });
+    connect(_drawSelectionWidget, &line_widget::LineDrawSelectionWidget::applyToCurrentFrame,
+            this, &MediaLine_Widget::_applyLineToCurrentFrame);
+    connect(_drawSelectionWidget, &line_widget::LineDrawSelectionWidget::linePointsUpdated,
+            this, &MediaLine_Widget::_updateTemporaryLineFromDrawWidget);
 
     ui->mode_stacked_widget->setCurrentIndex(0);
 }
@@ -329,10 +347,19 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
             _addPointToDrawAllFrames(x_media, y_media);
             break;
         }
+        case Selection_Mode::Draw: {
+            std::cout << "Selection mode is Draw" << std::endl;
+            _addPointToDraw(x_media, y_media);
+            break;
+        }
     }
 }
 
 void MediaLine_Widget::_mouseMoved(qreal x, qreal y) {
+    // Suppress unused parameter warnings
+    static_cast<void>(x);
+    static_cast<void>(y);
+
     // Only handle mouse move in Select Line mode
     if (_selection_mode != Selection_Mode::Select) {
         return;
@@ -356,6 +383,9 @@ void MediaLine_Widget::_mouseMoved(qreal x, qreal y) {
 }
 
 void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIndex current_time) {
+    // Suppress unused parameter warning
+    static_cast<void>(current_time);
+
     // Get the EntityID for the selected line from the group system
     auto selected_entities = _scene->getSelectedEntities();
     if (selected_entities.empty()) {
@@ -434,7 +464,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
               << _active_key << " (EntityID: " << selected_entity_id.id << ")" << std::endl;
 }
 
-void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time) {
+void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, [[maybe_unused]] TimeFrameIndex current_time) {
     // Get the EntityID for the selected line from the group system
     auto selected_entities = _scene->getSelectedEntities();
     if (selected_entities.empty()) {
@@ -580,8 +610,8 @@ void MediaLine_Widget::_toggleSelectionMode(QString text) {
         _scene->setShowHoverCircle(false);
     }
 
-    // Enable/disable temporary line visualization for DrawAllFrames mode
-    if (_selection_mode == Selection_Mode::DrawAllFrames) {
+    // Enable/disable temporary line visualization for DrawAllFrames and Draw modes
+    if (_selection_mode == Selection_Mode::DrawAllFrames || _selection_mode == Selection_Mode::Draw) {
         _scene->setShowTemporaryLine(true);
     } else {
         _scene->setShowTemporaryLine(false);
@@ -1327,6 +1357,91 @@ std::optional<EntityId> MediaLine_Widget::_getSelectedEntityIdFromGroupSystem() 
 void MediaLine_Widget::_updateTemporaryLineFromWidget() {
     if (_drawAllFramesSelectionWidget) {
         auto current_points = _drawAllFramesSelectionWidget->getCurrentLinePoints();
+        _scene->updateTemporaryLine(current_points, "");// Use default aspect ratios
+    }
+}
+
+void MediaLine_Widget::_addPointToDraw(float x_media, float y_media) {
+    if (_drawSelectionWidget && _drawSelectionWidget->isDrawingActive()) {
+        // Store the points in default media coordinates for the temporary line
+        _drawSelectionWidget->addPoint(Point2D<float>{x_media, y_media});
+
+        // Update the temporary line visualization using default aspect ratios
+        auto current_points = _drawSelectionWidget->getCurrentLinePoints();
+        _scene->updateTemporaryLine(current_points, "");// Use default aspect ratios
+    }
+}
+
+void MediaLine_Widget::_applyLineToCurrentFrame() {
+    if (!_drawSelectionWidget || _active_key.empty()) {
+        std::cout << "Cannot apply line to current frame: widget not available or no active key" << std::endl;
+        return;
+    }
+
+    auto line_points = _drawSelectionWidget->getCurrentLinePoints();
+    if (line_points.empty()) {
+        std::cout << "No line points to apply to current frame" << std::endl;
+        return;
+    }
+
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        std::cout << "No line data available for active key" << std::endl;
+        return;
+    }
+
+    // Get current frame time
+    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
+
+    // Convert coordinates from default media to line-specific coordinates if needed
+    Line2D line_to_apply;
+    if (!_active_key.empty()) {
+        auto line_data_for_conversion = _data_manager->getData<LineData>(_active_key);
+        if (line_data_for_conversion) {
+            auto image_size = line_data_for_conversion->getImageSize();
+
+            // If the line data has specific image dimensions, convert coordinates
+            if (image_size.width != -1 && image_size.height != -1) {
+                float default_xAspect = _scene->getXAspect();
+                float default_yAspect = _scene->getYAspect();
+                float line_xAspect = static_cast<float>(_scene->getCanvasSize().first) / image_size.width;
+                float line_yAspect = static_cast<float>(_scene->getCanvasSize().second) / image_size.height;
+
+                // Convert each point from default media coordinates to line-specific coordinates
+                for (auto const & point: line_points) {
+                    float x_canvas = point.x * default_xAspect;
+                    float y_canvas = point.y * default_yAspect;
+                    float x_converted = x_canvas / line_xAspect;
+                    float y_converted = y_canvas / line_yAspect;
+                    line_to_apply.push_back(Point2D<float>{x_converted, y_converted});
+                }
+            } else {
+                line_to_apply = Line2D(line_points);
+            }
+        } else {
+            line_to_apply = Line2D(line_points);
+        }
+    } else {
+        line_to_apply = Line2D(line_points);
+    }
+
+    // Apply the line to the current frame only
+    line_data->addAtTime(current_time, line_to_apply, NotifyObservers::Yes);
+
+    // Clear the line points after applying
+    _drawSelectionWidget->clearLinePoints();
+
+    // Clear the temporary line visualization
+    _scene->clearTemporaryLine();
+
+    _scene->UpdateCanvas();
+
+    std::cout << "Applied line to current frame " << current_time.getValue() << " with " << line_points.size() << " points" << std::endl;
+}
+
+void MediaLine_Widget::_updateTemporaryLineFromDrawWidget() {
+    if (_drawSelectionWidget) {
+        auto current_points = _drawSelectionWidget->getCurrentLinePoints();
         _scene->updateTemporaryLine(current_points, "");// Use default aspect ratios
     }
 }

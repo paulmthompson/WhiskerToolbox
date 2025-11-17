@@ -1,4 +1,3 @@
-
 find_package(OpenCV CONFIG REQUIRED)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
@@ -81,6 +80,9 @@ set(MEDIA_WIDGET_SOURCES
         MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.cpp
         MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp
         MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.ui
+        MediaLine_Widget/SelectionWidgets/LineDrawSelectionWidget.cpp
+        MediaLine_Widget/SelectionWidgets/LineDrawSelectionWidget.hpp
+        MediaLine_Widget/SelectionWidgets/LineDrawSelectionWidget.ui
 
         MediaInterval_Widget/MediaInterval_Widget.hpp
         MediaInterval_Widget/MediaInterval_Widget.cpp
@@ -133,4 +135,3 @@ endif()
 if (MSVC)
     target_compile_options(Media_Widget PRIVATE ${MSVC_WARNINGS})
 endif()
-

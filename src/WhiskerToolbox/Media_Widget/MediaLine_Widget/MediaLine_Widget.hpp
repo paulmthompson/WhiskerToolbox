@@ -24,6 +24,7 @@ class LineAddSelectionWidget;
 class LineEraseSelectionWidget;
 class LineSelectSelectionWidget;
 class LineDrawAllFramesSelectionWidget;
+class LineDrawSelectionWidget;
 }// namespace line_widget
 
 class DataManager;
@@ -52,7 +53,8 @@ private:
         Add,
         Erase,
         Select,
-        DrawAllFrames
+        DrawAllFrames,
+        Draw
     };
 
     enum class Smoothing_Mode {
@@ -65,6 +67,7 @@ private:
     line_widget::LineEraseSelectionWidget * _eraseSelectionWidget{nullptr};
     line_widget::LineSelectSelectionWidget * _selectSelectionWidget{nullptr};
     line_widget::LineDrawAllFramesSelectionWidget * _drawAllFramesSelectionWidget{nullptr};
+    line_widget::LineDrawSelectionWidget * _drawSelectionWidget{nullptr};
 
     QMap<QString, Selection_Mode> _selection_modes;
     Selection_Mode _selection_mode{Selection_Mode::None};
@@ -113,6 +116,11 @@ private:
     void _applyLineToAllFrames();
     std::vector<TimeFrameIndex> _getAllFrameTimes();
     void _updateTemporaryLineFromWidget();
+
+    // Draw single frame methods
+    void _addPointToDraw(float x_media, float y_media);
+    void _applyLineToCurrentFrame();
+    void _updateTemporaryLineFromDrawWidget();
 
 private slots:
     void _clickedInVideoWithModifiers(qreal x, qreal y, Qt::KeyboardModifiers modifiers);
