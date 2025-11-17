@@ -34,9 +34,12 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         // Check that high frequency content is attenuated
         float max_amplitude = 0.0f;
         // Skip initial transient
-        for (size_t i = 500; i < filtered->getNumSamples(); ++i) {
-            max_amplitude = std::max(max_amplitude,
-                std::abs(filtered->getDataAtDataArrayIndex(DataArrayIndex(i))));
+        size_t i = 0;
+        for (auto const& sample : filtered->getAllSamples()) {
+            if (i >= 500) {
+                max_amplitude = std::max(max_amplitude, std::abs(sample.value));
+            }
+            ++i;
         }
         REQUIRE(max_amplitude < 0.15f); // More stringent requirement
     }
@@ -53,9 +56,12 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         // Check that low frequency content is attenuated
         float max_amplitude = 0.0f;
         // Skip initial transient
-        for (size_t i = 500; i < filtered->getNumSamples(); ++i) {
-            max_amplitude = std::max(max_amplitude,
-                std::abs(filtered->getDataAtDataArrayIndex(DataArrayIndex(i))));
+        size_t i = 0;
+        for (auto const& sample : filtered->getAllSamples()) {
+            if (i >= 500) {
+                max_amplitude = std::max(max_amplitude, std::abs(sample.value));
+            }
+            ++i;
         }
         REQUIRE(max_amplitude < 0.15f); // More stringent requirement
     }
@@ -72,9 +78,12 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         // Signal should be preserved (allowing for some attenuation)
         float max_amplitude = 0.0f;
         // Skip longer transient for bandpass
-        for (size_t i = 500; i < filtered->getNumSamples(); ++i) {
-            max_amplitude = std::max(max_amplitude,
-                std::abs(filtered->getDataAtDataArrayIndex(DataArrayIndex(i))));
+        size_t i = 0;
+        for (auto const& sample : filtered->getAllSamples()) {
+            if (i >= 500) {
+                max_amplitude = std::max(max_amplitude, std::abs(sample.value));
+            }
+            ++i;
         }
         REQUIRE(max_amplitude > 0.7f); // Signal should be mostly preserved
     }

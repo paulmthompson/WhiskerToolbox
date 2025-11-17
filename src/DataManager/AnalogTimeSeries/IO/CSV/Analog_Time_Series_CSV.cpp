@@ -119,11 +119,11 @@ void save(AnalogTimeSeries * analog_data,
     // Set precision for floating point numbers
     fout << std::fixed << std::setprecision(opts.precision);
 
-    size_t num_samples = analog_data->getNumSamples();
-    for (size_t i = 0; i < num_samples; ++i) {
-        fout << analog_data->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)).getValue() 
+    // Use the new getAllSamples() interface for cleaner, storage-agnostic iteration
+    for (auto const & sample : analog_data->getAllSamples()) {
+        fout << sample.time_frame_index.getValue() 
              << opts.delimiter 
-             << analog_data->getDataAtDataArrayIndex(DataArrayIndex(i)) 
+             << sample.value 
              << opts.line_delim;
         if (fout.fail()) {
             std::cerr << "Error: Failed while writing data to file: " << filename << std::endl;

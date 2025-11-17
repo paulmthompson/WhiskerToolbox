@@ -98,21 +98,25 @@ protected:
         // Check number of samples
         REQUIRE(loaded_data.getNumSamples() == original_analog_data->getNumSamples());
         
-        size_t num_samples = original_analog_data->getNumSamples();
+        // Use getAllSamples() for cleaner iteration over time-value pairs
+        auto original_samples = original_analog_data->getAllSamples();
+        auto loaded_samples = loaded_data.getAllSamples();
         
-        // Check each data point and timestamp
-        for (size_t i = 0; i < num_samples; ++i) {
-            DataArrayIndex data_idx(i);
+        auto original_it = original_samples.begin();
+        auto loaded_it = loaded_samples.begin();
+        
+        while (original_it != original_samples.end() && loaded_it != loaded_samples.end()) {
+            auto const& original_sample = *original_it;
+            auto const& loaded_sample = *loaded_it;
             
             // Check data values
-            float original_value = original_analog_data->getDataAtDataArrayIndex(data_idx);
-            float loaded_value = loaded_data.getDataAtDataArrayIndex(data_idx);
-            REQUIRE_THAT(original_value, WithinAbs(loaded_value, 0.01f));
+            REQUIRE_THAT(original_sample.value, WithinAbs(loaded_sample.value, 0.01f));
             
             // Check time frame indices
-            TimeFrameIndex original_time = original_analog_data->getTimeFrameIndexAtDataArrayIndex(data_idx);
-            TimeFrameIndex loaded_time = loaded_data.getTimeFrameIndexAtDataArrayIndex(data_idx);
-            REQUIRE(original_time.getValue() == loaded_time.getValue());
+            REQUIRE(original_sample.time_frame_index.getValue() == loaded_sample.time_frame_index.getValue());
+            
+            ++original_it;
+            ++loaded_it;
         }
     }
 
@@ -184,10 +188,14 @@ TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - IO - AnalogTimeSeries - C
         REQUIRE(loaded_analog_data != nullptr);
         REQUIRE(loaded_analog_data->getNumSamples() == 5);
         
-        // Check first few values
-        REQUIRE_THAT(loaded_analog_data->getDataAtDataArrayIndex(DataArrayIndex(0)), WithinAbs(1.5f, 0.01f));
-        REQUIRE_THAT(loaded_analog_data->getDataAtDataArrayIndex(DataArrayIndex(1)), WithinAbs(2.3f, 0.01f));
-        REQUIRE_THAT(loaded_analog_data->getDataAtDataArrayIndex(DataArrayIndex(2)), WithinAbs(3.7f, 0.01f));
+        // Check first few values using getAllSamples()
+        auto samples = loaded_analog_data->getAllSamples();
+        auto it = samples.begin();
+        REQUIRE_THAT(it->value, WithinAbs(1.5f, 0.01f));
+        ++it;
+        REQUIRE_THAT(it->value, WithinAbs(2.3f, 0.01f));
+        ++it;
+        REQUIRE_THAT(it->value, WithinAbs(3.7f, 0.01f));
         
         // Clean up
         std::filesystem::remove(single_col_filepath);

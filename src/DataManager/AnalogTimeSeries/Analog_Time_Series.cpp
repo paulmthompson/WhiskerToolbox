@@ -63,48 +63,12 @@ void AnalogTimeSeries::setData(std::map<int, float> analog_map) {
     _time_storage = std::make_shared<SparseTimeIndexStorage>(std::move(time_storage));
 }
 
-// ========== Overwriting Data ==========
-
-void AnalogTimeSeries::overwriteAtTimeIndexes(std::vector<float> & analog_data, std::vector<TimeFrameIndex> & time_indices) {
-    if (analog_data.size() != time_indices.size()) {
-        std::cerr << "Analog data and time indices vectors must be the same size" << std::endl;
-        return;
-    }
-
-    for (size_t i = 0; i < time_indices.size(); ++i) {
-        // Find the DataArrayIndex that corresponds to this TimeFrameIndex
-        std::optional<DataArrayIndex> data_index = findDataArrayIndexForTimeFrameIndex(time_indices[i]);
-
-        // Only overwrite if we found a corresponding DataArrayIndex
-        if (data_index.has_value()) {
-            _data[data_index.value().getValue()] = analog_data[i];
-        } else {
-            std::cerr << "TimeFrameIndex " << time_indices[i].getValue() << " not found in time series" << std::endl;
-        }
-    }
-}
-
-void AnalogTimeSeries::overwriteAtDataArrayIndexes(std::vector<float> & analog_data, std::vector<DataArrayIndex> & data_indices) {
-    if (analog_data.size() != data_indices.size()) {
-        std::cerr << "Analog data and data indices vectors must be the same size" << std::endl;
-        return;
-    }
-
-    for (size_t i = 0; i < data_indices.size(); ++i) {
-        if (data_indices[i].getValue() < _data.size()) {
-            _data[data_indices[i].getValue()] = analog_data[i];
-        } else {
-            std::cerr << "DataArrayIndex " << data_indices[i].getValue() << " is out of bounds (data size: " << _data.size() << ")" << std::endl;
-        }
-    }
-}
-
 // ========== Getting Data ==========
 
 std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
     // Find the start and end indices using our boundary-finding methods
-    auto start_index_opt = findDataArrayIndexGreaterOrEqual(start_time);
-    auto end_index_opt = findDataArrayIndexLessOrEqual(end_time);
+    auto start_index_opt = _findDataArrayIndexGreaterOrEqual(start_time);
+    auto end_index_opt = _findDataArrayIndexLessOrEqual(end_time);
 
     // Check if both boundaries were found
     if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
@@ -157,7 +121,7 @@ std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
 
 // ========== TimeFrame Support ==========
 
-std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const {
+std::optional<DataArrayIndex> AnalogTimeSeries::_findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const {
     auto position = _time_storage->findArrayPositionForTimeIndex(time_index);
     if (position.has_value()) {
         return DataArrayIndex(position.value());
@@ -165,7 +129,7 @@ std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexForTimeFrameIn
     return std::nullopt;
 }
 
-std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const {
+std::optional<DataArrayIndex> AnalogTimeSeries::_findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const {
     auto position = _time_storage->findArrayPositionGreaterOrEqual(target_time);
     if (position.has_value()) {
         return DataArrayIndex(position.value());
@@ -173,7 +137,7 @@ std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexGreaterOrEqual
     return std::nullopt;
 }
 
-std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const {
+std::optional<DataArrayIndex> AnalogTimeSeries::_findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const {
     auto position = _time_storage->findArrayPositionLessOrEqual(target_time);
     if (position.has_value()) {
         return DataArrayIndex(position.value());
@@ -242,8 +206,8 @@ void AnalogTimeSeries::TimeValueRangeIterator::_updateCurrentPoint() const {
     }
 
     _current_point = TimeValuePoint(
-            _series->getTimeFrameIndexAtDataArrayIndex(_current_index),
-            _series->getDataAtDataArrayIndex(_current_index));
+            _series->_getTimeFrameIndexAtDataArrayIndex(_current_index),
+            _series->_getDataAtDataArrayIndex(_current_index));
 }
 
 AnalogTimeSeries::TimeValueRangeView::TimeValueRangeView(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index)
@@ -302,8 +266,8 @@ AnalogTimeSeries::TimeValueSpanPair::TimeValueSpanPair(std::span<float const> da
 
 AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
     // Use existing boundary-finding logic
-    auto start_index_opt = findDataArrayIndexGreaterOrEqual(start_time);
-    auto end_index_opt = findDataArrayIndexLessOrEqual(end_time);
+    auto start_index_opt = _findDataArrayIndexGreaterOrEqual(start_time);
+    auto end_index_opt = _findDataArrayIndexLessOrEqual(end_time);
 
     // Handle cases where boundaries are not found
     if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
@@ -329,8 +293,8 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
     auto data_span = getDataInTimeFrameIndexRange(start_time, end_time);
 
     // Find the corresponding array indices for the time iterator
-    auto start_index_opt = findDataArrayIndexGreaterOrEqual(start_time);
-    auto end_index_opt = findDataArrayIndexLessOrEqual(end_time);
+    auto start_index_opt = _findDataArrayIndexGreaterOrEqual(start_time);
+    auto end_index_opt = _findDataArrayIndexLessOrEqual(end_time);
 
     // Handle cases where boundaries are not found
     if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
@@ -376,4 +340,9 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
 
     // 3. Use the converted indices to get the data in the target timeframe
     return getTimeValueSpanInTimeFrameIndexRange(target_start_index, target_end_index);
+}
+
+AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getAllSamples() const {
+    // Return a range view over all samples (from index 0 to size)
+    return {this, DataArrayIndex(0), DataArrayIndex(_data.size())};
 }

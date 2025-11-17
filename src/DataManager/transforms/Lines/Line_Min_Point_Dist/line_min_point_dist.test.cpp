@@ -11,6 +11,31 @@
 #include <fstream>
 #include <iostream>
 
+// Helper function to get value at a specific index using the public getAllSamples() interface
+static float getValueAtIndex(const AnalogTimeSeries* series, size_t index) {
+    size_t i = 0;
+    for (auto const& sample : series->getAllSamples()) {
+        if (i == index) {
+            return sample.value;
+        }
+        ++i;
+    }
+    throw std::out_of_range("Index out of range");
+}
+
+// Helper function to get TimeFrameIndex at a specific index using the public getAllSamples() interface
+static TimeFrameIndex getTimeAtIndex(const AnalogTimeSeries* series, size_t index) {
+    size_t i = 0;
+    for (auto const& sample : series->getAllSamples()) {
+        if (i == index) {
+            return sample.time_frame_index;
+        }
+        ++i;
+    }
+    throw std::out_of_range("Index out of range");
+}
+
+
 TEST_CASE("Line to point minimum distance calculation - Core functionality", "[line][point][distance][transform]") {
     auto line_data = std::make_shared<LineData>();
     auto point_data = std::make_shared<PointData>();
@@ -31,8 +56,8 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
 
         // Verify the result
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(5.0f, 0.001f));
-        REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(timestamp));
+        REQUIRE_THAT(getValueAtIndex(result.get(), 0), Catch::Matchers::WithinAbs(5.0f, 0.001f));
+        REQUIRE(getTimeAtIndex(result.get(), 0) == TimeFrameIndex(timestamp));
     }
 
     SECTION("Multiple points with different distances") {
@@ -56,8 +81,8 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
 
         // Verify the result - minimum distance should be 1.0
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(1.0f, 0.001f));
-        REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(timestamp));
+        REQUIRE_THAT(getValueAtIndex(result.get(), 0), Catch::Matchers::WithinAbs(1.0f, 0.001f));
+        REQUIRE(getTimeAtIndex(result.get(), 0) == TimeFrameIndex(timestamp));
     }
 
     SECTION("Multiple timesteps with lines and points") {
@@ -93,16 +118,16 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         // Find the indices for both timestamps
         size_t idx30 = 0;
         size_t idx40 = 1;
-        if (result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(40)) {
+        if (getTimeAtIndex(result.get(), 0) == TimeFrameIndex(40)) {
             idx30 = 1;
             idx40 = 0;
         }
 
-        REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(idx30)) == TimeFrameIndex(30));
-        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(idx30)), Catch::Matchers::WithinAbs(2.0f, 0.001f));
+        REQUIRE(getTimeAtIndex(result.get(), idx30) == TimeFrameIndex(30));
+        REQUIRE_THAT(getValueAtIndex(result.get(), idx30), Catch::Matchers::WithinAbs(2.0f, 0.001f));
 
-        REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(idx40)) == TimeFrameIndex(40));
-        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(idx40)), Catch::Matchers::WithinAbs(3.0f, 0.001f));
+        REQUIRE(getTimeAtIndex(result.get(), idx40) == TimeFrameIndex(40));
+        REQUIRE_THAT(getValueAtIndex(result.get(), idx40), Catch::Matchers::WithinAbs(3.0f, 0.001f));
     }
 
     SECTION("Scaling points with different image sizes") {
@@ -127,7 +152,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
 
         // Verify the result
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(20.0f, 0.001f));
+        REQUIRE_THAT(getValueAtIndex(result.get(), 0), Catch::Matchers::WithinAbs(20.0f, 0.001f));
     }
 
     SECTION("Point directly on the line has zero distance") {
@@ -146,7 +171,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
 
         // Verify the result
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(getValueAtIndex(result.get(), 0), Catch::Matchers::WithinAbs(0.0f, 0.001f));
     }
 }
 
@@ -234,7 +259,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
 
         // Verify the result is calculated without scaling
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(5.0f, 0.001f));
+        REQUIRE_THAT(getValueAtIndex(result.get(), 0), Catch::Matchers::WithinAbs(5.0f, 0.001f));
     }
 
     SECTION("Transform operation with null point data in parameters") {
@@ -362,18 +387,18 @@ TEST_CASE("Data Transform: Line Min Point Dist - JSON pipeline", "[transforms][l
     // Find the indices for both timestamps
     size_t idx100 = 0;
     size_t idx200 = 1;
-    if (result_distances->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(200)) {
+    if (getTimeAtIndex(result_distances.get(), 0) == TimeFrameIndex(200)) {
         idx100 = 1;
         idx200 = 0;
     }
     
     // Check timestamp 100: point (5,5) to horizontal line (0,0)-(10,0) = 5.0 units
-    REQUIRE(result_distances->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(idx100)) == TimeFrameIndex(100));
-    REQUIRE_THAT(result_distances->getDataAtDataArrayIndex(DataArrayIndex(idx100)), Catch::Matchers::WithinAbs(5.0f, 0.001f));
+    REQUIRE(getTimeAtIndex(result_distances.get(), idx100) == TimeFrameIndex(100));
+    REQUIRE_THAT(getValueAtIndex(result_distances.get(), idx100), Catch::Matchers::WithinAbs(5.0f, 0.001f));
     
     // Check timestamp 200: point (8,5) to vertical line (5,0)-(5,10) = 3.0 units
-    REQUIRE(result_distances->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(idx200)) == TimeFrameIndex(200));
-    REQUIRE_THAT(result_distances->getDataAtDataArrayIndex(DataArrayIndex(idx200)), Catch::Matchers::WithinAbs(3.0f, 0.001f));
+    REQUIRE(getTimeAtIndex(result_distances.get(), idx200) == TimeFrameIndex(200));
+    REQUIRE_THAT(getValueAtIndex(result_distances.get(), idx200), Catch::Matchers::WithinAbs(3.0f, 0.001f));
     
     // Test another pipeline with different line and point data (scaling test)
     auto line_data_scaled = std::make_shared<LineData>();
@@ -440,8 +465,8 @@ TEST_CASE("Data Transform: Line Min Point Dist - JSON pipeline", "[transforms][l
     REQUIRE(result_distances_scaled != nullptr);
     
     REQUIRE(result_distances_scaled->getNumSamples() == 1);
-    REQUIRE(result_distances_scaled->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(300));
-    REQUIRE_THAT(result_distances_scaled->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(20.0f, 0.001f));
+    REQUIRE(getTimeAtIndex(result_distances_scaled.get(), 0) == TimeFrameIndex(300));
+    REQUIRE_THAT(getValueAtIndex(result_distances_scaled.get(), 0), Catch::Matchers::WithinAbs(20.0f, 0.001f));
     
     // Test edge case: point directly on the line
     auto line_data_on_line = std::make_shared<LineData>();
@@ -504,8 +529,8 @@ TEST_CASE("Data Transform: Line Min Point Dist - JSON pipeline", "[transforms][l
     REQUIRE(result_distances_on_line != nullptr);
     
     REQUIRE(result_distances_on_line->getNumSamples() == 1);
-    REQUIRE(result_distances_on_line->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(400));
-    REQUIRE_THAT(result_distances_on_line->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(0.0f, 0.001f));
+    REQUIRE(getTimeAtIndex(result_distances_on_line.get(), 0) == TimeFrameIndex(400));
+    REQUIRE_THAT(getValueAtIndex(result_distances_on_line.get(), 0), Catch::Matchers::WithinAbs(0.0f, 0.001f));
     
     // Cleanup
     try {

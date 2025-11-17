@@ -19,15 +19,4 @@ arma::Row<double> convertAnalogTimeSeriesToMlpackArray(
         AnalogTimeSeries const * analogTimeSeries,
         std::vector<size_t> const & timestamps);
 
-/**
- * Update an AnalogTimeSeries from an mlpack row vector
- * @param array The mlpack row vector
- * @param timestamps The timestamps to update
- * @param analogTimeSeries The AnalogTimeSeries to update
- */
-void updateAnalogTimeSeriesFromMlpackArray(
-        arma::Row<double> const & array,
-        std::vector<TimeFrameIndex> & timestamps,
-        AnalogTimeSeries * analogTimeSeries);
-
 #endif// ANALOG_ARMADILLO_HPP

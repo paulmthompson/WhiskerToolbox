@@ -71,44 +71,7 @@ public:
      */
     explicit AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples);
 
-    // ========== Overwriting Data ==========
-
-    /**
-     * @brief Overwrite data at specific TimeFrameIndex values
-     * 
-     * This function finds DataArrayIndex positions that correspond to the given TimeFrameIndex values
-     * and overwrites the data at those positions. If a TimeFrameIndex doesn't exist in the series,
-     * it will be ignored (no overwrite occurs).
-     * 
-     * @param analog_data Vector of new analog values
-     * @param time_indices Vector of TimeFrameIndex values where data should be overwritten
-     */
-    void overwriteAtTimeIndexes(std::vector<float> & analog_data, std::vector<TimeFrameIndex> & time_indices);
-
-    /**
-     * @brief Overwrite data at specific DataArrayIndex positions
-     * 
-     * This function directly overwrites data at the specified DataArrayIndex positions.
-     * Bounds checking is performed - indices outside the data array range will be ignored.
-     * 
-     * @param analog_data Vector of new analog values
-     * @param data_indices Vector of DataArrayIndex positions where data should be overwritten
-     */
-    void overwriteAtDataArrayIndexes(std::vector<float> & analog_data, std::vector<DataArrayIndex> & data_indices);
-
     // ========== Getting Data ==========
-
-    /**
-     * @brief Get the data value at a specific DataArrayIndex
-     * 
-     * This does not consider time information so DataArrayIndex 1 and 2 may represent 
-     * values at are irregularly spaced. Use this if you are processing data
-     * where the time information is not important (e.g. statistical calculations)
-     * 
-     * @param i The DataArrayIndex to get the data value at
-     * @return The data value at the specified DataArrayIndex
-     */
-    [[nodiscard]] float getDataAtDataArrayIndex(DataArrayIndex i) const { return _data[i.getValue()]; };
 
     [[nodiscard]] size_t getNumSamples() const { return _data.size(); };
 
@@ -173,42 +136,6 @@ public:
                                                                       TimeFrameIndex end_time,
                                                                       TimeFrame const * source_timeFrame
                                                                       ) const;
-
-
-    /**
-     * @brief Find the DataArrayIndex that corresponds to a given TimeFrameIndex
-     * 
-     * This function searches for the DataArrayIndex position that corresponds to the given TimeFrameIndex.
-     * For dense storage, it calculates the position if the TimeFrameIndex falls within the range.
-     * For sparse storage, it searches for the TimeFrameIndex in the stored indices.
-     * 
-     * @param time_index The TimeFrameIndex to search for
-     * @return std::optional<DataArrayIndex> containing the corresponding DataArrayIndex, or std::nullopt if not found
-     */
-    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const;
-
-    /**
-     * @brief Find the DataArrayIndex for the smallest TimeFrameIndex >= target_time
-     * 
-     * This function finds the first data point where TimeFrameIndex >= target_time.
-     * Useful for finding the start boundary of a time range when the exact time may not exist.
-     * 
-     * @param target_time The target TimeFrameIndex
-     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the first TimeFrameIndex >= target_time, or std::nullopt if no such index exists
-     */
-    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const;
-
-    /**
-     * @brief Find the DataArrayIndex for the largest TimeFrameIndex <= target_time
-     * 
-     * This function finds the last data point where TimeFrameIndex <= target_time.
-     * Useful for finding the end boundary of a time range when the exact time may not exist.
-     * 
-     * @param target_time The target TimeFrameIndex
-     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the last TimeFrameIndex <= target_time, or std::nullopt if no such index exists
-     */
-    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
-
 
     // ========== Time-Value Range Access ==========
 
@@ -354,16 +281,26 @@ public:
                                                                           TimeFrameIndex end_time,
                                                                           TimeFrame const * source_timeFrame) const;
 
-
     /**
-     * @brief Get the TimeFrameIndex that corresponds to a given DataArrayIndex
+     * @brief Get all samples as time-value pairs for range-based iteration
      * 
-     * @param i The DataArrayIndex to get the TimeFrameIndex for
-     * @return The TimeFrameIndex that corresponds to the given DataArrayIndex
+     * Returns a range view over all samples in the time series, providing paired
+     * TimeFrameIndex and float values. This is the recommended interface for iterating
+     * over all data as it works with any storage backend (vector, memory-mapped, etc.).
+     * 
+     * @return TimeValueRangeView that supports range-based for loops
+     * 
+     * @example
+     * ```cpp
+     * for (auto const& sample : analog_series->getAllSamples()) {
+     *     std::cout << sample.time_frame_index.getValue() << ": " << sample.value << std::endl;
+     * }
+     * ```
+     * 
+     * @note This provides a uniform interface regardless of underlying storage type
+     * @see TimeValuePoint for the structure returned by dereferencing the iterator
      */
-    [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
-        return _time_storage->getTimeFrameIndexAt(i.getValue());
-    }
+    [[nodiscard]] TimeValueRangeView getAllSamples() const;
 
     /**
      * @brief Get the time indices as a vector
@@ -414,6 +351,63 @@ private:
     void setData(std::vector<float> analog_vector);
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
     void setData(std::map<int, float> analog_map);
+
+    /**
+     * @brief Get the data value at a specific DataArrayIndex (internal use only)
+     * 
+     * This does not consider time information so DataArrayIndex 1 and 2 may represent 
+     * values that are irregularly spaced. Use this if you are processing data
+     * where the time information is not important (e.g. statistical calculations)
+     * 
+     * @param i The DataArrayIndex to get the data value at
+     * @return The data value at the specified DataArrayIndex
+     */
+    [[nodiscard]] float _getDataAtDataArrayIndex(DataArrayIndex i) const { return _data[i.getValue()]; };
+
+    /**
+     * @brief Get the TimeFrameIndex that corresponds to a given DataArrayIndex (internal use only)
+     * 
+     * @param i The DataArrayIndex to get the TimeFrameIndex for
+     * @return The TimeFrameIndex that corresponds to the given DataArrayIndex
+     */
+    [[nodiscard]] TimeFrameIndex _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
+        return _time_storage->getTimeFrameIndexAt(i.getValue());
+    }
+
+    /**
+     * @brief Find the DataArrayIndex that corresponds to a given TimeFrameIndex
+     * 
+     * This function searches for the DataArrayIndex position that corresponds to the given TimeFrameIndex.
+     * For dense storage, it calculates the position if the TimeFrameIndex falls within the range.
+     * For sparse storage, it searches for the TimeFrameIndex in the stored indices.
+     * 
+     * @param time_index The TimeFrameIndex to search for
+     * @return std::optional<DataArrayIndex> containing the corresponding DataArrayIndex, or std::nullopt if not found
+     */
+    [[nodiscard]] std::optional<DataArrayIndex> _findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const;
+
+    /**
+     * @brief Find the DataArrayIndex for the smallest TimeFrameIndex >= target_time
+     * 
+     * This function finds the first data point where TimeFrameIndex >= target_time.
+     * Useful for finding the start boundary of a time range when the exact time may not exist.
+     * 
+     * @param target_time The target TimeFrameIndex
+     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the first TimeFrameIndex >= target_time, or std::nullopt if no such index exists
+     */
+    [[nodiscard]] std::optional<DataArrayIndex> _findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const;
+
+    /**
+     * @brief Find the DataArrayIndex for the largest TimeFrameIndex <= target_time
+     * 
+     * This function finds the last data point where TimeFrameIndex <= target_time.
+     * Useful for finding the end boundary of a time range when the exact time may not exist.
+     * 
+     * @param target_time The target TimeFrameIndex
+     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the last TimeFrameIndex <= target_time, or std::nullopt if no such index exists
+     */
+    [[nodiscard]] std::optional<DataArrayIndex> _findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
+
 };
 
 #endif// ANALOG_TIME_SERIES_HPP
