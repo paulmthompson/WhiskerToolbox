@@ -73,6 +73,40 @@ public:
      */
     explicit AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples);
 
+    // ========== Factory Methods ==========
+    
+    /**
+     * @brief Create memory-mapped AnalogTimeSeries from binary file
+     * 
+     * Creates an AnalogTimeSeries that reads data from a binary file using memory mapping.
+     * This is efficient for large datasets as it doesn't load the entire file into memory.
+     * Supports strided access (e.g., reading one channel from multi-channel interleaved data).
+     * 
+     * @param config Memory-mapped storage configuration
+     * @param time_vector Vector of TimeFrameIndex values corresponding to the samples
+     * @return std::shared_ptr<AnalogTimeSeries> Memory-mapped analog time series
+     * 
+     * @throws std::runtime_error if file cannot be opened or configuration is invalid
+     * 
+     * @example Reading channel 5 from 384-channel int16 data:
+     * @code
+     * MmapStorageConfig config;
+     * config.file_path = "ephys_data.bin";
+     * config.header_size = 0;
+     * config.offset = 5;  // Start at channel 5
+     * config.stride = 384;  // Skip 384 values between samples
+     * config.data_type = MmapDataType::Int16;
+     * config.scale_factor = 0.195f;  // Convert to microvolts
+     * config.num_samples = 0;  // Auto-detect
+     * 
+     * auto time_indices = createTimeVector(num_samples);
+     * auto series = AnalogTimeSeries::createMemoryMapped(config, time_indices);
+     * @endcode
+     */
+    [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createMemoryMapped(
+        MmapStorageConfig config,
+        std::vector<TimeFrameIndex> time_vector);
+
     // ========== Getting Data ==========
 
     [[nodiscard]] size_t getNumSamples() const { return _data_storage.size(); };
@@ -451,6 +485,9 @@ private:
     
     // Cached optimization pointer for fast path access
     float const* _contiguous_data_ptr{nullptr};
+
+    // Private constructor for factory methods
+    AnalogTimeSeries(DataStorageWrapper storage, std::vector<TimeFrameIndex> time_vector);
 
     void setData(std::vector<float> analog_vector);
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);

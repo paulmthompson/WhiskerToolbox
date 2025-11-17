@@ -6,6 +6,18 @@
 #include <span>
 #include <type_traits>
 #include <vector>
+#include <cstring>
+#include <stdexcept>
+#include <filesystem>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 /**
  * @brief Storage type enumeration for runtime type identification
@@ -171,6 +183,126 @@ public:
     
 private:
     std::vector<float> _data;
+};
+
+/**
+ * @brief Type conversion strategies for memory-mapped data
+ */
+enum class MmapDataType {
+    Float32,    // 32-bit floating point (no conversion needed)
+    Float64,    // 64-bit floating point (double)
+    Int8,       // 8-bit signed integer
+    UInt8,      // 8-bit unsigned integer
+    Int16,      // 16-bit signed integer
+    UInt16,     // 16-bit unsigned integer
+    Int32,      // 32-bit signed integer
+    UInt32      // 32-bit unsigned integer
+};
+
+/**
+ * @brief Configuration for memory-mapped analog data storage
+ */
+struct MmapStorageConfig {
+    std::filesystem::path file_path;    ///< Path to binary data file
+    size_t header_size = 0;             ///< Bytes to skip at file start
+    size_t offset = 0;                  ///< Sample offset within data region
+    size_t stride = 1;                  ///< Stride between samples (in elements, not bytes)
+    size_t num_samples = 0;             ///< Number of samples to read (0 = auto-detect)
+    MmapDataType data_type = MmapDataType::Float32;  ///< Underlying data type
+    float scale_factor = 1.0f;          ///< Multiplicative scale for conversion
+    float offset_value = 0.0f;          ///< Additive offset for conversion
+};
+
+/**
+ * @brief Memory-mapped file analog data storage using CRTP
+ * 
+ * Provides efficient access to large binary files without loading entire dataset
+ * into memory. Supports:
+ * - Strided access (e.g., reading one channel from interleaved multi-channel data)
+ * - Type conversion from various integer/float formats to float32
+ * - Scale and offset transformations
+ * - Cross-platform memory mapping (POSIX mmap and Windows MapViewOfFile)
+ * 
+ * Example use case: 384-channel electrophysiology data stored as int16
+ * with channels interleaved - can efficiently access a single channel.
+ */
+class MemoryMappedAnalogDataStorage : public AnalogDataStorageBase<MemoryMappedAnalogDataStorage> {
+public:
+    /**
+     * @brief Construct memory-mapped storage from configuration
+     * 
+     * @param config Configuration specifying file path, layout, and conversion
+     * @throws std::runtime_error if file cannot be opened or mapped
+     */
+    explicit MemoryMappedAnalogDataStorage(MmapStorageConfig config);
+    
+    /**
+     * @brief Destructor - unmaps file and releases resources
+     */
+    ~MemoryMappedAnalogDataStorage();
+    
+    // Disable copy (would require complex mapping logic)
+    MemoryMappedAnalogDataStorage(MemoryMappedAnalogDataStorage const&) = delete;
+    MemoryMappedAnalogDataStorage& operator=(MemoryMappedAnalogDataStorage const&) = delete;
+    
+    // Enable move
+    MemoryMappedAnalogDataStorage(MemoryMappedAnalogDataStorage&&) noexcept;
+    MemoryMappedAnalogDataStorage& operator=(MemoryMappedAnalogDataStorage&&) noexcept;
+    
+    // CRTP implementation methods
+    
+    [[nodiscard]] float getValueAtImpl(size_t index) const;
+    
+    [[nodiscard]] size_t sizeImpl() const {
+        return _num_samples;
+    }
+    
+    [[nodiscard]] std::span<float const> getSpanImpl() const {
+        // Memory-mapped data with stride or type conversion is not contiguous as float
+        return {};
+    }
+    
+    [[nodiscard]] std::span<float const> getSpanRangeImpl(size_t start, size_t end) const {
+        // Non-contiguous storage cannot provide spans
+        return {};
+    }
+    
+    [[nodiscard]] bool isContiguousImpl() const {
+        // Only contiguous if stride=1 and native float32 (no conversion)
+        return _config.stride == 1 && _config.data_type == MmapDataType::Float32 
+               && _config.scale_factor == 1.0f && _config.offset_value == 0.0f;
+    }
+    
+    [[nodiscard]] AnalogStorageType getStorageType() const override {
+        return AnalogStorageType::MemoryMapped;
+    }
+    
+    /**
+     * @brief Get configuration used for this storage
+     */
+    [[nodiscard]] MmapStorageConfig const& getConfig() const {
+        return _config;
+    }
+    
+private:
+    void _openAndMapFile();
+    void _closeAndUnmap();
+    [[nodiscard]] size_t _getElementSize() const;
+    [[nodiscard]] float _convertToFloat(void const* ptr) const;
+    
+    MmapStorageConfig _config;
+    size_t _num_samples;
+    size_t _element_size;
+    
+#ifdef _WIN32
+    HANDLE _file_handle = INVALID_HANDLE_VALUE;
+    HANDLE _map_handle = NULL;
+    void* _mapped_data = nullptr;
+#else
+    int _file_descriptor = -1;
+    void* _mapped_data = nullptr;
+    size_t _mapped_size = 0;
+#endif
 };
 
 #endif // ANALOG_DATA_STORAGE_HPP

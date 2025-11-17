@@ -1,4 +1,5 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/AnalogDataStorage.hpp"
 #include "AnalogTimeSeries/utils/statistics.hpp"
 
 #include <catch2/catch_approx.hpp>
@@ -6,6 +7,8 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <map>
 #include <ranges>
 #include <random>
@@ -623,5 +626,252 @@ TEST_CASE("AnalogTimeSeries - Time-Value Interface Comparison", "[analog][timese
         // Verify span size is reasonable
         REQUIRE(span_pair.values.size() > 100); // Should capture many points
         REQUIRE(span_pair.values.size() <= 1000); // But not more than total data
+    }
+}
+
+TEST_CASE("AnalogTimeSeries - Memory-mapped storage", "[analog][timeseries][mmap]") {
+    
+    SECTION("Memory-mapped int16 data") {
+        // Create a temporary binary file with int16 data
+        std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_int16.bin";
+        
+        // Write test data: 100 int16 values
+        std::vector<int16_t> test_data;
+        for (int i = 0; i < 100; ++i) {
+            test_data.push_back(static_cast<int16_t>(i * 10));
+        }
+        
+        std::ofstream out(temp_file, std::ios::binary);
+        out.write(reinterpret_cast<char const*>(test_data.data()), test_data.size() * sizeof(int16_t));
+        out.close();
+        
+        // Create memory-mapped analog time series
+        MmapStorageConfig config;
+        config.file_path = temp_file;
+        config.header_size = 0;
+        config.offset = 0;
+        config.stride = 1;
+        config.data_type = MmapDataType::Int16;
+        config.scale_factor = 1.0f;
+        config.offset_value = 0.0f;
+        config.num_samples = 100;
+        
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 100; ++i) {
+            times.push_back(TimeFrameIndex(i));
+        }
+        
+        auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+        
+        // Verify data access
+        REQUIRE(series->getNumSamples() == 100);
+        
+        // Check values through iterator
+        auto samples = series->getAllSamples();
+        int count = 0;
+        for (auto const& [time, value] : samples) {
+            REQUIRE(value == Catch::Approx(static_cast<float>(count * 10)));
+            count++;
+        }
+        REQUIRE(count == 100);
+        
+        // Cleanup
+        std::filesystem::remove(temp_file);
+    }
+    
+    SECTION("Memory-mapped with stride (interleaved channels)") {
+        // Create file with 3 interleaved channels: [ch0, ch1, ch2, ch0, ch1, ch2, ...]
+        std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_strided.bin";
+        
+        std::vector<int16_t> interleaved_data;
+        for (int i = 0; i < 50; ++i) {
+            interleaved_data.push_back(static_cast<int16_t>(i * 100));     // Channel 0
+            interleaved_data.push_back(static_cast<int16_t>(i * 100 + 1)); // Channel 1
+            interleaved_data.push_back(static_cast<int16_t>(i * 100 + 2)); // Channel 2
+        }
+        
+        std::ofstream out(temp_file, std::ios::binary);
+        out.write(reinterpret_cast<char const*>(interleaved_data.data()), 
+                  interleaved_data.size() * sizeof(int16_t));
+        out.close();
+        
+        // Access channel 1 (offset=1, stride=3)
+        MmapStorageConfig config;
+        config.file_path = temp_file;
+        config.header_size = 0;
+        config.offset = 1;  // Start at second element (channel 1)
+        config.stride = 3;  // Skip 3 elements between samples
+        config.data_type = MmapDataType::Int16;
+        config.scale_factor = 1.0f;
+        config.offset_value = 0.0f;
+        config.num_samples = 0; // Auto-detect
+        
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 50; ++i) {
+            times.push_back(TimeFrameIndex(i));
+        }
+        
+        auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+        
+        REQUIRE(series->getNumSamples() == 50);
+        
+        // Verify we're reading channel 1 data
+        auto samples = series->getAllSamples();
+        int count = 0;
+        for (auto const& [time, value] : samples) {
+            REQUIRE(value == Catch::Approx(static_cast<float>(count * 100 + 1)));
+            count++;
+        }
+        REQUIRE(count == 50);
+        
+        // Cleanup
+        std::filesystem::remove(temp_file);
+    }
+    
+    SECTION("Memory-mapped with header and scale/offset") {
+        std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_header.bin";
+        
+        // Write 256-byte header followed by int16 data
+        std::ofstream out(temp_file, std::ios::binary);
+        std::vector<char> header(256, 0xAA); // Dummy header
+        out.write(header.data(), header.size());
+        
+        // Write actual data after header
+        std::vector<int16_t> data;
+        for (int i = 0; i < 100; ++i) {
+            data.push_back(static_cast<int16_t>(i + 1000)); // Offset by 1000
+        }
+        out.write(reinterpret_cast<char const*>(data.data()), data.size() * sizeof(int16_t));
+        out.close();
+        
+        // Configure with header, scale, and offset
+        MmapStorageConfig config;
+        config.file_path = temp_file;
+        config.header_size = 256;
+        config.offset = 0;
+        config.stride = 1;
+        config.data_type = MmapDataType::Int16;
+        config.scale_factor = 0.1f;  // Scale down by 10x
+        config.offset_value = -100.0f; // Subtract 100
+        config.num_samples = 100;
+        
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 100; ++i) {
+            times.push_back(TimeFrameIndex(i));
+        }
+        
+        auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+        
+        REQUIRE(series->getNumSamples() == 100);
+        
+        // Verify scale and offset applied: value = (raw * scale) + offset
+        // For i=0: raw=1000, result = 1000*0.1 - 100 = 0
+        // For i=10: raw=1010, result = 1010*0.1 - 100 = 1
+        auto samples = series->getAllSamples();
+        int count = 0;
+        for (auto const& [time, value] : samples) {
+            float expected = static_cast<float>(count + 1000) * 0.1f - 100.0f;
+            REQUIRE(value == Catch::Approx(expected).margin(0.01f));
+            count++;
+        }
+        REQUIRE(count == 100);
+        
+        // Cleanup
+        std::filesystem::remove(temp_file);
+    }
+    
+    SECTION("Memory-mapped different data types") {
+        // Test float32
+        {
+            std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_float32.bin";
+            std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
+            
+            std::ofstream out(temp_file, std::ios::binary);
+            out.write(reinterpret_cast<char const*>(data.data()), data.size() * sizeof(float));
+            out.close();
+            
+            MmapStorageConfig config;
+            config.file_path = temp_file;
+            config.data_type = MmapDataType::Float32;
+            config.num_samples = 5;
+            
+            std::vector<TimeFrameIndex> times{TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+                                            TimeFrameIndex(3), TimeFrameIndex(4)};
+            
+            auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+            auto samples = series->getAllSamples();
+            
+            int idx = 0;
+            for (auto const& [time, value] : samples) {
+                REQUIRE(value == Catch::Approx(data[idx]).margin(0.001f));
+                idx++;
+            }
+            
+            std::filesystem::remove(temp_file);
+        }
+        
+        // Test uint8
+        {
+            std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_uint8.bin";
+            std::vector<uint8_t> data{10, 20, 30, 40, 50};
+            
+            std::ofstream out(temp_file, std::ios::binary);
+            out.write(reinterpret_cast<char const*>(data.data()), data.size() * sizeof(uint8_t));
+            out.close();
+            
+            MmapStorageConfig config;
+            config.file_path = temp_file;
+            config.data_type = MmapDataType::UInt8;
+            config.num_samples = 5;
+            
+            std::vector<TimeFrameIndex> times{TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+                                            TimeFrameIndex(3), TimeFrameIndex(4)};
+            
+            auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+            auto samples = series->getAllSamples();
+            
+            int idx = 0;
+            for (auto const& [time, value] : samples) {
+                REQUIRE(value == Catch::Approx(static_cast<float>(data[idx])));
+                idx++;
+            }
+            
+            std::filesystem::remove(temp_file);
+        }
+    }
+    
+    SECTION("Memory-mapped error handling") {
+        // Non-existent file
+        MmapStorageConfig config;
+        config.file_path = "/nonexistent/path/to/file.bin";
+        config.num_samples = 10;
+        
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 10; ++i) {
+            times.push_back(TimeFrameIndex(i));
+        }
+        
+        REQUIRE_THROWS_AS(AnalogTimeSeries::createMemoryMapped(config, times), std::runtime_error);
+        
+        // Mismatched time vector size
+        std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_size_mismatch.bin";
+        std::vector<float> data(100, 1.0f);
+        
+        std::ofstream out(temp_file, std::ios::binary);
+        out.write(reinterpret_cast<char const*>(data.data()), data.size() * sizeof(float));
+        out.close();
+        
+        config.file_path = temp_file;
+        config.data_type = MmapDataType::Float32;
+        config.num_samples = 100;
+        
+        std::vector<TimeFrameIndex> wrong_size_times; // Wrong size!
+        for (int i = 0; i < 50; ++i) {
+            wrong_size_times.push_back(TimeFrameIndex(i));
+        }
+        
+        REQUIRE_THROWS_AS(AnalogTimeSeries::createMemoryMapped(config, wrong_size_times), std::runtime_error);
+        
+        std::filesystem::remove(temp_file);
     }
 }

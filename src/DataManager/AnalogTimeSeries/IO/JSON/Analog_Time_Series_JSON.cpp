@@ -35,6 +35,16 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::s
             opts.filename = file_path;
             opts.header_size = item.value("header_size", 0);
             opts.num_channels = item.value("channel_count", 1);
+            
+            // Memory-mapped options
+            opts.use_memory_mapped = item.value("use_memory_mapped", false);
+            opts.offset = item.value("offset", 0);
+            opts.stride = item.value("stride", 1);
+            opts.data_type = item.value("data_type", "int16");
+            opts.scale_factor = item.value("scale_factor", 1.0f);
+            opts.offset_value = item.value("offset_value", 0.0f);
+            opts.num_samples = item.value("num_samples", 0);
+            
             analog_time_series = load(opts);
 
             break;

@@ -17,7 +17,19 @@ float calculate_mean_impl(std::vector<float> const & data, size_t start, size_t 
 }
 
 float calculate_mean(AnalogTimeSeries const & series) {
-    return calculate_mean(series.getAnalogTimeSeries());
+    auto span = series.getAnalogTimeSeries();
+    // If span is empty (non-contiguous storage like memory-mapped with stride),
+    // fall back to iterator-based calculation
+    if (span.empty()) {
+        size_t count = 0;
+        double sum = 0.0;
+        for (auto const& [time, value] : series.getAllSamples()) {
+            sum += static_cast<double>(value);
+            ++count;
+        }
+        return count > 0 ? static_cast<float>(sum / static_cast<double>(count)) : std::numeric_limits<float>::quiet_NaN();
+    }
+    return calculate_mean(span);
 }
 
 float calculate_mean(AnalogTimeSeries const & series, int64_t start, int64_t end) {
@@ -48,7 +60,31 @@ float calculate_std_dev_impl(std::vector<float> const & data, size_t start, size
 }
 
 float calculate_std_dev(AnalogTimeSeries const & series) {
-    return calculate_std_dev(series.getAnalogTimeSeries());
+    auto span = series.getAnalogTimeSeries();
+    // If span is empty (non-contiguous storage like memory-mapped with stride),
+    // fall back to iterator-based calculation
+    if (span.empty()) {
+        // First pass: calculate mean
+        size_t count = 0;
+        double sum = 0.0;
+        for (auto const& [time, value] : series.getAllSamples()) {
+            sum += static_cast<double>(value);
+            ++count;
+        }
+        if (count == 0) {
+            return std::numeric_limits<float>::quiet_NaN();
+        }
+        double mean = sum / static_cast<double>(count);
+        
+        // Second pass: calculate variance
+        double variance_sum = 0.0;
+        for (auto const& [time, value] : series.getAllSamples()) {
+            double diff = static_cast<double>(value) - mean;
+            variance_sum += diff * diff;
+        }
+        return static_cast<float>(std::sqrt(variance_sum / static_cast<double>(count)));
+    }
+    return calculate_std_dev(span);
 }
 
 float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t end) {
@@ -73,8 +109,10 @@ float calculate_std_dev_approximate(AnalogTimeSeries const & series,
                                     float sample_percentage,
                                     size_t min_sample_threshold) {
     auto span = series.getAnalogTimeSeries();
+    
+    // If span is empty (non-contiguous storage), fall back to exact calculation via iterators
     if (span.empty()) {
-        return std::numeric_limits<float>::quiet_NaN();
+        return calculate_std_dev(series);
     }
 
     size_t const data_size = span.size();
@@ -115,8 +153,10 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
                                  size_t max_sample_size,
                                  float convergence_tolerance) {
     auto span = series.getAnalogTimeSeries();
+    
+    // If span is empty (non-contiguous storage), fall back to exact calculation via iterators
     if (span.empty()) {
-        return std::numeric_limits<float>::quiet_NaN();
+        return calculate_std_dev(series);
     }
 
     size_t const data_size = span.size();
@@ -222,7 +262,19 @@ float calculate_min_impl(std::vector<float> const & data, size_t start, size_t e
 }
 
 float calculate_min(AnalogTimeSeries const & series) {
-    return calculate_min(series.getAnalogTimeSeries());
+    auto span = series.getAnalogTimeSeries();
+    // If span is empty (non-contiguous storage like memory-mapped with stride),
+    // fall back to iterator-based calculation
+    if (span.empty()) {
+        float min_val = std::numeric_limits<float>::max();
+        bool found_any = false;
+        for (auto const& [time, value] : series.getAllSamples()) {
+            min_val = std::min(min_val, value);
+            found_any = true;
+        }
+        return found_any ? min_val : std::numeric_limits<float>::quiet_NaN();
+    }
+    return calculate_min(span);
 }
 
 float calculate_min(AnalogTimeSeries const & series, int64_t start, int64_t end) {
@@ -253,7 +305,19 @@ float calculate_max_impl(std::vector<float> const & data, size_t start, size_t e
 }
 
 float calculate_max(AnalogTimeSeries const & series) {
-    return calculate_max(series.getAnalogTimeSeries());
+    auto span = series.getAnalogTimeSeries();
+    // If span is empty (non-contiguous storage like memory-mapped with stride),
+    // fall back to iterator-based calculation
+    if (span.empty()) {
+        float max_val = std::numeric_limits<float>::lowest();
+        bool found_any = false;
+        for (auto const& [time, value] : series.getAllSamples()) {
+            max_val = std::max(max_val, value);
+            found_any = true;
+        }
+        return found_any ? max_val : std::numeric_limits<float>::quiet_NaN();
+    }
+    return calculate_max(span);
 }
 
 float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end) {

@@ -38,6 +38,39 @@ AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, size_t num_
     setData(std::move(analog_vector));
 }
 
+// Private constructor for factory methods
+AnalogTimeSeries::AnalogTimeSeries(DataStorageWrapper storage, std::vector<TimeFrameIndex> time_vector)
+    : _data_storage(std::move(storage)),
+      _time_storage(TimeIndexStorageFactory::createFromTimeIndices(std::move(time_vector))) {
+    _cacheOptimizationPointers();
+}
+
+// ========== Factory Methods ==========
+
+std::shared_ptr<AnalogTimeSeries> AnalogTimeSeries::createMemoryMapped(
+    MmapStorageConfig config,
+    std::vector<TimeFrameIndex> time_vector) {
+    
+    // Create memory-mapped storage
+    auto mmap_storage = MemoryMappedAnalogDataStorage(std::move(config));
+    
+    // Validate that time vector matches data size
+    size_t num_samples = mmap_storage.size();
+    if (time_vector.size() != num_samples) {
+        throw std::runtime_error(
+            "Time vector size (" + std::to_string(time_vector.size()) + 
+            ") does not match data size (" + std::to_string(num_samples) + ")");
+    }
+    
+    // Wrap in type-erased storage
+    DataStorageWrapper storage_wrapper(std::move(mmap_storage));
+    
+    // Use make_shared with private constructor access via friendship or helper
+    // Since we can't use make_shared with private constructors directly, use new
+    return std::shared_ptr<AnalogTimeSeries>(
+        new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_vector)));
+}
+
 void AnalogTimeSeries::setData(std::vector<float> analog_vector) {
     size_t size = analog_vector.size();
     _data_storage = DataStorageWrapper(VectorAnalogDataStorage(std::move(analog_vector)));
