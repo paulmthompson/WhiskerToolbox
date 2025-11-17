@@ -4,6 +4,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeIndexStorage.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -12,7 +13,6 @@
 #include <ranges>
 #include <span>
 #include <stdexcept>
-#include <variant>
 #include <vector>
 
 /**
@@ -379,10 +379,7 @@ public:
      * @return The TimeFrameIndex that corresponds to the given DataArrayIndex
      */
     [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
-        return std::visit([i](auto const & time_storage) -> TimeFrameIndex {
-            return time_storage.getTimeFrameIndexAtDataArrayIndex(i);
-        },
-                          _time_storage);
+        return _time_storage->getTimeFrameIndexAt(i.getValue());
     }
 
     /**
@@ -403,84 +400,19 @@ public:
      * @see getTimeAtIndex() for single index lookups
      */
     [[nodiscard]] std::vector<TimeFrameIndex> getTimeSeries() const {
-        return std::visit([](auto const & time_storage) -> std::vector<TimeFrameIndex> {
-            if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
-                // Generate vector for dense storage
-                std::vector<TimeFrameIndex> result;
-                result.reserve(time_storage.count);
-                for (size_t i = 0; i < time_storage.count; ++i) {
-                    result.push_back(time_storage.start_time_frame_index + TimeFrameIndex(static_cast<int64_t>(i)));
-                }
-                return result;
-            } else {
-                // Return copy for sparse storage
-                return time_storage.time_frame_indices;
-            }
-        },
-                          _time_storage);
+        return _time_storage->getAllTimeIndices();
     }
 
-    // ========== Time Storage Optimization ==========
+    // ========== Time Storage Access ==========
 
     /**
-     * @brief Dense time representation for regularly sampled data
-     * 
-     * More memory efficient than storing every index individually.
-     * Represents: start_index, start_index+1, start_index+2, ..., start_index+count-1
-     * 
-     * Now strongly typed: indexed by DataArrayIndex, returns TimeFrameIndex
-     */
-    struct DenseTimeRange {
-        TimeFrameIndex start_time_frame_index;
-        size_t count;
-
-        DenseTimeRange(TimeFrameIndex start, size_t num_samples)
-            : start_time_frame_index(start),
-              count(num_samples) {}
-
-        [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
-            if (i.getValue() >= count) {
-                throw std::out_of_range("DataArrayIndex out of range for DenseTimeRange");
-            }
-            return TimeFrameIndex(start_time_frame_index.getValue() + static_cast<int64_t>(i.getValue()));
-        }
-
-        [[nodiscard]] size_t size() const { return count; }
-    };
-
-    /**
-     * @brief Sparse time representation for irregularly sampled data
-     * 
-     * Stores explicit time indices for each sample.
-     * 
-     * Now strongly typed: indexed by DataArrayIndex, returns TimeFrameIndex
-     */
-    struct SparseTimeIndices {
-        std::vector<TimeFrameIndex> time_frame_indices;
-
-        explicit SparseTimeIndices(std::vector<TimeFrameIndex> time_indices)
-            : time_frame_indices(std::move(time_indices)) {}
-
-        [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
-            if (i.getValue() >= time_frame_indices.size()) {
-                throw std::out_of_range("DataArrayIndex out of range for SparseTimeIndices");
-            }
-            return time_frame_indices[i.getValue()];
-        }
-
-        [[nodiscard]] size_t size() const { return time_frame_indices.size(); }
-    };
-
-    using TimeStorage = std::variant<DenseTimeRange, SparseTimeIndices>;
-
-    /**
-    * @brief Get a const reference to the time storage variant (DenseTimeRange or SparseTimeIndices)
+    * @brief Get a const reference to the time index storage
     *
     * This allows efficient access to the underlying time mapping without copying.
     *
-    * @return const TimeStorage& (std::variant<DenseTimeRange, SparseTimeIndices>)
+    * @return const shared_ptr to TimeIndexStorage
     */
-    [[nodiscard]] TimeStorage const & getTimeStorage() const noexcept { return _time_storage; }
+    [[nodiscard]] std::shared_ptr<TimeIndexStorage> const & getTimeStorage() const noexcept { return _time_storage; }
 
     // ========== Time Frame ==========
     /**
@@ -493,7 +425,7 @@ public:
 protected:
 private:
     std::vector<float> _data;
-    TimeStorage _time_storage;
+    std::shared_ptr<TimeIndexStorage> _time_storage;
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
     void setData(std::vector<float> analog_vector);

@@ -12,23 +12,23 @@
 
 AnalogTimeSeries::AnalogTimeSeries()
     : _data(),
-      _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {}
+      _time_storage(TimeIndexStorageFactory::createDenseFromZero(0)) {}
 
 AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map)
     : _data(),
-      _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {
+      _time_storage(TimeIndexStorageFactory::createDenseFromZero(0)) {
     setData(std::move(analog_map));
 }
 
 AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector)
     : _data(),
-      _time_storage(DenseTimeRange(TimeFrameIndex(0), 0)) {
+      _time_storage(TimeIndexStorageFactory::createDenseFromZero(0)) {
     setData(std::move(analog_vector), std::move(time_vector));
 }
 
 AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples)
     : _data(),
-      _time_storage(DenseTimeRange(TimeFrameIndex(0), num_samples)) {
+      _time_storage(TimeIndexStorageFactory::createDenseFromZero(num_samples)) {
     if (analog_vector.size() != num_samples) {
         std::cerr << "Error: size of analog vector and number of samples are not the same!" << std::endl;
         return;
@@ -39,7 +39,7 @@ AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, size_t num_
 void AnalogTimeSeries::setData(std::vector<float> analog_vector) {
     _data = std::move(analog_vector);
     // Use dense time storage for consecutive indices starting from 0
-    _time_storage = DenseTimeRange(TimeFrameIndex(0), _data.size());
+    _time_storage = TimeIndexStorageFactory::createDenseFromZero(_data.size());
 }
 
 void AnalogTimeSeries::setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) {
@@ -49,24 +49,7 @@ void AnalogTimeSeries::setData(std::vector<float> analog_vector, std::vector<Tim
     }
 
     _data = std::move(analog_vector);
-
-    // Check if we can use dense storage (consecutive indices)
-    bool is_dense = true;
-    if (!time_vector.empty()) {
-        TimeFrameIndex expected_value = time_vector[0];
-        for (size_t i = 0; i < time_vector.size(); ++i) {
-            if (time_vector[i] != expected_value + TimeFrameIndex(static_cast<int64_t>(i))) {
-                is_dense = false;
-                break;
-            }
-        }
-    }
-
-    if (is_dense && !time_vector.empty()) {
-        _time_storage = DenseTimeRange(TimeFrameIndex(time_vector[0]), time_vector.size());
-    } else {
-        _time_storage = SparseTimeIndices(std::move(time_vector));
-    }
+    _time_storage = TimeIndexStorageFactory::createFromTimeIndices(std::move(time_vector));
 }
 
 void AnalogTimeSeries::setData(std::map<int, float> analog_map) {
@@ -77,7 +60,7 @@ void AnalogTimeSeries::setData(std::map<int, float> analog_map) {
         time_storage.push_back(TimeFrameIndex(key));
         _data.push_back(value);
     }
-    _time_storage = SparseTimeIndices(std::move(time_storage));
+    _time_storage = std::make_shared<SparseTimeIndexStorage>(std::move(time_storage));
 }
 
 // ========== Overwriting Data ==========
@@ -175,84 +158,27 @@ std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
 // ========== TimeFrame Support ==========
 
 std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const {
-    return std::visit([time_index](auto const & time_storage) -> std::optional<DataArrayIndex> {
-        if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
-            // For dense storage, check if the TimeFrameIndex falls within our range
-            TimeFrameIndex start = time_storage.start_time_frame_index;
-            auto end = TimeFrameIndex(start.getValue() + static_cast<int64_t>(time_storage.count) - 1);
-
-            if (time_index >= start && time_index <= end) {
-                // Calculate the DataArrayIndex
-                auto offset = static_cast<size_t>(time_index.getValue() - start.getValue());
-                return DataArrayIndex(offset);
-            }
-            return std::nullopt;
-        } else {
-            // For sparse storage, search for the TimeFrameIndex
-            auto it = std::find(time_storage.time_frame_indices.begin(), time_storage.time_frame_indices.end(), time_index);
-            if (it != time_storage.time_frame_indices.end()) {
-                auto index = static_cast<size_t>(std::distance(time_storage.time_frame_indices.begin(), it));
-                return DataArrayIndex(index);
-            }
-            return std::nullopt;
-        }
-    },
-                      _time_storage);
+    auto position = _time_storage->findArrayPositionForTimeIndex(time_index);
+    if (position.has_value()) {
+        return DataArrayIndex(position.value());
+    }
+    return std::nullopt;
 }
 
 std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const {
-    return std::visit([target_time](auto const & time_storage) -> std::optional<DataArrayIndex> {
-        if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
-            // For dense storage, calculate the position if target_time falls within our range
-            TimeFrameIndex start = time_storage.start_time_frame_index;
-            auto end = TimeFrameIndex(start.getValue() + static_cast<int64_t>(time_storage.count) - 1);
-
-            if (target_time <= end) {
-                // Find the first index >= target_time
-                TimeFrameIndex effective_start = (target_time >= start) ? target_time : start;
-                auto offset = static_cast<size_t>(effective_start.getValue() - start.getValue());
-                return DataArrayIndex(offset);
-            }
-            return std::nullopt;
-        } else {
-            // For sparse storage, use lower_bound to find first element >= target_time
-            auto it = std::lower_bound(time_storage.time_frame_indices.begin(), time_storage.time_frame_indices.end(), target_time);
-            if (it != time_storage.time_frame_indices.end()) {
-                auto index = static_cast<size_t>(std::distance(time_storage.time_frame_indices.begin(), it));
-                return DataArrayIndex(index);
-            }
-            return std::nullopt;
-        }
-    },
-                      _time_storage);
+    auto position = _time_storage->findArrayPositionGreaterOrEqual(target_time);
+    if (position.has_value()) {
+        return DataArrayIndex(position.value());
+    }
+    return std::nullopt;
 }
 
 std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const {
-    return std::visit([target_time](auto const & time_storage) -> std::optional<DataArrayIndex> {
-        if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
-            // For dense storage, calculate the position if target_time falls within our range
-            TimeFrameIndex start = time_storage.start_time_frame_index;
-            auto end = TimeFrameIndex(start.getValue() + static_cast<int64_t>(time_storage.count) - 1);
-
-            if (target_time >= start) {
-                // Find the last index <= target_time
-                TimeFrameIndex effective_end = (target_time <= end) ? target_time : end;
-                auto offset = static_cast<size_t>(effective_end.getValue() - start.getValue());
-                return DataArrayIndex(offset);
-            }
-            return std::nullopt;
-        } else {
-            // For sparse storage, use upper_bound to find first element > target_time, then step back
-            auto it = std::upper_bound(time_storage.time_frame_indices.begin(), time_storage.time_frame_indices.end(), target_time);
-            if (it != time_storage.time_frame_indices.begin()) {
-                --it;// Step back to get the last element <= target_time
-                auto index = static_cast<size_t>(std::distance(time_storage.time_frame_indices.begin(), it));
-                return DataArrayIndex(index);
-            }
-            return std::nullopt;
-        }
-    },
-                      _time_storage);
+    auto position = _time_storage->findArrayPositionLessOrEqual(target_time);
+    if (position.has_value()) {
+        return DataArrayIndex(position.value());
+    }
+    return std::nullopt;
 }
 
 // ========== Time-Value Range Access Implementation ==========
@@ -471,45 +397,53 @@ AnalogTimeSeries::TimeIndexRange::TimeIndexRange(AnalogTimeSeries const * series
       _end_index(end_index) {}
 
 std::unique_ptr<AnalogTimeSeries::TimeIndexIterator> AnalogTimeSeries::TimeIndexRange::begin() const {
-    return std::visit([this](auto const & time_storage) -> std::unique_ptr<TimeIndexIterator> {
-        if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
-            // Dense storage - create iterator based on start time and offset
-            return std::make_unique<DenseTimeIndexIterator>(
-                    time_storage.start_time_frame_index,
-                    _start_index,
-                    _end_index,
-                    false);
-        } else {
-            // Sparse storage - create iterator with direct index access
-            return std::make_unique<SparseTimeIndexIterator>(
-                    &time_storage.time_frame_indices,
-                    _start_index,
-                    _end_index,
-                    false);
-        }
-    },
-                      _series->getTimeStorage());
+    auto storage = _series->getTimeStorage();
+    
+    // Try to downcast to DenseTimeIndexStorage
+    if (auto dense = std::dynamic_pointer_cast<DenseTimeIndexStorage const>(storage)) {
+        return std::make_unique<DenseTimeIndexIterator>(
+                dense->getStartIndex(),
+                _start_index,
+                _end_index,
+                false);
+    }
+    
+    // Try to downcast to SparseTimeIndexStorage
+    if (auto sparse = std::dynamic_pointer_cast<SparseTimeIndexStorage const>(storage)) {
+        return std::make_unique<SparseTimeIndexIterator>(
+                &sparse->getTimeIndices(),
+                _start_index,
+                _end_index,
+                false);
+    }
+    
+    // Fallback: this shouldn't happen with current implementations
+    throw std::runtime_error("Unknown TimeIndexStorage type");
 }
 
 std::unique_ptr<AnalogTimeSeries::TimeIndexIterator> AnalogTimeSeries::TimeIndexRange::end() const {
-    return std::visit([this](auto const & time_storage) -> std::unique_ptr<TimeIndexIterator> {
-        if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
-            // Dense storage - create end iterator
-            return std::make_unique<DenseTimeIndexIterator>(
-                    time_storage.start_time_frame_index,
-                    _start_index,
-                    _end_index,
-                    true);
-        } else {
-            // Sparse storage - create end iterator
-            return std::make_unique<SparseTimeIndexIterator>(
-                    &time_storage.time_frame_indices,
-                    _start_index,
-                    _end_index,
-                    true);
-        }
-    },
-                      _series->getTimeStorage());
+    auto storage = _series->getTimeStorage();
+    
+    // Try to downcast to DenseTimeIndexStorage
+    if (auto dense = std::dynamic_pointer_cast<DenseTimeIndexStorage const>(storage)) {
+        return std::make_unique<DenseTimeIndexIterator>(
+                dense->getStartIndex(),
+                _start_index,
+                _end_index,
+                true);
+    }
+    
+    // Try to downcast to SparseTimeIndexStorage
+    if (auto sparse = std::dynamic_pointer_cast<SparseTimeIndexStorage const>(storage)) {
+        return std::make_unique<SparseTimeIndexIterator>(
+                &sparse->getTimeIndices(),
+                _start_index,
+                _end_index,
+                true);
+    }
+    
+    // Fallback: this shouldn't happen with current implementations
+    throw std::runtime_error("Unknown TimeIndexStorage type");
 }
 
 size_t AnalogTimeSeries::TimeIndexRange::size() const {
