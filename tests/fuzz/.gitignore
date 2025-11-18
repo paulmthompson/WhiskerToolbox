@@ -1,0 +1,22 @@
+# Fuzz test generated artifacts
+
+# Crash reproducers and findings
+crash-*
+leak-*
+timeout-*
+oom-*
+
+# Fuzzer corpus (generated during execution)
+# Keep seed corpus but ignore generated mutations
+corpus/**/*
+!corpus/README.md
+!corpus/unit/*.json
+!corpus/integration/*.json
+
+# Fuzzer logs
+*.log
+fuzz-*.txt
+
+# Coverage data
+*.profraw
+*.profdata
