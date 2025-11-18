@@ -32,6 +32,12 @@ FetchContent_Declare(
 find_package(absl CONFIG REQUIRED)
 message(STATUS "Found abseil from vcpkg - FuzzTest will use this version")
 
+# Link to absl_log_instantiations if it was created in external/CMakeLists.txt
+# This ensures FuzzTest gets the explicit template instantiations needed for Clang 18
+if(TARGET absl_log_instantiations)
+    message(STATUS "Linking FuzzTest to absl_log_instantiations for Clang 18 compatibility")
+endif()
+
 # Tell FuzzTest not to build its own RE2 and googletest since we have them or don't need them
 set(FUZZTEST_BUILD_TESTING OFF CACHE BOOL "Disable FuzzTest's own tests" FORCE)
 

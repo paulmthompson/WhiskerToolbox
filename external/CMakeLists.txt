@@ -206,20 +206,23 @@ if(ENABLE_UI)
     list(APPEND FETCHCONTENT_TARGETS "qt6advanceddocking")
 endif()
 
-# Create explicit Abseil log template instantiations for Clang 18 BEFORE building OR-Tools
-if(ENABLE_ORTOOLS AND LINUX AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_library(absl_log_instantiations STATIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/absl_log_instantiations.cpp
-    )
-    target_link_libraries(absl_log_instantiations PUBLIC absl::log_internal_message)
-    set_target_properties(absl_log_instantiations PROPERTIES 
-        POSITION_INDEPENDENT_CODE ON
-    )
-    
-    # Make Abseil's log_internal_message library depend on our instantiations
-    # This ensures all OR-Tools binaries get the instantiations
-    if(TARGET absl::log_internal_message)
-        target_link_libraries(absl::log_internal_message INTERFACE absl_log_instantiations)
+# Create explicit Abseil log template instantiations for Clang 18
+# Required for both OR-Tools and FuzzTest to avoid linking issues
+if(LINUX AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(ENABLE_ORTOOLS OR ENABLE_FUZZ_TESTING)
+        add_library(absl_log_instantiations STATIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/absl_log_instantiations.cpp
+        )
+        target_link_libraries(absl_log_instantiations PUBLIC absl::log_internal_message)
+        set_target_properties(absl_log_instantiations PROPERTIES 
+            POSITION_INDEPENDENT_CODE ON
+        )
+        
+        # Make Abseil's log_internal_message library depend on our instantiations
+        # This ensures all OR-Tools and FuzzTest binaries get the instantiations
+        if(TARGET absl::log_internal_message)
+            target_link_libraries(absl::log_internal_message INTERFACE absl_log_instantiations)
+        endif()
     endif()
 endif()
 
