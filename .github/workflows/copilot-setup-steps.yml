@@ -70,7 +70,7 @@ jobs:
         run: echo "VCPKG_BINARY_SOURCES=clear;files,/home/runner/work/WhiskerToolbox/WhiskerToolbox/vcpkg_cache,readwrite" >> $GITHUB_ENV
 
       - name: Configure CMake without coverage
-        run: cmake --preset linux-clang-release -DENABLE_ORTOOLS=OFF -DENABLE_TIME_TRACE=ON
+        run: cmake --preset linux-clang-release -DENABLE_ORTOOLS=OFF -DENABLE_TIME_TRACE=ON -DENABLE_FUZZ_TESTING=ON
 
       - name: Build
         run: cmake --build --preset linux-clang-release
