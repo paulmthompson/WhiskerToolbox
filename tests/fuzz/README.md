@@ -47,6 +47,12 @@ FuzzTest provides several command-line options:
 # Run for a specific duration
 ./fuzz_test --fuzz_for=60s
 
+# Filter out internal FuzzTest tests (like Utf8DecodeTest)
+./fuzz_test --gtest_filter=-Utf8*
+
+# Run specific test in fuzzing mode
+./fuzz_test --fuzz=YourTestSuite.YourFuzzTest
+
 # Use a specific seed corpus
 ./fuzz_test --fuzz_corpus_dir=/path/to/corpus
 

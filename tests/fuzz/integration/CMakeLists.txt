@@ -9,9 +9,9 @@ target_link_libraries(fuzz_transform_pipeline
     PRIVATE
         DataManager
         gtest
-        gtest_main
         gmock
         fuzztest::fuzztest
+        fuzztest::fuzztest_gtest_main
 )
 
 # Add AddressSanitizer for better bug detection
