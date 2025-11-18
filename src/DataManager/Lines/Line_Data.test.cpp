@@ -1,4 +1,5 @@
 #include "Lines/Line_Data.hpp"
+#include "Lines/Ragged_Line_Data.hpp"
 #include "DataManager.hpp"
 #include "Entity/EntityRegistry.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -527,5 +528,58 @@ TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][mo
             }
             REQUIRE(found_match);
         }
+    }
+}
+
+TEST_CASE("LineData - Interface hierarchy", "[line][data][interface]") {
+    SECTION("LineData reports Ragged type by default") {
+        LineData line_data;
+        REQUIRE(line_data.getLineDataType() == LineData::LineDataType::Ragged);
+    }
+
+    SECTION("RaggedLineData reports Ragged type") {
+        RaggedLineData ragged_line_data;
+        REQUIRE(ragged_line_data.getLineDataType() == LineData::LineDataType::Ragged);
+    }
+
+    SECTION("RaggedLineData can be used polymorphically") {
+        std::shared_ptr<LineData> line_data = std::make_shared<RaggedLineData>();
+        REQUIRE(line_data->getLineDataType() == LineData::LineDataType::Ragged);
+        
+        // Verify functionality works through base pointer
+        std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
+        std::vector<float> y1 = {1.0f, 2.0f, 1.0f};
+        
+        line_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
+        
+        auto lines = line_data->getAtTime(TimeFrameIndex(10));
+        REQUIRE(lines.size() == 1);
+    }
+
+    SECTION("RaggedLineData constructor works") {
+        std::map<TimeFrameIndex, std::vector<Line2D>> data;
+        std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
+        std::vector<float> y1 = {1.0f, 2.0f, 1.0f};
+        data[TimeFrameIndex(10)].emplace_back(x1, y1);
+        
+        RaggedLineData ragged_line_data(data);
+        
+        auto lines = ragged_line_data.getAtTime(TimeFrameIndex(10));
+        REQUIRE(lines.size() == 1);
+        REQUIRE(lines[0].size() == 3);
+    }
+
+    SECTION("LineData constructor still works for backward compatibility") {
+        std::map<TimeFrameIndex, std::vector<Line2D>> data;
+        std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
+        std::vector<float> y1 = {1.0f, 2.0f, 1.0f};
+        data[TimeFrameIndex(10)].emplace_back(x1, y1);
+        
+        LineData line_data(data);
+        
+        auto lines = line_data.getAtTime(TimeFrameIndex(10));
+        REQUIRE(lines.size() == 1);
+        REQUIRE(lines[0].size() == 3);
+        REQUIRE(line_data.getLineDataType() == LineData::LineDataType::Ragged);
     }
 }
