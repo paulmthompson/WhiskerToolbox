@@ -417,13 +417,19 @@ public:
      * @param notify Whether to notify observers after the operation
      */
     void addAtTime(TimeFrameIndex time, TData const & data, NotifyObservers notify) {
+        // Calculate local_index and add data atomically to prevent race conditions
         int const local_index = static_cast<int>(_data[time].size());
+
+        // Add the data entry first to reserve the index
+        _data[time].emplace_back(EntityId(0), data);
+
+        // Now assign the EntityID with the correct local_index
         EntityId entity_id = EntityId(0);
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
+            // Update the EntityID in the data entry we just added
+            _data[time][local_index].entity_id = entity_id;
         }
-
-        _data[time].emplace_back(entity_id, data);
 
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
