@@ -2,6 +2,7 @@
 
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
+find_package(reflectcpp CONFIG REQUIRED)
 
 if (ENABLE_OPENCV)
 # OPEN CV INTERFERES WITH TENSOR DATA. we need to import it first
@@ -233,6 +234,7 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(DataManager PRIVATE StateEstimation)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(DataManager PUBLIC reflectcpp::reflectcpp)
 
 target_link_libraries(DataManager PRIVATE Whisker-Analysis)
 

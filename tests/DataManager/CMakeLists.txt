@@ -95,6 +95,9 @@ add_executable(test_data_manager
         IO/analog_time_series_csv.test.cpp
         IO/digital_interval_series_csv.test.cpp
         IO/point_dlc_csv.test.cpp
+        
+        # Loader tests
+        loaders/test_analog_reflection.cpp
 )
 
 # Add VideoData tests only if FFmpeg is enabled
