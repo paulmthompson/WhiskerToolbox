@@ -11,7 +11,19 @@
 #include <filesystem>
 
 #ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
+#ifdef ABSOLUTE //In some analog transforms
+#undef ABSOLUTE
+#endif
+#ifdef IGNORE // in parameters
+#undef IGNORE
+#endif
 #else
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -126,6 +138,8 @@ public:
      */
     explicit VectorAnalogDataStorage(std::vector<float> data)
         : _data(std::move(data)) {}
+
+    virtual ~VectorAnalogDataStorage() = default;
     
     // CRTP implementation methods (called by base class)
     
@@ -239,7 +253,7 @@ public:
     /**
      * @brief Destructor - unmaps file and releases resources
      */
-    ~MemoryMappedAnalogDataStorage();
+    virtual ~MemoryMappedAnalogDataStorage();
     
     // Disable copy (would require complex mapping logic)
     MemoryMappedAnalogDataStorage(MemoryMappedAnalogDataStorage const&) = delete;
