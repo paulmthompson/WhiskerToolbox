@@ -56,6 +56,15 @@ FetchContent_Declare(
 # We'll add necessary flags only to our fuzz test executables later
 FetchContent_MakeAvailable(fuzztest)
 
+# NOW link the instantiations after FuzzTest's abseil is available
+if(TARGET absl_log_instantiations)
+    # Link to FuzzTest's abseil log_internal_message
+    if(TARGET absl::log_internal_message)
+        target_link_libraries(absl::log_internal_message INTERFACE absl_log_instantiations)
+    endif()
+endif()
+
+
 # Helper function to link absl_log_instantiations to fuzz test executables
 # This ensures Clang 18 gets the explicit template instantiations it needs
 function(add_fuzz_test_with_instantiations target_name)
