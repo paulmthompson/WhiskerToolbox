@@ -48,7 +48,7 @@ std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options) {
     std::string line;
     
     // Skip header if present
-    if (options.has_header && std::getline(file, line)) {
+    if (options.getHasHeader() && std::getline(file, line)) {
         // Header line consumed, continue with data
     }
 
@@ -60,14 +60,14 @@ std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options) {
         std::vector<std::string> row;
         
         // Parse the line based on delimiter
-        while (std::getline(ss, cell, options.delimiter[0])) {
+        while (std::getline(ss, cell, options.getDelimiter()[0])) {
             row.push_back(cell);
         }
         
         if (row.empty()) continue;
         
         try {
-            if (options.single_column_format) {
+            if (options.getSingleColumnFormat()) {
                 // Single column format: only data, time is inferred as index
                 if (!row.empty()) {
                     data_values.push_back(std::stof(row[0]));
@@ -75,9 +75,9 @@ std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options) {
                 }
             } else {
                 // Two column format: time and data columns
-                if (row.size() > static_cast<size_t>(std::max(options.time_column, options.data_column))) {
-                    time_values.push_back(TimeFrameIndex(static_cast<int64_t>(std::stof(row[static_cast<size_t>(options.time_column)]))));
-                    data_values.push_back(std::stof(row[static_cast<size_t>(options.data_column)]));
+                if (row.size() > static_cast<size_t>(std::max(options.getTimeColumn(), options.getDataColumn()))) {
+                    time_values.push_back(TimeFrameIndex(static_cast<int64_t>(std::stof(row[static_cast<size_t>(options.getTimeColumn())]))));
+                    data_values.push_back(std::stof(row[static_cast<size_t>(options.getDataColumn())]));
                 }
             }
         } catch (std::exception const & e) {

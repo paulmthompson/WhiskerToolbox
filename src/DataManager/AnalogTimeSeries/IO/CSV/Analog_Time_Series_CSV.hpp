@@ -10,23 +10,14 @@
 
 class AnalogTimeSeries;
 
-struct CSVAnalogLoaderOptions {
-    std::string filepath;
-    std::string delimiter = ",";
-    bool has_header = false;
-    bool single_column_format = true;  // If true, only data column, time is inferred as index
-    int time_column = 0;               // Column index for time data (when single_column_format is false)
-    int data_column = 1;               // Column index for data values (when single_column_format is false)
-};
-
 /**
- * @brief Reflected version of CSVAnalogLoaderOptions with validation
+ * @brief CSV analog data loader options with validation
  * 
- * This version uses reflect-cpp for automatic JSON serialization/deserialization
+ * Uses reflect-cpp for automatic JSON serialization/deserialization
  * and includes validators to ensure data integrity.
  * Optional fields can be omitted from JSON and will use default values.
  */
-struct CSVAnalogLoaderOptionsReflected {
+struct CSVAnalogLoaderOptions {
     std::string filepath;
     
     // Common delimiters: comma, tab, semicolon, pipe, space
@@ -39,33 +30,12 @@ struct CSVAnalogLoaderOptionsReflected {
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> time_column;
     std::optional<rfl::Validator<int, rfl::Minimum<0>>> data_column;
     
-    /**
-     * @brief Convert reflected options to legacy format
-     */
-    CSVAnalogLoaderOptions toLegacy() const {
-        CSVAnalogLoaderOptions legacy;
-        legacy.filepath = filepath;
-        legacy.delimiter = delimiter.value_or(",");
-        legacy.has_header = has_header.value_or(false);
-        legacy.single_column_format = single_column_format.value_or(true);
-        legacy.time_column = time_column.has_value() ? time_column.value().value() : 0;
-        legacy.data_column = data_column.has_value() ? data_column.value().value() : 1;
-        return legacy;
-    }
-    
-    /**
-     * @brief Convert legacy options to reflected format
-     */
-    static CSVAnalogLoaderOptionsReflected fromLegacy(CSVAnalogLoaderOptions const& legacy) {
-        CSVAnalogLoaderOptionsReflected reflected;
-        reflected.filepath = legacy.filepath;
-        reflected.delimiter = legacy.delimiter;
-        reflected.has_header = legacy.has_header;
-        reflected.single_column_format = legacy.single_column_format;
-        reflected.time_column = rfl::Validator<int, rfl::Minimum<0>>(legacy.time_column);
-        reflected.data_column = rfl::Validator<int, rfl::Minimum<0>>(legacy.data_column);
-        return reflected;
-    }
+    // Helper methods to get values with defaults
+    std::string getDelimiter() const { return delimiter.value_or(","); }
+    bool getHasHeader() const { return has_header.value_or(false); }
+    bool getSingleColumnFormat() const { return single_column_format.value_or(true); }
+    int getTimeColumn() const { return time_column.has_value() ? time_column.value().value() : 0; }
+    int getDataColumn() const { return data_column.has_value() ? data_column.value().value() : 1; }
 };
 
 /**

@@ -61,7 +61,7 @@ TEST_CASE("Reflect-cpp basic functionality", "[reflection][basic]") {
     }
 }
 
-TEST_CASE("BinaryAnalogLoaderOptionsReflected - Default Values1", "[reflection][analog][binary]") {
+TEST_CASE("BinaryAnalogLoaderOptions - Default Values1", "[reflection][analog][binary]") {
     nlohmann::json json_obj = {
         {"filename", "test.bin"},
         {"parent_dir", "/data"},
@@ -76,7 +76,7 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Default Values1", "[reflection][
         {"num_samples", 10000}
     };
     
-    auto result = parseJson<BinaryAnalogLoaderOptionsReflected>(json_obj);
+    auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
     
     REQUIRE(result);
     
@@ -94,7 +94,7 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Default Values1", "[reflection][
     REQUIRE(opts.num_samples.value_or(0) == 10000);
 }
 
-TEST_CASE("BinaryAnalogLoaderOptionsReflected - Default Values2", "[reflection][analog][binary]") {
+TEST_CASE("BinaryAnalogLoaderOptions - Default Values2", "[reflection][analog][binary]") {
     nlohmann::json json_obj = {
         {"filename", "minimal.bin"}
         // All other fields should use their default values
@@ -105,7 +105,7 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Default Values2", "[reflection][
     
     // Try parsing directly with rfl to get better error messages
     try {
-        auto result_direct = rfl::json::read<BinaryAnalogLoaderOptionsReflected>(json_str);
+        auto result_direct = rfl::json::read<BinaryAnalogLoaderOptions>(json_str);
         if (!result_direct) {
             INFO("Direct parse failed");
         } else {
@@ -115,7 +115,7 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Default Values2", "[reflection][
         INFO("Exception from rfl::json::read: " << e.what());
     }
     
-    auto result = parseJson<BinaryAnalogLoaderOptionsReflected>(json_obj);
+    auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
     
     REQUIRE(result);
     
@@ -134,14 +134,14 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Default Values2", "[reflection][
     REQUIRE((!opts.num_samples.has_value() || opts.num_samples.value() == 0));
 }
 
-TEST_CASE("BinaryAnalogLoaderOptionsReflected - Validation", "[reflection][analog][binary]") {
+TEST_CASE("BinaryAnalogLoaderOptions - Validation", "[reflection][analog][binary]") {
     SECTION("Negative header_size should fail") {
         nlohmann::json json_obj = {
             {"filename", "test.bin"},
             {"header_size", -10}
         };
         
-        auto result = parseJson<BinaryAnalogLoaderOptionsReflected>(json_obj);
+        auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
         REQUIRE_FALSE(result);
     }
     
@@ -151,7 +151,7 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Validation", "[reflection][analo
             {"num_channels", 0}
         };
         
-        auto result = parseJson<BinaryAnalogLoaderOptionsReflected>(json_obj);
+        auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
         REQUIRE_FALSE(result);
     }
     
@@ -161,7 +161,7 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Validation", "[reflection][analo
             {"stride", 0}
         };
         
-        auto result = parseJson<BinaryAnalogLoaderOptionsReflected>(json_obj);
+        auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
         REQUIRE_FALSE(result);
     }
     
@@ -171,7 +171,7 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Validation", "[reflection][analo
             {"data_type", "invalid_type"}
         };
         
-        auto result = parseJson<BinaryAnalogLoaderOptionsReflected>(json_obj);
+        auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
         REQUIRE_FALSE(result);
     }
     
@@ -184,14 +184,14 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Validation", "[reflection][analo
                 {"data_type", type}
             };
             
-            auto result = parseJson<BinaryAnalogLoaderOptionsReflected>(json_obj);
+            auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
             REQUIRE(result);
             REQUIRE(result.value().data_type == type);
         }
     }
 }
 
-TEST_CASE("BinaryAnalogLoaderOptionsReflected - Serialization Round-trip", "[reflection][analog][binary]") {
+TEST_CASE("BinaryAnalogLoaderOptions - Serialization Round-trip", "[reflection][analog][binary]") {
     // Create JSON directly with all fields
     nlohmann::json json_obj = {
         {"filename", "roundtrip.bin"},
@@ -208,7 +208,7 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Serialization Round-trip", "[ref
     };
     
     // Parse
-    auto result = parseJson<BinaryAnalogLoaderOptionsReflected>(json_obj);
+    auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
     REQUIRE(result);
     
     auto original = result.value();
@@ -217,7 +217,7 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Serialization Round-trip", "[ref
     auto json_roundtrip = toJson(original);
     
     // Parse again
-    auto result2 = parseJson<BinaryAnalogLoaderOptionsReflected>(json_roundtrip);
+    auto result2 = parseJson<BinaryAnalogLoaderOptions>(json_roundtrip);
     REQUIRE(result2);
     
     auto parsed = result2.value();
@@ -234,52 +234,8 @@ TEST_CASE("BinaryAnalogLoaderOptionsReflected - Serialization Round-trip", "[ref
     REQUIRE(parsed.num_samples == original.num_samples);
 }
 
-TEST_CASE("BinaryAnalogLoaderOptionsReflected - Legacy Conversion", "[reflection][analog][binary]") {
-    BinaryAnalogLoaderOptions legacy;
-    legacy.filename = "legacy.bin";
-    legacy.parent_dir = "/legacy";
-    legacy.header_size = 128;
-    legacy.num_channels = 2;
-    legacy.use_memory_mapped = false;
-    legacy.offset = 50;
-    legacy.stride = 3;
-    legacy.data_type = "uint16";
-    legacy.scale_factor = 1.5f;
-    legacy.offset_value = 0.5f;
-    legacy.num_samples = 2000;
-    
-    // Convert to reflected
-    auto reflected = BinaryAnalogLoaderOptionsReflected::fromLegacy(legacy);
-    
-    REQUIRE(reflected.filename == legacy.filename);
-    REQUIRE(reflected.parent_dir.value_or("") == legacy.parent_dir);
-    REQUIRE(reflected.header_size.value().value() == legacy.header_size);
-    REQUIRE(reflected.num_channels.value().value() == legacy.num_channels);
-    REQUIRE(reflected.use_memory_mapped.value_or(false) == legacy.use_memory_mapped);
-    REQUIRE(reflected.offset.value().value() == legacy.offset);
-    REQUIRE(reflected.stride.value().value() == legacy.stride);
-    REQUIRE(reflected.data_type.value_or("") == legacy.data_type);
-    REQUIRE(reflected.scale_factor.value_or(0.0f) == legacy.scale_factor);
-    REQUIRE(reflected.offset_value.value_or(0.0f) == legacy.offset_value);
-    REQUIRE(reflected.num_samples.value_or(0) == legacy.num_samples);
-    
-    // Convert back
-    auto back_to_legacy = reflected.toLegacy();
-    
-    REQUIRE(back_to_legacy.filename == legacy.filename);
-    REQUIRE(back_to_legacy.parent_dir == legacy.parent_dir);
-    REQUIRE(back_to_legacy.header_size == legacy.header_size);
-    REQUIRE(back_to_legacy.num_channels == legacy.num_channels);
-    REQUIRE(back_to_legacy.use_memory_mapped == legacy.use_memory_mapped);
-    REQUIRE(back_to_legacy.offset == legacy.offset);
-    REQUIRE(back_to_legacy.stride == legacy.stride);
-    REQUIRE(back_to_legacy.data_type == legacy.data_type);
-    REQUIRE(back_to_legacy.scale_factor == legacy.scale_factor);
-    REQUIRE(back_to_legacy.offset_value == legacy.offset_value);
-    REQUIRE(back_to_legacy.num_samples == legacy.num_samples);
-}
 
-TEST_CASE("CSVAnalogLoaderOptionsReflected - Basic Parsing", "[reflection][analog][csv]") {
+TEST_CASE("CSVAnalogLoaderOptions - Basic Parsing", "[reflection][analog][csv]") {
     nlohmann::json json_obj = {
         {"filepath", "test.csv"},
         {"delimiter", ";"},
@@ -289,7 +245,7 @@ TEST_CASE("CSVAnalogLoaderOptionsReflected - Basic Parsing", "[reflection][analo
         {"data_column", 2}
     };
     
-    auto result = parseJson<CSVAnalogLoaderOptionsReflected>(json_obj);
+    auto result = parseJson<CSVAnalogLoaderOptions>(json_obj);
     
     REQUIRE(result);
     
@@ -302,12 +258,12 @@ TEST_CASE("CSVAnalogLoaderOptionsReflected - Basic Parsing", "[reflection][analo
     REQUIRE(opts.data_column.value() == 2);
 }
 
-TEST_CASE("CSVAnalogLoaderOptionsReflected - Default Values", "[reflection][analog][csv]") {
+TEST_CASE("CSVAnalogLoaderOptions - Default Values", "[reflection][analog][csv]") {
     nlohmann::json json_obj = {
         {"filepath", "minimal.csv"}
     };
     
-    auto result = parseJson<CSVAnalogLoaderOptionsReflected>(json_obj);
+    auto result = parseJson<CSVAnalogLoaderOptions>(json_obj);
     
     REQUIRE(result);
     
@@ -321,23 +277,22 @@ TEST_CASE("CSVAnalogLoaderOptionsReflected - Default Values", "[reflection][anal
     REQUIRE_FALSE(opts.time_column.has_value());
     REQUIRE_FALSE(opts.data_column.has_value());
     
-    // Convert to legacy and check defaults are applied
-    auto legacy = opts.toLegacy();
-    REQUIRE(legacy.delimiter == ",");
-    REQUIRE(legacy.has_header == false);
-    REQUIRE(legacy.single_column_format == true);
-    REQUIRE(legacy.time_column == 0);
-    REQUIRE(legacy.data_column == 1);
+    // Check defaults via helper methods
+    REQUIRE(opts.getDelimiter() == ",");
+    REQUIRE(opts.getHasHeader() == false);
+    REQUIRE(opts.getSingleColumnFormat() == true);
+    REQUIRE(opts.getTimeColumn() == 0);
+    REQUIRE(opts.getDataColumn() == 1);
 }
 
-TEST_CASE("CSVAnalogLoaderOptionsReflected - Validation", "[reflection][analog][csv]") {
+TEST_CASE("CSVAnalogLoaderOptions - Validation", "[reflection][analog][csv]") {
     SECTION("Negative time_column should fail") {
         nlohmann::json json_obj = {
             {"filepath", "test.csv"},
             {"time_column", -1}
         };
         
-        auto result = parseJson<CSVAnalogLoaderOptionsReflected>(json_obj);
+        auto result = parseJson<CSVAnalogLoaderOptions>(json_obj);
         REQUIRE_FALSE(result);
     }
     
@@ -347,13 +302,13 @@ TEST_CASE("CSVAnalogLoaderOptionsReflected - Validation", "[reflection][analog][
             {"data_column", -5}
         };
         
-        auto result = parseJson<CSVAnalogLoaderOptionsReflected>(json_obj);
+        auto result = parseJson<CSVAnalogLoaderOptions>(json_obj);
         REQUIRE_FALSE(result);
     }
 }
 
-TEST_CASE("CSVAnalogLoaderOptionsReflected - Serialization Round-trip", "[reflection][analog][csv]") {
-    CSVAnalogLoaderOptionsReflected original;
+TEST_CASE("CSVAnalogLoaderOptions - Serialization Round-trip", "[reflection][analog][csv]") {
+    CSVAnalogLoaderOptions original;
     original.filepath = "roundtrip.csv";
     original.delimiter = "\t";
     original.has_header = true;
@@ -365,7 +320,7 @@ TEST_CASE("CSVAnalogLoaderOptionsReflected - Serialization Round-trip", "[reflec
     auto json_obj = toJson(original);
     
     // Deserialize
-    auto result = parseJson<CSVAnalogLoaderOptionsReflected>(json_obj);
+    auto result = parseJson<CSVAnalogLoaderOptions>(json_obj);
     REQUIRE(result);
     
     auto parsed = result.value();
@@ -377,42 +332,13 @@ TEST_CASE("CSVAnalogLoaderOptionsReflected - Serialization Round-trip", "[reflec
     REQUIRE(parsed.data_column.value() == original.data_column.value());
 }
 
-TEST_CASE("CSVAnalogLoaderOptionsReflected - Legacy Conversion", "[reflection][analog][csv]") {
-    CSVAnalogLoaderOptions legacy;
-    legacy.filepath = "legacy.csv";
-    legacy.delimiter = "|";
-    legacy.has_header = true;
-    legacy.single_column_format = false;
-    legacy.time_column = 2;
-    legacy.data_column = 4;
-    
-    // Convert to reflected
-    auto reflected = CSVAnalogLoaderOptionsReflected::fromLegacy(legacy);
-    
-    REQUIRE(reflected.filepath == legacy.filepath);
-    REQUIRE(reflected.delimiter == legacy.delimiter);
-    REQUIRE(reflected.has_header == legacy.has_header);
-    REQUIRE(reflected.single_column_format == legacy.single_column_format);
-    REQUIRE(reflected.time_column.value() == legacy.time_column);
-    REQUIRE(reflected.data_column.value() == legacy.data_column);
-    
-    // Convert back
-    auto back_to_legacy = reflected.toLegacy();
-    
-    REQUIRE(back_to_legacy.filepath == legacy.filepath);
-    REQUIRE(back_to_legacy.delimiter == legacy.delimiter);
-    REQUIRE(back_to_legacy.has_header == legacy.has_header);
-    REQUIRE(back_to_legacy.single_column_format == legacy.single_column_format);
-    REQUIRE(back_to_legacy.time_column == legacy.time_column);
-    REQUIRE(back_to_legacy.data_column == legacy.data_column);
-}
 
 // Note: Schema generation doesn't work with custom validators yet
 // TODO: Implement to_schema() for ValidDataType once reflect-cpp pattern is clearer
 /*
 TEST_CASE("JSON Schema Generation", "[reflection][analog][schema]") {
-    SECTION("BinaryAnalogLoaderOptionsReflected schema") {
-        auto schema = generateSchema<BinaryAnalogLoaderOptionsReflected>();
+    SECTION("BinaryAnalogLoaderOptions schema") {
+        auto schema = generateSchema<BinaryAnalogLoaderOptions>();
         
         REQUIRE_FALSE(schema.empty());
         
@@ -423,8 +349,8 @@ TEST_CASE("JSON Schema Generation", "[reflection][analog][schema]") {
         REQUIRE_THAT(schema, ContainsSubstring("data_type"));
     }
     
-    SECTION("CSVAnalogLoaderOptionsReflected schema") {
-        auto schema = generateSchema<CSVAnalogLoaderOptionsReflected>();
+    SECTION("CSVAnalogLoaderOptions schema") {
+        auto schema = generateSchema<CSVAnalogLoaderOptions>();
         
         REQUIRE_FALSE(schema.empty());
         

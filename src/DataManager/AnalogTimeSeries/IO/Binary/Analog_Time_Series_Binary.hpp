@@ -26,30 +26,14 @@ struct ValidDataType {
     }
 };
 
-struct BinaryAnalogLoaderOptions {
-    std::string filename;
-    std::string parent_dir = ".";
-    int header_size = 0;
-    int num_channels = 1;
-    
-    // Memory-mapped options
-    bool use_memory_mapped = false;      // Enable memory-mapped loading
-    size_t offset = 0;                   // Sample offset within data (after header)
-    size_t stride = 1;                   // Stride between samples (for multi-channel)
-    std::string data_type = "int16";     // Data type: "int16", "float32", "int8", etc.
-    float scale_factor = 1.0f;           // Multiplicative scale for conversion
-    float offset_value = 0.0f;           // Additive offset for conversion
-    size_t num_samples = 0;              // Number of samples (0 = auto-detect)
-};
-
 /**
- * @brief Reflected version of BinaryAnalogLoaderOptions with validation
+ * @brief Binary analog data loader options with validation
  * 
- * This version uses reflect-cpp for automatic JSON serialization/deserialization
+ * Uses reflect-cpp for automatic JSON serialization/deserialization
  * and includes validators to ensure data integrity.
  * Optional fields can be omitted from JSON and will use default values.
  */
-struct BinaryAnalogLoaderOptionsReflected {
+struct BinaryAnalogLoaderOptions {
     std::string filename;
     std::optional<std::string> parent_dir;
     
@@ -74,67 +58,17 @@ struct BinaryAnalogLoaderOptionsReflected {
     std::optional<float> offset_value;
     std::optional<size_t> num_samples;
     
-    /**
-     * @brief Convert reflected options to legacy format
-     * 
-     * This allows gradual migration by supporting both formats.
-     */
-    BinaryAnalogLoaderOptions toLegacy() const {
-        BinaryAnalogLoaderOptions legacy;
-        legacy.filename = filename;
-        legacy.parent_dir = parent_dir.value_or(".");
-        legacy.header_size = header_size.has_value() ? header_size.value().value() : 0;
-        legacy.num_channels = num_channels.has_value() ? num_channels.value().value() : 1;
-        legacy.use_memory_mapped = use_memory_mapped.value_or(false);
-        legacy.offset = offset.has_value() ? offset.value().value() : 0;
-        legacy.stride = stride.has_value() ? stride.value().value() : 1;
-        legacy.data_type = data_type.has_value() ? data_type.value().value() : "int16";
-        legacy.scale_factor = scale_factor.value_or(1.0f);
-        legacy.offset_value = offset_value.value_or(0.0f);
-        legacy.num_samples = num_samples.value_or(0);
-        return legacy;
-    }
-    
-    /**
-     * @brief Convert legacy options to reflected format
-     * 
-     * Uses JSON round-trip to handle Literal type conversion properly
-     */
-    static BinaryAnalogLoaderOptionsReflected fromLegacy(BinaryAnalogLoaderOptions const& legacy) {
-        // Create JSON from legacy struct
-        nlohmann::json j;
-        j["filename"] = legacy.filename;
-        j["parent_dir"] = legacy.parent_dir;
-        j["header_size"] = legacy.header_size;
-        j["num_channels"] = legacy.num_channels;
-        j["use_memory_mapped"] = legacy.use_memory_mapped;
-        j["offset"] = legacy.offset;
-        j["stride"] = legacy.stride;
-        j["data_type"] = legacy.data_type;
-        j["scale_factor"] = legacy.scale_factor;
-        j["offset_value"] = legacy.offset_value;
-        j["num_samples"] = legacy.num_samples;
-        
-        // Parse into reflected struct (this handles Literal validation)
-        auto result = rfl::json::read<BinaryAnalogLoaderOptionsReflected>(j.dump());
-        if (!result) {
-            // Fallback with default data_type if invalid
-            BinaryAnalogLoaderOptionsReflected reflected;
-            reflected.filename = legacy.filename;
-            reflected.parent_dir = legacy.parent_dir;
-            reflected.header_size = legacy.header_size;
-            reflected.num_channels = legacy.num_channels;
-            reflected.use_memory_mapped = legacy.use_memory_mapped;
-            reflected.offset = legacy.offset;
-            reflected.stride = legacy.stride;
-            // data_type stays default (int16)
-            reflected.scale_factor = legacy.scale_factor;
-            reflected.offset_value = legacy.offset_value;
-            reflected.num_samples = legacy.num_samples;
-            return reflected;
-        }
-        return result.value();
-    }
+    // Helper methods to get values with defaults
+    std::string getParentDir() const { return parent_dir.value_or("."); }
+    int getHeaderSize() const { return header_size.has_value() ? header_size.value().value() : 0; }
+    int getNumChannels() const { return num_channels.has_value() ? num_channels.value().value() : 1; }
+    bool getUseMemoryMapped() const { return use_memory_mapped.value_or(false); }
+    size_t getOffset() const { return offset.has_value() ? offset.value().value() : 0; }
+    size_t getStride() const { return stride.has_value() ? stride.value().value() : 1; }
+    std::string getDataType() const { return data_type.has_value() ? data_type.value().value() : "int16"; }
+    float getScaleFactor() const { return scale_factor.value_or(1.0f); }
+    float getOffsetValue() const { return offset_value.value_or(0.0f); }
+    size_t getNumSamples() const { return num_samples.value_or(0); }
 };
 
 std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions const & opts);

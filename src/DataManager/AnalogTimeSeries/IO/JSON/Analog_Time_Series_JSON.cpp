@@ -35,34 +35,17 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::s
         case AnalogDataType::int16: {
 
             // Try reflected version with validation first
-            auto opts_result = parseJson<BinaryAnalogLoaderOptionsReflected>(item);
+            auto opts_result = parseJson<BinaryAnalogLoaderOptions>(item);
             
             if (opts_result) {
                 // Successfully parsed with reflect-cpp, use validated options
-                auto opts_reflected = opts_result.value();
-                auto opts = opts_reflected.toLegacy();
+                auto opts = opts_result.value();
                 opts.filename = file_path;
                 analog_time_series = load(opts);
             } else {
                 // Fall back to manual parsing for backward compatibility
-                std::cerr << "Warning: BinaryAnalogLoader using fallback parsing. "
+                std::cerr << "Warning: BinaryAnalogLoader parsing failed. "
                           << "Validation error: " << opts_result.error()->what() << "\n";
-                
-                auto opts = BinaryAnalogLoaderOptions();
-                opts.filename = file_path;
-                opts.header_size = item.value("header_size", 0);
-                opts.num_channels = item.value("channel_count", 1);
-                
-                // Memory-mapped options
-                opts.use_memory_mapped = item.value("use_memory_mapped", false);
-                opts.offset = item.value("offset", 0);
-                opts.stride = item.value("stride", 1);
-                opts.data_type = item.value("data_type", "int16");
-                opts.scale_factor = item.value("scale_factor", 1.0f);
-                opts.offset_value = item.value("offset_value", 0.0f);
-                opts.num_samples = item.value("num_samples", 0);
-                
-                analog_time_series = load(opts);
             }
 
             break;
@@ -70,12 +53,11 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::s
         case AnalogDataType::csv: {
             
             // Try reflected version with validation first
-            auto opts_result = parseJson<CSVAnalogLoaderOptionsReflected>(item);
+            auto opts_result = parseJson<CSVAnalogLoaderOptions>(item);
             
             if (opts_result) {
                 // Successfully parsed with reflect-cpp, use validated options
-                auto opts_reflected = opts_result.value();
-                auto opts = opts_reflected.toLegacy();
+                auto opts = opts_result.value();
                 opts.filepath = file_path;
                 
                 auto single_series = load(opts);
@@ -84,21 +66,8 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::s
                 }
             } else {
                 // Fall back to manual parsing for backward compatibility
-                std::cerr << "Warning: CSVAnalogLoader using fallback parsing. "
+                std::cerr << "Warning: CSVAnalogLoader parsing failed. "
                           << "Validation error: " << opts_result.error()->what() << "\n";
-                
-                auto opts = CSVAnalogLoaderOptions();
-                opts.filepath = file_path;
-                opts.delimiter = item.value("delimiter", ",");
-                opts.has_header = item.value("has_header", false);
-                opts.single_column_format = item.value("single_column_format", true);
-                opts.time_column = item.value("time_column", 0);
-                opts.data_column = item.value("data_column", 1);
-                
-                auto single_series = load(opts);
-                if (single_series) {
-                    analog_time_series.push_back(single_series);
-                }
             }
 
             break;
