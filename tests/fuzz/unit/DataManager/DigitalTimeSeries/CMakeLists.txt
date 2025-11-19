@@ -4,6 +4,8 @@ add_executable(fuzz_digital_event_series_json
     fuzz_digital_event_series_json.cpp
 )
 
+add_fuzz_test_with_instantiations(fuzz_digital_event_series_json)
+
 target_link_libraries(fuzz_digital_event_series_json
     PRIVATE
         DataManager

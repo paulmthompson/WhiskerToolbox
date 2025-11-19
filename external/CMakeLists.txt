@@ -213,13 +213,15 @@ if(LINUX AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             find_package(absl REQUIRED)
         endif()
 
-        add_library(absl_log_instantiations STATIC
+         add_library(absl_log_instantiations STATIC
             ${CMAKE_CURRENT_SOURCE_DIR}/absl_log_instantiations.cpp
         )
         target_link_libraries(absl_log_instantiations PUBLIC absl::log_internal_message)
         set_target_properties(absl_log_instantiations PROPERTIES 
             POSITION_INDEPENDENT_CODE ON
         )
+        # Expose presence of the instantiation target to parent/subdirectories
+        set(HAVE_ABSL_LOG_INSTANTIATIONS ON CACHE BOOL "Abseil log instantiations target is available")
         
         # Make Abseil's log_internal_message library depend on our instantiations
         # This ensures all OR-Tools binaries get the instantiations

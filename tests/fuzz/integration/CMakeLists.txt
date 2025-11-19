@@ -5,6 +5,8 @@ add_executable(fuzz_transform_pipeline
     fuzz_transform_pipeline.cpp
 )
 
+add_fuzz_test_with_instantiations(fuzz_transform_pipeline)
+
 target_link_libraries(fuzz_transform_pipeline
     PRIVATE
         DataManager
