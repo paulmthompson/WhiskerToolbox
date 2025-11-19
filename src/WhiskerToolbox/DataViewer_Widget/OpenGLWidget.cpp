@@ -815,33 +815,29 @@ void OpenGLWidget::drawAnalogSeries() {
         glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
         glUniform1f(m_alphaLoc, 1.0f);
 
-        auto analog_range = series->getTimeValueSpanInTimeFrameIndexRange(series_start_index,
-                                                                          series_end_index);
-
-        if (analog_range.values.empty()) {
-            // Instead of returning early (which stops rendering ALL series),
-            // continue to the next series. This allows other series to still be rendered
-            // even if this particular series has no data in the current visible range.
-            i++;
-            continue;
-        }
+        // Use iterator-based approach which automatically uses fast path (span/pointer)
+        // for contiguous data and slow path for non-contiguous (memory-mapped with stride)
+        auto analog_range = series->getTimeValueRangeInTimeFrameIndexRange(series_start_index,
+                                                                           series_end_index);
 
         if (display_options->gap_handling == AnalogGapHandling::AlwaysConnect) {
 
-            auto time_begin = analog_range.time_indices.begin();
-
-            for (size_t i = 0; i < analog_range.values.size(); i++) {
-                auto const xCanvasPos = time_frame->getTimeAtIndex(**time_begin);
-                //auto const xCanvasPos = point.time_frame_index.getValue();
-                auto const yCanvasPos = analog_range.values[i];
+            m_vertices.clear();
+            for (auto const& [time_idx, value] : analog_range) {
+                auto const xCanvasPos = time_frame->getTimeAtIndex(time_idx);
+                auto const yCanvasPos = value;
 
                 m_vertices.push_back(xCanvasPos);
                 m_vertices.push_back(yCanvasPos);
                 m_vertices.push_back(0.0f);// z coordinate
                 m_vertices.push_back(1.0f);// w coordinate
-
-                ++(*time_begin);
             }
+            
+            if (m_vertices.empty()) {
+                i++;
+                continue;
+            }
+            
             m_vbo.bind();
             m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
             m_vbo.release();
@@ -854,12 +850,12 @@ void OpenGLWidget::drawAnalogSeries() {
             // Draw multiple line segments, breaking at gaps
             // Set line thickness before drawing segments
             glLineWidth(static_cast<float>(display_options->line_thickness));
-            _drawAnalogSeriesWithGapDetection(data, time_frame, analog_range,
+            _drawAnalogSeriesWithGapDetection(time_frame, analog_range,
                                               display_options->gap_threshold);
 
         } else if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
             // Draw individual markers instead of lines
-            _drawAnalogSeriesAsMarkers(data, time_frame, analog_range);
+            _drawAnalogSeriesAsMarkers(time_frame, analog_range);
         }
 
 
@@ -871,35 +867,36 @@ void OpenGLWidget::drawAnalogSeries() {
     glUseProgram(0);
 }
 
-void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & data,
-                                                     std::shared_ptr<TimeFrame> const & time_frame,
-                                                     AnalogTimeSeries::TimeValueSpanPair analog_range,
+void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::shared_ptr<TimeFrame> const & time_frame,
+                                                     AnalogTimeSeries::TimeValueRangeView analog_range,
                                                      float gap_threshold) {
 
     std::vector<GLfloat> segment_vertices;
-    auto prev_index = 0;
+    int prev_index = -1;
+    bool first_point = true;
 
-    auto time_begin = analog_range.time_indices.begin();
-
-    for (size_t i = 0; i < analog_range.values.size(); i++) {
-        auto const xCanvasPos = time_frame->getTimeAtIndex(**time_begin);
-        auto const yCanvasPos = analog_range.values[i];
+    for (auto const& [time_idx, value] : analog_range) {
+        auto const xCanvasPos = time_frame->getTimeAtIndex(time_idx);
+        auto const yCanvasPos = value;
 
         // Check for gap if this isn't the first point
-        if (prev_index != 0) {
+        if (!first_point) {
+            int const current_index = time_idx.getValue();
+            int const gap_size = current_index - prev_index;
 
-            float const time_gap = (**time_begin).getValue() - prev_index;
-
-            if (time_gap > gap_threshold) {
-                // Draw current segment if it has points
-                if (segment_vertices.size() >= 4) {// At least 2 points (2 floats each)
+            if (gap_size > static_cast<int>(gap_threshold)) {
+                // Gap detected - draw current segment and start new one
+                if (segment_vertices.size() >= 4) {// At least 1 point (4 floats)
                     m_vbo.bind();
                     m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
                     m_vbo.release();
-                    glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 4));
-                }
 
-                // Start new segment
+                    if (segment_vertices.size() >= 8) {// At least 2 points (8 floats)
+                        glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 4));
+                    } else {// Single point - draw as a small marker
+                        glDrawArrays(GL_POINTS, 0, static_cast<int>(segment_vertices.size() / 4));
+                    }
+                }
                 segment_vertices.clear();
             }
         }
@@ -910,8 +907,8 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & 
         segment_vertices.push_back(0.0f);// z coordinate
         segment_vertices.push_back(1.0f);// w coordinate
 
-        prev_index = (**time_begin).getValue();
-        ++(*time_begin);
+        prev_index = time_idx.getValue();
+        first_point = false;
     }
 
     // Draw final segment
@@ -929,24 +926,18 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & 
     }
 }
 
-void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::vector<float> const & data,
-                                              std::shared_ptr<TimeFrame> const & time_frame,
-                                              AnalogTimeSeries::TimeValueSpanPair analog_range) {
+void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::shared_ptr<TimeFrame> const & time_frame,
+                                              AnalogTimeSeries::TimeValueRangeView analog_range) {
     m_vertices.clear();
 
-    auto time_begin = analog_range.time_indices.begin();
-
-    for (size_t i = 0; i < analog_range.values.size(); i++) {
-
-        auto const xCanvasPos = time_frame->getTimeAtIndex(**time_begin);
-        auto const yCanvasPos = analog_range.values[i];
+    for (auto const& [time_idx, value] : analog_range) {
+        auto const xCanvasPos = time_frame->getTimeAtIndex(time_idx);
+        auto const yCanvasPos = value;
 
         m_vertices.push_back(xCanvasPos);
         m_vertices.push_back(yCanvasPos);
         m_vertices.push_back(0.0f);// z coordinate
         m_vertices.push_back(1.0f);// w coordinate
-
-        ++(*time_begin);
     }
 
     if (!m_vertices.empty()) {

@@ -1,4 +1,5 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/AnalogDataStorage.hpp"
 #include "AnalogTimeSeries/utils/statistics.hpp"
 
 #include <catch2/catch_approx.hpp>
@@ -6,6 +7,8 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <map>
 #include <ranges>
 #include <random>
@@ -25,7 +28,7 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
         REQUIRE(stored_data.size() == 5);
         REQUIRE(time_data.size() == 5);
 
-        REQUIRE(stored_data == data);
+        REQUIRE(std::vector<float>(stored_data.begin(), stored_data.end()) == data);
         REQUIRE(time_data == times);
     }
 
@@ -45,335 +48,12 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
         REQUIRE(stored_data.size() == 5);
         REQUIRE(time_data.size() == 5);
 
-        REQUIRE(stored_data == std::vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
+        REQUIRE(std::vector<float>(stored_data.begin(), stored_data.end()) == std::vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
         REQUIRE(time_data == std::vector<TimeFrameIndex>{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)});
     }
 
-    SECTION("Overwrite data at specific TimeFrameIndex values") {
-        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)};
-        AnalogTimeSeries series(data, times);
-
-        std::vector<float> new_data{9.0f, 8.0f};
-        std::vector<TimeFrameIndex> target_times{TimeFrameIndex(20), TimeFrameIndex(40)};
-
-        series.overwriteAtTimeIndexes(new_data, target_times);
-
-        auto const & stored_data = series.getAnalogTimeSeries();
-
-        REQUIRE(stored_data == std::vector<float>{1.0f, 9.0f, 3.0f, 8.0f, 5.0f});
-    }
-
-    SECTION("Overwrite data at specific DataArrayIndex positions") {
-        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)};
-        AnalogTimeSeries series(data, times);
-
-        std::vector<float> new_data{9.0f, 8.0f};
-        std::vector<DataArrayIndex> target_indices{DataArrayIndex(1), DataArrayIndex(3)};
-
-        series.overwriteAtDataArrayIndexes(new_data, target_indices);
-
-        auto const & stored_data = series.getAnalogTimeSeries();
-
-        REQUIRE(stored_data == std::vector<float>{1.0f, 9.0f, 3.0f, 8.0f, 5.0f});
-    }
 
 }
-
-TEST_CASE("AnalogTimeSeries - Edge cases and error handling", "[analog][timeseries][error]") {
-
-    SECTION("Overwriting with non-existent TimeFrameIndex values") {
-        std::vector<float> data{1.0f, 2.0f, 3.0f};
-        std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
-        AnalogTimeSeries series(data, times);
-
-        // Attempt to overwrite at TimeFrameIndex values that don't exist
-        std::vector<float> new_data{9.0f, 8.0f};
-        std::vector<TimeFrameIndex> non_existent_times{TimeFrameIndex(15), TimeFrameIndex(25)};
-
-        // This should not change the original data since the TimeFrameIndex values don't exist
-        series.overwriteAtTimeIndexes(new_data, non_existent_times);
-
-        auto const & stored_data = series.getAnalogTimeSeries();
-        REQUIRE(stored_data == std::vector<float>{1.0f, 2.0f, 3.0f});
-    }
-
-    SECTION("Overwriting with out-of-bounds DataArrayIndex values") {
-        std::vector<float> data{1.0f, 2.0f, 3.0f};
-        std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
-        AnalogTimeSeries series(data, times);
-
-        // Attempt to overwrite at DataArrayIndex values that are out of bounds
-        std::vector<float> new_data{9.0f, 8.0f};
-        std::vector<DataArrayIndex> out_of_bounds_indices{DataArrayIndex(5), DataArrayIndex(10)};
-
-        // This should not change the original data since the indices are out of bounds
-        series.overwriteAtDataArrayIndexes(new_data, out_of_bounds_indices);
-
-        auto const & stored_data = series.getAnalogTimeSeries();
-        REQUIRE(stored_data == std::vector<float>{1.0f, 2.0f, 3.0f});
-    }
-
-    SECTION("Overwriting with mismatched vector sizes - TimeFrameIndex") {
-        std::vector<float> data{1.0f, 2.0f, 3.0f};
-        std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
-        AnalogTimeSeries series(data, times);
-
-        // Create vectors with mismatched sizes
-        std::vector<float> new_data{9.0f, 8.0f};
-        std::vector<TimeFrameIndex> mismatched_times{TimeFrameIndex(10)};
-
-        // This should not change the original data due to size mismatch
-        series.overwriteAtTimeIndexes(new_data, mismatched_times);
-
-        auto const & stored_data = series.getAnalogTimeSeries();
-        REQUIRE(stored_data == std::vector<float>{1.0f, 2.0f, 3.0f});
-    }
-
-    SECTION("Overwriting with mismatched vector sizes - DataArrayIndex") {
-        std::vector<float> data{1.0f, 2.0f, 3.0f};
-        std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
-        AnalogTimeSeries series(data, times);
-
-        // Create vectors with mismatched sizes
-        std::vector<float> new_data{9.0f, 8.0f};
-        std::vector<DataArrayIndex> mismatched_indices{DataArrayIndex(1)};
-
-        // This should not change the original data due to size mismatch
-        series.overwriteAtDataArrayIndexes(new_data, mismatched_indices);
-
-        auto const & stored_data = series.getAnalogTimeSeries();
-        REQUIRE(stored_data == std::vector<float>{1.0f, 2.0f, 3.0f});
-    }
-
-    SECTION("Dense time range - overwrite by TimeFrameIndex") {
-        // Test with dense time storage (consecutive indices starting from 0)
-        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        AnalogTimeSeries series(data, data.size()); // This should create dense storage
-
-        std::vector<float> new_data{9.0f, 8.0f};
-        std::vector<TimeFrameIndex> target_times{TimeFrameIndex(1), TimeFrameIndex(3)};
-
-        series.overwriteAtTimeIndexes(new_data, target_times);
-
-        auto const & stored_data = series.getAnalogTimeSeries();
-        REQUIRE(stored_data == std::vector<float>{1.0f, 9.0f, 3.0f, 8.0f, 5.0f});
-    }
-}
-
-TEST_CASE("AnalogTimeSeries - Boundary finding methods", "[analog][timeseries][boundary]") {
-
-    SECTION("findDataArrayIndexGreaterOrEqual - sparse data with gaps") {
-        // Create data with irregular TimeFrameIndex spacing: 1, 5, 7, 15, 20, 100, 200, 250, 300, 500
-        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f};
-        std::vector<TimeFrameIndex> times{
-            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
-            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
-            TimeFrameIndex(300), TimeFrameIndex(500)
-        };
-        
-        AnalogTimeSeries series(data, times);
-
-        // Test exact matches
-        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(5));
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 1); // Index of TimeFrameIndex(5)
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(100));
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 5); // Index of TimeFrameIndex(100)
-
-        // Test boundary cases - values between existing times
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(3)); // Between 1 and 5
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 1); // Should find TimeFrameIndex(5)
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(50)); // Between 20 and 100
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 5); // Should find TimeFrameIndex(100)
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(275)); // Between 250 and 300
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 8); // Should find TimeFrameIndex(300)
-
-        // Test edge cases
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(0)); // Before all data
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 0); // Should find TimeFrameIndex(1)
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(500)); // Last value
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 9); // Should find TimeFrameIndex(500)
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(1000)); // Beyond all data
-        REQUIRE_FALSE(result.has_value());
-    }
-
-    SECTION("findDataArrayIndexLessOrEqual - sparse data with gaps") {
-        // Create data with irregular TimeFrameIndex spacing: 1, 5, 7, 15, 20, 100, 200, 250, 300, 500
-        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f};
-        std::vector<TimeFrameIndex> times{
-            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
-            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
-            TimeFrameIndex(300), TimeFrameIndex(500)
-        };
-        
-        AnalogTimeSeries series(data, times);
-
-        // Test exact matches
-        auto result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(5));
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 1); // Index of TimeFrameIndex(5)
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(100));
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 5); // Index of TimeFrameIndex(100)
-
-        // Test boundary cases - values between existing times
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(3)); // Between 1 and 5
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 0); // Should find TimeFrameIndex(1)
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(50)); // Between 20 and 100
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 4); // Should find TimeFrameIndex(20)
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(275)); // Between 250 and 300
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 7); // Should find TimeFrameIndex(250)
-
-        // Test edge cases
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(0)); // Before all data
-        REQUIRE_FALSE(result.has_value());
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(500)); // Last value
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 9); // Should find TimeFrameIndex(500)
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(1000)); // Beyond all data
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 9); // Should find TimeFrameIndex(500)
-    }
-
-    SECTION("Boundary finding - dense consecutive storage") {
-        // Create data with consecutive TimeFrameIndex values starting from 100
-        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
-        std::vector<TimeFrameIndex> times{TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103), TimeFrameIndex(104)};
-        
-        AnalogTimeSeries series(data, times);
-
-        // Test findDataArrayIndexGreaterOrEqual
-        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(99)); // Before start
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 0); // Should find TimeFrameIndex(100)
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(102)); // Exact match
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 2); // Should find TimeFrameIndex(102)
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(105)); // After end
-        REQUIRE_FALSE(result.has_value());
-
-        // Test findDataArrayIndexLessOrEqual
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(99)); // Before start
-        REQUIRE_FALSE(result.has_value());
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(102)); // Exact match
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 2); // Should find TimeFrameIndex(102)
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(105)); // After end
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 4); // Should find TimeFrameIndex(104)
-    }
-
-    SECTION("Boundary finding - dense storage starting from 0") {
-        // Create data using the constructor that should produce dense storage starting from 0
-        std::vector<float> data{5.5f, 6.6f, 7.7f, 8.8f, 9.9f};
-        AnalogTimeSeries series(data, data.size()); // Dense storage from TimeFrameIndex(0)
-
-        // Test findDataArrayIndexGreaterOrEqual
-        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(-1)); // Before start
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 0); // Should find TimeFrameIndex(0)
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(2)); // Middle
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 2); // Should find TimeFrameIndex(2)
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(5)); // After end
-        REQUIRE_FALSE(result.has_value());
-
-        // Test findDataArrayIndexLessOrEqual
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(-1)); // Before start
-        REQUIRE_FALSE(result.has_value());
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(2)); // Middle
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 2); // Should find TimeFrameIndex(2)
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(5)); // After end
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 4); // Should find TimeFrameIndex(4)
-    }
-
-    SECTION("Boundary finding with single data point") {
-        std::vector<float> data{42.0f};
-        std::vector<TimeFrameIndex> times{TimeFrameIndex(50)};
-        
-        AnalogTimeSeries series(data, times);
-
-        // Test findDataArrayIndexGreaterOrEqual
-        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(40)); // Before
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 0);
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(50)); // Exact
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 0);
-        
-        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(60)); // After
-        REQUIRE_FALSE(result.has_value());
-
-        // Test findDataArrayIndexLessOrEqual
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(40)); // Before
-        REQUIRE_FALSE(result.has_value());
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(50)); // Exact
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 0);
-        
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(60)); // After
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 0);
-    }
-
-    SECTION("Verify data values at found indices") {
-        // Test that the boundary-finding methods return indices that give access to correct data
-        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
-        std::vector<TimeFrameIndex> times{
-            TimeFrameIndex(2), TimeFrameIndex(4), TimeFrameIndex(6), TimeFrameIndex(8), TimeFrameIndex(10)
-        };
-        
-        AnalogTimeSeries series(data, times);
-
-        // Find index >= 5 (should find TimeFrameIndex(6) at DataArrayIndex(2))
-        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(5));
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 2);
-        REQUIRE(series.getDataAtDataArrayIndex(result.value()) == 30.0f);
-        REQUIRE(series.getTimeFrameIndexAtDataArrayIndex(result.value()) == TimeFrameIndex(6));
-
-        // Find index <= 5 (should find TimeFrameIndex(4) at DataArrayIndex(1))
-        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(5));
-        REQUIRE(result.has_value());
-        REQUIRE(result.value().getValue() == 1);
-        REQUIRE(series.getDataAtDataArrayIndex(result.value()) == 20.0f);
-        REQUIRE(series.getTimeFrameIndexAtDataArrayIndex(result.value()) == TimeFrameIndex(4));
-    }
-}
-
 TEST_CASE("AnalogTimeSeries - getDataInTimeFrameIndexRange functionality", "[analog][timeseries][span_range]") {
 
     SECTION("Basic range extraction - sparse data") {
@@ -576,132 +256,6 @@ TEST_CASE("AnalogTimeSeries - getDataInTimeFrameIndexRange functionality", "[ana
         // (span should be a view, not a copy)
         auto const& original_data = series.getAnalogTimeSeries();
         REQUIRE(span.data() == &original_data[1]); // Should point to the second element (index 1)
-    }
-}
-
-TEST_CASE("AnalogTimeSeries - findDataArrayIndexForTimeFrameIndex functionality", "[analog][timeseries][index_lookup]") {
-
-    SECTION("Regular spacing - even TimeFrameIndex values") {
-        // Create 10 values (0-9) with even TimeFrameIndex values (2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
-        std::vector<float> data{0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 10; ++i) {
-            times.push_back(TimeFrameIndex(2 * (i + 1))); // 2, 4, 6, 8, 10, 12, 14, 16, 18, 20
-        }
-        
-        AnalogTimeSeries series(data, times);
-
-        // Test finding DataArrayIndex for each TimeFrameIndex
-        for (size_t i = 0; i < times.size(); ++i) {
-            auto result = series.findDataArrayIndexForTimeFrameIndex(times[i]);
-            REQUIRE(result.has_value());
-            REQUIRE(result.value().getValue() == i);
-            
-            // Verify the data value matches
-            REQUIRE(series.getDataAtDataArrayIndex(result.value()) == data[i]);
-        }
-
-        // Test non-existent TimeFrameIndex values
-        auto result_odd = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(3)); // Should not exist
-        REQUIRE_FALSE(result_odd.has_value());
-        
-        auto result_too_high = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(22)); // Should not exist
-        REQUIRE_FALSE(result_too_high.has_value());
-        
-        auto result_too_low = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(1)); // Should not exist
-        REQUIRE_FALSE(result_too_low.has_value());
-    }
-
-    SECTION("Irregular spacing - scattered TimeFrameIndex values") {
-        // Create 10 values with irregular TimeFrameIndex spacing
-        std::vector<float> data{10.5f, 20.3f, 30.1f, 40.7f, 50.2f, 60.9f, 70.4f, 80.8f, 90.6f, 100.0f};
-        std::vector<TimeFrameIndex> times{
-            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
-            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
-            TimeFrameIndex(300), TimeFrameIndex(500)
-        };
-        
-        AnalogTimeSeries series(data, times);
-
-        // Test finding DataArrayIndex for each TimeFrameIndex
-        for (size_t i = 0; i < times.size(); ++i) {
-            auto result = series.findDataArrayIndexForTimeFrameIndex(times[i]);
-            REQUIRE(result.has_value());
-            REQUIRE(result.value().getValue() == i);
-            
-            // Verify the data value matches
-            REQUIRE(series.getDataAtDataArrayIndex(result.value()) == Catch::Approx(data[i]));
-        }
-
-        // Test non-existent TimeFrameIndex values in the gaps
-        auto result_gap1 = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(3)); // Between 1 and 5
-        REQUIRE_FALSE(result_gap1.has_value());
-        
-        auto result_gap2 = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(50)); // Between 20 and 100
-        REQUIRE_FALSE(result_gap2.has_value());
-        
-        auto result_gap3 = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(275)); // Between 250 and 300
-        REQUIRE_FALSE(result_gap3.has_value());
-        
-        auto result_beyond = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(1000)); // Beyond all values
-        REQUIRE_FALSE(result_beyond.has_value());
-        
-        auto result_before = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(0)); // Before all values
-        REQUIRE_FALSE(result_before.has_value());
-    }
-
-    SECTION("Dense time storage - consecutive TimeFrameIndex values starting from non-zero") {
-        // Create data using the constructor that should produce dense storage
-        std::vector<float> data{5.5f, 6.6f, 7.7f, 8.8f, 9.9f};
-        // This should create DenseTimeRange starting from TimeFrameIndex(0)
-        AnalogTimeSeries series(data, data.size());
-
-        // Test finding DataArrayIndex for consecutive TimeFrameIndex values starting from 0
-        for (size_t i = 0; i < data.size(); ++i) {
-            auto result = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(static_cast<int64_t>(i)));
-            REQUIRE(result.has_value());
-            REQUIRE(result.value().getValue() == i);
-            
-            // Verify the data value matches
-            REQUIRE(series.getDataAtDataArrayIndex(result.value()) == Catch::Approx(data[i]));
-        }
-
-        // Test non-existent TimeFrameIndex values outside the range
-        auto result_negative = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(-1));
-        REQUIRE_FALSE(result_negative.has_value());
-        
-        auto result_too_high = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(static_cast<int64_t>(data.size())));
-        REQUIRE_FALSE(result_too_high.has_value());
-    }
-
-    SECTION("Dense time storage - consecutive TimeFrameIndex values with custom start") {
-        // Create data with consecutive TimeFrameIndex values starting from 100
-        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f};
-        std::vector<TimeFrameIndex> times{TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103)};
-        
-        AnalogTimeSeries series(data, times);
-
-        // This should optimize to dense storage since the times are consecutive
-        // Test finding DataArrayIndex for consecutive TimeFrameIndex values
-        for (size_t i = 0; i < data.size(); ++i) {
-            TimeFrameIndex target_time(100 + static_cast<int64_t>(i));
-            auto result = series.findDataArrayIndexForTimeFrameIndex(target_time);
-            REQUIRE(result.has_value());
-            REQUIRE(result.value().getValue() == i);
-            
-            // Verify the data value matches
-            REQUIRE(series.getDataAtDataArrayIndex(result.value()) == Catch::Approx(data[i]));
-        }
-
-        // Test non-existent TimeFrameIndex values outside the range
-        auto result_before = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(99));
-        REQUIRE_FALSE(result_before.has_value());
-        
-        auto result_after = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(104));
-        REQUIRE_FALSE(result_after.has_value());
-        
-        auto result_gap = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(50));
-        REQUIRE_FALSE(result_gap.has_value());
     }
 }
 
@@ -1072,5 +626,252 @@ TEST_CASE("AnalogTimeSeries - Time-Value Interface Comparison", "[analog][timese
         // Verify span size is reasonable
         REQUIRE(span_pair.values.size() > 100); // Should capture many points
         REQUIRE(span_pair.values.size() <= 1000); // But not more than total data
+    }
+}
+
+TEST_CASE("AnalogTimeSeries - Memory-mapped storage", "[analog][timeseries][mmap]") {
+    
+    SECTION("Memory-mapped int16 data") {
+        // Create a temporary binary file with int16 data
+        std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_int16.bin";
+        
+        // Write test data: 100 int16 values
+        std::vector<int16_t> test_data;
+        for (int i = 0; i < 100; ++i) {
+            test_data.push_back(static_cast<int16_t>(i * 10));
+        }
+        
+        std::ofstream out(temp_file, std::ios::binary);
+        out.write(reinterpret_cast<char const*>(test_data.data()), test_data.size() * sizeof(int16_t));
+        out.close();
+        
+        // Create memory-mapped analog time series
+        MmapStorageConfig config;
+        config.file_path = temp_file;
+        config.header_size = 0;
+        config.offset = 0;
+        config.stride = 1;
+        config.data_type = MmapDataType::Int16;
+        config.scale_factor = 1.0f;
+        config.offset_value = 0.0f;
+        config.num_samples = 100;
+        
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 100; ++i) {
+            times.push_back(TimeFrameIndex(i));
+        }
+        
+        auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+        
+        // Verify data access
+        REQUIRE(series->getNumSamples() == 100);
+        
+        // Check values through iterator
+        auto samples = series->getAllSamples();
+        int count = 0;
+        for (auto const& [time, value] : samples) {
+            REQUIRE(value == Catch::Approx(static_cast<float>(count * 10)));
+            count++;
+        }
+        REQUIRE(count == 100);
+        
+        // Cleanup
+        std::filesystem::remove(temp_file);
+    }
+    
+    SECTION("Memory-mapped with stride (interleaved channels)") {
+        // Create file with 3 interleaved channels: [ch0, ch1, ch2, ch0, ch1, ch2, ...]
+        std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_strided.bin";
+        
+        std::vector<int16_t> interleaved_data;
+        for (int i = 0; i < 50; ++i) {
+            interleaved_data.push_back(static_cast<int16_t>(i * 100));     // Channel 0
+            interleaved_data.push_back(static_cast<int16_t>(i * 100 + 1)); // Channel 1
+            interleaved_data.push_back(static_cast<int16_t>(i * 100 + 2)); // Channel 2
+        }
+        
+        std::ofstream out(temp_file, std::ios::binary);
+        out.write(reinterpret_cast<char const*>(interleaved_data.data()), 
+                  interleaved_data.size() * sizeof(int16_t));
+        out.close();
+        
+        // Access channel 1 (offset=1, stride=3)
+        MmapStorageConfig config;
+        config.file_path = temp_file;
+        config.header_size = 0;
+        config.offset = 1;  // Start at second element (channel 1)
+        config.stride = 3;  // Skip 3 elements between samples
+        config.data_type = MmapDataType::Int16;
+        config.scale_factor = 1.0f;
+        config.offset_value = 0.0f;
+        config.num_samples = 0; // Auto-detect
+        
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 50; ++i) {
+            times.push_back(TimeFrameIndex(i));
+        }
+        
+        auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+        
+        REQUIRE(series->getNumSamples() == 50);
+        
+        // Verify we're reading channel 1 data
+        auto samples = series->getAllSamples();
+        int count = 0;
+        for (auto const& [time, value] : samples) {
+            REQUIRE(value == Catch::Approx(static_cast<float>(count * 100 + 1)));
+            count++;
+        }
+        REQUIRE(count == 50);
+        
+        // Cleanup
+        std::filesystem::remove(temp_file);
+    }
+    
+    SECTION("Memory-mapped with header and scale/offset") {
+        std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_header.bin";
+        
+        // Write 256-byte header followed by int16 data
+        std::ofstream out(temp_file, std::ios::binary);
+        std::vector<char> header(256, 0xAA); // Dummy header
+        out.write(header.data(), header.size());
+        
+        // Write actual data after header
+        std::vector<int16_t> data;
+        for (int i = 0; i < 100; ++i) {
+            data.push_back(static_cast<int16_t>(i + 1000)); // Offset by 1000
+        }
+        out.write(reinterpret_cast<char const*>(data.data()), data.size() * sizeof(int16_t));
+        out.close();
+        
+        // Configure with header, scale, and offset
+        MmapStorageConfig config;
+        config.file_path = temp_file;
+        config.header_size = 256;
+        config.offset = 0;
+        config.stride = 1;
+        config.data_type = MmapDataType::Int16;
+        config.scale_factor = 0.1f;  // Scale down by 10x
+        config.offset_value = -100.0f; // Subtract 100
+        config.num_samples = 100;
+        
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 100; ++i) {
+            times.push_back(TimeFrameIndex(i));
+        }
+        
+        auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+        
+        REQUIRE(series->getNumSamples() == 100);
+        
+        // Verify scale and offset applied: value = (raw * scale) + offset
+        // For i=0: raw=1000, result = 1000*0.1 - 100 = 0
+        // For i=10: raw=1010, result = 1010*0.1 - 100 = 1
+        auto samples = series->getAllSamples();
+        int count = 0;
+        for (auto const& [time, value] : samples) {
+            float expected = static_cast<float>(count + 1000) * 0.1f - 100.0f;
+            REQUIRE(value == Catch::Approx(expected).margin(0.01f));
+            count++;
+        }
+        REQUIRE(count == 100);
+        
+        // Cleanup
+        std::filesystem::remove(temp_file);
+    }
+    
+    SECTION("Memory-mapped different data types") {
+        // Test float32
+        {
+            std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_float32.bin";
+            std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
+            
+            std::ofstream out(temp_file, std::ios::binary);
+            out.write(reinterpret_cast<char const*>(data.data()), data.size() * sizeof(float));
+            out.close();
+            
+            MmapStorageConfig config;
+            config.file_path = temp_file;
+            config.data_type = MmapDataType::Float32;
+            config.num_samples = 5;
+            
+            std::vector<TimeFrameIndex> times{TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+                                            TimeFrameIndex(3), TimeFrameIndex(4)};
+            
+            auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+            auto samples = series->getAllSamples();
+            
+            int idx = 0;
+            for (auto const& [time, value] : samples) {
+                REQUIRE(value == Catch::Approx(data[idx]).margin(0.001f));
+                idx++;
+            }
+            
+            std::filesystem::remove(temp_file);
+        }
+        
+        // Test uint8
+        {
+            std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_uint8.bin";
+            std::vector<uint8_t> data{10, 20, 30, 40, 50};
+            
+            std::ofstream out(temp_file, std::ios::binary);
+            out.write(reinterpret_cast<char const*>(data.data()), data.size() * sizeof(uint8_t));
+            out.close();
+            
+            MmapStorageConfig config;
+            config.file_path = temp_file;
+            config.data_type = MmapDataType::UInt8;
+            config.num_samples = 5;
+            
+            std::vector<TimeFrameIndex> times{TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+                                            TimeFrameIndex(3), TimeFrameIndex(4)};
+            
+            auto series = AnalogTimeSeries::createMemoryMapped(config, times);
+            auto samples = series->getAllSamples();
+            
+            int idx = 0;
+            for (auto const& [time, value] : samples) {
+                REQUIRE(value == Catch::Approx(static_cast<float>(data[idx])));
+                idx++;
+            }
+            
+            std::filesystem::remove(temp_file);
+        }
+    }
+    
+    SECTION("Memory-mapped error handling") {
+        // Non-existent file
+        MmapStorageConfig config;
+        config.file_path = "/nonexistent/path/to/file.bin";
+        config.num_samples = 10;
+        
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 10; ++i) {
+            times.push_back(TimeFrameIndex(i));
+        }
+        
+        REQUIRE_THROWS_AS(AnalogTimeSeries::createMemoryMapped(config, times), std::runtime_error);
+        
+        // Mismatched time vector size
+        std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_mmap_size_mismatch.bin";
+        std::vector<float> data(100, 1.0f);
+        
+        std::ofstream out(temp_file, std::ios::binary);
+        out.write(reinterpret_cast<char const*>(data.data()), data.size() * sizeof(float));
+        out.close();
+        
+        config.file_path = temp_file;
+        config.data_type = MmapDataType::Float32;
+        config.num_samples = 100;
+        
+        std::vector<TimeFrameIndex> wrong_size_times; // Wrong size!
+        for (int i = 0; i < 50; ++i) {
+            wrong_size_times.push_back(TimeFrameIndex(i));
+        }
+        
+        REQUIRE_THROWS_AS(AnalogTimeSeries::createMemoryMapped(config, wrong_size_times), std::runtime_error);
+        
+        std::filesystem::remove(temp_file);
     }
 }

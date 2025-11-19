@@ -390,3 +390,82 @@ This directory contains:
 - `WhiskerToolbox` - Main executable
 - Various shared libraries (.so files)
 - Build artifacts and intermediate files
+
+---
+
+## Fuzz Testing with Google FuzzTest
+
+**Purpose:** Automated testing that generates random inputs to discover edge cases, crashes, and unexpected behaviors. Uses coverage-guided fuzzing to systematically explore code paths.
+
+**Requirements:** 
+- Clang compiler (required for instrumentation)
+- CMake option: `-DENABLE_FUZZ_TESTING=ON`
+
+**Location:** `tests/fuzz/`
+
+**Command Line Usage:**
+
+Build with fuzz testing enabled:
+```bash
+cmake --preset linux-clang-release -DENABLE_FUZZ_TESTING=ON -DENABLE_ORTOOLS=OFF
+cmake --build --preset linux-clang-release
+```
+
+Run all fuzz tests via CTest:
+```bash
+ctest --preset linux-clang-release -R fuzz --output-on-failure
+```
+
+Run specific fuzz test directly:
+```bash
+# Digital Event Series JSON fuzzing
+./out/build/Clang/Release/tests/fuzz/unit/DataManager/DigitalTimeSeries/fuzz_digital_event_series_json
+
+# Transform Pipeline fuzzing
+./out/build/Clang/Release/tests/fuzz/integration/fuzz_transform_pipeline
+```
+
+Run with specific fuzz options:
+```bash
+# Run for specific duration
+./fuzz_test --fuzz_for=60s
+
+# Run specific fuzz test within suite
+./fuzz_test --fuzz=MySuite.MyFuzzTest
+
+# Reproduce a specific crash
+./fuzz_test --fuzz_reproduce_finding=crash-reproducer-file
+```
+
+**Available Fuzz Tests:**
+
+1. **Digital Event Series JSON** (`tests/fuzz/unit/DataManager/DigitalTimeSeries/`)
+   - Tests JSON parsing robustness
+   - Fuzzes format types, parameters, and data values
+   - Validates error handling for corrupted inputs
+
+2. **Transform Pipeline** (`tests/fuzz/integration/`)
+   - Fuzzes pipeline configurations
+   - Tests variable substitution
+   - Validates multi-phase execution
+   - Tests with random transform combinations
+
+**Corpus Management:**
+
+Seed inputs located in `tests/fuzz/corpus/`:
+- `unit/` - Unit test seeds (JSON configurations, data files)
+- `integration/` - Integration test seeds (pipeline configurations)
+
+The fuzzer uses these seeds as starting points and mutates them to discover new test cases.
+
+**Use Cases:**
+- Discover parsing bugs and edge cases
+- Validate error handling for invalid inputs
+- Test robustness of data loaders
+- Find crashes and undefined behavior
+- Continuous integration smoke testing
+
+**Documentation:**
+- Full documentation: `tests/fuzz/README.md`
+- Corpus information: `tests/fuzz/corpus/README.md`
+

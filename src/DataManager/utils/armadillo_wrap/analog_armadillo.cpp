@@ -24,12 +24,3 @@ arma::Row<double> convertAnalogTimeSeriesToMlpackArray(
 
     return result;
 }
-
-void updateAnalogTimeSeriesFromMlpackArray(
-        arma::Row<double> const & array,
-        std::vector<TimeFrameIndex> & timestamps,
-        AnalogTimeSeries * analogTimeSeries) {
-
-    std::vector<float> data(array.n_elem); // Does this actually write anything?
-    analogTimeSeries->overwriteAtTimeIndexes(data, timestamps);
-}

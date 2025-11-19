@@ -26,11 +26,18 @@ jobs:
       - name: Configure CMake without coverage
         run: cmake --preset linux-clang-release
 
-      - name: Display Log on failure
-        if: failure()
+      - name: Clean vcpkg build files
         run: |
-          cat /usr/local/share/vcpkg/buildtrees/glib/package-x64-linux-dbg-out.log
-          cat /usr/local/share/vcpkg/buildtrees/glib/package-x64-linux-dbg-err.log
+          echo "Disk usage before cleanup:"
+          df -h
+          # Clean vcpkg buildtrees (temporary build artifacts)
+          rm -rf ${{ github.workspace }}/vcpkg/buildtrees 2>/dev/null || true
+          # Clean vcpkg downloads (source archives)
+          rm -rf ${{ github.workspace }}/vcpkg/downloads 2>/dev/null || true
+          # Clean vcpkg packages (intermediate package artifacts)
+          rm -rf ${{ github.workspace }}/vcpkg/packages 2>/dev/null || true
+          echo "Disk usage after cleanup:"
+          df -h
 
       - name: Build
         run: cmake --build --preset linux-clang-release

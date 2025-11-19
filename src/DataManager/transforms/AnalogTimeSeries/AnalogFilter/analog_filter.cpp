@@ -61,7 +61,7 @@ std::shared_ptr<AnalogTimeSeries> filterWithInstance(
     }
 
     // Get all data from the time series
-    auto & data_span = analog_time_series->getAnalogTimeSeries();
+    auto data_span = analog_time_series->getAnalogTimeSeries();
     auto time_series = analog_time_series->getTimeSeries();
 
     if (data_span.empty()) {

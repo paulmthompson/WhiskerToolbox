@@ -6,6 +6,9 @@
             "name": "armadillo"
         },
         {
+            "name": "eigen3"
+        },
+        {
             "name": "glib"
         },
         {
@@ -25,7 +28,7 @@
             "name": "openblas"
         },
         {
-            "name": "eigen3"
+            "name": "reflectcpp"
         },
         {
             "name": "spdlog"
@@ -116,9 +119,13 @@
             ]
         }
     },
-    "builtin-baseline": "3508985146f1b1d248c67ead13f8f54be5b4f5da",
-    "$comment": "hash corresponds to 2024.08.23",
+    "builtin-baseline": "b322364f06308bdd24823f9d8f03fe0cc86fd46f",
+    "$comment": "hash corresponds to 2024.12.16",
     "overrides": [
+        {
+            "name": "abseil",
+            "version": "20240722.0"
+        },
         {
             "name": "armadillo",
             "version": "12.8.4"
@@ -132,8 +139,12 @@
             "version": "1.0.1"
         },
         {
+            "name": "eigen3",
+            "version": "3.4.0#4"
+        },
+        {
             "name": "ffmpeg",
-            "version": "6.1.1#9"
+            "version": "7.1#1"
         },
         {
             "name": "glib",
@@ -147,7 +158,7 @@
         },
         {
             "name": "hdf5",
-            "version": "1.14.4.3"
+            "version": "1.14.4.3#3"
         },
         {
             "name": "highfive",

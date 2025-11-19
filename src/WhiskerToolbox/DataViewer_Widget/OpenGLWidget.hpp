@@ -443,14 +443,13 @@ private:
     void cancelTooltipTimer();
 
     // Gap detection helper methods for analog series
-    void _drawAnalogSeriesWithGapDetection(std::vector<float> const & data,
-                                           std::shared_ptr<TimeFrame> const & time_frame,
-                                           AnalogTimeSeries::TimeValueSpanPair analog_range,
+    // These work with TimeValueRangeView which provides the necessary data regardless of underlying storage
+    void _drawAnalogSeriesWithGapDetection(std::shared_ptr<TimeFrame> const & time_frame,
+                                           AnalogTimeSeries::TimeValueRangeView analog_range,
                                            float gap_threshold);
 
-    void _drawAnalogSeriesAsMarkers(std::vector<float> const & data,
-                                    std::shared_ptr<TimeFrame> const & time_frame,
-                                    AnalogTimeSeries::TimeValueSpanPair analog_range);
+    void _drawAnalogSeriesAsMarkers(std::shared_ptr<TimeFrame> const & time_frame,
+                                    AnalogTimeSeries::TimeValueRangeView analog_range);
 
     std::unordered_map<std::string, AnalogSeriesData> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;

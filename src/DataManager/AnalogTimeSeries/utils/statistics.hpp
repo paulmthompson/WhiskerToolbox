@@ -6,10 +6,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <limits>
+#include <ranges>
 #include <span>
 #include <vector>
 
@@ -18,9 +20,39 @@ class AnalogTimeSeries;
 // ========== Mean ==========
 
 /**
- * @brief Raw mean calculation implementation using iterators
+ * @brief Calculate mean from any range of numeric values
  * 
- * This is the core implementation that all other mean functions call.
+ * This generic implementation works with any range type: std::vector, std::span,
+ * custom iterators, range views, etc. Uses C++20 ranges for maximum flexibility.
+ * 
+ * @tparam Range Any type satisfying std::ranges::input_range with numeric value_type
+ * @param range The range of values to calculate mean from
+ * @return float The mean value of the range
+ */
+template<std::ranges::input_range Range>
+    requires std::convertible_to<std::ranges::range_value_t<Range>, float>
+float calculate_mean(Range&& range) {
+    if (std::ranges::empty(range)) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    float sum = 0.0f;
+    size_t count = 0;
+    
+    for (auto const& value : range) {
+        sum += static_cast<float>(value);
+        ++count;
+    }
+    
+    if (count == 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    return sum / static_cast<float>(count);
+}
+
+/**
+ * @brief Raw mean calculation implementation using iterators (for backward compatibility)
  * 
  * @param begin Iterator to the start of the data range
  * @param end Iterator to the end of the data range (exclusive)
@@ -28,21 +60,7 @@ class AnalogTimeSeries;
  */
 template<typename Iterator>
 float calculate_mean_impl(Iterator begin, Iterator end) {
-    if (begin == end) {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    auto const distance = std::distance(begin, end);
-    if (distance <= 0) {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    float sum = 0.0f;
-    for (auto it = begin; it != end; ++it) {
-        sum += *it;
-    }
-
-    return sum / static_cast<float>(distance);
+    return calculate_mean(std::ranges::subrange(begin, end));
 }
 
 /**
@@ -56,14 +74,6 @@ float calculate_mean_impl(Iterator begin, Iterator end) {
  * @return float The mean value in the specified range
  */
 float calculate_mean_impl(std::vector<float> const & data, size_t start, size_t end);
-
-/**
- * @brief Calculate the mean value of a span of data
- * 
- * @param data_span Span of float data
- * @return float The mean value
- */
-float calculate_mean(std::span<float const> data_span);
 
 /**
  * @brief Calculate the mean value of an AnalogTimeSeries
@@ -100,9 +110,47 @@ float calculate_mean_in_time_range(AnalogTimeSeries const & series, TimeFrameInd
 // ========== Standard Deviation ==========
 
 /**
- * @brief Raw standard deviation calculation implementation using iterators
+ * @brief Calculate standard deviation from any range of numeric values
  * 
- * This is the core implementation that all other standard deviation functions call.
+ * This generic implementation works with any forward range type. Uses C++20 ranges
+ * for maximum flexibility. Requires forward_range because we need two passes.
+ * 
+ * @tparam Range Any type satisfying std::ranges::forward_range with numeric value_type
+ * @param range The range of values to calculate standard deviation from
+ * @return float The standard deviation of the range
+ */
+template<std::ranges::forward_range Range>
+    requires std::convertible_to<std::ranges::range_value_t<Range>, float>
+float calculate_std_dev(Range&& range) {
+    if (std::ranges::empty(range)) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    // Calculate mean first
+    float const mean = calculate_mean(range);
+    if (std::isnan(mean)) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    // Calculate variance
+    float sum = 0.0f;
+    size_t count = 0;
+    
+    for (auto const& value : range) {
+        float const diff = static_cast<float>(value) - mean;
+        sum += diff * diff;
+        ++count;
+    }
+    
+    if (count == 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    return std::sqrt(sum / static_cast<float>(count));
+}
+
+/**
+ * @brief Raw standard deviation calculation implementation using iterators (for backward compatibility)
  * 
  * @param begin Iterator to the start of the data range
  * @param end Iterator to the end of the data range (exclusive)
@@ -110,29 +158,7 @@ float calculate_mean_in_time_range(AnalogTimeSeries const & series, TimeFrameInd
  */
 template<typename Iterator>
 float calculate_std_dev_impl(Iterator begin, Iterator end) {
-    if (begin == end) {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    auto const distance = std::distance(begin, end);
-    if (distance <= 0) {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    // Calculate mean first
-    float const mean = calculate_mean_impl(begin, end);
-    if (std::isnan(mean)) {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    // Calculate variance
-    float sum = 0.0f;
-    for (auto it = begin; it != end; ++it) {
-        float const diff = *it - mean;
-        sum += diff * diff;
-    }
-
-    return std::sqrt(sum / static_cast<float>(distance));
+    return calculate_std_dev(std::ranges::subrange(begin, end));
 }
 
 /**
@@ -146,14 +172,6 @@ float calculate_std_dev_impl(Iterator begin, Iterator end) {
  * @return float The standard deviation in the specified range
  */
 float calculate_std_dev_impl(std::vector<float> const & data, size_t start, size_t end);
-
-/**
- * @brief Calculate the standard deviation of a span of data
- * 
- * @param data_span Span of float data
- * @return float The standard deviation
- */
-float calculate_std_dev(std::span<float const> data_span);
 
 /**
  * @brief Calculate the standard deviation of an AnalogTimeSeries
@@ -241,9 +259,32 @@ float calculate_std_dev_approximate_in_time_range(AnalogTimeSeries const & serie
 // ========== Minimum ==========
 
 /**
- * @brief Raw minimum calculation implementation using iterators
+ * @brief Calculate minimum from any range of numeric values
  * 
- * This is the core implementation that all other minimum functions call.
+ * This generic implementation works with any forward range type. Uses C++20 ranges
+ * for maximum flexibility.
+ * 
+ * @tparam Range Any type satisfying std::ranges::forward_range with numeric value_type
+ * @param range The range of values to find the minimum from
+ * @return float The minimum value of the range
+ */
+template<std::ranges::forward_range Range>
+    requires std::convertible_to<std::ranges::range_value_t<Range>, float>
+float calculate_min(Range&& range) {
+    if (std::ranges::empty(range)) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    auto min_it = std::ranges::min_element(range);
+    if (min_it == std::ranges::end(range)) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    return static_cast<float>(*min_it);
+}
+
+/**
+ * @brief Raw minimum calculation implementation using iterators (for backward compatibility)
  * 
  * @param begin Iterator to the start of the data range
  * @param end Iterator to the end of the data range (exclusive)
@@ -251,16 +292,7 @@ float calculate_std_dev_approximate_in_time_range(AnalogTimeSeries const & serie
  */
 template<typename Iterator>
 float calculate_min_impl(Iterator begin, Iterator end) {
-    if (begin == end) {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    auto const distance = std::distance(begin, end);
-    if (distance <= 0) {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    return *std::min_element(begin, end);
+    return calculate_min(std::ranges::subrange(begin, end));
 }
 
 /**
@@ -274,14 +306,6 @@ float calculate_min_impl(Iterator begin, Iterator end) {
  * @return float The minimum value in the specified range
  */
 float calculate_min_impl(std::vector<float> const & data, size_t start, size_t end);
-
-/**
- * @brief Calculate the minimum value of a span of data
- * 
- * @param data_span Span of float data
- * @return float The minimum value
- */
-float calculate_min(std::span<float const> data_span);
 
 /**
  * @brief Calculate the minimum value in an AnalogTimeSeries
@@ -318,9 +342,32 @@ float calculate_min_in_time_range(AnalogTimeSeries const & series, TimeFrameInde
 // ========== Maximum ==========
 
 /**
- * @brief Raw maximum calculation implementation using iterators
+ * @brief Calculate maximum from any range of numeric values
  * 
- * This is the core implementation that all other maximum functions call.
+ * This generic implementation works with any forward range type. Uses C++20 ranges
+ * for maximum flexibility.
+ * 
+ * @tparam Range Any type satisfying std::ranges::forward_range with numeric value_type
+ * @param range The range of values to find the maximum from
+ * @return float The maximum value of the range
+ */
+template<std::ranges::forward_range Range>
+    requires std::convertible_to<std::ranges::range_value_t<Range>, float>
+float calculate_max(Range&& range) {
+    if (std::ranges::empty(range)) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    auto max_it = std::ranges::max_element(range);
+    if (max_it == std::ranges::end(range)) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    return static_cast<float>(*max_it);
+}
+
+/**
+ * @brief Raw maximum calculation implementation using iterators (for backward compatibility)
  * 
  * @param begin Iterator to the start of the data range
  * @param end Iterator to the end of the data range (exclusive)
@@ -328,16 +375,7 @@ float calculate_min_in_time_range(AnalogTimeSeries const & series, TimeFrameInde
  */
 template<typename Iterator>
 float calculate_max_impl(Iterator begin, Iterator end) {
-    if (begin == end) {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    auto const distance = std::distance(begin, end);
-    if (distance <= 0) {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    return *std::max_element(begin, end);
+    return calculate_max(std::ranges::subrange(begin, end));
 }
 
 /**
@@ -351,14 +389,6 @@ float calculate_max_impl(Iterator begin, Iterator end) {
  * @return float The maximum value in the specified range
  */
 float calculate_max_impl(std::vector<float> const & data, size_t start, size_t end);
-
-/**
- * @brief Calculate the maximum value of a span of data
- * 
- * @param data_span Span of float data
- * @return float The maximum value
- */
-float calculate_max(std::span<float const> data_span);
 
 /**
  * @brief Calculate the maximum value in an AnalogTimeSeries

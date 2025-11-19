@@ -27,6 +27,8 @@ option(ENABLE_ORTOOLS "Enable OR-Tools support for min-cost flow tracking" ON)
 
 option(ENABLE_TIME_TRACE "Enable Clang -ftime-trace for build time profiling" OFF)
 
+option(ENABLE_FUZZ_TESTING "Enable fuzz testing with Google FuzzTest (Clang only)" OFF)
+
 # Configure vcpkg features based on CMake options - MUST be before project() call
 set(VCPKG_MANIFEST_FEATURES "")
 if(ENABLE_CAPNPROTO)
@@ -75,6 +77,15 @@ if(ENABLE_ORTOOLS)
     list(APPEND VCPKG_MANIFEST_FEATURES "ortools")
 else()
     message(STATUS "OR-Tools support: DISABLED")
+endif()
+
+if(ENABLE_FUZZ_TESTING)
+   # if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+   #     message(FATAL_ERROR "Fuzz testing requires Clang compiler")
+   # endif()
+    message(STATUS "Fuzz testing: ENABLED")
+else()
+    message(STATUS "Fuzz testing: DISABLED")
 endif()
 
 message(STATUS "VCPKG_MANIFEST_FEATURES: ${VCPKG_MANIFEST_FEATURES}")

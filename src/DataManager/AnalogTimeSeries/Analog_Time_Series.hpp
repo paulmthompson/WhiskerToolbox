@@ -1,18 +1,20 @@
 #ifndef ANALOG_TIME_SERIES_HPP
 #define ANALOG_TIME_SERIES_HPP
 
+#include "AnalogDataStorage.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeIndexStorage.hpp"
 
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <span>
 #include <stdexcept>
-#include <variant>
 #include <vector>
 
 /**
@@ -71,62 +73,60 @@ public:
      */
     explicit AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples);
 
-    // ========== Overwriting Data ==========
-
+    // ========== Factory Methods ==========
+    
     /**
-     * @brief Overwrite data at specific TimeFrameIndex values
+     * @brief Create memory-mapped AnalogTimeSeries from binary file
      * 
-     * This function finds DataArrayIndex positions that correspond to the given TimeFrameIndex values
-     * and overwrites the data at those positions. If a TimeFrameIndex doesn't exist in the series,
-     * it will be ignored (no overwrite occurs).
+     * Creates an AnalogTimeSeries that reads data from a binary file using memory mapping.
+     * This is efficient for large datasets as it doesn't load the entire file into memory.
+     * Supports strided access (e.g., reading one channel from multi-channel interleaved data).
      * 
-     * @param analog_data Vector of new analog values
-     * @param time_indices Vector of TimeFrameIndex values where data should be overwritten
+     * @param config Memory-mapped storage configuration
+     * @param time_vector Vector of TimeFrameIndex values corresponding to the samples
+     * @return std::shared_ptr<AnalogTimeSeries> Memory-mapped analog time series
+     * 
+     * @throws std::runtime_error if file cannot be opened or configuration is invalid
+     * 
+     * @example Reading channel 5 from 384-channel int16 data:
+     * @code
+     * MmapStorageConfig config;
+     * config.file_path = "ephys_data.bin";
+     * config.header_size = 0;
+     * config.offset = 5;  // Start at channel 5
+     * config.stride = 384;  // Skip 384 values between samples
+     * config.data_type = MmapDataType::Int16;
+     * config.scale_factor = 0.195f;  // Convert to microvolts
+     * config.num_samples = 0;  // Auto-detect
+     * 
+     * auto time_indices = createTimeVector(num_samples);
+     * auto series = AnalogTimeSeries::createMemoryMapped(config, time_indices);
+     * @endcode
      */
-    void overwriteAtTimeIndexes(std::vector<float> & analog_data, std::vector<TimeFrameIndex> & time_indices);
-
-    /**
-     * @brief Overwrite data at specific DataArrayIndex positions
-     * 
-     * This function directly overwrites data at the specified DataArrayIndex positions.
-     * Bounds checking is performed - indices outside the data array range will be ignored.
-     * 
-     * @param analog_data Vector of new analog values
-     * @param data_indices Vector of DataArrayIndex positions where data should be overwritten
-     */
-    void overwriteAtDataArrayIndexes(std::vector<float> & analog_data, std::vector<DataArrayIndex> & data_indices);
+    [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createMemoryMapped(
+        MmapStorageConfig config,
+        std::vector<TimeFrameIndex> time_vector);
 
     // ========== Getting Data ==========
 
-    /**
-     * @brief Get the data value at a specific DataArrayIndex
-     * 
-     * This does not consider time information so DataArrayIndex 1 and 2 may represent 
-     * values at are irregularly spaced. Use this if you are processing data
-     * where the time information is not important (e.g. statistical calculations)
-     * 
-     * @param i The DataArrayIndex to get the data value at
-     * @return The data value at the specified DataArrayIndex
-     */
-    [[nodiscard]] float getDataAtDataArrayIndex(DataArrayIndex i) const { return _data[i.getValue()]; };
-
-    [[nodiscard]] size_t getNumSamples() const { return _data.size(); };
+    [[nodiscard]] size_t getNumSamples() const { return _data_storage.size(); };
 
     /**
-     * @brief Get a const reference to the analog data vector
+     * @brief Get a span over the analog data values
      * 
-     * Returns a const reference to the internal vector containing the analog time series data values.
-     * This method provides efficient read-only access to the data without copying.
+     * Returns a span providing a view over the analog time series data values.
+     * This method provides efficient read-only access to contiguous data without copying.
+     * For non-contiguous storage (e.g., memory-mapped with stride), returns empty span.
      * 
-     * @return const reference to std::vector<float> containing the analog data values
+     * @return std::span<float const> view over the analog data values, or empty span if not contiguous
      * 
-     * @note This method returns by const reference for performance - no data copying occurs.
-     *       Use this when you need to iterate over or access the raw data values efficiently.
+     * @note For contiguous storage (vector), this provides zero-copy access.
+     *       For non-contiguous storage, use getAllSamples() iterator instead.
      * 
      * @see getTimeSeries() for accessing the corresponding time indices
-     * @see getDataInRange() for accessing data within a specific time range
+     * @see getAllSamples() for time-value pair iteration that works with any storage
      */
-    [[nodiscard]] std::vector<float> const & getAnalogTimeSeries() const { return _data; };
+    [[nodiscard]] std::span<float const> getAnalogTimeSeries() const { return _data_storage.getSpan(); };
 
     /**
      * @brief Get a span (view) of data values within a TimeFrameIndex range
@@ -174,42 +174,6 @@ public:
                                                                       TimeFrame const * source_timeFrame
                                                                       ) const;
 
-
-    /**
-     * @brief Find the DataArrayIndex that corresponds to a given TimeFrameIndex
-     * 
-     * This function searches for the DataArrayIndex position that corresponds to the given TimeFrameIndex.
-     * For dense storage, it calculates the position if the TimeFrameIndex falls within the range.
-     * For sparse storage, it searches for the TimeFrameIndex in the stored indices.
-     * 
-     * @param time_index The TimeFrameIndex to search for
-     * @return std::optional<DataArrayIndex> containing the corresponding DataArrayIndex, or std::nullopt if not found
-     */
-    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const;
-
-    /**
-     * @brief Find the DataArrayIndex for the smallest TimeFrameIndex >= target_time
-     * 
-     * This function finds the first data point where TimeFrameIndex >= target_time.
-     * Useful for finding the start boundary of a time range when the exact time may not exist.
-     * 
-     * @param target_time The target TimeFrameIndex
-     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the first TimeFrameIndex >= target_time, or std::nullopt if no such index exists
-     */
-    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const;
-
-    /**
-     * @brief Find the DataArrayIndex for the largest TimeFrameIndex <= target_time
-     * 
-     * This function finds the last data point where TimeFrameIndex <= target_time.
-     * Useful for finding the end boundary of a time range when the exact time may not exist.
-     * 
-     * @param target_time The target TimeFrameIndex
-     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the last TimeFrameIndex <= target_time, or std::nullopt if no such index exists
-     */
-    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
-
-
     // ========== Time-Value Range Access ==========
 
     /**
@@ -226,7 +190,10 @@ public:
     };
 
     /**
-     * @brief Iterator for time-value ranges that handles both dense and sparse storage efficiently
+     * @brief Iterator for time-value ranges with optimized fast path for contiguous data
+     * 
+     * Uses cached pointer for direct access to contiguous storage (vector),
+     * falling back to virtual dispatch for non-contiguous storage (mmap).
      */
     class TimeValueRangeIterator {
     public:
@@ -251,6 +218,9 @@ public:
         DataArrayIndex _end_index;
         mutable TimeValuePoint _current_point;// mutable for lazy evaluation in operator*
         bool _is_end;
+        
+        // Fast path: cached pointer for contiguous data (null if not contiguous)
+        float const* _contiguous_data_ptr{nullptr};
 
         void _updateCurrentPoint() const;
     };
@@ -274,33 +244,16 @@ public:
     };
 
     /**
-     * @brief Abstract base class for time index iteration over ranges
-     */
-    class TimeIndexIterator {
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using value_type = TimeFrameIndex;
-        using difference_type = std::ptrdiff_t;
-        using pointer = TimeFrameIndex const *;
-        using reference = TimeFrameIndex const &;
-
-        virtual ~TimeIndexIterator() = default;
-        virtual reference operator*() const = 0;
-        virtual TimeIndexIterator & operator++() = 0;
-        virtual bool operator==(TimeIndexIterator const & other) const = 0;
-        virtual bool operator!=(TimeIndexIterator const & other) const = 0;
-        [[nodiscard]] virtual std::unique_ptr<TimeIndexIterator> clone() const = 0;
-    };
-
-    /**
      * @brief Time index range abstraction that handles both dense and sparse storage
+     * 
+     * Uses TimeIndexIterator from TimeIndexStorage for iteration
      */
     class TimeIndexRange {
     public:
         TimeIndexRange(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index);
 
-        [[nodiscard]] std::unique_ptr<TimeIndexIterator> begin() const;
-        [[nodiscard]] std::unique_ptr<TimeIndexIterator> end() const;
+        [[nodiscard]] std::unique_ptr<::TimeIndexIterator> begin() const;
+        [[nodiscard]] std::unique_ptr<::TimeIndexIterator> end() const;
         [[nodiscard]] size_t size() const;
         [[nodiscard]] bool empty() const;
 
@@ -371,19 +324,26 @@ public:
                                                                           TimeFrameIndex end_time,
                                                                           TimeFrame const * source_timeFrame) const;
 
-
     /**
-     * @brief Get the TimeFrameIndex that corresponds to a given DataArrayIndex
+     * @brief Get all samples as time-value pairs for range-based iteration
      * 
-     * @param i The DataArrayIndex to get the TimeFrameIndex for
-     * @return The TimeFrameIndex that corresponds to the given DataArrayIndex
+     * Returns a range view over all samples in the time series, providing paired
+     * TimeFrameIndex and float values. This is the recommended interface for iterating
+     * over all data as it works with any storage backend (vector, memory-mapped, etc.).
+     * 
+     * @return TimeValueRangeView that supports range-based for loops
+     * 
+     * @example
+     * ```cpp
+     * for (auto const& sample : analog_series->getAllSamples()) {
+     *     std::cout << sample.time_frame_index.getValue() << ": " << sample.value << std::endl;
+     * }
+     * ```
+     * 
+     * @note This provides a uniform interface regardless of underlying storage type
+     * @see TimeValuePoint for the structure returned by dereferencing the iterator
      */
-    [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
-        return std::visit([i](auto const & time_storage) -> TimeFrameIndex {
-            return time_storage.getTimeFrameIndexAtDataArrayIndex(i);
-        },
-                          _time_storage);
-    }
+    [[nodiscard]] TimeValueRangeView getAllSamples() const;
 
     /**
      * @brief Get the time indices as a vector
@@ -403,84 +363,19 @@ public:
      * @see getTimeAtIndex() for single index lookups
      */
     [[nodiscard]] std::vector<TimeFrameIndex> getTimeSeries() const {
-        return std::visit([](auto const & time_storage) -> std::vector<TimeFrameIndex> {
-            if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
-                // Generate vector for dense storage
-                std::vector<TimeFrameIndex> result;
-                result.reserve(time_storage.count);
-                for (size_t i = 0; i < time_storage.count; ++i) {
-                    result.push_back(time_storage.start_time_frame_index + TimeFrameIndex(static_cast<int64_t>(i)));
-                }
-                return result;
-            } else {
-                // Return copy for sparse storage
-                return time_storage.time_frame_indices;
-            }
-        },
-                          _time_storage);
+        return _time_storage->getAllTimeIndices();
     }
 
-    // ========== Time Storage Optimization ==========
+    // ========== Time Storage Access ==========
 
     /**
-     * @brief Dense time representation for regularly sampled data
-     * 
-     * More memory efficient than storing every index individually.
-     * Represents: start_index, start_index+1, start_index+2, ..., start_index+count-1
-     * 
-     * Now strongly typed: indexed by DataArrayIndex, returns TimeFrameIndex
-     */
-    struct DenseTimeRange {
-        TimeFrameIndex start_time_frame_index;
-        size_t count;
-
-        DenseTimeRange(TimeFrameIndex start, size_t num_samples)
-            : start_time_frame_index(start),
-              count(num_samples) {}
-
-        [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
-            if (i.getValue() >= count) {
-                throw std::out_of_range("DataArrayIndex out of range for DenseTimeRange");
-            }
-            return TimeFrameIndex(start_time_frame_index.getValue() + static_cast<int64_t>(i.getValue()));
-        }
-
-        [[nodiscard]] size_t size() const { return count; }
-    };
-
-    /**
-     * @brief Sparse time representation for irregularly sampled data
-     * 
-     * Stores explicit time indices for each sample.
-     * 
-     * Now strongly typed: indexed by DataArrayIndex, returns TimeFrameIndex
-     */
-    struct SparseTimeIndices {
-        std::vector<TimeFrameIndex> time_frame_indices;
-
-        explicit SparseTimeIndices(std::vector<TimeFrameIndex> time_indices)
-            : time_frame_indices(std::move(time_indices)) {}
-
-        [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
-            if (i.getValue() >= time_frame_indices.size()) {
-                throw std::out_of_range("DataArrayIndex out of range for SparseTimeIndices");
-            }
-            return time_frame_indices[i.getValue()];
-        }
-
-        [[nodiscard]] size_t size() const { return time_frame_indices.size(); }
-    };
-
-    using TimeStorage = std::variant<DenseTimeRange, SparseTimeIndices>;
-
-    /**
-    * @brief Get a const reference to the time storage variant (DenseTimeRange or SparseTimeIndices)
+    * @brief Get a const reference to the time index storage
     *
     * This allows efficient access to the underlying time mapping without copying.
     *
-    * @return const TimeStorage& (std::variant<DenseTimeRange, SparseTimeIndices>)
+    * @return const shared_ptr to TimeIndexStorage
     */
-    [[nodiscard]] TimeStorage const & getTimeStorage() const noexcept { return _time_storage; }
+    [[nodiscard]] std::shared_ptr<TimeIndexStorage> const & getTimeStorage() const noexcept { return _time_storage; }
 
     // ========== Time Frame ==========
     /**
@@ -492,13 +387,181 @@ public:
 
 protected:
 private:
-    std::vector<float> _data;
-    TimeStorage _time_storage;
+    /**
+     * @brief Type-erased wrapper for analog data storage
+     * 
+     * Provides uniform interface to different storage backends (vector, mmap, etc.)
+     * while enabling compile-time optimizations through template instantiation.
+     */
+    class DataStorageWrapper {
+    public:
+        template<typename DataStorageImpl>
+        explicit DataStorageWrapper(DataStorageImpl storage)
+            : _impl(std::make_unique<StorageModel<DataStorageImpl>>(std::move(storage))) {}
+        
+        [[nodiscard]] size_t size() const { return _impl->size(); }
+        
+        [[nodiscard]] float getValueAt(size_t index) const {
+            return _impl->getValueAt(index);
+        }
+        
+        [[nodiscard]] std::span<float const> getSpan() const {
+            return _impl->getSpan();
+        }
+        
+        [[nodiscard]] std::span<float const> getSpanRange(size_t start, size_t end) const {
+            return _impl->getSpanRange(start, end);
+        }
+        
+        [[nodiscard]] bool isContiguous() const {
+            return _impl->isContiguous();
+        }
+        
+        [[nodiscard]] float const* tryGetContiguousPointer() const {
+            return _impl->tryGetContiguousPointer();
+        }
+        
+        [[nodiscard]] AnalogStorageType getStorageType() const {
+            return _impl->getStorageType();
+        }
+        
+    private:
+        struct StorageConcept {
+            virtual ~StorageConcept() = default;
+            virtual size_t size() const = 0;
+            virtual float getValueAt(size_t index) const = 0;
+            virtual std::span<float const> getSpan() const = 0;
+            virtual std::span<float const> getSpanRange(size_t start, size_t end) const = 0;
+            virtual bool isContiguous() const = 0;
+            virtual float const* tryGetContiguousPointer() const = 0;
+            virtual AnalogStorageType getStorageType() const = 0;
+        };
+        
+        template<typename DataStorageImpl>
+        struct StorageModel : StorageConcept {
+            DataStorageImpl _storage;
+            
+            explicit StorageModel(DataStorageImpl storage)
+                : _storage(std::move(storage)) {}
+            
+            size_t size() const override {
+                return _storage.size();
+            }
+            
+            float getValueAt(size_t index) const override {
+                return _storage.getValueAt(index);
+            }
+            
+            std::span<float const> getSpan() const override {
+                return _storage.getSpan();
+            }
+            
+            std::span<float const> getSpanRange(size_t start, size_t end) const override {
+                return _storage.getSpanRange(start, end);
+            }
+            
+            bool isContiguous() const override {
+                return _storage.isContiguous();
+            }
+            
+            float const* tryGetContiguousPointer() const override {
+                if constexpr (std::is_same_v<DataStorageImpl, VectorAnalogDataStorage>) {
+                    return _storage.data();
+                }
+                return nullptr;
+            }
+            
+            AnalogStorageType getStorageType() const override {
+                return _storage.getStorageType();
+            }
+        };
+        
+        std::unique_ptr<StorageConcept> _impl;
+    };
+
+    DataStorageWrapper _data_storage;
+    std::shared_ptr<TimeIndexStorage> _time_storage;
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
+    
+    // Cached optimization pointer for fast path access
+    float const* _contiguous_data_ptr{nullptr};
+
+    // Private constructor for factory methods
+    AnalogTimeSeries(DataStorageWrapper storage, std::vector<TimeFrameIndex> time_vector);
 
     void setData(std::vector<float> analog_vector);
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
     void setData(std::map<int, float> analog_map);
+    
+    /**
+     * @brief Cache optimization pointers after construction
+     * 
+     * Attempts to extract direct pointer to contiguous data for fast path access.
+     * Called in constructors and setData methods.
+     */
+    void _cacheOptimizationPointers() {
+        _contiguous_data_ptr = _data_storage.tryGetContiguousPointer();
+    }
+
+    /**
+     * @brief Get the data value at a specific DataArrayIndex (internal use only)
+     * 
+     * Uses fast path (cached pointer) when available, falls back to virtual dispatch.
+     * 
+     * @param i The DataArrayIndex to get the data value at
+     * @return The data value at the specified DataArrayIndex
+     */
+    [[nodiscard]] float _getDataAtDataArrayIndex(DataArrayIndex i) const {
+        if (_contiguous_data_ptr) {
+            return _contiguous_data_ptr[i.getValue()];
+        }
+        return _data_storage.getValueAt(i.getValue());
+    }
+
+    /**
+     * @brief Get the TimeFrameIndex that corresponds to a given DataArrayIndex (internal use only)
+     * 
+     * @param i The DataArrayIndex to get the TimeFrameIndex for
+     * @return The TimeFrameIndex that corresponds to the given DataArrayIndex
+     */
+    [[nodiscard]] TimeFrameIndex _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
+        return _time_storage->getTimeFrameIndexAt(i.getValue());
+    }
+
+    /**
+     * @brief Find the DataArrayIndex that corresponds to a given TimeFrameIndex
+     * 
+     * This function searches for the DataArrayIndex position that corresponds to the given TimeFrameIndex.
+     * For dense storage, it calculates the position if the TimeFrameIndex falls within the range.
+     * For sparse storage, it searches for the TimeFrameIndex in the stored indices.
+     * 
+     * @param time_index The TimeFrameIndex to search for
+     * @return std::optional<DataArrayIndex> containing the corresponding DataArrayIndex, or std::nullopt if not found
+     */
+    [[nodiscard]] std::optional<DataArrayIndex> _findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const;
+
+    /**
+     * @brief Find the DataArrayIndex for the smallest TimeFrameIndex >= target_time
+     * 
+     * This function finds the first data point where TimeFrameIndex >= target_time.
+     * Useful for finding the start boundary of a time range when the exact time may not exist.
+     * 
+     * @param target_time The target TimeFrameIndex
+     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the first TimeFrameIndex >= target_time, or std::nullopt if no such index exists
+     */
+    [[nodiscard]] std::optional<DataArrayIndex> _findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const;
+
+    /**
+     * @brief Find the DataArrayIndex for the largest TimeFrameIndex <= target_time
+     * 
+     * This function finds the last data point where TimeFrameIndex <= target_time.
+     * Useful for finding the end boundary of a time range when the exact time may not exist.
+     * 
+     * @param target_time The target TimeFrameIndex
+     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the last TimeFrameIndex <= target_time, or std::nullopt if no such index exists
+     */
+    [[nodiscard]] std::optional<DataArrayIndex> _findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
+
 };
 
 #endif// ANALOG_TIME_SERIES_HPP

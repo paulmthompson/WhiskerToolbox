@@ -42,9 +42,12 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         // Check that high frequency content is attenuated
         float max_amplitude = 0.0f;
         // Skip initial transient
-        for (size_t i = 500; i < filtered->getNumSamples(); ++i) {
-            max_amplitude = std::max(max_amplitude, 
-                std::abs(filtered->getDataAtDataArrayIndex(DataArrayIndex(i))));
+        size_t i = 0;
+        for (auto const& sample : filtered->getAllSamples()) {
+            if (i >= 500) {
+                max_amplitude = std::max(max_amplitude, std::abs(sample.value));
+            }
+            ++i;
         }
         REQUIRE(max_amplitude < 0.15f); // More stringent requirement
     }
@@ -61,9 +64,12 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         // Check that low frequency content is attenuated
         float max_amplitude = 0.0f;
         // Skip initial transient
-        for (size_t i = 500; i < filtered->getNumSamples(); ++i) {
-            max_amplitude = std::max(max_amplitude, 
-                std::abs(filtered->getDataAtDataArrayIndex(DataArrayIndex(i))));
+        size_t i = 0;
+        for (auto const& sample : filtered->getAllSamples()) {
+            if (i >= 500) {
+                max_amplitude = std::max(max_amplitude, std::abs(sample.value));
+            }
+            ++i;
         }
         REQUIRE(max_amplitude < 0.15f); // More stringent requirement
     }
@@ -80,9 +86,12 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         // Signal should be preserved (allowing for some attenuation)
         float max_amplitude = 0.0f;
         // Skip longer transient for bandpass
-        for (size_t i = 500; i < filtered->getNumSamples(); ++i) {
-            max_amplitude = std::max(max_amplitude, 
-                std::abs(filtered->getDataAtDataArrayIndex(DataArrayIndex(i))));
+        size_t i = 0;
+        for (auto const& sample : filtered->getAllSamples()) {
+            if (i >= 500) {
+                max_amplitude = std::max(max_amplitude, std::abs(sample.value));
+            }
+            ++i;
         }
         REQUIRE(max_amplitude > 0.7f); // Signal should be mostly preserved
     }
@@ -96,7 +105,7 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         REQUIRE(filtered);
 
         // Get filtered data
-        auto& filtered_data = filtered->getAnalogTimeSeries();
+        auto filtered_data = filtered->getAnalogTimeSeries();
 
         // Skip first 1000 samples to avoid transient response
         float max_amplitude = 0.0f;
@@ -530,7 +539,7 @@ TEST_CASE("Data Transform: Filter - JSON Pipeline Integration", "[transforms][an
     // The 50 Hz component should be attenuated (cutoff at 10 Hz)
     // Original signal: 1.0 amplitude at 5 Hz + 0.5 amplitude at 50 Hz
     // After 10 Hz lowpass: 5 Hz should pass through, 50 Hz should be heavily attenuated
-    auto& filtered_data = filtered_series->getAnalogTimeSeries();
+    auto filtered_data = filtered_series->getAnalogTimeSeries();
     
     // Check that the signal is dominated by the low frequency (5 Hz) component
     // The filtered max amplitude should be close to the original 5 Hz component (1.0)

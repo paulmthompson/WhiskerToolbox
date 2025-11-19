@@ -9,7 +9,7 @@ if(ENABLE_FFMPEG)
     FetchContent_Declare(
       ffmpeg_wrapper
       GIT_REPOSITORY https://github.com/paulmthompson/ffmpeg_wrapper.git
-      GIT_TAG b9214faca9333caf2914b7243a0424df0724687b
+      GIT_TAG 6cbda11c78a91f19f1141125acaf1d9dc0f8586d
     )
 endif()
 
@@ -207,19 +207,27 @@ if(ENABLE_UI)
 endif()
 
 # Create explicit Abseil log template instantiations for Clang 18 BEFORE building OR-Tools
-if(ENABLE_ORTOOLS AND LINUX AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_library(absl_log_instantiations STATIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/absl_log_instantiations.cpp
-    )
-    target_link_libraries(absl_log_instantiations PUBLIC absl::log_internal_message)
-    set_target_properties(absl_log_instantiations PROPERTIES 
-        POSITION_INDEPENDENT_CODE ON
-    )
-    
-    # Make Abseil's log_internal_message library depend on our instantiations
-    # This ensures all OR-Tools binaries get the instantiations
-    if(TARGET absl::log_internal_message)
-        target_link_libraries(absl::log_internal_message INTERFACE absl_log_instantiations)
+if(LINUX AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if (ENABLE_ORTOOLS OR ENABLE_FUZZ_TESTING)
+        if (NOT ENABLE_ORTOOLS)
+            find_package(absl REQUIRED)
+        endif()
+
+         add_library(absl_log_instantiations STATIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/absl_log_instantiations.cpp
+        )
+        target_link_libraries(absl_log_instantiations PUBLIC absl::log_internal_message)
+        set_target_properties(absl_log_instantiations PROPERTIES 
+            POSITION_INDEPENDENT_CODE ON
+        )
+        # Expose presence of the instantiation target to parent/subdirectories
+        set(HAVE_ABSL_LOG_INSTANTIATIONS ON CACHE BOOL "Abseil log instantiations target is available")
+        
+        # Make Abseil's log_internal_message library depend on our instantiations
+        # This ensures all OR-Tools binaries get the instantiations
+        if(TARGET absl::log_internal_message)
+            target_link_libraries(absl::log_internal_message INTERFACE absl_log_instantiations)
+        endif()
     endif()
 endif()
 
