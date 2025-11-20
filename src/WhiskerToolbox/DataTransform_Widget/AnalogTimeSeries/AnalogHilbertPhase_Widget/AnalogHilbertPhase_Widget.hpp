@@ -2,7 +2,6 @@
 #define ANALOGHILBERTPHASE_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/data_transforms.hpp"
 
 namespace Ui { class AnalogHilbertPhase_Widget; }
 

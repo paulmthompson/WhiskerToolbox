@@ -2,7 +2,7 @@
 #define LINEBASEFLIP_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.hpp"
-#include "transforms/Lines/Line_Base_Flip/line_base_flip.hpp"
+
 
 #include <QWidget>
 #include <memory>

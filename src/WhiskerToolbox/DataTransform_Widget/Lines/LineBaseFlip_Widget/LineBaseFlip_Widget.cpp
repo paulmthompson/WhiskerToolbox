@@ -1,6 +1,10 @@
 #include "LineBaseFlip_Widget.hpp"
 #include "ui_LineBaseFlip_Widget.h"
 
+#include "DataManager/DataManager.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+#include "transforms/Lines/Line_Base_Flip/line_base_flip.hpp"
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -13,9 +17,7 @@
 #include <QTimer>
 #include <QDebug>
 
-// Include DataManager and PointData headers
-#include "DataManager/DataManager.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+
 
 LineBaseFlip_Widget::LineBaseFlip_Widget(QWidget* parent)
     : DataManagerParameter_Widget(parent)
