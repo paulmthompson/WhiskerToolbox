@@ -3,13 +3,14 @@
 
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
-#include "utils/TableView/core/DataSourceNameInterner.hpp"
+//#include "utils/TableView/core/DataSourceNameInterner.hpp"
 #include "Entity/EntityTypes.hpp"
 
 #include <cstddef>
 #include <optional>
 #include <variant>
 
+using DataSourceId = std::uint32_t;
 
 /**
  * @brief A variant type that can hold any of the possible source types that can define a row.

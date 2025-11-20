@@ -77,7 +77,7 @@ set(DATAMANAGER_SOURCES
         utils/TableView/core/TableView.cpp
         utils/TableView/core/TableViewBuilder.h
         utils/TableView/core/TableViewBuilder.cpp
-        utils/TableView/core/DataSourceNameInterner.hpp
+
 
         utils/TableView/TableInfo.hpp
         utils/TableView/TableEvents.hpp
