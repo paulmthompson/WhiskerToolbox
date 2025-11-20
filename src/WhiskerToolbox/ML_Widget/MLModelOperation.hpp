@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_MLMODELOPERATION_HPP
 #define WHISKERTOOLBOX_MLMODELOPERATION_HPP
 
-#include "DataManager/DataManagerTypes.hpp"// For DataTypeVariant
+//#include "DataManager/DataManagerTypes.hpp"// For DataTypeVariant
 #include "MLModelParameters.hpp"
 
 #include <armadillo>

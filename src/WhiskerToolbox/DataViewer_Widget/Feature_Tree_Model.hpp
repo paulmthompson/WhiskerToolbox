@@ -1,7 +1,7 @@
 #ifndef FEATURE_TREE_MODEL_HPP
 #define FEATURE_TREE_MODEL_HPP
 
-#include "DataManagerTypes.hpp"
+#include "DataManagerFwd.hpp"
 
 #include <QObject>
 
