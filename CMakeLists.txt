@@ -168,6 +168,12 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 #=============================
+# Profiling Tools
+#=============================
+
+add_subdirectory(tools/profiling_loader)
+
+#=============================
 # Testing
 #=============================
 
