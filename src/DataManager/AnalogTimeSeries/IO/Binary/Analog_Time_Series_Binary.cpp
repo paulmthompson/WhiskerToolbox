@@ -83,32 +83,30 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions co
 
         for (auto & channel: data) {
 
-            std::vector<float> data_float(channel.begin(), channel.end());
-            analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(std::move(data_float),
-                                                                            data_float.size()));
-
-            // convert to float with std::transform
-            /*
+            // Pre-allocate and convert to avoid extra allocation
             std::vector<float> data_float;
-            std::transform(
-                    channel.begin(),
-                    channel.end(),
-                    std::back_inserter(data_float), [](int16_t i) { return i; });
-
-            analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(data_float, data_float.size()));
-            */
+            data_float.reserve(channel.size());  // Reserve capacity upfront
+            std::transform(channel.begin(), channel.end(), 
+                           std::back_inserter(data_float), 
+                           [](int16_t i) { return static_cast<float>(i); });
+            
+            // Store size before move
+            size_t const size = data_float.size();
+            analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(std::move(data_float), size));
         }
 
     } else {
 
         auto data = Loader::readBinaryFile<int16_t>(binary_loader_opts);
 
-        // convert to float with std::transform
+        // Pre-allocate vector to avoid reallocations
         std::vector<float> data_float;
+        data_float.reserve(data.size());
         std::transform(
                 data.begin(),
                 data.end(),
-                std::back_inserter(data_float), [](int16_t i) { return i; });
+                std::back_inserter(data_float), 
+                [](int16_t i) { return static_cast<float>(i); });
 
         analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(data_float, data_float.size()));
     }

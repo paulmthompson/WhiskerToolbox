@@ -1,0 +1,8 @@
+[
+  {
+    "data_type": "digital_interval",
+    "name": "digital_interval",
+    "filepath": "digital_intervals.csv",
+    "format": "csv"
+  }
+]

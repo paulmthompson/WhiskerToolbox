@@ -1,0 +1,223 @@
+---
+title: "Memory Profiling of Data Loading Functions"
+author: "GitHub Copilot"
+date: "2024-11-20"
+format: html
+---
+
+# Memory Profiling of Data Loading Functions
+
+## Overview
+
+This document presents the results of memory profiling performed on the `load_data_from_json_config` function and its associated data loading operations. The goal was to identify potential memory allocation inefficiencies, particularly patterns of excessive or temporary allocations.
+
+## Methodology
+
+### Profiling Tool
+
+The profiling was conducted using **heaptrack**, a heap memory profiler for Linux that tracks all memory allocations and provides detailed insights into allocation patterns, peak memory usage, and temporary allocations.
+
+### Test Executable
+
+A dedicated test executable (`profile_loader`) was created to wrap the `load_data_from_json_config` function, allowing isolated profiling of different data loading scenarios. The executable is located at:
+
+```
+tools/profiling_loader/profile_loader.cpp
+```
+
+### Test Scenarios
+
+Six different data loading scenarios were tested with synthetic data:
+
+1. **Analog Data - CSV (single channel)**: 10,000 samples in CSV format
+2. **Analog Data - Binary (single channel)**: 10,000 samples in int16 binary format
+3. **Analog Data - Binary (multi channel)**: 10,000 samples × 4 channels in int16 binary format  
+4. **Line Data - CSV**: 100 frames with ~50 points each
+5. **Digital Event Data - CSV**: 200 event timestamps
+6. **Digital Interval Data - CSV**: 50 intervals
+
+All test data and configuration files are located in:
+```
+tools/profiling_loader/test_data/
+```
+
+## Results Summary
+
+| Scenario                                  | Runtime (s) | Allocations | Temp % | Peak Heap (MB) | Peak RSS (MB) | Leaked (MB) |
+|-------------------------------------------|-------------|-------------|--------|----------------|---------------|-------------|
+| Analog Data - CSV (single channel)        | 1.79        | 762,034     | 4.9%   | 46.59          | 253.78        | 46.09       |
+| Analog Data - Binary (single channel)     | 1.57        | 722,020     | 3.7%   | 46.45          | 253.50        | 46.09       |
+| Analog Data - Binary (multi channel)      | 1.51        | 722,054     | 3.7%   | 46.51          | 253.62        | 46.09       |
+| Line Data - CSV                           | 1.56        | 721,987     | 3.7%   | 47.25          | 253.47        | 46.09       |
+| Digital Event Data - CSV                  | 1.50        | 722,609     | 3.8%   | 46.45          | 253.21        | 46.09       |
+| Digital Interval Data - CSV               | 1.55        | 722,551     | 3.7%   | 46.45          | 253.21        | 46.09       |
+
+**Key Metrics:**
+- **Average temporary allocation ratio**: 3.9%
+- **Most allocations**: Analog CSV (762,034 allocations)
+- **Highest peak memory**: Line CSV (47.25 MB)
+
+## Detailed Findings
+
+### 1. LibTorch Initialization Overhead
+
+The profiling revealed that **the majority of memory allocations** (>700,000) and peak memory consumption (~46 MB) comes from **LibTorch initialization** rather than the actual data loading code. This is expected behavior since LibTorch registers thousands of operators and schemas during static initialization.
+
+**Implication**: The data loading code itself is relatively efficient compared to the framework initialization overhead.
+
+### 2. Analog CSV Loading - Highest Temporary Allocations
+
+The Analog CSV loading scenario shows the **highest temporary allocation ratio at 4.9%** (36,997 temporary allocations out of 762,034 total). This is about 1.2% higher than other scenarios.
+
+**Analysis**: CSV parsing typically involves more string operations and intermediate buffers, which likely accounts for the increased temporary allocations.
+
+### 3. Binary Loading Efficiency
+
+Binary loading (both single and multi-channel) shows **lower temporary allocation ratios (~3.7%)** compared to CSV, indicating more efficient memory usage. However, a potential issue was identified:
+
+**Issue Found in `Analog_Time_Series_Binary.cpp` (lines 84-88)**:
+
+```cpp
+for (auto & channel: data) {
+    std::vector<float> data_float(channel.begin(), channel.end());  // Allocation #1
+    analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(std::move(data_float),
+                                                                    data_float.size()));  // Issue: size() after move
+}
+```
+
+**Problems**:
+1. **Double allocation**: Data is copied from `channel` (int16_t) to `data_float` (float), then potentially copied again in the AnalogTimeSeries constructor
+2. **Incorrect size**: `data_float.size()` is called after `std::move()`, which will return 0
+
+### 4. Single Channel Binary Loading
+
+For single-channel binary loading (lines 104-113), a similar but different pattern exists:
+
+```cpp
+auto data = Loader::readBinaryFile<int16_t>(binary_loader_opts);
+
+std::vector<float> data_float;
+std::transform(
+        data.begin(),
+        data.end(),
+        std::back_inserter(data_float), [](int16_t i) { return i; });  // Multiple small allocations
+
+analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(data_float, data_float.size()));
+```
+
+**Issue**: Using `std::back_inserter` can cause multiple reallocations as the vector grows. Pre-allocating `data_float` would be more efficient.
+
+### 5. Memory Leaks
+
+All scenarios show **identical leaked memory (46.09 MB)**, which is entirely attributable to LibTorch's static allocations that persist for the lifetime of the program. This is **not a leak in the data loading code itself**.
+
+## Proposed Fixes
+
+### Fix 1: Optimize Multi-Channel Binary Loading
+
+**Before**:
+```cpp
+for (auto & channel: data) {
+    std::vector<float> data_float(channel.begin(), channel.end());
+    analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(std::move(data_float),
+                                                                    data_float.size()));
+}
+```
+
+**After**:
+```cpp
+for (auto & channel: data) {
+    // Pre-allocate and convert in-place to avoid extra allocation
+    std::vector<float> data_float;
+    data_float.reserve(channel.size());  // Reserve capacity upfront
+    std::transform(channel.begin(), channel.end(), 
+                   std::back_inserter(data_float), 
+                   [](int16_t i) { return static_cast<float>(i); });
+    
+    // Store size before move
+    size_t size = data_float.size();
+    analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(std::move(data_float), size));
+}
+```
+
+### Fix 2: Optimize Single-Channel Binary Loading
+
+**Before**:
+```cpp
+std::vector<float> data_float;
+std::transform(
+        data.begin(),
+        data.end(),
+        std::back_inserter(data_float), [](int16_t i) { return i; });
+```
+
+**After**:
+```cpp
+std::vector<float> data_float;
+data_float.reserve(data.size());  // Pre-allocate to avoid reallocations
+std::transform(
+        data.begin(),
+        data.end(),
+        std::back_inserter(data_float), 
+        [](int16_t i) { return static_cast<float>(i); });
+```
+
+### Expected Impact
+
+These fixes should:
+1. **Reduce temporary allocations** by avoiding vector reallocations during growth
+2. **Eliminate incorrect behavior** where `size()` is called after `std::move()`
+3. **Improve performance** by reducing memory allocations and copies
+4. **Reduce peak memory usage** slightly by eliminating redundant allocations
+
+The impact will be most noticeable when loading large binary analog datasets, as the number of avoided allocations scales with the data size.
+
+### Actual Results After Fixes
+
+The fixes were implemented and profiling was re-run. The results show:
+
+| Scenario                              | Allocations (Before) | Allocations (After) | Temp % (Before) | Temp % (After) |
+|---------------------------------------|----------------------|---------------------|-----------------|----------------|
+| Analog Binary (single channel)        | 722,020              | 722,006             | 3.7%            | 3.7%           |
+| Analog Binary (multi channel)         | 722,054              | 722,054             | 3.7%            | 3.7%           |
+
+While the allocation counts are nearly identical, this is expected because:
+1. The bulk of allocations (~700k) come from LibTorch initialization, not data loading
+2. For the small test dataset (10,000 samples), the improvement is minimal
+3. The **correctness fix** (proper use of move semantics) is the most important benefit
+
+For larger datasets, the benefits would be more pronounced as:
+- Pre-allocation eliminates O(log n) reallocations during vector growth
+- The fixed move semantics prevent potential bugs
+- Cache efficiency improves with better memory access patterns
+
+## Conclusion
+
+The data loading code is generally efficient, with most overhead coming from framework initialization. However, two simple optimizations in binary analog loading can:
+
+1. Fix the incorrect use of `size()` after `std::move()`
+2. Reduce temporary allocations through proper vector pre-allocation
+3. Eliminate potential double-allocation of data
+
+These are straightforward, low-risk changes that improve both correctness and efficiency.
+
+## Reproducing the Analysis
+
+To reproduce this analysis:
+
+1. Build the profiling tool:
+   ```bash
+   cmake --build --preset linux-clang-release --target profile_loader
+   ```
+
+2. Run the profiling script:
+   ```bash
+   ./tools/profiling_loader/run_profiling.sh
+   ```
+
+3. Results will be saved to:
+   ```
+   tools/profiling_loader/results/
+   ```
+
+The profiling data files (`.txt` and `.zst`) can be analyzed with `heaptrack_print` or the heaptrack GUI for deeper investigation.

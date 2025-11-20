@@ -1,0 +1,68 @@
+[
+  {
+    "scenario": "Analog Data - CSV (single channel)",
+    "config": "config_analog_csv",
+    "runtime_s": 1.87,
+    "total_allocations": 762034,
+    "temporary_allocations": 36997,
+    "peak_heap_mb": 46.59,
+    "peak_rss_mb": 253.55,
+    "leaked_mb": 46.09,
+    "temp_ratio": 4.855032715075705
+  },
+  {
+    "scenario": "Analog Data - Binary (single channel)",
+    "config": "config_analog_binary_single",
+    "runtime_s": 1.57,
+    "total_allocations": 722006,
+    "temporary_allocations": 27012,
+    "peak_heap_mb": 46.45,
+    "peak_rss_mb": 253.59,
+    "leaked_mb": 46.09,
+    "temp_ratio": 3.7412431475638703
+  },
+  {
+    "scenario": "Analog Data - Binary (multi channel)",
+    "config": "config_analog_binary_multi",
+    "runtime_s": 1.49,
+    "total_allocations": 722054,
+    "temporary_allocations": 27013,
+    "peak_heap_mb": 46.51,
+    "peak_rss_mb": 253.62,
+    "leaked_mb": 46.09,
+    "temp_ratio": 3.7411329346558566
+  },
+  {
+    "scenario": "Line Data - CSV",
+    "config": "config_line_csv",
+    "runtime_s": 1.47,
+    "total_allocations": 721987,
+    "temporary_allocations": 27012,
+    "peak_heap_mb": 47.25,
+    "peak_rss_mb": 253.5,
+    "leaked_mb": 46.09,
+    "temp_ratio": 3.7413416031036566
+  },
+  {
+    "scenario": "Digital Event Data - CSV",
+    "config": "config_digital_event_csv",
+    "runtime_s": 1.48,
+    "total_allocations": 722609,
+    "temporary_allocations": 27203,
+    "peak_heap_mb": 46.45,
+    "peak_rss_mb": 253.17,
+    "leaked_mb": 46.09,
+    "temp_ratio": 3.7645531677573905
+  },
+  {
+    "scenario": "Digital Interval Data - CSV",
+    "config": "config_digital_interval_csv",
+    "runtime_s": 1.52,
+    "total_allocations": 722551,
+    "temporary_allocations": 27012,
+    "peak_heap_mb": 46.45,
+    "peak_rss_mb": 253.28,
+    "leaked_mb": 46.09,
+    "temp_ratio": 3.738421232549675
+  }
+]

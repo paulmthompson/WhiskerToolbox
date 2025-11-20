@@ -1,0 +1,12 @@
+[
+  {
+    "data_type": "analog",
+    "name": "analog_csv",
+    "filepath": "analog_single.csv",
+    "format": "csv",
+    "delimiter": ",",
+    "has_header": false,
+    "single_column_format": true,
+    "data_column": 0
+  }
+]
