@@ -18,4 +18,5 @@ vcpkg
 vcpkg_cache
 
 tools
-ninja-build/ninja
+ninja-build/ninjadist/
+ninja-build/
