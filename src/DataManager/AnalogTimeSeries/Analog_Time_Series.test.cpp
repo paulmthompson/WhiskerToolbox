@@ -370,25 +370,46 @@ TEST_CASE("AnalogTimeSeries - Time-Value Range Interface", "[analog][timeseries]
         
         AnalogTimeSeries series(data, times);
 
+        // Range covers times 20 and 30 (Values 2.0f and 3.0f)
         auto range = series.getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex(15), TimeFrameIndex(35));
         
         auto it = range.begin();
         auto end_it = range.end();
         
         REQUIRE(it != end_it);
+        REQUIRE(range.size() == 2); // View_interface provides this now
         
-        // Test dereference and arrow operator
+        // 1. Test Dereference (Return by Value)
+        // Note: (*it) creates a temporary TimeValuePoint
         REQUIRE((*it).time_frame_index == TimeFrameIndex(20));
-        REQUIRE(it->value == 2.0f);
+        REQUIRE((*it).value == 2.0f);
         
-        // Test pre-increment
+        // 2. Test Random Access Indexing (operator[])
+        REQUIRE(range[0].value == 2.0f);
+        REQUIRE(range[1].value == 3.0f);
+
+        // 3. Test Iterator Arithmetic (operator+, operator-)
+        auto second_it = it + 1;
+        REQUIRE((*second_it).value == 3.0f);
+        REQUIRE((second_it - it) == 1); // Difference type
+
+        // 4. Test Pre/Post Increment
         ++it;
-        REQUIRE(it->time_frame_index == TimeFrameIndex(30));
-        REQUIRE(it->value == 3.0f);
+        REQUIRE((*it).time_frame_index == TimeFrameIndex(30));
+        REQUIRE((*it).value == 3.0f);
         
-        // Test post-increment
-        auto old_it = it++;
-        REQUIRE(old_it->time_frame_index == TimeFrameIndex(30));
+        // 5. Test Bidirectional (operator--)
+        --it; 
+        REQUIRE((*it).value == 2.0f); // Should be back at start
+        
+        // 6. Test Random Access assignments (+=, -=)
+        it += 1;
+        REQUIRE((*it).value == 3.0f);
+        it -= 1;
+        REQUIRE((*it).value == 2.0f);
+
+        // 7. Test End iterator logic
+        it += 2; 
         REQUIRE(it == end_it);
     }
 }

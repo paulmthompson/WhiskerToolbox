@@ -74,7 +74,7 @@ public:
     explicit AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples);
 
     // ========== Factory Methods ==========
-    
+
     /**
      * @brief Create memory-mapped AnalogTimeSeries from binary file
      * 
@@ -104,8 +104,8 @@ public:
      * @endcode
      */
     [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createMemoryMapped(
-        MmapStorageConfig config,
-        std::vector<TimeFrameIndex> time_vector);
+            MmapStorageConfig config,
+            std::vector<TimeFrameIndex> time_vector);
 
     // ========== Getting Data ==========
 
@@ -171,8 +171,7 @@ public:
      */
     [[nodiscard]] std::span<float const> getDataInTimeFrameIndexRange(TimeFrameIndex start_time,
                                                                       TimeFrameIndex end_time,
-                                                                      TimeFrame const * source_timeFrame
-                                                                      ) const;
+                                                                      TimeFrame const * source_timeFrame) const;
 
     // ========== Time-Value Range Access ==========
 
@@ -189,58 +188,139 @@ public:
               value(val) {}
     };
 
-    /**
-     * @brief Iterator for time-value ranges with optimized fast path for contiguous data
-     * 
-     * Uses cached pointer for direct access to contiguous storage (vector),
-     * falling back to virtual dispatch for non-contiguous storage (mmap).
-     */
     class TimeValueRangeIterator {
     public:
-        using iterator_category = std::forward_iterator_tag;
+        // 1. Upgrade category to Random Access
+        using iterator_category = std::random_access_iterator_tag;
+
+        // 2. C++20 requires distinct iterator_concept for ranges
+        using iterator_concept = std::random_access_iterator_tag;
+
         using value_type = TimeValuePoint;
         using difference_type = std::ptrdiff_t;
-        using pointer = TimeValuePoint const *;
-        using reference = TimeValuePoint const &;
+        using pointer = TimeValuePoint;  // Proxy pointer (optional, or strictly TimeValuePoint*)
+        using reference = TimeValuePoint;// RETURN BY VALUE
 
-        TimeValueRangeIterator(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index, bool is_end = false);
+        // 3. Must be default constructible
+        TimeValueRangeIterator() = default;
 
-        reference operator*() const;
-        pointer operator->() const;
-        TimeValueRangeIterator & operator++();
-        TimeValueRangeIterator operator++(int);
-        bool operator==(TimeValueRangeIterator const & other) const;
-        bool operator!=(TimeValueRangeIterator const & other) const;
+        TimeValueRangeIterator(AnalogTimeSeries const * series, DataArrayIndex current, DataArrayIndex end)
+            : _series(series),
+              _current_index(current),
+              _end_index(end) {
+            // Cache the contiguous pointer if available for speed
+            if (_series) _contiguous_data_ptr = _series->_data_storage.tryGetContiguousPointer();
+        }
+
+        // Dereference returns by Value (Cleanest for stashing iterators)
+        reference operator*() const {
+            // Use fast path if available
+            float val = (_contiguous_data_ptr)
+                                ? _contiguous_data_ptr[_current_index.getValue()]
+                                : _series->_data_storage.getValueAt(_current_index.getValue());
+
+            // Assume _time_storage has a similar fast lookup, otherwise use existing accessor
+            TimeFrameIndex time = _series->_getTimeFrameIndexAtDataArrayIndex(_current_index);
+
+            return TimeValuePoint{time, val};
+        }
+
+        // Standard Iterator Operations
+        TimeValueRangeIterator & operator++() {
+            // Assuming DataArrayIndex has operator++
+            // _current_index++;
+            // If not, generic increment:
+            _current_index = DataArrayIndex(_current_index.getValue() + 1);
+            return *this;
+        }
+
+        TimeValueRangeIterator operator++(int) {
+            TimeValueRangeIterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        TimeValueRangeIterator & operator--() {
+            _current_index = DataArrayIndex(_current_index.getValue() - 1);
+            return *this;
+        }
+
+        TimeValueRangeIterator operator--(int) {
+            TimeValueRangeIterator tmp = *this;
+            --(*this);
+            return tmp;
+        }
+
+        // Random Access Arithmetic
+        TimeValueRangeIterator & operator+=(difference_type n) {
+            _current_index = DataArrayIndex(_current_index.getValue() + n);
+            return *this;
+        }
+
+        TimeValueRangeIterator & operator-=(difference_type n) {
+            _current_index = DataArrayIndex(_current_index.getValue() - n);
+            return *this;
+        }
+
+        friend TimeValueRangeIterator operator+(TimeValueRangeIterator it, difference_type n) { return it += n; }
+        friend TimeValueRangeIterator operator+(difference_type n, TimeValueRangeIterator it) { return it += n; }
+        friend TimeValueRangeIterator operator-(TimeValueRangeIterator it, difference_type n) { return it -= n; }
+
+        friend difference_type operator-(TimeValueRangeIterator const & lhs, TimeValueRangeIterator const & rhs) {
+            return static_cast<difference_type>(lhs._current_index.getValue()) -
+                   static_cast<difference_type>(rhs._current_index.getValue());
+        }
+
+        // Comparisons
+        bool operator==(TimeValueRangeIterator const & other) const {
+            return _current_index.getValue() == other._current_index.getValue();
+        }
+
+        // Default C++20 spaceship operator handles !=, <, >, <=, >= automatically
+        auto operator<=>(TimeValueRangeIterator const & other) const {
+            return _current_index.getValue() <=> other._current_index.getValue();
+        }
+
+        // Random access subscription
+        reference operator[](difference_type n) const {
+            return *(*this + n);
+        }
 
     private:
-        AnalogTimeSeries const * _series;
-        DataArrayIndex _current_index;
-        DataArrayIndex _end_index;
-        mutable TimeValuePoint _current_point;// mutable for lazy evaluation in operator*
-        bool _is_end;
-        
-        // Fast path: cached pointer for contiguous data (null if not contiguous)
-        float const* _contiguous_data_ptr{nullptr};
-
-        void _updateCurrentPoint() const;
+        AnalogTimeSeries const * _series = nullptr;
+        DataArrayIndex _current_index{0};
+        DataArrayIndex _end_index{0};
+        float const * _contiguous_data_ptr{nullptr};
     };
 
-    /**
-     * @brief Range view for time-value pairs that supports range-based for loops
-     */
-    class TimeValueRangeView {
+    class TimeValueRangeView : public std::ranges::view_interface<TimeValueRangeView> {
     public:
-        TimeValueRangeView(AnalogTimeSeries const * series, DataArrayIndex start_index, DataArrayIndex end_index);
+        // 1. Must be default constructible
+        TimeValueRangeView() = default;
 
-        [[nodiscard]] TimeValueRangeIterator begin() const;
-        [[nodiscard]] TimeValueRangeIterator end() const;
-        [[nodiscard]] size_t size() const;
-        [[nodiscard]] bool empty() const;
+        TimeValueRangeView(AnalogTimeSeries const * series, DataArrayIndex start, DataArrayIndex end)
+            : _series(series),
+              _start_index(start),
+              _end_index(end) {}
+
+        [[nodiscard]] TimeValueRangeIterator begin() const {
+            return TimeValueRangeIterator(_series, _start_index, _end_index);
+        }
+
+        [[nodiscard]] TimeValueRangeIterator end() const {
+            return TimeValueRangeIterator(_series, _end_index, _end_index);
+        }
+
+        // size() is actually provided by view_interface if iterator is RandomAccess and sized
+        // But explicit implementation is often faster/safer if you have the data
+        [[nodiscard]] size_t size() const {
+            return _end_index.getValue() - _start_index.getValue();
+        }
 
     private:
-        AnalogTimeSeries const * _series;
-        DataArrayIndex _start_index;
-        DataArrayIndex _end_index;
+        AnalogTimeSeries const * _series = nullptr;
+        DataArrayIndex _start_index{0};
+        DataArrayIndex _end_index{0};
     };
 
     /**
@@ -320,7 +400,7 @@ public:
      * @note If source_timeFrame equals the analog series' timeframe, or if either is null,
      *       falls back to the non-converting version
      */
-    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, 
+    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time,
                                                                           TimeFrameIndex end_time,
                                                                           TimeFrame const * source_timeFrame) const;
 
@@ -385,6 +465,15 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
 
+
+    /**
+ * @brief Get a ranges-compatible view of the entire series.
+ */
+    [[nodiscard]] auto view() const {
+        // Assuming DataArrayIndex can be constructed from size_t 0 and size()
+        return TimeValueRangeView(this, DataArrayIndex(0), DataArrayIndex(getNumSamples()));
+    }
+
 protected:
 private:
     /**
@@ -398,33 +487,33 @@ private:
         template<typename DataStorageImpl>
         explicit DataStorageWrapper(DataStorageImpl storage)
             : _impl(std::make_unique<StorageModel<DataStorageImpl>>(std::move(storage))) {}
-        
+
         [[nodiscard]] size_t size() const { return _impl->size(); }
-        
+
         [[nodiscard]] float getValueAt(size_t index) const {
             return _impl->getValueAt(index);
         }
-        
+
         [[nodiscard]] std::span<float const> getSpan() const {
             return _impl->getSpan();
         }
-        
+
         [[nodiscard]] std::span<float const> getSpanRange(size_t start, size_t end) const {
             return _impl->getSpanRange(start, end);
         }
-        
+
         [[nodiscard]] bool isContiguous() const {
             return _impl->isContiguous();
         }
-        
-        [[nodiscard]] float const* tryGetContiguousPointer() const {
+
+        [[nodiscard]] float const * tryGetContiguousPointer() const {
             return _impl->tryGetContiguousPointer();
         }
-        
+
         [[nodiscard]] AnalogStorageType getStorageType() const {
             return _impl->getStorageType();
         }
-        
+
     private:
         struct StorageConcept {
             virtual ~StorageConcept() = default;
@@ -433,58 +522,58 @@ private:
             virtual std::span<float const> getSpan() const = 0;
             virtual std::span<float const> getSpanRange(size_t start, size_t end) const = 0;
             virtual bool isContiguous() const = 0;
-            virtual float const* tryGetContiguousPointer() const = 0;
+            virtual float const * tryGetContiguousPointer() const = 0;
             virtual AnalogStorageType getStorageType() const = 0;
         };
-        
+
         template<typename DataStorageImpl>
         struct StorageModel : StorageConcept {
             DataStorageImpl _storage;
-            
+
             explicit StorageModel(DataStorageImpl storage)
                 : _storage(std::move(storage)) {}
-            
+
             size_t size() const override {
                 return _storage.size();
             }
-            
+
             float getValueAt(size_t index) const override {
                 return _storage.getValueAt(index);
             }
-            
+
             std::span<float const> getSpan() const override {
                 return _storage.getSpan();
             }
-            
+
             std::span<float const> getSpanRange(size_t start, size_t end) const override {
                 return _storage.getSpanRange(start, end);
             }
-            
+
             bool isContiguous() const override {
                 return _storage.isContiguous();
             }
-            
-            float const* tryGetContiguousPointer() const override {
+
+            float const * tryGetContiguousPointer() const override {
                 if constexpr (std::is_same_v<DataStorageImpl, VectorAnalogDataStorage>) {
                     return _storage.data();
                 }
                 return nullptr;
             }
-            
+
             AnalogStorageType getStorageType() const override {
                 return _storage.getStorageType();
             }
         };
-        
+
         std::unique_ptr<StorageConcept> _impl;
     };
 
     DataStorageWrapper _data_storage;
     std::shared_ptr<TimeIndexStorage> _time_storage;
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
-    
+
     // Cached optimization pointer for fast path access
-    float const* _contiguous_data_ptr{nullptr};
+    float const * _contiguous_data_ptr{nullptr};
 
     // Private constructor for factory methods
     AnalogTimeSeries(DataStorageWrapper storage, std::vector<TimeFrameIndex> time_vector);
@@ -492,7 +581,7 @@ private:
     void setData(std::vector<float> analog_vector);
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
     void setData(std::map<int, float> analog_map);
-    
+
     /**
      * @brief Cache optimization pointers after construction
      * 
@@ -561,7 +650,6 @@ private:
      * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the last TimeFrameIndex <= target_time, or std::nullopt if no such index exists
      */
     [[nodiscard]] std::optional<DataArrayIndex> _findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
-
 };
 
 #endif// ANALOG_TIME_SERIES_HPP

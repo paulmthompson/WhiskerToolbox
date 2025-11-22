@@ -191,11 +191,11 @@ TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - IO - AnalogTimeSeries - C
         // Check first few values using getAllSamples()
         auto samples = loaded_analog_data->getAllSamples();
         auto it = samples.begin();
-        REQUIRE_THAT(it->value, WithinAbs(1.5f, 0.01f));
+        REQUIRE_THAT((*it).value, WithinAbs(1.5f, 0.01f));
         ++it;
-        REQUIRE_THAT(it->value, WithinAbs(2.3f, 0.01f));
+        REQUIRE_THAT((*it).value, WithinAbs(2.3f, 0.01f));
         ++it;
-        REQUIRE_THAT(it->value, WithinAbs(3.7f, 0.01f));
+        REQUIRE_THAT((*it).value, WithinAbs(3.7f, 0.01f));
         
         // Clean up
         std::filesystem::remove(single_col_filepath);
