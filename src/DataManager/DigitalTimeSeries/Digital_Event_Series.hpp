@@ -6,6 +6,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <compare>
 #include <ranges>
 #include <utility>
 #include <vector>
@@ -27,6 +28,123 @@ class DigitalEventSeries : public ObserverData {
 public:
     DigitalEventSeries() = default;
     explicit DigitalEventSeries(std::vector<TimeFrameIndex> event_vector);
+
+    // =============================================================
+    // ==================== RANGES INTERFACE =======================
+    // =============================================================
+
+    /**
+     * @brief Random Access Iterator for DigitalEventSeries
+     * * Synthesizes EventWithId objects on demand from the parallel 
+     * time and ID vectors.
+     */
+    class EventIterator {
+    public:
+        // Iterator traits
+        using iterator_category = std::random_access_iterator_tag;
+        using iterator_concept = std::random_access_iterator_tag;
+        using value_type = EventWithId;
+        using difference_type = std::ptrdiff_t;
+        using pointer = EventWithId;  // Proxy pointer
+        using reference = EventWithId;// Return by Value
+
+        EventIterator() = default;
+        EventIterator(DigitalEventSeries const * series, size_t index)
+            : _series(series),
+              _index(index) {}
+
+        // Dereference: Zips the Time and ID together
+        reference operator*() const {
+            // Access private members of the series (nested classes have access)
+            TimeFrameIndex const time = _series->_data[_index];
+
+            // Defensive check: ensure we don't read past IDs if they are out of sync
+            // (Though rebuildAllEntityIds should keep them synced)
+            EntityId const id = (_index < _series->_entity_ids.size())
+                                        ? _series->_entity_ids[_index]
+                                        : EntityId(0);
+
+            return EventWithId(time, id);
+        }
+
+        // Standard Random Access Operations
+        EventIterator & operator++() {
+            ++_index;
+            return *this;
+        }
+        EventIterator operator++(int) {
+            auto tmp = *this;
+            ++_index;
+            return tmp;
+        }
+        EventIterator & operator--() {
+            --_index;
+            return *this;
+        }
+        EventIterator operator--(int) {
+            auto tmp = *this;
+            --_index;
+            return tmp;
+        }
+
+        EventIterator & operator+=(difference_type n) {
+            _index += static_cast<size_t>(n);
+            return *this;
+        }
+        EventIterator & operator-=(difference_type n) {
+            _index -= static_cast<size_t>(n);
+            return *this;
+        }
+
+        friend EventIterator operator+(EventIterator it, difference_type n) { return it += n; }
+        friend EventIterator operator+(difference_type n, EventIterator it) { return it += n; }
+        friend EventIterator operator-(EventIterator it, difference_type n) { return it -= n; }
+
+        friend difference_type operator-(EventIterator const & lhs, EventIterator const & rhs) {
+            return static_cast<difference_type>(lhs._index) - static_cast<difference_type>(rhs._index);
+        }
+
+        // Comparison (Space-ship operator handles <, >, <=, >=, ==, !=)
+        auto operator<=>(EventIterator const & other) const {
+            return _index <=> other._index;
+        }
+        bool operator==(EventIterator const & other) const {
+            return _index == other._index;
+        }
+
+        // Subscript
+        reference operator[](difference_type n) const { return *(*this + n); }
+
+    private:
+        DigitalEventSeries const * _series{nullptr};
+        size_t _index{0};
+    };
+
+    /**
+     * @brief Lightweight view over the event series
+     */
+    class EventView : public std::ranges::view_interface<EventView> {
+    public:
+        EventView() = default;
+        EventView(DigitalEventSeries const * series)
+            : _series(series) {}
+
+        EventIterator begin() const { return EventIterator(_series, 0); }
+        EventIterator end() const { return EventIterator(_series, _series->size()); }
+        size_t size() const { return _series->size(); }
+
+    private:
+        DigitalEventSeries const * _series{nullptr};
+    };
+
+    /**
+     * @brief Get a std::ranges compatible view of the series.
+     * Allows iterating over EventWithId objects directly.
+     */
+    [[nodiscard]] auto view() const {
+        return EventView(this);
+    }
+
 
     [[nodiscard]] std::vector<TimeFrameIndex> const & getEventSeries() const;
 
@@ -133,7 +251,6 @@ private:
     std::string _identity_data_key;
     EntityRegistry * _identity_registry{nullptr};
     std::vector<EntityId> _entity_ids;
-
 };
 
 #endif//BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
