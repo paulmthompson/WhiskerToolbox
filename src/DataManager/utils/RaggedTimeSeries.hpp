@@ -20,6 +20,8 @@
 #include <unordered_set>
 #include <vector>
 
+template <typename TData> class RaggedTimeSeriesView;
+
 /**
  * @brief Base template class for ragged time series data structures.
  *
@@ -765,6 +767,56 @@ public:
         return GetEntriesInRange(TimeFrameInterval(target_start_index, target_end_index));
     }
 
+    // ========== Ranges & Views ==========
+
+    /**
+     * @brief A view of (Time, Span<DataEntry>) pairs.
+     * * This makes the RaggedTimeSeries iterable as a sequence of time buckets.
+     * usage: for(auto [time, entries] : ts.time_slices()) { ... }
+     */
+    [[nodiscard]] auto time_slices() const {
+        return _data | std::views::transform([](auto const& pair) {
+            return std::make_pair(pair.first, std::span<DataEntry<TData> const>{pair.second});
+        });
+    }
+
+    /**
+     * @brief A flattened view of (Time, DataEntry) pairs.
+     * * This creates a zero-overhead 1D view of all entities across all times.
+     * Crucially, it preserves the TimeFrameIndex for each entity.
+     * * usage: for(auto [time, entry] : ts.elements()) { ... }
+     */
+    [[nodiscard]] auto elements() const {
+        return _data | std::views::transform([](auto const& pair) {
+            // 1. Capture the outer key (Time)
+            TimeFrameIndex const time = pair.first;
+            
+            // 2. Create an inner view that zips Time with the DataEntry
+            return pair.second | std::views::transform([time](auto const& entry) {
+                return std::make_pair(time, std::cref(entry));
+            });
+        }) 
+        | std::views::join; // 3. Flatten the Range<Range<Pair>> into Range<Pair>
+    }
+
+    /**
+     * @brief A flattened view of (Time, EntityId, TData) tuples.
+     * * Helper that unpacks the DataEntry for easier structured binding.
+     */
+    [[nodiscard]] auto flattened_data() const {
+        return elements() | std::views::transform([](auto const& pair) {
+            TimeFrameIndex const time = pair.first;
+            DataEntry<TData> const& entry = pair.second.get();
+            return std::make_tuple(time, entry.entity_id, std::cref(entry.data));
+        });
+    }
+
+    /**
+     * @brief Create a view of this time series.
+     * This works for RaggedTimeSeries and any derived class (like PointData).
+     */
+    auto view() const;
+
 
 protected:
     /**
@@ -839,5 +891,21 @@ protected:
 
     inline static std::vector<DataEntry<TData>> const _empty_entries{};
 };
+
+template <typename TData>
+class RaggedTimeSeriesView : public std::ranges::view_interface<RaggedTimeSeriesView<TData>> {
+    RaggedTimeSeries<TData> const* _ts;
+public:
+    RaggedTimeSeriesView() = default;
+    RaggedTimeSeriesView(RaggedTimeSeries<TData> const& ts) : _ts(&ts) {}
+    auto begin() const { return _ts->time_slices().begin(); }
+    auto end() const { return _ts->time_slices().end(); }
+    auto flatten() const { return _ts->elements(); }
+};
+
+template <typename TData>
+auto RaggedTimeSeries<TData>::view() const {
+    return RaggedTimeSeriesView<TData>(*this);
+}
 
 #endif // RAGGED_TIME_SERIES_HPP

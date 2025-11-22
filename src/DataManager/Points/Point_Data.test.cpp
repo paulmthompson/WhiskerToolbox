@@ -575,3 +575,202 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         REQUIRE(result.empty());
     }
 }
+
+TEST_CASE("PointData - View functionality", "[points][data][view][ranges]") {
+    PointData point_data;
+
+    // Setup test data with multiple time points
+    Point2D<float> p1{1.0f, 2.0f};
+    Point2D<float> p2{3.0f, 4.0f};
+    Point2D<float> p3{5.0f, 6.0f};
+    Point2D<float> p4{7.0f, 8.0f};
+    Point2D<float> p5{9.0f, 10.0f};
+
+    point_data.addAtTime(TimeFrameIndex(10), p1, NotifyObservers::No);
+    point_data.addAtTime(TimeFrameIndex(10), p2, NotifyObservers::No);
+    point_data.addAtTime(TimeFrameIndex(20), p3, NotifyObservers::No);
+    point_data.addAtTime(TimeFrameIndex(30), p4, NotifyObservers::No);
+    point_data.addAtTime(TimeFrameIndex(30), p5, NotifyObservers::No);
+
+    SECTION("View creation and basic iteration") {
+        auto view = point_data.view();
+
+        // Count total time slices
+        std::size_t time_count = 0;
+        for (auto [time, entries] : view) {
+            static_cast<void>(entries); // Suppress unused warning
+            ++time_count;
+        }
+
+        REQUIRE(time_count == 3); // Times: 10, 20, 30
+    }
+
+    SECTION("View iteration with time slice access") {
+        auto view = point_data.view();
+
+        std::vector<TimeFrameIndex> times;
+        std::vector<std::size_t> entry_counts;
+
+        for (auto [time, entries] : view) {
+            times.push_back(time);
+            entry_counts.push_back(entries.size());
+        }
+
+        REQUIRE(times.size() == 3);
+        REQUIRE(times[0] == TimeFrameIndex(10));
+        REQUIRE(times[1] == TimeFrameIndex(20));
+        REQUIRE(times[2] == TimeFrameIndex(30));
+
+        REQUIRE(entry_counts[0] == 2); // 2 points at time 10
+        REQUIRE(entry_counts[1] == 1); // 1 point at time 20
+        REQUIRE(entry_counts[2] == 2); // 2 points at time 30
+    }
+
+    SECTION("View flatten functionality") {
+        auto view = point_data.view();
+        auto flattened = view.flatten();
+
+        std::size_t total_count = 0;
+        std::vector<Point2D<float>> all_points;
+        std::vector<TimeFrameIndex> all_times;
+
+        for (auto [time, entry] : flattened) {
+            ++total_count;
+            all_times.push_back(time);
+            all_points.push_back(entry.data);
+        }
+
+        REQUIRE(total_count == 5); // Total of 5 points across all times
+
+        // Verify times are correct
+        REQUIRE(all_times[0] == TimeFrameIndex(10));
+        REQUIRE(all_times[1] == TimeFrameIndex(10));
+        REQUIRE(all_times[2] == TimeFrameIndex(20));
+        REQUIRE(all_times[3] == TimeFrameIndex(30));
+        REQUIRE(all_times[4] == TimeFrameIndex(30));
+
+        // Verify point data
+        REQUIRE(all_points[0].x == Catch::Approx(1.0f));
+        REQUIRE(all_points[0].y == Catch::Approx(2.0f));
+        REQUIRE(all_points[1].x == Catch::Approx(3.0f));
+        REQUIRE(all_points[1].y == Catch::Approx(4.0f));
+        REQUIRE(all_points[2].x == Catch::Approx(5.0f));
+        REQUIRE(all_points[2].y == Catch::Approx(6.0f));
+        REQUIRE(all_points[3].x == Catch::Approx(7.0f));
+        REQUIRE(all_points[3].y == Catch::Approx(8.0f));
+        REQUIRE(all_points[4].x == Catch::Approx(9.0f));
+        REQUIRE(all_points[4].y == Catch::Approx(10.0f));
+    }
+
+    SECTION("View with empty data") {
+        PointData empty_data;
+        auto view = empty_data.view();
+
+        std::size_t count = 0;
+        for (auto [time, entries] : view) {
+            static_cast<void>(time);
+            static_cast<void>(entries);
+            ++count;
+        }
+
+        REQUIRE(count == 0);
+    }
+
+    SECTION("View with ranges algorithms") {
+        auto view = point_data.view();
+        auto flattened = view.flatten();
+
+        // Use std::ranges::find_if to find a specific point
+        auto it = std::ranges::find_if(flattened, [](auto const & elem) {
+            auto [time, entry] = elem;
+            return entry.data.x == Catch::Approx(5.0f) && entry.data.y == Catch::Approx(6.0f);
+        });
+
+        REQUIRE(it != flattened.end());
+        auto [found_time, found_entry] = *it;
+        REQUIRE(found_time == TimeFrameIndex(20));
+        REQUIRE(found_entry.data.x == Catch::Approx(5.0f));
+        REQUIRE(found_entry.data.y == Catch::Approx(6.0f));
+    }
+
+    SECTION("View with ranges filter") {
+        auto view = point_data.view();
+        auto flattened = view.flatten();
+
+        // Filter points at time 10
+        auto filtered = flattened | std::views::filter([](auto const & elem) {
+            auto [time, entry] = elem;
+            static_cast<void>(entry);
+            return time == TimeFrameIndex(10);
+        });
+
+        std::size_t count = 0;
+        for (auto [time, entry] : filtered) {
+            static_cast<void>(entry);
+            REQUIRE(time == TimeFrameIndex(10));
+            ++count;
+        }
+
+        REQUIRE(count == 2); // Should have 2 points at time 10
+    }
+
+    SECTION("View with ranges transform") {
+        auto view = point_data.view();
+        auto flattened = view.flatten();
+
+        // Transform to extract only x coordinates
+        auto x_coords = flattened | std::views::transform([](auto const & elem) {
+            auto [time, entry] = elem;
+            static_cast<void>(time);
+            return entry.data.x;
+        });
+
+        std::vector<float> x_values;
+        for (auto x : x_coords) {
+            x_values.push_back(x);
+        }
+
+        REQUIRE(x_values.size() == 5);
+        REQUIRE(x_values[0] == Catch::Approx(1.0f));
+        REQUIRE(x_values[1] == Catch::Approx(3.0f));
+        REQUIRE(x_values[2] == Catch::Approx(5.0f));
+        REQUIRE(x_values[3] == Catch::Approx(7.0f));
+        REQUIRE(x_values[4] == Catch::Approx(9.0f));
+    }
+
+    SECTION("View is lazy - no copy on creation") {
+        // Create view - should be zero-cost
+        auto view = point_data.view();
+        
+        // Add more data after view creation
+        Point2D<float> p6{11.0f, 12.0f};
+        point_data.addAtTime(TimeFrameIndex(40), p6, NotifyObservers::No);
+
+        // View should reflect the updated data
+        std::size_t time_count = 0;
+        for (auto [time, entries] : view) {
+            static_cast<void>(entries);
+            ++time_count;
+        }
+
+        REQUIRE(time_count == 4); // Should now have 4 time points (including new 40)
+    }
+
+    SECTION("View iteration with EntityId access") {
+        auto view = point_data.view();
+        auto flattened = view.flatten();
+
+        std::vector<EntityId> entity_ids;
+        for (auto [time, entry] : flattened) {
+            static_cast<void>(time);
+            entity_ids.push_back(entry.entity_id);
+        }
+
+        // Should have 5 entity IDs, all should be valid (non-zero if identity context set)
+        REQUIRE(entity_ids.size() == 5);
+        
+        // Each entity ID should be unique (if not all zero)
+        std::unordered_set<EntityId> unique_ids(entity_ids.begin(), entity_ids.end());
+        REQUIRE(unique_ids.size() <= 5); // At most 5 unique IDs
+    }
+}

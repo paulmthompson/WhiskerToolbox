@@ -75,4 +75,6 @@ public:
     void changeImageSize(ImageSize const & image_size);
 };
 
+using PointDataView = RaggedTimeSeriesView<Point2D<float>>;
+
 #endif// POINT_DATA_HPP
