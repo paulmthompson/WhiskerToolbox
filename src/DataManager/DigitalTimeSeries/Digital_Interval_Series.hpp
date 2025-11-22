@@ -49,6 +49,121 @@ public:
 
     explicit DigitalIntervalSeries(std::vector<std::pair<float, float>> const & digital_vector);
 
+    // =============================================================
+    // ==================== RANGES INTERFACE =======================
+    // =============================================================
+
+    /**
+     * @brief Random Access Iterator for DigitalIntervalSeries
+     * * Synthesizes IntervalWithId objects on demand from the parallel 
+     * interval and ID vectors.
+     */
+    class IntervalIterator {
+    public:
+        // Iterator traits
+        using iterator_category = std::random_access_iterator_tag;
+        using iterator_concept = std::random_access_iterator_tag;
+        using value_type = IntervalWithId;
+        using difference_type = std::ptrdiff_t;
+        using pointer = IntervalWithId;  // Proxy pointer
+        using reference = IntervalWithId;// Return by Value
+
+        IntervalIterator() = default;
+        IntervalIterator(DigitalIntervalSeries const * series, size_t index)
+            : _series(series),
+              _index(index) {}
+
+        // Dereference: Zips the Interval and ID together
+        reference operator*() const {
+            // Access private members of the series
+            Interval const & interval = _series->_data[_index];
+
+            // Defensive check for ID sync
+            EntityId const id = (_index < _series->_entity_ids.size())
+                                        ? _series->_entity_ids[_index]
+                                        : EntityId(0);
+
+            return IntervalWithId(interval, id);
+        }
+
+        // Standard Random Access Operations
+        IntervalIterator & operator++() {
+            ++_index;
+            return *this;
+        }
+        IntervalIterator operator++(int) {
+            auto tmp = *this;
+            ++_index;
+            return tmp;
+        }
+        IntervalIterator & operator--() {
+            --_index;
+            return *this;
+        }
+        IntervalIterator operator--(int) {
+            auto tmp = *this;
+            --_index;
+            return tmp;
+        }
+
+        IntervalIterator & operator+=(difference_type n) {
+            _index += static_cast<size_t>(n);
+            return *this;
+        }
+        IntervalIterator & operator-=(difference_type n) {
+            _index -= static_cast<size_t>(n);
+            return *this;
+        }
+
+        friend IntervalIterator operator+(IntervalIterator it, difference_type n) { return it += n; }
+        friend IntervalIterator operator+(difference_type n, IntervalIterator it) { return it += n; }
+        friend IntervalIterator operator-(IntervalIterator it, difference_type n) { return it -= n; }
+
+        friend difference_type operator-(IntervalIterator const & lhs, IntervalIterator const & rhs) {
+            return static_cast<difference_type>(lhs._index) - static_cast<difference_type>(rhs._index);
+        }
+
+        // Comparison
+        auto operator<=>(IntervalIterator const & other) const {
+            return _index <=> other._index;
+        }
+        bool operator==(IntervalIterator const & other) const {
+            return _index == other._index;
+        }
+
+        // Subscript
+        reference operator[](difference_type n) const { return *(*this + n); }
+
+    private:
+        DigitalIntervalSeries const * _series{nullptr};
+        size_t _index{0};
+    };
+
+    /**
+     * @brief Lightweight view over the interval series
+     */
+    class IntervalView : public std::ranges::view_interface<IntervalView> {
+    public:
+        IntervalView() = default;
+        IntervalView(DigitalIntervalSeries const * series)
+            : _series(series) {}
+
+        IntervalIterator begin() const { return IntervalIterator(_series, 0); }
+        IntervalIterator end() const { return IntervalIterator(_series, _series->size()); }
+        size_t size() const { return _series->size(); }
+
+    private:
+        DigitalIntervalSeries const * _series{nullptr};
+    };
+
+    /**
+     * @brief Get a std::ranges compatible view of the series.
+     * Allows iterating over IntervalWithId objects directly.
+     */
+    [[nodiscard]] auto view() const {
+        return IntervalView(this);
+    }
+
     // ========== Setters ==========
 
     void addEvent(Interval new_interval);
@@ -163,9 +278,9 @@ public:
 
         // Use helper function for time frame conversion
         auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_time,
-                                                                              stop_time,
-                                                                              source_timeframe,
-                                                                              *_time_frame);
+                                                                             stop_time,
+                                                                             source_timeframe,
+                                                                             *_time_frame);
         return getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
     }
 
