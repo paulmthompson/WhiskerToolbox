@@ -217,6 +217,73 @@ TEST_CASE("TransformsV2 - MaskData to RaggedAnalogTimeSeries Manual", "[transfor
     std::cout << "  Output: 3 area vectors preserving structure\n";
 }
 
+TEST_CASE("TransformsV2 - Registry Materialize Container", "[transforms][v2][integration][registry]") {
+    // Test automatic container transform materialization
+    ElementRegistry registry;
+    
+    // Register element transform: Mask2D → float
+    TransformMetadata metadata;
+    metadata.description = "Calculate mask area";
+    metadata.category = "Image Processing";
+    
+    registry.registerTransform<Mask2D, float, MaskAreaParams>(
+        "CalculateMaskArea",
+        calculateMaskArea,
+        metadata
+    );
+    
+    // Create test data: MaskData with multiple masks
+    std::vector<int> times = {0, 10, 20};
+    auto time_frame = std::make_shared<TimeFrame>(times);
+    
+    MaskData mask_data;
+    mask_data.setTimeFrame(time_frame);
+    
+    // Add mask at time 0 (4 pixels)
+    mask_data.addAtTime(TimeFrameIndex(0), 
+        Mask2D({Point2D<uint32_t>{0, 0}, Point2D<uint32_t>{0, 1}, 
+                Point2D<uint32_t>{1, 0}, Point2D<uint32_t>{1, 1}}),
+        NotifyObservers::No);
+    
+    // Add two masks at time 10 (2 and 3 pixels)
+    mask_data.addAtTime(TimeFrameIndex(10),
+        Mask2D({Point2D<uint32_t>{0, 0}, Point2D<uint32_t>{1, 0}}),
+        NotifyObservers::No);
+    mask_data.addAtTime(TimeFrameIndex(10),
+        Mask2D({Point2D<uint32_t>{0, 0}, Point2D<uint32_t>{0, 1}, Point2D<uint32_t>{0, 2}}),
+        NotifyObservers::No);
+    
+    // Materialize container transform (returns by value!)
+    MaskAreaParams params;
+    auto result = registry.materializeContainer<MaskData, RaggedAnalogTimeSeries>(
+        "CalculateMaskArea",
+        mask_data,
+        params
+    );
+    
+    // DataManager would handle setting TimeFrame
+    result.setTimeFrame(mask_data.getTimeFrame());
+    
+    // Verify results
+    REQUIRE(result.getNumTimePoints() == 2);
+    
+    // Check time 0
+    auto data_at_0 = result.getDataAtTime(TimeFrameIndex(0));
+    REQUIRE(data_at_0.size() == 1);
+    REQUIRE(data_at_0[0] == 4.0f);
+    
+    // Check time 10
+    auto data_at_10 = result.getDataAtTime(TimeFrameIndex(10));
+    REQUIRE(data_at_10.size() == 2);
+    REQUIRE(data_at_10[0] == 2.0f);
+    REQUIRE(data_at_10[1] == 3.0f);
+    
+    std::cout << "✓ Registry materialize container works!\n";
+    std::cout << "  Element: Mask2D → float (registered)\n";
+    std::cout << "  Container: MaskData → RaggedAnalogTimeSeries (automatic)\n";
+    std::cout << "  Ownership: Returned by value (caller manages)\n";
+}
+
 TEST_CASE("TransformsV2 - Range Views Work", "[transforms][v2][ranges]") {
     // Verify that the user's range views work correctly
     

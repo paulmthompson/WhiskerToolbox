@@ -3,6 +3,7 @@
 
 #include "ElementTransform.hpp"
 #include "ContainerTraits.hpp"
+#include "Observer/Observer_Data.hpp"
 
 #include <functional>
 #include <memory>
@@ -240,39 +241,56 @@ public:
     // ========================================================================
     
     /**
-     * @brief Execute transform on container, automatically lifting from element level
+     * @brief Get a callable transform function from the registry
      * 
-     * This returns a lazy view that can be chained with other transforms.
-     * The view is not materialized until explicitly converted to a container.
+     * Returns a lambda that captures the transform and parameters,
+     * allowing it to be used with standard algorithms or materializers.
+     * 
+     * @tparam In Input element type
+     * @tparam Out Output element type
+     * @tparam Params Parameter type
+     * 
+     * @param name Transform name
+     * @param params Parameters to bind to the transform
+     * @return Callable that applies the transform
+     * 
+     * @throws std::runtime_error if transform not found
+     */
+    template<typename In, typename Out, typename Params>
+    auto getTransformFunction(std::string const& name, Params const& params) const {
+        auto transform = getTransform<In, Out, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Transform not found: " + name);
+        }
+        
+        return [transform, params](In const& input) -> Out {
+            return transform->execute(input, params, ComputeContext{});
+        };
+    }
+    
+    /**
+     * @brief Materialize container transform using registered element transform
+     * 
+     * Applies the element transform to each element in the input container
+     * and materializes the results into an output container.
      * 
      * @tparam ContainerIn Input container type (e.g., MaskData)
      * @tparam ContainerOut Output container type (e.g., RaggedAnalogTimeSeries)
      * @tparam Params Parameter type
      * 
-     * @return Lazy view that can be materialized or chained
+     * @param name Transform name to look up
+     * @param input Input container
+     * @param params Transform parameters
+     * @return Output container by value (caller manages ownership)
      * 
-     * @note Use ranges::to<ContainerOut>() or .materialize() to evaluate
-     * 
-     * Example:
-     * @code
-     * auto lazy_result = registry.executeContainer<MaskData, RaggedAnalogTimeSeries>(
-     *     "CalculateMaskArea", mask_data, params);
-     * 
-     * // Chain with another transform (lazy)
-     * auto chained = lazy_result | std::views::transform(normalize);
-     * 
-     * // Materialize when needed
-     * auto materialized = lazy_result | ranges::to<RaggedAnalogTimeSeries>();
-     * @endcode
+     * @note Does NOT set TimeFrame - caller should handle metadata transfer
+     * @note Does NOT set ImageSize - caller should handle metadata transfer
      */
     template<typename ContainerIn, typename ContainerOut, typename Params>
-    auto executeContainer(
+    ContainerOut materializeContainer(
         std::string const& name,
         ContainerIn const& input,
-        Params const& params,
-        ComputeContext const& ctx = {}) const;
-    
-    // Implementation needs TransformView helper (to be defined)
+        Params const& params) const;
     
     // ========================================================================
     // Query Interface
@@ -387,17 +405,51 @@ private:
 };
 
 // ============================================================================
-// Container Transform Implementation (TODO: Move to TransformPipeline.hpp)
+// Container Transform Implementation
 // ============================================================================
-// 
-// The executeContainer implementation should return a lazy range view that:
-// 1. Wraps the input container
-// 2. Stores the transform and parameters
-// 3. Lazily applies the transform when iterated
-// 4. Can be chained with other transforms
-// 5. Can be materialized into the output container type
-//
-// This will be implemented once we have the TransformPipeline infrastructure.
+
+/**
+ * @brief Materialize container transform for RaggedAnalogTimeSeries output
+ * 
+ * Simplified design:
+ * - Returns by value (caller manages ownership)
+ * - Does NOT set TimeFrame (caller's responsibility)
+ * - Does NOT set ImageSize (caller's responsibility)
+ * - Focuses purely on data transformation
+ */
+template<typename ContainerIn, typename ContainerOut, typename Params>
+ContainerOut ElementRegistry::materializeContainer(
+    std::string const& name,
+    ContainerIn const& input,
+    Params const& params) const {
+    
+    using In = ElementFor_t<ContainerIn>;
+    using Out = ElementFor_t<ContainerOut>;
+    
+    // Get transform function
+    auto transform_fn = getTransformFunction<In, Out, Params>(name, params);
+    
+    // Create output container (by value)
+    ContainerOut output;
+    
+    // Apply transform to each element and accumulate results
+    for (auto [time, entry] : input.elements()) {
+        Out result = transform_fn(entry.data);
+        
+        // Append to output container
+        if constexpr (std::is_same_v<ContainerOut, RaggedAnalogTimeSeries>) {
+            output.appendAtTime(time, {result}, NotifyObservers::No);
+        }
+        else if constexpr (RaggedContainer<ContainerOut>) {
+            output.addAtTime(time, result, NotifyObservers::No);
+        }
+        else {
+            output.setAtTime(time, result, NotifyObservers::No);
+        }
+    }
+    
+    return output;
+}
 
 } // namespace WhiskerToolbox::Transforms::V2
 
