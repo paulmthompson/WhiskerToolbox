@@ -38,6 +38,62 @@ public:
     RaggedAnalogTimeSeries() = default;
     virtual ~RaggedAnalogTimeSeries() = default;
 
+    /**
+     * @brief Construct from a range of time-value pairs
+     * 
+     * Accepts any input range that yields pairs of (TimeFrameIndex, values) where values
+     * can be either std::vector<float> or std::span<float const> or individual floats.
+     * This enables efficient construction from transformed views.
+     * 
+     * @tparam R Range type (must satisfy std::ranges::input_range)
+     * @param time_value_pairs Range of (TimeFrameIndex, values) pairs
+     * 
+     * @example
+     * ```cpp
+     * auto transformed = mask_data.elements() 
+     *     | std::views::transform([](auto entry) { 
+     *         return std::pair{entry.time, calculateMaskArea(entry.data)};
+     *     });
+     * RaggedAnalogTimeSeries ragged(transformed);
+     * ```
+     */
+    template<std::ranges::input_range R>
+    requires requires(std::ranges::range_value_t<R> pair) {
+        { pair.first } -> std::convertible_to<TimeFrameIndex>;
+        { pair.second };  // Can be float, vector<float>, or span<float const>
+    }
+    explicit RaggedAnalogTimeSeries(R&& time_value_pairs) {
+        for (auto&& [time, values] : time_value_pairs) {
+            // Handle different value types
+            if constexpr (std::convertible_to<decltype(values), float>) {
+                // Single float value - append to existing data at this time
+                _data[time].push_back(static_cast<float>(values));
+            }
+            else if constexpr (std::convertible_to<decltype(values), std::vector<float>>) {
+                // Vector of floats
+                if (_data.find(time) == _data.end()) {
+                    // No existing data at this time - move or copy the entire vector
+                    if constexpr (std::is_rvalue_reference_v<decltype(values)>) {
+                        _data[time] = std::move(values);
+                    } else {
+                        _data[time] = values;
+                    }
+                } else {
+                    // Existing data at this time - append
+                    _data[time].insert(_data[time].end(), values.begin(), values.end());
+                }
+            }
+            else if constexpr (std::ranges::range<decltype(values)>) {
+                // Span or other range type - append to existing data
+                if (_data.find(time) == _data.end()) {
+                    _data[time] = std::vector<float>(std::ranges::begin(values), std::ranges::end(values));
+                } else {
+                    _data[time].insert(_data[time].end(), std::ranges::begin(values), std::ranges::end(values));
+                }
+            }
+        }
+    }
+
     // Delete copy constructor and copy assignment
     RaggedAnalogTimeSeries(RaggedAnalogTimeSeries const &) = delete;
     RaggedAnalogTimeSeries & operator=(RaggedAnalogTimeSeries const &) = delete;

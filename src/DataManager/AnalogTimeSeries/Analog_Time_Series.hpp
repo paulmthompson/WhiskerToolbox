@@ -73,6 +73,53 @@ public:
      */
     explicit AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples);
 
+    /**
+     * @brief Construct from a range of time-value pairs
+     * 
+     * Accepts any input range that yields pairs of (TimeFrameIndex, float).
+     * This enables efficient single-pass construction from transformed views.
+     * 
+     * @tparam R Range type (must satisfy std::ranges::input_range)
+     * @param time_value_pairs Range of (TimeFrameIndex, float) pairs
+     * 
+     * @example
+     * ```cpp
+     * auto transformed = ragged_series 
+     *     | std::views::transform([](auto entry) { 
+     *         float sum = std::accumulate(entry.values.begin(), entry.values.end(), 0.0f);
+     *         return std::pair{entry.time, sum};
+     *     });
+     * AnalogTimeSeries analog(transformed);
+     * ```
+     */
+    template<std::ranges::input_range R>
+    requires requires(std::ranges::range_value_t<R> pair) {
+        { pair.first } -> std::convertible_to<TimeFrameIndex>;
+        { pair.second } -> std::convertible_to<float>;
+    }
+    explicit AnalogTimeSeries(R&& time_value_pairs) 
+        : AnalogTimeSeries() {
+        
+        // First pass: collect into vectors for efficient construction
+        std::vector<TimeFrameIndex> times;
+        std::vector<float> values;
+        
+        // Reserve if we can get size
+        if constexpr (std::ranges::sized_range<R>) {
+            auto size = std::ranges::size(time_value_pairs);
+            times.reserve(size);
+            values.reserve(size);
+        }
+        
+        for (auto&& [time, value] : time_value_pairs) {
+            times.push_back(time);
+            values.push_back(static_cast<float>(value));
+        }
+        
+        // Use existing setData method for efficient storage setup
+        setData(std::move(values), std::move(times));
+    }
+
     // ========== Factory Methods ==========
 
     /**

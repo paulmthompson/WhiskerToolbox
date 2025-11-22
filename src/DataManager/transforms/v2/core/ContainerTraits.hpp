@@ -113,10 +113,92 @@ struct ElementFor<AnalogTimeSeries> {
 
 template<>
 struct ElementFor<RaggedAnalogTimeSeries> { 
-    using type = float; 
-};// Helper alias
+    using type = float;  // Each entry is a float (just like AnalogTimeSeries)
+};
+
+// Helper alias
 template<typename Container>
 using ElementFor_t = typename ElementFor<Container>::type;
+
+// ============================================================================
+// Raggedness Traits (Orthogonal to Element Type)
+// ============================================================================
+
+/**
+ * @brief Trait to determine if a container is ragged (multiple entries per time)
+ * 
+ * Ragged containers can have variable numbers of elements at each time point.
+ * Non-ragged containers have exactly one element per time point.
+ */
+template<typename T>
+struct is_ragged : std::false_type {};
+
+template<> struct is_ragged<MaskData> : std::true_type {};
+template<> struct is_ragged<LineData> : std::true_type {};
+template<> struct is_ragged<PointData> : std::true_type {};
+template<> struct is_ragged<RaggedAnalogTimeSeries> : std::true_type {};
+template<> struct is_ragged<AnalogTimeSeries> : std::false_type {};
+
+template<typename T>
+inline constexpr bool is_ragged_v = is_ragged<T>::value;
+
+/**
+ * @brief Get the corresponding non-ragged container for an element type
+ * 
+ * Maps element types to single-value-per-time containers:
+ * - float → AnalogTimeSeries (not RaggedAnalogTimeSeries)
+ */
+template<typename ElementType>
+struct NonRaggedContainerFor;
+
+template<>
+struct NonRaggedContainerFor<float> {
+    using type = AnalogTimeSeries;
+};
+
+template<typename T>
+using NonRaggedContainerFor_t = typename NonRaggedContainerFor<T>::type;
+
+/**
+ * @brief Get the corresponding ragged container for an element type
+ * 
+ * Maps element types to multi-value-per-time containers:
+ * - Mask2D → MaskData
+ * - Line2D → LineData
+ * - Point2D<float> → PointData
+ * - float → RaggedAnalogTimeSeries
+ * - std::vector<float> → RaggedAnalogTimeSeries
+ */
+template<typename ElementType>
+struct RaggedContainerFor;
+
+template<>
+struct RaggedContainerFor<Mask2D> {
+    using type = MaskData;
+};
+
+template<>
+struct RaggedContainerFor<Line2D> {
+    using type = LineData;
+};
+
+template<>
+struct RaggedContainerFor<Point2D<float>> {
+    using type = PointData;
+};
+
+template<>
+struct RaggedContainerFor<float> {
+    using type = RaggedAnalogTimeSeries;
+};
+
+template<>
+struct RaggedContainerFor<std::vector<float>> {
+    using type = RaggedAnalogTimeSeries;
+};
+
+template<typename T>
+using RaggedContainerFor_t = typename RaggedContainerFor<T>::type;
 
 // ============================================================================
 // Container Type Traits

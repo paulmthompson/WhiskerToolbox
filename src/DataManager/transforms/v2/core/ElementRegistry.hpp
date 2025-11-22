@@ -11,6 +11,7 @@
 #include <string>
 #include <typeindex>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2 {
@@ -43,6 +44,8 @@ struct TransformMetadata {
     bool is_multi_input = false;
     size_t input_arity = 1;
     std::vector<std::type_index> individual_input_types;  // For multi-input
+    
+    bool is_time_grouped = false;  // True if this operates on span<Element> per time
     
     // For UI generation
     std::string input_type_name;
@@ -141,6 +144,68 @@ public:
         registerTransform<In, Out, NoParams>(
             name,
             [f = std::move(func)](In const& in, NoParams const&) { return f(in); },
+            metadata
+        );
+    }
+    
+    // ========================================================================
+    // Time-Grouped Transform Registration (M→N per time)
+    // ========================================================================
+    
+    /**
+     * @brief Register time-grouped transform
+     * 
+     * For transforms that operate on all elements at a single time point.
+     * Signature: (span<In>, Params) → vector<Out>
+     * 
+     * @tparam In Input element type (e.g., float)
+     * @tparam Out Output element type (e.g., float)
+     * @tparam Params Parameter type
+     * 
+     * Example: Sum reduction (span<float> → vector<float> with one element)
+     */
+    template<typename In, typename Out, typename Params>
+    void registerTimeGroupedTransform(
+        std::string const& name,
+        std::function<std::vector<Out>(std::span<In const>, Params const&)> func,
+        TransformMetadata metadata = {}) {
+        
+        // Create typed transform
+        auto transform = std::make_shared<TypedTimeGroupedTransform<In, Out, Params>>(std::move(func));
+        
+        // Complete metadata
+        metadata.name = name;
+        metadata.input_type = std::type_index(typeid(In));
+        metadata.output_type = std::type_index(typeid(Out));
+        metadata.params_type = std::type_index(typeid(Params));
+        metadata.is_multi_input = false;
+        metadata.input_arity = 1;
+        metadata.is_time_grouped = true;
+        
+        // Store transform (type-erased)
+        auto key = std::make_pair(std::type_index(typeid(In)), name);
+        time_grouped_transforms_[key] = transform;
+        
+        // Store metadata
+        metadata_[name] = metadata;
+        
+        // Update type index maps
+        input_type_to_names_[std::type_index(typeid(In))].push_back(name);
+        output_type_to_names_[std::type_index(typeid(Out))].push_back(name);
+    }
+    
+    /**
+     * @brief Register stateless time-grouped transform (no parameters)
+     */
+    template<typename In, typename Out>
+    void registerTimeGroupedTransform(
+        std::string const& name,
+        std::function<std::vector<Out>(std::span<In const>)> func,
+        TransformMetadata metadata = {}) {
+        
+        registerTimeGroupedTransform<In, Out, NoParams>(
+            name,
+            [f = std::move(func)](std::span<In const> in, NoParams const&) { return f(in); },
             metadata
         );
     }
@@ -268,30 +333,6 @@ public:
         };
     }
     
-    /**
-     * @brief Materialize container transform using registered element transform
-     * 
-     * Applies the element transform to each element in the input container
-     * and materializes the results into an output container.
-     * 
-     * @tparam ContainerIn Input container type (e.g., MaskData)
-     * @tparam ContainerOut Output container type (e.g., RaggedAnalogTimeSeries)
-     * @tparam Params Parameter type
-     * 
-     * @param name Transform name to look up
-     * @param input Input container
-     * @param params Transform parameters
-     * @return Output container by value (caller manages ownership)
-     * 
-     * @note Does NOT set TimeFrame - caller should handle metadata transfer
-     * @note Does NOT set ImageSize - caller should handle metadata transfer
-     */
-    template<typename ContainerIn, typename ContainerOut, typename Params>
-    ContainerOut materializeContainer(
-        std::string const& name,
-        ContainerIn const& input,
-        Params const& params) const;
-    
     // ========================================================================
     // Query Interface
     // ========================================================================
@@ -381,6 +422,22 @@ private:
         return std::static_pointer_cast<TypedTransform<In, Out, Params>>(it->second);
     }
     
+    /**
+     * @brief Internal: Get typed time-grouped transform
+     */
+    template<typename In, typename Out, typename Params>
+    std::shared_ptr<TypedTimeGroupedTransform<In, Out, Params>> 
+    getTimeGroupedTransform(std::string const& name) const {
+        auto key = std::make_pair(std::type_index(typeid(In)), name);
+        auto it = time_grouped_transforms_.find(key);
+        
+        if (it == time_grouped_transforms_.end()) {
+            return nullptr;
+        }
+        
+        return std::static_pointer_cast<TypedTimeGroupedTransform<In, Out, Params>>(it->second);
+    }
+    
     // Hash function for pair<type_index, string>
     struct PairHash {
         template<typename T1, typename T2>
@@ -398,58 +455,17 @@ private:
         PairHash
     > transforms_;
     
+    std::unordered_map<
+        std::pair<std::type_index, std::string>,
+        std::shared_ptr<void>,
+        PairHash
+    > time_grouped_transforms_;
+    
     std::unordered_map<std::string, TransformMetadata> metadata_;
     
     std::unordered_map<std::type_index, std::vector<std::string>> input_type_to_names_;
     std::unordered_map<std::type_index, std::vector<std::string>> output_type_to_names_;
 };
-
-// ============================================================================
-// Container Transform Implementation
-// ============================================================================
-
-/**
- * @brief Materialize container transform for RaggedAnalogTimeSeries output
- * 
- * Simplified design:
- * - Returns by value (caller manages ownership)
- * - Does NOT set TimeFrame (caller's responsibility)
- * - Does NOT set ImageSize (caller's responsibility)
- * - Focuses purely on data transformation
- */
-template<typename ContainerIn, typename ContainerOut, typename Params>
-ContainerOut ElementRegistry::materializeContainer(
-    std::string const& name,
-    ContainerIn const& input,
-    Params const& params) const {
-    
-    using In = ElementFor_t<ContainerIn>;
-    using Out = ElementFor_t<ContainerOut>;
-    
-    // Get transform function
-    auto transform_fn = getTransformFunction<In, Out, Params>(name, params);
-    
-    // Create output container (by value)
-    ContainerOut output;
-    
-    // Apply transform to each element and accumulate results
-    for (auto [time, entry] : input.elements()) {
-        Out result = transform_fn(entry.data);
-        
-        // Append to output container
-        if constexpr (std::is_same_v<ContainerOut, RaggedAnalogTimeSeries>) {
-            output.appendAtTime(time, {result}, NotifyObservers::No);
-        }
-        else if constexpr (RaggedContainer<ContainerOut>) {
-            output.addAtTime(time, result, NotifyObservers::No);
-        }
-        else {
-            output.setAtTime(time, result, NotifyObservers::No);
-        }
-    }
-    
-    return output;
-}
 
 } // namespace WhiskerToolbox::Transforms::V2
 

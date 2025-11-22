@@ -4,6 +4,7 @@
 #include <concepts>
 #include <functional>
 #include <memory>
+#include <span>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -107,6 +108,43 @@ concept BinaryElementTransform = requires(F f, In1 const& in1, In2 const& in2, P
 
 // Note: Variadic element transforms removed - use tuples for multi-input
 // e.g., std::tuple<In1, In2, In3> for 3 inputs
+
+// ============================================================================
+// Time-Grouped Transform Concepts (M→N per time point)
+// ============================================================================
+
+/**
+ * @brief Concept for time-grouped transform
+ * 
+ * Operates on all elements at a single time point:
+ * Range<In> → Range<Out>
+ * 
+ * This enables M→N transformations per time:
+ * - Sum reduction: many floats → one float (M→1)
+ * - Filter: many floats → variable floats (M→N, N≤M)
+ * - Decompose: one mask → many masks (1→M)
+ * 
+ * The transform receives all elements at a time and produces all outputs for that time.
+ */
+template<typename F, typename In, typename Out, typename Params>
+concept TimeGroupedTransform = requires(
+    F f,
+    std::span<In const> inputs,
+    Params const& params) {
+    { f(inputs, params) } -> std::convertible_to<std::vector<Out>>;
+};
+
+/**
+ * @brief Concept for context-aware time-grouped transform
+ */
+template<typename F, typename In, typename Out, typename Params>
+concept ContextAwareTimeGroupedTransform = requires(
+    F f,
+    std::span<In const> inputs,
+    Params const& params,
+    ComputeContext const& ctx) {
+    { f(inputs, params, ctx) } -> std::convertible_to<std::vector<Out>>;
+};
 
 // ============================================================================
 // Type Traits for Transform Inspection
@@ -292,6 +330,74 @@ public:
     
     static constexpr size_t getInputArity() {
         return input_arity_v<In>;
+    }
+
+private:
+    FunctionType func_;
+};
+
+// ============================================================================
+// Typed Time-Grouped Transform Wrapper (M→N per time point)
+// ============================================================================
+
+/**
+ * @brief Type-safe wrapper for time-grouped transforms
+ * 
+ * Wraps transforms that operate on all elements at a single time point.
+ * Signature: (span<In const>, Params const&) → vector<Out>
+ * 
+ * Example: Sum reduction that takes many floats and produces one
+ * 
+ * @tparam In Input element type
+ * @tparam Out Output element type
+ * @tparam Params Parameter type (use void for stateless)
+ */
+template<typename In, typename Out, typename Params = void>
+class TypedTimeGroupedTransform {
+public:
+    using InputType = In;
+    using OutputType = Out;
+    using ParamsType = Params;
+    using FunctionType = std::function<std::vector<Out>(std::span<In const>, Params const&)>;
+    
+    explicit TypedTimeGroupedTransform(FunctionType func)
+        : func_(std::move(func)) {}
+    
+    // Construct from any compatible callable
+    template<typename F>
+    requires std::invocable<F, std::span<In const>, Params const&>
+    explicit TypedTimeGroupedTransform(F func)
+        : func_(std::move(func)) {}
+    
+    std::vector<Out> execute(std::span<In const> inputs, Params const& params) const {
+        return func_(inputs, params);
+    }
+
+private:
+    FunctionType func_;
+};
+
+/**
+ * @brief Specialization for stateless time-grouped transforms (no parameters)
+ */
+template<typename In, typename Out>
+class TypedTimeGroupedTransform<In, Out, void> {
+public:
+    using InputType = In;
+    using OutputType = Out;
+    using ParamsType = void;
+    using FunctionType = std::function<std::vector<Out>(std::span<In const>)>;
+    
+    explicit TypedTimeGroupedTransform(FunctionType func)
+        : func_(std::move(func)) {}
+    
+    template<typename F>
+    requires std::invocable<F, std::span<In const>>
+    explicit TypedTimeGroupedTransform(F func)
+        : func_(std::move(func)) {}
+    
+    std::vector<Out> execute(std::span<In const> inputs) const {
+        return func_(inputs);
     }
 
 private:
