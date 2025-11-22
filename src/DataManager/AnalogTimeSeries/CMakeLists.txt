@@ -5,6 +5,8 @@ set(analog_subdirectory_sources
     Analog_Time_Series.cpp
     AnalogDataStorage.hpp
     AnalogDataStorage.cpp
+    RaggedAnalogTimeSeries.hpp
+    RaggedAnalogTimeSeries.cpp
     IO/Binary/Analog_Time_Series_Binary.hpp
     IO/Binary/Analog_Time_Series_Binary.cpp
     IO/CSV/Analog_Time_Series_CSV.hpp
