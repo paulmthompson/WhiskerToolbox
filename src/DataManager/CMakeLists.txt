@@ -205,6 +205,11 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/Mask_Skeletonize/mask_skeletonize.hpp
         transforms/Media/whisker_tracing.cpp
         transforms/Media/whisker_tracing.hpp
+
+        transforms/v2/core/ContainerTraits.hpp
+        transforms/v2/core/ContainerTraits.cpp 
+        transforms/v2/core/ElementRegistry.hpp 
+        transforms/v2/core/ElementTransform.hpp
 )
 
 

@@ -98,6 +98,8 @@ add_executable(test_data_manager
         
         # Loader tests
         loaders/test_analog_reflection.cpp
+
+        TransformsV2/test_mask_area.test.cpp
 )
 
 # Add VideoData tests only if FFmpeg is enabled
