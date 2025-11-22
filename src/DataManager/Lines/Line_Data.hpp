@@ -65,5 +65,6 @@ public:
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 };
 
+using LineDataView = RaggedTimeSeriesView<Line2D>;
 
 #endif// LINE_DATA_HPP
