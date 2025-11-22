@@ -3,6 +3,7 @@
 #include "transforms/v2/core/ElementTransform.hpp"
 #include "transforms/v2/examples/MaskAreaTransform.hpp"
 #include "transforms/v2/examples/SumReductionTransform.hpp"
+#include "transforms/v2/examples/RegisteredTransforms.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
@@ -71,18 +72,8 @@ TEST_CASE("TransformsV2 - Mask Area Full Mask", "[transforms][v2][element]") {
 }
 
 TEST_CASE("TransformsV2 - Registry Basic Registration", "[transforms][v2][registry]") {
-    ElementRegistry registry;
-    
-    // Register the transform
-    TransformMetadata metadata;
-    metadata.description = "Calculate mask area as vector";
-    metadata.category = "Image Processing";
-    
-    registry.registerTransform<Mask2D, float, MaskAreaParams>(
-        "CalculateMaskArea",
-        calculateMaskArea,
-        metadata
-    );
+    // Transforms are now registered at compile time via RegisteredTransforms.hpp
+    auto& registry = ElementRegistry::instance();
     
     // Verify it was registered
     REQUIRE(registry.hasTransform("CalculateMaskArea"));
@@ -90,20 +81,11 @@ TEST_CASE("TransformsV2 - Registry Basic Registration", "[transforms][v2][regist
     auto const* meta = registry.getMetadata("CalculateMaskArea");
     REQUIRE(meta != nullptr);
     REQUIRE(meta->name == "CalculateMaskArea");
-    REQUIRE(meta->description == "Calculate mask area as vector");
+    REQUIRE(meta->description == "Calculate the area of a mask in pixels");
 }
 
 TEST_CASE("TransformsV2 - Registry Execute Element Transform", "[transforms][v2][registry]") {
-    ElementRegistry registry;
-    
-    TransformMetadata metadata;
-    metadata.description = "Calculate mask area as vector";
-    
-    registry.registerTransform<Mask2D, float, MaskAreaParams>(
-        "CalculateMaskArea",
-        calculateMaskArea,
-        metadata
-    );
+    auto& registry = ElementRegistry::instance();
     
     // Create test mask with 3 pixels
     Mask2D mask({
@@ -115,7 +97,7 @@ TEST_CASE("TransformsV2 - Registry Execute Element Transform", "[transforms][v2]
     
     MaskAreaParams params;
     
-    // Execute via registry
+    // Execute via registry (transform already registered at compile time)
     auto result = registry.execute<Mask2D, float, MaskAreaParams>(
         "CalculateMaskArea", mask, params);
     

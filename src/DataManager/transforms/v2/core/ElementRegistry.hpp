@@ -88,6 +88,16 @@ public:
     ElementRegistry(ElementRegistry&&) = default;
     ElementRegistry& operator=(ElementRegistry&&) = default;
     
+    /**
+     * @brief Get global singleton instance
+     * 
+     * @return Reference to the global registry
+     */
+    static ElementRegistry& instance() {
+        static ElementRegistry registry;
+        return registry;
+    }
+    
     // ========================================================================
     // Single-Input Transform Registration
     // ========================================================================
@@ -465,6 +475,133 @@ private:
     
     std::unordered_map<std::type_index, std::vector<std::string>> input_type_to_names_;
     std::unordered_map<std::type_index, std::vector<std::string>> output_type_to_names_;
+};
+
+// ============================================================================
+// Compile-Time Registration Helper
+// ============================================================================
+
+/**
+ * @brief RAII helper for compile-time transform registration
+ * 
+ * This class is designed to be instantiated as a static variable,
+ * triggering registration during static initialization.
+ * 
+ * Example usage:
+ * ```cpp
+ * namespace {
+ *     auto const register_mask_area = RegisterTransform<Mask2D, float, MaskAreaParams>(
+ *         "CalculateMaskArea",
+ *         calculateMaskArea,
+ *         TransformMetadata{
+ *             .description = "Calculate mask area",
+ *             .category = "Image Processing"
+ *         }
+ *     );
+ * }
+ * ```
+ */
+template<typename In, typename Out, typename Params>
+class RegisterTransform {
+public:
+    RegisterTransform(
+        std::string const& name,
+        std::function<Out(In const&, Params const&)> func,
+        TransformMetadata metadata = {})
+    {
+        ElementRegistry::instance().registerTransform<In, Out, Params>(
+            name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time stateless transform registration
+ */
+template<typename In, typename Out>
+class RegisterStatelessTransform {
+public:
+    RegisterStatelessTransform(
+        std::string const& name,
+        std::function<Out(In const&)> func,
+        TransformMetadata metadata = {})
+    {
+        ElementRegistry::instance().registerTransform<In, Out>(
+            name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time context-aware transform registration
+ */
+template<typename In, typename Out, typename Params>
+class RegisterContextTransform {
+public:
+    RegisterContextTransform(
+        std::string const& name,
+        std::function<Out(In const&, Params const&, ComputeContext const&)> func,
+        TransformMetadata metadata = {})
+    {
+        // Wrap the context-aware function to match the expected signature
+        auto wrapped = [func](In const& in, Params const& p) -> Out {
+            ComputeContext ctx;  // Default context
+            return func(in, p, ctx);
+        };
+        ElementRegistry::instance().registerTransform<In, Out, Params>(
+            name, wrapped, std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time time-grouped transform registration
+ */
+template<typename In, typename Out, typename Params>
+class RegisterTimeGroupedTransform {
+public:
+    RegisterTimeGroupedTransform(
+        std::string const& name,
+        std::function<std::vector<Out>(std::span<In const>, Params const&)> func,
+        TransformMetadata metadata = {})
+    {
+        ElementRegistry::instance().registerTimeGroupedTransform<In, Out, Params>(
+            name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time stateless time-grouped transform registration
+ */
+template<typename In, typename Out>
+class RegisterStatelessTimeGroupedTransform {
+public:
+    RegisterStatelessTimeGroupedTransform(
+        std::string const& name,
+        std::function<std::vector<Out>(std::span<In const>)> func,
+        TransformMetadata metadata = {})
+    {
+        ElementRegistry::instance().registerTimeGroupedTransform<In, Out>(
+            name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time context-aware time-grouped transform registration
+ */
+template<typename In, typename Out, typename Params>
+class RegisterContextTimeGroupedTransform {
+public:
+    RegisterContextTimeGroupedTransform(
+        std::string const& name,
+        std::function<std::vector<Out>(std::span<In const>, Params const&, ComputeContext const&)> func,
+        TransformMetadata metadata = {})
+    {
+        // Wrap the context-aware function to match the expected signature
+        auto wrapped = [func](std::span<In const> inputs, Params const& p) -> std::vector<Out> {
+            ComputeContext ctx;  // Default context
+            return func(inputs, p, ctx);
+        };
+        ElementRegistry::instance().registerTimeGroupedTransform<In, Out, Params>(
+            name, wrapped, std::move(metadata));
+    }
 };
 
 } // namespace WhiskerToolbox::Transforms::V2
