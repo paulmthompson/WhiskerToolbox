@@ -1,6 +1,8 @@
 #include "transforms/v2/core/ContainerTraits.hpp"
+#include "transforms/v2/core/ContainerTransform.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/ElementTransform.hpp"
+#include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/examples/MaskAreaTransform.hpp"
 #include "transforms/v2/examples/SumReductionTransform.hpp"
 #include "transforms/v2/examples/RegisteredTransforms.hpp"
@@ -19,6 +21,36 @@
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+
+// ============================================================================
+// Test-specific convenience functions
+// ============================================================================
+
+/**
+ * @brief Create a pipeline for MaskData → area → sum → AnalogTimeSeries
+ */
+inline TransformPipeline createMaskAreaSumPipeline(
+    MaskAreaParams area_params = {},
+    SumReductionParams sum_params = {})
+{
+    return TransformPipeline()
+        .addStep("CalculateMaskArea", std::move(area_params))
+        .addStep("SumReduction", std::move(sum_params));
+}
+
+/**
+ * @brief Execute mask area calculation and sum reduction in one call
+ */
+inline std::shared_ptr<AnalogTimeSeries> calculateAndSumMaskAreas(
+    MaskData const& mask_data)
+{
+    auto pipeline = createMaskAreaSumPipeline();
+    return pipeline.execute<MaskData, AnalogTimeSeries>(mask_data);
+}
+
+// ============================================================================
+// Tests
+// ============================================================================
 
 /**
  * @brief Test: Transform Mask2D to std::vector<float> (area calculation)
@@ -472,4 +504,233 @@ TEST_CASE("TransformsV2 - Chained Transform: Mask Area + Sum Reduction", "[trans
     std::cout << "  Method: Lazy views with std::ranges::views::transform\n";
     std::cout << "  Result: {10, 5} → 15 ✓\n";
     std::cout << "  Benefits: Zero intermediate storage, composable, efficient\n";
+}
+
+TEST_CASE("TransformsV2 - Container Transform Helpers", "[transforms][v2][container][helpers]") {
+    std::cout << "\n=== Testing Container Transform Helpers ===\n";
+    
+    // Setup test data
+    std::vector<int> times_int = {0, 10, 20};
+    auto time_frame = std::make_shared<TimeFrame>(times_int);
+    
+    MaskData mask_data;
+    mask_data.setTimeFrame(time_frame);
+    
+    // Add masks with known areas
+    mask_data.addAtTime(TimeFrameIndex(0), 
+        Mask2D({{0,0}, {1,0}, {2,0}, {3,0}}), // 4 pixels
+        NotifyObservers::No);
+    mask_data.addAtTime(TimeFrameIndex(0),
+        Mask2D({{0,1}, {1,1}}), // 2 pixels
+        NotifyObservers::No);
+    
+    mask_data.addAtTime(TimeFrameIndex(10),
+        Mask2D({{0,0}, {1,0}, {2,0}}), // 3 pixels
+        NotifyObservers::No);
+    
+    mask_data.addAtTime(TimeFrameIndex(20),
+        Mask2D({{0,0}, {1,0}, {2,0}, {3,0}, {4,0}}), // 5 pixels
+        NotifyObservers::No);
+    
+    std::cout << "Test data: MaskData with masks of areas {4,2}, {3}, {5}\n";
+    
+    // Test applyElementTransform
+    std::cout << "\nTesting applyElementTransform...\n";
+    auto ragged = applyElementTransform<MaskData, RaggedAnalogTimeSeries, Mask2D, float, MaskAreaParams>(
+        mask_data, "CalculateMaskArea", MaskAreaParams{});
+    
+    REQUIRE(ragged != nullptr);
+    REQUIRE(ragged->getNumTimePoints() == 3);
+    
+    auto data0 = ragged->getDataAtTime(TimeFrameIndex(0));
+    REQUIRE(data0.size() == 2);
+    REQUIRE(data0[0] == 4.0f);
+    REQUIRE(data0[1] == 2.0f);
+    std::cout << "  Time 0: {" << data0[0] << ", " << data0[1] << "} ✓\n";
+    
+    auto data10 = ragged->getDataAtTime(TimeFrameIndex(10));
+    REQUIRE(data10.size() == 1);
+    REQUIRE(data10[0] == 3.0f);
+    std::cout << "  Time 10: {" << data10[0] << "} ✓\n";
+    
+    // Test applyTimeGroupedTransform
+    std::cout << "\nTesting applyTimeGroupedTransform...\n";
+    auto analog = applyTimeGroupedTransform<RaggedAnalogTimeSeries, AnalogTimeSeries, float, float, SumReductionParams>(
+        *ragged, "SumReduction", SumReductionParams{});
+    
+    REQUIRE(analog != nullptr);
+    REQUIRE(analog->getNumSamples() == 3);
+    
+    auto series = analog->getAnalogTimeSeries();
+    REQUIRE(series[0] == 6.0f);  // 4 + 2
+    REQUIRE(series[1] == 3.0f);  // 3
+    REQUIRE(series[2] == 5.0f);  // 5
+    std::cout << "  Results: {" << series[0] << ", " << series[1] << ", " << series[2] << "} ✓\n";
+    
+    std::cout << "\n✓ Container transform helpers work correctly!\n";
+}
+
+TEST_CASE("TransformsV2 - Transform Pipeline", "[transforms][v2][pipeline]") {
+    std::cout << "\n=== Testing Transform Pipeline ===\n";
+    
+    // Setup test data
+    std::vector<int> times_int = {0, 10, 20};
+    auto time_frame = std::make_shared<TimeFrame>(times_int);
+    
+    MaskData mask_data;
+    mask_data.setTimeFrame(time_frame);
+    
+    // Time 0: masks with areas 10 and 5
+    std::vector<Point2D<uint32_t>> pixels10;
+    for (uint32_t i = 0; i < 10; ++i) pixels10.push_back({i, 0});
+    mask_data.addAtTime(TimeFrameIndex(0), Mask2D(pixels10), NotifyObservers::No);
+    
+    std::vector<Point2D<uint32_t>> pixels5;
+    for (uint32_t i = 0; i < 5; ++i) pixels5.push_back({i, 1});
+    mask_data.addAtTime(TimeFrameIndex(0), Mask2D(pixels5), NotifyObservers::No);
+    
+    // Time 10: masks with areas 3, 7, 2
+    mask_data.addAtTime(TimeFrameIndex(10), Mask2D({{0,0}, {1,0}, {2,0}}), NotifyObservers::No);
+    std::vector<Point2D<uint32_t>> pixels7;
+    for (uint32_t i = 0; i < 7; ++i) pixels7.push_back({i, 1});
+    mask_data.addAtTime(TimeFrameIndex(10), Mask2D(pixels7), NotifyObservers::No);
+    mask_data.addAtTime(TimeFrameIndex(10), Mask2D({{0,2}, {1,2}}), NotifyObservers::No);
+    
+    // Time 20: mask with area 20
+    std::vector<Point2D<uint32_t>> pixels20;
+    for (uint32_t i = 0; i < 20; ++i) pixels20.push_back({i, 0});
+    mask_data.addAtTime(TimeFrameIndex(20), Mask2D(pixels20), NotifyObservers::No);
+    
+    std::cout << "Input: MaskData with areas {10,5}, {3,7,2}, {20}\n";
+    
+    // Test pipeline builder
+    std::cout << "\nBuilding pipeline with addStep()...\n";
+    TransformPipeline pipeline;
+    pipeline.addStep("CalculateMaskArea", MaskAreaParams{})
+            .addStep("SumReduction", SumReductionParams{});
+    
+    REQUIRE(pipeline.size() == 2);
+    REQUIRE(pipeline.getStepName(0) == "CalculateMaskArea");
+    REQUIRE(pipeline.getStepName(1) == "SumReduction");
+    std::cout << "  Step 0: " << pipeline.getStepName(0) << " ✓\n";
+    std::cout << "  Step 1: " << pipeline.getStepName(1) << " ✓\n";
+    
+    // Execute pipeline (uses standard materialized execution since step 2 is time-grouped)
+    std::cout << "\nExecuting pipeline (materialized - has time-grouped transform)...\n";
+    auto result = pipeline.execute<MaskData, AnalogTimeSeries>(mask_data);
+    
+    REQUIRE(result != nullptr);
+    REQUIRE(result->getNumSamples() == 3);
+    
+    auto series = result->getAnalogTimeSeries();
+    REQUIRE(series[0] == 15.0f);  // 10 + 5
+    REQUIRE(series[1] == 12.0f);  // 3 + 7 + 2
+    REQUIRE(series[2] == 20.0f);  // 20
+    
+    std::cout << "  Time 0: " << series[0] << " (expected 15) ✓\n";
+    std::cout << "  Time 10: " << series[1] << " (expected 12) ✓\n";
+    std::cout << "  Time 20: " << series[2] << " (expected 20) ✓\n";
+    
+    std::cout << "\n✓ Transform pipeline works correctly!\n";
+    std::cout << "  Note: This pipeline uses materialized execution because\n";
+    std::cout << "        step 2 (SumReduction) is time-grouped and requires\n";
+    std::cout << "        collecting all values at each time point.\n";
+}
+
+TEST_CASE("TransformsV2 - Fused Pipeline Execution", "[transforms][v2][pipeline][fusion]") {
+    std::cout << "\n=== Testing Fused Pipeline Execution ===\n";
+    
+    // Setup test data
+    std::vector<int> times_int = {0, 10, 20};
+    auto time_frame = std::make_shared<TimeFrame>(times_int);
+    
+    MaskData mask_data;
+    mask_data.setTimeFrame(time_frame);
+    
+    // Add some masks
+    for (int i = 0; i < 3; ++i) {
+        std::vector<Point2D<uint32_t>> pixels;
+        int num_pixels = (i + 1) * 5;  // 5, 10, 15 pixels
+        for (int j = 0; j < num_pixels; ++j) {
+            pixels.push_back({static_cast<uint32_t>(j), static_cast<uint32_t>(i)});
+        }
+        mask_data.addAtTime(TimeFrameIndex(i * 10), Mask2D(pixels), NotifyObservers::No);
+    }
+    
+    std::cout << "Input: MaskData with single masks of areas 5, 10, 15\n";
+    
+    // Create element-only pipeline (single step - can be fused)
+    std::cout << "\nTesting single-step fused execution...\n";
+    TransformPipeline single_step_pipeline;
+    single_step_pipeline.addStep("CalculateMaskArea", MaskAreaParams{});
+    
+    try {
+        auto ragged = single_step_pipeline.executeFused<MaskData, RaggedAnalogTimeSeries>(mask_data);
+        
+        REQUIRE(ragged != nullptr);
+        REQUIRE(ragged->getNumTimePoints() == 3);
+        
+        auto data0 = ragged->getDataAtTime(TimeFrameIndex(0));
+        auto data10 = ragged->getDataAtTime(TimeFrameIndex(10));
+        auto data20 = ragged->getDataAtTime(TimeFrameIndex(20));
+        
+        REQUIRE(data0.size() == 1);
+        REQUIRE(data0[0] == 5.0f);
+        REQUIRE(data10.size() == 1);
+        REQUIRE(data10[0] == 10.0f);
+        REQUIRE(data20.size() == 1);
+        REQUIRE(data20[0] == 15.0f);
+        
+        std::cout << "  ✓ Single-step fusion works!\n";
+        std::cout << "    Time 0: area = " << data0[0] << "\n";
+        std::cout << "    Time 10: area = " << data10[0] << "\n";
+        std::cout << "    Time 20: area = " << data20[0] << "\n";
+        std::cout << "    Performance: Single pass, zero intermediate allocations\n";
+    } catch (std::exception const& e) {
+        FAIL("Fused execution failed: " << e.what());
+    }
+    
+    std::cout << "\n✓ Fused pipeline execution works!\n";
+    std::cout << "  Benefits:\n";
+    std::cout << "  - Single pass through data\n";
+    std::cout << "  - No intermediate container allocations\n";
+    std::cout << "  - Hot data stays in CPU cache\n";
+    std::cout << "  - Minimal overhead (function pointer indirection only)\n";
+}
+
+TEST_CASE("TransformsV2 - Convenience Functions", "[transforms][v2][convenience]") {
+    std::cout << "\n=== Testing Convenience Functions ===\n";
+    
+    // Setup test data
+    std::vector<int> times_int = {0, 10};
+    auto time_frame = std::make_shared<TimeFrame>(times_int);
+    
+    MaskData mask_data;
+    mask_data.setTimeFrame(time_frame);
+    
+    std::vector<Point2D<uint32_t>> pixels8;
+    for (uint32_t i = 0; i < 8; ++i) pixels8.push_back({i, 0});
+    mask_data.addAtTime(TimeFrameIndex(0), Mask2D(pixels8), NotifyObservers::No);
+    
+    std::vector<Point2D<uint32_t>> pixels12;
+    for (uint32_t i = 0; i < 12; ++i) pixels12.push_back({i, 1});
+    mask_data.addAtTime(TimeFrameIndex(10), Mask2D(pixels12), NotifyObservers::No);
+    
+    std::cout << "Input: MaskData with single masks of area 8 and 12\n";
+    
+    // Test convenience function
+    std::cout << "\nTesting calculateAndSumMaskAreas()...\n";
+    auto result = calculateAndSumMaskAreas(mask_data);
+    
+    REQUIRE(result != nullptr);
+    REQUIRE(result->getNumSamples() == 2);
+    
+    auto series = result->getAnalogTimeSeries();
+    REQUIRE(series[0] == 8.0f);
+    REQUIRE(series[1] == 12.0f);
+    
+    std::cout << "  Time 0: " << series[0] << " ✓\n";
+    std::cout << "  Time 10: " << series[1] << " ✓\n";
+    
+    std::cout << "\n✓ Convenience function works - single call transforms MaskData → AnalogTimeSeries!\n";
 }

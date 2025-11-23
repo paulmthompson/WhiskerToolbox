@@ -5,6 +5,7 @@
 #include "ContainerTraits.hpp"
 #include "Observer/Observer_Data.hpp"
 
+#include <any>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -24,6 +25,72 @@ namespace WhiskerToolbox::Transforms::V2 {
  * @brief Empty parameter struct for transforms that don't need configuration
  */
 struct NoParams {};
+
+// ============================================================================
+// Type Triple for Parameter Executor Lookup
+// ============================================================================
+
+/**
+ * @brief Key for looking up typed executors by full type signature
+ */
+struct TypeTriple {
+    std::type_index input_type;
+    std::type_index output_type;
+    std::type_index params_type;
+    
+    bool operator==(TypeTriple const& other) const {
+        return input_type == other.input_type &&
+               output_type == other.output_type &&
+               params_type == other.params_type;
+    }
+};
+
+/**
+ * @brief Hash function for TypeTriple
+ */
+struct TypeTripleHash {
+    std::size_t operator()(TypeTriple const& key) const {
+        std::size_t h1 = std::hash<std::type_index>{}(key.input_type);
+        std::size_t h2 = std::hash<std::type_index>{}(key.output_type);
+        std::size_t h3 = std::hash<std::type_index>{}(key.params_type);
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
+
+// ============================================================================
+// Typed Parameter Executor (stores parameters and types)
+// ============================================================================
+
+/**
+ * @brief Interface for parameter executors with captured state
+ * 
+ * Each executor knows its input/output types and has parameters captured.
+ * This eliminates per-element casts and type dispatch.
+ */
+class IParamExecutor {
+public:
+    virtual ~IParamExecutor() = default;
+    virtual std::any execute(std::string const& name, std::any const& input) const = 0;
+};
+
+/**
+ * @brief Concrete executor with full type information and captured parameters
+ * 
+ * All types are known at construction time, eliminating runtime dispatch.
+ * Parameters are captured, eliminating per-element casts.
+ * 
+ * Note: Implementation is defined after ElementRegistry class declaration.
+ */
+template<typename In, typename Out, typename Params>
+class TypedParamExecutor : public IParamExecutor {
+public:
+    explicit TypedParamExecutor(Params params);
+    
+    std::any execute(std::string const& name, std::any const& input_any) const override;
+    
+private:
+    Params params_;  // Parameters captured at construction
+};
 
 // ============================================================================
 // Transform Metadata
@@ -311,6 +378,24 @@ public:
         return transform->execute(inputs, params, ctx);
     }
     
+    /**
+     * @brief Execute time-grouped transform
+     * 
+     * @throws std::runtime_error if transform not found or type mismatch
+     */
+    template<typename In, typename Out, typename Params>
+    std::vector<Out> executeTimeGrouped(std::string const& name,
+                                       std::span<In const> inputs,
+                                       Params const& params) const {
+        
+        auto transform = getTimeGroupedTransform<In, Out, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Time-grouped transform not found: " + name);
+        }
+        
+        return transform->execute(inputs, params);
+    }
+    
     // ========================================================================
     // Container-Level Execution (Automatic Lifting)
     // ========================================================================
@@ -409,10 +494,145 @@ public:
     std::vector<std::string> getAllTransformNames() const {
         std::vector<std::string> names;
         names.reserve(metadata_.size());
-        for (auto const& [name, meta] : metadata_) {
+        for (auto const& [name, _] : metadata_) {
             names.push_back(name);
         }
         return names;
+    }
+    
+    // ========================================================================
+    // Typed Parameter Executors (eliminates per-element dispatch)
+    // ========================================================================
+    
+    /**
+     * @brief Register a typed executor factory for a specific type signature
+     * 
+     * The factory creates executors with parameters already captured,
+     * eliminating per-element parameter casts and type dispatch.
+     * 
+     * @tparam In Input element type
+     * @tparam Out Output element type
+     * @tparam Params Parameter type
+     * @param factory Function that creates executor from type-erased params
+     */
+    template<typename In, typename Out, typename Params>
+    void registerTypedExecutorFactory(
+        std::function<std::unique_ptr<IParamExecutor>(std::any const&)> factory)
+    {
+        TypeTriple key{typeid(In), typeid(Out), typeid(Params)};
+        typed_executor_factories_[key] = std::move(factory);
+    }
+    
+    /**
+     * @brief Get or create a typed executor for given parameters
+     * 
+     * This looks up the factory, creates an executor with parameters captured,
+     * and caches it for reuse.
+     * 
+     * @param key Type triple identifying the transform signature
+     * @param params Type-erased parameters
+     * @return Pointer to executor with captured state
+     */
+    IParamExecutor const* getOrCreateTypedExecutor(
+        TypeTriple const& key,
+        std::any const& params) const
+    {
+        // Check cache first
+        auto cache_key = std::make_pair(key, std::type_index(params.type()));
+        auto cache_it = typed_executor_cache_.find(cache_key);
+        if (cache_it != typed_executor_cache_.end()) {
+            return cache_it->second.get();
+        }
+        
+        // Look up factory
+        auto factory_it = typed_executor_factories_.find(key);
+        if (factory_it == typed_executor_factories_.end()) {
+            throw std::runtime_error("No typed executor factory registered for type triple: " +
+                                   std::string(key.input_type.name()) + " -> " +
+                                   std::string(key.output_type.name()) + " (" +
+                                   std::string(key.params_type.name()) + ")");
+        }
+        
+        // Create executor with captured parameters
+        auto executor = factory_it->second(params);
+        auto* executor_ptr = executor.get();
+        
+        // Cache for reuse
+        typed_executor_cache_[cache_key] = std::move(executor);
+        
+        return executor_ptr;
+    }
+    
+    /**
+     * @brief Legacy registration for backward compatibility
+     * 
+     * @deprecated Use registerTypedExecutorFactory instead
+     */
+    template<typename Params>
+    void registerParamExecutor(
+        std::function<std::any(
+            std::string const& transform_name,
+            std::any const& input_element,
+            std::any const& params,
+            std::type_index in_type,
+            std::type_index out_type)> executor)
+    {
+        param_executors_[typeid(Params)] = std::move(executor);
+    }
+    
+    /**
+     * @brief Execute transform with typed executor (zero per-element dispatch)
+     * 
+     * Looks up pre-built executor with captured parameters and types,
+     * eliminating all per-element casts and dispatch overhead.
+     * 
+     * @param transform_name Name of the transform
+     * @param input_element Input element (type-erased)
+     * @param params Parameters (type-erased)
+     * @param in_type Input element type
+     * @param out_type Output element type
+     * @param param_type Parameter type
+     * @return Output element (type-erased)
+     */
+    std::any executeWithDynamicParams(
+        std::string const& transform_name,
+        std::any const& input_element,
+        std::any const& params,
+        std::type_index in_type,
+        std::type_index out_type,
+        std::type_index param_type) const
+    {
+        TypeTriple key{in_type, out_type, param_type};
+        
+        // Get or create executor with captured state
+        auto const* executor = getOrCreateTypedExecutor(key, params);
+        
+        // Execute with zero dispatch overhead!
+        return executor->execute(transform_name, input_element);
+    }
+    
+    /**
+     * @brief Legacy executeWithDynamicParams for backward compatibility
+     * 
+     * Falls back to old param_executors_ map if typed executor not found.
+     * 
+     * @deprecated Typed executors should be registered instead
+     */
+    std::any executeWithDynamicParamsLegacy(
+        std::string const& transform_name,
+        std::any const& input_element,
+        std::any const& params,
+        std::type_index in_type,
+        std::type_index out_type,
+        std::type_index param_type) const
+    {
+        auto it = param_executors_.find(param_type);
+        if (it == param_executors_.end()) {
+            throw std::runtime_error("No executor registered for parameter type: " + 
+                                    std::string(param_type.name()));
+        }
+        
+        return it->second(transform_name, input_element, params, in_type, out_type);
     }
 
 private:
@@ -456,6 +676,14 @@ private:
             auto h2 = std::hash<T2>{}(p.second);
             return h1 ^ (h2 << 1);
         }
+        
+        // Specialized hash for pair<TypeTriple, std::type_index>
+        std::size_t operator()(std::pair<TypeTriple, std::type_index> const& p) const {
+            TypeTripleHash triple_hash;
+            auto h1 = triple_hash(p.first);
+            auto h2 = std::hash<std::type_index>{}(p.second);
+            return h1 ^ (h2 << 1);
+        }
     };
     
     // Storage
@@ -475,7 +703,80 @@ private:
     
     std::unordered_map<std::type_index, std::vector<std::string>> input_type_to_names_;
     std::unordered_map<std::type_index, std::vector<std::string>> output_type_to_names_;
+    
+    // Typed executor factories (create executors with captured parameters)
+    std::unordered_map<
+        TypeTriple,
+        std::function<std::unique_ptr<IParamExecutor>(std::any const&)>,
+        TypeTripleHash
+    > typed_executor_factories_;
+    
+    // Cache of created executors (reused across pipeline executions)
+    // Key: (TypeTriple, param_type_index) -> unique ownership of executor
+    mutable std::unordered_map<
+        std::pair<TypeTriple, std::type_index>,
+        std::unique_ptr<IParamExecutor>,
+        PairHash
+    > typed_executor_cache_;
+    
+    // Legacy parameter type executors (for backward compatibility)
+    std::unordered_map<
+        std::type_index,
+        std::function<std::any(std::string const&, std::any const&, std::any const&, 
+                              std::type_index, std::type_index)>
+    > param_executors_;
 };
+
+// ============================================================================
+// TypedParamExecutor Implementation (after ElementRegistry is fully declared)
+// ============================================================================
+
+template<typename In, typename Out, typename Params>
+TypedParamExecutor<In, Out, Params>::TypedParamExecutor(Params params)
+    : params_(std::move(params))
+{}
+
+template<typename In, typename Out, typename Params>
+std::any TypedParamExecutor<In, Out, Params>::execute(
+    std::string const& name,
+    std::any const& input_any) const
+{
+    // All types known - zero dispatch cost!
+    auto const& input = std::any_cast<In const&>(input_any);
+    auto& registry = ElementRegistry::instance();
+    Out result = registry.execute<In, Out, Params>(name, input, params_);
+    return std::any{result};
+}
+
+// ============================================================================
+// Helper: Auto-register typed executor factory during transform registration
+// ============================================================================
+
+/**
+ * @brief Automatically register typed executor factory when registering transform
+ * 
+ * This helper ensures that every registered transform automatically gets
+ * a typed executor factory, eliminating manual registration boilerplate.
+ */
+template<typename In, typename Out, typename Params>
+struct AutoRegisterTypedExecutor {
+    AutoRegisterTypedExecutor() {
+        auto& registry = ElementRegistry::instance();
+        
+        registry.registerTypedExecutorFactory<In, Out, Params>(
+            [](std::any const& params_any) -> std::unique_ptr<IParamExecutor> {
+                auto params = std::any_cast<Params>(params_any);
+                return std::make_unique<TypedParamExecutor<In, Out, Params>>(std::move(params));
+            });
+    }
+};
+
+// Invoke during static initialization for each transform type
+#define AUTO_REGISTER_TYPED_EXECUTOR(In, Out, Params) \
+    namespace { \
+        static AutoRegisterTypedExecutor<In, Out, Params> \
+            auto_register_typed_executor_##In##_##Out##_##Params; \
+    }
 
 // ============================================================================
 // Compile-Time Registration Helper

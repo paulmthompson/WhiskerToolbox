@@ -97,6 +97,51 @@ inline auto const register_sum_reduction_ctx = RegisterContextTimeGroupedTransfo
     }
 );
 
+// ============================================================================
+// Typed Executor Registration (zero per-element dispatch overhead)
+// ============================================================================
+
+/**
+ * @brief Register typed executor for MaskAreaParams
+ * 
+ * This creates executors with parameters and types already captured,
+ * eliminating all per-element casts and dispatch overhead.
+ */
+inline bool const register_mask_area_typed_executor = []() {
+    auto& registry = ElementRegistry::instance();
+    
+    // Register factory for Mask2D -> float with MaskAreaParams
+    registry.registerTypedExecutorFactory<Mask2D, float, MaskAreaParams>(
+        [](std::any const& params_any) -> std::unique_ptr<IParamExecutor> {
+            auto params = std::any_cast<MaskAreaParams>(params_any);
+            return std::make_unique<TypedParamExecutor<Mask2D, float, MaskAreaParams>>(
+                std::move(params));
+        });
+    
+    return true;
+}();
+
+/**
+ * @brief Register typed executor for SumReductionParams
+ * 
+ * Note: SumReduction is time-grouped and cannot be used in fused pipelines,
+ * but we register the executor for consistency and future extensions.
+ */
+inline bool const register_sum_reduction_typed_executor = []() {
+    auto& registry = ElementRegistry::instance();
+    
+    // Register factory for float -> float with SumReductionParams
+    // This won't be used in fusion (time-grouped), but available for other contexts
+    registry.registerTypedExecutorFactory<float, float, SumReductionParams>(
+        [](std::any const& params_any) -> std::unique_ptr<IParamExecutor> {
+            auto params = std::any_cast<SumReductionParams>(params_any);
+            return std::make_unique<TypedParamExecutor<float, float, SumReductionParams>>(
+                std::move(params));
+        });
+    
+    return true;
+}();
+
 } // anonymous namespace
 
 } // namespace WhiskerToolbox::Transforms::V2::Examples
