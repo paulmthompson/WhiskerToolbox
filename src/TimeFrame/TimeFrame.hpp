@@ -8,34 +8,34 @@
 
 
 struct TimeFrameIndex {
-    explicit TimeFrameIndex(int64_t val)
+    explicit constexpr TimeFrameIndex(int64_t val)
         : value(val) {}
 
-    [[nodiscard]] int64_t getValue() const {
+    [[nodiscard]] constexpr int64_t getValue() const {
         return value;
     }
 
-    bool operator==(TimeFrameIndex const & other) const {
+    constexpr bool operator==(TimeFrameIndex const & other) const {
         return value == other.value;
     }
 
-    bool operator!=(TimeFrameIndex const & other) const {
+    constexpr bool operator!=(TimeFrameIndex const & other) const {
         return value != other.value;
     }
 
-    bool operator<(TimeFrameIndex const & other) const {
+    constexpr bool operator<(TimeFrameIndex const & other) const {
         return value < other.value;
     }
 
-    bool operator>(TimeFrameIndex const & other) const {
+    constexpr bool operator>(TimeFrameIndex const & other) const {
         return value > other.value;
     }
 
-    bool operator<=(TimeFrameIndex const & other) const {
+    constexpr bool operator<=(TimeFrameIndex const & other) const {
         return value <= other.value;
     }
 
-    bool operator>=(TimeFrameIndex const & other) const {
+    constexpr bool operator>=(TimeFrameIndex const & other) const {
         return value >= other.value;
     }
 

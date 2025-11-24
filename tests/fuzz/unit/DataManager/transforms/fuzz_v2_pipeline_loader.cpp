@@ -271,3 +271,42 @@ FUZZ_TEST(PipelineLoaderFuzz, FuzzOptionalStepFields)
         fuzztest::Just(true),  // Only test enabled=true (disabled is tested elsewhere)
         fuzztest::VectorOf(fuzztest::PrintableAsciiString())  // tags
     );
+
+/**
+ * @brief Fuzz test for binary transform (LineMinPointDist)
+ */
+void FuzzBinaryTransformPipeline(bool return_squared_distance) {
+    LineMinPointDistParams params;
+    params.return_squared_distance = return_squared_distance;
+    
+    PipelineDescriptor descriptor;
+    
+    std::string param_json = saveParametersToJson(params);
+    auto param_result = rfl::json::read<rfl::Generic>(param_json);
+    
+    if (!param_result) {
+        return; // Skip if parameter serialization failed
+    }
+    
+    descriptor.steps = {
+        PipelineStepDescriptor{
+            .step_id = "line_point_distance",
+            .transform_name = "CalculateLineMinPointDistance",
+            .parameters = param_result.value()
+        }
+    };
+    
+    std::string json = savePipelineToJson(descriptor);
+    auto result = loadPipelineFromJson(json);
+    
+    // Should succeed with valid binary transform
+    EXPECT_TRUE(result);
+    
+    if (result) {
+        auto const& pipeline = result.value();
+        EXPECT_EQ(pipeline.size(), 1);
+        EXPECT_EQ(pipeline.getStepName(0), "CalculateLineMinPointDistance");
+    }
+}
+FUZZ_TEST(PipelineLoaderFuzz, FuzzBinaryTransformPipeline)
+    .WithDomains(fuzztest::Arbitrary<bool>());

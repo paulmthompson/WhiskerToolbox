@@ -2,20 +2,25 @@
 
 ## Current Status Summary
 
-**✅ Phase 1 & 2 Complete** - Core infrastructure is fully operational:
+**✅ Phase 1, 2 & 3a Complete** - Core infrastructure and JSON configuration fully operational:
 
 - **ElementRegistry**: Compile-time typed transform registry with TypedParamExecutor system
 - **TypedParamExecutor**: Eliminates per-element parameter casts and type dispatch overhead
 - **TransformPipeline**: Multi-step pipeline with execution fusion
 - **Container Automatic Lifting**: Element transforms automatically work on containers
-- **Advanced Features**: Ragged outputs, multi-input transforms, time-grouped transforms
-- **Working Examples**: MaskArea, SumReduction transforms with tests
+- **Binary Transforms**: Multi-input support via std::tuple with BinaryElementTransform
+- **Advanced Features**: Ragged outputs, multi-input transforms (binary), time-grouped transforms
+- **reflect-cpp Integration**: Automatic parameter serialization with validation
+- **JSON Pipeline Loading**: Complete schema with PipelineDescriptor and comprehensive validation
+- **Comprehensive Testing**: 50+ unit tests, 12+ fuzz tests, 18+ corpus files
+- **Working Examples**: MaskArea, SumReduction, LineMinPointDist (binary) transforms with full tests
 
 **Performance Characteristics:**
 - Parameter cast: Once per pipeline (not per element)
 - Type dispatch: Once per pipeline (not per element)
 - Per-element overhead: ~2 virtual calls + 2 any_casts (input/output only)
 - Fusion: Multiple transforms execute in single pass (no intermediate containers)
+- Binary transforms: std::tuple-based with zero-copy view compatibility
 
 ## Recommended Next Steps
 
@@ -70,58 +75,62 @@
 
 **Why:** Enable UI pipeline builder; allow users to save/load analysis workflows
 
-**Tasks:**
+**Status:** ✅ Phase 3a Complete, Phase 3b In Progress
 
-#### 3a. Parameter Serialization with reflect-cpp
-- Define parameter structs using reflect-cpp macros
-- Add `rfl::json::write()` and `rfl::json::read()` support
-- Add parameter validation (min/max, allowed values)
-- Update existing parameter structs (MaskAreaParams, etc.)
+#### 3a. Parameter Serialization with reflect-cpp ✅ COMPLETE
+- ✅ Defined parameter structs using reflect-cpp with validators
+- ✅ Added `rfl::json::write()` and `rfl::json::read()` support
+- ✅ Added parameter validation (min/max, type constraints)
+- ✅ Updated all parameter structs (MaskAreaParams, SumReductionParams, LineMinPointDistParams)
+- ✅ Comprehensive unit tests (20+ test cases)
+- ✅ Comprehensive fuzz tests (5 fuzz functions with corpus)
 
-**Files to Create:**
-- `src/DataManager/transforms/v2/parameters/ParameterSerialization.hpp`
-- `tests/DataManager/TransformsV2/test_parameter_serialization.test.cpp`
+**Files Created:**
+- ✅ `src/DataManager/transforms/v2/examples/ParameterIO.hpp`
+- ✅ `tests/DataManager/TransformsV2/test_parameter_io.test.cpp`
+- ✅ `tests/fuzz/unit/DataManager/transforms/fuzz_v2_parameter_io.cpp`
+- ✅ `tests/fuzz/corpus/v2_parameters/` (8 corpus files)
 
-**Estimated Effort:** 2-3 days
+#### 3b. Pipeline JSON Schema and Loading ✅ COMPLETE ✅ COMPLETE
+- ✅ Defined JSON schema for pipeline descriptors (PipelineDescriptor, PipelineStepDescriptor)
+- ✅ Added pipeline serialization/deserialization with reflect-cpp
+- ✅ Added comprehensive validation (transform existence, parameter types, metadata)
+- ✅ Support for optional fields (description, enabled flag, tags)
+- ✅ Comprehensive unit tests (25+ test cases)
+- ✅ Comprehensive fuzz tests (7 fuzz functions with corpus)
 
-#### 3b. Pipeline JSON Schema and Factory
-- Define JSON schema for pipeline descriptors
-- Implement `PipelineFactory` for runtime type dispatch
-- Add pipeline serialization/deserialization
-- Add validation (check transform names exist, types compatible)
+**Files Created:**
+- ✅ `src/DataManager/transforms/v2/examples/PipelineLoader.hpp`
+- ✅ `tests/DataManager/TransformsV2/test_pipeline_loader.test.cpp`
+- ✅ `tests/fuzz/unit/DataManager/transforms/fuzz_v2_pipeline_loader.cpp`
+- ✅ `tests/fuzz/corpus/v2_pipelines/` (10 corpus files)
 
-**Files to Create:**
-- `src/DataManager/transforms/v2/runtime/PipelineDescriptor.hpp`
-- `src/DataManager/transforms/v2/runtime/PipelineFactory.hpp`
-- `src/DataManager/transforms/v2/runtime/PipelineFactory.cpp`
-- `tests/DataManager/TransformsV2/test_pipeline_factory.test.cpp`
-
-**JSON Schema Example:**
+**JSON Schema Implemented:**
 ```json
 {
-  "version": "1.0",
-  "name": "Whisker Analysis",
-  "input_type": "MaskData",
-  "output_type": "AnalogTimeSeries",
+  "metadata": {
+    "name": "Whisker Analysis",
+    "version": "1.0",
+    "description": "Calculate whisker properties",
+    "author": "Lab Name"
+  },
   "steps": [
     {
-      "name": "Skeletonize",
-      "enabled": true,
+      "step_id": "area_calc",
+      "transform_name": "CalculateMaskArea",
       "parameters": {
-        "method": "zhang-suen",
-        "max_iterations": 100
-      }
-    },
-    {
-      "name": "CalculateMaskArea",
+        "scale_factor": 2.5,
+        "min_area": 10.0
+      },
+      "description": "Calculate mask area",
       "enabled": true,
-      "parameters": {}
+      "tags": ["geometry", "measurement"]
     }
   ]
 }
 ```
 
-**Estimated Effort:** 5-7 days
+#### 3c. Type-Erased Pipeline Factory (Next Step)
 
 #### 3c. Type-Erased Executor Interface
 - Define `IPipelineExecutor` interface for UI integration
@@ -213,20 +222,21 @@
 
 ## Recommended Roadmap
 
-### Sprint 1 (1-2 weeks)
-- **Priority 1:** Comprehensive testing
-- **Priority 2:** Migrate 3 real transforms
-- **Goal:** Validate system with real use cases
+### ✅ Sprint 1 Complete (Completed)
+- ✅ **Priority 1:** Comprehensive testing (50+ unit tests, 12+ fuzz tests)
+- ✅ **Priority 3a:** Parameter serialization with reflect-cpp
+- ✅ **Priority 3b:** Pipeline JSON schema and loading
+- ✅ **Binary Transform Example:** LineMinPointDist with full test coverage
 
-### Sprint 2 (2-3 weeks)
-- **Priority 3a:** Parameter serialization with reflect-cpp
-- **Priority 3b:** Pipeline JSON schema and factory
-- **Goal:** Enable runtime pipeline configuration
+### Sprint 2 (Current - 1-2 weeks)
+- **Priority 2:** Migrate 3-5 real transforms from V1
+- **Priority 3c:** Type-erased executor interface for UI integration
+- **Goal:** Validate system with real-world transforms and enable UI access
 
 ### Sprint 3 (1-2 weeks)
-- **Priority 3c:** Type-erased executor interface
-- **Priority 2:** Migrate 2 more transforms
-- **Goal:** Complete runtime configuration system
+- **Priority 2:** Continue transform migration
+- **Priority 1:** Additional testing for migrated transforms
+- **Goal:** Build library of production-ready transforms
 
 ### Sprint 4 (2-3 weeks)
 - **Priority 4:** UI integration
@@ -348,14 +358,18 @@
 The V2 transform system has a solid foundation with Phase 1 & 2 complete. The TypedParamExecutor system successfully eliminates per-element overhead while maintaining type safety.
 
 **Recommended immediate focus:**
-1. **Testing** (Priority 1) - Ensure robustness
-2. **Real-world validation** (Priority 2) - Migrate actual transforms
-3. **Runtime configuration** (Priority 3) - Enable UI integration
+1. **Real-world validation** (Priority 2) - Migrate 3-5 actual transforms from V1
+2. **Type-erased executor** (Priority 3c) - Enable UI integration with IPipelineExecutor interface
+3. **Additional testing** (Priority 1) - Test migrated transforms and container-level binary execution
 
 Advanced features (ranges, provenance, parallelization) should be deferred until the core system is battle-tested with real user workflows.
 
 **Estimated timeline to production-ready:**
-- With Priorities 1-4: 8-12 weeks
-- With Priorities 1-3 only: 5-7 weeks (can ship without UI initially)
+- ✅ Phase 3a Complete: Parameter serialization and JSON loading operational
+- Remaining with Priorities 2-4: 6-9 weeks
+- With Priorities 2-3c only: 3-5 weeks (can ship without full UI initially)
 
-The system is well-architected and ready for expansion. The next phase should focus on making it accessible to users while validating it with real-world transforms.
+The system is well-architected with JSON configuration now operational. The next phase should focus on:
+1. Migrating real transforms to validate the system
+2. Creating type-erased executor interface for UI integration
+3. Building the UI pipeline builder

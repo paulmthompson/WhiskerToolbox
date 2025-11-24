@@ -8,19 +8,21 @@ This document describes the redesigned transformation architecture that addresse
 
 ## Current Implementation Status
 
-### ✅ Implemented (Phase 1 & 2)
+### ✅ Implemented (Phase 1, 2 & 3a)
 - **ElementRegistry**: Compile-time typed transform registry
 - **TypedParamExecutor**: Eliminates per-element parameter casts and type dispatch
 - **TransformPipeline**: Multi-step pipeline with execution fusion
 - **Container Automatic Lifting**: Element transforms automatically work on containers
 - **ContainerTraits**: Type mapping system (Mask2D ↔ MaskData, etc.)
-- **Advanced Features**: Ragged outputs, multi-input transforms, time-grouped transforms
-- **Examples**: MaskArea and SumReduction transforms with tests
+- **Advanced Features**: Ragged outputs, multi-input transforms (binary via tuple), time-grouped transforms
+- **reflect-cpp Integration**: Parameter serialization with automatic validation
+- **JSON Pipeline Loading**: PipelineDescriptor, PipelineLoader with full validation
+- **Fuzz Testing**: Comprehensive corpus and fuzz tests for pipeline loading
+- **Examples**: MaskArea, SumReduction, and LineMinPointDist (binary) transforms with tests
 
-### 🔄 Planned (Phase 3+)
+### 🔄 Planned (Phase 3b+)
 - **C++20 Ranges**: True lazy evaluation (deferred - may not be needed)
-- **Runtime Configuration**: JSON pipeline loading and factory
-- **reflect-cpp Integration**: Parameter serialization and validation
+- **Runtime Pipeline Factory**: Type-erased execution interface for UI integration
 - **Provenance Tracking**: EntityID relationship tracking
 - **Lazy Storage**: On-demand computation for derived data
 - **Parallel Execution**: Multi-threaded transform execution
@@ -309,16 +311,34 @@ std::vector<EntityId> source_masks =
 - ✅ `ContainerTransform.hpp` - Container lifting utilities
 - ✅ `examples/MaskAreaTransform.hpp` - Working example transform
 - ✅ `examples/SumReductionTransform.hpp` - Working example transform
-- ✅ `examples/RegisteredTransforms.hpp` - Registration code
-- ✅ `tests/DataManager/TransformsV2/test_mask_area.test.cpp` - Basic tests
+- ✅ `examples/LineMinPointDistTransform.hpp` - Binary transform example
+- ✅ `examples/RegisteredTransforms.hpp` - Registration code with binary support
+- ✅ `tests/DataManager/TransformsV2/test_*.test.cpp` - Comprehensive unit tests
 
-### Phase 3: Runtime Configuration 🔄 PLANNED
+### Phase 3a: Parameter Serialization & Pipeline Loading ✅ COMPLETE
+
+**Completed:**
+- ✅ `examples/ParameterIO.hpp` - reflect-cpp integration with validation
+- ✅ `examples/PipelineLoader.hpp` - JSON pipeline schema and loading
+- ✅ `tests/DataManager/TransformsV2/test_parameter_io.test.cpp` - Parameter I/O tests
+- ✅ `tests/DataManager/TransformsV2/test_pipeline_loader.test.cpp` - Pipeline loading tests (25+ cases)
+- ✅ `tests/fuzz/unit/DataManager/transforms/fuzz_v2_parameter_io.cpp` - Parameter fuzz tests
+- ✅ `tests/fuzz/unit/DataManager/transforms/fuzz_v2_pipeline_loader.cpp` - Pipeline fuzz tests (7 functions)
+- ✅ `tests/fuzz/corpus/v2_parameters/` - Parameter test corpus (8 files)
+- ✅ `tests/fuzz/corpus/v2_pipelines/` - Pipeline test corpus (10 files)
+
+### Phase 3: Runtime Configuration 🔄 IN PROGRESS
+
+**Completed:**
+- ✅ `examples/ParameterIO.hpp` - reflect-cpp parameter serialization with validation
+- ✅ `examples/PipelineLoader.hpp` - JSON pipeline schema (PipelineDescriptor, PipelineStepDescriptor)
+- ✅ `examples/LineMinPointDistTransform.hpp` - Binary transform example (multi-input via tuple)
+- ✅ Comprehensive unit tests and fuzz tests with corpus
 
 **To Be Implemented:**
-- ⏳ `parameters/ParameterSerialization.hpp` - reflect-cpp integration
-- ⏳ `runtime/PipelineDescriptor.hpp` - JSON pipeline schema
-- ⏳ `runtime/PipelineFactory.hpp` - Runtime type dispatch factory
-- ⏳ `runtime/PipelineExecutor.hpp` - Type-erased execution interface
+- ⏳ `runtime/PipelineFactory.hpp` - Runtime type dispatch factory (type-erased interface)
+- ⏳ `runtime/PipelineExecutor.hpp` - Type-erased execution interface for UI integration
+- ⏳ Migration of existing V1 transforms to V2 with JSON support
 
 ### Phase 4: Advanced Features 🔄 FUTURE
 
@@ -493,7 +513,10 @@ auto result = pipeline.execute(mask_data);  // Automatic parallelization
 See `examples/` directory for working code:
 - `MaskAreaTransform.hpp` - Simple element transform (Mask2D → float)
 - `SumReductionTransform.hpp` - Reduction transform (float → float)
+- `LineMinPointDistTransform.hpp` - Binary transform ((Line2D, Point2D) → float)
 - `RegisteredTransforms.hpp` - Registration and typed executor factories
+- `ParameterIO.hpp` - reflect-cpp parameter serialization with validation
+- `PipelineLoader.hpp` - JSON pipeline loading with comprehensive validation
 
 ## Next Steps
 
