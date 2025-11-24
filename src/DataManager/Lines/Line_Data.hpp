@@ -9,6 +9,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 #include "utils/RaggedTimeSeries.hpp"
 
 #include <cstddef>
@@ -34,6 +35,20 @@ using LineEntry = DataEntry<Line2D>;
  */
 class LineData : public RaggedTimeSeries<Line2D> {
 public:
+    // ========== Type Traits ==========
+    /**
+     * @brief Type traits for LineData
+     * 
+     * Defines compile-time properties of LineData for use in generic algorithms
+     * and the transformation system.
+     */
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<LineData, Line2D> {
+        static constexpr bool is_ragged = true;
+        static constexpr bool is_temporal = true;
+        static constexpr bool has_entity_ids = true;
+        static constexpr bool is_spatial = true;
+    };
+
     // ========== Constructors ==========
     /**
      * @brief Default constructor

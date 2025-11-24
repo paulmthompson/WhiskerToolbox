@@ -9,6 +9,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 #include "utils/RaggedTimeSeries.hpp"
 
 #include <cstddef>
@@ -31,8 +32,25 @@ using MaskEntry = DataEntry<Mask2D>;
  */
 class MaskData : public RaggedTimeSeries<Mask2D> {
 public:
+    // ========== Type Traits ==========
+    /**
+     * @brief Type traits for MaskData
+     * 
+     * Defines compile-time properties of MaskData for use in generic algorithms
+     * and the transformation system.
+     */
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<MaskData, Mask2D> {
+        static constexpr bool is_ragged = true;
+        static constexpr bool is_temporal = true;
+        static constexpr bool has_entity_ids = true;
+        static constexpr bool is_spatial = true;
+    };
+
     // ========== Constructors ==========
     MaskData() = default;
+    
+    // Inherit range constructor from base class for view-based construction
+    using RaggedTimeSeries<Mask2D>::RaggedTimeSeries;
 
     // ========== Image Size ==========
     /**

@@ -8,6 +8,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 #include "utils/RaggedTimeSeries.hpp"
 
 #include <map>
@@ -30,6 +31,20 @@ using PointEntry = DataEntry<Point2D<float>>;
  */
 class PointData : public RaggedTimeSeries<Point2D<float>> {
 public:
+    // ========== Type Traits ==========
+    /**
+     * @brief Type traits for PointData
+     * 
+     * Defines compile-time properties of PointData for use in generic algorithms
+     * and the transformation system.
+     */
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<PointData, Point2D<float>> {
+        static constexpr bool is_ragged = true;
+        static constexpr bool is_temporal = true;
+        static constexpr bool has_entity_ids = true;
+        static constexpr bool is_spatial = true;
+    };
+
     // ========== Constructors ==========
     /**
      * @brief Default constructor

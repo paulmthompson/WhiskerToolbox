@@ -4,6 +4,29 @@
 
 This document describes the redesigned transformation architecture that addresses limitations in the current system and provides a unified, composable approach to data transformations.
 
+**Status:** Phase 1 & 2 complete (core infrastructure operational). This document describes both implemented features and future architectural goals.
+
+## Current Implementation Status
+
+### ✅ Implemented (Phase 1 & 2)
+- **ElementRegistry**: Compile-time typed transform registry
+- **TypedParamExecutor**: Eliminates per-element parameter casts and type dispatch
+- **TransformPipeline**: Multi-step pipeline with execution fusion
+- **Container Automatic Lifting**: Element transforms automatically work on containers
+- **ContainerTraits**: Type mapping system (Mask2D ↔ MaskData, etc.)
+- **Advanced Features**: Ragged outputs, multi-input transforms, time-grouped transforms
+- **Examples**: MaskArea and SumReduction transforms with tests
+
+### 🔄 Planned (Phase 3+)
+- **C++20 Ranges**: True lazy evaluation (deferred - may not be needed)
+- **Runtime Configuration**: JSON pipeline loading and factory
+- **reflect-cpp Integration**: Parameter serialization and validation
+- **Provenance Tracking**: EntityID relationship tracking
+- **Lazy Storage**: On-demand computation for derived data
+- **Parallel Execution**: Multi-threaded transform execution
+
+See `NEXT_STEPS.md` for detailed roadmap and recommendations.
+
 ## Current Limitations
 
 ### Problems with Existing System
@@ -63,65 +86,110 @@ This document describes the redesigned transformation architecture that addresse
 
 ## System Components
 
-### 1. Element-Level Transforms
+### 0. Type Traits Layer (✅ Implemented)
+
+**New Foundation Layer**: As of recent refactoring, fundamental type properties have been extracted from the transformation system into a dedicated type traits layer at `src/DataManager/TypeTraits/`.
+
+**Rationale**: Type traits (raggedness, temporal properties, entity tracking) are fundamental properties of data types that should be usable beyond just the transformation system. By placing them at the DataManager level, they can be leveraged by:
+- Transform system (current primary user)
+- Generic algorithms across DataManager
+- UI widgets (adapting display based on container properties)
+- Serialization systems
+- Future features requiring type introspection
+
+**Design**: Intrusive traits - each container type defines its own `DataTraits` nested struct:
+
+```cpp
+class MaskData : public RaggedTimeSeries<Mask2D> {
+public:
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<MaskData, Mask2D> {
+        static constexpr bool is_ragged = true;
+        static constexpr bool is_temporal = true;
+        static constexpr bool has_entity_ids = true;
+        static constexpr bool is_spatial = true;
+    };
+    // ...
+};
+```
+
+**Usage**:
+```cpp
+// Query traits
+using namespace WhiskerToolbox::TypeTraits;
+static_assert(is_ragged_v<MaskData>);
+using ElementType = element_type_t<MaskData>;  // Mask2D
+
+// Use concepts
+template<RaggedContainer T>
+void processRaggedData(T const& container) { /* ... */ }
+```
+
+**Location**: `src/DataManager/TypeTraits/DataTypeTraits.hpp`  
+**Documentation**: `src/DataManager/TypeTraits/README.md`
+
+### 1. Element-Level Transforms (✅ Implemented)
 
 **Concept**: Transforms that operate on individual data elements.
 
 ```cpp
-// Pure element transform signature
+// Element transform signature (using std::function)
 template<typename In, typename Out, typename Params>
 using ElementTransformFunc = std::function<Out(In const&, Params const&)>;
 
 // Examples:
-Mask2D skeletonize(Mask2D const& mask, SkeletonParams const& params);
-Line2D maskToLine(Mask2D const& mask, MaskToLineParams const& params);
-float lineAngle(Line2D const& line, AngleParams const& params);
+float calculateMaskArea(Mask2D const& mask, MaskAreaParams const& params);
+float sumValues(float const& value, SumReductionParams const& params);
 ```
 
 **Properties**:
-- Stateless (or stateful with explicit context)
+- Stateless (parameters passed explicitly)
 - Type-safe at compile time
-- Composable via function composition
+- Composable via TransformPipeline
 - Testable in isolation
 
-### 2. Range-Based Pipelines
+**Implementation:** See `core/ElementTransform.hpp` and `core/ElementRegistry.hpp`
 
-**Concept**: Apply transforms lazily using C++20 ranges.
+### 2. Pipeline Fusion (✅ Implemented, Ranges Not Yet)
+
+**Current Implementation**: Multi-step pipelines with fused execution
 
 ```cpp
-// Instead of:
-MaskData masks1 = skeletonize(masks_input);  // Materialize
-LineData lines = maskToLine(masks1);          // Materialize
-AnalogTimeSeries angles = lineAngles(lines); // Materialize
+// Manual chaining (old approach):
+auto skel = registry.executeContainer<MaskData, MaskData>("Skeletonize", masks, p1);
+auto areas = registry.executeContainer<MaskData, AnalogTimeSeries>("Area", skel, p2);
 
-// Use:
-auto pipeline = MaskDataView(masks_input)
-    | ranges::transform(skeletonize)
-    | ranges::transform(maskToLine)
-    | ranges::transform(lineAngle);
-
-// Only materializes when consumed:
-auto angles = pipeline | ranges::to<AnalogTimeSeries>();
+// Fused pipeline (current V2 approach):
+TransformPipeline<MaskData, AnalogTimeSeries> pipeline;
+pipeline.addStep<SkeletonParams>("Skeletonize", p1);
+pipeline.addStep<MaskAreaParams>("CalculateArea", p2);
+auto areas = pipeline.execute(masks);  // Single pass, no intermediate MaskData
 ```
 
-**Implementation Note**: The container types (MaskData, LineData, etc.) inherit from 
-`std::ranges::view_interface` and provide their own range views via `elements()` method. 
-No separate `RangeAdaptors` wrapper is needed - the standard library ranges already 
-work directly with our containers.
+**Benefits Achieved**:
+- Single iteration over input data
+- No intermediate container allocations
+- Better cache locality
 
-**Benefits**:
-- No intermediate allocations
-- Cache-friendly (process one element through entire chain)
-- Compiler can optimize/fuse operations
-- Lazy evaluation (compute on demand)
+**Future with C++20 Ranges** (deferred):
+```cpp
+// Potential future API (not yet implemented):
+auto pipeline = MaskDataView(masks)
+    | ranges::transform(skeletonize)
+    | ranges::transform(calculateArea);
+auto areas = pipeline | ranges::to<AnalogTimeSeries>();
+```
 
-### 3. Storage Abstraction
+**Note**: Current fusion approach provides most benefits. True lazy ranges may not be necessary given time-indexed nature of data.
+
+**Implementation:** See `core/TransformPipeline.hpp`
+### 3. Storage Abstraction (🔄 Planned)
 
 **Current State**:
-- AnalogTimeSeries has AnalogDataStorage (vector vs memory-mapped)
-- Other types (MaskData, LineData) don't have storage abstraction
+- Container types store data directly (vector-based)
+- All transforms materialize their output
+- AnalogTimeSeries has some storage abstraction (AnalogDataStorage)
 
-**Proposed**:
+**Proposed Future Enhancement**:
 
 ```cpp
 template<typename T>
@@ -139,33 +207,34 @@ class LazyTransformStorage : public DataStorage<T> {
     // Stores transform chain + input reference
     // Computes on-demand when getAt() called
 };
-
-template<typename T>
-class MemoryMappedStorage : public DataStorage<T> { ... };
 ```
 
-**Benefit**: AnalogTimeSeries computed via lazy evaluation can store the pipeline instead of materialized values.
+**Note**: Current eager fusion approach already minimizes intermediate allocations. Lazy storage may not provide significant additional benefit given time-indexed nature of data.
 
-### 4. Container-Level Automatic Lifting
+### 4. Container-Level Automatic Lifting (✅ Implemented)
 
 **Concept**: Automatically generate container transforms from element transforms.
 
+**Implementation**:
 ```cpp
 // Register element transform
-registry.registerElementTransform("Skeletonize", skeletonize_element);
+registry.registerTransform<Mask2D, float, MaskAreaParams>(
+    "CalculateMaskArea", calculateMaskArea);
 
 // Automatically available at container level:
-std::shared_ptr<MaskData> skeletonized = 
-    registry.executeContainer<MaskData, MaskData>(
-        "Skeletonize", masks, params);
+auto areas = registry.executeContainer<MaskData, AnalogTimeSeries, MaskAreaParams>(
+    "CalculateMaskArea", masks, params);
 ```
 
-**Implementation**:
-- Use template metaprogramming to map element types to container types
-- Trait: `ContainerFor<Mask2D>` → `MaskData`
-- Automatically generate container version using range views
+**How it works**:
+- ContainerTraits maps element types to container types
+- Template metaprogramming generates container iteration code
+- Works for all container/element type combinations
+- Supports ragged outputs (variable-length per time frame)
 
-### 5. Runtime Configuration with Compile-Time Execution
+**Implementation:** See `core/ContainerTraits.hpp` and `core/ContainerTransform.hpp`
+
+### 5. Runtime Configuration with Compile-Time Execution (🔄 Planned)
 
 **User Workflow**:
 1. User selects transforms via UI (dropdown, drag-drop, etc.)
@@ -197,107 +266,125 @@ auto pipeline = factory.createPipeline(desc);
 auto result = pipeline->execute(mask_data);
 ```
 
-### 6. Provenance Tracking
+### 6. Provenance Tracking (🔄 Planned)
 
 **Concept**: Track EntityID relationships through transforms.
 
+**Proposed Future API**:
 ```cpp
-// When LazyTransformStorage is used:
-auto line_data = masks_to_lines(mask_data);  // Lazy
-
 // Query provenance:
 EntityId line_id = line_data.getEntityIdAt(t, i);
 std::vector<EntityId> parent_masks = 
     line_data.getParentEntityIds(line_id);
 
-// Works even for derived data:
-auto angles = lineAngles(line_data);  // AnalogTimeSeries
+// Multi-level queries:
+auto angles = lineAngles(line_data);
 EntityId angle_id = ...;
-std::vector<EntityId> source_lines = 
-    angles.getParentEntityIds(angle_id);
 std::vector<EntityId> source_masks = 
     angles.getAncestorEntityIds(angle_id, EntityKind::MaskEntity);
 ```
 
-**Implementation**:
-- Each LazyTransformStorage tracks parent EntityIDs
-- EntityRegistry stores transform graph
+**Implementation Plan**:
+- Store parent EntityIDs in transformed data
+- EntityRegistry maintains transform graph
 - Query methods walk the graph
+- Integrate with existing EntityID system
+
+**Use Cases**:
+- Debugging ("which mask produced this line?")
+- Data lineage visualization
+- Complex multi-step analysis tracking
+
+**Note**: Not critical for initial deployment. Can be added as opt-in feature after core system is stable.
+
+## Implementation Status
+
+### Phase 1 & 2: Core Infrastructure ✅ COMPLETE
+
+**Completed:**
+- ✅ `ElementTransform.hpp` - Transform function wrappers
+- ✅ `ElementRegistry.hpp` - Compile-time typed registry with TypedParamExecutor
+- ✅ `TransformPipeline.hpp` - Multi-step pipeline with fusion
+- ✅ `ContainerTraits.hpp/.cpp` - Element ↔ Container type mappings
+- ✅ `ContainerTransform.hpp` - Container lifting utilities
+- ✅ `examples/MaskAreaTransform.hpp` - Working example transform
+- ✅ `examples/SumReductionTransform.hpp` - Working example transform
+- ✅ `examples/RegisteredTransforms.hpp` - Registration code
+- ✅ `tests/DataManager/TransformsV2/test_mask_area.test.cpp` - Basic tests
+
+### Phase 3: Runtime Configuration 🔄 PLANNED
+
+**To Be Implemented:**
+- ⏳ `parameters/ParameterSerialization.hpp` - reflect-cpp integration
+- ⏳ `runtime/PipelineDescriptor.hpp` - JSON pipeline schema
+- ⏳ `runtime/PipelineFactory.hpp` - Runtime type dispatch factory
+- ⏳ `runtime/PipelineExecutor.hpp` - Type-erased execution interface
+
+### Phase 4: Advanced Features 🔄 FUTURE
+
+**Deferred (evaluate need after Phase 3):**
+- ⏳ `storage/LazyStorage.hpp` - On-demand computation storage
+- ⏳ `provenance/ProvenanceTracker.hpp` - EntityID relationship tracking
+- ⏳ C++20 ranges integration - True lazy pipelines
+- ⏳ Parallel execution support
+
+**Rationale for Deferral:**
+- Current fusion approach provides most benefits
+- Time-indexed data complicates lazy evaluation
+- Need real-world usage data before optimizing further
+
+See `NEXT_STEPS.md` for detailed roadmap.
 
 ## Migration Strategy
 
-### Phase 1: Parallel Implementation (Current)
+### Phase 1 & 2: Parallel Implementation ✅ COMPLETE
 
-1. Create `src/DataManager/transforms/v2/` directory
-2. Implement core infrastructure:
-   - ElementTransformRegistry
-   - RangeTransformPipeline
-   - PipelineFactory
-   - reflect-cpp parameter integration
-3. Port 2-3 example transforms (MaskArea, MaskToLine, LineAngle)
-4. Add comprehensive tests
+### Phase 1 & 2: Parallel Implementation ✅ COMPLETE
 
-### Phase 2: Integration
+1. ✅ Created `src/DataManager/transforms/v2/` directory
+2. ✅ Implemented core infrastructure:
+   - ElementRegistry with TypedParamExecutor system
+   - TransformPipeline with execution fusion
+   - ContainerTraits for automatic lifting
+3. ✅ Ported 2 example transforms (MaskArea, SumReduction)
+4. ✅ Added basic tests
 
-1. Both old and new systems accessible via UI
-2. New transforms registered in both registries
-3. Users can test new system alongside old
-4. Gather feedback, iterate
+**Key Achievement:** TypedParamExecutor eliminates per-element parameter casts and type dispatch overhead.
 
-### Phase 3: Migration
+### Phase 3: Runtime Configuration 🔄 NEXT
 
-1. Gradually port transforms from v1 to v2
-2. Update UI to use new system by default
-3. Deprecate old system
-4. Remove old implementation once all transforms migrated
+1. Integrate reflect-cpp for parameter serialization
+2. Define JSON schema for pipeline descriptors
+3. Implement PipelineFactory for runtime type dispatch
+4. Add pipeline save/load functionality
+5. Add comprehensive tests
 
-### Phase 4: Advanced Features
+**Goal:** Enable users to build, save, and load analysis pipelines via UI.
 
-1. Implement LazyTransformStorage
-2. Add provenance tracking
-3. Extend to TableView system
-4. Performance optimization based on profiling
+**Estimated Effort:** 9-13 days
 
-## Implementation Files
+### Phase 4: UI Integration 🔄 FUTURE
 
-### Core Infrastructure
+1. Add V2 transforms to DataTransform_Widget
+2. Create pipeline builder UI
+3. Auto-generate parameter forms from metadata
+4. Add pipeline visualization
+5. Add execution progress reporting
 
-- `ElementTransform.hpp` - Element-level transform interfaces and concepts
-- `ElementRegistry.hpp` - Registry for element transforms
-- `TransformPipeline.hpp` - Lazy range-based pipeline builder
-- `StorageStrategy.hpp` - Storage abstraction interfaces
-- `LazyStorage.hpp` - Lazy evaluation storage implementation
-- `ContainerTraits.hpp/.cpp` - Mapping between element and container types
-- `CompileTimeRegistry.hpp` - Compile-time typed transform registry
-- `RuntimePipeline.hpp` - Type-erased runtime pipeline configuration
-- `PipelineFactory.hpp` - Factory for creating optimized pipelines
-- `ProvenanceTracker.hpp` - EntityID relationship tracking
+**Goal:** Make V2 transforms accessible to all users.
 
-**Note**: Container types (MaskData, LineData, etc.) provide range views directly via 
-inheritance from `std::ranges::view_interface`. No separate range adapter layer is needed.
+**Estimated Effort:** 2-3 weeks
 
-### Parameter Handling
+### Phase 5: Migration 🔄 FUTURE
 
-- `TransformParameters.hpp` - reflect-cpp based parameter definitions
-- `ParameterValidation.hpp` - Compile-time parameter validation
-- `ParameterSerialization.hpp` - JSON serialization via reflect-cpp
+1. Migrate transforms from V1 to V2 gradually
+2. Gather user feedback and iterate
+3. Deprecate V1 system
+4. Remove V1 after full migration
 
-### Example Transforms
+**Goal:** Complete transition to V2 system.
 
-- `examples/MaskAreaTransform.hpp` - Element-level mask area
-- `examples/MaskToLineTransform.hpp` - Mask to line fitting
-- `examples/LineAngleTransform.hpp` - Line angle computation
-- `examples/ComposedTransform.hpp` - Example of transform composition
-
-### Testing
-
-- `ElementTransform.test.cpp` - Element transform tests
-- `RangePipeline.test.cpp` - Pipeline composition tests
-- `LazyEvaluation.test.cpp` - Lazy evaluation correctness
-- `Provenance.test.cpp` - EntityID tracking tests
-- `Performance.benchmark.cpp` - Performance comparison
-
-## Key Design Decisions
+## Key Architectural Decisions
 
 ### Why Ranges Instead of Virtual Functions?
 
@@ -361,61 +448,66 @@ data_manager->addData("lines", pipeline);  // May keep lazy
 
 ## Performance Considerations
 
-### Compile-Time Optimization
+### Current Implementation (✅ Fusion-Based)
 
-The range-based approach allows the compiler to:
-1. Inline all transform functions
-2. Fuse loops (single pass through data)
-3. Apply SIMD vectorization
-4. Eliminate temporary allocations
-
-### Memory Efficiency
-
-**Old approach**:
+**Memory Efficiency with Pipeline Fusion:**
 ```
 Input: 1000 masks @ 1MB each = 1000 MB
-Step 1: Skeletonize → 1000 MB (temp)
-Step 2: Fit lines → 100 MB (temp)  
-Step 3: Calculate angles → 8 KB
-Peak memory: ~2100 MB
+Pipeline: MaskData → process → AnalogTimeSeries (fused execution)
+Peak memory: ~1001 MB (input + 1 intermediate element + output)
 ```
 
-**New approach (lazy)**:
+**Benefits Achieved:**
+- No intermediate container allocations between steps
+- Single pass through input data
+- Better cache locality (element processed through full pipeline)
+- TypedParamExecutor eliminates per-element overhead (~20-30ns per element saved)
+
+### Future with True Lazy Evaluation (🔄 Deferred)
+
+**Potential with C++20 Ranges:**
 ```
 Input: 1000 masks @ 1MB each = 1000 MB
-Pipeline: Process one mask at a time
-Peak memory: ~1001 MB (1 temp mask)
+Lazy Pipeline: Process one mask at a time through entire chain
+Peak memory: ~1001 MB (input + 1 temp mask)
 ```
 
-### Parallelization
+**Note:** Current fusion approach already achieves most benefits. True lazy ranges deferred pending:
+- Real-world memory profiling
+- User demand for on-demand computation
+- Evidence that time-indexed data benefits from laziness
 
-Range-based approach is compatible with parallel execution:
+### Parallelization (🔄 Future)
 
+Future parallel execution strategy:
 ```cpp
-// Sequential
-auto result = masks | skeletonize | maskToLine | collect;
+// Mark expensive transforms in metadata
+meta.is_expensive = true;
 
-// Parallel (when appropriate)
-auto result = masks 
-    | ranges::views::chunk(100)  // Process in batches
-    | ranges::views::transform(parallel_process)
-    | ranges::views::join
-    | collect;
+// Thread pool will parallelize across time frames
+auto result = pipeline.execute(mask_data);  // Automatic parallelization
 ```
 
-## Examples
+## Current Examples
 
-See `examples/` directory for complete working examples of:
-- Simple element transform
-- Multi-step pipeline
-- Lazy evaluation
-- Runtime configuration
-- Provenance tracking
-- TableView integration
+See `examples/` directory for working code:
+- `MaskAreaTransform.hpp` - Simple element transform (Mask2D → float)
+- `SumReductionTransform.hpp` - Reduction transform (float → float)
+- `RegisteredTransforms.hpp` - Registration and typed executor factories
+
+## Next Steps
+
+See `NEXT_STEPS.md` for detailed roadmap and implementation recommendations.
+
+**Immediate Priorities:**
+1. Expand test coverage (multi-step pipelines, ragged outputs, etc.)
+2. Migrate 3-5 real transforms from V1 to validate system
+3. Implement runtime configuration (JSON pipelines, reflect-cpp parameters)
+4. UI integration (pipeline builder, parameter forms)
 
 ## References
 
-- C++20 Ranges: https://en.cppreference.com/w/cpp/ranges
 - reflect-cpp: https://github.com/getml/reflect-cpp
-- CRTP Pattern: https://en.cppreference.com/w/cpp/language/crtp
+- C++20 Ranges: https://en.cppreference.com/w/cpp/ranges
 - Type Erasure: https://www.modernescpp.com/index.php/c-core-guidelines-type-erasure-with-templates
+

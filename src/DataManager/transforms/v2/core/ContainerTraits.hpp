@@ -1,6 +1,8 @@
 #ifndef WHISKERTOOLBOX_V2_CONTAINER_TRAITS_HPP
 #define WHISKERTOOLBOX_V2_CONTAINER_TRAITS_HPP
 
+#include "TypeTraits/DataTypeTraits.hpp"
+
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -8,7 +10,6 @@
 #include <unordered_map>
 #include <vector>
 
-// Forward declarations
 class MaskData;
 class LineData;
 class PointData;
@@ -18,11 +19,9 @@ class DigitalEventSeries;
 class DigitalIntervalSeries;
 class TimeFrame;
 
-// Forward declare core geometry types
 struct Mask2D;
 struct Line2D;
 template<typename T> struct Point2D;
-// Add others as needed...
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -113,7 +112,7 @@ struct ElementFor<AnalogTimeSeries> {
 
 template<>
 struct ElementFor<RaggedAnalogTimeSeries> { 
-    using type = float;  // Each entry is a float (just like AnalogTimeSeries)
+    using type = float;
 };
 
 // Helper alias
@@ -129,15 +128,11 @@ using ElementFor_t = typename ElementFor<Container>::type;
  * 
  * Ragged containers can have variable numbers of elements at each time point.
  * Non-ragged containers have exactly one element per time point.
+ * 
+ * NOTE: This now delegates to the DataTraits system for consistency.
  */
 template<typename T>
-struct is_ragged : std::false_type {};
-
-template<> struct is_ragged<MaskData> : std::true_type {};
-template<> struct is_ragged<LineData> : std::true_type {};
-template<> struct is_ragged<PointData> : std::true_type {};
-template<> struct is_ragged<RaggedAnalogTimeSeries> : std::true_type {};
-template<> struct is_ragged<AnalogTimeSeries> : std::false_type {};
+struct is_ragged : std::bool_constant<TypeTraits::is_ragged_v<T>> {};
 
 template<typename T>
 inline constexpr bool is_ragged_v = is_ragged<T>::value;
@@ -206,29 +201,30 @@ using RaggedContainerFor_t = typename RaggedContainerFor<T>::type;
 
 /**
  * @brief Concept for temporal containers (have TimeFrame)
+ * 
+ * NOTE: This now uses the DataTraits system for consistency.
  */
 template<typename T>
-concept TemporalContainer = requires(T const& t) {
-    { t.getTimeFrame() } -> std::convertible_to<std::shared_ptr<TimeFrame>>;
-};
+concept TemporalContainer = TypeTraits::HasDataTraits<T> && 
+                            TypeTraits::is_temporal_v<T>;
 
 /**
  * @brief Concept for ragged time series containers
+ * 
+ * NOTE: This now uses the DataTraits system for consistency.
  */
 template<typename T>
-concept RaggedContainer = requires(T const& t, size_t idx) {
-    typename ElementFor<T>::type;
-    { t.getTimeFrame() } -> std::convertible_to<std::shared_ptr<TimeFrame>>;
-    // Multiple elements can exist at each time index
-};
+concept RaggedContainer = TypeTraits::HasDataTraits<T> && 
+                          TypeTraits::is_ragged_v<T>;
 
 /**
  * @brief Concept for containers with EntityIds
+ * 
+ * NOTE: This now uses the DataTraits system for consistency.
  */
 template<typename T>
-concept EntityContainer = requires(T const& t) {
-    { t.getAllEntityIds() };
-};
+concept EntityContainer = TypeTraits::HasDataTraits<T> && 
+                          TypeTraits::has_entity_ids_v<T>;
 
 /**
  * @brief Check if type is a known container type

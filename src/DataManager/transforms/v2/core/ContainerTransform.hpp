@@ -210,6 +210,86 @@ std::shared_ptr<OutContainer> applyTimeGroupedTransform(
 }
 
 // ============================================================================
+// View-Based Transform Helpers (Lazy Evaluation)
+// ============================================================================
+
+/**
+ * @brief Apply element transform to a container, returning a lazy view
+ * 
+ * This function returns a lazy range view that applies the transform on-demand
+ * as elements are accessed. No materialization occurs until the view is consumed
+ * (e.g., by constructing a container from it).
+ * 
+ * The returned view preserves the (TimeFrameIndex, TransformedData) structure,
+ * making it suitable for further view-based transformations or final materialization.
+ * 
+ * @tparam InContainer Input container type (must have elements() view)
+ * @tparam InElement Input element type
+ * @tparam OutElement Output element type
+ * @tparam Params Parameter type for the transform
+ * 
+ * @param input Input container
+ * @param transform_name Name of registered transform
+ * @param params Parameters for the transform
+ * @return Lazy range view of (TimeFrameIndex, OutElement) pairs
+ * 
+ * @example
+ * ```cpp
+ * // No materialization happens here - just creates a view
+ * auto view = applyElementTransformView<MaskData, Mask2D, float, MaskAreaParams>(
+ *     mask_data, "CalculateMaskArea", params);
+ * 
+ * // Chain another transform on the view
+ * auto chained_view = view | std::views::transform([](auto pair) { 
+ *     return std::make_pair(pair.first, pair.second * 2.0f);
+ * });
+ * 
+ * // Materialize only when needed
+ * auto result = std::make_shared<RaggedAnalogTimeSeries>(chained_view);
+ * ```
+ */
+template<typename InContainer, typename InElement, typename OutElement, typename Params>
+requires requires(InContainer const& c) { c.elements(); } && 
+         std::is_same_v<ElementFor_t<InContainer>, InElement>
+auto applyElementTransformView(
+    InContainer const& input,
+    std::string const& transform_name,
+    Params const& params)
+{
+    auto& registry = ElementRegistry::instance();
+    
+    // Create a view that transforms each element lazily
+    return input.elements() | std::views::transform([&registry, transform_name, params](auto const& elem) {
+        // Extract the actual data element
+        InElement const& data = extractElement<decltype(elem), InElement>(elem);
+        
+        // Transform it (this is the only computation that happens per element access)
+        auto result = registry.execute<InElement, OutElement, Params>(
+            transform_name, data, params);
+        
+        // Get the time from the element (first element of pair)
+        auto time = elem.first;
+        
+        // Return (time, transformed_data) pair
+        return std::make_pair(time, result);
+    });
+}
+
+/**
+ * @brief Apply element transform returning a lazy view (no params version)
+ */
+template<typename InContainer, typename InElement, typename OutElement>
+requires requires(InContainer const& c) { c.elements(); } && 
+         std::is_same_v<ElementFor_t<InContainer>, InElement>
+auto applyElementTransformView(
+    InContainer const& input,
+    std::string const& transform_name)
+{
+    return applyElementTransformView<InContainer, InElement, OutElement, NoParams>(
+        input, transform_name, NoParams{});
+}
+
+// ============================================================================
 // Simplified API using type deduction
 // ============================================================================
 

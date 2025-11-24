@@ -52,6 +52,51 @@ public:
     RaggedTimeSeries(RaggedTimeSeries const &) = delete;
     RaggedTimeSeries & operator=(RaggedTimeSeries const &) = delete;
 
+    /**
+     * @brief Construct from a range of time-data pairs
+     * 
+     * Accepts any input range that yields pairs of (TimeFrameIndex, TData).
+     * This enables efficient construction from transformed views, such as
+     * pipeline outputs.
+     * 
+     * EntityIds will be automatically assigned during construction if an
+     * identity context is set. Otherwise, EntityIds will be EntityId(0).
+     * 
+     * @tparam R Range type (must satisfy std::ranges::input_range)
+     * @param time_data_pairs Range of (TimeFrameIndex, TData) pairs
+     * 
+     * @example
+     * ```cpp
+     * auto transformed = mask_data.elements() 
+     *     | std::views::transform([](auto [time, entry]) { 
+     *         return std::pair{time, skeletonize(entry.get().data)};
+     *     });
+     * auto new_masks = std::make_shared<MaskData>();
+     * *new_masks = MaskData(transformed);  // Construct from view
+     * ```
+     */
+    template<std::ranges::input_range R>
+    requires requires(std::ranges::range_value_t<R> pair) {
+        { pair.first } -> std::convertible_to<TimeFrameIndex>;
+        { pair.second } -> std::convertible_to<TData>;
+    }
+    explicit RaggedTimeSeries(R&& time_data_pairs) : RaggedTimeSeries() {
+        // Process the range, adding each element with automatic EntityId assignment
+        for (auto&& [time, data] : time_data_pairs) {
+            // Use addAtTime which handles EntityId assignment via identity context
+            if constexpr (std::is_rvalue_reference_v<decltype(data)>) {
+                addAtTime(time, std::forward<decltype(data)>(data), NotifyObservers::No);
+            } else {
+                addAtTime(time, data, NotifyObservers::No);
+            }
+        }
+        
+        // Single notification at end after all data is loaded
+        if (!_data.empty()) {
+            notifyObservers();
+        }
+    }
+
     // ========== Time Frame ==========
     /**
      * @brief Set the time frame for this data structure

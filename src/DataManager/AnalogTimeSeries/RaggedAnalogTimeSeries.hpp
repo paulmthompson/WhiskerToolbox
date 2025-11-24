@@ -4,6 +4,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 
 #include <map>
 #include <memory>
@@ -34,6 +35,20 @@ class RaggedAnalogTimeSeriesView;
  */
 class RaggedAnalogTimeSeries : public ObserverData {
 public:
+    // ========== Type Traits ==========
+    /**
+     * @brief Type traits for RaggedAnalogTimeSeries
+     * 
+     * Defines compile-time properties of RaggedAnalogTimeSeries for use in generic algorithms
+     * and the transformation system.
+     */
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<RaggedAnalogTimeSeries, float> {
+        static constexpr bool is_ragged = true;
+        static constexpr bool is_temporal = true;
+        static constexpr bool has_entity_ids = false;
+        static constexpr bool is_spatial = false;
+    };
+
     // ========== Constructors ==========
     RaggedAnalogTimeSeries() = default;
     virtual ~RaggedAnalogTimeSeries() = default;
@@ -328,6 +343,47 @@ public:
      * range-based for loops and range algorithms.
      */
     [[nodiscard]] auto view() const;
+
+    /**
+     * @brief Get a flattened view of (TimeFrameIndex, float) pairs
+     * 
+     * This creates a lazy view that flattens the ragged structure into individual
+     * (time, value) pairs. This is the analog of RaggedTimeSeries<T>::elements()
+     * and enables uniform iteration API across all ragged container types.
+     * 
+     * Usage: for (auto [time, value] : ragged_analog.elements()) { ... }
+     * 
+     * @return A lazy range view of (TimeFrameIndex, float) pairs
+     */
+    [[nodiscard]] auto elements() const {
+        return _data | std::views::transform([](auto const& pair) {
+            // Capture the time for each value in the vector
+            TimeFrameIndex const time = pair.first;
+            std::vector<float> const& values = pair.second;
+            
+            // Create a view that pairs the time with each float value
+            return values | std::views::transform([time](float value) {
+                return std::make_pair(time, value);
+            });
+        }) | std::views::join;  // Flatten the nested ranges
+    }
+
+    /**
+     * @brief Get a view of (TimeFrameIndex, std::span<float const>) pairs
+     * 
+     * Similar to RaggedTimeSeries<T>::time_slices(), this provides access to
+     * all values at each time point as a span. Useful when you need to process
+     * all values at a time together rather than individually.
+     * 
+     * Usage: for (auto [time, values_span] : ragged_analog.time_slices()) { ... }
+     * 
+     * @return A lazy range view of (TimeFrameIndex, span) pairs
+     */
+    [[nodiscard]] auto time_slices() const {
+        return _data | std::views::transform([](auto const& pair) {
+            return std::make_pair(pair.first, std::span<float const>{pair.second});
+        });
+    }
 
 private:
     /**

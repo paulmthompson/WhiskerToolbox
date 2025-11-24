@@ -6,6 +6,7 @@
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -26,6 +27,20 @@
  */
 class AnalogTimeSeries : public ObserverData {
 public:
+    // ========== Type Traits ==========
+    /**
+     * @brief Type traits for AnalogTimeSeries
+     * 
+     * Defines compile-time properties of AnalogTimeSeries for use in generic algorithms
+     * and the transformation system.
+     */
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<AnalogTimeSeries, float> {
+        static constexpr bool is_ragged = false;
+        static constexpr bool is_temporal = true;
+        static constexpr bool has_entity_ids = false;
+        static constexpr bool is_spatial = false;
+    };
+
     // ========== Constructors ==========
     /**
      * @brief Default constructor

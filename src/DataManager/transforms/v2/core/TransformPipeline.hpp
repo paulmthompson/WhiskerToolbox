@@ -403,6 +403,154 @@ public:
         return steps_.at(index).transform_name;
     }
 
+    /**
+     * @brief Execute the pipeline and return a lazy view (no materialization)
+     * 
+     * This method returns a lazy range view that applies all pipeline transforms
+     * on-demand as elements are accessed. No intermediate or output containers
+     * are materialized until the view is consumed.
+     * 
+     * This is the key method for view-based pipelines that eliminates all
+     * unnecessary materializations. The returned view can be:
+     * - Passed to further view transformations
+     * - Materialized into a container via range constructor
+     * - Consumed element-by-element in a loop
+     * 
+     * **Requirements:**
+     * - All pipeline steps must be element-level transforms (not time-grouped)
+     * - Input container must provide an elements() view
+     * 
+     * **Performance:**
+     * - Zero intermediate allocations
+     * - Computation happens on-demand (pull-based)
+     * - Optimal cache locality (transforms applied in sequence per element)
+     * 
+     * @tparam InputContainer Input container type (must have elements() view)
+     * @param input Input data
+     * @return Lazy range view of (TimeFrameIndex, OutputElement) pairs
+     * 
+     * @throws std::runtime_error if pipeline contains time-grouped transforms
+     * 
+     * @example
+     * ```cpp
+     * // Create pipeline
+     * auto pipeline = TransformPipeline()
+     *     .addStep("Skeletonize", params1)
+     *     .addStep("CalculateMaskArea", params2);
+     * 
+     * // Get lazy view - no computation yet!
+     * auto view = pipeline.executeAsView(mask_data);
+     * 
+     * // Option 1: Materialize into container
+     * auto result = std::make_shared<RaggedAnalogTimeSeries>(view);
+     * 
+     * // Option 2: Further transform the view
+     * auto filtered = view 
+     *     | std::views::filter([](auto pair) { return pair.second > 100.0f; });
+     * 
+     * // Option 3: Process elements on-demand
+     * for (auto [time, value] : view) {
+     *     // Transforms execute here, one element at a time
+     *     processValue(time, value);
+     * }
+     * ```
+     */
+    template<typename InputContainer>
+    requires requires(InputContainer const& c) { c.elements(); }
+    auto executeAsView(InputContainer const& input) const {
+        if (steps_.empty()) {
+            throw std::runtime_error("Pipeline has no steps");
+        }
+        
+        auto& registry = ElementRegistry::instance();
+        
+        // Verify all steps are element-level (not time-grouped)
+        for (auto const& step : steps_) {
+            auto const* meta = registry.getMetadata(step.transform_name);
+            if (!meta) {
+                throw std::runtime_error("Transform not found: " + step.transform_name);
+            }
+            if (meta->is_time_grouped) {
+                throw std::runtime_error(
+                    "executeAsView() does not support time-grouped transforms. "
+                    "Use execute() instead for pipelines with time-grouped steps.");
+            }
+        }
+        
+        // Build composed transform function (type-erased but created once)
+        std::vector<std::function<std::any(std::any)>> transform_chain;
+        transform_chain.reserve(steps_.size());
+        
+        for (auto const& step : steps_) {
+            auto const* meta = registry.getMetadata(step.transform_name);
+            auto transform_fn = buildTypeErasedFunction(step, meta);
+            transform_chain.push_back(std::move(transform_fn));
+        }
+        
+        // Compose all functions into a single callable
+        auto composed_fn = [chain = std::move(transform_chain)](std::any input_any) -> std::any {
+            std::any current = std::move(input_any);
+            for (auto const& transform : chain) {
+                current = transform(std::move(current));
+            }
+            return current;
+        };
+        
+        // Return a lazy view that applies the composed function to each element
+        return input.elements() | std::views::transform([composed_fn](auto const& elem) {
+            // Extract time
+            auto time = elem.first;
+            
+            // Extract data element and wrap in std::any for composed function
+            // The composed function handles all type conversions internally
+            using InputElement = ElementFor_t<InputContainer>;
+            InputElement const& data = extractElement<decltype(elem), InputElement>(elem);
+            std::any input_any = data;
+            
+            // Apply composed transform chain
+            std::any output_any = composed_fn(std::move(input_any));
+            
+            // The output type depends on the final transform in the pipeline
+            // Since we're returning a generic view, we keep it as (TimeFrameIndex, std::any)
+            // The consumer must know the output type or use a typed wrapper
+            return std::make_pair(time, std::move(output_any));
+        });
+    }
+
+    /**
+     * @brief Execute pipeline as view with explicit output type (type-safe version)
+     * 
+     * This is a type-safe wrapper around executeAsView() that ensures the output
+     * type is known at compile time. The returned view yields (TimeFrameIndex, OutElement)
+     * pairs instead of (TimeFrameIndex, std::any).
+     * 
+     * @tparam InputContainer Input container type
+     * @tparam OutElement Expected output element type
+     * @param input Input data
+     * @return Lazy range view of (TimeFrameIndex, OutElement) pairs
+     * 
+     * @example
+     * ```cpp
+     * auto view = pipeline.executeAsViewTyped<MaskData, float>(mask_data);
+     * // view is a range of (TimeFrameIndex, float) pairs
+     * 
+     * auto result = std::make_shared<RaggedAnalogTimeSeries>(view);
+     * ```
+     */
+    template<typename InputContainer, typename OutElement>
+    requires requires(InputContainer const& c) { c.elements(); }
+    auto executeAsViewTyped(InputContainer const& input) const {
+        auto any_view = executeAsView(input);
+        
+        // Add a transform that unwraps the std::any to the concrete output type
+        return any_view | std::views::transform([](auto pair) {
+            return std::make_pair(
+                pair.first, 
+                std::any_cast<OutElement>(std::move(pair.second))
+            );
+        });
+    }
+
 private:
     /**
      * @brief Build a type-erased transform function for runtime composition

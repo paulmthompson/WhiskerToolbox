@@ -12,52 +12,45 @@ This directory contains the next-generation transformation architecture for Whis
 
 ## Status
 
-🚧 **Under Active Development** 🚧
+✅ **Phase 2 Complete: Core Infrastructure Operational** ✅
 
-This is a parallel implementation. The existing transformation system (`src/DataManager/transforms/`) continues to work. This new system will gradually replace it as transforms are migrated.
+This is a parallel implementation. The existing transformation system (`src/DataManager/transforms/`) continues to work. This new system provides:
+
+**Currently Implemented:**
+- ✅ Element registry with compile-time type safety
+- ✅ TypedParamExecutor system (eliminates per-element parameter casts)
+- ✅ Container automatic lifting (element → container transforms)
+- ✅ Transform fusion pipeline (minimizes intermediate allocations)
+- ✅ Support for ragged outputs (variable-length per time frame)
+- ✅ Multi-input transforms (N inputs → 1 output)
+- ✅ Time-grouped transforms (span<Element> per time)
+
+**Coming Next:**
+- 🔄 C++20 ranges integration for true lazy evaluation
+- 🔄 Runtime JSON pipeline configuration
+- 🔄 Provenance tracking (EntityID relationships)
+- 🔄 reflect-cpp parameter serialization
 
 ## Directory Structure
 
 ```
 v2/
-├── DESIGN.md                    # Complete architecture documentation
+├── DESIGN.md                    # Architecture goals and future plans
+├── IMPLEMENTATION_GUIDE.md      # Usage guide
 ├── README.md                    # This file
-├── CMakeLists.txt              # Build configuration
 │
-├── core/                        # Core infrastructure
-│   ├── ElementTransform.hpp    # Element-level transform concepts & wrappers
+├── core/                        # ✅ Implemented core infrastructure
+│   ├── ElementTransform.hpp    # Transform function wrappers
 │   ├── ContainerTraits.hpp     # Element ↔ Container type mappings
-│   ├── ContainerTraits.cpp     # Implementation (typeid usage)
-│   ├── ElementRegistry.hpp     # Compile-time typed registry
-│   ├── ElementRegistry.cpp
-│   ├── TransformPipeline.hpp   # Lazy range-based pipeline builder
-│   └── TransformPipeline.cpp
+│   ├── ContainerTraits.cpp
+│   ├── ElementRegistry.hpp     # Main registry with TypedParamExecutor
+│   ├── TransformPipeline.hpp   # Multi-step pipeline with fusion
+│   └── ContainerTransform.hpp  # Container lifting utilities
 │
-├── runtime/                     # Runtime configuration support
-│   ├── PipelineDescriptor.hpp  # Runtime pipeline configuration
-│   ├── PipelineFactory.hpp     # Type-erased factory
-│   ├── PipelineFactory.cpp
-│   └── PipelineExecutor.hpp    # Type-erased execution interface
-│
-├── storage/                     # Storage strategy abstraction
-│   ├── StorageStrategy.hpp     # Base storage interfaces
-│   ├── LazyStorage.hpp         # Lazy-evaluated storage
-│   └── LazyStorage.cpp
-│
-├── parameters/                  # Parameter handling via reflect-cpp
-│   ├── TransformParameters.hpp # Parameter base classes
-│   ├── ParameterSerialization.hpp
-│   └── ParameterValidation.hpp
-│
-├── provenance/                  # EntityID relationship tracking
-│   ├── ProvenanceTracker.hpp
-│   └── ProvenanceTracker.cpp
-│
-└── examples/                    # Example transform implementations
+└── examples/                    # ✅ Working example transforms
     ├── MaskAreaTransform.hpp   # Mask2D → float (area calculation)
-    ├── MaskToLineTransform.hpp # Mask2D → Line2D (centerline fitting)
-    ├── LineAngleTransform.hpp  # Line2D → float (angle calculation)
-    └── ComposedExample.cpp     # Multi-step pipeline example
+    ├── SumReductionTransform.hpp # float → float (summation)
+    └── RegisteredTransforms.hpp # Registration code
 ```
 
 ## Key Concepts
@@ -78,45 +71,51 @@ auto areas = registry.executeContainer<MaskData, AnalogTimeSeries>(
     "CalculateArea", mask_data, params);
 ```
 
-### Lazy Evaluation
+### Fused Multi-Step Pipelines
 
 ```cpp
-// Old approach (eager, materializes each step):
-auto skel = skeletonize(masks);      // → MaskData (1GB allocated)
-auto lines = maskToLine(skel);       // → LineData (100MB allocated)  
-auto angles = lineAngle(lines);      // → AnalogTimeSeries (8KB)
-// Peak memory: ~1.1GB
+// Instead of manual chaining with intermediate allocations:
+auto skel = registry.executeContainer<MaskData, MaskData>(
+    "Skeletonize", masks, params1);
+auto areas = registry.executeContainer<MaskData, AnalogTimeSeries>(
+    "CalculateArea", skel, params2);
 
-// New approach (lazy, fused pipeline):
-auto pipeline = createRangeView(masks)
-    | transform(skeletonize)
-    | transform(maskToLine)
-    | transform(lineAngle);
+// Use pipeline for fused execution (single pass):
+TransformPipeline<MaskData, AnalogTimeSeries> pipeline;
+pipeline.addStep<SkeletonParams>("Skeletonize", params1);
+pipeline.addStep<MaskAreaParams>("CalculateArea", params2);
 
-auto angles = pipeline.materialize();
-// Peak memory: ~1MB (only 1 mask in memory at a time)
-// Compiler fuses the loop!
+// Executes both transforms in one pass (no intermediate MaskData)
+auto areas = pipeline.execute(masks);
+
+// Benefits:
+// - Single iteration over input data
+// - No intermediate container allocations
+// - Better cache locality
+// - Reduced memory usage
 ```
 
-### Runtime Configuration
+### Runtime Configuration (Coming Soon)
+
+The system is designed to support runtime pipeline configuration via JSON, but this is not yet fully implemented. Current approach:
 
 ```cpp
-// User builds pipeline via UI, saves as JSON:
-{
-  "name": "Whisker Analysis",
-  "steps": [
-    {"transform": "Skeletonize", "params": {...}},
-    {"transform": "MaskToLine", "params": {...}},
-    {"transform": "LineAngle", "params": {...}}
-  ]
-}
+// Manual pipeline construction (current):
+TransformPipeline<MaskData, AnalogTimeSeries> pipeline;
+pipeline.addStep<MaskAreaParams>("CalculateArea", params1);
+pipeline.addStep<NormalizeParams>("Normalize", params2);
+auto result = pipeline.execute(mask_data);
 
-// Factory creates compile-time optimized pipeline:
-auto pipeline = factory.loadFromJson("analysis.json");
-
-// Execution is fully typed and optimized:
-auto result = pipeline->execute(mask_data);
-// ↑ This runs as fast as hand-written fused loop!
+// Planned: JSON-based configuration
+// {
+//   "name": "Whisker Analysis",
+//   "steps": [
+//     {"transform": "CalculateArea", "params": {...}},
+//     {"transform": "Normalize", "params": {...}}
+//   ]
+// }
+// auto pipeline = factory.loadFromJson("analysis.json");
+// auto result = pipeline->execute(mask_data);
 ```
 
 ## Usage Examples
@@ -148,21 +147,21 @@ auto areas = registry.executeContainer<MaskData, AnalogTimeSeries>(
     "CalculateArea", mask_data, params);
 ```
 
-### Example 2: Build Lazy Pipeline
+### Example 2: Build Multi-Step Pipeline
 
 ```cpp
 #include "core/TransformPipeline.hpp"
 
 using namespace WhiskerToolbox::Transforms::V2;
 
-// Create pipeline using standard ranges
-// (Container types provide range views via std::ranges::view_interface)
-auto pipeline = PipelineBuilder<MaskData, AnalogTimeSeries>()
-    .addStep<MaskAreaParams>("CalculateArea", params1)
-    .addStep<NormalizeParams>("Normalize", params2)
-    .build();
+// Create multi-step pipeline
+TransformPipeline<MaskData, AnalogTimeSeries> pipeline;
 
-// Execute lazily
+// Add steps (executes in single fused pass)
+MaskAreaParams params1{};
+pipeline.addStep<MaskAreaParams>("CalculateMaskArea", params1);
+
+// Execute (all steps fused into single iteration)
 auto result = pipeline.execute(mask_data);
 ```
 
@@ -194,21 +193,32 @@ for (const auto& frame_data : ragged_areas.elements()) {
 }
 ```
 
-### Example 4: Runtime Configuration
+### Example 4: Multi-Input Transforms
 
 ```cpp
-#include "runtime/PipelineFactory.hpp"
+#include "core/ElementRegistry.hpp"
 
 using namespace WhiskerToolbox::Transforms::V2;
 
-// Load pipeline from JSON
-PipelineFactory factory(registry);
-auto pipeline = factory.loadFromJson("my_analysis.json");
+// Define a multi-input transform (e.g., intersection)
+struct IntersectionParams {};
 
-// Execute with progress reporting
-auto result = pipeline->execute(mask_data, [](int progress) {
-    std::cout << "Progress: " << progress << "%\n";
-});
+Mask2D intersectMasks(
+    std::tuple<Mask2D, Mask2D> const& inputs,
+    IntersectionParams const& params) {
+    auto const& [mask1, mask2] = inputs;
+    // Compute intersection...
+    return result;
+}
+
+// Register as multi-input transform
+registry.registerMultiInputTransform<
+    std::tuple<Mask2D, Mask2D>,
+    Mask2D,
+    IntersectionParams>(
+    "IntersectMasks",
+    intersectMasks
+);
 ```
 
 ## Building
@@ -297,29 +307,36 @@ Key test files:
 
 ## Roadmap
 
-### Phase 1: Core Infrastructure ✅
+### Phase 1: Core Infrastructure ✅ COMPLETE
 - [x] Element transform concepts and wrappers
-- [x] Container trait system
-- [x] Range adaptor views
+- [x] Container trait system  
 - [x] Design documentation
+- [x] TypedParamExecutor system (eliminates per-element overhead)
 
-### Phase 2: Registry and Execution (In Progress)
-- [ ] Element registry implementation
-- [ ] Range-based pipeline builder
-- [ ] Materialization strategies
-- [ ] Basic tests
+### Phase 2: Registry and Execution ✅ COMPLETE
+- [x] Element registry implementation
+- [x] TypedParamExecutor with cached executors
+- [x] Multi-step pipeline with fusion
+- [x] Container automatic lifting
+- [x] Ragged output support
+- [x] Multi-input transform support
+- [x] Time-grouped transform support
+- [x] Basic tests (MaskArea example)
+- [x] Example transforms (MaskArea, SumReduction)
 
-### Phase 3: Runtime Configuration
-- [ ] Pipeline descriptor (JSON schema)
-- [ ] Pipeline factory (type dispatch)
-- [ ] Type-erased executor
-- [ ] UI integration
+### Phase 3: Runtime Configuration (Next Priority)
+- [ ] JSON schema for pipeline descriptors
+- [ ] reflect-cpp parameter serialization
+- [ ] Pipeline factory (runtime type dispatch)
+- [ ] Type-erased executor interface
+- [ ] UI integration for pipeline builder
 
-### Phase 4: Advanced Features
-- [ ] Lazy storage strategy
-- [ ] Provenance tracking
-- [ ] Parallel execution support
-- [ ] Performance optimization
+### Phase 4: Advanced Features (Future)
+- [ ] C++20 ranges for true lazy evaluation
+- [ ] Lazy storage strategy (delay materialization)
+- [ ] Provenance tracking (EntityID relationships)
+- [ ] Parallel execution support (thread pool)
+- [ ] Performance benchmarking vs V1
 
 ### Phase 5: Migration
 - [ ] Port 10 transforms to V2
