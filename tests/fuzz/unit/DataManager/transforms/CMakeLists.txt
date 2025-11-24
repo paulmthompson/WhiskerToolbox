@@ -1,6 +1,7 @@
 
 add_executable(fuzz_v2_parameter_io
     fuzz_v2_parameter_io.cpp
+    fuzz_v2_pipeline_loader.cpp
 )
 
 add_fuzz_test_with_instantiations(fuzz_v2_parameter_io)

@@ -196,6 +196,20 @@ public:
     }
     
     /**
+     * @brief Add a pre-constructed pipeline step
+     * 
+     * This is useful for loading pipelines from JSON where the step
+     * is constructed separately with type-erased parameters.
+     * 
+     * @param step Pre-constructed pipeline step
+     * @return Reference to this pipeline for chaining
+     */
+    TransformPipeline& addStep(PipelineStep step) {
+        steps_.push_back(std::move(step));
+        return *this;
+    }
+    
+    /**
      * @brief Execute a two-step pipeline with full type specification
      * 
      * This method composes transforms into a single element-level function
