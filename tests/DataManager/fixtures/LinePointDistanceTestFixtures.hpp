@@ -258,6 +258,79 @@ struct InvalidImageSizes : LinePointDistanceFixture {
     }
 };
 
+/**
+ * @brief JSON pipeline test fixture - Two timesteps
+ * t=100: Horizontal line (0,0)-(10,0) with point (5,5), distance = 5.0
+ * t=200: Vertical line (5,0)-(5,10) with point (8,5), distance = 3.0
+ */
+struct JsonPipelineTwoTimesteps : LinePointDistanceFixture {
+    static constexpr TimeFrameIndex timestamp1{100};
+    static constexpr TimeFrameIndex timestamp2{200};
+    static constexpr float expected_distance1 = 5.0f;
+    static constexpr float expected_distance2 = 3.0f;
+    static constexpr size_t expected_num_results = 2;
+    
+    JsonPipelineTwoTimesteps() {
+        // Timestamp 100: horizontal line
+        line_data->emplaceAtTime(timestamp1,
+            std::vector<float>{0.0f, 10.0f},
+            std::vector<float>{0.0f, 0.0f});
+        point_data->addAtTime(timestamp1,
+            std::vector<Point2D<float>>{Point2D<float>{5.0f, 5.0f}},
+            NotifyObservers::No);
+        
+        // Timestamp 200: vertical line
+        line_data->emplaceAtTime(timestamp2,
+            std::vector<float>{5.0f, 5.0f},
+            std::vector<float>{0.0f, 10.0f});
+        point_data->addAtTime(timestamp2,
+            std::vector<Point2D<float>>{Point2D<float>{8.0f, 5.0f}},
+            NotifyObservers::No);
+    }
+};
+
+/**
+ * @brief JSON pipeline test with scaling
+ * Line: 100x100 image, (0,0) to (100,0) at t=300
+ * Point: 50x50 image, (25,10) -> scales to (50,20) in line space
+ * Expected distance: 20.0
+ */
+struct JsonPipelineScaling : LinePointDistanceFixture {
+    static constexpr TimeFrameIndex timestamp{300};
+    static constexpr float expected_distance = 20.0f;
+    
+    JsonPipelineScaling() {
+        line_data->setImageSize(ImageSize{100, 100});
+        point_data->setImageSize(ImageSize{50, 50});
+        
+        line_data->emplaceAtTime(timestamp,
+            std::vector<float>{0.0f, 100.0f},
+            std::vector<float>{0.0f, 0.0f});
+        point_data->addAtTime(timestamp,
+            std::vector<Point2D<float>>{Point2D<float>{25.0f, 10.0f}},
+            NotifyObservers::No);
+    }
+};
+
+/**
+ * @brief JSON pipeline test - point on line
+ * Diagonal line (0,0) to (10,10) with point (5,5) at t=400
+ * Expected distance: 0.0
+ */
+struct JsonPipelinePointOnLine : LinePointDistanceFixture {
+    static constexpr TimeFrameIndex timestamp{400};
+    static constexpr float expected_distance = 0.0f;
+    
+    JsonPipelinePointOnLine() {
+        line_data->emplaceAtTime(timestamp,
+            std::vector<float>{0.0f, 10.0f},
+            std::vector<float>{0.0f, 10.0f});
+        point_data->addAtTime(timestamp,
+            std::vector<Point2D<float>>{Point2D<float>{5.0f, 5.0f}},
+            NotifyObservers::No);
+    }
+};
+
 } // namespace WhiskerToolbox::Testing
 
 #endif // WHISKERTOOLBOX_LINE_POINT_DISTANCE_TEST_FIXTURES_HPP
