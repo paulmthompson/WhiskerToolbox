@@ -4,6 +4,7 @@
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/examples/MaskAreaTransform.hpp"
 #include "transforms/v2/examples/SumReductionTransform.hpp"
+#include "transforms/v2/examples/LineMinPointDistTransform.hpp"
 
 #include "CoreGeometry/masks.hpp"
 
@@ -97,6 +98,36 @@ inline auto const register_sum_reduction_ctx = RegisterContextTimeGroupedTransfo
     }
 );
 
+// Register LineMinPointDistTransform (Binary - takes two inputs)
+inline auto const register_line_min_point_dist = RegisterBinaryTransform<
+    Line2D, 
+    Point2D<float>, 
+    float, 
+    LineMinPointDistParams>(
+    "CalculateLineMinPointDistance",
+    calculateLineMinPointDistance,
+    TransformMetadata{
+        .name = "CalculateLineMinPointDistance",
+        .description = "Calculate distance from a point to a line (1:1 matching)",
+        .category = "Geometry",
+        .input_type = typeid(std::tuple<Line2D, Point2D<float>>),
+        .output_type = typeid(float),
+        .params_type = typeid(LineMinPointDistParams),
+        .input_type_name = "std::tuple<Line2D, Point2D<float>>",
+        .output_type_name = "float",
+        .params_type_name = "LineMinPointDistParams",
+        .is_expensive = false,
+        .is_deterministic = true,
+        .supports_cancellation = false,
+        .is_multi_input = true,
+        .input_arity = 2
+    }
+);
+
+// Register context-aware version
+// Note: Context-aware binary transforms need special handling - not yet implemented in registry
+// For now, we register the basic version only
+
 // ============================================================================
 // Typed Executor Registration (zero per-element dispatch overhead)
 // ============================================================================
@@ -136,6 +167,27 @@ inline bool const register_sum_reduction_typed_executor = []() {
         [](std::any const& params_any) -> std::unique_ptr<IParamExecutor> {
             auto params = std::any_cast<SumReductionParams>(params_any);
             return std::make_unique<TypedParamExecutor<float, float, SumReductionParams>>(
+                std::move(params));
+        });
+    
+    return true;
+}();
+
+/**
+ * @brief Register typed executor for LineMinPointDistParams
+ * 
+ * For binary transforms, the tuple input is used as the key.
+ */
+inline bool const register_line_min_point_dist_typed_executor = []() {
+    auto& registry = ElementRegistry::instance();
+    
+    using TupleInput = std::tuple<Line2D, Point2D<float>>;
+    
+    // Register factory for tuple<Line2D, Point2D> -> float with LineMinPointDistParams
+    registry.registerTypedExecutorFactory<TupleInput, float, LineMinPointDistParams>(
+        [](std::any const& params_any) -> std::unique_ptr<IParamExecutor> {
+            auto params = std::any_cast<LineMinPointDistParams>(params_any);
+            return std::make_unique<TypedParamExecutor<TupleInput, float, LineMinPointDistParams>>(
                 std::move(params));
         });
     

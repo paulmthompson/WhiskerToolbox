@@ -905,6 +905,24 @@ public:
     }
 };
 
+/**
+ * @brief RAII helper for compile-time binary transform registration
+ * 
+ * Registers a transform that takes two separate inputs.
+ */
+template<typename In1, typename In2, typename Out, typename Params>
+class RegisterBinaryTransform {
+public:
+    RegisterBinaryTransform(
+        std::string const& name,
+        std::function<Out(In1 const&, In2 const&, Params const&)> func,
+        TransformMetadata metadata = {})
+    {
+        ElementRegistry::instance().registerBinaryTransform<In1, In2, Out, Params>(
+            name, std::move(func), std::move(metadata));
+    }
+};
+
 } // namespace WhiskerToolbox::Transforms::V2
 
 #endif // WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP

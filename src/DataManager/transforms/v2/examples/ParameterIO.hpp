@@ -3,6 +3,8 @@
 
 #include "MaskAreaTransform.hpp"
 #include "SumReductionTransform.hpp"
+#include "LineMinPointDistTransform.hpp"
+#include "LineMinPointDistTransform.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -21,7 +23,8 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
  */
 using ParameterVariant = std::variant<
     MaskAreaParams,
-    SumReductionParams
+    SumReductionParams,
+    LineMinPointDistParams
 >;
 
 /**
@@ -132,6 +135,17 @@ inline std::optional<ParameterVariant> loadParameterVariant(
         }
     } else if (transform_name == "SumReduction") {
         auto result = loadParametersFromJson<SumReductionParams>(json_str);
+        if (result) {
+            return result.value();
+        }
+    } else if (transform_name == "CalculateLineMinPointDistance" || 
+               transform_name == "CalculateLineMinPointDistanceWithContext") {
+        auto result = loadParametersFromJson<LineMinPointDistParams>(json_str);
+        if (result) {
+            return result.value();
+        }
+    } else if (transform_name == "CalculateLineMinPointDistance") {
+        auto result = loadParametersFromJson<LineMinPointDistParams>(json_str);
         if (result) {
             return result.value();
         }
