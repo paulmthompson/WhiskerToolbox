@@ -101,6 +101,7 @@ add_executable(test_data_manager
 
         TransformsV2/test_mask_area.test.cpp
         TransformsV2/test_view_pipeline.test.cpp
+        TransformsV2/test_parameter_io.test.cpp
 )
 
 # Add VideoData tests only if FFmpeg is enabled

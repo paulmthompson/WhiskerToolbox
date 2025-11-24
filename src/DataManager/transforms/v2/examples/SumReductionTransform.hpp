@@ -3,6 +3,9 @@
 
 #include "transforms/v2/core/ElementTransform.hpp"
 
+#include <rfl.hpp>
+#include <rfl/json.hpp>
+#include <cmath>
 #include <numeric>
 #include <span>
 #include <vector>
@@ -11,11 +14,32 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 
 /**
  * @brief Parameters for sum reduction
+ * 
+ * Uses reflect-cpp for automatic JSON serialization/deserialization with validation.
+ * 
+ * Example JSON:
+ * ```json
+ * {
+ *   "ignore_nan": true,
+ *   "default_value": 0.0
+ * }
+ * ```
  */
 struct SumReductionParams {
-    // Could add options like:
-    // bool ignore_nan = false;
-    // float default_value = 0.0f;  // if empty input
+    // Whether to ignore NaN values when summing
+    std::optional<bool> ignore_nan;
+    
+    // Default value to return if input is empty
+    std::optional<float> default_value;
+    
+    // Helper methods to get values with defaults
+    bool getIgnoreNan() const { 
+        return ignore_nan.value_or(false); 
+    }
+    
+    float getDefaultValue() const { 
+        return default_value.value_or(0.0f); 
+    }
 };
 
 /**
@@ -38,14 +62,24 @@ inline std::vector<float> sumReduction(
     std::span<float const> values,
     SumReductionParams const& params) {
     
-    (void)params;  // Unused for now
-    
     if (values.empty()) {
-        return {0.0f};  // Return 0 for empty input
+        return {params.getDefaultValue()};
     }
     
-    float sum = std::accumulate(values.begin(), values.end(), 0.0f);
-    return {sum};  // Return vector with single element
+    float sum = 0.0f;
+    if (params.getIgnoreNan()) {
+        // Sum only non-NaN values
+        for (float value : values) {
+            if (!std::isnan(value)) {
+                sum += value;
+            }
+        }
+    } else {
+        // Standard sum
+        sum = std::accumulate(values.begin(), values.end(), 0.0f);
+    }
+    
+    return {sum};
 }
 
 /**

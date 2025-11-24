@@ -6,7 +6,8 @@
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "transforms/v2/core/ElementTransform.hpp"
 
-#include <rfl.hpp>  // reflect-cpp
+#include <rfl.hpp>
+#include <rfl/json.hpp>
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
@@ -14,12 +15,42 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 /**
  * @brief Parameters for mask area calculation
  * 
- * Using reflect-cpp for automatic JSON serialization
+ * Uses reflect-cpp for automatic JSON serialization/deserialization with validation.
+ * Optional fields can be omitted from JSON and will use default values.
+ * 
+ * Example JSON:
+ * ```json
+ * {
+ *   "scale_factor": 1.0,
+ *   "min_area": 0.0,
+ *   "exclude_holes": false
+ * }
+ * ```
  */
 struct MaskAreaParams {
-    // For now just holds the number of mask values to return per Mask2D
-    // This demonstrates outputting a std::vector<float> for each Mask2D
-    // Could add: bool exclude_holes = false; float scale_factor = 1.0f;
+    // Scale factor to multiply area by (e.g., convert pixels to mm²)
+    // Must be strictly positive (> 0)
+    std::optional<rfl::Validator<float, rfl::ExclusiveMinimum<0.0f>>> scale_factor;
+    
+    // Minimum area threshold - masks below this are reported as 0
+    // Must be non-negative (>= 0)
+    std::optional<rfl::Validator<float, rfl::Minimum<0.0f>>> min_area;
+    
+    // Whether to exclude holes when calculating area
+    std::optional<bool> exclude_holes;
+    
+    // Helper methods to get values with defaults
+    float getScaleFactor() const { 
+        return scale_factor.has_value() ? scale_factor.value().value() : 1.0f; 
+    }
+    
+    float getMinArea() const { 
+        return min_area.has_value() ? min_area.value().value() : 0.0f; 
+    }
+    
+    bool getExcludeHoles() const { 
+        return exclude_holes.value_or(false); 
+    }
 };
 
 /**
@@ -41,15 +72,21 @@ inline float calculateMaskArea(
     Mask2D const& mask, 
     MaskAreaParams const& params) {
     
-    (void)params;  // Unused for now
-    
     // Count pixels in the mask
     int count = 0;
     for (auto const& pixel : mask) {
         ++count;
     }
     
-    return static_cast<float>(count);
+    float area = static_cast<float>(count);
+    
+    // Apply minimum area threshold
+    if (area < params.getMinArea()) {
+        return 0.0f;
+    }
+    
+    // Apply scale factor
+    return area * params.getScaleFactor();
 }
 
 /**
