@@ -17,6 +17,11 @@ float calculate_mean_impl(std::vector<float> const & data, size_t start, size_t 
 }
 
 float calculate_mean(AnalogTimeSeries const & series) {
+    // Early return for empty series
+    if (series.getNumSamples() == 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
     auto span = series.getAnalogTimeSeries();
     // If span is empty (non-contiguous storage like memory-mapped with stride),
     // fall back to iterator-based calculation
@@ -60,6 +65,11 @@ float calculate_std_dev_impl(std::vector<float> const & data, size_t start, size
 }
 
 float calculate_std_dev(AnalogTimeSeries const & series) {
+    // Early return for empty series
+    if (series.getNumSamples() == 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
     auto span = series.getAnalogTimeSeries();
     // If span is empty (non-contiguous storage like memory-mapped with stride),
     // fall back to iterator-based calculation
@@ -108,6 +118,11 @@ float calculate_std_dev_in_time_range(AnalogTimeSeries const & series, TimeFrame
 float calculate_std_dev_approximate(AnalogTimeSeries const & series,
                                     float sample_percentage,
                                     size_t min_sample_threshold) {
+    // Early return for empty series
+    if (series.getNumSamples() == 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
     auto span = series.getAnalogTimeSeries();
     
     // If span is empty (non-contiguous storage), fall back to exact calculation via iterators
@@ -152,6 +167,11 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
                                  size_t initial_sample_size,
                                  size_t max_sample_size,
                                  float convergence_tolerance) {
+    // Early return for empty series
+    if (series.getNumSamples() == 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
     auto span = series.getAnalogTimeSeries();
     
     // If span is empty (non-contiguous storage), fall back to exact calculation via iterators
@@ -262,6 +282,11 @@ float calculate_min_impl(std::vector<float> const & data, size_t start, size_t e
 }
 
 float calculate_min(AnalogTimeSeries const & series) {
+    // Early return for empty series
+    if (series.getNumSamples() == 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
     auto span = series.getAnalogTimeSeries();
     // If span is empty (non-contiguous storage like memory-mapped with stride),
     // fall back to iterator-based calculation
@@ -305,6 +330,11 @@ float calculate_max_impl(std::vector<float> const & data, size_t start, size_t e
 }
 
 float calculate_max(AnalogTimeSeries const & series) {
+    // Early return for empty series
+    if (series.getNumSamples() == 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
     auto span = series.getAnalogTimeSeries();
     // If span is empty (non-contiguous storage like memory-mapped with stride),
     // fall back to iterator-based calculation
