@@ -9,18 +9,23 @@ This guide explains how to use and extend the new transformation system. It cove
 3. Building pipelines
 4. Runtime configuration
 5. Migration from V1
+6. Parameter System & Serialization
 
 ## Quick Reference
 
 ### Register a Transform
 
 ```cpp
-#include "core/ElementRegistry.hpp"
+#include "transforms/v2/core/ElementRegistry.hpp"
+#include <rfl.hpp> // reflect-cpp
 
 // 1. Define parameters (using reflect-cpp)
 struct MyParams {
-    float threshold = 0.5f;
-    int iterations = 10;
+    std::optional<float> threshold;
+    std::optional<int> iterations;
+    
+    float getThreshold() const { return threshold.value_or(0.5f); }
+    int getIterations() const { return iterations.value_or(10); }
 };
 
 // 2. Implement element-level function
@@ -463,7 +468,7 @@ private:
 ### After (V2 System)
 
 ```cpp
-// transforms/v2/examples/MaskAreaTransform.hpp
+// transforms/v2/algorithms/MaskArea/MaskArea.hpp
 
 struct MaskAreaParams {};  // No parameters needed
 
@@ -592,7 +597,7 @@ float extractAngle(Mask2D const& mask, ComposedParams const& params) {
 
 ```cpp
 #include <catch2/catch_test_macros.hpp>
-#include "examples/MaskAreaTransform.hpp"
+#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 
 TEST_CASE("MaskArea - Empty mask", "[transforms][v2]") {
     Mask2D empty_mask(10, std::vector<uint8_t>(10, 0));
@@ -674,16 +679,118 @@ TEST_CASE("Registry - Execute on container", "[transforms][v2][integration]") {
 ## Next Steps
 
 1. **Read DESIGN.md**: Understand overall architecture
-2. **Study examples/**: See complete working code
+2. **Study algorithms/**: See complete working code
 3. **Try migrating one transform**: Start with something simple
 4. **Add tests**: Verify correctness
 5. **Integrate with UI**: See it in action
 
 ## Questions?
 
-- **How do I...?** Check examples/ directory
+- **How do I...?** Check algorithms/ directory
 - **Why isn't...?** See DESIGN.md for architecture decisions
-- **Can I...?** Probably yes! The system is flexible
-- **Performance?** Run benchmarks in tests/
 
-Happy transforming! 🚀
+## Part 6: Parameter System & Serialization
+
+This system uses [reflect-cpp](https://github.com/getml/reflect-cpp) for automatic JSON serialization/deserialization with validation.
+
+### Overview
+
+All transform parameters use reflect-cpp to provide:
+- **Automatic JSON parsing** - No manual serialization code needed
+- **Type validation** - Compile-time and runtime type safety
+- **Value validation** - Built-in validators for ranges, constraints
+- **Optional fields** - Clean handling of default values
+- **Clear error messages** - Validation failures report exactly what went wrong
+
+### Parameter Structure
+
+Each parameter struct follows this pattern:
+
+```cpp
+struct TransformParams {
+    // Optional field with validator
+    std::optional<rfl::Validator<float, rfl::Minimum<0.0f>>> some_value;
+    
+    // Optional boolean field
+    std::optional<bool> some_flag;
+    
+    // Helper method with default
+    float getSomeValue() const { 
+        return some_value.has_value() ? some_value.value().value() : 1.0f; 
+    }
+    
+    bool getSomeFlag() const { 
+        return some_flag.value_or(false); 
+    }
+};
+```
+
+### Key Patterns
+
+1. **Optional fields** - Use `std::optional<T>` for all parameters
+2. **Validators** - Wrap validated fields in `rfl::Validator<T, Constraints...>`
+3. **Helper methods** - Provide `getXxx()` methods that return defaults
+4. **Clear naming** - Use descriptive field names matching JSON keys
+
+### Usage Examples
+
+#### Load Parameters from JSON
+
+```cpp
+#include "transforms/v2/core/ParameterIO.hpp"
+
+using namespace WhiskerToolbox::Transforms::V2::Examples;
+
+// From string
+std::string json = R"({"scale_factor": 2.5})";
+auto result = loadParametersFromJson<MaskAreaParams>(json);
+
+if (result) {
+    auto params = result.value();
+    float scale = params.getScaleFactor(); // 2.5
+} else {
+    std::cerr << "Error: " << result.error().what() << std::endl;
+}
+```
+
+#### Save Parameters to JSON
+
+```cpp
+MaskAreaParams params;
+params.scale_factor = 3.0f;
+params.exclude_holes = true;
+
+// To string
+std::string json = saveParametersToJson(params);
+
+// To file (pretty-printed)
+bool success = saveParametersToFile(params, "output.json");
+```
+
+### Validation
+
+reflect-cpp provides automatic validation:
+
+#### Built-in Validators
+
+- `rfl::Minimum<N>` - Value must be ≥ N
+- `rfl::Maximum<N>` - Value must be ≤ N
+- `rfl::ExclusiveMinimum<true>` - Value must be > N (not equal)
+- `rfl::ExclusiveMaximum<true>` - Value must be < N (not equal)
+
+#### Custom Validators
+
+```cpp
+struct ValidDataType {
+    static constexpr auto valid_types = std::array{"type1", "type2"};
+    
+    static rfl::Result<std::string> validate(const std::string& value) {
+        for (const auto& type : valid_types) {
+            if (value == type) return value;
+        }
+        return rfl::Error("Invalid type: " + value);
+    }
+};
+
+std::optional<rfl::Validator<std::string, ValidDataType>> data_type;
+```

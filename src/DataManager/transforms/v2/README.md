@@ -12,7 +12,7 @@ This directory contains the next-generation transformation architecture for Whis
 
 ## Status
 
-✅ **Phase 2 Complete: Core Infrastructure Operational** ✅
+✅ **Phase 3 Complete: Core Infrastructure & View Pipelines Operational** ✅
 
 This is a parallel implementation. The existing transformation system (`src/DataManager/transforms/`) continues to work. This new system provides:
 
@@ -21,36 +21,39 @@ This is a parallel implementation. The existing transformation system (`src/Data
 - ✅ TypedParamExecutor system (eliminates per-element parameter casts)
 - ✅ Container automatic lifting (element → container transforms)
 - ✅ Transform fusion pipeline (minimizes intermediate allocations)
+- ✅ **View-based lazy pipelines** (zero intermediate allocations, pull-based)
 - ✅ Support for ragged outputs (variable-length per time frame)
 - ✅ Multi-input transforms (N inputs → 1 output)
 - ✅ Time-grouped transforms (span<Element> per time)
+- ✅ Runtime JSON pipeline configuration with reflect-cpp
 
 **Coming Next:**
-- 🔄 C++20 ranges integration for true lazy evaluation
-- 🔄 Runtime JSON pipeline configuration
 - 🔄 Provenance tracking (EntityID relationships)
-- 🔄 reflect-cpp parameter serialization
+- 🔄 UI Integration (Pipeline Builder)
+- 🔄 Migration of legacy transforms
 
 ## Directory Structure
 
 ```
 v2/
-├── DESIGN.md                    # Architecture goals and future plans
-├── IMPLEMENTATION_GUIDE.md      # Usage guide
-├── README.md                    # This file
+├── algorithms/                  # ✅ Concrete transform implementations
+│   ├── MaskArea/               # Mask2D → float
+│   ├── SumReduction/           # float → float (reduction)
+│   └── LineMinPointDist/       # (Line2D, Point2D) → float
 │
-├── core/                        # ✅ Implemented core infrastructure
+├── core/                        # ✅ Core infrastructure
 │   ├── ElementTransform.hpp    # Transform function wrappers
 │   ├── ContainerTraits.hpp     # Element ↔ Container type mappings
-│   ├── ContainerTraits.cpp
 │   ├── ElementRegistry.hpp     # Main registry with TypedParamExecutor
 │   ├── TransformPipeline.hpp   # Multi-step pipeline with fusion
-│   └── ContainerTransform.hpp  # Container lifting utilities
+│   ├── ContainerTransform.hpp  # Container lifting utilities
+│   ├── ParameterIO.hpp         # reflect-cpp parameter serialization
+│   ├── PipelineLoader.hpp      # JSON pipeline loading
+│   └── RegisteredTransforms.hpp # Central registration
 │
-└── examples/                    # ✅ Working example transforms
-    ├── MaskAreaTransform.hpp   # Mask2D → float (area calculation)
-    ├── SumReductionTransform.hpp # float → float (summation)
-    └── RegisteredTransforms.hpp # Registration code
+├── DESIGN.md                    # Architecture goals and future plans
+├── IMPLEMENTATION_GUIDE.md      # Usage guide
+└── README.md                    # This file
 ```
 
 ## Key Concepts
@@ -123,8 +126,8 @@ auto result = pipeline.execute(mask_data);
 ### Example 1: Register and Execute Element Transform
 
 ```cpp
-#include "core/ElementRegistry.hpp"
-#include "examples/MaskAreaTransform.hpp"
+#include "transforms/v2/core/ElementRegistry.hpp"
+#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 
 using namespace WhiskerToolbox::Transforms::V2;
 
@@ -150,7 +153,7 @@ auto areas = registry.executeContainer<MaskData, AnalogTimeSeries>(
 ### Example 2: Build Multi-Step Pipeline
 
 ```cpp
-#include "core/TransformPipeline.hpp"
+#include "transforms/v2/core/TransformPipeline.hpp"
 
 using namespace WhiskerToolbox::Transforms::V2;
 
@@ -168,8 +171,8 @@ auto result = pipeline.execute(mask_data);
 ### Example 3: Ragged Output Transform
 
 ```cpp
-#include "core/ElementRegistry.hpp"
-#include "examples/MaskAreaTransform.hpp"
+#include "transforms/v2/core/ElementRegistry.hpp"
+#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 
 using namespace WhiskerToolbox::Transforms::V2;
 
@@ -196,7 +199,7 @@ for (const auto& frame_data : ragged_areas.elements()) {
 ### Example 4: Multi-Input Transforms
 
 ```cpp
-#include "core/ElementRegistry.hpp"
+#include "transforms/v2/core/ElementRegistry.hpp"
 
 using namespace WhiskerToolbox::Transforms::V2;
 
@@ -258,7 +261,7 @@ class MaskAreaOperation : public TransformOperation {
 };
 ```
 
-**New system** (`examples/MaskAreaTransform.hpp`):
+**New system** (`algorithms/MaskArea/MaskArea.hpp`):
 ```cpp
 // Just the element-level computation!
 float calculateMaskArea(Mask2D const& mask, MaskAreaParams const& params) {
@@ -302,7 +305,7 @@ Key test files:
 
 - **Architecture**: See `DESIGN.md` for complete system design
 - **API Reference**: Doxygen comments in header files
-- **Examples**: Working code in `examples/` directory
+- **Examples**: Working code in `algorithms/` directory
 - **Migration**: Step-by-step guide in this README
 
 ## Roadmap
@@ -324,15 +327,16 @@ Key test files:
 - [x] Basic tests (MaskArea example)
 - [x] Example transforms (MaskArea, SumReduction)
 
-### Phase 3: Runtime Configuration (Next Priority)
-- [ ] JSON schema for pipeline descriptors
-- [ ] reflect-cpp parameter serialization
-- [ ] Pipeline factory (runtime type dispatch)
-- [ ] Type-erased executor interface
-- [ ] UI integration for pipeline builder
+### Phase 3: Runtime Configuration ✅ COMPLETE
+- [x] JSON schema for pipeline descriptors
+- [x] reflect-cpp parameter serialization
+- [x] Pipeline factory (runtime type dispatch)
+- [x] Type-erased executor interface
+- [ ] UI integration for pipeline builder (In Progress)
 
 ### Phase 4: Advanced Features (Future)
-- [ ] C++20 ranges for true lazy evaluation
+- [x] View-based lazy pipelines (zero intermediate allocations)
+- [ ] C++20 ranges for true lazy evaluation (deferred)
 - [ ] Lazy storage strategy (delay materialization)
 - [ ] Provenance tracking (EntityID relationships)
 - [ ] Parallel execution support (thread pool)
@@ -378,7 +382,7 @@ registry.registerTransform<InputType, OutputType, MyTransformParams>(
 
 - Architecture questions: See `DESIGN.md`
 - Implementation questions: Check header comments
-- Migration questions: See examples in `examples/`
+- Migration questions: See examples in `algorithms/`
 - Performance questions: Run benchmarks in `tests/`
 
 ## License

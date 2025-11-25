@@ -8,10 +8,11 @@ This document describes the redesigned transformation architecture that addresse
 
 ## Current Implementation Status
 
-### ✅ Implemented (Phase 1, 2 & 3a)
+### ✅ Implemented (Phase 1, 2 & 3)
 - **ElementRegistry**: Compile-time typed transform registry
 - **TypedParamExecutor**: Eliminates per-element parameter casts and type dispatch
 - **TransformPipeline**: Multi-step pipeline with execution fusion
+- **View-Based Pipelines**: Lazy evaluation with `executeAsView()` (zero intermediate allocations)
 - **Container Automatic Lifting**: Element transforms automatically work on containers
 - **ContainerTraits**: Type mapping system (Mask2D ↔ MaskData, etc.)
 - **Advanced Features**: Ragged outputs, multi-input transforms (binary via tuple), time-grouped transforms
@@ -20,9 +21,8 @@ This document describes the redesigned transformation architecture that addresse
 - **Fuzz Testing**: Comprehensive corpus and fuzz tests for pipeline loading
 - **Examples**: MaskArea, SumReduction, and LineMinPointDist (binary) transforms with tests
 
-### 🔄 Planned (Phase 3b+)
-- **C++20 Ranges**: True lazy evaluation (deferred - may not be needed)
-- **Runtime Pipeline Factory**: Type-erased execution interface for UI integration
+### 🔄 Planned (Phase 4+)
+- **UI Integration**: Pipeline Builder Widget
 - **Provenance Tracking**: EntityID relationship tracking
 - **Lazy Storage**: On-demand computation for derived data
 - **Parallel Execution**: Multi-threaded transform execution
@@ -151,39 +151,45 @@ float sumValues(float const& value, SumReductionParams const& params);
 
 **Implementation:** See `core/ElementTransform.hpp` and `core/ElementRegistry.hpp`
 
-### 2. Pipeline Fusion (✅ Implemented, Ranges Not Yet)
+### 2. Pipeline Fusion & View-Based Execution (✅ Implemented)
 
-**Current Implementation**: Multi-step pipelines with fused execution
+**Current Implementation**: Multi-step pipelines with two execution modes:
+
+**Mode A: Fused Execution (Eager)**
+Executes all steps in a single pass, materializing the final result immediately.
 
 ```cpp
-// Manual chaining (old approach):
-auto skel = registry.executeContainer<MaskData, MaskData>("Skeletonize", masks, p1);
-auto areas = registry.executeContainer<MaskData, AnalogTimeSeries>("Area", skel, p2);
-
-// Fused pipeline (current V2 approach):
 TransformPipeline<MaskData, AnalogTimeSeries> pipeline;
 pipeline.addStep<SkeletonParams>("Skeletonize", p1);
 pipeline.addStep<MaskAreaParams>("CalculateArea", p2);
 auto areas = pipeline.execute(masks);  // Single pass, no intermediate MaskData
 ```
 
+**Mode B: View-Based Execution (Lazy)**
+Returns a lazy view that computes elements on-demand. Zero intermediate allocations.
+
+```cpp
+// Returns lazy view of (TimeFrameIndex, std::any) pairs
+auto view = pipeline.executeAsView(masks);
+
+// Or typed view
+auto view_typed = pipeline.executeAsViewTyped<MaskData, float>(masks);
+
+// Compose with std::views
+auto filtered = view_typed 
+    | std::views::filter([](auto p) { return p.second > 10.0f; });
+
+// Materialize only when needed
+auto result = std::make_shared<RaggedAnalogTimeSeries>(filtered);
+```
+
 **Benefits Achieved**:
 - Single iteration over input data
 - No intermediate container allocations
 - Better cache locality
+- Support for infinite/streaming data (via views)
 
-**Future with C++20 Ranges** (deferred):
-```cpp
-// Potential future API (not yet implemented):
-auto pipeline = MaskDataView(masks)
-    | ranges::transform(skeletonize)
-    | ranges::transform(calculateArea);
-auto areas = pipeline | ranges::to<AnalogTimeSeries>();
-```
-
-**Note**: Current fusion approach provides most benefits. True lazy ranges may not be necessary given time-indexed nature of data.
-
-**Implementation:** See `core/TransformPipeline.hpp`
+**Implementation:** See `core/TransformPipeline.hpp` and `core/ContainerTransform.hpp`
 ### 3. Storage Abstraction (🔄 Planned)
 
 **Current State**:
@@ -309,17 +315,17 @@ std::vector<EntityId> source_masks =
 - ✅ `TransformPipeline.hpp` - Multi-step pipeline with fusion
 - ✅ `ContainerTraits.hpp/.cpp` - Element ↔ Container type mappings
 - ✅ `ContainerTransform.hpp` - Container lifting utilities
-- ✅ `examples/MaskAreaTransform.hpp` - Working example transform
-- ✅ `examples/SumReductionTransform.hpp` - Working example transform
-- ✅ `examples/LineMinPointDistTransform.hpp` - Binary transform example
-- ✅ `examples/RegisteredTransforms.hpp` - Registration code with binary support
+- ✅ `algorithms/MaskArea/MaskArea.hpp` - Working example transform
+- ✅ `algorithms/SumReduction/SumReduction.hpp` - Working example transform
+- ✅ `algorithms/LineMinPointDist/LineMinPointDist.hpp` - Binary transform example
+- ✅ `core/RegisteredTransforms.hpp` - Registration code with binary support
 - ✅ `tests/DataManager/TransformsV2/test_*.test.cpp` - Comprehensive unit tests
 
 ### Phase 3a: Parameter Serialization & Pipeline Loading ✅ COMPLETE
 
 **Completed:**
-- ✅ `examples/ParameterIO.hpp` - reflect-cpp integration with validation
-- ✅ `examples/PipelineLoader.hpp` - JSON pipeline schema and loading
+- ✅ `core/ParameterIO.hpp` - reflect-cpp integration with validation
+- ✅ `core/PipelineLoader.hpp` - JSON pipeline schema and loading
 - ✅ `tests/DataManager/TransformsV2/test_parameter_io.test.cpp` - Parameter I/O tests
 - ✅ `tests/DataManager/TransformsV2/test_pipeline_loader.test.cpp` - Pipeline loading tests (25+ cases)
 - ✅ `tests/fuzz/unit/DataManager/transforms/fuzz_v2_parameter_io.cpp` - Parameter fuzz tests
@@ -330,9 +336,9 @@ std::vector<EntityId> source_masks =
 ### Phase 3: Runtime Configuration 🔄 IN PROGRESS
 
 **Completed:**
-- ✅ `examples/ParameterIO.hpp` - reflect-cpp parameter serialization with validation
-- ✅ `examples/PipelineLoader.hpp` - JSON pipeline schema (PipelineDescriptor, PipelineStepDescriptor)
-- ✅ `examples/LineMinPointDistTransform.hpp` - Binary transform example (multi-input via tuple)
+- ✅ `core/ParameterIO.hpp` - reflect-cpp parameter serialization with validation
+- ✅ `core/PipelineLoader.hpp` - JSON pipeline schema (PipelineDescriptor, PipelineStepDescriptor)
+- ✅ `algorithms/LineMinPointDist/LineMinPointDist.hpp` - Binary transform example (multi-input via tuple)
 - ✅ Comprehensive unit tests and fuzz tests with corpus
 
 **To Be Implemented:**
@@ -510,7 +516,7 @@ auto result = pipeline.execute(mask_data);  // Automatic parallelization
 
 ## Current Examples
 
-See `examples/` directory for working code:
+See `algorithms/` directory for working code:
 - `MaskAreaTransform.hpp` - Simple element transform (Mask2D → float)
 - `SumReductionTransform.hpp` - Reduction transform (float → float)
 - `LineMinPointDistTransform.hpp` - Binary transform ((Line2D, Point2D) → float)

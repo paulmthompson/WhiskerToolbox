@@ -1,5 +1,5 @@
 
-#include "transforms/v2/examples/ParameterIO.hpp"
+#include "transforms/v2/core/ParameterIO.hpp"
 #include "SumReduction.hpp"
 
 #include <catch2/catch_test_macros.hpp>
