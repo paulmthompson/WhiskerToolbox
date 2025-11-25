@@ -8,6 +8,7 @@ class LineData;
 class MaskData;
 class MediaData;
 class PointData;
+class RaggedAnalogTimeSeries;
 class TensorData;
 
 enum class DM_DataType {
@@ -17,6 +18,7 @@ enum class DM_DataType {
     Mask,
     Line,
     Analog,
+    RaggedAnalog,
     DigitalEvent,
     DigitalInterval,
     Tensor,
