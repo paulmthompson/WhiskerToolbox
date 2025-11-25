@@ -595,60 +595,13 @@ private:
         // Build a lambda that captures the transform and its parameters
         // The lambda knows the concrete types and can do the std::any conversions
         
-        if (params_type == typeid(NoParams)) {
+       // if (params_type == typeid(NoParams)) {
             // No parameters - simpler case
-            return buildTypeErasedFunctionNoParams(step, input_type, output_type);
-        } else {
+      //      return buildTypeErasedFunctionNoParams(step, input_type, output_type);
+    //    } else {
             // Has parameters - need to extract from step.params
             return buildTypeErasedFunctionWithParams(step, input_type, output_type, params_type);
-        }
-    }
-    
-    /**
-     * @brief Build type-erased function for transforms without parameters
-     */
-    std::function<std::any(std::any)> buildTypeErasedFunctionNoParams(
-        PipelineStep const& step,
-        std::type_index input_type,
-        std::type_index output_type) const
-    {
-        auto& registry = ElementRegistry::instance();
-        
-        // Dispatch on known type combinations
-        // For each combination, create a lambda that does the type conversions
-        
-        if (input_type == typeid(Mask2D) && output_type == typeid(float)) {
-            return [&registry, name = step.transform_name](std::any input) -> std::any {
-                auto const& mask = std::any_cast<Mask2D const&>(input);
-                float result = registry.execute<Mask2D, float, NoParams>(name, mask, NoParams{});
-                return std::any{result};
-            };
-        }
-        else if (input_type == typeid(float) && output_type == typeid(float)) {
-            return [&registry, name = step.transform_name](std::any input) -> std::any {
-                float value = std::any_cast<float>(input);
-                float result = registry.execute<float, float, NoParams>(name, value, NoParams{});
-                return std::any{result};
-            };
-        }
-        else if (input_type == typeid(Line2D) && output_type == typeid(Line2D)) {
-            return [&registry, name = step.transform_name](std::any input) -> std::any {
-                auto const& line = std::any_cast<Line2D const&>(input);
-                Line2D result = registry.execute<Line2D, Line2D, NoParams>(name, line, NoParams{});
-                return std::any{result};
-            };
-        }
-        else if (input_type == typeid(Mask2D) && output_type == typeid(Line2D)) {
-            return [&registry, name = step.transform_name](std::any input) -> std::any {
-                auto const& mask = std::any_cast<Mask2D const&>(input);
-                Line2D result = registry.execute<Mask2D, Line2D, NoParams>(name, mask, NoParams{});
-                return std::any{result};
-            };
-        }
-        
-        throw std::runtime_error("Unsupported type combination for fusion: " +
-                               std::string(input_type.name()) + " -> " +
-                               std::string(output_type.name()));
+      //  }
     }
     
     /**
