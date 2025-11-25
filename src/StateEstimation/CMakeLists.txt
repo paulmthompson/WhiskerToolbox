@@ -50,6 +50,7 @@ set(STATE_ESTIMATION_EXAMPLES
 )
 
 add_library(StateEstimation STATIC ${STATE_ESTIMATION_SOURCES})
+set_target_properties(StateEstimation PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(StateEstimation PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
