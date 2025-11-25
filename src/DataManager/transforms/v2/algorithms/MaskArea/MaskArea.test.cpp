@@ -1,9 +1,13 @@
-
+#include "MaskArea.hpp"
+#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
+#include "transforms/v2/core/ParameterIO.hpp"
+#include "transforms/v2/core/TransformPipeline.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace WhiskerToolbox::Transforms::V2;
 
 // ============================================================================
 // Tests: MaskAreaParams JSON Loading

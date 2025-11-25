@@ -3,10 +3,10 @@
 
 #include "ContainerTraits.hpp"
 #include "ContainerTransform.hpp"
-#include "ElementRegistry.hpp"
-#include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
+#include "ElementRegistry.hpp"
 
 #include <any>
 #include <functional>
@@ -40,7 +40,7 @@ inline constexpr bool always_false = false;
  * This helper uses compile-time checks to call the right method.
  */
 template<typename Container, typename Element>
-void addElementToContainer(Container& container, TimeFrameIndex time, Element&& element) {
+void addElementToContainer(Container & container, TimeFrameIndex time, Element && element) {
     // Check if container has appendAtTime (like RaggedAnalogTimeSeries)
     if constexpr (requires { container.appendAtTime(time, std::vector<Element>{}, NotifyObservers::No); }) {
         // Wrap single element in vector for appendAtTime
@@ -49,11 +49,74 @@ void addElementToContainer(Container& container, TimeFrameIndex time, Element&& 
     // Check if container has addAtTime for single elements (like RaggedTimeSeries<T>)
     else if constexpr (requires { container.addAtTime(time, std::forward<Element>(element), NotifyObservers::No); }) {
         container.addAtTime(time, std::forward<Element>(element), NotifyObservers::No);
-    }
-    else {
+    } else {
         static_assert(always_false<Container>, "Container type does not support addAtTime or appendAtTime");
     }
 }
+
+// ============================================================================
+// Pipeline Output Builder
+// ============================================================================
+
+/**
+ * @brief Helper to build output containers efficiently
+ * 
+ * Handles both incremental addition (RaggedTimeSeries) and batch loading (AnalogTimeSeries).
+ */
+template<typename Container, typename Element>
+class PipelineOutputBuilder {
+public:
+    PipelineOutputBuilder(std::shared_ptr<TimeFrame> tf)
+        : tf_(tf) {
+        if constexpr (use_incremental) {
+            container_ = std::make_shared<Container>();
+            if constexpr (requires { container_->setTimeFrame(tf); }) {
+                container_->setTimeFrame(tf);
+            }
+        }
+    }
+
+    void add(TimeFrameIndex time, Element element) {
+        if constexpr (use_incremental) {
+            addElementToContainer(*container_, time, std::move(element));
+        } else {
+            times_.push_back(time);
+            values_.push_back(std::move(element));
+        }
+    }
+
+    std::shared_ptr<Container> finalize() {
+        if constexpr (use_incremental) {
+            return container_;
+        } else {
+            auto container = std::make_shared<Container>(std::move(values_),
+                                                         std::move(times_));
+            if constexpr (requires { container->setTimeFrame(tf_); }) {
+                container->setTimeFrame(tf_);
+            }
+            return container;
+        }
+    }
+
+private:
+    // Detect incremental capabilities
+    static constexpr bool has_add_at_time = requires(Container & c, TimeFrameIndex t, Element e) {
+        c.addAtTime(t, e, NotifyObservers::No);
+    };
+
+    static constexpr bool has_append_at_time = requires(Container & c, TimeFrameIndex t, std::vector<Element> v) {
+        c.appendAtTime(t, v, NotifyObservers::No);
+    };
+
+    // Prefer incremental if available, otherwise fallback to batch
+    static constexpr bool use_incremental = has_add_at_time || has_append_at_time;
+
+    std::shared_ptr<Container> container_;
+    std::shared_ptr<TimeFrame> tf_;
+
+    std::vector<TimeFrameIndex> times_;
+    std::vector<Element> values_;
+};
 
 // ============================================================================
 // Pipeline Step Definition
@@ -72,43 +135,41 @@ void addElementToContainer(Container& container, TimeFrameIndex time, Element&& 
  */
 struct PipelineStep {
     std::string transform_name;
-    std::any params;  // Type-erased parameters
-    
+    std::any params;// Type-erased parameters
+
     // Type-erased executors that know the correct parameter type
     // These are set when the step is added to the pipeline
-    std::function<std::any(std::any const&, std::any const&)> element_executor;
-    std::function<std::any(std::any const&, std::any const&)> time_grouped_executor;
-    
+    std::function<std::any(std::any const &, std::any const &)> element_executor;
+    std::function<std::any(std::any const &, std::any const &)> time_grouped_executor;
+
     template<typename Params>
     PipelineStep(std::string name, Params p)
-        : transform_name(std::move(name))
-        , params(std::move(p))
-    {
+        : transform_name(std::move(name)),
+          params(std::move(p)) {
         // Create type-erased executors that capture the parameter type
-        auto& registry = ElementRegistry::instance();
-        auto const* meta = registry.getMetadata(transform_name);
-        
+        auto & registry = ElementRegistry::instance();
+        auto const * meta = registry.getMetadata(transform_name);
+
         if (meta && !meta->is_time_grouped) {
             // Element transform executor
             element_executor = [name = transform_name, p = this->params](
-                std::any const& input, std::any const&) -> std::any {
+                                       std::any const & input, std::any const &) -> std::any {
                 // This will be called with the correct types by the pipeline
                 // The actual execution is deferred until we know InputElement and OutputElement
-                return std::any{};  // Placeholder - will be replaced by specialized executor
+                return std::any{};// Placeholder - will be replaced by specialized executor
             };
         } else if (meta && meta->is_time_grouped) {
             // Time-grouped transform executor
             time_grouped_executor = [name = transform_name, p = this->params](
-                std::any const& input, std::any const&) -> std::any {
-                return std::any{};  // Placeholder
+                                            std::any const & input, std::any const &) -> std::any {
+                return std::any{};// Placeholder
             };
         }
     }
-    
+
     PipelineStep(std::string name)
-        : PipelineStep(std::move(name), NoParams{})
-    {}
-    
+        : PipelineStep(std::move(name), NoParams{}) {}
+
     /**
      * @brief Create element executor for specific types
      * 
@@ -117,27 +178,27 @@ struct PipelineStep {
      */
     template<typename InputElement, typename OutputElement, typename Params>
     void createElementExecutor() {
-        auto& registry = ElementRegistry::instance();
+        auto & registry = ElementRegistry::instance();
         element_executor = [&registry, name = transform_name, p = std::any_cast<Params>(params)](
-            std::any const& input_any, std::any const&) -> std::any {
-            auto const& input = std::any_cast<InputElement const&>(input_any);
+                                   std::any const & input_any, std::any const &) -> std::any {
+            auto const & input = std::any_cast<InputElement const &>(input_any);
             OutputElement result = registry.execute<InputElement, OutputElement, Params>(
-                name, input, p);
+                    name, input, p);
             return std::any{result};
         };
     }
-    
+
     /**
      * @brief Create time-grouped executor for specific types
      */
     template<typename InputElement, typename OutputElement, typename Params>
     void createTimeGroupedExecutor() {
-        auto& registry = ElementRegistry::instance();
+        auto & registry = ElementRegistry::instance();
         time_grouped_executor = [&registry, name = transform_name, p = std::any_cast<Params>(params)](
-            std::any const& input_any, std::any const&) -> std::any {
-            auto const& input = std::any_cast<std::span<InputElement const> const&>(input_any);
+                                        std::any const & input_any, std::any const &) -> std::any {
+            auto const & input = std::any_cast<std::span<InputElement const> const &>(input_any);
             std::vector<OutputElement> result = registry.executeTimeGrouped<InputElement, OutputElement, Params>(
-                name, input, p);
+                    name, input, p);
             return std::any{result};
         };
     }
@@ -168,7 +229,7 @@ struct PipelineStep {
 class TransformPipeline {
 public:
     TransformPipeline() = default;
-    
+
     /**
      * @brief Add a transform step to the pipeline
      * 
@@ -178,19 +239,19 @@ public:
      * @return Reference to this pipeline for chaining
      */
     template<typename Params>
-    TransformPipeline& addStep(std::string const& transform_name, Params params) {
+    TransformPipeline & addStep(std::string const & transform_name, Params params) {
         steps_.emplace_back(transform_name, std::move(params));
         return *this;
     }
-    
+
     /**
      * @brief Add a transform step with no parameters
      */
-    TransformPipeline& addStep(std::string const& transform_name) {
+    TransformPipeline & addStep(std::string const & transform_name) {
         steps_.emplace_back(transform_name);
         return *this;
     }
-    
+
     /**
      * @brief Add a pre-constructed pipeline step
      * 
@@ -200,11 +261,11 @@ public:
      * @param step Pre-constructed pipeline step
      * @return Reference to this pipeline for chaining
      */
-    TransformPipeline& addStep(PipelineStep step) {
+    TransformPipeline & addStep(PipelineStep step) {
         steps_.push_back(std::move(step));
         return *this;
     }
-    
+
     /**
      * @brief Execute a multi-step pipeline with full type specification
      * 
@@ -222,31 +283,31 @@ public:
      * @return Shared pointer to final output
      */
     template<typename InputContainer, typename OutputContainer>
-    std::shared_ptr<OutputContainer> execute(InputContainer const& input) const {
+    std::shared_ptr<OutputContainer> execute(InputContainer const & input) const {
         if (steps_.empty()) {
             throw std::runtime_error("Pipeline has no steps");
         }
-        
-        auto& registry = ElementRegistry::instance();
-        
+
+        auto & registry = ElementRegistry::instance();
+
         // 1. Compile pipeline into segments
         struct Segment {
             bool is_element_wise;
-            std::vector<size_t> step_indices; // Indices into steps_
+            std::vector<size_t> step_indices;// Indices into steps_
             std::type_index input_type = typeid(void);
             std::type_index output_type = typeid(void);
-            
+
             // For fused element segment
             std::function<std::any(std::any)> fused_fn;
         };
-        
+
         std::vector<Segment> segments;
-        
+
         for (size_t i = 0; i < steps_.size(); ++i) {
-            auto const& step = steps_[i];
-            auto const* meta = registry.getMetadata(step.transform_name);
+            auto const & step = steps_[i];
+            auto const * meta = registry.getMetadata(step.transform_name);
             if (!meta) throw std::runtime_error("Transform not found: " + step.transform_name);
-            
+
             if (meta->is_time_grouped) {
                 // Time-grouped transform is always its own segment
                 Segment seg;
@@ -270,116 +331,134 @@ public:
                 }
             }
         }
-        
+
         // 2. Build fused functions for element segments
-        for (auto& seg : segments) {
+        for (auto & seg: segments) {
             if (seg.is_element_wise) {
                 std::vector<std::function<std::any(std::any)>> chain;
-                for (size_t idx : seg.step_indices) {
-                    auto const& step = steps_[idx];
-                    auto const* meta = registry.getMetadata(step.transform_name);
+                for (size_t idx: seg.step_indices) {
+                    auto const & step = steps_[idx];
+                    auto const * meta = registry.getMetadata(step.transform_name);
                     chain.push_back(buildTypeErasedFunction(step, meta));
                 }
-                
+
                 seg.fused_fn = [chain = std::move(chain)](std::any input) -> std::any {
                     std::any current = std::move(input);
-                    for (auto const& fn : chain) {
+                    for (auto const & fn: chain) {
                         current = fn(std::move(current));
                     }
                     return current;
                 };
             }
         }
-        
-        // 3. Prepare output container
-        auto output = std::make_shared<OutputContainer>();
-        output->setTimeFrame(input.getTimeFrame());
-        
+
+        // 3. Prepare output builder
+        PipelineOutputBuilder<OutputContainer, ElementFor_t<OutputContainer>> builder(input.getTimeFrame());
+
         using InputElement = ElementFor_t<InputContainer>;
         using OutputElement = ElementFor_t<OutputContainer>;
-        
-        // 4. Execute pipeline time-point by time-point
-        // This keeps data hot in cache as we process one time point fully before moving to next
-        auto time_indices = input.getTimeIndices();
-        
-        for (auto time : time_indices) {
-            // Initial data extraction
-            // We need to start with a vector<std::any> representing the input elements at this time
-            std::vector<std::any> current_vec_any;
-            
-            // Check if input container supports direct access
-            if constexpr (requires { input.getDataAtTime(time); }) {
-                // For RaggedTimeSeries-like inputs
-                auto const& data = input.getDataAtTime(time); // span or vector
-                current_vec_any.reserve(data.size());
-                for (auto const& elem : data) {
-                    current_vec_any.push_back(std::any{elem});
-                }
-            } else {
-                // Fallback or error
-                 throw std::runtime_error("Input container does not support getDataAtTime");
+
+        // 4. Execute pipeline time-point by time-point with buffering
+        // We iterate through the input view, buffering elements for the current time point.
+        // When the time point changes, we flush the buffer through the rest of the pipeline.
+
+        std::vector<std::any> time_buffer;
+        // Initialize with default constructed TimeFrameIndex, will be set on first iteration
+        TimeFrameIndex current_time{0};
+        bool first_element = true;
+
+        // Helper to process the buffered data for a single time point
+        auto process_buffer = [&](TimeFrameIndex t) {
+            if (time_buffer.empty()) return;
+
+            // We have the data for time 't' in 'time_buffer'.
+            // This data has already passed through Segment 0 IF Segment 0 is element-wise.
+            // Otherwise it is raw input.
+
+            std::vector<std::any> current_vec = std::move(time_buffer);
+            time_buffer.clear();// Prepare for next (though we moved it)
+
+            // Determine which segment to start with
+            size_t start_seg_idx = 0;
+            if (!segments.empty() && segments[0].is_element_wise) {
+                start_seg_idx = 1;// Already processed by S0 during collection
             }
-            
-            std::type_index current_type = typeid(InputElement);
-            
-            // Pass through segments
-            for (auto const& seg : segments) {
+
+            // Pass through remaining segments
+            for (size_t i = start_seg_idx; i < segments.size(); ++i) {
+                auto & seg = segments[i];
+
                 if (seg.is_element_wise) {
-                    // Apply fused element transform to each element in vector
-                    // We don't need to know the vector type here, just iterate std::any
-                    std::vector<std::any> next_vec_any;
-                    next_vec_any.reserve(current_vec_any.size());
-                    
-                    for (auto& elem_any : current_vec_any) {
-                        next_vec_any.push_back(seg.fused_fn(std::move(elem_any)));
+                    // Map vector -> vector
+                    std::vector<std::any> next_vec;
+                    next_vec.reserve(current_vec.size());
+                    for (auto & elem: current_vec) {
+                        next_vec.push_back(seg.fused_fn(std::move(elem)));
                     }
-                    current_vec_any = std::move(next_vec_any);
+                    current_vec = std::move(next_vec);
                 } else {
-                    // Time-grouped transform
-                    // We have vector<std::any>, need to convert to span<T> wrapped in any
-                    // Use ContainerOps to do the conversion
-                    auto const& ops = registry.getContainerOps(seg.input_type);
-                    
-                    // 1. Reconstruct typed vector from vector<std::any>
-                    // We use buildVector to create vector<T> inside std::any
-                    std::any typed_vec_any = ops.buildVector(current_vec_any.size(), 
-                        [&](size_t i) { return current_vec_any[i]; });
-                        
-                    // 2. Convert to span<T> wrapped in any
+                    // Grouped transform
+                    // Convert vector<any> -> span<T> (any)
+                    auto const & ops = registry.getContainerOps(seg.input_type);
+                    std::any typed_vec_any = ops.buildVector(current_vec.size(),
+                                                             [&](size_t k) { return current_vec[k]; });
                     std::any span_any = ops.vectorToSpan(typed_vec_any);
-                    
-                    // 3. Execute transform
-                    // Result is vector<Out> wrapped in any
-                    auto const& step = steps_[seg.step_indices[0]];
-                    auto const* meta = registry.getMetadata(step.transform_name);
-                    
+
+                    // Execute
+                    auto const & step = steps_[seg.step_indices[0]];
+                    auto const * meta = registry.getMetadata(step.transform_name);
                     std::any result_any = registry.executeTimeGroupedWithDynamicParams(
-                        step.transform_name, span_any, step.params,
-                        seg.input_type, seg.output_type, meta->params_type);
-                        
-                    // 4. Convert result vector<Out> back to vector<std::any>
-                    // We need ops for output type
-                    auto const& out_ops = registry.getContainerOps(seg.output_type);
+                            step.transform_name, span_any, step.params,
+                            seg.input_type, seg.output_type, meta->params_type);
+
+                    // Convert result vector<Out> (any) -> vector<any>
+                    auto const & out_ops = registry.getContainerOps(seg.output_type);
                     size_t res_size = out_ops.getSize(result_any);
-                    
-                    current_vec_any.clear();
-                    current_vec_any.reserve(res_size);
-                    for (size_t i = 0; i < res_size; ++i) {
-                        current_vec_any.push_back(out_ops.getElement(result_any, i));
+                    current_vec.clear();
+                    current_vec.reserve(res_size);
+                    for (size_t k = 0; k < res_size; ++k) {
+                        current_vec.push_back(out_ops.getElement(result_any, k));
                     }
                 }
-                current_type = seg.output_type;
             }
-            
-            // 5. Add final results to output container
-            for (auto& res_any : current_vec_any) {
-                addElementToContainer(*output, time, std::any_cast<OutputElement>(std::move(res_any)));
+
+            // Write to output
+            for (auto & res_any: current_vec) {
+                builder.add(t, std::any_cast<OutputElement>(std::move(res_any)));
             }
+        };
+
+        // Iterate input elements using the view
+        for (auto const & elem: input.elements()) {
+            auto time = elem.first;
+
+            if (!first_element && time != current_time) {
+                process_buffer(current_time);
+            }
+
+            current_time = time;
+            first_element = false;
+
+            // Extract data using generic helper
+            InputElement const & data = extractElement<decltype(elem), InputElement>(elem);
+            std::any val = data;
+
+            // If first segment is element-wise, apply it immediately before buffering
+            if (!segments.empty() && segments[0].is_element_wise) {
+                val = segments[0].fused_fn(std::move(val));
+            }
+
+            time_buffer.push_back(std::move(val));
         }
-        
-        return output;
+
+        // Flush last buffer
+        if (!first_element) {
+            process_buffer(current_time);
+        }
+
+        return builder.finalize();
     }
-    
+
     /**
      * @brief Execute pipeline with automatic fusion optimization
      * 
@@ -393,23 +472,23 @@ public:
      * @return Output container
      */
     template<typename InputContainer, typename OutputContainer>
-    std::shared_ptr<OutputContainer> executeOptimized(InputContainer const& input) const {
+    std::shared_ptr<OutputContainer> executeOptimized(InputContainer const & input) const {
         if (steps_.empty()) {
             throw std::runtime_error("Pipeline has no steps");
         }
-        
-        auto& registry = ElementRegistry::instance();
-        
+
+        auto & registry = ElementRegistry::instance();
+
         // Analyze pipeline: check if all steps are element-level (fusible)
         bool all_element_level = true;
-        for (auto const& step : steps_) {
-            auto const* meta = registry.getMetadata(step.transform_name);
+        for (auto const & step: steps_) {
+            auto const * meta = registry.getMetadata(step.transform_name);
             if (!meta || meta->is_time_grouped) {
                 all_element_level = false;
                 break;
             }
         }
-        
+
         if (all_element_level) {
             // Pure element pipeline - use fusion for maximum performance
             return executeFused<InputContainer, OutputContainer>(input);
@@ -418,7 +497,7 @@ public:
             return execute<InputContainer, OutputContainer>(input);
         }
     }
-    
+
     /**
      * @brief Execute a multi-step element-level pipeline with full fusion
      * 
@@ -445,84 +524,83 @@ public:
      * @return Output with composed transformation applied
      */
     template<typename InputContainer, typename OutputContainer>
-    std::shared_ptr<OutputContainer> executeFused(InputContainer const& input) const {
+    std::shared_ptr<OutputContainer> executeFused(InputContainer const & input) const {
         if (steps_.empty()) {
             throw std::runtime_error("Pipeline has no steps");
         }
-        
-        auto& registry = ElementRegistry::instance();
-        
+
+        auto & registry = ElementRegistry::instance();
+
         // Verify all steps are element-level (not time-grouped)
-        for (auto const& step : steps_) {
-            auto const* meta = registry.getMetadata(step.transform_name);
+        for (auto const & step: steps_) {
+            auto const * meta = registry.getMetadata(step.transform_name);
             if (!meta) {
                 throw std::runtime_error("Transform not found: " + step.transform_name);
             }
             if (meta->is_time_grouped) {
-                throw std::runtime_error("Cannot fuse pipeline containing time-grouped transform: " + 
-                                       step.transform_name);
+                throw std::runtime_error("Cannot fuse pipeline containing time-grouped transform: " +
+                                         step.transform_name);
             }
         }
-        
+
         using InputElement = ElementFor_t<InputContainer>;
         using OutputElement = ElementFor_t<OutputContainer>;
-        
+
         // Build a chain of type-erased transform functions
         // Each function takes std::any and returns std::any
         std::vector<std::function<std::any(std::any)>> transform_chain;
         transform_chain.reserve(steps_.size());
-        
+
         for (size_t i = 0; i < steps_.size(); ++i) {
-            auto const& step = steps_[i];
-            auto const* meta = registry.getMetadata(step.transform_name);
-            
+            auto const & step = steps_[i];
+            auto const * meta = registry.getMetadata(step.transform_name);
+
             // Create a type-erased function for this step
             // The function knows its input and output types from metadata
             auto transform_fn = buildTypeErasedFunction(step, meta);
             transform_chain.push_back(std::move(transform_fn));
         }
-        
+
         // Compose all functions into a single callable
         // This is the "fusion" - we build the composition once, then iterate
         auto composed_fn = [chain = std::move(transform_chain)](std::any input) -> std::any {
             std::any current = std::move(input);
-            for (auto const& transform : chain) {
+            for (auto const & transform: chain) {
                 current = transform(std::move(current));
             }
             return current;
         };
-        
+
         // Execute in single pass with composed function
-        auto output = std::make_shared<OutputContainer>();
-        output->setTimeFrame(input.getTimeFrame());
-        
-        for (auto const& [time, entry] : input.elements()) {
+        PipelineOutputBuilder<OutputContainer, OutputElement> builder(input.getTimeFrame());
+
+        for (auto const & [time, entry]: input.elements()) {
             // Wrap input in std::any, apply composed function, extract output
             std::any input_any = entry.data;
             std::any output_any = composed_fn(std::move(input_any));
             OutputElement result = std::any_cast<OutputElement>(std::move(output_any));
-            
+
             // Add to output using the appropriate method for this container type
-            addElementToContainer(*output, time, std::move(result));
+            builder.add(time, std::move(result));
         }
-        
-        return output;
+
+        return builder.finalize();
     }
-    
+
     /**
      * @brief Get the number of steps in the pipeline
      */
     size_t size() const { return steps_.size(); }
-    
+
     /**
      * @brief Check if the pipeline is empty
      */
     bool empty() const { return steps_.empty(); }
-    
+
     /**
      * @brief Get information about a specific step
      */
-    std::string const& getStepName(size_t index) const {
+    std::string const & getStepName(size_t index) const {
         return steps_.at(index).transform_name;
     }
 
@@ -579,65 +657,65 @@ public:
      * ```
      */
     template<typename InputContainer>
-    requires requires(InputContainer const& c) { c.elements(); }
-    auto executeAsView(InputContainer const& input) const {
+        requires requires(InputContainer const & c) { c.elements(); }
+    auto executeAsView(InputContainer const & input) const {
         if (steps_.empty()) {
             throw std::runtime_error("Pipeline has no steps");
         }
-        
-        auto& registry = ElementRegistry::instance();
-        
+
+        auto & registry = ElementRegistry::instance();
+
         // Verify all steps are element-level (not time-grouped)
-        for (auto const& step : steps_) {
-            auto const* meta = registry.getMetadata(step.transform_name);
+        for (auto const & step: steps_) {
+            auto const * meta = registry.getMetadata(step.transform_name);
             if (!meta) {
                 throw std::runtime_error("Transform not found: " + step.transform_name);
             }
             if (meta->is_time_grouped) {
                 throw std::runtime_error(
-                    "executeAsView() does not support time-grouped transforms. "
-                    "Use execute() instead for pipelines with time-grouped steps.");
+                        "executeAsView() does not support time-grouped transforms. "
+                        "Use execute() instead for pipelines with time-grouped steps.");
             }
         }
-        
+
         // Build composed transform function (type-erased but created once)
         std::vector<std::function<std::any(std::any)>> transform_chain;
         transform_chain.reserve(steps_.size());
-        
-        for (auto const& step : steps_) {
-            auto const* meta = registry.getMetadata(step.transform_name);
+
+        for (auto const & step: steps_) {
+            auto const * meta = registry.getMetadata(step.transform_name);
             auto transform_fn = buildTypeErasedFunction(step, meta);
             transform_chain.push_back(std::move(transform_fn));
         }
-        
+
         // Compose all functions into a single callable
         auto composed_fn = [chain = std::move(transform_chain)](std::any input_any) -> std::any {
             std::any current = std::move(input_any);
-            for (auto const& transform : chain) {
+            for (auto const & transform: chain) {
                 current = transform(std::move(current));
             }
             return current;
         };
-        
+
         // Return a lazy view that applies the composed function to each element
-        return input.elements() | std::views::transform([composed_fn](auto const& elem) {
-            // Extract time
-            auto time = elem.first;
-            
-            // Extract data element and wrap in std::any for composed function
-            // The composed function handles all type conversions internally
-            using InputElement = ElementFor_t<InputContainer>;
-            InputElement const& data = extractElement<decltype(elem), InputElement>(elem);
-            std::any input_any = data;
-            
-            // Apply composed transform chain
-            std::any output_any = composed_fn(std::move(input_any));
-            
-            // The output type depends on the final transform in the pipeline
-            // Since we're returning a generic view, we keep it as (TimeFrameIndex, std::any)
-            // The consumer must know the output type or use a typed wrapper
-            return std::make_pair(time, std::move(output_any));
-        });
+        return input.elements() | std::views::transform([composed_fn](auto const & elem) {
+                   // Extract time
+                   auto time = elem.first;
+
+                   // Extract data element and wrap in std::any for composed function
+                   // The composed function handles all type conversions internally
+                   using InputElement = ElementFor_t<InputContainer>;
+                   InputElement const & data = extractElement<decltype(elem), InputElement>(elem);
+                   std::any input_any = data;
+
+                   // Apply composed transform chain
+                   std::any output_any = composed_fn(std::move(input_any));
+
+                   // The output type depends on the final transform in the pipeline
+                   // Since we're returning a generic view, we keep it as (TimeFrameIndex, std::any)
+                   // The consumer must know the output type or use a typed wrapper
+                   return std::make_pair(time, std::move(output_any));
+               });
     }
 
     /**
@@ -661,17 +739,16 @@ public:
      * ```
      */
     template<typename InputContainer, typename OutElement>
-    requires requires(InputContainer const& c) { c.elements(); }
-    auto executeAsViewTyped(InputContainer const& input) const {
+        requires requires(InputContainer const & c) { c.elements(); }
+    auto executeAsViewTyped(InputContainer const & input) const {
         auto any_view = executeAsView(input);
-        
+
         // Add a transform that unwraps the std::any to the concrete output type
         return any_view | std::views::transform([](auto pair) {
-            return std::make_pair(
-                pair.first, 
-                std::any_cast<OutElement>(std::move(pair.second))
-            );
-        });
+                   return std::make_pair(
+                           pair.first,
+                           std::any_cast<OutElement>(std::move(pair.second)));
+               });
     }
 
 private:
@@ -690,49 +767,47 @@ private:
      * @return Type-erased function suitable for composition
      */
     std::function<std::any(std::any)> buildTypeErasedFunction(
-        PipelineStep const& step,
-        TransformMetadata const* meta) const
-    {
-        auto& registry = ElementRegistry::instance();
-        
+            PipelineStep const & step,
+            TransformMetadata const * meta) const {
+        auto & registry = ElementRegistry::instance();
+
         // Dispatch based on input and output types from metadata
         // This is where we handle the type erasure/recovery
-        
+
         auto input_type = meta->input_type;
         auto output_type = meta->output_type;
         auto params_type = meta->params_type;
-        
+
         // Build a lambda that captures the transform and its parameters
         // The lambda knows the concrete types and can do the std::any conversions
         return buildTypeErasedFunctionWithParams(step, input_type, output_type, params_type);
     }
-    
+
     /**
      * @brief Build type-erased function for transforms with parameters
      * 
      * This version extracts parameters from step.params and captures them.
      */
     std::function<std::any(std::any)> buildTypeErasedFunctionWithParams(
-        PipelineStep const& step,
-        std::type_index input_type,
-        std::type_index output_type,
-        std::type_index params_type) const
-    {
-        auto& registry = ElementRegistry::instance();
-        
+            PipelineStep const & step,
+            std::type_index input_type,
+            std::type_index output_type,
+            std::type_index params_type) const {
+        auto & registry = ElementRegistry::instance();
+
         // Use the registry's dynamic parameter execution
         // Capture the types and parameters for later execution
-        return [&registry, 
-                name = step.transform_name, 
+        return [&registry,
+                name = step.transform_name,
                 params = step.params,
                 input_type,
                 output_type,
                 params_type](std::any input) -> std::any {
             return registry.executeWithDynamicParams(
-                name, input, params, input_type, output_type, params_type);
+                    name, input, params, input_type, output_type, params_type);
         };
     }
-    
+
     /**
      * @brief Build a typed element transform function (legacy - for non-fused paths)
      * 
@@ -740,56 +815,54 @@ private:
      * This is composed with other functions before iteration.
      */
     template<typename InputElement, typename OutputElement>
-    std::function<OutputElement(InputElement const&)> buildElementFunction(
-        PipelineStep const& step,
-        std::type_index param_type) const
-    {
-        auto& registry = ElementRegistry::instance();
-        
+    std::function<OutputElement(InputElement const &)> buildElementFunction(
+            PipelineStep const & step,
+            std::type_index param_type) const {
+        auto & registry = ElementRegistry::instance();
+
         // Dispatch based on parameter type
         if (param_type == typeid(NoParams)) {
-            auto const& params = std::any_cast<NoParams const&>(step.params);
-            return [&registry, name = step.transform_name, params](InputElement const& input) -> OutputElement {
+            auto const & params = std::any_cast<NoParams const &>(step.params);
+            return [&registry, name = step.transform_name, params](InputElement const & input) -> OutputElement {
                 return registry.execute<InputElement, OutputElement, NoParams>(name, input, params);
             };
         }
-        
+
         // For other parameter types, would need to be registered or handled here
-        throw std::runtime_error("Parameter type not supported for fusion: " + 
-                               std::string(param_type.name()));
+        throw std::runtime_error("Parameter type not supported for fusion: " +
+                                 std::string(param_type.name()));
     }
-    
+
     /**
      * @brief Apply element transform with materialization (non-fused path)
      */
     template<typename InputContainer, typename InputElement, typename OutputElement>
     auto applyElementTransformGeneric(
-        InputContainer const& input,
-        PipelineStep const& step,
-        std::type_index param_type) const
-        -> std::shared_ptr<RaggedContainerFor_t<OutputElement>>
-    {
+            InputContainer const & input,
+            PipelineStep const & step,
+            std::type_index param_type) const
+            -> std::shared_ptr<RaggedContainerFor_t<OutputElement>> {
         using OutputContainer = RaggedContainerFor_t<OutputElement>;
-        auto& registry = ElementRegistry::instance();
-        
+        auto & registry = ElementRegistry::instance();
+
         auto output = std::make_shared<OutputContainer>();
         output->setTimeFrame(input.getTimeFrame());
-        
-        auto const* meta = registry.getMetadata(step.transform_name);
+
+        auto const * meta = registry.getMetadata(step.transform_name);
         if (!meta) {
             throw std::runtime_error("Transform not found: " + step.transform_name);
         }
-        
+
         // Transform each element
-        for (auto const& [time, entry] : input.elements()) {
+        for (auto const & [time, entry]: input.elements()) {
             OutputElement result = executeWithDynamicParams<InputElement, OutputElement>(
-                step, entry.data, param_type);
+                    step, entry.data, param_type);
             output->appendAtTime(time, std::vector<OutputElement>{result}, NotifyObservers::No);
         }
-        
+
         return output;
     }
-    
+
     /**
      * @brief Execute transform with dynamic parameter type dispatch
      * 
@@ -797,55 +870,53 @@ private:
      */
     template<typename InputElement, typename OutputElement>
     OutputElement executeWithDynamicParams(
-        PipelineStep const& step,
-        InputElement const& input,
-        std::type_index param_type) const
-    {
-        auto& registry = ElementRegistry::instance();
-        
+            PipelineStep const & step,
+            InputElement const & input,
+            std::type_index param_type) const {
+        auto & registry = ElementRegistry::instance();
+
         // Typed executor handles everything - zero dispatch overhead!
         std::any input_any = input;
         std::any result_any = registry.executeWithDynamicParams(
-            step.transform_name, input_any, step.params,
-            typeid(InputElement), typeid(OutputElement), param_type);
-        
+                step.transform_name, input_any, step.params,
+                typeid(InputElement), typeid(OutputElement), param_type);
+
         return std::any_cast<OutputElement>(std::move(result_any));
     }
-    
+
     /**
      * @brief Apply time-grouped transform with dynamic executor creation
      */
     template<typename InputContainer, typename OutputContainer, typename InputElement, typename OutputElement>
     std::shared_ptr<OutputContainer> applyTimeGroupedTransformGeneric(
-        InputContainer const& input,
-        PipelineStep const& step,
-        std::type_index param_type) const
-    {
-        auto& registry = ElementRegistry::instance();
-        
+            InputContainer const & input,
+            PipelineStep const & step,
+            std::type_index param_type) const {
+        auto & registry = ElementRegistry::instance();
+
         // For AnalogTimeSeries output, collect into map
         if constexpr (std::is_same_v<OutputContainer, AnalogTimeSeries>) {
             auto time_indices = input.getTimeIndices();
             std::map<int, OutputElement> output_map;
-            
-            for (auto time : time_indices) {
+
+            for (auto time: time_indices) {
                 auto data_at_time = input.getDataAtTime(time);
                 auto result = executeTimeGroupedWithDynamicParams<InputElement, OutputElement>(
-                    step, data_at_time, param_type);
-                
+                        step, data_at_time, param_type);
+
                 if (!result.empty()) {
                     output_map[time.getValue()] = result[0];
                 }
             }
-            
+
             auto output = std::make_shared<AnalogTimeSeries>(output_map);
             output->setTimeFrame(input.getTimeFrame());
             return std::static_pointer_cast<OutputContainer>(output);
         }
-        
+
         throw std::runtime_error("Unsupported output container type");
     }
-    
+
     /**
      * @brief Execute time-grouped transform with dynamic parameter type dispatch
      * 
@@ -853,25 +924,25 @@ private:
      */
     template<typename InputElement, typename OutputElement>
     std::vector<OutputElement> executeTimeGroupedWithDynamicParams(
-        PipelineStep const& step,
-        std::span<InputElement const> inputs,
-        std::type_index param_type) const
-    {
-        auto& registry = ElementRegistry::instance();
-        
+            PipelineStep const & step,
+            std::span<InputElement const> inputs,
+            std::type_index param_type) const {
+        auto & registry = ElementRegistry::instance();
+
         // Use the registry's dynamic parameter execution for time-grouped transforms
         // This uses the registered factories to create a typed executor on the fly
         std::any input_any = inputs;
         std::any result_any = registry.executeTimeGroupedWithDynamicParams(
-            step.transform_name, input_any, step.params,
-            typeid(InputElement), typeid(OutputElement), param_type);
-            
+                step.transform_name, input_any, step.params,
+                typeid(InputElement), typeid(OutputElement), param_type);
+
         return std::any_cast<std::vector<OutputElement>>(std::move(result_any));
     }
-    
+
     std::vector<PipelineStep> steps_;
 };
 
-} // namespace WhiskerToolbox::Transforms::V2
 
-#endif // WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
+}// namespace WhiskerToolbox::Transforms::V2
+
+#endif// WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP

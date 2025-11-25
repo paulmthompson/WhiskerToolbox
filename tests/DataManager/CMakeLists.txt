@@ -101,7 +101,7 @@ add_executable(test_data_manager
 
         TransformsV2/test_view_pipeline.test.cpp
         TransformsV2/test_line_min_point_dist_v2.test.cpp
-        #${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/examples/LineMinPointDistTransform.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskArea/MaskArea.test.cpp
 
 )
 
