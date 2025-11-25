@@ -19,3 +19,5 @@ vcpkg_cache
 
 tools
 ninja-build/ninja
+
+dist
