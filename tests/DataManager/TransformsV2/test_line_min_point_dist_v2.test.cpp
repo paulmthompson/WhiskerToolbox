@@ -1,7 +1,7 @@
 // Unit tests for LineMinPointDistTransform
 
-#include "transforms/v2/examples/LineMinPointDistTransform.hpp"
-#include "transforms/v2/examples/RegisteredTransforms.hpp"
+#include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
+#include "transforms/v2/core/RegisteredTransforms.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>

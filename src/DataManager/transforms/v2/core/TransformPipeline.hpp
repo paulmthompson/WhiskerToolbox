@@ -8,9 +8,8 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
-// Include example parameter types for runtime dispatch
-#include "transforms/v2/examples/MaskAreaTransform.hpp"
-#include "transforms/v2/examples/SumReductionTransform.hpp"
+#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
+#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 
 #include <any>
 #include <functional>

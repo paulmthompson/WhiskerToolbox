@@ -1,4 +1,4 @@
-#include "LineMinPointDistTransform.hpp"
+#include "LineMinPointDist.hpp"
 
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"

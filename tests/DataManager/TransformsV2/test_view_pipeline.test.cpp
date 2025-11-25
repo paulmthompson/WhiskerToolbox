@@ -1,11 +1,12 @@
+#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
+#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 #include "transforms/v2/core/ContainerTraits.hpp"
 #include "transforms/v2/core/ContainerTransform.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/ElementTransform.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
-#include "transforms/v2/examples/MaskAreaTransform.hpp"
-#include "transforms/v2/examples/RegisteredTransforms.hpp"
-#include "transforms/v2/examples/SumReductionTransform.hpp"
+#include "transforms/v2/core/RegisteredTransforms.hpp"
+
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
@@ -177,12 +178,12 @@ TEST_CASE("TransformsV2 - RaggedTimeSeries range constructor", "[transforms][v2]
         mask_data->addAtTime(TimeFrameIndex(0),
                              Mask2D({Point2D<uint32_t>{0, 0}, Point2D<uint32_t>{1, 1}}),
                              NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(10), 
-        Mask2D({Point2D<uint32_t>{2, 2}}), 
-        NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(10),
+                             Mask2D({Point2D<uint32_t>{2, 2}}),
+                             NotifyObservers::No);
         mask_data->addAtTime(TimeFrameIndex(20),
-        Mask2D({Point2D<uint32_t>{3, 3}, Point2D<uint32_t>{4, 4}, Point2D<uint32_t>{5, 5}}),
-        NotifyObservers::No);
+                             Mask2D({Point2D<uint32_t>{3, 3}, Point2D<uint32_t>{4, 4}, Point2D<uint32_t>{5, 5}}),
+                             NotifyObservers::No);
         mask_data->setTimeFrame(time_frame);
 
         // Verify data was added correctly

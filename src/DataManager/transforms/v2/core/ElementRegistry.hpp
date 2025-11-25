@@ -5,6 +5,9 @@
 #include "ContainerTraits.hpp"
 #include "Observer/Observer_Data.hpp"
 
+#include <rfl.hpp>
+#include <rfl/json.hpp>
+
 #include <any>
 #include <functional>
 #include <memory>
@@ -207,6 +210,9 @@ public:
         // Update type index maps
         input_type_to_names_[std::type_index(typeid(In))].push_back(name);
         output_type_to_names_[std::type_index(typeid(Out))].push_back(name);
+        
+        // Auto-register all parameter-related factories (JSON, validator, executor, PipelineStep)
+        registerParamDeserializerIfNeeded<In, Out, Params>();
     }
     
     /**
@@ -269,6 +275,9 @@ public:
         // Update type index maps
         input_type_to_names_[std::type_index(typeid(In))].push_back(name);
         output_type_to_names_[std::type_index(typeid(Out))].push_back(name);
+        
+        // Auto-register all parameter-related factories
+        registerParamDeserializerIfNeeded<In, Out, Params>();
     }
     
     /**
@@ -333,6 +342,10 @@ public:
         input_type_to_names_[std::type_index(typeid(In1))].push_back(name);
         input_type_to_names_[std::type_index(typeid(In2))].push_back(name);
         output_type_to_names_[std::type_index(typeid(Out))].push_back(name);
+        
+        // Auto-register all parameter-related factories
+        // For binary transforms, use the tuple input type
+        registerParamDeserializerIfNeeded<TupleIn, Out, Params>();
     }
     
     // ========================================================================
@@ -500,6 +513,85 @@ public:
         return names;
     }
     
+    /**
+     * @brief Register JSON parameter deserializer for a parameter type
+     * 
+     * This allows the registry to deserialize JSON strings into typed parameters
+     * without needing a variant or manual dispatch.
+     * 
+     * @tparam Params Parameter type
+     * @param deserializer Function that converts JSON string to std::any containing Params
+     */
+    template<typename Params>
+    void registerParamDeserializer(
+        std::function<std::any(std::string const&)> deserializer)
+    {
+        param_deserializers_[typeid(Params)] = std::move(deserializer);
+    }
+    
+    /**
+     * @brief Deserialize JSON parameters for a transform by name
+     * 
+     * Looks up the transform's parameter type and uses the registered deserializer.
+     * 
+     * @param transform_name Name of the transform
+     * @param json_str JSON string containing parameters
+     * @return std::any containing typed parameters, or empty std::any on failure
+     */
+    std::any deserializeParameters(
+        std::string const& transform_name,
+        std::string const& json_str) const
+    {
+        // Get metadata to find parameter type
+        auto const* metadata = getMetadata(transform_name);
+        if (!metadata) {
+            return std::any{}; // Transform not found
+        }
+        
+        // Look up deserializer for this parameter type
+        auto it = param_deserializers_.find(metadata->params_type);
+        if (it == param_deserializers_.end()) {
+            return std::any{}; // No deserializer registered
+        }
+        
+        // Deserialize
+        try {
+            return it->second(json_str);
+        } catch (...) {
+            return std::any{}; // Deserialization failed
+        }
+    }
+    
+    /**
+     * @brief Validate that parameters match the expected type for a transform
+     * 
+     * This checks that the std::any contains parameters of the correct type
+     * for the given transform, based on registered metadata.
+     * 
+     * @param transform_name Name of the transform
+     * @param params_any Type-erased parameters to validate
+     * @return true if parameters are valid for this transform
+     */
+    bool validateParameters(
+        std::string const& transform_name,
+        std::any const& params_any) const
+    {
+        // Get metadata to find parameter type
+        auto const* metadata = getMetadata(transform_name);
+        if (!metadata) {
+            return false; // Transform not found
+        }
+        
+        // Look up validator for this parameter type
+        auto it = param_validators_.find(metadata->params_type);
+        if (it == param_validators_.end()) {
+            return false; // No validator registered
+        }
+        
+        // Validate
+        return it->second(params_any);
+    }
+    
     // ========================================================================
     // Typed Parameter Executors (eliminates per-element dispatch)
     // ========================================================================
@@ -637,6 +729,54 @@ public:
 
 private:
     /**
+     * @brief Auto-register all parameter-related factories for a parameter type
+     * 
+     * This is called automatically during transform registration and sets up:
+     * 1. JSON deserializer (using reflect-cpp)
+     * 2. Parameter validator
+     * 3. Typed executor factory (for pipeline execution)
+     * 4. PipelineStep factory (for pipeline loading from JSON)
+     * 
+     * @tparam In Input element type
+     * @tparam Out Output element type
+     * @tparam Params Parameter type (must be reflect-cpp serializable)
+     */
+    template<typename In, typename Out, typename Params>
+    void registerParamDeserializerIfNeeded() {
+        auto type_idx = std::type_index(typeid(Params));
+        
+        // Only register if not already present
+        if (param_deserializers_.find(type_idx) == param_deserializers_.end()) {
+            // 1. Register JSON deserializer using reflect-cpp
+            param_deserializers_[type_idx] = [](std::string const& json_str) -> std::any {
+                auto result = rfl::json::read<Params>(json_str);
+                if (result) {
+                    return std::any{result.value()};
+                }
+                return std::any{}; // Failed deserialization
+            };
+            
+            // 2. Register validator to check std::any contains correct type
+            param_validators_[type_idx] = [](std::any const& params_any) -> bool {
+                try {
+                    std::any_cast<Params const&>(params_any);
+                    return true;
+                } catch (...) {
+                    return false;
+                }
+            };
+            
+            // 3. Register typed executor factory (for zero-dispatch pipeline execution)
+            registerTypedExecutorFactory<In, Out, Params>(
+                [](std::any const& params_any) -> std::unique_ptr<IParamExecutor> {
+                    auto params = std::any_cast<Params>(params_any);
+                    return std::make_unique<TypedParamExecutor<In, Out, Params>>(
+                        std::move(params));
+                });
+        }
+    }
+    
+    /**
      * @brief Internal: Get typed transform
      */
     template<typename In, typename Out, typename Params>
@@ -725,6 +865,19 @@ private:
         std::function<std::any(std::string const&, std::any const&, std::any const&, 
                               std::type_index, std::type_index)>
     > param_executors_;
+    
+    // JSON parameter deserializers (type_index -> JSON string -> std::any)
+    std::unordered_map<
+        std::type_index,
+        std::function<std::any(std::string const&)>
+    > param_deserializers_;
+    
+    // Parameter type validators (type_index -> std::any validator)
+    // Just validates that std::any contains the correct type
+    mutable std::unordered_map<
+        std::type_index,
+        std::function<bool(std::any const&)>
+    > param_validators_;
 };
 
 // ============================================================================
@@ -922,7 +1075,6 @@ public:
             name, std::move(func), std::move(metadata));
     }
 };
-
 } // namespace WhiskerToolbox::Transforms::V2
 
 #endif // WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP

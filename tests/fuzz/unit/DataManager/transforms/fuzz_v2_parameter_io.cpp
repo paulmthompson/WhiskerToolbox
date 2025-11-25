@@ -1,7 +1,9 @@
 // Fuzz test for V2 transform parameter JSON loading
 // Tests both valid variations and invalid/malformed JSON to ensure robustness
 
-#include "transforms/v2/examples/ParameterIO.hpp"
+#include "transforms/v2/core/ParameterIO.hpp"
+#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
+#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 
 #include <fuzztest/fuzztest.h>
 #include <gtest/gtest.h>
@@ -248,20 +250,3 @@ FUZZ_TEST(SumReductionParamsFuzz, FuzzSumReductionParamsComplete)
         fuzztest::Arbitrary<float>()
     );
 
-// ============================================================================
-// Fuzz Tests: Parameter Variant Loading
-// ============================================================================
-
-/**
- * @brief Fuzz test variant loading with arbitrary transform names and JSON
- */
-void FuzzParameterVariantLoading(std::string const& transform_name, std::string const& json_str) {
-    auto variant = loadParameterVariant(transform_name, json_str);
-    // Should not crash, may or may not succeed
-    (void)variant;
-}
-FUZZ_TEST(ParameterVariantFuzz, FuzzParameterVariantLoading)
-    .WithDomains(
-        fuzztest::InRegexp("[A-Za-z][A-Za-z0-9 ]*"),  // Valid-looking transform names
-        fuzztest::Arbitrary<std::string>()  // Any JSON
-    );

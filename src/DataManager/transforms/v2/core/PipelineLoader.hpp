@@ -3,7 +3,7 @@
 
 #include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
-#include "transforms/v2/examples/ParameterIO.hpp"
+#include "transforms/v2/core/ParameterIO.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -96,6 +96,92 @@ struct PipelineDescriptor {
 };
 
 // ============================================================================
+// Pipeline Step Factory Registry
+// ============================================================================
+
+/**
+ * @brief Registry of PipelineStep factory functions
+ * 
+ * Maps type_index -> factory function that creates PipelineStep from std::any.
+ * Factories are registered automatically via static initialization when
+ * parameter types are used with RegisterTransform.
+ */
+inline std::unordered_map<
+    std::type_index,
+    std::function<PipelineStep(std::string const&, std::any const&)>>& 
+getPipelineStepFactoryRegistry() {
+    static std::unordered_map<
+        std::type_index,
+        std::function<PipelineStep(std::string const&, std::any const&)>> registry;
+    return registry;
+}
+
+/**
+ * @brief Helper to register a PipelineStep factory for a parameter type
+ * 
+ * Call this once for each parameter type to register its factory.
+ * Template automatically deduces the parameter type.
+ */
+template<typename Params>
+inline void registerPipelineStepFactoryFor() {
+    auto& registry = getPipelineStepFactoryRegistry();
+    auto type_idx = std::type_index(typeid(Params));
+    
+    // Only register if not already present
+    if (registry.find(type_idx) == registry.end()) {
+        registry[type_idx] = [](std::string const& name, std::any const& params_any) {
+            auto params = std::any_cast<Params>(params_any);
+            return PipelineStep(name, params);
+        };
+    }
+}
+
+/**
+ * @brief Auto-register a PipelineStep factory for a parameter type
+ * 
+ * This template class registers a factory function during static initialization.
+ * Used by transform registration to automatically register factories.
+ */
+template<typename Params>
+struct RegisterPipelineStepFactory {
+    RegisterPipelineStepFactory() {
+        registerPipelineStepFactoryFor<Params>();
+    }
+};
+
+/**
+ * @brief Create PipelineStep using the factory registry
+ * 
+ * Looks up the appropriate factory based on parameter type from metadata.
+ * 
+ * @param registry Element registry (for metadata lookup)
+ * @param transform_name Transform name
+ * @param params_any Type-erased parameters
+ * @return PipelineStep with correctly typed parameters
+ */
+inline PipelineStep createPipelineStepFromRegistry(
+    ElementRegistry const& registry,
+    std::string const& transform_name,
+    std::any const& params_any)
+{
+    auto const* meta = registry.getMetadata(transform_name);
+    if (!meta) {
+        throw std::runtime_error("Transform '" + transform_name + "' not found");
+    }
+    
+    auto& factory_registry = getPipelineStepFactoryRegistry();
+    auto it = factory_registry.find(meta->params_type);
+    
+    if (it == factory_registry.end()) {
+        throw std::runtime_error(
+            "No PipelineStep factory registered for parameter type: " + 
+            std::string(meta->params_type.name()));
+    }
+    
+    return it->second(transform_name, params_any);
+}
+
+// ============================================================================
 // Pipeline Loading Functions
 // ============================================================================
 
@@ -104,8 +190,8 @@ struct PipelineDescriptor {
  * 
  * This function:
  * 1. Validates that transform_name exists in the registry
- * 2. Loads parameters using the appropriate type from ParameterIO
- * 3. Creates a PipelineStep with type-erased parameters
+ * 2. Loads parameters using the registry's automatic deserializer
+ * 3. Creates a PipelineStep using the factory registry
  * 
  * @param descriptor Step descriptor from JSON
  * @return rfl::Result<PipelineStep> Success or error message
@@ -126,21 +212,25 @@ inline rfl::Result<PipelineStep> loadStepFromDescriptor(PipelineStepDescriptor c
     
     // Load parameters if provided
     if (descriptor.parameters.has_value()) {
-        // Convert rfl::Generic back to JSON string for loadParameterVariant
+        // Convert rfl::Generic back to JSON string for registry-based loading
         auto json_str = rfl::json::write(descriptor.parameters.value());
         
-        auto param_variant = loadParameterVariant(descriptor.transform_name, json_str);
-        if (!param_variant.has_value()) {
+        // Use registry to deserialize parameters based on transform metadata
+        auto params_any = loadParametersForTransform(descriptor.transform_name, json_str);
+        if (!params_any.has_value()) {
             return rfl::Error("Failed to load parameters for transform '" + 
                             descriptor.transform_name + "' in step '" + 
-                            descriptor.step_id + "'");
+                            descriptor.step_id + "'. Check that parameters match the expected type and validation rules.");
         }
         
-        // Create PipelineStep based on parameter type
-        return std::visit([&](auto const& params) -> rfl::Result<PipelineStep> {
-            using ParamType = std::decay_t<decltype(params)>;
-            return rfl::Result<PipelineStep>(PipelineStep(descriptor.transform_name, params));
-        }, param_variant.value());
+        // Create PipelineStep using factory registry (no manual dispatch!)
+        try {
+            auto step = createPipelineStepFromRegistry(registry, descriptor.transform_name, params_any);
+            return rfl::Result<PipelineStep>(std::move(step));
+        } catch (std::exception const& e) {
+            return rfl::Error("Failed to create pipeline step for transform '" + 
+                            descriptor.transform_name + "': " + e.what());
+        }
     } else {
         // No parameters - create step with NoParams
         return rfl::Result<PipelineStep>(PipelineStep(descriptor.transform_name));

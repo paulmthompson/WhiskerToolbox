@@ -1,8 +1,8 @@
 // Fuzz tests for V2 Pipeline Loader
 // Tests robust JSON parsing and error handling for complete pipelines
 
-#include "transforms/v2/examples/PipelineLoader.hpp"
-#include "transforms/v2/examples/RegisteredTransforms.hpp"
+#include "transforms/v2/core/PipelineLoader.hpp"
+#include "transforms/v2/core/RegisteredTransforms.hpp"
 
 #include <fuzztest/fuzztest.h>
 #include <gtest/gtest.h>

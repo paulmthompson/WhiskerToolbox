@@ -1,31 +1,17 @@
 #ifndef WHISKERTOOLBOX_V2_PARAMETER_IO_HPP
 #define WHISKERTOOLBOX_V2_PARAMETER_IO_HPP
 
-#include "MaskAreaTransform.hpp"
-#include "SumReductionTransform.hpp"
-#include "LineMinPointDistTransform.hpp"
-#include "LineMinPointDistTransform.hpp"
+#include "transforms/v2/core/ElementRegistry.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <any>
 #include <fstream>
 #include <optional>
 #include <string>
-#include <variant>
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
-
-/**
- * @brief Variant type for all V2 example transform parameters
- * 
- * This allows runtime dispatch to the correct parameter type based on JSON.
- */
-using ParameterVariant = std::variant<
-    MaskAreaParams,
-    SumReductionParams,
-    LineMinPointDistParams
->;
 
 /**
  * @brief Load parameters from JSON string
@@ -116,42 +102,29 @@ bool saveParametersToFile(ParamsT const& params,
 }
 
 /**
- * @brief Load parameter variant from JSON with transform name
+ * @brief Load parameters for a transform using registry-based dispatch
  * 
- * Dynamically dispatches to the correct parameter type based on transform_name.
+ * This function uses the ElementRegistry's metadata to automatically determine
+ * the correct parameter type and deserializer. The deserializers are automatically
+ * registered when transforms are registered, so no manual registration is needed.
  * 
- * @param transform_name Name of the transform
- * @param json_str JSON string
- * @return Optional containing parameters or nullopt if invalid
+ * @param transform_name Name of the transform (must be registered)
+ * @param json_str JSON string containing parameters
+ * @return std::any containing typed parameters, or empty on failure
+ * 
+ * @example
+ * ```cpp
+ * auto params_any = loadParametersForTransform("CalculateMaskArea", json);
+ * if (params_any.has_value()) {
+ *     auto params = std::any_cast<MaskAreaParams>(params_any);
+ *     // use params...\n * }\n * ```
  */
-inline std::optional<ParameterVariant> loadParameterVariant(
+inline std::any loadParametersForTransform(
     std::string const& transform_name,
-    std::string const& json_str) {
-    
-    if (transform_name == "CalculateMaskArea") {
-        auto result = loadParametersFromJson<MaskAreaParams>(json_str);
-        if (result) {
-            return result.value();
-        }
-    } else if (transform_name == "SumReduction") {
-        auto result = loadParametersFromJson<SumReductionParams>(json_str);
-        if (result) {
-            return result.value();
-        }
-    } else if (transform_name == "CalculateLineMinPointDistance" || 
-               transform_name == "CalculateLineMinPointDistanceWithContext") {
-        auto result = loadParametersFromJson<LineMinPointDistParams>(json_str);
-        if (result) {
-            return result.value();
-        }
-    } else if (transform_name == "CalculateLineMinPointDistance") {
-        auto result = loadParametersFromJson<LineMinPointDistParams>(json_str);
-        if (result) {
-            return result.value();
-        }
-    }
-    
-    return std::nullopt;
+    std::string const& json_str)
+{
+    auto& registry = ElementRegistry::instance();
+    return registry.deserializeParameters(transform_name, json_str);
 }
 
 } // namespace WhiskerToolbox::Transforms::V2::Examples

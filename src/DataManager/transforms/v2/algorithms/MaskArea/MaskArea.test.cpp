@@ -1,26 +1,140 @@
-#include "transforms/v2/core/ContainerTraits.hpp"
-#include "transforms/v2/core/ContainerTransform.hpp"
-#include "transforms/v2/core/ElementRegistry.hpp"
-#include "transforms/v2/core/ElementTransform.hpp"
-#include "transforms/v2/core/TransformPipeline.hpp"
-#include "transforms/v2/examples/MaskAreaTransform.hpp"
-#include "transforms/v2/examples/SumReductionTransform.hpp"
-#include "transforms/v2/examples/RegisteredTransforms.hpp"
 
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
-#include "CoreGeometry/masks.hpp"
-#include "Masks/Mask_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include <iostream>
-#include <memory>
-#include <vector>
-
-using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
+
+// ============================================================================
+// Tests: MaskAreaParams JSON Loading
+// ============================================================================
+
+TEST_CASE("MaskAreaParams - Load valid JSON with all fields", "[transforms][v2][params][json]") {
+    std::string json = R"({
+        "scale_factor": 2.5,
+        "min_area": 10.0,
+        "exclude_holes": true
+    })";
+    
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    
+    REQUIRE(result);
+    auto params = result.value();
+    
+    REQUIRE_THAT(params.getScaleFactor(), Catch::Matchers::WithinRel(2.5f, 0.001f));
+    REQUIRE_THAT(params.getMinArea(), Catch::Matchers::WithinRel(10.0f, 0.001f));
+    REQUIRE(params.getExcludeHoles() == true);
+}
+
+TEST_CASE("MaskAreaParams - Load JSON with partial fields (uses defaults)", "[transforms][v2][params][json]") {
+    std::string json = R"({
+        "scale_factor": 3.0
+    })";
+    
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    
+    REQUIRE(result);
+    auto params = result.value();
+    
+    REQUIRE_THAT(params.getScaleFactor(), Catch::Matchers::WithinRel(3.0f, 0.001f));
+    REQUIRE_THAT(params.getMinArea(), Catch::Matchers::WithinRel(0.0f, 0.001f)); // default
+    REQUIRE(params.getExcludeHoles() == false); // default
+}
+
+TEST_CASE("MaskAreaParams - Load empty JSON (uses all defaults)", "[transforms][v2][params][json]") {
+    std::string json = "{}";
+    
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    
+    REQUIRE(result);
+    auto params = result.value();
+    
+    REQUIRE_THAT(params.getScaleFactor(), Catch::Matchers::WithinRel(1.0f, 0.001f));
+    REQUIRE_THAT(params.getMinArea(), Catch::Matchers::WithinRel(0.0f, 0.001f));
+    REQUIRE(params.getExcludeHoles() == false);
+}
+
+TEST_CASE("MaskAreaParams - Reject negative scale_factor", "[transforms][v2][params][json][validation]") {
+    std::string json = R"({
+        "scale_factor": -1.0
+    })";
+    
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    
+    REQUIRE(!result); // Should fail validation
+}
+
+TEST_CASE("MaskAreaParams - Reject zero scale_factor", "[transforms][v2][params][json][validation]") {
+    std::string json = R"({
+        "scale_factor": 0.0
+    })";
+    
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    
+    REQUIRE(!result); // Should fail validation (ExclusiveMinimum<true>)
+}
+
+TEST_CASE("MaskAreaParams - Reject negative min_area", "[transforms][v2][params][json][validation]") {
+    std::string json = R"({
+        "min_area": -5.0
+    })";
+    
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    
+    REQUIRE(!result); // Should fail validation
+}
+
+TEST_CASE("MaskAreaParams - Accept zero min_area", "[transforms][v2][params][json][validation]") {
+    std::string json = R"({
+        "min_area": 0.0
+    })";
+    
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    
+    REQUIRE(result); // Zero should be valid for min_area
+}
+
+TEST_CASE("MaskAreaParams - Reject invalid JSON", "[transforms][v2][params][json][validation]") {
+    std::string json = R"({
+        "scale_factor": "not_a_number"
+    })";
+    
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    
+    REQUIRE(!result);
+}
+
+TEST_CASE("MaskAreaParams - Reject malformed JSON", "[transforms][v2][params][json][validation]") {
+    std::string json = R"({
+        "scale_factor": 1.0,
+        "invalid
+    })";
+    
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    
+    REQUIRE(!result);
+}
+
+
+TEST_CASE("MaskAreaParams - JSON round-trip preserves values", "[transforms][v2][params][json]") {
+    MaskAreaParams original;
+    original.scale_factor = 2.5f;
+    original.min_area = 15.0f;
+    original.exclude_holes = true;
+    
+    // Serialize
+    std::string json = saveParametersToJson(original);
+    
+    // Deserialize
+    auto result = loadParametersFromJson<MaskAreaParams>(json);
+    REQUIRE(result);
+    auto recovered = result.value();
+    
+    // Verify values match
+    REQUIRE_THAT(recovered.getScaleFactor(), Catch::Matchers::WithinRel(2.5f, 0.001f));
+    REQUIRE_THAT(recovered.getMinArea(), Catch::Matchers::WithinRel(15.0f, 0.001f));
+    REQUIRE(recovered.getExcludeHoles() == true);
+}
 
 // ============================================================================
 // Test-specific convenience functions
@@ -47,10 +161,6 @@ inline std::shared_ptr<AnalogTimeSeries> calculateAndSumMaskAreas(
     auto pipeline = createMaskAreaSumPipeline();
     return pipeline.execute<MaskData, AnalogTimeSeries>(mask_data);
 }
-
-// ============================================================================
-// Tests
-// ============================================================================
 
 /**
  * @brief Test: Transform Mask2D to std::vector<float> (area calculation)
