@@ -77,6 +77,15 @@ public:
 };
 
 /**
+ * @brief Interface for time-grouped parameter executors with captured state
+ */
+class ITimeGroupedParamExecutor {
+public:
+    virtual ~ITimeGroupedParamExecutor() = default;
+    virtual std::any execute(std::string const& name, std::any const& input_span) const = 0;
+};
+
+/**
  * @brief Concrete executor with full type information and captured parameters
  * 
  * All types are known at construction time, eliminating runtime dispatch.
@@ -93,6 +102,20 @@ public:
     
 private:
     Params params_;  // Parameters captured at construction
+};
+
+/**
+ * @brief Concrete time-grouped executor with full type information and captured parameters
+ */
+template<typename In, typename Out, typename Params>
+class TypedTimeGroupedParamExecutor : public ITimeGroupedParamExecutor {
+public:
+    explicit TypedTimeGroupedParamExecutor(Params params);
+    
+    std::any execute(std::string const& name, std::any const& input_span_any) const override;
+    
+private:
+    Params params_;
 };
 
 // ============================================================================
@@ -616,6 +639,17 @@ public:
     }
     
     /**
+     * @brief Register a typed time-grouped executor factory
+     */
+    template<typename In, typename Out, typename Params>
+    void registerTimeGroupedExecutorFactory(
+        std::function<std::unique_ptr<ITimeGroupedParamExecutor>(std::any const&)> factory)
+    {
+        TypeTriple key{typeid(In), typeid(Out), typeid(Params)};
+        time_grouped_executor_factories_[key] = std::move(factory);
+    }
+
+    /**
      * @brief Get or create a typed executor for given parameters
      * 
      * This looks up the factory, creates an executor with parameters captured,
@@ -655,6 +689,39 @@ public:
         return executor_ptr;
     }
     
+    /**
+     * @brief Get or create a typed time-grouped executor for given parameters
+     */
+    ITimeGroupedParamExecutor const* getOrCreateTimeGroupedExecutor(
+        TypeTriple const& key,
+        std::any const& params) const
+    {
+        // Check cache first
+        auto cache_key = std::make_pair(key, std::type_index(params.type()));
+        auto cache_it = time_grouped_executor_cache_.find(cache_key);
+        if (cache_it != time_grouped_executor_cache_.end()) {
+            return cache_it->second.get();
+        }
+        
+        // Look up factory
+        auto factory_it = time_grouped_executor_factories_.find(key);
+        if (factory_it == time_grouped_executor_factories_.end()) {
+            throw std::runtime_error("No typed time-grouped executor factory registered for type triple: " +
+                                   std::string(key.input_type.name()) + " -> " +
+                                   std::string(key.output_type.name()) + " (" +
+                                   std::string(key.params_type.name()) + ")");
+        }
+        
+        // Create executor with captured parameters
+        auto executor = factory_it->second(params);
+        auto* executor_ptr = executor.get();
+        
+        // Cache for reuse
+        time_grouped_executor_cache_[cache_key] = std::move(executor);
+        
+        return executor_ptr;
+    }
+
     /**
      * @brief Legacy registration for backward compatibility
      * 
@@ -704,6 +771,26 @@ public:
     }
     
     /**
+     * @brief Execute time-grouped transform with typed executor
+     */
+    std::any executeTimeGroupedWithDynamicParams(
+        std::string const& transform_name,
+        std::any const& input_span,
+        std::any const& params,
+        std::type_index in_type,
+        std::type_index out_type,
+        std::type_index param_type) const
+    {
+        TypeTriple key{in_type, out_type, param_type};
+        
+        // Get or create executor with captured state
+        auto const* executor = getOrCreateTimeGroupedExecutor(key, params);
+        
+        // Execute
+        return executor->execute(transform_name, input_span);
+    }
+
+    /**
      * @brief Legacy executeWithDynamicParams for backward compatibility
      * 
      * Falls back to old param_executors_ map if typed executor not found.
@@ -745,7 +832,7 @@ private:
     void registerParamDeserializerIfNeeded() {
         auto type_idx = std::type_index(typeid(Params));
         
-        // Only register if not already present
+        // Only register deserializer/validator if not already present (per Params type)
         if (param_deserializers_.find(type_idx) == param_deserializers_.end()) {
             // 1. Register JSON deserializer using reflect-cpp
             param_deserializers_[type_idx] = [](std::string const& json_str) -> std::any {
@@ -765,15 +852,26 @@ private:
                     return false;
                 }
             };
-            
-            // 3. Register typed executor factory (for zero-dispatch pipeline execution)
-            registerTypedExecutorFactory<In, Out, Params>(
-                [](std::any const& params_any) -> std::unique_ptr<IParamExecutor> {
-                    auto params = std::any_cast<Params>(params_any);
-                    return std::make_unique<TypedParamExecutor<In, Out, Params>>(
-                        std::move(params));
-                });
         }
+        
+        // ALWAYS register executor factories for this specific (In, Out, Params) combination
+        // These are keyed by the triple, so we need to register them even if Params is already known
+        
+        // 3. Register typed executor factory (for zero-dispatch pipeline execution)
+        registerTypedExecutorFactory<In, Out, Params>(
+            [](std::any const& params_any) -> std::unique_ptr<IParamExecutor> {
+                auto params = std::any_cast<Params>(params_any);
+                return std::make_unique<TypedParamExecutor<In, Out, Params>>(
+                    std::move(params));
+            });
+
+        // 4. Register typed time-grouped executor factory
+        registerTimeGroupedExecutorFactory<In, Out, Params>(
+            [](std::any const& params_any) -> std::unique_ptr<ITimeGroupedParamExecutor> {
+                auto params = std::any_cast<Params>(params_any);
+                return std::make_unique<TypedTimeGroupedParamExecutor<In, Out, Params>>(
+                    std::move(params));
+            });
     }
     
     /**
@@ -851,6 +949,12 @@ private:
         TypeTripleHash
     > typed_executor_factories_;
     
+    std::unordered_map<
+        TypeTriple,
+        std::function<std::unique_ptr<ITimeGroupedParamExecutor>(std::any const&)>,
+        TypeTripleHash
+    > time_grouped_executor_factories_;
+
     // Cache of created executors (reused across pipeline executions)
     // Key: (TypeTriple, param_type_index) -> unique ownership of executor
     mutable std::unordered_map<
@@ -859,6 +963,12 @@ private:
         PairHash
     > typed_executor_cache_;
     
+    mutable std::unordered_map<
+        std::pair<TypeTriple, std::type_index>,
+        std::unique_ptr<ITimeGroupedParamExecutor>,
+        PairHash
+    > time_grouped_executor_cache_;
+
     // Legacy parameter type executors (for backward compatibility)
     std::unordered_map<
         std::type_index,
@@ -898,6 +1008,22 @@ std::any TypedParamExecutor<In, Out, Params>::execute(
     auto const& input = std::any_cast<In const&>(input_any);
     auto& registry = ElementRegistry::instance();
     Out result = registry.execute<In, Out, Params>(name, input, params_);
+    return std::any{result};
+}
+
+template<typename In, typename Out, typename Params>
+TypedTimeGroupedParamExecutor<In, Out, Params>::TypedTimeGroupedParamExecutor(Params params)
+    : params_(std::move(params))
+{}
+
+template<typename In, typename Out, typename Params>
+std::any TypedTimeGroupedParamExecutor<In, Out, Params>::execute(
+    std::string const& name,
+    std::any const& input_span_any) const
+{
+    auto const& input_span = std::any_cast<std::span<In const> const&>(input_span_any);
+    auto& registry = ElementRegistry::instance();
+    std::vector<Out> result = registry.executeTimeGrouped<In, Out, Params>(name, input_span, params_);
     return std::any{result};
 }
 

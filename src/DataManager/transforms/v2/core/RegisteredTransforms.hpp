@@ -130,14 +130,15 @@ inline auto const register_line_min_point_dist = RegisterBinaryTransform<
                 .input_type = typeid(std::tuple<Line2D, Point2D<float>>),
                 .output_type = typeid(float),
                 .params_type = typeid(LineMinPointDistParams),
+                .is_multi_input = true,
+                .input_arity = 2,
                 .input_type_name = "std::tuple<Line2D, Point2D<float>>",
                 .output_type_name = "float",
                 .params_type_name = "LineMinPointDistParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = false,
-                .is_multi_input = true,
-                .input_arity = 2});
+});
 
 }// anonymous namespace
 

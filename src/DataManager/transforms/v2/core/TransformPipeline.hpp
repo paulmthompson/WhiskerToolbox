@@ -8,8 +8,8 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
-#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
+//#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
+//#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 
 #include <any>
 #include <functional>
@@ -594,14 +594,7 @@ private:
         
         // Build a lambda that captures the transform and its parameters
         // The lambda knows the concrete types and can do the std::any conversions
-        
-       // if (params_type == typeid(NoParams)) {
-            // No parameters - simpler case
-      //      return buildTypeErasedFunctionNoParams(step, input_type, output_type);
-    //    } else {
-            // Has parameters - need to extract from step.params
-            return buildTypeErasedFunctionWithParams(step, input_type, output_type, params_type);
-      //  }
+        return buildTypeErasedFunctionWithParams(step, input_type, output_type, params_type);
     }
     
     /**
@@ -756,29 +749,14 @@ private:
     {
         auto& registry = ElementRegistry::instance();
         
-        // For time-grouped transforms, we need to use the registry directly
-        // since they have different signatures (span -> vector)
-        // The typed executor system is primarily for element-level transforms
-        
-        // Fallback to manual dispatch for time-grouped transforms
-        if (param_type == typeid(NoParams)) {
-            auto const& params = std::any_cast<NoParams const&>(step.params);
-            return registry.executeTimeGrouped<InputElement, OutputElement, NoParams>(
-                step.transform_name, inputs, params);
-        }
-        else if (param_type == typeid(Examples::SumReductionParams)) {
-            auto const& params = std::any_cast<Examples::SumReductionParams const&>(step.params);
-            return registry.executeTimeGrouped<InputElement, OutputElement, Examples::SumReductionParams>(
-                step.transform_name, inputs, params);
-        }
-        else if (param_type == typeid(Examples::MaskAreaParams)) {
-            auto const& params = std::any_cast<Examples::MaskAreaParams const&>(step.params);
-            return registry.executeTimeGrouped<InputElement, OutputElement, Examples::MaskAreaParams>(
-                step.transform_name, inputs, params);
-        }
-        
-        throw std::runtime_error("Parameter type dispatch not implemented for time-grouped transform: " + 
-                                std::string(param_type.name()));
+        // Use the registry's dynamic parameter execution for time-grouped transforms
+        // This uses the registered factories to create a typed executor on the fly
+        std::any input_any = inputs;
+        std::any result_any = registry.executeTimeGroupedWithDynamicParams(
+            step.transform_name, input_any, step.params,
+            typeid(InputElement), typeid(OutputElement), param_type);
+            
+        return std::any_cast<std::vector<OutputElement>>(std::move(result_any));
     }
     
     std::vector<PipelineStep> steps_;
