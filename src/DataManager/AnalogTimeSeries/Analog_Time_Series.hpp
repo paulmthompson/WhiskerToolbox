@@ -712,6 +712,38 @@ private:
      * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the last TimeFrameIndex <= target_time, or std::nullopt if no such index exists
      */
     [[nodiscard]] std::optional<DataArrayIndex> _findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
+
+    // ========== Iteration & Access ==========
+
+    /**
+     * @brief Get a view of (TimeFrameIndex, float) pairs
+     * 
+     * Enables iterating over the time series as a sequence of time-value pairs.
+     * Compatible with TransformPipeline.
+     */
+    [[nodiscard]] auto elements() const {
+        return std::views::iota(size_t(0), _data_storage.size()) 
+             | std::views::transform([this](size_t i) {
+                 return std::make_pair(
+                     _time_storage->getTimeFrameIndexAt(i),
+                     _data_storage.getValueAt(i)
+                 );
+             });
+    }
+
+    /**
+     * @brief Get value at specific time
+     * 
+     * @param time The time to get value for
+     * @return Optional float value if time exists
+     */
+    [[nodiscard]] std::optional<float> getAtTime(TimeFrameIndex time) const {
+        auto idx = _findDataArrayIndexForTimeFrameIndex(time);
+        if (idx) {
+            return _getDataAtDataArrayIndex(*idx);
+        }
+        return std::nullopt;
+    }
 };
 
 #endif// ANALOG_TIME_SERIES_HPP
