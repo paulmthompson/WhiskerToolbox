@@ -8,9 +8,6 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
-//#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
-//#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
-
 #include <any>
 #include <functional>
 #include <map>
@@ -209,22 +206,20 @@ public:
     }
     
     /**
-     * @brief Execute a two-step pipeline with full type specification
+     * @brief Execute a multi-step pipeline with full type specification
      * 
-     * This method composes transforms into a single element-level function
-     * before iteration, enabling true element-by-element execution with
-     * no intermediate containers.
+     * This method supports arbitrary pipeline lengths (N steps) by dynamically
+     * dispatching between element-wise and time-grouped transforms.
+     * 
+     * Execution Strategy:
+     * 1. Groups adjacent element-wise transforms into fused segments
+     * 2. Iterates through time points (keeping data hot)
+     * 3. For each time point, chains segments using type-erased vectors
      * 
      * @tparam InputContainer Input container type (e.g., MaskData)
      * @tparam OutputContainer Final output container type (e.g., AnalogTimeSeries)
      * @param input Input data
      * @return Shared pointer to final output
-     * 
-     * Performance characteristics:
-     * - Single pass through data
-     * - No intermediate container allocations
-     * - Cache-friendly (hot data stays in cache)
-     * - Only type erasure cost is at composition time, not per-element
      */
     template<typename InputContainer, typename OutputContainer>
     std::shared_ptr<OutputContainer> execute(InputContainer const& input) const {
@@ -232,42 +227,157 @@ public:
             throw std::runtime_error("Pipeline has no steps");
         }
         
-        if (steps_.size() != 2) {
-            throw std::runtime_error("Generic execute currently supports only 2-step pipelines");
-        }
-        
         auto& registry = ElementRegistry::instance();
         
-        // Get metadata for both steps
-        auto const* meta1 = registry.getMetadata(steps_[0].transform_name);
-        auto const* meta2 = registry.getMetadata(steps_[1].transform_name);
+        // 1. Compile pipeline into segments
+        struct Segment {
+            bool is_element_wise;
+            std::vector<size_t> step_indices; // Indices into steps_
+            std::type_index input_type = typeid(void);
+            std::type_index output_type = typeid(void);
+            
+            // For fused element segment
+            std::function<std::any(std::any)> fused_fn;
+        };
         
-        if (!meta1 || !meta2) {
-            throw std::runtime_error("Transform not found in registry");
-        }
+        std::vector<Segment> segments;
         
-        using InputElement = ElementFor_t<InputContainer>;
-        
-        // Build composed executor for element-level transforms
-        // This happens ONCE, then we iterate with the composed function
-        if (!meta1->is_time_grouped) {
-            if (meta1->output_type == typeid(float)) {
-                // Step 1 produces intermediate floats
-                // Check if step 2 is time-grouped (requires collecting per-time)
-                if (meta2->is_time_grouped && meta2->output_type == typeid(float)) {
-                    // Need intermediate ragged structure for time-grouped transform
-                    auto intermediate = applyElementTransformGeneric<InputContainer, InputElement, float>(
-                        input, steps_[0], meta1->params_type);
-                    
-                    return applyTimeGroupedTransformGeneric<
-                        decltype(*intermediate), OutputContainer, float, float>(
-                        *intermediate, steps_[1], meta2->params_type);
+        for (size_t i = 0; i < steps_.size(); ++i) {
+            auto const& step = steps_[i];
+            auto const* meta = registry.getMetadata(step.transform_name);
+            if (!meta) throw std::runtime_error("Transform not found: " + step.transform_name);
+            
+            if (meta->is_time_grouped) {
+                // Time-grouped transform is always its own segment
+                Segment seg;
+                seg.is_element_wise = false;
+                seg.step_indices = {i};
+                seg.input_type = meta->input_type;
+                seg.output_type = meta->output_type;
+                segments.push_back(std::move(seg));
+            } else {
+                // Element-wise transform: merge with previous if possible
+                if (!segments.empty() && segments.back().is_element_wise) {
+                    segments.back().step_indices.push_back(i);
+                    segments.back().output_type = meta->output_type;
+                } else {
+                    Segment seg;
+                    seg.is_element_wise = true;
+                    seg.step_indices = {i};
+                    seg.input_type = meta->input_type;
+                    seg.output_type = meta->output_type;
+                    segments.push_back(std::move(seg));
                 }
             }
-            // Add more output types here as needed (Line2D, Mask2D, etc.)
         }
         
-        throw std::runtime_error("Unsupported pipeline configuration");
+        // 2. Build fused functions for element segments
+        for (auto& seg : segments) {
+            if (seg.is_element_wise) {
+                std::vector<std::function<std::any(std::any)>> chain;
+                for (size_t idx : seg.step_indices) {
+                    auto const& step = steps_[idx];
+                    auto const* meta = registry.getMetadata(step.transform_name);
+                    chain.push_back(buildTypeErasedFunction(step, meta));
+                }
+                
+                seg.fused_fn = [chain = std::move(chain)](std::any input) -> std::any {
+                    std::any current = std::move(input);
+                    for (auto const& fn : chain) {
+                        current = fn(std::move(current));
+                    }
+                    return current;
+                };
+            }
+        }
+        
+        // 3. Prepare output container
+        auto output = std::make_shared<OutputContainer>();
+        output->setTimeFrame(input.getTimeFrame());
+        
+        using InputElement = ElementFor_t<InputContainer>;
+        using OutputElement = ElementFor_t<OutputContainer>;
+        
+        // 4. Execute pipeline time-point by time-point
+        // This keeps data hot in cache as we process one time point fully before moving to next
+        auto time_indices = input.getTimeIndices();
+        
+        for (auto time : time_indices) {
+            // Initial data extraction
+            // We need to start with a vector<std::any> representing the input elements at this time
+            std::vector<std::any> current_vec_any;
+            
+            // Check if input container supports direct access
+            if constexpr (requires { input.getDataAtTime(time); }) {
+                // For RaggedTimeSeries-like inputs
+                auto const& data = input.getDataAtTime(time); // span or vector
+                current_vec_any.reserve(data.size());
+                for (auto const& elem : data) {
+                    current_vec_any.push_back(std::any{elem});
+                }
+            } else {
+                // Fallback or error
+                 throw std::runtime_error("Input container does not support getDataAtTime");
+            }
+            
+            std::type_index current_type = typeid(InputElement);
+            
+            // Pass through segments
+            for (auto const& seg : segments) {
+                if (seg.is_element_wise) {
+                    // Apply fused element transform to each element in vector
+                    // We don't need to know the vector type here, just iterate std::any
+                    std::vector<std::any> next_vec_any;
+                    next_vec_any.reserve(current_vec_any.size());
+                    
+                    for (auto& elem_any : current_vec_any) {
+                        next_vec_any.push_back(seg.fused_fn(std::move(elem_any)));
+                    }
+                    current_vec_any = std::move(next_vec_any);
+                } else {
+                    // Time-grouped transform
+                    // We have vector<std::any>, need to convert to span<T> wrapped in any
+                    // Use ContainerOps to do the conversion
+                    auto const& ops = registry.getContainerOps(seg.input_type);
+                    
+                    // 1. Reconstruct typed vector from vector<std::any>
+                    // We use buildVector to create vector<T> inside std::any
+                    std::any typed_vec_any = ops.buildVector(current_vec_any.size(), 
+                        [&](size_t i) { return current_vec_any[i]; });
+                        
+                    // 2. Convert to span<T> wrapped in any
+                    std::any span_any = ops.vectorToSpan(typed_vec_any);
+                    
+                    // 3. Execute transform
+                    // Result is vector<Out> wrapped in any
+                    auto const& step = steps_[seg.step_indices[0]];
+                    auto const* meta = registry.getMetadata(step.transform_name);
+                    
+                    std::any result_any = registry.executeTimeGroupedWithDynamicParams(
+                        step.transform_name, span_any, step.params,
+                        seg.input_type, seg.output_type, meta->params_type);
+                        
+                    // 4. Convert result vector<Out> back to vector<std::any>
+                    // We need ops for output type
+                    auto const& out_ops = registry.getContainerOps(seg.output_type);
+                    size_t res_size = out_ops.getSize(result_any);
+                    
+                    current_vec_any.clear();
+                    current_vec_any.reserve(res_size);
+                    for (size_t i = 0; i < res_size; ++i) {
+                        current_vec_any.push_back(out_ops.getElement(result_any, i));
+                    }
+                }
+                current_type = seg.output_type;
+            }
+            
+            // 5. Add final results to output container
+            for (auto& res_any : current_vec_any) {
+                addElementToContainer(*output, time, std::any_cast<OutputElement>(std::move(res_any)));
+            }
+        }
+        
+        return output;
     }
     
     /**

@@ -236,6 +236,10 @@ public:
         
         // Auto-register all parameter-related factories (JSON, validator, executor, PipelineStep)
         registerParamDeserializerIfNeeded<In, Out, Params>();
+        
+        // Register container operations for input and output types
+        registerContainerOps<In>();
+        registerContainerOps<Out>();
     }
     
     /**
@@ -301,6 +305,10 @@ public:
         
         // Auto-register all parameter-related factories
         registerParamDeserializerIfNeeded<In, Out, Params>();
+        
+        // Register container operations for input and output types
+        registerContainerOps<In>();
+        registerContainerOps<Out>();
     }
     
     /**
@@ -988,6 +996,83 @@ private:
         std::type_index,
         std::function<bool(std::any const&)>
     > param_validators_;
+
+    // ========================================================================
+    // Container Operations (Type Erasure Support)
+    // ========================================================================
+    
+public:
+    struct ContainerOps {
+        // Get size of vector<T> wrapped in any
+        std::function<size_t(std::any const&)> getSize;
+        
+        // Get element at index from vector<T> wrapped in any
+        std::function<std::any(std::any const&, size_t)> getElement;
+        
+        // Build vector<T> from generator function
+        std::function<std::any(size_t, std::function<std::any(size_t)>)> buildVector;
+        
+        // Convert vector<T> (in any) to span<T const> (in any)
+        std::function<std::any(std::any const&)> vectorToSpan;
+    };
+    
+    /**
+     * @brief Register container operations for a type T
+     * 
+     * Enables generic pipeline execution by providing type-erased access
+     * to vector<T> and span<T>.
+     */
+    template<typename T>
+    void registerContainerOps() {
+        std::type_index type_idx = typeid(T);
+        if (container_ops_.find(type_idx) != container_ops_.end()) {
+            return;
+        }
+        
+        ContainerOps ops;
+        
+        ops.getSize = [](std::any const& vec_any) -> size_t {
+            auto const& vec = std::any_cast<std::vector<T> const&>(vec_any);
+            return vec.size();
+        };
+        
+        ops.getElement = [](std::any const& vec_any, size_t index) -> std::any {
+            auto const& vec = std::any_cast<std::vector<T> const&>(vec_any);
+            return std::any{vec[index]};
+        };
+        
+        ops.buildVector = [](size_t size, std::function<std::any(size_t)> generator) -> std::any {
+            std::vector<T> vec;
+            vec.reserve(size);
+            for (size_t i = 0; i < size; ++i) {
+                vec.push_back(std::any_cast<T>(generator(i)));
+            }
+            return std::any{std::move(vec)};
+        };
+        
+        ops.vectorToSpan = [](std::any const& vec_any) -> std::any {
+            auto const& vec = std::any_cast<std::vector<T> const&>(vec_any);
+            return std::any{std::span<T const>{vec}};
+        };
+        
+        container_ops_[type_idx] = std::move(ops);
+    }
+    
+    /**
+     * @brief Get container operations for a type
+     */
+    ContainerOps const& getContainerOps(std::type_index type_idx) const {
+        auto it = container_ops_.find(type_idx);
+        if (it == container_ops_.end()) {
+            throw std::runtime_error("No container operations registered for type: " + 
+                                   std::string(type_idx.name()));
+        }
+        return it->second;
+    }
+
+private:
+    // Container operations for type erasure
+    std::unordered_map<std::type_index, ContainerOps> container_ops_;
 };
 
 // ============================================================================
