@@ -89,6 +89,7 @@ inline auto const register_sum_reduction = RegisterTimeGroupedTransform<float, f
                 .output_type = typeid(float),
                 .params_type = typeid(SumReductionParams),
                 .is_time_grouped = true,
+                .produces_single_output = true,
                 .input_type_name = "float",
                 .output_type_name = "float",
                 .params_type_name = "SumReductionParams",

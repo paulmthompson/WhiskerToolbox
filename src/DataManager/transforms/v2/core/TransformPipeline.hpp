@@ -6,6 +6,11 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
+#include "DataManager/DataManagerTypes.hpp"
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Points/Point_Data.hpp"
 #include "ElementRegistry.hpp"
 
 #include <any>
@@ -266,91 +271,23 @@ public:
         return *this;
     }
 
+private:
+    struct Segment {
+        bool is_element_wise;
+        std::vector<size_t> step_indices;// Indices into steps_
+        std::type_index input_type = typeid(void);
+        std::type_index output_type = typeid(void);
+
+        // For fused element segment
+        std::function<std::any(std::any)> fused_fn;
+    };
+
     /**
-     * @brief Execute a multi-step pipeline with full type specification
-     * 
-     * This method supports arbitrary pipeline lengths (N steps) by dynamically
-     * dispatching between element-wise and time-grouped transforms.
-     * 
-     * Execution Strategy:
-     * 1. Groups adjacent element-wise transforms into fused segments
-     * 2. Iterates through time points (keeping data hot)
-     * 3. For each time point, chains segments using type-erased vectors
-     * 
-     * @tparam InputContainer Input container type (e.g., MaskData)
-     * @tparam OutputContainer Final output container type (e.g., AnalogTimeSeries)
-     * @param input Input data
-     * @return Shared pointer to final output
+     * @brief Internal execution logic with known types
      */
     template<typename InputContainer, typename OutputContainer>
-    std::shared_ptr<OutputContainer> execute(InputContainer const & input) const {
-        if (steps_.empty()) {
-            throw std::runtime_error("Pipeline has no steps");
-        }
-
+    std::shared_ptr<OutputContainer> executeImpl(InputContainer const & input, std::vector<Segment> const & segments) const {
         auto & registry = ElementRegistry::instance();
-
-        // 1. Compile pipeline into segments
-        struct Segment {
-            bool is_element_wise;
-            std::vector<size_t> step_indices;// Indices into steps_
-            std::type_index input_type = typeid(void);
-            std::type_index output_type = typeid(void);
-
-            // For fused element segment
-            std::function<std::any(std::any)> fused_fn;
-        };
-
-        std::vector<Segment> segments;
-
-        for (size_t i = 0; i < steps_.size(); ++i) {
-            auto const & step = steps_[i];
-            auto const * meta = registry.getMetadata(step.transform_name);
-            if (!meta) throw std::runtime_error("Transform not found: " + step.transform_name);
-
-            if (meta->is_time_grouped) {
-                // Time-grouped transform is always its own segment
-                Segment seg;
-                seg.is_element_wise = false;
-                seg.step_indices = {i};
-                seg.input_type = meta->input_type;
-                seg.output_type = meta->output_type;
-                segments.push_back(std::move(seg));
-            } else {
-                // Element-wise transform: merge with previous if possible
-                if (!segments.empty() && segments.back().is_element_wise) {
-                    segments.back().step_indices.push_back(i);
-                    segments.back().output_type = meta->output_type;
-                } else {
-                    Segment seg;
-                    seg.is_element_wise = true;
-                    seg.step_indices = {i};
-                    seg.input_type = meta->input_type;
-                    seg.output_type = meta->output_type;
-                    segments.push_back(std::move(seg));
-                }
-            }
-        }
-
-        // 2. Build fused functions for element segments
-        for (auto & seg: segments) {
-            if (seg.is_element_wise) {
-                std::vector<std::function<std::any(std::any)>> chain;
-                for (size_t idx: seg.step_indices) {
-                    auto const & step = steps_[idx];
-                    auto const * meta = registry.getMetadata(step.transform_name);
-                    chain.push_back(buildTypeErasedFunction(step, meta));
-                }
-
-                seg.fused_fn = [chain = std::move(chain)](std::any input) -> std::any {
-                    std::any current = std::move(input);
-                    for (auto const & fn: chain) {
-                        current = fn(std::move(current));
-                    }
-                    return current;
-                };
-            }
-        }
 
         // 3. Prepare output builder
         PipelineOutputBuilder<OutputContainer, ElementFor_t<OutputContainer>> builder(input.getTimeFrame());
@@ -451,12 +388,110 @@ public:
             time_buffer.push_back(std::move(val));
         }
 
-        // Flush last buffer
-        if (!first_element) {
+        // Process last buffer
+        if (!time_buffer.empty()) {
             process_buffer(current_time);
         }
 
         return builder.finalize();
+    }
+
+public:
+
+
+    /**
+     * @brief Execute pipeline and return variant result
+     * 
+     * Determines output container type at runtime based on pipeline steps
+     * and input raggedness.
+     */
+    template<typename InputContainer>
+    DataTypeVariant execute(InputContainer const & input) const {
+        if (steps_.empty()) {
+            throw std::runtime_error("Pipeline has no steps");
+        }
+
+        auto & registry = ElementRegistry::instance();
+
+        // 1. Compile pipeline into segments
+        std::vector<Segment> segments;
+        bool is_ragged = InputContainer::DataTraits::is_ragged;
+
+        for (size_t i = 0; i < steps_.size(); ++i) {
+            auto const & step = steps_[i];
+            auto const * meta = registry.getMetadata(step.transform_name);
+            if (!meta) throw std::runtime_error("Transform not found: " + step.transform_name);
+
+            if (meta->is_time_grouped) {
+                // Time-grouped transform is always its own segment
+                Segment seg;
+                seg.is_element_wise = false;
+                seg.step_indices = {i};
+                seg.input_type = meta->input_type;
+                seg.output_type = meta->output_type;
+                segments.push_back(std::move(seg));
+                
+                // Assume time-grouped transforms produce ragged output unless proven otherwise
+                if (meta->produces_single_output) {
+                    is_ragged = false;
+                } else {
+                    is_ragged = true;
+                } 
+            } else {
+                // Element-wise transform: merge with previous if possible
+                if (!segments.empty() && segments.back().is_element_wise) {
+                    segments.back().step_indices.push_back(i);
+                    segments.back().output_type = meta->output_type;
+                } else {
+                    Segment seg;
+                    seg.is_element_wise = true;
+                    seg.step_indices = {i};
+                    seg.input_type = meta->input_type;
+                    seg.output_type = meta->output_type;
+                    segments.push_back(std::move(seg));
+                }
+                // Element-wise preserves raggedness
+            }
+        }
+
+        // 2. Build fused functions for element segments
+        for (auto & seg: segments) {
+            if (seg.is_element_wise) {
+                std::vector<std::function<std::any(std::any)>> chain;
+                for (size_t idx: seg.step_indices) {
+                    auto const & step = steps_[idx];
+                    auto const * meta = registry.getMetadata(step.transform_name);
+                    chain.push_back(buildTypeErasedFunction(step, meta));
+                }
+
+                seg.fused_fn = [chain = std::move(chain)](std::any input) -> std::any {
+                    std::any current = std::move(input);
+                    for (auto const & fn: chain) {
+                        current = fn(std::move(current));
+                    }
+                    return current;
+                };
+            }
+        }
+
+        // 3. Determine output container type and dispatch
+        std::type_index final_type = segments.back().output_type;
+
+        if (final_type == typeid(float)) {
+            if (is_ragged) {
+                return executeImpl<InputContainer, RaggedAnalogTimeSeries>(input, segments);
+            } else {
+                return executeImpl<InputContainer, AnalogTimeSeries>(input, segments);
+            }
+        } else if (final_type == typeid(Mask2D)) {
+            return executeImpl<InputContainer, MaskData>(input, segments);
+        } else if (final_type == typeid(Line2D)) {
+            return executeImpl<InputContainer, LineData>(input, segments);
+        } else if (final_type == typeid(Point2D<float>)) {
+            return executeImpl<InputContainer, PointData>(input, segments);
+        } else {
+            throw std::runtime_error("Unsupported output element type: " + std::string(final_type.name()));
+        }
     }
 
     /**
@@ -531,28 +566,10 @@ public:
 
         auto & registry = ElementRegistry::instance();
 
+        std::vector<std::function<std::any(std::any)>> transform_chain;
+
         // Verify all steps are element-level (not time-grouped)
         for (auto const & step: steps_) {
-            auto const * meta = registry.getMetadata(step.transform_name);
-            if (!meta) {
-                throw std::runtime_error("Transform not found: " + step.transform_name);
-            }
-            if (meta->is_time_grouped) {
-                throw std::runtime_error("Cannot fuse pipeline containing time-grouped transform: " +
-                                         step.transform_name);
-            }
-        }
-
-        using InputElement = ElementFor_t<InputContainer>;
-        using OutputElement = ElementFor_t<OutputContainer>;
-
-        // Build a chain of type-erased transform functions
-        // Each function takes std::any and returns std::any
-        std::vector<std::function<std::any(std::any)>> transform_chain;
-        transform_chain.reserve(steps_.size());
-
-        for (size_t i = 0; i < steps_.size(); ++i) {
-            auto const & step = steps_[i];
             auto const * meta = registry.getMetadata(step.transform_name);
 
             // Create a type-erased function for this step
@@ -572,6 +589,7 @@ public:
         };
 
         // Execute in single pass with composed function
+        using OutputElement = ElementFor_t<OutputContainer>;
         PipelineOutputBuilder<OutputContainer, OutputElement> builder(input.getTimeFrame());
 
         for (auto const & [time, entry]: input.elements()) {
@@ -943,6 +961,21 @@ private:
 };
 
 
-}// namespace WhiskerToolbox::Transforms::V2
+/**
+ * @brief Execute pipeline on variant input
+ */
+inline DataTypeVariant executePipeline(DataTypeVariant const& input, TransformPipeline const& pipeline) {
+    return std::visit([&](auto const& ptr) -> DataTypeVariant {
+        using T = typename std::remove_reference_t<decltype(*ptr)>;
+        // Check if T is a valid input container (has DataTraits)
+        if constexpr (TypeTraits::HasDataTraits<T>) {
+            return pipeline.execute<T>(*ptr);
+        } else {
+            throw std::runtime_error("Unsupported input container type in variant");
+        }
+    }, input);
+}
 
-#endif// WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
+} // namespace WhiskerToolbox::Transforms::V2
+
+#endif // WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP

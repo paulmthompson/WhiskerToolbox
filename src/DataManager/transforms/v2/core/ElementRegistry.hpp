@@ -143,6 +143,7 @@ struct TransformMetadata {
     std::vector<std::type_index> individual_input_types;// For multi-input
 
     bool is_time_grouped = false;// True if this operates on span<Element> per time
+    bool produces_single_output = false; // True if time-grouped transform produces exactly 1 output per time point
 
     // For UI generation
     std::string input_type_name;

@@ -2,6 +2,7 @@
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
+#include "transforms/v2/core/RegisteredTransforms.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -163,7 +164,8 @@ inline std::shared_ptr<AnalogTimeSeries> calculateAndSumMaskAreas(
     MaskData const& mask_data)
 {
     auto pipeline = createMaskAreaSumPipeline();
-    return pipeline.execute<MaskData, AnalogTimeSeries>(mask_data);
+    auto result_variant = pipeline.execute<MaskData>(mask_data);
+    return std::get<std::shared_ptr<AnalogTimeSeries>>(result_variant);
 }
 
 /**
@@ -349,18 +351,10 @@ TEST_CASE("TransformsV2 - MaskData to RaggedAnalogTimeSeries Manual", "[transfor
 
 TEST_CASE("TransformsV2 - Registry Materialize Container", "[transforms][v2][integration][registry]") {
     // Test automatic container transform materialization
-    ElementRegistry registry;
+    auto& registry = ElementRegistry::instance();
     
-    // Register element transform: Mask2D → float
-    TransformMetadata metadata;
-    metadata.description = "Calculate mask area";
-    metadata.category = "Image Processing";
-    
-    registry.registerTransform<Mask2D, float, MaskAreaParams>(
-        "CalculateMaskArea",
-        calculateMaskArea,
-        metadata
-    );
+    // Transforms are already registered via RegisteredTransforms.hpp
+
     
     // Create test data: MaskData with multiple masks
     std::vector<int> times = {0, 10, 20};
@@ -513,28 +507,9 @@ TEST_CASE("TransformsV2 - Chained Transform: Mask Area + Sum Reduction", "[trans
     std::cout << "  Time 100: 3 masks (areas 3, 7, 2)\n";
     std::cout << "  Time 200: 1 mask (area 20)\n";
     
-    // Create registry and register transforms
-    ElementRegistry registry;
-    
-    // Register element transform: Mask2D → float
-    registry.registerTransform<Mask2D, float, MaskAreaParams>(
-        "CalculateMaskArea",
-        calculateMaskArea,
-        TransformMetadata{
-            .description = "Calculate area of mask",
-            .category = "Geometry"
-        }
-    );
-    
-    // Register time-grouped transform: span<float> → vector<float> (with sum)
-    registry.registerTimeGroupedTransform<float, float, SumReductionParams>(
-        "SumReduction",
-        sumReduction,
-        TransformMetadata{
-            .description = "Sum all values at each time point",
-            .category = "Statistics"
-        }
-    );
+    // Use global registry (transforms registered via RegisteredTransforms.hpp)
+    auto& registry = ElementRegistry::instance();
+
     
     std::cout << "\nStep 1: MaskData → RaggedAnalogTimeSeries (element transform)\n";
     
@@ -731,7 +706,8 @@ TEST_CASE("TransformsV2 - Transform Pipeline", "[transforms][v2][pipeline]") {
     
     // Execute pipeline (uses standard materialized execution since step 2 is time-grouped)
     std::cout << "\nExecuting pipeline (materialized - has time-grouped transform)...\n";
-    auto result = pipeline.execute<MaskData, AnalogTimeSeries>(mask_data);
+    auto result_variant = pipeline.execute<MaskData>(mask_data);
+    auto result = std::get<std::shared_ptr<AnalogTimeSeries>>(result_variant);
     
     REQUIRE(result != nullptr);
     REQUIRE(result->getNumSamples() == 3);

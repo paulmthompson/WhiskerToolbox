@@ -527,6 +527,12 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
 
+    /**
+     * @brief Get the time frame
+     * 
+     * @return std::shared_ptr<TimeFrame> The time frame
+     */
+    [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const { return _time_frame; }
 
     /**
  * @brief Get a ranges-compatible view of the entire series.
@@ -713,6 +719,7 @@ private:
      */
     [[nodiscard]] std::optional<DataArrayIndex> _findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
 
+public:
     // ========== Iteration & Access ==========
 
     /**

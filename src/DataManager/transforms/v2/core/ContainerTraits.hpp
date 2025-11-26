@@ -19,8 +19,8 @@ class DigitalEventSeries;
 class DigitalIntervalSeries;
 class TimeFrame;
 
-struct Mask2D;
-struct Line2D;
+class Mask2D;
+class Line2D;
 template<typename T> struct Point2D;
 
 namespace WhiskerToolbox::Transforms::V2 {
