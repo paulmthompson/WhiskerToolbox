@@ -400,10 +400,17 @@ public:
 
 
     /**
-     * @brief Execute pipeline and return variant result
+     * @brief Execute pipeline and return variant result (Generalist)
      * 
      * Determines output container type at runtime based on pipeline steps
-     * and input raggedness.
+     * and input raggedness. This is the primary entry point for runtime-composed
+     * pipelines (e.g. from UI) where the output type is not known at compile time.
+     * 
+     * Uses a buffered execution model that handles transitions between element-wise
+     * and time-grouped transforms.
+     * 
+     * @see executeOptimized For compile-time known types with automatic optimization
+     * @see executeFused For high-performance pure element-wise pipelines
      */
     template<typename InputContainer>
     DataTypeVariant execute(InputContainer const & input) const {
@@ -495,16 +502,21 @@ public:
     }
 
     /**
-     * @brief Execute pipeline with automatic fusion optimization
+     * @brief Execute pipeline with automatic fusion optimization (Dispatcher)
      * 
      * Analyzes the pipeline structure and chooses the optimal execution strategy:
-     * - Pure element chains: Fused single-pass execution
-     * - Chains with time-grouped: Materialized intermediate execution
+     * - Pure element chains: Fused single-pass execution (via executeFused)
+     * - Chains with time-grouped: Materialized intermediate execution (via execute)
+     * 
+     * Use this when the output type is known at compile time.
      * 
      * @tparam InputContainer Input container type
      * @tparam OutputContainer Output container type
      * @param input Input data
      * @return Output container
+     * 
+     * @see executeFused The specialized implementation for pure element pipelines
+     * @see execute The general implementation handling time-grouped transforms
      */
     template<typename InputContainer, typename OutputContainer>
     std::shared_ptr<OutputContainer> executeOptimized(InputContainer const & input) const {
@@ -534,7 +546,7 @@ public:
     }
 
     /**
-     * @brief Execute a multi-step element-level pipeline with full fusion
+     * @brief Execute a multi-step element-level pipeline with full fusion (Specialist)
      * 
      * For element→element→element pipelines (no time-grouped transforms),
      * this composes all transforms into a single function and executes in
@@ -557,6 +569,9 @@ public:
      * @tparam OutputContainer Output container type
      * @param input Input data
      * @return Output with composed transformation applied
+     * 
+     * @see executeOptimized Automatic selection of this method
+     * @see executeAsView For lazy evaluation without materialization
      */
     template<typename InputContainer, typename OutputContainer>
     std::shared_ptr<OutputContainer> executeFused(InputContainer const & input) const {
@@ -623,7 +638,7 @@ public:
     }
 
     /**
-     * @brief Execute the pipeline and return a lazy view (no materialization)
+     * @brief Execute the pipeline and return a lazy view (Lazy Evaluator)
      * 
      * This method returns a lazy range view that applies all pipeline transforms
      * on-demand as elements are accessed. No intermediate or output containers
@@ -649,6 +664,9 @@ public:
      * @return Lazy range view of (TimeFrameIndex, OutputElement) pairs
      * 
      * @throws std::runtime_error if pipeline contains time-grouped transforms
+     * 
+     * @see executeAsViewTyped For type-safe lazy evaluation
+     * @see executeFused For eager evaluation with similar performance characteristics
      * 
      * @example
      * ```cpp
@@ -737,7 +755,7 @@ public:
     }
 
     /**
-     * @brief Execute pipeline as view with explicit output type (type-safe version)
+     * @brief Execute pipeline as view with explicit output type (Type-Safe Lazy Evaluator)
      * 
      * This is a type-safe wrapper around executeAsView() that ensures the output
      * type is known at compile time. The returned view yields (TimeFrameIndex, OutElement)
@@ -747,6 +765,8 @@ public:
      * @tparam OutElement Expected output element type
      * @param input Input data
      * @return Lazy range view of (TimeFrameIndex, OutElement) pairs
+     * 
+     * @see executeAsView For the underlying generic implementation
      * 
      * @example
      * ```cpp
