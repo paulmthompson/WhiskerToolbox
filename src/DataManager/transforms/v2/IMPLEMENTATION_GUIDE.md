@@ -317,16 +317,25 @@ float angle = registry.execute<Line2D, float, AngleParams>(
     "LineAngle", line, params3);
 ```
 
-#### Pipeline Builder (Coming in Phase 2)
+#### Fused Pipeline Execution
 
 ```cpp
-auto pipeline = PipelineBuilder<Mask2D, float>()
-    .addStep<SkeletonParams>("Skeletonize", params1)
-    .addStep<MaskToLineParams>("MaskToLine", params2)
-    .addStep<AngleParams>("LineAngle", params3)
-    .build();
+// Typed Pipeline (Compile-time output type)
+TransformPipeline<MaskData, AnalogTimeSeries> pipeline;
+pipeline.addStep<SkeletonParams>("Skeletonize", params1);
+pipeline.addStep<MaskToLineParams>("MaskToLine", params2);
+pipeline.addStep<AngleParams>("LineAngle", params3);
 
-float angle = pipeline.execute(mask);
+auto angles = pipeline.execute(masks);
+
+// Dynamic Pipeline (Runtime output type)
+TransformPipeline<MaskData> dynamic_pipeline;
+dynamic_pipeline.addStep<SkeletonParams>("Skeletonize", params1);
+dynamic_pipeline.addStep<MaskToLineParams>("MaskToLine", params2);
+dynamic_pipeline.addStep<AngleParams>("LineAngle", params3);
+
+// Returns DataTypeVariant
+DataTypeVariant result = dynamic_pipeline.execute(masks);
 ```
 
 ### Lazy Evaluation (Coming in Phase 2)
@@ -405,8 +414,8 @@ auto result = pipeline->execute(masks, [](int p) {
     updateProgressBar(p);
 });
 
-// Result is shared_ptr<AnalogTimeSeries>
-auto angles = std::any_cast<std::shared_ptr<AnalogTimeSeries>>(result);
+// Result is DataTypeVariant
+auto angles = std::get<std::shared_ptr<AnalogTimeSeries>>(result);
 ```
 
 ## Part 5: Migration from V1

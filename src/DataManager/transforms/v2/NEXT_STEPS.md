@@ -19,7 +19,7 @@
 **Performance Characteristics:**
 - Parameter cast: Once per pipeline (not per element)
 - Type dispatch: Once per pipeline (not per element)
-- Per-element overhead: ~2 virtual calls + 2 any_casts (input/output only)
+- Per-element overhead: ~2 virtual calls + 2 variant visits (input/output only)
 - Fusion: Multiple transforms execute in single pass (no intermediate containers)
 - View Mode: Pull-based execution, zero intermediate allocations, compatible with std::views
 

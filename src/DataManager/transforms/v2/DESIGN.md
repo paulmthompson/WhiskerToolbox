@@ -169,7 +169,7 @@ auto areas = pipeline.execute(masks);  // Single pass, no intermediate MaskData
 Returns a lazy view that computes elements on-demand. Zero intermediate allocations.
 
 ```cpp
-// Returns lazy view of (TimeFrameIndex, std::any) pairs
+// Returns lazy view of (TimeFrameIndex, DataTypeVariant) pairs
 auto view = pipeline.executeAsView(masks);
 
 // Or typed view
@@ -181,6 +181,19 @@ auto filtered = view_typed
 
 // Materialize only when needed
 auto result = std::make_shared<RaggedAnalogTimeSeries>(filtered);
+```
+
+**Mode C: Dynamic Output (Single Template)**
+Allows specifying only the input type, with the output type being a variant. This simplifies runtime dispatch by reducing the combinatorial explosion of template instantiations.
+
+```cpp
+// Pipeline with known input but dynamic output
+TransformPipeline<MaskData> pipeline; 
+pipeline.addStep<SkeletonParams>("Skeletonize", p1);
+pipeline.addStep<MaskAreaParams>("CalculateArea", p2);
+
+// Returns DataTypeVariant
+DataTypeVariant result = pipeline.execute(masks);
 ```
 
 **Benefits Achieved**:
@@ -417,7 +430,7 @@ See `NEXT_STEPS.md` for detailed roadmap.
 **Option A: Virtual function call per element**
 ```cpp
 class ITransform {
-    virtual std::any execute(std::any const& input) = 0;
+    virtual DataTypeVariant execute(DataTypeVariant const& input) = 0;
 };
 
 for (auto& mask : masks) {

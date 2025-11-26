@@ -91,6 +91,13 @@ pipeline.addStep<MaskAreaParams>("CalculateArea", params2);
 // Executes both transforms in one pass (no intermediate MaskData)
 auto areas = pipeline.execute(masks);
 
+// Dynamic Output (Single Template):
+// Useful when output type is not known at compile time
+TransformPipeline<MaskData> dynamic_pipeline;
+dynamic_pipeline.addStep<SkeletonParams>("Skeletonize", params1);
+dynamic_pipeline.addStep<MaskAreaParams>("CalculateArea", params2);
+DataTypeVariant result = dynamic_pipeline.execute(masks);
+
 // Benefits:
 // - Single iteration over input data
 // - No intermediate container allocations
