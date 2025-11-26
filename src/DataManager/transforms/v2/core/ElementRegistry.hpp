@@ -5,6 +5,7 @@
 #include "ElementTransform.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TransformTypes.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -64,6 +65,16 @@ struct TypeTripleHash {
     }
 };
 
+// Helper to check if type T is in Variant
+template<typename T, typename Variant>
+struct is_in_variant;
+
+template<typename T, typename... Ts>
+struct is_in_variant<T, std::variant<Ts...>> : std::disjunction<std::is_same<T, Ts>...> {};
+
+template<typename T, typename Variant>
+inline constexpr bool is_in_variant_v = is_in_variant<T, Variant>::value;
+
 // ============================================================================
 // Typed Parameter Executor (stores parameters and types)
 // ============================================================================
@@ -77,7 +88,7 @@ struct TypeTripleHash {
 class IParamExecutor {
 public:
     virtual ~IParamExecutor() = default;
-    virtual std::any execute(std::string const & name, std::any const & input) const = 0;
+    virtual ElementVariant execute(std::string const & name, ElementVariant const & input) const = 0;
 };
 
 /**
@@ -86,7 +97,7 @@ public:
 class ITimeGroupedParamExecutor {
 public:
     virtual ~ITimeGroupedParamExecutor() = default;
-    virtual std::any execute(std::string const & name, std::any const & input_span) const = 0;
+    virtual BatchVariant execute(std::string const & name, BatchVariant const & input_span) const = 0;
 };
 
 /**
@@ -102,7 +113,7 @@ class TypedParamExecutor : public IParamExecutor {
 public:
     explicit TypedParamExecutor(Params params);
 
-    std::any execute(std::string const & name, std::any const & input_any) const override;
+    ElementVariant execute(std::string const & name, ElementVariant const & input_any) const override;
 
 private:
     Params params_;// Parameters captured at construction
@@ -116,7 +127,7 @@ class TypedTimeGroupedParamExecutor : public ITimeGroupedParamExecutor {
 public:
     explicit TypedTimeGroupedParamExecutor(Params params);
 
-    std::any execute(std::string const & name, std::any const & input_span_any) const override;
+    BatchVariant execute(std::string const & name, BatchVariant const & input_span_any) const override;
 
 private:
     Params params_;
@@ -732,16 +743,16 @@ public:
      * eliminating all per-element casts and dispatch overhead.
      * 
      * @param transform_name Name of the transform
-     * @param input_element Input element (type-erased)
+     * @param input_element Input element (variant)
      * @param params Parameters (type-erased)
      * @param in_type Input element type
      * @param out_type Output element type
      * @param param_type Parameter type
-     * @return Output element (type-erased)
+     * @return Output element (variant)
      */
-    std::any executeWithDynamicParams(
+    ElementVariant executeWithDynamicParams(
             std::string const & transform_name,
-            std::any const & input_element,
+            ElementVariant const & input_element,
             std::any const & params,
             std::type_index in_type,
             std::type_index out_type,
@@ -758,9 +769,9 @@ public:
     /**
      * @brief Execute time-grouped transform with typed executor
      */
-    std::any executeTimeGroupedWithDynamicParams(
+    BatchVariant executeTimeGroupedWithDynamicParams(
             std::string const & transform_name,
-            std::any const & input_span,
+            BatchVariant const & input_span,
             std::any const & params,
             std::type_index in_type,
             std::type_index out_type,
@@ -1072,14 +1083,22 @@ TypedParamExecutor<In, Out, Params>::TypedParamExecutor(Params params)
     : params_(std::move(params)) {}
 
 template<typename In, typename Out, typename Params>
-std::any TypedParamExecutor<In, Out, Params>::execute(
+ElementVariant TypedParamExecutor<In, Out, Params>::execute(
         std::string const & name,
-        std::any const & input_any) const {
-    // All types known - zero dispatch cost!
-    auto const & input = std::any_cast<In const &>(input_any);
-    auto & registry = ElementRegistry::instance();
-    Out result = registry.execute<In, Out, Params>(name, input, params_);
-    return std::any{result};
+        ElementVariant const & input_variant) const {
+    // Check if In and Out are supported by ElementVariant
+    if constexpr (is_in_variant_v<In, ElementVariant> && is_in_variant_v<Out, ElementVariant>) {
+        // All types known - zero dispatch cost!
+        if (auto const* input = std::get_if<In>(&input_variant)) {
+            auto & registry = ElementRegistry::instance();
+            Out result = registry.execute<In, Out, Params>(name, *input, params_);
+            return ElementVariant{result};
+        }
+        throw std::runtime_error("Input variant does not hold expected type: " + std::string(typeid(In).name()));
+    } else {
+        throw std::runtime_error("Type combination not supported by ElementVariant: " + 
+                                 std::string(typeid(In).name()) + " -> " + std::string(typeid(Out).name()));
+    }
 }
 
 template<typename In, typename Out, typename Params>
@@ -1087,13 +1106,27 @@ TypedTimeGroupedParamExecutor<In, Out, Params>::TypedTimeGroupedParamExecutor(Pa
     : params_(std::move(params)) {}
 
 template<typename In, typename Out, typename Params>
-std::any TypedTimeGroupedParamExecutor<In, Out, Params>::execute(
+BatchVariant TypedTimeGroupedParamExecutor<In, Out, Params>::execute(
         std::string const & name,
-        std::any const & input_span_any) const {
-    auto const & input_span = std::any_cast<std::span<In const> const &>(input_span_any);
-    auto & registry = ElementRegistry::instance();
-    std::vector<Out> result = registry.executeTimeGrouped<In, Out, Params>(name, input_span, params_);
-    return std::any{result};
+        BatchVariant const & input_batch) const {
+    
+    // Check if std::vector<In> and std::vector<Out> are supported by BatchVariant
+    using InVec = std::vector<In>;
+    using OutVec = std::vector<Out>;
+
+    if constexpr (is_in_variant_v<InVec, BatchVariant> && is_in_variant_v<OutVec, BatchVariant>) {
+        if (auto const* input_vec = std::get_if<InVec>(&input_batch)) {
+            auto & registry = ElementRegistry::instance();
+            std::span<In const> input_span(*input_vec);
+            std::vector<Out> result = registry.executeTimeGrouped<In, Out, Params>(name, input_span, params_);
+            return BatchVariant{result};
+        }
+        throw std::runtime_error("Input batch does not hold expected type: " + std::string(typeid(InVec).name()));
+    } else {
+        throw std::runtime_error("Type combination not supported by BatchVariant: " + 
+                                 std::string(typeid(InVec).name()) + " -> " + std::string(typeid(OutVec).name()));
+    }
+    throw std::runtime_error("Input batch does not hold expected type: " + std::string(typeid(std::vector<In>).name()));
 }
 
 // ============================================================================
@@ -1263,6 +1296,8 @@ public:
                 name, std::move(func), std::move(metadata));
     }
 };
-}// namespace WhiskerToolbox::Transforms::V2
+
+
+} // namespace WhiskerToolbox::Transforms::V2
 
 #endif// WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP

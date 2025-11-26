@@ -60,7 +60,7 @@ inline auto const register_mask_area = RegisterTransform<Mask2D, float, MaskArea
                 .supports_cancellation = false});
 
 // Register context-aware version
-inline auto const register_mask_area_ctx = RegisterContextTransform<Mask2D, std::vector<float>, MaskAreaParams>(
+inline auto const register_mask_area_ctx = RegisterContextTransform<Mask2D, float, MaskAreaParams>(
         "CalculateMaskAreaWithContext",
         calculateMaskAreaWithContext,
         TransformMetadata{
@@ -68,10 +68,10 @@ inline auto const register_mask_area_ctx = RegisterContextTransform<Mask2D, std:
                 .description = "Calculate the area of a mask with progress reporting",
                 .category = "Image Processing",
                 .input_type = typeid(Mask2D),
-                .output_type = typeid(std::vector<float>),
+                .output_type = typeid(float),
                 .params_type = typeid(MaskAreaParams),
                 .input_type_name = "Mask2D",
-                .output_type_name = "std::vector<float>",
+                .output_type_name = "float",
                 .params_type_name = "MaskAreaParams",
                 .is_expensive = false,
                 .is_deterministic = true,

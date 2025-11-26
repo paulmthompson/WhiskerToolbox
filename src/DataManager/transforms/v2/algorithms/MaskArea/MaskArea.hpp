@@ -94,7 +94,7 @@ inline float calculateMaskArea(
  * 
  * Demonstrates progress reporting and cancellation checking.
  */
-inline std::vector<float> calculateMaskAreaWithContext(
+inline float calculateMaskAreaWithContext(
     Mask2D const& mask,
     MaskAreaParams const& params,
     ComputeContext const& ctx) {
@@ -121,7 +121,7 @@ inline std::vector<float> calculateMaskAreaWithContext(
         }
     }
     
-    return {static_cast<float>(count)};
+    return static_cast<float>(count);
 }
 
 } // namespace WhiskerToolbox::Transforms::V2::Examples
