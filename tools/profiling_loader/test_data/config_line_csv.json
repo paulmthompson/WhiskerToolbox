@@ -1,0 +1,11 @@
+[
+  {
+    "data_type": "line",
+    "name": "line_csv",
+    "filepath": "line_data.csv",
+    "format": "csv",
+    "delimiter": ",",
+    "coordinate_delimiter": " ",
+    "has_header": false
+  }
+]

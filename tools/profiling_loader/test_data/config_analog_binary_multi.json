@@ -1,0 +1,10 @@
+[
+  {
+    "data_type": "analog",
+    "name": "analog_binary_multi",
+    "filepath": "analog_multi.bin",
+    "format": "int16",
+    "header_size": 0,
+    "channel_count": 4
+  }
+]

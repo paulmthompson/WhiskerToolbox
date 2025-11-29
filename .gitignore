@@ -17,5 +17,8 @@ vcpkg_installed
 vcpkg
 vcpkg_cache
 
-tools
-ninja-build/ninja
+tools/ClangBuildAnalyzer
+tools/heaptrack
+dist/
+ninja-build/
+*.zst
