@@ -714,6 +714,124 @@ public:
     }
 
     /**
+     * @brief Execute pipeline on a generic view (View-Based Entry Point)
+     * 
+     * Allows executing the pipeline on any range that yields (TimeFrameIndex, InputElement) pairs.
+     * This is essential for multi-input pipelines where the input is a zipped view (e.g. RaggedZipView).
+     * 
+     * @tparam InputElement The type of the data element in the view (e.g. Mask2D, tuple<Line2D, Point2D>)
+     * @tparam View The range type
+     * @param view The input view
+     * @return Lazy range view of (TimeFrameIndex, ElementVariant) pairs
+     */
+    template<typename InputElement, std::ranges::input_range View>
+    auto executeFromView(View&& view) const {
+        if (steps_.empty()) {
+            throw std::runtime_error("Pipeline has no steps");
+        }
+
+        auto & registry = ElementRegistry::instance();
+
+        // Verify all steps are element-level (not time-grouped)
+        for (auto const & step: steps_) {
+            auto const * meta = registry.getMetadata(step.transform_name);
+            if (!meta) {
+                throw std::runtime_error("Transform not found: " + step.transform_name);
+            }
+            if (meta->is_time_grouped) {
+                throw std::runtime_error(
+                        "executeFromView() does not support time-grouped transforms. "
+                        "Use execute() instead for pipelines with time-grouped steps.");
+            }
+        }
+
+        // Build composed transform function (type-erased but created once)
+        std::vector<std::function<ElementVariant(ElementVariant)>> transform_chain;
+        // --- HEAD-TAIL EXECUTION STRATEGY ---
+        // We split the pipeline into Head (first step) and Tail (rest).
+        // Head handles the conversion from InputElement (which might be a tuple) to ElementVariant.
+        // Tail handles the standard ElementVariant -> ElementVariant chain.
+
+        auto const& head_step = steps_.front();
+        auto const* head_meta = registry.getMetadata(head_step.transform_name);
+
+        // Build Head Function: InputElement -> ElementVariant
+        auto head_fn = [this, step = head_step, meta = head_meta](InputElement const& input) -> ElementVariant {
+            auto& reg = ElementRegistry::instance();
+            // Wrap input in std::any to pass through the generic interface
+            std::any input_any{input};
+            return reg.executeWithDynamicParamsAny(
+                step.transform_name, 
+                input_any, 
+                step.params, 
+                std::type_index(typeid(InputElement)), // Use actual input type
+                meta->output_type, 
+                meta->params_type
+            );
+        };
+
+        // Build Tail Chain: ElementVariant -> ElementVariant
+        std::vector<std::function<ElementVariant(ElementVariant)>> tail_chain;
+        tail_chain.reserve(steps_.size() - 1);
+
+        for (size_t i = 1; i < steps_.size(); ++i) {
+            auto const& step = steps_[i];
+            auto const* meta = registry.getMetadata(step.transform_name);
+            tail_chain.push_back(buildTypeErasedFunction(step, meta));
+        }
+
+        // Compose Head and Tail
+        auto composed_fn = [head = std::move(head_fn), tail = std::move(tail_chain)](InputElement const& input) -> ElementVariant {
+            // Execute Head
+            ElementVariant current = head(input);
+            
+            // Execute Tail
+            for (auto const& transform : tail) {
+                current = transform(std::move(current));
+            }
+            return current;
+        };
+
+        // Return a lazy view that applies the composed function to each element
+        return std::forward<View>(view) | std::views::transform([composed_fn](auto const & elem) {
+                   // Extract time
+                   auto time = elem.first;
+
+                   // Extract data element (second part of pair)
+                   auto const & raw_data = std::get<1>(elem);
+
+                   // Generic unwrapping helper
+                   // Handles:
+                   // 1. Direct match (T -> T)
+                   // 2. DataEntry wrapper (DataEntry<T> -> T)
+                   // 3. Tuple (for multi-input) - passed as is
+                   auto const& get_input_ref = [](auto const& val) -> InputElement const& {
+                       if constexpr (std::is_convertible_v<decltype(val), InputElement const&>) {
+                           return val;
+                       } else if constexpr (requires { val.data; }) {
+                           // Try unwrapping .data (e.g. DataEntry<T>)
+                           if constexpr (std::is_convertible_v<decltype(val.data), InputElement const&>) {
+                               return val.data;
+                           } else {
+                               // If .data exists but isn't convertible, we can't do much.
+                               // This might happen if InputElement is wrong.
+                               // Return val and let compiler error on mismatch.
+                               return (InputElement const&)val; 
+                           }
+                       } else {
+                           // Fallback: force cast/conversion and let compiler error if invalid
+                           return (InputElement const&)val;
+                       }
+                   };
+
+                   // Apply composed transform chain (Head + Tail)
+                   ElementVariant output_any = composed_fn(get_input_ref(raw_data));
+
+                   return std::make_pair(time, std::move(output_any));
+               });
+    }
+
+    /**
      * @brief Execute the pipeline and return a lazy view (Lazy Evaluator)
      * 
      * This method returns a lazy range view that applies all pipeline transforms
@@ -771,63 +889,8 @@ public:
     template<typename InputContainer>
         requires requires(InputContainer const & c) { c.elements(); }
     auto executeAsView(InputContainer const & input) const {
-        if (steps_.empty()) {
-            throw std::runtime_error("Pipeline has no steps");
-        }
-
-        auto & registry = ElementRegistry::instance();
-
-        // Verify all steps are element-level (not time-grouped)
-        for (auto const & step: steps_) {
-            auto const * meta = registry.getMetadata(step.transform_name);
-            if (!meta) {
-                throw std::runtime_error("Transform not found: " + step.transform_name);
-            }
-            if (meta->is_time_grouped) {
-                throw std::runtime_error(
-                        "executeAsView() does not support time-grouped transforms. "
-                        "Use execute() instead for pipelines with time-grouped steps.");
-            }
-        }
-
-        // Build composed transform function (type-erased but created once)
-        std::vector<std::function<ElementVariant(ElementVariant)>> transform_chain;
-        transform_chain.reserve(steps_.size());
-
-        for (auto const & step: steps_) {
-            auto const * meta = registry.getMetadata(step.transform_name);
-            auto transform_fn = buildTypeErasedFunction(step, meta);
-            transform_chain.push_back(std::move(transform_fn));
-        }
-
-        // Compose all functions into a single callable
-        auto composed_fn = [chain = std::move(transform_chain)](ElementVariant input_any) -> ElementVariant {
-            ElementVariant current = std::move(input_any);
-            for (auto const & transform: chain) {
-                current = transform(std::move(current));
-            }
-            return current;
-        };
-
-        // Return a lazy view that applies the composed function to each element
-        return input.elements() | std::views::transform([composed_fn](auto const & elem) {
-                   // Extract time
-                   auto time = elem.first;
-
-                   // Extract data element and wrap in variant for composed function
-                   // The composed function handles all type conversions internally
-                   using InputElement = ElementFor_t<InputContainer>;
-                   InputElement const & data = extractElement<decltype(elem), InputElement>(elem);
-                   ElementVariant input_any{data};
-
-                   // Apply composed transform chain
-                   ElementVariant output_any = composed_fn(std::move(input_any));
-
-                   // The output type depends on the final transform in the pipeline
-                   // Since we're returning a generic view, we keep it as (TimeFrameIndex, ElementVariant)
-                   // The consumer must know the output type or use a typed wrapper
-                   return std::make_pair(time, std::move(output_any));
-               });
+        using InputElement = ElementFor_t<InputContainer>;
+        return executeFromView<InputElement>(input.elements());
     }
 
     /**

@@ -89,6 +89,9 @@ class IParamExecutor {
 public:
     virtual ~IParamExecutor() = default;
     virtual ElementVariant execute(std::string const & name, ElementVariant const & input) const = 0;
+    
+    // New method to support arbitrary input types (e.g. tuples) for the "Head" of the pipeline
+    virtual ElementVariant executeAny(std::string const & name, std::any const & input) const = 0;
 };
 
 /**
@@ -114,6 +117,8 @@ public:
     explicit TypedParamExecutor(Params params);
 
     ElementVariant execute(std::string const & name, ElementVariant const & input_any) const override;
+    
+    ElementVariant executeAny(std::string const & name, std::any const & input_any) const override;
 
 private:
     Params params_;// Parameters captured at construction
@@ -767,6 +772,28 @@ public:
     }
 
     /**
+     * @brief Execute transform with dynamic parameters and arbitrary input type
+     * 
+     * Used for the "Head" of the pipeline where input might be a tuple or other type
+     * not supported by ElementVariant.
+     */
+    ElementVariant executeWithDynamicParamsAny(
+            std::string const & transform_name,
+            std::any const & input_element,
+            std::any const & params,
+            std::type_index in_type,
+            std::type_index out_type,
+            std::type_index param_type) const {
+        TypeTriple key{in_type, out_type, param_type};
+
+        // Get or create executor with captured state
+        auto const * executor = getOrCreateTypedExecutor(key, params);
+
+        // Execute using the generic input interface
+        return executor->executeAny(transform_name, input_element);
+    }
+
+    /**
      * @brief Execute time-grouped transform with typed executor
      */
     BatchVariant executeTimeGroupedWithDynamicParams(
@@ -1098,6 +1125,33 @@ ElementVariant TypedParamExecutor<In, Out, Params>::execute(
     } else {
         throw std::runtime_error("Type combination not supported by ElementVariant: " + 
                                  std::string(typeid(In).name()) + " -> " + std::string(typeid(Out).name()));
+    }
+}
+
+template<typename In, typename Out, typename Params>
+ElementVariant TypedParamExecutor<In, Out, Params>::executeAny(
+        std::string const & name,
+        std::any const & input_any) const {
+    
+    try {
+        auto const& input = std::any_cast<In const&>(input_any);
+        auto & registry = ElementRegistry::instance();
+        
+        // Helper to wrap result
+        auto wrap_result = [](Out&& res) -> ElementVariant {
+            if constexpr (is_in_variant_v<Out, ElementVariant>) {
+                return ElementVariant{std::move(res)};
+            } else {
+                // This path should ideally not be reached if Out is a supported type
+                // But if we ever support other types, we might need std::any in ElementVariant
+                throw std::runtime_error("Output type not supported by ElementVariant: " + std::string(typeid(Out).name()));
+            }
+        };
+
+        Out result = registry.execute<In, Out, Params>(name, input, params_);
+        return wrap_result(std::move(result));
+    } catch (std::bad_any_cast const&) {
+        throw std::runtime_error("Input std::any does not hold expected type: " + std::string(typeid(In).name()));
     }
 }
 

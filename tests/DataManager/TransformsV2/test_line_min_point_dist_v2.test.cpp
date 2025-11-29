@@ -2,10 +2,16 @@
 
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
+#include "transforms/v2/core/TransformPipeline.hpp"
+#include "transforms/v2/core/RaggedZipView.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
 
 // ============================================================================
@@ -179,4 +185,88 @@ TEST_CASE("LineMinPointDistParams handles missing fields with defaults", "[line_
     REQUIRE(result);
     REQUIRE(result.value().getUseFirstLineOnly() == true);
     REQUIRE(result.value().getReturnSquaredDistance() == false);
+}
+
+// ============================================================================
+// Pipeline Integration Tests
+// ============================================================================
+
+namespace {
+
+// Helper to create PointData
+std::shared_ptr<PointData> createPointData(std::vector<std::pair<int, std::vector<Point2D<float>>>> const& data) {
+    auto pd = std::make_shared<PointData>();
+    for (auto const& [time, points] : data) {
+        for (auto const& p : points) {
+            Point2D<float> p_copy = p;
+            pd->addAtTime(TimeFrameIndex(time), std::move(p_copy), NotifyObservers::No);
+        }
+    }
+    return pd;
+}
+
+// Helper to create LineData
+std::shared_ptr<LineData> createLineData(std::vector<std::pair<int, std::vector<Line2D>>> const& data) {
+    auto ld = std::make_shared<LineData>();
+    for (auto const& [time, lines] : data) {
+        for (auto const& l : lines) {
+            Line2D l_copy = l;
+            ld->addAtTime(TimeFrameIndex(time), std::move(l_copy), NotifyObservers::No);
+        }
+    }
+    return ld;
+}
+
+} // namespace
+
+TEST_CASE("Pipeline Execution with RaggedZipView and LineMinPointDist", "[line_min_point_dist][pipeline]") {
+    // 1. Create Input Data
+    // T=0: Line(y=0) + Point(y=1) -> Dist=1
+    // T=1: Line(y=0) + Point(y=2) -> Dist=2
+    auto lines = createLineData({
+        {0, {Line2D(Point2D<float>(0.0f, 0.0f), Point2D<float>(10.0f, 0.0f))}},
+        {1, {Line2D(Point2D<float>(0.0f, 0.0f), Point2D<float>(10.0f, 0.0f))}}
+    });
+    
+    auto points = createPointData({
+        {0, {{5.0f, 1.0f}}},
+        {1, {{5.0f, 2.0f}}}
+    });
+
+    // 2. Create Zipped View
+    auto v_lines = lines->time_slices();
+    auto v_points = points->time_slices();
+    RaggedZipView zip_view(v_lines, v_points);
+
+    // 3. Adapt View to pair<Time, tuple> format expected by pipeline
+    auto pipeline_input_view = zip_view | std::views::transform([](auto const& triplet) {
+        auto const& [time, line_entry, point_entry] = triplet;
+        // Extract raw data from DataEntry wrappers
+        return std::make_pair(time, std::make_tuple(line_entry.data, point_entry.data));
+    });
+
+    // 4. Create Pipeline
+    TransformPipeline pipeline;
+    pipeline.addStep<LineMinPointDistParams>("CalculateLineMinPointDistance", LineMinPointDistParams{});
+
+    // 5. Execute Pipeline
+    // We must specify the InputElement type explicitly as tuple<Line2D, Point2D<float>>
+    using InputTuple = std::tuple<Line2D, Point2D<float>>;
+    auto result_view = pipeline.executeFromView<InputTuple>(pipeline_input_view);
+
+    // 6. Verify Results
+    int count = 0;
+    for (auto const& [time, result_variant] : result_view) {
+        // Result should be float
+        REQUIRE(std::holds_alternative<float>(result_variant));
+        float dist = std::get<float>(result_variant);
+        
+        if (time.getValue() == 0) {
+            REQUIRE_THAT(dist, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+        } else if (time.getValue() == 1) {
+            REQUIRE_THAT(dist, Catch::Matchers::WithinAbs(2.0f, 0.001f));
+        }
+        count++;
+    }
+    REQUIRE(count == 2);
 }

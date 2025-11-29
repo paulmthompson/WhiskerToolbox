@@ -5,7 +5,7 @@
 #include <iterator>
 #include <tuple>
 
-namespace WhiskerToolbox::DataManager::Transforms::V2 {
+namespace WhiskerToolbox::Transforms::V2 {
 
 /**
  * @brief A view that synchronizes two time-ordered ranges
@@ -39,7 +39,7 @@ public:
         }
 
         reference operator*() const {
-            return {it1_->first, it1_->second, it2_->second};
+            return {(*it1_).first, (*it1_).second, (*it2_).second};
         }
 
         Iterator& operator++() {
@@ -69,9 +69,9 @@ public:
     private:
         void synchronize() {
             while (it1_ != end1_ && it2_ != end2_) {
-                if (it1_->first < it2_->first) {
+                if ((*it1_).first < (*it2_).first) {
                     ++it1_;
-                } else if (it2_->first < it1_->first) {
+                } else if ((*it2_).first < (*it1_).first) {
                     ++it2_;
                 } else {
                     // Times match
