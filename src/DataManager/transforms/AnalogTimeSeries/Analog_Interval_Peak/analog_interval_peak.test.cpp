@@ -7,27 +7,20 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "transforms/data_transforms.hpp"
 
+#include "fixtures/AnalogIntervalPeakTestFixture.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <memory>
 #include <vector>
 
-TEST_CASE("Data Transform: Analog Interval Peak - Maximum Within Intervals", "[transforms][analog_interval_peak]") {
+TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Maximum Within Intervals", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
     AnalogIntervalPeakOperation operation;
 
     SECTION("Basic maximum detection within intervals") {
-        // Analog signal: index 0->5, values increase then decrease
-        std::vector<float> values = {1.0f, 2.0f, 5.0f, 3.0f, 1.0f, 0.5f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 6; ++i) {
-            times.push_back(TimeFrameIndex(i * 100));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        // Intervals: [0, 200] and [300, 500]
-        std::vector<Interval> intervals = {{0, 200}, {300, 500}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["basic_max_within"];
+        auto dis = m_test_interval_series["basic_max_within_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -46,15 +39,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - Maximum Within Intervals", "[t
     }
 
     SECTION("Maximum detection with progress callback") {
-        std::vector<float> values = {1.0f, 5.0f, 2.0f, 8.0f, 3.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 5; ++i) {
-            times.push_back(TimeFrameIndex(i * 10));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        std::vector<Interval> intervals = {{0, 20}, {30, 40}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["max_with_progress"];
+        auto dis = m_test_interval_series["max_with_progress_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -74,15 +60,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - Maximum Within Intervals", "[t
     }
 
     SECTION("Multiple intervals with varying peak locations") {
-        std::vector<float> values = {1.0f, 9.0f, 3.0f, 2.0f, 8.0f, 1.0f, 5.0f, 10.0f, 2.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 9; ++i) {
-            times.push_back(TimeFrameIndex(i * 10));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        std::vector<Interval> intervals = {{0, 20}, {30, 50}, {60, 80}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["multiple_intervals_varying"];
+        auto dis = m_test_interval_series["multiple_intervals_varying_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -99,19 +78,12 @@ TEST_CASE("Data Transform: Analog Interval Peak - Maximum Within Intervals", "[t
     }
 }
 
-TEST_CASE("Data Transform: Analog Interval Peak - Minimum Within Intervals", "[transforms][analog_interval_peak]") {
+TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Minimum Within Intervals", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
 
     SECTION("Basic minimum detection within intervals") {
-        std::vector<float> values = {5.0f, 3.0f, 1.0f, 4.0f, 2.0f, 3.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 6; ++i) {
-            times.push_back(TimeFrameIndex(i * 100));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        std::vector<Interval> intervals = {{0, 200}, {300, 500}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["basic_min_within"];
+        auto dis = m_test_interval_series["basic_min_within_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MINIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -127,15 +99,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - Minimum Within Intervals", "[t
     }
 
     SECTION("Minimum with negative values") {
-        std::vector<float> values = {1.0f, -5.0f, 2.0f, -3.0f, 0.5f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 5; ++i) {
-            times.push_back(TimeFrameIndex(i * 10));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        std::vector<Interval> intervals = {{0, 20}, {20, 40}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["min_with_negative"];
+        auto dis = m_test_interval_series["min_with_negative_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MINIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -151,21 +116,12 @@ TEST_CASE("Data Transform: Analog Interval Peak - Minimum Within Intervals", "[t
     }
 }
 
-TEST_CASE("Data Transform: Analog Interval Peak - Between Interval Starts", "[transforms][analog_interval_peak]") {
+TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Between Interval Starts", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
 
     SECTION("Maximum between interval starts") {
-        // Values: steady increase
-        std::vector<float> values = {1.0f, 2.0f, 5.0f, 8.0f, 10.0f, 7.0f, 3.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 7; ++i) {
-            times.push_back(TimeFrameIndex(i * 10));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        // Intervals start at 0, 20, 40
-        std::vector<Interval> intervals = {{0, 10}, {20, 30}, {40, 50}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["max_between_starts"];
+        auto dis = m_test_interval_series["max_between_starts_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::BETWEEN_INTERVAL_STARTS;
@@ -186,15 +142,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - Between Interval Starts", "[tr
     }
 
     SECTION("Minimum between interval starts") {
-        std::vector<float> values = {5.0f, 2.0f, 8.0f, 3.0f, 9.0f, 1.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 6; ++i) {
-            times.push_back(TimeFrameIndex(i * 100));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        std::vector<Interval> intervals = {{0, 100}, {200, 300}, {400, 500}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["min_between_starts"];
+        auto dis = m_test_interval_series["min_between_starts_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MINIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::BETWEEN_INTERVAL_STARTS;
@@ -215,16 +164,12 @@ TEST_CASE("Data Transform: Analog Interval Peak - Between Interval Starts", "[tr
     }
 }
 
-TEST_CASE("Data Transform: Analog Interval Peak - Edge Cases", "[transforms][analog_interval_peak]") {
+TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Edge Cases", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
 
     SECTION("Empty intervals - no events") {
-        std::vector<float> values = {1.0f, 2.0f, 3.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20)};
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        std::vector<Interval> intervals = {};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["empty_intervals"];
+        auto dis = m_test_interval_series["empty_intervals_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -236,12 +181,13 @@ TEST_CASE("Data Transform: Analog Interval Peak - Edge Cases", "[transforms][ana
     }
 
     SECTION("Null analog time series") {
+        auto dis = m_test_interval_series["empty_intervals_intervals"];
         std::vector<Interval> intervals = {{0, 10}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto dis_with_data = std::make_shared<DigitalIntervalSeries>(intervals);
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
-        params.interval_series = dis;
+        params.interval_series = dis_with_data;
 
         auto result = find_interval_peaks(nullptr, params);
         REQUIRE(result != nullptr);
@@ -249,9 +195,7 @@ TEST_CASE("Data Transform: Analog Interval Peak - Edge Cases", "[transforms][ana
     }
 
     SECTION("Null interval series") {
-        std::vector<float> values = {1.0f, 2.0f, 3.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20)};
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["simple_signal"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -263,13 +207,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - Edge Cases", "[transforms][ana
     }
 
     SECTION("Interval with no corresponding analog data") {
-        std::vector<float> values = {1.0f, 2.0f, 3.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20)};
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        // Interval outside the range of analog data
-        std::vector<Interval> intervals = {{100, 200}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["no_data_interval"];
+        auto dis = m_test_interval_series["no_data_interval_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -282,12 +221,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - Edge Cases", "[transforms][ana
     }
 
     SECTION("Single data point interval") {
-        std::vector<float> values = {1.0f, 5.0f, 2.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20)};
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        std::vector<Interval> intervals = {{10, 10}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["single_point"];
+        auto dis = m_test_interval_series["single_point_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -302,13 +237,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - Edge Cases", "[transforms][ana
     }
 
     SECTION("Multiple intervals, some without data") {
-        std::vector<float> values = {1.0f, 5.0f, 8.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20)};
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        // First interval has data, second doesn't, third does
-        std::vector<Interval> intervals = {{0, 10}, {50, 60}, {10, 20}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["mixed_data_availability"];
+        auto dis = m_test_interval_series["mixed_data_availability_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -325,41 +255,12 @@ TEST_CASE("Data Transform: Analog Interval Peak - Edge Cases", "[transforms][ana
     }
 }
 
-TEST_CASE("Data Transform: Analog Interval Peak - TimeFrame Conversion", "[transforms][analog_interval_peak]") {
+TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - TimeFrame Conversion", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
 
     SECTION("Different timeframes - conversion required") {
-        // Create analog time series with one timeframe
-        auto timeValues = std::vector<int>();
-        timeValues.push_back(0);
-        timeValues.push_back(10);
-        timeValues.push_back(20);
-        timeValues.push_back(30);
-        timeValues.push_back(40);
-        auto analog_tf = std::make_shared<TimeFrame>(timeValues);
-
-        std::vector<float> values = {1.0f, 5.0f, 2.0f, 8.0f, 3.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 5; ++i) {
-            times.push_back(TimeFrameIndex(i));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-        ats->setTimeFrame(analog_tf);
-
-        // Create interval series with a different timeframe
-        auto interval_tf_values = std::vector<int>();
-        interval_tf_values.push_back(0);
-        interval_tf_values.push_back(5);
-        interval_tf_values.push_back(15);
-        interval_tf_values.push_back(25);
-        interval_tf_values.push_back(35);
-        auto interval_tf = std::make_shared<TimeFrame>(interval_tf_values);
-
-        // Interval in interval_tf coordinates: [1, 3] means timestamps [5.0, 25.0]
-        // In analog_tf coordinates, timestamps [5.0, 25.0] map to indices [0-1, 2]
-        std::vector<Interval> intervals = {{1, 3}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
-        dis->setTimeFrame(interval_tf);
+        auto ats = m_test_analog_signals["different_timeframes"];
+        auto dis = m_test_interval_series["different_timeframes_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -377,25 +278,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - TimeFrame Conversion", "[trans
     }
 
     SECTION("Same timeframe - no conversion needed") {
-
-        auto shared_tf_values = std::vector<int>();
-        shared_tf_values.push_back(0);
-        shared_tf_values.push_back(10);
-        shared_tf_values.push_back(20);
-        shared_tf_values.push_back(30);
-        auto shared_tf = std::make_shared<TimeFrame>(shared_tf_values);
-
-        std::vector<float> values = {1.0f, 9.0f, 3.0f, 5.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 4; ++i) {
-            times.push_back(TimeFrameIndex(i));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-        ats->setTimeFrame(shared_tf);
-
-        std::vector<Interval> intervals = {{0, 2}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
-        dis->setTimeFrame(shared_tf);
+        auto ats = m_test_analog_signals["same_timeframe"];
+        auto dis = m_test_interval_series["same_timeframe_intervals"];
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -410,7 +294,7 @@ TEST_CASE("Data Transform: Analog Interval Peak - TimeFrame Conversion", "[trans
     }
 }
 
-TEST_CASE("Data Transform: Analog Interval Peak - Operation Interface", "[transforms][analog_interval_peak]") {
+TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Operation Interface", "[transforms][analog_interval_peak]") {
     AnalogIntervalPeakOperation operation;
 
     SECTION("getName returns correct name") {
@@ -449,15 +333,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - Operation Interface", "[transf
     }
 
     SECTION("execute with valid input") {
-        std::vector<float> values = {1.0f, 5.0f, 2.0f, 8.0f, 3.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 5; ++i) {
-            times.push_back(TimeFrameIndex(i * 10));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        std::vector<Interval> intervals = {{0, 20}, {30, 40}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["operation_interface"];
+        auto dis = m_test_interval_series["operation_interface_intervals"];
 
         IntervalPeakParams params;
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
@@ -478,9 +355,7 @@ TEST_CASE("Data Transform: Analog Interval Peak - Operation Interface", "[transf
     }
 
     SECTION("execute with null parameters uses defaults") {
-        std::vector<float> values = {1.0f, 5.0f, 2.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20)};
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["simple_signal"];
 
         DataTypeVariant input_variant = ats;
         DataTypeVariant result_variant = operation.execute(input_variant, nullptr);
@@ -493,15 +368,8 @@ TEST_CASE("Data Transform: Analog Interval Peak - Operation Interface", "[transf
     }
 
     SECTION("execute with progress callback") {
-        std::vector<float> values = {1.0f, 5.0f, 2.0f, 8.0f, 3.0f};
-        std::vector<TimeFrameIndex> times;
-        for (int i = 0; i < 5; ++i) {
-            times.push_back(TimeFrameIndex(i * 10));
-        }
-        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-
-        std::vector<Interval> intervals = {{0, 20}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto ats = m_test_analog_signals["operation_progress"];
+        auto dis = m_test_interval_series["operation_progress_intervals"];
 
         IntervalPeakParams params;
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
