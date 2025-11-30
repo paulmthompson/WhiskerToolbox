@@ -5,6 +5,8 @@
 #include "transforms/AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
 #include "transforms/data_transforms.hpp" // For ProgressCallback
 
+#include "fixtures/AnalogScalingTestFixture.hpp"
+
 #include <vector>
 #include <memory> // std::make_shared
 #include <functional> // std::function
@@ -12,10 +14,7 @@
 
 // Using Catch::Matchers::Equals for vectors of floats.
 
-TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][analog_scaling]") {
-    std::vector<float> values;
-    std::vector<TimeFrameIndex> times;
-    std::shared_ptr<AnalogTimeSeries> ats;
+TEST_CASE_METHOD(AnalogScalingTestFixture, "Data Transform: Scale and Normalize - Happy Path", "[transforms][analog_scaling]") {
     std::shared_ptr<AnalogTimeSeries> result_scaled;
     AnalogScalingParams params;
     volatile int progress_val = -1; // Volatile to prevent optimization issues in test
@@ -26,9 +25,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
     };
 
     SECTION("FixedGain scaling") {
-        values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_signals["standard_signal"];
         params.method = ScalingMethod::FixedGain;
         params.gain_factor = 2.5;
 
@@ -37,17 +34,13 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
         auto scaled_span = result_scaled->getAnalogTimeSeries();
         REQUIRE_THAT(std::vector<float>(scaled_span.begin(), scaled_span.end()), Catch::Matchers::Equals(expected_values));
 
-        progress_val = -1;
-        call_count = 0;
         result_scaled = scale_analog_time_series(ats.get(), params);
         auto scaled_span_2 = result_scaled->getAnalogTimeSeries();
         REQUIRE_THAT(std::vector<float>(scaled_span_2.begin(), scaled_span_2.end()), Catch::Matchers::Equals(expected_values));
     }
 
     SECTION("ZScore scaling") {
-        values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_signals["standard_signal"];
         params.method = ScalingMethod::ZScore;
 
         result_scaled = scale_analog_time_series(ats.get(), params);
@@ -63,9 +56,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
     }
 
     SECTION("MinMax scaling") {
-        values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_signals["standard_signal"];
         params.method = ScalingMethod::MinMax;
         params.min_target = 0.0;
         params.max_target = 1.0;
@@ -77,9 +68,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
     }
 
     SECTION("Centering scaling") {
-        values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_signals["standard_signal"];
         params.method = ScalingMethod::Centering;
 
         result_scaled = scale_analog_time_series(ats.get(), params);
@@ -89,9 +78,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
     }
 
     SECTION("UnitVariance scaling") {
-        values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_signals["standard_signal"];
         params.method = ScalingMethod::UnitVariance;
 
         result_scaled = scale_analog_time_series(ats.get(), params);
@@ -107,9 +94,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
     }
 
     SECTION("StandardDeviation scaling") {
-        values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_signals["standard_signal"];
         params.method = ScalingMethod::StandardDeviation;
         params.std_dev_target = 2.0;
 
@@ -127,9 +112,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
     }
 
     SECTION("RobustScaling") {
-        values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_signals["standard_signal"];
         params.method = ScalingMethod::RobustScaling;
 
         result_scaled = scale_analog_time_series(ats.get(), params);
@@ -141,16 +124,10 @@ TEST_CASE("Data Transform: Scale and Normalize - Happy Path", "[transforms][anal
     }
 }
 
-TEST_CASE("Data Transform: Scale and Normalize - Error and Edge Cases", "[transforms][analog_scaling]") {
+TEST_CASE_METHOD(AnalogScalingTestFixture, "Data Transform: Scale and Normalize - Error and Edge Cases", "[transforms][analog_scaling]") {
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<AnalogTimeSeries> result_scaled;
     AnalogScalingParams params;
-    volatile int progress_val = -1;
-    volatile int call_count = 0;
-    ProgressCallback cb = [&](int p) {
-        progress_val = p;
-        call_count = call_count + 1;
-    };
 
     SECTION("Null input AnalogTimeSeries") {
         ats = nullptr; // Deliberately null
@@ -161,9 +138,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Error and Edge Cases", "[transf
     }
 
     SECTION("Empty AnalogTimeSeries (no timestamps/values)") {
-        std::vector<float> values_empty = {};
-        std::vector<TimeFrameIndex> times_empty = {};
-        ats = std::make_shared<AnalogTimeSeries>(values_empty, times_empty);
+        ats = m_test_signals["empty_signal"];
         params.method = ScalingMethod::ZScore;
 
         result_scaled = scale_analog_time_series(ats.get(), params);
@@ -172,9 +147,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Error and Edge Cases", "[transf
     }
 
     SECTION("Constant values (zero std dev)") {
-        std::vector<float> values = {3.0f, 3.0f, 3.0f, 3.0f, 3.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        ats = m_test_signals["constant_values"];
         params.method = ScalingMethod::ZScore;
 
         result_scaled = scale_analog_time_series(ats.get(), params);
@@ -186,9 +159,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Error and Edge Cases", "[transf
     }
 
     SECTION("Negative values") {
-        std::vector<float> values = {-2.0f, -1.0f, 0.0f, 1.0f, 2.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        ats = m_test_signals["negative_values"];
         params.method = ScalingMethod::MinMax;
         params.min_target = 0.0;
         params.max_target = 1.0;
@@ -209,7 +180,7 @@ TEST_CASE("Data Transform: Scale and Normalize - Error and Edge Cases", "[transf
 #include <fstream>
 #include <iostream>
 
-TEST_CASE("Data Transform: Scale and Normalize - JSON pipeline", "[transforms][analog_scaling][json]") {
+TEST_CASE_METHOD(AnalogScalingTestFixture, "Data Transform: Scale and Normalize - JSON pipeline", "[transforms][analog_scaling][json]") {
     const nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "scaling_step_1"},
@@ -228,24 +199,16 @@ TEST_CASE("Data Transform: Scale and Normalize - JSON pipeline", "[transforms][a
         }}}
     };
 
-    DataManager dm;
+    auto dm_ptr = createDataManagerWithTestSignal("TestSignal.channel1");
+    DataManager* dm = dm_ptr.get();
     TransformRegistry registry;
 
-    auto time_frame = std::make_shared<TimeFrame>();
-    dm.setTime(TimeKey("default"), time_frame);
-
-    std::vector<float> values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-    std::vector<TimeFrameIndex> times = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-    auto ats = std::make_shared<AnalogTimeSeries>(values, times);
-    ats->setTimeFrame(time_frame);
-    dm.setData("TestSignal.channel1", ats, TimeKey("default"));
-
-    TransformPipeline pipeline(&dm, &registry);
+    TransformPipeline pipeline(dm, &registry);
     pipeline.loadFromJson(json_config);
     pipeline.execute();
 
     // Verify the results
-    auto scaled_series = dm.getData<AnalogTimeSeries>("ScaledSignal");
+    auto scaled_series = dm->getData<AnalogTimeSeries>("ScaledSignal");
     REQUIRE(scaled_series != nullptr);
 
     // ZScore scaling: mean = 3.0, Population std = sqrt(2.0) ≈ 1.414
@@ -294,26 +257,10 @@ TEST_CASE("Data Transform: Scale and Normalize - Parameter Factory", "[transform
     REQUIRE(params->quantile_high == 0.9);
 }
 
-TEST_CASE("Data Transform: Scale and Normalize - load_data_from_json_config", "[transforms][analog_scaling][json_config]") {
-    // Create DataManager and populate it with AnalogTimeSeries in code
-    DataManager dm;
-
-    // Create a TimeFrame for our data
-    auto time_frame = std::make_shared<TimeFrame>();
-    dm.setTime(TimeKey("default"), time_frame);
-    
-    // Create test analog data in code
-    std::vector<float> values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-    std::vector<TimeFrameIndex> times = {
-        TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), 
-        TimeFrameIndex(400), TimeFrameIndex(500)
-    };
-    
-    auto test_analog = std::make_shared<AnalogTimeSeries>(values, times);
-    test_analog->setTimeFrame(time_frame);
-    
-    // Store the analog data in DataManager with a known key
-    dm.setData("test_signal", test_analog, TimeKey("default"));
+TEST_CASE_METHOD(AnalogScalingTestFixture, "Data Transform: Scale and Normalize - load_data_from_json_config", "[transforms][analog_scaling][json_config]") {
+    // Create DataManager with test data using fixture helper
+    auto dm_ptr = createDataManagerWithTestSignal("test_signal");
+    DataManager* dm = dm_ptr.get();
     
     // Create JSON configuration for transformation pipeline using unified format
     const char* json_config = 
@@ -360,15 +307,15 @@ TEST_CASE("Data Transform: Scale and Normalize - load_data_from_json_config", "[
     }
     
     // Execute the transformation pipeline using load_data_from_json_config
-    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    auto data_info_list = load_data_from_json_config(dm, json_filepath.string());
     
     // Verify the transformation was executed and results are available
-    auto result_scaled = dm.getData<AnalogTimeSeries>("scaled_signal");
-    REQUIRE(result_scaled != nullptr);
+    auto result_signal = dm->getData<AnalogTimeSeries>("scaled_signal");
+    REQUIRE(result_signal != nullptr);
     
     // Verify the ZScore scaling results
     // Mean = 3.0, Population std = sqrt(2.0) ≈ 1.414
-    auto result_values = result_scaled->getAnalogTimeSeries();
+    auto result_values = result_signal->getAnalogTimeSeries();
     REQUIRE(result_values.size() == 5);
     REQUIRE(std::abs(result_values[0] - (-1.414f)) < 0.01f);
     REQUIRE(std::abs(result_values[1] - (-0.707f)) < 0.01f);
@@ -417,10 +364,10 @@ TEST_CASE("Data Transform: Scale and Normalize - load_data_from_json_config", "[
     }
     
     // Execute the MinMax scaling pipeline
-    auto data_info_list_minmax = load_data_from_json_config(&dm, json_filepath_minmax.string());
+    auto data_info_list_minmax = load_data_from_json_config(dm, json_filepath_minmax.string());
     
     // Verify the MinMax scaling results
-    auto result_scaled_minmax = dm.getData<AnalogTimeSeries>("scaled_signal_minmax");
+    auto result_scaled_minmax = dm->getData<AnalogTimeSeries>("scaled_signal_minmax");
     REQUIRE(result_scaled_minmax != nullptr);
     
     std::vector<float> expected_values_minmax = {0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
@@ -468,10 +415,10 @@ TEST_CASE("Data Transform: Scale and Normalize - load_data_from_json_config", "[
     }
     
     // Execute the FixedGain scaling pipeline
-    auto data_info_list_fixedgain = load_data_from_json_config(&dm, json_filepath_fixedgain.string());
+    auto data_info_list_fixedgain = load_data_from_json_config(dm, json_filepath_fixedgain.string());
     
     // Verify the FixedGain scaling results
-    auto result_scaled_fixedgain = dm.getData<AnalogTimeSeries>("scaled_signal_fixedgain");
+    auto result_scaled_fixedgain = dm->getData<AnalogTimeSeries>("scaled_signal_fixedgain");
     REQUIRE(result_scaled_fixedgain != nullptr);
     
     std::vector<float> expected_values_fixedgain = {2.5f, 5.0f, 7.5f, 10.0f, 12.5f};
