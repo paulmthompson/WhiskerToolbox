@@ -14,6 +14,7 @@ This document describes the redesigned transformation architecture that addresse
 - **TransformPipeline**: Multi-step pipeline with execution fusion
 - **View-Based Pipelines**: Lazy evaluation with `executeAsView()` (zero intermediate allocations)
 - **Container Automatic Lifting**: Element transforms automatically work on containers
+- **Native Container Transforms**: Direct implementation of container-to-container transforms (e.g. for temporal operations)
 - **ContainerTraits**: Type mapping system (Mask2D ↔ MaskData, etc.)
 - **Advanced Features**: Ragged outputs, multi-input transforms (binary via tuple), time-grouped transforms
 - **reflect-cpp Integration**: Parameter serialization with automatic validation
@@ -232,11 +233,13 @@ class LazyTransformStorage : public DataStorage<T> {
 
 **Note**: Current eager fusion approach already minimizes intermediate allocations. Lazy storage may not provide significant additional benefit given time-indexed nature of data.
 
-### 4. Container-Level Automatic Lifting (✅ Implemented)
+### 4. Container-Level Transforms (✅ Implemented)
 
-**Concept**: Automatically generate container transforms from element transforms.
+**Concept**: Transforms that operate on entire containers.
 
-**Implementation**:
+**Type A: Automatic Lifting (Element → Container)**
+Automatically generate container transforms from element transforms.
+
 ```cpp
 // Register element transform
 registry.registerTransform<Mask2D, float, MaskAreaParams>(
@@ -247,13 +250,23 @@ auto areas = registry.executeContainer<MaskData, AnalogTimeSeries, MaskAreaParam
     "CalculateMaskArea", masks, params);
 ```
 
-**How it works**:
-- ContainerTraits maps element types to container types
-- Template metaprogramming generates container iteration code
-- Works for all container/element type combinations
-- Supports ragged outputs (variable-length per time frame)
+**Type B: Native Container Transforms**
+Directly implemented container-to-container transforms. Essential for:
+- Temporal operations (e.g., thresholding with lockout time)
+- Global statistics (e.g., normalization using global mean)
+- Operations requiring full context
 
-**Implementation:** See `core/ContainerTraits.hpp` and `core/ContainerTransform.hpp`
+```cpp
+// Register native container transform
+registry.registerContainerTransform<AnalogTimeSeries, DigitalEventSeries, ThresholdParams>(
+    "AnalogEventThreshold", analogEventThreshold);
+```
+
+**How it works**:
+- **Lifting**: ContainerTraits maps element types to container types; metaprogramming generates iteration code.
+- **Native**: Registry stores and executes container-level functions directly.
+
+**Implementation:** See `core/ContainerTraits.hpp`, `core/ContainerTransform.hpp`, and `core/ElementRegistry.hpp`
 
 ### 5. Runtime Configuration with Compile-Time Execution (🔄 Planned)
 

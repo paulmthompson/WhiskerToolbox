@@ -210,6 +210,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/core/ContainerTraits.cpp 
         transforms/v2/core/ElementRegistry.hpp 
         transforms/v2/core/ElementTransform.hpp
+        transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp
+        transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.cpp
         transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp
         transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.cpp
 )

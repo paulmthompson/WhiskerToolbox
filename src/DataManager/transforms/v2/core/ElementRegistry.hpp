@@ -2,6 +2,7 @@
 #define WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
 
 #include "ContainerTraits.hpp"
+#include "DataManagerTypes.hpp"
 #include "ElementTransform.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -174,6 +175,97 @@ struct TransformMetadata {
     bool is_expensive = false;// Hint for parallelization
     bool is_deterministic = true;
     bool supports_cancellation = false;
+};
+
+/**
+ * @brief Metadata specific to container-level transforms
+ * 
+ * Separate from TransformMetadata to avoid polluting element transforms
+ * with unnecessary flags.
+ */
+struct ContainerTransformMetadata {
+    std::string name;
+    std::string description;
+    std::string category;  // "Signal Processing", "Time Series Analysis", etc.
+    
+    std::type_index input_container_type = typeid(void);
+    std::type_index output_container_type = typeid(void);
+    std::type_index params_type = typeid(void);
+    
+    // For UI generation
+    std::string input_type_name;
+    std::string output_type_name;
+    std::string params_type_name;
+    
+    // Version and authorship
+    std::string version = "1.0";
+    std::string author;
+    
+    // Performance hints
+    bool is_expensive = false;  // Hint for showing progress UI
+    bool is_deterministic = true;
+    bool supports_cancellation = true;  // Most container transforms support this
+};
+
+// ============================================================================
+// Container Transform Infrastructure
+// ============================================================================
+
+/**
+ * @brief Type-erased wrapper for container transforms
+ * 
+ * This is INTERNAL to the registry - transforms themselves don't inherit.
+ * Stores the pure function that operates on concrete container types.
+ */
+template<typename InContainer, typename OutContainer, typename Params>
+class TypedContainerTransform {
+public:
+    using FuncType = std::function<std::shared_ptr<OutContainer>(
+        InContainer const&,
+        Params const&,
+        ComputeContext const&)>;
+    
+    explicit TypedContainerTransform(FuncType func)
+        : func_(std::move(func)) {}
+    
+    std::shared_ptr<OutContainer> execute(
+        InContainer const& input,
+        Params const& params,
+        ComputeContext const& ctx) const {
+        return func_(input, params, ctx);
+    }
+
+private:
+    FuncType func_;
+};
+
+/**
+ * @brief Executor for container transforms with captured parameters
+ * 
+ * Similar to TypedParamExecutor but for container-level operations.
+ * Eliminates per-call parameter casts by capturing params at construction.
+ * 
+ * Note: Implementation is defined after ElementRegistry class declaration.
+ */
+template<typename InContainer, typename OutContainer, typename Params>
+class TypedContainerExecutor {
+public:
+    explicit TypedContainerExecutor(Params params);
+    
+    // Pure execution - no variants!
+    std::shared_ptr<OutContainer> execute(
+        std::string const& name,
+        InContainer const& input,
+        ComputeContext const& ctx) const;
+    
+    // Type-erased version for pipeline (converts DataTypeVariant)
+    DataTypeVariant executeVariant(
+        std::string const& name,
+        DataTypeVariant const& input_variant,
+        ComputeContext const& ctx) const;
+
+private:
+    Params params_;
 };
 
 // ============================================================================
@@ -456,6 +548,124 @@ public:
         }
 
         return transform->execute(inputs, params);
+    }
+
+    // ========================================================================
+    // Container Transform Registration and Execution
+    // ========================================================================
+    
+    /**
+     * @brief Register a container-level transform
+     * 
+     * These are transforms that need full container access (temporal dependencies, etc.)
+     * Transform function should be pure: take concrete types, return concrete types.
+     * No virtual inheritance, no variants - pipeline handles type erasure.
+     * 
+     * @tparam InContainer Input container type (e.g., AnalogTimeSeries)
+     * @tparam OutContainer Output container type (e.g., DigitalEventSeries)  
+     * @tparam Params Parameter type
+     * 
+     * @param name Unique transform name
+     * @param func Transform function: (Container const&, Params const&, Context const&) -> shared_ptr<Container>
+     * @param metadata Optional metadata
+     */
+    template<typename InContainer, typename OutContainer, typename Params>
+    void registerContainerTransform(
+        std::string const& name,
+        std::function<std::shared_ptr<OutContainer>(
+            InContainer const&,
+            Params const&,
+            ComputeContext const&)> func,
+        ContainerTransformMetadata metadata = {}) {
+        
+        // Create typed transform wrapper
+        auto transform = std::make_shared<TypedContainerTransform<InContainer, OutContainer, Params>>(
+            std::move(func));
+        
+        // Complete metadata
+        metadata.name = name;
+        metadata.input_container_type = typeid(InContainer);
+        metadata.output_container_type = typeid(OutContainer);
+        metadata.params_type = typeid(Params);
+        metadata.input_type_name = typeid(InContainer).name();
+        metadata.output_type_name = typeid(OutContainer).name();
+        metadata.params_type_name = typeid(Params).name();
+        
+        // Store (separate from element transforms)
+        auto key = std::make_pair(std::type_index(typeid(InContainer)), name);
+        container_transforms_[key] = transform;
+        container_metadata_[name] = metadata;
+        
+        // Update lookup maps
+        container_input_to_names_[typeid(InContainer)].push_back(name);
+        container_output_to_names_[typeid(OutContainer)].push_back(name);
+        
+        // Register parameter deserializer and executor factory
+        registerContainerParamHandling<InContainer, OutContainer, Params>();
+    }
+    
+    /**
+     * @brief Execute a container transform
+     * 
+     * @tparam InContainer Input container type
+     * @tparam OutContainer Output container type
+     * @tparam Params Parameter type
+     * 
+     * @param name Transform name
+     * @param input Input container (concrete type, not variant)
+     * @param params Parameters (concrete type, not type-erased)
+     * @param ctx Compute context for progress/cancellation
+     * @return Shared pointer to output container
+     * 
+     * @throws std::runtime_error if transform not found
+     */
+    template<typename InContainer, typename OutContainer, typename Params>
+    std::shared_ptr<OutContainer> executeContainerTransform(
+        std::string const& name,
+        InContainer const& input,
+        Params const& params,
+        ComputeContext const& ctx = {}) const {
+        
+        auto transform = getContainerTransform<InContainer, OutContainer, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Container transform not found: " + name);
+        }
+        
+        auto result = transform->execute(input, params, ctx);
+        
+        // Pipeline/registry handles TimeFrame propagation
+        // Copy TimeFrame from input to output if output supports it
+        if (result && input.getTimeFrame()) {
+            result->setTimeFrame(input.getTimeFrame());
+        }
+        
+        return result;
+    }
+    
+    /**
+     * @brief Check if a transform is a container transform
+     */
+    bool isContainerTransform(std::string const& name) const {
+        return container_metadata_.find(name) != container_metadata_.end();
+    }
+    
+    /**
+     * @brief Get container transform metadata
+     */
+    ContainerTransformMetadata const* getContainerMetadata(std::string const& name) const {
+        auto it = container_metadata_.find(name);
+        return (it != container_metadata_.end()) ? &it->second : nullptr;
+    }
+    
+    /**
+     * @brief Get all container transforms for an input type
+     */
+    std::vector<std::string> getContainerTransformsForInputType(std::type_index input_type) const {
+        auto it = container_input_to_names_.find(input_type);
+        if (it != container_input_to_names_.end()) {
+            return it->second;
+        }
+        return {};
     }
 
     // ========================================================================
@@ -903,6 +1113,58 @@ private:
 
         return std::static_pointer_cast<TypedTimeGroupedTransform<In, Out, Params>>(it->second);
     }
+    
+    /**
+     * @brief Internal: Get typed container transform
+     */
+    template<typename InContainer, typename OutContainer, typename Params>
+    std::shared_ptr<TypedContainerTransform<InContainer, OutContainer, Params>>
+    getContainerTransform(std::string const& name) const {
+        auto key = std::make_pair(std::type_index(typeid(InContainer)), name);
+        auto it = container_transforms_.find(key);
+        if (it == container_transforms_.end()) {
+            return nullptr;
+        }
+        return std::static_pointer_cast<TypedContainerTransform<InContainer, OutContainer, Params>>(
+            it->second);
+    }
+    
+    /**
+     * @brief Register parameter handling for container transforms
+     */
+    template<typename InContainer, typename OutContainer, typename Params>
+    void registerContainerParamHandling() {
+        // Register JSON deserializer (reuse element system if not exists)
+        auto type_idx = std::type_index(typeid(Params));
+        if (param_deserializers_.find(type_idx) == param_deserializers_.end()) {
+            param_deserializers_[type_idx] = [](std::string const& json_str) -> std::any {
+                auto result = rfl::json::read<Params>(json_str);
+                return result ? std::any{result.value()} : std::any{};
+            };
+            
+            param_validators_[type_idx] = [](std::any const& params_any) -> bool {
+                try {
+                    std::any_cast<Params const&>(params_any);
+                    return true;
+                } catch (...) {
+                    return false;
+                }
+            };
+        }
+        
+        // Register container executor factory (always register, keyed by triple)
+        TypeTriple key{typeid(InContainer), typeid(OutContainer), typeid(Params)};
+        
+        // Store factory that creates type-erased shared_ptr
+        // We use shared_ptr instead of unique_ptr because it supports custom deleters more cleanly
+        container_executor_factories_[key] = [](std::any const& params_any) {
+            auto params = std::any_cast<Params>(params_any);
+            auto executor = std::make_shared<TypedContainerExecutor<InContainer, OutContainer, Params>>(
+                std::move(params));
+            // Return as shared_ptr<void> for type erasure
+            return std::shared_ptr<void>(executor);
+        };
+    }
 
     // Hash function for pair<type_index, string>
     struct PairHash {
@@ -979,6 +1241,36 @@ private:
             std::type_index,
             std::function<bool(std::any const &)>>
             param_validators_;
+
+    // ========================================================================
+    // Container Transform Storage (Separate from Element Transforms)
+    // ========================================================================
+    
+    // Container transforms storage
+    std::unordered_map<
+            std::pair<std::type_index, std::string>,
+            std::shared_ptr<void>,
+            PairHash>
+            container_transforms_;
+    
+    std::unordered_map<std::string, ContainerTransformMetadata> container_metadata_;
+    
+    std::unordered_map<std::type_index, std::vector<std::string>> container_input_to_names_;
+    std::unordered_map<std::type_index, std::vector<std::string>> container_output_to_names_;
+    
+    // Container executor factories (keyed by TypeTriple)
+    std::unordered_map<
+            TypeTriple,
+            std::function<std::shared_ptr<void>(std::any const&)>,
+            TypeTripleHash>
+            container_executor_factories_;
+    
+    // Cache of container executors
+    mutable std::unordered_map<
+            std::pair<TypeTriple, std::type_index>,
+            std::shared_ptr<void>,
+            PairHash>
+            container_executor_cache_;
 
     // ========================================================================
     // Container Operations (Type Erasure Support)
@@ -1100,6 +1392,43 @@ private:
     std::unordered_map<std::type_index, ContainerOps> container_ops_;
     std::unordered_map<std::type_index, ElementRegistry::TimeSeriesOps> time_series_ops_;
 };
+
+// ============================================================================
+// TypedContainerExecutor Implementation (after ElementRegistry is fully declared)
+// ============================================================================
+
+template<typename InContainer, typename OutContainer, typename Params>
+TypedContainerExecutor<InContainer, OutContainer, Params>::TypedContainerExecutor(Params params)
+    : params_(std::move(params)) {}
+
+template<typename InContainer, typename OutContainer, typename Params>
+std::shared_ptr<OutContainer> TypedContainerExecutor<InContainer, OutContainer, Params>::execute(
+    std::string const& name,
+    InContainer const& input,
+    ComputeContext const& ctx) const {
+    auto& registry = ElementRegistry::instance();
+    return registry.executeContainerTransform<InContainer, OutContainer, Params>(
+        name, input, params_, ctx);
+}
+
+template<typename InContainer, typename OutContainer, typename Params>
+DataTypeVariant TypedContainerExecutor<InContainer, OutContainer, Params>::executeVariant(
+    std::string const& name,
+    DataTypeVariant const& input_variant,
+    ComputeContext const& ctx) const {
+    
+    // Extract concrete type from variant (pipeline's job, not transform's)
+    auto const* input_ptr = std::get_if<std::shared_ptr<InContainer>>(&input_variant);
+    if (!input_ptr || !(*input_ptr)) {
+        throw std::runtime_error("Invalid input container type for transform: " + name);
+    }
+    
+    // Execute pure transform
+    auto result = execute(name, **input_ptr, ctx);
+    
+    // Wrap result back in variant (pipeline's job)
+    return DataTypeVariant{result};
+}
 
 // ============================================================================
 // TypedParamExecutor Implementation (after ElementRegistry is fully declared)

@@ -1,6 +1,7 @@
 #ifndef WHISKERTOOLBOX_V2_REGISTERED_TRANSFORMS_HPP
 #define WHISKERTOOLBOX_V2_REGISTERED_TRANSFORMS_HPP
 
+#include "transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
@@ -30,6 +31,7 @@ inline bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<MaskAreaParams>();
     registerPipelineStepFactoryFor<SumReductionParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
+    registerPipelineStepFactoryFor<AnalogEventThresholdParams>();
     return true;
 }();
 
@@ -140,6 +142,29 @@ inline auto const register_line_min_point_dist = RegisterBinaryTransform<
                 .is_deterministic = true,
                 .supports_cancellation = false,
 });
+
+// Register AnalogEventThreshold (Container Transform)
+inline void registerAnalogEventThreshold() {
+    auto& registry = ElementRegistry::instance();
+    registry.registerContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
+        "AnalogEventThreshold",
+        analogEventThreshold,
+        ContainerTransformMetadata{
+            .description = "Detect threshold crossing events with lockout period",
+            .category = "Signal Processing",
+            .input_type_name = "AnalogTimeSeries",
+            .output_type_name = "DigitalEventSeries",
+            .params_type_name = "AnalogEventThresholdParams",
+            .is_expensive = false,
+            .is_deterministic = true,
+            .supports_cancellation = true
+        });
+}
+
+inline auto const container_transform_registration = []() {
+    registerAnalogEventThreshold();
+    return true;
+}();
 
 }// anonymous namespace
 

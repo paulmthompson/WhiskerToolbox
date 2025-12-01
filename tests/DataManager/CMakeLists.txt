@@ -104,6 +104,7 @@ add_executable(test_data_manager
         TransformsV2/test_zipping_logic.test.cpp
         TransformsV2/test_pipeline_zipping.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskArea/MaskArea.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp
 
 )
 

@@ -20,6 +20,7 @@ This is a parallel implementation. The existing transformation system (`src/Data
 - ✅ Element registry with compile-time type safety
 - ✅ TypedParamExecutor system (eliminates per-element parameter casts)
 - ✅ Container automatic lifting (element → container transforms)
+- ✅ **Native Container Transforms** (direct container-to-container operations)
 - ✅ Transform fusion pipeline (minimizes intermediate allocations)
 - ✅ **View-based lazy pipelines** (zero intermediate allocations, pull-based)
 - ✅ Support for ragged outputs (variable-length per time frame)
@@ -66,12 +67,20 @@ v2/
 float calculateArea(Mask2D const& mask, AreaParams const& params);
 ```
 
-**Container Transform**: Operates on collection
+**Lifted Container Transform**: Operates on collection (automatically generated)
 ```cpp
 // Container-level: MaskData → AnalogTimeSeries
 // Automatically generated from element transform!
 auto areas = registry.executeContainer<MaskData, AnalogTimeSeries>(
     "CalculateArea", mask_data, params);
+```
+
+**Native Container Transform**: Operates directly on collection (manually implemented)
+```cpp
+// Container-level: AnalogTimeSeries → DigitalEventSeries
+// Implemented directly to handle temporal dependencies (e.g. thresholds with lockout)
+auto events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries>(
+    "AnalogEventThreshold", analog_data, params);
 ```
 
 ### Fused Multi-Step Pipelines

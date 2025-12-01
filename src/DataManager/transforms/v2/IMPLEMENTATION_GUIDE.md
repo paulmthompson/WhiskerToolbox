@@ -56,6 +56,11 @@ float result = registry.execute<Mask2D, float, MyParams>(
 MaskData masks = ...;
 auto results = registry.executeContainer<MaskData, AnalogTimeSeries, MyParams>(
     "MyTransform", masks, params);
+
+// Or native container transform
+AnalogTimeSeries analog = ...;
+auto events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, ThresholdParams>(
+    "Threshold", analog, params);
 ```
 
 ## Part 1: Creating Transforms
@@ -135,6 +140,29 @@ float expensiveComputation(
     
     return result;
 }
+```
+
+#### Pattern 4: Native Container Transform
+
+For operations that need the entire container (e.g., temporal dependencies, global stats):
+
+```cpp
+// Operates on the whole container, not just one element
+std::shared_ptr<DigitalEventSeries> analogEventThreshold(
+    AnalogTimeSeries const& input,
+    AnalogEventThresholdParams const& params,
+    ComputeContext const& ctx) {
+    
+    auto result = std::make_shared<DigitalEventSeries>();
+    // ... process entire time series with temporal logic ...
+    return result;
+}
+
+// Register as container transform
+registry.registerContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
+    "AnalogEventThreshold",
+    analogEventThreshold
+);
 ```
 
 ### Parameter Best Practices
@@ -274,6 +302,20 @@ SkeletonParams params;
 auto skeletons = registry.executeContainer<MaskData, MaskData, SkeletonParams>(
     "Skeletonize",
     masks,
+    params
+);
+```
+
+#### Native Container Transform
+
+```cpp
+AnalogTimeSeries analog = loadAnalogData();
+AnalogEventThresholdParams params;
+
+// Executes directly on the container (no lifting)
+auto events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
+    "AnalogEventThreshold",
+    analog,
     params
 );
 ```
