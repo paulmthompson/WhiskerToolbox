@@ -212,6 +212,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/core/ElementTransform.hpp
         transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp
         transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.cpp
+        transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp
+        transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.cpp
         transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp
         transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.cpp
 )

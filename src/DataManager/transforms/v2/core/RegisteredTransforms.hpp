@@ -1,14 +1,18 @@
 #ifndef WHISKERTOOLBOX_V2_REGISTERED_TRANSFORMS_HPP
 #define WHISKERTOOLBOX_V2_REGISTERED_TRANSFORMS_HPP
 
+#include "CoreGeometry/masks.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+
 #include "transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
+#include "transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/PipelineLoader.hpp"
 
-#include "CoreGeometry/masks.hpp"
+
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 
@@ -32,6 +36,7 @@ inline bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<SumReductionParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<AnalogEventThresholdParams>();
+    registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
     return true;
 }();
 
@@ -161,8 +166,28 @@ inline void registerAnalogEventThreshold() {
         });
 }
 
+// Register AnalogIntervalPeak (Binary Container Transform)
+inline void registerAnalogIntervalPeak() {
+    auto& registry = ElementRegistry::instance();
+    registry.registerBinaryContainerTransform<
+        DigitalIntervalSeries,
+        AnalogTimeSeries,
+        DigitalEventSeries,
+        AnalogIntervalPeakParams>(
+        "AnalogIntervalPeak",
+        analogIntervalPeak,
+        ContainerTransformMetadata{
+            .description = "Find peak (min/max) analog values within intervals",
+            .category = "Signal Processing / Time Series",
+            .is_expensive = false,
+            .is_deterministic = true,
+            .supports_cancellation = true
+        });
+}
+
 inline auto const container_transform_registration = []() {
     registerAnalogEventThreshold();
+    registerAnalogIntervalPeak();
     return true;
 }();
 

@@ -1,6 +1,8 @@
 #ifndef WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
 #define WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
 
+#include "ComputeContext.hpp"
+#include "ContainerRegistry.hpp"
 #include "ContainerTraits.hpp"
 #include "DataManagerTypes.hpp"
 #include "ElementTransform.hpp"
@@ -175,97 +177,6 @@ struct TransformMetadata {
     bool is_expensive = false;// Hint for parallelization
     bool is_deterministic = true;
     bool supports_cancellation = false;
-};
-
-/**
- * @brief Metadata specific to container-level transforms
- * 
- * Separate from TransformMetadata to avoid polluting element transforms
- * with unnecessary flags.
- */
-struct ContainerTransformMetadata {
-    std::string name;
-    std::string description;
-    std::string category;  // "Signal Processing", "Time Series Analysis", etc.
-    
-    std::type_index input_container_type = typeid(void);
-    std::type_index output_container_type = typeid(void);
-    std::type_index params_type = typeid(void);
-    
-    // For UI generation
-    std::string input_type_name;
-    std::string output_type_name;
-    std::string params_type_name;
-    
-    // Version and authorship
-    std::string version = "1.0";
-    std::string author;
-    
-    // Performance hints
-    bool is_expensive = false;  // Hint for showing progress UI
-    bool is_deterministic = true;
-    bool supports_cancellation = true;  // Most container transforms support this
-};
-
-// ============================================================================
-// Container Transform Infrastructure
-// ============================================================================
-
-/**
- * @brief Type-erased wrapper for container transforms
- * 
- * This is INTERNAL to the registry - transforms themselves don't inherit.
- * Stores the pure function that operates on concrete container types.
- */
-template<typename InContainer, typename OutContainer, typename Params>
-class TypedContainerTransform {
-public:
-    using FuncType = std::function<std::shared_ptr<OutContainer>(
-        InContainer const&,
-        Params const&,
-        ComputeContext const&)>;
-    
-    explicit TypedContainerTransform(FuncType func)
-        : func_(std::move(func)) {}
-    
-    std::shared_ptr<OutContainer> execute(
-        InContainer const& input,
-        Params const& params,
-        ComputeContext const& ctx) const {
-        return func_(input, params, ctx);
-    }
-
-private:
-    FuncType func_;
-};
-
-/**
- * @brief Executor for container transforms with captured parameters
- * 
- * Similar to TypedParamExecutor but for container-level operations.
- * Eliminates per-call parameter casts by capturing params at construction.
- * 
- * Note: Implementation is defined after ElementRegistry class declaration.
- */
-template<typename InContainer, typename OutContainer, typename Params>
-class TypedContainerExecutor {
-public:
-    explicit TypedContainerExecutor(Params params);
-    
-    // Pure execution - no variants!
-    std::shared_ptr<OutContainer> execute(
-        std::string const& name,
-        InContainer const& input,
-        ComputeContext const& ctx) const;
-    
-    // Type-erased version for pipeline (converts DataTypeVariant)
-    DataTypeVariant executeVariant(
-        std::string const& name,
-        DataTypeVariant const& input_variant,
-        ComputeContext const& ctx) const;
-
-private:
-    Params params_;
 };
 
 // ============================================================================
@@ -666,6 +577,109 @@ public:
             return it->second;
         }
         return {};
+    }
+    
+    /**
+     * @brief Register binary container transform
+     * 
+     * For container-level transforms that need two full containers as input
+     * and handle their own time alignment and ragged structure.
+     * 
+     * Example: AnalogIntervalPeak(DigitalIntervalSeries, AnalogTimeSeries) → DigitalEventSeries
+     * 
+     * @tparam InContainer1 First input container type
+     * @tparam InContainer2 Second input container type
+     * @tparam OutContainer Output container type
+     * @tparam Params Parameter type
+     */
+    template<typename InContainer1, typename InContainer2, typename OutContainer, typename Params>
+    void registerBinaryContainerTransform(
+        std::string const& name,
+        std::function<std::shared_ptr<OutContainer>(
+            InContainer1 const&,
+            InContainer2 const&,
+            Params const&,
+            ComputeContext const&)> func,
+        ContainerTransformMetadata metadata = {}) {
+        
+        // Wrap as tuple-input function (consistent with element-level)
+        // Use tuple of references to avoid copying large containers
+        auto wrapped = [f = std::move(func)](
+            std::tuple<InContainer1&, InContainer2&> const& inputs,
+            Params const& params,
+            ComputeContext const& ctx) -> std::shared_ptr<OutContainer> {
+            return f(std::get<0>(inputs), std::get<1>(inputs), params, ctx);
+        };
+        
+        using TupleIn = std::tuple<InContainer1&, InContainer2&>;
+        auto transform = std::make_shared<TypedContainerTransform<TupleIn, OutContainer, Params>>(
+            wrapped);
+        
+        // Complete metadata
+        metadata.name = name;
+        metadata.input_container_type = typeid(TupleIn);
+        metadata.output_container_type = typeid(OutContainer);
+        metadata.params_type = typeid(Params);
+        metadata.is_multi_input = true;
+        metadata.input_arity = 2;
+        metadata.individual_input_types = {
+            std::type_index(typeid(InContainer1)),
+            std::type_index(typeid(InContainer2))
+        };
+        metadata.input_type_name = std::string("std::tuple<") + 
+                                   typeid(InContainer1).name() + ", " + 
+                                   typeid(InContainer2).name() + ">";
+        metadata.output_type_name = typeid(OutContainer).name();
+        metadata.params_type_name = typeid(Params).name();
+        
+        // Store
+        auto key = std::make_pair(std::type_index(typeid(TupleIn)), name);
+        container_transforms_[key] = transform;
+        container_metadata_[name] = metadata;
+        
+        // Update maps (both individual types point to this transform)
+        container_input_to_names_[typeid(InContainer1)].push_back(name);
+        container_input_to_names_[typeid(InContainer2)].push_back(name);
+        container_output_to_names_[typeid(OutContainer)].push_back(name);
+        
+        // Register parameter handling
+        registerContainerParamHandling<TupleIn, OutContainer, Params>();
+    }
+    
+    /**
+     * @brief Execute binary container transform
+     * 
+     * @param name Transform name
+     * @param input1 First input container
+     * @param input2 Second input container
+     * @param params Parameters
+     * @param ctx Compute context
+     * @return Shared pointer to output container
+     */
+    template<typename InContainer1, typename InContainer2, typename OutContainer, typename Params>
+    std::shared_ptr<OutContainer> executeBinaryContainerTransform(
+        std::string const& name,
+        InContainer1& input1,
+        InContainer2& input2,
+        Params const& params,
+        ComputeContext const& ctx = {}) const {
+        
+        using TupleIn = std::tuple<InContainer1&, InContainer2&>;
+        auto transform = getContainerTransform<TupleIn, OutContainer, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Binary container transform not found: " + name);
+        }
+        
+        // Create tuple of references (no copying!)
+        auto const inputs = std::tie(input1, input2);
+        auto result = transform->execute(inputs, params, ctx);
+        
+        // Propagate TimeFrame from first input if available
+        if (result && input1.getTimeFrame()) {
+            result->setTimeFrame(input1.getTimeFrame());
+        }
+        
+        return result;
     }
 
     // ========================================================================
