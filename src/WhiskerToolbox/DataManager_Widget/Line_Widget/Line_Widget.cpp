@@ -383,9 +383,9 @@ void Line_Widget::_initiateSaveProcess(QString const & format, LineSaverConfig c
     // Only prepend output path if parent_dir is relative (starts with "." or doesn't start with "/")
     if (parent_dir == "." || (!parent_dir.empty() && parent_dir[0] != '/')) {
         if (parent_dir == ".") {
-            updated_config["parent_dir"] = _data_manager->getOutputPath().string();
+            updated_config["parent_dir"] = _data_manager->getOutputPath();
         } else {
-            updated_config["parent_dir"] = _data_manager->getOutputPath().string() + "/" + parent_dir;
+            updated_config["parent_dir"] = _data_manager->getOutputPath() + "/" + parent_dir;
         }
     }
     // If parent_dir is absolute, use it as-is
@@ -415,7 +415,7 @@ void Line_Widget::_initiateSaveProcess(QString const & format, LineSaverConfig c
 
             MediaExportOptions options = ui->media_export_options_widget->getOptions();
             // Use the same parent directory used for line saving
-            std::string const base_output_dir = updated_config.value("parent_dir", _data_manager->getOutputPath().string());
+            std::string const base_output_dir = updated_config.value("parent_dir", _data_manager->getOutputPath());
             options.image_save_dir = base_output_dir;
 
             try {

@@ -122,7 +122,7 @@ DataManager::DataManager() {
     _data["media"] = std::make_shared<EmptyMediaData>();
 
     setTimeKey("media", TimeKey("time"));
-    _output_path = std::filesystem::current_path();
+    _output_path = std::filesystem::current_path().string();
 
     // Initialize TableRegistry
     _table_registry = std::make_unique<TableRegistry>(*this);
@@ -460,7 +460,8 @@ bool DataManager::deleteData(std::string const & key) {
 
 std::optional<std::string> processFilePath(
         std::string const & file_path,
-        std::filesystem::path const & base_path) {
+        std::string const & base_path) {
+    std::filesystem::path const base(base_path);
     std::filesystem::path full_path = file_path;
 
     // Check for wildcard character
@@ -470,7 +471,7 @@ std::optional<std::string> processFilePath(
         std::regex const regex_pattern(pattern);
 
         // Iterate through the directory to find matching files
-        for (auto const & entry: std::filesystem::directory_iterator(base_path)) {
+        for (auto const & entry: std::filesystem::directory_iterator(base)) {
             std::cout << "Checking " << entry.path().string() << " with full path " << full_path << std::endl;
             if (std::regex_match(entry.path().string(), regex_pattern)) {
                 std::cout << "Loading file " << entry.path().string() << std::endl;
@@ -481,7 +482,7 @@ std::optional<std::string> processFilePath(
     } else {
         // Check if the file path is relative
         if (!std::filesystem::path(file_path).is_absolute()) {
-            full_path = base_path / file_path;
+            full_path = base / file_path;
         }
         // Check for the presence of the file
         if (std::filesystem::exists(full_path)) {
@@ -525,7 +526,7 @@ DM_DataType stringToDataType(std::string const & data_type_str) {
     return DM_DataType::Unknown;
 }
 
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::filesystem::path const & base_path, JsonLoadProgressCallback progress_callback) {
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::string const & base_path, JsonLoadProgressCallback progress_callback) {
     std::vector<DataInfo> data_info_list;
     // Create factory for plugin system
     ConcreteDataFactory factory;
@@ -870,7 +871,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
     return data_info_list;
 }
 
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::filesystem::path const & base_path) {
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::string const & base_path) {
     // Call the version with progress callback, passing nullptr
     return load_data_from_json_config(dm, j, base_path, nullptr);
 }
@@ -888,7 +889,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
     ifs >> j;
 
     // get base path of filepath
-    std::filesystem::path const base_path = std::filesystem::path(json_filepath).parent_path();
+    std::string const base_path = std::filesystem::path(json_filepath).parent_path().string();
     return load_data_from_json_config(dm, j, base_path, progress_callback);
 }
 

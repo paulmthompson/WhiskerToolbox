@@ -82,7 +82,7 @@ void AnalogTimeSeries_Widget::_initiateSaveProcess(SaverType saver_type, AnalogS
     switch (saver_type) {
         case SaverType::CSV: {
             CSVAnalogSaverOptions & specific_csv_options = std::get<CSVAnalogSaverOptions>(options_variant);
-            specific_csv_options.parent_dir = _data_manager->getOutputPath().string();
+            specific_csv_options.parent_dir = _data_manager->getOutputPath();
             save_successful = _performActualCSVSave(specific_csv_options);
             break;
         }

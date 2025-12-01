@@ -259,7 +259,7 @@ void DigitalIntervalSeries_Widget::_initiateSaveProcess(SaverType saver_type, In
     switch (saver_type) {
         case SaverType::CSV: {
             CSVIntervalSaverOptions & specific_csv_options = std::get<CSVIntervalSaverOptions>(options_variant);
-            specific_csv_options.parent_dir = _data_manager->getOutputPath().string();
+            specific_csv_options.parent_dir = _data_manager->getOutputPath();
             if (specific_csv_options.parent_dir.empty()) {
                 specific_csv_options.parent_dir = ".";
             }

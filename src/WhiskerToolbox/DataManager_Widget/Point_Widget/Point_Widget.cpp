@@ -356,7 +356,7 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
     switch (saver_type) {
         case SaverType::CSV: {
             auto & specific_csv_options = std::get<CSVPointSaverOptions>(options_variant);
-            specific_csv_options.parent_dir = _data_manager->getOutputPath().string();
+            specific_csv_options.parent_dir = _data_manager->getOutputPath();
             save_successful = _performActualCSVSave(specific_csv_options);
             break;
         }
@@ -385,7 +385,7 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
                 if (std::holds_alternative<CSVPointSaverOptions>(options_variant)) {
                     base_output_dir = std::get<CSVPointSaverOptions>(options_variant).parent_dir;
                 } else {
-                    base_output_dir = _data_manager->getOutputPath().string();
+                    base_output_dir = _data_manager->getOutputPath();
                 }
 
                 MediaExportOptions options = ui->media_export_options_widget->getOptions();

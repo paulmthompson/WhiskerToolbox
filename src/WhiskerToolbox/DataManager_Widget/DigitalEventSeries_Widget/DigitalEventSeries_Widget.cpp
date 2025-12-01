@@ -166,7 +166,7 @@ void DigitalEventSeries_Widget::_initiateSaveProcess(SaverType saver_type, Event
 
     if (saver_type == SaverType::CSV) {
         auto & csv_options = std::get<CSVEventSaverOptions>(options_variant);
-        csv_options.parent_dir = output_path.string();
+        csv_options.parent_dir = output_path;
         csv_options.filename = ui->filename_edit->text().toStdString();
         
         if (_performActualCSVSave(csv_options)) {

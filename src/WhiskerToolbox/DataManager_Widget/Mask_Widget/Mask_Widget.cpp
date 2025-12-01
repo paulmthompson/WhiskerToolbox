@@ -435,7 +435,7 @@ void Mask_Widget::_initiateSaveProcess(QString const & format, MaskSaverConfig c
     // Update config with full path
     MaskSaverConfig updated_config = config;
     std::string const parent_dir = config.value("parent_dir", ".");
-    updated_config["parent_dir"] = _data_manager->getOutputPath().string() + "/" + parent_dir;
+    updated_config["parent_dir"] = _data_manager->getOutputPath() + "/" + parent_dir;
 
     bool const save_successful = _performRegistrySave(format, updated_config);
 
@@ -462,7 +462,7 @@ void Mask_Widget::_initiateSaveProcess(QString const & format, MaskSaverConfig c
 
             MediaExportOptions options = ui->media_export_options_widget->getOptions();
             // Use the same parent directory used for mask saving
-            std::string const base_output_dir = updated_config.value("parent_dir", _data_manager->getOutputPath().string());
+            std::string const base_output_dir = updated_config.value("parent_dir", _data_manager->getOutputPath());
             options.image_save_dir = base_output_dir;
 
             try {
