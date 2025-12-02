@@ -896,3 +896,449 @@ TEST_CASE("AnalogTimeSeries - Memory-mapped storage", "[analog][timeseries][mmap
         std::filesystem::remove(temp_file);
     }
 }
+
+TEST_CASE("AnalogTimeSeries - Lazy View Storage", "[analog][timeseries][lazy][view]") {
+    
+    SECTION("Basic lazy transform - z-score normalization") {
+        // Create base series
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+            TimeFrameIndex(3), TimeFrameIndex(4)
+        };
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        // Compute statistics
+        float sum = 0.0f, sum_sq = 0.0f;
+        size_t n = base_series->getNumSamples();
+        for (auto const& sample : base_series->view()) {
+            sum += sample.value;
+            sum_sq += sample.value * sample.value;
+        }
+        float mean = sum / n;  // 30.0
+        float variance = (sum_sq / n) - (mean * mean);  // 200.0
+        float std = std::sqrt(variance);  // 14.142...
+        
+        // Create lazy z-score transform
+        auto z_score_view = base_series->view()
+            | std::views::transform([mean, std](auto tv) {
+                float z = (tv.value - mean) / std;
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, z};
+            });
+        
+        // Wrap in AnalogTimeSeries
+        auto normalized_series = AnalogTimeSeries::createFromView(
+            z_score_view,
+            base_series->getTimeStorage()
+        );
+        
+        // Verify lazy computation
+        REQUIRE(normalized_series->getNumSamples() == 5);
+        REQUIRE(normalized_series->getTimeStorage() == base_series->getTimeStorage());
+        
+        // Check z-scores are computed correctly on access
+        auto samples = normalized_series->getAllSamples();
+        std::vector<float> expected_z_scores{
+            (10.0f - 30.0f) / std,  // -1.414...
+            (20.0f - 30.0f) / std,  // -0.707...
+            (30.0f - 30.0f) / std,  // 0.0
+            (40.0f - 30.0f) / std,  // 0.707...
+            (50.0f - 30.0f) / std   // 1.414...
+        };
+        
+        int idx = 0;
+        for (auto const& [time, value] : samples) {
+            REQUIRE(value == Catch::Approx(expected_z_scores[idx]).margin(0.001f));
+            idx++;
+        }
+        REQUIRE(idx == 5);
+    }
+    
+    SECTION("Lazy transform with std::pair interface") {
+        // Create base series
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40)
+        };
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        // Create lazy transform that doubles values (using std::pair)
+        auto doubled_view = base_series->view()
+            | std::views::transform([](auto tv) {
+                return std::pair{tv.time_frame_index, tv.value * 2.0f};
+            });
+        
+        auto doubled_series = AnalogTimeSeries::createFromView(
+            doubled_view,
+            base_series->getTimeStorage()
+        );
+        
+        // Verify doubled values
+        auto samples = doubled_series->getAllSamples();
+        std::vector<float> expected{2.0f, 4.0f, 6.0f, 8.0f};
+        
+        int idx = 0;
+        for (auto const& [time, value] : samples) {
+            REQUIRE(value == Catch::Approx(expected[idx]));
+            idx++;
+        }
+        REQUIRE(idx == 4);
+    }
+    
+    SECTION("Lazy transform - chained transforms") {
+        // Create base series
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+            TimeFrameIndex(3), TimeFrameIndex(4)
+        };
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        // Chain: square, then add 10
+        auto transformed_view = base_series->view()
+            | std::views::transform([](auto tv) {
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * tv.value};
+            })
+            | std::views::transform([](auto tv) {
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value + 10.0f};
+            });
+        
+        auto transformed_series = AnalogTimeSeries::createFromView(
+            transformed_view,
+            base_series->getTimeStorage()
+        );
+        
+        // Verify: (x^2) + 10
+        auto samples = transformed_series->getAllSamples();
+        std::vector<float> expected{11.0f, 14.0f, 19.0f, 26.0f, 35.0f};
+        
+        int idx = 0;
+        for (auto const& [time, value] : samples) {
+            REQUIRE(value == Catch::Approx(expected[idx]));
+            idx++;
+        }
+    }
+    
+    SECTION("Lazy transform - storage type verification") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2)};
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        auto lazy_view = base_series->view()
+            | std::views::transform([](auto tv) {
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * 2.0f};
+            });
+        
+        auto lazy_series = AnalogTimeSeries::createFromView(lazy_view, base_series->getTimeStorage());
+        
+        // Verify storage type
+        REQUIRE(lazy_series->getAnalogTimeSeries().empty());  // No contiguous span available
+    }
+    
+    SECTION("Lazy transform - getDataInTimeFrameIndexRange") {
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20), 
+            TimeFrameIndex(30), TimeFrameIndex(40)
+        };
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        auto scaled_view = base_series->view()
+            | std::views::transform([](auto tv) {
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * 0.1f};
+            });
+        
+        auto scaled_series = AnalogTimeSeries::createFromView(scaled_view, base_series->getTimeStorage());
+        
+        // Range queries should work but return empty span (non-contiguous)
+        auto span = scaled_series->getDataInTimeFrameIndexRange(TimeFrameIndex(10), TimeFrameIndex(30));
+        REQUIRE(span.empty());  // Lazy storage doesn't provide contiguous spans
+        
+        // But iteration should work
+        auto range = scaled_series->getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex(10), TimeFrameIndex(30));
+        std::vector<float> collected;
+        for (auto const& sample : range) {
+            collected.push_back(sample.value);
+        }
+        
+        REQUIRE(collected.size() == 3);
+        REQUIRE(collected[0] == Catch::Approx(2.0f));  // 20 * 0.1
+        REQUIRE(collected[1] == Catch::Approx(3.0f));  // 30 * 0.1
+        REQUIRE(collected[2] == Catch::Approx(4.0f));  // 40 * 0.1
+    }
+    
+    SECTION("Lazy transform - getAtTime") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), 
+            TimeFrameIndex(400), TimeFrameIndex(500)
+        };
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        auto cubed_view = base_series->view()
+            | std::views::transform([](auto tv) {
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * tv.value * tv.value};
+            });
+        
+        auto cubed_series = AnalogTimeSeries::createFromView(cubed_view, base_series->getTimeStorage());
+        
+        // Random access should work
+        auto value = cubed_series->getAtTime(TimeFrameIndex(300));
+        REQUIRE(value.has_value());
+        REQUIRE(value.value() == Catch::Approx(27.0f));  // 3^3
+        
+        value = cubed_series->getAtTime(TimeFrameIndex(500));
+        REQUIRE(value.has_value());
+        REQUIRE(value.value() == Catch::Approx(125.0f));  // 5^3
+        
+        value = cubed_series->getAtTime(TimeFrameIndex(999));
+        REQUIRE_FALSE(value.has_value());
+    }
+    
+    SECTION("Lazy transform - error handling") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2)};
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        // Create view with wrong size
+        auto view_subset = base_series->view() | std::views::take(2);
+        
+        // Create different time storage with wrong size
+        std::vector<TimeFrameIndex> wrong_times{TimeFrameIndex(0), TimeFrameIndex(1)};
+        auto wrong_time_storage = TimeIndexStorageFactory::createFromTimeIndices(std::move(wrong_times));
+        
+        // Should throw due to size mismatch
+        REQUIRE_THROWS_AS(
+            AnalogTimeSeries::createFromView(view_subset, base_series->getTimeStorage()),
+            std::runtime_error
+        );
+    }
+}
+
+TEST_CASE("AnalogTimeSeries - Materialization", "[analog][timeseries][materialize]") {
+    
+    SECTION("Materialize lazy view storage") {
+        // Create lazy series
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+            TimeFrameIndex(3), TimeFrameIndex(4)
+        };
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        auto squared_view = base_series->view()
+            | std::views::transform([](auto tv) {
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * tv.value};
+            });
+        
+        auto lazy_series = AnalogTimeSeries::createFromView(squared_view, base_series->getTimeStorage());
+        
+        // Materialize
+        auto materialized = lazy_series->materialize();
+        
+        // Verify materialized data
+        REQUIRE(materialized->getNumSamples() == 5);
+        
+        auto span = materialized->getAnalogTimeSeries();
+        REQUIRE_FALSE(span.empty());  // Should now have contiguous storage
+        REQUIRE(span.size() == 5);
+        
+        REQUIRE(span[0] == Catch::Approx(1.0f));   // 1^2
+        REQUIRE(span[1] == Catch::Approx(4.0f));   // 2^2
+        REQUIRE(span[2] == Catch::Approx(9.0f));   // 3^2
+        REQUIRE(span[3] == Catch::Approx(16.0f));  // 4^2
+        REQUIRE(span[4] == Catch::Approx(25.0f));  // 5^2
+    }
+    
+    SECTION("Materialize vector storage (deep copy)") {
+        std::vector<float> data{10.0f, 20.0f, 30.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2)};
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        // Materialize already-materialized series (should deep copy)
+        auto materialized = base_series->materialize();
+        
+        REQUIRE(materialized->getNumSamples() == 3);
+        
+        auto span = materialized->getAnalogTimeSeries();
+        REQUIRE(span.size() == 3);
+        REQUIRE(span[0] == 10.0f);
+        REQUIRE(span[1] == 20.0f);
+        REQUIRE(span[2] == 30.0f);
+        
+        // Verify it's a different object
+        REQUIRE(span.data() != base_series->getAnalogTimeSeries().data());
+    }
+    
+    SECTION("Materialize memory-mapped storage") {
+        // Create temporary file
+        std::filesystem::path temp_file = std::filesystem::temp_directory_path() / "test_materialize_mmap.bin";
+        
+        std::vector<float> data{1.5f, 2.5f, 3.5f, 4.5f, 5.5f};
+        std::ofstream out(temp_file, std::ios::binary);
+        out.write(reinterpret_cast<char const*>(data.data()), data.size() * sizeof(float));
+        out.close();
+        
+        // Create memory-mapped series
+        MmapStorageConfig config;
+        config.file_path = temp_file;
+        config.data_type = MmapDataType::Float32;
+        config.num_samples = 5;
+        
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+            TimeFrameIndex(3), TimeFrameIndex(4)
+        };
+        
+        auto mmap_series = AnalogTimeSeries::createMemoryMapped(config, times);
+        
+        // Materialize
+        auto materialized = mmap_series->materialize();
+        
+        // Verify data is now in vector storage
+        auto span = materialized->getAnalogTimeSeries();
+        REQUIRE_FALSE(span.empty());
+        REQUIRE(span.size() == 5);
+        
+        for (size_t i = 0; i < 5; ++i) {
+            REQUIRE(span[i] == Catch::Approx(data[i]));
+        }
+        
+        // Cleanup
+        std::filesystem::remove(temp_file);
+    }
+    
+    SECTION("Materialize enables efficient random access") {
+        // Create lazy series with expensive computation
+        std::vector<float> data;
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 1000; ++i) {
+            data.push_back(static_cast<float>(i));
+            times.push_back(TimeFrameIndex(i));
+        }
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        // Expensive transform (for demonstration)
+        auto expensive_view = base_series->view()
+            | std::views::transform([](auto tv) {
+                float result = tv.value;
+                for (int i = 0; i < 10; ++i) {
+                    result = std::sqrt(result + 1.0f);
+                }
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, result};
+            });
+        
+        auto lazy_series = AnalogTimeSeries::createFromView(expensive_view, base_series->getTimeStorage());
+        
+        // Materialize for efficient repeated access
+        auto materialized = lazy_series->materialize();
+        
+        // Random access pattern (would be expensive with lazy evaluation)
+        std::vector<int> random_indices{100, 500, 200, 800, 50, 900, 300};
+        for (auto idx : random_indices) {
+            auto value = materialized->getAtTime(TimeFrameIndex(idx));
+            REQUIRE(value.has_value());
+        }
+        
+        // Verify span access works
+        auto span = materialized->getAnalogTimeSeries();
+        REQUIRE(span.size() == 1000);
+    }
+    
+    SECTION("Materialize preserves time indices") {
+        // Create lazy series with sparse time indices
+        std::vector<float> data{10.0f, 20.0f, 30.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(5), TimeFrameIndex(100), TimeFrameIndex(500)};
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        auto transformed_view = base_series->view()
+            | std::views::transform([](auto tv) {
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value + 1.0f};
+            });
+        
+        auto lazy_series = AnalogTimeSeries::createFromView(transformed_view, base_series->getTimeStorage());
+        auto materialized = lazy_series->materialize();
+        
+        // Verify time indices preserved
+        auto time_vec = materialized->getTimeSeries();
+        REQUIRE(time_vec.size() == 3);
+        REQUIRE(time_vec[0] == TimeFrameIndex(5));
+        REQUIRE(time_vec[1] == TimeFrameIndex(100));
+        REQUIRE(time_vec[2] == TimeFrameIndex(500));
+        
+        // Verify values
+        auto span = materialized->getAnalogTimeSeries();
+        REQUIRE(span[0] == Catch::Approx(11.0f));
+        REQUIRE(span[1] == Catch::Approx(21.0f));
+        REQUIRE(span[2] == Catch::Approx(31.0f));
+    }
+}
+
+TEST_CASE("AnalogTimeSeries - Lazy View Integration with Statistics", "[analog][timeseries][lazy][statistics]") {
+    
+    SECTION("Compute statistics on lazy view") {
+        // Create base series
+        std::vector<float> data{2.0f, 4.0f, 6.0f, 8.0f, 10.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+            TimeFrameIndex(3), TimeFrameIndex(4)
+        };
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        // Create lazy log transform
+        auto log_view = base_series->view()
+            | std::views::transform([](auto tv) {
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, std::log(tv.value)};
+            });
+        
+        auto log_series = AnalogTimeSeries::createFromView(log_view, base_series->getTimeStorage());
+        
+        // Compute mean on lazy series
+        float sum = 0.0f;
+        int count = 0;
+        for (auto const& sample : log_series->getAllSamples()) {
+            sum += sample.value;
+            count++;
+        }
+        float mean = sum / count;
+        
+        // Expected: mean(log(2), log(4), log(6), log(8), log(10))
+        float expected_mean = (std::log(2.0f) + std::log(4.0f) + std::log(6.0f) + 
+                              std::log(8.0f) + std::log(10.0f)) / 5.0f;
+        
+        REQUIRE(mean == Catch::Approx(expected_mean).margin(0.001f));
+    }
+    
+    SECTION("Normalize then compute standard deviation") {
+        std::vector<float> data{5.0f, 10.0f, 15.0f, 20.0f, 25.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), 
+            TimeFrameIndex(3), TimeFrameIndex(4)
+        };
+        auto base_series = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        // First pass: compute mean
+        float mean = 15.0f;  // Known mean
+        
+        // Create centered view (subtract mean)
+        auto centered_view = base_series->view()
+            | std::views::transform([mean](auto tv) {
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value - mean};
+            });
+        
+        auto centered_series = AnalogTimeSeries::createFromView(centered_view, base_series->getTimeStorage());
+        
+        // Compute variance
+        float sum_sq = 0.0f;
+        int count = 0;
+        for (auto const& sample : centered_series->getAllSamples()) {
+            sum_sq += sample.value * sample.value;
+            count++;
+        }
+        float variance = sum_sq / count;
+        float std_dev = std::sqrt(variance);
+        
+        // Expected std dev for {5, 10, 15, 20, 25} is sqrt(50) ≈ 7.071
+        REQUIRE(std_dev == Catch::Approx(7.071f).margin(0.01f));
+    }
+}

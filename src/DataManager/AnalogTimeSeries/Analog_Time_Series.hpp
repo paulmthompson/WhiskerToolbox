@@ -169,6 +169,74 @@ public:
             MmapStorageConfig config,
             std::vector<TimeFrameIndex> time_vector);
 
+    /**
+     * @brief Create AnalogTimeSeries from a lazy view
+     * 
+     * Creates an AnalogTimeSeries that computes values on-demand from a ranges view.
+     * The view must be a random-access range that yields elements compatible with 
+     * (TimeFrameIndex, float) pairs or TimeValuePoint. No intermediate data is 
+     * materialized - values are computed when accessed.
+     * 
+     * This enables efficient transform pipelines without intermediate allocations:
+     * @code
+     * // Z-score normalization without materializing intermediate results
+     * auto base_series = ;
+     * float mean =;
+     * float std = ;
+     * 
+     * auto normalized_view = base_series->view()
+     *     | std::views::transform([mean, std](auto tv) {
+     *         float z_score = (tv.value - mean) / std;
+     *         return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, z_score};
+     *     });
+     * 
+     * auto normalized_series = AnalogTimeSeries::createFromView(
+     *     normalized_view, 
+     *     base_series->getTimeStorage()
+     * );
+     * 
+     * // Access computes z-score on-demand
+     * float value = normalized_series->getAtTime(TimeFrameIndex(100)).value();
+     * @endcode
+     * 
+     * @tparam ViewType Random-access range type
+     * @param view Random-access range view yielding (TimeFrameIndex, float) pairs or TimeValuePoint
+     * @param time_storage Shared time index storage (reuse from base series for efficiency)
+     * @return std::shared_ptr<AnalogTimeSeries> Lazy analog time series
+     * 
+     * @throws std::runtime_error if view size doesn't match time storage size
+     * 
+     * @note The view must remain valid for the lifetime of the returned AnalogTimeSeries.
+     *       Capture by value in lambdas or ensure base series outlives the lazy series.
+     * @note For materialized (eager) storage, call .materialize() on the result
+     * 
+     * @see materialize() to convert lazy storage to vector storage
+     * @see view() to get a view over an existing AnalogTimeSeries
+     */
+    template<std::ranges::random_access_range ViewType>
+    [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createFromView(
+            ViewType view,
+            std::shared_ptr<TimeIndexStorage> time_storage)
+    {
+        size_t num_samples = std::ranges::size(view);
+        
+        // Validate that view size matches time storage
+        if (num_samples != time_storage->size()) {
+            throw std::runtime_error(
+                "View size (" + std::to_string(num_samples) + 
+                ") does not match time storage size (" + 
+                std::to_string(time_storage->size()) + ")");
+        }
+        
+        // Create lazy storage
+        auto lazy_storage = LazyViewStorage<ViewType>(std::move(view), num_samples);
+        DataStorageWrapper storage_wrapper(std::move(lazy_storage));
+        
+        // Use private constructor with shared time storage
+        return std::shared_ptr<AnalogTimeSeries>(
+            new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_storage)));
+    }
+
     // ========== Getting Data ==========
 
     [[nodiscard]] size_t getNumSamples() const { return _data_storage.size(); };
@@ -643,8 +711,16 @@ private:
     // Cached optimization pointer for fast path access
     float const * _contiguous_data_ptr{nullptr};
 
-    // Private constructor for factory methods
+    // Private constructors for factory methods
     AnalogTimeSeries(DataStorageWrapper storage, std::vector<TimeFrameIndex> time_vector);
+    
+    // Constructor for reusing shared time storage (efficient for lazy views)
+    AnalogTimeSeries(DataStorageWrapper storage, std::shared_ptr<TimeIndexStorage> time_storage)
+        : _data_storage(std::move(storage))
+        , _time_storage(std::move(time_storage))
+    {
+        _cacheOptimizationPointers();
+    }
 
     void setData(std::vector<float> analog_vector);
     void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
@@ -750,6 +826,64 @@ public:
             return _getDataAtDataArrayIndex(*idx);
         }
         return std::nullopt;
+    }
+
+    // ========== Materialization ==========
+
+    /**
+     * @brief Materialize lazy storage into vector storage
+     * 
+     * Converts any storage backend (lazy, memory-mapped, etc.) into contiguous
+     * vector storage by evaluating all values and copying them into memory.
+     * Useful when:
+     * - Random access patterns would cause repeated computation
+     * - Downstream operations require contiguous memory
+     * - Original data source (file, base series) will be destroyed
+     * 
+     * @return std::shared_ptr<AnalogTimeSeries> New series with vector storage
+     * 
+     * @note For already-materialized vector storage, this creates a deep copy
+     * @note This will evaluate all lazy computations immediately
+     * 
+     * @example
+     * @code
+     * auto lazy_series = AnalogTimeSeries::createFromView(transformed_view, time_storage);
+     * // ... do some sequential processing ...
+     * 
+     * // Materialize before random access-heavy operations
+     * auto materialized = lazy_series->materialize();
+     * 
+     * // Now random access is efficient
+     * for (int i = 0; i < 1000; ++i) {
+     *     auto value = materialized->getAtTime(TimeFrameIndex(random_indices[i]));
+     * }
+     * @endcode
+     */
+    [[nodiscard]] std::shared_ptr<AnalogTimeSeries> materialize() const {
+        // Fast path: already vector storage, just deep copy
+        if (_data_storage.getStorageType() == AnalogStorageType::Vector) {
+            std::vector<float> values;
+            auto span = _data_storage.getSpan();
+            values.assign(span.begin(), span.end());
+            return std::make_shared<AnalogTimeSeries>(
+                std::move(values), 
+                _time_storage->getAllTimeIndices()
+            );
+        }
+        
+        // Slow path: evaluate all values from storage
+        size_t n = _data_storage.size();
+        std::vector<float> values;
+        values.reserve(n);
+        
+        for (size_t i = 0; i < n; ++i) {
+            values.push_back(_data_storage.getValueAt(i));
+        }
+        
+        return std::make_shared<AnalogTimeSeries>(
+            std::move(values),
+            _time_storage->getAllTimeIndices()
+        );
     }
 };
 
