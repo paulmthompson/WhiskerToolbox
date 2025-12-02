@@ -165,6 +165,55 @@ registry.registerContainerTransform<AnalogTimeSeries, DigitalEventSeries, Analog
 );
 ```
 
+#### Pattern 5: Multi-Pass Transform (Preprocessing)
+
+For element-level transforms that need global statistics (e.g., Z-Score normalization, MinMax scaling). The system allows you to define a `preprocess()` method in your parameters struct that runs before the main transformation.
+
+```cpp
+#include "transforms/v2/core/PreProcessingRegistry.hpp"
+
+struct ZScoreParams {
+    // User configuration
+    bool clamp = false;
+    
+    // Cached state (use rfl::Skip to exclude from JSON serialization)
+    rfl::Skip<std::optional<float>> mean;
+    rfl::Skip<std::optional<float>> std;
+    rfl::Skip<bool> preprocessed = false;
+    
+    // Preprocessing method - automatically called by pipeline
+    // Must be a template to handle different view types
+    template<typename View>
+    void preprocess(View view) {
+        if (preprocessed.value()) return;
+        
+        // Compute statistics in first pass
+        double sum = 0, sq_sum = 0, count = 0;
+        for (auto const& pair : view) {
+            // pair.second is the value (or reference wrapper)
+            float val = ...; // Extract value
+            sum += val;
+            count++;
+        }
+        
+        mean = static_cast<float>(sum / count);
+        // ... compute std ...
+        preprocessed = true;
+    }
+};
+
+// Transform function uses cached values
+float zScore(float val, ZScoreParams const& params) {
+    // Params are guaranteed to be preprocessed here
+    return (val - params.mean.value().value()) / params.std.value().value();
+}
+
+// Register preprocessing capability in anonymous namespace
+namespace {
+    auto const register_zscore_prep = RegisterPreprocessing<ZScoreParams>();
+}
+```
+
 ### Parameter Best Practices
 
 #### Use reflect-cpp for Serialization

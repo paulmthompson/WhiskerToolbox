@@ -1,13 +1,13 @@
 #ifndef WHISKERTOOLBOX_V2_ZSCORE_NORMALIZATION_HPP
 #define WHISKERTOOLBOX_V2_ZSCORE_NORMALIZATION_HPP
 
+#include "transforms/v2/core/PreProcessingRegistry.hpp"
+
 #include <rfl.hpp>
 
 #include <cmath>
 #include <optional>
 #include <ranges>
-
-#include "transforms/v2/core/TransformPipeline.hpp"
 
 namespace WhiskerToolbox::Transforms::V2 {
 

@@ -114,6 +114,39 @@ DataTypeVariant result = dynamic_pipeline.execute(masks);
 // - Reduced memory usage
 ```
 
+### Multi-Pass Preprocessing
+
+Some element-level transforms require global statistics (e.g., Z-Score normalization requires mean and std dev). The system supports a **preprocessing phase** where transforms can make a first pass over the data to compute and cache these statistics.
+
+```cpp
+// 1. Define params with cached state (skipped by serialization)
+struct ZScoreParams {
+    // User config
+    bool clamp_outliers = false;
+    
+    // Cached state (computed during preprocessing)
+    rfl::Skip<std::optional<float>> mean;
+    rfl::Skip<std::optional<float>> std;
+    
+    // Preprocess method (automatically called by pipeline)
+    template<typename View>
+    void preprocess(View view) {
+        // Compute mean/std from view...
+        mean = computed_mean;
+        std = computed_std;
+    }
+};
+
+// 2. Transform uses cached values
+float zScore(float val, ZScoreParams const& params) {
+    return (val - params.mean.value()) / params.std.value();
+}
+
+// The pipeline automatically detects the preprocess() method and calls it
+// before the main execution loop. This enables multi-pass algorithms 
+// without materializing intermediate containers.
+```
+
 ### Runtime Configuration (Coming Soon)
 
 The system is designed to support runtime pipeline configuration via JSON, but this is not yet fully implemented. Current approach:
