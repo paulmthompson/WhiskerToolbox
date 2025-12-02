@@ -178,3 +178,11 @@ If we wish to run testing, we should add the tests subdirectory.
 if (BUILD_TESTING)
     add_subdirectory(tests)
 endif()
+
+#=============================
+# Benchmarking
+#=============================
+
+if (ENABLE_BENCHMARK)
+    add_subdirectory(benchmark)
+endif()

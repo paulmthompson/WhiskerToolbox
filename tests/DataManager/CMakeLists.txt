@@ -132,10 +132,6 @@ if(ENABLE_OPENCV)
     target_compile_definitions(test_data_manager PUBLIC ENABLE_OPENCV)
 endif()
 
-if(ENABLE_BENCHMARK)
-    target_sources(test_data_manager PRIVATE ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Alignment/line_alignment.benchmark.cpp)
-endif()
-
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
 target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)

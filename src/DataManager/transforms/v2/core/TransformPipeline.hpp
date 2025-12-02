@@ -630,8 +630,12 @@ public:
             // Pure element pipeline - use fusion for maximum performance
             return executeFused<InputContainer, OutputContainer>(input);
         } else {
-            // Has time-grouped transforms - use standard execution
-            return execute<InputContainer, OutputContainer>(input);
+            // Has time-grouped transforms - use standard execution with variant
+            auto result_variant = execute<InputContainer>(input);
+            
+            // Unwrap the variant to get the typed result
+            auto result = std::get<std::shared_ptr<OutputContainer>>(result_variant);
+            return result;
         }
     }
 

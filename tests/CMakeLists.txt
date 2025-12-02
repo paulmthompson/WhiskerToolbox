@@ -26,4 +26,3 @@ if (ENABLE_FUZZ_TESTING)
         add_subdirectory(fuzz)
 endif()
 
-add_subdirectory(benchmarks)
