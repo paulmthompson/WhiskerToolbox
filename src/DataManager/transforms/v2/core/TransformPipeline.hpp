@@ -22,11 +22,84 @@
 #include <span>
 #include <string>
 #include <type_traits>
+#include <typeindex>
 #include <utility>
 #include <variant>
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2 {
+
+// ============================================================================
+// Preprocessing Registry
+// ============================================================================
+
+/**
+ * @brief Global registry for parameter types that support preprocessing
+ * 
+ * This is a simple set that tracks which parameter types have preprocessing capability.
+ * Parameter types register themselves at their definition site using RAII.
+ * 
+ * The registry doesn't store preprocessing logic - it just tracks which types
+ * need preprocessing attempts. The actual dispatch uses template instantiation
+ * at the call site where types are known.
+ */
+class PreprocessingRegistry {
+public:
+    static PreprocessingRegistry& instance() {
+        static PreprocessingRegistry registry;
+        return registry;
+    }
+
+    /**
+     * @brief Register that a parameter type supports preprocessing
+     */
+    void registerType(std::type_index type_id) {
+        registered_types_.insert(type_id);
+    }
+
+    /**
+     * @brief Check if a parameter type is registered for preprocessing
+     */
+    bool isRegistered(std::type_index type_id) const {
+        return registered_types_.find(type_id) != registered_types_.end();
+    }
+    
+    /**
+     * @brief Get all registered type indices
+     * 
+     * This is used to iterate over all types that might need preprocessing.
+     */
+    std::vector<std::type_index> getAllRegisteredTypes() const {
+        return std::vector<std::type_index>(registered_types_.begin(), registered_types_.end());
+    }
+
+private:
+    PreprocessingRegistry() = default;
+    std::unordered_set<std::type_index> registered_types_;
+};
+
+/**
+ * @brief RAII helper for registering preprocessing at static initialization
+ * 
+ * Usage in parameter header file (where Params is fully defined):
+ * ```cpp
+ * // In ZScoreNormalization.hpp  
+ * namespace {
+ *     inline auto const register_zscore_preprocessing = 
+ *         RegisterPreprocessing<ZScoreNormalizationParams>();
+ * }
+ * ```
+ * 
+ * This simply registers the type_index so PipelineStep knows which params
+ * types might need preprocessing attempts.
+ */
+template<typename Params>
+class RegisterPreprocessing {
+public:
+    RegisterPreprocessing() {
+        PreprocessingRegistry::instance().registerType(std::type_index(typeid(Params)));
+    }
+};
 
 // ============================================================================
 // Helper for Adding Elements to Different Container Types
@@ -128,6 +201,14 @@ private:
 // Pipeline Step Definition
 // ============================================================================
 
+// Forward declare for ADL
+struct PipelineStep;
+
+// Default implementation declared but not defined
+// RegisteredTransforms.hpp provides the definition
+template<typename View>
+void tryAllRegisteredPreprocessing(PipelineStep const&, View const&);
+
 /**
  * @brief Represents a single step in a transform pipeline
  * 
@@ -141,7 +222,7 @@ private:
  */
 struct PipelineStep {
     std::string transform_name;
-    std::any params;// Type-erased parameters
+    mutable std::any params;// Type-erased parameters (mutable for preprocessing/caching)
 
     // Type-erased executors that know the correct parameter type
     // These are set when the step is added to the pipeline
@@ -175,6 +256,58 @@ struct PipelineStep {
 
     PipelineStep(std::string name)
         : PipelineStep(std::move(name), NoParams{}) {}
+
+    /**
+     * @brief Try preprocessing using registry lookup
+     * 
+     * This is a compile-time template that gets instantiated with both
+     * the View type and the Params type known. The Params type is discovered
+     * by trying registered types from the preprocessing registry.
+     * 
+     * @tparam View The view type (known at call site)
+     * @tparam Params The parameter type (tried from registry)
+     */
+    template<typename View, typename Params>
+    bool tryPreprocessTyped(View const& view) const {
+        // Check type without throwing
+        if (params.type() != typeid(Params)) {
+            return false;
+        }
+        
+        // Cast to concrete type (non-const since we're modifying it)
+        auto& params_ref = std::any_cast<Params&>(params);
+        
+        // Check if this type has preprocess() method that's callable with this view type
+        // The requires constraint on the preprocess method ensures type safety
+        if constexpr (requires { params_ref.preprocess(view); }) {
+            // Check for idempotency guard
+            if constexpr (requires { params_ref.isPreprocessed(); }) {
+                if (!params_ref.isPreprocessed()) {
+                    params_ref.preprocess(view);
+                }
+            } else {
+                params_ref.preprocess(view);
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * @brief Main preprocessing entry point
+     * 
+     * Calls free function that can be overloaded in RegisteredTransforms.hpp
+     */
+    template<typename View>
+    void maybePreprocess(View const& view) const {
+        // Call ADL-found free function
+        // Default version does nothing, RegisteredTransforms.hpp provides the real version
+        tryAllRegisteredPreprocessing(*this, view);
+    }
+
+private:
+
+public:
 
     /**
      * @brief Create element executor for specific types
@@ -675,6 +808,13 @@ public:
 
         auto & registry = ElementRegistry::instance();
 
+        // Preprocessing phase: Allow params to compute statistics/allocate buffers
+        // Automatically tries all registered parameter types
+        auto view = input.elements();
+        for (auto const& step : steps_) {
+            step.maybePreprocess(view);
+        }
+
         std::vector<std::function<ElementVariant(ElementVariant)>> transform_chain;
 
         // Verify all steps are element-level (not time-grouped)
@@ -735,6 +875,12 @@ public:
         }
 
         auto & registry = ElementRegistry::instance();
+
+        // Preprocessing phase: Allow params to compute statistics/allocate buffers
+        // Automatically tries all registered parameter types
+        for (auto const& step : steps_) {
+            step.maybePreprocess(view);
+        }
 
         // Verify all steps are element-level (not time-grouped)
         for (auto const & step: steps_) {
@@ -976,16 +1122,17 @@ private:
             std::type_index params_type) const {
         auto & registry = ElementRegistry::instance();
 
-        // Use the registry's dynamic parameter execution
-        // Capture the types and parameters for later execution
+        // Capture a pointer to the step so we always access the current params
+        // (which may have been modified by preprocessing)
+        auto step_ptr = &step;
         return [&registry,
                 name = step.transform_name,
-                params = step.params,
+                step_ptr,  // Capture pointer to step to access mutable params
                 input_type,
                 output_type,
                 params_type](ElementVariant input) -> ElementVariant {
             return registry.executeWithDynamicParams(
-                    name, input, params, input_type, output_type, params_type);
+                    name, input, step_ptr->params, input_type, output_type, params_type);
         };
     }
 

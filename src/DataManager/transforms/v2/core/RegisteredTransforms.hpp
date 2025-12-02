@@ -9,10 +9,26 @@
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
+#include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/PipelineLoader.hpp"
 
 
+
+namespace WhiskerToolbox::Transforms::V2 {
+
+// Overload tryAllRegisteredPreprocessing to actually try preprocessing types
+// This overload will be found by ADL when RegisteredTransforms.hpp is included
+
+template<typename View>
+inline void tryAllRegisteredPreprocessing(PipelineStep const& step, View const& view) {
+    // Try each registered parameter type
+    // Only the matching type will succeed; others return false immediately
+    if (step.template tryPreprocessTyped<View, ZScoreNormalizationParams>(view)) return;
+    // Add more types here as they're created
+}
+
+} // namespace WhiskerToolbox::Transforms::V2
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 
@@ -37,6 +53,7 @@ inline bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<AnalogEventThresholdParams>();
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
+    registerPipelineStepFactoryFor<ZScoreNormalizationParams>();
     return true;
 }();
 
@@ -147,6 +164,24 @@ inline auto const register_line_min_point_dist = RegisterBinaryTransform<
                 .is_deterministic = true,
                 .supports_cancellation = false,
 });
+
+// Register ZScoreNormalization (Multi-Pass Element Transform)
+inline auto const register_zscore_normalization = RegisterTransform<float, float, ZScoreNormalizationParams>(
+        "ZScoreNormalization",
+        zScoreNormalization,
+        TransformMetadata{
+                .name = "ZScoreNormalization",
+                .description = "Normalize values to z-scores (mean=0, std=1) using multi-pass statistics computation",
+                .category = "Statistics",
+                .input_type = typeid(float),
+                .output_type = typeid(float),
+                .params_type = typeid(ZScoreNormalizationParams),
+                .input_type_name = "float",
+                .output_type_name = "float",
+                .params_type_name = "ZScoreNormalizationParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
 
 // Register AnalogEventThreshold (Container Transform)
 inline void registerAnalogEventThreshold() {

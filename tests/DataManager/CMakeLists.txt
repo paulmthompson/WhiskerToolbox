@@ -106,6 +106,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskArea/MaskArea.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.test.cpp
 
 )
 

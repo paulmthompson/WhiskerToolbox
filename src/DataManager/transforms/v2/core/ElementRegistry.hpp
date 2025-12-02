@@ -895,25 +895,18 @@ public:
     }
 
     /**
-     * @brief Get or create a typed executor for given parameters
+     * @brief Create a typed executor for given parameters
      * 
-     * This looks up the factory, creates an executor with parameters captured,
-     * and caches it for reuse.
+     * Creates a fresh executor with parameters captured.
+     * No caching to avoid stale data issues with preprocessing.
      * 
      * @param key Type triple identifying the transform signature
      * @param params Type-erased parameters
-     * @return Pointer to executor with captured state
+     * @return Unique pointer to executor with captured state
      */
-    IParamExecutor const * getOrCreateTypedExecutor(
+    std::unique_ptr<IParamExecutor> createTypedExecutor(
             TypeTriple const & key,
             std::any const & params) const {
-        // Check cache first
-        auto cache_key = std::make_pair(key, std::type_index(params.type()));
-        auto cache_it = typed_executor_cache_.find(cache_key);
-        if (cache_it != typed_executor_cache_.end()) {
-            return cache_it->second.get();
-        }
-
         // Look up factory
         auto factory_it = typed_executor_factories_.find(key);
         if (factory_it == typed_executor_factories_.end()) {
@@ -924,28 +917,18 @@ public:
         }
 
         // Create executor with captured parameters
-        auto executor = factory_it->second(params);
-        auto * executor_ptr = executor.get();
-
-        // Cache for reuse
-        typed_executor_cache_[cache_key] = std::move(executor);
-
-        return executor_ptr;
+        return factory_it->second(params);
     }
 
     /**
-     * @brief Get or create a typed time-grouped executor for given parameters
+     * @brief Create a typed time-grouped executor for given parameters
+     * 
+     * Creates a fresh executor with parameters captured.
+     * No caching to avoid stale data issues with preprocessing.
      */
-    ITimeGroupedParamExecutor const * getOrCreateTimeGroupedExecutor(
+    std::unique_ptr<ITimeGroupedParamExecutor> createTimeGroupedExecutor(
             TypeTriple const & key,
             std::any const & params) const {
-        // Check cache first
-        auto cache_key = std::make_pair(key, std::type_index(params.type()));
-        auto cache_it = time_grouped_executor_cache_.find(cache_key);
-        if (cache_it != time_grouped_executor_cache_.end()) {
-            return cache_it->second.get();
-        }
-
         // Look up factory
         auto factory_it = time_grouped_executor_factories_.find(key);
         if (factory_it == time_grouped_executor_factories_.end()) {
@@ -956,19 +939,13 @@ public:
         }
 
         // Create executor with captured parameters
-        auto executor = factory_it->second(params);
-        auto * executor_ptr = executor.get();
-
-        // Cache for reuse
-        time_grouped_executor_cache_[cache_key] = std::move(executor);
-
-        return executor_ptr;
+        return factory_it->second(params);
     }
 
     /**
      * @brief Execute transform with typed executor (zero per-element dispatch)
      * 
-     * Looks up pre-built executor with captured parameters and types,
+     * Creates fresh executor with captured parameters and types,
      * eliminating all per-element casts and dispatch overhead.
      * 
      * @param transform_name Name of the transform
@@ -988,10 +965,10 @@ public:
             std::type_index param_type) const {
         TypeTriple key{in_type, out_type, param_type};
 
-        // Get or create executor with captured state
-        auto const * executor = getOrCreateTypedExecutor(key, params);
+        // Create fresh executor with captured state
+        auto executor = createTypedExecutor(key, params);
 
-        // Execute with zero dispatch overhead!
+        // Execute with zero per-element dispatch overhead!
         return executor->execute(transform_name, input_element);
     }
 
@@ -1010,8 +987,8 @@ public:
             std::type_index param_type) const {
         TypeTriple key{in_type, out_type, param_type};
 
-        // Get or create executor with captured state
-        auto const * executor = getOrCreateTypedExecutor(key, params);
+        // Create fresh executor with captured state
+        auto executor = createTypedExecutor(key, params);
 
         // Execute using the generic input interface
         return executor->executeAny(transform_name, input_element);
@@ -1029,8 +1006,8 @@ public:
             std::type_index param_type) const {
         TypeTriple key{in_type, out_type, param_type};
 
-        // Get or create executor with captured state
-        auto const * executor = getOrCreateTimeGroupedExecutor(key, params);
+        // Create fresh executor with captured state
+        auto executor = createTimeGroupedExecutor(key, params);
 
         // Execute
         return executor->execute(transform_name, input_span);
@@ -1229,19 +1206,9 @@ private:
             TypeTripleHash>
             time_grouped_executor_factories_;
 
-    // Cache of created executors (reused across pipeline executions)
-    // Key: (TypeTriple, param_type_index) -> unique ownership of executor
-    mutable std::unordered_map<
-            std::pair<TypeTriple, std::type_index>,
-            std::unique_ptr<IParamExecutor>,
-            PairHash>
-            typed_executor_cache_;
-
-    mutable std::unordered_map<
-            std::pair<TypeTriple, std::type_index>,
-            std::unique_ptr<ITimeGroupedParamExecutor>,
-            PairHash>
-            time_grouped_executor_cache_;
+    // Note: No executor caching - executors are created fresh for each pipeline execution
+    // to avoid stale data issues with preprocessing. The per-element optimization
+    // (captured params, no per-element any_cast) is still achieved.
 
     // JSON parameter deserializers (type_index -> JSON string -> std::any)
     std::unordered_map<
