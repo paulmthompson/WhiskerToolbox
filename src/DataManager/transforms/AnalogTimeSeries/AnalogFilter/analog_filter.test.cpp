@@ -7,6 +7,8 @@
 #include "utils/filter/FilterFactory.hpp"
 #include "utils/filter/IFilter.hpp"
 
+#include "fixtures/AnalogFilterTestFixture.hpp"
+
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
@@ -14,21 +16,11 @@
 #include <iostream>
 
 
-TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filter]") {
-    // Create test data: sine wave at 10 Hz sampled at 1000 Hz
-    std::vector<float> data;
-    std::vector<TimeFrameIndex> times;
-    const size_t num_samples = 2000; // Increased for better steady-state
+TEST_CASE_METHOD(AnalogFilterTestFixture, "Data Transform: Filter Analog Time Series", "[transforms][analog_filter]") {
+    auto series = m_test_analog_signals["sine_10hz_2000"];
+    const size_t num_samples = 2000;
     const double sampling_rate = 1000.0;
     const double signal_freq = 10.0;
-
-    for (size_t i = 0; i < num_samples; ++i) {
-        double t = static_cast<double>(i) / sampling_rate;
-        data.push_back(static_cast<float>(std::sin(2.0 * M_PI * signal_freq * t)));
-        times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
-    }
-
-    auto series = std::make_shared<AnalogTimeSeries>(data, times);
 
     SECTION("Low-pass filter") {
         // Use the new filter interface with Butterworth lowpass
@@ -118,7 +110,7 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
     }
 }
 
-TEST_CASE("Data Transform: Filter Analog Time Series - Operation Class Tests", "[transforms][analog_filter][operation]") {
+TEST_CASE_METHOD(AnalogFilterTestFixture,"Data Transform: Filter Analog Time Series - Operation Class Tests", "[transforms][analog_filter][operation]") {
     AnalogFilterOperation operation;
 
     SECTION("Basic operation properties") {
@@ -140,13 +132,7 @@ TEST_CASE("Data Transform: Filter Analog Time Series - Operation Class Tests", "
     }
 
     SECTION("Execute with progress callback") {
-        // Create test data
-        std::vector<float> data(1000, 1.0f);
-        std::vector<TimeFrameIndex> times;
-        for (size_t i = 0; i < 1000; ++i) {
-            times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
-        }
-        auto series = std::make_shared<AnalogTimeSeries>(data, times);
+        auto series = m_test_analog_signals["constant_1000"];
         DataTypeVariant input(series);
 
         // Create parameters using new filter interface
@@ -168,19 +154,10 @@ TEST_CASE("Data Transform: Filter Analog Time Series - Operation Class Tests", "
     }
 }
 
-TEST_CASE("Data Transform: Filter Analog Time Series - New Interface Features", "[transforms][analog_filter][new_interface]") {
-    // Create test data
-    std::vector<float> data;
-    std::vector<TimeFrameIndex> times;
+TEST_CASE_METHOD(AnalogFilterTestFixture, "Data Transform: Filter Analog Time Series - New Interface Features", "[transforms][analog_filter][new_interface]") {
+    auto series = m_test_analog_signals["pattern_1000"];
     const size_t num_samples = 1000;
     const double sampling_rate = 1000.0;
-
-    for (size_t i = 0; i < num_samples; ++i) {
-        data.push_back(static_cast<float>(i % 10)); // Simple pattern
-        times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
-    }
-
-    auto series = std::make_shared<AnalogTimeSeries>(data, times);
 
     SECTION("Filter factory function approach") {
         // Create parameters using factory function
@@ -421,18 +398,9 @@ TEST_CASE("Data Transform: Filter Specification - JSON Serialization", "[transfo
     }
 }
 
-TEST_CASE("Data Transform: Filter Specification - Filter Creation", "[transforms][analog_filter][specification]") {
-    // Create test data
-    std::vector<float> data;
-    std::vector<TimeFrameIndex> times;
+TEST_CASE_METHOD(AnalogFilterTestFixture, "Data Transform: Filter Specification - Filter Creation", "[transforms][analog_filter][specification]") {
+    auto series = m_test_analog_signals["sine_10hz_1000"];
     const size_t num_samples = 1000;
-    
-    for (size_t i = 0; i < num_samples; ++i) {
-        times.push_back(TimeFrameIndex(i));
-        data.push_back(std::sin(2.0 * M_PI * 10.0 * i / 1000.0));  // 10 Hz signal
-    }
-    
-    auto series = std::make_shared<AnalogTimeSeries>(data, times);
     
     SECTION("Create and apply Butterworth lowpass") {
         FilterSpecification spec;
@@ -482,7 +450,7 @@ TEST_CASE("Data Transform: Filter Specification - Filter Creation", "[transforms
     }
 }
 
-TEST_CASE("Data Transform: Filter - JSON Pipeline Integration", "[transforms][analog_filter][pipeline]") {
+TEST_CASE_METHOD(AnalogFilterTestFixture, "Data Transform: Filter - JSON Pipeline Integration", "[transforms][analog_filter][pipeline]") {
     const nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "filter_step_1"},
@@ -508,19 +476,9 @@ TEST_CASE("Data Transform: Filter - JSON Pipeline Integration", "[transforms][an
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
     
-    // Create test signal
-    std::vector<float> data;
-    std::vector<TimeFrameIndex> times;
+    auto series = m_test_analog_signals["multi_freq_5_50"];
     const size_t num_samples = 2000;
     
-    for (size_t i = 0; i < num_samples; ++i) {
-        times.push_back(TimeFrameIndex(i));
-        // Signal with 5 Hz and 50 Hz components
-        data.push_back(std::sin(2.0 * M_PI * 5.0 * i / 1000.0) + 
-                      0.5f * std::sin(2.0 * M_PI * 50.0 * i / 1000.0));
-    }
-    
-    auto series = std::make_shared<AnalogTimeSeries>(data, times);
     series->setTimeFrame(time_frame);
     dm.setData("raw_signal", series, TimeKey("default"));
     
@@ -554,7 +512,7 @@ TEST_CASE("Data Transform: Filter - JSON Pipeline Integration", "[transforms][an
     REQUIRE(max_amplitude < 1.3f);  // 50 Hz component significantly attenuated
 }
 
-TEST_CASE("Data Transform: Filter - Multiple Filter Types in Pipeline", "[transforms][analog_filter][pipeline]") {
+TEST_CASE_METHOD(AnalogFilterTestFixture, "Data Transform: Filter - Multiple Filter Types in Pipeline", "[transforms][analog_filter][pipeline]") {
     const nlohmann::json json_config = {
         {"steps", {
             {
@@ -600,21 +558,9 @@ TEST_CASE("Data Transform: Filter - Multiple Filter Types in Pipeline", "[transf
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
     
-    // Create test signal with multiple frequency components
-    std::vector<float> data;
-    std::vector<TimeFrameIndex> times;
+    auto series = m_test_analog_signals["multi_freq_10_60_100"];
     const size_t num_samples = 2000;
     
-    for (size_t i = 0; i < num_samples; ++i) {
-        times.push_back(TimeFrameIndex(i));
-        data.push_back(
-            std::sin(2.0 * M_PI * 10.0 * i / 1000.0) +   // 10 Hz
-            std::sin(2.0 * M_PI * 60.0 * i / 1000.0) +   // 60 Hz (to be notched)
-            std::sin(2.0 * M_PI * 100.0 * i / 1000.0)    // 100 Hz (to be lowpassed)
-        );
-    }
-    
-    auto series = std::make_shared<AnalogTimeSeries>(data, times);
     series->setTimeFrame(time_frame);
     dm.setData("raw_signal", series, TimeKey("default"));
     
