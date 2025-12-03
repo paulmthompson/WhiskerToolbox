@@ -9,16 +9,15 @@
 #include "transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 #include "transforms/data_transforms.hpp"
 
+#include "fixtures/AnalogHilbertPhaseTestFixture.hpp"
+
 #include <cmath>
 #include <functional>
 #include <memory>
 #include <numbers>
 #include <vector>
 
-TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hilbert_phase]") {
-    std::vector<float> values;
-    std::vector<TimeFrameIndex> times;
-    std::shared_ptr<AnalogTimeSeries> ats;
+TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hilbert_phase]") {
     std::shared_ptr<AnalogTimeSeries> result_phase;
     HilbertPhaseParams params;
     int volatile progress_val = -1;
@@ -29,22 +28,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     };
 
     SECTION("Simple sine wave - known phase relationship") {
-        // Create a simple sine wave: sin(2*pi*f*t)
-        // The phase of sin(x) should be x (modulo 2*pi)
-        constexpr float frequency = 1.0f;       // 1 Hz
-        constexpr size_t sample_rate = 100;     // 100 Hz
-        constexpr size_t duration_samples = 200;// 2 seconds
-
-        values.reserve(duration_samples);
-        times.reserve(duration_samples);
-
-        for (size_t i = 0; i < duration_samples; ++i) {
-            float t = static_cast<float>(i) / sample_rate;
-            values.push_back(std::sin(2.0f * std::numbers::pi_v<float> * frequency * t));
-            times.push_back(TimeFrameIndex(i));
-        }
-
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["sine_1hz_200"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
 
@@ -70,20 +54,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Cosine wave - phase should be shifted by π/2 from sine") {
-        constexpr float frequency = 2.0f;       // 2 Hz
-        constexpr size_t sample_rate = 50;      // 50 Hz
-        constexpr size_t duration_samples = 100;// 2 seconds
-
-        values.reserve(duration_samples);
-        times.reserve(duration_samples);
-
-        for (size_t i = 0; i < duration_samples; ++i) {
-            float t = static_cast<float>(i) / sample_rate;
-            values.push_back(std::cos(2.0f * std::numbers::pi_v<float> * frequency * t));
-            times.push_back(TimeFrameIndex(i));
-        }
-
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["cosine_2hz_100"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
 
@@ -101,22 +72,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Complex signal with multiple frequencies") {
-        constexpr size_t sample_rate = 100;
-        constexpr size_t duration_samples = 300;
-
-        values.reserve(duration_samples);
-        times.reserve(duration_samples);
-
-        for (size_t i = 0; i < duration_samples; ++i) {
-            float t = static_cast<float>(i) / sample_rate;
-            // Mix of 2Hz and 5Hz components
-            float signal = std::sin(2.0f * std::numbers::pi_v<float> * 2.0f * t) +
-                           0.5f * std::sin(2.0f * std::numbers::pi_v<float> * 5.0f * t);
-            values.push_back(signal);
-            times.push_back(TimeFrameIndex(i));
-        }
-
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["multi_freq_2_5"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
 
@@ -125,6 +81,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         REQUIRE(!result_phase->getAnalogTimeSeries().empty());
 
         auto const & phase_values = result_phase->getAnalogTimeSeries();
+        auto times = ats->getTimeSeries();
         REQUIRE(phase_values.size() == times.back().getValue() + 1);// Should match output timestamp size
 
         // Verify phase continuity (no large jumps except at wrap-around)
@@ -139,18 +96,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Discontinuous time series - chunked processing") {
-        // Create a discontinuous time series with large gaps
-        values = {1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f};
-        times = {TimeFrameIndex(0),
-                 TimeFrameIndex(1),
-                 TimeFrameIndex(2),
-                 TimeFrameIndex(3),
-                 TimeFrameIndex(2000),
-                 TimeFrameIndex(2001),
-                 TimeFrameIndex(2002),
-                 TimeFrameIndex(2003)};// Large gap at 2000
-
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["discontinuous_large_gap"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 100;// Should split at gap of 2000-3=1997
@@ -160,6 +106,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         REQUIRE(!result_phase->getAnalogTimeSeries().empty());
 
         auto const & phase_values = result_phase->getAnalogTimeSeries();
+        auto times = ats->getTimeSeries();
         REQUIRE(phase_values.size() == times.back().getValue() + 1);// Should match output timestamp size
 
         // Check that phase values are in the expected range
@@ -178,16 +125,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Multiple discontinuities") {
-        // Create multiple chunks
-        values = {1.0f, 0.0f, -1.0f, 1.0f, 0.0f, -1.0f};
-        times = {TimeFrameIndex(0),
-                 TimeFrameIndex(1),
-                 TimeFrameIndex(2),
-                 TimeFrameIndex(1000),
-                 TimeFrameIndex(1001),
-                 TimeFrameIndex(2000)};// Two large gaps
-
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["multiple_discontinuities"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 100;// Should create 3 chunks
@@ -197,6 +135,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         REQUIRE(!result_phase->getAnalogTimeSeries().empty());
 
         auto const & phase_values = result_phase->getAnalogTimeSeries();
+        auto times = ats->getTimeSeries();
         REQUIRE(phase_values.size() == times.back().getValue() + 1);
 
         // Check that phase values are in the expected range
@@ -207,13 +146,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Progress callback detailed check") {
-        values = {1.0f, 0.0f, -1.0f, 0.0f, 1.0f};
-        times = {TimeFrameIndex(0),
-                 TimeFrameIndex(25),
-                 TimeFrameIndex(50),
-                 TimeFrameIndex(75),
-                 TimeFrameIndex(100)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["progress_callback_signal"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
 
@@ -242,13 +175,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Default parameters") {
-        values = {1.0f, 2.0f, 1.0f, 0.0f, -1.0f};
-        times = {TimeFrameIndex(0),
-                 TimeFrameIndex(10),
-                 TimeFrameIndex(20),
-                 TimeFrameIndex(30),
-                 TimeFrameIndex(40)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["default_params_signal"];
 
         // Use default parameters
         HilbertPhaseParams default_params;
@@ -265,22 +192,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Amplitude extraction - simple sine wave") {
-        // Create a simple sine wave with known amplitude
+        auto ats = m_test_analog_signals["amplitude_sine_2_5"];
         constexpr float amplitude = 2.5f;
-        constexpr float frequency = 1.0f;       // 1 Hz
-        constexpr size_t sample_rate = 100;     // 100 Hz
-        constexpr size_t duration_samples = 200;// 2 seconds
-
-        values.reserve(duration_samples);
-        times.reserve(duration_samples);
-
-        for (size_t i = 0; i < duration_samples; ++i) {
-            float t = static_cast<float>(i) / sample_rate;
-            values.push_back(amplitude * std::sin(2.0f * std::numbers::pi_v<float> * frequency * t));
-            times.push_back(TimeFrameIndex(i));
-        }
-
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
@@ -308,24 +221,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Amplitude extraction - amplitude modulated signal") {
-        // Create an amplitude modulated signal
-        constexpr float carrier_freq = 10.0f;
-        constexpr float modulation_freq = 1.0f;
-        constexpr size_t sample_rate = 100;
-        constexpr size_t duration_samples = 200;
-
-        values.reserve(duration_samples);
-        times.reserve(duration_samples);
-
-        for (size_t i = 0; i < duration_samples; ++i) {
-            float t = static_cast<float>(i) / sample_rate;
-            float envelope = 1.0f + 0.5f * std::sin(2.0f * std::numbers::pi_v<float> * modulation_freq * t);
-            float carrier = std::sin(2.0f * std::numbers::pi_v<float> * carrier_freq * t);
-            values.push_back(envelope * carrier);
-            times.push_back(TimeFrameIndex(i));
-        }
-
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["amplitude_modulated"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
@@ -362,18 +258,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Amplitude extraction with discontinuities") {
-        // Create a discontinuous signal with varying amplitudes
-        values = {1.0f, 0.5f, -1.0f, 0.5f, 2.0f, 1.0f, -2.0f, 1.0f};
-        times = {TimeFrameIndex(0),
-                 TimeFrameIndex(1),
-                 TimeFrameIndex(2),
-                 TimeFrameIndex(3),
-                 TimeFrameIndex(2000),
-                 TimeFrameIndex(2001),
-                 TimeFrameIndex(2002),
-                 TimeFrameIndex(2003)};
-
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["amplitude_discontinuous"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 100;
@@ -384,6 +269,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
         REQUIRE(!result_amplitude->getAnalogTimeSeries().empty());
 
         auto const & amplitude_values = result_amplitude->getAnalogTimeSeries();
+        auto times = ats->getTimeSeries();
         REQUIRE(amplitude_values.size() == times.back().getValue() + 1);
 
         // All amplitude values should be non-negative
@@ -393,22 +279,8 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
     }
 
     SECTION("Windowed processing - long signal") {
-        // Create a long sine wave to test windowed processing
+        auto ats = m_test_analog_signals["long_sine_5hz"];
         constexpr float amplitude = 2.0f;
-        constexpr float frequency = 5.0f;
-        constexpr size_t sample_rate = 1000; // 1 kHz
-        constexpr size_t duration_samples = 150000; // 150 seconds of data
-
-        values.reserve(duration_samples);
-        times.reserve(duration_samples);
-
-        for (size_t i = 0; i < duration_samples; ++i) {
-            float t = static_cast<float>(i) / sample_rate;
-            values.push_back(amplitude * std::sin(2.0f * std::numbers::pi_v<float> * frequency * t));
-            times.push_back(TimeFrameIndex(i));
-        }
-
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
         
         // Configure for windowed processing
         // lowFrequency parameter removed (was stub)
@@ -448,7 +320,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hil
 }
 
 
-TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][analog_hilbert_phase]") {
+TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][analog_hilbert_phase]") {
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<AnalogTimeSeries> result_phase;
     HilbertPhaseParams params;
@@ -460,7 +332,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
     };
 
     SECTION("Null input AnalogTimeSeries") {
-        ats = nullptr;
+        std::shared_ptr<AnalogTimeSeries> ats = nullptr;
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
 
@@ -479,9 +351,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
     }
 
     SECTION("Empty time series") {
-        std::vector<float> empty_values;
-        std::vector<TimeFrameIndex> empty_times;
-        ats = std::make_shared<AnalogTimeSeries>(empty_values, empty_times);
+        auto ats = m_test_analog_signals["empty_signal"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
 
@@ -491,9 +361,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
     }
 
     SECTION("Single sample") {
-        std::vector<float> values = {1.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["single_sample"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
 
@@ -509,12 +377,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
     }
 
     SECTION("Invalid frequency parameters - negative frequencies") {
-        std::vector<float> values = {1.0f, 0.0f, -1.0f, 0.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0),
-                                             TimeFrameIndex(25),
-                                             TimeFrameIndex(50),
-                                             TimeFrameIndex(75)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["invalid_freq_params"];
 
         // lowFrequency parameter removed (was stub) - Invalid negative frequency test no longer applicable
         // highFrequency parameter removed (was stub)
@@ -526,12 +389,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
     }
 
     SECTION("Invalid frequency parameters - frequencies too high") {
-        std::vector<float> values = {1.0f, 0.0f, -1.0f, 0.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0),
-                                             TimeFrameIndex(25),
-                                             TimeFrameIndex(50),
-                                             TimeFrameIndex(75)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["invalid_freq_params"];
 
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub) - High frequency test no longer applicable
@@ -543,12 +401,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
     }
 
     SECTION("Invalid frequency parameters - low >= high") {
-        std::vector<float> values = {1.0f, 0.0f, -1.0f, 0.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0),
-                                             TimeFrameIndex(25),
-                                             TimeFrameIndex(50),
-                                             TimeFrameIndex(75)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["invalid_freq_params"];
 
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub) - Low > High test no longer applicable
@@ -560,12 +413,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
     }
 
     SECTION("Time series with NaN values") {
-        std::vector<float> values = {1.0f, std::numeric_limits<float>::quiet_NaN(), -1.0f, 0.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0),
-                                             TimeFrameIndex(25),
-                                             TimeFrameIndex(50),
-                                             TimeFrameIndex(75)};
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["signal_with_nan"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
 
@@ -583,13 +431,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
     }
 
     SECTION("Irregular timestamp spacing") {
-        std::vector<float> values = {1.0f, 0.0f, -1.0f, 0.0f, 1.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0),
-                                             TimeFrameIndex(1),
-                                             TimeFrameIndex(10),
-                                             TimeFrameIndex(11),
-                                             TimeFrameIndex(100)};// Irregular spacing
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["irregular_spacing"];
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
 
@@ -599,17 +441,12 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
 
         // Should handle irregular spacing gracefully
         auto const & phase_values = result_phase->getAnalogTimeSeries();
+        auto times = ats->getTimeSeries();
         REQUIRE(phase_values.size() == times.back().getValue() + 1);// Continuous output
     }
 
     SECTION("Very small discontinuity threshold") {
-        // Test with threshold smaller than natural gaps
-        std::vector<float> values = {1.0f, 0.0f, -1.0f, 0.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0),
-                                             TimeFrameIndex(5),
-                                             TimeFrameIndex(10),
-                                             TimeFrameIndex(15)};// Gaps of 5
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["small_gaps"];
 
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
@@ -621,17 +458,12 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
 
         // Should create multiple small chunks
         auto const & phase_values = result_phase->getAnalogTimeSeries();
+        auto times = ats->getTimeSeries();
         REQUIRE(phase_values.size() == times.back().getValue() + 1);
     }
 
     SECTION("Very large discontinuity threshold") {
-        // Test with threshold larger than any gaps
-        std::vector<float> values = {1.0f, 0.0f, -1.0f, 0.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0),
-                                             TimeFrameIndex(100),
-                                             TimeFrameIndex(200),
-                                             TimeFrameIndex(300)};// Large gaps
-        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        auto ats = m_test_analog_signals["large_gaps"];
 
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
@@ -643,45 +475,15 @@ TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][
 
         // Should process as single chunk
         auto const & phase_values = result_phase->getAnalogTimeSeries();
+        auto times = ats->getTimeSeries();
         REQUIRE(phase_values.size() == times.back().getValue() + 1);
     }
 }
 
 
-TEST_CASE("Data Transform: Hilbert Phase - Irregularly Sampled Data", "[transforms][analog_hilbert_phase]") {
-    // Create irregularly sampled sine wave with both small and large gaps
-    std::vector<float> data;
-    std::vector<TimeFrameIndex> times;
-
-    double sampling_rate = 1000.0;// 1kHz
-    double freq = 10.0;           // 10Hz sine wave
-
-    // Create data with three segments:
-    // 1. Dense segment with small gaps (should be interpolated)
-    // 2. Large gap (should not be interpolated)
-    // 3. Another dense segment with small gaps
-
-    // First segment: points at 0,1,3,4,6,7,9,10 (skipping 2,5,8)
-    for (int i = 0; i <= 10; i++) {
-        if (i % 3 == 2) continue;// Skip every third point
-
-        double t = i / sampling_rate;
-        data.push_back(static_cast<float>(std::sin(2.0 * M_PI * freq * t)));
-        times.push_back(TimeFrameIndex(i));
-    }
-
-    // Large gap (100 samples)
-
-    // Second segment: points at 110,111,113,114,116,117,119,120
-    for (int i = 110; i <= 120; i++) {
-        if (i % 3 == 2) continue;// Skip every third point
-
-        double t = i / sampling_rate;
-        data.push_back(static_cast<float>(std::sin(2.0 * M_PI * freq * t)));
-        times.push_back(TimeFrameIndex(i));
-    }
-
-    AnalogTimeSeries series(data, times);
+TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase - Irregularly Sampled Data", "[transforms][analog_hilbert_phase]") {
+    auto series_ptr = m_test_analog_signals["irregularly_sampled"];
+    AnalogTimeSeries& series = *series_ptr;
 
     // Configure Hilbert transform parameters
     HilbertPhaseParams params;
@@ -781,7 +583,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Irregularly Sampled Data", "[transfor
 #include <fstream>
 #include <iostream>
 
-TEST_CASE("Data Transform: Analog Hilbert Phase - JSON pipeline", "[transforms][analog_hilbert_phase][json]") {
+TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Analog Hilbert Phase - JSON pipeline", "[transforms][analog_hilbert_phase][json]") {
     const nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "hilbert_phase_step_1"},
@@ -802,22 +604,7 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - JSON pipeline", "[transforms][
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
 
-    // Create test analog data - a sine wave
-    constexpr size_t sample_rate = 100;
-    constexpr size_t duration_samples = 200;
-    std::vector<float> values;
-    std::vector<TimeFrameIndex> times;
-    
-    values.reserve(duration_samples);
-    times.reserve(duration_samples);
-    
-    for (size_t i = 0; i < duration_samples; ++i) {
-        float t = static_cast<float>(i) / sample_rate;
-        values.push_back(std::sin(2.0f * std::numbers::pi_v<float> * 10.0f * t)); // 10 Hz sine wave
-        times.push_back(TimeFrameIndex(i));
-    }
-    
-    auto ats = std::make_shared<AnalogTimeSeries>(values, times);
+    auto ats = m_test_analog_signals["pipeline_test_signal"];
     ats->setTimeFrame(time_frame);
     dm.setData("TestSignal.channel1", ats, TimeKey("default"));
 
@@ -865,7 +652,7 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - Parameter Factory", "[transfor
     REQUIRE(params->applyBandpassFilter == true);
 }
 
-TEST_CASE("Data Transform: Analog Hilbert Phase - load_data_from_json_config", "[transforms][analog_hilbert_phase][json_config]") {
+TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Analog Hilbert Phase - load_data_from_json_config", "[transforms][analog_hilbert_phase][json_config]") {
     // Create DataManager and populate it with AnalogTimeSeries in code
     DataManager dm;
 
@@ -873,22 +660,7 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - load_data_from_json_config", "
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
     
-    // Create test analog data - a sine wave
-    constexpr size_t sample_rate = 100;
-    constexpr size_t duration_samples = 200;
-    std::vector<float> values;
-    std::vector<TimeFrameIndex> times;
-    
-    values.reserve(duration_samples);
-    times.reserve(duration_samples);
-    
-    for (size_t i = 0; i < duration_samples; ++i) {
-        float t = static_cast<float>(i) / sample_rate;
-        values.push_back(std::sin(2.0f * std::numbers::pi_v<float> * 10.0f * t)); // 10 Hz sine wave
-        times.push_back(TimeFrameIndex(i));
-    }
-    
-    auto test_analog = std::make_shared<AnalogTimeSeries>(values, times);
+    auto test_analog = m_test_analog_signals["pipeline_test_signal"];
     test_analog->setTimeFrame(time_frame);
     
     // Store the analog data in DataManager with a known key
