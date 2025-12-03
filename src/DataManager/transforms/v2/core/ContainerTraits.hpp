@@ -21,7 +21,8 @@ class TimeFrame;
 
 class Mask2D;
 class Line2D;
-template<typename T> struct Point2D;
+template<typename T>
+struct Point2D;
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -111,7 +112,7 @@ struct ElementFor<AnalogTimeSeries> {
 };
 
 template<>
-struct ElementFor<RaggedAnalogTimeSeries> { 
+struct ElementFor<RaggedAnalogTimeSeries> {
     using type = float;
 };
 
@@ -205,7 +206,7 @@ using RaggedContainerFor_t = typename RaggedContainerFor<T>::type;
  * NOTE: This now uses the DataTraits system for consistency.
  */
 template<typename T>
-concept TemporalContainer = TypeTraits::HasDataTraits<T> && 
+concept TemporalContainer = TypeTraits::HasDataTraits<T> &&
                             TypeTraits::is_temporal_v<T>;
 
 /**
@@ -214,7 +215,7 @@ concept TemporalContainer = TypeTraits::HasDataTraits<T> &&
  * NOTE: This now uses the DataTraits system for consistency.
  */
 template<typename T>
-concept RaggedContainer = TypeTraits::HasDataTraits<T> && 
+concept RaggedContainer = TypeTraits::HasDataTraits<T> &&
                           TypeTraits::is_ragged_v<T>;
 
 /**
@@ -223,7 +224,7 @@ concept RaggedContainer = TypeTraits::HasDataTraits<T> &&
  * NOTE: This now uses the DataTraits system for consistency.
  */
 template<typename T>
-concept EntityContainer = TypeTraits::HasDataTraits<T> && 
+concept EntityContainer = TypeTraits::HasDataTraits<T> &&
                           TypeTraits::has_entity_ids_v<T>;
 
 /**
@@ -232,13 +233,20 @@ concept EntityContainer = TypeTraits::HasDataTraits<T> &&
 template<typename T>
 struct is_container : std::false_type {};
 
-template<> struct is_container<MaskData> : std::true_type {};
-template<> struct is_container<LineData> : std::true_type {};
-template<> struct is_container<PointData> : std::true_type {};
-template<> struct is_container<AnalogTimeSeries> : std::true_type {};
-template<> struct is_container<RaggedAnalogTimeSeries> : std::true_type {};
-template<> struct is_container<DigitalEventSeries> : std::true_type {};
-template<> struct is_container<DigitalIntervalSeries> : std::true_type {};
+template<>
+struct is_container<MaskData> : std::true_type {};
+template<>
+struct is_container<LineData> : std::true_type {};
+template<>
+struct is_container<PointData> : std::true_type {};
+template<>
+struct is_container<AnalogTimeSeries> : std::true_type {};
+template<>
+struct is_container<RaggedAnalogTimeSeries> : std::true_type {};
+template<>
+struct is_container<DigitalEventSeries> : std::true_type {};
+template<>
+struct is_container<DigitalIntervalSeries> : std::true_type {};
 
 template<typename T>
 inline constexpr bool is_container_v = is_container<T>::value;
@@ -274,7 +282,7 @@ public:
     static std::type_index elementToContainer(std::type_index element_type);
     static std::type_index containerToElement(std::type_index container_type);
     static std::string containerToString(std::type_index container_type);
-    static std::type_index stringToContainer(std::string const& name);
+    static std::type_index stringToContainer(std::string const & name);
 };
 
 // ============================================================================
@@ -289,9 +297,9 @@ struct TransformCompatible {
     // Compatible if:
     // 1. Both are known element types, or
     // 2. In is element type and Out is compatible element type
-    static constexpr bool value = 
-        requires { typename ContainerFor<In>::type; } &&
-        requires { typename ContainerFor<Out>::type; };
+    static constexpr bool value =
+            requires { typename ContainerFor<In>::type; } &&
+            requires { typename ContainerFor<Out>::type; };
 };
 
 template<typename In, typename Out>
@@ -305,7 +313,7 @@ struct ContainerChainable {
     using Element1 = ElementFor_t<Container1>;
     using Container1_Out = ContainerFor_t<Element1>;
     using Element2 = ElementFor_t<Container2>;
-    
+
     // Chainable if output of Container1 can be input to Container2
     // This is always true in current design, but could have restrictions
     static constexpr bool value = true;
@@ -314,6 +322,6 @@ struct ContainerChainable {
 template<typename Container1, typename Container2>
 inline constexpr bool ContainerChainable_v = ContainerChainable<Container1, Container2>::value;
 
-} // namespace WhiskerToolbox::Transforms::V2
+}// namespace WhiskerToolbox::Transforms::V2
 
-#endif // WHISKERTOOLBOX_V2_CONTAINER_TRAITS_HPP
+#endif// WHISKERTOOLBOX_V2_CONTAINER_TRAITS_HPP

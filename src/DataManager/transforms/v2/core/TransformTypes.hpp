@@ -13,7 +13,6 @@ namespace WhiskerToolbox::Transforms::V2 {
 /**
  * @brief Variant type for single elements in the transform pipeline
  * 
- * Replaces std::any for better performance (no heap allocation) and type safety.
  */
 using ElementVariant = std::variant<
     float,

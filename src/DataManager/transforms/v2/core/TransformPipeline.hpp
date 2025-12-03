@@ -6,11 +6,7 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManagerTypes.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
 #include "ElementRegistry.hpp"
 #include "PreProcessingRegistry.hpp"
 #include "TransformTypes.hpp"
@@ -136,7 +132,7 @@ struct PipelineStep;
 // Default implementation declared but not defined
 // RegisteredTransforms.hpp provides the definition
 template<typename View>
-void tryAllRegisteredPreprocessing(PipelineStep const&, View const&);
+void tryAllRegisteredPreprocessing(PipelineStep const &, View const &);
 
 /**
  * @brief Represents a single step in a transform pipeline
@@ -197,15 +193,15 @@ struct PipelineStep {
      * @tparam Params The parameter type (tried from registry)
      */
     template<typename View, typename Params>
-    bool tryPreprocessTyped(View const& view) const {
+    bool tryPreprocessTyped(View const & view) const {
         // Check type without throwing
         if (params.type() != typeid(Params)) {
             return false;
         }
-        
+
         // Cast to concrete type (non-const since we're modifying it)
-        auto& params_ref = std::any_cast<Params&>(params);
-        
+        auto & params_ref = std::any_cast<Params &>(params);
+
         // Check if this type has preprocess() method that's callable with this view type
         // The requires constraint on the preprocess method ensures type safety
         if constexpr (requires { params_ref.preprocess(view); }) {
@@ -218,26 +214,24 @@ struct PipelineStep {
                 params_ref.preprocess(view);
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * @brief Main preprocessing entry point
      * 
      * Calls free function that can be overloaded in RegisteredTransforms.hpp
      */
     template<typename View>
-    void maybePreprocess(View const& view) const {
+    void maybePreprocess(View const & view) const {
         // Call ADL-found free function
         // Default version does nothing, RegisteredTransforms.hpp provides the real version
         tryAllRegisteredPreprocessing(*this, view);
     }
 
 private:
-
 public:
-
     /**
      * @brief Create element executor for specific types
      * 
@@ -282,36 +276,13 @@ public:
 // Batch Variant Helpers
 // ============================================================================
 
-inline void pushToBatch(BatchVariant & batch, ElementVariant const & element) {
-    std::visit([&](auto & vec, auto const & elem) {
-        using VecT = std::decay_t<decltype(vec)>;
-        using ElemT = std::decay_t<decltype(elem)>;
-        // Check if vector value type matches element type
-        if constexpr (std::is_same_v<typename VecT::value_type, ElemT>) {
-            vec.push_back(elem);
-        } else {
-            // This should not happen in a correctly typed pipeline
-            throw std::runtime_error("Type mismatch in pushToBatch: Vector and Element types do not match");
-        }
-    },
-               batch, element);
-}
+void pushToBatch(BatchVariant & batch, ElementVariant const & element);
 
-inline BatchVariant initBatchFromElement(ElementVariant const & element) {
-    return std::visit([](auto const & elem) -> BatchVariant {
-        using ElemT = std::decay_t<decltype(elem)>;
-        return std::vector<ElemT>{elem};
-    },
-                      element);
-}
+BatchVariant initBatchFromElement(ElementVariant const & element);
 
-inline size_t getBatchSize(BatchVariant const & batch) {
-    return std::visit([](auto const & vec) { return vec.size(); }, batch);
-}
+size_t getBatchSize(BatchVariant const & batch);
 
-inline void clearBatch(BatchVariant & batch) {
-    std::visit([](auto & vec) { vec.clear(); }, batch);
-}
+void clearBatch(BatchVariant & batch);
 
 // ============================================================================
 // Transform Pipeline
@@ -486,15 +457,14 @@ private:
                     // Grouped transform
                     auto const & step = steps_[seg.step_indices[0]];
                     auto const * meta = registry.getMetadata(step.transform_name);
-                    
+
                     current_batch = registry.executeTimeGroupedWithDynamicParams(
-                        step.transform_name,
-                        current_batch,
-                        step.params,
-                        seg.input_type,
-                        seg.output_type,
-                        meta->params_type
-                    );
+                            step.transform_name,
+                            current_batch,
+                            step.params,
+                            seg.input_type,
+                            seg.output_type,
+                            meta->params_type);
                 }
             }
 
@@ -565,93 +535,7 @@ public:
      * @see executeFused For high-performance pure element-wise pipelines
      */
     template<typename InputContainer>
-    DataTypeVariant execute(InputContainer const & input) const {
-        if (steps_.empty()) {
-            throw std::runtime_error("Pipeline has no steps");
-        }
-
-        auto & registry = ElementRegistry::instance();
-
-        // 1. Compile pipeline into segments
-        std::vector<Segment> segments;
-        bool is_ragged = InputContainer::DataTraits::is_ragged;
-
-        for (size_t i = 0; i < steps_.size(); ++i) {
-            auto const & step = steps_[i];
-            auto const * meta = registry.getMetadata(step.transform_name);
-            if (!meta) throw std::runtime_error("Transform not found: " + step.transform_name);
-
-            if (meta->is_time_grouped) {
-                // Time-grouped transform is always its own segment
-                Segment seg;
-                seg.is_element_wise = false;
-                seg.step_indices = {i};
-                seg.input_type = meta->input_type;
-                seg.output_type = meta->output_type;
-                segments.push_back(std::move(seg));
-
-                // Assume time-grouped transforms produce ragged output unless proven otherwise
-                if (meta->produces_single_output) {
-                    is_ragged = false;
-                } else {
-                    is_ragged = true;
-                }
-            } else {
-                // Element-wise transform: merge with previous if possible
-                if (!segments.empty() && segments.back().is_element_wise) {
-                    segments.back().step_indices.push_back(i);
-                    segments.back().output_type = meta->output_type;
-                } else {
-                    Segment seg;
-                    seg.is_element_wise = true;
-                    seg.step_indices = {i};
-                    seg.input_type = meta->input_type;
-                    seg.output_type = meta->output_type;
-                    segments.push_back(std::move(seg));
-                }
-                // Element-wise preserves raggedness
-            }
-        }
-
-        // 2. Build fused functions for element segments
-        for (auto & seg: segments) {
-            if (seg.is_element_wise) {
-                std::vector<std::function<ElementVariant(ElementVariant)>> chain;
-                for (size_t idx: seg.step_indices) {
-                    auto const & step = steps_[idx];
-                    auto const * meta = registry.getMetadata(step.transform_name);
-                    chain.push_back(buildTypeErasedFunction(step, meta));
-                }
-
-                seg.fused_fn = [chain = std::move(chain)](ElementVariant input) -> ElementVariant {
-                    ElementVariant current = std::move(input);
-                    for (auto const & fn: chain) {
-                        current = fn(std::move(current));
-                    }
-                    return current;
-                };
-            }
-        }
-
-        // 3. Determine output container type and dispatch
-        std::type_index final_type = segments.back().output_type;
-
-        if (final_type == typeid(float)) {
-            if (is_ragged) {
-                return executeImpl<InputContainer, RaggedAnalogTimeSeries>(input, segments);
-            } else {
-                return executeImpl<InputContainer, AnalogTimeSeries>(input, segments);
-            }
-        } else if (final_type == typeid(Mask2D)) {
-            return executeImpl<InputContainer, MaskData>(input, segments);
-        } else if (final_type == typeid(Line2D)) {
-            return executeImpl<InputContainer, LineData>(input, segments);
-        } else if (final_type == typeid(Point2D<float>)) {
-            return executeImpl<InputContainer, PointData>(input, segments);
-        } else {
-            throw std::runtime_error("Unsupported output element type: " + std::string(final_type.name()));
-        }
-    }
+    DataTypeVariant execute(InputContainer const & input) const;
 
     /**
      * @brief Execute pipeline with automatic fusion optimization (Dispatcher)
@@ -694,7 +578,7 @@ public:
         } else {
             // Has time-grouped transforms - use standard execution with variant
             auto result_variant = execute<InputContainer>(input);
-            
+
             // Unwrap the variant to get the typed result
             auto result = std::get<std::shared_ptr<OutputContainer>>(result_variant);
             return result;
@@ -740,7 +624,7 @@ public:
         // Preprocessing phase: Allow params to compute statistics/allocate buffers
         // Automatically tries all registered parameter types
         auto view = input.elements();
-        for (auto const& step : steps_) {
+        for (auto const & step: steps_) {
             step.maybePreprocess(view);
         }
 
@@ -798,7 +682,7 @@ public:
      * @return Lazy range view of (TimeFrameIndex, ElementVariant) pairs
      */
     template<typename InputElement, std::ranges::input_range View>
-    auto executeFromView(View&& view) const {
+    auto executeFromView(View && view) const {
         if (steps_.empty()) {
             throw std::runtime_error("Pipeline has no steps");
         }
@@ -807,7 +691,7 @@ public:
 
         // Preprocessing phase: Allow params to compute statistics/allocate buffers
         // Automatically tries all registered parameter types
-        for (auto const& step : steps_) {
+        for (auto const & step: steps_) {
             step.maybePreprocess(view);
         }
 
@@ -831,22 +715,21 @@ public:
         // Head handles the conversion from InputElement (which might be a tuple) to ElementVariant.
         // Tail handles the standard ElementVariant -> ElementVariant chain.
 
-        auto const& head_step = steps_.front();
-        auto const* head_meta = registry.getMetadata(head_step.transform_name);
+        auto const & head_step = steps_.front();
+        auto const * head_meta = registry.getMetadata(head_step.transform_name);
 
         // Build Head Function: InputElement -> ElementVariant
-        auto head_fn = [this, step = head_step, meta = head_meta](InputElement const& input) -> ElementVariant {
-            auto& reg = ElementRegistry::instance();
+        auto head_fn = [this, step = head_step, meta = head_meta](InputElement const & input) -> ElementVariant {
+            auto & reg = ElementRegistry::instance();
             // Wrap input in std::any to pass through the generic interface
             std::any input_any{input};
             return reg.executeWithDynamicParamsAny(
-                step.transform_name, 
-                input_any, 
-                step.params, 
-                std::type_index(typeid(InputElement)), // Use actual input type
-                meta->output_type, 
-                meta->params_type
-            );
+                    step.transform_name,
+                    input_any,
+                    step.params,
+                    std::type_index(typeid(InputElement)),// Use actual input type
+                    meta->output_type,
+                    meta->params_type);
         };
 
         // Build Tail Chain: ElementVariant -> ElementVariant
@@ -854,18 +737,18 @@ public:
         tail_chain.reserve(steps_.size() - 1);
 
         for (size_t i = 1; i < steps_.size(); ++i) {
-            auto const& step = steps_[i];
-            auto const* meta = registry.getMetadata(step.transform_name);
+            auto const & step = steps_[i];
+            auto const * meta = registry.getMetadata(step.transform_name);
             tail_chain.push_back(buildTypeErasedFunction(step, meta));
         }
 
         // Compose Head and Tail
-        auto composed_fn = [head = std::move(head_fn), tail = std::move(tail_chain)](InputElement const& input) -> ElementVariant {
+        auto composed_fn = [head = std::move(head_fn), tail = std::move(tail_chain)](InputElement const & input) -> ElementVariant {
             // Execute Head
             ElementVariant current = head(input);
-            
+
             // Execute Tail
-            for (auto const& transform : tail) {
+            for (auto const & transform: tail) {
                 current = transform(std::move(current));
             }
             return current;
@@ -884,22 +767,22 @@ public:
                    // 1. Direct match (T -> T)
                    // 2. DataEntry wrapper (DataEntry<T> -> T)
                    // 3. Tuple (for multi-input) - passed as is
-                   auto const& get_input_ref = [](auto const& val) -> InputElement const& {
-                       if constexpr (std::is_convertible_v<decltype(val), InputElement const&>) {
+                   auto const & get_input_ref = [](auto const & val) -> InputElement const & {
+                       if constexpr (std::is_convertible_v<decltype(val), InputElement const &>) {
                            return val;
                        } else if constexpr (requires { val.data; }) {
                            // Try unwrapping .data (e.g. DataEntry<T>)
-                           if constexpr (std::is_convertible_v<decltype(val.data), InputElement const&>) {
+                           if constexpr (std::is_convertible_v<decltype(val.data), InputElement const &>) {
                                return val.data;
                            } else {
                                // If .data exists but isn't convertible, we can't do much.
                                // This might happen if InputElement is wrong.
                                // Return val and let compiler error on mismatch.
-                               return (InputElement const&)val; 
+                               return (InputElement const &) val;
                            }
                        } else {
                            // Fallback: force cast/conversion and let compiler error if invalid
-                           return (InputElement const&)val;
+                           return (InputElement const &) val;
                        }
                    };
 
@@ -1024,20 +907,7 @@ private:
      */
     std::function<ElementVariant(ElementVariant)> buildTypeErasedFunction(
             PipelineStep const & step,
-            TransformMetadata const * meta) const {
-        auto & registry = ElementRegistry::instance();
-
-        // Dispatch based on input and output types from metadata
-        // This is where we handle the type erasure/recovery
-
-        auto input_type = meta->input_type;
-        auto output_type = meta->output_type;
-        auto params_type = meta->params_type;
-
-        // Build a lambda that captures the transform and its parameters
-        // The lambda knows the concrete types and can do the variant conversions
-        return buildTypeErasedFunctionWithParams(step, input_type, output_type, params_type);
-    }
+            TransformMetadata const * meta) const;
 
     /**
      * @brief Build type-erased function for transforms with parameters
@@ -1048,77 +918,7 @@ private:
             PipelineStep const & step,
             std::type_index input_type,
             std::type_index output_type,
-            std::type_index params_type) const {
-        auto & registry = ElementRegistry::instance();
-
-        // Capture a pointer to the step so we always access the current params
-        // (which may have been modified by preprocessing)
-        auto step_ptr = &step;
-        return [&registry,
-                name = step.transform_name,
-                step_ptr,  // Capture pointer to step to access mutable params
-                input_type,
-                output_type,
-                params_type](ElementVariant input) -> ElementVariant {
-            return registry.executeWithDynamicParams(
-                    name, input, step_ptr->params, input_type, output_type, params_type);
-        };
-    }
-
-    /**
-     * @brief Build a typed element transform function (legacy - for non-fused paths)
-     * 
-     * Creates a callable that applies the transform with its parameters.
-     * This is composed with other functions before iteration.
-     */
-    template<typename InputElement, typename OutputElement>
-    std::function<OutputElement(InputElement const &)> buildElementFunction(
-            PipelineStep const & step,
-            std::type_index param_type) const {
-        auto & registry = ElementRegistry::instance();
-
-        // Dispatch based on parameter type
-        if (param_type == typeid(NoParams)) {
-            auto const & params = std::any_cast<NoParams const &>(step.params);
-            return [&registry, name = step.transform_name, params](InputElement const & input) -> OutputElement {
-                return registry.execute<InputElement, OutputElement, NoParams>(name, input, params);
-            };
-        }
-
-        // For other parameter types, would need to be registered or handled here
-        throw std::runtime_error("Parameter type not supported for fusion: " +
-                                 std::string(param_type.name()));
-    }
-
-    /**
-     * @brief Apply element transform with materialization (non-fused path)
-     */
-    template<typename InputContainer, typename InputElement, typename OutputElement>
-    auto applyElementTransformGeneric(
-            InputContainer const & input,
-            PipelineStep const & step,
-            std::type_index param_type) const
-            -> std::shared_ptr<RaggedContainerFor_t<OutputElement>> {
-        using OutputContainer = RaggedContainerFor_t<OutputElement>;
-        auto & registry = ElementRegistry::instance();
-
-        auto output = std::make_shared<OutputContainer>();
-        output->setTimeFrame(input.getTimeFrame());
-
-        auto const * meta = registry.getMetadata(step.transform_name);
-        if (!meta) {
-            throw std::runtime_error("Transform not found: " + step.transform_name);
-        }
-
-        // Transform each element
-        for (auto const & [time, entry]: input.elements()) {
-            OutputElement result = executeWithDynamicParams<InputElement, OutputElement>(
-                    step, entry.data, param_type);
-            output->appendAtTime(time, std::vector<OutputElement>{result}, NotifyObservers::No);
-        }
-
-        return output;
-    }
+            std::type_index params_type) const;
 
     /**
      * @brief Execute transform with dynamic parameter type dispatch
@@ -1139,39 +939,6 @@ private:
                 typeid(InputElement), typeid(OutputElement), param_type);
 
         return std::get<OutputElement>(std::move(result_var));
-    }
-
-    /**
-     * @brief Apply time-grouped transform with dynamic executor creation
-     */
-    template<typename InputContainer, typename OutputContainer, typename InputElement, typename OutputElement>
-    std::shared_ptr<OutputContainer> applyTimeGroupedTransformGeneric(
-            InputContainer const & input,
-            PipelineStep const & step,
-            std::type_index param_type) const {
-        auto & registry = ElementRegistry::instance();
-
-        // For AnalogTimeSeries output, collect into map
-        if constexpr (std::is_same_v<OutputContainer, AnalogTimeSeries>) {
-            auto time_indices = input.getTimeIndices();
-            std::map<int, OutputElement> output_map;
-
-            for (auto time: time_indices) {
-                auto data_at_time = input.getDataAtTime(time);
-                auto result = executeTimeGroupedWithDynamicParams<InputElement, OutputElement>(
-                        step, data_at_time, param_type);
-
-                if (!result.empty()) {
-                    output_map[time.getValue()] = result[0];
-                }
-            }
-
-            auto output = std::make_shared<AnalogTimeSeries>(output_map);
-            output->setTimeFrame(input.getTimeFrame());
-            return std::static_pointer_cast<OutputContainer>(output);
-        }
-
-        throw std::runtime_error("Unsupported output container type");
     }
 
     /**
@@ -1205,18 +972,14 @@ private:
 /**
  * @brief Execute pipeline on variant input
  */
-inline DataTypeVariant executePipeline(DataTypeVariant const & input, TransformPipeline const & pipeline) {
-    return std::visit([&](auto const & ptr) -> DataTypeVariant {
-        using T = typename std::remove_reference_t<decltype(*ptr)>;
-        // Check if T is a valid input container (has DataTraits)
-        if constexpr (TypeTraits::HasDataTraits<T>) {
-            return pipeline.execute<T>(*ptr);
-        } else {
-            throw std::runtime_error("Unsupported input container type in variant");
-        }
-    },
-                      input);
-}
+DataTypeVariant executePipeline(DataTypeVariant const & input, TransformPipeline const & pipeline);
+
+
+extern template DataTypeVariant TransformPipeline::execute<RaggedAnalogTimeSeries>(RaggedAnalogTimeSeries const &) const;
+extern template DataTypeVariant TransformPipeline::execute<AnalogTimeSeries>(AnalogTimeSeries const &) const;
+extern template DataTypeVariant TransformPipeline::execute<MaskData>(MaskData const &) const;
+extern template DataTypeVariant TransformPipeline::execute<LineData>(LineData const &) const;
+extern template DataTypeVariant TransformPipeline::execute<PointData>(PointData const &) const;
 
 }// namespace WhiskerToolbox::Transforms::V2
 
