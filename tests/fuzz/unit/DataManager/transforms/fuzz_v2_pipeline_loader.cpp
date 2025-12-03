@@ -3,6 +3,9 @@
 
 #include "transforms/v2/core/PipelineLoader.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
+#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
+#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
+#include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 
 #include <fuzztest/fuzztest.h>
 #include <gtest/gtest.h>

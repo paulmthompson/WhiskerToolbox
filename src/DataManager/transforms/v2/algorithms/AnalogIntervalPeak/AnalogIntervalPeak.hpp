@@ -1,16 +1,19 @@
 #ifndef WHISKERTOOLBOX_V2_ANALOG_INTERVAL_PEAK_HPP
 #define WHISKERTOOLBOX_V2_ANALOG_INTERVAL_PEAK_HPP
 
-#include "transforms/v2/core/ElementTransform.hpp"
+#include <rfl.hpp>
+#include <rfl/json.hpp>
 
 #include <memory>
 #include <optional>
-#include <rfl.hpp>
-#include <rfl/json.hpp>
 
 class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
+
+namespace WhiskerToolbox::Transforms::V2 {
+struct ComputeContext;
+}
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -88,7 +91,7 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
         DigitalIntervalSeries const & intervals,
         AnalogTimeSeries const & analog,
         AnalogIntervalPeakParams const & params,
-        ComputeContext const & ctx = {});
+        ComputeContext const & ctx);
 
 }// namespace WhiskerToolbox::Transforms::V2
 

@@ -5,6 +5,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "transforms/v2/core/ComputeContext.hpp"
 
 #include <algorithm>
 #include <iostream>

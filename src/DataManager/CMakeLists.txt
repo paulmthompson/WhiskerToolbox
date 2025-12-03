@@ -212,6 +212,7 @@ set(DATAMANAGER_SOURCES
         transforms/v2/core/ElementTransform.hpp
         transforms/v2/core/PipelineLoader.hpp
         transforms/v2/core/PipelineLoader.cpp
+        transforms/v2/core/RegisteredTransforms.cpp
         transforms/v2/core/TransformPipeline.hpp
         transforms/v2/core/TransformPipeline.cpp
         transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp
@@ -220,6 +221,10 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.cpp
         transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp
         transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.cpp
+        transforms/v2/algorithms/MaskArea/MaskArea.hpp
+        transforms/v2/algorithms/MaskArea/MaskArea.cpp
+        transforms/v2/algorithms/SumReduction/SumReduction.hpp
+        transforms/v2/algorithms/SumReduction/SumReduction.cpp
 )
 
 

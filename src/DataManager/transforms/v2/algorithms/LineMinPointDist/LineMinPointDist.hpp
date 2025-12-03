@@ -6,9 +6,13 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
-struct Line2D;
+class Line2D;
 template<typename T>
 struct Point2D;
+
+namespace WhiskerToolbox::Transforms::V2 {
+struct ComputeContext;
+}
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 

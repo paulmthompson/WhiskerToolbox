@@ -1,5 +1,9 @@
 #include "AnalogEventThreshold.hpp"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "transforms/v2/core/ComputeContext.hpp"
+
 #include <cmath>
 #include <iostream>
 

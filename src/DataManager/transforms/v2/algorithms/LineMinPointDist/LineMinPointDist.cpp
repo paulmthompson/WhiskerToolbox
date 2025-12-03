@@ -2,6 +2,7 @@
 
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
+#include "transforms/v2/core/ComputeContext.hpp"
 
 #include <algorithm>
 #include <cmath>

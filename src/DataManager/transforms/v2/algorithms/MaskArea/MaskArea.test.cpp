@@ -1,4 +1,6 @@
 #include "MaskArea.hpp"
+
+#include "Masks/Mask_Data.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"

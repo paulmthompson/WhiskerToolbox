@@ -1,15 +1,17 @@
 #ifndef WHISKERTOOLBOX_V2_ANALOG_EVENT_THRESHOLD_HPP
 #define WHISKERTOOLBOX_V2_ANALOG_EVENT_THRESHOLD_HPP
 
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "transforms/v2/core/ElementTransform.hpp"
-
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
 #include <memory>
 #include <vector>
+
+class AnalogTimeSeries;
+class DigitalEventSeries;
+namespace WhiskerToolbox::Transforms::V2 {
+struct ComputeContext;
+}
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 
@@ -30,27 +32,27 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 struct AnalogEventThresholdParams {
     // Threshold value for event detection
     std::optional<float> threshold_value;
-    
+
     // Direction of threshold crossing: "positive", "negative", or "absolute"
     std::optional<std::string> direction;
-    
+
     // Lockout time (in same units as time series) to prevent multiple detections
     // Must be non-negative
     std::optional<rfl::Validator<float, rfl::Minimum<0.0f>>> lockout_time;
-    
+
     // Helper methods to get values with defaults
-    float getThresholdValue() const { 
-        return threshold_value.value_or(1.0f); 
+    float getThresholdValue() const {
+        return threshold_value.value_or(1.0f);
     }
-    
+
     std::string getDirection() const {
         return direction.value_or("positive");
     }
-    
-    float getLockoutTime() const { 
-        return lockout_time.has_value() ? lockout_time.value().value() : 0.0f; 
+
+    float getLockoutTime() const {
+        return lockout_time.has_value() ? lockout_time.value().value() : 0.0f;
     }
-    
+
     // Validate direction string
     bool isValidDirection() const {
         auto dir = getDirection();
@@ -79,10 +81,10 @@ struct AnalogEventThresholdParams {
  * @return Shared pointer to digital event series containing event times
  */
 std::shared_ptr<DigitalEventSeries> analogEventThreshold(
-    AnalogTimeSeries const& input,
-    AnalogEventThresholdParams const& params,
-    ComputeContext const& ctx);
+        AnalogTimeSeries const & input,
+        AnalogEventThresholdParams const & params,
+        ComputeContext const & ctx);
 
-} // namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif // WHISKERTOOLBOX_V2_ANALOG_EVENT_THRESHOLD_HPP
+#endif// WHISKERTOOLBOX_V2_ANALOG_EVENT_THRESHOLD_HPP

@@ -1,5 +1,9 @@
 #include "AnalogEventThreshold.hpp"
-#include "transforms/v2/core/ElementRegistry.hpp"
+
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "transforms/v2/core/ComputeContext.hpp"
+#include "transforms/v2/core/ElementRegistry.hpp" //registerContainerTransform
 #include "transforms/v2/core/ParameterIO.hpp"
 
 #include <catch2/catch_test_macros.hpp>

@@ -1,14 +1,16 @@
 #ifndef WHISKERTOOLBOX_V2_SUM_REDUCTION_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_SUM_REDUCTION_TRANSFORM_HPP
 
-#include "transforms/v2/core/ElementTransform.hpp"
-
 #include <rfl.hpp>
 #include <rfl/json.hpp>
-#include <cmath>
-#include <numeric>
+
+#include <optional>
 #include <span>
 #include <vector>
+
+namespace WhiskerToolbox::Transforms::V2 {
+struct ComputeContext;
+}
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 
@@ -28,17 +30,17 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 struct SumReductionParams {
     // Whether to ignore NaN values when summing
     std::optional<bool> ignore_nan;
-    
+
     // Default value to return if input is empty
     std::optional<float> default_value;
-    
+
     // Helper methods to get values with defaults
-    bool getIgnoreNan() const { 
-        return ignore_nan.value_or(false); 
+    bool getIgnoreNan() const {
+        return ignore_nan.value_or(false);
     }
-    
-    float getDefaultValue() const { 
-        return default_value.value_or(0.0f); 
+
+    float getDefaultValue() const {
+        return default_value.value_or(0.0f);
     }
 };
 
@@ -58,58 +60,17 @@ struct SumReductionParams {
  * @param params Parameters (currently unused)
  * @return Vector containing single summed value
  */
-inline std::vector<float> sumReduction(
-    std::span<float const> values,
-    SumReductionParams const& params) {
-    
-    if (values.empty()) {
-        return {params.getDefaultValue()};
-    }
-    
-    float sum = 0.0f;
-    if (params.getIgnoreNan()) {
-        // Sum only non-NaN values
-        for (float value : values) {
-            if (!std::isnan(value)) {
-                sum += value;
-            }
-        }
-    } else {
-        // Standard sum
-        sum = std::accumulate(values.begin(), values.end(), 0.0f);
-    }
-    
-    return {sum};
-}
-
+std::vector<float> sumReduction(
+        std::span<float const> values,
+        SumReductionParams const & params);
 /**
  * @brief Context-aware version with progress reporting
  */
-inline std::vector<float> sumReductionWithContext(
-    std::span<float const> values,
-    SumReductionParams const& params,
-    ComputeContext const& ctx) {
-    
-    (void)params;
-    
-    ctx.reportProgress(0);
-    
-    if (ctx.shouldCancel()) {
-        return {0.0f};
-    }
-    
-    if (values.empty()) {
-        ctx.reportProgress(100);
-        return {0.0f};
-    }
-    
-    ctx.reportProgress(50);
-    float sum = std::accumulate(values.begin(), values.end(), 0.0f);
-    ctx.reportProgress(100);
-    
-    return {sum};
-}
+std::vector<float> sumReductionWithContext(
+        std::span<float const> values,
+        SumReductionParams const & params,
+        ComputeContext const & ctx);
 
-} // namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif // WHISKERTOOLBOX_V2_SUM_REDUCTION_TRANSFORM_HPP
+#endif// WHISKERTOOLBOX_V2_SUM_REDUCTION_TRANSFORM_HPP
