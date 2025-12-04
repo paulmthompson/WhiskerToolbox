@@ -44,6 +44,8 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
 
+#include "Lineage/LineageRegistry.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -132,6 +134,9 @@ DataManager::DataManager() {
 
     // Initialize EntityGroupManager
     _entity_group_manager = std::make_unique<EntityGroupManager>();
+
+    // Initialize LineageRegistry
+    _lineage_registry = std::make_unique<WhiskerToolbox::Lineage::LineageRegistry>();
 
     // Register all available loaders
     static bool loaders_registered = false;

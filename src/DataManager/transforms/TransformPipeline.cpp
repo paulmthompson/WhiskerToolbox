@@ -214,7 +214,7 @@ StepResult TransformPipeline::executeStep(PipelineStep const& step, ProgressCall
             return result;
         }
         
-        // Store output data
+        // Store output data with lineage tracking
         auto time_key = data_manager_->getTimeKey(step.input_key);
         storeOutputData(step.output_key, output_data, step.step_id, time_key);
         result.result_data = output_data;

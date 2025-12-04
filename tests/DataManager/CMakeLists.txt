@@ -33,6 +33,8 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/Lineage/LineageRegistry.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Lineage/EntityResolver.test.cpp
 
+        Lineage/test_lineage_recorder.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
 

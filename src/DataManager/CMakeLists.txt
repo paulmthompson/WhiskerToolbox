@@ -231,6 +231,8 @@ set(DATAMANAGER_SOURCES
         Lineage/LineageRegistry.cpp
         Lineage/EntityResolver.hpp
         Lineage/EntityResolver.cpp
+        Lineage/LineageRecorder.hpp
+        Lineage/LineageRecorder.cpp
 )
 
 

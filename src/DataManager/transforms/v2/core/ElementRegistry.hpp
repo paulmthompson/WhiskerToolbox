@@ -164,6 +164,9 @@ struct TransformMetadata {
     bool is_time_grouped = false;// True if this operates on span<Element> per time
     bool produces_single_output = false; // True if time-grouped transform produces exactly 1 output per time point
 
+    // Lineage tracking - describes the entity relationship between input and output
+    TransformLineageType lineage_type = TransformLineageType::None;
+
     // For UI generation
     std::string input_type_name;
     std::string output_type_name;

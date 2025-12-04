@@ -215,6 +215,7 @@ private:
      * @param output_key Output key (empty = temporary)
      * @param data Data to store
      * @param step_id Step ID for temporary key generation
+     * @param time_key TimeKey for the data
      */
     void storeOutputData(std::string const& output_key, 
                         DataTypeVariant const& data, 

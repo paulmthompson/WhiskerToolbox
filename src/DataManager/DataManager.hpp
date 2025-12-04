@@ -23,6 +23,10 @@ class EntityGroupManager;
 class TableRegistry;
 struct TableEvent;
 
+namespace WhiskerToolbox::Lineage {
+class LineageRegistry;
+}
+
 class DataManager {
 
 public:
@@ -352,6 +356,16 @@ public:
      */
     [[nodiscard]] EntityGroupManager * getEntityGroupManager() const { return _entity_group_manager.get(); }
 
+    /**
+     * @brief Access the session-scoped LineageRegistry.
+     * 
+     * The LineageRegistry tracks relationships between derived data containers
+     * and their source containers, enabling entity propagation.
+     */
+    [[nodiscard]] WhiskerToolbox::Lineage::LineageRegistry * getLineageRegistry() const { 
+        return _lineage_registry.get(); 
+    }
+
 private:
     std::unordered_map<TimeKey, std::shared_ptr<TimeFrame>> _times;
 
@@ -376,6 +390,9 @@ private:
     // ======= Identity / Entity registry =======
     std::unique_ptr<EntityRegistry> _entity_registry;
     std::unique_ptr<EntityGroupManager> _entity_group_manager;
+
+    // ======= Lineage registry =======
+    std::unique_ptr<WhiskerToolbox::Lineage::LineageRegistry> _lineage_registry;
 };
 
 /**
