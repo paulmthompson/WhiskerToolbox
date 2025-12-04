@@ -27,13 +27,11 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
     float const scale_x = static_cast<float>(image_size.width) / static_cast<float>(_image_size.width);
     float const scale_y = static_cast<float>(image_size.height) / static_cast<float>(_image_size.height);
 
-    for (auto & [time, entries]: _data) {
-        (void) time;
-        for (auto & entry: entries) {
-            for (auto & point: entry.data) {
-                point.x = static_cast<uint32_t>(std::round(static_cast<float>(point.x) * scale_x));
-                point.y = static_cast<uint32_t>(std::round(static_cast<float>(point.y) * scale_y));
-            }
+    for (size_t i = 0; i < _storage.size(); ++i) {
+        Mask2D& mask = _storage.getMutableData(i);
+        for (auto & point: mask) {
+            point.x = static_cast<uint32_t>(std::round(static_cast<float>(point.x) * scale_x));
+            point.y = static_cast<uint32_t>(std::round(static_cast<float>(point.y) * scale_y));
         }
     }
     _image_size = image_size;

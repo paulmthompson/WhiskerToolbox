@@ -196,12 +196,10 @@ TEST_CASE("PointParticleFilter: Multiple groups tracked independently", "[PointP
     point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{150.0f, 100.0f}, NotifyObservers::No);
     
     // Assign entities to groups
-    auto all_entries = point_data->getAllEntries();
     std::vector<EntityId> entity_ids;
-    for (auto const & [time, entries] : all_entries) {
-        for (auto const & entry : entries) {
-            entity_ids.push_back(entry.entity_id);
-        }
+    for (auto const & [time, entry] : point_data->elements()) {
+        static_cast<void>(time);
+        entity_ids.push_back(entry.entity_id);
     }
     
     // Assign first two entities to group 1, next two to group 2

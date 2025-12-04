@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
-#include "transforms/v2/core/RaggedZipView.hpp"
+#include "transforms/v2/core/FlatZipView.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "DataManager/Points/Point_Data.hpp"
@@ -83,16 +83,14 @@ TEST_CASE("TransformPipeline - Multi-Input Execution", "[transforms][v2][pipelin
         {1, {{2.0f, 2.0f}}}
     });
 
-    // 3. Create Zipped View
-    auto v_lines = lines->time_slices();
-    auto v_points = points->time_slices();
-    RaggedZipView zip_view(v_lines, v_points);
+    FlatZipView zip_view(lines->elements(), points->elements());
+
 
     // 4. Adapt View to pair<Time, tuple> format expected by pipeline
     auto pipeline_input_view = zip_view | std::views::transform([](auto const& triplet) {
-        auto const& [time, line_entry, point_entry] = triplet;
-        // Extract raw data from DataEntry wrappers
-        return std::make_pair(time, std::make_tuple(line_entry.data, point_entry.data));
+        auto const& [time, line, point] = triplet;
+        // Data is already raw (Line2D, Point2D<float>), no DataEntry wrapper
+        return std::make_pair(time, std::make_tuple(line, point));
     });
 
     // 5. Create Pipeline

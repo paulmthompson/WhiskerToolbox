@@ -11,16 +11,14 @@
 
 PointData::PointData(std::map<TimeFrameIndex, Point2D<float>> const & data) {
     for (auto const & [time, point]: data) {
-        _data[time].emplace_back(EntityId(0), point);
+        _storage.append(time, point, EntityId(0));
     }
 }
 
 PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const & data) {
     for (auto const & [time, points]: data) {
-        auto & entries = _data[time];
-        entries.reserve(points.size());
         for (auto const & p: points) {
-            entries.emplace_back(EntityId(0), p);
+            _storage.append(time, p, EntityId(0));
         }
     }
 }
@@ -43,12 +41,10 @@ void PointData::changeImageSize(ImageSize const & image_size) {
     float const scale_x = static_cast<float>(image_size.width) / static_cast<float>(_image_size.width);
     float const scale_y = static_cast<float>(image_size.height) / static_cast<float>(_image_size.height);
 
-    for (auto & [time, entries]: _data) {
-        (void) time;
-        for (auto & entry: entries) {
-            entry.data.x *= scale_x;
-            entry.data.y *= scale_y;
-        }
+    for (size_t i = 0; i < _storage.size(); ++i) {
+        Point2D<float>& point = _storage.getMutableData(i);
+        point.x *= scale_x;
+        point.y *= scale_y;
     }
     _image_size = image_size;
 }

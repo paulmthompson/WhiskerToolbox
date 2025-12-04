@@ -85,9 +85,11 @@ public:
             TimeFrameIndex const tfIndex = indices[r];
             
             // Get all entries (Line2D + EntityId pairs) at this time
-            auto entries = m_lineSource->getEntriesAtTime(tfIndex, *targetTF);
-            
-            if (entries.empty()) {
+            auto entity_ids = m_lineSource->getEntityIdsAtTime(tfIndex, *targetTF);
+            auto lines = m_lineSource->getAtTime(tfIndex, *targetTF);
+
+
+            if (lines.empty()) {
                 // No lines at this timestamp - fill with zeros
                 for (int p = 0; p < positions; ++p) {
                     results[static_cast<size_t>(2 * p)][r] = 0.0;
@@ -99,10 +101,9 @@ public:
 
             // Select the appropriate entry based on entity index
             int const entry_index = entityIdx[r].value_or(0);
-            auto const & entry = entries[static_cast<size_t>(std::min(entry_index, static_cast<int>(entries.size()) - 1))];
+            auto const & line = lines[static_cast<size_t>(std::min(entry_index, static_cast<int>(lines.size()) - 1))];
             
-            Line2D const & line = entry.data;
-            entityIds.push_back(entry.entity_id);
+            entityIds.push_back(entity_ids[static_cast<size_t>(std::min(entry_index, static_cast<int>(entity_ids.size()) - 1))]);
             for (int p = 0; p < positions; ++p) {
                 auto optPoint = point_at_fractional_position(line, fractions[static_cast<size_t>(p)], true);
                 if (optPoint.has_value()) {

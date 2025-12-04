@@ -10,10 +10,11 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/map_timeseries.hpp"
+#include "utils/RaggedStorage.hpp"
 
 #include <algorithm>
-#include <map>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <type_traits>
@@ -92,7 +93,7 @@ public:
         }
         
         // Single notification at end after all data is loaded
-        if (!_data.empty()) {
+        if (!_storage.empty()) {
             notifyObservers();
         }
     }
@@ -166,27 +167,35 @@ public:
      * @pre Identity context should be set via setIdentityContext before calling
      */
     void rebuildAllEntityIds() {
-        if (!_identity_registry) {
-            // No registry: reset all EntityIds to 0
-            for (auto & [t, entries]: _data) {
-                (void) t;  // Suppress unused variable warning
-                for (auto & entry: entries) {
-                    entry.entity_id = EntityId(0);
-                }
-            }
+        // With SoA storage, we need to rebuild the entire storage with new EntityIds
+        // This is an expensive operation - consider if it's really needed
+        if (_storage.empty()) {
             return;
         }
 
-        // Determine the EntityKind based on TData type using if constexpr
-        EntityKind kind = getEntityKind();
-
-        // Rebuild EntityIds using the registry
-        for (auto & [t, entries]: _data) {
-            for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
-                entries[static_cast<size_t>(i)].entity_id = 
-                    _identity_registry->ensureId(_identity_data_key, kind, t, i);
+        EntityKind const kind = getEntityKind();
+        
+        // Create a new storage and repopulate with correct EntityIds
+        OwningRaggedStorage<TData> new_storage;
+        new_storage.reserve(_storage.size());
+        
+        // Track local indices per time for EntityId generation
+        std::map<TimeFrameIndex, int> time_local_indices;
+        
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            TimeFrameIndex const time = _storage.getTime(i);
+            TData const& data = _storage.getData(i);
+            
+            int local_index = time_local_indices[time]++;
+            EntityId entity_id = EntityId(0);
+            if (_identity_registry) {
+                entity_id = _identity_registry->ensureId(_identity_data_key, kind, time, local_index);
             }
+            
+            new_storage.append(time, data, entity_id);
         }
+        
+        _storage = std::move(new_storage);
     }
 
     // ========== Common Entity-based Operations ==========
@@ -203,7 +212,7 @@ public:
      * @param notify If true, observers will be notified of the change
      */
     void addEntryAtTime(TimeFrameIndex time, TData const & data, EntityId entity_id, NotifyObservers notify) {
-        _data[time].emplace_back(entity_id, data);
+        _storage.append(time, data, entity_id);
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
         }
@@ -227,9 +236,19 @@ public:
     std::size_t copyByEntityIds(DerivedTarget & target, 
                                 std::unordered_set<EntityId> const & entity_ids, 
                                 NotifyObservers notify) {
-        bool const should_notify = (notify == NotifyObservers::Yes);
-        return copy_by_entity_ids(_data, target, entity_ids, should_notify,
-                                  [](DataEntry<TData> const & entry) -> TData const & { return entry.data; });
+        std::size_t count = 0;
+        // Iterate through storage in order to preserve ordering
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            EntityId const eid = _storage.getEntityId(i);
+            if (entity_ids.contains(eid)) {
+                target.addAtTime(_storage.getTime(i), _storage.getData(i), NotifyObservers::No);
+                ++count;
+            }
+        }
+        if (notify == NotifyObservers::Yes && count > 0) {
+            target.notifyObservers();
+        }
+        return count;
     }
 
     /**
@@ -249,15 +268,32 @@ public:
     std::size_t moveByEntityIds(DerivedTarget & target, 
                                 std::unordered_set<EntityId> const & entity_ids, 
                                 NotifyObservers notify) {
-        bool const should_notify = (notify == NotifyObservers::Yes);
-        auto result = move_by_entity_ids(_data, target, entity_ids, should_notify,
-                                         [](DataEntry<TData> const & entry) -> TData const & { return entry.data; });
-
-        if (notify == NotifyObservers::Yes && result > 0) {
+        // Collect entries to move (iterate in order to preserve ordering)
+        std::vector<std::tuple<TimeFrameIndex, TData, EntityId>> to_move;
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            EntityId const eid = _storage.getEntityId(i);
+            if (entity_ids.contains(eid)) {
+                to_move.emplace_back(_storage.getTime(i), _storage.getData(i), eid);
+            }
+        }
+        
+        // Add to target (preserving EntityIds)
+        for (auto const& [time, data, eid] : to_move) {
+            target.addEntryAtTime(time, data, eid, NotifyObservers::No);
+        }
+        
+        // Remove from source
+        for (auto const& [time, data, eid] : to_move) {
+            (void)time;
+            (void)data;
+            _storage.removeByEntityId(eid);
+        }
+        
+        if (notify == NotifyObservers::Yes && !to_move.empty()) {
+            target.notifyObservers();
             notifyObservers();
         }
-
-        return result;
+        return to_move.size();
     }
 
     // ========== Entity Lookup Methods ==========
@@ -272,28 +308,12 @@ public:
      * @return Optional containing a const reference to the data if found, std::nullopt otherwise
      */
     [[nodiscard]] std::optional<std::reference_wrapper<TData const>> getDataByEntityId(EntityId entity_id) const {
-        if (!_identity_registry) {
+        // Use O(1) storage lookup instead of registry-based lookup
+        auto idx_opt = _storage.findByEntityId(entity_id);
+        if (!idx_opt.has_value()) {
             return std::nullopt;
         }
-
-        auto descriptor = _identity_registry->get(entity_id);
-        if (!descriptor || descriptor->kind != getEntityKind() || descriptor->data_key != _identity_data_key) {
-            return std::nullopt;
-        }
-
-        TimeFrameIndex const time{descriptor->time_value};
-        int const local_index = descriptor->local_index;
-
-        auto time_it = _data.find(time);
-        if (time_it == _data.end()) {
-            return std::nullopt;
-        }
-
-        if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-            return std::nullopt;
-        }
-
-        return std::cref(time_it->second[static_cast<size_t>(local_index)].data);
+        return std::cref(_storage.getData(*idx_opt));
     }
 
     /**
@@ -305,16 +325,12 @@ public:
      * @return Optional containing the TimeFrameIndex if found, std::nullopt otherwise
      */
     [[nodiscard]] std::optional<TimeFrameIndex> getTimeByEntityId(EntityId entity_id) const {
-        if (!_identity_registry) {
+        // Use O(1) storage lookup instead of registry-based lookup
+        auto idx_opt = _storage.findByEntityId(entity_id);
+        if (!idx_opt.has_value()) {
             return std::nullopt;
         }
-
-        auto descriptor = _identity_registry->get(entity_id);
-        if (!descriptor) {
-            return std::nullopt;
-        }
-        
-        return TimeFrameIndex{descriptor->time_value};
+        return _storage.getTime(*idx_opt);
     }
 
     /**
@@ -364,26 +380,13 @@ public:
      * @return Optional containing a DataModifier handle if found, std::nullopt otherwise
      */
     [[nodiscard]] std::optional<DataModifier> getMutableData(EntityId entity_id, NotifyObservers notify) {
-        if (!_identity_registry) {
+        // Use O(1) storage lookup
+        auto idx_opt = _storage.findByEntityId(entity_id);
+        if (!idx_opt.has_value()) {
             return std::nullopt;
         }
 
-        auto descriptor = _identity_registry->get(entity_id);
-        if (!descriptor || descriptor->kind != getEntityKind() || descriptor->data_key != _identity_data_key) {
-            return std::nullopt;
-        }
-
-        auto time_it = _data.find(TimeFrameIndex{descriptor->time_value});
-        if (time_it == _data.end()) {
-            return std::nullopt;
-        }
-
-        size_t local_index = static_cast<size_t>(descriptor->local_index);
-        if (local_index >= time_it->second.size()) {
-            return std::nullopt;
-        }
-
-        TData & data_ref = time_it->second[local_index].data;
+        TData & data_ref = _storage.getMutableData(*idx_opt);
 
         return DataModifier(data_ref, [this, notify]() { 
             if (notify == NotifyObservers::Yes) { 
@@ -403,35 +406,11 @@ public:
      * @return true if the data was found and cleared, false otherwise
      */
     [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify) {
-        if (!_identity_registry) {
-            return false;
-        }
-
-        auto descriptor = _identity_registry->get(entity_id);
-        if (!descriptor || descriptor->kind != getEntityKind() || descriptor->data_key != _identity_data_key) {
-            return false;
-        }
-
-        TimeFrameIndex const time{descriptor->time_value};
-        int const local_index = descriptor->local_index;
-
-        auto time_it = _data.find(time);
-        if (time_it == _data.end()) {
-            return false;
-        }
-
-        if (local_index < 0 || static_cast<size_t>(local_index) >= time_it->second.size()) {
-            return false;
-        }
-
-        time_it->second.erase(time_it->second.begin() + static_cast<std::ptrdiff_t>(local_index));
-        if (time_it->second.empty()) {
-            _data.erase(time_it);
-        }
-        if (notify == NotifyObservers::Yes) {
+        bool const removed = _storage.removeByEntityId(entity_id);
+        if (removed && notify == NotifyObservers::Yes) {
             notifyObservers();
         }
-        return true;
+        return removed;
     }
 
     /**
@@ -464,13 +443,14 @@ public:
      * @param notify Whether to notify observers after the operation
      */
     void addAtTime(TimeFrameIndex time, TData const & data, NotifyObservers notify) {
-        int const local_index = static_cast<int>(_data[time].size());
+        auto [start, end] = _storage.getTimeRange(time);
+        int const local_index = static_cast<int>(end - start);
         EntityId entity_id = EntityId(0);
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
         }
 
-        _data[time].emplace_back(entity_id, data);
+        _storage.append(time, data, entity_id);
 
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
@@ -502,13 +482,14 @@ public:
      * @param notify Whether to notify observers after the operation
      */
     void addAtTime(TimeFrameIndex time, TData && data, NotifyObservers notify) {
-        int const local_index = static_cast<int>(_data[time].size());
+        auto [start, end] = _storage.getTimeRange(time);
+        int const local_index = static_cast<int>(end - start);
         EntityId entity_id = EntityId(0);
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
         }
 
-        _data[time].emplace_back(entity_id, std::move(data));
+        _storage.append(time, std::move(data), entity_id);
 
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
@@ -542,13 +523,15 @@ public:
      */
     template<typename... TDataArgs>
     void emplaceAtTime(TimeFrameIndex time, TDataArgs &&... args) {
-        int const local_index = static_cast<int>(_data[time].size());
+        auto [start, end] = _storage.getTimeRange(time);
+        int const local_index = static_cast<int>(end - start);
         EntityId entity_id = EntityId(0);
         if (_identity_registry) {
             entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
         }
 
-        _data[time].emplace_back(entity_id, std::forward<TDataArgs>(args)...);
+        // Construct TData in-place then append
+        _storage.append(time, TData(std::forward<TDataArgs>(args)...), entity_id);
     }
 
     /**
@@ -565,25 +548,16 @@ public:
             return;
         }
 
-        // 1. Get (or create) the vector of entries for this time
-        // This is our single map lookup.
-        auto & entry_vec = _data[time];
+        auto [start, end] = _storage.getTimeRange(time);
+        size_t const old_count = end - start;
 
-        // 2. Reserve space once for high performance
-        size_t const old_size = entry_vec.size();
-        entry_vec.reserve(old_size + data_to_add.size());
-
-        // 3. Loop and emplace new entries
         for (size_t i = 0; i < data_to_add.size(); ++i) {
-            int const local_index = static_cast<int>(old_size + i);
+            int const local_index = static_cast<int>(old_count + i);
             EntityId entity_id = EntityId(0);
             if (_identity_registry) {
                 entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
             }
-
-            // Calls DataEntry(entity_id, data_to_add[i])
-            // This will invoke the TData copy constructor
-            entry_vec.emplace_back(entity_id, data_to_add[i]);
+            _storage.append(time, data_to_add[i], entity_id);
         }
 
         if (notify == NotifyObservers::Yes) {
@@ -606,24 +580,16 @@ public:
             return;
         }
 
-        // 1. Get (or create) the vector of entries for this time
-        auto & entry_vec = _data[time];
+        auto [start, end] = _storage.getTimeRange(time);
+        size_t const old_count = end - start;
 
-        // 2. Reserve space once
-        size_t const old_size = entry_vec.size();
-        entry_vec.reserve(old_size + data_to_add.size());
-
-        // 3. Loop and emplace new entries
         for (size_t i = 0; i < data_to_add.size(); ++i) {
-            int const local_index = static_cast<int>(old_size + i);
+            int const local_index = static_cast<int>(old_count + i);
             EntityId entity_id = EntityId(0);
             if (_identity_registry) {
                 entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
             }
-
-            // Calls DataEntry(entity_id, std::move(data_to_add[i]))
-            // This will invoke the TData MOVE constructor
-            entry_vec.emplace_back(entity_id, std::move(data_to_add[i]));
+            _storage.append(time, std::move(data_to_add[i]), entity_id);
         }
 
         if (notify == NotifyObservers::Yes) {
@@ -639,7 +605,7 @@ public:
      * @return The count of time frames containing at least one entry
      */
     [[nodiscard]] std::size_t getTimeCount() const {
-        return _data.size();
+        return _storage.getTimeCount();
     }
 
     /**
@@ -652,9 +618,9 @@ public:
      */
     [[nodiscard]] std::size_t getMaxEntriesAtAnyTime() const {
         std::size_t max_entries = 0;
-        for (auto const & [time, entries]: _data) {
-            (void) time;
-            max_entries = std::max(max_entries, entries.size());
+        for (auto const& [time, range] : _storage.timeRanges()) {
+            size_t const count = range.second - range.first;
+            max_entries = std::max(max_entries, count);
         }
         return max_entries;
     }
@@ -668,12 +634,7 @@ public:
      * @return The total count of all entries
      */
     [[nodiscard]] std::size_t getTotalEntryCount() const {
-        std::size_t total = 0;
-        for (auto const & [time, entries]: _data) {
-            (void) time;
-            total += entries.size();
-        }
-        return total;
+        return _storage.size();
     }
 
     /**
@@ -684,7 +645,7 @@ public:
      * @return A view of TimeFrameIndex keys
      */
     [[nodiscard]] auto getTimesWithData() const {
-        return _data | std::views::keys;
+        return _storage.timeRanges() | std::views::keys;
     }
 
     /**
@@ -696,73 +657,59 @@ public:
      * @return A view of time-entries pairs for all times, where entries are spans
      */
     [[nodiscard]] auto getAllEntries() const {
-        return _data | std::views::transform([](auto const & pair) {
-                   // pair.second is a std::vector<DataEntry<TData>>&
-                   // We create a non-owning span pointing to its data
-                   return std::make_pair(
-                           pair.first,
-                           std::span<DataEntry<TData> const>{pair.second});
+        // Returns a view of (time, range) pairs where range provides indices
+        // Note: Each inner range must be materialized or used immediately
+        return _storage.timeRanges() | std::views::transform([this](auto const & pair) {
+                   TimeFrameIndex const time = pair.first;
+                   auto const& [start, end] = pair.second;
+                   // Create a vector of DataEntry for this time (not a lazy view to avoid dangling)
+                   std::vector<DataEntry<TData>> entries;
+                   entries.reserve(end - start);
+                   for (size_t idx = start; idx < end; ++idx) {
+                       entries.emplace_back(_storage.getEntityId(idx), _storage.getData(idx));
+                   }
+                   return std::make_pair(time, std::move(entries));
                });
     }
 
     // ========== Time-based Getters ==========
 
-    /**
-     * @brief Get a zero-copy view of all data entries at a specific time.
-     * @param time The time to get entries for.
-     * @return A std::span over the entries. If time is not found,
-     * returns an empty span.
-     */
-    [[nodiscard]] std::span<DataEntry<TData> const> getEntriesAtTime(TimeFrameIndex time) const {
-        auto it = _data.find(time);
-        if (it == _data.end()) {
-            return _empty_entries;
-        }
-        return it->second;
-    }
-
-    /**
-     * @brief Get a zero-copy view of all data entries at a specific time.
-     * @param time The time to get entries for.
-     * @return A std::span over the entries. If time is not found,
-     * returns an empty span.
-     */
-    [[nodiscard]] std::span<DataEntry<TData> const> getEntriesAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
-        
-        TimeFrameIndex const converted_time = convert_time_index(time,
-                                                                 &source_timeframe,
-                                                                 _time_frame.get());
-        return getEntriesAtTime(converted_time);
-    }
-
-
+    public:
     [[nodiscard]] auto getAtTime(TimeFrameIndex time) const {
-        return getEntriesAtTime(time) | std::views::transform(&DataEntry<TData>::data);
+        auto [start, end] = _storage.getTimeRange(time);
+        return std::views::iota(start, end) 
+            | std::views::transform([this](size_t idx) -> TData const& {
+                return _storage.getData(idx);
+            });
     }
 
     [[nodiscard]] auto getAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
         TimeFrameIndex const converted_time = convert_time_index(time,
                                                                  &source_timeframe,
                                                                  _time_frame.get());
-        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<TData>::data);
+        return getAtTime(converted_time);
     }
 
     [[nodiscard]] auto getAtTime(TimeIndexAndFrame const & time_index_and_frame) const {
         TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
                                                                  time_index_and_frame.time_frame,
                                                                  _time_frame.get());
-        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<TData>::data);
+        return getAtTime(converted_time);
     }
 
     [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time) const {
-        return getEntriesAtTime(time) | std::views::transform(&DataEntry<TData>::entity_id);
+        auto [start, end] = _storage.getTimeRange(time);
+        return std::views::iota(start, end)
+            | std::views::transform([this](size_t idx) {
+                return _storage.getEntityId(idx);
+            });
     }
 
     [[nodiscard]] auto getEntityIdsAtTime(TimeFrameIndex time, TimeFrame const & source_timeframe) const {
         TimeFrameIndex const converted_time = convert_time_index(time,
                                                                  &source_timeframe,
                                                                  _time_frame.get());
-        return getEntriesAtTime(converted_time) | std::views::transform(&DataEntry<TData>::entity_id);
+        return getEntityIdsAtTime(converted_time);
     }
 
     /**
@@ -775,8 +722,19 @@ public:
      * @return A zero-copy view of time-data entries pairs for times within the specified interval
      */
     [[nodiscard]] auto GetEntriesInRange(TimeFrameInterval const & interval) const {
-        return getAllEntries() | std::views::filter([interval](auto const & pair) {
+        return _storage.timeRanges() 
+            | std::views::filter([interval](auto const & pair) {
                    return pair.first >= interval.start && pair.first <= interval.end;
+               })
+            | std::views::transform([this](auto const & pair) {
+                   TimeFrameIndex const time = pair.first;
+                   auto const& [start, end] = pair.second;
+                   std::vector<DataEntry<TData>> entries;
+                   entries.reserve(end - start);
+                   for (size_t idx = start; idx < end; ++idx) {
+                       entries.emplace_back(_storage.getEntityId(idx), _storage.getData(idx));
+                   }
+                   return std::make_pair(time, std::move(entries));
                });
     }
 
@@ -815,33 +773,19 @@ public:
     // ========== Ranges & Views ==========
 
     /**
-     * @brief A view of (Time, Span<DataEntry>) pairs.
-     * * This makes the RaggedTimeSeries iterable as a sequence of time buckets.
-     * usage: for(auto [time, entries] : ts.time_slices()) { ... }
-     */
-    [[nodiscard]] auto time_slices() const {
-        return _data | std::views::transform([](auto const& pair) {
-            return std::make_pair(pair.first, std::span<DataEntry<TData> const>{pair.second});
-        });
-    }
-
-    /**
      * @brief A flattened view of (Time, DataEntry) pairs.
      * * This creates a zero-overhead 1D view of all entities across all times.
      * Crucially, it preserves the TimeFrameIndex for each entity.
      * * usage: for(auto [time, entry] : ts.elements()) { ... }
      */
     [[nodiscard]] auto elements() const {
-        return _data | std::views::transform([](auto const& pair) {
-            // 1. Capture the outer key (Time)
-            TimeFrameIndex const time = pair.first;
-            
-            // 2. Create an inner view that zips Time with the DataEntry
-            return pair.second | std::views::transform([time](auto const& entry) {
-                return std::make_pair(time, std::cref(entry));
+        // Use flattened iteration over all storage indices
+        return std::views::iota(size_t{0}, _storage.size())
+            | std::views::transform([this](size_t idx) {
+                return std::make_pair(
+                    _storage.getTime(idx), 
+                    DataEntry<TData>{_storage.getEntityId(idx), _storage.getData(idx)});
             });
-        }) 
-        | std::views::join; // 3. Flatten the Range<Range<Pair>> into Range<Pair>
     }
 
     /**
@@ -849,11 +793,13 @@ public:
      * * Helper that unpacks the DataEntry for easier structured binding.
      */
     [[nodiscard]] auto flattened_data() const {
-        return elements() | std::views::transform([](auto const& pair) {
-            TimeFrameIndex const time = pair.first;
-            DataEntry<TData> const& entry = pair.second.get();
-            return std::make_tuple(time, entry.entity_id, std::cref(entry.data));
-        });
+        return std::views::iota(size_t{0}, _storage.size())
+            | std::views::transform([this](size_t idx) {
+                return std::make_tuple(
+                    _storage.getTime(idx), 
+                    _storage.getEntityId(idx), 
+                    std::cref(_storage.getData(idx)));
+            });
     }
 
     /**
@@ -906,21 +852,21 @@ protected:
      * @return true if data was found and cleared, false otherwise
      */
     [[nodiscard]] bool _clearAtTime(TimeFrameIndex time, NotifyObservers notify) {
-        auto it = _data.find(time);
-        if (it != _data.end()) {
-            _data.erase(it);
-            if (notify == NotifyObservers::Yes) {
-                notifyObservers();
-            }
-            return true;
+        size_t const removed = _storage.removeAtTime(time);
+        if (removed == 0) {
+            return false;
         }
-        return false;
+        
+        if (notify == NotifyObservers::Yes) {
+            notifyObservers();
+        }
+        return true;
     }
 
     // ========== Protected Member Variables ==========
     
-    /// Storage for time series data: map from time to vector of entries
-    std::map<TimeFrameIndex, std::vector<DataEntry<TData>>> _data;
+    /// Storage for time series data using SoA layout
+    OwningRaggedStorage<TData> _storage;
     
     /// Image size metadata
     ImageSize _image_size;
@@ -933,19 +879,49 @@ protected:
     
     /// Pointer to EntityRegistry for automatic EntityId management
     EntityRegistry * _identity_registry{nullptr};
-
-    inline static std::vector<DataEntry<TData>> const _empty_entries{};
 };
 
+// RaggedTimeSeriesView wraps a RaggedTimeSeries and provides a proper range interface
+// It caches the elements view to ensure begin()/end() return compatible iterators
 template <typename TData>
 class RaggedTimeSeriesView : public std::ranges::view_interface<RaggedTimeSeriesView<TData>> {
-    RaggedTimeSeries<TData> const* _ts;
+public:
+    // The underlying elements view type from RaggedTimeSeries::elements()
+    using ElementsView = decltype(std::declval<RaggedTimeSeries<TData> const&>().elements());
+    
+private:
+    // We store the view by value to ensure iterator compatibility
+    // mutable because begin()/end() are const but we need to lazily initialize
+    mutable std::optional<ElementsView> _cached_view;
+    RaggedTimeSeries<TData> const* _ts = nullptr;
+    
+    void ensureView() const {
+        if (!_cached_view.has_value() && _ts != nullptr) {
+            _cached_view.emplace(_ts->elements());
+        }
+    }
+    
 public:
     RaggedTimeSeriesView() = default;
-    RaggedTimeSeriesView(RaggedTimeSeries<TData> const& ts) : _ts(&ts) {}
-    auto begin() const { return _ts->time_slices().begin(); }
-    auto end() const { return _ts->time_slices().end(); }
-    auto flatten() const { return _ts->elements(); }
+    explicit RaggedTimeSeriesView(RaggedTimeSeries<TData> const& ts) : _ts(&ts) {}
+    
+    auto begin() const { 
+        ensureView();
+        return _cached_view->begin();
+    }
+    
+    auto end() const { 
+        ensureView();
+        return _cached_view->end();
+    }
+    
+    // Convenience method for explicit flattening
+    [[nodiscard]] auto flatten() const { return _ts->elements(); }
+    [[nodiscard]] auto elements() const { return _ts->elements(); }
+    
+    // Size information
+    [[nodiscard]] std::size_t size() const { return _ts ? _ts->getTotalEntryCount() : 0; }
+    [[nodiscard]] bool empty() const { return size() == 0; }
 };
 
 template <typename TData>

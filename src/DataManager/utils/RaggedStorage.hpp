@@ -241,7 +241,6 @@ public:
         }
         
         size_t const idx = it->second;
-        TimeFrameIndex const time = _times[idx];
         
         // Erase from arrays
         _times.erase(_times.begin() + static_cast<std::ptrdiff_t>(idx));
@@ -252,6 +251,36 @@ public:
         _rebuildAccelerationStructures();
         
         return true;
+    }
+    
+    /**
+     * @brief Remove all entries at a specific time
+     * @param time The TimeFrameIndex to remove all entries for
+     * @return Number of entries removed
+     * 
+     * @note More efficient than calling removeByEntityId multiple times
+     */
+    size_t removeAtTime(TimeFrameIndex time) {
+        auto it = _time_ranges.find(time);
+        if (it == _time_ranges.end()) {
+            return 0;
+        }
+        
+        auto [start, end] = it->second;
+        size_t const count = end - start;
+        
+        // Erase the range from all vectors
+        _times.erase(_times.begin() + static_cast<std::ptrdiff_t>(start),
+                     _times.begin() + static_cast<std::ptrdiff_t>(end));
+        _data.erase(_data.begin() + static_cast<std::ptrdiff_t>(start),
+                    _data.begin() + static_cast<std::ptrdiff_t>(end));
+        _entity_ids.erase(_entity_ids.begin() + static_cast<std::ptrdiff_t>(start),
+                          _entity_ids.begin() + static_cast<std::ptrdiff_t>(end));
+        
+        // Rebuild acceleration structures
+        _rebuildAccelerationStructures();
+        
+        return count;
     }
 
     // ========== CRTP Implementation ==========

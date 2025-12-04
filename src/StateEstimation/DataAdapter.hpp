@@ -7,6 +7,7 @@
 #include <iterator>
 #include <ranges>
 #include <type_traits>
+#include <vector>
 
 namespace StateEstimation {
 
@@ -31,30 +32,124 @@ struct FlattenedItem {
 };
 
 /**
- * @brief Adapter that flattens nested time-entry structure into individual items
+ * @brief Simple adapter that wraps elements() output for StateEstimation compatibility
  * 
- * This adapter converts a range of {TimeFrameIndex, vector<Entry>} pairs into
- * a flat iteration of individual DataItem objects. Each entry in the nested
- * structure is yielded as a separate item with associated time and entity metadata.
+ * This adapter takes a RaggedTimeSeries and provides iteration over FlattenedItem
+ * objects, which the StateEstimation tracking system expects.
  * 
- * The adapter maintains zero-copy semantics for the actual data objects by
- * holding references, while copying cheap metadata (TimeFrameIndex, EntityId).
+ * With the new SoA-based RaggedTimeSeries, elements() already provides a flat
+ * view of (TimeFrameIndex, DataEntry<TData>) pairs. This adapter simply converts
+ * those to FlattenedItem format.
  * 
- * @tparam Range The type of the input range (e.g., from GetAllLineEntriesAsRange)
- * @tparam DataType The actual data type contained in entries (e.g., Line2D)
- * @tparam EntryType The entry structure type (must have .line and .entity_id members)
+ * @tparam DataType The actual data type (e.g., Line2D)
  * 
  * Example usage:
  * @code
- * auto line_range = line_data->GetAllLineEntriesAsRange();
- * auto flat_range = FlattenedDataAdapter(line_range);
+ * auto data_source = ElementsDataAdapter<Line2D>(*line_data);
  * 
- * for (auto const& item : flat_range) {
+ * for (auto const& item : data_source) {
  *     TimeFrameIndex time = item.getTimeFrameIndex();
- *     Line2D const& line = item.getData();  // Zero-copy reference
+ *     Line2D const& line = item.getData();
  *     EntityId id = item.getEntityId();
  * }
  * @endcode
+ */
+template<typename DataType>
+class ElementsDataAdapter {
+public:
+    // Store materialized data to ensure stable references
+    struct StoredItem {
+        TimeFrameIndex time;
+        DataType data;  // Owned copy
+        EntityId entity_id;
+    };
+    
+    /**
+     * @brief Construct from a RaggedTimeSeries-like object with elements() method
+     */
+    template<typename RaggedTS>
+    explicit ElementsDataAdapter(RaggedTS const& ts) {
+        // Materialize the elements to ensure stable references
+        for (auto const& [time, entry] : ts.elements()) {
+            items_.push_back(StoredItem{
+                .time = time,
+                .data = entry.data,
+                .entity_id = entry.entity_id
+            });
+        }
+    }
+    
+    class Iterator {
+    public:
+        using value_type = FlattenedItem<DataType>;
+        using reference = value_type;
+        using pointer = void;
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::forward_iterator_tag;
+        
+        Iterator() = default;
+        explicit Iterator(std::vector<StoredItem> const* items, size_t index = 0)
+            : items_(items), index_(index) {}
+        
+        FlattenedItem<DataType> operator*() const {
+            auto const& item = (*items_)[index_];
+            return FlattenedItem<DataType>{
+                .time = item.time,
+                .data = item.data,
+                .entity_id = item.entity_id
+            };
+        }
+        
+        Iterator& operator++() { ++index_; return *this; }
+        Iterator operator++(int) { Iterator tmp = *this; ++index_; return tmp; }
+        
+        bool operator==(Iterator const& other) const { return index_ == other.index_; }
+        bool operator!=(Iterator const& other) const { return index_ != other.index_; }
+        
+    private:
+        std::vector<StoredItem> const* items_ = nullptr;
+        size_t index_ = 0;
+    };
+    
+    Iterator begin() const { return Iterator(&items_, 0); }
+    Iterator end() const { return Iterator(&items_, items_.size()); }
+    
+    [[nodiscard]] size_t size() const { return items_.size(); }
+    [[nodiscard]] bool empty() const { return items_.empty(); }
+    
+private:
+    std::vector<StoredItem> items_;
+};
+
+/**
+ * @brief Helper function to create an ElementsDataAdapter from a RaggedTimeSeries
+ * 
+ * @tparam RaggedTS The RaggedTimeSeries type (e.g., LineData, PointData)
+ * @param ts The RaggedTimeSeries to adapt
+ * @return An ElementsDataAdapter for the data type
+ */
+template<typename RaggedTS>
+auto makeDataAdapter(RaggedTS const& ts) {
+    // Deduce the data type from the elements() return type
+    using ElementType = std::ranges::range_value_t<decltype(ts.elements())>;
+    using DataEntryType = std::decay_t<decltype(std::declval<ElementType>().second)>;
+    using DataType = std::decay_t<decltype(std::declval<DataEntryType>().data)>;
+    
+    return ElementsDataAdapter<DataType>(ts);
+}
+
+// ============================================================================
+// Legacy adapter for backwards compatibility (deprecated)
+// ============================================================================
+
+/**
+ * @brief [DEPRECATED] Adapter that flattens nested time-entry structure into individual items
+ * 
+ * This adapter was designed for the old getAllEntries() API which returned
+ * {TimeFrameIndex, vector<Entry>} pairs. With the new SoA-based elements() API,
+ * use ElementsDataAdapter or makeDataAdapter() instead.
+ * 
+ * @deprecated Use ElementsDataAdapter instead
  */
 template<typename Range, typename DataType, typename EntryType>
 class FlattenedDataAdapter : public std::ranges::view_interface<FlattenedDataAdapter<Range, DataType, EntryType>> {
@@ -62,12 +157,6 @@ public:
     using OuterIterator = std::ranges::iterator_t<Range>;
     using TimeEntriesPair = std::ranges::range_value_t<Range>;
     
-    /**
-     * @brief Iterator for flattened data
-     * 
-     * Maintains position in both the outer range (time frames) and 
-     * inner vector (entries within each time frame).
-     */
     class Iterator {
     public:
         using value_type = FlattenedItem<DataType>;
@@ -96,7 +185,6 @@ public:
         Iterator& operator++() {
             ++inner_idx_;
             
-            // Check if we've exhausted the current frame's entries
             auto const& pair = *outer_it_;
             if (inner_idx_ >= pair.second.size()) {
                 ++outer_it_;
@@ -117,7 +205,6 @@ public:
             if (outer_it_ != other.outer_it_) {
                 return false;
             }
-            // If both are at end, they're equal regardless of inner_idx
             if (outer_it_ == outer_end_) {
                 return true;
             }
@@ -164,33 +251,17 @@ public:
     }
     
 private:
-    mutable Range range_;  // Store by value to handle temporary ranges/views, mutable for const iteration
+    mutable Range range_;
 };
 
 /**
- * @brief Helper function to create a flattened adapter for LineData ranges
+ * @brief [DEPRECATED] Helper function to create a flattened adapter for LineData ranges
  * 
- * This factory function deduces template parameters automatically and creates
- * a FlattenedDataAdapter suitable for use with LineData's GetAllLineEntriesAsRange().
- * 
- * @tparam Range The range type (auto-deduced)
- * @param range The input range from GetAllLineEntriesAsRange()
- * @return A FlattenedDataAdapter that yields individual DataItem<Line2D> objects
- * 
- * Example:
- * @code
- * auto line_range = line_data->GetAllLineEntriesAsRange();
- * auto data_source = flattenLineData(line_range);
- * 
- * Tracker<Line2D> tracker(...);
- * tracker.process(data_source, ...);
- * @endcode
+ * @deprecated Use makeDataAdapter() instead
  */
 template<typename Range>
 auto flattenLineData(Range&& range) {
-    // Deduce types from the range
     using RangeValueType = std::ranges::range_value_t<std::remove_reference_t<Range>>;
-    // Assume entries have .line member which is Line2D
     using EntryType = std::decay_t<decltype(std::declval<RangeValueType>().second[0])>;
     using DataType = std::decay_t<decltype(std::declval<EntryType>().data)>;
     

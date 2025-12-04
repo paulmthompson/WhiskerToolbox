@@ -81,12 +81,11 @@ std::shared_ptr<LineData> lineOutlierDetection(std::shared_ptr<LineData> line_da
                   << start_frame.getValue() << " to " << end_frame.getValue() << std::endl;
     }
 
-    // Get natural iterator from LineData and flatten to individual items
-    auto line_entries_range = line_data->getAllEntries();
-    auto flattened_data = StateEstimation::flattenLineData(line_entries_range);
+    // Create data adapter from LineData using the new elements()-based API
+    auto data_adapter = StateEstimation::makeDataAdapter(*line_data);
 
     // Convert to legacy tuple format for OutlierDetection
-    auto data_source = convertToLegacyFormat<Line2D>(flattened_data);
+    auto data_source = convertToLegacyFormat<Line2D>(data_adapter);
 
     if (params->verbose_output) {
         std::cout << "Total line items: " << data_source.size() << std::endl;

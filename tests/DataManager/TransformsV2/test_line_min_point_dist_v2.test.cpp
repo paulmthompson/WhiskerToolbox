@@ -3,7 +3,7 @@
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
-#include "transforms/v2/core/RaggedZipView.hpp"
+#include "transforms/v2/core/FlatZipView.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
@@ -219,7 +219,7 @@ std::shared_ptr<LineData> createLineData(std::vector<std::pair<int, std::vector<
 
 } // namespace
 
-TEST_CASE("Pipeline Execution with RaggedZipView and LineMinPointDist", "[line_min_point_dist][pipeline]") {
+TEST_CASE("Pipeline Execution with FlatZipView and LineMinPointDist", "[line_min_point_dist][pipeline]") {
     // 1. Create Input Data
     // T=0: Line(y=0) + Point(y=1) -> Dist=1
     // T=1: Line(y=0) + Point(y=2) -> Dist=2
@@ -233,16 +233,14 @@ TEST_CASE("Pipeline Execution with RaggedZipView and LineMinPointDist", "[line_m
         {1, {{5.0f, 2.0f}}}
     });
 
-    // 2. Create Zipped View
-    auto v_lines = lines->time_slices();
-    auto v_points = points->time_slices();
-    RaggedZipView zip_view(v_lines, v_points);
+    // 2. Create Zipped View using FlatZipView with elements()
+    FlatZipView zip_view(lines->elements(), points->elements());
 
     // 3. Adapt View to pair<Time, tuple> format expected by pipeline
     auto pipeline_input_view = zip_view | std::views::transform([](auto const& triplet) {
-        auto const& [time, line_entry, point_entry] = triplet;
-        // Extract raw data from DataEntry wrappers
-        return std::make_pair(time, std::make_tuple(line_entry.data, point_entry.data));
+        auto const& [time, line, point] = triplet;
+        // Data is already raw (Line2D, Point2D<float>), extracted from DataEntry by FlatZipView
+        return std::make_pair(time, std::make_tuple(line, point));
     });
 
     // 4. Create Pipeline

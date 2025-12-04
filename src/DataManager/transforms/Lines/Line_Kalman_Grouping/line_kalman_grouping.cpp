@@ -267,13 +267,12 @@ std::shared_ptr<LineData> lineKalmanGrouping(std::shared_ptr<LineData> line_data
                   << start_frame.getValue() << " to " << end_frame.getValue() << std::endl;
     }
 
-    // Get natural iterator from LineData and flatten to individual items
-    // This provides zero-copy access to Line2D objects
-    auto line_entries_range = line_data->getAllEntries();
-    auto data_source = StateEstimation::flattenLineData(line_entries_range);
+    // Create data adapter from LineData using the new elements()-based API
+    // This materializes the data into a vector for stable iteration
+    auto data_source = StateEstimation::makeDataAdapter(*line_data);
 
     if (params->verbose_output) {
-        std::cout << "Created zero-copy data source from LineData" << std::endl;
+        std::cout << "Created data adapter with " << data_source.size() << " entries" << std::endl;
     }
 
     // Build GroundTruthMap: frames where entities are already grouped

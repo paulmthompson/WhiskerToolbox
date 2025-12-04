@@ -27,8 +27,7 @@ namespace WhiskerToolbox::Transforms::V2 {
  * @brief Extract the actual data element from a container's iterator value
  * 
  * Different containers have different iterator structures:
- * - RaggedTimeSeries elements(): std::pair<TimeFrameIndex, std::reference_wrapper<DataEntry<T>>>
- * - RaggedTimeSeries time_slices(): std::pair<TimeFrameIndex, std::span<DataEntry<T> const>>
+ * - RaggedTimeSeries elements(): std::pair<TimeFrameIndex, DataEntry<T>>
  * - AnalogTimeSeries getAllSamples(): TimeValuePoint (has .value member)
  * - Some containers: direct value (float, etc.)
  * 

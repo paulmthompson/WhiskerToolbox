@@ -11,11 +11,10 @@
 // ========== Constructors ==========
 
 LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data) {
-    // Convert old format to new format
+    // Convert old format to new SoA storage
     for (auto const & [time, lines]: data) {
-        _data[time].reserve(lines.size());
         for (auto const & line: lines) {
-            _data[time].emplace_back(EntityId(0), line);// EntityId will be 0 initially
+            _storage.append(time, line, EntityId(0));// EntityId will be 0 initially
         }
     }
 }
@@ -36,12 +35,11 @@ void LineData::changeImageSize(ImageSize const & image_size) {
     float const scale_x = static_cast<float>(image_size.width) / static_cast<float>(_image_size.width);
     float const scale_y = static_cast<float>(image_size.height) / static_cast<float>(_image_size.height);
 
-    for (auto & [time, entries]: _data) {
-        for (auto & entry: entries) {
-            for (auto & point: entry.data) {
-                point.x *= scale_x;
-                point.y *= scale_y;
-            }
+    for (size_t i = 0; i < _storage.size(); ++i) {
+        Line2D& line = _storage.getMutableData(i);
+        for (auto & point: line) {
+            point.x *= scale_x;
+            point.y *= scale_y;
         }
     }
     _image_size = image_size;

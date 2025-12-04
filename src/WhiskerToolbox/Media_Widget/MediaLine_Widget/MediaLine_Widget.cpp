@@ -631,8 +631,8 @@ void MediaLine_Widget::LoadFrame(int frame_id) {
     if (!_active_key.empty()) {
         auto line_data = _data_manager->getData<LineData>(_active_key);
         if (line_data) {
-            auto entries = line_data->getEntriesAtTime(TimeFrameIndex(frame_id));
-            int num_lines = static_cast<int>(entries.size());
+            auto lines = line_data->getAtTime(TimeFrameIndex(frame_id));
+            int num_lines = static_cast<int>(lines.size());
 
             std::cout << "Frame " << frame_id << ": " << num_lines << " lines in " << _active_key << std::endl;
         }
@@ -995,9 +995,10 @@ std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
     }
 
     auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-    auto entries = line_data->getEntriesAtTime(current_time);
+    auto entity_ids = line_data->getEntityIdsAtTime(current_time);
+    auto lines = line_data->getAtTime(current_time);
 
-    if (entries.empty()) {
+    if (lines.empty()) {
         return std::nullopt;
     }
 
@@ -1005,9 +1006,9 @@ std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
     std::optional<EntityId> nearest_entity_id = std::nullopt;
     float min_distance = _line_selection_threshold + 1;// Initialize beyond threshold
 
-    for (auto const & entry: entries) {
-        auto const & line = entry.data;
-        auto const entity_id = entry.entity_id;
+    for (size_t i = 0; i < lines.size(); ++i) {
+        auto const & line = lines[i];
+        auto const entity_id = entity_ids[i];
 
         if (line.empty()) {
             continue;

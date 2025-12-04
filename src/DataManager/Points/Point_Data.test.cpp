@@ -595,35 +595,33 @@ TEST_CASE("PointData - View functionality", "[points][data][view][ranges]") {
     SECTION("View creation and basic iteration") {
         auto view = point_data.view();
 
-        // Count total time slices
-        std::size_t time_count = 0;
-        for (auto [time, entries] : view) {
-            static_cast<void>(entries); // Suppress unused warning
-            ++time_count;
+        // Count total entries (view iterates individual elements)
+        std::size_t entry_count = 0;
+        for (auto [time, entry] : view) {
+            static_cast<void>(time);
+            static_cast<void>(entry);
+            ++entry_count;
         }
 
-        REQUIRE(time_count == 3); // Times: 10, 20, 30
+        REQUIRE(entry_count == 5); // 5 total entries across times 10, 20, 30
     }
 
     SECTION("View iteration with time slice access") {
         auto view = point_data.view();
 
         std::vector<TimeFrameIndex> times;
-        std::vector<std::size_t> entry_counts;
+        std::map<TimeFrameIndex, std::size_t> entry_counts;
 
-        for (auto [time, entries] : view) {
+        // view iterates over individual (time, entry) pairs
+        for (auto [time, entry] : view) {
+            static_cast<void>(entry);
             times.push_back(time);
-            entry_counts.push_back(entries.size());
+            entry_counts[time] += 1;
         }
 
-        REQUIRE(times.size() == 3);
-        REQUIRE(times[0] == TimeFrameIndex(10));
-        REQUIRE(times[1] == TimeFrameIndex(20));
-        REQUIRE(times[2] == TimeFrameIndex(30));
-
-        REQUIRE(entry_counts[0] == 2); // 2 points at time 10
-        REQUIRE(entry_counts[1] == 1); // 1 point at time 20
-        REQUIRE(entry_counts[2] == 2); // 2 points at time 30
+        REQUIRE(entry_counts[TimeFrameIndex(10)] == 2); // 2 points at time 10
+        REQUIRE(entry_counts[TimeFrameIndex(20)] == 1); // 1 point at time 20
+        REQUIRE(entry_counts[TimeFrameIndex(30)] == 2); // 2 points at time 30
     }
 
     SECTION("View flatten functionality") {
@@ -746,14 +744,15 @@ TEST_CASE("PointData - View functionality", "[points][data][view][ranges]") {
         Point2D<float> p6{11.0f, 12.0f};
         point_data.addAtTime(TimeFrameIndex(40), p6, NotifyObservers::No);
 
-        // View should reflect the updated data
-        std::size_t time_count = 0;
-        for (auto [time, entries] : view) {
-            static_cast<void>(entries);
-            ++time_count;
+        // View should reflect the updated data (iterates individual entries)
+        std::size_t entry_count = 0;
+        for (auto [time, entry] : view) {
+            static_cast<void>(time);
+            static_cast<void>(entry);
+            ++entry_count;
         }
 
-        REQUIRE(time_count == 4); // Should now have 4 time points (including new 40)
+        REQUIRE(entry_count == 6); // Should now have 6 entries (5 original + 1 new at time 40)
     }
 
     SECTION("View iteration with EntityId access") {
