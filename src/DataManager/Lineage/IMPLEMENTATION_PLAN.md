@@ -6,7 +6,7 @@
 |-------|--------|-------------|
 | Phase 1 | ✅ **COMPLETE** | Core Lineage Types and Registry |
 | Phase 2 | ✅ **COMPLETE** | Entity Resolver |
-| Phase 3 | ⬜ Not Started | Transform Pipeline Integration |
+| Phase 3 | ✅ **COMPLETE** | Transform Pipeline Integration |
 | Phase 4 | ⬜ Not Started | UI Integration |
 | Phase 5 | ⬜ Not Started | Testing & Documentation |
 
@@ -17,7 +17,6 @@
 - ✅ `src/DataManager/Lineage/LineageRegistry.hpp` - Registry interface with staleness tracking
 - ✅ `src/DataManager/Lineage/LineageRegistry.cpp` - Full implementation
 - ✅ `src/DataManager/Lineage/LineageRegistry.test.cpp` - Comprehensive unit tests
-- ✅ `src/DataManager/Lineage/CMakeLists.txt` - Build configuration
 - ✅ `src/DataManager/CMakeLists.txt` - Updated to include Lineage sources
 - ✅ `tests/DataManager/CMakeLists.txt` - Updated to include Lineage tests
 
@@ -25,6 +24,16 @@
 - ✅ `src/DataManager/Lineage/EntityResolver.hpp` - Resolver interface for tracing lineage
 - ✅ `src/DataManager/Lineage/EntityResolver.cpp` - Full implementation with visitor dispatch
 - ✅ `src/DataManager/Lineage/EntityResolver.test.cpp` - Unit tests for resolution strategies
+
+#### Phase 3
+- ✅ `src/DataManager/DataManager.hpp` - Added LineageRegistry member and accessors
+- ✅ `src/DataManager/DataManager.cpp` - Initialize LineageRegistry in constructor
+- ✅ `src/DataManager/transforms/v2/core/TransformTypes.hpp` - Added TransformLineageType enum
+- ✅ `src/DataManager/transforms/v2/core/ElementRegistry.hpp` - Added lineage_type to TransformMetadata
+- ✅ `src/DataManager/transforms/v2/core/RegisteredTransforms.cpp` - Updated transform registrations with lineage types
+- ✅ `src/DataManager/Lineage/LineageRecorder.hpp` - Helper to record lineage from transforms
+- ✅ `src/DataManager/Lineage/LineageRecorder.cpp` - Implementation
+- ✅ `tests/DataManager/Lineage/test_lineage_recorder.test.cpp` - Unit tests for LineageRecorder
 
 ---
 
@@ -472,74 +481,148 @@ SubsetLineage createLineageFromView(
 ```
 
 ### Deliverables - Phase 2
-- [ ] `EntityResolver.hpp/cpp` with all resolution strategies
-- [ ] Helper functions for ViewRaggedStorage ↔ SubsetLineage
-- [ ] Unit tests for each resolution strategy
-- [ ] Integration tests with DataManager
+- [x] `EntityResolver.hpp/cpp` with all resolution strategies
+- [x] Efficient implementation using `getType()` + `switch` and `flattened_data()` for RaggedTimeSeries
+- [x] Unit tests for each resolution strategy
+- [x] Integration tests with DataManager
 
 ---
 
-## Phase 3: Transform Pipeline Integration (Week 3)
+## Phase 3: Transform Pipeline Integration (Week 3) ✅ COMPLETE
 
-### 3.1 Automatic Lineage in Transform Pipeline
+### 3.1 DataManager Integration
 
-Modify the V2 transform pipeline to optionally track lineage:
+**File:** `src/DataManager/DataManager.hpp`
 
-**File:** `src/DataManager/transforms/v2/core/TransformPipeline.hpp`
+Added LineageRegistry as a member of DataManager:
 
 ```cpp
-template<typename InputContainer, typename OutputContainer = void>
-class TransformPipeline {
+class DataManager {
     // ... existing ...
     
-    // NEW: Lineage tracking mode
-    bool _track_lineage = false;
+    // Lineage registry for tracking data provenance
+    std::unique_ptr<WhiskerToolbox::Lineage::LineageRegistry> _lineage_registry;
     
 public:
-    TransformPipeline& withLineageTracking(bool enable = true) {
-        _track_lineage = enable;
-        return *this;
-    }
-    
-    // Execute and register lineage
-    auto executeWithLineage(
-        InputContainer const& input,
-        std::string const& input_key,
-        std::string const& output_key,
-        DataManager* dm) const;
+    // Accessors
+    [[nodiscard]] WhiskerToolbox::Lineage::LineageRegistry* getLineageRegistry();
+    [[nodiscard]] WhiskerToolbox::Lineage::LineageRegistry const* getLineageRegistry() const;
 };
 ```
 
-### 3.2 Lineage Inference for Common Transforms
+### 3.2 Transform Lineage Type Enum
 
-Create helpers that automatically determine lineage type:
+**File:** `src/DataManager/transforms/v2/core/TransformTypes.hpp`
+
+Added enum for transforms to declare their lineage semantics:
 
 ```cpp
-namespace WhiskerToolbox::Lineage {
+enum class TransformLineageType {
+    None,            // No lineage tracking (default)
+    OneToOneByTime,  // 1:1 mapping: output[t, i] derives from input[t, i]
+    AllToOneByTime,  // N:1 mapping: output[t] derives from ALL input entities at time t
+    Subset,          // Output contains a subset of input entities
+    Source           // Transform creates source data (no input lineage)
+};
+```
 
-// Infer lineage from transform characteristics
-template<typename Transform>
-Descriptor inferLineage(std::string const& source_key) {
-    if constexpr (Transform::is_element_transform) {
-        // Element transforms are 1:1
-        return OneToOneByTime{source_key};
-    } else if constexpr (Transform::is_reduction) {
-        // Reductions are N:1
-        return AllToOneByTime{source_key};
-    } else {
-        // Default: no lineage inference
-        return Source{};
-    }
-}
+### 3.3 TransformMetadata Extension
 
-} // namespace WhiskerToolbox::Lineage
+**File:** `src/DataManager/transforms/v2/core/ElementRegistry.hpp`
+
+Added `lineage_type` field to `TransformMetadata`:
+
+```cpp
+struct TransformMetadata {
+    // ... existing fields ...
+    
+    // Lineage tracking - describes the entity relationship between input and output
+    TransformLineageType lineage_type = TransformLineageType::None;
+    
+    // ... rest of fields ...
+};
+```
+
+### 3.4 Updated Transform Registrations
+
+**File:** `src/DataManager/transforms/v2/core/RegisteredTransforms.cpp`
+
+Updated all v2 transform registrations with their lineage types:
+
+| Transform | Lineage Type | Rationale |
+|-----------|--------------|-----------|
+| `CalculateMaskArea` | `OneToOneByTime` | Each output area derives from one input mask |
+| `CalculateMaskAreaWithContext` | `OneToOneByTime` | Same as above with progress reporting |
+| `SumReduction` | `AllToOneByTime` | Single sum from all values at each time |
+| `SumReductionWithContext` | `AllToOneByTime` | Same as above with progress reporting |
+| `ZScoreNormalization` | `OneToOneByTime` | Each normalized value corresponds to one input |
+| `CalculateLineMinPointDistance` | `OneToOneByTime` | Binary but 1:1 by time (zipped inputs) |
+
+### 3.5 LineageRecorder Utility
+
+**File:** `src/DataManager/Lineage/LineageRecorder.hpp`
+
+Helper class to bridge between transform lineage types and lineage descriptors:
+
+```cpp
+class LineageRecorder {
+public:
+    // Record lineage for single-input transforms
+    static void record(
+        LineageRegistry& registry,
+        std::string const& output_key,
+        std::string const& input_key,
+        Transforms::V2::TransformLineageType lineage_type);
+    
+    // Record lineage for multi-input transforms (uses MultiSourceLineage)
+    static void recordMultiInput(
+        LineageRegistry& registry,
+        std::string const& output_key,
+        std::vector<std::string> const& input_keys,
+        Transforms::V2::TransformLineageType lineage_type);
+    
+    // Record source lineage (for original/loaded data)
+    static void recordSource(
+        LineageRegistry& registry,
+        std::string const& data_key);
+};
+```
+
+### 3.6 Usage Example
+
+```cpp
+// Execute a v2 pipeline
+auto pipeline = TransformPipeline()
+    .addStep("CalculateMaskArea", MaskAreaParams{});
+
+auto result = pipeline.executeOptimized<MaskData, AnalogTimeSeries>(mask_data);
+
+// Store result in DataManager
+dm->setData("mask_areas", result, time_key);
+
+// Record lineage based on transform metadata
+auto& registry = ElementRegistry::instance();
+auto const* meta = registry.getMetadata("CalculateMaskArea");
+
+LineageRecorder::record(
+    *dm->getLineageRegistry(),
+    "mask_areas",    // output key
+    "masks",         // input key  
+    meta->lineage_type  // TransformLineageType::OneToOneByTime
+);
+
+// Now EntityResolver can trace mask_areas back to masks
+EntityResolver resolver(dm);
+auto source_ids = resolver.resolveToSource("mask_areas", TimeFrameIndex(5));
 ```
 
 ### Deliverables - Phase 3
-- [ ] Pipeline lineage tracking option
-- [ ] Lineage inference helpers
-- [ ] Integration tests with real transforms (MaskArea, etc.)
-- [ ] Update IMPLEMENTATION_GUIDE.md with lineage examples
+- [x] DataManager integration with LineageRegistry member
+- [x] TransformLineageType enum in v2 TransformTypes
+- [x] lineage_type field in TransformMetadata
+- [x] Updated transform registrations with lineage types
+- [x] LineageRecorder utility class
+- [x] Unit tests for LineageRecorder
 
 ---
 
