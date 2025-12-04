@@ -225,6 +225,10 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/MaskArea/MaskArea.cpp
         transforms/v2/algorithms/SumReduction/SumReduction.hpp
         transforms/v2/algorithms/SumReduction/SumReduction.cpp
+
+        Lineage/LineageTypes.hpp
+        Lineage/LineageRegistry.hpp
+        Lineage/LineageRegistry.cpp
 )
 
 
