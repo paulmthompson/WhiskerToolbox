@@ -12,19 +12,19 @@ TEST_CASE_METHOD(DataManagerTestFixture, "DataManagerTestFixture - Basic Data Po
     SECTION("PointData population") {
         auto point_data = dm.getData<PointData>("test_points");
         REQUIRE(point_data != nullptr);
-        REQUIRE(point_data->getAllEntries().size() > 0);
+        REQUIRE(point_data->getTotalEntryCount() > 0);
     }
     
     SECTION("LineData population") {
         auto line_data = dm.getData<LineData>("test_lines");
         REQUIRE(line_data != nullptr);
-        REQUIRE(line_data->getAllEntries().size() > 0);
+        REQUIRE(line_data->getTotalEntryCount() > 0);
     }
     
     SECTION("MaskData population") {
         auto mask_data = dm.getData<MaskData>("test_masks");
         REQUIRE(mask_data != nullptr);
-        REQUIRE(mask_data->getAllEntries().size() > 0);
+        REQUIRE(mask_data->getTotalEntryCount() > 0);
     }
     
     SECTION("AnalogTimeSeries population") {
@@ -67,13 +67,13 @@ TEST_CASE_METHOD(DataManagerRandomTestFixture, "DataManagerRandomTestFixture - R
     SECTION("Random PointData") {
         auto random_points = dm.getData<PointData>("random_points");
         REQUIRE(random_points != nullptr);
-        REQUIRE(random_points->getAllEntries().size() > 0);
+        REQUIRE(random_points->getTotalEntryCount() > 0);
     }
     
     SECTION("Random LineData") {
         auto random_lines = dm.getData<LineData>("random_lines");
         REQUIRE(random_lines != nullptr);
-        REQUIRE(random_lines->getAllEntries().size() > 0);
+        REQUIRE(random_lines->getTotalEntryCount() > 0);
     }
     
     SECTION("Random AnalogTimeSeries") {

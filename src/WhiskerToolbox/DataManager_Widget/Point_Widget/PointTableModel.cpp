@@ -14,32 +14,37 @@ void PointTableModel::setPoints(PointData const * pointData) {
     _all_data.clear();
     _point_data_source = pointData;
     if (pointData) {
-        for (auto const & [time, entries]: pointData->getAllEntries()) {
+        TimeFrameIndex current_time = TimeFrameIndex(-1);
+        int pointIndex = 0;
+        for (auto [time, entity_id, point_ref]: pointData->flattened_data()) {
+            // Track local index within time
+            if (time != current_time) {
+                current_time = time;
+                pointIndex = 0;
+            }
             auto frame = time.getValue();
-            int pointIndex = 0;
-            for (auto const & entry: entries) {
-                QString group_name = "No Group";
-                if (_group_manager) {
-                    int group_id = _group_manager->getEntityGroup(entry.entity_id);
-                    if (group_id != -1) {
-                        auto group = _group_manager->getGroup(group_id);
-                        if (group.has_value()) {
-                            group_name = group->name;
-                        }
+            auto const & point = static_cast<Point2D<float> const&>(point_ref);
+            QString group_name = "No Group";
+            if (_group_manager) {
+                int group_id = _group_manager->getEntityGroup(entity_id);
+                if (group_id != -1) {
+                    auto group = _group_manager->getGroup(group_id);
+                    if (group.has_value()) {
+                        group_name = group->name;
                     }
                 }
-                
-                PointTableRow row = {
-                    .frame = frame, 
-                    .pointIndex = pointIndex, 
-                    .x = entry.data.x,
-                    .y = entry.data.y,
-                    .entity_id = entry.entity_id,
-                    .group_name = group_name
-                };
-                _all_data.push_back(row);
-                pointIndex++;
             }
+            
+            PointTableRow row = {
+                .frame = frame, 
+                .pointIndex = pointIndex, 
+                .x = point.x,
+                .y = point.y,
+                .entity_id = entity_id,
+                .group_name = group_name
+            };
+            _all_data.push_back(row);
+            pointIndex++;
         }
     }
     _applyGroupFilter();

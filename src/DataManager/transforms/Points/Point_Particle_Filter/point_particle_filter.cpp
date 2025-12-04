@@ -67,18 +67,17 @@ std::map<TimeFrameIndex, Point2D<float>> extractGroundTruthForGroup(
     std::unordered_set<EntityId> entities_in_group(entities_vec.begin(), entities_vec.end());
     
     // Iterate through all times with data using the range API
-    for (auto const & [time, entries] : point_data->getAllEntries()) {
-        // Find points belonging to this group
-        for (auto const & entry : entries) {
-            // Check if this entity belongs to the target group
-            if (entities_in_group.find(entry.entity_id) != entities_in_group.end()) {
-                // Apply scaling to convert from point space to mask space
-                Point2D<float> scaled_point{
-                    entry.data.x * scale_x,
-                    entry.data.y * scale_y
-                };
+    for (auto const & [time, entity_id, point] : point_data->flattened_data()) {
+        // Check if this entity belongs to the target group
+        if (entities_in_group.find(entity_id) != entities_in_group.end()) {
+            // Apply scaling to convert from point space to mask space
+            Point2D<float> scaled_point{
+                point.x * scale_x,
+                point.y * scale_y
+            };
+            // Only store the first point per frame for this group
+            if (ground_truth.find(time) == ground_truth.end()) {
                 ground_truth[time] = scaled_point;
-                break;  // Assume one point per group per frame
             }
         }
     }
@@ -368,16 +367,14 @@ std::shared_ptr<PointData> pointParticleFilter(
         if (ground_truth.size() < 2) {
             // Not enough ground truth - just copy what we have
             for (auto const & [time, point] : ground_truth) {
-                for (auto const & [point_time, entries] : point_data->getAllEntries()) {
+                for (auto const & [point_time, entity_id, entry] : point_data->flattened_data()) {
                     if (point_time == time) {
-                        for (auto const & entry : entries) {
-                            if (entities_in_group.find(entry.entity_id) != entities_in_group.end()) {
-                                result->addEntryAtTime(time, entry.data, entry.entity_id, NotifyObservers::No);
-                                break;  // Assume one point per group per frame
-                            }
+                        if (entities_in_group.find(entity_id) != entities_in_group.end()) {
+                            result->addEntryAtTime(time, entry, entity_id, NotifyObservers::No);
+                            break;  // Assume one point per group per frame
                         }
-                        break;  // Assume one point per group per frame
                     }
+                    break;  // Assume one point per group per frame
                 }
             }
         } else {

@@ -152,10 +152,7 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
     }
 
     // Determine total number of time points for progress calculation
-    size_t total_time_points = 0;
-    for (auto const & [time, entries]: line_data->getAllEntries()) {
-        total_time_points++;
-    }
+    size_t total_time_points = line_data->getTotalEntryCount();
     if (total_time_points == 0) {
         progressCallback(100);
         return std::make_shared<AnalogTimeSeries>();
@@ -168,16 +165,7 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
     int polynomial_order = params->polynomial_order;
     float fitting_window = params->fitting_window_percentage;// Get fitting_window again
 
-    for (auto const & [time, entries]: line_data->getAllEntries()) {
-        if (entries.empty()) {
-            processed_time_points++;
-            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / static_cast<double>(total_time_points) * 100.0));
-            progressCallback(current_progress);
-            continue;
-        }
-
-        // Process only the first line at each time point, similar to LineAngle
-        Line2D const & line = entries[0].data;
+    for (auto const & [time, entity_id, line]: line_data->flattened_data()) {
 
         if (line.size() < 2) {// Need at least two points to define a direction/curvature
             processed_time_points++;

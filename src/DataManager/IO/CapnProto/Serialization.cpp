@@ -6,8 +6,9 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
-#include <vector>
 #include <iostream>
+#include <map>
+#include <vector>
 
 namespace IO::CapnProto {
 
@@ -15,25 +16,32 @@ kj::Array<capnp::word> serializeLineData(LineData const* lineData) {
     capnp::MallocMessageBuilder message;
     LineDataProto::Builder lineDataProto = message.initRoot<LineDataProto>();
 
-    auto times = lineData->getTimesWithData();
+    // Build a time-grouped map from flattened data for serialization
+    std::map<TimeFrameIndex, std::vector<Line2D const*>> time_to_lines;
+    for (auto [time, entity_id, line_ref]: lineData->flattened_data()) {
+        (void)entity_id; // Not serialized currently
+        // line_ref is std::reference_wrapper<Line2D const>, use addressof after conversion
+        time_to_lines[time].push_back(&static_cast<Line2D const&>(line_ref));
+    }
 
-    auto timeLinesList = lineDataProto.initTimeLines(times.size());
+    auto timeLinesList = lineDataProto.initTimeLines(time_to_lines.size());
  
     size_t i = 0;
-    for (auto [time, entries] : lineData->getAllEntries()) {
+    for (auto const & [time, lines] : time_to_lines) {
         auto timeLine = timeLinesList[i];
         timeLine.setTime(time.getValue());
 
-        auto linesList = timeLine.initLines(entries.size());
+        auto linesList = timeLine.initLines(lines.size());
 
-        for (size_t j = 0; j < entries.size(); j++) {
+        for (size_t j = 0; j < lines.size(); j++) {
             auto lineBuilder = linesList[j];
-            auto pointsList = lineBuilder.initPoints(entries[j].data.size());
+            auto const & line = *lines[j];
+            auto pointsList = lineBuilder.initPoints(line.size());
 
-            for (size_t k = 0; k < entries[j].data.size(); k++) {
+            for (size_t k = 0; k < line.size(); k++) {
                 auto pointBuilder = pointsList[k];
-                pointBuilder.setX(entries[j].data[k].x);
-                pointBuilder.setY(entries[j].data[k].y);
+                pointBuilder.setX(line[k].x);
+                pointBuilder.setY(line[k].y);
             }
         }
 

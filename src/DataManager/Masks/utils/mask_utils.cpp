@@ -34,12 +34,7 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
     }
     
     // Count total masks to process for progress calculation
-    size_t total_masks = 0;
-    for (auto const & [time, entries] : mask_data->getAllEntries()) {
-        if (!entries.empty()) {
-            total_masks += entries.size();
-        }
-    }
+    size_t total_masks = mask_data->getTotalEntryCount();
     
     if (total_masks == 0) {
         progress_callback(100);
@@ -50,39 +45,37 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
     
     size_t processed_masks = 0;
     
-    for (auto const & [time, entries] : mask_data->getAllEntries()) {
+    for (auto const & [time, entity_id, mask] : mask_data->flattened_data()) {
         
-        for (auto const & mask : entries) {
-            if (mask.data.empty()) {
-                if (preserve_empty_masks) {
-                    result_mask_data->emplaceAtTime(TimeFrameIndex(time.getValue()), Mask2D());
-                }
-                processed_masks++;
-                continue;
+        if (mask.empty()) {
+            if (preserve_empty_masks) {
+                result_mask_data->emplaceAtTime(TimeFrameIndex(time.getValue()), Mask2D());
             }
-            
-            // Convert mask to binary image
-            Image binary_image = mask_to_binary_image(mask.data, image_size);
-            
-            // Apply the binary processing algorithm
-            Image processed_image = binary_processor(binary_image);
-            
-            // Convert processed image back to mask points
-            Mask2D processed_mask = binary_image_to_mask(processed_image);
-            
-            // Add the processed mask to result (only if it has points)
-            if (!processed_mask.empty()) {
-                result_mask_data->addAtTime(time, processed_mask, NotifyObservers::No);
-            }
-            
             processed_masks++;
-            
-            // Update progress
-            int progress = static_cast<int>(
-                std::round(static_cast<double>(processed_masks) / total_masks * 100.0)
-            );
-            progress_callback(progress);
+                continue;
         }
+            
+        // Convert mask to binary image
+        Image binary_image = mask_to_binary_image(mask, image_size);
+            
+        // Apply the binary processing algorithm
+        Image processed_image = binary_processor(binary_image);
+            
+        // Convert processed image back to mask points
+        Mask2D processed_mask = binary_image_to_mask(processed_image);
+            
+        // Add the processed mask to result (only if it has points)
+        if (!processed_mask.empty()) {
+            result_mask_data->addAtTime(time, processed_mask, NotifyObservers::No);
+        }
+            
+        processed_masks++;
+            
+        // Update progress
+        int progress = static_cast<int>(
+            std::round(static_cast<double>(processed_masks) / total_masks * 100.0)
+        );
+        progress_callback(progress);
     }
     
     progress_callback(100);

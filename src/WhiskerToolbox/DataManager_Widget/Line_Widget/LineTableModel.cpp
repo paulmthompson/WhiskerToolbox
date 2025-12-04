@@ -13,30 +13,35 @@ void LineTableModel::setLines(LineData const * lineData) {
     _all_data.clear();
     _line_data_source = lineData;
     if (lineData) {
-        for (auto const & [time, entries]: lineData->getAllEntries()) {
+        TimeFrameIndex current_time = TimeFrameIndex(-1);
+        int lineIndex = 0;
+        for (auto [time, entity_id, line_ref]: lineData->flattened_data()) {
+            // Track local index within time
+            if (time != current_time) {
+                current_time = time;
+                lineIndex = 0;
+            }
             auto frame = time.getValue();
-            int lineIndex = 0;
-            for (auto const & entry: entries) {
-                QString group_name = "No Group";
-                if (_group_manager) {
-                    int group_id = _group_manager->getEntityGroup(entry.entity_id);
-                    if (group_id != -1) {
-                        auto group = _group_manager->getGroup(group_id);
-                        if (group.has_value()) {
-                            group_name = group->name;
-                        }
+            auto const & line = static_cast<Line2D const&>(line_ref);
+            QString group_name = "No Group";
+            if (_group_manager) {
+                int group_id = _group_manager->getEntityGroup(entity_id);
+                if (group_id != -1) {
+                    auto group = _group_manager->getGroup(group_id);
+                    if (group.has_value()) {
+                        group_name = group->name;
                     }
                 }
-
-                LineTableRow row = {
-                        .frame = frame,
-                        .lineIndex = lineIndex,
-                        .length = static_cast<int>(entry.data.size()),
-                        .entity_id = entry.entity_id,
-                        .group_name = group_name};
-                _all_data.push_back(row);
-                lineIndex++;
             }
+
+            LineTableRow row = {
+                    .frame = frame,
+                    .lineIndex = lineIndex,
+                    .length = static_cast<int>(line.size()),
+                    .entity_id = entity_id,
+                    .group_name = group_name};
+            _all_data.push_back(row);
+            lineIndex++;
         }
     }
     _applyGroupFilter();

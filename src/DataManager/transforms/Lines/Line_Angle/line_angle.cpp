@@ -162,12 +162,7 @@ std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
         reference_y = 0.0f;
     }
 
-    for (auto const & [time, entries]: line_data->getAllEntries()) {
-        if (entries.empty()) {
-            continue;
-        }
-
-        Line2D const & line = entries[0].data;
+    for (auto const & [time, entity_id, line]: line_data->flattened_data()) {
 
         if (line.size() < 2) {
             continue;

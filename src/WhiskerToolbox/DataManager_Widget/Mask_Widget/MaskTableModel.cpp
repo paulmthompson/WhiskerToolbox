@@ -14,31 +14,36 @@ void MaskTableModel::setMasks(MaskData const * maskData) {
     _all_data.clear();
     _mask_data_source = maskData;
     if (maskData) {
-        for (auto const & [time, entries]: maskData->getAllEntries()) {
+        TimeFrameIndex current_time = TimeFrameIndex(-1);
+        int maskIndex = 0;
+        for (auto [time, entity_id, mask_ref]: maskData->flattened_data()) {
+            // Track local index within time
+            if (time != current_time) {
+                current_time = time;
+                maskIndex = 0;
+            }
             auto frame = time.getValue();
-            int maskIndex = 0;
-            for (auto const & entry: entries) {
-                QString group_name = "No Group";
-                if (_group_manager) {
-                    int const group_id = _group_manager->getEntityGroup(entry.entity_id);
-                    if (group_id != -1) {
-                        auto group = _group_manager->getGroup(group_id);
-                        if (group.has_value()) {
-                            group_name = group->name;
-                        }
+            auto const & mask = static_cast<Mask2D const&>(mask_ref);
+            QString group_name = "No Group";
+            if (_group_manager) {
+                int const group_id = _group_manager->getEntityGroup(entity_id);
+                if (group_id != -1) {
+                    auto group = _group_manager->getGroup(group_id);
+                    if (group.has_value()) {
+                        group_name = group->name;
                     }
                 }
-
-                MaskTableRow const row = {
-                    .frame = frame,
-                    .maskIndex = maskIndex,
-                    .totalPointsInFrame = static_cast<int>(entry.data.size()),
-                    .entity_id = entry.entity_id,
-                    .group_name = group_name
-                };
-                _all_data.push_back(row);
-                maskIndex++;
             }
+
+            MaskTableRow const row = {
+                .frame = frame,
+                .maskIndex = maskIndex,
+                .totalPointsInFrame = static_cast<int>(mask.size()),
+                .entity_id = entity_id,
+                .group_name = group_name
+            };
+            _all_data.push_back(row);
+            maskIndex++;
         }
     }
     _applyGroupFilter();

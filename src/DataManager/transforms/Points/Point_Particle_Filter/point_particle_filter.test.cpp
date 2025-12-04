@@ -66,11 +66,9 @@ TEST_CASE("PointParticleFilter: Basic straight line tracking", "[PointParticleFi
     point_data->addAtTime(TimeFrameIndex(10), end_point, NotifyObservers::No);
     
     // Get entity IDs and assign to group
-    auto all_entries = point_data->getAllEntries();
-    for (auto const & [time, entries] : all_entries) {
-        for (auto const & entry : entries) {
-            group_manager->addEntityToGroup(group_id, entry.entity_id);
-        }
+    auto all_entries = point_data->flattened_data();
+    for (auto const & [time, entity, entry] : all_entries) {
+        group_manager->addEntityToGroup(group_id, entity);
     }
     
     // Create masks for each frame (horizontal corridor)
@@ -134,10 +132,8 @@ TEST_CASE("PointParticleFilter: Tracking with gaps in masks", "[PointParticleFil
     point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.0f, 150.0f}, NotifyObservers::No);
     
     // Assign to group
-    for (auto const & [time, entries] : point_data->getAllEntries()) {
-        for (auto const & entry : entries) {
-            group_manager->addEntityToGroup(group_id, entry.entity_id);
-        }
+    for (auto const & [time, entity, entry] : point_data->flattened_data()) {
+        group_manager->addEntityToGroup(group_id, entity);
     }
     
     // Add masks with some gaps (frames 0, 2, 4, 6, 8, 10)
@@ -253,10 +249,8 @@ TEST_CASE("PointParticleFilter: Single ground truth point (no tracking)", "[Poin
     // Only one ground truth point
     point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f}, NotifyObservers::No);
     
-    for (auto const & [time, entries] : point_data->getAllEntries()) {
-        for (auto const & entry : entries) {
-            group_manager->addEntityToGroup(group_id, entry.entity_id);
-        }
+    for (auto const & [time, entity, entry] : point_data->flattened_data()) {
+        group_manager->addEntityToGroup(group_id, entity);
     }
     
     // Add mask
@@ -310,10 +304,8 @@ TEST_CASE("PointParticleFilter: Curved trajectory", "[PointParticleFilter]") {
     point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{150.0f, 100.0f}, NotifyObservers::No);
     point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{100.0f, 150.0f}, NotifyObservers::No);
     
-    for (auto const & [time, entries] : point_data->getAllEntries()) {
-        for (auto const & entry : entries) {
-            group_manager->addEntityToGroup(group_id, entry.entity_id);
-        }
+    for (auto const & [time, entity, entry] : point_data->flattened_data()) {
+        group_manager->addEntityToGroup(group_id, entity);
     }
     
     // Create circular masks centered at (100, 100) with radius 50
@@ -416,10 +408,8 @@ TEST_CASE("PointParticleFilterOperation: Execute with valid data", "[PointPartic
     point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f}, NotifyObservers::No);
     point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{120.0f, 100.0f}, NotifyObservers::No);
     
-    for (auto const & [time, entries] : point_data->getAllEntries()) {
-        for (auto const & entry : entries) {
-            group_manager->addEntityToGroup(group_id, entry.entity_id);
-        }
+    for (auto const & [time, entity, entry] : point_data->flattened_data()) {
+        group_manager->addEntityToGroup(group_id, entity);
     }
     
     // Add masks
@@ -530,10 +520,8 @@ TEST_CASE("PointParticleFilter: Progress callback is called", "[PointParticleFil
     point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{100.0f, 100.0f}, NotifyObservers::No);
     point_data->addAtTime(TimeFrameIndex(5), Point2D<float>{120.0f, 100.0f}, NotifyObservers::No);
     
-    for (auto const & [time, entries] : point_data->getAllEntries()) {
-        for (auto const & entry : entries) {
-            group_manager->addEntityToGroup(group_id, entry.entity_id);
-        }
+    for (auto const & [time, entity, entry] : point_data->flattened_data()) {
+        group_manager->addEntityToGroup(group_id, entity);
     }
     
     for (int i = 0; i <= 5; ++i) {

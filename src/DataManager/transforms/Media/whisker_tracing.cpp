@@ -412,7 +412,7 @@ DataTypeVariant WhiskerTracingOperation::execute(DataTypeVariant const& dataVari
     if (progressCallback) progressCallback(PROGRESS_COMPLETE);
 
     std::cout << "WhiskerTracingOperation executed successfully. Traced "
-              << traced_whiskers->getAllEntries().size() << " whiskers across "
+              << traced_whiskers->getTotalEntryCount() << " whiskers across "
               << total_frame_count << " frames." << std::endl;
 
     return traced_whiskers;

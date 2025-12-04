@@ -377,13 +377,14 @@ void MaskDataVisualization::createBinaryImageTexture() {
     binary_image_data.resize(image_size.width * image_size.height, 0.0f);
 
     // Aggregate all masks into the binary image
-    for (auto const & [time, entries]: mask_data->getAllEntries()) {
-        for (auto const & entry: entries) {
-            for (auto const & point: entry.data) {
-                if (point.x < image_size.width && point.y < image_size.height) {
-                    size_t index = point.y * image_size.width + point.x;
-                    binary_image_data[index] += 1.0f;
-                }
+    for (auto [time, entity_id, mask_ref]: mask_data->flattened_data()) {
+        (void)time;
+        (void)entity_id;
+        auto const & mask = static_cast<Mask2D const&>(mask_ref);
+        for (auto const & point: mask) {
+            if (point.x < image_size.width && point.y < image_size.height) {
+                size_t index = point.y * image_size.width + point.x;
+                binary_image_data[index] += 1.0f;
             }
         }
     }
@@ -469,22 +470,19 @@ void MaskDataVisualization::populateRTree() {
              << mask_data->getTotalEntryCount()
              << "time frames";
 
-    for (auto const & [time, entries]: mask_data->getAllEntries()) {
+    for (auto [time, entity_id, mask_ref]: mask_data->flattened_data()) {
+        (void)time;
+        auto const & mask = static_cast<Mask2D const&>(mask_ref);
 
-        for (auto const & entry: entries) {
-            auto const & mask = entry.data;
-            auto const entity_id = entry.entity_id;
+        if (mask.empty()) continue;
 
-            if (mask.empty()) continue;
+        // Calculate bounding box for this mask
+        auto [min_point, max_point] = get_bounding_box(mask);
 
-            // Calculate bounding box for this mask
-            auto [min_point, max_point] = get_bounding_box(mask);
+        BoundingBox bbox(static_cast<float>(min_point.x), static_cast<float>(min_point.y),
+                         static_cast<float>(max_point.x), static_cast<float>(max_point.y));
 
-            BoundingBox bbox(static_cast<float>(min_point.x), static_cast<float>(min_point.y),
-                             static_cast<float>(max_point.x), static_cast<float>(max_point.y));
-
-            spatial_index->insert(bbox, entity_id);
-        }
+        spatial_index->insert(bbox, entity_id);
     }
 
     qDebug() << "MaskDataVisualization: R-tree populated with" << spatial_index->size() << "masks";

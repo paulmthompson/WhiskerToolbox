@@ -49,20 +49,11 @@ std::shared_ptr<LineData> lineIndexGrouping(std::shared_ptr<LineData> line_data,
     // Report progress at start
     progressCallback(0);
 
-    // Get the internal data structure from LineData
-    auto line_entries_range = line_data->getAllEntries();
-
-    // Build a map structure for the templated function
+    // Build a map structure for the templated function from flattened data
     std::map<TimeFrameIndex, std::vector<LineEntry>> data_map;
-    for (auto const & [time, entries]: line_entries_range) {
-        std::vector<LineEntry> entry_vec;
-        entry_vec.reserve(entries.size());
-        
-        for (auto const & entry: entries) {
-            entry_vec.push_back(entry);
-        }
-        
-        data_map[time] = std::move(entry_vec);
+    for (auto [time, entity_id, line_ref]: line_data->flattened_data()) {
+        // line_ref is std::reference_wrapper<Line2D const>, implicit conversion to Line2D const&
+        data_map[time].emplace_back(entity_id, static_cast<Line2D const&>(line_ref));
     }
 
     // Call the templated grouping function

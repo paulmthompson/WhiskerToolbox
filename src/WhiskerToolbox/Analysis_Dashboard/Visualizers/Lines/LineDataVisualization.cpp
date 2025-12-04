@@ -72,47 +72,51 @@ void LineDataVisualization::buildVertexData() {
     std::vector<uint32_t> segment_line_ids;// Line ID for each vertex in segments
 
     uint32_t line_index = 0;
+    TimeFrameIndex current_time = TimeFrameIndex(-1);
+    int local_line_id = 0;
 
-    for (auto const & [time, entries]: m_line_data_ptr->getAllEntries()) {
-        for (int line_id = 0; line_id < static_cast<int>(entries.size()); ++line_id) {
-            Line2D const & line = entries[line_id].data;
+    for (auto [time, entity_id, line_ref]: m_line_data_ptr->flattened_data()) {
+        Line2D const & line = static_cast<Line2D const&>(line_ref);
 
-            if (line.size() < 2) {
-                continue;
-            }
-
-            // Record line-level EntityId
-            EntityId entity_id = EntityId(0);
-            if (line_id < static_cast<int>(entries.size())) {
-                entity_id = entries[line_id].entity_id;
-            }
-            m_line_entity_ids.push_back(entity_id);
-
-            uint32_t line_start_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
-
-            // Convert line strip to line segments (pairs of consecutive vertices)
-            for (size_t i = 0; i < line.size() - 1; ++i) {
-                Point2D<float> const & p0 = line[i];
-                Point2D<float> const & p1 = line[i + 1];
-
-                segment_vertices.push_back(p0.x);
-                segment_vertices.push_back(p0.y);
-                segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
-                m_entity_id_per_vertex.push_back(m_line_entity_ids.back());
-
-                segment_vertices.push_back(p1.x);
-                segment_vertices.push_back(p1.y);
-                segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
-                m_entity_id_per_vertex.push_back(m_line_entity_ids.back());
-            }
-
-            uint32_t line_end_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
-            uint32_t line_vertex_count = line_end_vertex - line_start_vertex;
-
-            m_line_vertex_ranges.push_back({line_start_vertex, line_vertex_count});
-
-            line_index++;
+        // Track local index within time
+        if (time != current_time) {
+            current_time = time;
+            local_line_id = 0;
+        } else {
+            ++local_line_id;
         }
+
+        if (line.size() < 2) {
+            continue;
+        }
+
+        // Record line-level EntityId
+        m_line_entity_ids.push_back(entity_id);
+
+        uint32_t line_start_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
+
+        // Convert line strip to line segments (pairs of consecutive vertices)
+        for (size_t i = 0; i < line.size() - 1; ++i) {
+            Point2D<float> const & p0 = line[i];
+            Point2D<float> const & p1 = line[i + 1];
+
+            segment_vertices.push_back(p0.x);
+            segment_vertices.push_back(p0.y);
+            segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
+            m_entity_id_per_vertex.push_back(m_line_entity_ids.back());
+
+            segment_vertices.push_back(p1.x);
+            segment_vertices.push_back(p1.y);
+            segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
+            m_entity_id_per_vertex.push_back(m_line_entity_ids.back());
+        }
+
+        uint32_t line_end_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
+        uint32_t line_vertex_count = line_end_vertex - line_start_vertex;
+
+        m_line_vertex_ranges.push_back({line_start_vertex, line_vertex_count});
+
+        line_index++;
     }
 
     m_vertex_data = std::move(segment_vertices);
@@ -647,20 +651,20 @@ BoundingBox LineDataVisualization::calculateBoundsForLineData(LineData const * l
 
     bool has_data = false;
 
-    for (auto const & [time, entries]: line_data->getAllEntries()) {
-        for (auto const & entry: entries) {
-            Line2D const & line = entry.data;
-            for (Point2D<float> const & point: line) {
-                if (!has_data) {
-                    min_x = max_x = point.x;
-                    min_y = max_y = point.y;
-                    has_data = true;
-                } else {
-                    min_x = std::min(min_x, point.x);
-                    max_x = std::max(max_x, point.x);
-                    min_y = std::min(min_y, point.y);
-                    max_y = std::max(max_y, point.y);
-                }
+    for (auto [time, entity_id, line_ref]: line_data->flattened_data()) {
+        (void)time;
+        (void)entity_id;
+        Line2D const & line = static_cast<Line2D const&>(line_ref);
+        for (Point2D<float> const & point: line) {
+            if (!has_data) {
+                min_x = max_x = point.x;
+                min_y = max_y = point.y;
+                has_data = true;
+            } else {
+                min_x = std::min(min_x, point.x);
+                max_x = std::max(max_x, point.x);
+                min_y = std::min(min_y, point.y);
+                max_y = std::max(max_y, point.y);
             }
         }
     }

@@ -31,12 +31,7 @@ std::shared_ptr<PointData> calculate_mask_centroid(
     result_point_data->setImageSize(mask_data->getImageSize());
 
     // Count total masks to process for progress calculation
-    size_t total_masks = 0;
-    for (auto const & [time, masks]: mask_data->getAllEntries()) {
-        if (!masks.empty()) {
-            total_masks += masks.size();
-        }
-    }
+    size_t total_masks = mask_data->getTotalEntryCount();
 
     if (total_masks == 0) {
         progressCallback(100);
@@ -48,37 +43,33 @@ std::shared_ptr<PointData> calculate_mask_centroid(
     size_t processed_masks = 0;
 
     // Process each timestamp
-    for (auto const & [time, entries]: mask_data->getAllEntries()) {
+    for (auto const & [time, entity_id, mask]: mask_data->flattened_data()) {
 
-        // Process each mask at this timestamp
-        for (auto const & mask: entries) {
-            if (mask.data.empty()) {
-                continue;
-            }
-
-            float centroid_x = 0.0f;
-            float centroid_y = 0.0f;
-
-            // Calculate centroid
-            for (auto const & point: mask.data) {
-                centroid_x += static_cast<float>(point.x);
-                centroid_y += static_cast<float>(point.y);
-            }
-
-            // Average the coordinates
-            centroid_x /= static_cast<float>(mask.data.size());
-            centroid_y /= static_cast<float>(mask.data.size());
-
-            // Add centroid point to result
-            result_point_data->addAtTime(time, {centroid_x, centroid_y}, NotifyObservers::No);
-
-            processed_masks++;
-
-            // Update progress
-            int progress = static_cast<int>(
-                    std::round(static_cast<double>(processed_masks) / static_cast<double>(total_masks) * 100.0));
-            progressCallback(progress);
+        if (mask.empty()) {
+            continue;
         }
+
+        float centroid_x = 0.0f;
+        float centroid_y = 0.0f;
+
+        // Calculate centroid
+        for (auto const & point: mask) {
+            centroid_x += static_cast<float>(point.x);
+            centroid_y += static_cast<float>(point.y);
+        }
+
+        // Average the coordinates
+        centroid_x /= static_cast<float>(mask.size());
+        centroid_y /= static_cast<float>(mask.size());
+
+        // Add centroid point to result
+        result_point_data->addAtTime(time, {centroid_x, centroid_y}, NotifyObservers::No);
+        processed_masks++;
+
+        // Update progress
+        int progress = static_cast<int>(
+                    std::round(static_cast<double>(processed_masks) / static_cast<double>(total_masks) * 100.0));
+        progressCallback(progress);
     }
 
     // Notify observers once at the end

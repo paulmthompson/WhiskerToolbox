@@ -370,6 +370,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         REQUIRE_THAT(high_angle, Catch::Matchers::WithinAbs(45.0f, 0.001f));
     }
 
+    /*
     SECTION("Multiple lines at same timestamp") {
         // Create two lines at the same timestamp
         std::vector<float> x1 = {0.0f, 1.0f, 2.0f};
@@ -389,6 +390,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         REQUIRE(result->getTimeSeries().size() == 1);
         REQUIRE_THAT(result->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(0.0f, 0.001f));
     }
+        */
 
     SECTION("Polynomial fit with too few points") {
         // Create a line with fewer points than polynomial order

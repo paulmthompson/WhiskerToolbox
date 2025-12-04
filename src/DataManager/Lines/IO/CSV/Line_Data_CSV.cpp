@@ -47,24 +47,22 @@ void save(
     }
 
     // Write the data
-    for (auto const & [time, entries]: line_data->getAllEntries()) {
-        for (auto const & entry: entries) {
-            std::ostringstream x_values;
-            std::ostringstream y_values;
+    for (auto const & [time, entity_id, line]: line_data->flattened_data()) {
+        std::ostringstream x_values;
+        std::ostringstream y_values;
 
-            for (auto const & point: entry.data) {
-                x_values << std::fixed << std::setprecision(opts.precision) << point.x << opts.delimiter;
-                y_values << std::fixed << std::setprecision(opts.precision) << point.y << opts.delimiter;
-            }
-
-            // Remove the trailing delimiter
-            std::string x_str = x_values.str();
-            std::string y_str = y_values.str();
-            if (!x_str.empty()) x_str.pop_back();
-            if (!y_str.empty()) y_str.pop_back();
-
-            file << time.getValue() << ",\"" << x_str << "\",\"" << y_str << "\"\n";
+        for (auto const & point: line) {
+            x_values << std::fixed << std::setprecision(opts.precision) << point.x << opts.delimiter;
+            y_values << std::fixed << std::setprecision(opts.precision) << point.y << opts.delimiter;
         }
+
+        // Remove the trailing delimiter
+        std::string x_str = x_values.str();
+        std::string y_str = y_values.str();
+        if (!x_str.empty()) x_str.pop_back();
+        if (!y_str.empty()) y_str.pop_back();
+
+        file << time.getValue() << ",\"" << x_str << "\",\"" << y_str << "\"\n";
     }
 
     file.close();
@@ -84,16 +82,8 @@ void save(
     int files_skipped = 0;
 
     // Iterate through all timestamps with data
-    for (auto const & [time, entries]: line_data->getAllEntries()) {
-        // Only save if there are lines at this timestamp
-        if (entries.empty()) {
-            files_skipped++;
-            continue;
-        }
+    for (auto const & [time, entity_id, line]: line_data->flattened_data()) {
 
-        // Only save the first line (index 0) as documented
-        Line2D const & first_line = entries[0].data;
-        
         // Generate filename with zero-padded frame number
         std::string const padded_frame = pad_frame_id(static_cast<int>(time.getValue()), opts.frame_id_padding);
         std::string const filename = opts.parent_dir + "/" + padded_frame + ".csv";
@@ -125,7 +115,7 @@ void save(
 
         // Write X and Y coordinates in separate columns
         file << std::fixed << std::setprecision(opts.precision);
-        for (auto const & point: first_line) {
+        for (auto const & point: line) {
             file << point.x << opts.delimiter << point.y << opts.line_delim;
         }
 

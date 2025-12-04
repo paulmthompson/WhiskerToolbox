@@ -174,12 +174,7 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
     std::cout << "Saving mask images to directory: " << opts.parent_dir << std::endl;
 
     // Iterate through all masks with their timestamps
-    for (auto const & [time, entries]: mask_data->getAllEntries()) {
-
-        if (entries.empty()) {
-            files_skipped++;
-            continue;
-        }
+    for (auto const & [time, entity_id, mask]: mask_data->flattened_data()) {
 
         // Create output image with desired dimensions
         cv::Mat output_img = cv::Mat::zeros(opts.image_height, opts.image_width, CV_8UC1);
@@ -187,19 +182,18 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
 
         // Resize each mask and draw it on the output image
         ImageSize dest_size{opts.image_width, opts.image_height};
-        for (auto const & mask: entries) {
-            // Resize the mask using our new resize function
-            Mask2D resized_mask = resize_mask(mask.data, mask_data_size, dest_size);
 
-            // Draw the resized mask on the output image
-            for (Point2D<uint32_t> const & point: resized_mask) {
-                int x = static_cast<int>(point.x);
-                int y = static_cast<int>(point.y);
+        // Resize the mask using our new resize function
+        Mask2D resized_mask = resize_mask(mask, mask_data_size, dest_size);
 
-                // Check bounds (should already be valid after resize, but be safe)
-                if (x >= 0 && x < opts.image_width && y >= 0 && y < opts.image_height) {
-                    output_img.at<uint8_t>(y, x) = static_cast<uint8_t>(opts.mask_value);
-                }
+        // Draw the resized mask on the output image
+        for (Point2D<uint32_t> const & point: resized_mask) {
+            int x = static_cast<int>(point.x);
+            int y = static_cast<int>(point.y);
+
+            // Check bounds (should already be valid after resize, but be safe)
+            if (x >= 0 && x < opts.image_width && y >= 0 && y < opts.image_height) {
+                output_img.at<uint8_t>(y, x) = static_cast<uint8_t>(opts.mask_value);
             }
         }
 

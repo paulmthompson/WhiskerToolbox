@@ -648,30 +648,6 @@ public:
         return _storage.timeRanges() | std::views::keys;
     }
 
-    /**
-     * @brief Get all data entries with their associated times as a zero-copy range
-     *
-     * This method provides zero-copy access to the underlying DataEntry<TData> data structure,
-     * which contains both the data (Line2D, Mask2D, Point2D<float>) and EntityId information.
-     *
-     * @return A view of time-entries pairs for all times, where entries are spans
-     */
-    [[nodiscard]] auto getAllEntries() const {
-        // Returns a view of (time, range) pairs where range provides indices
-        // Note: Each inner range must be materialized or used immediately
-        return _storage.timeRanges() | std::views::transform([this](auto const & pair) {
-                   TimeFrameIndex const time = pair.first;
-                   auto const& [start, end] = pair.second;
-                   // Create a vector of DataEntry for this time (not a lazy view to avoid dangling)
-                   std::vector<DataEntry<TData>> entries;
-                   entries.reserve(end - start);
-                   for (size_t idx = start; idx < end; ++idx) {
-                       entries.emplace_back(_storage.getEntityId(idx), _storage.getData(idx));
-                   }
-                   return std::make_pair(time, std::move(entries));
-               });
-    }
-
     // ========== Time-based Getters ==========
 
     public:

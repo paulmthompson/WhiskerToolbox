@@ -24,25 +24,21 @@ void PointDataVisualization::populateData() {
     BoundingBox const bounds = calculateBoundsForPointData(m_point_data.get());
 
     m_spatial_index = std::make_unique<QuadTree<EntityId>>(bounds);
-    m_vertex_data.reserve(m_point_data->getAllEntries().size() * 3); // Reserve space for x, y, group_id
+    m_vertex_data.reserve(m_point_data->getTotalEntryCount() * 3); // Reserve space for x, y, group_id
 
     std::vector<EntityId> entity_ids;
 
-    for (auto const & [time, entries]: m_point_data->getAllEntries()) {
+    for (auto [time, eid, point_ref]: m_point_data->flattened_data()) {
+        (void)time;
+        auto const & point = static_cast<Point2D<float> const&>(point_ref);
 
-        for (size_t i = 0; i < entries.size(); ++i) {
-            auto const & point = entries[i];
+        m_spatial_index->insert(point.x, point.y, eid);
 
-            auto const & eid = point.entity_id;
+        m_vertex_data.push_back(point.x);
+        m_vertex_data.push_back(point.y);
+        m_vertex_data.push_back(0.0f);
 
-            m_spatial_index->insert(point.data.x, point.data.y, eid);
-
-            m_vertex_data.push_back(point.data.x);
-            m_vertex_data.push_back(point.data.y);
-            m_vertex_data.push_back(0.0f);
-
-            entity_ids.push_back(eid);
-        }
+        entity_ids.push_back(eid);
     }
 
     m_total_point_count = m_vertex_data.size() / 3;

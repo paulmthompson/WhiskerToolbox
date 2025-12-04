@@ -45,10 +45,7 @@ std::shared_ptr<LineData> line_resample(
               << ", epsilon = " << params.epsilon << std::endl;
 
     auto resampled_line_map = std::map<TimeFrameIndex, std::vector<Line2D>>();
-    int total_lines = 0;
-    for (auto const & [time, entries]: line_data->getAllEntries()) {
-        total_lines += static_cast<int>(entries.size());
-    }
+    int total_lines = line_data->getTotalEntryCount();
     if (total_lines == 0) {
         if (progressCallback) {
             progressCallback(100);// No data to process, so 100% complete.
@@ -62,38 +59,28 @@ std::shared_ptr<LineData> line_resample(
         progressCallback(0);
     }
 
-    for (auto const & [time, entries]: line_data->getAllEntries()) {
-        std::vector<Line2D> new_lines_at_time;
-        new_lines_at_time.reserve(entries.size());
+    for (auto const & [time, entity_id, line]: line_data->flattened_data()) {
 
-        for (auto const & entry: entries) {
-            if (entry.data.empty()) {
-                new_lines_at_time.push_back(Line2D());// Keep empty lines as empty
-            } else {
-                Line2D simplified_line;
-                switch (params.algorithm) {
-                    case LineSimplificationAlgorithm::FixedSpacing:
-                        simplified_line = resample_line_points(entry.data, params.target_spacing);
-                        break;
-                    case LineSimplificationAlgorithm::DouglasPeucker:
-                        simplified_line = douglas_peucker_simplify(entry.data, params.epsilon);
-                        break;
-                }
-                new_lines_at_time.push_back(simplified_line);
-            }
-            processed_lines++;
-            if (progressCallback && total_lines > 0) {
-                int const current_progress = static_cast<int>((static_cast<double>(processed_lines) / total_lines) * 100.0);
-                progressCallback(current_progress);
+        auto new_line_at_time = Line2D();
+        if (!line.empty()) {
+
+            switch (params.algorithm) {
+                case LineSimplificationAlgorithm::FixedSpacing:
+                    new_line_at_time = resample_line_points(line, params.target_spacing);
+                    break;
+                case LineSimplificationAlgorithm::DouglasPeucker:
+                    new_line_at_time = douglas_peucker_simplify(line, params.epsilon);
+                    break;
             }
         }
-        if (!new_lines_at_time.empty() || line_data->getAtTime(time).empty()) {
-            // Add to map if there are new lines OR if the original time had lines (even if all became empty)
-            // This ensures that times that previously had data but now have all empty lines are still represented.
-            // However, if a time originally had no lines, we don't add an empty entry for it.
-            if (!line_data->getAtTime(time).empty() || !new_lines_at_time.empty()) {
-                resampled_line_map[time] = std::move(new_lines_at_time);
-            }
+        processed_lines++;
+        if (progressCallback && total_lines > 0) {
+            int const current_progress = static_cast<int>((static_cast<double>(processed_lines) / total_lines) * 100.0);
+            progressCallback(current_progress);
+        }
+
+        if (!line_data->getAtTime(time).empty() || !new_line_at_time.empty()) {
+            resampled_line_map[time].push_back(std::move(new_line_at_time));
         }
     }
 

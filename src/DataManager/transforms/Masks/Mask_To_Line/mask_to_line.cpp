@@ -355,14 +355,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
     std::vector<long long> smoothing_times;
 
     size_t processed_masks = 0;
-    for (auto const & [time, entries]: mask_data->getAllEntries()) {
-
-        if (entries.empty()) {
-            continue;
-        }
-
-        // For now, just process the first mask at each time
-        auto const & mask = entries[0].data;
+    for (auto const & [time, entity_id, mask]: mask_data->flattened_data()) {
 
         if (mask.empty()) {
             continue;

@@ -113,10 +113,8 @@ std::shared_ptr<LineData> lineOutlierDetection(std::shared_ptr<LineData> line_da
 
     // Filter to only groups that have entities in this LineData
     std::set<EntityId> entity_set;
-    for (auto const & [time, entries]: line_data->getAllEntries()) {
-        for (auto const & entry: entries) {
-            entity_set.insert(entry.entity_id);
-        }
+    for (auto const & [time, entity_id, line]: line_data->flattened_data()) {
+        entity_set.insert(entity_id);
     }
 
     if (params->verbose_output) {
