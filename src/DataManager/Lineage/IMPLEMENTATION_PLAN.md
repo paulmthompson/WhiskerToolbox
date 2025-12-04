@@ -5,13 +5,14 @@
 | Phase | Status | Description |
 |-------|--------|-------------|
 | Phase 1 | ✅ **COMPLETE** | Core Lineage Types and Registry |
-| Phase 2 | ⬜ Not Started | Entity Resolver |
+| Phase 2 | ✅ **COMPLETE** | Entity Resolver |
 | Phase 3 | ⬜ Not Started | Transform Pipeline Integration |
 | Phase 4 | ⬜ Not Started | UI Integration |
 | Phase 5 | ⬜ Not Started | Testing & Documentation |
 
 ### Completed Files
 
+#### Phase 1
 - ✅ `src/DataManager/Lineage/LineageTypes.hpp` - All 8 lineage variant types
 - ✅ `src/DataManager/Lineage/LineageRegistry.hpp` - Registry interface with staleness tracking
 - ✅ `src/DataManager/Lineage/LineageRegistry.cpp` - Full implementation
@@ -19,6 +20,11 @@
 - ✅ `src/DataManager/Lineage/CMakeLists.txt` - Build configuration
 - ✅ `src/DataManager/CMakeLists.txt` - Updated to include Lineage sources
 - ✅ `tests/DataManager/CMakeLists.txt` - Updated to include Lineage tests
+
+#### Phase 2
+- ✅ `src/DataManager/Lineage/EntityResolver.hpp` - Resolver interface for tracing lineage
+- ✅ `src/DataManager/Lineage/EntityResolver.cpp` - Full implementation with visitor dispatch
+- ✅ `src/DataManager/Lineage/EntityResolver.test.cpp` - Unit tests for resolution strategies
 
 ---
 

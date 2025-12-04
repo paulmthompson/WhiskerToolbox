@@ -61,7 +61,7 @@ struct AllToOneByTime {
 struct SubsetLineage {
     std::string source_key;
     std::unordered_set<EntityId> included_entities;
-    
+
     /// Optional: key of intermediate container this was filtered from
     std::optional<std::string> filtered_from_key;
 };
@@ -75,11 +75,11 @@ struct SubsetLineage {
  */
 struct MultiSourceLineage {
     std::vector<std::string> source_keys;
-    
+
     enum class CombineStrategy {
-        ZipByTime,   ///< Match elements by TimeFrameIndex
-        Cartesian,   ///< All combinations
-        Custom       ///< Application-specific logic
+        ZipByTime,///< Match elements by TimeFrameIndex
+        Cartesian,///< All combinations
+        Custom    ///< Application-specific logic
     };
     CombineStrategy strategy = CombineStrategy::ZipByTime;
 };
@@ -96,7 +96,7 @@ struct MultiSourceLineage {
  */
 struct ExplicitLineage {
     std::string source_key;
-    
+
     /// contributors[derived_idx] = vector of source EntityIds
     std::vector<std::vector<EntityId>> contributors;
 };
@@ -117,7 +117,7 @@ struct ExplicitLineage {
  */
 struct EntityMappedLineage {
     std::string source_key;
-    
+
     /// derived_entity_id → [parent_entity_ids]
     std::unordered_map<EntityId, std::vector<EntityId>> entity_mapping;
 };
@@ -134,11 +134,11 @@ struct EntityMappedLineage {
  */
 struct ImplicitEntityMapping {
     std::string source_key;
-    
+
     enum class Cardinality {
-        OneToOne,   ///< derived[time, i] ← source[time, i]
-        AllToOne,   ///< derived[time, 0] ← all source[time, *]
-        OneToAll    ///< derived[time, *] ← source[time, 0]
+        OneToOne,///< derived[time, i] ← source[time, i]
+        AllToOne,///< derived[time, 0] ← all source[time, *]
+        OneToAll ///< derived[time, *] ← source[time, 0]
     };
     Cardinality cardinality = Cardinality::OneToOne;
 };
@@ -149,15 +149,14 @@ struct ImplicitEntityMapping {
  * Use std::visit to dispatch on the actual lineage type.
  */
 using Descriptor = std::variant<
-    Source,
-    OneToOneByTime,
-    AllToOneByTime,
-    SubsetLineage,
-    MultiSourceLineage,
-    ExplicitLineage,
-    EntityMappedLineage,
-    ImplicitEntityMapping
->;
+        Source,
+        OneToOneByTime,
+        AllToOneByTime,
+        SubsetLineage,
+        MultiSourceLineage,
+        ExplicitLineage,
+        EntityMappedLineage,
+        ImplicitEntityMapping>;
 
 // ============================================================================
 // Helper Functions
@@ -166,7 +165,7 @@ using Descriptor = std::variant<
 /**
  * @brief Check if the lineage descriptor represents source data (no parent)
  */
-[[nodiscard]] inline bool isSource(Descriptor const& desc) {
+[[nodiscard]] inline bool isSource(Descriptor const & desc) {
     return std::holds_alternative<Source>(desc);
 }
 
@@ -175,10 +174,10 @@ using Descriptor = std::variant<
  * 
  * @return Vector of source data keys (empty for Source type)
  */
-[[nodiscard]] inline std::vector<std::string> getSourceKeys(Descriptor const& desc) {
-    return std::visit([](auto const& lineage) -> std::vector<std::string> {
+[[nodiscard]] inline std::vector<std::string> getSourceKeys(Descriptor const & desc) {
+    return std::visit([](auto const & lineage) -> std::vector<std::string> {
         using T = std::decay_t<decltype(lineage)>;
-        
+
         if constexpr (std::is_same_v<T, Source>) {
             return {};
         } else if constexpr (std::is_same_v<T, MultiSourceLineage>) {
@@ -187,16 +186,17 @@ using Descriptor = std::variant<
             // All other types have a single source_key
             return {lineage.source_key};
         }
-    }, desc);
+    },
+                      desc);
 }
 
 /**
  * @brief Get a human-readable name for the lineage type
  */
-[[nodiscard]] inline std::string getLineageTypeName(Descriptor const& desc) {
-    return std::visit([](auto const& lineage) -> std::string {
+[[nodiscard]] inline std::string getLineageTypeName(Descriptor const & desc) {
+    return std::visit([](auto const & lineage) -> std::string {
         using T = std::decay_t<decltype(lineage)>;
-        
+
         if constexpr (std::is_same_v<T, Source>) {
             return "Source";
         } else if constexpr (std::is_same_v<T, OneToOneByTime>) {
@@ -216,9 +216,10 @@ using Descriptor = std::variant<
         } else {
             return "Unknown";
         }
-    }, desc);
+    },
+                      desc);
 }
 
-} // namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Lineage
 
-#endif // WHISKERTOOLBOX_LINEAGE_TYPES_HPP
+#endif// WHISKERTOOLBOX_LINEAGE_TYPES_HPP
