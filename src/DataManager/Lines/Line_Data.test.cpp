@@ -29,7 +29,7 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
     std::vector<float> x3 = {10.0f, 11.0f, 12.0f};
     std::vector<float> y3 = {10.0f, 11.0f, 10.0f};
 
-    SECTION("GetLinesInRange functionality") {
+    SECTION("getElementsInRange functionality") {
         // Setup data at multiple time points
         line_data.emplaceAtTime(TimeFrameIndex(5), x1, y1); // 1 line
         line_data.emplaceAtTime(TimeFrameIndex(10), x1, y1);// 1 line
@@ -41,35 +41,43 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
         SECTION("Range includes some data") {
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (auto const & [time, entries]: line_data.GetEntriesInRange(interval)) {
-                if (count == 0) {
-                    REQUIRE(time.getValue() == 10);
-                    REQUIRE(entries.size() == 2);// 2 lines at time 10
-                } else if (count == 1) {
-                    REQUIRE(time.getValue() == 15);
-                    REQUIRE(entries.size() == 1);
-                } else if (count == 2) {
-                    REQUIRE(time.getValue() == 20);
-                    REQUIRE(entries.size() == 1);
-                }
+            size_t entries_at_time_10 = 0;
+            size_t entries_at_time_15 = 0;
+            size_t entries_at_time_20 = 0;
+            
+            for (auto [time, entity_id, line_ref]: line_data.getElementsInRange(interval)) {
+                (void)entity_id;
+                (void)line_ref;
+                if (time.getValue() == 10) entries_at_time_10++;
+                else if (time.getValue() == 15) entries_at_time_15++;
+                else if (time.getValue() == 20) entries_at_time_20++;
                 count++;
             }
-            REQUIRE(count == 3);// Should include times 10, 15, 20
+            REQUIRE(entries_at_time_10 == 2);// 2 lines at time 10
+            REQUIRE(entries_at_time_15 == 1);
+            REQUIRE(entries_at_time_20 == 1);
+            REQUIRE(count == 4);// Total 4 entries across times 10, 15, 20
         }
 
         SECTION("Range includes all data") {
             TimeFrameInterval interval{TimeFrameIndex(0), TimeFrameIndex(30)};
             size_t count = 0;
-            for (auto const & [time, entries]: line_data.GetEntriesInRange(interval)) {
+            for (auto [time, entity_id, line_ref]: line_data.getElementsInRange(interval)) {
+                (void)time;
+                (void)entity_id;
+                (void)line_ref;
                 count++;
             }
-            REQUIRE(count == 5);// Should include all 5 time points
+            REQUIRE(count == 6);// Should include all 6 entries
         }
 
         SECTION("Range includes no data") {
             TimeFrameInterval interval{TimeFrameIndex(100), TimeFrameIndex(200)};
             size_t count = 0;
-            for (auto const & [time, entries]: line_data.GetEntriesInRange(interval)) {
+            for (auto [time, entity_id, line_ref]: line_data.getElementsInRange(interval)) {
+                (void)time;
+                (void)entity_id;
+                (void)line_ref;
                 count++;
             }
             REQUIRE(count == 0);// Should be empty
@@ -78,9 +86,10 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
         SECTION("Range with single time point") {
             TimeFrameInterval interval{TimeFrameIndex(15), TimeFrameIndex(15)};
             size_t count = 0;
-            for (auto const & [time, entries]: line_data.GetEntriesInRange(interval)) {
+            for (auto [time, entity_id, line_ref]: line_data.getElementsInRange(interval)) {
+                (void)entity_id;
+                (void)line_ref;
                 REQUIRE(time.getValue() == 15);
-                REQUIRE(entries.size() == 1);
                 count++;
             }
             REQUIRE(count == 1);// Should include only time 15
@@ -89,7 +98,10 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
         SECTION("Range with start > end") {
             TimeFrameInterval interval{TimeFrameIndex(20), TimeFrameIndex(10)};
             size_t count = 0;
-            for (auto const & [time, entries]: line_data.GetEntriesInRange(interval)) {
+            for (auto [time, entity_id, line_ref]: line_data.getElementsInRange(interval)) {
+                (void)time;
+                (void)entity_id;
+                (void)line_ref;
                 count++;
             }
             REQUIRE(count == 0);// Should be empty when start > end
@@ -100,20 +112,22 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             // Test with same source and target timeframes
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (auto const & [time, entries]: line_data.GetEntriesInRange(interval, *timeframe)) {
-                if (count == 0) {
-                    REQUIRE(time.getValue() == 10);
-                    REQUIRE(entries.size() == 2);
-                } else if (count == 1) {
-                    REQUIRE(time.getValue() == 15);
-                    REQUIRE(entries.size() == 1);
-                } else if (count == 2) {
-                    REQUIRE(time.getValue() == 20);
-                    REQUIRE(entries.size() == 1);
-                }
+            size_t entries_at_time_10 = 0;
+            size_t entries_at_time_15 = 0;
+            size_t entries_at_time_20 = 0;
+            
+            for (auto [time, entity_id, line_ref]: line_data.getElementsInRange(interval, *timeframe)) {
+                (void)entity_id;
+                (void)line_ref;
+                if (time.getValue() == 10) entries_at_time_10++;
+                else if (time.getValue() == 15) entries_at_time_15++;
+                else if (time.getValue() == 20) entries_at_time_20++;
                 count++;
             }
-            REQUIRE(count == 3);// Should include times 10, 15, 20
+            REQUIRE(entries_at_time_10 == 2);
+            REQUIRE(entries_at_time_15 == 1);
+            REQUIRE(entries_at_time_20 == 1);
+            REQUIRE(count == 4);// Total 4 entries across times 10, 15, 20
         }
 
         SECTION("Range with timeframe conversion - different timeframes") {
@@ -138,19 +152,21 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             size_t count = 0;
-            for (auto const & [time, entries]: timeframe_test_data.GetEntriesInRange(video_interval, *video_timeframe)) {
-                if (count == 0) {
-                    REQUIRE(time.getValue() == 2);
-                    REQUIRE(entries.size() == 1);
-                } else if (count == 1) {
-                    REQUIRE(time.getValue() == 3);
-                    REQUIRE(entries.size() == 1);
-                } else if (count == 2) {
-                    REQUIRE(time.getValue() == 4);
-                    REQUIRE(entries.size() == 1);
-                }
+            size_t entries_at_idx_2 = 0;
+            size_t entries_at_idx_3 = 0;
+            size_t entries_at_idx_4 = 0;
+            
+            for (auto [time, entity_id, line_ref]: timeframe_test_data.getElementsInRange(video_interval, *video_timeframe)) {
+                (void)entity_id;
+                (void)line_ref;
+                if (time.getValue() == 2) entries_at_idx_2++;
+                else if (time.getValue() == 3) entries_at_idx_3++;
+                else if (time.getValue() == 4) entries_at_idx_4++;
                 count++;
             }
+            REQUIRE(entries_at_idx_2 == 1);
+            REQUIRE(entries_at_idx_3 == 1);
+            REQUIRE(entries_at_idx_4 == 1);
             REQUIRE(count == 3);// Should include converted times 2, 3, 4
         }
     }

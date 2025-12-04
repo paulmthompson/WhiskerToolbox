@@ -697,45 +697,47 @@ public:
      * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
      * @return A zero-copy view of time-data entries pairs for times within the specified interval
      */
-    [[nodiscard]] auto GetEntriesInRange(TimeFrameInterval const & interval) const {
-        return _storage.timeRanges() 
-            | std::views::filter([interval](auto const & pair) {
-                   return pair.first >= interval.start && pair.first <= interval.end;
-               })
-            | std::views::transform([this](auto const & pair) {
-                   TimeFrameIndex const time = pair.first;
-                   auto const& [start, end] = pair.second;
-                   std::vector<DataEntry<TData>> entries;
-                   entries.reserve(end - start);
-                   for (size_t idx = start; idx < end; ++idx) {
-                       entries.emplace_back(_storage.getEntityId(idx), _storage.getData(idx));
-                   }
-                   return std::make_pair(time, std::move(entries));
+    /**
+     * @brief Get a filtered view of elements within a TimeFrameInterval
+     *
+     * Returns a filtered view of (Time, EntityId, TData const&) tuples for times 
+     * within the specified interval [start, end] (inclusive).
+     * This method provides zero-copy access to the underlying data.
+     *
+     * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
+     * @return A zero-copy filtered view of flattened_data() for times within the interval
+     */
+    [[nodiscard]] auto getElementsInRange(TimeFrameInterval const & interval) const {
+        return flattened_data() 
+            | std::views::filter([interval](auto const & tuple) {
+                   auto const & time = std::get<0>(tuple);
+                   return time >= interval.start && time <= interval.end;
                });
     }
 
     /**
-     * @brief Get data entries with their associated times as a zero-copy range within a TimeFrameInterval with timeframe conversion
+     * @brief Get a filtered view of elements within a TimeFrameInterval with timeframe conversion
      *
      * Converts the time range from the source timeframe to the target timeframe (this data's timeframe)
-     * and returns a filtered view of time-data entries pairs for times within the converted interval range.
+     * and returns a filtered view of (Time, EntityId, TData const&) tuples for times within the 
+     * converted interval range.
      * If the timeframes are the same, no conversion is performed.
-     * This method provides zero-copy access to the underlying DataEntry<TData> data structure.
+     * This method provides zero-copy access to the underlying data.
      *
      * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
      * @param source_timeframe The timeframe that the interval is expressed in
-     * @return A zero-copy view of time-data entries pairs for times within the converted interval range
+     * @return A zero-copy filtered view of flattened_data() for times within the converted interval
      */
-    [[nodiscard]] auto GetEntriesInRange(TimeFrameInterval const & interval,
+    [[nodiscard]] auto getElementsInRange(TimeFrameInterval const & interval,
                                          TimeFrame const & source_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
         if (&source_timeframe == _time_frame.get()) {
-            return GetEntriesInRange(interval);
+            return getElementsInRange(interval);
         }
 
         // If either timeframe is null, fall back to original behavior
         if (!_time_frame) {
-            return GetEntriesInRange(interval);
+            return getElementsInRange(interval);
         }
 
         auto [target_start_index, target_end_index] = convertTimeFrameRange(interval.start,
@@ -743,7 +745,7 @@ public:
                                                                             source_timeframe,
                                                                             *_time_frame);
 
-        return GetEntriesInRange(TimeFrameInterval(target_start_index, target_end_index));
+        return getElementsInRange(TimeFrameInterval(target_start_index, target_end_index));
     }
 
     // ========== Ranges & Views ==========
