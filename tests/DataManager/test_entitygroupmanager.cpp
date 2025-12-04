@@ -297,7 +297,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         // Use LineData lookup methods to get original data
         auto lines_with_ids = line_data->getDataByEntityIds(group_entities);
 
-        REQUIRE(lines_with_ids.size() == 2);
+        REQUIRE(std::ranges::distance(lines_with_ids) == 2);
 
         // Verify the lookup results
         for (auto const & [entity_id, line]: lines_with_ids) {
@@ -331,7 +331,7 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         // Step 3: Get original line data for visualization
         auto selected_lines = line_data->getDataByEntityIds(selected_entities);
 
-        REQUIRE(selected_lines.size() == 2);
+        REQUIRE(std::ranges::distance(selected_lines) == 2);
 
         // Step 4: Verify we can identify the temporal spread
         // Step 5: Verify line data integrity
@@ -647,12 +647,18 @@ TEST_CASE_METHOD(EntityGroupManagerIntegrationFixture,
         std::vector<EntityId> batch_entities = {entities_t10[0], entities_t20[1], entities_t30[0]};
         auto batch_points = point_data->getDataByEntityIds(batch_entities);
 
-        REQUIRE(batch_points.size() == 3);
+        REQUIRE(std::ranges::distance(batch_points) == 3);
 
-        // Verify batch results
-        REQUIRE(batch_points[0].first == entities_t10[0]);
-        REQUIRE(batch_points[0].second.get().x == Catch::Approx(10.0f));
-        REQUIRE(batch_points[0].second.get().y == Catch::Approx(15.0f));
+        // Verify batch results by iterating
+        size_t batch_idx = 0;
+        for (auto const & [entity_id, point_ref] : batch_points) {
+            if (batch_idx == 0) {
+                REQUIRE(entity_id == entities_t10[0]);
+                REQUIRE(point_ref.get().x == Catch::Approx(10.0f));
+                REQUIRE(point_ref.get().y == Catch::Approx(15.0f));
+            }
+            ++batch_idx;
+        }
 
 
         INFO("Successfully tested PointData entity lookup and group membership integration");

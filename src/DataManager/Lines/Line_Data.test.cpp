@@ -198,7 +198,7 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
 
         std::vector<EntityId> fake_entities = {fake_entity, EntityId(67890)};
         auto lines_result = line_data.getDataByEntityIds(fake_entities);
-        REQUIRE(lines_result.empty());
+        REQUIRE(std::ranges::distance(lines_result) == 0);
     }
 
     SECTION("Entity ID retrieval methods work") {
@@ -222,7 +222,7 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
 
         // Verify return types are as expected (they should be empty/nullopt without registry)
         REQUIRE_FALSE(single_line.has_value());
-        REQUIRE(multiple_lines.empty());
+        REQUIRE(std::ranges::distance(multiple_lines) == 0);
     }
 }
 

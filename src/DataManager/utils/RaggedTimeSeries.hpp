@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <string>
 #include <type_traits>
 #include <unordered_set>
@@ -334,26 +335,40 @@ public:
     }
 
     /**
-     * @brief Get all data that match the given EntityIds.
+     * @brief Get all data that match the given EntityIds as a lazy view.
      * 
-     * This method is optimized for batch lookup of multiple EntityIds,
-     * useful for group-based operations.
+     * This method returns a lazy range that performs O(1) lookups for each EntityId
+     * on iteration. Only found entities are yielded.
+     * 
+     * @param entity_ids Span of EntityIds to look up
+     * @return A lazy view yielding (EntityId, TData const&) pairs for found entities
+     * 
+     * @note The returned view is lazy - lookups happen during iteration.
+     *       The span must remain valid for the lifetime of the view.
+     */
+    [[nodiscard]] auto getDataByEntityIds(std::span<EntityId const> entity_ids) const {
+        return entity_ids
+            | std::views::transform([this](EntityId eid) {
+                return std::pair{eid, _storage.findByEntityId(eid)};
+            })
+            | std::views::filter([](auto const& pair) {
+                return pair.second.has_value();
+            })
+            | std::views::transform([this](auto const& pair) {
+                return std::pair{pair.first, std::cref(_storage.getData(*pair.second))};
+            });
+    }
+
+    /**
+     * @brief Get all data that match the given EntityIds (vector overload).
+     * 
+     * Convenience overload that accepts a vector of EntityIds.
      * 
      * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of pairs containing {EntityId, const reference to data} for found entities
+     * @return A lazy view yielding (EntityId, TData const&) pairs for found entities
      */
-    [[nodiscard]] std::vector<std::pair<EntityId, std::reference_wrapper<TData const>>> getDataByEntityIds(std::vector<EntityId> const & entity_ids) const {
-        std::vector<std::pair<EntityId, std::reference_wrapper<TData const>>> results;
-        results.reserve(entity_ids.size());
-
-        for (EntityId const entity_id: entity_ids) {
-            auto data = getDataByEntityId(entity_id);
-            if (data.has_value()) {
-                results.emplace_back(entity_id, data.value());
-            }
-        }
-
-        return results;
+    [[nodiscard]] auto getDataByEntityIds(std::vector<EntityId> const & entity_ids) const {
+        return getDataByEntityIds(std::span<EntityId const>(entity_ids));
     }
 
     // ========== Mutable Data Access ==========

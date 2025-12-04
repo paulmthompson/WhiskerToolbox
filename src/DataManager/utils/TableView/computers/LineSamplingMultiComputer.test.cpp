@@ -1464,14 +1464,13 @@ TEST_CASE_METHOD(LineSamplingEntityIntegrationFixture,
         
         // Now query LineData using the grouped EntityIDs to get the original line data
         auto lines_from_group = line_data->getDataByEntityIds(group_entities);
-        REQUIRE(lines_from_group.size() == selected_entity_ids.size());
+        REQUIRE(std::ranges::distance(lines_from_group) == static_cast<std::ptrdiff_t>(selected_entity_ids.size()));
         
         // Verify that the lines we get back match the data in the corresponding table rows
         // We'll compare the start and end points from LineSamplingMultiComputer with actual line data
         
-        for (size_t i = 0; i < lines_from_group.size(); ++i) {
-            EntityId entity_id = lines_from_group[i].first;
-            Line2D const& original_line = lines_from_group[i].second;
+        for (auto const & [entity_id, original_line_ref] : lines_from_group) {
+            Line2D const& original_line = original_line_ref.get();
             
             // Find which row this EntityID corresponds to in our selected rows
             size_t table_row_index = 0;
