@@ -15,6 +15,8 @@
 - **JSON Pipeline Loading**: Complete schema with PipelineDescriptor and comprehensive validation
 - **Comprehensive Testing**: 50+ unit tests, 12+ fuzz tests, 18+ corpus files
 - **Working Examples**: MaskArea, SumReduction, LineMinPointDist (binary) transforms with full tests
+- **Provenance Tracking**: Full lineage tracking with `LineageRegistry` and `EntityResolver`
+- **DataManager Integration**: `load_data_from_json_config_v2()` with V1-compatible JSON format
 
 **Performance Characteristics:**
 - Parameter cast: Once per pipeline (not per element)
@@ -59,21 +61,9 @@
 
 **Estimated Effort:** 3-5 days (depending on complexity)
 
-### Priority 3: Provenance Tracking (Medium Impact, Medium Complexity)
+### Priority 3: Advanced Features (Lower Priority, Various Complexity)
 
-**Why:** Track which Mask2D produced which Line2D; useful for debugging and visualization
-
-**Implementation:**
-- Store parent EntityIDs in LazyTransformStorage
-- Add `getParentEntityIds()` method to all data types
-- Add `getAncestorEntityIds()` for multi-level queries
-- Integrate with EntityRegistry
-
-**Estimated Effort:** 1-2 weeks
-
-### Priority 4: Advanced Features (Lower Priority, Various Complexity)
-
-#### 4a. Parallel Execution (Medium Impact, High Complexity)
+#### 3a. Parallel Execution (Medium Impact, High Complexity)
 
 **Why:** Utilize multi-core CPUs for expensive transforms
 
@@ -87,7 +77,7 @@
 
 **Note:** Many transforms are already fast; profile before implementing
 
-#### 4b. Lazy Storage Strategy (Low-Medium Impact, High Complexity)
+#### 3b. Lazy Storage Strategy (Low-Medium Impact, High Complexity)
 
 **Why:** Avoid materializing intermediate results for derived data
 
@@ -103,18 +93,19 @@
 
 ## Recommended Roadmap
 
-### ✅ Sprint 1 & 2 Complete (Completed)
+### ✅ Sprint 1, 2 & 3 Complete (Completed)
 - ✅ **Priority 1:** Comprehensive testing (50+ unit tests, 12+ fuzz tests)
 - ✅ **Priority 3a:** Parameter serialization with reflect-cpp
 - ✅ **Priority 3b:** Pipeline JSON schema and loading
 - ✅ **View Pipelines:** Lazy evaluation infrastructure
+- ✅ **Provenance Tracking:** Lineage system implemented
+- ✅ **DataManager Integration:** `load_data_from_json_config_v2()` with V1-compatible format
 
-### Sprint 3 (Current - 1-2 weeks)
+### Sprint 4 (Current - 1-2 weeks)
 - **Priority 1:** UI Integration (Pipeline Builder)
 - **Priority 2:** Migrate 3-5 real transforms from V1
 - **Goal:** Validate system with real-world transforms and enable UI access
 
-### Sprint 4 (1-2 weeks)
+### Sprint 5 (1-2 weeks)
 - **Priority 2:** Continue transform migration
-- **Priority 3:** Provenance Tracking
 - **Goal:** Build library of production-ready transforms

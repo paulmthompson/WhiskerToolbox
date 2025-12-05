@@ -27,9 +27,10 @@ This is a parallel implementation. The existing transformation system (`src/Data
 - ✅ Multi-input transforms (N inputs → 1 output)
 - ✅ Time-grouped transforms (span<Element> per time)
 - ✅ Runtime JSON pipeline configuration with reflect-cpp
+- ✅ **Provenance Tracking** (LineageRegistry, EntityResolver, LineageRecorder)
+- ✅ **DataManager Integration** (`load_data_from_json_config_v2`, V1-compatible JSON format)
 
 **Coming Next:**
-- 🔄 Provenance tracking (EntityID relationships)
 - 🔄 UI Integration (Pipeline Builder)
 - 🔄 Migration of legacy transforms
 
@@ -50,6 +51,7 @@ v2/
 │   ├── ContainerTransform.hpp  # Container lifting utilities
 │   ├── ParameterIO.hpp         # reflect-cpp parameter serialization
 │   ├── PipelineLoader.hpp      # JSON pipeline loading
+│   ├── DataManagerIntegration.hpp # DataManager pipeline executor
 │   └── RegisteredTransforms.hpp # Central registration
 │
 ├── DESIGN.md                    # Architecture goals and future plans
@@ -147,27 +149,52 @@ float zScore(float val, ZScoreParams const& params) {
 // without materializing intermediate containers.
 ```
 
-### Runtime Configuration (Coming Soon)
+### Runtime Configuration with DataManager Integration
 
-The system is designed to support runtime pipeline configuration via JSON, but this is not yet fully implemented. Current approach:
+The system supports runtime pipeline configuration via JSON with full DataManager integration:
 
 ```cpp
-// Manual pipeline construction (current):
-TransformPipeline<MaskData, AnalogTimeSeries> pipeline;
-pipeline.addStep<MaskAreaParams>("CalculateArea", params1);
-pipeline.addStep<NormalizeParams>("Normalize", params2);
-auto result = pipeline.execute(mask_data);
+#include "transforms/v2/core/DataManagerIntegration.hpp"
 
-// Planned: JSON-based configuration
-// {
-//   "name": "Whisker Analysis",
-//   "steps": [
-//     {"transform": "CalculateArea", "params": {...}},
-//     {"transform": "Normalize", "params": {...}}
-//   ]
-// }
-// auto pipeline = factory.loadFromJson("analysis.json");
-// auto result = pipeline->execute(mask_data);
+using namespace WhiskerToolbox::Transforms::V2;
+
+// Option 1: Use DataManagerPipelineExecutor directly
+DataManager dm;
+// ... populate dm with data ...
+
+DataManagerPipelineExecutor executor(&dm);
+executor.loadFromJson(R"({
+    "steps": [{
+        "step_id": "1",
+        "transform_name": "CalculateMaskArea",
+        "input_key": "mask_data",
+        "output_key": "areas",
+        "parameters": {}
+    }]
+})");
+auto result = executor.execute();
+
+// Option 2: Use load_data_from_json_config_v2 (V1-compatible interface)
+// JSON file format matches V1 exactly:
+// [
+//   {
+//     "transformations": {
+//       "metadata": { "name": "My Pipeline" },
+//       "steps": [
+//         {
+//           "step_id": "1",
+//           "transform_name": "CalculateMaskArea",
+//           "input_key": "mask_data",
+//           "output_key": "areas",
+//           "parameters": {}
+//         }
+//       ]
+//     }
+//   }
+// ]
+auto data_info = load_data_from_json_config_v2(&dm, "pipeline.json");
+// Results are stored in DataManager, accessible via output_key
+auto areas = dm.getData<RaggedAnalogTimeSeries>("areas");
 ```
 
 ## Usage Examples

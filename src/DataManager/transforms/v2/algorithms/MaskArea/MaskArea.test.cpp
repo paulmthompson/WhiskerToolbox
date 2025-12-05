@@ -1,13 +1,19 @@
 #include "MaskArea.hpp"
 
+#include "DataManager.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
+#include "transforms/v2/core/DataManagerIntegration.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2::Examples;
 using namespace WhiskerToolbox::Transforms::V2;
@@ -825,4 +831,257 @@ TEST_CASE("TransformsV2 - Convenience Functions", "[transforms][v2][convenience]
     std::cout << "  Time 10: " << series[1] << " ✓\n";
     
     std::cout << "\n✓ Convenience function works - single call transforms MaskData → AnalogTimeSeries!\n";
+}
+
+// ============================================================================
+// V2 DataManager Integration Tests
+// ============================================================================
+
+TEST_CASE("TransformsV2 - DataManager Integration - load_data_from_json_config_v2", "[transforms][v2][datamanager][json_config]") {
+    using namespace WhiskerToolbox::Transforms::V2;
+    
+    // Create DataManager and populate it with MaskData in code
+    DataManager dm;
+
+    // Create a TimeFrame for our data
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test mask data in code
+    auto test_mask_data = std::make_shared<MaskData>();
+    
+    // Add multiple masks at different timestamps
+    std::vector<uint32_t> x1 = {1, 2, 3};
+    std::vector<uint32_t> y1 = {1, 2, 3};
+    test_mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x1, y1), NotifyObservers::No);
+
+    std::vector<uint32_t> x2 = {4, 5, 6, 7, 8};
+    std::vector<uint32_t> y2 = {4, 5, 6, 7, 8};
+    test_mask_data->addAtTime(TimeFrameIndex(200), Mask2D(x2, y2), NotifyObservers::No);
+    std::vector<uint32_t> x3 = {9, 10};
+    std::vector<uint32_t> y3 = {9, 10};
+    test_mask_data->addAtTime(TimeFrameIndex(300), Mask2D(x3, y3), NotifyObservers::No);
+
+    // Store the mask data in DataManager with a known key
+    dm.setData("test_mask_data", test_mask_data, TimeKey("default"));
+    
+    // Create JSON configuration for transformation pipeline using unified format
+    const char* json_config = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Mask Area Calculation Pipeline V2\",\n"
+        "            \"description\": \"Test mask area calculation on mask data using V2 system\",\n"
+        "            \"version\": \"2.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"CalculateMaskArea\",\n"
+        "                \"input_key\": \"test_mask_data\",\n"
+        "                \"output_key\": \"calculated_areas\",\n"
+        "                \"parameters\": {}\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "v2_mask_area_pipeline_test";
+    std::filesystem::create_directories(test_dir);
+    
+    std::filesystem::path json_filepath = test_dir / "pipeline_config_v2.json";
+    {
+        std::ofstream json_file(json_filepath);
+        REQUIRE(json_file.is_open());
+        json_file << json_config;
+        json_file.close();
+    }
+    
+    // Execute the transformation pipeline using V2 load_data_from_json_config
+    auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
+    
+    // Verify the transformation was executed and results are available
+    // Note: V2 outputs RaggedAnalogTimeSeries for ragged input (MaskData)
+    // Each timestamp has a single mask, so each has one area value
+    auto result_areas = dm.getData<RaggedAnalogTimeSeries>("calculated_areas");
+    REQUIRE(result_areas != nullptr);
+    
+    // Verify the area calculation results
+    auto time_indices = result_areas->getTimeIndices();
+    REQUIRE(time_indices.size() == 3);
+    
+    // Check timestamp 100 (3 points)
+    auto values_100 = result_areas->getDataAtTime(TimeFrameIndex(100));
+    REQUIRE(values_100.size() == 1);
+    REQUIRE(values_100[0] == 3.0f);
+    
+    // Check timestamp 200 (5 points)
+    auto values_200 = result_areas->getDataAtTime(TimeFrameIndex(200));
+    REQUIRE(values_200.size() == 1);
+    REQUIRE(values_200[0] == 5.0f);
+    
+    // Check timestamp 300 (2 points)
+    auto values_300 = result_areas->getDataAtTime(TimeFrameIndex(300));
+    REQUIRE(values_300.size() == 1);
+    REQUIRE(values_300[0] == 2.0f);
+    
+    // Test with empty mask data
+    auto empty_mask_data = std::make_shared<MaskData>();
+    dm.setData("empty_mask_data", empty_mask_data, TimeKey("default"));
+    
+    const char* json_config_empty = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Empty Mask Area Calculation V2\",\n"
+        "            \"description\": \"Test mask area calculation on empty mask data using V2\",\n"
+        "            \"version\": \"2.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"CalculateMaskArea\",\n"
+        "                \"input_key\": \"empty_mask_data\",\n"
+        "                \"output_key\": \"empty_areas\",\n"
+        "                \"parameters\": {}\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_empty = test_dir / "pipeline_config_empty_v2.json";
+    {
+        std::ofstream json_file(json_filepath_empty);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_empty;
+        json_file.close();
+    }
+    
+    // Execute the empty mask pipeline
+    auto data_info_list_empty = load_data_from_json_config_v2(&dm, json_filepath_empty.string());
+    
+    // Verify the empty mask results
+    auto result_empty_areas = dm.getData<RaggedAnalogTimeSeries>("empty_areas");
+    REQUIRE(result_empty_areas != nullptr);
+    REQUIRE(result_empty_areas->getNumTimePoints() == 0);
+    
+    // Test with multiple masks at same timestamp
+    auto multi_mask_data = std::make_shared<MaskData>();
+    
+    // Add two masks at the same timestamp
+    std::vector<uint32_t> x1_multi = {1, 2};
+    std::vector<uint32_t> y1_multi = {1, 2};
+    multi_mask_data->addAtTime(TimeFrameIndex(500), Mask2D(x1_multi, y1_multi), NotifyObservers::No);
+    
+    std::vector<uint32_t> x2_multi = {3, 4, 5};
+    std::vector<uint32_t> y2_multi = {3, 4, 5};
+    multi_mask_data->addAtTime(TimeFrameIndex(500), Mask2D(x2_multi, y2_multi), NotifyObservers::No);
+    dm.setData("multi_mask_data", multi_mask_data, TimeKey("default"));
+    
+    const char* json_config_multi = 
+        "[\n"
+        "{\n"
+        "    \"transformations\": {\n"
+        "        \"metadata\": {\n"
+        "            \"name\": \"Multiple Masks Area Calculation V2\",\n"
+        "            \"description\": \"Test mask area calculation with multiple masks at same timestamp using V2\",\n"
+        "            \"version\": \"2.0\"\n"
+        "        },\n"
+        "        \"steps\": [\n"
+        "            {\n"
+        "                \"step_id\": \"1\",\n"
+        "                \"transform_name\": \"CalculateMaskArea\",\n"
+        "                \"input_key\": \"multi_mask_data\",\n"
+        "                \"output_key\": \"multi_areas\",\n"
+        "                \"parameters\": {}\n"
+        "            }\n"
+        "        ]\n"
+        "    }\n"
+        "}\n"
+        "]";
+    
+    std::filesystem::path json_filepath_multi = test_dir / "pipeline_config_multi_v2.json";
+    {
+        std::ofstream json_file(json_filepath_multi);
+        REQUIRE(json_file.is_open());
+        json_file << json_config_multi;
+        json_file.close();
+    }
+    
+    // Execute the multi-mask pipeline
+    auto data_info_list_multi = load_data_from_json_config_v2(&dm, json_filepath_multi.string());
+    
+    // Verify the multi-mask results
+    // Note: V2 system returns individual mask areas, not summed
+    // MaskData (ragged) -> RaggedAnalogTimeSeries
+    auto result_multi_areas = dm.getData<RaggedAnalogTimeSeries>("multi_areas");
+    REQUIRE(result_multi_areas != nullptr);
+    
+    // Should have 2 values at timestamp 500 (one for each mask)
+    auto multi_values = result_multi_areas->getDataAtTime(TimeFrameIndex(500));
+    REQUIRE(multi_values.size() == 2);
+    
+    // Areas should be 2 and 3 (order may vary)
+    float sum = multi_values[0] + multi_values[1];
+    REQUIRE(sum == 5.0f);  // 2 + 3 = 5
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}
+
+TEST_CASE("TransformsV2 - DataManager Integration - Pipeline Executor Direct", "[transforms][v2][datamanager][executor]") {
+    using namespace WhiskerToolbox::Transforms::V2;
+    
+    // Create DataManager
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Create test mask data
+    auto mask_data = std::make_shared<MaskData>();
+    std::vector<uint32_t> x = {1, 2, 3, 4, 5};
+    std::vector<uint32_t> y = {1, 2, 3, 4, 5};
+    mask_data->addAtTime(TimeFrameIndex(0), Mask2D(x, y), NotifyObservers::No);
+    dm.setData("masks", mask_data, TimeKey("default"));
+    
+    // Create executor directly
+    DataManagerPipelineExecutor executor(&dm);
+    
+    // Load JSON directly (not from file)
+    nlohmann::json config = {
+        {"steps", {{
+            {"step_id", "area_step"},
+            {"transform_name", "CalculateMaskArea"},
+            {"input_key", "masks"},
+            {"output_key", "areas"},
+            {"parameters", nlohmann::json::object()}
+        }}}
+    };
+    
+    REQUIRE(executor.loadFromJson(config));
+    
+    // Validate
+    auto errors = executor.validate();
+    REQUIRE(errors.empty());
+    
+    // Execute
+    auto result = executor.execute();
+    REQUIRE(result.success);
+    REQUIRE(result.steps_completed == 1);
+    
+    // Verify output - V2 outputs RaggedAnalogTimeSeries for ragged input
+    auto areas = dm.getData<RaggedAnalogTimeSeries>("areas");
+    REQUIRE(areas != nullptr);
+    auto values = areas->getDataAtTime(TimeFrameIndex(0));
+    REQUIRE(values.size() == 1);
+    REQUIRE(values[0] == 5.0f);
 }

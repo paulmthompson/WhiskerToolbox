@@ -21,10 +21,11 @@ This document describes the redesigned transformation architecture that addresse
 - **JSON Pipeline Loading**: PipelineDescriptor, PipelineLoader with full validation
 - **Fuzz Testing**: Comprehensive corpus and fuzz tests for pipeline loading
 - **Examples**: MaskArea, SumReduction, and LineMinPointDist (binary) transforms with tests
+- **Provenance Tracking**: Full lineage tracking with `LineageRegistry` and `EntityResolver`
+- **DataManager Integration**: `DataManagerPipelineExecutor` and `load_data_from_json_config_v2()` with V1-compatible JSON format
 
 ### 🔄 Planned (Phase 4+)
 - **UI Integration**: Pipeline Builder Widget
-- **Provenance Tracking**: EntityID relationship tracking
 - **Lazy Storage**: On-demand computation for derived data
 - **Parallel Execution**: Multi-threaded transform execution
 
@@ -300,20 +301,30 @@ auto pipeline = factory.createPipeline(desc);
 auto result = pipeline->execute(mask_data);
 ```
 
-### 6. Provenance Tracking (🔄 Planned)
+### 6. Provenance Tracking (✅ Implemented)
 
-**Concept**: Track EntityID relationships through transforms.
+**Concept**: Track EntityID relationships through transforms using a decoupled lineage system.
 
-**Proposed Future API**:
+**Implementation**:
+- **LineageRegistry**: Central store for lineage relationships (Source, OneToOne, Subset, etc.)
+- **EntityResolver**: Resolves derived data back to source EntityIds
+- **LineageRecorder**: Automatically records lineage during transform execution
+- **Integration**: 
+  - `TransformMetadata` includes `lineage_type`
+  - `DataManager` holds the `LineageRegistry`
+  - Transforms automatically register lineage via `LineageRecorder`
+
+**Key Components**:
+- `LineageTypes.hpp`: Defines lineage variants (Source, OneToOneByTime, etc.)
+- `EntityResolver.hpp`: Interface for tracing lineage
+- `LineageRegistry.hpp`: Registry interface with staleness tracking
+
+**Usage**:
 ```cpp
-// Query provenance:
-EntityId line_id = line_data.getEntityIdAt(t, i);
-std::vector<EntityId> parent_masks = 
-    line_data.getParentEntityIds(line_id);
-
-// Multi-level queries:
-auto angles = lineAngles(line_data);
-EntityId angle_id = ...;
+// Resolve derived data back to source entities
+auto resolver = data_manager.getEntityResolver();
+auto source_entities = resolver.resolveToRoot("mask_areas", time_index);
+```
 std::vector<EntityId> source_masks = 
     angles.getAncestorEntityIds(angle_id, EntityKind::MaskEntity);
 ```

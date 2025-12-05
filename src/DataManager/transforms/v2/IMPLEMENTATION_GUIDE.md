@@ -894,3 +894,237 @@ struct ValidDataType {
 
 std::optional<rfl::Validator<std::string, ValidDataType>> data_type;
 ```
+
+## Part 7: DataManager Integration
+
+The V2 system provides seamless integration with the DataManager, allowing you to load and execute transform pipelines that read from and write to DataManager keys—just like the V1 system.
+
+### Overview
+
+The `DataManagerIntegration` module provides:
+- **JSON Pipeline Loading** - Load V1-compatible pipeline configurations with `input_key`/`output_key`
+- **Automatic Data Retrieval** - Fetch input data from DataManager by key
+- **Automatic Result Storage** - Store transform results back to DataManager
+- **Progress Reporting** - Optional callback for UI progress updates
+
+### Key Components
+
+```cpp
+#include "transforms/v2/core/DataManagerIntegration.hpp"
+
+using namespace WhiskerToolbox::Transforms::V2;
+```
+
+#### DataManagerStepDescriptor
+
+Describes a single step with DataManager key bindings:
+
+```cpp
+struct DataManagerStepDescriptor {
+    std::string name;                      // Transform name
+    std::map<std::string, nlohmann::json> parameters;  // Transform parameters
+    std::string input_key;                 // DataManager key for input
+    std::string output_key;                // DataManager key for output
+};
+```
+
+#### DataManagerPipelineDescriptor
+
+Describes a complete pipeline:
+
+```cpp
+struct DataManagerPipelineDescriptor {
+    std::string name;
+    std::string description;
+    std::vector<DataManagerStepDescriptor> steps;
+};
+```
+
+#### V2PipelineResult
+
+Result of pipeline execution:
+
+```cpp
+struct V2PipelineResult {
+    bool success = false;
+    std::string error_message;
+    std::map<std::string, DataTypeVariant> outputs;  // Key -> output data
+};
+```
+
+### Loading and Executing Pipelines
+
+#### Convenience Function
+
+The simplest way to use DataManager integration:
+
+```cpp
+#include "transforms/v2/core/DataManagerIntegration.hpp"
+
+auto data_manager = std::make_shared<DataManager>();
+// ... populate data_manager with input data ...
+
+std::string json_config = R"({
+    "name": "Mask Area Pipeline",
+    "description": "Calculate area from masks",
+    "steps": [
+        {
+            "name": "CalculateMaskArea",
+            "input_key": "mask_data",
+            "output_key": "mask_area_results",
+            "parameters": {}
+        }
+    ]
+})";
+
+auto result = load_data_from_json_config_v2(data_manager, json_config);
+
+if (result.success) {
+    // Output is now stored in data_manager under "mask_area_results"
+    auto output = data_manager->getData<AnalogTimeSeries>("mask_area_results");
+} else {
+    std::cerr << "Error: " << result.error_message << std::endl;
+}
+```
+
+#### Using DataManagerPipelineExecutor Directly
+
+For more control over execution:
+
+```cpp
+DataManagerPipelineExecutor executor(data_manager);
+
+// Load from JSON
+DataManagerPipelineDescriptor descriptor;
+descriptor.name = "My Pipeline";
+descriptor.steps.push_back({
+    .name = "CalculateMaskArea",
+    .parameters = {},
+    .input_key = "mask_data",
+    .output_key = "area_output"
+});
+
+// Execute with progress callback
+auto result = executor.execute(descriptor, [](int percent) {
+    std::cout << "Progress: " << percent << "%" << std::endl;
+});
+
+// Access results
+if (result.success) {
+    for (auto const& [key, data] : result.outputs) {
+        std::cout << "Output stored: " << key << std::endl;
+    }
+}
+```
+
+### JSON Pipeline Format
+
+The JSON format is compatible with V1 pipelines:
+
+```json
+{
+    "name": "Multi-Step Analysis",
+    "description": "Example pipeline with multiple steps",
+    "steps": [
+        {
+            "name": "CalculateMaskArea",
+            "input_key": "raw_masks",
+            "output_key": "mask_areas",
+            "parameters": {
+                "scale_factor": 1.5
+            }
+        },
+        {
+            "name": "SmoothTimeSeries",
+            "input_key": "mask_areas",
+            "output_key": "smoothed_areas",
+            "parameters": {
+                "window_size": 5
+            }
+        }
+    ]
+}
+```
+
+### Output Type Behavior
+
+V2 preserves the structure of input data more precisely than V1:
+
+| Input Type | V2 Output Type | Notes |
+|------------|----------------|-------|
+| `MaskData` (regular) | `AnalogTimeSeries` | Single value per timepoint |
+| `MaskData` (ragged) | `RaggedAnalogTimeSeries` | Preserves per-mask values |
+| `LineData` (regular) | `AnalogTimeSeries` | Single value per timepoint |
+| `LineData` (ragged) | `RaggedAnalogTimeSeries` | Preserves per-line values |
+
+### Complete Example
+
+```cpp
+#include <catch2/catch_test_macros.hpp>
+#include "transforms/v2/core/DataManagerIntegration.hpp"
+#include "DataManager.hpp"
+#include "MaskData.hpp"
+
+TEST_CASE("V2 DataManager Pipeline", "[transforms][v2][datamanager]") {
+    // Setup
+    auto dm = std::make_shared<DataManager>();
+    auto masks = std::make_shared<MaskData>();
+    
+    // Create test mask (10x10 with 25 pixels set)
+    Mask2D test_mask(10, std::vector<uint8_t>(10, 0));
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            test_mask[i][j] = 255;
+        }
+    }
+    masks->setMaskAtTime(0.0, test_mask);
+    dm->setData("input_masks", masks);
+    
+    // Configure pipeline
+    std::string json = R"({
+        "name": "Area Test",
+        "steps": [{
+            "name": "CalculateMaskArea",
+            "input_key": "input_masks",
+            "output_key": "output_areas",
+            "parameters": {}
+        }]
+    })";
+    
+    // Execute
+    auto result = load_data_from_json_config_v2(dm, json);
+    
+    // Verify
+    REQUIRE(result.success);
+    auto areas = dm->getData<AnalogTimeSeries>("output_areas");
+    REQUIRE(areas != nullptr);
+    REQUIRE(areas->getAnalogAtTime(0.0) == Catch::Approx(25.0f));
+}
+```
+
+### Comparison with V1
+
+| Feature | V1 | V2 |
+|---------|----|----|
+| JSON Loading | `load_data_from_json_config()` | `load_data_from_json_config_v2()` |
+| Registry | `TransformRegistry` instance | `ElementRegistry::instance()` singleton |
+| Executor | Integrated in `TransformPipeline` | `DataManagerPipelineExecutor` |
+| Ragged Data | Flattens to `AnalogTimeSeries` | Preserves as `RaggedAnalogTimeSeries` |
+| Transform Functions | Class-based operations | Pure functions |
+
+### Migration from V1 Pipelines
+
+Existing V1 JSON configurations work with V2—no changes needed to your JSON files. Simply change the function call:
+
+```cpp
+// V1
+load_data_from_json_config(data_manager, json_config);
+
+// V2
+auto result = load_data_from_json_config_v2(data_manager, json_config);
+if (!result.success) {
+    // Handle error
+}
+```
+
+The V2 function returns a result object with success status and error messages, providing better error handling than V1.

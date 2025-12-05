@@ -208,6 +208,8 @@ set(DATAMANAGER_SOURCES
 
         transforms/v2/core/ContainerTraits.hpp
         transforms/v2/core/ContainerTraits.cpp 
+        transforms/v2/core/DataManagerIntegration.hpp
+        transforms/v2/core/DataManagerIntegration.cpp
         transforms/v2/core/ElementRegistry.hpp 
         transforms/v2/core/ElementTransform.hpp
         transforms/v2/core/PipelineLoader.hpp
