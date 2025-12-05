@@ -2,11 +2,14 @@
 
 #include "DataManager.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 #include "transforms/v2/core/DataManagerIntegration.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
+
+#include "fixtures/MaskAreaTestFixture.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -147,6 +150,269 @@ TEST_CASE("MaskAreaParams - JSON round-trip preserves values", "[transforms][v2]
     REQUIRE_THAT(recovered.getScaleFactor(), Catch::Matchers::WithinRel(2.5f, 0.001f));
     REQUIRE_THAT(recovered.getMinArea(), Catch::Matchers::WithinRel(15.0f, 0.001f));
     REQUIRE(recovered.getExcludeHoles() == true);
+}
+
+// ============================================================================
+// Core Functionality Tests (using shared fixture with V1)
+// ============================================================================
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "TransformsV2 - Empty mask data via fixture", 
+                 "[transforms][v2][fixture]") {
+    auto mask_data = m_test_masks["empty_mask_data"];
+    auto& registry = ElementRegistry::instance();
+    
+    MaskAreaParams params;
+    auto transform_fn = registry.getTransformFunction<Mask2D, float, MaskAreaParams>("CalculateMaskArea", params);
+    
+    // Empty MaskData should produce empty result
+    auto result = std::make_shared<RaggedAnalogTimeSeries>();
+    for (auto const& [time, entry] : mask_data->elements()) {
+        float area = transform_fn(entry.data);
+        result->appendAtTime(time, {area}, NotifyObservers::No);
+    }
+    
+    REQUIRE(result->getNumTimePoints() == 0);
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "TransformsV2 - Single mask at one timestamp via fixture", 
+                 "[transforms][v2][fixture]") {
+    auto mask_data = m_test_masks["single_mask_single_timestamp"];
+    auto& registry = ElementRegistry::instance();
+    
+    MaskAreaParams params;
+    auto transform_fn = registry.getTransformFunction<Mask2D, float, MaskAreaParams>("CalculateMaskArea", params);
+    
+    auto result = std::make_shared<RaggedAnalogTimeSeries>();
+    for (auto const& [time, entry] : mask_data->elements()) {
+        float area = transform_fn(entry.data);
+        result->appendAtTime(time, {area}, NotifyObservers::No);
+    }
+    result->setTimeFrame(mask_data->getTimeFrame());
+    
+    REQUIRE(result->getNumTimePoints() == 1);
+    auto values = result->getDataAtTime(TimeFrameIndex(10));
+    REQUIRE(values.size() == 1);
+    REQUIRE(values[0] == 3.0f);
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "TransformsV2 - Multiple masks at one timestamp via fixture", 
+                 "[transforms][v2][fixture]") {
+    auto mask_data = m_test_masks["multiple_masks_single_timestamp"];
+    auto& registry = ElementRegistry::instance();
+    
+    MaskAreaParams params;
+    auto transform_fn = registry.getTransformFunction<Mask2D, float, MaskAreaParams>("CalculateMaskArea", params);
+    
+    auto result = std::make_shared<RaggedAnalogTimeSeries>();
+    for (auto const& [time, entry] : mask_data->elements()) {
+        float area = transform_fn(entry.data);
+        result->appendAtTime(time, {area}, NotifyObservers::No);
+    }
+    result->setTimeFrame(mask_data->getTimeFrame());
+    
+    REQUIRE(result->getNumTimePoints() == 1);
+    auto values = result->getDataAtTime(TimeFrameIndex(20));
+    // V2 preserves individual mask areas: [3.0, 5.0]
+    REQUIRE(values.size() == 2);
+    REQUIRE(values[0] == 3.0f);
+    REQUIRE(values[1] == 5.0f);
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "TransformsV2 - Masks across multiple timestamps via fixture", 
+                 "[transforms][v2][fixture]") {
+    auto mask_data = m_test_masks["masks_multiple_timestamps"];
+    auto& registry = ElementRegistry::instance();
+    
+    MaskAreaParams params;
+    auto transform_fn = registry.getTransformFunction<Mask2D, float, MaskAreaParams>("CalculateMaskArea", params);
+    
+    auto result = std::make_shared<RaggedAnalogTimeSeries>();
+    for (auto const& [time, entry] : mask_data->elements()) {
+        float area = transform_fn(entry.data);
+        result->appendAtTime(time, {area}, NotifyObservers::No);
+    }
+    result->setTimeFrame(mask_data->getTimeFrame());
+    
+    REQUIRE(result->getNumTimePoints() == 2);
+    
+    // Check timestamp 30 - one mask with 2 pixels
+    auto values_30 = result->getDataAtTime(TimeFrameIndex(30));
+    REQUIRE(values_30.size() == 1);
+    REQUIRE(values_30[0] == 2.0f);
+    
+    // Check timestamp 40 - two masks with 3 and 4 pixels
+    auto values_40 = result->getDataAtTime(TimeFrameIndex(40));
+    REQUIRE(values_40.size() == 2);
+    REQUIRE(values_40[0] == 3.0f);
+    REQUIRE(values_40[1] == 4.0f);
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "TransformsV2 - Empty mask (zero pixels) via fixture", 
+                 "[transforms][v2][fixture][edge]") {
+    auto mask_data = m_test_masks["empty_mask_at_timestamp"];
+    auto& registry = ElementRegistry::instance();
+    
+    MaskAreaParams params;
+    auto transform_fn = registry.getTransformFunction<Mask2D, float, MaskAreaParams>("CalculateMaskArea", params);
+    
+    auto result = std::make_shared<RaggedAnalogTimeSeries>();
+    for (auto const& [time, entry] : mask_data->elements()) {
+        float area = transform_fn(entry.data);
+        result->appendAtTime(time, {area}, NotifyObservers::No);
+    }
+    result->setTimeFrame(mask_data->getTimeFrame());
+    
+    REQUIRE(result->getNumTimePoints() == 1);
+    auto values = result->getDataAtTime(TimeFrameIndex(10));
+    REQUIRE(values.size() == 1);
+    REQUIRE(values[0] == 0.0f);
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "TransformsV2 - Large mask count via fixture", 
+                 "[transforms][v2][fixture][edge]") {
+    auto mask_data = m_test_masks["large_mask_count"];
+    auto& registry = ElementRegistry::instance();
+    
+    MaskAreaParams params;
+    auto transform_fn = registry.getTransformFunction<Mask2D, float, MaskAreaParams>("CalculateMaskArea", params);
+    
+    auto result = std::make_shared<RaggedAnalogTimeSeries>();
+    for (auto const& [time, entry] : mask_data->elements()) {
+        float area = transform_fn(entry.data);
+        result->appendAtTime(time, {area}, NotifyObservers::No);
+    }
+    result->setTimeFrame(mask_data->getTimeFrame());
+    
+    REQUIRE(result->getNumTimePoints() == 1);
+    auto values = result->getDataAtTime(TimeFrameIndex(30));
+    // 10 masks with areas 1, 2, 3, ..., 10
+    REQUIRE(values.size() == 10);
+    
+    float sum = 0.0f;
+    for (auto v : values) {
+        sum += v;
+    }
+    REQUIRE(sum == 55.0f); // 1+2+3+...+10 = 55
+}
+
+// ============================================================================
+// V2 DataManager Integration Tests (using fixture)
+// ============================================================================
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "TransformsV2 - DataManager JSON load via fixture", 
+                 "[transforms][v2][datamanager][fixture]") {
+    using namespace WhiskerToolbox::Transforms::V2;
+    
+    auto dm = getDataManager();
+    
+    // JSON config using fixture's pre-populated data
+    nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "area_step"},
+            {"transform_name", "CalculateMaskArea"},
+            {"input_key", "json_pipeline_multi_timestamp"},
+            {"output_key", "v2_calculated_areas"},
+            {"parameters", nlohmann::json::object()}
+        }}}
+    };
+    
+    DataManagerPipelineExecutor executor(dm);
+    REQUIRE(executor.loadFromJson(json_config));
+    
+    auto result = executor.execute();
+    REQUIRE(result.success);
+    
+    auto areas = dm->getData<RaggedAnalogTimeSeries>("v2_calculated_areas");
+    REQUIRE(areas != nullptr);
+    
+    // Verify same data as V1 test (but in ragged format)
+    auto time_indices = areas->getTimeIndices();
+    REQUIRE(time_indices.size() == 3);
+    
+    // Check timestamp 100 (3 points)
+    auto values_100 = areas->getDataAtTime(TimeFrameIndex(100));
+    REQUIRE(values_100.size() == 1);
+    REQUIRE(values_100[0] == 3.0f);
+    
+    // Check timestamp 200 (5 points)
+    auto values_200 = areas->getDataAtTime(TimeFrameIndex(200));
+    REQUIRE(values_200.size() == 1);
+    REQUIRE(values_200[0] == 5.0f);
+    
+    // Check timestamp 300 (2 points)
+    auto values_300 = areas->getDataAtTime(TimeFrameIndex(300));
+    REQUIRE(values_300.size() == 1);
+    REQUIRE(values_300[0] == 2.0f);
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "TransformsV2 - DataManager empty mask JSON via fixture", 
+                 "[transforms][v2][datamanager][fixture]") {
+    using namespace WhiskerToolbox::Transforms::V2;
+    
+    auto dm = getDataManager();
+    
+    nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "empty_area_step"},
+            {"transform_name", "CalculateMaskArea"},
+            {"input_key", "empty_mask_data"},
+            {"output_key", "v2_empty_areas"},
+            {"parameters", nlohmann::json::object()}
+        }}}
+    };
+    
+    DataManagerPipelineExecutor executor(dm);
+    REQUIRE(executor.loadFromJson(json_config));
+    
+    auto result = executor.execute();
+    REQUIRE(result.success);
+    
+    auto areas = dm->getData<RaggedAnalogTimeSeries>("v2_empty_areas");
+    REQUIRE(areas != nullptr);
+    REQUIRE(areas->getNumTimePoints() == 0);
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "TransformsV2 - DataManager multi-mask JSON via fixture", 
+                 "[transforms][v2][datamanager][fixture]") {
+    using namespace WhiskerToolbox::Transforms::V2;
+    
+    auto dm = getDataManager();
+    
+    nlohmann::json json_config = {
+        {"steps", {{
+            {"step_id", "multi_mask_step"},
+            {"transform_name", "CalculateMaskArea"},
+            {"input_key", "json_pipeline_multi_mask"},
+            {"output_key", "v2_multi_areas"},
+            {"parameters", nlohmann::json::object()}
+        }}}
+    };
+    
+    DataManagerPipelineExecutor executor(dm);
+    REQUIRE(executor.loadFromJson(json_config));
+    
+    auto result = executor.execute();
+    REQUIRE(result.success);
+    
+    auto areas = dm->getData<RaggedAnalogTimeSeries>("v2_multi_areas");
+    REQUIRE(areas != nullptr);
+    
+    // V2 preserves individual mask areas (unlike V1 which sums them)
+    auto values = areas->getDataAtTime(TimeFrameIndex(500));
+    REQUIRE(values.size() == 2);
+    
+    // Areas should be 2 and 3
+    float sum = values[0] + values[1];
+    REQUIRE(sum == 5.0f);
 }
 
 // ============================================================================

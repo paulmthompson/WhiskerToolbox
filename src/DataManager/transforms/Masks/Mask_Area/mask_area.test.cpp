@@ -13,196 +13,156 @@
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 
+#include "fixtures/MaskAreaTestFixture.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
-TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]") {
-    auto mask_data = std::make_shared<MaskData>();
+// ============================================================================
+// Core Functionality Tests (using fixture)
+// ============================================================================
 
-    SECTION("Calculating area from empty mask data") {
-        auto result = area(mask_data.get());
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Mask area calculation - Empty mask data", 
+                 "[mask][area][transform][fixture]") {
+    auto mask_data = m_test_masks["empty_mask_data"];
+    auto result = area(mask_data.get());
 
-        REQUIRE(result->getAnalogTimeSeries().empty());
-        REQUIRE(result->getTimeSeries().empty());
-    }
-
-    SECTION("Calculating area from single mask at one timestamp") {
-        // Create a simple mask (3 points)
-        std::vector<uint32_t> x_coords = {1, 2, 3};
-        std::vector<uint32_t> y_coords = {1, 2, 3};
-        mask_data->addAtTime(TimeFrameIndex(10), Mask2D(x_coords, y_coords), NotifyObservers::No);
-
-        auto result = area(mask_data.get());
-
-        auto const & values = result->getAnalogTimeSeries();
-        auto const & times = result->getTimeSeries();
-
-        REQUIRE(times.size() == 1);
-        REQUIRE(values.size() == 1);
-        REQUIRE(times[0] == TimeFrameIndex(10));
-        REQUIRE(values[0] == 3.0f); // 3 points in the mask
-    }
-
-    SECTION("Calculating area from multiple masks at one timestamp") {
-        // First mask (3 points)
-        std::vector<uint32_t> x1 = {1, 2, 3};
-        std::vector<uint32_t> y1 = {1, 2, 3};
-        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(x1, y1), NotifyObservers::No);
-
-        // Second mask (5 points)
-        std::vector<uint32_t> x2 = {4, 5, 6, 7, 8};
-        std::vector<uint32_t> y2 = {4, 5, 6, 7, 8};
-        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(x2, y2), NotifyObservers::No);
-
-        auto result = area(mask_data.get());
-
-        auto const & values = result->getAnalogTimeSeries();
-        auto const & times = result->getTimeSeries();
-
-        REQUIRE(times.size() == 1);
-        REQUIRE(values.size() == 1);
-        REQUIRE(times[0] == TimeFrameIndex(20));
-        REQUIRE(values[0] == 8.0f); // 3 + 5 = 8 points total
-    }
-
-    SECTION("Calculating areas from masks across multiple timestamps") {
-        // Timestamp 30: One mask with 2 points
-        std::vector<uint32_t> x1 = {1, 2};
-        std::vector<uint32_t> y1 = {1, 2};
-        mask_data->addAtTime(TimeFrameIndex(30), Mask2D(x1, y1), NotifyObservers::No);
-
-        // Timestamp 40: Two masks with 3 and 4 points
-        std::vector<uint32_t> x2 = {1, 2, 3};
-        std::vector<uint32_t> y2 = {1, 2, 3};
-        mask_data->addAtTime(TimeFrameIndex(40), Mask2D(x2, y2), NotifyObservers::No);
-
-        std::vector<uint32_t> x3 = {4, 5, 6, 7};
-        std::vector<uint32_t> y3 = {4, 5, 6, 7};
-        mask_data->addAtTime(TimeFrameIndex(40), Mask2D(x3, y3), NotifyObservers::No);
-        auto result = area(mask_data.get());
-
-        auto const & values = result->getAnalogTimeSeries();
-        auto const & times = result->getTimeSeries();
-
-        REQUIRE(times.size() == 2);
-        REQUIRE(values.size() == 2);
-
-        // Check timestamp 30
-        auto time30_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(30)));
-        REQUIRE(values[time30_idx] == 2.0f);
-
-        // Check timestamp 40
-        auto time40_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(40)));
-        REQUIRE(values[time40_idx] == 7.0f); // 3 + 4 = 7 points
-    }
-
-    SECTION("Verify returned AnalogTimeSeries structure") {
-        // Add some mask data
-        std::vector<uint32_t> x = {1, 2, 3, 4};
-        std::vector<uint32_t> y = {1, 2, 3, 4};
-        mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x, y), NotifyObservers::No);
-
-        auto result = area(mask_data.get());
-
-        // Verify it's a proper AnalogTimeSeries
-        REQUIRE(result != nullptr);
-        REQUIRE(result->getAnalogTimeSeries().size() == 1);
-        REQUIRE(result->getTimeSeries().size() == 1);
-
-        // Statistics should work on the result
-        REQUIRE(calculate_mean(*result.get()) == 4.0f);
-        REQUIRE(calculate_min(*result.get()) == 4.0f);
-        REQUIRE(calculate_max(*result.get()) == 4.0f);
-    }
+    REQUIRE(result->getAnalogTimeSeries().empty());
+    REQUIRE(result->getTimeSeries().empty());
 }
 
-TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area][transform][edge]") {
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Mask area calculation - Single mask at one timestamp", 
+                 "[mask][area][transform][fixture]") {
+    auto mask_data = m_test_masks["single_mask_single_timestamp"];
+    auto result = area(mask_data.get());
 
-    auto mask_data = std::make_shared<MaskData>();
+    auto const & values = result->getAnalogTimeSeries();
+    auto const & times = result->getTimeSeries();
 
-    SECTION("Masks with zero points") {
-        // Add an empty mask (should be handled gracefully)
-        std::vector<uint32_t> empty_x;
-        std::vector<uint32_t> empty_y;
-        mask_data->addAtTime(TimeFrameIndex(10), Mask2D(empty_x, empty_y), NotifyObservers::No);
-
-        auto result = area(mask_data.get());
-
-        REQUIRE(result->getAnalogTimeSeries().size() == 1);
-        REQUIRE(result->getTimeSeries().size() == 1);
-        REQUIRE(result->getAnalogTimeSeries()[0] == 0.0f);
-    }
-
-    SECTION("Mixed empty and non-empty masks") {
-        // Add an empty mask
-        std::vector<uint32_t> empty_x;
-        std::vector<uint32_t> empty_y;
-        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(empty_x, empty_y), NotifyObservers::No);
-
-        // Add a non-empty mask at the same timestamp
-        std::vector<uint32_t> x = {1, 2, 3};
-        std::vector<uint32_t> y = {1, 2, 3};
-        mask_data->addAtTime(TimeFrameIndex(20), Mask2D(x, y), NotifyObservers::No);
-
-        auto result = area(mask_data.get());
-
-        REQUIRE(result->getAnalogTimeSeries().size() == 1);
-        REQUIRE(result->getTimeSeries().size() == 1);
-        REQUIRE(result->getAnalogTimeSeries()[0] == 3.0f); // Only counts the non-empty mask
-    }
-
-    SECTION("Large number of masks and points") {
-        // Create a timestamp with many small masks
-        for (int i = 0; i < 10; i++) {
-            std::vector<uint32_t> x(i+1, 1);
-            std::vector<uint32_t> y(i+1, 1);
-            mask_data->addAtTime(TimeFrameIndex(30), Mask2D(x, y), NotifyObservers::No);
-        }
-
-        auto result = area(mask_data.get());
-
-        // Sum of 1 + 2 + 3 + ... + 10 = 55
-        REQUIRE(result->getAnalogTimeSeries()[0] == 55.0f);
-    }
+    REQUIRE(times.size() == 1);
+    REQUIRE(values.size() == 1);
+    REQUIRE(times[0] == TimeFrameIndex(10));
+    REQUIRE(values[0] == 3.0f);
 }
 
-TEST_CASE("Data Transform: Mask Area - JSON pipeline", "[transforms][mask_area][json]") {
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Mask area calculation - Multiple masks at one timestamp", 
+                 "[mask][area][transform][fixture]") {
+    auto mask_data = m_test_masks["multiple_masks_single_timestamp"];
+    auto result = area(mask_data.get());
+
+    auto const & values = result->getAnalogTimeSeries();
+    auto const & times = result->getTimeSeries();
+
+    REQUIRE(times.size() == 1);
+    REQUIRE(values.size() == 1);
+    REQUIRE(times[0] == TimeFrameIndex(20));
+    REQUIRE(values[0] == 8.0f); // 3 + 5 = 8 points total
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Mask area calculation - Masks across multiple timestamps", 
+                 "[mask][area][transform][fixture]") {
+    auto mask_data = m_test_masks["masks_multiple_timestamps"];
+    auto result = area(mask_data.get());
+
+    auto const & values = result->getAnalogTimeSeries();
+    auto const & times = result->getTimeSeries();
+
+    REQUIRE(times.size() == 2);
+    REQUIRE(values.size() == 2);
+
+    // Check timestamp 30
+    auto time30_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(30)));
+    REQUIRE(values[time30_idx] == 2.0f);
+
+    // Check timestamp 40
+    auto time40_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(40)));
+    REQUIRE(values[time40_idx] == 7.0f); // 3 + 4 = 7 points
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Mask area calculation - Verify AnalogTimeSeries structure and statistics", 
+                 "[mask][area][transform][fixture]") {
+    auto mask_data = m_test_masks["single_mask_for_statistics"];
+    auto result = area(mask_data.get());
+
+    // Verify it's a proper AnalogTimeSeries
+    REQUIRE(result != nullptr);
+    REQUIRE(result->getAnalogTimeSeries().size() == 1);
+    REQUIRE(result->getTimeSeries().size() == 1);
+
+    // Statistics should work on the result
+    REQUIRE(calculate_mean(*result.get()) == 4.0f);
+    REQUIRE(calculate_min(*result.get()) == 4.0f);
+    REQUIRE(calculate_max(*result.get()) == 4.0f);
+}
+
+// ============================================================================
+// Edge Cases (using fixture)
+// ============================================================================
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Mask area calculation - Empty mask (zero pixels)", 
+                 "[mask][area][transform][edge][fixture]") {
+    auto mask_data = m_test_masks["empty_mask_at_timestamp"];
+    auto result = area(mask_data.get());
+
+    REQUIRE(result->getAnalogTimeSeries().size() == 1);
+    REQUIRE(result->getTimeSeries().size() == 1);
+    REQUIRE(result->getAnalogTimeSeries()[0] == 0.0f);
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Mask area calculation - Mixed empty and non-empty masks", 
+                 "[mask][area][transform][edge][fixture]") {
+    auto mask_data = m_test_masks["mixed_empty_nonempty"];
+    auto result = area(mask_data.get());
+
+    REQUIRE(result->getAnalogTimeSeries().size() == 1);
+    REQUIRE(result->getTimeSeries().size() == 1);
+    REQUIRE(result->getAnalogTimeSeries()[0] == 3.0f); // 0 + 3 = 3
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Mask area calculation - Large number of masks", 
+                 "[mask][area][transform][edge][fixture]") {
+    auto mask_data = m_test_masks["large_mask_count"];
+    auto result = area(mask_data.get());
+
+    // Sum of 1 + 2 + 3 + ... + 10 = 55
+    REQUIRE(result->getAnalogTimeSeries()[0] == 55.0f);
+}
+
+// ============================================================================
+// JSON Pipeline Tests (using fixture)
+// ============================================================================
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Data Transform: Mask Area - JSON pipeline", 
+                 "[transforms][mask_area][json][fixture]") {
     const nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "mask_area_step_1"},
             {"transform_name", "Calculate Area"},
-            {"input_key", "TestMaskData"},
+            {"input_key", "json_pipeline_basic"},
             {"output_key", "MaskAreas"},
             {"parameters", {}}
         }}}
     };
 
-    DataManager dm;
+    auto dm = getDataManager();
     TransformRegistry registry;
 
-    auto time_frame = std::make_shared<TimeFrame>();
-    dm.setTime(TimeKey("default"), time_frame);
-
-    // Create test mask data
-    auto mask_data = std::make_shared<MaskData>();
-    
-    // Add masks at different timestamps
-    std::vector<uint32_t> x1 = {1, 2, 3};
-    std::vector<uint32_t> y1 = {1, 2, 3};
-    mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x1, y1), NotifyObservers::No);
-
-    std::vector<uint32_t> x2 = {4, 5, 6, 7};
-    std::vector<uint32_t> y2 = {4, 5, 6, 7};
-    mask_data->addAtTime(TimeFrameIndex(200), Mask2D(x2, y2), NotifyObservers::No);
-    dm.setData("TestMaskData", mask_data, TimeKey("default"));
-
-    TransformPipeline pipeline(&dm, &registry);
+    TransformPipeline pipeline(dm, &registry);
     pipeline.loadFromJson(json_config);
     pipeline.execute();
 
     // Verify the results
-    auto area_series = dm.getData<AnalogTimeSeries>("MaskAreas");
+    auto area_series = dm->getData<AnalogTimeSeries>("MaskAreas");
     REQUIRE(area_series != nullptr);
 
     auto const & values = area_series->getAnalogTimeSeries();
@@ -220,31 +180,10 @@ TEST_CASE("Data Transform: Mask Area - JSON pipeline", "[transforms][mask_area][
     REQUIRE(values[time200_idx] == 4.0f);
 }
 
-TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms][mask_area][json_config]") {
-    // Create DataManager and populate it with MaskData in code
-    DataManager dm;
-
-    // Create a TimeFrame for our data
-    auto time_frame = std::make_shared<TimeFrame>();
-    dm.setTime(TimeKey("default"), time_frame);
-    
-    // Create test mask data in code
-    auto test_mask_data = std::make_shared<MaskData>();
-    
-    // Add multiple masks at different timestamps
-    std::vector<uint32_t> x1 = {1, 2, 3};
-    std::vector<uint32_t> y1 = {1, 2, 3};
-    test_mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x1, y1), NotifyObservers::No);
-
-    std::vector<uint32_t> x2 = {4, 5, 6, 7, 8};
-    std::vector<uint32_t> y2 = {4, 5, 6, 7, 8};
-    test_mask_data->addAtTime(TimeFrameIndex(200), Mask2D(x2, y2), NotifyObservers::No);
-    std::vector<uint32_t> x3 = {9, 10};
-    std::vector<uint32_t> y3 = {9, 10};
-    test_mask_data->addAtTime(TimeFrameIndex(300), Mask2D(x3, y3), NotifyObservers::No);
-
-    // Store the mask data in DataManager with a known key
-    dm.setData("test_mask_data", test_mask_data, TimeKey("default"));
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Data Transform: Mask Area - load_data_from_json_config", 
+                 "[transforms][mask_area][json_config][fixture]") {
+    auto dm = getDataManager();
     
     // Create JSON configuration for transformation pipeline using unified format
     const char* json_config = 
@@ -261,7 +200,7 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
         "                \"step_id\": \"1\",\n"
         "                \"transform_name\": \"Calculate Area\",\n"
         "                \"phase\": \"analysis\",\n"
-        "                \"input_key\": \"test_mask_data\",\n"
+        "                \"input_key\": \"json_pipeline_multi_timestamp\",\n"
         "                \"output_key\": \"calculated_areas\",\n"
         "                \"parameters\": {}\n"
         "            }\n"
@@ -283,10 +222,10 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
     }
     
     // Execute the transformation pipeline using load_data_from_json_config
-    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    auto data_info_list = load_data_from_json_config(dm, json_filepath.string());
     
     // Verify the transformation was executed and results are available
-    auto result_areas = dm.getData<AnalogTimeSeries>("calculated_areas");
+    auto result_areas = dm->getData<AnalogTimeSeries>("calculated_areas");
     REQUIRE(result_areas != nullptr);
     
     // Verify the area calculation results
@@ -308,9 +247,18 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
     auto time300_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(300)));
     REQUIRE(values[time300_idx] == 2.0f);
     
-    // Test with empty mask data
-    auto empty_mask_data = std::make_shared<MaskData>();
-    dm.setData("empty_mask_data", empty_mask_data, TimeKey("default"));
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Data Transform: Mask Area - Empty mask JSON pipeline", 
+                 "[transforms][mask_area][json_config][fixture]") {
+    auto dm = getDataManager();
     
     const char* json_config_empty = 
         "[\n"
@@ -335,6 +283,9 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
         "}\n"
         "]";
     
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_area_empty_test";
+    std::filesystem::create_directories(test_dir);
+    
     std::filesystem::path json_filepath_empty = test_dir / "pipeline_config_empty.json";
     {
         std::ofstream json_file(json_filepath_empty);
@@ -344,26 +295,26 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
     }
     
     // Execute the empty mask pipeline
-    auto data_info_list_empty = load_data_from_json_config(&dm, json_filepath_empty.string());
+    auto data_info_list_empty = load_data_from_json_config(dm, json_filepath_empty.string());
     
     // Verify the empty mask results
-    auto result_empty_areas = dm.getData<AnalogTimeSeries>("empty_areas");
+    auto result_empty_areas = dm->getData<AnalogTimeSeries>("empty_areas");
     REQUIRE(result_empty_areas != nullptr);
     REQUIRE(result_empty_areas->getAnalogTimeSeries().empty());
     REQUIRE(result_empty_areas->getTimeSeries().empty());
     
-    // Test with multiple masks at same timestamp
-    auto multi_mask_data = std::make_shared<MaskData>();
-    
-    // Add two masks at the same timestamp
-    std::vector<uint32_t> x1_multi = {1, 2};
-    std::vector<uint32_t> y1_multi = {1, 2};
-    multi_mask_data->addAtTime(TimeFrameIndex(500), Mask2D(x1_multi, y1_multi), NotifyObservers::No);
-    
-    std::vector<uint32_t> x2_multi = {3, 4, 5};
-    std::vector<uint32_t> y2_multi = {3, 4, 5};
-    multi_mask_data->addAtTime(TimeFrameIndex(500), Mask2D(x2_multi, y2_multi), NotifyObservers::No);
-    dm.setData("multi_mask_data", multi_mask_data, TimeKey("default"));
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}
+
+TEST_CASE_METHOD(MaskAreaTestFixture, 
+                 "Data Transform: Mask Area - Multi-mask JSON pipeline", 
+                 "[transforms][mask_area][json_config][fixture]") {
+    auto dm = getDataManager();
     
     const char* json_config_multi = 
         "[\n"
@@ -379,7 +330,7 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
         "                \"step_id\": \"1\",\n"
         "                \"transform_name\": \"Calculate Area\",\n"
         "                \"phase\": \"analysis\",\n"
-        "                \"input_key\": \"multi_mask_data\",\n"
+        "                \"input_key\": \"json_pipeline_multi_mask\",\n"
         "                \"output_key\": \"multi_areas\",\n"
         "                \"parameters\": {}\n"
         "            }\n"
@@ -387,6 +338,9 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
         "    }\n"
         "}\n"
         "]";
+    
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_area_multi_test";
+    std::filesystem::create_directories(test_dir);
     
     std::filesystem::path json_filepath_multi = test_dir / "pipeline_config_multi.json";
     {
@@ -397,10 +351,10 @@ TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", "[transforms
     }
     
     // Execute the multi-mask pipeline
-    auto data_info_list_multi = load_data_from_json_config(&dm, json_filepath_multi.string());
+    auto data_info_list_multi = load_data_from_json_config(dm, json_filepath_multi.string());
     
     // Verify the multi-mask results (2 + 3 = 5 points total)
-    auto result_multi_areas = dm.getData<AnalogTimeSeries>("multi_areas");
+    auto result_multi_areas = dm->getData<AnalogTimeSeries>("multi_areas");
     REQUIRE(result_multi_areas != nullptr);
     
     auto const & multi_values = result_multi_areas->getAnalogTimeSeries();
