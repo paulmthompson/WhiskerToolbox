@@ -5,6 +5,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
+#include "transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.hpp"
 #include "transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
@@ -34,6 +35,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<SumReductionParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<AnalogEventThresholdParams>();
+    registerPipelineStepFactoryFor<AnalogHilbertPhaseParams>();
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParams>();
     return true;
@@ -206,9 +208,27 @@ void registerAnalogIntervalPeak() {
                     .supports_cancellation = true});
 }
 
+// Register AnalogHilbertPhase (Container Transform)
+void registerAnalogHilbertPhase() {
+    auto & registry = ElementRegistry::instance();
+    registry.registerContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
+            "AnalogHilbertPhase",
+            analogHilbertPhase,
+            ContainerTransformMetadata{
+                    .description = "Calculate instantaneous phase or amplitude using Hilbert transform",
+                    .category = "Signal Processing",
+                    .input_type_name = "AnalogTimeSeries",
+                    .output_type_name = "AnalogTimeSeries",
+                    .params_type_name = "AnalogHilbertPhaseParams",
+                    .is_expensive = true,
+                    .is_deterministic = true,
+                    .supports_cancellation = true});
+}
+
 auto const container_transform_registration = []() {
     registerAnalogEventThreshold();
     registerAnalogIntervalPeak();
+    registerAnalogHilbertPhase();
     return true;
 }();
 

@@ -19,3 +19,7 @@ vcpkg_cache
 
 tools
 ninja-build/ninja
+
+dist/*.a
+dist/*.so
+dist/*.so.*
