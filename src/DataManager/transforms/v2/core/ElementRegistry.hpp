@@ -78,6 +78,8 @@ struct is_in_variant<T, std::variant<Ts...>> : std::disjunction<std::is_same<T, 
 template<typename T, typename Variant>
 inline constexpr bool is_in_variant_v = is_in_variant<T, Variant>::value;
 
+// is_tuple is defined in ElementTransform.hpp
+
 // ============================================================================
 // Typed Parameter Executor (stores parameters and types)
 // ============================================================================
@@ -583,6 +585,67 @@ public:
     }
     
     /**
+     * @brief Create a container executor from parameters
+     * 
+     * Uses the registered factory to create a typed executor with captured parameters.
+     * Returns the IContainerExecutor interface for type-erased execution.
+     * 
+     * @param name Transform name
+     * @param params_any Type-erased parameters (must match registered type)
+     * @return Shared pointer to IContainerExecutor, or nullptr if not found
+     */
+    std::shared_ptr<IContainerExecutor> createContainerExecutor(
+        std::string const& name,
+        std::any const& params_any) const {
+        
+        auto const* meta = getContainerMetadata(name);
+        if (!meta) {
+            return nullptr;
+        }
+        
+        TypeTriple key{
+            meta->input_container_type,
+            meta->output_container_type,
+            meta->params_type
+        };
+        
+        auto factory_it = container_executor_factories_.find(key);
+        if (factory_it == container_executor_factories_.end()) {
+            return nullptr;
+        }
+        
+        return factory_it->second(params_any);
+    }
+    
+    /**
+     * @brief Execute container transform with dynamic parameter dispatch
+     * 
+     * Creates an executor from the parameters and executes the transform.
+     * This is the primary entry point for dynamic container transform execution.
+     * 
+     * @param name Transform name
+     * @param input_variant Input data as DataTypeVariant
+     * @param params_any Type-erased parameters
+     * @param ctx Compute context
+     * @return Output data as DataTypeVariant
+     * 
+     * @throws std::runtime_error if transform not found or execution fails
+     */
+    DataTypeVariant executeContainerTransformDynamic(
+        std::string const& name,
+        DataTypeVariant const& input_variant,
+        std::any const& params_any,
+        ComputeContext const& ctx = {}) const {
+        
+        auto executor = createContainerExecutor(name, params_any);
+        if (!executor) {
+            throw std::runtime_error("Container transform not found or failed to create executor: " + name);
+        }
+        
+        return executor->execute(name, input_variant, ctx);
+    }
+    
+    /**
      * @brief Register binary container transform
      * 
      * For container-level transforms that need two full containers as input
@@ -771,9 +834,17 @@ public:
     }
 
     /**
-     * @brief Check if transform exists
+     * @brief Check if transform exists (element or container)
      */
     bool hasTransform(std::string const & name) const {
+        return metadata_.find(name) != metadata_.end() ||
+               container_metadata_.find(name) != container_metadata_.end();
+    }
+
+    /**
+     * @brief Check if an element-level transform exists (not container)
+     */
+    bool hasElementTransform(std::string const & name) const {
         return metadata_.find(name) != metadata_.end();
     }
 
@@ -816,14 +887,23 @@ public:
     std::any deserializeParameters(
             std::string const & transform_name,
             std::string const & json_str) const {
-        // Get metadata to find parameter type
-        auto const * metadata = getMetadata(transform_name);
-        if (!metadata) {
-            return std::any{};// Transform not found
+        // Get metadata to find parameter type - check both element and container transforms
+        std::type_index params_type = typeid(void);
+        
+        auto const * element_metadata = getMetadata(transform_name);
+        if (element_metadata) {
+            params_type = element_metadata->params_type;
+        } else {
+            auto const * container_metadata = getContainerMetadata(transform_name);
+            if (container_metadata) {
+                params_type = container_metadata->params_type;
+            } else {
+                return std::any{};// Transform not found in either registry
+            }
         }
 
         // Look up deserializer for this parameter type
-        auto it = param_deserializers_.find(metadata->params_type);
+        auto it = param_deserializers_.find(params_type);
         if (it == param_deserializers_.end()) {
             return std::any{};// No deserializer registered
         }
@@ -849,14 +929,23 @@ public:
     bool validateParameters(
             std::string const & transform_name,
             std::any const & params_any) const {
-        // Get metadata to find parameter type
-        auto const * metadata = getMetadata(transform_name);
-        if (!metadata) {
-            return false;// Transform not found
+        // Get metadata to find parameter type - check both element and container transforms
+        std::type_index params_type = typeid(void);
+        
+        auto const * element_metadata = getMetadata(transform_name);
+        if (element_metadata) {
+            params_type = element_metadata->params_type;
+        } else {
+            auto const * container_metadata = getContainerMetadata(transform_name);
+            if (container_metadata) {
+                params_type = container_metadata->params_type;
+            } else {
+                return false;// Transform not found in either registry
+            }
         }
 
         // Look up validator for this parameter type
-        auto it = param_validators_.find(metadata->params_type);
+        auto it = param_validators_.find(params_type);
         if (it == param_validators_.end()) {
             return false;// No validator registered
         }
@@ -1146,18 +1235,20 @@ private:
             };
         }
         
-        // Register container executor factory (always register, keyed by triple)
-        TypeTriple key{typeid(InContainer), typeid(OutContainer), typeid(Params)};
-        
-        // Store factory that creates type-erased shared_ptr
-        // We use shared_ptr instead of unique_ptr because it supports custom deleters more cleanly
-        container_executor_factories_[key] = [](std::any const& params_any) {
-            auto params = std::any_cast<Params>(params_any);
-            auto executor = std::make_shared<TypedContainerExecutor<InContainer, OutContainer, Params>>(
-                std::move(params));
-            // Return as shared_ptr<void> for type erasure
-            return std::shared_ptr<void>(executor);
-        };
+        // Only register IContainerExecutor factory for single-input transforms
+        // Binary transforms (tuple inputs) require specialized execution paths
+        // because DataTypeVariant doesn't contain tuple types
+        if constexpr (!is_tuple_v<InContainer>) {
+            TypeTriple key{typeid(InContainer), typeid(OutContainer), typeid(Params)};
+            
+            // Store factory that creates type-erased IContainerExecutor
+            // This is used for dynamic dispatch in DataManagerPipelineExecutor
+            container_executor_factories_[key] = [](std::any const& params_any) -> std::shared_ptr<IContainerExecutor> {
+                auto params = std::any_cast<Params>(params_any);
+                return std::make_shared<TypedContainerExecutor<InContainer, OutContainer, Params>>(
+                    std::move(params));
+            };
+        }
     }
 
     // Hash function for pair<type_index, string>
@@ -1243,9 +1334,10 @@ private:
     std::unordered_map<std::type_index, std::vector<std::string>> container_output_to_names_;
     
     // Container executor factories (keyed by TypeTriple)
+    // Returns IContainerExecutor which provides type-erased execution
     std::unordered_map<
             TypeTriple,
-            std::function<std::shared_ptr<void>(std::any const&)>,
+            std::function<std::shared_ptr<IContainerExecutor>(std::any const&)>,
             TypeTripleHash>
             container_executor_factories_;
     
@@ -1386,7 +1478,7 @@ TypedContainerExecutor<InContainer, OutContainer, Params>::TypedContainerExecuto
     : params_(std::move(params)) {}
 
 template<typename InContainer, typename OutContainer, typename Params>
-std::shared_ptr<OutContainer> TypedContainerExecutor<InContainer, OutContainer, Params>::execute(
+std::shared_ptr<OutContainer> TypedContainerExecutor<InContainer, OutContainer, Params>::executeTyped(
     std::string const& name,
     InContainer const& input,
     ComputeContext const& ctx) const {
@@ -1396,7 +1488,7 @@ std::shared_ptr<OutContainer> TypedContainerExecutor<InContainer, OutContainer, 
 }
 
 template<typename InContainer, typename OutContainer, typename Params>
-DataTypeVariant TypedContainerExecutor<InContainer, OutContainer, Params>::executeVariant(
+DataTypeVariant TypedContainerExecutor<InContainer, OutContainer, Params>::execute(
     std::string const& name,
     DataTypeVariant const& input_variant,
     ComputeContext const& ctx) const {
@@ -1407,8 +1499,8 @@ DataTypeVariant TypedContainerExecutor<InContainer, OutContainer, Params>::execu
         throw std::runtime_error("Invalid input container type for transform: " + name);
     }
     
-    // Execute pure transform
-    auto result = execute(name, **input_ptr, ctx);
+    // Execute pure transform using typed method
+    auto result = executeTyped(name, **input_ptr, ctx);
     
     // Wrap result back in variant (pipeline's job)
     return DataTypeVariant{result};

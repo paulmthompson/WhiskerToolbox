@@ -248,6 +248,16 @@ private:
             std::string const & transform_name,
             DataTypeVariant const & input_data,
             std::optional<rfl::Generic> const & parameters);
+
+    /**
+     * @brief Execute a container transform with dynamic dispatch
+     * 
+     * Helper for executeTransform when the transform is a container transform.
+     */
+    std::optional<DataTypeVariant> executeContainerTransformDynamic(
+            std::string const & transform_name,
+            DataTypeVariant const & input_data,
+            std::optional<rfl::Generic> const & parameters);
 };
 
 // ============================================================================

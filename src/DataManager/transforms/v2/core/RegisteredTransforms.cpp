@@ -6,6 +6,7 @@
 
 #include "transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
+#include "transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
@@ -35,6 +36,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<AnalogEventThresholdParams>();
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
+    registerPipelineStepFactoryFor<AnalogIntervalThresholdParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParams>();
     return true;
 }();
@@ -206,9 +208,27 @@ void registerAnalogIntervalPeak() {
                     .supports_cancellation = true});
 }
 
+// Register AnalogIntervalThreshold (Container Transform)
+void registerAnalogIntervalThreshold() {
+    auto & registry = ElementRegistry::instance();
+    registry.registerContainerTransform<AnalogTimeSeries, DigitalIntervalSeries, AnalogIntervalThresholdParams>(
+            "AnalogIntervalThreshold",
+            analogIntervalThreshold,
+            ContainerTransformMetadata{
+                    .description = "Detect intervals where signal meets threshold criteria",
+                    .category = "Signal Processing",
+                    .input_type_name = "AnalogTimeSeries",
+                    .output_type_name = "DigitalIntervalSeries",
+                    .params_type_name = "AnalogIntervalThresholdParams",
+                    .is_expensive = false,
+                    .is_deterministic = true,
+                    .supports_cancellation = true});
+}
+
 auto const container_transform_registration = []() {
     registerAnalogEventThreshold();
     registerAnalogIntervalPeak();
+    registerAnalogIntervalThreshold();
     return true;
 }();
 

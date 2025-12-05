@@ -318,7 +318,7 @@ TEST_CASE("V2 Container Transform: Registry Integration",
     
     SECTION("Transform is registered as container transform") {
         REQUIRE(registry.isContainerTransform("AnalogEventThreshold"));
-        REQUIRE_FALSE(registry.hasTransform("AnalogEventThreshold"));  // Not an element transform
+        REQUIRE_FALSE(registry.hasElementTransform("AnalogEventThreshold"));  // Not an element transform
     }
     
     SECTION("Can retrieve container metadata") {

@@ -316,7 +316,12 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeTransform(
 
     auto & registry = ElementRegistry::instance();
 
-    // Get transform metadata
+    // Check if this is a container transform first
+    if (registry.isContainerTransform(transform_name)) {
+        return executeContainerTransformDynamic(transform_name, input_data, parameters);
+    }
+
+    // Get element transform metadata
     auto const * meta = registry.getMetadata(transform_name);
     if (!meta) {
         std::cerr << "Transform '" << transform_name << "' not found in V2 registry" << std::endl;
@@ -344,8 +349,21 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeTransform(
             return std::nullopt;
         }
     } else {
-        // No parameters - use default
-        pipeline.addStep(transform_name);
+        // No parameters provided - use default-constructed params with proper type
+        // We need to deserialize "{}" to get the correctly typed default params
+        auto params_any = Examples::loadParametersForTransform(transform_name, "{}");
+        if (!params_any.has_value()) {
+            std::cerr << "Failed to create default parameters for transform '" << transform_name << "'" << std::endl;
+            return std::nullopt;
+        }
+
+        try {
+            auto step = Examples::createPipelineStepFromRegistry(registry, transform_name, params_any);
+            pipeline.addStep(std::move(step));
+        } catch (std::exception const & e) {
+            std::cerr << "Failed to create pipeline step with default params: " << e.what() << std::endl;
+            return std::nullopt;
+        }
     }
 
     // Execute pipeline on the input data
@@ -353,6 +371,51 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeTransform(
         return executePipeline(input_data, pipeline);
     } catch (std::exception const & e) {
         std::cerr << "Pipeline execution failed: " << e.what() << std::endl;
+        return std::nullopt;
+    }
+}
+
+std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeContainerTransformDynamic(
+        std::string const & transform_name,
+        DataTypeVariant const & input_data,
+        std::optional<rfl::Generic> const & parameters) {
+
+    auto & registry = ElementRegistry::instance();
+
+    // Get container transform metadata
+    auto const * meta = registry.getContainerMetadata(transform_name);
+    if (!meta) {
+        std::cerr << "Container transform '" << transform_name << "' metadata not found" << std::endl;
+        return std::nullopt;
+    }
+
+    try {
+        std::any params_any;
+        
+        // Load parameters if provided, otherwise use default
+        if (parameters.has_value()) {
+            std::string params_json = rfl::json::write(parameters.value());
+            params_any = Examples::loadParametersForTransform(transform_name, params_json);
+            if (!params_any.has_value()) {
+                std::cerr << "Failed to load parameters for container transform '" << transform_name << "'" << std::endl;
+                return std::nullopt;
+            }
+        } else {
+            // Use the default parameter deserializer with empty JSON
+            params_any = Examples::loadParametersForTransform(transform_name, "{}");
+            if (!params_any.has_value()) {
+                std::cerr << "Failed to create default parameters for container transform '" << transform_name << "'" << std::endl;
+                return std::nullopt;
+            }
+        }
+
+        // Execute using the registry's dynamic container execution
+        ComputeContext ctx;
+        auto result = registry.executeContainerTransformDynamic(transform_name, input_data, params_any, ctx);
+        return result;
+
+    } catch (std::exception const & e) {
+        std::cerr << "Container transform execution failed: " << e.what() << std::endl;
         return std::nullopt;
     }
 }
