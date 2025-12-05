@@ -67,6 +67,8 @@ struct AnalogHilbertPhaseParams {
     std::optional<rfl::Validator<float, rfl::Minimum<0.0f>>> sampling_rate;
 
     // Helper methods to get values with defaults
+    // Note: For optional validators, .value().value() is needed - first extracts 
+    // from std::optional, second extracts validated value from rfl::Validator
     std::string getOutputType() const {
         return output_type.value_or("phase");
     }
