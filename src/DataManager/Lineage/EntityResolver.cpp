@@ -2,6 +2,7 @@
 #include "DataManager.hpp"
 #include "Lineage/LineageRegistry.hpp"
 
+#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
@@ -29,13 +30,70 @@ std::vector<EntityId> EntityResolver::resolveToSource(
         return {};
     }
 
-    // Get lineage registry - for now we'll check if DataManager has one
-    // This will be integrated in Phase 2 completion
-    // For now, return empty if no lineage system available
+    // Get lineage from registry
+    auto const * registry = _dm->getLineageRegistry();
+    if (!registry) {
+        // No lineage registry - just return EntityIds from the container itself
+        return getEntityIdsFromContainer(data_key, time, local_index);
+    }
 
-    // Try to get lineage from registry (future integration point)
-    // For now, just return EntityIds from the container itself
-    return getEntityIdsFromContainer(data_key, time, local_index);
+    auto lineage_opt = registry->getLineage(data_key);
+    if (!lineage_opt) {
+        // No lineage registered - return EntityIds from the container itself
+        return getEntityIdsFromContainer(data_key, time, local_index);
+    }
+
+    // Dispatch based on lineage type
+    return std::visit(
+            [this, &data_key, &time, local_index](auto const & lineage) -> std::vector<EntityId> {
+                using T = std::decay_t<decltype(lineage)>;
+
+                if constexpr (std::is_same_v<T, Source>) {
+                    // Source data - return own EntityIds from this container
+                    return getEntityIdsFromContainer(data_key, time, local_index);
+                } else if constexpr (std::is_same_v<T, OneToOneByTime>) {
+                    // 1:1 mapping - get EntityId from source at same time and local_index
+                    return getEntityIdsFromContainer(lineage.source_key, time, local_index);
+                } else if constexpr (std::is_same_v<T, AllToOneByTime>) {
+                    // N:1 mapping - get ALL EntityIds from source at this time
+                    return getAllEntityIdsAtTime(lineage.source_key, time);
+                } else if constexpr (std::is_same_v<T, SubsetLineage>) {
+                    // Subset - get EntityId from source, filtered by included set
+                    auto ids = getEntityIdsFromContainer(lineage.source_key, time, local_index);
+                    std::vector<EntityId> result;
+                    for (auto const & id: ids) {
+                        if (lineage.included_entities.count(id) > 0) {
+                            result.push_back(id);
+                        }
+                    }
+                    return result;
+                } else if constexpr (std::is_same_v<T, MultiSourceLineage>) {
+                    // Multi-source - combine EntityIds from all sources
+                    std::vector<EntityId> result;
+                    for (auto const & source_key: lineage.source_keys) {
+                        auto ids = getEntityIdsFromContainer(source_key, time, local_index);
+                        result.insert(result.end(), ids.begin(), ids.end());
+                    }
+                    return result;
+                } else if constexpr (std::is_same_v<T, ExplicitLineage>) {
+                    // Explicit mapping - look up in contributors map
+                    // local_index is the derived index
+                    if (local_index < lineage.contributors.size()) {
+                        return lineage.contributors[local_index];
+                    }
+                    return {};
+                } else if constexpr (std::is_same_v<T, EntityMappedLineage>) {
+                    // Entity-mapped - would need derived EntityId, not position
+                    // This path shouldn't be used with position-based resolution
+                    return {};
+                } else if constexpr (std::is_same_v<T, ImplicitEntityMapping>) {
+                    // Implicit mapping by position
+                    return getEntityIdsFromContainer(lineage.source_key, time, local_index);
+                } else {
+                    return {};
+                }
+            },
+            lineage_opt.value());
 }
 
 std::vector<EntityId> EntityResolver::resolveToRoot(
@@ -46,9 +104,124 @@ std::vector<EntityId> EntityResolver::resolveToRoot(
         return {};
     }
 
-    // For now, delegate to resolveToSource
-    // Full chain traversal will be implemented when LineageRegistry is integrated
-    return resolveToSource(data_key, time, local_index);
+    auto const * registry = _dm->getLineageRegistry();
+    if (!registry) {
+        return getEntityIdsFromContainer(data_key, time, local_index);
+    }
+
+    // Check if this key has lineage
+    auto lineage_opt = registry->getLineage(data_key);
+    if (!lineage_opt) {
+        // No lineage - return EntityIds from this container
+        return getEntityIdsFromContainer(data_key, time, local_index);
+    }
+
+    // Handle Source specially - it means this is a root/terminal node
+    if (std::holds_alternative<Source>(lineage_opt.value())) {
+        return getEntityIdsFromContainer(data_key, time, local_index);
+    }
+
+    // Recursively resolve based on lineage type
+    return std::visit(
+            [this, &time, local_index](auto const & lineage) -> std::vector<EntityId> {
+                using T = std::decay_t<decltype(lineage)>;
+
+                if constexpr (std::is_same_v<T, Source>) {
+                    // Should not reach here - handled above
+                    return {};
+                } else if constexpr (std::is_same_v<T, OneToOneByTime>) {
+                    // 1:1 mapping - resolve recursively through source
+                    return resolveToRoot(lineage.source_key, time, local_index);
+                } else if constexpr (std::is_same_v<T, AllToOneByTime>) {
+                    // N:1 mapping - need to resolve ALL elements at this time through source
+                    // First check if source has its own lineage
+                    auto const * reg = _dm->getLineageRegistry();
+                    auto source_lineage = reg ? reg->getLineage(lineage.source_key) : std::nullopt;
+                    
+                    if (!source_lineage || std::holds_alternative<Source>(source_lineage.value())) {
+                        // Source is terminal - get all EntityIds directly
+                        return getAllEntityIdsAtTime(lineage.source_key, time);
+                    }
+                    
+                    // Source has lineage - we need to resolve all elements at this time through it
+                    // Get count of elements at this time in the source
+                    std::vector<EntityId> all_root_ids;
+                    
+                    // We need to figure out how many elements are at this time in the intermediate container
+                    // and resolve each one to root
+                    DM_DataType const type = _dm->getType(lineage.source_key);
+                    std::size_t count = 0;
+                    
+                    // Determine count based on data type
+                    switch (type) {
+                        case DM_DataType::RaggedAnalog:
+                            if (auto data = _dm->getData<RaggedAnalogTimeSeries>(lineage.source_key)) {
+                                auto values = data->getDataAtTime(time);
+                                count = values.size();
+                            }
+                            break;
+                        case DM_DataType::Mask:
+                            if (auto data = _dm->getData<MaskData>(lineage.source_key)) {
+                                count = data->getEntityIdsAtTime(time).size();
+                            }
+                            break;
+                        case DM_DataType::Line:
+                            if (auto data = _dm->getData<LineData>(lineage.source_key)) {
+                                count = data->getEntityIdsAtTime(time).size();
+                            }
+                            break;
+                        case DM_DataType::Points:
+                            if (auto data = _dm->getData<PointData>(lineage.source_key)) {
+                                count = data->getEntityIdsAtTime(time).size();
+                            }
+                            break;
+                        default:
+                            // For other types, try with local_index 0
+                            count = 1;
+                            break;
+                    }
+                    
+                    // Resolve each element at this time through the chain
+                    for (std::size_t i = 0; i < count; ++i) {
+                        auto ids = resolveToRoot(lineage.source_key, time, i);
+                        all_root_ids.insert(all_root_ids.end(), ids.begin(), ids.end());
+                    }
+                    
+                    return all_root_ids;
+                } else if constexpr (std::is_same_v<T, SubsetLineage>) {
+                    // Subset - resolve through source, filtered
+                    auto ids = resolveToRoot(lineage.source_key, time, local_index);
+                    std::vector<EntityId> result;
+                    for (auto const & id: ids) {
+                        if (lineage.included_entities.count(id) > 0) {
+                            result.push_back(id);
+                        }
+                    }
+                    return result;
+                } else if constexpr (std::is_same_v<T, MultiSourceLineage>) {
+                    // Multi-source - resolve through all sources
+                    std::vector<EntityId> result;
+                    for (auto const & source_key: lineage.source_keys) {
+                        auto ids = resolveToRoot(source_key, time, local_index);
+                        result.insert(result.end(), ids.begin(), ids.end());
+                    }
+                    return result;
+                } else if constexpr (std::is_same_v<T, ExplicitLineage>) {
+                    // Explicit - already at root level (contributors are EntityIds)
+                    if (local_index < lineage.contributors.size()) {
+                        return lineage.contributors[local_index];
+                    }
+                    return {};
+                } else if constexpr (std::is_same_v<T, ImplicitEntityMapping>) {
+                    return resolveToRoot(lineage.source_key, time, local_index);
+                } else if constexpr (std::is_same_v<T, EntityMappedLineage>) {
+                    // Would need derived EntityId, not local_index
+                    return {};
+                } else {
+                    return {};
+                }
+            },
+            lineage_opt.value());
 }
 
 // =============================================================================
@@ -161,16 +334,26 @@ std::unordered_set<EntityId> EntityResolver::getAllSourceEntities(
 std::vector<std::string> EntityResolver::getLineageChain(
         std::string const & data_key) const {
     // Delegate to LineageRegistry if available
-    // For now, return just the data key itself
+    auto const * registry = _dm ? _dm->getLineageRegistry() : nullptr;
+    if (registry) {
+        return registry->getLineageChain(data_key);
+    }
     return {data_key};
 }
 
 bool EntityResolver::hasLineage(std::string const & data_key) const {
-    // Will check LineageRegistry when integrated
+    auto const * registry = _dm ? _dm->getLineageRegistry() : nullptr;
+    if (registry) {
+        return registry->hasLineage(data_key);
+    }
     return false;
 }
 
 bool EntityResolver::isSource(std::string const & data_key) const {
+    auto const * registry = _dm ? _dm->getLineageRegistry() : nullptr;
+    if (registry) {
+        return registry->isSource(data_key);
+    }
     // Without lineage info, assume everything is a source
     return true;
 }

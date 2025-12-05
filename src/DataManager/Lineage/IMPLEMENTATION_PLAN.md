@@ -16,24 +16,30 @@
 - ✅ `src/DataManager/Lineage/LineageTypes.hpp` - All 8 lineage variant types
 - ✅ `src/DataManager/Lineage/LineageRegistry.hpp` - Registry interface with staleness tracking
 - ✅ `src/DataManager/Lineage/LineageRegistry.cpp` - Full implementation
-- ✅ `src/DataManager/Lineage/LineageRegistry.test.cpp` - Comprehensive unit tests
+- ✅ `tests/DataManager/Lineage/LineageRegistry.test.cpp` - Comprehensive unit tests
 - ✅ `src/DataManager/CMakeLists.txt` - Updated to include Lineage sources
 - ✅ `tests/DataManager/CMakeLists.txt` - Updated to include Lineage tests
 
 #### Phase 2
 - ✅ `src/DataManager/Lineage/EntityResolver.hpp` - Resolver interface for tracing lineage
 - ✅ `src/DataManager/Lineage/EntityResolver.cpp` - Full implementation with visitor dispatch
-- ✅ `src/DataManager/Lineage/EntityResolver.test.cpp` - Unit tests for resolution strategies
+- ✅ `tests/DataManager/Lineage/EntityResolver.test.cpp` - Unit tests for resolution strategies
 
 #### Phase 3
 - ✅ `src/DataManager/DataManager.hpp` - Added LineageRegistry member and accessors
-- ✅ `src/DataManager/DataManager.cpp` - Initialize LineageRegistry in constructor
+- ✅ `src/DataManager/DataManager.cpp` - Initialize LineageRegistry in constructor; added RaggedAnalog to getType()
 - ✅ `src/DataManager/transforms/v2/core/TransformTypes.hpp` - Added TransformLineageType enum
 - ✅ `src/DataManager/transforms/v2/core/ElementRegistry.hpp` - Added lineage_type to TransformMetadata
 - ✅ `src/DataManager/transforms/v2/core/RegisteredTransforms.cpp` - Updated transform registrations with lineage types
 - ✅ `src/DataManager/Lineage/LineageRecorder.hpp` - Helper to record lineage from transforms
 - ✅ `src/DataManager/Lineage/LineageRecorder.cpp` - Implementation
 - ✅ `tests/DataManager/Lineage/test_lineage_recorder.test.cpp` - Unit tests for LineageRecorder
+- ✅ `tests/DataManager/Lineage/test_transform_lineage_integration.test.cpp` - Full integration tests
+
+### Key Bug Fixes (Phase 3)
+- Fixed `DataManager::getType()` to recognize `RaggedAnalogTimeSeries` (was returning `Unknown`)
+- Fixed `EntityResolver::resolveToRoot()` to properly handle `Source` lineage type (was returning empty instead of EntityIds)
+- Fixed chain resolution for multi-step lineage (e.g., `total_areas → mask_areas → masks`)
 
 ---
 
@@ -623,6 +629,9 @@ auto source_ids = resolver.resolveToSource("mask_areas", TimeFrameIndex(5));
 - [x] Updated transform registrations with lineage types
 - [x] LineageRecorder utility class
 - [x] Unit tests for LineageRecorder
+- [x] Full integration tests (MaskData → MaskArea → SumReduction → EntityResolver)
+- [x] Bug fix: RaggedAnalogTimeSeries recognition in DataManager::getType()
+- [x] Bug fix: Source lineage handling in EntityResolver::resolveToRoot()
 
 ---
 

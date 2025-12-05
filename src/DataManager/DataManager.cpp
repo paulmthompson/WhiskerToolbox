@@ -928,6 +928,8 @@ DM_DataType DataManager::getType(std::string const & key) const {
             return DM_DataType::Mask;
         } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(it->second)) {
             return DM_DataType::Analog;
+        } else if (std::holds_alternative<std::shared_ptr<RaggedAnalogTimeSeries>>(it->second)) {
+            return DM_DataType::RaggedAnalog;
         } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(it->second)) {
             return DM_DataType::DigitalEvent;
         } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(it->second)) {
