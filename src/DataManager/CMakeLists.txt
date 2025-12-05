@@ -229,6 +229,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/MaskArea/MaskArea.cpp
         transforms/v2/algorithms/SumReduction/SumReduction.hpp
         transforms/v2/algorithms/SumReduction/SumReduction.cpp
+        transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.hpp
+        transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.cpp
 
         Lineage/LineageTypes.hpp
         Lineage/LineageRegistry.hpp

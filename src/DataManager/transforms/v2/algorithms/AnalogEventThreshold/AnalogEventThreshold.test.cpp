@@ -3,6 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "transforms/v2/core/ComputeContext.hpp"
+#include "transforms/v2/core/DataManagerIntegration.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp" //registerContainerTransform
 #include "transforms/v2/core/ParameterIO.hpp"
 
@@ -11,6 +12,8 @@
 
 #include "fixtures/AnalogEventThresholdTestFixture.hpp"
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
@@ -333,5 +336,295 @@ TEST_CASE("V2 Container Transform: Registry Integration",
         auto transforms = registry.getContainerTransformsForInputType(typeid(AnalogTimeSeries));
         REQUIRE_FALSE(transforms.empty());
         REQUIRE(std::find(transforms.begin(), transforms.end(), "AnalogEventThreshold") != transforms.end());
+    }
+}
+
+// ============================================================================
+// Tests: DataManager Integration via load_data_from_json_config_v2
+// ============================================================================
+
+TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
+                 "V2 Container Transform: AnalogEventThreshold - load_data_from_json_config_v2",
+                 "[transforms][v2][container][analog_event_threshold][json_config]") {
+    
+    using namespace WhiskerToolbox::Transforms::V2;
+    
+    // Get DataManager from fixture
+    DataManager* dm = getDataManager();
+    
+    // Create temporary directory for JSON config files
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "analog_event_threshold_v2_test";
+    std::filesystem::create_directories(test_dir);
+    
+    SECTION("Execute V2 pipeline via load_data_from_json_config_v2 - positive threshold no lockout") {
+        // Create JSON config in V1-compatible format (used by load_data_from_json_config_v2)
+        const char* json_config = 
+            "[\n"
+            "{\n"
+            "    \"transformations\": {\n"
+            "        \"metadata\": {\n"
+            "            \"name\": \"V2 Event Threshold Detection Pipeline\",\n"
+            "            \"description\": \"Test V2 event threshold detection on analog signal\",\n"
+            "            \"version\": \"2.0\"\n"
+            "        },\n"
+            "        \"steps\": [\n"
+            "            {\n"
+            "                \"step_id\": \"1\",\n"
+            "                \"transform_name\": \"AnalogEventThreshold\",\n"
+            "                \"input_key\": \"positive_no_lockout\",\n"
+            "                \"output_key\": \"v2_detected_events\",\n"
+            "                \"parameters\": {\n"
+            "                    \"threshold_value\": 1.0,\n"
+            "                    \"direction\": \"positive\",\n"
+            "                    \"lockout_time\": 0.0\n"
+            "                }\n"
+            "            }\n"
+            "        ]\n"
+            "    }\n"
+            "}\n"
+            "]";
+        
+        std::filesystem::path json_filepath = test_dir / "v2_pipeline_config.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config;
+            json_file.close();
+        }
+        
+        // Execute the V2 transformation pipeline
+        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        
+        // Verify the transformation was executed and results are available
+        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events");
+        REQUIRE(result_events != nullptr);
+        
+        // Verify the event detection results
+        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
+        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+    }
+    
+    SECTION("Execute V2 pipeline with lockout") {
+        const char* json_config_lockout = 
+            "[\n"
+            "{\n"
+            "    \"transformations\": {\n"
+            "        \"metadata\": {\n"
+            "            \"name\": \"V2 Event Threshold with Lockout\",\n"
+            "            \"description\": \"Test V2 event detection with lockout time\",\n"
+            "            \"version\": \"2.0\"\n"
+            "        },\n"
+            "        \"steps\": [\n"
+            "            {\n"
+            "                \"step_id\": \"1\",\n"
+            "                \"transform_name\": \"AnalogEventThreshold\",\n"
+            "                \"input_key\": \"positive_with_lockout\",\n"
+            "                \"output_key\": \"v2_detected_events_lockout\",\n"
+            "                \"parameters\": {\n"
+            "                    \"threshold_value\": 1.0,\n"
+            "                    \"direction\": \"positive\",\n"
+            "                    \"lockout_time\": 150.0\n"
+            "                }\n"
+            "            }\n"
+            "        ]\n"
+            "    }\n"
+            "}\n"
+            "]";
+        
+        std::filesystem::path json_filepath = test_dir / "v2_pipeline_config_lockout.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config_lockout;
+            json_file.close();
+        }
+        
+        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        
+        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_lockout");
+        REQUIRE(result_events != nullptr);
+        
+        // With lockout of 150, event at 300 should be skipped
+        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
+        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+    }
+    
+    SECTION("Execute V2 pipeline with negative threshold") {
+        const char* json_config_negative = 
+            "[\n"
+            "{\n"
+            "    \"transformations\": {\n"
+            "        \"metadata\": {\n"
+            "            \"name\": \"V2 Event Threshold Negative Direction\",\n"
+            "            \"description\": \"Test V2 event detection with negative threshold\",\n"
+            "            \"version\": \"2.0\"\n"
+            "        },\n"
+            "        \"steps\": [\n"
+            "            {\n"
+            "                \"step_id\": \"1\",\n"
+            "                \"transform_name\": \"AnalogEventThreshold\",\n"
+            "                \"input_key\": \"negative_no_lockout\",\n"
+            "                \"output_key\": \"v2_detected_events_negative\",\n"
+            "                \"parameters\": {\n"
+            "                    \"threshold_value\": -1.0,\n"
+            "                    \"direction\": \"negative\",\n"
+            "                    \"lockout_time\": 0.0\n"
+            "                }\n"
+            "            }\n"
+            "        ]\n"
+            "    }\n"
+            "}\n"
+            "]";
+        
+        std::filesystem::path json_filepath = test_dir / "v2_pipeline_config_negative.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config_negative;
+            json_file.close();
+        }
+        
+        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        
+        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_negative");
+        REQUIRE(result_events != nullptr);
+        
+        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
+        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+    }
+    
+    SECTION("Execute V2 pipeline with absolute threshold") {
+        const char* json_config_absolute = 
+            "[\n"
+            "{\n"
+            "    \"transformations\": {\n"
+            "        \"metadata\": {\n"
+            "            \"name\": \"V2 Event Threshold Absolute Direction\",\n"
+            "            \"description\": \"Test V2 event detection with absolute threshold\",\n"
+            "            \"version\": \"2.0\"\n"
+            "        },\n"
+            "        \"steps\": [\n"
+            "            {\n"
+            "                \"step_id\": \"1\",\n"
+            "                \"transform_name\": \"AnalogEventThreshold\",\n"
+            "                \"input_key\": \"absolute_no_lockout\",\n"
+            "                \"output_key\": \"v2_detected_events_absolute\",\n"
+            "                \"parameters\": {\n"
+            "                    \"threshold_value\": 1.0,\n"
+            "                    \"direction\": \"absolute\",\n"
+            "                    \"lockout_time\": 0.0\n"
+            "                }\n"
+            "            }\n"
+            "        ]\n"
+            "    }\n"
+            "}\n"
+            "]";
+        
+        std::filesystem::path json_filepath = test_dir / "v2_pipeline_config_absolute.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config_absolute;
+            json_file.close();
+        }
+        
+        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        
+        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_absolute");
+        REQUIRE(result_events != nullptr);
+        
+        std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
+        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+    }
+    
+    SECTION("Execute V2 pipeline - no events expected (high threshold)") {
+        const char* json_config_high = 
+            "[\n"
+            "{\n"
+            "    \"transformations\": {\n"
+            "        \"metadata\": {\n"
+            "            \"name\": \"V2 Event Threshold High Threshold\",\n"
+            "            \"description\": \"Test V2 event detection with high threshold - no events\",\n"
+            "            \"version\": \"2.0\"\n"
+            "        },\n"
+            "        \"steps\": [\n"
+            "            {\n"
+            "                \"step_id\": \"1\",\n"
+            "                \"transform_name\": \"AnalogEventThreshold\",\n"
+            "                \"input_key\": \"no_events_high_threshold\",\n"
+            "                \"output_key\": \"v2_detected_events_high\",\n"
+            "                \"parameters\": {\n"
+            "                    \"threshold_value\": 10.0,\n"
+            "                    \"direction\": \"positive\",\n"
+            "                    \"lockout_time\": 0.0\n"
+            "                }\n"
+            "            }\n"
+            "        ]\n"
+            "    }\n"
+            "}\n"
+            "]";
+        
+        std::filesystem::path json_filepath = test_dir / "v2_pipeline_config_high.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config_high;
+            json_file.close();
+        }
+        
+        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        
+        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_high");
+        REQUIRE(result_events != nullptr);
+        REQUIRE(result_events->getEventSeries().empty());
+    }
+    
+    SECTION("Execute V2 pipeline - empty signal") {
+        const char* json_config_empty = 
+            "[\n"
+            "{\n"
+            "    \"transformations\": {\n"
+            "        \"metadata\": {\n"
+            "            \"name\": \"V2 Event Threshold Empty Signal\",\n"
+            "            \"description\": \"Test V2 event detection on empty signal\",\n"
+            "            \"version\": \"2.0\"\n"
+            "        },\n"
+            "        \"steps\": [\n"
+            "            {\n"
+            "                \"step_id\": \"1\",\n"
+            "                \"transform_name\": \"AnalogEventThreshold\",\n"
+            "                \"input_key\": \"empty_signal\",\n"
+            "                \"output_key\": \"v2_detected_events_empty\",\n"
+            "                \"parameters\": {\n"
+            "                    \"threshold_value\": 1.0,\n"
+            "                    \"direction\": \"positive\",\n"
+            "                    \"lockout_time\": 0.0\n"
+            "                }\n"
+            "            }\n"
+            "        ]\n"
+            "    }\n"
+            "}\n"
+            "]";
+        
+        std::filesystem::path json_filepath = test_dir / "v2_pipeline_config_empty.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config_empty;
+            json_file.close();
+        }
+        
+        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        
+        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_empty");
+        REQUIRE(result_events != nullptr);
+        REQUIRE(result_events->getEventSeries().empty());
+    }
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 }
