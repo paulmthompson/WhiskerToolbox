@@ -9,29 +9,28 @@
 #include <memory>
 #include <vector>
 
-TEST_CASE("Data Transform: Digital Interval Boolean Transform - AND Operation", "[transforms][digital_interval_boolean]") {
+#include "fixtures/DigitalIntervalBooleanTestFixture.hpp"
+
+// ============================================================================
+// Tests using shared fixture (for V1/V2 parity)
+// ============================================================================
+
+TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
+                 "V1 Transform: Digital Interval Boolean - AND Operation",
+                 "[transforms][v1][digital_interval_boolean]") {
     BooleanParams params;
-    BooleanOperation operation;
+    params.operation = BooleanParams::BooleanOperation::AND;
 
     SECTION("Basic AND - overlapping intervals") {
-        // Input: (1,5), (10,15)
-        // Other: (3,7), (12,20)
-        // AND: (3,5), (12,15)
-        std::vector<Interval> input_intervals = {{1, 5}, {10, 15}};
-        std::vector<Interval> other_intervals = {{3, 7}, {12, 20}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["and_overlapping"];
+        auto other = m_other_series["and_overlapping"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::AND;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 2);
-
         REQUIRE(result_intervals[0].start == 3);
         REQUIRE(result_intervals[0].end == 5);
         REQUIRE(result_intervals[1].start == 12);
@@ -39,94 +38,60 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - AND Operation", 
     }
 
     SECTION("AND - no overlap") {
-        // Input: (1,5)
-        // Other: (10,15)
-        // AND: empty
-        std::vector<Interval> input_intervals = {{1, 5}};
-        std::vector<Interval> other_intervals = {{10, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["and_no_overlap"];
+        auto other = m_other_series["and_no_overlap"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::AND;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
-
-        auto const & result_intervals = result->getDigitalIntervalSeries();
-        REQUIRE(result_intervals.empty());
+        REQUIRE(result->getDigitalIntervalSeries().empty());
     }
 
     SECTION("AND - complete overlap") {
-        // Input: (1,10)
-        // Other: (1,10)
-        // AND: (1,10)
-        std::vector<Interval> input_intervals = {{1, 10}};
-        std::vector<Interval> other_intervals = {{1, 10}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["and_complete_overlap"];
+        auto other = m_other_series["and_complete_overlap"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::AND;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 1);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 10);
     }
 
     SECTION("AND - one series subset of other") {
-        // Input: (5,15)
-        // Other: (1,20)
-        // AND: (5,15)
-        std::vector<Interval> input_intervals = {{5, 15}};
-        std::vector<Interval> other_intervals = {{1, 20}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["and_subset"];
+        auto other = m_other_series["and_subset"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::AND;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 1);
-
         REQUIRE(result_intervals[0].start == 5);
         REQUIRE(result_intervals[0].end == 15);
     }
 }
 
-TEST_CASE("Data Transform: Digital Interval Boolean Transform - OR Operation", "[transforms][digital_interval_boolean]") {
+TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
+                 "V1 Transform: Digital Interval Boolean - OR Operation",
+                 "[transforms][v1][digital_interval_boolean]") {
     BooleanParams params;
+    params.operation = BooleanParams::BooleanOperation::OR;
 
     SECTION("Basic OR - separate intervals") {
-        // Input: (1,5)
-        // Other: (10,15)
-        // OR: (1,5), (10,15)
-        std::vector<Interval> input_intervals = {{1, 5}};
-        std::vector<Interval> other_intervals = {{10, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["or_separate"];
+        auto other = m_other_series["or_separate"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::OR;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 2);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 5);
         REQUIRE(result_intervals[1].start == 10);
@@ -134,47 +99,29 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - OR Operation", "
     }
 
     SECTION("OR - overlapping intervals merge") {
-        // Input: (1,10)
-        // Other: (5,15)
-        // OR: (1,15)
-        std::vector<Interval> input_intervals = {{1, 10}};
-        std::vector<Interval> other_intervals = {{5, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["or_overlapping_merge"];
+        auto other = m_other_series["or_overlapping_merge"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::OR;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 1);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 15);
     }
 
     SECTION("OR - multiple intervals with gaps") {
-        // Input: (1,5), (15,20)
-        // Other: (8,12), (18,25)
-        // OR: (1,5), (8,12), (15,25)
-        std::vector<Interval> input_intervals = {{1, 5}, {15, 20}};
-        std::vector<Interval> other_intervals = {{8, 12}, {18, 25}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["or_multiple_with_gaps"];
+        auto other = m_other_series["or_multiple_with_gaps"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::OR;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 3);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 5);
         REQUIRE(result_intervals[1].start == 8);
@@ -184,28 +131,22 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - OR Operation", "
     }
 }
 
-TEST_CASE("Data Transform: Digital Interval Boolean Transform - XOR Operation", "[transforms][digital_interval_boolean]") {
+TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
+                 "V1 Transform: Digital Interval Boolean - XOR Operation",
+                 "[transforms][v1][digital_interval_boolean]") {
     BooleanParams params;
+    params.operation = BooleanParams::BooleanOperation::XOR;
 
     SECTION("Basic XOR - no overlap") {
-        // Input: (1,5)
-        // Other: (10,15)
-        // XOR: (1,5), (10,15) - both present, not overlapping
-        std::vector<Interval> input_intervals = {{1, 5}};
-        std::vector<Interval> other_intervals = {{10, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["xor_no_overlap"];
+        auto other = m_other_series["xor_no_overlap"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::XOR;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 2);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 5);
         REQUIRE(result_intervals[1].start == 10);
@@ -213,24 +154,15 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - XOR Operation", 
     }
 
     SECTION("XOR - partial overlap excludes overlap") {
-        // Input: (1,10)
-        // Other: (5,15)
-        // XOR: (1,4), (11,15) - excludes (5,10) where both are true
-        std::vector<Interval> input_intervals = {{1, 10}};
-        std::vector<Interval> other_intervals = {{5, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["xor_partial_overlap"];
+        auto other = m_other_series["xor_partial_overlap"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::XOR;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 2);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 4);
         REQUIRE(result_intervals[1].start == 11);
@@ -238,44 +170,25 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - XOR Operation", 
     }
 
     SECTION("XOR - complete overlap results in nothing") {
-        // Input: (1,10)
-        // Other: (1,10)
-        // XOR: empty - both true everywhere
-        std::vector<Interval> input_intervals = {{1, 10}};
-        std::vector<Interval> other_intervals = {{1, 10}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["xor_complete_overlap"];
+        auto other = m_other_series["xor_complete_overlap"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::XOR;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
-
-        auto const & result_intervals = result->getDigitalIntervalSeries();
-        REQUIRE(result_intervals.empty());
+        REQUIRE(result->getDigitalIntervalSeries().empty());
     }
 
     SECTION("XOR - complex pattern") {
-        // Input: (1,5), (10,15)
-        // Other: (3,12)
-        // XOR: (1,2), (6,9), (13,15)
-        std::vector<Interval> input_intervals = {{1, 5}, {10, 15}};
-        std::vector<Interval> other_intervals = {{3, 12}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["xor_complex"];
+        auto other = m_other_series["xor_complex"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::XOR;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 3);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 2);
         REQUIRE(result_intervals[1].start == 6);
@@ -285,67 +198,41 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - XOR Operation", 
     }
 }
 
-TEST_CASE("Data Transform: Digital Interval Boolean Transform - NOT Operation", "[transforms][digital_interval_boolean]") {
+TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
+                 "V1 Transform: Digital Interval Boolean - NOT Operation",
+                 "[transforms][v1][digital_interval_boolean]") {
     BooleanParams params;
+    params.operation = BooleanParams::BooleanOperation::NOT;
 
     SECTION("NOT - single interval") {
-        // Input: (5,10)
-        // NOT: (5,10) inverted within its own range - empty (all covered)
-        // Actually, NOT should invert within the defined range
-        // If interval is (5,10), NOT gives nothing in that range
-        // This is tricky - we need to define the "universe"
-        // Let's assume NOT inverts within the min-max range of the input
-        std::vector<Interval> input_intervals = {{5, 10}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
+        auto input = m_input_series["not_single_interval"];
 
-        params.operation = BooleanParams::BooleanOperation::NOT;
-        // other_series is ignored for NOT
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
-
-        auto const & result_intervals = result->getDigitalIntervalSeries();
         // Within range (5,10), everything is true, so NOT gives empty
-        REQUIRE(result_intervals.empty());
+        REQUIRE(result->getDigitalIntervalSeries().empty());
     }
 
     SECTION("NOT - intervals with gaps") {
-        // Input: (1,5), (10,15)
-        // Range is (1,15)
-        // NOT: (6,9) - the gap between intervals
-        std::vector<Interval> input_intervals = {{1, 5}, {10, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
+        auto input = m_input_series["not_with_gaps"];
 
-        params.operation = BooleanParams::BooleanOperation::NOT;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 1);
-
         REQUIRE(result_intervals[0].start == 6);
         REQUIRE(result_intervals[0].end == 9);
     }
 
     SECTION("NOT - multiple gaps") {
-        // Input: (1,3), (5,7), (9,11)
-        // Range is (1,11)
-        // NOT: (4,4), (8,8)
-        std::vector<Interval> input_intervals = {{1, 3}, {5, 7}, {9, 11}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
+        auto input = m_input_series["not_multiple_gaps"];
 
-        params.operation = BooleanParams::BooleanOperation::NOT;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 2);
-
         REQUIRE(result_intervals[0].start == 4);
         REQUIRE(result_intervals[0].end == 4);
         REQUIRE(result_intervals[1].start == 8);
@@ -353,94 +240,60 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - NOT Operation", 
     }
 }
 
-TEST_CASE("Data Transform: Digital Interval Boolean Transform - AND_NOT Operation", "[transforms][digital_interval_boolean]") {
+TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
+                 "V1 Transform: Digital Interval Boolean - AND_NOT Operation",
+                 "[transforms][v1][digital_interval_boolean]") {
     BooleanParams params;
+    params.operation = BooleanParams::BooleanOperation::AND_NOT;
 
     SECTION("AND_NOT - subtract overlapping portion") {
-        // Input: (1,10)
-        // Other: (5,15)
-        // AND_NOT: (1,4) - input where other is false
-        std::vector<Interval> input_intervals = {{1, 10}};
-        std::vector<Interval> other_intervals = {{5, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["and_not_subtract_overlap"];
+        auto other = m_other_series["and_not_subtract_overlap"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::AND_NOT;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 1);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 4);
     }
 
     SECTION("AND_NOT - no overlap keeps input") {
-        // Input: (1,5)
-        // Other: (10,15)
-        // AND_NOT: (1,5) - input unchanged
-        std::vector<Interval> input_intervals = {{1, 5}};
-        std::vector<Interval> other_intervals = {{10, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["and_not_no_overlap"];
+        auto other = m_other_series["and_not_no_overlap"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::AND_NOT;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 1);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 5);
     }
 
     SECTION("AND_NOT - complete overlap removes everything") {
-        // Input: (5,10)
-        // Other: (1,15)
-        // AND_NOT: empty
-        std::vector<Interval> input_intervals = {{5, 10}};
-        std::vector<Interval> other_intervals = {{1, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["and_not_complete_overlap"];
+        auto other = m_other_series["and_not_complete_overlap"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::AND_NOT;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
-
-        auto const & result_intervals = result->getDigitalIntervalSeries();
-        REQUIRE(result_intervals.empty());
+        REQUIRE(result->getDigitalIntervalSeries().empty());
     }
 
     SECTION("AND_NOT - punch holes in input") {
-        // Input: (1,20)
-        // Other: (5,8), (12,15)
-        // AND_NOT: (1,4), (9,11), (16,20)
-        std::vector<Interval> input_intervals = {{1, 20}};
-        std::vector<Interval> other_intervals = {{5, 8}, {12, 15}};
-        
-        auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
-        auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
+        auto input = m_input_series["and_not_punch_holes"];
+        auto other = m_other_series["and_not_punch_holes"];
+        params.other_series = other;
 
-        params.operation = BooleanParams::BooleanOperation::AND_NOT;
-        params.other_series = other_dis;
-
-        auto result = apply_boolean_operation(input_dis.get(), params);
+        auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
         REQUIRE(result_intervals.size() == 3);
-
         REQUIRE(result_intervals[0].start == 1);
         REQUIRE(result_intervals[0].end == 4);
         REQUIRE(result_intervals[1].start == 9);
@@ -450,7 +303,82 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - AND_NOT Operatio
     }
 }
 
-TEST_CASE("Data Transform: Digital Interval Boolean Transform - Class Tests", "[transforms][digital_interval_boolean][operation]") {
+TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
+                 "V1 Transform: Digital Interval Boolean - Edge Cases",
+                 "[transforms][v1][digital_interval_boolean][edge_cases]") {
+    BooleanParams params;
+
+    SECTION("Empty input series") {
+        auto input = m_input_series["empty_input"];
+        auto other = m_other_series["empty_input"];
+        params.operation = BooleanParams::BooleanOperation::OR;
+        params.other_series = other;
+
+        auto result = apply_boolean_operation(input.get(), params);
+        REQUIRE(result != nullptr);
+        // OR with empty input and non-empty other should give the other
+        REQUIRE(!result->getDigitalIntervalSeries().empty());
+    }
+
+    SECTION("Both series empty") {
+        auto input = m_input_series["both_empty"];
+        auto other = m_other_series["both_empty"];
+        params.operation = BooleanParams::BooleanOperation::AND;
+        params.other_series = other;
+
+        auto result = apply_boolean_operation(input.get(), params);
+        REQUIRE(result != nullptr);
+        REQUIRE(result->getDigitalIntervalSeries().empty());
+    }
+
+    SECTION("Null input pointer") {
+        params.operation = BooleanParams::BooleanOperation::AND;
+
+        auto result = apply_boolean_operation(nullptr, params);
+        REQUIRE(result != nullptr);
+        REQUIRE(result->getDigitalIntervalSeries().empty());
+    }
+
+    SECTION("NOT with empty series") {
+        auto input = m_input_series["not_empty"];
+        params.operation = BooleanParams::BooleanOperation::NOT;
+
+        auto result = apply_boolean_operation(input.get(), params);
+        REQUIRE(result != nullptr);
+        REQUIRE(result->getDigitalIntervalSeries().empty());
+    }
+}
+
+TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
+                 "V1 Transform: Progress Callback",
+                 "[transforms][v1][digital_interval_boolean][progress]") {
+    BooleanParams params;
+    
+    SECTION("Progress callback is invoked") {
+        auto input = m_input_series["large_intervals"];
+        auto other = m_other_series["large_intervals"];
+        params.operation = BooleanParams::BooleanOperation::AND;
+        params.other_series = other;
+
+        std::vector<int> progress_values;
+        auto callback = [&progress_values](int progress) {
+            progress_values.push_back(progress);
+        };
+
+        auto result = apply_boolean_operation(input.get(), params, callback);
+        REQUIRE(result != nullptr);
+        
+        // Verify that progress was reported
+        REQUIRE(!progress_values.empty());
+        REQUIRE(progress_values.back() == 100);
+    }
+}
+
+// ============================================================================
+// V1-specific tests (Class API, JSON pipeline, parameters)
+// ============================================================================
+
+TEST_CASE("Data Transform: Digital Interval Boolean Transform - Class Tests", "[transforms][v1][digital_interval_boolean][operation]") {
     BooleanOperation operation;
     BooleanParams params;
     DataTypeVariant variant;

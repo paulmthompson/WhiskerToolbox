@@ -7,6 +7,7 @@
 #include "transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
+#include "transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
@@ -37,6 +38,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<AnalogEventThresholdParams>();
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
     registerPipelineStepFactoryFor<AnalogIntervalThresholdParams>();
+    registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParams>();
     return true;
 }();
@@ -225,10 +227,26 @@ void registerAnalogIntervalThreshold() {
                     .supports_cancellation = true});
 }
 
+// Register DigitalIntervalBoolean (Binary Container Transform) - compile-time registration
+auto const register_digital_interval_boolean = RegisterBinaryContainerTransform<
+        DigitalIntervalSeries,
+        DigitalIntervalSeries,
+        DigitalIntervalSeries,
+        DigitalIntervalBooleanParams>(
+        "DigitalIntervalBoolean",
+        digitalIntervalBoolean,
+        ContainerTransformMetadata{
+                .description = "Apply boolean logic between two interval series",
+                .category = "Signal Processing / Logic",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
 auto const container_transform_registration = []() {
     registerAnalogEventThreshold();
     registerAnalogIntervalPeak();
     registerAnalogIntervalThreshold();
+    // DigitalIntervalBoolean is now registered via compile-time RAII above
     return true;
 }();
 

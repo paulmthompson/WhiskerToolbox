@@ -231,6 +231,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/SumReduction/SumReduction.cpp
         transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.hpp
         transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.cpp
+        transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp
+        transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.cpp
 
         Lineage/LineageTypes.hpp
         Lineage/LineageRegistry.hpp

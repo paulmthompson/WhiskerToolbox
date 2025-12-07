@@ -300,6 +300,102 @@ registry.registerMultiInputTransform<
 );
 ```
 
+### Example 5: Runtime Multi-Input Pipeline (Binary Transforms via JSON)
+
+For multi-input (binary, ternary, etc.) transforms at runtime, use `additional_input_keys` to specify secondary inputs:
+
+```cpp
+#include "transforms/v2/core/DataManagerIntegration.hpp"
+
+using namespace WhiskerToolbox::Transforms::V2;
+
+DataManager dm;
+// ... populate dm with LineData at "my_lines" and PointData at "my_points" ...
+
+DataManagerPipelineExecutor executor(&dm);
+executor.loadFromJson(R"({
+    "steps": [
+        {
+            "step_id": "1",
+            "transform_name": "CalculateLineMinPointDistance",
+            "input_key": "my_lines",
+            "additional_input_keys": ["my_points"],
+            "output_key": "distances",
+            "parameters": {}
+        },
+        {
+            "step_id": "2",
+            "transform_name": "SumReduction",
+            "input_key": "distances",
+            "output_key": "total_distances",
+            "parameters": {}
+        },
+        {
+            "step_id": "3",
+            "transform_name": "AnalogEventThreshold",
+            "input_key": "total_distances",
+            "output_key": "threshold_events",
+            "parameters": {
+                "threshold": 5.0,
+                "direction": "above"
+            }
+        }
+    ]
+})");
+
+auto result = executor.execute();
+if (result.success) {
+    // "distances" contains RaggedAnalogTimeSeries from multi-input transform
+    // "total_distances" contains AnalogTimeSeries (sum of distances)
+    // "threshold_events" contains DigitalEventSeries
+    auto events = dm.getData<DigitalEventSeries>("threshold_events");
+}
+```
+
+**Key Points for Multi-Input Pipelines:**
+- `input_key` specifies the primary input (first element of tuple)
+- `additional_input_keys` is an array of secondary inputs (rest of tuple)
+- All inputs are zip-iterated at runtime using `FlatZipView`
+- Binary transforms (2 inputs) use tuple: `(primary, secondary)`
+- Steps can be chained after multi-input transforms using standard `input_key`
+
+**JSON Schema for Multi-Input Step:**
+```json
+{
+    "step_id": "string (unique identifier)",
+    "transform_name": "string (registered transform name)",
+    "input_key": "string (primary input DataManager key)",
+    "additional_input_keys": ["string", "..."],  // Optional: secondary inputs
+    "output_key": "string (output DataManager key)",
+    "parameters": { }
+}
+```
+
+### Example 6: Pipeline Fusion with Multi-Input Transforms
+
+The executor automatically analyzes pipelines and groups fusible steps into segments:
+
+```cpp
+DataManagerPipelineExecutor executor(&dm);
+executor.loadFromJson(config);
+
+// Analyze fusion opportunities
+auto segments = executor.buildSegments();
+
+for (auto const& segment : segments) {
+    std::cout << "Segment: steps " << segment.start_step 
+              << " to " << segment.end_step << "\n";
+    std::cout << "  Multi-input: " << segment.is_multi_input << "\n";
+    std::cout << "  Requires materialization: " 
+              << segment.requires_materialization << "\n";
+}
+
+// Fusion rules:
+// - Element-wise transforms with chained outputs are fused
+// - Multi-input transforms start new segments
+// - Container transforms (like AnalogEventThreshold) require materialization
+```
+
 ## Building
 
 This module is part of the DataManager library and built with CMake:

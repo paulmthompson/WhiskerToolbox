@@ -1,20 +1,27 @@
 #include "DataManagerIntegration.hpp"
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Tensors/Tensor_Data.hpp"
+#include "transforms/v2/core/ContainerTraits.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
+#include "transforms/v2/core/FlatZipView.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
 #include "transforms/v2/core/PipelineLoader.hpp"
+#include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
 
 #include <chrono>
 #include <filesystem>
 #include <iostream>
+#include <ranges>
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -100,6 +107,19 @@ bool DataManagerPipelineExecutor::parseJsonFormat(nlohmann::json const & json_co
             // Optional fields
             if (step_json.contains("output_key") && step_json["output_key"].is_string()) {
                 step.output_key = step_json["output_key"].get<std::string>();
+            }
+
+            // Parse additional_input_keys for multi-input transforms
+            if (step_json.contains("additional_input_keys") && step_json["additional_input_keys"].is_array()) {
+                std::vector<std::string> additional_keys;
+                for (auto const & key_json : step_json["additional_input_keys"]) {
+                    if (key_json.is_string()) {
+                        additional_keys.push_back(key_json.get<std::string>());
+                    }
+                }
+                if (!additional_keys.empty()) {
+                    step.additional_input_keys = std::move(additional_keys);
+                }
             }
 
             if (step_json.contains("parameters") && step_json["parameters"].is_object()) {
@@ -209,20 +229,34 @@ V2StepResult DataManagerPipelineExecutor::executeStep(
     result.output_key = step.output_key.value_or("");
 
     try {
-        // 1. Get input data from DataManager or temporary storage
-        auto input_data = getInputData(step.input_key);
-        if (!input_data.has_value()) {
-            result.success = false;
-            result.error_message = "Input data '" + step.input_key + "' not found in DataManager";
-            return result;
-        }
+        std::optional<DataTypeVariant> output_data;
 
-        // 2. Execute the transform using V2 system
-        auto output_data = executeTransform(step.transform_name, input_data.value(), step.parameters);
-        if (!output_data.has_value()) {
-            result.success = false;
-            result.error_message = "Transform '" + step.transform_name + "' failed to execute";
-            return result;
+        // Check if this is a multi-input step
+        if (step.isMultiInput()) {
+            // Use specialized multi-input execution path
+            output_data = executeMultiInputStep(step_index);
+            if (!output_data.has_value()) {
+                result.success = false;
+                result.error_message = "Multi-input transform '" + step.transform_name + "' failed to execute";
+                return result;
+            }
+        } else {
+            // Single-input execution path (existing logic)
+            // 1. Get input data from DataManager or temporary storage
+            auto input_data = getInputData(step.input_key);
+            if (!input_data.has_value()) {
+                result.success = false;
+                result.error_message = "Input data '" + step.input_key + "' not found in DataManager";
+                return result;
+            }
+
+            // 2. Execute the transform using V2 system
+            output_data = executeTransform(step.transform_name, input_data.value(), step.parameters);
+            if (!output_data.has_value()) {
+                result.success = false;
+                result.error_message = "Transform '" + step.transform_name + "' failed to execute";
+                return result;
+            }
         }
 
         // 3. Store output data
@@ -418,6 +452,314 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeContainerTran
         std::cerr << "Container transform execution failed: " << e.what() << std::endl;
         return std::nullopt;
     }
+}
+
+// ============================================================================
+// Multi-Input Pipeline Execution Helpers
+// ============================================================================
+
+namespace {
+
+/**
+ * @brief Helper to execute binary transform on two containers with elements()
+ * 
+ * This is only instantiated for container types that have ElementFor specializations.
+ * Uses SFINAE to ensure proper compile-time dispatch.
+ */
+template<typename Container1, typename Container2>
+auto executeBinaryTransformImpl(
+    std::shared_ptr<Container1> const & data1_ptr,
+    std::shared_ptr<Container2> const & data2_ptr,
+    std::string const & transform_name,
+    std::any const & params_any,
+    std::vector<DataManagerStepDescriptor> const & steps,
+    size_t step_index,
+    DataManagerPipelineExecutor const & executor)
+    -> std::enable_if_t<
+        has_element_type_v<Container1> && has_element_type_v<Container2>,
+        std::optional<DataTypeVariant>>
+{
+    auto & registry = ElementRegistry::instance();
+    auto const & step = steps[step_index];
+    
+    using Element1 = ElementForSafe_t<Container1>;
+    using Element2 = ElementForSafe_t<Container2>;
+    using TupleType = std::tuple<Element1, Element2>;
+
+    // Create zip view
+    FlatZipView zip_view(data1_ptr->elements(), data2_ptr->elements());
+
+    // Adapt to (time, tuple) format for pipeline
+    auto pipeline_input = zip_view | std::views::transform([](auto const & triplet) {
+        auto const & [time, e1, e2] = triplet;
+        return std::make_pair(time, std::make_tuple(e1, e2));
+    });
+
+    // Build pipeline - include this step and any following fusible steps
+    TransformPipeline pipeline;
+
+    // Add current step
+    try {
+        auto pipeline_step = Examples::createPipelineStepFromRegistry(
+            registry, transform_name, params_any);
+        pipeline.addStep(std::move(pipeline_step));
+    } catch (std::exception const & e) {
+        std::cerr << "Failed to create pipeline step: " << e.what() << std::endl;
+        return std::nullopt;
+    }
+
+    // Check if following steps can be fused (they use this step's output)
+    for (size_t i = step_index + 1; i < steps.size(); ++i) {
+        if (!executor.canFuseStep(i)) break;
+        if (!executor.stepsAreChained(i - 1, i)) break;
+
+        auto const & next_step = steps[i];
+        std::any next_params;
+        if (next_step.parameters.has_value()) {
+            std::string params_json = rfl::json::write(next_step.parameters.value());
+            next_params = Examples::loadParametersForTransform(next_step.transform_name, params_json);
+        } else {
+            next_params = Examples::loadParametersForTransform(next_step.transform_name, "{}");
+        }
+
+        if (!next_params.has_value()) break;
+
+        try {
+            auto next_pipeline_step = Examples::createPipelineStepFromRegistry(
+                registry, next_step.transform_name, next_params);
+            pipeline.addStep(std::move(next_pipeline_step));
+        } catch (...) {
+            break;
+        }
+    }
+
+    // Execute the fused pipeline
+    try {
+        auto result_view = pipeline.executeFromView<TupleType>(pipeline_input);
+
+        // Materialize results into output container
+        // Determine output type from the last step's metadata
+        auto last_step_idx = step_index + pipeline.size() - 1;
+        auto const & last_step = steps[last_step_idx];
+        auto const * meta = registry.getMetadata(last_step.transform_name);
+
+        if (!meta) {
+            std::cerr << "Transform metadata not found for " << last_step.transform_name << std::endl;
+            return std::nullopt;
+        }
+
+        // Create output container based on output type
+        if (meta->output_type == typeid(float)) {
+            auto output = std::make_shared<RaggedAnalogTimeSeries>();
+            if (data1_ptr->getTimeFrame()) {
+                output->setTimeFrame(data1_ptr->getTimeFrame());
+            }
+
+            for (auto const & [time, result_variant] : result_view) {
+                if (auto const * val = std::get_if<float>(&result_variant)) {
+                    output->appendAtTime(time, std::vector<float>{*val}, NotifyObservers::No);
+                }
+            }
+
+            return DataTypeVariant{output};
+        }
+
+        // Add more output type handlers as needed
+        std::cerr << "Unsupported output type for multi-input transform" << std::endl;
+        return std::nullopt;
+
+    } catch (std::exception const & e) {
+        std::cerr << "Pipeline execution failed: " << e.what() << std::endl;
+        return std::nullopt;
+    }
+}
+
+/**
+ * @brief Fallback for unsupported container types
+ */
+template<typename Container1, typename Container2>
+auto executeBinaryTransformImpl(
+    std::shared_ptr<Container1> const &,
+    std::shared_ptr<Container2> const &,
+    std::string const &,
+    std::any const &,
+    std::vector<DataManagerStepDescriptor> const &,
+    size_t,
+    DataManagerPipelineExecutor const &)
+    -> std::enable_if_t<
+        !(has_element_type_v<Container1> && has_element_type_v<Container2>),
+        std::optional<DataTypeVariant>>
+{
+    std::cerr << "Container types do not support element-level transforms" << std::endl;
+    return std::nullopt;
+}
+
+} // anonymous namespace
+
+// ============================================================================
+// Multi-Input Pipeline Execution
+// ============================================================================
+
+std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeMultiInputStep(size_t step_index) {
+    if (step_index >= steps_.size()) {
+        return std::nullopt;
+    }
+
+    auto const & step = steps_[step_index];
+
+    // Get all input keys
+    auto input_keys = step.getAllInputKeys();
+    if (input_keys.size() < 2) {
+        std::cerr << "Multi-input step requires at least 2 inputs, got " << input_keys.size() << std::endl;
+        return std::nullopt;
+    }
+
+    // For now, only support binary (2-input) transforms
+    if (input_keys.size() > 2) {
+        std::cerr << "Currently only binary (2-input) transforms are supported" << std::endl;
+        return std::nullopt;
+    }
+
+    // Get both input containers
+    auto input1_opt = getInputData(input_keys[0]);
+    auto input2_opt = getInputData(input_keys[1]);
+
+    if (!input1_opt.has_value()) {
+        std::cerr << "Input data '" << input_keys[0] << "' not found" << std::endl;
+        return std::nullopt;
+    }
+    if (!input2_opt.has_value()) {
+        std::cerr << "Input data '" << input_keys[1] << "' not found" << std::endl;
+        return std::nullopt;
+    }
+
+    // Load parameters
+    std::any params_any;
+    if (step.parameters.has_value()) {
+        std::string params_json = rfl::json::write(step.parameters.value());
+        params_any = Examples::loadParametersForTransform(step.transform_name, params_json);
+    } else {
+        params_any = Examples::loadParametersForTransform(step.transform_name, "{}");
+    }
+
+    if (!params_any.has_value()) {
+        std::cerr << "Failed to load parameters for transform '" << step.transform_name << "'" << std::endl;
+        return std::nullopt;
+    }
+
+    // Type-dispatch to execute the binary transform using SFINAE-based helper
+    return std::visit([&](auto const & data1_ptr) -> std::optional<DataTypeVariant> {
+        return std::visit([&](auto const & data2_ptr) -> std::optional<DataTypeVariant> {
+            if (!data1_ptr || !data2_ptr) {
+                return std::nullopt;
+            }
+            
+            // Use the SFINAE-enabled helper function which is only instantiated
+            // for container types that have ElementFor specializations
+            return executeBinaryTransformImpl(
+                data1_ptr, data2_ptr,
+                step.transform_name, params_any,
+                steps_, step_index, *this);
+        }, *input2_opt);
+    }, *input1_opt);
+}
+
+bool DataManagerPipelineExecutor::canFuseStep(size_t step_index) const {
+    if (step_index >= steps_.size()) return false;
+
+    auto const & step = steps_[step_index];
+    auto & registry = ElementRegistry::instance();
+
+    // Multi-input steps cannot be fused (they start new segments)
+    if (step.isMultiInput()) return false;
+
+    // Container transforms cannot be fused
+    if (registry.isContainerTransform(step.transform_name)) return false;
+
+    // Check element transform metadata
+    auto const * meta = registry.getMetadata(step.transform_name);
+    if (!meta) return false;
+
+    // Time-grouped transforms cannot be fused (need all values at a time)
+    if (meta->is_time_grouped) return false;
+
+    // Element-level transform - can fuse!
+    return true;
+}
+
+bool DataManagerPipelineExecutor::stepsAreChained(size_t prev_step, size_t curr_step) const {
+    if (prev_step >= steps_.size() || curr_step >= steps_.size()) return false;
+    if (curr_step <= prev_step) return false;
+
+    auto const & prev = steps_[prev_step];
+    auto const & curr = steps_[curr_step];
+
+    // Current step's input must come from previous step
+    std::string prev_output = prev.output_key.value_or(prev.step_id);
+    return curr.input_key == prev_output;
+}
+
+std::vector<DataManagerPipelineExecutor::PipelineSegment> DataManagerPipelineExecutor::buildSegments() const {
+    std::vector<PipelineSegment> segments;
+    auto & registry = ElementRegistry::instance();
+
+    size_t i = 0;
+    while (i < steps_.size()) {
+        PipelineSegment seg;
+        seg.start_step = i;
+        seg.is_multi_input = steps_[i].isMultiInput();
+        seg.input_keys = steps_[i].getAllInputKeys();
+
+        // Check if first step requires materialization
+        bool first_requires_mat = registry.isContainerTransform(steps_[i].transform_name);
+        if (auto const * meta = registry.getMetadata(steps_[i].transform_name)) {
+            first_requires_mat = first_requires_mat || meta->is_time_grouped;
+        }
+
+        // Greedily extend segment while steps are fusible
+        size_t j = i + 1;
+        while (j < steps_.size() && canFuseStep(j) && stepsAreChained(j - 1, j)) {
+            ++j;
+        }
+
+        seg.end_step = j;
+        seg.output_key = steps_[j - 1].output_key.value_or(steps_[j - 1].step_id);
+        seg.requires_materialization = first_requires_mat || (j == i + 1);
+
+        segments.push_back(seg);
+        i = j;
+    }
+
+    return segments;
+}
+
+std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeSegment(
+        PipelineSegment const & segment) {
+    // For now, delegate to existing step-by-step execution
+    // Full segment fusion will be implemented in a future iteration
+    
+    if (segment.is_multi_input) {
+        return executeMultiInputStep(segment.start_step);
+    }
+
+    // Get input data for first step
+    auto input_data = getInputData(steps_[segment.start_step].input_key);
+    if (!input_data.has_value()) {
+        return std::nullopt;
+    }
+
+    // Execute transforms in segment
+    DataTypeVariant current_data = *input_data;
+    for (size_t i = segment.start_step; i < segment.end_step; ++i) {
+        auto const & step = steps_[i];
+        auto result = executeTransform(step.transform_name, current_data, step.parameters);
+        if (!result.has_value()) {
+            return std::nullopt;
+        }
+        current_data = *result;
+    }
+
+    return current_data;
 }
 
 // ============================================================================

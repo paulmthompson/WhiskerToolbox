@@ -40,6 +40,18 @@ namespace WhiskerToolbox::Transforms::V2 {
  *   }
  * }
  * ```
+ * 
+ * For multi-input (binary) transforms:
+ * ```json
+ * {
+ *   "step_id": "calculate_distance",
+ *   "transform_name": "CalculateLineMinPointDistance",
+ *   "input_key": "line_data",
+ *   "additional_input_keys": ["point_data"],
+ *   "output_key": "distances",
+ *   "parameters": {}
+ * }
+ * ```
  */
 struct DataManagerStepDescriptor {
     // Unique identifier for this step (for error reporting and dependencies)
@@ -48,8 +60,12 @@ struct DataManagerStepDescriptor {
     // Name of the transform (must exist in ElementRegistry)
     std::string transform_name;
 
-    // Key to retrieve input data from DataManager
+    // Key to retrieve primary input data from DataManager
     std::string input_key;
+
+    // Additional input keys for multi-input (binary/n-ary) transforms
+    // Combined with input_key to form tuple: (input_key, additional_input_keys[0], ...)
+    std::optional<std::vector<std::string>> additional_input_keys;
 
     // Key to store output data in DataManager (optional - if empty, data is temporary)
     std::optional<std::string> output_key;
@@ -62,6 +78,23 @@ struct DataManagerStepDescriptor {
     std::optional<bool> enabled;
     std::optional<int> phase;
     std::optional<std::vector<std::string>> tags;
+
+    // Helper to check if this is a multi-input step
+    bool isMultiInput() const {
+        return additional_input_keys.has_value() && !additional_input_keys->empty();
+    }
+
+    // Get all input keys in order
+    std::vector<std::string> getAllInputKeys() const {
+        std::vector<std::string> keys;
+        keys.push_back(input_key);
+        if (additional_input_keys.has_value()) {
+            for (auto const & key : *additional_input_keys) {
+                keys.push_back(key);
+            }
+        }
+        return keys;
+    }
 };
 
 /**
@@ -216,6 +249,53 @@ public:
      */
     void clear();
 
+    // ========================================================================
+    // Pipeline Segment Analysis and Fusion
+    // ========================================================================
+
+    /**
+     * @brief Represents a segment of consecutive steps that can be fused
+     * 
+     * The executor analyzes steps and groups them into fusible segments:
+     * - Element-wise steps can be fused together
+     * - Multi-input steps start new segments
+     * - Time-grouped and container transforms force materialization
+     */
+    struct PipelineSegment {
+        size_t start_step;       // First step index (inclusive)
+        size_t end_step;         // Last step index (exclusive)
+        bool is_multi_input;     // First step has multiple inputs
+        std::vector<std::string> input_keys;  // All input keys for this segment
+        std::string output_key;  // Output key (from last step in segment)
+        bool requires_materialization;  // True if segment contains non-fusible transform
+    };
+
+    /**
+     * @brief Build fusible segments from consecutive steps
+     * 
+     * Analyzes the pipeline and groups consecutive fusible steps together.
+     * Returns a vector of segments that can be executed independently.
+     */
+    std::vector<PipelineSegment> buildSegments() const;
+
+    /**
+     * @brief Check if a step can be fused with the previous step
+     * 
+     * A step can be fused if:
+     * - It is an element-level transform (not time-grouped, not container)
+     * - It has a single input
+     * - Its input comes from the previous step's output
+     */
+    bool canFuseStep(size_t step_index) const;
+
+    /**
+     * @brief Check if consecutive steps form a data dependency chain
+     * 
+     * Returns true if step[i]'s input_key matches step[i-1]'s output_key
+     * or step[i-1]'s step_id (for temporary data).
+     */
+    bool stepsAreChained(size_t prev_step, size_t curr_step) const;
+
 private:
     DataManager * data_manager_;
     std::vector<DataManagerStepDescriptor> steps_;
@@ -258,6 +338,28 @@ private:
             std::string const & transform_name,
             DataTypeVariant const & input_data,
             std::optional<rfl::Generic> const & parameters);
+
+    /**
+     * @brief Execute a multi-input (binary) transform step
+     * 
+     * Handles steps with additional_input_keys by:
+     * 1. Retrieving all input containers
+     * 2. Creating a zipped view using FlatZipView
+     * 3. Building a fused pipeline for consecutive element-wise steps
+     * 4. Executing and materializing the result
+     * 
+     * @param step_index Index of the multi-input step
+     * @return Result containing output data or error
+     */
+    std::optional<DataTypeVariant> executeMultiInputStep(size_t step_index);
+
+    /**
+     * @brief Execute a segment of fused steps
+     * 
+     * For segments with multiple element-wise steps, creates a single
+     * TransformPipeline and executes all steps in one pass.
+     */
+    std::optional<DataTypeVariant> executeSegment(PipelineSegment const & segment);
 };
 
 // ============================================================================

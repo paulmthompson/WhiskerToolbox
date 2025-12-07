@@ -112,12 +112,14 @@ add_executable(test_data_manager
         #TransformsV2/test_zipping_logic.test.cpp
         TransformsV2/test_pipeline_zipping.test.cpp
         TransformsV2/test_mask_to_interval_pipeline.test.cpp
+        TransformsV2/test_multi_input_pipeline.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskArea/MaskArea.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.test.cpp
+        #${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.test.cpp
 
 )
 

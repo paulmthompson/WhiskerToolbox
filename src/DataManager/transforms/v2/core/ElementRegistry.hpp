@@ -1756,6 +1756,67 @@ public:
     }
 };
 
+/**
+ * @brief RAII helper for compile-time container transform registration
+ * 
+ * Registers a container-level transform that operates on entire containers.
+ */
+template<typename InContainer, typename OutContainer, typename Params>
+class RegisterContainerTransform {
+public:
+    RegisterContainerTransform(
+            std::string const & name,
+            std::function<std::shared_ptr<OutContainer>(
+                InContainer const &,
+                Params const &,
+                ComputeContext const &)> func,
+            ContainerTransformMetadata metadata = {}) {
+        ElementRegistry::instance().registerContainerTransform<InContainer, OutContainer, Params>(
+                name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time binary container transform registration
+ * 
+ * Registers a container-level transform that takes two containers as input.
+ * 
+ * Example usage:
+ * ```cpp
+ * namespace {
+ *     auto const register_digital_interval_boolean = 
+ *         RegisterBinaryContainerTransform<
+ *             DigitalIntervalSeries,
+ *             DigitalIntervalSeries,
+ *             DigitalIntervalSeries,
+ *             DigitalIntervalBooleanParams>(
+ *         "DigitalIntervalBoolean",
+ *         digitalIntervalBoolean,
+ *         ContainerTransformMetadata{
+ *             .description = "Apply boolean logic between two interval series",
+ *             .category = "Signal Processing / Logic"
+ *         }
+ *     );
+ * }
+ * ```
+ */
+template<typename InContainer1, typename InContainer2, typename OutContainer, typename Params>
+class RegisterBinaryContainerTransform {
+public:
+    RegisterBinaryContainerTransform(
+            std::string const & name,
+            std::function<std::shared_ptr<OutContainer>(
+                InContainer1 const &,
+                InContainer2 const &,
+                Params const &,
+                ComputeContext const &)> func,
+            ContainerTransformMetadata metadata = {}) {
+        ElementRegistry::instance().registerBinaryContainerTransform<
+                InContainer1, InContainer2, OutContainer, Params>(
+                name, std::move(func), std::move(metadata));
+    }
+};
+
 
 } // namespace WhiskerToolbox::Transforms::V2
 

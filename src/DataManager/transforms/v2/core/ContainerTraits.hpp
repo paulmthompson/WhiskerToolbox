@@ -121,6 +121,45 @@ template<typename Container>
 using ElementFor_t = typename ElementFor<Container>::type;
 
 // ============================================================================
+// Concept for Containers with elements() method
+// ============================================================================
+
+/**
+ * @brief Concept for containers that provide an elements() method
+ * 
+ * This is used for compile-time dispatch to avoid instantiating
+ * ElementFor for unsupported container types.
+ */
+template<typename T>
+concept HasElements = requires(T const & t) {
+    { t.elements() };
+};
+
+/**
+ * @brief SFINAE-safe version of ElementFor that provides void for unsupported types
+ * 
+ * Use this when you need to conditionally get element types without
+ * compilation errors for unsupported containers.
+ */
+template<typename Container, typename = void>
+struct ElementForSafe {
+    using type = void;
+    static constexpr bool is_valid = false;
+};
+
+template<typename Container>
+struct ElementForSafe<Container, std::void_t<typename ElementFor<Container>::type>> {
+    using type = typename ElementFor<Container>::type;
+    static constexpr bool is_valid = true;
+};
+
+template<typename Container>
+using ElementForSafe_t = typename ElementForSafe<Container>::type;
+
+template<typename Container>
+inline constexpr bool has_element_type_v = ElementForSafe<Container>::is_valid;
+
+// ============================================================================
 // Raggedness Traits (Orthogonal to Element Type)
 // ============================================================================
 
