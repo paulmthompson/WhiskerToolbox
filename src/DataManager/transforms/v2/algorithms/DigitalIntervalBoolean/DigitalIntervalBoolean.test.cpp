@@ -658,6 +658,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
         std::filesystem::path json_filepath = test_dir / "and_pipeline.json";
 
         // The fixture already populated DataManager with "and_overlapping_input" and "and_overlapping_other"
+        // Uses additional_input_keys for multi-input (binary) transforms
         const char* json_config = R"([
         {
             "transformations": {
@@ -670,7 +671,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
                         "step_id": "boolean_and",
                         "transform_name": "DigitalIntervalBoolean",
                         "input_key": "and_overlapping_input",
-                        "input_key_2": "and_overlapping_other",
+                        "additional_input_keys": ["and_overlapping_other"],
                         "output_key": "and_result",
                         "parameters": {
                             "operation": "and"
@@ -715,6 +716,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
         std::filesystem::create_directories(test_dir);
         std::filesystem::path json_filepath = test_dir / "or_pipeline.json";
 
+        // Uses additional_input_keys for multi-input (binary) transforms
         const char* json_config = R"([
         {
             "transformations": {
@@ -727,7 +729,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
                         "step_id": "boolean_or",
                         "transform_name": "DigitalIntervalBoolean",
                         "input_key": "or_overlapping_merge_input",
-                        "input_key_2": "or_overlapping_merge_other",
+                        "additional_input_keys": ["or_overlapping_merge_other"],
                         "output_key": "or_result",
                         "parameters": {
                             "operation": "or"

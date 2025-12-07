@@ -10,6 +10,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Tensors/Tensor_Data.hpp"
+#include "transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "transforms/v2/core/ContainerTraits.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/FlatZipView.hpp"
@@ -594,6 +595,100 @@ auto executeBinaryTransformImpl(
     return std::nullopt;
 }
 
+// ============================================================================
+// Binary Container Transform Execution Helper
+// ============================================================================
+
+/**
+ * @brief Execute a binary container transform with type dispatch
+ * 
+ * This helper handles binary container transforms (like DigitalIntervalBoolean)
+ * that operate on two whole containers rather than element-by-element.
+ * 
+ * Uses std::visit to dispatch to the correct typed execution.
+ */
+template<typename Container1, typename Container2, typename Params>
+std::optional<DataTypeVariant> tryExecuteBinaryContainerTransform(
+    std::shared_ptr<Container1> const & data1_ptr,
+    std::shared_ptr<Container2> const & data2_ptr,
+    std::string const & transform_name,
+    Params const & params) {
+    
+    auto & registry = ElementRegistry::instance();
+    ComputeContext ctx;
+    
+    // Check if this specific combination is registered
+    auto const * meta = registry.getContainerMetadata(transform_name);
+    if (!meta || !meta->is_multi_input || meta->input_arity != 2) {
+        return std::nullopt;
+    }
+    
+    // Verify input types match what's registered
+    bool types_match = false;
+    if (meta->individual_input_types.size() >= 2) {
+        types_match = 
+            (meta->individual_input_types[0] == std::type_index(typeid(Container1))) &&
+            (meta->individual_input_types[1] == std::type_index(typeid(Container2)));
+    }
+    
+    if (!types_match) {
+        return std::nullopt;
+    }
+    
+    // For DigitalIntervalSeries x DigitalIntervalSeries -> DigitalIntervalSeries
+    // This is the specific case we need to handle
+    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> && 
+                  std::is_same_v<Container2, DigitalIntervalSeries>) {
+        try {
+            auto result = registry.executeBinaryContainerTransform<
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                DigitalIntervalSeries,
+                Params>(
+                transform_name,
+                *data1_ptr,
+                *data2_ptr,
+                params,
+                ctx);
+            
+            if (result) {
+                return DataTypeVariant{result};
+            }
+        } catch (std::exception const & e) {
+            std::cerr << "Binary container transform failed: " << e.what() << std::endl;
+        }
+    }
+    
+    return std::nullopt;
+}
+
+/**
+ * @brief Overload for type-erased params (std::any)
+ */
+template<typename Container1, typename Container2>
+std::optional<DataTypeVariant> tryExecuteBinaryContainerTransformAny(
+    std::shared_ptr<Container1> const & data1_ptr,
+    std::shared_ptr<Container2> const & data2_ptr,
+    std::string const & transform_name,
+    std::any const & params_any) {
+    
+    // Try known parameter types for binary container transforms
+    // DigitalIntervalBoolean uses DigitalIntervalBooleanParams
+    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> && 
+                  std::is_same_v<Container2, DigitalIntervalSeries>) {
+        try {
+            auto const & params = std::any_cast<DigitalIntervalBooleanParams const &>(params_any);
+            return tryExecuteBinaryContainerTransform(data1_ptr, data2_ptr, transform_name, params);
+        } catch (std::bad_any_cast const &) {
+            // Not the right param type, continue
+        }
+    }
+    
+    // Add more binary container transform parameter types here as needed
+    
+    return std::nullopt;
+}
+
 } // anonymous namespace
 
 // ============================================================================
@@ -606,6 +701,7 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeMultiInputSte
     }
 
     auto const & step = steps_[step_index];
+    auto & registry = ElementRegistry::instance();
 
     // Get all input keys
     auto input_keys = step.getAllInputKeys();
@@ -647,15 +743,34 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeMultiInputSte
         return std::nullopt;
     }
 
-    // Type-dispatch to execute the binary transform using SFINAE-based helper
+    // Check if this is a binary CONTAINER transform (operates on whole containers)
+    // vs a binary ELEMENT transform (operates element-by-element with FlatZipView)
+    auto const * container_meta = registry.getContainerMetadata(step.transform_name);
+    bool is_binary_container_transform = container_meta && 
+                                          container_meta->is_multi_input && 
+                                          container_meta->input_arity == 2;
+
+    // Type-dispatch to execute the binary transform
     return std::visit([&](auto const & data1_ptr) -> std::optional<DataTypeVariant> {
         return std::visit([&](auto const & data2_ptr) -> std::optional<DataTypeVariant> {
             if (!data1_ptr || !data2_ptr) {
                 return std::nullopt;
             }
             
-            // Use the SFINAE-enabled helper function which is only instantiated
-            // for container types that have ElementFor specializations
+            // First, try binary container transform (whole-container operations)
+            if (is_binary_container_transform) {
+                auto result = tryExecuteBinaryContainerTransformAny(
+                    data1_ptr, data2_ptr,
+                    step.transform_name, params_any);
+                if (result.has_value()) {
+                    return result;
+                }
+                // If container transform didn't match types, fall through to element-level
+            }
+            
+            // Fall back to element-level binary transform (FlatZipView approach)
+            // This is used for transforms like LineMinPointDist that work on
+            // std::tuple<Element1, Element2> -> OutputElement
             return executeBinaryTransformImpl(
                 data1_ptr, data2_ptr,
                 step.transform_name, params_any,
