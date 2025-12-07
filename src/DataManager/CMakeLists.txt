@@ -233,6 +233,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.cpp
         transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp
         transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.cpp
+        transforms/v2/algorithms/LineAngle/LineAngle.hpp
+        transforms/v2/algorithms/LineAngle/LineAngle.cpp
 
         Lineage/LineageTypes.hpp
         Lineage/LineageRegistry.hpp

@@ -120,6 +120,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineAngle/LineAngle.test.cpp
 
 )
 
@@ -153,6 +154,7 @@ target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)
 target_include_directories(test_data_manager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/..>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/tests/DataManager>"
 )
 
 if (APPLE)

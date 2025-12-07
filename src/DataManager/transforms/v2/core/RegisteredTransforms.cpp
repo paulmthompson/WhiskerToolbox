@@ -8,6 +8,7 @@
 #include "transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
 #include "transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
+#include "transforms/v2/algorithms/LineAngle/LineAngle.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
@@ -34,6 +35,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<NoParams>();
     registerPipelineStepFactoryFor<MaskAreaParams>();
     registerPipelineStepFactoryFor<SumReductionParams>();
+    registerPipelineStepFactoryFor<LineAngleParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<AnalogEventThresholdParams>();
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
@@ -155,6 +157,44 @@ auto const register_line_min_point_dist = RegisterBinaryTransform<
                 .is_deterministic = true,
                 .supports_cancellation = false,
         });
+
+// Register LineAngleTransform (Unary - takes Line2D, returns float)
+auto const register_line_angle = RegisterTransform<Line2D, float, LineAngleParams>(
+        "CalculateLineAngle",
+        calculateLineAngle,
+        TransformMetadata{
+                .name = "CalculateLineAngle",
+                .description = "Calculate the angle at a position along a line",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(float),
+                .params_type = typeid(LineAngleParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "float",
+                .params_type_name = "LineAngleParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of LineAngle
+auto const register_line_angle_ctx = RegisterContextTransform<Line2D, float, LineAngleParams>(
+        "CalculateLineAngleWithContext",
+        calculateLineAngleWithContext,
+        TransformMetadata{
+                .name = "CalculateLineAngleWithContext",
+                .description = "Calculate the angle at a position along a line with progress reporting",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(float),
+                .params_type = typeid(LineAngleParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "float",
+                .params_type_name = "LineAngleParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
 
 // Register ZScoreNormalization (Multi-Pass Element Transform)
 auto const register_zscore_normalization = RegisterTransform<float, float, ZScoreNormalizationParams>(

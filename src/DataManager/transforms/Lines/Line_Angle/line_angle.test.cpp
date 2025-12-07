@@ -9,10 +9,29 @@
 #include <cmath>
 #include <nlohmann/json.hpp>
 
-TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transform]") {
-    auto line_data = std::make_shared<LineData>();
+#include "fixtures/LineAngleTestFixture.hpp"
 
+// ============================================================================
+// Helper Function
+// ============================================================================
+
+// Helper to extract Line2D from LineData at a given time
+static Line2D getLineAt(LineData const* line_data, TimeFrameIndex time) {
+    auto lines_at_time = line_data->getAtTime(time);
+    for (auto const& line : lines_at_time) {
+        return line;  // Return the first line at this time
+    }
+    return Line2D{};
+}
+
+// ============================================================================
+// Core Functionality Tests (using fixture)
+// ============================================================================
+
+TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functionality", "[line][angle][transform]") {
+    
     SECTION("Calculating angle from empty line data") {
+        auto line_data = m_line_data["empty_line_data"];
         auto params = std::make_unique<LineAngleParameters>();
         auto result = line_angle(line_data.get(), params.get());
 
@@ -21,12 +40,8 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
     }
 
     SECTION("Direct angle calculation - Horizontal line") {
-        // Create a horizontal line
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {1.0f, 1.0f, 1.0f, 1.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(10), x_coords, y_coords);
+        auto line_data = m_line_data["horizontal_line"];
 
-        // Position at 33% (approx. between points 1 and 2)
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.33f;
         params->method = AngleCalculationMethod::DirectPoints;
@@ -44,12 +59,8 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
     }
 
     SECTION("Direct angle calculation - Vertical line") {
-        // Create a vertical line pointing up
-        std::vector<float> x_coords = {1.0f, 1.0f, 1.0f, 1.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(20), x_coords, y_coords);
+        auto line_data = m_line_data["vertical_line"];
 
-        // Position at 25% (at point 1)
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.25f;
         params->method = AngleCalculationMethod::DirectPoints;
@@ -67,12 +78,8 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
     }
 
     SECTION("Direct angle calculation - Diagonal line (45 degrees)") {
-        // Create a diagonal line (45 degrees)
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(30), x_coords, y_coords);
+        auto line_data = m_line_data["diagonal_45_degrees"];
 
-        // Position at 50% (at point 2)
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.50f;
         params->method = AngleCalculationMethod::DirectPoints;
@@ -90,24 +97,8 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
     }
 
     SECTION("Direct angle calculation - Multiple time points") {
-        // Create lines at different time points with different angles
+        auto line_data = m_line_data["multiple_timesteps"];
 
-        // Horizontal line at time 40
-        std::vector<float> x1 = {0.0f, 1.0f, 2.0f};
-        std::vector<float> y1 = {1.0f, 1.0f, 1.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(40), x1, y1);
-
-        // Vertical line at time 50
-        std::vector<float> x2 = {1.0f, 1.0f, 1.0f};
-        std::vector<float> y2 = {0.0f, 1.0f, 2.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(50), x2, y2);
-
-        // 45-degree line at time 60
-        std::vector<float> x3 = {0.0f, 1.0f, 2.0f};
-        std::vector<float> y3 = {0.0f, 1.0f, 2.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(60), x3, y3);
-
-        // Position at 50%
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
         params->method = AngleCalculationMethod::DirectPoints;
@@ -134,16 +125,12 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
     }
 
     SECTION("Polynomial angle calculation - Simple line") {
-        // Create a curve (points on a parabola)
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(70), x_coords, y_coords);
+        auto line_data = m_line_data["parabola"];
 
-        // Position at 40% with polynomial fitting
         auto params = std::make_unique<LineAngleParameters>();
-        params->position = 0.4f; // Around x=3 (37% of length of line)
+        params->position = 0.4f;
         params->method = AngleCalculationMethod::PolynomialFit;
-        params->polynomial_order = 2; // Use a quadratic fit for this parabola
+        params->polynomial_order = 2;
 
         auto result = line_angle(line_data.get(), params.get());
 
@@ -154,55 +141,42 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         REQUIRE(values.size() == 1);
         REQUIRE(times[0] == TimeFrameIndex(70));
 
-        // For a parabola y = x², the derivative is 2x. So slope at x=3 is 6
-        // Angle of atan(6,1) is approximately 80.537 degrees. 
+        // For a parabola y = x², the derivative is 2x
         REQUIRE(values[0] > 75.0f);
         REQUIRE(values[0] < 85.0f);
     }
 
     SECTION("Different polynomial orders") {
-        // Create a smooth curve
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f};
-        std::vector<float> y_coords = {0.0f, 0.5f, 1.8f, 3.9f, 6.8f, 10.5f, 15.0f, 20.3f};
-        line_data->emplaceAtTime(TimeFrameIndex(80), x_coords, y_coords);
+        auto line_data = m_line_data["smooth_curve"];
 
-        // Test with different polynomial orders
-        auto position = 0.5f; // Middle of the line
+        auto position = 0.5f;
 
-        // First order (linear fit)
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = position;
         params1->method = AngleCalculationMethod::PolynomialFit;
         params1->polynomial_order = 1;
         auto result1 = line_angle(line_data.get(), params1.get());
 
-        // Third order
         auto params3 = std::make_unique<LineAngleParameters>();
         params3->position = position;
         params3->method = AngleCalculationMethod::PolynomialFit;
         params3->polynomial_order = 3;
         auto result3 = line_angle(line_data.get(), params3.get());
 
-        // Fifth order
         auto params5 = std::make_unique<LineAngleParameters>();
         params5->position = position;
         params5->method = AngleCalculationMethod::PolynomialFit;
         params5->polynomial_order = 5;
         auto result5 = line_angle(line_data.get(), params5.get());
 
-        // Each result should have proper data structure
         REQUIRE(result1->getTimeSeries().size() == 1);
         REQUIRE(result3->getTimeSeries().size() == 1);
         REQUIRE(result5->getTimeSeries().size() == 1);
 
-        // Higher order polynomials should better capture local curvature
-        // For this curve, we expect higher orders to yield different angles
-        // from lower orders (exact values will depend on the curve)
         auto angle1 = result1->getAnalogTimeSeries()[0];
         auto angle3 = result3->getAnalogTimeSeries()[0];
         auto angle5 = result5->getAnalogTimeSeries()[0];
 
-        // We don't check exact values, but ensure they're reasonable angles
         REQUIRE(angle1 >= -180.0f);
         REQUIRE(angle1 <= 180.0f);
         REQUIRE(angle3 >= -180.0f);
@@ -210,26 +184,20 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         REQUIRE(angle5 >= -180.0f);
         REQUIRE(angle5 <= 180.0f);
 
-        // The angles should be different because of the different polynomial orders
         REQUIRE((std::abs(angle1 - angle3) > 1.0f || std::abs(angle1 - angle5) > 1.0f));
     }
 
     SECTION("Verify returned AnalogTimeSeries structure") {
-        // Add a simple line
-        std::vector<float> x = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y = {0.0f, 0.0f, 0.0f, 0.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x, y);
+        auto line_data = m_line_data["horizontal_at_origin"];
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
         auto result = line_angle(line_data.get(), params.get());
 
-        // Verify it's a proper AnalogTimeSeries
         REQUIRE(result != nullptr);
         REQUIRE(result->getAnalogTimeSeries().size() == 1);
         REQUIRE(result->getTimeSeries().size() == 1);
 
-        // Statistics should work on the result
         float angle = result->getAnalogTimeSeries()[0];
         REQUIRE(calculate_mean(*result.get()) == angle);
         REQUIRE(calculate_min(*result.get()) == angle);
@@ -237,70 +205,50 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
     }
 
     SECTION("Reference vector - Horizontal reference") {
-        // Create a 45-degree line
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(110), x_coords, y_coords);
+        auto line_data = m_line_data["diagonal_for_reference"];
 
-        // Default reference (1,0) - horizontal reference
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = 0.5f;
         params1->reference_x = 1.0f;
         params1->reference_y = 0.0f;
         auto result1 = line_angle(line_data.get(), params1.get());
 
-        // The angle should be 45 degrees (default reference is horizontal)
         REQUIRE_THAT(result1->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 0.001f));
     }
 
     SECTION("Reference vector - Vertical reference") {
-        // Create a 45-degree line
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(120), x_coords, y_coords);
+        auto line_data = m_line_data["diagonal_for_reference"];
 
-        // Vertical reference (0,1)
         auto params2 = std::make_unique<LineAngleParameters>();
         params2->position = 0.5f;
         params2->reference_x = 0.0f;
         params2->reference_y = 1.0f;
         auto result2 = line_angle(line_data.get(), params2.get());
 
-        // The angle should be -45 degrees (angle from vertical to 45-degree line)
         REQUIRE_THAT(result2->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(-45.0f, 0.001f));
     }
 
     SECTION("Reference vector - 45-degree reference") {
-        // Create a horizontal line
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {1.0f, 1.0f, 1.0f, 1.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(130), x_coords, y_coords);
+        auto line_data = m_line_data["horizontal_for_reference"];
 
-        // 45-degree reference (1,1)
         auto params3 = std::make_unique<LineAngleParameters>();
         params3->position = 0.5f;
         params3->reference_x = 1.0f;
         params3->reference_y = 1.0f;
         auto result3 = line_angle(line_data.get(), params3.get());
 
-        // The angle should be -45 degrees (angle from 45-degree to horizontal)
         REQUIRE_THAT(result3->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(-45.0f, 0.001f));
     }
 
     SECTION("Reference vector with polynomial fit") {
-        // Create a parabolic curve
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(140), x_coords, y_coords);
+        auto line_data = m_line_data["parabola_for_reference"];
 
-        // Use default reference (1,0) with polynomial fit
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = 0.5f;
         params1->method = AngleCalculationMethod::PolynomialFit;
         params1->polynomial_order = 2;
         auto result1 = line_angle(line_data.get(), params1.get());
 
-        // Now use vertical reference (0,1) with same polynomial fit
         auto params2 = std::make_unique<LineAngleParameters>();
         params2->position = 0.5f;
         params2->method = AngleCalculationMethod::PolynomialFit;
@@ -309,11 +257,9 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         params2->reference_y = 1.0f;
         auto result2 = line_angle(line_data.get(), params2.get());
 
-        // The difference between the two angles should be approximately 90 degrees
         float angle1 = result1->getAnalogTimeSeries()[0];
         float angle2 = result2->getAnalogTimeSeries()[0];
 
-        // Adjust for angle wrapping
         float angle_diff = angle1 - angle2;
         if (angle_diff > 180.0f) angle_diff -= 360.0f;
         if (angle_diff <= -180.0f) angle_diff += 360.0f;
@@ -322,146 +268,87 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
     }
 }
 
-TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angle][transform][edge]") {
-    auto line_data = std::make_shared<LineData>();
+// ============================================================================
+// Edge Cases Tests (using fixture)
+// ============================================================================
+
+TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and error handling", "[line][angle][transform][edge]") {
 
     SECTION("Line with only one point") {
-        // Add a line with just one point (should skip this line)
-        std::vector<float> x = {1.0f};
-        std::vector<float> y = {1.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(10), x, y);
+        auto line_data = m_line_data["single_point_line"];
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
         auto result = line_angle(line_data.get(), params.get());
 
-        // Should return an empty result
         REQUIRE(result->getAnalogTimeSeries().empty());
         REQUIRE(result->getTimeSeries().empty());
     }
 
     SECTION("Position out of range") {
-        // Create a normal line
-        std::vector<float> x = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(20), x, y);
+        auto line_data = m_line_data["two_point_diagonal"];
 
-        // Test position below 0
         auto params_low = std::make_unique<LineAngleParameters>();
-        params_low->position = -0.5f;  // Should clamp to 0.0
+        params_low->position = -0.5f;
         auto result_low = line_angle(line_data.get(), params_low.get());
 
-        // Test position above 1
         auto params_high = std::make_unique<LineAngleParameters>();
-        params_high->position = 1.5f;  // Should clamp to 1.0
+        params_high->position = 1.5f;
         auto result_high = line_angle(line_data.get(), params_high.get());
 
-        // Both should work and use clamped positions
         REQUIRE(result_low->getAnalogTimeSeries().size() == 1);
         REQUIRE(result_high->getAnalogTimeSeries().size() == 1);
 
-        // Low position (0.0) should be the angle from the first point to itself, which is not defined
-        // but implementation should handle this gracefully
         float low_angle = result_low->getAnalogTimeSeries()[0];
         REQUIRE((std::isnan(low_angle) || (-180.0f <= low_angle && low_angle <= 180.0f)));
 
-        // High position (1.0) should be the angle from first to last point (45 degrees)
         float high_angle = result_high->getAnalogTimeSeries()[0];
         REQUIRE_THAT(high_angle, Catch::Matchers::WithinAbs(45.0f, 0.001f));
     }
 
-    /*
-    SECTION("Multiple lines at same timestamp") {
-        // Create two lines at the same timestamp
-        std::vector<float> x1 = {0.0f, 1.0f, 2.0f};
-        std::vector<float> y1 = {0.0f, 0.0f, 0.0f};  // Horizontal: 0 degrees
-        line_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
-
-        std::vector<float> x2 = {0.0f, 0.0f, 0.0f};
-        std::vector<float> y2 = {0.0f, 1.0f, 2.0f};  // Vertical: 90 degrees
-        line_data->emplaceAtTime(TimeFrameIndex(30), x2, y2);
-
-        auto params = std::make_unique<LineAngleParameters>();
-        params->position = 0.5f;
-        auto result = line_angle(line_data.get(), params.get());
-
-        // Only the first line should be used
-        REQUIRE(result->getAnalogTimeSeries().size() == 1);
-        REQUIRE(result->getTimeSeries().size() == 1);
-        REQUIRE_THAT(result->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(0.0f, 0.001f));
-    }
-        */
-
     SECTION("Polynomial fit with too few points") {
-        // Create a line with fewer points than polynomial order
-        std::vector<float> x = {0.0f, 1.0f};
-        std::vector<float> y = {0.0f, 1.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(40), x, y);
+        auto line_data = m_line_data["two_point_line"];
 
-        // Try to fit a 3rd order polynomial (requires at least 4 points)
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
         params->method = AngleCalculationMethod::PolynomialFit;
         params->polynomial_order = 3;
         auto result = line_angle(line_data.get(), params.get());
 
-        // Should fall back to direct method instead of failing
         REQUIRE(result->getAnalogTimeSeries().size() == 1);
         REQUIRE(result->getTimeSeries().size() == 1);
-        // 45 degree angle with direct method
         REQUIRE_THAT(result->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 0.001f));
     }
 
     SECTION("Polynomial fit with collinear points") {
-        // Create a vertical line where x values are all the same
-        std::vector<float> x = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-        std::vector<float> y = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(50), x, y);
+        auto line_data = m_line_data["vertical_collinear"];
 
-        // Try polynomial fit which may be numerically unstable
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
         params->method = AngleCalculationMethod::PolynomialFit;
         params->polynomial_order = 3;
         auto result = line_angle(line_data.get(), params.get());
 
-        // Should still produce a result (either falling back to direct method or
-        // producing a reasonable angle through the polynomial fit)
         REQUIRE(result->getAnalogTimeSeries().size() == 1);
         REQUIRE(result->getTimeSeries().size() == 1);
 
         float angle = result->getAnalogTimeSeries()[0];
-        // Should be close to 90 degrees (vertical line)
         REQUIRE(((angle > 80.0f && angle < 100.0f) || (angle < -80.0f && angle > -100.0f)));
     }
 
     SECTION("Null parameters") {
-        // Create a simple line
-        std::vector<float> x = {0.0f, 1.0f, 2.0f};
-        std::vector<float> y = {0.0f, 1.0f, 2.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(60), x, y);
+        auto line_data = m_line_data["simple_diagonal"];
 
-        // Call with null parameters
         auto result = line_angle(line_data.get(), nullptr);
 
-        // Should use default parameters
         REQUIRE(result->getAnalogTimeSeries().size() == 1);
         REQUIRE(result->getTimeSeries().size() == 1);
-        // Default is 0.2 position with direct method, expect about 45 degrees
         REQUIRE_THAT(result->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 0.001f));
     }
 
     SECTION("Large number of points") {
-        // Create a line with many points
-        std::vector<float> x;
-        std::vector<float> y;
-        for (int i = 0; i < 1000; ++i) {
-            x.push_back(static_cast<float>(i));
-            y.push_back(static_cast<float>(i));  // 45-degree line
-        }
-        line_data->emplaceAtTime(TimeFrameIndex(70), x, y);
+        auto line_data = m_line_data["large_diagonal_line"];
 
-        // Test both methods
         auto params_direct = std::make_unique<LineAngleParameters>();
         params_direct->position = 0.5f;
         params_direct->method = AngleCalculationMethod::DirectPoints;
@@ -473,82 +360,81 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         params_poly->polynomial_order = 3;
         auto result_poly = line_angle(line_data.get(), params_poly.get());
 
-        // Both should handle large number of points
         REQUIRE(result_direct->getAnalogTimeSeries().size() == 1);
         REQUIRE(result_poly->getAnalogTimeSeries().size() == 1);
 
-        // Both should produce close to 45 degrees
         REQUIRE_THAT(result_direct->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 0.001f));
         REQUIRE_THAT(result_poly->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 1.0f));
     }
 
     SECTION("Zero reference vector") {
-        // Create a simple line
-        std::vector<float> x = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(80), x, y);
+        auto line_data = m_line_data["diagonal_45_degrees"];
 
-        // Try a zero reference vector (should default to (1,0))
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
         params->reference_x = 0.0f;
         params->reference_y = 0.0f;
         auto result = line_angle(line_data.get(), params.get());
 
-        // The angle should be the same as with the default reference
         REQUIRE_THAT(result->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 0.001f));
     }
 
     SECTION("Normalizing reference vector") {
-        // Create a simple line
-        std::vector<float> x = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y = {0.0f, 0.0f, 0.0f, 0.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(90), x, y);
+        auto line_data = m_line_data["horizontal_for_normalization"];
 
-        // Use an unnormalized reference vector
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = 0.5f;
         params1->reference_x = 0.0f;
-        params1->reference_y = 2.0f;  // Magnitude of 2
+        params1->reference_y = 2.0f;
         auto result1 = line_angle(line_data.get(), params1.get());
 
-        // Use the same reference vector but normalized
         auto params2 = std::make_unique<LineAngleParameters>();
         params2->position = 0.5f;
         params2->reference_x = 0.0f;
-        params2->reference_y = 1.0f;  // Normalized to magnitude of 1
+        params2->reference_y = 1.0f;
         auto result2 = line_angle(line_data.get(), params2.get());
 
-        // Both should give the same angle (reference direction is what matters, not magnitude)
         REQUIRE_THAT(result1->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(result2->getAnalogTimeSeries()[0], 0.001f));
     }
 
     SECTION("Specific problematic 2-point lines with negative reference vector") {
-        // Test Line 1: (565, 253), (408, 277)
-        std::vector<float> x1 = {565.0f, 408.0f};
-        std::vector<float> y1 = {253.0f, 277.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(200), x1, y1);
+        auto line_data1 = m_line_data["problematic_line_1"];
+        auto line_data2 = m_line_data["problematic_line_2"];
+        
+        // Combine them into one LineData for testing
+        auto combined_line_data = std::make_shared<LineData>();
+        
+        // Copy line 1 at t=200
+        auto line1 = getLineAt(line_data1.get(), TimeFrameIndex(200));
+        std::vector<float> x1, y1;
+        for (auto const& pt : line1) {
+            x1.push_back(pt.x);
+            y1.push_back(pt.y);
+        }
+        combined_line_data->emplaceAtTime(TimeFrameIndex(200), x1, y1);
+        
+        // Copy line 2 at t=210
+        auto line2 = getLineAt(line_data2.get(), TimeFrameIndex(210));
+        std::vector<float> x2, y2;
+        for (auto const& pt : line2) {
+            x2.push_back(pt.x);
+            y2.push_back(pt.y);
+        }
+        combined_line_data->emplaceAtTime(TimeFrameIndex(210), x2, y2);
 
-        // Test Line 2: (567, 252), (434, 265)
-        std::vector<float> x2 = {567.0f, 434.0f};
-        std::vector<float> y2 = {252.0f, 265.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(210), x2, y2);
-
-        // Test with reference vector (-1, 0) at 80% position
         auto params_80 = std::make_unique<LineAngleParameters>();
         params_80->position = 0.8f;
         params_80->reference_x = -1.0f;
         params_80->reference_y = 0.0f;
         params_80->method = AngleCalculationMethod::DirectPoints;
-        auto result_80 = line_angle(line_data.get(), params_80.get());
+        auto result_80 = line_angle(combined_line_data.get(), params_80.get());
 
-        // Test with reference vector (-1, 0) at 100% position
         auto params_100 = std::make_unique<LineAngleParameters>();
         params_100->position = 1.0f;
         params_100->reference_x = -1.0f;
         params_100->reference_y = 0.0f;
         params_100->method = AngleCalculationMethod::DirectPoints;
-        auto result_100 = line_angle(line_data.get(), params_100.get());
+        auto result_100 = line_angle(combined_line_data.get(), params_100.get());
 
         // Verify we get results for both lines
         REQUIRE(result_80->getAnalogTimeSeries().size() == 2);
@@ -585,7 +471,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         params_poly_80->reference_y = 0.0f;
         params_poly_80->method = AngleCalculationMethod::PolynomialFit;
         params_poly_80->polynomial_order = 1; // Linear fit for 2 points
-        auto result_poly_80 = line_angle(line_data.get(), params_poly_80.get());
+        auto result_poly_80 = line_angle(combined_line_data.get(), params_poly_80.get());
 
         // Polynomial fit should fall back to direct method for 2 points
         REQUIRE(result_poly_80->getAnalogTimeSeries().size() == 2);
