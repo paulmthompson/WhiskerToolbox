@@ -2,6 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Lines/Line_Data.hpp"
+#include "CoreGeometry/angle.hpp"
 #include "CoreGeometry/line_geometry.hpp"
 #include "transforms/utils/variant_type_check.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
@@ -13,114 +14,6 @@
 #include <numbers>
 #include <vector>
 
-
-float normalize_angle(float raw_angle, float reference_x, float reference_y) {
-    // Calculate the angle of the reference vector (if not the default x-axis)
-    float reference_angle = 0.0f;
-    if (!(reference_x == 1.0f && reference_y == 0.0f)) {
-        reference_angle = std::atan2(reference_y, reference_x);
-        // Convert to degrees
-        reference_angle *= 180.0f / static_cast<float>(std::numbers::pi);
-    }
-
-    // Adjust the raw angle by subtracting the reference angle
-    float normalized_angle = raw_angle - reference_angle;
-
-    // Normalize to range [-180, 180]
-    while (normalized_angle > 180.0f) normalized_angle -= 360.0f;
-    while (normalized_angle <= -180.0f) normalized_angle += 360.0f;
-
-    return normalized_angle;
-}
-
-// Calculate angle using direct point comparison
-float calculate_direct_angle(Line2D const & line, float position, float reference_x, float reference_y) {
-    if (line.size() < 2) {
-        return 0.0f;
-    }
-
-    // Calculate the index of the position point, ensuring we never select the base point
-    // when computing the direction from the first point. This avoids a zero-length vector
-    // for 2-point lines at position 1.0.
-    auto idx = static_cast<size_t>(position * static_cast<float>((line.size() - 1)));
-    if (idx == 0) {
-        idx = 1; // always pick at least the second point
-    } else if (idx >= line.size()) {
-        idx = line.size() - 1; // clamp to last valid index
-    } else if (idx >= line.size() - 1) {
-        idx = line.size() - 1; // for end positions, use the last point
-    }
-
-    Point2D<float> const base = line[0];
-    Point2D<float> const pos = line[idx];
-
-    // Calculate angle in radians (atan2 returns value in range [-π, π])
-    float raw_angle = std::atan2(pos.y - base.y, pos.x - base.x);
-
-    // Convert to degrees
-    float angle_degrees = raw_angle * 180.0f / static_cast<float>(std::numbers::pi);
-
-    // Normalize with respect to the reference vector
-    return normalize_angle(angle_degrees, reference_x, reference_y);
-}
-
-// Calculate angle using polynomial parameterization
-float calculate_polynomial_angle(Line2D const & line,
-                                 float position,
-                                 int polynomial_order,
-                                 float reference_x,
-                                 float reference_y) {
-    if (line.size() < static_cast<size_t>(polynomial_order + 1)) {
-        // Fall back to direct method if not enough points
-        return calculate_direct_angle(line, position, reference_x, reference_y);
-    }
-
-    // Extract x and y coordinates
-    std::vector<double> x_coords;
-    std::vector<double> y_coords;
-
-    auto length = calc_length(line);
-
-    x_coords.reserve(line.size());
-    y_coords.reserve(line.size());
-    auto t_values_f = calc_cumulative_length_vector(line);
-    for (size_t i = 0; i < line.size(); ++i) {
-        // Normalize t_values to [0, 1]
-        t_values_f[i] /= length;
-    }
-
-    std::vector<double> t_values(t_values_f.begin(), t_values_f.end());
-
-    for (size_t i = 0; i < line.size(); ++i) {
-        x_coords.push_back(static_cast<double>(line[i].x));
-        y_coords.push_back(static_cast<double>(line[i].y));
-    }
-
-    // Fit polynomials to x(t) and y(t)
-    std::vector<double> x_coeffs = fit_polynomial(t_values, x_coords, polynomial_order);
-    std::vector<double> y_coeffs = fit_polynomial(t_values, y_coords, polynomial_order);
-
-    if (x_coeffs.empty() || y_coeffs.empty()) {
-        // Fall back to direct method if fitting failed
-        return calculate_direct_angle(line, position, reference_x, reference_y);
-    }
-
-    // Evaluate derivatives at the specified position
-    double t = static_cast<double>(position);
-    double dx_dt = evaluate_polynomial_derivative(x_coeffs, t);
-    double dy_dt = evaluate_polynomial_derivative(y_coeffs, t);
-
-    // Calculate angle using the derivatives
-    double raw_angle = std::atan2(dy_dt, dx_dt);
-
-    // Convert to degrees
-    float angle_degrees = static_cast<float>(raw_angle * 180.0 / std::numbers::pi);
-
-    // Normalize with respect to the reference vector
-    return normalize_angle(angle_degrees, reference_x, reference_y);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data, LineAngleParameters const * params) {
     // Call the version with progress reporting but ignore progress

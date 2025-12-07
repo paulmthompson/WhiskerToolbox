@@ -2,7 +2,6 @@
 #define LINE_ANGLE_HPP
 
 #include "transforms/data_transforms.hpp"
-#include "CoreGeometry/lines.hpp"
 
 #include <memory>   // std::shared_ptr
 #include <string>   // std::string
@@ -26,15 +25,6 @@ struct LineAngleParameters : public TransformParametersBase {
     float reference_x = 1.0f;
     float reference_y = 0.0f;
 };
-
-///////////////////////////////////////////////////////////////////////////////
-
-float normalize_angle(float raw_angle, float reference_x, float reference_y);
-
-float calculate_direct_angle(Line2D const & line, float position, float reference_x, float reference_y);
-
-float calculate_polynomial_angle(Line2D const & line, float position, int polynomial_order,
-                                 float reference_x, float reference_y);
 
 ///////////////////////////////////////////////////////////////////////////////
 

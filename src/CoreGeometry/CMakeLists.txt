@@ -2,6 +2,7 @@
 # This library provides header-only geometry utilities
 
 set(NEURALYZER_GEOMETRY_INCLUDES
+    include/CoreGeometry/angle.hpp
     include/CoreGeometry/boundingbox.hpp
     include/CoreGeometry/geometry.hpp
     include/CoreGeometry/Image.hpp
@@ -24,6 +25,7 @@ set(NEURALYZER_GEOMETRY_INCLUDES
 )
 
 set(NEURALYZER_GEOMETRY_SOURCES
+   src/angle.cpp
    src/Image.cpp
    src/lines.cpp
    src/line_geometry.cpp
