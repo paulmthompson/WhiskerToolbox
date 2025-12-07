@@ -1,5 +1,8 @@
 #include "line_curvature.hpp"
 
+
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "Lines/Line_Data.hpp"
 #include "transforms/utils/variant_type_check.hpp"
 #include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
@@ -147,7 +150,7 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
 
     if (!line_data || !params) {
         std::cerr << "LineCurvature: Null LineData or parameters provided." << std::endl;
-        progressCallback(100);    // Still call progress to complete
+        progressCallback(100);                      // Still call progress to complete
         return std::make_shared<AnalogTimeSeries>();// Return empty series
     }
 

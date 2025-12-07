@@ -3,10 +3,6 @@
 
 #include "transforms/data_transforms.hpp"
 
-#include "CoreGeometry/points.hpp"
-#include "CoreGeometry/lines.hpp"
-
-
 #include <memory>   // std::shared_ptr
 #include <optional> // std::optional
 #include <string>   // std::string
@@ -33,19 +29,6 @@ struct LineSubsegmentParameters : public TransformParametersBase {
     // For direct method
     bool preserve_original_spacing = true;  // Keep original point spacing vs. resample
 };
-
-///////////////////////////////////////////////////////////////////////////////
-
-std::vector<Point2D<float>> extract_direct_subsegment(Line2D const & line,
-                                                      float start_pos,
-                                                      float end_pos,
-                                                      bool preserve_spacing);
-
-std::vector<Point2D<float>> extract_parametric_subsegment(Line2D const & line,
-                                                          float start_pos,
-                                                          float end_pos,
-                                                          int polynomial_order,
-                                                          int output_points);
 
 ///////////////////////////////////////////////////////////////////////////////
 

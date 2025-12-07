@@ -1,8 +1,6 @@
 #ifndef LINE_CURVATURE_HPP
 #define LINE_CURVATURE_HPP
 
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "Lines/Line_Data.hpp"
 #include "transforms/data_transforms.hpp"
 
 #include <memory>   // std::shared_ptr, std::unique_ptr
@@ -10,6 +8,9 @@
 #include <string>   // std::string
 #include <typeindex>// std::type_index
 
+class AnalogTimeSeries;
+class Line2D;
+class LineData;
 
 enum class CurvatureCalculationMethod {
     PolynomialFit// Only method for now

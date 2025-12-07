@@ -1,6 +1,8 @@
 #ifndef POLYNOMIAL_FIT_HPP
 #define POLYNOMIAL_FIT_HPP
 
+#include "CoreGeometry/points.hpp" // For Point2D
+
 #include <vector>
 
 class Line2D;
@@ -39,5 +41,11 @@ double evaluate_polynomial_second_derivative(std::vector<double> const & coeffs,
 float calculate_polynomial_angle(Line2D const & line, float position, int polynomial_order,
                                  float reference_x, float reference_y);
 
+
+std::vector<Point2D<float>> extract_parametric_subsegment(Line2D const & line,
+                                                          float start_pos,
+                                                          float end_pos,
+                                                          int polynomial_order,
+                                                          int output_points);
 
 #endif// POLYNOMIAL_FIT_HPP
