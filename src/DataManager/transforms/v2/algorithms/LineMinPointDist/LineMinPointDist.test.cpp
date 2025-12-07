@@ -1,21 +1,39 @@
+#include "LineMinPointDist.hpp"
+
+#include "Lines/Line_Data.hpp"
+#include "Points/Point_Data.hpp"
+#include "AnalogTimeSeries/Ragged_Analog_Time_Series.hpp"
+#include "transforms/v2/core/ComputeContext.hpp"
+#include "transforms/v2/core/DataManagerIntegration.hpp"
+#include "transforms/v2/core/ElementRegistry.hpp"
+#include "transforms/v2/core/ParameterIO.hpp"
+#include "transforms/v2/core/RegisteredTransforms.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include "LineMinPointDist.hpp"
-#include "DataManager/transforms/v2/core/ElementRegistry.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
-#include "fixtures/LinePointDistanceTestFixtures.hpp"
-#include "Lines/Line_Data.hpp"
-#include "Points/Point_Data.hpp"
+#include "fixtures/LinePointDistanceTestFixture.hpp"
 
-#include <memory>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <cmath>
 
-using namespace WhiskerToolbox;
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
-using namespace WhiskerToolbox::Testing;
 using Catch::Matchers::WithinAbs;
+
+// ============================================================================
+// Registration: Uses singleton from RegisteredTransforms.cpp (compile-time)
+// ============================================================================
+// CalculateLineMinPointDistance is registered at compile-time via
+// RegisterBinaryTransform RAII helper in RegisteredTransforms.cpp.
+// The ElementRegistry::instance() singleton already has this transform
+// available when tests run.
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
 // Helper to extract Line2D from LineData at a given time
 static Line2D getLineAt(LineData const* line_data, TimeFrameIndex time) {
@@ -34,127 +52,382 @@ static std::vector<Point2D<float>> getPointsAt(PointData const* point_data, Time
 }
 
 // ============================================================================
-// Core Functionality Tests
+// Tests: Algorithm Correctness (using fixture)
 // ============================================================================
 
-TEST_CASE("Line to point minimum distance calculation V2 - Core functionality", "[line][point][distance][transform][v2]") {
-
-    SECTION("Basic distance calculation between a line and a point") {
-        HorizontalLineWithPointAbove fixture;
-        LineMinPointDistParams params;
+TEST_CASE_METHOD(LinePointDistanceTestFixture,
+                 "V2 Binary Element Transform: LineMinPointDist - Core Functionality",
+                 "[transforms][v2][binary_element][line_min_point_dist]") {
+    
+    LineMinPointDistParams params;
+    
+    SECTION("Basic distance calculation - horizontal line with point above") {
+        auto line_data = m_line_data["horizontal_line_point_above"];
+        auto point_data = m_point_data["horizontal_line_point_above"];
         
-        auto line = getLineAt(fixture.line_data.get(), fixture.timestamp);
-        auto points = getPointsAt(fixture.point_data.get(), fixture.timestamp);
+        TimeFrameIndex timestamp(10);
+        auto line = getLineAt(line_data.get(), timestamp);
+        auto points = getPointsAt(point_data.get(), timestamp);
         
         float distance = calculateLineMinPointDistance(line, points[0], params);
         
-        REQUIRE_THAT(distance, WithinAbs(fixture.expected_distance, 0.001f));
+        REQUIRE_THAT(distance, WithinAbs(5.0f, 0.001f));
     }
-
-    SECTION("Multiple points with different distances") {
-        VerticalLineWithMultiplePoints fixture;
-        LineMinPointDistParams params;
+    
+    SECTION("Multiple points with different distances - finds minimum") {
+        auto line_data = m_line_data["vertical_line_multiple_points"];
+        auto point_data = m_point_data["vertical_line_multiple_points"];
         
-        auto line = getLineAt(fixture.line_data.get(), fixture.timestamp);
-        auto points = getPointsAt(fixture.point_data.get(), fixture.timestamp);
+        TimeFrameIndex timestamp(20);
+        auto line = getLineAt(line_data.get(), timestamp);
+        auto points = getPointsAt(point_data.get(), timestamp);
         
-        // The fixture expects minimum distance, so we test the minimum
+        // Calculate minimum distance across all points
         float min_distance = std::numeric_limits<float>::max();
         for (auto const& point : points) {
             float dist = calculateLineMinPointDistance(line, point, params);
             min_distance = std::min(min_distance, dist);
         }
         
-        REQUIRE_THAT(min_distance, WithinAbs(fixture.expected_distance, 0.001f));
+        // Minimum distance is 1.0 (from point at (6,8) to line at x=5)
+        REQUIRE_THAT(min_distance, WithinAbs(1.0f, 0.001f));
     }
-
-    SECTION("Multiple timesteps with lines and points") {
-        MultipleTimesteps fixture;
-        LineMinPointDistParams params;
-        
-        // Test first timestep
-        {
-            auto line = getLineAt(fixture.line_data.get(), fixture.timestamp1);
-            auto points = getPointsAt(fixture.point_data.get(), fixture.timestamp1);
-            float distance = calculateLineMinPointDistance(line, points[0], params);
-            REQUIRE_THAT(distance, WithinAbs(fixture.expected_distance1, 0.001f));
-        }
-        
-        // Test second timestep
-        {
-            auto line = getLineAt(fixture.line_data.get(), fixture.timestamp2);
-            auto points = getPointsAt(fixture.point_data.get(), fixture.timestamp2);
-            float distance = calculateLineMinPointDistance(line, points[0], params);
-            REQUIRE_THAT(distance, WithinAbs(fixture.expected_distance2, 0.001f));
-        }
-    }
-
-    SECTION("Scaling points with different image sizes") {
-        CoordinateScaling fixture;
-        LineMinPointDistParams params;
-        
-        auto line = getLineAt(fixture.line_data.get(), fixture.timestamp);
-        auto points = getPointsAt(fixture.point_data.get(), fixture.timestamp);
-        
-        float distance = calculateLineMinPointDistance(line, points[0], params);
-        
-        REQUIRE_THAT(distance, WithinAbs(fixture.expected_distance, 0.001f));
-    }
-
+    
     SECTION("Point directly on the line has zero distance") {
-        PointOnLine fixture;
-        LineMinPointDistParams params;
+        auto line_data = m_line_data["point_on_line"];
+        auto point_data = m_point_data["point_on_line"];
         
-        auto line = getLineAt(fixture.line_data.get(), fixture.timestamp);
-        auto points = getPointsAt(fixture.point_data.get(), fixture.timestamp);
+        TimeFrameIndex timestamp(70);
+        auto line = getLineAt(line_data.get(), timestamp);
+        auto points = getPointsAt(point_data.get(), timestamp);
         
         float distance = calculateLineMinPointDistance(line, points[0], params);
         
-        REQUIRE_THAT(distance, WithinAbs(fixture.expected_distance, 0.001f));
+        REQUIRE_THAT(distance, WithinAbs(0.0f, 0.001f));
+    }
+    
+    SECTION("Multiple timesteps with different distances") {
+        auto line_data = m_line_data["multiple_timesteps"];
+        auto point_data = m_point_data["multiple_timesteps"];
+        
+        // Timestamp 30: horizontal line, point at (5,2), distance = 2.0
+        {
+            TimeFrameIndex timestamp(30);
+            auto line = getLineAt(line_data.get(), timestamp);
+            auto points = getPointsAt(point_data.get(), timestamp);
+            
+            REQUIRE(!line.empty());
+            REQUIRE(!points.empty());
+            
+            float distance = calculateLineMinPointDistance(line, points[0], params);
+            REQUIRE_THAT(distance, WithinAbs(2.0f, 0.001f));
+        }
+        
+        // Timestamp 40: vertical line, point at (3,5), distance = 3.0
+        {
+            TimeFrameIndex timestamp(40);
+            auto line = getLineAt(line_data.get(), timestamp);
+            auto points = getPointsAt(point_data.get(), timestamp);
+            
+            REQUIRE(!line.empty());
+            REQUIRE(!points.empty());
+            
+            float distance = calculateLineMinPointDistance(line, points[0], params);
+            REQUIRE_THAT(distance, WithinAbs(3.0f, 0.001f));
+        }
     }
 }
 
-// ============================================================================
-// Edge Cases and Error Handling
-// ============================================================================
-
-TEST_CASE("Line to point minimum distance calculation V2 - Edge cases and error handling", "[line][point][distance][edge][v2]") {
-
-    SECTION("Line with only one point (invalid)") {
-        InvalidLineOnePoint fixture;
-        LineMinPointDistParams params;
+TEST_CASE_METHOD(LinePointDistanceTestFixture,
+                 "V2 Binary Element Transform: LineMinPointDist - Edge Cases",
+                 "[transforms][v2][binary_element][line_min_point_dist]") {
+    
+    LineMinPointDistParams params;
+    
+    SECTION("Line with only one point (invalid) returns infinity") {
+        auto line_data = m_line_data["invalid_line_one_point"];
+        auto point_data = m_point_data["invalid_line_one_point"];
         
-        auto line = getLineAt(fixture.line_data.get(), fixture.timestamp);
-        auto points = getPointsAt(fixture.point_data.get(), fixture.timestamp);
+        TimeFrameIndex timestamp(40);
+        auto line = getLineAt(line_data.get(), timestamp);
+        auto points = getPointsAt(point_data.get(), timestamp);
         
         float distance = calculateLineMinPointDistance(line, points[0], params);
         
         // Should return infinity for invalid line
         REQUIRE(std::isinf(distance));
     }
+    
+    SECTION("Empty line returns infinity") {
+        Line2D empty_line;
+        Point2D<float> point{5.0f, 5.0f};
+        
+        float distance = calculateLineMinPointDistance(empty_line, point, params);
+        
+        REQUIRE(std::isinf(distance));
+    }
 }
 
 // ============================================================================
-// Parameter Validation Tests
+// Tests: Parameter Validation
 // ============================================================================
 
-TEST_CASE("Line to point minimum distance calculation V2 - Parameters", "[line][point][distance][parameters][v2]") {
-
-    SECTION("JSON round-trip with reflect-cpp") {
-        // Create params with non-default value
+TEST_CASE("V2 Binary Element Transform: LineMinPointDistParams - JSON Loading",
+          "[transforms][v2][params][json]") {
+    
+    SECTION("Load valid JSON with all fields") {
+        std::string json = R"({
+            "use_first_line_only": false,
+            "return_squared_distance": true
+        })";
+        
+        auto result = loadParametersFromJson<LineMinPointDistParams>(json);
+        
+        REQUIRE(result);
+        auto params = result.value();
+        
+        REQUIRE(params.getUseFirstLineOnly() == false);
+        REQUIRE(params.getReturnSquaredDistance() == true);
+    }
+    
+    SECTION("Load empty JSON (uses defaults)") {
+        std::string json = "{}";
+        
+        auto result = loadParametersFromJson<LineMinPointDistParams>(json);
+        
+        REQUIRE(result);
+        auto params = result.value();
+        
+        REQUIRE(params.getUseFirstLineOnly() == true);
+        REQUIRE(params.getReturnSquaredDistance() == false);
+    }
+    
+    SECTION("JSON round-trip preserves values") {
         LineMinPointDistParams original;
+        original.use_first_line_only = false;
         original.return_squared_distance = true;
         
-        // Serialize to JSON
-        auto json_str = rfl::json::write(original);
+        // Serialize
+        std::string json = saveParametersToJson(original);
         
-        // Deserialize from JSON
-        auto deserialized_result = rfl::json::read<LineMinPointDistParams>(json_str);
-        REQUIRE(deserialized_result);
-        
-        auto deserialized = deserialized_result.value();
+        // Deserialize
+        auto result = loadParametersFromJson<LineMinPointDistParams>(json);
+        REQUIRE(result);
+        auto recovered = result.value();
         
         // Verify values match
-        REQUIRE(deserialized.getReturnSquaredDistance() == original.getReturnSquaredDistance());
+        REQUIRE(recovered.getUseFirstLineOnly() == false);
+        REQUIRE(recovered.getReturnSquaredDistance() == true);
+    }
+}
+
+// ============================================================================
+// Tests: Registry Integration
+// ============================================================================
+
+TEST_CASE("V2 Binary Element Transform: Registry Integration",
+          "[transforms][v2][registry][binary_element]") {
+    
+    auto& registry = ElementRegistry::instance();
+    
+    SECTION("Transform is registered") {
+        REQUIRE(registry.hasElementTransform("CalculateLineMinPointDistance"));
+    }
+    
+    SECTION("Can retrieve metadata") {
+        auto const* metadata = registry.getMetadata("CalculateLineMinPointDistance");
+        REQUIRE(metadata != nullptr);
+        REQUIRE(metadata->name == "CalculateLineMinPointDistance");
+        REQUIRE(metadata->category == "Geometry");
+        REQUIRE(metadata->is_multi_input == true);
+        REQUIRE(metadata->input_arity == 2);
+    }
+}
+
+// ============================================================================
+// Tests: DataManager Integration via load_data_from_json_config_v2
+// ============================================================================
+
+TEST_CASE_METHOD(LinePointDistanceTestFixture,
+                 "V2 DataManager Integration: LineMinPointDist via load_data_from_json_config_v2",
+                 "[transforms][v2][datamanager][line_min_point_dist]") {
+    
+    DataManager* dm = getDataManager();
+    
+    // Create temporary directory for JSON config files
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_min_point_dist_v2_test";
+    std::filesystem::create_directories(test_dir);
+    
+    SECTION("Two timesteps pipeline") {
+        // Uses additional_input_keys for multi-input (binary) transforms
+        const char* json_config = R"([
+        {
+            "transformations": {
+                "metadata": {
+                    "name": "Line Min Point Distance Pipeline",
+                    "description": "Test line to point minimum distance calculation",
+                    "version": "2.0"
+                },
+                "steps": [
+                    {
+                        "step_id": "1",
+                        "transform_name": "CalculateLineMinPointDistance",
+                        "input_key": "json_pipeline_two_timesteps_line",
+                        "additional_input_keys": ["json_pipeline_two_timesteps_point"],
+                        "output_key": "v2_line_point_distances",
+                        "parameters": {
+                            "use_first_line_only": true,
+                            "return_squared_distance": false
+                        }
+                    }
+                ]
+            }
+        }
+        ])";
+        
+        std::filesystem::path json_filepath = test_dir / "two_timesteps_pipeline.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config;
+            json_file.close();
+        }
+        
+        // Execute the V2 transformation pipeline
+        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        
+        // Verify the transformation was executed and results are available
+        auto result_distances = dm->getData<RaggedAnalogTimeSeries>("v2_line_point_distances");
+        REQUIRE(result_distances != nullptr);
+        
+        // Check we have 2 results (t=100 and t=200)
+        REQUIRE(result_distances->getNumSamples() == 2);
+        
+        // Verify distance values
+        // t=100: horizontal line (0,0)-(10,0) with point (5,5), distance = 5.0
+        // t=200: vertical line (5,0)-(5,10) with point (8,5), distance = 3.0
+        auto all_samples = result_distances->getAllSamples();
+        bool found_100 = false;
+        bool found_200 = false;
+        
+        for (auto const& sample : all_samples) {
+            if (sample.time_frame_index == TimeFrameIndex(100)) {
+                REQUIRE(!sample.value.empty());
+                REQUIRE_THAT(sample.value[0], WithinAbs(5.0f, 0.001f));
+                found_100 = true;
+            } else if (sample.time_frame_index == TimeFrameIndex(200)) {
+                REQUIRE(!sample.value.empty());
+                REQUIRE_THAT(sample.value[0], WithinAbs(3.0f, 0.001f));
+                found_200 = true;
+            }
+        }
+        
+        REQUIRE(found_100);
+        REQUIRE(found_200);
+        
+        // Cleanup
+        try {
+            std::filesystem::remove_all(test_dir);
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+        }
+    }
+    
+    SECTION("Point on line edge case") {
+        const char* json_config = R"([
+        {
+            "transformations": {
+                "metadata": {
+                    "name": "Point On Line Test",
+                    "version": "2.0"
+                },
+                "steps": [
+                    {
+                        "step_id": "1",
+                        "transform_name": "CalculateLineMinPointDistance",
+                        "input_key": "json_pipeline_point_on_line_line",
+                        "additional_input_keys": ["json_pipeline_point_on_line_point"],
+                        "output_key": "v2_point_on_line_distances",
+                        "parameters": {}
+                    }
+                ]
+            }
+        }
+        ])";
+        
+        std::filesystem::path json_filepath = test_dir / "point_on_line_pipeline.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config;
+            json_file.close();
+        }
+        
+        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        
+        auto result_distances = dm->getData<RaggedAnalogTimeSeries>("v2_point_on_line_distances");
+        REQUIRE(result_distances != nullptr);
+        REQUIRE(result_distances->getNumSamples() == 1);
+        
+        // Distance should be 0 for point exactly on line
+        auto all_samples = result_distances->getAllSamples();
+        REQUIRE(!all_samples.empty());
+        REQUIRE(!all_samples.front().value.empty());
+        REQUIRE_THAT(all_samples.front().value[0], WithinAbs(0.0f, 0.001f));
+        
+        try {
+            std::filesystem::remove_all(test_dir);
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+        }
+    }
+    
+    SECTION("Basic horizontal line test") {
+        const char* json_config = R"([
+        {
+            "transformations": {
+                "metadata": {
+                    "name": "Horizontal Line Test",
+                    "version": "2.0"
+                },
+                "steps": [
+                    {
+                        "step_id": "1",
+                        "transform_name": "CalculateLineMinPointDistance",
+                        "input_key": "horizontal_line_point_above_line",
+                        "additional_input_keys": ["horizontal_line_point_above_point"],
+                        "output_key": "v2_horizontal_distances",
+                        "parameters": {}
+                    }
+                ]
+            }
+        }
+        ])";
+        
+        std::filesystem::path json_filepath = test_dir / "horizontal_line_pipeline.json";
+        {
+            std::ofstream json_file(json_filepath);
+            REQUIRE(json_file.is_open());
+            json_file << json_config;
+            json_file.close();
+        }
+        
+        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        
+        auto result_distances = dm->getData<RaggedAnalogTimeSeries>("v2_horizontal_distances");
+        REQUIRE(result_distances != nullptr);
+        REQUIRE(result_distances->getNumSamples() == 1);
+        
+        // Distance should be 5.0 (point at y=5, line at y=0)
+        auto all_samples = result_distances->getAllSamples();
+        REQUIRE(!all_samples.empty());
+        REQUIRE(!all_samples.front().value.empty());
+        REQUIRE_THAT(all_samples.front().value[0], WithinAbs(5.0f, 0.001f));
+        
+        try {
+            std::filesystem::remove_all(test_dir);
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+        }
     }
 }
