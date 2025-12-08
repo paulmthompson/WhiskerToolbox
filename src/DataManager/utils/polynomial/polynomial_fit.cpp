@@ -9,6 +9,7 @@
 #include <armadillo>
 
 #include <cmath>
+#include <numbers>
 
 // Helper function to fit a polynomial of the specified order to the given data
 std::vector<double> fit_polynomial(std::vector<double> const & x, std::vector<double> const & y, int order) {
