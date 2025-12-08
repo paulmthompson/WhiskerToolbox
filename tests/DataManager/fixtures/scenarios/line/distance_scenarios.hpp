@@ -1,8 +1,8 @@
 #ifndef DISTANCE_SCENARIOS_HPP
 #define DISTANCE_SCENARIOS_HPP
 
-#include "builders/LineDataBuilder.hpp"
-#include "builders/PointDataBuilder.hpp"
+#include "../../builders/LineDataBuilder.hpp"
+#include "../../builders/PointDataBuilder.hpp"
 #include <memory>
 #include <utility>
 

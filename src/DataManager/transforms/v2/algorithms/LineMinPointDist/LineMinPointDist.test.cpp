@@ -246,16 +246,26 @@ TEST_CASE("V2 DataManager Integration: LineMinPointDist via load_data_from_json_
     
     DataManager dm;
     
+    // Create TimeFrame for DataManager
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
     // Create test data using scenarios
     auto [line_data_two_ts, point_data_two_ts] = line_distance_scenarios::json_pipeline_two_timesteps();
+    line_data_two_ts->setTimeFrame(time_frame);
+    point_data_two_ts->setTimeFrame(time_frame);
     dm.setData("json_pipeline_two_timesteps_line", line_data_two_ts, TimeKey("default"));
     dm.setData("json_pipeline_two_timesteps_point", point_data_two_ts, TimeKey("default"));
     
     auto [line_data_on_line, point_data_on_line] = line_distance_scenarios::json_pipeline_point_on_line();
+    line_data_on_line->setTimeFrame(time_frame);
+    point_data_on_line->setTimeFrame(time_frame);
     dm.setData("json_pipeline_point_on_line_line", line_data_on_line, TimeKey("default"));
     dm.setData("json_pipeline_point_on_line_point", point_data_on_line, TimeKey("default"));
     
     auto [line_data_horiz, point_data_horiz] = line_distance_scenarios::horizontal_line_point_above();
+    line_data_horiz->setTimeFrame(time_frame);
+    point_data_horiz->setTimeFrame(time_frame);
     dm.setData("horizontal_line_point_above_line", line_data_horiz, TimeKey("default"));
     dm.setData("horizontal_line_point_above_point", point_data_horiz, TimeKey("default"));
     

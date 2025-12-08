@@ -221,16 +221,26 @@ TEST_CASE("V1 Transform: Line Min Point Dist - JSON Pipeline",
     
     DataManager dm;
     
+    // Create TimeFrame for DataManager
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
     // Setup test data using scenarios
     auto [line_data_two_ts, point_data_two_ts] = line_distance_scenarios::json_pipeline_two_timesteps();
+    line_data_two_ts->setTimeFrame(time_frame);
+    point_data_two_ts->setTimeFrame(time_frame);
     dm.setData("json_pipeline_two_timesteps_line", line_data_two_ts, TimeKey("default"));
     dm.setData("json_pipeline_two_timesteps_point", point_data_two_ts, TimeKey("default"));
     
     auto [line_data_scaling, point_data_scaling] = line_distance_scenarios::json_pipeline_scaling();
+    line_data_scaling->setTimeFrame(time_frame);
+    point_data_scaling->setTimeFrame(time_frame);
     dm.setData("json_pipeline_scaling_line", line_data_scaling, TimeKey("default"));
     dm.setData("json_pipeline_scaling_point", point_data_scaling, TimeKey("default"));
     
     auto [line_data_on_line, point_data_on_line] = line_distance_scenarios::json_pipeline_point_on_line();
+    line_data_on_line->setTimeFrame(time_frame);
+    point_data_on_line->setTimeFrame(time_frame);
     dm.setData("json_pipeline_point_on_line_line", line_data_on_line, TimeKey("default"));
     dm.setData("json_pipeline_point_on_line_point", point_data_on_line, TimeKey("default"));
     
