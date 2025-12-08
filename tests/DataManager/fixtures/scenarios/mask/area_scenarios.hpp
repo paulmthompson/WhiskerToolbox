@@ -1,7 +1,7 @@
 #ifndef AREA_SCENARIOS_HPP
 #define AREA_SCENARIOS_HPP
 
-#include "builders/MaskDataBuilder.hpp"
+#include "fixtures/builders/MaskDataBuilder.hpp"
 #include <memory>
 
 /**
@@ -110,38 +110,38 @@ inline std::shared_ptr<MaskData> circle_mask() {
 /**
  * @brief Empty mask at a timestamp (zero pixels)
  * 
- * Empty mask at t=70
+ * Empty mask at t=10
  * 
  * Expected area: 0.0 pixels
  */
 inline std::shared_ptr<MaskData> empty_mask_at_timestamp() {
     return MaskDataBuilder()
-        .withEmpty(70)
+        .withEmpty(10)
         .build();
 }
 
 /**
  * @brief Mixed empty and non-empty masks at same timestamp
  * 
- * Empty mask at t=80
- * Non-empty mask at t=80: 5 pixels
+ * Empty mask at t=20
+ * Non-empty mask at t=20: 3 pixels
  * 
- * V1 Expected: 5.0 (sum includes empty)
- * V2 Expected: [0.0, 5.0]
+ * V1 Expected: 3.0 (sum includes empty)
+ * V2 Expected: [0.0, 3.0]
  */
 inline std::shared_ptr<MaskData> mixed_empty_nonempty() {
-    std::vector<uint32_t> xs = {1, 2, 3, 4, 5};
-    std::vector<uint32_t> ys = {1, 2, 3, 4, 5};
+    std::vector<uint32_t> xs = {1, 2, 3};
+    std::vector<uint32_t> ys = {1, 2, 3};
     return MaskDataBuilder()
-        .withEmpty(80)
-        .atTime(80, Mask2D(xs, ys))
+        .withEmpty(20)
+        .atTime(20, Mask2D(xs, ys))
         .build();
 }
 
 /**
  * @brief Large number of masks at one timestamp (stress test)
  * 
- * 10 masks at t=90, each with varying sizes
+ * 10 masks at t=30, each with varying sizes
  * 
  * Tests performance and handling of many masks
  */
@@ -153,7 +153,7 @@ inline std::shared_ptr<MaskData> large_mask_count() {
             xs.push_back(i * 10 + j);
             ys.push_back(i * 10 + j);
         }
-        builder.atTime(90, Mask2D(xs, ys));
+        builder.atTime(30, Mask2D(xs, ys));
     }
     return builder.build();
 }
@@ -161,56 +161,77 @@ inline std::shared_ptr<MaskData> large_mask_count() {
 /**
  * @brief Two masks at different timestamps for JSON pipeline tests
  * 
- * Mask at t=100: 4 pixels
- * Mask at t=110: 6 pixels
+ * Mask at t=100: 3 pixels
+ * Mask at t=200: 4 pixels
+ * 
+ * V1 Expected: {100: 3.0, 200: 4.0}
+ * V2 Expected: {100: [3.0], 200: [4.0]}
  */
 inline std::shared_ptr<MaskData> json_pipeline_basic() {
-    std::vector<uint32_t> xs1 = {1, 2, 3, 4};
-    std::vector<uint32_t> ys1 = {1, 2, 3, 4};
-    std::vector<uint32_t> xs2 = {1, 2, 3, 4, 5, 6};
-    std::vector<uint32_t> ys2 = {1, 2, 3, 4, 5, 6};
+    std::vector<uint32_t> xs1 = {1, 2, 3};
+    std::vector<uint32_t> ys1 = {1, 2, 3};
+    std::vector<uint32_t> xs2 = {4, 5, 6, 7};
+    std::vector<uint32_t> ys2 = {4, 5, 6, 7};
     return MaskDataBuilder()
         .atTime(100, Mask2D(xs1, ys1))
-        .atTime(110, Mask2D(xs2, ys2))
+        .atTime(200, Mask2D(xs2, ys2))
         .build();
 }
 
 /**
  * @brief Multiple timestamps for comprehensive JSON tests
  * 
- * Masks at t=120, t=130, t=140
+ * Masks at t=100, t=200, t=300
  * Each with varying pixel counts
+ * 
+ * V1 Expected: {100: 3.0, 200: 5.0, 300: 2.0}
+ * V2 Expected: {100: [3.0], 200: [5.0], 300: [2.0]}
  */
 inline std::shared_ptr<MaskData> json_pipeline_multi_timestamp() {
-    std::vector<uint32_t> xs1 = {1, 2};
-    std::vector<uint32_t> ys1 = {1, 2};
-    std::vector<uint32_t> xs2 = {1, 2, 3, 4};
-    std::vector<uint32_t> ys2 = {1, 2, 3, 4};
-    std::vector<uint32_t> xs3 = {1, 2, 3};
-    std::vector<uint32_t> ys3 = {1, 2, 3};
+    std::vector<uint32_t> xs1 = {1, 2, 3};
+    std::vector<uint32_t> ys1 = {1, 2, 3};
+    std::vector<uint32_t> xs2 = {4, 5, 6, 7, 8};
+    std::vector<uint32_t> ys2 = {4, 5, 6, 7, 8};
+    std::vector<uint32_t> xs3 = {9, 10};
+    std::vector<uint32_t> ys3 = {9, 10};
     return MaskDataBuilder()
-        .atTime(120, Mask2D(xs1, ys1))
-        .atTime(130, Mask2D(xs2, ys2))
-        .atTime(140, Mask2D(xs3, ys3))
+        .atTime(100, Mask2D(xs1, ys1))
+        .atTime(200, Mask2D(xs2, ys2))
+        .atTime(300, Mask2D(xs3, ys3))
         .build();
 }
 
 /**
  * @brief Multiple masks at same timestamp for JSON tests
  * 
- * 3 masks at t=150 with different sizes
+ * 2 masks at t=500 with different sizes
+ * 
+ * V1 Expected: {500: 5.0} (2 + 3)
+ * V2 Expected: {500: [2.0, 3.0]}
  */
 inline std::shared_ptr<MaskData> json_pipeline_multi_mask() {
     std::vector<uint32_t> xs1 = {1, 2};
     std::vector<uint32_t> ys1 = {1, 2};
     std::vector<uint32_t> xs2 = {3, 4, 5};
     std::vector<uint32_t> ys2 = {3, 4, 5};
-    std::vector<uint32_t> xs3 = {6, 7, 8, 9};
-    std::vector<uint32_t> ys3 = {6, 7, 8, 9};
     return MaskDataBuilder()
-        .atTime(150, Mask2D(xs1, ys1))
-        .atTime(150, Mask2D(xs2, ys2))
-        .atTime(150, Mask2D(xs3, ys3))
+        .atTime(500, Mask2D(xs1, ys1))
+        .atTime(500, Mask2D(xs2, ys2))
+        .build();
+}
+
+/**
+ * @brief Single mask for statistics verification
+ * 
+ * Mask at t=100: 4 pixels at (1,1), (2,2), (3,3), (4,4)
+ * 
+ * Expected: mean=4.0, min=4.0, max=4.0, area=4.0
+ */
+inline std::shared_ptr<MaskData> single_mask_for_statistics() {
+    std::vector<uint32_t> xs = {1, 2, 3, 4};
+    std::vector<uint32_t> ys = {1, 2, 3, 4};
+    return MaskDataBuilder()
+        .atTime(100, Mask2D(xs, ys))
         .build();
 }
 

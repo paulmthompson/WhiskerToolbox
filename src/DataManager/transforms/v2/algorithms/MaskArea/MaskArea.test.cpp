@@ -9,7 +9,7 @@
 #include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
 
-#include "fixtures/MaskAreaTestFixture.hpp"
+#include "fixtures/scenarios/mask/area_scenarios.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -153,13 +153,12 @@ TEST_CASE("MaskAreaParams - JSON round-trip preserves values", "[transforms][v2]
 }
 
 // ============================================================================
-// Core Functionality Tests (using shared fixture with V1)
+// Core Functionality Tests (using scenarios shared with V1)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "TransformsV2 - Empty mask data via fixture", 
-                 "[transforms][v2][fixture]") {
-    auto mask_data = m_test_masks["empty_mask_data"];
+TEST_CASE("TransformsV2 - Empty mask data via scenario", 
+          "[transforms][v2]") {
+    auto mask_data = mask_scenarios::empty_mask_data();
     auto& registry = ElementRegistry::instance();
     
     MaskAreaParams params;
@@ -175,10 +174,9 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(result->getNumTimePoints() == 0);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "TransformsV2 - Single mask at one timestamp via fixture", 
-                 "[transforms][v2][fixture]") {
-    auto mask_data = m_test_masks["single_mask_single_timestamp"];
+TEST_CASE("TransformsV2 - Single mask at one timestamp via scenario", 
+          "[transforms][v2]") {
+    auto mask_data = mask_scenarios::single_mask_single_timestamp();
     auto& registry = ElementRegistry::instance();
     
     MaskAreaParams params;
@@ -197,10 +195,9 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(values[0] == 3.0f);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "TransformsV2 - Multiple masks at one timestamp via fixture", 
-                 "[transforms][v2][fixture]") {
-    auto mask_data = m_test_masks["multiple_masks_single_timestamp"];
+TEST_CASE("TransformsV2 - Multiple masks at one timestamp via scenario", 
+          "[transforms][v2]") {
+    auto mask_data = mask_scenarios::multiple_masks_single_timestamp();
     auto& registry = ElementRegistry::instance();
     
     MaskAreaParams params;
@@ -221,10 +218,9 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(values[1] == 5.0f);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "TransformsV2 - Masks across multiple timestamps via fixture", 
-                 "[transforms][v2][fixture]") {
-    auto mask_data = m_test_masks["masks_multiple_timestamps"];
+TEST_CASE("TransformsV2 - Masks across multiple timestamps via scenario", 
+          "[transforms][v2]") {
+    auto mask_data = mask_scenarios::masks_multiple_timestamps();
     auto& registry = ElementRegistry::instance();
     
     MaskAreaParams params;
@@ -251,10 +247,9 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(values_40[1] == 4.0f);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "TransformsV2 - Empty mask (zero pixels) via fixture", 
-                 "[transforms][v2][fixture][edge]") {
-    auto mask_data = m_test_masks["empty_mask_at_timestamp"];
+TEST_CASE("TransformsV2 - Empty mask (zero pixels) via scenario", 
+          "[transforms][v2][edge]") {
+    auto mask_data = mask_scenarios::empty_mask_at_timestamp();
     auto& registry = ElementRegistry::instance();
     
     MaskAreaParams params;
@@ -273,10 +268,9 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(values[0] == 0.0f);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "TransformsV2 - Large mask count via fixture", 
-                 "[transforms][v2][fixture][edge]") {
-    auto mask_data = m_test_masks["large_mask_count"];
+TEST_CASE("TransformsV2 - Large mask count via scenario", 
+          "[transforms][v2][edge]") {
+    auto mask_data = mask_scenarios::large_mask_count();
     auto& registry = ElementRegistry::instance();
     
     MaskAreaParams params;
@@ -302,17 +296,22 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
 }
 
 // ============================================================================
-// V2 DataManager Integration Tests (using fixture)
+// V2 DataManager Integration Tests (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "TransformsV2 - DataManager JSON load via fixture", 
-                 "[transforms][v2][datamanager][fixture]") {
+TEST_CASE("TransformsV2 - DataManager JSON load via scenario", 
+          "[transforms][v2][datamanager]") {
     using namespace WhiskerToolbox::Transforms::V2;
     
-    auto dm = getDataManager();
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
     
-    // JSON config using fixture's pre-populated data
+    // Use scenario data
+    auto mask_data = mask_scenarios::json_pipeline_multi_timestamp();
+    dm.setData("json_pipeline_multi_timestamp", mask_data, TimeKey("default"));
+    
+    // JSON config using scenario's pre-populated data
     nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "area_step"},
@@ -323,41 +322,44 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
         }}}
     };
     
-    DataManagerPipelineExecutor executor(dm);
+    DataManagerPipelineExecutor executor(&dm);
     REQUIRE(executor.loadFromJson(json_config));
     
     auto result = executor.execute();
     REQUIRE(result.success);
     
-    auto areas = dm->getData<RaggedAnalogTimeSeries>("v2_calculated_areas");
+    auto areas = dm.getData<RaggedAnalogTimeSeries>("v2_calculated_areas");
     REQUIRE(areas != nullptr);
     
     // Verify same data as V1 test (but in ragged format)
     auto time_indices = areas->getTimeIndices();
     REQUIRE(time_indices.size() == 3);
     
-    // Check timestamp 100 (3 points)
+    // json_pipeline_multi_timestamp has masks at t=100 (3 pixels), t=200 (5 pixels), t=300 (2 pixels)
     auto values_100 = areas->getDataAtTime(TimeFrameIndex(100));
     REQUIRE(values_100.size() == 1);
     REQUIRE(values_100[0] == 3.0f);
     
-    // Check timestamp 200 (5 points)
     auto values_200 = areas->getDataAtTime(TimeFrameIndex(200));
     REQUIRE(values_200.size() == 1);
     REQUIRE(values_200[0] == 5.0f);
     
-    // Check timestamp 300 (2 points)
     auto values_300 = areas->getDataAtTime(TimeFrameIndex(300));
     REQUIRE(values_300.size() == 1);
     REQUIRE(values_300[0] == 2.0f);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "TransformsV2 - DataManager empty mask JSON via fixture", 
-                 "[transforms][v2][datamanager][fixture]") {
+TEST_CASE("TransformsV2 - DataManager empty mask JSON via scenario", 
+          "[transforms][v2][datamanager]") {
     using namespace WhiskerToolbox::Transforms::V2;
     
-    auto dm = getDataManager();
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Use scenario data
+    auto mask_data = mask_scenarios::empty_mask_data();
+    dm.setData("empty_mask_data", mask_data, TimeKey("default"));
     
     nlohmann::json json_config = {
         {"steps", {{
@@ -369,23 +371,28 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
         }}}
     };
     
-    DataManagerPipelineExecutor executor(dm);
+    DataManagerPipelineExecutor executor(&dm);
     REQUIRE(executor.loadFromJson(json_config));
     
     auto result = executor.execute();
     REQUIRE(result.success);
     
-    auto areas = dm->getData<RaggedAnalogTimeSeries>("v2_empty_areas");
+    auto areas = dm.getData<RaggedAnalogTimeSeries>("v2_empty_areas");
     REQUIRE(areas != nullptr);
     REQUIRE(areas->getNumTimePoints() == 0);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "TransformsV2 - DataManager multi-mask JSON via fixture", 
-                 "[transforms][v2][datamanager][fixture]") {
+TEST_CASE("TransformsV2 - DataManager multi-mask JSON via scenario", 
+          "[transforms][v2][datamanager]") {
     using namespace WhiskerToolbox::Transforms::V2;
     
-    auto dm = getDataManager();
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Use scenario data
+    auto mask_data = mask_scenarios::json_pipeline_multi_mask();
+    dm.setData("json_pipeline_multi_mask", mask_data, TimeKey("default"));
     
     nlohmann::json json_config = {
         {"steps", {{
@@ -397,16 +404,17 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
         }}}
     };
     
-    DataManagerPipelineExecutor executor(dm);
+    DataManagerPipelineExecutor executor(&dm);
     REQUIRE(executor.loadFromJson(json_config));
     
     auto result = executor.execute();
     REQUIRE(result.success);
     
-    auto areas = dm->getData<RaggedAnalogTimeSeries>("v2_multi_areas");
+    auto areas = dm.getData<RaggedAnalogTimeSeries>("v2_multi_areas");
     REQUIRE(areas != nullptr);
     
     // V2 preserves individual mask areas (unlike V1 which sums them)
+    // json_pipeline_multi_mask has 2 masks at t=500 with areas 2 and 3
     auto values = areas->getDataAtTime(TimeFrameIndex(500));
     REQUIRE(values.size() == 2);
     
