@@ -3,7 +3,7 @@
 #include "Points/Point_Data.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
-#include "fixtures/LinePointDistanceTestFixture.hpp"
+#include "fixtures/scenarios/line/distance_scenarios.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -40,13 +40,11 @@ static TimeFrameIndex getTimeAtIndex(const AnalogTimeSeries* series, size_t inde
 // Tests: Core Functionality (using fixture)
 // ============================================================================
 
-TEST_CASE_METHOD(LinePointDistanceTestFixture,
-                 "V1 Transform: Line Min Point Dist - Core Functionality",
-                 "[transforms][v1][line_min_point_dist]") {
+TEST_CASE("V1 Transform: Line Min Point Dist - Core Functionality",
+          "[transforms][v1][line_min_point_dist]") {
 
     SECTION("Basic distance calculation - horizontal line with point above") {
-        auto line_data = m_line_data["horizontal_line_point_above"];
-        auto point_data = m_point_data["horizontal_line_point_above"];
+        auto [line_data, point_data] = line_distance_scenarios::horizontal_line_point_above();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -57,8 +55,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
 
     SECTION("Multiple points with different distances - finds minimum") {
-        auto line_data = m_line_data["vertical_line_multiple_points"];
-        auto point_data = m_point_data["vertical_line_multiple_points"];
+        auto [line_data, point_data] = line_distance_scenarios::vertical_line_multiple_points();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -70,8 +67,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
 
     SECTION("Multiple timesteps with lines and points") {
-        auto line_data = m_line_data["multiple_timesteps"];
-        auto point_data = m_point_data["multiple_timesteps"];
+        auto [line_data, point_data] = line_distance_scenarios::multiple_timesteps();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -96,8 +92,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
 
     SECTION("Scaling points with different image sizes") {
-        auto line_data = m_line_data["coordinate_scaling"];
-        auto point_data = m_point_data["coordinate_scaling"];
+        auto [line_data, point_data] = line_distance_scenarios::coordinate_scaling();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -109,8 +104,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
 
     SECTION("Point directly on the line has zero distance") {
-        auto line_data = m_line_data["point_on_line"];
-        auto point_data = m_point_data["point_on_line"];
+        auto [line_data, point_data] = line_distance_scenarios::point_on_line();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -124,13 +118,11 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
 // Tests: Edge Cases (using fixture)
 // ============================================================================
 
-TEST_CASE_METHOD(LinePointDistanceTestFixture,
-                 "V1 Transform: Line Min Point Dist - Edge Cases",
-                 "[transforms][v1][line_min_point_dist][edge]") {
+TEST_CASE("V1 Transform: Line Min Point Dist - Edge Cases",
+          "[transforms][v1][line_min_point_dist][edge]") {
 
     SECTION("Empty line data results in empty output") {
-        auto line_data = m_line_data["empty_line_data"];
-        auto point_data = m_point_data["empty_line_data"];
+        auto [line_data, point_data] = line_distance_scenarios::empty_line_data();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -138,8 +130,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
 
     SECTION("Empty point data results in empty output") {
-        auto line_data = m_line_data["empty_point_data"];
-        auto point_data = m_point_data["empty_point_data"];
+        auto [line_data, point_data] = line_distance_scenarios::empty_point_data();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -147,8 +138,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
 
     SECTION("No matching timestamps between line and point data") {
-        auto line_data = m_line_data["no_matching_timestamps"];
-        auto point_data = m_point_data["no_matching_timestamps"];
+        auto [line_data, point_data] = line_distance_scenarios::no_matching_timestamps();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -156,8 +146,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
 
     SECTION("Line with only one point (invalid)") {
-        auto line_data = m_line_data["invalid_line_one_point"];
-        auto point_data = m_point_data["invalid_line_one_point"];
+        auto [line_data, point_data] = line_distance_scenarios::invalid_line_one_point();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -166,8 +155,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
 
     SECTION("Invalid image sizes fallback") {
-        auto line_data = m_line_data["invalid_image_sizes"];
-        auto point_data = m_point_data["invalid_image_sizes"];
+        auto [line_data, point_data] = line_distance_scenarios::invalid_image_sizes();
         
         auto result = line_min_point_dist(line_data.get(), point_data.get());
 
@@ -228,15 +216,36 @@ TEST_CASE("V1 Transform: Line Min Point Dist - Operation Edge Cases",
 // Tests: JSON Pipeline (using fixture)
 // ============================================================================
 
-TEST_CASE_METHOD(LinePointDistanceTestFixture,
-                 "V1 Transform: Line Min Point Dist - JSON Pipeline",
-                 "[transforms][v1][line_min_point_dist][json]") {
+TEST_CASE("V1 Transform: Line Min Point Dist - JSON Pipeline",
+          "[transforms][v1][line_min_point_dist][json]") {
     
-    DataManager* dm = getDataManager();
+    DataManager dm;
+    
+    // Create TimeFrame for DataManager
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Setup test data using scenarios
+    auto [line_data_two_ts, point_data_two_ts] = line_distance_scenarios::json_pipeline_two_timesteps();
+    line_data_two_ts->setTimeFrame(time_frame);
+    point_data_two_ts->setTimeFrame(time_frame);
+    dm.setData("json_pipeline_two_timesteps_line", line_data_two_ts, TimeKey("default"));
+    dm.setData("json_pipeline_two_timesteps_point", point_data_two_ts, TimeKey("default"));
+    
+    auto [line_data_scaling, point_data_scaling] = line_distance_scenarios::json_pipeline_scaling();
+    line_data_scaling->setTimeFrame(time_frame);
+    point_data_scaling->setTimeFrame(time_frame);
+    dm.setData("json_pipeline_scaling_line", line_data_scaling, TimeKey("default"));
+    dm.setData("json_pipeline_scaling_point", point_data_scaling, TimeKey("default"));
+    
+    auto [line_data_on_line, point_data_on_line] = line_distance_scenarios::json_pipeline_point_on_line();
+    line_data_on_line->setTimeFrame(time_frame);
+    point_data_on_line->setTimeFrame(time_frame);
+    dm.setData("json_pipeline_point_on_line_line", line_data_on_line, TimeKey("default"));
+    dm.setData("json_pipeline_point_on_line_point", point_data_on_line, TimeKey("default"));
     
     SECTION("Two timesteps pipeline") {
-        // Use data from fixture (already in DataManager)
-        // json_pipeline_two_timesteps_line and json_pipeline_two_timesteps_point
+        // Use data from scenarios (already in DataManager)
         
         const char* json_config = 
             "[\n"
@@ -274,10 +283,10 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
         }
         
         // Execute pipeline
-        auto data_info_list = load_data_from_json_config(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
         
         // Verify results
-        auto result_distances = dm->getData<AnalogTimeSeries>("line_point_distances");
+        auto result_distances = dm.getData<AnalogTimeSeries>("line_point_distances");
         REQUIRE(result_distances != nullptr);
         REQUIRE(result_distances->getNumSamples() == 2);
         
@@ -340,9 +349,9 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
             json_file << json_config_scaled;
         }
         
-        auto data_info_list_scaled = load_data_from_json_config(dm, json_filepath_scaled.string());
+        auto data_info_list_scaled = load_data_from_json_config(&dm, json_filepath_scaled.string());
         
-        auto result_distances_scaled = dm->getData<AnalogTimeSeries>("line_point_distances_scaled");
+        auto result_distances_scaled = dm.getData<AnalogTimeSeries>("line_point_distances_scaled");
         REQUIRE(result_distances_scaled != nullptr);
         REQUIRE(result_distances_scaled->getNumSamples() == 1);
         REQUIRE(getTimeAtIndex(result_distances_scaled.get(), 0) == TimeFrameIndex(300));
@@ -391,9 +400,9 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
             json_file << json_config_on_line;
         }
         
-        auto data_info_list_on_line = load_data_from_json_config(dm, json_filepath_on_line.string());
+        auto data_info_list_on_line = load_data_from_json_config(&dm, json_filepath_on_line.string());
         
-        auto result_distances_on_line = dm->getData<AnalogTimeSeries>("line_point_distances_on_line");
+        auto result_distances_on_line = dm.getData<AnalogTimeSeries>("line_point_distances_on_line");
         REQUIRE(result_distances_on_line != nullptr);
         REQUIRE(result_distances_on_line->getNumSamples() == 1);
         REQUIRE(getTimeAtIndex(result_distances_on_line.get(), 0) == TimeFrameIndex(400));
