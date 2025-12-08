@@ -9,7 +9,8 @@
 #include "transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"
 #include "transforms/data_transforms.hpp"
 
-#include "fixtures/AnalogHilbertPhaseTestFixture.hpp"
+// Builder-based test fixtures
+#include "fixtures/scenarios/analog/hilbert_scenarios.hpp"
 
 #include <cmath>
 #include <functional>
@@ -17,7 +18,7 @@
 #include <numbers>
 #include <vector>
 
-TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hilbert_phase]") {
+TEST_CASE("Data Transform: Hilbert Phase - Happy Path", "[transforms][analog_hilbert_phase]") {
     std::shared_ptr<AnalogTimeSeries> result_phase;
     HilbertPhaseParams params;
     int volatile progress_val = -1;
@@ -28,9 +29,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     };
 
     SECTION("Simple sine wave - known phase relationship") {
-        auto ats = m_test_analog_signals["sine_1hz_200"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::sine_1hz_200();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -54,9 +53,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Cosine wave - phase should be shifted by π/2 from sine") {
-        auto ats = m_test_analog_signals["cosine_2hz_100"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::cosine_2hz_100();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -72,9 +69,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Complex signal with multiple frequencies") {
-        auto ats = m_test_analog_signals["multi_freq_2_5"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::multi_freq_2_5();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -96,9 +91,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Discontinuous time series - chunked processing") {
-        auto ats = m_test_analog_signals["discontinuous_large_gap"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::discontinuous_large_gap();
         params.discontinuityThreshold = 100;// Should split at gap of 2000-3=1997
 
         result_phase = hilbert_phase(ats.get(), params);
@@ -125,9 +118,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Multiple discontinuities") {
-        auto ats = m_test_analog_signals["multiple_discontinuities"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::multiple_discontinuities();
         params.discontinuityThreshold = 100;// Should create 3 chunks
 
         result_phase = hilbert_phase(ats.get(), params);
@@ -146,9 +137,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Progress callback detailed check") {
-        auto ats = m_test_analog_signals["progress_callback_signal"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::progress_callback_signal();
 
         progress_val = 0;
         call_count = 0;
@@ -175,7 +164,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Default parameters") {
-        auto ats = m_test_analog_signals["default_params_signal"];
+        auto ats = hilbert_scenarios::default_params_signal();
 
         // Use default parameters
         HilbertPhaseParams default_params;
@@ -192,10 +181,8 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Amplitude extraction - simple sine wave") {
-        auto ats = m_test_analog_signals["amplitude_sine_2_5"];
+        auto ats = hilbert_scenarios::amplitude_sine_2_5();
         constexpr float amplitude = 2.5f;
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
 
         auto result_amplitude = hilbert_phase(ats.get(), params);
@@ -221,9 +208,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Amplitude extraction - amplitude modulated signal") {
-        auto ats = m_test_analog_signals["amplitude_modulated"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::amplitude_modulated();
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
 
         auto result_amplitude = hilbert_phase(ats.get(), params);
@@ -258,7 +243,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Amplitude extraction with discontinuities") {
-        auto ats = m_test_analog_signals["amplitude_discontinuous"];
+        auto ats = hilbert_scenarios::amplitude_discontinuous();
         // lowFrequency parameter removed (was stub)
         // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 100;
@@ -279,12 +264,10 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Windowed processing - long signal") {
-        auto ats = m_test_analog_signals["long_sine_5hz"];
+        auto ats = hilbert_scenarios::long_sine_5hz();
         constexpr float amplitude = 2.0f;
         
         // Configure for windowed processing
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
         params.outputType = HilbertPhaseParams::OutputType::Amplitude;
         params.maxChunkSize = 10000; // Process in 10k sample chunks
         params.overlapFraction = 0.25;
@@ -320,7 +303,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
 }
 
 
-TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][analog_hilbert_phase]") {
+TEST_CASE("Data Transform: Hilbert Phase - Error and Edge Cases", "[transforms][analog_hilbert_phase]") {
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<AnalogTimeSeries> result_phase;
     HilbertPhaseParams params;
@@ -333,8 +316,6 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
 
     SECTION("Null input AnalogTimeSeries") {
         std::shared_ptr<AnalogTimeSeries> ats = nullptr;
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -351,9 +332,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Empty time series") {
-        auto ats = m_test_analog_signals["empty_signal"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::empty_signal();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -361,9 +340,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Single sample") {
-        auto ats = m_test_analog_signals["single_sample"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::single_sample();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -377,10 +354,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Invalid frequency parameters - negative frequencies") {
-        auto ats = m_test_analog_signals["invalid_freq_params"];
-
-        // lowFrequency parameter removed (was stub) - Invalid negative frequency test no longer applicable
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::sine_1hz_200();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -389,10 +363,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Invalid frequency parameters - frequencies too high") {
-        auto ats = m_test_analog_signals["invalid_freq_params"];
-
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub) - High frequency test no longer applicable
+        auto ats = hilbert_scenarios::sine_1hz_200();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -401,10 +372,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Invalid frequency parameters - low >= high") {
-        auto ats = m_test_analog_signals["invalid_freq_params"];
-
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub) - Low > High test no longer applicable
+        auto ats = hilbert_scenarios::sine_1hz_200();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -413,9 +381,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Time series with NaN values") {
-        auto ats = m_test_analog_signals["signal_with_nan"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::signal_with_nan();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -431,9 +397,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Irregular timestamp spacing") {
-        auto ats = m_test_analog_signals["irregular_spacing"];
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
+        auto ats = hilbert_scenarios::irregular_spacing();
 
         result_phase = hilbert_phase(ats.get(), params);
         REQUIRE(result_phase != nullptr);
@@ -446,10 +410,8 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Very small discontinuity threshold") {
-        auto ats = m_test_analog_signals["small_gaps"];
+        auto ats = hilbert_scenarios::small_gaps();
 
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 2;// Smaller than gaps
 
         result_phase = hilbert_phase(ats.get(), params);
@@ -463,10 +425,8 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
     }
 
     SECTION("Very large discontinuity threshold") {
-        auto ats = m_test_analog_signals["large_gaps"];
+        auto ats = hilbert_scenarios::large_gaps();
 
-        // lowFrequency parameter removed (was stub)
-        // highFrequency parameter removed (was stub)
         params.discontinuityThreshold = 1000;// Larger than gaps
 
         result_phase = hilbert_phase(ats.get(), params);
@@ -481,14 +441,12 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
 }
 
 
-TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase - Irregularly Sampled Data", "[transforms][analog_hilbert_phase]") {
-    auto series_ptr = m_test_analog_signals["irregularly_sampled"];
+TEST_CASE("Data Transform: Hilbert Phase - Irregularly Sampled Data", "[transforms][analog_hilbert_phase]") {
+    auto series_ptr = hilbert_scenarios::irregularly_sampled();
     AnalogTimeSeries& series = *series_ptr;
 
     // Configure Hilbert transform parameters
     HilbertPhaseParams params;
-    // lowFrequency parameter removed (was stub)
-    // highFrequency parameter removed (was stub)
     params.discontinuityThreshold = 10;// Allow interpolation for gaps <= 10 samples
 
     // Apply transform
@@ -583,7 +541,32 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Hilbert Phase -
 #include <fstream>
 #include <iostream>
 
-TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Analog Hilbert Phase - JSON pipeline", "[transforms][analog_hilbert_phase][json]") {
+namespace {
+/**
+ * @brief Helper function to populate a DataManager with Hilbert phase test scenarios
+ * @param dm Reference to the DataManager to populate
+ * 
+ * This follows the pattern from the original fixture: create an empty TimeFrame,
+ * register it with DataManager using setTime(), set it on the signal, then store
+ * the signal with that TimeKey.
+ */
+void populateDataManagerWithHilbertScenarios(DataManager& dm) {
+    // Create a TimeFrame and register it with DataManager (required for pipeline output storage)
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("hilbert_time"), time_frame);
+    
+    // Create separate signals for each key to avoid "duplicate" rejection
+    auto pipeline_signal_1 = hilbert_scenarios::pipeline_test_signal();
+    pipeline_signal_1->setTimeFrame(time_frame);
+    dm.setData("TestSignal.channel1", pipeline_signal_1, TimeKey("hilbert_time"));
+    
+    auto pipeline_signal_2 = hilbert_scenarios::pipeline_test_signal();
+    pipeline_signal_2->setTimeFrame(time_frame);
+    dm.setData("test_signal", pipeline_signal_2, TimeKey("hilbert_time"));
+}
+} // anonymous namespace
+
+TEST_CASE("Data Transform: Analog Hilbert Phase - JSON pipeline", "[transforms][analog_hilbert_phase][json]") {
     const nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "hilbert_phase_step_1"},
@@ -601,12 +584,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Analog Hilbert 
     DataManager dm;
     TransformRegistry registry;
 
-    auto time_frame = std::make_shared<TimeFrame>();
-    dm.setTime(TimeKey("default"), time_frame);
-
-    auto ats = m_test_analog_signals["pipeline_test_signal"];
-    ats->setTimeFrame(time_frame);
-    dm.setData("TestSignal.channel1", ats, TimeKey("default"));
+    populateDataManagerWithHilbertScenarios(dm);
 
     TransformPipeline pipeline(&dm, &registry);
     pipeline.loadFromJson(json_config);
@@ -652,19 +630,10 @@ TEST_CASE("Data Transform: Analog Hilbert Phase - Parameter Factory", "[transfor
     REQUIRE(params->applyBandpassFilter == true);
 }
 
-TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, "Data Transform: Analog Hilbert Phase - load_data_from_json_config", "[transforms][analog_hilbert_phase][json_config]") {
+TEST_CASE("Data Transform: Analog Hilbert Phase - load_data_from_json_config", "[transforms][analog_hilbert_phase][json_config]") {
     // Create DataManager and populate it with AnalogTimeSeries in code
     DataManager dm;
-
-    // Create a TimeFrame for our data
-    auto time_frame = std::make_shared<TimeFrame>();
-    dm.setTime(TimeKey("default"), time_frame);
-    
-    auto test_analog = m_test_analog_signals["pipeline_test_signal"];
-    test_analog->setTimeFrame(time_frame);
-    
-    // Store the analog data in DataManager with a known key
-    dm.setData("test_signal", test_analog, TimeKey("default"));
+    populateDataManagerWithHilbertScenarios(dm);
     
     // Create JSON configuration for transformation pipeline using unified format
     const char* json_config = 

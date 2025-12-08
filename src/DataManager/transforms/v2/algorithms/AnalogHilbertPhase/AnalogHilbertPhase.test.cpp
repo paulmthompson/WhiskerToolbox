@@ -1,6 +1,8 @@
 #include "AnalogHilbertPhase.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "transforms/v2/core/ComputeContext.hpp"
 #include "transforms/v2/core/DataManagerIntegration.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
@@ -9,7 +11,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-#include "fixtures/AnalogHilbertPhaseTestFixture.hpp"
+// Builder-based test scenarios
+#include "fixtures/scenarios/analog/hilbert_scenarios.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -43,12 +46,11 @@ namespace {
 }
 
 // ============================================================================
-// Tests: Algorithm Correctness (using fixture)
+// Tests: Algorithm Correctness (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture, 
-                 "V2 Container Transform: Analog Hilbert Phase - Happy Path", 
-                 "[transforms][v2][container][analog_hilbert_phase]") {
+TEST_CASE("V2 Container Transform: Analog Hilbert Phase - Happy Path", 
+          "[transforms][v2][container][analog_hilbert_phase]") {
     
     auto& registry = ElementRegistry::instance();
     std::shared_ptr<AnalogTimeSeries> result_phase;
@@ -64,7 +66,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     };
     
     SECTION("Simple sine wave - known phase relationship") {
-        auto ats = m_test_analog_signals["sine_1hz_200"];
+        auto ats = hilbert_scenarios::sine_1hz_200();
         
         result_phase = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
             "AnalogHilbertPhase", *ats, params, ctx);
@@ -86,7 +88,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Cosine wave - phase should be shifted by π/2 from sine") {
-        auto ats = m_test_analog_signals["cosine_2hz_100"];
+        auto ats = hilbert_scenarios::cosine_2hz_100();
         
         result_phase = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
             "AnalogHilbertPhase", *ats, params, ctx);
@@ -104,7 +106,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Complex signal with multiple frequencies") {
-        auto ats = m_test_analog_signals["multi_freq_2_5"];
+        auto ats = hilbert_scenarios::multi_freq_2_5();
         
         result_phase = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
             "AnalogHilbertPhase", *ats, params, ctx);
@@ -128,7 +130,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Discontinuous time series - chunked processing") {
-        auto ats = m_test_analog_signals["discontinuous_large_gap"];
+        auto ats = hilbert_scenarios::discontinuous_large_gap();
         params.discontinuity_threshold = 100;  // Should split at gap of 2000-3=1997
         
         result_phase = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
@@ -153,7 +155,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Multiple discontinuities") {
-        auto ats = m_test_analog_signals["multiple_discontinuities"];
+        auto ats = hilbert_scenarios::multiple_discontinuities();
         params.discontinuity_threshold = 100;  // Should create 3 chunks
         
         result_phase = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
@@ -174,7 +176,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Default parameters") {
-        auto ats = m_test_analog_signals["default_params_signal"];
+        auto ats = hilbert_scenarios::default_params_signal();
         
         AnalogHilbertPhaseParams default_params;
         
@@ -192,7 +194,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Amplitude extraction - simple sine wave") {
-        auto ats = m_test_analog_signals["amplitude_sine_2_5"];
+        auto ats = hilbert_scenarios::amplitude_sine_2_5();
         constexpr float amplitude = 2.5f;
         params.output_type = "amplitude";
         
@@ -221,7 +223,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Amplitude extraction - amplitude modulated signal") {
-        auto ats = m_test_analog_signals["amplitude_modulated"];
+        auto ats = hilbert_scenarios::amplitude_modulated();
         params.output_type = "amplitude";
         
         auto result_amplitude = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
@@ -254,9 +256,8 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
 }
 
-TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
-                 "V2 Container Transform: Analog Hilbert Phase - Edge Cases",
-                 "[transforms][v2][container][analog_hilbert_phase]") {
+TEST_CASE("V2 Container Transform: Analog Hilbert Phase - Edge Cases",
+          "[transforms][v2][container][analog_hilbert_phase]") {
     
     auto& registry = ElementRegistry::instance();
     std::shared_ptr<AnalogTimeSeries> result_phase;
@@ -264,7 +265,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     ComputeContext ctx;
     
     SECTION("Empty time series") {
-        auto ats = m_test_analog_signals["empty_signal"];
+        auto ats = hilbert_scenarios::empty_signal();
         
         result_phase = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
             "AnalogHilbertPhase", *ats, params, ctx);
@@ -274,7 +275,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Single sample") {
-        auto ats = m_test_analog_signals["single_sample"];
+        auto ats = hilbert_scenarios::single_sample();
         
         result_phase = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
             "AnalogHilbertPhase", *ats, params, ctx);
@@ -289,7 +290,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Time series with NaN values") {
-        auto ats = m_test_analog_signals["signal_with_nan"];
+        auto ats = hilbert_scenarios::signal_with_nan();
         
         result_phase = registry.executeContainerTransform<AnalogTimeSeries, AnalogTimeSeries, AnalogHilbertPhaseParams>(
             "AnalogHilbertPhase", *ats, params, ctx);
@@ -307,7 +308,7 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
     }
     
     SECTION("Cancellation support") {
-        auto ats = m_test_analog_signals["sine_1hz_200"];
+        auto ats = hilbert_scenarios::sine_1hz_200();
         
         // Set cancellation flag immediately
         bool should_cancel = true;
@@ -450,14 +451,40 @@ TEST_CASE("V2 Container Transform: AnalogHilbertPhase - Registry Integration",
 // Tests: DataManager Integration via load_data_from_json_config_v2
 // ============================================================================
 
-TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
-                 "V2 Container Transform: AnalogHilbertPhase - load_data_from_json_config_v2",
-                 "[transforms][v2][container][analog_hilbert_phase][json_config]") {
+namespace {
+    // Helper function to populate DataManager with Hilbert phase test scenarios
+    // This follows the pattern from the v1 test: create an empty TimeFrame,
+    // register it with DataManager using setTime(), set it on the signal, then store
+    // the signal with that TimeKey.
+    void populateDataManagerWithHilbertScenarios(DataManager& dm) {
+        // Create a shared TimeFrame and register it with DataManager
+        auto time_frame = std::make_shared<TimeFrame>();
+        dm.setTime(TimeKey("hilbert_v2_time"), time_frame);
+        
+        // Create separate signals for each key (to avoid duplicate rejection)
+        auto pipeline_signal = hilbert_scenarios::pipeline_test_signal();
+        pipeline_signal->setTimeFrame(time_frame);
+        dm.setData("pipeline_test_signal", pipeline_signal, TimeKey("hilbert_v2_time"));
+        
+        auto amplitude_signal = hilbert_scenarios::amplitude_sine_2_5();
+        amplitude_signal->setTimeFrame(time_frame);
+        dm.setData("amplitude_sine_2_5", amplitude_signal, TimeKey("hilbert_v2_time"));
+        
+        auto discontinuous_signal = hilbert_scenarios::discontinuous_large_gap();
+        discontinuous_signal->setTimeFrame(time_frame);
+        dm.setData("discontinuous_large_gap", discontinuous_signal, TimeKey("hilbert_v2_time"));
+    }
+} // namespace
+
+TEST_CASE("V2 Container Transform: AnalogHilbertPhase - load_data_from_json_config_v2",
+          "[transforms][v2][container][analog_hilbert_phase][json_config]") {
     
     using namespace WhiskerToolbox::Transforms::V2;
     
-    // Get DataManager from fixture
-    DataManager* dm = getDataManager();
+    // Create and populate DataManager
+    DataManager dm;
+    populateDataManagerWithHilbertScenarios(dm);
+    DataManager* dm_ptr = &dm;
     
     // Create temporary directory for JSON config files
     std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "analog_hilbert_phase_v2_test";
@@ -498,10 +525,10 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
         }
         
         // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(dm_ptr, json_filepath.string());
         
         // Verify the transformation was executed and results are available
-        auto result_phase = dm->getData<AnalogTimeSeries>("v2_phase_signal");
+        auto result_phase = dm_ptr->getData<AnalogTimeSeries>("v2_phase_signal");
         REQUIRE(result_phase != nullptr);
         REQUIRE(!result_phase->getAnalogTimeSeries().empty());
         
@@ -547,9 +574,9 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(dm_ptr, json_filepath.string());
         
-        auto result_amplitude = dm->getData<AnalogTimeSeries>("v2_amplitude_signal");
+        auto result_amplitude = dm_ptr->getData<AnalogTimeSeries>("v2_amplitude_signal");
         REQUIRE(result_amplitude != nullptr);
         REQUIRE(!result_amplitude->getAnalogTimeSeries().empty());
         
@@ -608,9 +635,9 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(dm_ptr, json_filepath.string());
         
-        auto result_phase = dm->getData<AnalogTimeSeries>("v2_phase_filtered");
+        auto result_phase = dm_ptr->getData<AnalogTimeSeries>("v2_phase_filtered");
         REQUIRE(result_phase != nullptr);
         REQUIRE(!result_phase->getAnalogTimeSeries().empty());
         
@@ -656,9 +683,9 @@ TEST_CASE_METHOD(AnalogHilbertPhaseTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(dm_ptr, json_filepath.string());
         
-        auto result_phase = dm->getData<AnalogTimeSeries>("v2_phase_discontinuous");
+        auto result_phase = dm_ptr->getData<AnalogTimeSeries>("v2_phase_discontinuous");
         REQUIRE(result_phase != nullptr);
         REQUIRE(!result_phase->getAnalogTimeSeries().empty());
         
