@@ -6,25 +6,23 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <memory>
 
-#include "fixtures/MaskCentroidTestFixture.hpp"
+#include "fixtures/scenarios/mask/centroid_scenarios.hpp"
 
 // ============================================================================
-// Core Functionality Tests (using fixture)
+// Core Functionality Tests (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Mask centroid calculation - Empty mask data",
-                 "[mask][centroid][transform][fixture]") {
-    auto mask_data = m_test_masks["empty_mask_data"];
+TEST_CASE("Mask centroid calculation - Empty mask data",
+          "[mask][centroid][transform][scenario]") {
+    auto mask_data = mask_scenarios::empty_mask_data();
     auto result = calculate_mask_centroid(mask_data.get());
 
     REQUIRE(result->getTimesWithData().empty());
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Mask centroid calculation - Single mask at one timestamp",
-                 "[mask][centroid][transform][fixture]") {
-    auto mask_data = m_test_masks["single_mask_triangle"];
+TEST_CASE("Mask centroid calculation - Single mask at one timestamp",
+          "[mask][centroid][transform][scenario]") {
+    auto mask_data = mask_scenarios::single_mask_triangle();
     auto result = calculate_mask_centroid(mask_data.get());
 
     auto const & times = result->getTimesWithData();
@@ -39,10 +37,9 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
     REQUIRE_THAT(points[0].y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Mask centroid calculation - Multiple masks at one timestamp",
-                 "[mask][centroid][transform][fixture]") {
-    auto mask_data = m_test_masks["multiple_masks_single_timestamp"];
+TEST_CASE("Mask centroid calculation - Multiple masks at one timestamp",
+          "[mask][centroid][transform][scenario]") {
+    auto mask_data = mask_scenarios::multiple_masks_single_timestamp_centroid();
     auto result = calculate_mask_centroid(mask_data.get());
 
     auto const & times = result->getTimesWithData();
@@ -67,10 +64,9 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
     REQUIRE_THAT(sorted_points[1].y, Catch::Matchers::WithinAbs(4.5f, 0.001f));
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Mask centroid calculation - Masks across multiple timestamps",
-                 "[mask][centroid][transform][fixture]") {
-    auto mask_data = m_test_masks["masks_multiple_timestamps"];
+TEST_CASE("Mask centroid calculation - Masks across multiple timestamps",
+          "[mask][centroid][transform][scenario]") {
+    auto mask_data = mask_scenarios::masks_multiple_timestamps_centroid();
     auto result = calculate_mask_centroid(mask_data.get());
 
     auto const & times = result->getTimesWithData();
@@ -89,10 +85,9 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
     REQUIRE_THAT(points40[0].y, Catch::Matchers::WithinAbs(3.0f, 0.001f));
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Mask centroid calculation - Verify image size is preserved",
-                 "[mask][centroid][transform][fixture]") {
-    auto mask_data = m_test_masks["mask_with_image_size"];
+TEST_CASE("Mask centroid calculation - Verify image size is preserved",
+          "[mask][centroid][transform][scenario]") {
+    auto mask_data = mask_scenarios::mask_with_image_size_centroid();
     auto result = calculate_mask_centroid(mask_data.get());
 
     // Verify image size is copied
@@ -107,23 +102,21 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
 }
 
 // ============================================================================
-// Edge Cases (using fixture)
+// Edge Cases (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Mask centroid calculation - Masks with zero points",
-                 "[mask][centroid][transform][edge][fixture]") {
-    auto mask_data = m_test_masks["empty_mask_at_timestamp"];
+TEST_CASE("Mask centroid calculation - Masks with zero points",
+          "[mask][centroid][transform][edge][scenario]") {
+    auto mask_data = mask_scenarios::empty_mask_at_timestamp_centroid();
     auto result = calculate_mask_centroid(mask_data.get());
 
     // Empty masks should be skipped
     REQUIRE(result->getTimesWithData().empty());
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Mask centroid calculation - Mixed empty and non-empty masks",
-                 "[mask][centroid][transform][edge][fixture]") {
-    auto mask_data = m_test_masks["mixed_empty_nonempty"];
+TEST_CASE("Mask centroid calculation - Mixed empty and non-empty masks",
+          "[mask][centroid][transform][edge][scenario]") {
+    auto mask_data = mask_scenarios::mixed_empty_nonempty_centroid();
     auto result = calculate_mask_centroid(mask_data.get());
 
     auto const & times = result->getTimesWithData();
@@ -138,10 +131,9 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
     REQUIRE_THAT(points[0].y, Catch::Matchers::WithinAbs(2.0f, 0.001f));
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Mask centroid calculation - Single point masks",
-                 "[mask][centroid][transform][edge][fixture]") {
-    auto mask_data = m_test_masks["single_point_masks"];
+TEST_CASE("Mask centroid calculation - Single point masks",
+          "[mask][centroid][transform][edge][scenario]") {
+    auto mask_data = mask_scenarios::single_point_masks_centroid();
     auto result = calculate_mask_centroid(mask_data.get());
 
     auto const & points_view = result->getAtTime(TimeFrameIndex(30));
@@ -162,10 +154,9 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
     REQUIRE_THAT(sorted_points[1].y, Catch::Matchers::WithinAbs(15.0f, 0.001f));
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Mask centroid calculation - Large coordinates",
-                 "[mask][centroid][transform][edge][fixture]") {
-    auto mask_data = m_test_masks["large_coordinates"];
+TEST_CASE("Mask centroid calculation - Large coordinates",
+          "[mask][centroid][transform][edge][scenario]") {
+    auto mask_data = mask_scenarios::large_coordinates_centroid();
     auto result = calculate_mask_centroid(mask_data.get());
 
     auto const & points = result->getAtTime(TimeFrameIndex(40));
@@ -182,7 +173,7 @@ TEST_CASE("Mask centroid calculation - Null input handling", "[mask][centroid][t
 }
 
 // ============================================================================
-// Operation Interface Tests (using fixture)
+// Operation Interface Tests
 // ============================================================================
 
 TEST_CASE("MaskCentroidOperation - Operation interface", "[mask][centroid][operation]") {
@@ -203,11 +194,10 @@ TEST_CASE("MaskCentroidOperation - Operation interface", "[mask][centroid][opera
     }
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "MaskCentroidOperation - Can apply to valid MaskData",
-                 "[mask][centroid][operation][fixture]") {
+TEST_CASE("MaskCentroidOperation - Can apply to valid MaskData",
+          "[mask][centroid][operation][scenario]") {
     MaskCentroidOperation operation;
-    auto mask_data = m_test_masks["single_mask_triangle"];
+    auto mask_data = mask_scenarios::single_mask_triangle();
     DataTypeVariant variant = mask_data;
     REQUIRE(operation.canApply(variant));
 }
@@ -219,11 +209,10 @@ TEST_CASE("MaskCentroidOperation - Cannot apply to null MaskData", "[mask][centr
     REQUIRE_FALSE(operation.canApply(variant));
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "MaskCentroidOperation - Execute operation",
-                 "[mask][centroid][operation][fixture]") {
+TEST_CASE("MaskCentroidOperation - Execute operation",
+          "[mask][centroid][operation][scenario]") {
     MaskCentroidOperation operation;
-    auto mask_data = m_test_masks["operation_execute_test"];
+    auto mask_data = mask_scenarios::operation_execute_test_centroid();
 
     DataTypeVariant input_variant = mask_data;
     auto params = operation.getDefaultParameters();
@@ -242,22 +231,29 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
 }
 
 // ============================================================================
-// JSON Pipeline Tests (using fixture)
+// JSON Pipeline Tests
 // ============================================================================
 
 #include "DataManager.hpp"
 #include "IO/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Data Transform: Mask Centroid - JSON pipeline",
-                 "[transforms][mask_centroid][json][fixture]") {
-    auto dm = getDataManager();
+TEST_CASE("Data Transform: Mask Centroid - JSON pipeline",
+          "[transforms][mask_centroid][json][scenario]") {
+    // Create DataManager with time frame
+    auto dm = std::make_unique<DataManager>();
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm->setTime(TimeKey("default"), time_frame);
+    
+    // Add test data from scenario
+    auto mask_data = mask_scenarios::json_pipeline_basic_centroid();
+    dm->setData("json_pipeline_basic", mask_data, TimeKey("default"));
     
     // Create JSON configuration for transformation pipeline using unified format
     const char* json_config = 
@@ -296,7 +292,7 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
     }
     
     // Execute the transformation pipeline using load_data_from_json_config
-    auto data_info_list = load_data_from_json_config(dm, json_filepath.string());
+    auto data_info_list = load_data_from_json_config(dm.get(), json_filepath.string());
     
     // Verify the transformation was executed and results are available
     auto result_centroids = dm->getData<PointData>("mask_centroids");
@@ -344,10 +340,16 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
     }
 }
 
-TEST_CASE_METHOD(MaskCentroidTestFixture,
-                 "Data Transform: Mask Centroid - Complex JSON pipeline",
-                 "[transforms][mask_centroid][json][fixture]") {
-    auto dm = getDataManager();
+TEST_CASE("Data Transform: Mask Centroid - Complex JSON pipeline",
+          "[transforms][mask_centroid][json][scenario]") {
+    // Create DataManager with time frame
+    auto dm = std::make_unique<DataManager>();
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm->setTime(TimeKey("default"), time_frame);
+    
+    // Add test data from scenario
+    auto mask_data = mask_scenarios::json_pipeline_basic_centroid();
+    dm->setData("json_pipeline_basic", mask_data, TimeKey("default"));
     
     const char* json_config_complex = 
         "[\n"
@@ -384,7 +386,7 @@ TEST_CASE_METHOD(MaskCentroidTestFixture,
     }
     
     // Execute the complex pipeline
-    auto data_info_list_complex = load_data_from_json_config(dm, json_filepath_complex.string());
+    auto data_info_list_complex = load_data_from_json_config(dm.get(), json_filepath_complex.string());
     
     // Verify the complex results (should be identical to the first test since same input)
     auto result_centroids_complex = dm->getData<PointData>("complex_centroids");
