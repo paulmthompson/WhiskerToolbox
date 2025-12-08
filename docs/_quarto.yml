@@ -31,6 +31,8 @@ website:
             href: user_guide/index.qmd
           - text: "Developer Guide"
             href: developer/index.qmd
+          - text: "API Reference"
+            href: api_reference.qmd
 
       - icon: github
         href: https://github.com/paulmthompson/WhiskerToolbox
@@ -47,6 +49,8 @@ website:
         - developer/code_quality.qmd
         - developer/copilot.qmd
         - developer/contributing_code.qmd
+        - text: "API Reference"
+          href: api_reference.qmd
         - developer/data_manager.qmd 
         - developer/file_io.qmd
         - developer/image_processing.qmd

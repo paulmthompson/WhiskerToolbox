@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 
-<meta charset="utf-8">
-<meta name="generator" content="quarto-1.6.42">
+<head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta charset="utf-8" />
+<meta name="generator" content="quarto-1.4.549" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
 
 
-<title>Contrast and Brightness Adjustment – Neuralyzer</title>
+<title>Neuralyzer – Contrast and Brightness Adjustment</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -22,24 +24,7 @@ ul.task-list li input[type="checkbox"] {
 }
 </style>
 
-
-<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../">
-<script src="../../site_libs/quarto-html/quarto.js"></script>
-<script src="../../site_libs/quarto-html/popper.min.js"></script>
-<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<!-- htmldependencies:E3FAD763 -->
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,7 +53,7 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <script type="text/javascript">
@@ -98,95 +83,107 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../styles.css" />
 </head>
 
-<body class="nav-sidebar docked nav-fixed">
+<body>
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../../index.html">
+    <a class="navbar-brand" href="/index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+  aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"
+  onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../index.html"> 
+    <a class="nav-link" href="/index.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-tutorials" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-tutorials" role="button" data-bs-toggle="dropdown" aria-expanded="false" >
  <span class="menu-text">Tutorials</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
         <li>
-    <a class="dropdown-item" href="../../examples/keypoint_labeling.html">
+    <a class="dropdown-item" href="/examples/keypoint_labeling.html">
  <span class="dropdown-text">Keypoint Labeling</span></a>
   </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-how-to-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-how-to-guides" role="button" data-bs-toggle="dropdown" aria-expanded="false" >
  <span class="menu-text">How-to guides</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
         <li>
-    <a class="dropdown-item" href="../../labeling/keypoint.html">
+    <a class="dropdown-item" href="/labeling/keypoint.html">
  <span class="dropdown-text">Label Creation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../labeling/mask.html">
+    <a class="dropdown-item" href="/labeling/mask.html">
  <span class="dropdown-text">Mask Creation</span></a>
   </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="button" data-bs-toggle="dropdown" aria-expanded="false" >
  <span class="menu-text">Reference Guides</span>
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
         <li>
-    <a class="dropdown-item" href="../../user_guide/index.html">
+    <a class="dropdown-item" href="/user_guide/index.html">
  <span class="dropdown-text">User Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../developer/index.html">
+    <a class="dropdown-item" href="/developer/index.html">
  <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="/api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
   </li>  
     </ul>
   </li>
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i 
+  class="bi bi-github" 
+  role="img" 
+  aria-label="GitHub" 
+>
 </i> 
 <span class="menu-text"></span></a>
   </li>  
-  <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">Concepts</span>
-    </span>
-  </li>  
+  <li class="dropdown-header">
+ <span class="menu-text">Concepts</span></li>
 </ul>
           </div> <!-- /navcollapse -->
-            <div class="quarto-navbar-tools">
+          <div class="quarto-navbar-tools">
   <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn"
+      data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" 
+      aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation"
+      onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/image_processing/index.html">Image Processing</a></li><li class="breadcrumb-item"><a href="../../user_guide/image_processing/contrast.html">Contrast and Brightness Adjustment</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <h1 class="quarto-secondary-nav-title no-breadcrumbs"></h1>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" 
+        aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation"
+        onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -199,52 +196,52 @@ window.Quarto = {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/index.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Introduction</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../../user_guide/data_loading/index.html" class="sidebar-item-text sidebar-link">
+            <a href="/user_guide/data_loading/index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Loading</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_loading/JSON_loading.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_loading/JSON_loading.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">JSON_loading</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_loading/Point_Loading.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_loading/Point_Loading.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Point Loader</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_loading/Mask_Loading.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_loading/Mask_Loading.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Mask Loader</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_loading/Video_Loading.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_loading/Video_Loading.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Video Loading</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_loading/Line_Loading.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_loading/Line_Loading.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Line Loader</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_loading/Tensor_Loading.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_loading/Tensor_Loading.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Tensor Loader</span></a>
   </div>
 </li>
@@ -252,40 +249,93 @@ window.Quarto = {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../../user_guide/image_processing/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Image Processing</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+ <span class="menu-text">Media Viewer</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/image_processing/contrast.html" class="sidebar-item-text sidebar-link active">
+  <a href="/user_guide/media_viewer/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Viewer Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="/user_guide/media_viewer/process.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Processing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="/user_guide/media_viewer/points.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Point Data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="/user_guide/media_viewer/masks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mask Data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="/user_guide/media_viewer/intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interval Data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="/user_guide/media_viewer/lines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Line Data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="/user_guide/media_viewer/tensors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tensor Data</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="/user_guide/image_processing/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Processing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="/user_guide/image_processing/contrast.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Contrast and Brightness Adjustment</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/image_processing/gamma.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/image_processing/gamma.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Gamma Correction</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/image_processing/sharpening.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/image_processing/sharpening.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Image Sharpening</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/image_processing/clahe.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/image_processing/clahe.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Contrast Limited Adaptive Histogram Equalization</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/image_processing/bilateral_filter.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/image_processing/bilateral_filter.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Bilateral Filter</span></a>
   </div>
 </li>
@@ -293,50 +343,33 @@ window.Quarto = {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false">
  <span class="menu-text">Data Viewer</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_viewer/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Viewer</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
- <span class="menu-text">Media Viewer</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/media_viewer/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Media Viewer Overview</span></a>
+  <a href="/user_guide/data_viewer/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer</span></a>
   </div>
 </li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false">
  <span class="menu-text">Data Manager</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_manager/overview.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_manager/overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Manager Overview</span></a>
   </div>
 </li>
@@ -344,124 +377,124 @@ window.Quarto = {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false">
  <span class="menu-text">Data Transformations</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/overview.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Transformations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/analog_event_threshold.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/analog_event_threshold.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Analog Event Threshold</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/analog_interval_threshold.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/analog_interval_threshold.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Analog Interval Threshold</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/digital_interval_group.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/digital_interval_group.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Digital Interval Group</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/analog_hilbert_phase.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/analog_hilbert_phase.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Analog Hilbert Phase</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/line_angle.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/line_angle.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Line Angle</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/line_clip.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/line_clip.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Line Clip by Reference Line</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/line_curvature.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/line_curvature.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Line Curvature</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/line_resample.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/line_resample.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Line Resample</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/extract_line_subsegment.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/extract_line_subsegment.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Extract Line Subsegment</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/calculate_line_to_point_distance.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/calculate_line_to_point_distance.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Calculate Line to Point Distance</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/extract_point_from_line.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/extract_point_from_line.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Extract Point from Line</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/mask_area.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/mask_area.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Calculate Mask Area</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/mask_centroid.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/mask_centroid.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Calculate Mask Centroid</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/calculate_mask_principal_axis.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/calculate_mask_principal_axis.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Calculate Mask Principal Axis</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/remove_small_connected_components.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/remove_small_connected_components.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Remove Small Connected Components</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/skeletonize_mask.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/skeletonize_mask.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Skeletonize Mask</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/fill_mask_holes.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/fill_mask_holes.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Fill Mask Holes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/apply_median_filter.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/data_transformations/apply_median_filter.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Apply Median Filter</span></a>
   </div>
 </li>
@@ -469,28 +502,28 @@ window.Quarto = {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="false">
  <span class="menu-text">Machine Learning</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/machine_learning/ML_intro.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/machine_learning/ML_intro.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Overview</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/machine_learning/Naive_Bayes.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/machine_learning/Naive_Bayes.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Naive Bayes Classifier</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/machine_learning/Random_Forest.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/machine_learning/Random_Forest.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Random Forest Classifier</span></a>
   </div>
 </li>
@@ -498,16 +531,16 @@ window.Quarto = {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="false">
  <span class="menu-text">Export</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/export/video_export.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/export/video_export.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Video Export</span></a>
   </div>
 </li>
@@ -515,22 +548,22 @@ window.Quarto = {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" aria-expanded="false">
  <span class="menu-text">Behavioral Modules</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/behaviors/whisker.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/behaviors/whisker.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Whisker Tracking</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/behaviors/tongue.html" class="sidebar-item-text sidebar-link">
+  <a href="/user_guide/behaviors/tongue.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Tongue Tracking</span></a>
   </div>
 </li>
@@ -539,15 +572,15 @@ window.Quarto = {
     </ul>
     </div>
 </nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" ></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="contrast.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></div>
+        <div id="quarto-toc-target"></div>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/image_processing/index.html">Image Processing</a></li><li class="breadcrumb-item"><a href="../../user_guide/image_processing/contrast.html">Contrast and Brightness Adjustment</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Contrast and Brightness Adjustment</h1>
 </div>
@@ -569,11 +602,15 @@ window.Quarto = {
 <p>These two filters are implemented with a single linear transform taking parameters “alpha” (<span class="math inline">\(\alpha\)</span>) and “beta” (<span class="math inline">\(\beta\)</span>). Pixel values are multiplied by <span class="math inline">\(\alpha\)</span> to adjust contrast, then have <span class="math inline">\(\beta\)</span> added to adjust brightness: <span class="math display">\[
 g(x) = \alpha f(x) + \beta
 \]</span> In effect the magnitude of <span class="math inline">\(\alpha\)</span> corresponds to the amount of contrast and the magnitude of <span class="math inline">\(\beta\)</span> corresponds to the amount of brightness.</p>
-
-
+<div id="quarto-navigation-envelope" class="hidden">
+<p><span class="hidden" data-render-id="quarto-int-sidebar-title">User Guide</span> <span class="hidden" data-render-id="quarto-int-navbar-title">Neuralyzer</span> <span class="hidden" data-render-id="quarto-int-next">Gamma Correction</span> <span class="hidden" data-render-id="quarto-int-prev">Image Processing</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/index.htmlIntroduction">Introduction</span> <span class="hidden" data-render-id="quarto-int-sidebar:quarto-sidebar-section-1">Data Loading</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_loading/JSON_loading.htmlJSON_loading">JSON_loading</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_loading/Point_Loading.htmlPoint-Loader">Point Loader</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_loading/Mask_Loading.htmlMask-Loader">Mask Loader</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_loading/Video_Loading.htmlVideo-Loading">Video Loading</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_loading/Line_Loading.htmlLine-Loader">Line Loader</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_loading/Tensor_Loading.htmlTensor-Loader">Tensor Loader</span> <span class="hidden" data-render-id="quarto-int-sidebar:quarto-sidebar-section-2">Media Viewer</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/media_viewer/overview.htmlMedia-Viewer-Overview">Media Viewer Overview</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/media_viewer/process.htmlMedia-Processing">Media Processing</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/media_viewer/points.htmlPoint-Data">Point Data</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/media_viewer/masks.htmlMask-Data">Mask Data</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/media_viewer/intervals.htmlInterval-Data">Interval Data</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/media_viewer/lines.htmlLine-Data">Line Data</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/media_viewer/tensors.htmlTensor-Data">Tensor Data</span> <span class="hidden" data-render-id="quarto-int-sidebar:quarto-sidebar-section-3">Image Processing</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/image_processing/contrast.htmlContrast-and-Brightness-Adjustment">Contrast and Brightness Adjustment</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/image_processing/gamma.htmlGamma-Correction">Gamma Correction</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/image_processing/sharpening.htmlImage-Sharpening">Image Sharpening</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/image_processing/clahe.htmlContrast-Limited-Adaptive-Histogram-Equalization">Contrast Limited Adaptive Histogram Equalization</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/image_processing/bilateral_filter.htmlBilateral-Filter">Bilateral Filter</span> <span class="hidden" data-render-id="quarto-int-sidebar:quarto-sidebar-section-4">Data Viewer</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_viewer/overview.htmlData-Viewer">Data Viewer</span> <span class="hidden" data-render-id="quarto-int-sidebar:quarto-sidebar-section-5">Data Manager</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_manager/overview.htmlData-Manager-Overview">Data Manager Overview</span> <span class="hidden" data-render-id="quarto-int-sidebar:quarto-sidebar-section-6">Data Transformations</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/overview.htmlData-Transformations">Data Transformations</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/analog_event_threshold.htmlAnalog-Event-Threshold">Analog Event Threshold</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/analog_interval_threshold.htmlAnalog-Interval-Threshold">Analog Interval Threshold</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/digital_interval_group.htmlDigital-Interval-Group">Digital Interval Group</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/analog_hilbert_phase.htmlAnalog-Hilbert-Phase">Analog Hilbert Phase</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/line_angle.htmlLine-Angle">Line Angle</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/line_clip.htmlLine-Clip-by-Reference-Line">Line Clip by Reference Line</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/line_curvature.htmlLine-Curvature">Line Curvature</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/line_resample.htmlLine-Resample">Line Resample</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/extract_line_subsegment.htmlExtract-Line-Subsegment">Extract Line Subsegment</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/calculate_line_to_point_distance.htmlCalculate-Line-to-Point-Distance">Calculate Line to Point Distance</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/extract_point_from_line.htmlExtract-Point-from-Line">Extract Point from Line</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/mask_area.htmlCalculate-Mask-Area">Calculate Mask Area</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/mask_centroid.htmlCalculate-Mask-Centroid">Calculate Mask Centroid</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/calculate_mask_principal_axis.htmlCalculate-Mask-Principal-Axis">Calculate Mask Principal Axis</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/remove_small_connected_components.htmlRemove-Small-Connected-Components">Remove Small Connected Components</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/skeletonize_mask.htmlSkeletonize-Mask">Skeletonize Mask</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/fill_mask_holes.htmlFill-Mask-Holes">Fill Mask Holes</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/data_transformations/apply_median_filter.htmlApply-Median-Filter">Apply Median Filter</span> <span class="hidden" data-render-id="quarto-int-sidebar:quarto-sidebar-section-7">Machine Learning</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/machine_learning/ML_intro.htmlOverview">Overview</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/machine_learning/Naive_Bayes.htmlNaive-Bayes-Classifier">Naive Bayes Classifier</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/machine_learning/Random_Forest.htmlRandom-Forest-Classifier">Random Forest Classifier</span> <span class="hidden" data-render-id="quarto-int-sidebar:quarto-sidebar-section-8">Export</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/export/video_export.htmlVideo-Export">Video Export</span> <span class="hidden" data-render-id="quarto-int-sidebar:quarto-sidebar-section-9">Behavioral Modules</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/behaviors/whisker.htmlWhisker-Tracking">Whisker Tracking</span> <span class="hidden" data-render-id="quarto-int-sidebar:/user_guide/behaviors/tongue.htmlTongue-Tracking">Tongue Tracking</span> <span class="hidden" data-render-id="quarto-int-navbar:Introduction">Introduction</span> <span class="hidden" data-render-id="quarto-int-navbar:/index.html">/index.html</span> <span class="hidden" data-render-id="quarto-int-navbar:Tutorials">Tutorials</span> <span class="hidden" data-render-id="quarto-int-navbar:Keypoint Labeling">Keypoint Labeling</span> <span class="hidden" data-render-id="quarto-int-navbar:/examples/keypoint_labeling.html">/examples/keypoint_labeling.html</span> <span class="hidden" data-render-id="quarto-int-navbar:How-to guides">How-to guides</span> <span class="hidden" data-render-id="quarto-int-navbar:Label Creation">Label Creation</span> <span class="hidden" data-render-id="quarto-int-navbar:/labeling/keypoint.html">/labeling/keypoint.html</span> <span class="hidden" data-render-id="quarto-int-navbar:Mask Creation">Mask Creation</span> <span class="hidden" data-render-id="quarto-int-navbar:/labeling/mask.html">/labeling/mask.html</span> <span class="hidden" data-render-id="quarto-int-navbar:Reference Guides">Reference Guides</span> <span class="hidden" data-render-id="quarto-int-navbar:User Guide">User Guide</span> <span class="hidden" data-render-id="quarto-int-navbar:/user_guide/index.html">/user_guide/index.html</span> <span class="hidden" data-render-id="quarto-int-navbar:Developer Guide">Developer Guide</span> <span class="hidden" data-render-id="quarto-int-navbar:/developer/index.html">/developer/index.html</span> <span class="hidden" data-render-id="quarto-int-navbar:API Reference">API Reference</span> <span class="hidden" data-render-id="quarto-int-navbar:/api_reference.html">/api_reference.html</span> <span class="hidden" data-render-id="quarto-int-navbar:https://github.com/paulmthompson/WhiskerToolbox">https://github.com/paulmthompson/WhiskerToolbox</span> <span class="hidden" data-render-id="quarto-int-navbar:Concepts">Concepts</span> <span class="hidden" data-render-id="quarto-breadcrumbs-Image-Processing">Image Processing</span> <span class="hidden" data-render-id="quarto-breadcrumbs-Contrast-and-Brightness-Adjustment">Contrast and Brightness Adjustment</span></p>
+</div>
+<div id="quarto-meta-markdown" class="hidden">
+<p><span class="hidden" data-render-id="quarto-metatitle">Neuralyzer - Contrast and Brightness Adjustment</span> <span class="hidden" data-render-id="quarto-twittercardtitle">Neuralyzer - Contrast and Brightness Adjustment</span> <span class="hidden" data-render-id="quarto-ogcardtitle">Neuralyzer - Contrast and Brightness Adjustment</span> <span class="hidden" data-render-id="quarto-metasitename">Neuralyzer</span> <span class="hidden" data-render-id="quarto-twittercarddesc"></span> <span class="hidden" data-render-id="quarto-ogcardddesc"></span></p>
+</div>
 
 </main> <!-- /main -->
-<script id="quarto-html-after-body" type="application/javascript">
+<script id = "quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
     const mode = bsSheetEl.getAttribute("data-mode");
@@ -752,7 +789,18 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const onCopySuccess = function(e) {
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -784,45 +832,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
-  }
-  const getTextToCopy = function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-  }
-  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
-    text: getTextToCopy
   });
-  clipboard.on('success', onCopySuccess);
-  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
-    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
-      text: getTextToCopy,
-      container: window.document.getElementById('quarto-embedded-source-code-modal')
-    });
-    clipboardModal.on('success', onCopySuccess);
-  }
-    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-    var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
-    var isInternal = (href) => {
-        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
-    }
-    // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-    for (var i=0; i<links.length; i++) {
-      const link = links[i];
-      if (!isInternal(link.href)) {
-        // undo the damage that might have been done by quarto-nav.js in the case of
-        // links that we want to consider external
-        if (link.dataset.originalHref !== undefined) {
-          link.href = link.dataset.originalHref;
-        }
-      }
-    }
   function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
@@ -857,11 +867,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      if (note) {
-        return note.innerHTML;
-      } else {
-        return "";
-      }
+      return note.innerHTML;
     });
   }
   const xrefs = window.document.querySelectorAll('a.quarto-xref');
@@ -909,6 +915,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       if (window.Quarto?.typesetMath) {
         window.Quarto.typesetMath(note);
       }
+      // TODO in 1.5, we should make sure this works without a callout special case
       if (note.classList.contains("callout")) {
         return note.outerHTML;
       } else {
@@ -1136,7 +1143,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 </div> <!-- /content -->
 
+</body>
 
-
-
-</body></html>
+</html>
